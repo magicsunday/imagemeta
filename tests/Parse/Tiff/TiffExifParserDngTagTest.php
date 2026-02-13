@@ -5619,6 +5619,126 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts CFALayout values 1..5 (no version gating).
+     */
+    #[Test]
+    public function acceptsValidCfaLayoutValues(): void
+    {
+        foreach ([1, 2, 3, 4, 5] as $value) {
+            $parsed = (new TiffExifParser())->parseFromBlob(
+                $this->buildDngWithShort1Tag(DngTag::CFA_LAYOUT, $value),
+            );
+
+            self::assertSame('1.7.1.0', $parsed->dngVersion());
+        }
+    }
+
+    /**
+     * Rejects CFALayout with out-of-domain value (0).
+     */
+    #[Test]
+    public function rejectsCfaLayoutOutOfDomainZero(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1584);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithShort1Tag(DngTag::CFA_LAYOUT, 0),
+        );
+    }
+
+    /**
+     * Rejects CFALayout with out-of-domain value (10).
+     */
+    #[Test]
+    public function rejectsCfaLayoutOutOfDomainTen(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1584);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithShort1Tag(DngTag::CFA_LAYOUT, 10),
+        );
+    }
+
+    /**
+     * Accepts CFALayout value 8 with DNGBackwardVersion 1.3.0.0.
+     */
+    #[Test]
+    public function acceptsCfaLayout8WithVersion130(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithCfaLayoutAndBackwardVersion(8, [1, 3, 0, 0]),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects CFALayout value 8 with DNGBackwardVersion 1.2.0.0.
+     */
+    #[Test]
+    public function rejectsCfaLayout8WithVersion120(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1585);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithCfaLayoutAndBackwardVersion(8, [1, 2, 0, 0]),
+        );
+    }
+
+    /**
+     * Builds a DNG with CFALayout and DNGBackwardVersion in IFD0.
+     *
+     * @param int       $cfaLayout       CFALayout value
+     * @param list<int> $backwardVersion DNGBackwardVersion (4 bytes)
+     */
+    private function buildDngWithCfaLayoutAndBackwardVersion(int $cfaLayout, array $backwardVersion): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 7;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::DNG_BACKWARD_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', $backwardVersion[0], $backwardVersion[1], $backwardVersion[2], $backwardVersion[3])
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::CFA_LAYOUT)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', $cfaLayout) . pack('v', 0)
+            . pack('V', 0)
+            . $uniqueCameraModel;
+    }
+
+    /**
      * Accepts ProfileCopyright as ASCII NUL-terminated UTF-8.
      */
     #[Test]

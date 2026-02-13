@@ -1404,6 +1404,7 @@ final class TiffExifParser
         $this->validateDngDefaultUserCrop($ifd0);
         $this->validateDngDepthEnums($ifd0);
         $this->validateDngNoiseReductionApplied($ifd0);
+        $this->validateDngCfaLayoutDomain($ifd0);
         $this->validateDngProfileEmbedPolicy($ifd0);
         $this->validateDngEnhanceParams($ifd0);
         $this->validateDngSubTileBlockSize($ifd0);
@@ -6207,6 +6208,57 @@ final class TiffExifParser
                 sprintf('ProfileEmbedPolicy value must be 0..3, got %d.', is_int($entry->value) ? $entry->value : -1),
                 1583,
             );
+        }
+    }
+
+    /**
+     * Validates CFALayout (0xC617) value domain and version gating per DNG 1.7.1.0.
+     *
+     * Allowed values are 1..9. Values 6..9 require DNGBackwardVersion >= 1.3.0.0.
+     */
+    private function validateDngCfaLayoutDomain(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::CFA_LAYOUT);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (!is_int($entry->value) || $entry->value < 1 || $entry->value > 9) {
+            throw new ParseError(
+                sprintf('CFALayout value must be 1..9, got %d.', is_int($entry->value) ? $entry->value : -1),
+                1584,
+            );
+        }
+
+        if ($entry->value >= 6) {
+            $bwEntry = $ifd->get(DngTag::DNG_BACKWARD_VERSION);
+
+            if ($bwEntry instanceof IfdEntry && $bwEntry->value instanceof ExifNumericList) {
+                $bwVer = [];
+
+                foreach ($bwEntry->value->values as $c) {
+                    if (!is_int($c)) {
+                        return;
+                    }
+
+                    $bwVer[] = $c;
+                }
+
+                if (count($bwVer) === 4 && $this->dngVersionLessThan($bwVer, [1, 3, 0, 0])) {
+                    throw new ParseError(
+                        sprintf(
+                            'CFALayout value %d requires DNGBackwardVersion >= 1.3.0.0, got %d.%d.%d.%d.',
+                            $entry->value,
+                            $bwVer[0],
+                            $bwVer[1],
+                            $bwVer[2],
+                            $bwVer[3],
+                        ),
+                        1585,
+                    );
+                }
+            }
         }
     }
 }
