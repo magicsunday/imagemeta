@@ -807,7 +807,7 @@ final readonly class IsoBmffParser
                     throw new ParseError('trak must contain exactly one mdia box', 1377);
                 }
 
-                [$handler, $handlerName, $sampleInfo] = $this->parseMdia($child);
+                [$handler, $handlerName, $sampleInfo] = $this->parseMdia($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             } elseif ($child->type === self::BOX_UDTA) {
                 ++$udtaCount;
                 if ($udtaCount > 1) {
@@ -1104,11 +1104,23 @@ final readonly class IsoBmffParser
     /**
      * Parses the media box (`mdia`) and returns handler/sample information.
      *
-     * @param BoxDescriptor $mdia Media box descriptor.
+     * QuickTime File Format (2012), "User Data Atoms": udta may appear as a
+     * child of mdia in addition to moov and trak. Media-level user data is
+     * parsed with the same strategy as other udta paths (GH-1004).
+     *
+     * @param BoxDescriptor                                      $mdia            Media box descriptor.
+     * @param list<string>                                       $exifBlobs
+     * @param list<string>                                       $xmpBlobs
+     * @param array<int, array<int, list<IsoBmffItemReference>>> $itemReferences
+     * @param array<int, array<int, IsoBmffDataReference>>       $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                        $unresolvedItems
+     * @param array<string, bool>                                $xmpHashes
+     * @param QuickTimeKeyMap                                    $qtKeys
+     * @param QuickTimeDataAtomList                              $qtDataAtoms
      *
      * @return array{0: ?string, 1: ?string, 2: array<string, int|string>}
      */
-    private function parseMdia(BoxDescriptor $mdia): array
+    private function parseMdia(BoxDescriptor $mdia, array &$exifBlobs = [], array &$xmpBlobs = [], array &$qtKeys = [], array &$itemReferences = [], array &$dataReferences = [], array &$unresolvedItems = [], array &$xmpHashes = [], array &$qtDataAtoms = []): array
     {
         $handler     = null;
         $handlerName = null;
@@ -1116,6 +1128,7 @@ final readonly class IsoBmffParser
         $hdlrCount   = 0;
         $minfCount   = 0;
         $mdhdCount   = 0;
+        $udtaCount   = 0;
 
         // GH-881: collect children first so hdlr/minf order does not matter
         $children = [];
@@ -1145,6 +1158,14 @@ final readonly class IsoBmffParser
                 }
 
                 $this->parseMdhd($child);
+            } elseif ($child->type === self::BOX_UDTA) {
+                ++$udtaCount;
+
+                if ($udtaCount > 1) {
+                    throw new ParseError('duplicate udta box in mdia', 1463);
+                }
+
+                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             }
         }
 

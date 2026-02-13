@@ -3108,6 +3108,111 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Parses a recognized text atom from media-level udta (trak/mdia/udta).
+     *
+     * QuickTime File Format (2012), "User Data Atoms": udta may appear as a
+     * child of mdia in addition to moov and trak.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesMediaLevelUdtaTextAtom(): void
+    {
+        $titleAtom = $this->box("\xA9nam", "Media Title\0");
+        $udta      = $this->box('udta', $titleAtom);
+        $mdia      = $this->box('mdia', $this->minimalMdiaContent() . $udta);
+        $tkhd      = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak      = $this->box('trak', $tkhd . $mdia);
+        $moov      = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('Media Title', $qtMeta->keys['com.apple.quicktime.title']);
+    }
+
+    /**
+     * Merges moov-level and mdia-level udta metadata deterministically.
+     *
+     * Movie-level metadata is parsed first; track/media-level metadata
+     * overwrites it when keys collide (last-wins semantics).
+     *
+     * @return void
+     */
+    #[Test]
+    public function mergesMoovAndMdiaUdtaMetadataDeterministically(): void
+    {
+        // Movie-level udta with title
+        $moovTitle = $this->box("\xA9nam", "Movie Title\0");
+        $moovUdta  = $this->box('udta', $moovTitle);
+
+        // Media-level udta with artist (different key)
+        $mdiaArtist = $this->box("\xA9ART", "Media Artist\0");
+        $mdiaUdta   = $this->box('udta', $mdiaArtist);
+        $mdia       = $this->box('mdia', $this->minimalMdiaContent() . $mdiaUdta);
+        $tkhd       = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak       = $this->box('trak', $tkhd . $mdia);
+
+        $moov = $this->box('moov', $this->minimalMvhd() . $moovUdta . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('Movie Title', $qtMeta->keys['com.apple.quicktime.title']);
+        self::assertSame('Media Artist', $qtMeta->keys['com.apple.quicktime.artist']);
+    }
+
+    /**
+     * Unknown atoms in media-level udta are silently ignored.
+     *
+     * @return void
+     */
+    #[Test]
+    public function ignoresUnknownMdiaUdtaAtom(): void
+    {
+        $unknown = $this->box('abcd', "ignored\0");
+        $udta    = $this->box('udta', $unknown);
+        $mdia    = $this->box('mdia', $this->minimalMdiaContent() . $udta);
+        $tkhd    = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak    = $this->box('trak', $tkhd . $mdia);
+        $moov    = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        // Parsing completes without error; no spurious keys from unknown atom
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertArrayNotHasKey('com.apple.quicktime.title', $qtMeta->keys);
+    }
+
+    /**
+     * Rejects duplicate immediate udta children in mdia.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsDuplicateImmediateUdtaInMdia(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('duplicate udta box in mdia');
+
+        $udta1 = $this->box('udta', $this->box("\xA9nam", "First\0"));
+        $udta2 = $this->box('udta', $this->box("\xA9nam", "Second\0"));
+        $mdia  = $this->box('mdia', $this->minimalMdiaContent() . $udta1 . $udta2);
+        $tkhd  = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak  = $this->box('trak', $tkhd . $mdia);
+        $moov  = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp  = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
      * Uses two video tracks with different dimensions and codecs.
      * This verifies track-derived video keys are selected deterministically.
      *
@@ -4255,6 +4360,18 @@ final class IsoBmffParserTest extends TestCase
             . $this->fullBox('stsc', pack('N', 0))
             . $this->fullBox('stsz', pack('NN', 0, 0))
             . $this->fullBox('stco', pack('N', 0));
+    }
+
+    /**
+     * Returns the inner content of a minimal valid mdia (hdlr + mdhd + minf) without the mdia box wrapper.
+     * Useful when building a custom mdia that needs additional children (e.g. udta).
+     */
+    private function minimalMdiaContent(): string
+    {
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+
+        return $hdlr . $mdhd . $this->minimalMinf();
     }
 
     /**
