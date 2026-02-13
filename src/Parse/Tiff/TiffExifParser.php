@@ -1273,6 +1273,7 @@ final class TiffExifParser
         $this->validateEnhancedIfd($ifd0);
         foreach ($additionalIfds as $additionalIfd) {
             $this->validateEnhancedIfd($additionalIfd);
+            $this->validateDngRolePhotometric($additionalIfd);
         }
 
         $this->validateDngMatrixTags($ifd0);
@@ -4261,6 +4262,51 @@ final class TiffExifParser
             throw new ParseError(
                 'DNG requires Orientation tag in IFD0 per DNG 1.7.1.0.',
                 1484,
+            );
+        }
+    }
+
+    /**
+     * DNG NewSubFileType-to-PhotometricInterpretation rules.
+     * Depth map IFDs (type 8/9) require 51177; semantic mask IFDs (type 65540) require 52527.
+     *
+     * @var array<int, int>
+     */
+    private const array DNG_ROLE_PHOTOMETRIC = [
+        8     => 51177,
+        9     => 51177,
+        65540 => 52527,
+    ];
+
+    /**
+     * Validates that depth map and semantic mask IFDs use their required PhotometricInterpretation.
+     */
+    private function validateDngRolePhotometric(Ifd $ifd): void
+    {
+        $subfileEntry = $ifd->get(TiffTag::NEW_SUBFILE_TYPE);
+
+        if (!$subfileEntry instanceof IfdEntry || !is_int($subfileEntry->value)) {
+            return;
+        }
+
+        $required = self::DNG_ROLE_PHOTOMETRIC[$subfileEntry->value] ?? null;
+
+        if ($required === null) {
+            return;
+        }
+
+        $photoEntry = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $photoValue = $photoEntry instanceof IfdEntry && is_int($photoEntry->value) ? $photoEntry->value : null;
+
+        if ($photoValue !== $required) {
+            throw new ParseError(
+                sprintf(
+                    'DNG IFD with NewSubFileType %d requires PhotometricInterpretation %d per DNG 1.7.1.0, got %s.',
+                    $subfileEntry->value,
+                    $required,
+                    $photoValue !== null ? (string) $photoValue : 'none',
+                ),
+                1485,
             );
         }
     }

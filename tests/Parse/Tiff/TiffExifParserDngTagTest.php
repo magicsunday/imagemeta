@@ -1689,4 +1689,132 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', $ifdOffset)
             . $ifdData;
     }
+
+    /**
+     * Depth map IFD with wrong PhotometricInterpretation triggers ParseError.
+     */
+    #[Test]
+    public function rejectsDepthMapIfdWithWrongPhotometric(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1485);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithRoleIfd(8, 2),
+        );
+    }
+
+    /**
+     * Semantic mask IFD with wrong PhotometricInterpretation triggers ParseError.
+     */
+    #[Test]
+    public function rejectsSemanticMaskIfdWithWrongPhotometric(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1485);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithRoleIfd(65540, 2),
+        );
+    }
+
+    /**
+     * Depth map IFD with correct PhotometricInterpretation (51177) is valid.
+     */
+    #[Test]
+    public function acceptsDepthMapIfdWithCorrectPhotometric(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithRoleIfd(8, 51177),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * Semantic mask IFD with correct PhotometricInterpretation (52527) is valid.
+     */
+    #[Test]
+    public function acceptsSemanticMaskIfdWithCorrectPhotometric(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithRoleIfd(65540, 52527),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * Regular IFD with non-depth/non-semantic NewSubFileType is not affected.
+     */
+    #[Test]
+    public function acceptsRegularIfdWithAnyPhotometric(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithRoleIfd(1, 2),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * Builds a TIFF with IFD0 (minimal) chained to a second IFD with
+     * the given NewSubFileType and PhotometricInterpretation.
+     */
+    private function buildTiffWithRoleIfd(
+        int $newSubFileType,
+        int $photometric,
+    ): string {
+        $ifdOffset   = 8;
+        $ifd0Entries = 2;
+        $ifd0Size    = 2 + ($ifd0Entries * 12) + 4;
+        $ifd1Offset  = $ifdOffset + $ifd0Size;
+        $ifd1Entries = 4;
+
+        $ifd0 = pack('v', $ifd0Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('V', $ifd1Offset);
+
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::PHOTOMETRIC_INTERPRETATION => pack('v', ExifTag::PHOTOMETRIC_INTERPRETATION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $photometric) . pack('v', 0),
+            TiffTag::NEW_SUBFILE_TYPE => pack('v', TiffTag::NEW_SUBFILE_TYPE)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', 1)
+                . pack('V', $newSubFileType),
+        ];
+
+        ksort($tags);
+
+        $ifd1 = pack('v', $ifd1Entries);
+
+        foreach ($tags as $entry) {
+            $ifd1 .= $entry;
+        }
+
+        $ifd1 .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifd0
+            . $ifd1;
+    }
 }
