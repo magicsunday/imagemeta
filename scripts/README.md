@@ -56,29 +56,6 @@ The script organizes metadata into sections similar to exiftool:
 - XMP data grouped by namespace
 - Binary data detection and indication
 
-### analyze-exif-compliance.php
-
-Analyzes implementation coverage of EXIF 3.0, EXIF 2.32, and TIFF 6.0 tags against the official specifications.
-
-**Purpose:**  
-Tracks compliance with official EXIF/TIFF specifications and generates machine-readable compliance reports.
-
-**Usage:**
-```bash
-php scripts/analyze-exif-compliance.php [threshold]
-```
-
-**Examples:**
-```bash
-# Run with default 90% coverage threshold
-php scripts/analyze-exif-compliance.php
-
-# Run with custom 85% coverage threshold
-php scripts/analyze-exif-compliance.php 85
-```
-
-See the main project README for more details on compliance tracking.
-
 ## Requirements
 
 All scripts require:

@@ -47,7 +47,6 @@ composer require magicsunday/imagemeta
 * Parsed EXIF datetime assembly now validates raw `OffsetTime*` values through the same EXIF offset parser, so identifier/malformed offsets are rejected instead of silently defaulting to UTC.
 * Parsed EXIF DateTime* parsing no longer assumes UTC when OffsetTime* is missing; absolute timestamps are emitted only when a valid EXIF offset is present.
 * Parsed EXIF DateTime* parsing now rejects calendar/time overflow warnings from PHP datetime normalization (for example month/day/hour overflow) instead of accepting normalized outputs.
-* EXIF/TIFF compliance analysis now reads current `src/Exif/Model/*` source paths, hard-fails when required source files are missing, and runs in CI through `ci:test:php:compliance`.
 * EXIF-conformant JPEG marker-order validation for APP1/APP2/APP11 placement, plus DQT/DHT/DRI/SOF structural ordering and duplicate-marker guards before SOS.
 * Strict EXIF-JPEG marker profile now rejects progressive `SOF2`; only baseline `SOF0` is accepted for conformant parsing.
 * Strict EXIF-JPEG SOF validation now enforces 8-bit precision, exactly three YCbCr component IDs (`1/2/3`), and legal YCbCr subsampling (`4:2:2`/`4:2:0`).
@@ -241,34 +240,3 @@ Bit-mask sources such as `SceneFlags`, `ImageProcessingFlags` and `PhotosAppFeat
 * `PhotosAppFeatureFlags`: bit 0 → `personInPhoto`, bit 1 → `petInPhoto`
 
 Explicit boolean keys continue to override the derived values when both representations are present.
-
-## EXIF/TIFF Compliance
-
-This library tracks compliance with official EXIF 3.0, EXIF 2.32, and TIFF 6.0 specifications through automated analysis.
-
-### Compliance Summary
-
-| Metric                   |       Count | Percentage |
-|--------------------------|------------:|:----------:|
-| Total Specification Tags |         227 |    100%    |
-| ✅ Implemented            |         227 |   100.0%   |
-| ⚠️ Partial               |           0 |    0.0%    |
-| ❌ Missing                |           0 |    0.0%    |
-| ➕ Extra (not in spec)    |           0 |     -      |
-| **Overall Coverage**     | **227/227** | **100.0%** |
-
-*Last updated: 2026-02-13 15:22:38 UTC*
-
-### Coverage by Category
-
-| Category          | Implemented | Partial | Missing | Total | Coverage |
-|-------------------|------------:|--------:|--------:|------:|---------:|
-| TIFF 6.0 Baseline |          74 |       0 |       0 |    74 |   100.0% |
-| EXIF Tags         |         121 |       0 |       0 |   121 |   100.0% |
-| GPS Tags          |          32 |       0 |       0 |    32 |   100.0% |
-
-**Compliance documentation**:
-- **System guide**: [COMPLIANCE.md](docs/COMPLIANCE.md) - How the compliance system works
-- **Raw data**: [compliance-report.json](docs/compliance-report.json) - Machine-readable report
-
-The compliance report is automatically generated on every CI run and available as a downloadable artifact.

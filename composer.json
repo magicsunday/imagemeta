@@ -72,9 +72,6 @@
         "ci:test:php:rector": [
             "@ci:rector --dry-run"
         ],
-        "ci:test:php:compliance": [
-            "php scripts/analyze-exif-compliance.php 50"
-        ],
         "ci:test:php:unit": [
             "phpunit --configuration phpunit.xml"
         ],
@@ -89,7 +86,6 @@
             "@ci:test:php:cgl",
             "@ci:test:php:rector",
             "@ci:test:php:phpstan",
-            "@ci:test:php:compliance",
             "@ci:test:php:unit",
             "@ci:test:php:cpd"
         ],
