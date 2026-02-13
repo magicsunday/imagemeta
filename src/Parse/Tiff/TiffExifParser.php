@@ -1274,6 +1274,7 @@ final class TiffExifParser
         foreach ($additionalIfds as $additionalIfd) {
             $this->validateEnhancedIfd($additionalIfd);
             $this->validateDngRolePhotometric($additionalIfd);
+            $this->validateDngIfd0OnlyTags($additionalIfd);
         }
 
         $this->validateDngMatrixTags($ifd0);
@@ -4353,6 +4354,50 @@ final class TiffExifParser
                 ),
                 1485,
             );
+        }
+    }
+
+    /**
+     * DNG tags restricted to IFD 0 per DNG 1.7.1.0.
+     *
+     * @var list<int>
+     */
+    private const array DNG_IFD0_ONLY_TAGS = [
+        DngTag::DNG_VERSION,
+        DngTag::DNG_BACKWARD_VERSION,
+        DngTag::UNIQUE_CAMERA_MODEL,
+        DngTag::LOCALIZED_CAMERA_MODEL,
+        DngTag::AS_SHOT_NEUTRAL,
+        DngTag::AS_SHOT_WHITE_XY,
+        DngTag::BASELINE_EXPOSURE,
+        DngTag::BASELINE_NOISE,
+        DngTag::BASELINE_SHARPNESS,
+        DngTag::CAMERA_SERIAL_NUMBER,
+        DngTag::DNG_PRIVATE_DATA,
+        DngTag::MAKER_NOTE_SAFETY,
+        DngTag::RAW_DATA_UNIQUE_ID,
+        DngTag::ANALOG_BALANCE,
+        DngTag::AS_SHOT_ICC_PROFILE,
+        DngTag::AS_SHOT_PRE_PROFILE_MATRIX,
+        DngTag::CURRENT_ICC_PROFILE,
+        DngTag::CURRENT_PRE_PROFILE_MATRIX,
+    ];
+
+    /**
+     * Rejects DNG IFD0-only tags found in additional IFDs.
+     */
+    private function validateDngIfd0OnlyTags(Ifd $ifd): void
+    {
+        foreach (self::DNG_IFD0_ONLY_TAGS as $tag) {
+            if ($ifd->get($tag) instanceof IfdEntry) {
+                throw new ParseError(
+                    sprintf(
+                        'DNG tag 0x%04X is restricted to IFD 0 per DNG 1.7.1.0 but found in additional IFD.',
+                        $tag,
+                    ),
+                    1488,
+                );
+            }
         }
     }
 }

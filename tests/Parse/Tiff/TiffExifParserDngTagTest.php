@@ -2036,4 +2036,85 @@ final class TiffExifParserDngTagTest extends TestCase
             . $ifdData
             . $outOfLine;
     }
+
+    /**
+     * IFD0-only DNG tag in additional IFD triggers ParseError.
+     */
+    #[Test]
+    public function rejectsIfd0OnlyTagInAdditionalIfd(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1488);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTagInSecondIfd(DngTag::AS_SHOT_WHITE_XY),
+        );
+    }
+
+    /**
+     * DNG tag allowed in non-IFD0 contexts does not trigger the role error.
+     */
+    #[Test]
+    public function acceptsNonRestrictedTagInAdditionalIfd(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTagInSecondIfd(DngTag::CALIBRATION_ILLUMINANT_1),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * Builds a two-IFD TIFF where the second IFD contains a SHORT[1]
+     * tag with the given tag ID.
+     */
+    private function buildTiffWithTagInSecondIfd(int $extraTag): string
+    {
+        $ifdOffset   = 8;
+        $ifd0Entries = 2;
+        $ifd0Size    = 2 + ($ifd0Entries * 12) + 4;
+        $ifd1Offset  = $ifdOffset + $ifd0Size;
+
+        $ifd0 = pack('v', $ifd0Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('V', $ifd1Offset);
+
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 50) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 50) . pack('v', 0),
+            $extraTag => pack('v', $extraTag)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 17) . pack('v', 0),
+        ];
+
+        ksort($tags);
+
+        $ifd1 = pack('v', count($tags));
+
+        foreach ($tags as $entry) {
+            $ifd1 .= $entry;
+        }
+
+        $ifd1 .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifd0
+            . $ifd1;
+    }
 }
