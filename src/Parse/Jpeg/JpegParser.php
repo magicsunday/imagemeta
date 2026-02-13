@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use function array_key_exists;
 use function array_keys;
 use function count;
+use function iconv;
 use function implode;
 use function in_array;
 use function ksort;
@@ -35,6 +36,7 @@ use function str_starts_with;
 use function strlen;
 use function substr;
 use function unpack;
+use function usort;
 
 /**
  * Parses JPEG streams to extract metadata-bearing APP segments.
@@ -78,6 +80,12 @@ final class JpegParser
 
     private const string FPXR_SIGNATURE = 'FPXR';
 
+    private const int FLASHPIX_STORAGE_ENTITY_SIZE = 0xFFFFFFFF;
+
+    private const int FLASHPIX_MAX_CONTENT_ENTRIES = 1024;
+
+    private const int FLASHPIX_MAX_STREAM_SIZE = 16_777_216; // 16 MiB per stream
+
     private bool $parsed = false;
 
     /** @var list<string> */
@@ -99,11 +107,18 @@ final class JpegParser
 
     private ?string $iccProfile = null;
 
-    /** @var array<int, array<int, string>> */
-    private array $flashPixSequences = [];
+    /** @var array<int, array{size:int, defaultByte:int, isStorage:bool}> */
+    private array $flashPixContents = [];
 
-    /** @var array<int, int> */
-    private array $flashPixExpectedCounts = [];
+    /** @var array<int, list<array{offset:int, data:string}>> */
+    private array $flashPixChunks = [];
+
+    /** @var array<int, list<array{start:int, end:int}>> */
+    private array $flashPixRanges = [];
+
+    private bool $flashPixContentsSeen = false;
+
+    private ?int $flashPixLastStreamIndex = null;
 
     /** @var array<int, string> */
     private array $flashPixStreams = [];
@@ -203,7 +218,7 @@ final class JpegParser
     }
 
     /**
-     * Returns concatenated FlashPix extension streams keyed by their stream identifier.
+     * Returns concatenated FlashPix extension streams keyed by contents-list index.
      *
      * @return array<int, string>
      */
@@ -312,26 +327,29 @@ final class JpegParser
             throw new ParseError('Not a JPEG (missing SOI marker)', 1263);
         }
 
-        $this->exifBlobs              = [];
-        $this->xmpPackets             = [];
-        $this->iccSegments            = [];
-        $this->iccSequence            = [];
-        $this->iccExpectedCount       = null;
-        $this->iccProfile             = null;
-        $this->flashPixSequences      = [];
-        $this->flashPixExpectedCounts = [];
-        $this->flashPixStreams        = [];
-        $this->mpfSegments            = [];
-        $this->mpfFirstOffset         = null;
-        $this->mpfDocument            = null;
-        $this->audioStreams           = [];
-        $this->iptcPayloads           = [];
-        $this->xmpPacketHashes        = [];
-        $this->frameBitsPerSample     = null;
-        $this->frameComponentSampling = null;
-        $this->frameYCbCrSubSampling  = null;
-        $this->frameLines             = null;
-        $this->frameSamplesPerLine    = null;
+        $this->exifBlobs               = [];
+        $this->xmpPackets              = [];
+        $this->iccSegments             = [];
+        $this->iccSequence             = [];
+        $this->iccExpectedCount        = null;
+        $this->iccProfile              = null;
+        $this->flashPixContents        = [];
+        $this->flashPixChunks          = [];
+        $this->flashPixRanges          = [];
+        $this->flashPixContentsSeen    = false;
+        $this->flashPixLastStreamIndex = null;
+        $this->flashPixStreams         = [];
+        $this->mpfSegments             = [];
+        $this->mpfFirstOffset          = null;
+        $this->mpfDocument             = null;
+        $this->audioStreams            = [];
+        $this->iptcPayloads            = [];
+        $this->xmpPacketHashes         = [];
+        $this->frameBitsPerSample      = null;
+        $this->frameComponentSampling  = null;
+        $this->frameYCbCrSubSampling   = null;
+        $this->frameLines              = null;
+        $this->frameSamplesPerLine     = null;
 
         while (true) {
             [$marker, $offset] = $this->nextMarkerWithOffset();
@@ -377,32 +395,7 @@ final class JpegParser
             }
         }
 
-        if ($this->flashPixSequences !== []) {
-            foreach ($this->flashPixSequences as $streamId => $fragments) {
-                $expectedCount = $this->flashPixExpectedCounts[$streamId] ?? 0;
-                if ($expectedCount === 0) {
-                    continue;
-                }
-
-                if (count($fragments) !== $expectedCount) {
-                    continue;
-                }
-
-                $sequenceNumbers = array_keys($fragments);
-                sort($sequenceNumbers);
-
-                if ($sequenceNumbers !== range(1, $expectedCount)) {
-                    continue;
-                }
-
-                ksort($fragments);
-                $this->flashPixStreams[$streamId] = implode('', $fragments);
-            }
-
-            if ($this->flashPixStreams !== []) {
-                ksort($this->flashPixStreams);
-            }
-        }
+        $this->finaliseFlashPixStreams();
 
         if ($this->mpfSegments !== []) {
             $payload = implode('', $this->mpfSegments);
@@ -770,64 +763,384 @@ final class JpegParser
     /**
      * Processes FlashPix extension segments contained within APP2 markers.
      *
+     * EXIF 3.0 §4.7.3.1 requires APP2 ordering as Contents List first, then Stream Data.
+     * EXIF 3.0 §4.7.3.4 and §4.7.3.5 define field-level structures for both segment bodies.
+     *
      * @param string $payload Raw segment payload including signature.
      * @param int    $offset  Offset in the stream where the marker begins.
      */
     private function handleFlashPixSegment(string $payload, int $offset): void
     {
+        $body = $this->extractFlashPixBody($payload, $offset);
+
+        if (!$this->flashPixContentsSeen) {
+            $this->parseFlashPixContentsList($body, $offset);
+            $this->flashPixContentsSeen = true;
+
+            return;
+        }
+
+        $this->parseFlashPixStreamData($body, $offset);
+    }
+
+    /**
+     * Extracts the FlashPix payload body after the FPXR signature.
+     *
+     * EXIF 3.0 §4.7.3.3 documents an FPXR ID code suffix and version byte.
+     * Current parser compatibility accepts both suffix-bearing and legacy bodies.
+     *
+     * @param string $payload Raw APP2 payload with FPXR prefix.
+     * @param int    $offset  Marker offset used for diagnostics.
+     *
+     * @return string
+     */
+    private function extractFlashPixBody(string $payload, int $offset): string
+    {
         $signatureLength = strlen(self::FPXR_SIGNATURE);
-        if (strlen($payload) < $signatureLength + 4) {
+        $payloadLength   = strlen($payload);
+
+        if ($payloadLength < $signatureLength + 2) {
             throw new ParseError(sprintf('FlashPix segment at offset %d is too short', $offset), 1281);
         }
 
-        $header   = substr($payload, $signatureLength, 4);
-        $unpacked = @unpack('nstream/Csequence/Ccount', $header);
-
-        if (($unpacked === false) || !isset($unpacked['stream'], $unpacked['sequence'], $unpacked['count'])) {
-            throw new ParseError(sprintf('Unable to parse FlashPix segment header at offset %d', $offset), 1282);
+        // EXIF 3.0 §4.7.3.3: FPXR ID may include trailing 0x00 + version byte.
+        if ($payload[$signatureLength] === "\x00") {
+            return substr($payload, $signatureLength + 2);
         }
 
-        /** @var array{stream:int, sequence:int, count:int} $unpacked */
-        $streamId       = $unpacked['stream'];
-        $sequenceNumber = $unpacked['sequence'];
-        $sequenceCount  = $unpacked['count'];
-        $data           = substr($payload, $signatureLength + 4);
+        return substr($payload, $signatureLength);
+    }
 
-        $shouldStoreStream = true;
+    /**
+     * Parses the first FPXR APP2 body as a Contents List segment.
+     *
+     * EXIF 3.0 §4.7.3.4:
+     * - first two bytes: entry count
+     * - each entry: entity size (BE), default byte, UTF-16LE NUL-terminated name
+     * - storage entries (entity size 0xFFFFFFFF) include a 16-byte ClassID
+     *
+     * @param string $body   FPXR segment body without signature.
+     * @param int    $offset Marker offset used for diagnostics.
+     */
+    private function parseFlashPixContentsList(string $body, int $offset): void
+    {
+        if (strlen($body) < 2) {
+            throw new ParseError(sprintf('FlashPix contents list at offset %d is too short', $offset), 1282);
+        }
 
-        if ($sequenceNumber === 0 || $sequenceCount === 0 || $sequenceNumber > $sequenceCount) {
-            $this->flashPixExpectedCounts[$streamId] = 0;
-            unset($this->flashPixSequences[$streamId]);
-            $shouldStoreStream = false;
-        } else {
-            if (!array_key_exists($streamId, $this->flashPixExpectedCounts)) {
-                $this->flashPixExpectedCounts[$streamId] = $sequenceCount;
-            } elseif ($this->flashPixExpectedCounts[$streamId] !== $sequenceCount) {
-                $this->flashPixExpectedCounts[$streamId] = 0;
-                unset($this->flashPixSequences[$streamId]);
-                $shouldStoreStream = false;
-            }
+        $entryCount = (ord($body[0]) << 8) | ord($body[1]);
 
-            if ($shouldStoreStream && !array_key_exists($streamId, $this->flashPixSequences)) {
-                $this->flashPixSequences[$streamId] = [];
-            }
+        if ($entryCount > self::FLASHPIX_MAX_CONTENT_ENTRIES) {
+            throw new ParseError(
+                sprintf(
+                    'FlashPix contents list at offset %d has too many entries (%d)',
+                    $offset,
+                    $entryCount,
+                ),
+                1306,
+            );
+        }
 
-            // GH-885: reject duplicate FlashPix APP2 segment sequence numbers
-            if ($shouldStoreStream && array_key_exists($sequenceNumber, $this->flashPixSequences[$streamId])) {
+        $cursor                 = 2;
+        $length                 = strlen($body);
+        $this->flashPixContents = [];
+
+        for ($index = 0; $index < $entryCount; ++$index) {
+            if (($length - $cursor) < 5) {
                 throw new ParseError(
                     sprintf(
-                        'FlashPix stream %d at offset %d has duplicate sequence number %d',
-                        $streamId,
+                        'FlashPix contents entry %d at offset %d is truncated',
+                        $index,
                         $offset,
-                        $sequenceNumber,
                     ),
-                    1305,
+                    1307,
                 );
             }
 
-            if ($shouldStoreStream) {
-                $this->flashPixSequences[$streamId][$sequenceNumber] = $data;
+            $entitySize = (ord($body[$cursor]) << 24)
+                | (ord($body[$cursor + 1]) << 16)
+                | (ord($body[$cursor + 2]) << 8)
+                | ord($body[$cursor + 3]);
+            $defaultByte = ord($body[$cursor + 4]);
+            $cursor += 5;
+
+            [$name, $cursor] = $this->parseFlashPixName($body, $cursor, $offset, $index);
+
+            if ($name[0] !== '/') {
+                throw new ParseError(
+                    sprintf(
+                        'FlashPix contents entry %d at offset %d has invalid name prefix',
+                        $index,
+                        $offset,
+                    ),
+                    1309,
+                );
             }
+
+            $isStorage = $entitySize === self::FLASHPIX_STORAGE_ENTITY_SIZE;
+            if (!$isStorage && $entitySize > self::FLASHPIX_MAX_STREAM_SIZE) {
+                throw new ParseError(
+                    sprintf(
+                        'FlashPix stream entry %d at offset %d exceeds maximum size',
+                        $index,
+                        $offset,
+                    ),
+                    1310,
+                );
+            }
+
+            if ($isStorage) {
+                if (($length - $cursor) < 16) {
+                    throw new ParseError(
+                        sprintf(
+                            'FlashPix storage entry %d at offset %d is missing ClassID',
+                            $index,
+                            $offset,
+                        ),
+                        1311,
+                    );
+                }
+
+                $cursor += 16;
+            }
+
+            $this->flashPixContents[$index] = [
+                'size'        => $entitySize,
+                'defaultByte' => $defaultByte,
+                'isStorage'   => $isStorage,
+            ];
+        }
+
+        if ($cursor !== $length) {
+            throw new ParseError(sprintf('FlashPix contents list at offset %d has trailing bytes', $offset), 1312);
+        }
+    }
+
+    /**
+     * Parses one UTF-16LE NUL-terminated FlashPix contents-list name.
+     *
+     * @param string $body   FPXR contents-list body.
+     * @param int    $cursor Current parsing offset in $body.
+     * @param int    $offset APP2 marker offset for diagnostics.
+     * @param int    $index  Contents-list entry index.
+     *
+     * @return array{0:string, 1:int}
+     */
+    private function parseFlashPixName(string $body, int $cursor, int $offset, int $index): array
+    {
+        $length    = strlen($body);
+        $nameBytes = '';
+
+        while (true) {
+            if (($length - $cursor) < 2) {
+                throw new ParseError(
+                    sprintf(
+                        'FlashPix contents entry %d at offset %d has unterminated name',
+                        $index,
+                        $offset,
+                    ),
+                    1313,
+                );
+            }
+
+            $codeUnit = substr($body, $cursor, 2);
+            $cursor += 2;
+
+            if ($codeUnit === "\x00\x00") {
+                break;
+            }
+
+            $nameBytes .= $codeUnit;
+        }
+
+        if ($nameBytes === '') {
+            throw new ParseError(
+                sprintf(
+                    'FlashPix contents entry %d at offset %d has empty name',
+                    $index,
+                    $offset,
+                ),
+                1314,
+            );
+        }
+
+        $decoded = iconv('UTF-16LE', 'UTF-8', $nameBytes);
+        if ($decoded === false) {
+            throw new ParseError(
+                sprintf(
+                    'FlashPix contents entry %d at offset %d has invalid UTF-16LE name',
+                    $index,
+                    $offset,
+                ),
+                1315,
+            );
+        }
+
+        return [$decoded, $cursor];
+    }
+
+    /**
+     * Parses one FPXR Stream Data segment and records validated stream chunks.
+     *
+     * EXIF 3.0 §4.7.3.5:
+     * - index into contents list (0-based)
+     * - offset into full stream
+     * - remaining bytes are stream data
+     *
+     * @param string $body   FPXR segment body without signature.
+     * @param int    $offset Marker offset used for diagnostics.
+     */
+    private function parseFlashPixStreamData(string $body, int $offset): void
+    {
+        if (!$this->flashPixContentsSeen) {
+            throw new ParseError(sprintf('FlashPix stream data at offset %d appears before contents list', $offset), 1316);
+        }
+
+        if (strlen($body) < 6) {
+            throw new ParseError(sprintf('FlashPix stream data at offset %d is too short', $offset), 1317);
+        }
+
+        $index        = (ord($body[0]) << 8) | ord($body[1]);
+        $streamOffset = (ord($body[2]) << 24)
+            | (ord($body[3]) << 16)
+            | (ord($body[4]) << 8)
+            | ord($body[5]);
+        $data = substr($body, 6);
+
+        if (!array_key_exists($index, $this->flashPixContents)) {
+            throw new ParseError(
+                sprintf(
+                    'FlashPix stream data at offset %d has invalid contents-list index %d',
+                    $offset,
+                    $index,
+                ),
+                1319,
+            );
+        }
+
+        $entry = $this->flashPixContents[$index];
+        if ($entry['isStorage']) {
+            throw new ParseError(
+                sprintf(
+                    'FlashPix stream data at offset %d references storage entry %d',
+                    $offset,
+                    $index,
+                ),
+                1320,
+            );
+        }
+
+        if (
+            $streamOffset > $entry['size']
+            || ($streamOffset + strlen($data)) > $entry['size']
+        ) {
+            throw new ParseError(
+                sprintf(
+                    'FlashPix stream data at offset %d exceeds declared stream size for entry %d',
+                    $offset,
+                    $index,
+                ),
+                1321,
+            );
+        }
+
+        if (($this->flashPixLastStreamIndex !== null) && ($index < $this->flashPixLastStreamIndex)) {
+            throw new ParseError(
+                sprintf(
+                    'FlashPix stream data at offset %d breaks contents-list order',
+                    $offset,
+                ),
+                1322,
+            );
+        }
+
+        $this->flashPixLastStreamIndex = $index;
+
+        $chunkLength = strlen($data);
+        if ($chunkLength === 0) {
+            return;
+        }
+
+        $start = $streamOffset;
+        $end   = $streamOffset + $chunkLength;
+
+        if (!array_key_exists($index, $this->flashPixRanges)) {
+            $this->flashPixRanges[$index] = [];
+        }
+
+        foreach ($this->flashPixRanges[$index] as $range) {
+            if (($start < $range['end']) && ($end > $range['start'])) {
+                throw new ParseError(
+                    sprintf(
+                        'FlashPix stream data at offset %d overlaps existing data for entry %d',
+                        $offset,
+                        $index,
+                    ),
+                    1323,
+                );
+            }
+        }
+
+        $this->flashPixRanges[$index][] = ['start' => $start, 'end' => $end];
+
+        if (!array_key_exists($index, $this->flashPixChunks)) {
+            $this->flashPixChunks[$index] = [];
+        }
+
+        $this->flashPixChunks[$index][] = ['offset' => $start, 'data' => $data];
+    }
+
+    /**
+     * Materialises validated FlashPix stream chunks into full stream byte strings.
+     *
+     * Gaps in stream data are filled with the declared entry default byte
+     * (EXIF 3.0 §4.7.3.4 / §4.7.3.5).
+     */
+    private function finaliseFlashPixStreams(): void
+    {
+        $this->flashPixStreams = [];
+
+        foreach ($this->flashPixContents as $index => $entry) {
+            if ($entry['isStorage']) {
+                continue;
+            }
+
+            if (!array_key_exists($index, $this->flashPixChunks)) {
+                continue;
+            }
+
+            $chunks = $this->flashPixChunks[$index];
+            if ($chunks === []) {
+                continue;
+            }
+
+            usort(
+                $chunks,
+                static fn (array $left, array $right): int => $left['offset'] <=> $right['offset'],
+            );
+
+            $assembled = '';
+            $cursor    = 0;
+            $fillByte  = chr($entry['defaultByte']);
+
+            foreach ($chunks as $chunk) {
+                if ($chunk['offset'] > $cursor) {
+                    $assembled .= str_repeat($fillByte, $chunk['offset'] - $cursor);
+                }
+
+                $assembled .= $chunk['data'];
+                $cursor = $chunk['offset'] + strlen($chunk['data']);
+            }
+
+            if ($cursor < $entry['size']) {
+                $assembled .= str_repeat($fillByte, $entry['size'] - $cursor);
+            }
+
+            $this->flashPixStreams[$index] = $assembled;
+        }
+
+        if ($this->flashPixStreams !== []) {
+            ksort($this->flashPixStreams);
         }
     }
 

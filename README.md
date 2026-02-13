@@ -82,6 +82,7 @@ $metadata->quickTime?->firstAcceptableValue(
     [0x555315C7, 0], // accepted locales (specific to generic)
     [1],             // accepted type indicators (e.g. UTF-8)
 );
+$metadata->flashPixStreams;                   // FPXR streams keyed by contents-list index
 $metadata->mpfDocument?->entries;              // MP Index entries
 $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
 $metadata->structured()->derived->fieldOfViewDiagonalDeg;

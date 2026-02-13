@@ -45,7 +45,7 @@ final readonly class Metadata
      * @param MakerNotesRecord|null                                $makerNotes               Decoded maker notes metadata for the primary EXIF blob.
      * @param string|null                                          $iccProfile               Binary ICC profile when available.
      * @param list<string>                                         $iccSegments              Raw ICC APP2 segments in encounter order.
-     * @param array<int, string>                                   $flashPixStreams          Concatenated FlashPix extension streams keyed by identifier.
+     * @param array<int, string>                                   $flashPixStreams          Concatenated FlashPix extension streams keyed by FPXR contents-list index.
      * @param MpfDocument|null                                     $mpfDocument              Parsed MPF document derived from APP2 segments.
      * @param list<JpegAudioStream>                                $jpegAudioStreams         EXIF audio streams embedded in JPEG APP2 markers.
      * @param int|null                                             $jpegBitsPerSample        Sample precision reported by the JPEG frame header.

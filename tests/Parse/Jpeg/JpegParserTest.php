@@ -36,6 +36,7 @@ use function count;
 use function file_put_contents;
 use function fopen;
 use function fwrite;
+use function iconv;
 use function implode;
 use function pack;
 use function rewind;
@@ -256,49 +257,63 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Supplies two FlashPix fragments for a single stream.
-     * This confirms sequence ordering and stream reassembly.
+     * Supplies a Contents List segment followed by ordered Stream Data segments.
+     * This confirms stream assembly via content-list index and absolute stream offsets.
      *
      * @return void
      */
     #[Test]
     public function flashPixSegmentsAreMerged(): void
     {
-        $streamId = 3;
-        $partOne  = 'flashpix-part-one';
-        $partTwo  = 'flashpix-part-two';
+        $partOne = 'flashpix-part-one';
+        $partTwo = 'flashpix-part-two';
 
-        $segment1 = self::segment(self::MARKER_APP2, $this->fpxrPayload($streamId, 1, 2, $partOne));
-        $segment2 = self::segment(self::MARKER_APP2, $this->fpxrPayload($streamId, 2, 2, $partTwo));
+        $contents = self::segment(
+            self::MARKER_APP2,
+            $this->fpxrContentsListPayload([
+                ['size' => strlen($partOne . $partTwo), 'default' => 0x00, 'name' => '/Root/Stream0'],
+            ]),
+        );
 
-        $jpeg = $this->jpeg($segment2, $segment1);
+        $segment1 = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 0, $partOne));
+        $segment2 = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, strlen($partOne), $partTwo));
+
+        $jpeg = $this->jpeg($contents, $segment1, $segment2);
 
         $extractor = $this->createExtractor($jpeg);
 
-        self::assertSame([$streamId => $partOne . $partTwo], $extractor->getFlashPixStreams());
+        self::assertSame([0 => $partOne . $partTwo], $extractor->getFlashPixStreams());
     }
 
     /**
-     * Interleaves FlashPix fragments for multiple stream IDs.
-     * This verifies that each stream is reconstructed independently.
+     * Uses two contents-list entries and multiple stream-data segments.
+     * This verifies each stream is reconstructed independently by list index.
      *
      * @return void
      */
     #[Test]
     public function flashPixMultipleStreamsAreHandled(): void
     {
-        $streamOne  = self::segment(self::MARKER_APP2, $this->fpxrPayload(1, 1, 1, 'stream-one'));
-        $streamTwoA = self::segment(self::MARKER_APP2, $this->fpxrPayload(2, 1, 3, 'alpha-'));
-        $streamTwoB = self::segment(self::MARKER_APP2, $this->fpxrPayload(2, 2, 3, 'beta-'));
-        $streamTwoC = self::segment(self::MARKER_APP2, $this->fpxrPayload(2, 3, 3, 'gamma'));
+        $contents = self::segment(
+            self::MARKER_APP2,
+            $this->fpxrContentsListPayload([
+                ['size' => strlen('stream-one'), 'default' => 0x20, 'name' => '/Root/Stream0'],
+                ['size' => strlen('alpha-beta-gamma'), 'default' => 0x20, 'name' => '/Root/Stream1'],
+            ]),
+        );
 
-        $jpeg = $this->jpeg($streamTwoB, $streamOne, $streamTwoC, $streamTwoA);
+        $streamOne  = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 0, 'stream-one'));
+        $streamTwoA = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(1, 0, 'alpha-'));
+        $streamTwoB = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(1, 6, 'beta-'));
+        $streamTwoC = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(1, 11, 'gamma'));
+
+        $jpeg = $this->jpeg($contents, $streamOne, $streamTwoA, $streamTwoB, $streamTwoC);
 
         $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([
-            1 => 'stream-one',
-            2 => 'alpha-beta-gamma',
+            0 => 'stream-one',
+            1 => 'alpha-beta-gamma',
         ], $extractor->getFlashPixStreams());
     }
 
@@ -440,22 +455,105 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Uses a mismatched FlashPix fragment count for a stream.
-     * This confirms invalid sequences are discarded rather than partially assembled.
+     * Emits stream data before a contents list segment.
+     * This verifies APP2 FPXR ordering constraints are enforced.
      *
      * @return void
      */
     #[Test]
-    public function flashPixInvalidSequenceDiscardsStream(): void
+    public function flashPixStreamDataBeforeContentsListThrowsParseError(): void
     {
-        $segment1 = self::segment(self::MARKER_APP2, $this->fpxrPayload(5, 1, 2, 'first'));
-        $segment2 = self::segment(self::MARKER_APP2, $this->fpxrPayload(5, 2, 3, 'second'));
+        $streamData = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 0, 'data'));
 
-        $jpeg = $this->jpeg($segment1, $segment2);
+        $jpeg = $this->jpeg($streamData);
 
         $extractor = $this->createExtractor($jpeg);
 
-        self::assertSame([], $extractor->getFlashPixStreams());
+        $this->expectException(ParseError::class);
+
+        $extractor->getFlashPixStreams();
+    }
+
+    /**
+     * References a contents-list index that does not exist.
+     * This verifies stream-data index bounds are validated.
+     *
+     * @return void
+     */
+    #[Test]
+    public function flashPixInvalidContentsListIndexThrowsParseError(): void
+    {
+        $contents = self::segment(
+            self::MARKER_APP2,
+            $this->fpxrContentsListPayload([
+                ['size' => 8, 'default' => 0x00, 'name' => '/Root/Stream0'],
+            ]),
+        );
+        $invalidIndex = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(1, 0, 'abcd'));
+
+        $jpeg = $this->jpeg($contents, $invalidIndex);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+
+        $extractor->getFlashPixStreams();
+    }
+
+    /**
+     * Uses overlapping stream offsets for the same contents-list entry.
+     * This verifies overlap detection for FPXR stream assembly.
+     *
+     * @return void
+     */
+    #[Test]
+    public function flashPixOverlappingOffsetsThrowParseError(): void
+    {
+        $contents = self::segment(
+            self::MARKER_APP2,
+            $this->fpxrContentsListPayload([
+                ['size' => 10, 'default' => 0x00, 'name' => '/Root/Stream0'],
+            ]),
+        );
+        $first  = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 0, 'abcde'));
+        $second = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 3, 'xyz'));
+
+        $jpeg = $this->jpeg($contents, $first, $second);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+
+        $extractor->getFlashPixStreams();
+    }
+
+    /**
+     * Provides one stream with two ordered stream-data segments.
+     * This preserves regression behaviour for simple single-stream payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function flashPixSimpleRepresentablePayloadStillParses(): void
+    {
+        $first  = 'first-';
+        $second = 'second';
+        $all    = $first . $second;
+
+        $contents = self::segment(
+            self::MARKER_APP2,
+            $this->fpxrContentsListPayload([
+                ['size' => strlen($all), 'default' => 0x20, 'name' => '/Root/Stream0'],
+            ]),
+        );
+        $segmentOne = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 0, $first));
+        $segmentTwo = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, strlen($first), $second));
+
+        $jpeg = $this->jpeg($contents, $segmentOne, $segmentTwo);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([0 => $all], $extractor->getFlashPixStreams());
     }
 
     /**
@@ -632,7 +730,7 @@ final class JpegParserTest extends TestCase
 
         yield 'length-smaller-than-two' => [$lengthTooSmall, '/length/i'];
         yield 'truncated-payload' => [$truncatedPayload, '/truncated/i'];
-        yield 'flashpix-short-header' => [$shortFlashPix, '/FlashPix segment/i'];
+        yield 'flashpix-short-header' => [$shortFlashPix, '/FlashPix/i'];
     }
 
     /**
@@ -799,10 +897,6 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Builds a FlashPix APP2 payload with the provided header parameters.
-     * The payload includes stream ID, sequence numbers, and raw data bytes.
-     */
-    /**
      * Builds a synthetic MPF payload containing two entries and attribute metadata.
      * This fixture is used to validate MPF segment buffering and parsing.
      */
@@ -869,12 +963,41 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Builds a FlashPix APP2 payload with the provided header parameters.
-     * The sequence and count fields mirror FlashPix segment numbering.
+     * Builds a FlashPix Contents List APP2 payload with one or more entries.
+     *
+     * @param list<array{size:int, default:int, name:string}> $entries
      */
-    private function fpxrPayload(int $streamId, int $sequence, int $count, string $data): string
+    private function fpxrContentsListPayload(array $entries): string
     {
-        return self::FPXR_SIGNATURE . pack('n', $streamId) . chr($sequence) . chr($count) . $data;
+        $payload = pack('n', count($entries));
+
+        foreach ($entries as $entry) {
+            $nameBytes = $this->utf16LeNullTerminated($entry['name']);
+
+            $payload .= pack('N', $entry['size']);
+            $payload .= chr($entry['default']);
+            $payload .= $nameBytes;
+        }
+
+        return self::FPXR_SIGNATURE . "\x00\x00" . $payload;
+    }
+
+    /**
+     * Builds a FlashPix Stream Data APP2 payload for one contents-list entry.
+     */
+    private function fpxrStreamDataPayload(int $contentsIndex, int $offset, string $data): string
+    {
+        return self::FPXR_SIGNATURE . "\x00\x00" . pack('nN', $contentsIndex, $offset) . $data;
+    }
+
+    private function utf16LeNullTerminated(string $text): string
+    {
+        $encoded = iconv('UTF-8', 'UTF-16LE', $text);
+        if ($encoded === false) {
+            self::fail('Unable to encode UTF-16LE FlashPix test path.');
+        }
+
+        return $encoded . "\x00\x00";
     }
 
     /**
