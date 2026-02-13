@@ -1313,6 +1313,7 @@ final class TiffExifParser
             'ProfileLookTableEncoding',
         );
         $this->validateDngDigestTags($ifd0);
+        $this->validateDngPreviewDateTime($ifd0);
         $this->validateDngPreviewColorSpace($ifd0);
         $this->validateDngIlluminantData($ifd0);
         $this->validateDngProfileDynamicRange($ifd0);
@@ -5752,6 +5753,56 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('PreviewColorSpace value must be 0..4, got %d.', is_int($entry->value) ? $entry->value : -1),
                 1560,
+            );
+        }
+    }
+
+    /**
+     * Validates PreviewDateTime (0xC71B) per DNG 1.7.1.0.
+     *
+     * Must be ASCII with a valid ISO 8601 date/time string.
+     * NUL termination is already enforced by the generic ASCII decoder.
+     */
+    private function validateDngPreviewDateTime(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::PREVIEW_DATE_TIME);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if ($entry->type !== TiffConst::TYPE_ASCII) {
+            throw new ParseError(
+                sprintf('PreviewDateTime must use ASCII type, got %d.', $entry->type),
+                1561,
+            );
+        }
+
+        if (!is_string($entry->value) || $entry->value === '') {
+            throw new ParseError(
+                'PreviewDateTime must not be empty.',
+                1562,
+            );
+        }
+
+        // ISO 8601 basic validation: YYYY-MM-DDThh:mm:ss with optional timezone
+        if (preg_match('/^\d{4}-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/', $entry->value, $m) !== 1) {
+            throw new ParseError(
+                sprintf('PreviewDateTime is not a valid ISO 8601 timestamp: %s.', $entry->value),
+                1563,
+            );
+        }
+
+        $month  = (int) $m[1];
+        $day    = (int) $m[2];
+        $hour   = (int) $m[3];
+        $minute = (int) $m[4];
+        $second = (int) $m[5];
+
+        if ($month < 1 || $month > 12 || $day < 1 || $day > 31 || $hour > 23 || $minute > 59 || $second > 59) {
+            throw new ParseError(
+                sprintf('PreviewDateTime contains out-of-range date/time components: %s.', $entry->value),
+                1564,
             );
         }
     }

@@ -5221,4 +5221,93 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', 0)
             . $uniqueCameraModel;
     }
+
+    /**
+     * Accepts a valid PreviewDateTime ISO 8601 timestamp.
+     */
+    #[Test]
+    public function acceptsValidPreviewDateTime(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewDateTime("2024-06-15T10:30:00Z\0"),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects PreviewDateTime with malformed ISO 8601 format.
+     */
+    #[Test]
+    public function rejectsPreviewDateTimeMalformedFormat(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1563);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewDateTime("June 15 2024\0"),
+        );
+    }
+
+    /**
+     * Rejects PreviewDateTime with out-of-range month.
+     */
+    #[Test]
+    public function rejectsPreviewDateTimeOverflow(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1564);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewDateTime("2024-13-01T00:00:00\0"),
+        );
+    }
+
+    /**
+     * Builds a DNG with PreviewDateTime (0xC71B) in IFD0.
+     *
+     * @param string $dateTime NUL-terminated date/time string
+     */
+    private function buildDngWithPreviewDateTime(string $dateTime): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $dateOffset        = $modelOffset + strlen($uniqueCameraModel);
+
+        // PreviewDateTime 0xC71B > UniqueCameraModel 0xC614 → correct order
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::PREVIEW_DATE_TIME)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($dateTime))
+            . pack('V', $dateOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $dateTime;
+    }
 }
