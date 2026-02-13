@@ -1292,6 +1292,7 @@ final class TiffExifParser
         $this->validateDngBackwardVersionGate($ifd0);
         $this->validateDngColorimetricReference($ifd0);
         $this->validateDngNoiseProfile($ifd0);
+        $this->validateDngHueSatMapData($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -4719,6 +4720,98 @@ final class TiffExifParser
                     sprintf('NoiseProfile O_%d must be >= 0, got %g.', $i / 2, $o),
                     1499,
                 );
+            }
+        }
+    }
+
+    /**
+     * ProfileHueSatMapData tags to validate against ProfileHueSatMapDims.
+     *
+     * @var list<int>
+     */
+    private const array HUE_SAT_MAP_DATA_TAGS = [
+        DngTag::PROFILE_HUE_SAT_MAP_DATA_1,
+        DngTag::PROFILE_HUE_SAT_MAP_DATA_2,
+        DngTag::PROFILE_HUE_SAT_MAP_DATA_3_V17,
+    ];
+
+    /**
+     * Validates DNG ProfileHueSatMapData count/content against ProfileHueSatMapDims.
+     *
+     * Count must equal HueDivisions * SatDivisions * ValueDivisions * 3.
+     * Zero-saturation entries (saturation index 0) must have valueScale == 1.0.
+     */
+    private function validateDngHueSatMapData(Ifd $ifd): void
+    {
+        $dimsEntry = $ifd->get(DngTag::PROFILE_HUE_SAT_MAP_DIMS);
+
+        if (!$dimsEntry instanceof IfdEntry) {
+            return;
+        }
+
+        $dimsValue = $dimsEntry->value;
+
+        if (!$dimsValue instanceof ExifNumericList || count($dimsValue->values) !== 3) {
+            return;
+        }
+
+        $hueDivs = $dimsValue->values[0];
+        $satDivs = $dimsValue->values[1];
+        $valDivs = $dimsValue->values[2];
+
+        if (!is_int($hueDivs) || !is_int($satDivs) || !is_int($valDivs)) {
+            return;
+        }
+
+        $expectedCount = $hueDivs * $satDivs * $valDivs * 3;
+
+        foreach (self::HUE_SAT_MAP_DATA_TAGS as $tag) {
+            $dataEntry = $ifd->get($tag);
+
+            if (!$dataEntry instanceof IfdEntry) {
+                continue;
+            }
+
+            $dataValue = $dataEntry->value;
+
+            if (!$dataValue instanceof ExifNumericList) {
+                continue;
+            }
+
+            $actualCount = count($dataValue->values);
+
+            if ($actualCount !== $expectedCount) {
+                throw new ParseError(
+                    sprintf(
+                        'ProfileHueSatMapData 0x%04X count %d does not match dims %d*%d*%d*3 = %d.',
+                        $tag,
+                        $actualCount,
+                        $hueDivs,
+                        $satDivs,
+                        $valDivs,
+                        $expectedCount,
+                    ),
+                    1501,
+                );
+            }
+
+            for ($hue = 0; $hue < $hueDivs; ++$hue) {
+                for ($val = 0; $val < $valDivs; ++$val) {
+                    $tripleIndex = ($hue * $satDivs * $valDivs + 0 * $valDivs + $val) * 3;
+                    $valueScale  = $dataValue->values[$tripleIndex + 2] ?? null;
+
+                    if ((is_float($valueScale) || is_int($valueScale)) && (float) $valueScale !== 1.0) {
+                        throw new ParseError(
+                            sprintf(
+                                'ProfileHueSatMapData 0x%04X zero-saturation entry at index %d has valueScale %g, must be 1.0.',
+                                $tag,
+                                $tripleIndex / 3,
+                                $valueScale,
+                            ),
+                            1502,
+                        );
+                    }
+                }
             }
         }
     }

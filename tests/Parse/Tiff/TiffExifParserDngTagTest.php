@@ -2391,6 +2391,68 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * ProfileHueSatMapData1 count mismatch vs dims triggers ParseError.
+     */
+    #[Test]
+    public function rejectsHueSatMapDataCountMismatch(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1501);
+
+        // dims = 2*2*1 = 4 triples = 12 floats; provide only 9
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithHueSatMap(
+                [2, 2, 1],
+                array_fill(0, 9, 0.0),
+            ),
+        );
+    }
+
+    /**
+     * ProfileHueSatMapData1 with zero-saturation valueScale != 1.0 triggers ParseError.
+     */
+    #[Test]
+    public function rejectsHueSatMapZeroSatValueScaleNotOne(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1502);
+
+        // dims 2*2*1 = 4 triples; sat index 0 = zero-saturation row
+        // Triple at index 0: (hue=0, sat=1.0, val=0.5) — valueScale should be 1.0
+        $data = [
+            0.0, 1.0, 0.5,  // sat=0 row, valueScale=0.5 INVALID
+            0.0, 1.0, 1.0,  // sat=1 row, ok
+            0.0, 1.0, 0.5,  // sat=0 row, valueScale=0.5 INVALID
+            0.0, 1.0, 1.0,  // sat=1 row, ok
+        ];
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithHueSatMap([2, 2, 1], $data),
+        );
+    }
+
+    /**
+     * Valid ProfileHueSatMapData1 parses successfully.
+     */
+    #[Test]
+    public function acceptsValidHueSatMapData(): void
+    {
+        // dims 2*2*1 = 4 triples; sat index 0 has valueScale=1.0
+        $data = [
+            0.0, 1.0, 1.0,  // sat=0 row
+            0.0, 1.0, 1.2,  // sat=1 row
+            0.0, 1.0, 1.0,  // sat=0 row
+            0.0, 1.0, 0.9,  // sat=1 row
+        ];
+
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithHueSatMap([2, 2, 1], $data),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
      * ColorimetricReference value 0 with DNG 1.2+ parses successfully.
      */
     #[Test]
@@ -2873,5 +2935,65 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', 0)
             . $uniqueCameraModel
             . $noiseData;
+    }
+
+    /**
+     * Builds a DNG TIFF with ProfileHueSatMapDims and ProfileHueSatMapData1.
+     *
+     * @param list<int>   $dims   Three LONG values [hue, sat, val]
+     * @param list<float> $floats FLOAT data for ProfileHueSatMapData1
+     */
+    private function buildDngWithHueSatMap(array $dims, array $floats): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 7;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $dimsOffset        = $modelOffset + strlen($uniqueCameraModel);
+        $dimsData          = pack('V3', $dims[0], $dims[1], $dims[2]);
+        $dataOffset        = $dimsOffset + strlen($dimsData);
+        $floatData         = '';
+
+        foreach ($floats as $f) {
+            $floatData .= pack('g', $f);
+        }
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::PROFILE_HUE_SAT_MAP_DIMS)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 3)
+            . pack('V', $dimsOffset)
+            . pack('v', DngTag::PROFILE_HUE_SAT_MAP_DATA_1)
+            . pack('v', TiffConst::TYPE_FLOAT)
+            . pack('V', count($floats))
+            . pack('V', $dataOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $dimsData
+            . $floatData;
     }
 }
