@@ -34,6 +34,7 @@ composer require magicsunday/imagemeta
 * Unified EXIF 3.0, XMP and QuickTime metadata mapped into immutable value objects that expose typed properties instead of raw tag identifiers.
 * XMP `rdf:parseType="Resource"` properties are preserved as structured values under their parent property key instead of flattening child fields into unrelated top-level entries, while `xml:*` qualifiers (for example `xml:lang`) are kept as qualifiers and not exported as standalone properties.
 * EXIF-conformant JPEG APP marker-order validation for APP1/APP2/APP11 placement before structural and scan markers.
+* APP11/JUMBF metadata extraction surfaces supported XML/XMP payloads while safely skipping unsupported box types.
 * Baseline DNG support for core IFD0 tags: `DNGVersion`, `DNGBackwardVersion`, and `UniqueCameraModel` via `ParsedExif` accessors.
 * Maker note decoding with automatic Apple metadata merging plus MPF (Multi-Picture Format) documents, ICC profiles, FlashPix extension streams and EXIF audio tracks surfaced on the aggregate model.
 * Optional SHA-1 and MD5 digest calculation alongside MIME type, extension and frame dimension helpers for downstream correlation.

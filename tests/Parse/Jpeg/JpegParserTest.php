@@ -317,8 +317,10 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload  = self::TIFF_HEADER . 'primary-exif';
         $app2Payload  = 'dummy-app2';
-        $app11Payload = 'JP\0\0';
-        $sofPayload   = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+        $app11Payload = $this->app11Payload(
+            $this->app11SuperboxWithContent('abcd', 'marker-order'),
+        );
+        $sofPayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
             . "\x01\x22\x00"
             . "\x02\x11\x01"
             . "\x03\x11\x01";
@@ -346,9 +348,12 @@ final class JpegParserTest extends TestCase
     public function app11BeforeApp1App2RegionThrowsParseError(): void
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
+        $app11       = $this->app11Payload(
+            $this->app11SuperboxWithContent('abcd', 'marker-order'),
+        );
 
         $jpeg = $this->jpeg(
-            self::segment(self::MARKER_APP11, 'JP\0\0'),
+            self::segment(self::MARKER_APP11, $app11),
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
         );
 
@@ -369,12 +374,15 @@ final class JpegParserTest extends TestCase
     public function app11AfterDqtThrowsParseError(): void
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
+        $app11       = $this->app11Payload(
+            $this->app11SuperboxWithContent('abcd', 'marker-order'),
+        );
 
         $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, 'dummy-app2'),
             self::segment(self::MARKER_DQT, "\x00"),
-            self::segment(self::MARKER_APP11, 'JP\0\0'),
+            self::segment(self::MARKER_APP11, $app11),
         );
 
         $extractor = $this->createExtractor($jpeg);
@@ -404,6 +412,112 @@ final class JpegParserTest extends TestCase
         $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
+     * Detects and surfaces XML/XMP metadata carried inside APP11 JUMBF payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function app11JumbfXmlPayloadIsSurfacedAsXmpPacket(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+        $xmpPacket   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">APP11-XMP</x:xmpmeta>';
+        $app11       = $this->app11Payload(
+            $this->app11SuperboxWithContent('xml ', $xmpPacket),
+        );
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, 'dummy-app2'),
+            self::segment(self::MARKER_APP11, $app11),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$xmpPacket], $extractor->extractXmpPackets());
+    }
+
+    /**
+     * Preserves APP1/APP2 metadata extraction when APP11 JUMBF metadata is present.
+     *
+     * @return void
+     */
+    #[Test]
+    public function mixedApp1App2App11PreservesSupportedMetadataOutputs(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+        $app1Xmp     = '<x:xmpmeta xmlns:x="adobe:ns:meta/">APP1-XMP</x:xmpmeta>';
+        $app11Xmp    = '<x:xmpmeta xmlns:x="adobe:ns:meta/">APP11-XMP</x:xmpmeta>';
+        $iccProfile  = 'icc-profile-data';
+        $iccPayload  = self::ICC_SIGNATURE . "\x01\x01" . $iccProfile;
+        $app11       = $this->app11Payload(
+            $this->app11SuperboxWithContent('xml ', $app11Xmp),
+        );
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $app1Xmp),
+            self::segment(self::MARKER_APP2, $iccPayload),
+            self::segment(self::MARKER_APP11, $app11),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertSame([$app1Xmp, $app11Xmp], $extractor->extractXmpPackets());
+        self::assertSame($iccProfile, $extractor->getIccProfile());
+    }
+
+    /**
+     * Rejects malformed APP11 payloads with truncated JUMBF box data.
+     *
+     * @return void
+     */
+    #[Test]
+    public function malformedTruncatedApp11JumbfPayloadThrowsParseError(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+        $malformed   = "JP\0\0" . pack('n', 1) . pack('N', 1) . pack('N', 32) . 'jumbshort';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, 'dummy-app2'),
+            self::segment(self::MARKER_APP11, $malformed),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/APP11|JUMBF|truncated/i');
+
+        $extractor->extractXmpPackets();
+    }
+
+    /**
+     * Skips unknown APP11 JUMBF content boxes without failing extraction.
+     *
+     * @return void
+     */
+    #[Test]
+    public function unknownApp11JumbfContentBoxIsSkippedSafely(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+        $app11       = $this->app11Payload(
+            $this->app11SuperboxWithContent('abcd', 'not-xml-content'),
+        );
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, 'dummy-app2'),
+            self::segment(self::MARKER_APP11, $app11),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertSame([], $extractor->extractXmpPackets());
     }
 
     /**
@@ -1079,6 +1193,49 @@ final class JpegParserTest extends TestCase
     private static function segment(int $marker, string $payload): string
     {
         return "\xFF" . chr($marker) . pack('n', strlen($payload) + 2) . $payload;
+    }
+
+    /**
+     * Builds an APP11 payload wrapper around a JUMBF superbox.
+     *
+     * @param string $jumbfSuperbox Serialized JUMBF superbox bytes.
+     * @param int    $instance      APP11 box-instance number.
+     * @param int    $sequence      APP11 packet sequence number.
+     *
+     * @return string APP11 payload bytes.
+     */
+    private function app11Payload(string $jumbfSuperbox, int $instance = 1, int $sequence = 1): string
+    {
+        return "JP\0\0" . pack('n', $instance) . pack('N', $sequence) . $jumbfSuperbox;
+    }
+
+    /**
+     * Builds a minimal JUMBF superbox with description and content child boxes.
+     *
+     * @param string $contentBoxType Four-character content box type.
+     * @param string $contentPayload Content box payload bytes.
+     *
+     * @return string Serialized JUMBF superbox.
+     */
+    private function app11SuperboxWithContent(string $contentBoxType, string $contentPayload): string
+    {
+        $description = $this->jumbfBox('jumd', str_repeat("\0", 16));
+        $content     = $this->jumbfBox($contentBoxType, $contentPayload);
+
+        return $this->jumbfBox('jumb', $description . $content);
+    }
+
+    /**
+     * Builds an ISO-BMFF-style box payload used by JUMBF.
+     *
+     * @param string $type    Four-character box type.
+     * @param string $payload Box payload bytes.
+     *
+     * @return string Serialized box.
+     */
+    private function jumbfBox(string $type, string $payload): string
+    {
+        return pack('N', strlen($payload) + 8) . $type . $payload;
     }
 
     private function resourceBlock(int $resourceId, string $data, string $name = ''): string

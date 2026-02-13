@@ -32,9 +32,12 @@ use function range;
 use function sha1;
 use function sort;
 use function sprintf;
+use function str_contains;
 use function str_starts_with;
 use function strlen;
+use function strpos;
 use function substr;
+use function trim;
 use function unpack;
 use function usort;
 
@@ -472,6 +475,8 @@ final class JpegParser
                 $this->handleApp1($payload);
             } elseif ($marker === Marker::APP2) {
                 $this->handleApp2($payload, $offset);
+            } elseif ($marker === Marker::APP11) {
+                $this->handleApp11($payload, $offset);
             } elseif ($marker === Marker::APP13) {
                 $this->handleApp13($payload);
             } elseif ($marker === Marker::SOF0 || $marker === Marker::SOF2) {
@@ -686,12 +691,22 @@ final class JpegParser
             $this->exifBlobs[] = $tiffData;
         } elseif (str_starts_with($payload, self::XMP_SIGNATURE)) {
             $packet = substr($payload, strlen(self::XMP_SIGNATURE));
-            $hash   = sha1($packet);
+            $this->appendXmpPacket($packet);
+        }
+    }
 
-            if (!array_key_exists($hash, $this->xmpPacketHashes)) {
-                $this->xmpPacketHashes[$hash] = true;
-                $this->xmpPackets[]           = $packet;
-            }
+    /**
+     * Stores an XMP packet while preserving first-seen order and deduplicating by hash.
+     *
+     * @param string $packet Raw XMP packet body.
+     */
+    private function appendXmpPacket(string $packet): void
+    {
+        $hash = sha1($packet);
+
+        if (!array_key_exists($hash, $this->xmpPacketHashes)) {
+            $this->xmpPacketHashes[$hash] = true;
+            $this->xmpPackets[]           = $packet;
         }
     }
 
@@ -712,6 +727,155 @@ final class JpegParser
         } elseif (str_starts_with($payload, self::AUDIO_SIGNATURE)) {
             $this->handleAudioSegment($payload, $offset);
         }
+    }
+
+    /**
+     * Processes APP11 payloads carrying JUMBF box-structured metadata.
+     *
+     * EXIF 3.0 §4.7.5.3 defines the APP11 transport wrapper and stores JUMBF
+     * superboxes for annotation metadata. Supported XML/XMP payloads are
+     * surfaced through the existing XMP packet collection.
+     *
+     * @param string $payload Raw APP11 payload.
+     * @param int    $offset  Offset in the stream where the marker begins.
+     */
+    private function handleApp11(string $payload, int $offset): void
+    {
+        if (!str_starts_with($payload, 'JP')) {
+            return;
+        }
+
+        $jumbfSuperbox = $this->extractApp11JumbfSuperbox($payload, $offset);
+        $this->collectApp11XmlPacketsFromBoxes($jumbfSuperbox, $offset);
+    }
+
+    /**
+     * Extracts the first valid JUMBF superbox from an APP11 payload.
+     *
+     * @param string $payload APP11 payload bytes.
+     * @param int    $offset  APP11 marker offset for diagnostics.
+     *
+     * @return string Raw bytes of the JUMBF superbox.
+     */
+    private function extractApp11JumbfSuperbox(string $payload, int $offset): string
+    {
+        $length = strlen($payload);
+        if ($length < 12) {
+            throw new ParseError(sprintf('APP11 segment at offset %d is too short', $offset), 1331);
+        }
+
+        for ($position = 0; $position + 8 <= $length; ++$position) {
+            if (substr($payload, $position + 4, 4) !== 'jumb') {
+                continue;
+            }
+
+            $sizeUnpack = @unpack('Nsize', substr($payload, $position, 4));
+            if (($sizeUnpack === false) || !isset($sizeUnpack['size'])) {
+                throw new ParseError(sprintf('APP11 segment at offset %d has invalid JUMBF size field', $offset), 1332);
+            }
+
+            /** @var array{size:int} $sizeUnpack */
+            $boxLength = $sizeUnpack['size'];
+            if ($boxLength < 8) {
+                throw new ParseError(
+                    sprintf('APP11 segment at offset %d has invalid JUMBF box length %d', $offset, $boxLength),
+                    1332,
+                );
+            }
+
+            if ($position + $boxLength > $length) {
+                throw new ParseError(sprintf('APP11 segment at offset %d has truncated JUMBF box', $offset), 1334);
+            }
+
+            return substr($payload, $position, $boxLength);
+        }
+
+        throw new ParseError(sprintf('APP11 segment at offset %d does not contain a JUMBF superbox', $offset), 1333);
+    }
+
+    /**
+     * Traverses JUMBF boxes and collects XML/XMP payloads.
+     *
+     * @param string $boxStream Box stream beginning with one or more ISO-BMFF-style boxes.
+     * @param int    $offset    APP11 marker offset for diagnostics.
+     */
+    private function collectApp11XmlPacketsFromBoxes(string $boxStream, int $offset): void
+    {
+        $length   = strlen($boxStream);
+        $position = 0;
+
+        while ($position + 8 <= $length) {
+            $sizeUnpack = @unpack('Nsize', substr($boxStream, $position, 4));
+            if (($sizeUnpack === false) || !isset($sizeUnpack['size'])) {
+                throw new ParseError(sprintf('APP11 segment at offset %d has invalid JUMBF child size field', $offset), 1332);
+            }
+
+            /** @var array{size:int} $sizeUnpack */
+            $boxLength = $sizeUnpack['size'];
+            if ($boxLength < 8) {
+                throw new ParseError(
+                    sprintf('APP11 segment at offset %d has invalid JUMBF child box length %d', $offset, $boxLength),
+                    1332,
+                );
+            }
+
+            if ($position + $boxLength > $length) {
+                throw new ParseError(sprintf('APP11 segment at offset %d has truncated JUMBF child box', $offset), 1334);
+            }
+
+            $boxType    = substr($boxStream, $position + 4, 4);
+            $boxPayload = substr($boxStream, $position + 8, $boxLength - 8);
+
+            if ($boxType === 'jumb') {
+                $this->collectApp11XmlPacketsFromBoxes($boxPayload, $offset);
+            } elseif ($boxType === 'xml ' || $boxType === 'bidb') {
+                $candidate = $this->extractApp11XmlPacketCandidate($boxPayload);
+                if ($candidate !== null) {
+                    $this->appendXmpPacket($candidate);
+                }
+            }
+
+            $position += $boxLength;
+        }
+
+        if ($position !== $length) {
+            throw new ParseError(sprintf('APP11 segment at offset %d has trailing JUMBF bytes', $offset), 1334);
+        }
+    }
+
+    /**
+     * Extracts XML/XMP packet text from a JUMBF payload when recognizable.
+     *
+     * @param string $payload Raw JUMBF content payload.
+     *
+     * @return string|null XML/XMP packet text or null when not recognized.
+     */
+    private function extractApp11XmlPacketCandidate(string $payload): ?string
+    {
+        if (str_starts_with($payload, self::XMP_SIGNATURE)) {
+            return substr($payload, strlen(self::XMP_SIGNATURE));
+        }
+
+        if (!str_contains($payload, '<')) {
+            return null;
+        }
+
+        if (
+            !str_contains($payload, '<?xml')
+            && !str_contains($payload, '<x:xmpmeta')
+            && !str_contains($payload, '<rdf:RDF')
+        ) {
+            return null;
+        }
+
+        $start = strpos($payload, '<');
+        if ($start === false) {
+            return null;
+        }
+
+        $candidate = trim(substr($payload, $start));
+
+        return $candidate !== '' ? $candidate : null;
     }
 
     /**
