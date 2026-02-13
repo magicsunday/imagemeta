@@ -2174,6 +2174,60 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * CFA photometric with missing CFARepeatPatternDim triggers ParseError.
+     */
+    #[Test]
+    public function rejectsCfaPhotometricMissingRepeatPatternDim(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1491);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCfaPhotometric(includeRepeatPatternDim: false),
+        );
+    }
+
+    /**
+     * CFA photometric with missing CFAPattern triggers ParseError.
+     */
+    #[Test]
+    public function rejectsCfaPhotometricMissingCfaPattern(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1491);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCfaPhotometric(includeCfaPattern: false),
+        );
+    }
+
+    /**
+     * CFA photometric with both required tags parses successfully.
+     */
+    #[Test]
+    public function acceptsCfaPhotometricWithBothRequiredTags(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCfaPhotometric(),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * Non-CFA photometric without CFA tags parses successfully.
+     */
+    #[Test]
+    public function acceptsNonCfaPhotometricWithoutCfaTags(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCfaPhotometric(photometric: 2, includeRepeatPatternDim: false, includeCfaPattern: false),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
      * Builds a two-IFD TIFF where the second IFD contains Compression
      * and JXL tuning tags.
      */
@@ -2239,6 +2293,92 @@ final class TiffExifParserDngTagTest extends TestCase
                 . pack('V', 1)
                 . pack('V', $decodeSpeed),
         ];
+
+        ksort($tags);
+
+        $ifd2 = pack('v', count($tags));
+
+        foreach ($tags as $entry) {
+            $ifd2 .= $entry;
+        }
+
+        $ifd2 .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifd0
+            . $ifd1
+            . $ifd2;
+    }
+
+    /**
+     * Builds a 3-IFD TIFF where IFD2 has PhotometricInterpretation and
+     * optionally CFARepeatPatternDim and CFAPattern.
+     */
+    private function buildTiffWithCfaPhotometric(
+        int $photometric = 32803,
+        bool $includeRepeatPatternDim = true,
+        bool $includeCfaPattern = true,
+    ): string {
+        $ifdOffset   = 8;
+        $ifd0Entries = 2;
+        $ifd0Size    = 2 + ($ifd0Entries * 12) + 4;
+        $ifd1Offset  = $ifdOffset + $ifd0Size;
+        $ifd1Entries = 2;
+        $ifd1Size    = 2 + ($ifd1Entries * 12) + 4;
+        $ifd2Offset  = $ifd1Offset + $ifd1Size;
+
+        $ifd0 = pack('v', $ifd0Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('V', $ifd1Offset);
+
+        $ifd1 = pack('v', $ifd1Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('V', $ifd2Offset);
+
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::PHOTOMETRIC_INTERPRETATION => pack('v', ExifTag::PHOTOMETRIC_INTERPRETATION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $photometric) . pack('v', 0),
+        ];
+
+        if ($includeRepeatPatternDim) {
+            $tags[DngTag::CFA_REPEAT_PATTERN_DIM] = pack('v', DngTag::CFA_REPEAT_PATTERN_DIM)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 2)
+                . pack('v', 2) . pack('v', 2);
+        }
+
+        if ($includeCfaPattern) {
+            $tags[ExifTag::CFA_PATTERN] = pack('v', ExifTag::CFA_PATTERN)
+                . pack('v', TiffConst::TYPE_BYTE)
+                . pack('V', 4)
+                . pack('C4', 0, 1, 1, 2);
+        }
 
         ksort($tags);
 

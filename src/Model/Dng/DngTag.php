@@ -24,6 +24,13 @@ use Deprecated;
 final readonly class DngTag
 {
     /**
+     * Repeat pattern dimensions for the colour filter array (TIFF-EP).
+     * Required in any IFD with PhotometricInterpretation = CFA (32803).
+     * DNG 1.7.1.0 (Restrictions/Extensions to existing TIFF tags).
+     */
+    public const int CFA_REPEAT_PATTERN_DIM = 0x828D;
+
+    /**
      * DNG specification version encoded as four bytes.
      * DNG Version 1.0.0.0 (p. 24).
      */

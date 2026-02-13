@@ -1277,6 +1277,7 @@ final class TiffExifParser
             $this->validateDngRolePhotometric($additionalIfd);
             $this->validateDngIfd0OnlyTags($additionalIfd);
             $this->validateDngJxlTags($additionalIfd);
+            $this->validateDngCfaPhotometric($additionalIfd);
         }
 
         $this->validateDngMatrixTags($ifd0);
@@ -4458,6 +4459,35 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('JXLDecodeSpeed must be 1–4, got %d.', $jxlDecodeSpeed->value),
                 1489,
+            );
+        }
+    }
+
+    /**
+     * Validates CFA photometric cross-tag requirements per DNG 1.7.1.0.
+     *
+     * When PhotometricInterpretation is CFA (32803), both CFARepeatPatternDim
+     * and CFAPattern must be present in the same IFD.
+     */
+    private function validateDngCfaPhotometric(Ifd $ifd): void
+    {
+        $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+
+        if (!$photo instanceof IfdEntry || !is_int($photo->value) || $photo->value !== 32803) {
+            return;
+        }
+
+        if (!$ifd->get(DngTag::CFA_REPEAT_PATTERN_DIM) instanceof IfdEntry) {
+            throw new ParseError(
+                'CFA photometric (32803) requires CFARepeatPatternDim in the same IFD.',
+                1491,
+            );
+        }
+
+        if (!$ifd->get(ExifTag::CFA_PATTERN) instanceof IfdEntry) {
+            throw new ParseError(
+                'CFA photometric (32803) requires CFAPattern in the same IFD.',
+                1491,
             );
         }
     }
