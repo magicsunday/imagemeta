@@ -2336,6 +2336,46 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * DNGBackwardVersion above supported reader version triggers ParseError.
+     */
+    #[Test]
+    public function rejectsDngBackwardVersionAboveSupported(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1496);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBackwardVersion([2, 0, 0, 0]),
+        );
+    }
+
+    /**
+     * DNGBackwardVersion at exactly the supported version parses successfully.
+     */
+    #[Test]
+    public function acceptsDngBackwardVersionAtSupported(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBackwardVersion([1, 7, 1, 0]),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * DNGBackwardVersion below supported reader version parses successfully.
+     */
+    #[Test]
+    public function acceptsDngBackwardVersionBelowSupported(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBackwardVersion([1, 4, 0, 0]),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
      * Builds a two-IFD TIFF where the second IFD contains Compression
      * and JXL tuning tags.
      */
@@ -2570,6 +2610,51 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', $colorimetricRef) . pack('v', 0)
+            . pack('V', 0)
+            . $uniqueCameraModel;
+    }
+
+    /**
+     * Builds a minimal DNG TIFF with configurable DNGBackwardVersion.
+     *
+     * @param list<int> $bwVer Four-byte backward version
+     */
+    private function buildDngWithBackwardVersion(array $bwVer): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera');
+        $modelOffset       = $ifdOffset + $ifdSize;
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::DNG_BACKWARD_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', $bwVer[0], $bwVer[1], $bwVer[2], $bwVer[3])
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
             . pack('V', 0)
             . $uniqueCameraModel;
     }

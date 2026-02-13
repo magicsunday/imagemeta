@@ -1288,6 +1288,7 @@ final class TiffExifParser
         $this->validateDngCalibrationIlluminantPairZero($ifd0);
         $this->validateDngProfileToneCurve($ifd0);
         $this->validateDngInterleaveVersionFloors($ifd0);
+        $this->validateDngBackwardVersionGate($ifd0);
         $this->validateDngColorimetricReference($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
@@ -4567,6 +4568,55 @@ final class TiffExifParser
                     $bwVer[3],
                 ),
                 1495,
+            );
+        }
+    }
+
+    /**
+     * Maximum DNG backward version this parser supports.
+     *
+     * @var list<int>
+     */
+    private const array SUPPORTED_DNG_VERSION = [1, 7, 1, 0];
+
+    /**
+     * Rejects DNG files whose DNGBackwardVersion exceeds the supported reader version.
+     */
+    private function validateDngBackwardVersionGate(Ifd $ifd): void
+    {
+        $bwEntry = $ifd->get(DngTag::DNG_BACKWARD_VERSION);
+
+        if (!$bwEntry instanceof IfdEntry) {
+            return;
+        }
+
+        $bwValue = $bwEntry->value;
+
+        if (!$bwValue instanceof ExifNumericList || count($bwValue->values) !== 4) {
+            return;
+        }
+
+        $bwVer = [];
+
+        foreach ($bwValue->values as $c) {
+            if (!is_int($c)) {
+                return;
+            }
+
+            $bwVer[] = $c;
+        }
+
+        if ($this->dngVersionLessThan(self::SUPPORTED_DNG_VERSION, $bwVer)) {
+            throw new ParseError(
+                sprintf(
+                    'DNGBackwardVersion %d.%d.%d.%d exceeds supported reader version %d.%d.%d.%d.',
+                    $bwVer[0],
+                    $bwVer[1],
+                    $bwVer[2],
+                    $bwVer[3],
+                    ...self::SUPPORTED_DNG_VERSION,
+                ),
+                1496,
             );
         }
     }
