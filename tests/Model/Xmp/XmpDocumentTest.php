@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Model\Xmp;
 
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -26,6 +27,7 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(XmpDocument::class)]
+#[CoversClass(XmpStructuredValue::class)]
 final class XmpDocumentTest extends TestCase
 {
     /**
@@ -93,6 +95,70 @@ final class XmpDocumentTest extends TestCase
 
         self::assertSame([], $merged->data);
         self::assertSame([], $merged->namespacePrefixes);
+        self::assertSame([], $merged->structuredData);
+    }
+
+    /**
+     * Merges structured parseType Resource properties under their parent key.
+     *
+     * @return void
+     */
+    #[Test]
+    public function mergeAggregatesStructuredValues(): void
+    {
+        $namespace = 'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/';
+
+        $first = new XmpDocument(
+            [],
+            [],
+            [
+                sprintf('{%s}CreatorContactInfo', $namespace) => new XmpStructuredValue([
+                    sprintf('{%s}CiEmailWork', $namespace) => 'jane@example.com',
+                ]),
+            ],
+        );
+
+        $second = new XmpDocument(
+            [],
+            [],
+            [
+                sprintf('{%s}CreatorContactInfo', $namespace) => new XmpStructuredValue([
+                    sprintf('{%s}CiTelWork', $namespace) => '+49 30 555',
+                ]),
+            ],
+        );
+
+        $merged = XmpDocument::merge($first, $second);
+
+        $contactInfo = $merged->structured($namespace, 'CreatorContactInfo');
+        self::assertInstanceOf(XmpStructuredValue::class, $contactInfo);
+        self::assertSame('jane@example.com', $contactInfo->get($namespace, 'CiEmailWork'));
+        self::assertSame('+49 30 555', $contactInfo->get($namespace, 'CiTelWork'));
+    }
+
+    /**
+     * Returns structured values through get()/find() when keyed by the parent property.
+     *
+     * @return void
+     */
+    #[Test]
+    public function getReturnsStructuredValues(): void
+    {
+        $namespace = 'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/';
+        $document  = new XmpDocument(
+            [],
+            [],
+            [
+                sprintf('{%s}CreatorContactInfo', $namespace) => new XmpStructuredValue([
+                    sprintf('{%s}CiUrlWork', $namespace) => 'https://example.com',
+                ]),
+            ],
+        );
+
+        $value = $document->get($namespace, 'CreatorContactInfo');
+        self::assertInstanceOf(XmpStructuredValue::class, $value);
+        self::assertSame('https://example.com', $value->get($namespace, 'CiUrlWork'));
+        self::assertInstanceOf(XmpStructuredValue::class, $document->find('CreatorContactInfo'));
     }
 
     /**

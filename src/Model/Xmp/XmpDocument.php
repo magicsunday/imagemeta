@@ -33,8 +33,9 @@ use function trim;
 final readonly class XmpDocument
 {
     /**
-     * @param array<string, string|array<int, string>|XmpLanguageAlternative> $data              Map of Clark notation => value
-     * @param array<string, string>                                           $namespacePrefixes Map of namespace URI => prefix
+     * @param array<string, string|array<int, string>|XmpLanguageAlternative> $data              Map of Clark notation => scalar/container value.
+     * @param array<string, string>                                           $namespacePrefixes Map of namespace URI => prefix.
+     * @param array<string, XmpStructuredValue>                               $structuredData    Map of Clark notation => structured property value.
      */
     public function __construct(
         /**
@@ -45,6 +46,10 @@ final readonly class XmpDocument
          * @var array<string, string> Map of namespace URI to prefix (e.g., "http://ns.adobe.com/xap/1.0/" => "xmp")
          */
         public array $namespacePrefixes = [],
+        /**
+         * @var array<string, XmpStructuredValue> Map of Clark notation => structured value.
+         */
+        public array $structuredData = [],
     ) {
     }
 
@@ -56,13 +61,15 @@ final readonly class XmpDocument
     public static function merge(self ...$documents): self
     {
         if ($documents === []) {
-            return new self([], []);
+            return new self([], [], []);
         }
 
         /** @var array<string, string|array<int, string>|XmpLanguageAlternative> $data */
         $data = [];
         /** @var array<string, string> $namespacePrefixes */
         $namespacePrefixes = [];
+        /** @var array<string, XmpStructuredValue> $structuredData */
+        $structuredData = [];
 
         foreach ($documents as $document) {
             foreach ($document->data as $key => $value) {
@@ -74,9 +81,17 @@ final readonly class XmpDocument
                     $namespacePrefixes[$uri] = $prefix;
                 }
             }
+
+            foreach ($document->structuredData as $key => $value) {
+                if (isset($structuredData[$key])) {
+                    $structuredData[$key] = XmpStructuredValue::merge($structuredData[$key], $value);
+                } else {
+                    $structuredData[$key] = $value;
+                }
+            }
         }
 
-        return new self($data, $namespacePrefixes);
+        return new self($data, $namespacePrefixes, $structuredData);
     }
 
     /**
@@ -98,38 +113,7 @@ final readonly class XmpDocument
      */
     public function string(string $namespaceUri, string $localName): ?string
     {
-        $value = $this->get($namespaceUri, $localName);
-
-        if (is_string($value)) {
-            $trimmed = trim($value);
-
-            return $trimmed === '' ? null : $trimmed;
-        }
-
-        if ($value instanceof XmpLanguageAlternative) {
-            $text = $value->defaultValue();
-
-            if ($text === null) {
-                return null;
-            }
-
-            $trimmed = trim($text);
-
-            return $trimmed === '' ? null : $trimmed;
-        }
-
-        if (!is_array($value)) {
-            return null;
-        }
-
-        foreach ($value as $element) {
-            $trimmed = trim($element);
-            if ($trimmed !== '') {
-                return $trimmed;
-            }
-        }
-
-        return null;
+        return self::stringFromValue($this->get($namespaceUri, $localName));
     }
 
     /**
@@ -151,6 +135,10 @@ final readonly class XmpDocument
             $items = array_map(trim(...), $value->values());
 
             return array_values(array_filter($items, static fn (string $item): bool => $item !== ''));
+        }
+
+        if ($value instanceof XmpStructuredValue) {
+            return [];
         }
 
         if (!is_array($value)) {
@@ -225,9 +213,9 @@ final readonly class XmpDocument
      * @param string $namespaceUri Namespace URI that scopes the property.
      * @param string $localName    Local property name to retrieve.
      *
-     * @return array<int, string>|string|null
+     * @return array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue|null
      */
-    public function get(string $namespaceUri, string $localName): array|string|XmpLanguageAlternative|null
+    public function get(string $namespaceUri, string $localName): array|string|XmpLanguageAlternative|XmpStructuredValue|null
     {
         $key   = $this->buildClarkName($namespaceUri, $localName);
         $value = $this->data[$key] ?? null;
@@ -245,7 +233,7 @@ final readonly class XmpDocument
             return $value;
         }
 
-        return null;
+        return $this->structuredData[$key] ?? null;
     }
 
     /**
@@ -253,13 +241,22 @@ final readonly class XmpDocument
      *
      * @param string $localName Local property name to search for.
      *
-     * @return array<int, string>|string|null
+     * @return array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue|null
      */
-    public function find(string $localName): array|string|XmpLanguageAlternative|null
+    public function find(string $localName): array|string|XmpLanguageAlternative|XmpStructuredValue|null
     {
-        return array_find(
+        $value = array_find(
             $this->data,
             fn (array|string|XmpLanguageAlternative $value, string $key): bool => $this->matchesLocalName($key, $localName)
+        );
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        return array_find(
+            $this->structuredData,
+            fn (XmpStructuredValue $entry, string $key): bool => $this->matchesLocalName($key, $localName)
         );
     }
 
@@ -271,6 +268,57 @@ final readonly class XmpDocument
         $value = $this->get($namespaceUri, $localName);
 
         return $value instanceof XmpLanguageAlternative ? $value : null;
+    }
+
+    /**
+     * Returns the structured property value for the specified property.
+     */
+    public function structured(string $namespaceUri, string $localName): ?XmpStructuredValue
+    {
+        $value = $this->get($namespaceUri, $localName);
+
+        return $value instanceof XmpStructuredValue ? $value : null;
+    }
+
+    /**
+     * Resolves the first non-empty textual value from supported XMP value forms.
+     *
+     * @param array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue|null $value
+     *
+     * @return string|null First non-empty textual value or null.
+     */
+    public static function stringFromValue(array|string|XmpLanguageAlternative|XmpStructuredValue|null $value): ?string
+    {
+        if (is_string($value)) {
+            $trimmed = trim($value);
+
+            return $trimmed === '' ? null : $trimmed;
+        }
+
+        if ($value instanceof XmpLanguageAlternative) {
+            $text = $value->defaultValue();
+
+            if ($text === null) {
+                return null;
+            }
+
+            $trimmed = trim($text);
+
+            return $trimmed === '' ? null : $trimmed;
+        }
+
+        if ($value instanceof XmpStructuredValue || !is_array($value)) {
+            return null;
+        }
+
+        foreach ($value as $element) {
+            $trimmed = trim($element);
+            if ($trimmed !== '') {
+                return $trimmed;
+            }
+        }
+
+        return null;
     }
 
     /**

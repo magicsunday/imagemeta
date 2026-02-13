@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Parse\Xmp;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
+use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
 use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
 use XMLReader;
 
@@ -32,9 +33,9 @@ final class XmpParser
     /**
      * Parses an XMP packet and returns a document containing discovered properties.
      *
-     * The resulting document stores values keyed by Clark notation ("{namespace}local") and
-     * flattens RDF containers (Bag/Seq/Alt) into PHP lists. Namespace prefixes are extracted
-     * from xmlns declarations for later display.
+     * The resulting document stores scalar/container values keyed by Clark notation
+     * ("{namespace}local"), extracts `rdf:parseType="Resource"` properties as structured
+     * values, and records namespace prefixes from xmlns declarations.
      *
      * @param string $xml The raw XML payload containing the XMP packet.
      *
@@ -44,11 +45,13 @@ final class XmpParser
     {
         $reader = XMLReader::XML($xml, null, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
         if (!$reader instanceof XMLReader) {
-            return new XmpDocument([], []);
+            return new XmpDocument([], [], []);
         }
 
         /** @var array<string, array<int, string>|string|XmpLanguageAlternative> $data */
         $data = [];
+        /** @var array<string, XmpStructuredValue> $structuredData */
+        $structuredData = [];
         /** @var array<string, string> $namespacePrefixes Maps namespace URI to prefix */
         $namespacePrefixes = [];
         /** @var array<int, array{string, string}> $elementPath */
@@ -63,6 +66,8 @@ final class XmpParser
         $listKinds = [];
         /** @var array<int, string> $languageBuffers */
         $languageBuffers = [];
+        /** @var array<int, array<string, array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue>> $structuredBuffers */
+        $structuredBuffers = [];
 
         while ($reader->read()) {
             switch ($reader->nodeType) {
@@ -78,6 +83,12 @@ final class XmpParser
                         $listBuffers[$depth] = [];
                         $altBuffers[$depth]  = [];
                         $listKinds[$depth]   = '';
+
+                        // XMP Specification Part 1 (RDF property forms): parseType="Resource"
+                        // represents a structured value whose child elements belong to the parent property.
+                        if ($this->hasRdfParseTypeResource($reader)) {
+                            $structuredBuffers[$depth] = [];
+                        }
                     }
 
                     if ($namespace === self::RDF_NAMESPACE && in_array($localName, ['Alt', 'Bag', 'Seq'], true)) {
@@ -102,19 +113,28 @@ final class XmpParser
 
                     if ($reader->isEmptyElement) {
                         if ($namespace !== self::RDF_NAMESPACE) {
-                            $this->storeFinalizedValue(
+                            $this->storeFinalizedElementValue(
                                 $data,
+                                $structuredData,
                                 $listBuffers,
                                 $altBuffers,
                                 $listKinds,
                                 $textBuffers,
+                                $structuredBuffers,
                                 $depth,
                                 $namespace,
                                 $localName,
                             );
                         }
 
-                        unset($elementPath[$depth], $textBuffers[$depth], $listBuffers[$depth]);
+                        unset(
+                            $elementPath[$depth],
+                            $textBuffers[$depth],
+                            $listBuffers[$depth],
+                            $altBuffers[$depth],
+                            $listKinds[$depth],
+                            $structuredBuffers[$depth],
+                        );
                     }
 
                     break;
@@ -181,12 +201,14 @@ final class XmpParser
                             }
                         }
                     } elseif ($namespace !== self::RDF_NAMESPACE) {
-                        $this->storeFinalizedValue(
+                        $this->storeFinalizedElementValue(
                             $data,
+                            $structuredData,
                             $listBuffers,
                             $altBuffers,
                             $listKinds,
                             $textBuffers,
+                            $structuredBuffers,
                             $depth,
                             $namespace,
                             $localName,
@@ -200,6 +222,7 @@ final class XmpParser
                         $altBuffers[$depth],
                         $listKinds[$depth],
                         $languageBuffers[$depth],
+                        $structuredBuffers[$depth],
                     );
                     break;
             }
@@ -207,7 +230,7 @@ final class XmpParser
 
         $reader->close();
 
-        return new XmpDocument($data, $namespacePrefixes);
+        return new XmpDocument($data, $namespacePrefixes, $structuredData);
     }
 
     /**
@@ -301,37 +324,160 @@ final class XmpParser
     }
 
     /**
+     * Detects RDF structured-property form encoded as rdf:parseType="Resource".
+     *
+     * XMP Specification Part 1 (RDF property forms) allows this representation for
+     * structured values whose child elements belong to the parent property.
+     */
+    private function hasRdfParseTypeResource(XMLReader $reader): bool
+    {
+        if (!$reader->hasAttributes) {
+            return false;
+        }
+
+        $isResource = false;
+
+        $reader->moveToFirstAttribute();
+
+        do {
+            if (
+                ($reader->namespaceURI === self::RDF_NAMESPACE)
+                && ($reader->localName === 'parseType')
+                && (trim($reader->value) === 'Resource')
+            ) {
+                $isResource = true;
+                break;
+            }
+        } while ($reader->moveToNextAttribute());
+
+        $reader->moveToElement();
+
+        return $isResource;
+    }
+
+    /**
      * Stores a value derived from buffered list/text information.
      *
-     * @param array<string, array<int, string>|string|XmpLanguageAlternative> $data
-     * @param array<int, list<string>>                                        $listBuffers
-     * @param array<int, list<array{lang: string, value: string}>>            $altBuffers
-     * @param array<int, string>                                              $listKinds
-     * @param array<int, string>                                              $textBuffers
+     * @param array<string, array<int, string>|string|XmpLanguageAlternative>                                $data
+     * @param array<string, XmpStructuredValue>                                                              $structuredData
+     * @param array<int, list<string>>                                                                       $listBuffers
+     * @param array<int, list<array{lang: string, value: string}>>                                           $altBuffers
+     * @param array<int, string>                                                                             $listKinds
+     * @param array<int, string>                                                                             $textBuffers
+     * @param array<int, array<string, array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue>> $structuredBuffers
      */
-    private function storeFinalizedValue(
+    private function storeFinalizedElementValue(
         array &$data,
+        array &$structuredData,
         array $listBuffers,
         array $altBuffers,
         array $listKinds,
         array $textBuffers,
+        array &$structuredBuffers,
         int $depth,
         string $namespace,
         string $localName,
     ): void {
+        $value = $this->finalizeElementValue($listBuffers, $altBuffers, $listKinds, $textBuffers, $structuredBuffers, $depth);
+        $key   = $this->buildClarkName($namespace, $localName);
+
+        $parentStructuredDepth = $this->findStructuredParentDepth($depth - 1, $structuredBuffers);
+        if ($parentStructuredDepth !== null) {
+            $this->appendStructuredFieldValue($structuredBuffers[$parentStructuredDepth], $key, $value);
+
+            return;
+        }
+
+        if ($value instanceof XmpStructuredValue) {
+            if (isset($structuredData[$key])) {
+                $structuredData[$key] = XmpStructuredValue::merge($structuredData[$key], $value);
+            } else {
+                $structuredData[$key] = $value;
+            }
+
+            return;
+        }
+
+        $this->storeValue($data, $key, $value);
+    }
+
+    /**
+     * @param array<int, list<string>>                                                                       $listBuffers
+     * @param array<int, list<array{lang: string, value: string}>>                                           $altBuffers
+     * @param array<int, string>                                                                             $listKinds
+     * @param array<int, string>                                                                             $textBuffers
+     * @param array<int, array<string, array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue>> $structuredBuffers
+     *
+     * @return array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue
+     */
+    private function finalizeElementValue(
+        array $listBuffers,
+        array $altBuffers,
+        array $listKinds,
+        array $textBuffers,
+        array $structuredBuffers,
+        int $depth,
+    ): array|string|XmpLanguageAlternative|XmpStructuredValue {
         /** @var list<string> $items */
         $items = $listBuffers[$depth] ?? [];
         /** @var list<array{lang: string, value: string}> $altItems */
         $altItems = $altBuffers[$depth] ?? [];
         $text     = $textBuffers[$depth] ?? '';
+        $fields   = $structuredBuffers[$depth] ?? [];
 
-        $value = $this->finalizeValue($items, $altItems, $listKinds[$depth] ?? '', $text);
+        if ($fields !== []) {
+            return new XmpStructuredValue($fields);
+        }
 
-        $this->storeValue(
-            $data,
-            $this->buildClarkName($namespace, $localName),
-            $value,
-        );
+        return $this->finalizeValue($items, $altItems, $listKinds[$depth] ?? '', $text);
+    }
+
+    /**
+     * @param array<int, array<string, array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue>> $structuredBuffers
+     */
+    private function findStructuredParentDepth(int $startDepth, array $structuredBuffers): ?int
+    {
+        for ($depth = $startDepth; $depth >= 0; --$depth) {
+            if (isset($structuredBuffers[$depth])) {
+                return $depth;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue> $fields
+     * @param array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue                $value
+     *
+     * @param-out array<string, array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue> $fields
+     */
+    private function appendStructuredFieldValue(array &$fields, string $key, array|string|XmpLanguageAlternative|XmpStructuredValue $value): void
+    {
+        if (!array_key_exists($key, $fields)) {
+            $fields[$key] = $value;
+
+            return;
+        }
+
+        $existing = $fields[$key];
+
+        if (($existing instanceof XmpStructuredValue) && ($value instanceof XmpStructuredValue)) {
+            $fields[$key] = XmpStructuredValue::merge($existing, $value);
+
+            return;
+        }
+
+        if (($existing instanceof XmpStructuredValue) || ($value instanceof XmpStructuredValue)) {
+            // Keep the first observed representation when value forms differ.
+            return;
+        }
+
+        $temporary = ['value' => $existing];
+
+        XmpValueAccumulator::merge($temporary, 'value', $value);
+
+        $fields[$key] = $temporary['value'];
     }
 
     /**
@@ -386,7 +532,7 @@ final class XmpParser
      * Stores a value in the result map while merging multiple occurrences.
      *
      * @param array<string, string|array<int, string>|XmpLanguageAlternative> $data
-     * @param list<string>|string|XmpLanguageAlternative                      $value
+     * @param array<int, string>|string|XmpLanguageAlternative                $value
      */
     private function storeValue(array &$data, string $key, array|string|XmpLanguageAlternative $value): void
     {

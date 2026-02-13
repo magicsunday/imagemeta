@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Xmp;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
+use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -31,6 +32,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ParseError::class)]
 #[UsesClass(XmpDocument::class)]
 #[UsesClass(XmpLanguageAlternative::class)]
+#[UsesClass(XmpStructuredValue::class)]
 final class XmpParserTest extends TestCase
 {
     private const string XMP_NS = 'http://ns.adobe.com/xap/1.0/';
@@ -40,6 +42,8 @@ final class XmpParserTest extends TestCase
     private const string EXIF_NS = 'http://ns.adobe.com/exif/1.0/';
 
     private const string TIFF_NS = 'http://ns.adobe.com/tiff/1.0/';
+
+    private const string IPTC_CORE_NS = 'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/';
 
     /**
      * Uses rdf:Description attributes for TIFF and XMP properties.
@@ -390,6 +394,110 @@ XML;
         self::assertSame('GT-I9195', $document->get(self::TIFF_NS, 'Model'));
         self::assertSame('1', $document->get(self::TIFF_NS, 'Orientation'));
         self::assertSame(['Portrait'], $document->get(self::DC_NS, 'subject'));
+    }
+
+    /**
+     * Preserves parseType Resource child fields under their parent property as a structured value.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseExtractsParseTypeResourceAsStructuredProperty(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:Iptc4xmpCore="http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/">
+  <rdf:Description>
+    <Iptc4xmpCore:CreatorContactInfo rdf:parseType="Resource">
+      <Iptc4xmpCore:CiEmailWork>jane@example.com</Iptc4xmpCore:CiEmailWork>
+      <Iptc4xmpCore:CiTelWork>+49 30 555</Iptc4xmpCore:CiTelWork>
+    </Iptc4xmpCore:CreatorContactInfo>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $document    = (new XmpParser())->parse($xml);
+        $contactInfo = $document->get(self::IPTC_CORE_NS, 'CreatorContactInfo');
+
+        self::assertInstanceOf(XmpStructuredValue::class, $contactInfo);
+        self::assertSame('jane@example.com', $contactInfo->get(self::IPTC_CORE_NS, 'CiEmailWork'));
+        self::assertSame('+49 30 555', $contactInfo->get(self::IPTC_CORE_NS, 'CiTelWork'));
+
+        self::assertNull($document->get(self::IPTC_CORE_NS, 'CiEmailWork'));
+        self::assertNull($document->get(self::IPTC_CORE_NS, 'CiTelWork'));
+    }
+
+    /**
+     * Keeps nested parseType Resource nodes as nested structured values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseExtractsNestedParseTypeResourceStructure(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:Iptc4xmpCore="http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/">
+  <rdf:Description>
+    <Iptc4xmpCore:CreatorContactInfo rdf:parseType="Resource">
+      <Iptc4xmpCore:CiAdrCity>Berlin</Iptc4xmpCore:CiAdrCity>
+      <Iptc4xmpCore:CiAdrExtadr rdf:parseType="Resource">
+        <Iptc4xmpCore:Street>Main Street 1</Iptc4xmpCore:Street>
+        <Iptc4xmpCore:HouseNumber>5</Iptc4xmpCore:HouseNumber>
+      </Iptc4xmpCore:CiAdrExtadr>
+    </Iptc4xmpCore:CreatorContactInfo>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $document    = (new XmpParser())->parse($xml);
+        $contactInfo = $document->get(self::IPTC_CORE_NS, 'CreatorContactInfo');
+
+        self::assertInstanceOf(XmpStructuredValue::class, $contactInfo);
+        self::assertSame('Berlin', $contactInfo->get(self::IPTC_CORE_NS, 'CiAdrCity'));
+
+        $address = $contactInfo->get(self::IPTC_CORE_NS, 'CiAdrExtadr');
+        self::assertInstanceOf(XmpStructuredValue::class, $address);
+        self::assertSame('Main Street 1', $address->get(self::IPTC_CORE_NS, 'Street'));
+        self::assertSame('5', $address->get(self::IPTC_CORE_NS, 'HouseNumber'));
+    }
+
+    /**
+     * Keeps simple text and RDF container extraction unchanged when parseType Resource is present.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseKeepsSimpleAndContainerPropertiesWhenParseTypeResourceExists(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:tiff="http://ns.adobe.com/tiff/1.0/"
+         xmlns:Iptc4xmpCore="http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/">
+  <rdf:Description>
+    <tiff:Make>DJI</tiff:Make>
+    <dc:subject>
+      <rdf:Seq>
+        <rdf:li>one</rdf:li>
+        <rdf:li>two</rdf:li>
+      </rdf:Seq>
+    </dc:subject>
+    <Iptc4xmpCore:CreatorContactInfo rdf:parseType="Resource">
+      <Iptc4xmpCore:CiUrlWork>https://example.com</Iptc4xmpCore:CiUrlWork>
+    </Iptc4xmpCore:CreatorContactInfo>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $document = (new XmpParser())->parse($xml);
+
+        self::assertSame('DJI', $document->get(self::TIFF_NS, 'Make'));
+        self::assertSame(['one', 'two'], $document->get(self::DC_NS, 'subject'));
+
+        $contactInfo = $document->get(self::IPTC_CORE_NS, 'CreatorContactInfo');
+        self::assertInstanceOf(XmpStructuredValue::class, $contactInfo);
+        self::assertSame('https://example.com', $contactInfo->get(self::IPTC_CORE_NS, 'CiUrlWork'));
     }
 
     /**

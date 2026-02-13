@@ -16,6 +16,8 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
 use MagicSunday\ImageMeta\Value\Audio as ValueAudio;
 use MagicSunday\ImageMeta\Value\AudioClips;
@@ -337,20 +339,21 @@ final readonly class ValueFactory
             creditLine: $xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'Credit'),
         );
 
-        $iptcNamespace = 'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/';
+        $iptcNamespace      = 'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/';
+        $creatorContactInfo = $xmpDocument?->structured($iptcNamespace, 'CreatorContactInfo');
 
         $author = new Author(
             artist: $exifDocument?->artist(),
             ownerName: $exifDocument?->ownerName(),
             creator: $this->firstListValue($xmpDocument?->stringList('http://purl.org/dc/elements/1.1/', 'creator') ?? []),
-            creatorEmail: $xmpDocument?->string($iptcNamespace, 'CiEmailWork'),
-            creatorPhone: $xmpDocument?->string($iptcNamespace, 'CiTelWork'),
-            creatorAddress: $xmpDocument?->string($iptcNamespace, 'CiAdrExtadr'),
-            creatorCity: $xmpDocument?->string($iptcNamespace, 'CiAdrCity'),
-            creatorRegion: $xmpDocument?->string($iptcNamespace, 'CiAdrRegion'),
-            creatorPostalCode: $xmpDocument?->string($iptcNamespace, 'CiAdrPcode'),
-            creatorCountry: $xmpDocument?->string($iptcNamespace, 'CiAdrCtry'),
-            creatorUrl: $xmpDocument?->string($iptcNamespace, 'CiUrlWork'),
+            creatorEmail: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiEmailWork'),
+            creatorPhone: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiTelWork'),
+            creatorAddress: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrExtadr'),
+            creatorCity: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrCity'),
+            creatorRegion: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrRegion'),
+            creatorPostalCode: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrPcode'),
+            creatorCountry: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrCtry'),
+            creatorUrl: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiUrlWork'),
             photographer: $exifDocument?->photographer(),
             imageEditor: $exifDocument?->imageEditor(),
         );
@@ -478,6 +481,30 @@ final readonly class ValueFactory
     private function firstListValue(array $values): ?string
     {
         return $values[0] ?? null;
+    }
+
+    /**
+     * Resolves IPTC creator contact fields from either flattened legacy fields or CreatorContactInfo.
+     *
+     * @param XmpDocument|null        $document       Parsed XMP document.
+     * @param XmpStructuredValue|null $creatorContact Structured CreatorContactInfo object.
+     * @param string                  $namespace      IPTC namespace URI.
+     * @param string                  $localName      Contact field local name.
+     *
+     * @return string|null Resolved contact value or null when unavailable.
+     */
+    private function resolveCreatorContactValue(
+        ?XmpDocument $document,
+        ?XmpStructuredValue $creatorContact,
+        string $namespace,
+        string $localName,
+    ): ?string {
+        $directValue = $document?->string($namespace, $localName);
+        if ($directValue !== null) {
+            return $directValue;
+        }
+
+        return $creatorContact?->string($namespace, $localName);
     }
 
     /**
