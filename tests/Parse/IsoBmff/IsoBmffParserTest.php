@@ -2945,6 +2945,74 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame('Test Track Name', $qtMeta->keys[QuickTimeMeta::TRACK_NAME_KEY]);
     }
 
+    /**
+     * Parses a direct textual user-data atom from movie-level udta.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesMovieLevelDirectUdtaTextAtom(): void
+    {
+        $titleAtom = $this->box("\xA9nam", "Movie Title\0");
+        $moov      = $this->moov($this->box('udta', $titleAtom));
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('Movie Title', $qtMeta->keys['com.apple.quicktime.title']);
+    }
+
+    /**
+     * Keeps direct udta text atoms and nested meta metadata together.
+     *
+     * @return void
+     */
+    #[Test]
+    public function keepsMovieLevelDirectUdtaAtomAndMetaMetadata(): void
+    {
+        $titleAtom = $this->box("\xA9nam", "Movie Title\0");
+
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $dataBox  = $this->box('data', pack('N', 1) . pack('N', 0) . 'meta-value');
+        $ilst     = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
+        $meta     = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+
+        $udta = $this->box('udta', $titleAtom . $meta);
+        $moov = $this->moov($udta);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('Movie Title', $qtMeta->keys['com.apple.quicktime.title']);
+        self::assertSame('meta-value', $qtMeta->keys[$key]);
+    }
+
+    /**
+     * Ignores unknown direct udta atoms without failing metadata extraction.
+     *
+     * @return void
+     */
+    #[Test]
+    public function ignoresUnknownMovieLevelDirectUdtaAtom(): void
+    {
+        $unknown = $this->box('abcd', "ignored\0");
+        $moov    = $this->moov($this->box('udta', $unknown));
+        $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertArrayNotHasKey('com.apple.quicktime.title', $qtMeta->keys);
+        self::assertArrayNotHasKey('com.apple.quicktime.artist', $qtMeta->keys);
+    }
+
     #[Test]
     public function moovLevelMetadataNotOverwrittenByTrackUdta(): void
     {

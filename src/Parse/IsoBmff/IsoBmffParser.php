@@ -427,6 +427,22 @@ final readonly class IsoBmffParser
     ];
 
     /**
+     * QuickTime direct udta text atoms mapped to normalized metadata keys.
+     *
+     * QuickTime File Format 2012 §2 "User Data Atoms" defines direct movie/track/media-level
+     * user-data atoms that carry textual metadata.
+     *
+     * @var array<string, string>
+     */
+    private const array UDTA_TEXT_KEYS = [
+        "\xA9nam" => 'com.apple.quicktime.title',
+        "\xA9ART" => 'com.apple.quicktime.artist',
+        "\xA9alb" => 'com.apple.quicktime.album',
+        "\xA9cmt" => 'com.apple.quicktime.comment',
+        "\xA9day" => 'com.apple.quicktime.creationDate',
+    ];
+
+    /**
      * Initialises the extractor with the source stream that contains the ISO BMFF structure.
      *
      * @param Stream $stream Stream positioned at the beginning of the media file to parse.
@@ -672,6 +688,8 @@ final readonly class IsoBmffParser
                 $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms, $fileOffsetOrigin);
             } elseif ($child->type === self::BOX_NAME) {
                 $this->parseUdtaNameAtom($child, $qtKeys);
+            } else {
+                $this->parseUdtaTextAtom($child, $qtKeys);
             }
         }
     }
@@ -706,6 +724,37 @@ final readonly class IsoBmffParser
         // Only set track name if not already present (movie-level takes precedence)
         if (!array_key_exists(QuickTimeMeta::TRACK_NAME_KEY, $qtKeys)) {
             $qtKeys[QuickTimeMeta::TRACK_NAME_KEY] = $value;
+        }
+    }
+
+    /**
+     * Parses recognized direct user-data text atoms inside udta containers.
+     *
+     * QuickTime File Format 2012 §2 "User Data Atoms": recognized atom types are
+     * decoded, unknown atom types are ignored without failing the container parse.
+     *
+     * @param BoxDescriptor   $atom   Box descriptor for a direct udta child atom.
+     * @param QuickTimeKeyMap $qtKeys
+     */
+    private function parseUdtaTextAtom(BoxDescriptor $atom, array &$qtKeys): void
+    {
+        $key = self::UDTA_TEXT_KEYS[$atom->type] ?? null;
+        if ($key === null || $atom->contentSize < 1) {
+            return;
+        }
+
+        $win = $atom->window;
+        $win->seek(0);
+
+        $raw   = $win->read($atom->contentSize);
+        $value = rtrim($raw, "\0");
+
+        if ($value === '') {
+            return;
+        }
+
+        if (!array_key_exists($key, $qtKeys)) {
+            $qtKeys[$key] = $value;
         }
     }
 
