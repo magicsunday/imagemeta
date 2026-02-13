@@ -1322,6 +1322,7 @@ final class TiffExifParser
         $this->validateDngImageStats($ifd0);
         $this->validateDngImageSequenceInfo($ifd0);
         $this->validateDngRgbTables($ifd0);
+        $this->validateDngDefaultUserCrop($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -5803,6 +5804,60 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('PreviewDateTime contains out-of-range date/time components: %s.', $entry->value),
                 1564,
+            );
+        }
+    }
+
+    /**
+     * Validates DefaultUserCrop (0xC7B5) per DNG 1.7.1.0.
+     *
+     * Must be RATIONAL[4]: (Top, Left, Bottom, Right) with 0 <= Top < Bottom <= 1.0
+     * and 0 <= Left < Right <= 1.0.
+     */
+    private function validateDngDefaultUserCrop(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::DEFAULT_USER_CROP);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if ($entry->type !== TiffConst::TYPE_RATIONAL || $entry->count !== 4) {
+            throw new ParseError(
+                sprintf('DefaultUserCrop must be RATIONAL[4], got type %d count %d.', $entry->type, $entry->count),
+                1565,
+            );
+        }
+
+        $value = $entry->value;
+
+        if (!$value instanceof ExifRationalList || count($value->values) !== 4) {
+            return;
+        }
+
+        $top    = $value->values[0]->denominator !== 0 ? $value->values[0]->numerator / $value->values[0]->denominator : -1.0;
+        $left   = $value->values[1]->denominator !== 0 ? $value->values[1]->numerator / $value->values[1]->denominator : -1.0;
+        $bottom = $value->values[2]->denominator !== 0 ? $value->values[2]->numerator / $value->values[2]->denominator : -1.0;
+        $right  = $value->values[3]->denominator !== 0 ? $value->values[3]->numerator / $value->values[3]->denominator : -1.0;
+
+        if ($top < 0.0 || $left < 0.0 || $bottom > 1.0 || $right > 1.0) {
+            throw new ParseError(
+                sprintf('DefaultUserCrop values must be in [0.0, 1.0], got (%.4f, %.4f, %.4f, %.4f).', $top, $left, $bottom, $right),
+                1566,
+            );
+        }
+
+        if ($top >= $bottom) {
+            throw new ParseError(
+                sprintf('DefaultUserCrop requires Top < Bottom, got %.4f >= %.4f.', $top, $bottom),
+                1567,
+            );
+        }
+
+        if ($left >= $right) {
+            throw new ParseError(
+                sprintf('DefaultUserCrop requires Left < Right, got %.4f >= %.4f.', $left, $right),
+                1568,
             );
         }
     }

@@ -5310,4 +5310,101 @@ final class TiffExifParserDngTagTest extends TestCase
             . $uniqueCameraModel
             . $dateTime;
     }
+
+    /**
+     * Accepts a valid DefaultUserCrop RATIONAL[4].
+     */
+    #[Test]
+    public function acceptsValidDefaultUserCrop(): void
+    {
+        // Top=0/1, Left=0/1, Bottom=1/1, Right=1/1 (full image)
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultUserCrop([[0, 1], [0, 1], [1, 1], [1, 1]]),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects DefaultUserCrop with Top >= Bottom.
+     */
+    #[Test]
+    public function rejectsDefaultUserCropTopGteBottom(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1567);
+
+        // Top=1/2, Bottom=1/4 → 0.5 >= 0.25
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultUserCrop([[1, 2], [0, 1], [1, 4], [1, 1]]),
+        );
+    }
+
+    /**
+     * Rejects DefaultUserCrop with out-of-range value.
+     */
+    #[Test]
+    public function rejectsDefaultUserCropOutOfRange(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1566);
+
+        // Bottom=3/2 = 1.5 (> 1.0)
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultUserCrop([[0, 1], [0, 1], [3, 2], [1, 1]]),
+        );
+    }
+
+    /**
+     * Builds a DNG with DefaultUserCrop (0xC7B5) RATIONAL[4] in IFD0.
+     *
+     * @param array{0: array{0: int, 1: int}, 1: array{0: int, 1: int}, 2: array{0: int, 1: int}, 3: array{0: int, 1: int}} $rationals
+     */
+    private function buildDngWithDefaultUserCrop(array $rationals): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $cropOffset        = $modelOffset + strlen($uniqueCameraModel);
+
+        $cropData = '';
+        foreach ($rationals as [$num, $den]) {
+            $cropData .= pack('V', $num) . pack('V', $den);
+        }
+
+        // DefaultUserCrop 0xC7B5 > UniqueCameraModel 0xC614 → correct order
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::DEFAULT_USER_CROP)
+            . pack('v', TiffConst::TYPE_RATIONAL)
+            . pack('V', 4)
+            . pack('V', $cropOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $cropData;
+    }
 }

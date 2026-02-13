@@ -246,7 +246,11 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 DngTag::DEFAULT_USER_CROP,
                 TiffConst::TYPE_RATIONAL,
                 4,
-                str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 4),
+                // Top=0/1, Left=0/1, Bottom=1/1, Right=1/1
+                "\x00\x00\x00\x00\x00\x00\x00\x01"
+                . "\x00\x00\x00\x00\x00\x00\x00\x01"
+                . "\x00\x00\x00\x01\x00\x00\x00\x01"
+                . "\x00\x00\x00\x01\x00\x00\x00\x01",
             ],
         ];
     }
