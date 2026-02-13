@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Dng;
 
+use Deprecated;
+
 /**
  * Centralised list of Adobe DNG (Digital Negative) tag identifiers.
  *
@@ -370,10 +372,20 @@ final readonly class DngTag
     public const int PROFILE_HUE_SAT_MAP_DATA_2 = 0xC6FB;
 
     /**
-     * Tertiary hue/saturation/value adjustment map encoded as IEEE-754 floats.
+     * Profile tone curve for non-linear tone mapping.
      * DNG Version 1.2.0.0 (p. 48-55).
+     *
+     * Note: this tag was previously misidentified as ProfileHueSatMapData3.
+     * The actual ProfileHueSatMapData3 tag ID is 0xCD39 (DNG 1.7.0.0).
      */
-    public const int PROFILE_HUE_SAT_MAP_DATA_3 = 0xC6FC;
+    public const int PROFILE_TONE_CURVE = 0xC6FC;
+
+    #[Deprecated(message: <<<'TXT'
+    Use PROFILE_TONE_CURVE instead. This alias preserves backward
+                 compatibility but maps to ProfileToneCurve (0xC6FC), not
+                 ProfileHueSatMapData3 (0xCD39).
+    TXT)]
+    public const int PROFILE_HUE_SAT_MAP_DATA_3 = self::PROFILE_TONE_CURVE;
 
     /**
      * Profile embed policy flag.
@@ -674,6 +686,18 @@ final readonly class DngTag
      * DNG Version 1.7.0.0 (p. 93).
      */
     public const int ILLUMINANT_DATA_3 = 0xCD37;
+
+    /**
+     * Tertiary hue/saturation/value adjustment map encoded as IEEE-754 floats.
+     * DNG Version 1.7.0.0 (p. 89).
+     */
+    public const int PROFILE_HUE_SAT_MAP_DATA_3_V17 = 0xCD39;
+
+    /**
+     * Tertiary dimensionality reduction matrix.
+     * DNG Version 1.7.0.0 (p. 90).
+     */
+    public const int REDUCTION_MATRIX_3 = 0xCD3A;
 
     /**
      * Prevent instantiation of this constants-only utility class.

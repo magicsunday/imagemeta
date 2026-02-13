@@ -3810,6 +3810,7 @@ final class TiffExifParser
         DngTag::CAMERA_CALIBRATION_3 => 'colorSquared',
         DngTag::REDUCTION_MATRIX_1   => 'colorTimesThree',
         DngTag::REDUCTION_MATRIX_2   => 'colorTimesThree',
+        DngTag::REDUCTION_MATRIX_3   => 'colorTimesThree',
         DngTag::FORWARD_MATRIX_1     => 'colorTimesThree',
         DngTag::FORWARD_MATRIX_2     => 'colorTimesThree',
         DngTag::FORWARD_MATRIX_3     => 'colorTimesThree',
