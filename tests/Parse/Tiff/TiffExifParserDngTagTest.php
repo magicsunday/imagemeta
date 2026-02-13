@@ -5619,6 +5619,94 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts ProfileCopyright as ASCII NUL-terminated UTF-8.
+     */
+    #[Test]
+    public function acceptsValidProfileCopyright(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::PROFILE_COPYRIGHT,
+                TiffConst::TYPE_ASCII,
+                "Copyright 2024\0",
+            ),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Accepts ProfileCopyright as BYTE NUL-terminated UTF-8.
+     */
+    #[Test]
+    public function acceptsValidProfileCopyrightByte(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::PROFILE_COPYRIGHT,
+                TiffConst::TYPE_BYTE,
+                "\xC2\xA9 2024\0",
+            ),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects ProfileCopyright with wrong type.
+     */
+    #[Test]
+    public function rejectsProfileCopyrightWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1571);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::PROFILE_COPYRIGHT,
+                TiffConst::TYPE_SHORT,
+                "\x00\x01",
+            ),
+        );
+    }
+
+    /**
+     * Rejects BYTE ProfileCopyright missing trailing NUL.
+     */
+    #[Test]
+    public function rejectsProfileCopyrightMissingNul(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1572);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::PROFILE_COPYRIGHT,
+                TiffConst::TYPE_BYTE,
+                'NoNul',
+            ),
+        );
+    }
+
+    /**
+     * Rejects BYTE ProfileCopyright with invalid UTF-8.
+     */
+    #[Test]
+    public function rejectsProfileCopyrightInvalidUtf8(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1573);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::PROFILE_COPYRIGHT,
+                TiffConst::TYPE_BYTE,
+                "\xC0\xAF\0",
+            ),
+        );
+    }
+
+    /**
      * Accepts CameraCalibrationSignature as ASCII NUL-terminated UTF-8.
      */
     #[Test]
