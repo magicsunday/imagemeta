@@ -1279,6 +1279,7 @@ final class TiffExifParser
         $this->validateDngIlluminantDependencies($ifd0);
         $this->validateDngTripleIlluminant($ifd0);
         $this->validateDngWhiteBalanceExclusivity($ifd0);
+        $this->validateDngCalibrationIlluminantPairZero($ifd0);
         $this->validateDngInterleaveVersionFloors($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -4031,6 +4032,30 @@ final class TiffExifParser
             throw new ParseError(
                 'AsShotNeutral and AsShotWhiteXY are mutually exclusive per DNG 1.7.1.0.',
                 1477,
+            );
+        }
+    }
+
+    /**
+     * Validates that when both CalibrationIlluminant1 and CalibrationIlluminant2
+     * are present, neither has value 0 (unknown).
+     */
+    private function validateDngCalibrationIlluminantPairZero(Ifd $ifd): void
+    {
+        $illum1 = $ifd->get(DngTag::CALIBRATION_ILLUMINANT_1);
+        $illum2 = $ifd->get(DngTag::CALIBRATION_ILLUMINANT_2);
+
+        if (!$illum1 instanceof IfdEntry || !$illum2 instanceof IfdEntry) {
+            return;
+        }
+
+        if (
+            (is_int($illum1->value) && $illum1->value === 0)
+            || (is_int($illum2->value) && $illum2->value === 0)
+        ) {
+            throw new ParseError(
+                'CalibrationIlluminant1 and CalibrationIlluminant2 must not have value 0 (unknown) when both are present per DNG 1.7.1.0.',
+                1479,
             );
         }
     }

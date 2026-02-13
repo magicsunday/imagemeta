@@ -1363,4 +1363,94 @@ final class TiffExifParserDngTagTest extends TestCase
             . $ifd0
             . $exifIfd;
     }
+
+    /**
+     * Both CalibrationIlluminant1 and CalibrationIlluminant2 present with one value 0 triggers ParseError.
+     */
+    #[Test]
+    public function rejectsPairedCalibrationIlluminantWithZeroValue(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1479);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithPairedIlluminants(0, 17),
+        );
+    }
+
+    /**
+     * Both CalibrationIlluminant1 and CalibrationIlluminant2 present with non-zero values is valid.
+     */
+    #[Test]
+    public function acceptsPairedCalibrationIlluminantsWithNonZeroValues(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithPairedIlluminants(17, 21),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::CALIBRATION_ILLUMINANT_1));
+        self::assertNotNull($parsed->ifd0->get(DngTag::CALIBRATION_ILLUMINANT_2));
+    }
+
+    /**
+     * Only CalibrationIlluminant1 present with value 0 does not trigger the pair rule.
+     */
+    #[Test]
+    public function acceptsSingleCalibrationIlluminantWithZeroValue(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCalibrationIlluminant(
+                DngTag::CALIBRATION_ILLUMINANT_1,
+                0,
+                null,
+            ),
+        );
+
+        self::assertNull($parsed->ifd0->get(DngTag::CALIBRATION_ILLUMINANT_2));
+    }
+
+    /**
+     * Builds a minimal TIFF with both CalibrationIlluminant1 and CalibrationIlluminant2.
+     */
+    private function buildTiffWithPairedIlluminants(
+        int $illuminant1Val,
+        int $illuminant2Val,
+    ): string {
+        $ifdOffset  = 8;
+        $entryCount = 4;
+
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            DngTag::CALIBRATION_ILLUMINANT_1 => pack('v', DngTag::CALIBRATION_ILLUMINANT_1)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $illuminant1Val) . pack('v', 0),
+            DngTag::CALIBRATION_ILLUMINANT_2 => pack('v', DngTag::CALIBRATION_ILLUMINANT_2)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $illuminant2Val) . pack('v', 0),
+        ];
+
+        ksort($tags);
+
+        $ifdData = pack('v', $entryCount);
+
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData;
+    }
 }
