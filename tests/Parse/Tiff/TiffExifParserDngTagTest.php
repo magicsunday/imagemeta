@@ -5590,6 +5590,59 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts a valid EnhanceParams NUL-terminated ASCII string.
+     */
+    #[Test]
+    public function acceptsValidEnhanceParams(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::ENHANCE_PARAMS,
+                TiffConst::TYPE_ASCII,
+                "Adobe SuperResolution v1\0",
+            ),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects EnhanceParams with wrong type (SHORT).
+     */
+    #[Test]
+    public function rejectsEnhanceParamsWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1575);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::ENHANCE_PARAMS,
+                TiffConst::TYPE_SHORT,
+                "\x00\x01",
+            ),
+        );
+    }
+
+    /**
+     * Rejects EnhanceParams with empty content (only NUL terminator).
+     */
+    #[Test]
+    public function rejectsEnhanceParamsEmpty(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1576);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::ENHANCE_PARAMS,
+                TiffConst::TYPE_ASCII,
+                "\0",
+            ),
+        );
+    }
+
+    /**
      * Accepts valid DepthFormat enum values (0, 1, 2).
      */
     #[Test]

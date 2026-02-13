@@ -1374,6 +1374,7 @@ final class TiffExifParser
         $this->validateDngRgbTables($ifd0);
         $this->validateDngDefaultUserCrop($ifd0);
         $this->validateDngDepthEnums($ifd0);
+        $this->validateDngEnhanceParams($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -6009,6 +6010,34 @@ final class TiffExifParser
                     1574,
                 );
             }
+        }
+    }
+
+    /**
+     * Validates EnhanceParams (0xC7EE) per DNG 1.7.1.0.
+     *
+     * Must be ASCII type with a non-empty NUL-terminated string.
+     */
+    private function validateDngEnhanceParams(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::ENHANCE_PARAMS);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if ($entry->type !== TiffConst::TYPE_ASCII) {
+            throw new ParseError(
+                sprintf('EnhanceParams must use ASCII type, got %d.', $entry->type),
+                1575,
+            );
+        }
+
+        if (!is_string($entry->value) || $entry->value === '') {
+            throw new ParseError(
+                'EnhanceParams must not be empty per DNG 1.7.1.0.',
+                1576,
+            );
         }
     }
 }
