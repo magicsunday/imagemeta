@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Model;
 
-use DateTimeInterface;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
@@ -34,23 +33,20 @@ use function strlen;
 final class ParsedExifDateTimeFormatTest extends TestCase
 {
     /**
-     * Supplies a valid "YYYY:MM:DD HH:MM:SS" DateTime tag.
-     * Confirms the parser accepts the conformant format.
+     * Supplies a valid "YYYY:MM:DD HH:MM:SS" DateTimeOriginal without OffsetTimeOriginal.
+     * Confirms no absolute timestamp is emitted when offset certainty is missing.
      *
      * @return void
      */
     #[Test]
-    public function acceptsValidDateTimeFormat(): void
+    public function doesNotAssumeUtcWhenOffsetMissing(): void
     {
         $parsedExif = $this->parsedExifWithDateTime(
             ExifTag::DATETIME_ORIGINAL,
             "2023:06:15 14:30:00\0",
         );
 
-        self::assertSame(
-            '2023-06-15T14:30:00+00:00',
-            $parsedExif->dateTimeOriginal()?->format(DateTimeInterface::ATOM),
-        );
+        self::assertNull($parsedExif->dateTimeOriginal());
     }
 
     /**

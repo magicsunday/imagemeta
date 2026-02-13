@@ -129,7 +129,8 @@ final class TiffExifParserExamplesTest extends TestCase
         self::assertEqualsWithDelta(50.0, $result->focalLengthMm(), 0.000001);
         self::assertEqualsWithDelta(6.5, $result->flashEnergy(), 0.000001);
         self::assertSame(200, $result->iso());
-        self::assertSame('2024:01:02 03:04:05', $result->dateTimeOriginal()?->format('Y:m:d H:i:s'));
+        self::assertNull($result->dateTimeOriginal());
+        self::assertSame('2024:01:02 03:04:05', $result->dateTimeOriginalRaw());
         self::assertSame('Sample EXIF 3.0', $result->userComment());
     }
 

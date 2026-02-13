@@ -2586,7 +2586,10 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns a best-effort capture timestamp. Defaults to UTC when no offset tag is provided.
+     * Returns a best-effort absolute capture timestamp.
+     *
+     * EXIF DateTime* values without OffsetTime* remain local/offset-unknown and
+     * are therefore not converted into an absolute instant here.
      *
      * @return DateTimeImmutable|null
      */
@@ -4519,14 +4522,15 @@ final readonly class ParsedExif
             return null;
         }
 
-        $timeZone = new DateTimeZone('UTC');
-        if ($rawOffset !== null && $rawOffset !== '') {
-            $parsedOffset = ValueConverters::parseOffset($rawOffset);
-            if (!$parsedOffset instanceof DateTimeZone) {
-                return null;
-            }
+        // EXIF DateTime* tags are local date/time values; without OffsetTime*
+        // the absolute instant is undefined and is intentionally not inferred.
+        if ($rawOffset === null || trim($rawOffset) === '') {
+            return null;
+        }
 
-            $timeZone = $parsedOffset;
+        $timeZone = ValueConverters::parseOffset($rawOffset);
+        if (!$timeZone instanceof DateTimeZone) {
+            return null;
         }
 
         $normalized = str_replace(':', '-', substr($rawDateTime, 0, 10)) . substr($rawDateTime, 10);
