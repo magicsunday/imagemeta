@@ -5590,6 +5590,35 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts ProfileEmbedPolicy values 0..3.
+     */
+    #[Test]
+    public function acceptsValidProfileEmbedPolicy(): void
+    {
+        foreach ([0, 1, 2, 3] as $value) {
+            $parsed = (new TiffExifParser())->parseFromBlob(
+                $this->buildDngWithLong1Tag(DngTag::PROFILE_EMBED_POLICY, $value),
+            );
+
+            self::assertSame('1.7.1.0', $parsed->dngVersion());
+        }
+    }
+
+    /**
+     * Rejects ProfileEmbedPolicy with out-of-domain value.
+     */
+    #[Test]
+    public function rejectsProfileEmbedPolicyOutOfDomain(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1583);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithLong1Tag(DngTag::PROFILE_EMBED_POLICY, 4),
+        );
+    }
+
+    /**
      * Accepts CameraCalibrationSignature as ASCII NUL-terminated UTF-8.
      */
     #[Test]

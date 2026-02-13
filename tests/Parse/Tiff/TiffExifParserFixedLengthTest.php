@@ -248,6 +248,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 1,
                 "\x00\x00\x00\x01\x00\x00\x00\x02",
             ],
+            'ProfileEmbedPolicy count 1' => [
+                DngTag::PROFILE_EMBED_POLICY,
+                TiffConst::TYPE_LONG,
+                1,
+                "\x00\x00\x00\x00",
+            ],
             'BaselineExposureOffset count 1' => [
                 DngTag::BASELINE_EXPOSURE_OFFSET,
                 TiffConst::TYPE_RATIONAL,

@@ -1059,6 +1059,13 @@ final class TiffExifParser
             'typeName' => 'RATIONAL',
             'spec'     => 'DNG 1.7.1.0',
         ],
+        DngTag::PROFILE_EMBED_POLICY => [
+            'name'     => 'ProfileEmbedPolicy',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_LONG,
+            'typeName' => 'LONG',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
         DngTag::BASELINE_EXPOSURE_OFFSET => [
             'name'     => 'BaselineExposureOffset',
             'count'    => 1,
@@ -1396,6 +1403,7 @@ final class TiffExifParser
         $this->validateDngDefaultUserCrop($ifd0);
         $this->validateDngDepthEnums($ifd0);
         $this->validateDngNoiseReductionApplied($ifd0);
+        $this->validateDngProfileEmbedPolicy($ifd0);
         $this->validateDngEnhanceParams($ifd0);
         $this->validateDngSubTileBlockSize($ifd0);
         $this->validateDngRowInterleaveFactor($ifd0);
@@ -6175,6 +6183,27 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('NoiseReductionApplied must be in [0.0, 1.0], got %.4f.', $value),
                 1582,
+            );
+        }
+    }
+
+    /**
+     * Validates ProfileEmbedPolicy (0xC6FD) per DNG 1.7.1.0.
+     *
+     * Must be LONG[1] with value in {0,1,2,3}.
+     */
+    private function validateDngProfileEmbedPolicy(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::PROFILE_EMBED_POLICY);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (!is_int($entry->value) || $entry->value < 0 || $entry->value > 3) {
+            throw new ParseError(
+                sprintf('ProfileEmbedPolicy value must be 0..3, got %d.', is_int($entry->value) ? $entry->value : -1),
+                1583,
             );
         }
     }
