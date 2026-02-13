@@ -393,6 +393,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(0xE3, 'vendor-one'),
             self::segment(0xE4, 'vendor-two'),
+            self::segment(0xFE, 'comment'),
             self::segment(0xE5, 'vendor-three'),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml),
             self::segment(0xE6, 'vendor-four')
@@ -1979,6 +1980,35 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Rejects TEM markers that appear before SOS in pre-scan marker parsing.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsTemMarkerBeforeSos(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'pre-sos-tem';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . "\xFF\x01"
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1502);
+        $this->expectExceptionMessageMatches('/TEM|before SOS|SOS/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
      * Accepts a valid stream when no restart marker appears in the pre-scan marker area.
      *
      * @return void
@@ -1987,6 +2017,30 @@ final class JpegParserTest extends TestCase
     public function acceptsStreamWithoutPreSosRestartMarkers(): void
     {
         $exifPayload = self::TIFF_HEADER . 'no-pre-sos-restart';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
+     * Accepts a valid stream when no TEM marker appears in the pre-scan marker area.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsStreamWithoutPreSosTemMarkers(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'no-pre-sos-tem';
 
         $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)

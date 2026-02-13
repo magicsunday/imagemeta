@@ -456,7 +456,13 @@ final class JpegParser
             }
 
             if ($marker === Marker::TEM) {
-                continue; // EXIF 3.0 §4.7.1 treats TEM as a non-payload marker outside segment syntax.
+                throw new ParseError(
+                    sprintf(
+                        'TEM marker at offset %d is not allowed before SOS marker in strict EXIF JPEG mode',
+                        $offset,
+                    ),
+                    1502,
+                );
             }
 
             if (($marker >= Marker::RST_FIRST) && ($marker <= Marker::RST_LAST)) {
