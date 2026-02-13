@@ -1292,6 +1292,7 @@ final class TiffExifParser
         $this->validateDngBackwardVersionGate($ifd0);
         $this->validateDngColorimetricReference($ifd0);
         $this->validateDngNoiseProfile($ifd0);
+        $this->validateDngHueSatMapDims($ifd0);
         $this->validateDngHueSatMapData($ifd0);
         $this->validateDngIlluminantData($ifd0);
         $this->validateDngProfileDynamicRange($ifd0);
@@ -4744,6 +4745,62 @@ final class TiffExifParser
                     1499,
                 );
             }
+        }
+    }
+
+    /**
+     * Validates DNG ProfileHueSatMapDims LONG[3] layout and minimum division constraints.
+     *
+     * HueDivisions >= 1, SaturationDivisions >= 2, ValueDivisions >= 1.
+     */
+    private function validateDngHueSatMapDims(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::PROFILE_HUE_SAT_MAP_DIMS);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if ($entry->type !== TiffConst::TYPE_LONG || $entry->count !== 3) {
+            throw new ParseError(
+                sprintf('ProfileHueSatMapDims must be LONG[3], got type %d count %d.', $entry->type, $entry->count),
+                1511,
+            );
+        }
+
+        $value = $entry->value;
+
+        if (!$value instanceof ExifNumericList || count($value->values) !== 3) {
+            return;
+        }
+
+        $hueDivs = $value->values[0];
+        $satDivs = $value->values[1];
+        $valDivs = $value->values[2];
+
+        if (!is_int($hueDivs) || !is_int($satDivs) || !is_int($valDivs)) {
+            return;
+        }
+
+        if ($hueDivs < 1) {
+            throw new ParseError(
+                sprintf('ProfileHueSatMapDims HueDivisions must be >= 1, got %d.', $hueDivs),
+                1512,
+            );
+        }
+
+        if ($satDivs < 2) {
+            throw new ParseError(
+                sprintf('ProfileHueSatMapDims SaturationDivisions must be >= 2, got %d.', $satDivs),
+                1513,
+            );
+        }
+
+        if ($valDivs < 1) {
+            throw new ParseError(
+                sprintf('ProfileHueSatMapDims ValueDivisions must be >= 1, got %d.', $valDivs),
+                1514,
+            );
         }
     }
 

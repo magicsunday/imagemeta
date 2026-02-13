@@ -3349,4 +3349,108 @@ final class TiffExifParserDngTagTest extends TestCase
             . $uniqueCameraModel
             . $payload;
     }
+
+    /**
+     * Accepts valid ProfileHueSatMapDims with conforming lower bounds.
+     */
+    #[Test]
+    public function acceptsProfileHueSatMapDimsValid(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildDngWithHueSatMapDimsOnly([1, 2, 1]),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects ProfileHueSatMapDims with HueDivisions = 0.
+     */
+    #[Test]
+    public function rejectsHueSatMapDimsHueZero(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1512);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithHueSatMapDimsOnly([0, 2, 1]),
+        );
+    }
+
+    /**
+     * Rejects ProfileHueSatMapDims with SaturationDivisions < 2.
+     */
+    #[Test]
+    public function rejectsHueSatMapDimsSatTooLow(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1513);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithHueSatMapDimsOnly([1, 1, 1]),
+        );
+    }
+
+    /**
+     * Rejects ProfileHueSatMapDims with ValueDivisions = 0.
+     */
+    #[Test]
+    public function rejectsHueSatMapDimsValueZero(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1514);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithHueSatMapDimsOnly([1, 2, 0]),
+        );
+    }
+
+    /**
+     * Builds a DNG TIFF with only ProfileHueSatMapDims (no data tag).
+     *
+     * @param array{0: int, 1: int, 2: int} $dims Hue, saturation, value divisions
+     */
+    private function buildDngWithHueSatMapDimsOnly(array $dims): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $dimsOffset        = $modelOffset + strlen($uniqueCameraModel);
+        $dimsData          = pack('V3', $dims[0], $dims[1], $dims[2]);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::PROFILE_HUE_SAT_MAP_DIMS)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 3)
+            . pack('V', $dimsOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $dimsData;
+    }
 }
