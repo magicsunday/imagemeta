@@ -2256,6 +2256,46 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * RGB CFA without CFAPlaneColor parses successfully (no false positive).
+     */
+    #[Test]
+    public function acceptsRgbCfaWithoutCfaPlaneColor(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCfaPhotometric(),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * Non-RGB CFA without CFAPlaneColor triggers ParseError.
+     */
+    #[Test]
+    public function rejectsNonRgbCfaWithoutCfaPlaneColor(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1497);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCfaPhotometric(cfaColors: pack('C4', 0, 1, 3, 4)),
+        );
+    }
+
+    /**
+     * Non-RGB CFA with CFAPlaneColor parses successfully.
+     */
+    #[Test]
+    public function acceptsNonRgbCfaWithCfaPlaneColor(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCfaPhotometric(cfaColors: pack('C4', 0, 1, 3, 4), includeCfaPlaneColor: true),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
      * Non-CFA photometric without CFA tags parses successfully.
      */
     #[Test]
@@ -2484,6 +2524,8 @@ final class TiffExifParserDngTagTest extends TestCase
         int $photometric = 32803,
         bool $includeRepeatPatternDim = true,
         bool $includeCfaPattern = true,
+        ?string $cfaColors = null,
+        bool $includeCfaPlaneColor = false,
     ): string {
         $ifdOffset   = 8;
         $ifd0Entries = 2;
@@ -2538,10 +2580,18 @@ final class TiffExifParserDngTagTest extends TestCase
         }
 
         if ($includeCfaPattern) {
+            $patternBytes               = $cfaColors ?? pack('C4', 0, 1, 1, 2);
             $tags[ExifTag::CFA_PATTERN] = pack('v', ExifTag::CFA_PATTERN)
                 . pack('v', TiffConst::TYPE_BYTE)
+                . pack('V', strlen($patternBytes))
+                . str_pad($patternBytes, 4, "\0");
+        }
+
+        if ($includeCfaPlaneColor) {
+            $tags[DngTag::CFA_PLANE_COLOR] = pack('v', DngTag::CFA_PLANE_COLOR)
+                . pack('v', TiffConst::TYPE_BYTE)
                 . pack('V', 4)
-                . pack('C4', 0, 1, 1, 2);
+                . pack('C4', 0, 1, 3, 4);
         }
 
         ksort($tags);

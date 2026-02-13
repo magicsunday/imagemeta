@@ -4504,11 +4504,32 @@ final class TiffExifParser
             );
         }
 
-        if (!$ifd->get(ExifTag::CFA_PATTERN) instanceof IfdEntry) {
+        $cfaEntry = $ifd->get(ExifTag::CFA_PATTERN);
+
+        if (!$cfaEntry instanceof IfdEntry) {
             throw new ParseError(
                 'CFA photometric (32803) requires CFAPattern in the same IFD.',
                 1491,
             );
+        }
+
+        if ($ifd->get(DngTag::CFA_PLANE_COLOR) instanceof IfdEntry) {
+            return;
+        }
+
+        $cfaValue = $cfaEntry->value;
+
+        if (!$cfaValue instanceof ExifNumericList) {
+            return;
+        }
+
+        foreach ($cfaValue->values as $color) {
+            if (is_int($color) && $color > 2) {
+                throw new ParseError(
+                    'Non-RGB CFA images require CFAPlaneColor per DNG 1.7.1.0.',
+                    1497,
+                );
+            }
         }
     }
 
