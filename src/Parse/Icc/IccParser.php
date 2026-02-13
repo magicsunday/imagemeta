@@ -244,8 +244,9 @@ final class IccParser
 
         $renderingIntent    = $this->extractRenderingIntent($data);
         $profileId          = $this->extractProfileId($data);
-        $description        = $this->extractTag($data, $profileSize, 'desc');
-        $copyright          = $this->extractTag($data, $profileSize, 'cprt');
+        $majorVersion       = ord($data[8]);
+        $description        = $this->extractTag($data, $profileSize, 'desc', $majorVersion);
+        $copyright          = $this->extractTag($data, $profileSize, 'cprt', $majorVersion);
         $whitePoint         = $this->extractWhitePoint($data, $profileSize);
         $cmmType            = $this->extractSignature(substr($data, IccTag::CMM_TYPE, 4));
         $profileDateTime    = $this->extractProfileDateTime($data);
@@ -749,15 +750,19 @@ final class IccParser
     /**
      * Extracts a text tag (desc, cprt) from the tag table.
      *
-     * ICC.1:2022 §9.2.22 (copyrightTag) and §9.2.41 (profileDescriptionTag).
+     * ICC.1:2022 §9.2.22 (copyrightTag) and §9.2.43 (profileDescriptionTag):
+     * the permitted type for both tags is multiLocalizedUnicodeType (mluc).
+     * Legacy profiles (major version < 4) may use descType or textType as
+     * fallback per ICC.1:2001 §6.5.17 and §6.5.22.
      *
      * @param string $data         Raw ICC profile payload.
      * @param int    $profileSize  Declared profile size limiting the accessible range.
      * @param string $tagSignature Tag signature to search for ('desc' or 'cprt').
+     * @param int    $majorVersion Profile major version for tag-type conformance gating.
      *
      * @return string|null Tag text or null when not available.
      */
-    private function extractTag(string $data, int $profileSize, string $tagSignature): ?string
+    private function extractTag(string $data, int $profileSize, string $tagSignature, int $majorVersion): ?string
     {
         $tagData = $this->findTagData($data, $profileSize, $tagSignature);
         if ($tagData === null) {
@@ -766,15 +771,21 @@ final class IccParser
 
         $type = substr($tagData, 0, 4);
 
-        if ($type === 'desc') {
-            return $this->parseDescTag($tagData);
-        }
-
         if ($type === 'mluc') {
             return $this->parseMlucTag($tagData);
         }
 
-        // ICC.1:2022 §10.24 textType for older profiles
+        // ICC v4+: only multiLocalizedUnicodeType is conforming for cprt/desc
+        if ($majorVersion >= 4) {
+            return null;
+        }
+
+        // Legacy fallbacks for ICC v2/v3 profiles
+        if ($type === 'desc') {
+            return $this->parseDescTag($tagData);
+        }
+
+        // ICC.1:2001 §6.5.18 textType
         if ($type === 'text') {
             return $this->parseTextTag($tagData);
         }

@@ -56,7 +56,7 @@ final class IccParserTest extends TestCase
 
         self::assertNotNull($result);
         self::assertSame('Test Profile', $result['description']);
-        self::assertSame('4.2.1', $result['version']);
+        self::assertSame('2.4', $result['version']);
         self::assertSame('XYZ ', $result['pcs']);
         self::assertSame('Media-Relative Colorimetric', $result['renderingIntent']);
         self::assertNull($result['profileId']);
@@ -84,7 +84,7 @@ final class IccParserTest extends TestCase
 
         self::assertNotNull($result);
         self::assertSame('Test Profile', $result['description']);
-        self::assertSame('4.2.1', $result['version']);
+        self::assertSame('2.4', $result['version']);
         self::assertSame('XYZ ', $result['pcs']);
         self::assertSame('Media-Relative Colorimetric', $result['renderingIntent']);
         self::assertNull($result['profileId']);
@@ -127,7 +127,7 @@ final class IccParserTest extends TestCase
 
         self::assertNotNull($result);
         self::assertSame('Test Profile', $result['description']);
-        self::assertSame('4.2.1', $result['version']);
+        self::assertSame('2.4', $result['version']);
     }
 
     /**
@@ -691,7 +691,8 @@ final class IccParserTest extends TestCase
     public function decodeRejectsTextTypeWithoutTrailingNul(): void
     {
         // Use text of exactly 4 bytes so 4-byte alignment padding doesn't inadvertently add a NUL
-        $profile = $this->buildTextTypeProfile('Hell');
+        // ICC v2: textType is permitted as a legacy fallback for cprt
+        $profile = $this->buildTextTypeProfile('Hell', 0x02400000);
 
         $decoder = new IccParser();
         $result  = $decoder->decode($profile);
@@ -710,7 +711,8 @@ final class IccParserTest extends TestCase
     public function decodeRejectsTextTypeWithNonAsciiBytes(): void
     {
         // String with byte 0x80 (non-7-bit-ASCII)
-        $profile = $this->buildTextTypeProfile("Test\x80Text\0");
+        // ICC v2: textType is permitted as a legacy fallback for cprt
+        $profile = $this->buildTextTypeProfile("Test\x80Text\0", 0x02400000);
 
         $decoder = new IccParser();
         $result  = $decoder->decode($profile);
@@ -728,7 +730,8 @@ final class IccParserTest extends TestCase
     #[Test]
     public function decodeAcceptsValidTextType(): void
     {
-        $profile = $this->buildTextTypeProfile("Valid ASCII Text\0");
+        // ICC v2: textType is permitted as a legacy fallback for cprt
+        $profile = $this->buildTextTypeProfile("Valid ASCII Text\0", 0x02400000);
 
         $decoder = new IccParser();
         $result  = $decoder->decode($profile);
@@ -778,12 +781,12 @@ final class IccParserTest extends TestCase
     /**
      * Builds a minimal ICC profile with a textType copyright tag.
      */
-    private function buildTextTypeProfile(string $text): string
+    private function buildTextTypeProfile(string $text, int $versionBytes = 0x04210000): string
     {
         // ICC header (128 bytes)
         $header = pack('N', 0)           // Profile size (placeholder, patched below)
             . str_repeat("\0", 4)        // Preferred CMM type
-            . pack('N', 0x04210000)      // Version 4.2.1
+            . pack('N', $versionBytes)   // Version
             . str_repeat("\0", 4)        // Device class
             . 'RGB '                     // Color space
             . 'XYZ '                     // PCS
@@ -832,7 +835,8 @@ final class IccParserTest extends TestCase
     #[Test]
     public function decodeAcceptsValidDescTag(): void
     {
-        $profile = $this->buildDescTypeProfile("Valid ASCII\0");
+        // ICC v2: descType is permitted as a legacy fallback for desc tag
+        $profile = $this->buildDescTypeProfile("Valid ASCII\0", 0x02400000);
 
         $decoder = new IccParser();
         $result  = $decoder->decode($profile);
@@ -851,7 +855,8 @@ final class IccParserTest extends TestCase
     public function decodeRejectsDescTagWithNonAsciiBytes(): void
     {
         // String with byte 0x80 (non-7-bit-ASCII)
-        $profile = $this->buildDescTypeProfile("Test\x80Text\0");
+        // ICC v2: descType is permitted as a legacy fallback for desc tag
+        $profile = $this->buildDescTypeProfile("Test\x80Text\0", 0x02400000);
 
         $decoder = new IccParser();
         $result  = $decoder->decode($profile);
@@ -870,7 +875,8 @@ final class IccParserTest extends TestCase
     public function decodeRejectsDescTagWithoutTrailingNul(): void
     {
         // Use text of exactly 12 bytes so 4-byte alignment padding doesn't inadvertently add a NUL
-        $profile = $this->buildDescTypeProfile('Hello World!');
+        // ICC v2: descType is permitted as a legacy fallback for desc tag
+        $profile = $this->buildDescTypeProfile('Hello World!', 0x02400000);
 
         $decoder = new IccParser();
         $result  = $decoder->decode($profile);
@@ -888,7 +894,8 @@ final class IccParserTest extends TestCase
     #[Test]
     public function decodeRejectsDescTagWithExcessiveLength(): void
     {
-        $profile = $this->buildDescTypeProfileWithLength("Test\0", 1000);
+        // ICC v2: descType is permitted as a legacy fallback for desc tag
+        $profile = $this->buildDescTypeProfileWithLength("Test\0", 1000, 0x02400000);
 
         $decoder = new IccParser();
         $result  = $decoder->decode($profile);
@@ -898,22 +905,60 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * ICC v4+: textType is not a permitted payload for cprt (only mluc is conforming).
+     *
+     * ICC.1:2022 §9.2.22: copyrightTag permitted type is multiLocalizedUnicodeType.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsTextTypeForCprtInModernProfile(): void
+    {
+        $profile = $this->buildTextTypeProfile("Valid ASCII Text\0", 0x04200000);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertNull($result['copyright']);
+    }
+
+    /**
+     * ICC v4+: descType is not a permitted payload for desc tag (only mluc is conforming).
+     *
+     * ICC.1:2022 §9.2.43: profileDescriptionTag permitted type is multiLocalizedUnicodeType.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsDescTypeForDescInModernProfile(): void
+    {
+        $profile = $this->buildDescTypeProfile("Valid ASCII\0", 0x04200000);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertNull($result['description']);
+    }
+
+    /**
      * Builds a minimal ICC profile with a descType description tag.
      */
-    private function buildDescTypeProfile(string $text): string
+    private function buildDescTypeProfile(string $text, int $versionBytes = 0x04210000): string
     {
-        return $this->buildDescTypeProfileWithLength($text, strlen($text));
+        return $this->buildDescTypeProfileWithLength($text, strlen($text), $versionBytes);
     }
 
     /**
      * Builds a minimal ICC profile with a descType description tag with custom length field.
      */
-    private function buildDescTypeProfileWithLength(string $text, int $asciiLength): string
+    private function buildDescTypeProfileWithLength(string $text, int $asciiLength, int $versionBytes = 0x04210000): string
     {
         // ICC header (128 bytes)
         $header = pack('N', 0)           // Profile size (placeholder, patched below)
             . str_repeat("\0", 4)        // Preferred CMM type
-            . pack('N', 0x04210000)      // Version 4.2.1
+            . pack('N', $versionBytes)   // Version
             . str_repeat("\0", 4)        // Device class
             . 'RGB '                     // Color space
             . 'XYZ '                     // PCS
