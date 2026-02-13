@@ -1281,6 +1281,7 @@ final class TiffExifParser
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
         $this->validateCameraControlEnumDomains($ifd0, $exifIfd, $ifd1, ...$additionalIfds);
+        $this->validateFlashBitfield($exifIfd);
         $this->validateJpegThumbnailStream($ifd1);
 
         if (!$jpegContext) {
@@ -1773,6 +1774,50 @@ final class TiffExifParser
                     );
                 }
             }
+        }
+    }
+
+    /**
+     * Validates EXIF Flash tag bitfield semantics and reserved combinations.
+     *
+     * EXIF 3.0 §4.6.6.7.21 defines bit 0 (fired), bits 1-2 (return status),
+     * bits 3-4 (mode), bit 5 (function present flag), and bit 6 (red-eye).
+     * Bit 7 and above are reserved and must remain zero in strict conformance.
+     */
+    private function validateFlashBitfield(?Ifd $exifIfd): void
+    {
+        if (!$exifIfd instanceof Ifd) {
+            return;
+        }
+
+        $entry = $exifIfd->get(ExifTag::FLASH);
+        if (!($entry instanceof IfdEntry) || !is_int($entry->value)) {
+            return;
+        }
+
+        $flashBits = $entry->value;
+        if (($flashBits < 0) || ($flashBits > 0x7F)) {
+            throw new ParseError(
+                sprintf('Flash value %d uses reserved high-order bits per EXIF 3.0 §4.6.6.7.21', $flashBits),
+                1417,
+            );
+        }
+
+        $fired      = ($flashBits & 0x01) !== 0;
+        $returnBits = ($flashBits >> 1) & 0x03;
+
+        if ($returnBits === 1) {
+            throw new ParseError(
+                sprintf('Flash value %d contains reserved return-status bits per EXIF 3.0 §4.6.6.7.21', $flashBits),
+                1418,
+            );
+        }
+
+        if ((($returnBits === 2) || ($returnBits === 3)) && !$fired) {
+            throw new ParseError(
+                sprintf('Flash value %d encodes return detection while flash-fired bit is unset per EXIF 3.0 §4.6.6.7.21', $flashBits),
+                1419,
+            );
         }
     }
 

@@ -34,7 +34,7 @@ final readonly class ExposureFactory
         $exposureProgram = $exifDocument?->exposureProgram();
         $meteringMode    = $exifDocument?->meteringMode();
         $whiteBalance    = $exifDocument?->whiteBalance();
-        $flashInfo       = ExifFlash::fromExifValue($exifDocument?->flash() ?? 0);
+        $flashInfo       = $exifDocument?->flashInfo() ?? ExifFlash::fromExifValue(0);
 
         return new Exposure(
             iso: $exifDocument?->isoBestEffort(),

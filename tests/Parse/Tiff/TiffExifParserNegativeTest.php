@@ -30,6 +30,9 @@ use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
+use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
+use MagicSunday\ImageMeta\Value\Enum\FlashMode;
+use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -1563,6 +1566,79 @@ final class TiffExifParserNegativeTest extends TestCase
         );
 
         self::assertNull($result->exifIfd);
+    }
+
+    /**
+     * Accepts valid Flash bitfield combinations and exposes typed flash details.
+     *
+     * @param int                $flashValue       Raw EXIF Flash SHORT value.
+     * @param bool               $fired            Decoded fired bit.
+     * @param FlashReturn|null   $returnDetection  Decoded return detection state.
+     * @param FlashMode|null     $mode             Decoded flash mode.
+     * @param FlashFunction|null $functionPresence Decoded flash function flag.
+     * @param bool               $redEyeReduction  Decoded red-eye bit.
+     */
+    #[Test]
+    #[DataProvider('provideValidFlashBitfields')]
+    public function acceptValidFlashBitfields(
+        int $flashValue,
+        bool $fired,
+        ?FlashReturn $returnDetection,
+        ?FlashMode $mode,
+        ?FlashFunction $functionPresence,
+        bool $redEyeReduction,
+    ): void {
+        $result    = (new TiffExifParser())->parseFromBlob($this->buildTiffWithExifShortTag(ExifTag::FLASH, $flashValue));
+        $flashInfo = $result->flashInfo();
+
+        self::assertSame($flashValue, $result->flash());
+        self::assertNotNull($flashInfo);
+        self::assertSame($fired, $flashInfo->fired);
+        self::assertSame($returnDetection, $flashInfo->returnDetection);
+        self::assertSame($mode, $flashInfo->mode);
+        self::assertSame($functionPresence, $flashInfo->functionPresence);
+        self::assertSame($redEyeReduction, $flashInfo->redEyeReduction);
+    }
+
+    /**
+     * Rejects reserved/invalid Flash bitfield combinations per EXIF 3.0 §4.6.6.7.21.
+     *
+     * @param int $flashValue Raw EXIF Flash SHORT value.
+     * @param int $errorCode  Expected ParseError code.
+     */
+    #[Test]
+    #[DataProvider('provideInvalidFlashBitfields')]
+    public function rejectInvalidFlashBitfields(int $flashValue, int $errorCode): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode($errorCode);
+        $this->expectExceptionMessageMatches('/Flash value .* EXIF 3\\.0 §4\\.6\\.6\\.7\\.21|Flash value .*flash-fired bit is unset/i');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithExifShortTag(ExifTag::FLASH, $flashValue),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{0:int, 1:bool, 2:FlashReturn|null, 3:FlashMode|null, 4:FlashFunction|null, 5:bool}>
+     */
+    public static function provideValidFlashBitfields(): iterable
+    {
+        yield 'no flash fired' => [0x00, false, FlashReturn::NO_STROBE_DETECTION, FlashMode::UNKNOWN, FlashFunction::PRESENT, false];
+        yield 'fired, no return detection, mode auto, red-eye off' => [0x19, true, FlashReturn::NO_STROBE_DETECTION, FlashMode::AUTO, FlashFunction::PRESENT, false];
+        yield 'fired, return detected, mode unknown, function absent, red-eye on' => [0x67, true, FlashReturn::RETURN_DETECTED, FlashMode::UNKNOWN, FlashFunction::ABSENT, true];
+        yield 'fired, return not detected, mode auto, function present, red-eye on' => [0x5D, true, FlashReturn::RETURN_NOT_DETECTED, FlashMode::AUTO, FlashFunction::PRESENT, true];
+    }
+
+    /**
+     * @return iterable<string, array{0:int, 1:int}>
+     */
+    public static function provideInvalidFlashBitfields(): iterable
+    {
+        yield 'reserved high bits set' => [0x80, 1417];
+        yield 'reserved return-status combination' => [0x02, 1418];
+        yield 'return-not-detected without fired bit' => [0x04, 1419];
+        yield 'return-detected without fired bit' => [0x06, 1419];
     }
 
     /**

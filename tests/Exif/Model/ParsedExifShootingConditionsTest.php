@@ -19,6 +19,9 @@ use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
+use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
+use MagicSunday\ImageMeta\Value\Enum\FlashMode;
+use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
@@ -119,6 +122,46 @@ final class ParsedExifShootingConditionsTest extends TestCase
         self::assertSame(WhiteBalance::MANUAL, $parsedExif->whiteBalance());
         self::assertSame(ExposureMode::AUTO, $parsedExif->exposureMode());
         self::assertNull($parsedExif->sceneCaptureType());
+    }
+
+    /**
+     * Exposes raw and typed flash information from the EXIF Flash bit field.
+     * It verifies representative bit decoding for fired state, return detection, and mode flags.
+     *
+     * @return void
+     */
+    #[Test]
+    public function returnsRawAndTypedFlashInformation(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::FLASH => new IfdEntry(ExifTag::FLASH, 3, 1, 0x7D),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+        $flashInfo  = $parsedExif->flashInfo();
+
+        self::assertSame(0x7D, $parsedExif->flash());
+        self::assertNotNull($flashInfo);
+        self::assertTrue($flashInfo->fired);
+        self::assertSame(FlashMode::AUTO, $flashInfo->mode);
+        self::assertSame(FlashReturn::RETURN_NOT_DETECTED, $flashInfo->returnDetection);
+        self::assertSame(FlashFunction::ABSENT, $flashInfo->functionPresence);
+        self::assertTrue($flashInfo->redEyeReduction);
+    }
+
+    /**
+     * Returns no flash metadata when the optional Flash tag is absent.
+     * It ensures both raw and typed accessors stay nullable.
+     *
+     * @return void
+     */
+    #[Test]
+    public function returnsNullForMissingFlashTag(): void
+    {
+        $parsedExif = new ParsedExif(new Ifd([]), null, null, null, null);
+
+        self::assertNull($parsedExif->flash());
+        self::assertNull($parsedExif->flashInfo());
     }
 
     /**

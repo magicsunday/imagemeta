@@ -50,6 +50,7 @@ use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
+use MagicSunday\ImageMeta\Value\FlashInfo;
 use MagicSunday\ImageMeta\Value\Oecf;
 use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
@@ -1439,6 +1440,17 @@ final readonly class ParsedExif
     public function flash(): ?int
     {
         return $this->int($this->exifIfd, ExifTag::FLASH);
+    }
+
+    /**
+     * Returns the decoded flash information value object when present.
+     *
+     * EXIF 3.0 §4.6.6.7.21 (Flash) defines the bit field decoded into
+     * fired state, return status, mode, flash-function flag, and red-eye mode.
+     */
+    public function flashInfo(): ?FlashInfo
+    {
+        return ValueConverters::flashFromShort($this->flash());
     }
 
     /**
