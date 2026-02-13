@@ -1589,16 +1589,19 @@ final readonly class IsoBmffParser
         $dataReferences = $this->mergeDataReferences($dataReferences, $payloads['dataReferences']);
         $idatPayload    = $payloads['idatPayload'];
 
-        foreach ($payloads['directExif'] as $blob) {
-            $exifBlobs[] = $blob;
-        }
-
         [$exifItemIds, $xmpItemIds] = $this->gatherItemIds($payloads['itemInfos'], $payloads['primaryItemId']);
 
         // Resolve EXIF item payloads and normalize leading headers.
         // EXIF 3.0 §4.8 notes that item payloads omit the APP1 signature; some
         // encoders still include it, so we normalise accordingly.
         foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $payloads['itemReferences'], $this->normalizeExifBlob(...), $payloads['dataReferences'], $idatPayload, $unresolvedItems) as $blob) {
+            $exifBlobs[] = $blob;
+        }
+
+        // EXIF 3.0 Annex A item metadata: when both item-based and direct Exif payloads
+        // are present, keep item-based payloads first so pitm-driven default selection
+        // remains deterministic for MetadataReader::fromIsoBmff().
+        foreach ($payloads['directExif'] as $blob) {
             $exifBlobs[] = $blob;
         }
 
@@ -1936,6 +1939,17 @@ final readonly class IsoBmffParser
         // Deduplicate while preserving encounter order to avoid processing the same item twice.
         $exifItemIds = array_values(array_unique($exifItemIds));
         $xmpItemIds  = array_values(array_unique($xmpItemIds));
+
+        if (
+            ($primaryItemId !== null)
+            && isset($itemInfos[$primaryItemId])
+            && $this->isExifItem($itemInfos[$primaryItemId])
+        ) {
+            // EXIF 3.0 Annex A.2.5: pitm marks the default metadata item; prioritize
+            // the primary item for EXIF candidate resolution when it is EXIF-typed.
+            array_unshift($exifItemIds, $primaryItemId);
+            $exifItemIds = array_values(array_unique($exifItemIds));
+        }
 
         if (
             ($primaryItemId !== null)

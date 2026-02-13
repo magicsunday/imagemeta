@@ -681,6 +681,80 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Prioritizes EXIF item resolution by pitm when multiple EXIF item candidates exist.
+     *
+     * @return void
+     */
+    #[Test]
+    public function prioritizesPrimaryExifItemWhenPitmPointsToExifCandidate(): void
+    {
+        $exifFirstRaw   = pack('N', 0) . "MM\x00\x2Aitem-exif-first";
+        $exifPrimaryRaw = pack('N', 0) . "MM\x00\x2Aitem-exif-primary";
+        $exifFirst      = "MM\x00\x2Aitem-exif-first";
+        $exifPrimary    = "MM\x00\x2Aitem-exif-primary";
+
+        $data = $this->createItemBasedMetaFile(
+            [
+                ['id' => 1, 'name' => 'ExifOne', 'contentType' => 'application/exif', 'payload' => $exifFirstRaw],
+                ['id' => 2, 'name' => 'ExifTwo', 'contentType' => 'application/exif', 'payload' => $exifPrimaryRaw],
+            ],
+            2,
+        );
+
+        $extractor   = $this->createExtractor($data);
+        [$exifBlobs] = $extractor->extract();
+
+        self::assertSame([$exifPrimary, $exifFirst], $exifBlobs);
+    }
+
+    /**
+     * Applies deterministic precedence between item-based EXIF and direct Exif box payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function prefersItemBasedExifBeforeDirectExifBoxPayload(): void
+    {
+        $itemExifRaw = pack('N', 0) . "MM\x00\x2Aitem-based-exif";
+        $itemExif    = "MM\x00\x2Aitem-based-exif";
+        $directExif  = "MM\x00\x2Adirect-exif-box";
+
+        $data = $this->createMetaFileWithDirectAndItemExif($itemExifRaw, $directExif, 1);
+
+        $extractor   = $this->createExtractor($data);
+        [$exifBlobs] = $extractor->extract();
+
+        self::assertSame([$itemExif, $directExif], $exifBlobs);
+    }
+
+    /**
+     * Keeps EXIF selection deterministic without pitm by preserving descriptor order.
+     *
+     * @return void
+     */
+    #[Test]
+    public function keepsDeterministicExifFallbackOrderWithoutPitm(): void
+    {
+        $exifFirstRaw  = pack('N', 0) . "MM\x00\x2Afallback-exif-1";
+        $exifSecondRaw = pack('N', 0) . "MM\x00\x2Afallback-exif-2";
+        $exifFirst     = "MM\x00\x2Afallback-exif-1";
+        $exifSecond    = "MM\x00\x2Afallback-exif-2";
+
+        $data = $this->createItemBasedMetaFile(
+            [
+                ['id' => 7, 'name' => 'ExifOne', 'contentType' => 'application/exif', 'payload' => $exifFirstRaw],
+                ['id' => 8, 'name' => 'ExifTwo', 'contentType' => 'application/exif', 'payload' => $exifSecondRaw],
+            ],
+            null,
+        );
+
+        $extractor   = $this->createExtractor($data);
+        [$exifBlobs] = $extractor->extract();
+
+        self::assertSame([$exifFirst, $exifSecond], $exifBlobs);
+    }
+
+    /**
      * Reads content identifiers from both QuickTime keys and mdta free-form boxes.
      * This confirms either metadata path can populate QuickTimeMeta::contentIdentifier().
      *
@@ -3602,6 +3676,38 @@ final class IsoBmffParserTest extends TestCase
         }
 
         $mdat = $this->box('mdat', $mdatPayload);
+
+        return $ftyp . $meta . $mdat;
+    }
+
+    /**
+     * Builds an ISO BMFF file containing one item-based EXIF payload plus one direct Exif box payload.
+     *
+     * @param string   $itemExif      TIFF payload resolved from iloc metadata item.
+     * @param string   $directExif    TIFF payload embedded in a direct Exif box.
+     * @param int|null $primaryItemId Optional primary item id declared via pitm.
+     *
+     * @return string
+     */
+    private function createMetaFileWithDirectAndItemExif(string $itemExif, string $directExif, ?int $primaryItemId): string
+    {
+        $items = [
+            ['id' => 1, 'name' => 'ExifItem', 'contentType' => 'application/exif', 'payload' => $itemExif],
+        ];
+
+        $infeBoxes = $this->buildInfeMimeBox(1, 'ExifItem', 'application/exif');
+        $iinf      = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infeBoxes);
+        $pitm      = $primaryItemId !== null ? $this->box('pitm', "\0\0\0\0" . pack('n', $primaryItemId)) : '';
+        $direct    = $this->box('Exif', pack('N', 0) . $directExif);
+
+        $placeholderIloc = $this->buildIlocV0ForItems($items, 0);
+        $meta            = $this->fullBox('meta', $pitm . $iinf . $placeholderIloc . $direct);
+        $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
+        $iloc       = $this->buildIlocV0ForItems($items, $offsetBase);
+        $meta       = $this->fullBox('meta', $pitm . $iinf . $iloc . $direct);
+        $mdat       = $this->box('mdat', $itemExif);
 
         return $ftyp . $meta . $mdat;
     }

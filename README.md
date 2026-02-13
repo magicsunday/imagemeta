@@ -36,6 +36,7 @@ composer require magicsunday/imagemeta
 * XMP parser output now preserves RDF container semantics (`rdf:Bag`, `rdf:Seq`, `rdf:Alt`) via explicit container-type metadata in the document model.
 * XMP namespace-prefix extraction now preserves default namespace declarations (`xmlns`) as empty-prefix mappings instead of emitting a fake `"xmlns"` prefix.
 * ISO BMFF item-based XMP resolution now treats `pitm` only as primary-item identity; XMP prioritization is applied only when the primary item's descriptor explicitly signals XMP content.
+* ISO BMFF EXIF selection is now deterministic and `pitm`-aware: primary EXIF items are prioritized among item candidates, and item-based EXIF payloads are ordered before direct `Exif` box payloads.
 * EXIF-conformant JPEG marker-order validation for APP1/APP2/APP11 placement, plus DQT/DHT/DRI/SOF structural ordering and duplicate-marker guards before SOS.
 * Strict EXIF-JPEG marker profile now rejects progressive `SOF2`; only baseline `SOF0` is accepted for conformant parsing.
 * Strict EXIF-JPEG SOF validation now enforces 8-bit precision, exactly three YCbCr component IDs (`1/2/3`), and legal YCbCr subsampling (`4:2:2`/`4:2:0`).
