@@ -30,6 +30,7 @@ use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 
 use function array_any;
@@ -1275,6 +1276,7 @@ final class TiffExifParser
             $this->validateEnhancedIfd($additionalIfd);
             $this->validateDngRolePhotometric($additionalIfd);
             $this->validateDngIfd0OnlyTags($additionalIfd);
+            $this->validateDngJxlTags($additionalIfd);
         }
 
         $this->validateDngMatrixTags($ifd0);
@@ -1732,9 +1734,14 @@ final class TiffExifParser
     private function validateCompressionDomain(Ifd $ifd0, ?Ifd $ifd1): void
     {
         $entry = $ifd0->get(ExifTag::COMPRESSION);
-        if ($entry instanceof IfdEntry && is_int($entry->value) && $entry->value !== 1) {
+
+        if (
+            $entry instanceof IfdEntry
+            && is_int($entry->value)
+            && $entry->value !== 1
+        ) {
             throw new ParseError(sprintf(
-                'Compression value %d in IFD0 is invalid; only 1 (uncompressed) is allowed per EXIF 3.0 §4.6.5.1.4.',
+                'Compression value %d in IFD0 is invalid; only 1 (uncompressed) is allowed.',
                 $entry->value,
             ), 1351);
         }
@@ -1744,9 +1751,15 @@ final class TiffExifParser
         }
 
         $thumbEntry = $ifd1->get(ExifTag::COMPRESSION);
-        if ($thumbEntry instanceof IfdEntry && is_int($thumbEntry->value) && $thumbEntry->value !== 1 && $thumbEntry->value !== 6) {
+
+        if (
+            $thumbEntry instanceof IfdEntry
+            && is_int($thumbEntry->value)
+            && $thumbEntry->value !== 1
+            && $thumbEntry->value !== 6
+        ) {
             throw new ParseError(sprintf(
-                'Compression value %d in IFD1 is invalid; only 1 or 6 allowed per EXIF 3.0 §4.6.5.1.4.',
+                'Compression value %d in IFD1 is invalid; only 1 or 6 is allowed.',
                 $thumbEntry->value,
             ), 1352);
         }
@@ -4398,6 +4411,54 @@ final class TiffExifParser
                     1488,
                 );
             }
+        }
+    }
+
+    /**
+     * Validates DNG JPEG XL tag constraints per DNG 1.7.1.0 §JXL tags.
+     *
+     * JXLEffort must be 1–9, JXLDecodeSpeed must be 1–4, and all three
+     * JXL tags may only appear with Compression = 52546 (JPEG XL).
+     */
+    private function validateDngJxlTags(Ifd $ifd): void
+    {
+        $jxlDistance    = $ifd->get(DngTag::JXL_DISTANCE);
+        $jxlEffort      = $ifd->get(DngTag::JXL_EFFORT);
+        $jxlDecodeSpeed = $ifd->get(DngTag::JXL_DECODE_SPEED);
+
+        $hasJxlTags = $jxlDistance instanceof IfdEntry
+            || $jxlEffort instanceof IfdEntry
+            || $jxlDecodeSpeed instanceof IfdEntry;
+
+        if (!$hasJxlTags) {
+            return;
+        }
+
+        $compression = $ifd->get(ExifTag::COMPRESSION);
+
+        if (
+            !$compression instanceof IfdEntry
+            || !is_int($compression->value)
+            || $compression->value !== Compression::JPEG_XL->value
+        ) {
+            throw new ParseError(
+                'JXL tags (JXLDistance, JXLEffort, JXLDecodeSpeed) require Compression = 52546 (JPEG XL).',
+                1490,
+            );
+        }
+
+        if ($jxlEffort instanceof IfdEntry && is_int($jxlEffort->value) && ($jxlEffort->value < 1 || $jxlEffort->value > 9)) {
+            throw new ParseError(
+                sprintf('JXLEffort must be 1–9, got %d.', $jxlEffort->value),
+                1489,
+            );
+        }
+
+        if ($jxlDecodeSpeed instanceof IfdEntry && is_int($jxlDecodeSpeed->value) && ($jxlDecodeSpeed->value < 1 || $jxlDecodeSpeed->value > 4)) {
+            throw new ParseError(
+                sprintf('JXLDecodeSpeed must be 1–4, got %d.', $jxlDecodeSpeed->value),
+                1489,
+            );
         }
     }
 }

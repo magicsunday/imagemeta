@@ -2117,4 +2117,144 @@ final class TiffExifParserDngTagTest extends TestCase
             . $ifd0
             . $ifd1;
     }
+
+    /**
+     * JXLEffort out of range triggers ParseError.
+     */
+    #[Test]
+    public function rejectsJxlEffortOutOfRange(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1489);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithJxlTags(effort: 10),
+        );
+    }
+
+    /**
+     * JXLDecodeSpeed out of range triggers ParseError.
+     */
+    #[Test]
+    public function rejectsJxlDecodeSpeedOutOfRange(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1489);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithJxlTags(decodeSpeed: 5),
+        );
+    }
+
+    /**
+     * JXL tags present with non-JXL compression triggers ParseError.
+     */
+    #[Test]
+    public function rejectsJxlTagsWithNonJxlCompression(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1490);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithJxlTags(compression: 7),
+        );
+    }
+
+    /**
+     * Valid JXL tags with JPEG XL compression parses successfully.
+     */
+    #[Test]
+    public function acceptsValidJxlTagsWithJxlCompression(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithJxlTags(),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * Builds a two-IFD TIFF where the second IFD contains Compression
+     * and JXL tuning tags.
+     */
+    private function buildTiffWithJxlTags(
+        int $compression = 52546,
+        float $distance = 0.0,
+        int $effort = 7,
+        int $decodeSpeed = 4,
+    ): string {
+        $ifdOffset   = 8;
+        $ifd0Entries = 2;
+        $ifd0Size    = 2 + ($ifd0Entries * 12) + 4;
+        $ifd1Offset  = $ifdOffset + $ifd0Size;
+        $ifd1Entries = 2;
+        $ifd1Size    = 2 + ($ifd1Entries * 12) + 4;
+        $ifd2Offset  = $ifd1Offset + $ifd1Size;
+
+        $ifd0 = pack('v', $ifd0Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('V', $ifd1Offset);
+
+        $ifd1 = pack('v', $ifd1Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('V', $ifd2Offset);
+
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::COMPRESSION => pack('v', ExifTag::COMPRESSION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $compression) . pack('v', 0),
+            DngTag::JXL_DISTANCE => pack('v', DngTag::JXL_DISTANCE)
+                . pack('v', TiffConst::TYPE_FLOAT)
+                . pack('V', 1)
+                . pack('g', $distance),
+            DngTag::JXL_EFFORT => pack('v', DngTag::JXL_EFFORT)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', 1)
+                . pack('V', $effort),
+            DngTag::JXL_DECODE_SPEED => pack('v', DngTag::JXL_DECODE_SPEED)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', 1)
+                . pack('V', $decodeSpeed),
+        ];
+
+        ksort($tags);
+
+        $ifd2 = pack('v', count($tags));
+
+        foreach ($tags as $entry) {
+            $ifd2 .= $entry;
+        }
+
+        $ifd2 .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifd0
+            . $ifd1
+            . $ifd2;
+    }
 }
