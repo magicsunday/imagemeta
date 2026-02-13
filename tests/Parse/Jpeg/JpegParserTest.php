@@ -2974,6 +2974,53 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Rejects FF00 byte-stuffing sequence in pre-SOS marker area.
+     *
+     * JPEG byte-stuffing (0xFF00) is only valid within entropy-coded scan
+     * data after SOS; encountering it before SOS indicates a malformed stream.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsByteStuffingBeforeSos(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'pre-sos-stuff';
+
+        // SOI + APP1(Exif) + FF00(invalid) + structural markers + SOS + EOI
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . "\xFF\x00"
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1506);
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Valid pre-SOS marker sequence without byte-stuffing parses correctly.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsValidPreSosMarkersWithoutByteStuffing(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'no-stuffing';
+        $jpeg        = $this->jpeg(self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload));
+        $extractor   = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
      * Creates a stream-backed extractor for an in-memory JPEG binary.
      * This helper keeps parser instantiation consistent across tests.
      *
