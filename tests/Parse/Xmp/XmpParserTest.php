@@ -840,6 +840,58 @@ XML;
     }
 
     /**
+     * Records prefixed namespace declarations as URI-to-prefix mappings.
+     *
+     * @return void
+     */
+    #[Test]
+    public function extractsPrefixedNamespaceMapping(): void
+    {
+        $xml = '<root xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>ok</dc:title></root>';
+
+        $document = (new XmpParser())->parse($xml);
+
+        self::assertArrayHasKey(self::DC_NS, $document->namespacePrefixes);
+        self::assertSame('dc', $document->namespacePrefixes[self::DC_NS]);
+    }
+
+    /**
+     * Records default xmlns declarations with an empty prefix marker, not "xmlns".
+     *
+     * @return void
+     */
+    #[Test]
+    public function extractsDefaultNamespaceMappingWithEmptyPrefix(): void
+    {
+        $xml = '<root xmlns="urn:default"><value>ok</value></root>';
+
+        $document = (new XmpParser())->parse($xml);
+
+        self::assertArrayHasKey('urn:default', $document->namespacePrefixes);
+        self::assertSame('', $document->namespacePrefixes['urn:default']);
+    }
+
+    /**
+     * Keeps prefixed mappings unchanged when default and prefixed declarations coexist.
+     *
+     * @return void
+     */
+    #[Test]
+    public function keepsPrefixedMappingsWhenDefaultNamespaceExists(): void
+    {
+        $xml = '<root xmlns="urn:default" xmlns:dc="http://purl.org/dc/elements/1.1/">'
+            . '<dc:title>ok</dc:title>'
+            . '</root>';
+
+        $document = (new XmpParser())->parse($xml);
+
+        self::assertArrayHasKey('urn:default', $document->namespacePrefixes);
+        self::assertSame('', $document->namespacePrefixes['urn:default']);
+        self::assertArrayHasKey(self::DC_NS, $document->namespacePrefixes);
+        self::assertSame('dc', $document->namespacePrefixes[self::DC_NS]);
+    }
+
+    /**
      * Mixes text nodes with a CDATA section inside a single element.
      * Ensures the parser concatenates mixed content into one string.
      *

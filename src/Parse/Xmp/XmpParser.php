@@ -262,7 +262,7 @@ final class XmpParser
             // XMP Specification Part 1 §7.2: Capture namespace declarations (xmlns:*)
             if ($attrNamespace === 'http://www.w3.org/2000/xmlns/') {
                 $namespaceUri = $reader->value;
-                $prefix       = $attrLocalName;
+                $prefix       = ($attrLocalName === 'xmlns') ? '' : $attrLocalName;
 
                 // Store the mapping if not already present (first declaration wins)
                 if ($namespaceUri !== '' && !isset($namespacePrefixes[$namespaceUri])) {
