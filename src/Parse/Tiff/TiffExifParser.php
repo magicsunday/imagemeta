@@ -1275,6 +1275,7 @@ final class TiffExifParser
             $this->validateEnhancedIfd($additionalIfd);
         }
 
+        $this->validateDngMatrixTags($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
         $this->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
@@ -3786,5 +3787,84 @@ final class TiffExifParser
         }
 
         return true;
+    }
+
+    /**
+     * DNG matrix tag count formulas keyed by tag constant.
+     *
+     * Each entry maps to either 'colorTimesThree' (ColorPlanes × 3) or
+     * 'colorSquared' (ColorPlanes × ColorPlanes).
+     *
+     * DNG 1.7.1.0 pp. 32–42 (ColorMatrix/CameraCalibration/ReductionMatrix),
+     * pp. 58–61 (ForwardMatrix), pp. 87–90 (tertiary tags).
+     *
+     * @var array<int, 'colorTimesThree'|'colorSquared'>
+     */
+    private const array DNG_MATRIX_COUNT_RULES = [
+        DngTag::COLOR_MATRIX_1       => 'colorTimesThree',
+        DngTag::COLOR_MATRIX_2       => 'colorTimesThree',
+        DngTag::COLOR_MATRIX_3       => 'colorTimesThree',
+        DngTag::CAMERA_CALIBRATION_1 => 'colorSquared',
+        DngTag::CAMERA_CALIBRATION_2 => 'colorSquared',
+        DngTag::CAMERA_CALIBRATION_3 => 'colorSquared',
+        DngTag::REDUCTION_MATRIX_1   => 'colorTimesThree',
+        DngTag::REDUCTION_MATRIX_2   => 'colorTimesThree',
+        DngTag::FORWARD_MATRIX_1     => 'colorTimesThree',
+        DngTag::FORWARD_MATRIX_2     => 'colorTimesThree',
+        DngTag::FORWARD_MATRIX_3     => 'colorTimesThree',
+    ];
+
+    /**
+     * Validates DNG matrix tags against ColorPlanes-driven count and SRATIONAL type rules.
+     *
+     * DNG 1.7.1.0 pp. 32–42 defines matrix dimensional rules driven by the number of
+     * color planes derived from CfaPlaneColor (Tag 0xC616). Each matrix tag must use
+     * SRATIONAL type and match the expected element count.
+     */
+    private function validateDngMatrixTags(Ifd $ifd): void
+    {
+        $cfaEntry = $ifd->get(DngTag::CFA_PLANE_COLOR);
+
+        if (!$cfaEntry instanceof IfdEntry) {
+            return;
+        }
+
+        $colorPlanes = $cfaEntry->count;
+
+        foreach (self::DNG_MATRIX_COUNT_RULES as $tag => $formula) {
+            $entry = $ifd->get($tag);
+
+            if (!$entry instanceof IfdEntry) {
+                continue;
+            }
+
+            if ($entry->type !== TiffConst::TYPE_SRATIONAL) {
+                throw new ParseError(
+                    sprintf(
+                        'DNG matrix tag 0x%04X requires SRATIONAL type, got %d per DNG 1.7.1.0.',
+                        $tag,
+                        $entry->type,
+                    ),
+                    1469,
+                );
+            }
+
+            $expected = $formula === 'colorSquared'
+                ? $colorPlanes * $colorPlanes
+                : $colorPlanes * 3;
+
+            if ($entry->count !== $expected) {
+                throw new ParseError(
+                    sprintf(
+                        'DNG matrix tag 0x%04X count %d does not match expected %d (ColorPlanes=%d) per DNG 1.7.1.0.',
+                        $tag,
+                        $entry->count,
+                        $expected,
+                        $colorPlanes,
+                    ),
+                    1470,
+                );
+            }
+        }
     }
 }

@@ -409,6 +409,161 @@ final class TiffExifParserDngTagTest extends TestCase
             . $outOfLine;
     }
 
+    /**
+     * Valid ColorMatrix1 with count matching CfaPlaneColor-derived ColorPlanes parses
+     * successfully per DNG 1.7.1.0.
+     */
+    #[Test]
+    public function parsesValidColorMatrixWithCorrectCount(): void
+    {
+        $blob = $this->buildTiffWithDngMatrixTag(
+            DngTag::COLOR_MATRIX_1,
+            TiffConst::TYPE_SRATIONAL,
+            9,
+            3,
+        );
+
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob($blob);
+
+        $entry = $parsed->ifd0->get(DngTag::COLOR_MATRIX_1);
+        self::assertNotNull($entry);
+    }
+
+    /**
+     * ColorMatrix1 with wrong element count triggers a ParseError per DNG 1.7.1.0.
+     */
+    #[Test]
+    public function rejectsColorMatrixWithWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $blob = $this->buildTiffWithDngMatrixTag(
+            DngTag::COLOR_MATRIX_1,
+            TiffConst::TYPE_SRATIONAL,
+            10,
+            3,
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * CameraCalibration1 with wrong element count triggers a ParseError per DNG 1.7.1.0.
+     */
+    #[Test]
+    public function rejectsCameraCalibrationWithWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $blob = $this->buildTiffWithDngMatrixTag(
+            DngTag::CAMERA_CALIBRATION_1,
+            TiffConst::TYPE_SRATIONAL,
+            10,
+            3,
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * ForwardMatrix1 with wrong element count triggers a ParseError per DNG 1.7.1.0.
+     */
+    #[Test]
+    public function rejectsForwardMatrixWithWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $blob = $this->buildTiffWithDngMatrixTag(
+            DngTag::FORWARD_MATRIX_1,
+            TiffConst::TYPE_SRATIONAL,
+            10,
+            3,
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Wrong TIFF type for ColorMatrix1 triggers a ParseError per DNG 1.7.1.0.
+     */
+    #[Test]
+    public function rejectsMatrixTagWithWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $blob = $this->buildTiffWithDngMatrixTag(
+            DngTag::COLOR_MATRIX_1,
+            TiffConst::TYPE_RATIONAL,
+            9,
+            3,
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Builds a classic TIFF with CfaPlaneColor (establishing ColorPlanes) and a single
+     * DNG matrix tag.
+     *
+     * @param int $matrixTag   DNG matrix tag constant.
+     * @param int $type        TIFF field type for the matrix tag.
+     * @param int $count       Element count for the matrix tag.
+     * @param int $colorPlanes Number of color planes (determines CfaPlaneColor count).
+     */
+    private function buildTiffWithDngMatrixTag(
+        int $matrixTag,
+        int $type,
+        int $count,
+        int $colorPlanes,
+    ): string {
+        $ifdOffset  = 8;
+        $entryCount = 4; // ImageWidth + ImageLength + CfaPlaneColor + matrix tag
+        $ifdSize    = 2 + (12 * $entryCount) + 4;
+        $valOffset  = $ifdOffset + $ifdSize;
+
+        // CfaPlaneColor: BYTE[colorPlanes] — fits inline for colorPlanes ≤ 4
+        $cfaValues = '';
+        for ($i = 0; $i < $colorPlanes; ++$i) {
+            $cfaValues .= pack('C', $i);
+        }
+
+        $cfaValues = str_pad($cfaValues, 4, "\0");
+
+        // SRATIONAL data: each entry is 8 bytes (numerator + denominator)
+        $sratData = '';
+        for ($i = 0; $i < $count; ++$i) {
+            $sratData .= pack('VV', 1, 1); // 1/1 for each element
+        }
+
+        // Tags must be in ascending order: IMAGE_WIDTH(0x100) < IMAGE_LENGTH(0x101)
+        // < CFA_PLANE_COLOR(0xC616) < matrix tag (0xC621+)
+        $ifdData = pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', DngTag::CFA_PLANE_COLOR)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', $colorPlanes)
+            . $cfaValues
+            . pack('v', $matrixTag)
+            . pack('v', $type)
+            . pack('V', $count)
+            . pack('V', $valOffset)
+            . pack('V', 0); // next IFD
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData
+            . $sratData;
+    }
+
     private function buildTiffWithMakerNoteSafety(int $safetyValue): string
     {
         // Layout: header(8) + IFD0(2 + 4*12 + 4 = 54) + EXIF IFD(2 + 12 + 4 = 18)
