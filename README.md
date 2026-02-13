@@ -41,6 +41,7 @@ composer require magicsunday/imagemeta
 * JPEG SOS conformance now validates header structure and SOF consistency (component count, duplicate selectors, and unknown selectors) before scan-data parsing.
 * JPEG container conformance now requires a valid `EOI` marker after `SOS` scan data and rejects truncated streams that end without `EOI`.
 * JPEG scan validation now enforces DRI/RST consistency by requiring restart markers (`RST0..RST7`) in scan data when a `DRI` marker is declared.
+* JPEG post-`SOS` scan-data validation now rejects unexpected marker classes (for example `APPn`, `COM`, or second `SOS`) before `EOI`.
 * JPEG marker placement now rejects pre-scan restart markers (`RST0..RST7`) before the first `SOS`.
 * EXIF marker-profile validation now rejects pre-scan `TEM` markers before the first `SOS`.
 * EXIF-bearing JPEG streams now enforce mandatory pre-scan marker groups (`DQT`, `DHT`, `SOF`, `SOS`) and fail fast when any required group is missing.

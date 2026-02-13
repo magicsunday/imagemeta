@@ -2302,17 +2302,16 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Inserts a Start of Scan marker followed by restart markers and extra APP data.
-     * This confirms parsing stops at SOS and ignores metadata after scan data begins.
+     * Rejects APP markers that appear in the scan-data region after SOS.
      *
      * @return void
      */
     #[Test]
-    public function stopsAtSosIgnoresRestartMarkers(): void
+    public function rejectsAppMarkerInScanDataRegionAfterSos(): void
     {
         $primaryExif = self::TIFF_HEADER . 'primary-before-sos';
         $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">BeforeSOS</x:xmpmeta>';
-        $ignoredExif = self::TIFF_HEADER . 'ignored-after-sos';
+        $lateExif    = self::TIFF_HEADER . 'late-exif';
 
         $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $primaryExif)
@@ -2322,16 +2321,47 @@ final class JpegParserTest extends TestCase
             . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
             . "\xFF\xDA" . pack('n', 12) . $this->defaultSosPayload()
             . "\xFF\x00" . 'A'
-            . "\xFF\xD0"
             . "\xFF" . chr(self::MARKER_APP1)
-            . pack('n', strlen(self::EXIF_SIGNATURE . $ignoredExif) + 2)
-            . self::EXIF_SIGNATURE . $ignoredExif
+            . pack('n', strlen(self::EXIF_SIGNATURE . $lateExif) + 2)
+            . self::EXIF_SIGNATURE . $lateExif
             . "\xFF\xD9";
 
         $extractor = $this->createExtractor($jpeg);
 
-        self::assertSame([$primaryExif], $extractor->extractExifBlobs());
-        self::assertSame([$xmpXml], $extractor->extractXmpPackets());
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1503);
+        $this->expectExceptionMessageMatches('/scan data|APP|post-SOS|after SOS/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects a second SOS marker encountered after scan-data parsing has started.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsSecondSosMarkerInScanDataRegion(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'double-sos';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . "\xFF\xDA" . pack('n', 12) . $this->defaultSosPayload()
+            . "\xFF\x00" . 'scan'
+            . "\xFF\xDA" . pack('n', 12) . $this->defaultSosPayload()
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1503);
+        $this->expectExceptionMessageMatches('/scan data|second SOS|post-SOS|after SOS/i');
+
+        $extractor->extractExifBlobs();
     }
 
     /**

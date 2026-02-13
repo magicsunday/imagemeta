@@ -747,7 +747,7 @@ final class JpegParser
 
         while (true) {
             try {
-                [$marker] = $this->nextMarkerWithOffset();
+                [$marker, $markerOffset] = $this->nextMarkerWithOffset();
             } catch (BoundsError $exception) {
                 throw new ParseError(
                     sprintf(
@@ -778,6 +778,16 @@ final class JpegParser
 
                 return;
             }
+
+            throw new ParseError(
+                sprintf(
+                    'Unexpected marker 0x%02X at offset %d in scan data after SOS marker at offset %d',
+                    $marker,
+                    $markerOffset,
+                    $sosOffset,
+                ),
+                1503,
+            );
         }
     }
 
