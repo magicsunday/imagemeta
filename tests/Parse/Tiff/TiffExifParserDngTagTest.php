@@ -4357,4 +4357,176 @@ final class TiffExifParserDngTagTest extends TestCase
 
         return $result;
     }
+
+    /**
+     * Accepts a valid MaskSubArea in a semantic mask IFD.
+     */
+    #[Test]
+    public function acceptsValidMaskSubArea(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithMaskSubArea(TiffConst::TYPE_LONG, 4, [0, 0, 100, 100]),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Accepts a MaskSubArea with geometry that exceeds bounds (silently ignored per spec).
+     */
+    #[Test]
+    public function acceptsMaskSubAreaWithOutOfBoundsGeometry(): void
+    {
+        // T_crop + ImageLength (50 + 100 = 150) > H_full (120) → geometry invalid, tag ignored
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithMaskSubArea(TiffConst::TYPE_LONG, 4, [50, 60, 200, 120]),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects MaskSubArea with wrong type.
+     */
+    #[Test]
+    public function rejectsMaskSubAreaWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1541);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithMaskSubArea(TiffConst::TYPE_SHORT, 4, [0, 0, 100, 100]),
+        );
+    }
+
+    /**
+     * Rejects MaskSubArea with wrong count.
+     */
+    #[Test]
+    public function rejectsMaskSubAreaWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1542);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithMaskSubArea(TiffConst::TYPE_LONG, 3, [0, 0, 100]),
+        );
+    }
+
+    /**
+     * Builds a 3-IFD DNG where IFD2 is a semantic mask IFD with MaskSubArea.
+     *
+     * @param int       $maskType  TIFF type code for MaskSubArea entry
+     * @param int       $maskCount Count for MaskSubArea entry
+     * @param list<int> $maskVals  Values for MaskSubArea
+     */
+    private function buildDngWithMaskSubArea(int $maskType, int $maskCount, array $maskVals): string
+    {
+        $ifdOffset         = 8;
+        $ifd0Entries       = 5;
+        $ifd0Size          = 2 + ($ifd0Entries * 12) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifd0Size;
+
+        $ifd1Offset  = $modelOffset + strlen($uniqueCameraModel);
+        $ifd1Entries = 2;
+        $ifd1Size    = 2 + ($ifd1Entries * 12) + 4;
+
+        $ifd2Offset  = $ifd1Offset + $ifd1Size;
+        $ifd2Entries = 6;
+        $ifd2Size    = 2 + ($ifd2Entries * 12) + 4;
+
+        $semanticName   = pack('Z*', 'SkinMask0');
+        $nameDataOffset = $ifd2Offset + $ifd2Size;
+
+        // MaskSubArea values stored out-of-line (count >= 2 LONGs = 8+ bytes > 4-byte value field)
+        $maskDataOffset = $nameDataOffset + strlen($semanticName);
+        $maskData       = '';
+
+        if ($maskType === TiffConst::TYPE_LONG) {
+            foreach ($maskVals as $v) {
+                $maskData .= pack('V', $v);
+            }
+        } elseif ($maskType === TiffConst::TYPE_SHORT) {
+            foreach ($maskVals as $v) {
+                $maskData .= pack('v', $v);
+            }
+        }
+
+        // IFD0
+        $ifd0 = pack('v', $ifd0Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('V', $ifd1Offset);
+
+        // IFD1 (minimal thumbnail)
+        $ifd1 = pack('v', $ifd1Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('V', $ifd2Offset);
+
+        // IFD2 (semantic mask): tags in ascending order
+        // 0x00FE NewSubfileType, 0x0100 ImageWidth, 0x0101 ImageLength,
+        // 0x0106 PhotometricInterpretation, 0xCD2E SemanticName, 0xCD38 MaskSubArea
+        $ifd2 = pack('v', $ifd2Entries)
+            . pack('v', TiffTag::NEW_SUBFILE_TYPE)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', 65540)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::PHOTOMETRIC_INTERPRETATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 52527) . pack('v', 0)
+            . pack('v', DngTag::SEMANTIC_NAME)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($semanticName))
+            . pack('V', $nameDataOffset)
+            . pack('v', DngTag::MASK_SUB_AREA)
+            . pack('v', $maskType)
+            . pack('V', $maskCount)
+            . pack('V', $maskDataOffset)
+            . pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifd0
+            . $uniqueCameraModel
+            . $ifd1
+            . $ifd2
+            . $semanticName
+            . $maskData;
+    }
 }

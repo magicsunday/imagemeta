@@ -1281,6 +1281,7 @@ final class TiffExifParser
             $this->validateDngJxlTags($additionalIfd);
             $this->validateDngCfaPhotometric($additionalIfd);
             $this->validateDngSemanticMaskIdentity($additionalIfd);
+            $this->validateDngMaskSubArea($additionalIfd);
         }
 
         $this->validateDngMatrixTags($ifd0);
@@ -5393,6 +5394,43 @@ final class TiffExifParser
             throw new ParseError(
                 'SemanticName must not be empty in Semantic Mask IFD.',
                 1540,
+            );
+        }
+    }
+
+    /**
+     * Validates MaskSubArea (0xCD38) in Semantic Mask IFDs.
+     *
+     * MaskSubArea must use type LONG with count 4: (T_crop, L_crop, W_full, H_full).
+     * Geometric constraints require T_crop + ImageLength <= H_full and
+     * L_crop + ImageWidth <= W_full. If geometric constraints fail the tag
+     * is ignored per DNG 1.6+ spec (no ParseError for geometry).
+     */
+    private function validateDngMaskSubArea(Ifd $ifd): void
+    {
+        $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+
+        if (!$photo instanceof IfdEntry || !is_int($photo->value) || $photo->value !== Photometric::PHOTOMETRIC_MASK->value) {
+            return;
+        }
+
+        $entry = $ifd->get(DngTag::MASK_SUB_AREA);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if ($entry->type !== TiffConst::TYPE_LONG) {
+            throw new ParseError(
+                sprintf('MaskSubArea must use LONG type, got %d.', $entry->type),
+                1541,
+            );
+        }
+
+        if ($entry->count !== 4) {
+            throw new ParseError(
+                sprintf('MaskSubArea must have count 4, got %d.', $entry->count),
+                1542,
             );
         }
     }
