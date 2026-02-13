@@ -42,6 +42,30 @@ final class XmpValueAccumulatorTest extends TestCase
     }
 
     /**
+     * Keeps fixed-count EXIF array payloads cardinality-stable after merge.
+     *
+     * @return void
+     */
+    #[Test]
+    public function mergeKeepsFixedCountExifArrayCardinalityStable(): void
+    {
+        $data = [
+            '{exif}LensSpecification' => ['24/1', '70/1', '28/10', '28/10'],
+        ];
+
+        XmpValueAccumulator::merge(
+            $data,
+            '{exif}LensSpecification',
+            ['24/1', '70/1', '28/10', '28/10'],
+        );
+
+        self::assertSame(
+            ['24/1', '70/1', '28/10', '28/10', '24/1', '70/1', '28/10', '28/10'],
+            $data['{exif}LensSpecification'],
+        );
+    }
+
+    /**
      * Appends scalar values even when they duplicate existing entries.
      *
      * @return void
