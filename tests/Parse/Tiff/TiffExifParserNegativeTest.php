@@ -1657,6 +1657,46 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * JPEGInterchangeFormat shall not be present in IFD0 for JPEG primary context.
+     */
+    #[Test]
+    public function rejectIfd0JpegInterchangeFormatInJpegContext(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1353);
+        $this->expectExceptionMessageMatches('/JPEGInterchangeFormat.*IFD0|IFD0.*JPEGInterchangeFormat/i');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithIfd0Pointer(
+                ExifTag::JPEG_INTERCHANGE_FORMAT,
+                TiffConst::TYPE_LONG,
+                1,
+            ),
+            jpegContext: true,
+        );
+    }
+
+    /**
+     * JPEGInterchangeFormatLength shall not be present in IFD0 for JPEG primary context.
+     */
+    #[Test]
+    public function rejectIfd0JpegInterchangeFormatLengthInJpegContext(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1353);
+        $this->expectExceptionMessageMatches('/JPEGInterchangeFormatLength.*IFD0|IFD0.*JPEGInterchangeFormatLength/i');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithIfd0Pointer(
+                ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH,
+                TiffConst::TYPE_LONG,
+                1,
+            ),
+            jpegContext: true,
+        );
+    }
+
+    /**
      * Accepts a valid SOI..EOI JPEG thumbnail stream referenced by IFD1 tags.
      */
     #[Test]

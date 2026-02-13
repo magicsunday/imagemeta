@@ -38,6 +38,7 @@ composer require magicsunday/imagemeta
 * JPEG scan validation now enforces DRI/RST consistency by requiring restart markers (`RST0..RST7`) in scan data when a `DRI` marker is declared.
 * APP11/JUMBF metadata extraction now validates transport sequence metadata, reassembles multi-segment payloads per box instance, and surfaces supported XML/XMP payloads while safely skipping unsupported box types.
 * EXIF IFD1 JPEG thumbnail validation enforces SOI/EOI boundaries and rejects APPn, COM, and restart markers in strict thumbnail streams.
+* JPEG-primary EXIF validation now rejects `IFD0` usage of `JPEGInterchangeFormat` and `JPEGInterchangeFormatLength` (thumbnail-only tags).
 * Strict EXIF camera-control enum-domain validation rejects reserved/out-of-range values for tags such as ExposureProgram, MeteringMode, LightSource, and related controls.
 * EXIF `Flash` bitfield parsing now enforces reserved-combination rejection during TIFF/EXIF parsing and exposes typed flash details through `ParsedExif::flashInfo()` while keeping raw `flash()` access.
 * EXIF `CompositeImage` now enforces value-domain and companion-tag dependencies (`SourceImageNumberOfCompositeImage`, `SourceExposureTimesOfCompositeImage`) when `CompositeImage=3`.

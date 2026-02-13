@@ -2113,7 +2113,9 @@ final class TiffExifParser
      * Validates that JPEG-prohibited tags are not present in IFD0.
      *
      * EXIF 3.0 §4.6.5.1 specifies several tags that shall not be used when the
-     * primary image data is JPEG-compressed (carried via JPEG markers instead).
+     * primary image data is JPEG-compressed (carried via JPEG markers instead),
+     * including JPEGInterchangeFormat/JPEGInterchangeFormatLength for thumbnail-only
+     * JPEG payload addressing (EXIF 3.0 §4.6.5.2.4-§4.6.5.2.5).
      *
      * @var list<array{int, string}> JPEG_PROHIBITED_TAGS
      */
@@ -2128,6 +2130,8 @@ final class TiffExifParser
         [ExifTag::STRIP_BYTE_COUNTS, 'StripByteCounts'],
         [ExifTag::PLANAR_CONFIGURATION, 'PlanarConfiguration'],
         [ExifTag::COMPRESSION, 'Compression'],
+        [ExifTag::JPEG_INTERCHANGE_FORMAT, 'JPEGInterchangeFormat'],
+        [ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 'JPEGInterchangeFormatLength'],
     ];
 
     private function validateJpegContextProhibitions(Ifd $ifd0): void
