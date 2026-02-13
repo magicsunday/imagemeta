@@ -13,7 +13,6 @@ namespace MagicSunday\ImageMeta\Exif\Model;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use Exception;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
@@ -2151,7 +2150,7 @@ final readonly class ParsedExif
     {
         $dateTime = $this->parseExifDateTime(
             $this->dateTimeOriginalRaw(),
-            $this->offsetTimeOriginal(),
+            $this->offsetTimeOriginalRaw(),
             $this->subSecTimeOriginal(),
         );
 
@@ -2306,6 +2305,66 @@ final readonly class ParsedExif
 
         foreach ($this->fallbackIfds(includeIfd0: true) as $ifd) {
             $candidate = $this->normalizedOffset($ifd, ExifTag::OFFSET_TIME);
+            if ($candidate !== null) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the raw OffsetTimeOriginal tag value without EXIF normalization.
+     */
+    private function offsetTimeOriginalRaw(): ?string
+    {
+        $offset = $this->rawOffset($this->exifIfd, ExifTag::OFFSET_TIME_ORIGINAL);
+        if ($offset !== null) {
+            return $offset;
+        }
+
+        foreach ($this->fallbackIfds(includeIfd0: true) as $ifd) {
+            $candidate = $this->rawOffset($ifd, ExifTag::OFFSET_TIME_ORIGINAL);
+            if ($candidate !== null) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the raw OffsetTimeDigitized tag value without EXIF normalization.
+     */
+    private function offsetTimeDigitizedRaw(): ?string
+    {
+        $offset = $this->rawOffset($this->exifIfd, ExifTag::OFFSET_TIME_DIGITIZED);
+        if ($offset !== null) {
+            return $offset;
+        }
+
+        foreach ($this->fallbackIfds(includeIfd0: true) as $ifd) {
+            $candidate = $this->rawOffset($ifd, ExifTag::OFFSET_TIME_DIGITIZED);
+            if ($candidate !== null) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the raw OffsetTime tag value without EXIF normalization.
+     */
+    private function offsetTimeRaw(): ?string
+    {
+        $offset = $this->rawOffset($this->exifIfd, ExifTag::OFFSET_TIME);
+        if ($offset !== null) {
+            return $offset;
+        }
+
+        foreach ($this->fallbackIfds(includeIfd0: true) as $ifd) {
+            $candidate = $this->rawOffset($ifd, ExifTag::OFFSET_TIME);
             if ($candidate !== null) {
                 return $candidate;
             }
@@ -2533,9 +2592,9 @@ final readonly class ParsedExif
      */
     public function captureDateTime(): ?DateTimeImmutable
     {
-        $offsetOriginal  = $this->offsetTimeOriginal();
-        $offsetDigitized = $this->offsetTimeDigitized();
-        $offset          = $this->offsetTime();
+        $offsetOriginal  = $this->offsetTimeOriginalRaw();
+        $offsetDigitized = $this->offsetTimeDigitizedRaw();
+        $offset          = $this->offsetTimeRaw();
 
         $attempts = [
             [
@@ -2574,7 +2633,7 @@ final readonly class ParsedExif
     {
         return $this->parseExifDateTime(
             $this->dateTimeDigitizedRaw(),
-            $this->offsetTimeDigitized(),
+            $this->offsetTimeDigitizedRaw(),
             $this->subSecTimeDigitized(),
         );
     }
@@ -2591,7 +2650,7 @@ final readonly class ParsedExif
     {
         return $this->parseExifDateTime(
             $this->dateTimeRaw(),
-            $this->offsetTime(),
+            $this->offsetTimeRaw(),
             $this->subSecTime(),
         );
     }
@@ -4385,6 +4444,23 @@ final readonly class ParsedExif
     }
 
     /**
+     * Returns the raw textual offset value from an EXIF OffsetTime* tag.
+     *
+     * EXIF 3.0 §4.6.6.6.3–§4.6.6.6.5 defines OffsetTime* as ASCII text.
+     */
+    private function rawOffset(?Ifd $ifd, int $tag): ?string
+    {
+        $value = $this->value($ifd, $tag);
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $trimmed = rtrim(trim($value), "\0");
+
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    /**
      * Returns sanitized sub-second components limited to microsecond precision.
      */
     private function sanitizedSubSec(?Ifd $ifd, int $tag): ?string
@@ -4443,12 +4519,14 @@ final readonly class ParsedExif
             return null;
         }
 
-        try {
-            $tz = ($rawOffset !== null && $rawOffset !== '')
-                ? new DateTimeZone($rawOffset)
-                : new DateTimeZone('UTC');
-        } catch (Exception) {
-            return null;
+        $timeZone = new DateTimeZone('UTC');
+        if ($rawOffset !== null && $rawOffset !== '') {
+            $parsedOffset = ValueConverters::parseOffset($rawOffset);
+            if (!$parsedOffset instanceof DateTimeZone) {
+                return null;
+            }
+
+            $timeZone = $parsedOffset;
         }
 
         $normalized = str_replace(':', '-', substr($rawDateTime, 0, 10)) . substr($rawDateTime, 10);
@@ -4464,7 +4542,7 @@ final readonly class ParsedExif
             }
         }
 
-        $dt = DateTimeImmutable::createFromFormat($format, $normalized, $tz);
+        $dt = DateTimeImmutable::createFromFormat($format, $normalized, $timeZone);
 
         return $dt !== false ? $dt : null;
     }

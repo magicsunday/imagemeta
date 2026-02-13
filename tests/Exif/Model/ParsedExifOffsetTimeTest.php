@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Model;
 
+use DateTimeInterface;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
@@ -168,6 +169,48 @@ final class ParsedExifOffsetTimeTest extends TestCase
         self::assertNull($parsedExif->offsetTime());
     }
 
+    /**
+     * Supplies DateTimeOriginal with a canonical OffsetTimeOriginal.
+     * Confirms datetime parsing keeps the EXIF offset when it is spec-conformant.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsCanonicalOffsetForDateTimeParsing(): void
+    {
+        $parsedExif = $this->parsedExifWithDateTimeAndOffset("2024:06:01 12:34:56\0", "+01:00\0");
+
+        self::assertSame('2024-06-01T12:34:56+01:00', $parsedExif->dateTimeOriginal()?->format(DateTimeInterface::ATOM));
+    }
+
+    /**
+     * Supplies DateTimeOriginal with a timezone identifier in OffsetTimeOriginal.
+     * Verifies identifier-based offsets are rejected in the datetime parsing path.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsTimezoneIdentifierForDateTimeParsing(): void
+    {
+        $parsedExif = $this->parsedExifWithDateTimeAndOffset("2024:06:01 12:34:56\0", "Europe/Berlin\0");
+
+        self::assertNull($parsedExif->dateTimeOriginal());
+    }
+
+    /**
+     * Supplies DateTimeOriginal with malformed OffsetTimeOriginal syntax.
+     * Verifies malformed offsets do not bypass EXIF datetime offset validation.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMalformedOffsetForDateTimeParsing(): void
+    {
+        $parsedExif = $this->parsedExifWithDateTimeAndOffset("2024:06:01 12:34:56\0", "+0100\0");
+
+        self::assertNull($parsedExif->dateTimeOriginal());
+    }
+
     private function parsedExifWithOffset(int $tag, string $value): ParsedExif
     {
         $exifIfd = new Ifd([
@@ -176,6 +219,26 @@ final class ParsedExifOffsetTimeTest extends TestCase
                 2,
                 strlen($value),
                 rtrim($value, "\0"),
+            ),
+        ]);
+
+        return new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+    }
+
+    private function parsedExifWithDateTimeAndOffset(string $dateTime, string $offset): ParsedExif
+    {
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(
+                ExifTag::DATETIME_ORIGINAL,
+                2,
+                strlen($dateTime),
+                rtrim($dateTime, "\0"),
+            ),
+            ExifTag::OFFSET_TIME_ORIGINAL => new IfdEntry(
+                ExifTag::OFFSET_TIME_ORIGINAL,
+                2,
+                strlen($offset),
+                rtrim($offset, "\0"),
             ),
         ]);
 
