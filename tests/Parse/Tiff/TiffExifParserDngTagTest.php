@@ -1817,4 +1817,223 @@ final class TiffExifParserDngTagTest extends TestCase
             . $ifd0
             . $ifd1;
     }
+
+    /**
+     * Valid AsShotNeutral with RATIONAL type and count matching ColorPlanes parses successfully.
+     */
+    #[Test]
+    public function acceptsValidAsShotNeutralLayout(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithWhiteBalanceLayout(
+                DngTag::AS_SHOT_NEUTRAL,
+                TiffConst::TYPE_RATIONAL,
+                3,
+                3,
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::AS_SHOT_NEUTRAL));
+    }
+
+    /**
+     * AsShotNeutral with wrong count triggers ParseError.
+     */
+    #[Test]
+    public function rejectsAsShotNeutralWithWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1486);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithWhiteBalanceLayout(
+                DngTag::AS_SHOT_NEUTRAL,
+                TiffConst::TYPE_RATIONAL,
+                2,
+                3,
+            ),
+        );
+    }
+
+    /**
+     * AsShotNeutral with wrong type triggers ParseError.
+     */
+    #[Test]
+    public function rejectsAsShotNeutralWithWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1486);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithWhiteBalanceLayout(
+                DngTag::AS_SHOT_NEUTRAL,
+                TiffConst::TYPE_BYTE,
+                3,
+                3,
+            ),
+        );
+    }
+
+    /**
+     * Valid AsShotWhiteXY with RATIONAL[2] parses successfully.
+     */
+    #[Test]
+    public function acceptsValidAsShotWhiteXYLayout(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithWhiteBalanceLayout(
+                DngTag::AS_SHOT_WHITE_XY,
+                TiffConst::TYPE_RATIONAL,
+                2,
+                3,
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::AS_SHOT_WHITE_XY));
+    }
+
+    /**
+     * AsShotWhiteXY with wrong count triggers ParseError.
+     */
+    #[Test]
+    public function rejectsAsShotWhiteXYWithWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1487);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithWhiteBalanceLayout(
+                DngTag::AS_SHOT_WHITE_XY,
+                TiffConst::TYPE_RATIONAL,
+                3,
+                3,
+            ),
+        );
+    }
+
+    /**
+     * AsShotWhiteXY with wrong type triggers ParseError.
+     */
+    #[Test]
+    public function rejectsAsShotWhiteXYWithWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1487);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithWhiteBalanceLayout(
+                DngTag::AS_SHOT_WHITE_XY,
+                TiffConst::TYPE_BYTE,
+                2,
+                3,
+            ),
+        );
+    }
+
+    /**
+     * Builds a TIFF with CfaPlaneColor, ColorMatrix1 and a white-balance tag
+     * with given type/count. ColorMatrix1 is included to satisfy the matrix
+     * validation for non-monochrome DNG.
+     */
+    private function buildTiffWithWhiteBalanceLayout(
+        int $wbTag,
+        int $wbType,
+        int $wbCount,
+        int $colorPlanes,
+    ): string {
+        $ifdOffset = 8;
+
+        // CfaPlaneColor: BYTE, count = colorPlanes, inline (padded to 4 bytes)
+        $cfaValues = '';
+
+        for ($i = 0; $i < $colorPlanes; ++$i) {
+            $cfaValues .= pack('C', $i);
+        }
+
+        $cfaValues = str_pad($cfaValues, 4, "\x00");
+
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            DngTag::CFA_PLANE_COLOR => pack('v', DngTag::CFA_PLANE_COLOR)
+                . pack('v', TiffConst::TYPE_BYTE)
+                . pack('V', $colorPlanes)
+                . $cfaValues,
+        ];
+
+        // Placeholders for out-of-line tags
+        $tags[DngTag::COLOR_MATRIX_1] = 'CM1_PLACEHOLDER';
+        $tags[$wbTag]                 = 'WB_PLACEHOLDER';
+
+        ksort($tags);
+
+        $entryCount = count($tags);
+        $ifdSize    = 2 + ($entryCount * 12) + 4;
+        $curOffset  = $ifdOffset + $ifdSize;
+        $outOfLine  = '';
+
+        // ColorMatrix1: SRATIONAL, count = colorPlanes * 3
+        $cm1Count = $colorPlanes * 3;
+        $cm1Data  = '';
+
+        for ($i = 0; $i < $cm1Count; ++$i) {
+            $cm1Data .= pack('VV', 1, 1); // SRATIONAL 1/1
+        }
+
+        $tags[DngTag::COLOR_MATRIX_1] = pack('v', DngTag::COLOR_MATRIX_1)
+            . pack('v', TiffConst::TYPE_SRATIONAL)
+            . pack('V', $cm1Count)
+            . pack('V', $curOffset);
+        $outOfLine .= $cm1Data;
+        $curOffset += strlen($cm1Data);
+
+        // WB tag data
+        $wbData = '';
+
+        for ($i = 0; $i < $wbCount; ++$i) {
+            if ($wbType === TiffConst::TYPE_RATIONAL || $wbType === TiffConst::TYPE_SRATIONAL) {
+                $wbData .= pack('VV', 1, 3);
+            } elseif ($wbType === TiffConst::TYPE_SHORT) {
+                $wbData .= pack('v', 1);
+            } else {
+                $wbData .= pack('C', 0x31); // Single byte fallback for wrong-type tests
+            }
+        }
+
+        $totalSz = strlen($wbData);
+
+        if ($totalSz <= 4) {
+            $valOrOffset = str_pad($wbData, 4, "\x00");
+        } else {
+            $valOrOffset = pack('V', $curOffset);
+            $outOfLine .= $wbData;
+        }
+
+        $tags[$wbTag] = pack('v', $wbTag)
+            . pack('v', $wbType)
+            . pack('V', $wbCount)
+            . $valOrOffset;
+
+        ksort($tags);
+
+        $ifdData = pack('v', $entryCount);
+
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData
+            . $outOfLine;
+    }
 }

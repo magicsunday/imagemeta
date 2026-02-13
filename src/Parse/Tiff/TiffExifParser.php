@@ -1280,6 +1280,7 @@ final class TiffExifParser
         $this->validateDngIlluminantDependencies($ifd0);
         $this->validateDngTripleIlluminant($ifd0);
         $this->validateDngWhiteBalanceExclusivity($ifd0);
+        $this->validateDngWhiteBalanceLayout($ifd0);
         $this->validateDngCalibrationIlluminantPairZero($ifd0);
         $this->validateDngProfileToneCurve($ifd0);
         $this->validateDngInterleaveVersionFloors($ifd0);
@@ -4035,6 +4036,50 @@ final class TiffExifParser
             throw new ParseError(
                 'AsShotNeutral and AsShotWhiteXY are mutually exclusive per DNG 1.7.1.0.',
                 1477,
+            );
+        }
+    }
+
+    /**
+     * Validates DNG white-balance tag type and count constraints.
+     *
+     * AsShotNeutral: SHORT or RATIONAL, count = ColorPlanes.
+     * AsShotWhiteXY: RATIONAL, count = 2.
+     */
+    private function validateDngWhiteBalanceLayout(Ifd $ifd): void
+    {
+        $cfaEntry    = $ifd->get(DngTag::CFA_PLANE_COLOR);
+        $colorPlanes = $cfaEntry instanceof IfdEntry ? $cfaEntry->count : null;
+
+        $neutral = $ifd->get(DngTag::AS_SHOT_NEUTRAL);
+
+        if ($neutral instanceof IfdEntry) {
+            $validType = $neutral->type === TiffConst::TYPE_SHORT
+                || $neutral->type === TiffConst::TYPE_RATIONAL;
+
+            if (!$validType || ($colorPlanes !== null && $neutral->count !== $colorPlanes)) {
+                throw new ParseError(
+                    sprintf(
+                        'AsShotNeutral must be SHORT or RATIONAL with count = ColorPlanes (%s) per DNG 1.7.1.0, got type %d count %d.',
+                        $colorPlanes !== null ? (string) $colorPlanes : 'unknown',
+                        $neutral->type,
+                        $neutral->count,
+                    ),
+                    1486,
+                );
+            }
+        }
+
+        $whiteXY = $ifd->get(DngTag::AS_SHOT_WHITE_XY);
+
+        if ($whiteXY instanceof IfdEntry && ($whiteXY->type !== TiffConst::TYPE_RATIONAL || $whiteXY->count !== 2)) {
+            throw new ParseError(
+                sprintf(
+                    'AsShotWhiteXY must be RATIONAL with count 2 per DNG 1.7.1.0, got type %d count %d.',
+                    $whiteXY->type,
+                    $whiteXY->count,
+                ),
+                1487,
             );
         }
     }
