@@ -59,7 +59,7 @@ final class UndefinedTextMarker
             self::MARKER_ASCII   => self::MARKER_ASCII,
             self::MARKER_UNICODE => self::MARKER_UNICODE,
             self::MARKER_JIS     => self::MARKER_JIS,
-            self::MARKER_UNDEFINED, 'UNDEF', 'UTF8' => self::MARKER_UNDEFINED,
+            self::MARKER_UNDEFINED, 'UNDEF' => self::MARKER_UNDEFINED,
             default => '',
         };
     }

@@ -67,6 +67,23 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     }
 
     /**
+     * Supplies a non-spec UTF8 marker prefix.
+     * Confirms EXIF marker normalization rejects the prefix as invalid.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsUserCommentWithUtf8MarkerPrefix(): void
+    {
+        $raw = "UTF8\0\0\0\0Payload";
+
+        $parsedExif = $this->parsedExifWithUserComment($raw);
+
+        self::assertNull($parsedExif->userComment());
+        self::assertNull($parsedExif->userCommentEncoding());
+    }
+
+    /**
      * Supplies a UserComment with only 8 null bytes and no content.
      * Confirms that an empty UNDEFINED-prefix comment returns null.
      *
