@@ -11,18 +11,30 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\IsoBmff;
 
+use function array_key_exists;
 use function array_keys;
 
 /**
- * Holds ISO BMFF item references keyed by source item id.
+ * Holds ISO BMFF item references keyed by metadata context and source item id.
  */
 final readonly class IsoBmffItemReferenceMap
 {
     /**
-     * @param array<int, list<IsoBmffItemReference>> $references
+     * Legacy unambiguous lookup table keyed by source item id.
+     *
+     * If the same source item id exists in multiple contexts, it is omitted here
+     * to avoid ambiguous cross-context lookup results.
+     *
+     * @var array<int, list<IsoBmffItemReference>>
      */
-    public function __construct(public array $references)
+    public array $references;
+
+    /**
+     * @param array<int, array<int, list<IsoBmffItemReference>>> $referencesByContext
+     */
+    public function __construct(public array $referencesByContext)
     {
+        $this->references = $this->buildUnambiguousReferenceIndex($referencesByContext);
     }
 
     /**
@@ -32,11 +44,43 @@ final readonly class IsoBmffItemReferenceMap
      */
     public function fromItemIds(): array
     {
-        return array_keys($this->references);
+        $fromItemIds = [];
+
+        foreach ($this->referencesByContext as $contextReferences) {
+            foreach ($contextReferences as $fromItemId => $_references) {
+                if (!array_key_exists($fromItemId, $fromItemIds)) {
+                    $fromItemIds[$fromItemId] = true;
+                }
+            }
+        }
+
+        return array_keys($fromItemIds);
+    }
+
+    /**
+     * Returns all metadata context offsets that expose item references.
+     *
+     * @return list<int>
+     */
+    public function contextOffsets(): array
+    {
+        return array_keys($this->referencesByContext);
+    }
+
+    /**
+     * Returns references from the given source item id in the provided metadata context.
+     *
+     * @return list<IsoBmffItemReference>
+     */
+    public function referencesForContext(int $contextOffset, int $fromItemId): array
+    {
+        return $this->referencesByContext[$contextOffset][$fromItemId] ?? [];
     }
 
     /**
      * Returns references that originate from the given item id.
+     *
+     * For ambiguous item ids that occur in multiple metadata contexts, returns an empty list.
      *
      * @return list<IsoBmffItemReference>
      */
@@ -50,6 +94,37 @@ final readonly class IsoBmffItemReferenceMap
      */
     public function isEmpty(): bool
     {
-        return $this->references === [];
+        return $this->referencesByContext === [];
+    }
+
+    /**
+     * Flattens references into a legacy map where each source item id is unique across contexts.
+     *
+     * @param array<int, array<int, list<IsoBmffItemReference>>> $referencesByContext
+     *
+     * @return array<int, list<IsoBmffItemReference>>
+     */
+    private function buildUnambiguousReferenceIndex(array $referencesByContext): array
+    {
+        $resolvedReferences = [];
+        $ambiguousFromIds   = [];
+
+        foreach ($referencesByContext as $contextReferences) {
+            foreach ($contextReferences as $fromItemId => $references) {
+                if (array_key_exists($fromItemId, $ambiguousFromIds)) {
+                    continue;
+                }
+
+                if (array_key_exists($fromItemId, $resolvedReferences)) {
+                    unset($resolvedReferences[$fromItemId]);
+                    $ambiguousFromIds[$fromItemId] = true;
+                    continue;
+                }
+
+                $resolvedReferences[$fromItemId] = $references;
+            }
+        }
+
+        return $resolvedReferences;
     }
 }

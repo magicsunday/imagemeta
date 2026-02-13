@@ -1615,6 +1615,35 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds two independent meta contexts that both use item_ID=1 in iref entries.
+     * This verifies exported item references remain context-scoped and are not globally merged.
+     */
+    #[Test]
+    public function preserveItemReferencesPerMetaContextWithoutGlobalMerge(): void
+    {
+        $extractor = $this->createExtractor($this->createFileWithTwoMetaIrefContexts(
+            ['relation' => 'dimg', 'toItemId' => 2],
+            ['relation' => 'thmb', 'toItemId' => 3],
+        ));
+
+        [, , , $itemReferences] = $extractor->extract();
+
+        self::assertInstanceOf(IsoBmffItemReferenceMap::class, $itemReferences);
+        self::assertCount(2, $itemReferences->contextOffsets());
+        self::assertSame([], $itemReferences->referencesFor(1));
+
+        $relationTargets = [];
+        foreach ($itemReferences->contextOffsets() as $contextOffset) {
+            $references = $itemReferences->referencesForContext($contextOffset, 1);
+            self::assertCount(1, $references);
+            $relationTargets[] = $references[0]->relation . ':' . $references[0]->toItemId;
+        }
+
+        sort($relationTargets);
+        self::assertSame(['dimg:2', 'thmb:3'], $relationTargets);
+    }
+
+    /**
      * Creates an iref entry with a reference count above the configured maximum.
      * This ensures a ParseError is raised to prevent pathological allocations.
      *
@@ -3814,6 +3843,33 @@ final class IsoBmffParserTest extends TestCase
         $dinf      = $this->box('dinf', $dref);
 
         return $this->fullBox('meta', $iinf . $iloc . $dinf);
+    }
+
+    /**
+     * Builds an ISO BMFF file with two independent meta boxes containing overlapping iref item IDs.
+     *
+     * @param array{relation:string,toItemId:int} $firstReference
+     * @param array{relation:string,toItemId:int} $secondReference
+     */
+    private function createFileWithTwoMetaIrefContexts(array $firstReference, array $secondReference): string
+    {
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        return $ftyp
+            . $this->createMetaBoxWithIrefReference($firstReference['relation'], $firstReference['toItemId'])
+            . $this->createMetaBoxWithIrefReference($secondReference['relation'], $secondReference['toItemId']);
+    }
+
+    /**
+     * Builds one full `meta` box with a single iref relation from item_ID=1.
+     */
+    private function createMetaBoxWithIrefReference(string $relation, int $toItemId): string
+    {
+        $entryPayload = pack('n', 1) . pack('n', 1) . pack('n', $toItemId);
+        $entry        = $this->box($relation, $entryPayload);
+        $iref         = $this->fullBox('iref', $entry);
+
+        return $this->fullBox('meta', $iref);
     }
 
     /**

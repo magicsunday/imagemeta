@@ -39,12 +39,37 @@ final class IsoBmffItemReferenceMapTest extends TestCase
     public function mapProvidesReferencesBySourceId(): void
     {
         $reference = new IsoBmffItemReference('cdsc', 12);
-        $map       = new IsoBmffItemReferenceMap([5 => [$reference]]);
+        $map       = new IsoBmffItemReferenceMap([100 => [5 => [$reference]]]);
 
         self::assertSame([5], $map->fromItemIds());
+        self::assertSame([100], $map->contextOffsets());
+        self::assertSame([$reference], $map->referencesForContext(100, 5));
         self::assertSame([$reference], $map->referencesFor(5));
         self::assertSame([], $map->referencesFor(9));
         self::assertFalse($map->isEmpty());
+    }
+
+    /**
+     * Keeps overlapping source item identifiers separate across metadata contexts.
+     *
+     * @return void
+     */
+    #[Test]
+    public function mapKeepsOverlappingSourceIdsScopedByContext(): void
+    {
+        $firstReference  = new IsoBmffItemReference('dimg', 2);
+        $secondReference = new IsoBmffItemReference('thmb', 3);
+
+        $map = new IsoBmffItemReferenceMap([
+            32 => [1 => [$firstReference]],
+            96 => [1 => [$secondReference]],
+        ]);
+
+        self::assertSame([1], $map->fromItemIds());
+        self::assertSame([32, 96], $map->contextOffsets());
+        self::assertSame([$firstReference], $map->referencesForContext(32, 1));
+        self::assertSame([$secondReference], $map->referencesForContext(96, 1));
+        self::assertSame([], $map->referencesFor(1));
     }
 
     /**

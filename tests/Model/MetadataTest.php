@@ -169,7 +169,9 @@ final class MetadataTest extends TestCase
         ]);
 
         $itemReferences = new IsoBmffItemReferenceMap([
-            1 => [new IsoBmffItemReference('cdsc', 2)],
+            1 => [
+                1 => [new IsoBmffItemReference('cdsc', 2)],
+            ],
         ]);
 
         $iccProfile  = 'icc-profile';
