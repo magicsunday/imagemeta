@@ -476,6 +476,15 @@ final class JpegParser
                 );
             }
 
+            // EXIF 3.0 §4.5.4: SOI is a stand-alone marker that shall appear
+            // exactly once at the beginning of the JPEG stream.
+            if ($marker === Marker::SOI) {
+                throw new ParseError(
+                    sprintf('duplicate SOI marker at offset %d', $offset),
+                    1507,
+                );
+            }
+
             $isAppSegment  = $marker >= Marker::APP_FIRST && $marker <= Marker::APP_LAST;
             $segmentLength = $this->readSegmentLength($marker, $offset, $isAppSegment);
             $payloadLength = $segmentLength - 2;

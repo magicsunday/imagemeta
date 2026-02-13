@@ -2927,6 +2927,53 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Rejects a duplicate SOI marker before SOS in pre-scan marker parsing.
+     *
+     * EXIF 3.0 §4.5.4: SOI shall appear once at the beginning of the JPEG
+     * stream; any subsequent SOI in the marker flow is non-conformant.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsDuplicateSoiBeforeSos(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'dup-soi';
+
+        // SOI + APP1(Exif) + SOI(duplicate) + structural markers + SOS + EOI
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . "\xFF\xD8"
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1507);
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * A valid JPEG with a single initial SOI still parses correctly.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsValidJpegWithSingleSoi(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'single-soi-ok';
+        $jpeg        = $this->jpeg(self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload));
+        $extractor   = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
      * Creates a stream-backed extractor for an in-memory JPEG binary.
      * This helper keeps parser instantiation consistent across tests.
      *
