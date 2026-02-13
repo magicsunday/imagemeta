@@ -361,14 +361,17 @@ final class ValueConvertersTest extends TestCase
     public static function provideOffsetStrings(): iterable
     {
         yield 'already normalised' => ['+01:30', '+01:30'];
-        yield 'missing sign with colon' => ['05:45', '+05:45'];
-        yield 'compact digits' => ['0530', '+05:30'];
-        yield 'decimal hours' => ['-5.5', '-05:30'];
-        yield 'utc prefix' => ['UTC-4', '-04:00'];
-        yield 'zulu designator' => ['Z', '+00:00'];
+        yield 'missing sign with colon' => ['05:45', null];
+        yield 'compact digits' => ['0530', null];
+        yield 'decimal hours' => ['-5.5', null];
+        yield 'utc prefix' => ['UTC-4', null];
+        yield 'zulu designator' => ['Z', null];
         yield 'maximum offset' => ['+14:00', '+14:00'];
         yield 'positive above maximum' => ['+14:30', null];
         yield 'negative above maximum' => ['-14:30', null];
+        yield 'single digit hour with sign' => ['+5:30', null];
+        yield 'no minutes' => ['14', null];
+        yield 'minute overflow' => ['+01:75', null];
         yield 'invalid string' => ['abc', null];
         yield 'out of range' => ['+15:00', null];
     }
@@ -395,17 +398,20 @@ final class ValueConvertersTest extends TestCase
     public static function provideOffsetMinutes(): iterable
     {
         yield 'positive offset' => ['+01:30', 90];
-        yield 'negative compact' => ['-0330', -210];
-        yield 'decimal hours' => ['2.25', 135];
+        yield 'negative compact' => ['-0330', null];
+        yield 'decimal hours' => ['2.25', null];
         yield 'maximum offset' => ['+14:00', 840];
         yield 'positive above maximum' => ['+14:30', null];
         yield 'negative above maximum' => ['-14:30', null];
-        yield 'srational positive' => [new ExifRational(11, 2), 330];
+        yield 'single digit hour with sign' => ['+5:30', null];
+        yield 'no minutes' => ['14', null];
+        yield 'minute overflow' => ['-12:99', null];
+        yield 'srational positive' => [new ExifRational(11, 2), null];
         yield 'srational list negative' => [
             new ExifRationalList([
                 new ExifRational(-11, 2),
             ]),
-            -330,
+            null,
         ];
         yield 'invalid input' => ['invalid', null];
     }

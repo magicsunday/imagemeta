@@ -16,20 +16,9 @@ use Exception;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 
-use function ctype_digit;
-use function explode;
-use function floor;
-use function in_array;
 use function is_string;
-use function ltrim;
 use function preg_match;
-use function round;
 use function sprintf;
-use function str_contains;
-use function str_replace;
-use function str_starts_with;
-use function strlen;
-use function strtoupper;
 use function substr;
 use function trim;
 
@@ -119,126 +108,28 @@ final readonly class DateTimeConverter
      */
     public function parseOffsetComponents(int|float|string|ExifRational|ExifRationalList|null $value): ?array
     {
-        if ($value === null) {
+        if (!is_string($value)) {
             return null;
         }
 
-        if ($value instanceof ExifRationalList) {
-            $first = $value->values[0] ?? null;
-
-            if ($first instanceof ExifRational) {
-                return $this->parseOffsetComponents($first);
-            }
-
+        $trimmed = trim($value);
+        if ($trimmed === '') {
             return null;
         }
 
-        if ($value instanceof ExifRational) {
-            if ($value->denominator === 0) {
-                return null;
-            }
-
-            $value = (float) $value->numerator / (float) $value->denominator;
-        }
-
-        $raw = is_string($value) ? trim($value) : (string) $value;
-        $raw = str_replace(['−', '–', '—'], '-', $raw);
-        $raw = str_replace(['＋'], '+', $raw);
-
-        if ($raw === '') {
+        if (preg_match('/^[+-]\d{2}:\d{2}$/', $trimmed) !== 1) {
             return null;
         }
 
-        $upper = strtoupper($raw);
-
-        if (in_array($upper, ['Z', 'UTC', 'GMT'], true)) {
-            return ['sign' => 1, 'hours' => 0, 'minutes' => 0];
-        }
-
-        if (str_starts_with($upper, 'UTC') || str_starts_with($upper, 'GMT')) {
-            $raw = trim(substr($raw, 3));
-
-            if ($raw === '') {
-                return ['sign' => 1, 'hours' => 0, 'minutes' => 0];
-            }
-        }
-
-        $sign = 1;
-        $raw  = ltrim($raw);
-
-        if ($raw === '') {
-            return null;
-        }
-
-        $firstChar = $raw[0];
-
-        if ($firstChar === '+' || $firstChar === '-') {
-            $sign = $firstChar === '-' ? -1 : 1;
-            $raw  = substr($raw, 1);
-        }
-
-        $raw = trim($raw);
-
-        if ($raw === '') {
-            return null;
-        }
-
-        $normalized = str_replace([' ', '\t'], '', $raw);
-        $normalized = str_replace(',', '.', $normalized);
-
-        if (str_contains($normalized, ':')) {
-            $parts = explode(':', $normalized, 3);
-            if (count($parts) < 2) {
-                return null;
-            }
-
-            $hoursPart   = $parts[0];
-            $minutesPart = $parts[1];
-
-            if ($hoursPart === '' || $minutesPart === '') {
-                return null;
-            }
-
-            if (!ctype_digit($hoursPart) || !ctype_digit($minutesPart)) {
-                return null;
-            }
-
-            $hours   = (int) $hoursPart;
-            $minutes = (int) substr($minutesPart, 0, 2);
-        } elseif (preg_match('/^\d+(?:\.\d+)?$/', $normalized) === 1) {
-            if (str_contains($normalized, '.')) {
-                $floatHours = (float) $normalized;
-                $hours      = (int) floor(abs($floatHours));
-                $minutes    = (int) round((abs($floatHours) - $hours) * 60);
-            } else {
-                if (!ctype_digit($normalized)) {
-                    return null;
-                }
-
-                $length = strlen($normalized);
-
-                if ($length <= 2) {
-                    $hours   = (int) $normalized;
-                    $minutes = 0;
-                } else {
-                    $hours   = (int) substr($normalized, 0, $length - 2);
-                    $minutes = (int) substr($normalized, -2);
-                }
-            }
-        } else {
-            return null;
-        }
-
-        if ($minutes < 0) {
-            return null;
-        }
+        $sign    = $trimmed[0] === '-' ? -1 : 1;
+        $hours   = (int) substr($trimmed, 1, 2);
+        $minutes = (int) substr($trimmed, 4, 2);
 
         if ($minutes >= 60) {
-            $hours += (int) floor($minutes / 60);
-            $minutes %= 60;
+            return null;
         }
 
-        // EXIF OffsetTime domain: maximum absolute offset is 14:00.
+        // EXIF 3.0 §4.6.6.6.3-§4.6.6.6.5: maximum absolute offset is 14:00.
         if ($hours > 14 || ($hours === 14 && $minutes !== 0)) {
             return null;
         }
