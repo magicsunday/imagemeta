@@ -125,6 +125,7 @@ final class IccParser
      *     profileClass: string|null,
      *     colorSpace: string|null,
      *     profileDateTime: string|null,
+     *     profileDateTimeUtc: string|null,
      *     profileSignature: string|null,
      *     profileFlags: string|null,
      *     primaryPlatform: string|null,
@@ -248,6 +249,7 @@ final class IccParser
         $whitePoint         = $this->extractWhitePoint($data, $profileSize);
         $cmmType            = $this->extractSignature(substr($data, IccTag::CMM_TYPE, 4));
         $profileDateTime    = $this->extractProfileDateTime($data);
+        $profileDateTimeUtc = $profileDateTime !== null ? ($profileDateTime . 'Z') : null;
         $profileSignature   = $this->extractSignature(substr($data, IccTag::PROFILE_SIGNATURE, 4));
         $profileFlags       = $this->extractHexField($data, IccTag::PROFILE_FLAGS, 4, true);
         $primaryPlatform    = $this->extractSignature(substr($data, IccTag::PRIMARY_PLATFORM, 4));
@@ -327,6 +329,7 @@ final class IccParser
             'profileClass'       => $profileClass,
             'colorSpace'         => $colorSpace,
             'profileDateTime'    => $profileDateTime,
+            'profileDateTimeUtc' => $profileDateTimeUtc,
             'profileSignature'   => $profileSignature,
             'profileFlags'       => $profileFlags,
             'primaryPlatform'    => $primaryPlatform,
@@ -589,7 +592,7 @@ final class IccParser
      *
      * @param string $data Raw ICC profile payload.
      *
-     * @return string|null Formatted timestamp or null when unavailable.
+     * @return string|null Formatted UTC timestamp without suffix or null when unavailable/invalid.
      */
     private function extractProfileDateTime(string $data): ?string
     {
@@ -610,21 +613,14 @@ final class IccParser
         }
 
         // ICC.1:2022 §7.2.6: validate calendar/time field ranges.
+        // Invalid header fields are treated as absent metadata and therefore return null.
         if (
             !checkdate($month, $day, $year)
             || ($hour > 23)
             || ($minute > 59)
             || ($second > 59)
         ) {
-            throw new ParseError(sprintf(
-                'Invalid ICC dateTimeNumber: %04d-%02d-%02d %02d:%02d:%02d',
-                $year,
-                $month,
-                $day,
-                $hour,
-                $minute,
-                $second,
-            ), 1122);
+            return null;
         }
 
         return sprintf('%04d:%02d:%02d %02d:%02d:%02d', $year, $month, $day, $hour, $minute, $second);
