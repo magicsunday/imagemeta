@@ -4414,6 +4414,163 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts a valid ImageStats payload with zero child entries.
+     */
+    #[Test]
+    public function acceptsImageStatsWithZeroChildren(): void
+    {
+        // N=0 (big-endian LONG)
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithImageStats(pack('N', 0)),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Accepts a valid ImageStats payload with one child entry.
+     */
+    #[Test]
+    public function acceptsImageStatsWithOneChild(): void
+    {
+        // N=1, childTag=1, length=4, 4 bytes of float data
+        $payload = pack('N', 1)
+            . pack('N', 1)
+            . pack('N', 4)
+            . pack('G', 0.5);
+
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithImageStats($payload),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects ImageStats payload too short for child count.
+     */
+    #[Test]
+    public function rejectsImageStatsTruncatedHeader(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1543);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithImageStats("\x00\x00"),
+        );
+    }
+
+    /**
+     * Rejects ImageStats child entry with truncated header.
+     */
+    #[Test]
+    public function rejectsImageStatsTruncatedChildHeader(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1544);
+
+        // N=1 but only 4 bytes follow (need 8 for header)
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithImageStats(pack('N', 1) . pack('N', 1)),
+        );
+    }
+
+    /**
+     * Rejects ImageStats child entry with truncated payload.
+     */
+    #[Test]
+    public function rejectsImageStatsTruncatedChildPayload(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1545);
+
+        // N=1, childTag=1, length=100 but no data follows
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithImageStats(pack('N', 1) . pack('N', 1) . pack('N', 100)),
+        );
+    }
+
+    /**
+     * Rejects ImageStats with duplicate child tag codes.
+     */
+    #[Test]
+    public function rejectsImageStatsDuplicateChildTag(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1546);
+
+        // N=2, both with childTag=1
+        $payload = pack('N', 2)
+            . pack('N', 1) . pack('N', 4) . pack('G', 0.5)
+            . pack('N', 1) . pack('N', 4) . pack('G', 0.6);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithImageStats($payload),
+        );
+    }
+
+    /**
+     * Builds a minimal DNG with an ImageStats (0xCD46) payload in IFD0.
+     *
+     * @param string $payload Raw ImageStats payload bytes
+     */
+    private function buildDngWithImageStats(string $payload): string
+    {
+        $payloadLen        = strlen($payload);
+        $inline            = $payloadLen <= 4;
+        $ifdOffset         = 8;
+        $ifd0Entries       = 6;
+        $ifd0Size          = 2 + ($ifd0Entries * 12) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifd0Size;
+        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+
+        // For inline values (<=4 bytes), pad payload to 4 bytes and store in value field
+        $valueField = $inline
+            ? str_pad($payload, 4, "\0")
+            : pack('V', $payloadOffset);
+
+        $ifd0 = pack('v', $ifd0Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::IMAGE_STATS)
+            . pack('v', TiffConst::TYPE_UNDEFINED)
+            . pack('V', $payloadLen)
+            . $valueField
+            . pack('V', 0);
+
+        $result = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifd0
+            . $uniqueCameraModel;
+
+        if (!$inline) {
+            $result .= $payload;
+        }
+
+        return $result;
+    }
+
+    /**
      * Builds a 3-IFD DNG where IFD2 is a semantic mask IFD with MaskSubArea.
      *
      * @param int       $maskType  TIFF type code for MaskSubArea entry

@@ -1302,6 +1302,7 @@ final class TiffExifParser
         $this->validateDngProfileDynamicRange($ifd0);
         $this->validateDngProfileGainTableMap2($ifd0);
         $this->validateDngGainMapPlacement($ifd0);
+        $this->validateDngImageStats($ifd0);
         $this->validateDngImageSequenceInfo($ifd0);
         $this->validateDngRgbTables($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
@@ -5432,6 +5433,68 @@ final class TiffExifParser
                 sprintf('MaskSubArea must have count 4, got %d.', $entry->count),
                 1542,
             );
+        }
+    }
+
+    /**
+     * Validates DNG ImageStats (0xCD46) payload structure per DNG 1.7.1.0.
+     *
+     * All ImageStats data is stored in big-endian byte order regardless of TIFF
+     * file byte order. Payload: LONG child-count N, then N child entries each
+     * containing LONG childTagCode, LONG byteLength L, and L bytes of data.
+     * Duplicate child tag codes are rejected.
+     */
+    private function validateDngImageStats(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::IMAGE_STATS);
+
+        if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
+            return;
+        }
+
+        $payload = $entry->value;
+        $length  = strlen($payload);
+
+        if ($length < 4) {
+            throw new ParseError(
+                sprintf('ImageStats payload too short for child count (%d bytes).', $length),
+                1543,
+            );
+        }
+
+        // ImageStats is always big-endian
+        $childCount = Unpack::int('N', substr($payload, 0, 4), 'ImageStats child count');
+        $offset     = 4;
+        $seenTags   = [];
+
+        for ($i = 0; $i < $childCount; ++$i) {
+            if ($offset + 8 > $length) {
+                throw new ParseError(
+                    sprintf('ImageStats child entry %d truncated at header (offset %d, length %d).', $i, $offset, $length),
+                    1544,
+                );
+            }
+
+            $childTag    = Unpack::int('N', substr($payload, $offset, 4), 'ImageStats child tag');
+            $childLength = Unpack::int('N', substr($payload, $offset + 4, 4), 'ImageStats child length');
+            $offset += 8;
+
+            if ($offset + $childLength > $length) {
+                throw new ParseError(
+                    sprintf('ImageStats child tag %d payload truncated (need %d bytes at offset %d, have %d).', $childTag, $childLength, $offset, $length),
+                    1545,
+                );
+            }
+
+            if (isset($seenTags[$childTag])) {
+                throw new ParseError(
+                    sprintf('ImageStats child tag %d appears more than once.', $childTag),
+                    1546,
+                );
+            }
+
+            $seenTags[$childTag] = true;
+            $offset += $childLength;
         }
     }
 }
