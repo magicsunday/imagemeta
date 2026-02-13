@@ -1217,6 +1217,7 @@ final class IsoBmffParserTest extends TestCase
         /** @phpstan-ignore staticMethod.alreadyNarrowedType */
         self::assertInstanceOf(IsoBmffUnresolvedItem::class, $unresolved);
         self::assertSame(1, $unresolved->itemId);
+        self::assertGreaterThanOrEqual(0, $unresolved->metaContextOffset);
         self::assertSame(1, $unresolved->dataReferenceIndex);
         self::assertSame(ConstructionMethod::FileOffset, $unresolved->constructionMethod);
         self::assertSame($reference, $unresolved->dataReference);
@@ -1545,6 +1546,7 @@ final class IsoBmffParserTest extends TestCase
         self::assertCount(1, $unresolvedItems);
         $unresolved = $unresolvedItems[0];
         self::assertSame(1, $unresolved->itemId);
+        self::assertGreaterThanOrEqual(0, $unresolved->metaContextOffset);
         self::assertSame(1, $unresolved->dataReferenceIndex);
         self::assertSame(ConstructionMethod::FileOffset, $unresolved->constructionMethod);
         self::assertSame($reference, $unresolved->dataReference);
@@ -1598,13 +1600,16 @@ final class IsoBmffParserTest extends TestCase
 
         self::assertCount(2, $unresolvedItems);
 
-        $uris = [];
+        $uris           = [];
+        $contextOffsets = [];
         foreach ($unresolvedItems as $unresolvedItem) {
             self::assertSame(1, $unresolvedItem->itemId);
+            self::assertGreaterThanOrEqual(0, $unresolvedItem->metaContextOffset);
             self::assertSame(1, $unresolvedItem->dataReferenceIndex);
             self::assertSame(ConstructionMethod::FileOffset, $unresolvedItem->constructionMethod);
             self::assertNotNull($unresolvedItem->dataReference);
-            $uris[] = $unresolvedItem->dataReference->uri;
+            $uris[]                                             = $unresolvedItem->dataReference->uri;
+            $contextOffsets[$unresolvedItem->metaContextOffset] = true;
         }
 
         sort($uris);
@@ -1612,6 +1617,7 @@ final class IsoBmffParserTest extends TestCase
             ['https://example.test/meta-a', 'https://example.test/meta-b'],
             $uris,
         );
+        self::assertCount(2, array_keys($contextOffsets));
     }
 
     /**

@@ -1594,7 +1594,7 @@ final readonly class IsoBmffParser
         // Resolve EXIF item payloads and normalize leading headers.
         // EXIF 3.0 §4.8 notes that item payloads omit the APP1 signature; some
         // encoders still include it, so we normalise accordingly.
-        foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $payloads['itemReferences'], $this->normalizeExifBlob(...), $payloads['dataReferences'], $idatPayload, $unresolvedItems) as $blob) {
+        foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $payloads['itemReferences'], $this->normalizeExifBlob(...), $payloads['dataReferences'], $idatPayload, $unresolvedItems, $meta->offset) as $blob) {
             $exifBlobs[] = $blob;
         }
 
@@ -1606,7 +1606,7 @@ final readonly class IsoBmffParser
         }
 
         // Resolve referenced XMP payloads in declared priority order.
-        foreach ($this->resolveQueuedItems($xmpItemIds, $payloads['locations'], $payloads['itemReferences'], null, $payloads['dataReferences'], $idatPayload, $unresolvedItems) as $blob) {
+        foreach ($this->resolveQueuedItems($xmpItemIds, $payloads['locations'], $payloads['itemReferences'], null, $payloads['dataReferences'], $idatPayload, $unresolvedItems, $meta->offset) as $blob) {
             $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
@@ -1968,24 +1968,25 @@ final readonly class IsoBmffParser
     /**
      * Resolves queued item IDs to their payload data.
      *
-     * @param list<int>                                                                                                                                $itemIds         Item IDs to resolve.
-     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations       Item location metadata.
-     * @param array<int, list<IsoBmffItemReference>>                                                                                                   $itemReferences  Parsed item references for construction_method=2 extents.
-     * @param (callable(string):string)|null                                                                                                           $transform       Optional transform function.
-     * @param array<int, IsoBmffDataReference>                                                                                                         $dataReferences  Parsed data references for the current meta box.
-     * @param string|null                                                                                                                              $idatPayload     Cached idat payload for construction_method=1 extents.
-     * @param list<IsoBmffUnresolvedItem>                                                                                                              $unresolvedItems Accumulator for unresolved item payloads.
+     * @param list<int>                                                                                                                                $itemIds           Item IDs to resolve.
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations         Item location metadata.
+     * @param array<int, list<IsoBmffItemReference>>                                                                                                   $itemReferences    Parsed item references for construction_method=2 extents.
+     * @param (callable(string):string)|null                                                                                                           $transform         Optional transform function.
+     * @param array<int, IsoBmffDataReference>                                                                                                         $dataReferences    Parsed data references for the current meta box.
+     * @param string|null                                                                                                                              $idatPayload       Cached idat payload for construction_method=1 extents.
+     * @param list<IsoBmffUnresolvedItem>                                                                                                              $unresolvedItems   Accumulator for unresolved item payloads.
+     * @param int                                                                                                                                      $metaContextOffset Absolute file offset of the owning meta box.
      *
      * @return list<string> List of resolved item payloads.
      */
-    private function resolveQueuedItems(array $itemIds, array $locations, array $itemReferences, ?callable $transform, array $dataReferences, ?string $idatPayload, array &$unresolvedItems): array
+    private function resolveQueuedItems(array $itemIds, array $locations, array $itemReferences, ?callable $transform, array $dataReferences, ?string $idatPayload, array &$unresolvedItems, int $metaContextOffset): array
     {
         /** @var list<string> $resolved */
         $resolved = [];
 
         // Pull data for each referenced item and optionally transform the payload.
         foreach ($itemIds as $itemId) {
-            $data = $this->resolveItemData($itemId, $locations, $itemReferences, $dataReferences, $idatPayload, $unresolvedItems);
+            $data = $this->resolveItemData($itemId, $locations, $itemReferences, $dataReferences, $idatPayload, $unresolvedItems, $metaContextOffset);
             if ($data !== null) {
                 $resolved[] = $transform !== null ? $transform($data) : $data;
             }
@@ -2382,17 +2383,18 @@ final readonly class IsoBmffParser
     /**
      * Resolves metadata item references described by an `iloc` box.
      *
-     * @param int                                                                                                                                      $itemId          Identifier of the item to resolve.
+     * @param int                                                                                                                                      $itemId            Identifier of the item to resolve.
      * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
      * @param array<int, list<IsoBmffItemReference>>                                                                                                   $itemReferences
      * @param array<int, IsoBmffDataReference>                                                                                                         $dataReferences
      * @param string|null                                                                                                                              $idatPayload
      * @param list<IsoBmffUnresolvedItem>                                                                                                              $unresolvedItems
+     * @param int                                                                                                                                      $metaContextOffset
      * @param list<int>                                                                                                                                $visitedItemIds
      *
      * @return string|null
      */
-    private function resolveItemData(int $itemId, array $locations, array $itemReferences, array $dataReferences, ?string $idatPayload, array &$unresolvedItems, array $visitedItemIds = []): ?string
+    private function resolveItemData(int $itemId, array $locations, array $itemReferences, array $dataReferences, ?string $idatPayload, array &$unresolvedItems, int $metaContextOffset, array $visitedItemIds = []): ?string
     {
         if (!isset($locations[$itemId])) {
             return null;
@@ -2400,7 +2402,7 @@ final readonly class IsoBmffParser
 
         $location = $locations[$itemId];
         if (in_array($itemId, $visitedItemIds, true)) {
-            $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+            $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
 
             return null;
         }
@@ -2409,7 +2411,7 @@ final readonly class IsoBmffParser
             // GH-912: data_reference_index gating applies only to file_offset (method 0).
             // ISO/IEC 14496-12 §8.11.3.2: methods 1 and 2 do not use data_reference_index.
             if ($location['dataReferenceIndex'] !== 0) {
-                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
 
                 return null;
             }
@@ -2478,7 +2480,7 @@ final readonly class IsoBmffParser
 
         if ($location['constructionMethod'] === ConstructionMethod::IdatOffset->value) {
             if ($idatPayload === null) {
-                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
 
                 return null;
             }
@@ -2556,7 +2558,7 @@ final readonly class IsoBmffParser
             ));
 
             if ($references === []) {
-                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
 
                 return null;
             }
@@ -2579,7 +2581,7 @@ final readonly class IsoBmffParser
                 }
 
                 if (!isset($references[$referencePosition])) {
-                    $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+                    $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
 
                     return null;
                 }
@@ -2588,14 +2590,14 @@ final readonly class IsoBmffParser
                 $nextVisited     = $visitedItemIds;
                 $nextVisited[]   = $itemId;
                 if (in_array($referenceItemId, $nextVisited, true)) {
-                    $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+                    $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
 
                     return null;
                 }
 
-                $referenceData = $this->resolveItemData($referenceItemId, $locations, $itemReferences, $dataReferences, $idatPayload, $unresolvedItems, $nextVisited);
+                $referenceData = $this->resolveItemData($referenceItemId, $locations, $itemReferences, $dataReferences, $idatPayload, $unresolvedItems, $metaContextOffset, $nextVisited);
                 if ($referenceData === null) {
-                    $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+                    $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
 
                     return null;
                 }
@@ -2641,7 +2643,7 @@ final readonly class IsoBmffParser
             return $blob === '' ? null : $blob;
         }
 
-        $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+        $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
 
         return null;
     }
@@ -2653,8 +2655,9 @@ final readonly class IsoBmffParser
      * @param array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>} $location
      * @param array<int, IsoBmffDataReference>                                                                                             $dataReferences
      * @param list<IsoBmffUnresolvedItem>                                                                                                  $unresolvedItems
+     * @param int                                                                                                                          $metaContextOffset
      */
-    private function registerUnresolvedItem(int $itemId, array $location, array $dataReferences, array &$unresolvedItems): void
+    private function registerUnresolvedItem(int $itemId, array $location, array $dataReferences, array &$unresolvedItems, int $metaContextOffset): void
     {
         $dataReference      = null;
         $dataReferenceIndex = $location['dataReferenceIndex'];
@@ -2669,6 +2672,7 @@ final readonly class IsoBmffParser
             $dataReferenceIndex,
             $constructionMethod,
             $dataReference,
+            $metaContextOffset,
         );
     }
 

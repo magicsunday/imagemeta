@@ -23,12 +23,14 @@ final readonly class IsoBmffUnresolvedItem
      * @param int                       $dataReferenceIndex Data reference index used by the item.
      * @param ConstructionMethod|null   $constructionMethod Construction method declared by iloc.
      * @param IsoBmffDataReference|null $dataReference      Parsed data reference when available.
+     * @param int                       $metaContextOffset  Absolute file offset of the owning meta box.
      */
     public function __construct(
         public int $itemId,
         public int $dataReferenceIndex,
         public ?ConstructionMethod $constructionMethod,
         public ?IsoBmffDataReference $dataReference,
+        public int $metaContextOffset = 0,
     ) {
     }
 }
