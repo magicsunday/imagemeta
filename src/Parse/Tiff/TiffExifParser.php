@@ -4461,6 +4461,24 @@ final class TiffExifParser
                 1489,
             );
         }
+
+        $spp = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+
+        if ($spp instanceof IfdEntry && is_int($spp->value) && $spp->value !== 1 && $spp->value !== 3) {
+            throw new ParseError(
+                sprintf('JPEG XL SamplesPerPixel must be 1 or 3, got %d.', $spp->value),
+                1492,
+            );
+        }
+
+        $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+
+        if ($photo instanceof IfdEntry && is_int($photo->value) && !in_array($photo->value, [0, 1, 2, 4, 32803, 34892, 51177, 52527], true)) {
+            throw new ParseError(
+                sprintf('JPEG XL PhotometricInterpretation %d is not allowed.', $photo->value),
+                1493,
+            );
+        }
     }
 
     /**

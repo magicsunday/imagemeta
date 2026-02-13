@@ -2174,6 +2174,47 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * JXL compression with disallowed SamplesPerPixel triggers ParseError.
+     */
+    #[Test]
+    public function rejectsJxlWithUnsupportedSamplesPerPixel(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1492);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithJxlTags(samplesPerPixel: 4),
+        );
+    }
+
+    /**
+     * JXL compression with disallowed PhotometricInterpretation triggers ParseError.
+     */
+    #[Test]
+    public function rejectsJxlWithUnsupportedPhotometric(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1493);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithJxlTags(photometric: 6),
+        );
+    }
+
+    /**
+     * JXL compression with valid SamplesPerPixel and Photometric parses.
+     */
+    #[Test]
+    public function acceptsJxlWithValidSamplesAndPhotometric(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithJxlTags(samplesPerPixel: 3, photometric: 2),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
      * CFA photometric with missing CFARepeatPatternDim triggers ParseError.
      */
     #[Test]
@@ -2236,6 +2277,8 @@ final class TiffExifParserDngTagTest extends TestCase
         float $distance = 0.0,
         int $effort = 7,
         int $decodeSpeed = 4,
+        ?int $samplesPerPixel = null,
+        ?int $photometric = null,
     ): string {
         $ifdOffset   = 8;
         $ifd0Entries = 2;
@@ -2293,6 +2336,20 @@ final class TiffExifParserDngTagTest extends TestCase
                 . pack('V', 1)
                 . pack('V', $decodeSpeed),
         ];
+
+        if ($samplesPerPixel !== null) {
+            $tags[ExifTag::SAMPLES_PER_PIXEL] = pack('v', ExifTag::SAMPLES_PER_PIXEL)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $samplesPerPixel) . pack('v', 0);
+        }
+
+        if ($photometric !== null) {
+            $tags[ExifTag::PHOTOMETRIC_INTERPRETATION] = pack('v', ExifTag::PHOTOMETRIC_INTERPRETATION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $photometric) . pack('v', 0);
+        }
 
         ksort($tags);
 
