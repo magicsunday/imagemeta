@@ -664,6 +664,41 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * Builds a classic TIFF with an Exif IFD containing one SHORT[1] enum-tag value.
+     *
+     * @param int $tag   Exif IFD tag identifier.
+     * @param int $value SHORT[1] scalar value for the tag.
+     */
+    private function buildTiffWithExifShortTag(int $tag, int $value): string
+    {
+        $ifd0Offset     = 8;
+        $ifd0EntryCount = 3;
+        $ifd0Size       = 2 + ($ifd0EntryCount * 12) + 4;
+        $exifIfdOffset  = $ifd0Offset + $ifd0Size;
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifd0Offset);
+
+        $blob .= pack('v', $ifd0EntryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::EXIF_IFD_POINTER)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', $exifIfdOffset)
+            . pack('V', 0);
+
+        return $blob . (pack('v', 1) . pack('v', $tag) . pack('v', TiffConst::TYPE_SHORT) . pack('V', 1) . pack('v', $value) . pack('v', 0) . pack('V', 0));
+    }
+
+    /**
      * Builds a minimal valid TIFF blob with an SRATIONAL value.
      * This checks the behavior for the specific inputs used in the test.
      *
@@ -1477,6 +1512,95 @@ final class TiffExifParserNegativeTest extends TestCase
                 [[ExifTag::COMPRESSION, 3]],
             ),
         );
+    }
+
+    /**
+     * Accepts valid EXIF camera-control enum values from closed domains.
+     *
+     * @param int $tag
+     * @param int $value
+     */
+    #[Test]
+    #[DataProvider('provideValidCameraControlEnumValues')]
+    public function acceptValidCameraControlEnumDomains(int $tag, int $value): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithExifShortTag($tag, $value),
+        );
+
+        self::assertSame($value, $result->exifIfd?->get($tag)?->value);
+    }
+
+    /**
+     * Rejects reserved/out-of-domain EXIF camera-control enum values.
+     *
+     * @param int $tag
+     * @param int $value
+     */
+    #[Test]
+    #[DataProvider('provideInvalidCameraControlEnumValues')]
+    public function rejectInvalidCameraControlEnumDomains(int $tag, int $value): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/reserved or out of domain/i');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithExifShortTag($tag, $value),
+        );
+    }
+
+    /**
+     * Leaves missing optional camera-control tags accepted.
+     */
+    #[Test]
+    public function acceptMissingCameraControlEnumTags(): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTags([
+                [ExifTag::IMAGE_WIDTH, 100],
+                [ExifTag::IMAGE_LENGTH, 100],
+            ]),
+        );
+
+        self::assertNull($result->exifIfd);
+    }
+
+    /**
+     * @return iterable<string, array{0:int, 1:int}>
+     */
+    public static function provideValidCameraControlEnumValues(): iterable
+    {
+        yield 'ExposureProgram:8' => [ExifTag::EXPOSURE_PROGRAM, 8];
+        yield 'MeteringMode:255' => [ExifTag::METERING_MODE, 255];
+        yield 'LightSource:24' => [ExifTag::LIGHT_SOURCE, 24];
+        yield 'SensingMethod:7' => [ExifTag::SENSING_METHOD, 7];
+        yield 'ExposureMode:2' => [ExifTag::EXPOSURE_MODE, 2];
+        yield 'WhiteBalance:1' => [ExifTag::WHITE_BALANCE, 1];
+        yield 'SceneCaptureType:3' => [ExifTag::SCENE_CAPTURE_TYPE, 3];
+        yield 'GainControl:4' => [ExifTag::GAIN_CONTROL, 4];
+        yield 'Contrast:2' => [ExifTag::CONTRAST, 2];
+        yield 'Saturation:2' => [ExifTag::SATURATION, 2];
+        yield 'Sharpness:2' => [ExifTag::SHARPNESS, 2];
+        yield 'SubjectDistanceRange:3' => [ExifTag::SUBJECT_DISTANCE_RANGE, 3];
+    }
+
+    /**
+     * @return iterable<string, array{0:int, 1:int}>
+     */
+    public static function provideInvalidCameraControlEnumValues(): iterable
+    {
+        yield 'ExposureProgram:9' => [ExifTag::EXPOSURE_PROGRAM, 9];
+        yield 'MeteringMode:7' => [ExifTag::METERING_MODE, 7];
+        yield 'LightSource:8' => [ExifTag::LIGHT_SOURCE, 8];
+        yield 'SensingMethod:6' => [ExifTag::SENSING_METHOD, 6];
+        yield 'ExposureMode:3' => [ExifTag::EXPOSURE_MODE, 3];
+        yield 'WhiteBalance:2' => [ExifTag::WHITE_BALANCE, 2];
+        yield 'SceneCaptureType:4' => [ExifTag::SCENE_CAPTURE_TYPE, 4];
+        yield 'GainControl:5' => [ExifTag::GAIN_CONTROL, 5];
+        yield 'Contrast:3' => [ExifTag::CONTRAST, 3];
+        yield 'Saturation:3' => [ExifTag::SATURATION, 3];
+        yield 'Sharpness:3' => [ExifTag::SHARPNESS, 3];
+        yield 'SubjectDistanceRange:4' => [ExifTag::SUBJECT_DISTANCE_RANGE, 4];
     }
 
     /**

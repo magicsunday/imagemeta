@@ -1058,6 +1058,77 @@ final class TiffExifParser
         ],
     ];
 
+    /**
+     * EXIF camera-control tags with closed numeric value domains.
+     *
+     * EXIF 3.0 §4.6.6.7 defines these tags with explicit allowed values and
+     * reserves remaining codes for future use.
+     *
+     * @var array<int, array{name:string, allowed:list<int>, spec:string}>
+     */
+    private const array CAMERA_CONTROL_ENUM_DOMAINS = [
+        ExifTag::EXPOSURE_PROGRAM => [
+            'name'    => 'ExposureProgram',
+            'allowed' => [0, 1, 2, 3, 4, 5, 6, 7, 8],
+            'spec'    => 'EXIF 3.0 §4.6.6.7.3',
+        ],
+        ExifTag::METERING_MODE => [
+            'name'    => 'MeteringMode',
+            'allowed' => [0, 1, 2, 3, 4, 5, 6, 255],
+            'spec'    => 'EXIF 3.0 §4.6.6.7.19',
+        ],
+        ExifTag::LIGHT_SOURCE => [
+            'name'    => 'LightSource',
+            'allowed' => [0, 1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 255],
+            'spec'    => 'EXIF 3.0 §4.6.6.7.20',
+        ],
+        ExifTag::SENSING_METHOD => [
+            'name'    => 'SensingMethod',
+            'allowed' => [1, 2, 3, 4, 5, 7, 8],
+            'spec'    => 'EXIF 3.0 §4.6.6.7.31',
+        ],
+        ExifTag::EXPOSURE_MODE => [
+            'name'    => 'ExposureMode',
+            'allowed' => [0, 1, 2],
+            'spec'    => 'EXIF 3.0 §4.6.6.7.36',
+        ],
+        ExifTag::WHITE_BALANCE => [
+            'name'    => 'WhiteBalance',
+            'allowed' => [0, 1],
+            'spec'    => 'EXIF 3.0 §4.6.6.7.37',
+        ],
+        ExifTag::SCENE_CAPTURE_TYPE => [
+            'name'    => 'SceneCaptureType',
+            'allowed' => [0, 1, 2, 3],
+            'spec'    => 'EXIF 3.0 §4.6.6.7.40',
+        ],
+        ExifTag::GAIN_CONTROL => [
+            'name'    => 'GainControl',
+            'allowed' => [0, 1, 2, 3, 4],
+            'spec'    => 'EXIF 3.0 §4.6.6.7.41',
+        ],
+        ExifTag::CONTRAST => [
+            'name'    => 'Contrast',
+            'allowed' => [0, 1, 2],
+            'spec'    => 'EXIF 3.0 §4.6.6.7.42',
+        ],
+        ExifTag::SATURATION => [
+            'name'    => 'Saturation',
+            'allowed' => [0, 1, 2],
+            'spec'    => 'EXIF 3.0 §4.6.6.7.43',
+        ],
+        ExifTag::SHARPNESS => [
+            'name'    => 'Sharpness',
+            'allowed' => [0, 1, 2],
+            'spec'    => 'EXIF 3.0 §4.6.6.7.44',
+        ],
+        ExifTag::SUBJECT_DISTANCE_RANGE => [
+            'name'    => 'SubjectDistanceRange',
+            'allowed' => [0, 1, 2, 3],
+            'spec'    => 'EXIF 3.0 §4.6.6.7.46',
+        ],
+    ];
+
     private const int ASCII_PRINTABLE_MIN = 0x20;
 
     private const int ASCII_PRINTABLE_MAX = 0x7E;
@@ -1209,6 +1280,7 @@ final class TiffExifParser
 
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
+        $this->validateCameraControlEnumDomains($ifd0, $exifIfd, $ifd1, ...$additionalIfds);
         $this->validateJpegThumbnailStream($ifd1);
 
         if (!$jpegContext) {
@@ -1662,6 +1734,45 @@ final class TiffExifParser
                 'Compression value %d in IFD1 is invalid; only 1 or 6 allowed per EXIF 3.0 §4.6.5.1.4.',
                 $thumbEntry->value,
             ), 1352);
+        }
+    }
+
+    /**
+     * Validates closed value domains for EXIF camera-control enum tags.
+     *
+     * EXIF 3.0 §4.6.6.7 defines these tags as fixed code lists, where values
+     * outside each list are reserved and must be rejected in strict parsing.
+     */
+    private function validateCameraControlEnumDomains(?Ifd ...$ifds): void
+    {
+        foreach ($ifds as $ifd) {
+            if (!$ifd instanceof Ifd) {
+                continue;
+            }
+
+            foreach (self::CAMERA_CONTROL_ENUM_DOMAINS as $tag => $config) {
+                $entry = $ifd->get($tag);
+                if (!$entry instanceof IfdEntry) {
+                    continue;
+                }
+
+                if (!is_int($entry->value)) {
+                    continue;
+                }
+
+                if (!in_array($entry->value, $config['allowed'], true)) {
+                    throw new ParseError(
+                        sprintf(
+                            '%s value %d is reserved or out of domain for tag 0x%04X per %s',
+                            $config['name'],
+                            $entry->value,
+                            $tag,
+                            $config['spec'],
+                        ),
+                        1416,
+                    );
+                }
+            }
         }
     }
 

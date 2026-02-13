@@ -36,6 +36,7 @@ composer require magicsunday/imagemeta
 * EXIF-conformant JPEG marker-order validation for APP1/APP2/APP11 placement, plus DQT/DHT/DRI/SOF structural ordering and duplicate-marker guards before SOS.
 * APP11/JUMBF metadata extraction now validates transport sequence metadata, reassembles multi-segment payloads per box instance, and surfaces supported XML/XMP payloads while safely skipping unsupported box types.
 * EXIF IFD1 JPEG thumbnail validation enforces SOI/EOI boundaries and rejects APPn, COM, and restart markers in strict thumbnail streams.
+* Strict EXIF camera-control enum-domain validation rejects reserved/out-of-range values for tags such as ExposureProgram, MeteringMode, LightSource, and related controls.
 * Baseline DNG support for core IFD0 tags: `DNGVersion`, `DNGBackwardVersion`, and `UniqueCameraModel` via `ParsedExif` accessors.
 * Maker note decoding with automatic Apple metadata merging plus MPF (Multi-Picture Format) documents, ICC profiles, FlashPix extension streams and EXIF audio tracks surfaced on the aggregate model.
 * Optional SHA-1 and MD5 digest calculation alongside MIME type, extension and frame dimension helpers for downstream correlation.
