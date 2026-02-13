@@ -37,7 +37,6 @@ use function is_int;
 use function is_numeric;
 use function is_string;
 use function preg_match;
-use function preg_replace;
 use function round;
 use function sprintf;
 use function str_replace;
@@ -1122,25 +1121,31 @@ final readonly class GpsConverter
      */
     private function decodeUndefinedUnicode(string $payload): ?string
     {
-        if ($payload === '') {
+        if (strlen($payload) < 2) {
             return null;
         }
 
-        $converted = @iconv('UTF-16LE', 'UTF-8', $payload);
+        $byteOrderMark = substr($payload, 0, 2);
+        $content       = substr($payload, 2);
+
+        $encoding = match ($byteOrderMark) {
+            "\xFF\xFE" => CharacterEncoding::UTF16LE,
+            "\xFE\xFF" => CharacterEncoding::UTF16BE,
+            default    => null,
+        };
+
+        // No TIFF byte order context is available in this converter path.
+        // Without an explicit BOM, decoding is rejected to avoid byte-order ambiguity.
+        if (($encoding === null) || ($content === '') || (strlen($content) % 2 !== 0)) {
+            return null;
+        }
+
+        $converted = @iconv($encoding->value, 'UTF-8', $content);
         if ($converted === false) {
-            $converted = @iconv('UTF-16BE', 'UTF-8', $payload);
-        }
-
-        if ($converted !== false) {
-            return $this->stringConverter->sanitize($converted);
-        }
-
-        $stripped = preg_replace('/\x00/u', '', $payload);
-        if ($stripped === null) {
             return null;
         }
 
-        return $this->stringConverter->sanitize($stripped);
+        return $this->stringConverter->sanitize($converted);
     }
 
     /**

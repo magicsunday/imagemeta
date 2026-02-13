@@ -74,6 +74,7 @@ composer require magicsunday/imagemeta
 * EXIF GPS DMS parsing now rejects negative component magnitudes (degrees/minutes/seconds) and requires hemisphere sign handling exclusively via `GPS*Ref` tags.
 * EXIF GPS status/reference code fields now enforce strict one-code enum domains and reject reserved multi-character values for both normalized refs and exposed original ref fields.
 * EXIF `GPSAltitudeRef` normalization now rejects fractional inputs and accepts only integral enum codes (`0..3`) instead of rounding values into valid-looking references.
+* EXIF GPS UNICODE undefined-text decoding is now BOM-aware and strict: UTF-16LE/BE is selected from BOM, malformed payloads are rejected, and lossy null-byte salvage is no longer applied.
 * EXIF IFD0/IFD1 structure validation now rejects prohibited primary-vs-thumbnail encoding combinations from EXIF Table 3 (for example uncompressed RGB/YCbCr primary with JPEG-compressed thumbnail).
 * JPEG APP1 parsing now supports ExtendedXMP chunk reassembly (`xmpNote:HasExtendedXMP`) with strict GUID/offset/coverage validation and deterministic merge into base packets.
 * JPEG APP2 FlashPix stream transport now validates per-stream sequence headers strictly (valid `sequence/count`, stable count, no duplicate/missing sequence slots) and fails malformed assemblies with `ParseError`.

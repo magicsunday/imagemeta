@@ -825,7 +825,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function decodesGpsUndefinedStringsWithEncodings(): void
     {
-        $unicodePayload = "UNICODE\0" . pack('v*', 0x6E2C, 0x4F4D, 0x65B9, 0x5F0F) . "\0\0";
+        $unicodePayload = "UNICODE\0\xFF\xFE" . pack('v*', 0x6E2C, 0x4F4D, 0x65B9, 0x5F0F) . "\0\0";
         $jisPayload     = "JIS\0\0\0\0\0" . pack('C*', 0x93, 0x8C, 0x8B, 0x9E) . "\0";
 
         $gps = new Ifd([
@@ -847,6 +847,54 @@ final class ValueConvertersTest extends TestCase
 
         self::assertSame('測位方式', $result['processing_method']);
         self::assertSame('東京', $result['area_information']);
+    }
+
+    /**
+     * Decodes UTF-16BE GPS undefined strings when the payload carries a BE BOM.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodesGpsUndefinedUnicodeBigEndianWithBom(): void
+    {
+        $unicodePayload = "UNICODE\0\xFE\xFF" . pack('n*', 0x6E2C, 0x4F4D, 0x65B9, 0x5F0F) . "\0\0";
+
+        $gps = new Ifd([
+            ExifTag::GPS_PROCESSING_METHOD => new IfdEntry(
+                ExifTag::GPS_PROCESSING_METHOD,
+                7,
+                strlen($unicodePayload),
+                $unicodePayload,
+            ),
+        ]);
+
+        $result = ValueConverters::gpsFromIfd($gps);
+
+        self::assertSame('測位方式', $result['processing_method']);
+    }
+
+    /**
+     * Rejects malformed UTF-16 GPS undefined payloads without lossy salvage.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMalformedGpsUndefinedUnicodePayload(): void
+    {
+        $malformedPayload = "UNICODE\0\xFF\xFE\x61";
+
+        $gps = new Ifd([
+            ExifTag::GPS_PROCESSING_METHOD => new IfdEntry(
+                ExifTag::GPS_PROCESSING_METHOD,
+                7,
+                strlen($malformedPayload),
+                $malformedPayload,
+            ),
+        ]);
+
+        $result = ValueConverters::gpsFromIfd($gps);
+
+        self::assertNull($result['processing_method']);
     }
 
     /**
