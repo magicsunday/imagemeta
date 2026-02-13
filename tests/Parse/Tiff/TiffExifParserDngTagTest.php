@@ -5407,4 +5407,237 @@ final class TiffExifParserDngTagTest extends TestCase
             . $uniqueCameraModel
             . $cropData;
     }
+
+    /**
+     * Accepts DefaultBlackRender values 0 and 1.
+     */
+    #[Test]
+    public function acceptsValidDefaultBlackRender(): void
+    {
+        foreach ([0, 1] as $value) {
+            $parsed = (new TiffExifParser())->parseFromBlob(
+                $this->buildDngWithLong1Tag(DngTag::DEFAULT_BLACK_RENDER, $value),
+            );
+
+            self::assertSame('1.7.1.0', $parsed->dngVersion());
+        }
+    }
+
+    /**
+     * Rejects DefaultBlackRender with out-of-domain value.
+     */
+    #[Test]
+    public function rejectsDefaultBlackRenderOutOfDomain(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1570);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithLong1Tag(DngTag::DEFAULT_BLACK_RENDER, 2),
+        );
+    }
+
+    /**
+     * Builds a DNG with a LONG[1] tag inline in IFD0.
+     *
+     * @param int $tag   Tag constant (must be > 0xC614)
+     * @param int $value Tag value
+     */
+    /**
+     * Accepts PreviewApplicationName as ASCII NUL-terminated UTF-8.
+     */
+    #[Test]
+    public function acceptsPreviewStringTagAscii(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::PREVIEW_APPLICATION_NAME,
+                TiffConst::TYPE_ASCII,
+                "TestApp\0",
+            ),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Accepts PreviewApplicationVersion as BYTE NUL-terminated UTF-8.
+     */
+    #[Test]
+    public function acceptsPreviewStringTagByte(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::PREVIEW_APPLICATION_VERSION,
+                TiffConst::TYPE_BYTE,
+                "1.0\0",
+            ),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Accepts PreviewSettingsName as ASCII with UTF-8 content.
+     */
+    #[Test]
+    public function acceptsPreviewStringTagUtf8(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::PREVIEW_SETTINGS_NAME,
+                TiffConst::TYPE_ASCII,
+                "Schärfe\0",
+            ),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects preview string tag with wrong type (SHORT).
+     */
+    #[Test]
+    public function rejectsPreviewStringTagWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1571);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::PREVIEW_APPLICATION_NAME,
+                TiffConst::TYPE_SHORT,
+                "\x00\x01",
+            ),
+        );
+    }
+
+    /**
+     * Rejects BYTE preview string tag missing trailing NUL.
+     */
+    #[Test]
+    public function rejectsPreviewStringTagMissingNul(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1572);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::PREVIEW_APPLICATION_VERSION,
+                TiffConst::TYPE_BYTE,
+                'NoNul',
+            ),
+        );
+    }
+
+    /**
+     * Rejects BYTE preview string tag with invalid UTF-8.
+     */
+    #[Test]
+    public function rejectsPreviewStringTagInvalidUtf8Byte(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1573);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::PREVIEW_SETTINGS_NAME,
+                TiffConst::TYPE_BYTE,
+                "\xC0\xAF\0",
+            ),
+        );
+    }
+
+    /**
+     * Builds a DNG with a preview string tag in IFD0.
+     *
+     * @param int    $tag     Preview tag constant
+     * @param int    $type    TIFF type (ASCII or BYTE)
+     * @param string $payload Raw string bytes including NUL terminator
+     */
+    private function buildDngWithPreviewStringTag(int $tag, int $type, string $payload): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $payloadLen        = strlen($payload);
+        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+        $inline            = $payloadLen <= 4;
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', $tag)
+            . pack('v', $type)
+            . pack('V', $payloadLen)
+            . ($inline
+                ? str_pad($payload, 4, "\0")
+                : pack('V', $payloadOffset))
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . ($inline ? '' : $payload);
+    }
+
+    private function buildDngWithLong1Tag(int $tag, int $value): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', $tag)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', $value)
+            . pack('V', 0)
+            . $uniqueCameraModel;
+    }
 }

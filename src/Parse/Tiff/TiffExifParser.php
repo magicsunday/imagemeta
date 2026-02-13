@@ -1562,6 +1562,38 @@ final class TiffExifParser
             }
         }
 
+        // DNG 1.7.1.0: Preview string tags must be ASCII or BYTE, NUL-terminated UTF-8.
+        if (
+            in_array($tag, [DngTag::PREVIEW_APPLICATION_NAME, DngTag::PREVIEW_APPLICATION_VERSION, DngTag::PREVIEW_SETTINGS_NAME], true)
+        ) {
+            if ($type !== TiffConst::TYPE_ASCII && $type !== TiffConst::TYPE_BYTE) {
+                throw new ParseError(
+                    sprintf('DNG preview string tag 0x%04X must use ASCII or BYTE type, got %d.', $tag, $type),
+                    1571,
+                );
+            }
+
+            if ($type === TiffConst::TYPE_BYTE) {
+                if ($rawBytes === '' || $rawBytes[strlen($rawBytes) - 1] !== "\0") {
+                    throw new ParseError(
+                        sprintf('DNG preview string tag 0x%04X BYTE payload must be NUL-terminated.', $tag),
+                        1572,
+                    );
+                }
+
+                $text = rtrim($rawBytes, "\0");
+
+                if (!mb_check_encoding($text, 'UTF-8')) {
+                    throw new ParseError(
+                        sprintf('DNG preview string tag 0x%04X contains malformed UTF-8.', $tag),
+                        1573,
+                    );
+                }
+
+                $value = $text;
+            }
+        }
+
         if ($tag === ExifTag::CFA_PATTERN && is_string($value)) {
             $decodedPattern = $this->decodeCfaPatternPayload($rawBytes);
 
@@ -2779,6 +2811,9 @@ final class TiffExifParser
         ExifTag::RAW_DEVELOPING_SOFTWARE,
         ExifTag::IMAGE_EDITING_SOFTWARE,
         ExifTag::METADATA_EDITING_SOFTWARE,
+        DngTag::PREVIEW_APPLICATION_NAME,
+        DngTag::PREVIEW_APPLICATION_VERSION,
+        DngTag::PREVIEW_SETTINGS_NAME,
     ];
 
     /**
