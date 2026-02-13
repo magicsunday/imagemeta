@@ -373,6 +373,48 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
+     * Rejects RawDataUniqueID with wrong count (15 instead of 16).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsRawDataUniqueIdWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            DngTag::RAW_DATA_UNIQUE_ID,
+            TiffConst::TYPE_BYTE,
+            15,
+            str_repeat("\xAB", 15),
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects RawDataUniqueID with wrong type (UNDEFINED instead of BYTE).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsRawDataUniqueIdWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            DngTag::RAW_DATA_UNIQUE_ID,
+            TiffConst::TYPE_UNDEFINED,
+            16,
+            str_repeat("\xAB", 16),
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
      * Rejects RawToPreviewGain with wrong count (2 instead of 1).
      *
      * @return void
