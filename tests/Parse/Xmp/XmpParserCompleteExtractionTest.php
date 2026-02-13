@@ -105,13 +105,13 @@ XML;
     }
 
     /**
-     * Uses an x:xmpmeta wrapper that declares an xmptk attribute.
-     * Ensures the parser exposes xmptk as a property in the metadata document.
+     * Attributes on x:xmpmeta wrapper are outside the rdf:RDF graph and
+     * must not be extracted as XMP properties (ISO 16684-1).
      *
      * @return void
      */
     #[Test]
-    public function parseExtractsXmpMetaAttributes(): void
+    public function ignoresXmpMetaWrapperAttributes(): void
     {
         $xml = <<<'XML'
 <x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="XMP Core 4.4.0">
@@ -126,8 +126,11 @@ XML;
         $parser   = new XmpParser();
         $document = $parser->parse($xml);
 
-        // Verify xmptk attribute is extracted
-        self::assertSame('XMP Core 4.4.0', $document->get('adobe:ns:meta/', 'xmptk'));
+        // x:xmptk is outside rdf:RDF and must not be extracted
+        self::assertNull($document->get('adobe:ns:meta/', 'xmptk'));
+
+        // Properties inside rdf:RDF are still extracted
+        self::assertSame('SAMSUNG', $document->get('http://ns.adobe.com/tiff/1.0/', 'Make'));
     }
 
     /**

@@ -832,7 +832,9 @@ XML;
     #[Test]
     public function parseCapturesValuesFromGenericNamespaces(): void
     {
-        $xml = '<root xmlns="urn:example"><value>captured</value></root>';
+        $xml = '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+            . '<rdf:Description xmlns="urn:example"><value>captured</value></rdf:Description>'
+            . '</rdf:RDF>';
 
         $document = (new XmpParser())->parse($xml);
 
@@ -900,9 +902,11 @@ XML;
     #[Test]
     public function parsePreservesMixedTextAndCdata(): void
     {
-        $xml = '<dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">'
-            . 'Prefix <![CDATA[<tag> & middle]]> suffix'
-            . '</dc:title>';
+        $xml = '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+            . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/">'
+            . '<dc:title>Prefix <![CDATA[<tag> & middle]]> suffix</dc:title>'
+            . '</rdf:Description>'
+            . '</rdf:RDF>';
 
         $document = (new XmpParser())->parse($xml);
 
@@ -1171,5 +1175,88 @@ XML;
         $this->expectExceptionMessage('rdf:li in rdf:Alt must have an xml:lang qualifier');
 
         $parser->parse($xml);
+    }
+
+    /**
+     * XML payload without rdf:RDF returns an empty document.
+     *
+     * ISO 16684-1: XMP metadata is expressed within an rdf:RDF graph.
+     * Non-RDF XML payloads must not produce false-positive property extraction.
+     *
+     * @return void
+     */
+    #[Test]
+    public function returnsEmptyDocumentWithoutRdfGraph(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<root xmlns:tiff="http://ns.adobe.com/tiff/1.0/">
+  <tiff:Make>FakeCamera</tiff:Make>
+</root>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        self::assertNull($document->get(self::TIFF_NS, 'Make'));
+    }
+
+    /**
+     * Payload with extra XML outside rdf:RDF ignores outside nodes.
+     *
+     * Only properties within the rdf:RDF graph are extracted; elements
+     * in wrapper nodes like x:xmpmeta are not treated as XMP properties.
+     *
+     * @return void
+     */
+    #[Test]
+    public function ignoresPropertiesOutsideRdfGraph(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="XMP Core 5.0">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description xmlns:tiff="http://ns.adobe.com/tiff/1.0/" tiff:Make="Canon"/>
+  </rdf:RDF>
+</x:xmpmeta>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        // Property inside rdf:RDF is extracted
+        self::assertSame('Canon', $document->get(self::TIFF_NS, 'Make'));
+
+        // x:xmptk on wrapper element outside rdf:RDF is not extracted
+        self::assertNull($document->get('adobe:ns:meta/', 'xmptk'));
+    }
+
+    /**
+     * Valid packet with x:xmpmeta + rdf:RDF still parses correctly (regression).
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesValidXmpPacketWithXmpmeta(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description
+      xmlns:tiff="http://ns.adobe.com/tiff/1.0/"
+      xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+      tiff:Make="Nikon"
+      xmp:CreatorTool="Test"
+    />
+  </rdf:RDF>
+</x:xmpmeta>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        self::assertSame('Nikon', $document->get(self::TIFF_NS, 'Make'));
+        self::assertSame('Test', $document->get(self::XMP_NS, 'CreatorTool'));
     }
 }

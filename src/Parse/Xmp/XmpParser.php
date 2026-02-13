@@ -72,6 +72,11 @@ final class XmpParser
         /** @var array<int, array<string, array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue>> $structuredBuffers */
         $structuredBuffers = [];
 
+        // ISO 16684-1: XMP properties are expressed within an rdf:RDF graph.
+        // Elements outside the graph (x:xmpmeta wrapper, packet PI, etc.) are
+        // transport wrappers and must not produce property extraction.
+        $insideRdfGraph = false;
+
         while ($reader->read()) {
             switch ($reader->nodeType) {
                 case XMLReader::ELEMENT:
@@ -81,6 +86,10 @@ final class XmpParser
 
                     $elementPath[$depth] = [$namespace, $localName];
                     $textBuffers[$depth] = '';
+
+                    if ($namespace === self::RDF_NAMESPACE && $localName === 'RDF') {
+                        $insideRdfGraph = true;
+                    }
 
                     if ($namespace !== self::RDF_NAMESPACE) {
                         $listBuffers[$depth] = [];
@@ -112,10 +121,12 @@ final class XmpParser
 
                     // XMP Specification Part 1 §7.9.2.2: Properties may be encoded as attributes
                     // on rdf:Description or other elements. Extract non-structural attributes.
-                    $this->extractAttributes($reader, $data);
+                    if ($insideRdfGraph) {
+                        $this->extractAttributes($reader, $data);
+                    }
 
                     if ($reader->isEmptyElement) {
-                        if ($namespace !== self::RDF_NAMESPACE) {
+                        if ($insideRdfGraph && $namespace !== self::RDF_NAMESPACE) {
                             $this->storeFinalizedElementValue(
                                 $data,
                                 $structuredData,
@@ -161,6 +172,11 @@ final class XmpParser
                     }
 
                     [$namespace, $localName] = $info;
+
+                    if ($namespace === self::RDF_NAMESPACE && $localName === 'RDF') {
+                        $insideRdfGraph = false;
+                    }
+
                     if ($namespace === self::RDF_NAMESPACE && $localName === 'li') {
                         $text = trim($textBuffers[$depth] ?? '');
                         for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
@@ -204,7 +220,7 @@ final class XmpParser
                                 break;
                             }
                         }
-                    } elseif ($namespace !== self::RDF_NAMESPACE) {
+                    } elseif ($insideRdfGraph && $namespace !== self::RDF_NAMESPACE) {
                         $this->storeFinalizedElementValue(
                             $data,
                             $structuredData,
