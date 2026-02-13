@@ -107,6 +107,8 @@ final class JpegParser
     /** @var list<string> */
     private array $exifBlobs = [];
 
+    private ?int $firstExifApp1Offset = null;
+
     /** @var list<string> */
     private array $xmpPackets = [];
 
@@ -402,6 +404,7 @@ final class JpegParser
         $this->audioStreams                  = [];
         $this->iptcPayloads                  = [];
         $this->xmpPacketHashes               = [];
+        $this->firstExifApp1Offset           = null;
         $this->frameBitsPerSample            = null;
         $this->frameComponentSampling        = null;
         $this->frameYCbCrSubSampling         = null;
@@ -1029,6 +1032,19 @@ final class JpegParser
     private function handleApp1(string $payload, int $offset): void
     {
         if (str_starts_with($payload, self::EXIF_SIGNATURE)) {
+            if ($this->firstExifApp1Offset !== null) {
+                throw new ParseError(
+                    sprintf(
+                        'Duplicate Exif APP1 marker at offset %d; first Exif APP1 marker was at offset %d',
+                        $offset,
+                        $this->firstExifApp1Offset,
+                    ),
+                    1501,
+                );
+            }
+
+            $this->firstExifApp1Offset = $offset;
+
             // EXIF 3.0 §4.7.2 requires APP1 Exif data to start with "Exif\0\0"
             // followed by a valid TIFF header (byte order + magic number).
             $tiffData = substr($payload, strlen(self::EXIF_SIGNATURE));

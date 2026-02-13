@@ -132,6 +132,43 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Accepts a single EXIF APP1 block and returns its TIFF payload.
+     *
+     * @return void
+     */
+    #[Test]
+    public function singleExifApp1BlockParsesSuccessfully(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'single-exif';
+        $jpeg        = $this->jpeg(self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload));
+        $extractor   = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
+     * Keeps EXIF + XMP APP1 combination parsing intact.
+     *
+     * @return void
+     */
+    #[Test]
+    public function exifAndXmpApp1CombinationParsesSuccessfully(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'combo-exif';
+        $xmpPayload  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Combo</x:xmpmeta>';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertSame([$xmpPayload], $extractor->extractXmpPackets());
+    }
+
+    /**
      * Provides APP1 segment permutations mixing EXIF and XMP payloads.
      * These fixtures exercise the ordering logic in the extractor.
      *
@@ -165,24 +202,28 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Supplies two large EXIF segments that exceed 64 KB when combined.
-     * This ensures multiple APP1 EXIF blobs are collected and returned intact.
+     * Rejects duplicate EXIF APP1 metadata blocks in strict EXIF JPEG conformance mode.
      *
      * @return void
      */
     #[Test]
-    public function largeExifOver64KbIsHandled(): void
+    public function rejectsDuplicateExifApp1Blocks(): void
     {
-        $firstBlob  = self::TIFF_HEADER . str_repeat('A', 40_000);
-        $secondBlob = self::TIFF_HEADER . str_repeat('B', 30_000);
-        $xmpXml     = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Large</x:xmpmeta>';
+        $firstBlob  = self::TIFF_HEADER . 'first-exif';
+        $secondBlob = self::TIFF_HEADER . 'second-exif';
 
-        $jpeg = $this->jpeg(self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $firstBlob), self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $secondBlob), self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml));
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $firstBlob),
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $secondBlob),
+        );
 
         $extractor = $this->createExtractor($jpeg);
 
-        self::assertSame([$firstBlob, $secondBlob], $extractor->extractExifBlobs());
-        self::assertSame([$xmpXml], $extractor->extractXmpPackets());
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1501);
+        $this->expectExceptionMessageMatches('/duplicate.*Exif APP1|Exif APP1.*duplicate/i');
+
+        $extractor->extractExifBlobs();
     }
 
     /**
