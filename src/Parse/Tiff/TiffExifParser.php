@@ -1291,6 +1291,7 @@ final class TiffExifParser
         $this->validateDngInterleaveVersionFloors($ifd0);
         $this->validateDngBackwardVersionGate($ifd0);
         $this->validateDngColorimetricReference($ifd0);
+        $this->validateDngNoiseProfile($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -4669,6 +4670,54 @@ final class TiffExifParser
                         $tag,
                     ),
                     1498,
+                );
+            }
+        }
+    }
+
+    /**
+     * Validates DNG NoiseProfile coefficient constraints per DNG 1.7.1.0.
+     *
+     * Count must be even (pairs of S_i, O_i). Each S_i must be > 0, each O_i must be >= 0.
+     */
+    private function validateDngNoiseProfile(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::NOISE_PROFILE);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        $value = $entry->value;
+
+        if (!$value instanceof ExifNumericList) {
+            return;
+        }
+
+        $count = count($value->values);
+
+        if ($count < 2 || $count % 2 !== 0) {
+            throw new ParseError(
+                sprintf('NoiseProfile count must be even (pairs of S,O), got %d.', $count),
+                1500,
+            );
+        }
+
+        for ($i = 0; $i < $count; $i += 2) {
+            $s = $value->values[$i];
+            $o = $value->values[$i + 1];
+
+            if ((is_float($s) || is_int($s)) && $s <= 0.0) {
+                throw new ParseError(
+                    sprintf('NoiseProfile S_%d must be > 0, got %g.', $i / 2, $s),
+                    1499,
+                );
+            }
+
+            if ((is_float($o) || is_int($o)) && $o < 0.0) {
+                throw new ParseError(
+                    sprintf('NoiseProfile O_%d must be >= 0, got %g.', $i / 2, $o),
+                    1499,
                 );
             }
         }

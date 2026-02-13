@@ -2336,6 +2336,61 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * NoiseProfile with S_i <= 0 triggers ParseError.
+     */
+    #[Test]
+    public function rejectsNoiseProfileWithNonPositiveS(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1499);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithNoiseProfile([0.0, 0.001]),
+        );
+    }
+
+    /**
+     * NoiseProfile with O_i < 0 triggers ParseError.
+     */
+    #[Test]
+    public function rejectsNoiseProfileWithNegativeO(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1499);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithNoiseProfile([0.001, -0.0001]),
+        );
+    }
+
+    /**
+     * NoiseProfile with odd count triggers ParseError.
+     */
+    #[Test]
+    public function rejectsNoiseProfileWithOddCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1500);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithNoiseProfile([0.001, 0.0, 0.002]),
+        );
+    }
+
+    /**
+     * Valid global NoiseProfile (count=2) parses successfully.
+     */
+    #[Test]
+    public function acceptsValidGlobalNoiseProfile(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithNoiseProfile([0.001, 0.0]),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
      * ColorimetricReference value 0 with DNG 1.2+ parses successfully.
      */
     #[Test]
@@ -2765,5 +2820,58 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', $modelOffset)
             . pack('V', 0)
             . $uniqueCameraModel;
+    }
+
+    /**
+     * Builds a DNG TIFF with a NoiseProfile of given DOUBLE values.
+     *
+     * @param list<float> $doubles NoiseProfile coefficient values
+     */
+    private function buildDngWithNoiseProfile(array $doubles): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $noiseData         = '';
+
+        foreach ($doubles as $d) {
+            $noiseData .= pack('e', $d);
+        }
+
+        $noiseOffset = $modelOffset + strlen($uniqueCameraModel);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::NOISE_PROFILE)
+            . pack('v', TiffConst::TYPE_DOUBLE)
+            . pack('V', count($doubles))
+            . pack('V', $noiseOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $noiseData;
     }
 }
