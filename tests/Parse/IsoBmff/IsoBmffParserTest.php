@@ -3050,6 +3050,64 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Accepts a single immediate udta child in moov.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsSingleImmediateUdtaInMoov(): void
+    {
+        $titleAtom = $this->box("\xA9nam", "Movie Title\0");
+        $moov      = $this->moov($this->box('udta', $titleAtom));
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('Movie Title', $qtMeta->keys['com.apple.quicktime.title']);
+    }
+
+    /**
+     * Rejects duplicate immediate udta children in moov.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsDuplicateImmediateUdtaInMoov(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('duplicate udta box in moov');
+
+        $udta1 = $this->box('udta', $this->box("\xA9nam", "First\0"));
+        $udta2 = $this->box('udta', $this->box("\xA9nam", "Second\0"));
+        $moov  = $this->box('moov', $this->minimalMvhd() . $this->minimalTrak() . $udta1 . $udta2);
+        $ftyp  = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
+     * Rejects duplicate immediate udta children in trak.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsDuplicateImmediateUdtaInTrak(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('duplicate udta box in trak');
+
+        $udta1 = $this->box('udta', $this->box('name', "Track One\0"));
+        $udta2 = $this->box('udta', $this->box('name', "Track Two\0"));
+        $trak  = $this->box('trak', $this->minimalTrakContent() . $udta1 . $udta2);
+        $moov  = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp  = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
      * Uses two video tracks with different dimensions and codecs.
      * This verifies track-derived video keys are selected deterministically.
      *

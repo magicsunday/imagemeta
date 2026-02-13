@@ -550,6 +550,7 @@ final readonly class IsoBmffParser
     private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
     {
         $metaSeen  = false;
+        $udtaCount = 0;
         $mvhdCount = 0;
         $trakCount = 0;
 
@@ -564,6 +565,11 @@ final readonly class IsoBmffParser
                 $metaSeen = true;
                 $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             } elseif ($child->type === self::BOX_UDTA) {
+                ++$udtaCount;
+                if ($udtaCount > 1) {
+                    throw new ParseError('duplicate udta box in moov', 1417);
+                }
+
                 $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             } elseif ($child->type === self::BOX_TRAK) {
                 ++$trakCount;
@@ -783,6 +789,7 @@ final readonly class IsoBmffParser
         $sampleInfo  = [];
         $tkhdCount   = 0;
         $mdiaCount   = 0;
+        $udtaCount   = 0;
 
         foreach ($this->walkChildren($trak) as $child) {
             if ($child->type === self::BOX_TKHD) {
@@ -802,6 +809,11 @@ final readonly class IsoBmffParser
 
                 [$handler, $handlerName, $sampleInfo] = $this->parseMdia($child);
             } elseif ($child->type === self::BOX_UDTA) {
+                ++$udtaCount;
+                if ($udtaCount > 1) {
+                    throw new ParseError('duplicate udta box in trak', 1418);
+                }
+
                 $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             }
         }
