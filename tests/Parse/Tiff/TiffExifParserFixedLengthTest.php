@@ -242,6 +242,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 16,
                 str_repeat("\xAB", 16),
             ],
+            'BaselineExposureOffset count 1' => [
+                DngTag::BASELINE_EXPOSURE_OFFSET,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                "\x00\x00\x00\x01\x00\x00\x00\x01",
+            ],
             'DefaultUserCrop count 4' => [
                 DngTag::DEFAULT_USER_CROP,
                 TiffConst::TYPE_RATIONAL,
@@ -253,6 +259,48 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 . "\x00\x00\x00\x01\x00\x00\x00\x01",
             ],
         ];
+    }
+
+    /**
+     * Rejects BaselineExposureOffset with wrong type (LONG instead of RATIONAL).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsBaselineExposureOffsetWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            DngTag::BASELINE_EXPOSURE_OFFSET,
+            TiffConst::TYPE_LONG,
+            1,
+            "\x00\x00\x00\x01",
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects BaselineExposureOffset with wrong count (2 instead of 1).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsBaselineExposureOffsetWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            DngTag::BASELINE_EXPOSURE_OFFSET,
+            TiffConst::TYPE_RATIONAL,
+            2,
+            str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
     }
 
     private function buildClassicTiffWithEntry(int $tag, int $type, int $count, string $valueBytes): string

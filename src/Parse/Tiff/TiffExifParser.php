@@ -1052,6 +1052,13 @@ final class TiffExifParser
             'typeName' => 'BYTE',
             'spec'     => 'DNG 1.7.1.0',
         ],
+        DngTag::BASELINE_EXPOSURE_OFFSET => [
+            'name'     => 'BaselineExposureOffset',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_RATIONAL,
+            'typeName' => 'RATIONAL',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
         DngTag::DEFAULT_USER_CROP => [
             'name'     => 'DefaultUserCrop',
             'count'    => 4,
@@ -1315,6 +1322,7 @@ final class TiffExifParser
         $this->validateDngDigestTags($ifd0);
         $this->validateDngPreviewDateTime($ifd0);
         $this->validateDngPreviewColorSpace($ifd0);
+        $this->validateDngDefaultBlackRender($ifd0);
         $this->validateDngIlluminantData($ifd0);
         $this->validateDngProfileDynamicRange($ifd0);
         $this->validateDngProfileGainTableMap2($ifd0);
@@ -5858,6 +5866,34 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('DefaultUserCrop requires Left < Right, got %.4f >= %.4f.', $left, $right),
                 1568,
+            );
+        }
+    }
+
+    /**
+     * Validates DefaultBlackRender (0xC7A6) per DNG 1.7.1.0.
+     *
+     * Must be LONG[1] with value 0 (Auto) or 1 (None).
+     */
+    private function validateDngDefaultBlackRender(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::DEFAULT_BLACK_RENDER);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if ($entry->type !== TiffConst::TYPE_LONG || $entry->count !== 1) {
+            throw new ParseError(
+                sprintf('DefaultBlackRender must be LONG[1], got type %d count %d.', $entry->type, $entry->count),
+                1569,
+            );
+        }
+
+        if (!is_int($entry->value) || ($entry->value !== 0 && $entry->value !== 1)) {
+            throw new ParseError(
+                sprintf('DefaultBlackRender value must be 0 (Auto) or 1 (None), got %d.', is_int($entry->value) ? $entry->value : -1),
+                1570,
             );
         }
     }
