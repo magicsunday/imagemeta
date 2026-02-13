@@ -44,7 +44,13 @@ final class XmpParser
      */
     public function parse(string $xml): XmpDocument
     {
-        $reader = XMLReader::XML($xml, null, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+        // Defense-in-depth: Disable DTD processing entirely to prevent XXE attacks.
+        // LIBXML_NONET prevents network access; LIBXML_DISALLOW_DOCTYPE rejects DTDs altogether.
+        $reader = XMLReader::XML(
+            $xml,
+            null,
+            LIBXML_NONET | LIBXML_DISALLOW_DOCTYPE | LIBXML_NOERROR | LIBXML_NOWARNING
+        );
         if (!$reader instanceof XMLReader) {
             return new XmpDocument([], [], []);
         }

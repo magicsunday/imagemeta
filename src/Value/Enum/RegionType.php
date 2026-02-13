@@ -16,6 +16,10 @@ use function trim;
 
 /**
  * Describes the semantic classification of an annotated region.
+ *
+ * XMP Metadata Platform (XMP) Specification Part 2: Standard Schemas §2.4
+ * defines the Regions schema (mwg-rs) used for face detection, focus areas,
+ * and object recognition metadata in image files.
  */
 enum RegionType: string
 {
