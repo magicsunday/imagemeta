@@ -1281,6 +1281,7 @@ final class TiffExifParser
 
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
+        $this->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
         $this->validateCameraControlEnumDomains($ifd0, $exifIfd, $ifd1, ...$additionalIfds);
         $this->validateFlashBitfield($exifIfd);
         $this->validateJpegThumbnailStream($ifd1);
@@ -1741,6 +1742,50 @@ final class TiffExifParser
                 'Compression value %d in IFD1 is invalid; only 1 or 6 allowed per EXIF 3.0 §4.6.5.1.4.',
                 $thumbEntry->value,
             ), 1352);
+        }
+    }
+
+    /**
+     * Validates EXIF primary/thumbnail structure combinations across IFD0 and IFD1.
+     *
+     * EXIF 3.0 §4.5.8 Table 3 states that when primary image data is uncompressed
+     * RGB or uncompressed YCbCr, the thumbnail shall not be JPEG-compressed.
+     *
+     * @param Ifd      $ifd0        Primary image IFD.
+     * @param Ifd|null $ifd1        Thumbnail IFD.
+     * @param bool     $jpegContext True when APP1 data comes from JPEG primary image context.
+     */
+    private function validatePrimaryThumbnailStructureCompatibility(Ifd $ifd0, ?Ifd $ifd1, bool $jpegContext): void
+    {
+        if (!$ifd1 instanceof Ifd || $jpegContext) {
+            return;
+        }
+
+        $thumbCompression = $ifd1->get(ExifTag::COMPRESSION);
+        if (!($thumbCompression instanceof IfdEntry) || !is_int($thumbCompression->value) || ($thumbCompression->value !== 6)) {
+            return;
+        }
+
+        $primaryCompression = $ifd0->get(ExifTag::COMPRESSION);
+        if (!($primaryCompression instanceof IfdEntry) || !is_int($primaryCompression->value) || ($primaryCompression->value !== 1)) {
+            return;
+        }
+
+        $photometric = $ifd0->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        if (!($photometric instanceof IfdEntry) || !is_int($photometric->value)) {
+            return;
+        }
+
+        if (($photometric->value === 2) || ($photometric->value === 6)) {
+            $primaryStructure = $photometric->value === 2 ? 'uncompressed RGB' : 'uncompressed YCbCr';
+
+            throw new ParseError(
+                sprintf(
+                    'IFD1 JPEG thumbnail compression is not allowed when IFD0 primary image uses %s per EXIF 3.0 §4.5.8 Table 3.',
+                    $primaryStructure,
+                ),
+                1468,
+            );
         }
     }
 

@@ -1573,6 +1573,90 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * IFD1 Compression=1 is allowed when IFD0 is uncompressed RGB.
+     */
+    #[Test]
+    public function acceptIfd1CompressionUncompressedForUncompressedRgbPrimary(): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTwoIfds(
+                [
+                    [ExifTag::IMAGE_WIDTH, 100],
+                    [ExifTag::IMAGE_LENGTH, 100],
+                    [ExifTag::COMPRESSION, 1],
+                    [ExifTag::PHOTOMETRIC_INTERPRETATION, 2],
+                ],
+                [[ExifTag::COMPRESSION, 1]],
+            ),
+        );
+
+        self::assertSame(1, $result->ifd1?->get(ExifTag::COMPRESSION)?->value);
+    }
+
+    /**
+     * JPEG thumbnail compression is forbidden when IFD0 is uncompressed RGB.
+     */
+    #[Test]
+    public function rejectIfd1JpegCompressionForUncompressedRgbPrimary(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1468);
+        $this->expectExceptionMessageMatches('/Table 3|uncompressed RGB|thumbnail/i');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTwoIfds(
+                [
+                    [ExifTag::IMAGE_WIDTH, 100],
+                    [ExifTag::IMAGE_LENGTH, 100],
+                    [ExifTag::COMPRESSION, 1],
+                    [ExifTag::PHOTOMETRIC_INTERPRETATION, 2],
+                ],
+                [[ExifTag::COMPRESSION, 6]],
+            ),
+        );
+    }
+
+    /**
+     * JPEG thumbnail compression is forbidden when IFD0 is uncompressed YCbCr.
+     */
+    #[Test]
+    public function rejectIfd1JpegCompressionForUncompressedYcbcrPrimary(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1468);
+        $this->expectExceptionMessageMatches('/Table 3|uncompressed YCbCr|thumbnail/i');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTwoIfds(
+                [
+                    [ExifTag::IMAGE_WIDTH, 100],
+                    [ExifTag::IMAGE_LENGTH, 100],
+                    [ExifTag::COMPRESSION, 1],
+                    [ExifTag::PHOTOMETRIC_INTERPRETATION, 6],
+                ],
+                [[ExifTag::COMPRESSION, 6]],
+            ),
+        );
+    }
+
+    /**
+     * JPEG thumbnail compression remains allowed in JPEG-context EXIF parsing.
+     */
+    #[Test]
+    public function acceptIfd1JpegCompressionInJpegContext(): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTwoIfds(
+                [[ExifTag::ORIENTATION, 1]],
+                [[ExifTag::COMPRESSION, 6]],
+            ),
+            jpegContext: true,
+        );
+
+        self::assertSame(6, $result->ifd1?->get(ExifTag::COMPRESSION)?->value);
+    }
+
+    /**
      * Accepts a valid SOI..EOI JPEG thumbnail stream referenced by IFD1 tags.
      */
     #[Test]
