@@ -75,6 +75,8 @@ final class JpegParserTest extends TestCase
 
     private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
 
+    private const string EXTENDED_XMP_SIGNATURE = "http://ns.adobe.com/xmp/extension/\0";
+
     private const string ICC_SIGNATURE = "ICC_PROFILE\0";
 
     private const string MPF_SIGNATURE = "MPF\0";
@@ -206,6 +208,130 @@ final class JpegParserTest extends TestCase
 
         self::assertSame([$exifBlob], $extractor->extractExifBlobs());
         self::assertSame([$xmpOne, $xmpTwo], $extractor->extractXmpPackets());
+    }
+
+    /**
+     * Reassembles ExtendedXMP APP1 chunks referenced by xmpNote:HasExtendedXMP.
+     * This verifies chunk ordering, concatenation, and merged packet emission.
+     *
+     * @return void
+     */
+    #[Test]
+    public function reassemblesExtendedXmpChunksReferencedByBasePacket(): void
+    {
+        $guid            = '0123456789ABCDEF0123456789ABCDEF';
+        $basePacket      = '<x:xmpmeta xmlns:x="adobe:ns:meta/" xmlns:xmpNote="http://ns.adobe.com/xmp/note/" xmpNote:HasExtendedXMP="' . $guid . '">BASE-';
+        $extendedPayload = 'EXTENDED</x:xmpmeta>';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $basePacket),
+            self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 8, substr($extendedPayload, 8))),
+            self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 0, substr($extendedPayload, 0, 8))),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$basePacket . $extendedPayload], $extractor->extractXmpPackets());
+    }
+
+    /**
+     * Rejects ExtendedXMP assemblies that contain missing byte ranges.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsExtendedXmpWithMissingChunkRanges(): void
+    {
+        $guid            = '89ABCDEF0123456789ABCDEF01234567';
+        $basePacket      = '<x:xmpmeta xmlns:xmpNote="http://ns.adobe.com/xmp/note/" xmpNote:HasExtendedXMP="' . $guid . '">BASE-';
+        $extendedPayload = 'EXTENDED</x:xmpmeta>';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $basePacket),
+            self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 0, substr($extendedPayload, 0, 4))),
+            self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 8, substr($extendedPayload, 8))),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/ExtendedXMP.*missing|missing.*ExtendedXMP/i');
+
+        $extractor->extractXmpPackets();
+    }
+
+    /**
+     * Rejects ExtendedXMP assemblies that contain overlapping chunk ranges.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsExtendedXmpWithOverlappingChunkRanges(): void
+    {
+        $guid            = 'FEDCBA9876543210FEDCBA9876543210';
+        $basePacket      = '<x:xmpmeta xmlns:xmpNote="http://ns.adobe.com/xmp/note/" xmpNote:HasExtendedXMP="' . $guid . '">BASE-';
+        $extendedPayload = 'EXTENDED</x:xmpmeta>';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $basePacket),
+            self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 0, substr($extendedPayload, 0, 8))),
+            self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 6, substr($extendedPayload, 6))),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/ExtendedXMP.*overlap|overlap.*ExtendedXMP/i');
+
+        $extractor->extractXmpPackets();
+    }
+
+    /**
+     * Rejects mismatched GUID combinations between base and extension packets.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsExtendedXmpGuidMismatchBetweenBaseAndExtensions(): void
+    {
+        $baseGuid        = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+        $extensionGuid   = 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB';
+        $basePacket      = '<x:xmpmeta xmlns:xmpNote="http://ns.adobe.com/xmp/note/" xmpNote:HasExtendedXMP="' . $baseGuid . '">BASE-';
+        $extendedPayload = 'EXTENDED</x:xmpmeta>';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $basePacket),
+            self::segment(self::MARKER_APP1, $this->extendedXmpPayload($extensionGuid, strlen($extendedPayload), 0, $extendedPayload)),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/HasExtendedXMP|GUID|ExtendedXMP/i');
+
+        $extractor->extractXmpPackets();
+    }
+
+    /**
+     * Keeps regular APP1 XMP extraction unchanged when no base reference exists.
+     *
+     * @return void
+     */
+    #[Test]
+    public function ignoresOrphanExtendedXmpChunksWithoutBaseReference(): void
+    {
+        $guid            = '13579BDF02468ACE13579BDF02468ACE';
+        $xmpPacket       = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Plain</x:xmpmeta>';
+        $extendedPayload = 'ORPHAN';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPacket),
+            self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 0, $extendedPayload)),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$xmpPacket], $extractor->extractXmpPackets());
     }
 
     /**
@@ -1438,6 +1564,25 @@ final class JpegParserTest extends TestCase
     private static function segment(int $marker, string $payload): string
     {
         return "\xFF" . chr($marker) . pack('n', strlen($payload) + 2) . $payload;
+    }
+
+    /**
+     * Builds an ExtendedXMP APP1 payload with GUID, full-length and chunk offset headers.
+     *
+     * @param string $guid       32-char uppercase hex GUID.
+     * @param int    $fullLength Total logical ExtendedXMP payload length.
+     * @param int    $offset     Byte offset of this chunk inside the logical payload.
+     * @param string $chunk      Chunk bytes for this segment.
+     *
+     * @return string
+     */
+    private function extendedXmpPayload(string $guid, int $fullLength, int $offset, string $chunk): string
+    {
+        return self::EXTENDED_XMP_SIGNATURE
+            . $guid
+            . pack('N', $fullLength)
+            . pack('N', $offset)
+            . $chunk;
     }
 
     /**

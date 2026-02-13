@@ -29,6 +29,7 @@ use function ksort;
 use function max;
 use function min;
 use function ord;
+use function preg_match;
 use function range;
 use function sha1;
 use function sort;
@@ -37,6 +38,7 @@ use function str_contains;
 use function str_starts_with;
 use function strlen;
 use function strpos;
+use function strtoupper;
 use function substr;
 use function trim;
 use function unpack;
@@ -59,6 +61,12 @@ final class JpegParser
     private const string EXIF_SIGNATURE = "Exif\0\0";
 
     private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
+
+    private const string EXTENDED_XMP_SIGNATURE = "http://ns.adobe.com/xmp/extension/\0";
+
+    private const int EXTENDED_XMP_GUID_LENGTH = 32;
+
+    private const int EXTENDED_XMP_HEADER_LENGTH = 8;
 
     private const string ICC_SIGNATURE = "ICC_PROFILE\0";
 
@@ -104,6 +112,18 @@ final class JpegParser
 
     /** @var array<string, bool> */
     private array $xmpPacketHashes = [];
+
+    /** @var list<array{packet:string, guid:string, offset:int}> */
+    private array $extendedXmpBasePackets = [];
+
+    /** @var array<string, list<array{offset:int, length:int, data:string, segmentOffset:int}>> */
+    private array $extendedXmpChunks = [];
+
+    /** @var array<string, int> */
+    private array $extendedXmpTotalLength = [];
+
+    /** @var array<string, int> */
+    private array $extendedXmpFirstOffset = [];
 
     /** @var list<string> */
     private array $iccSegments = [];
@@ -346,6 +366,10 @@ final class JpegParser
 
         $this->exifBlobs               = [];
         $this->xmpPackets              = [];
+        $this->extendedXmpBasePackets  = [];
+        $this->extendedXmpChunks       = [];
+        $this->extendedXmpTotalLength  = [];
+        $this->extendedXmpFirstOffset  = [];
         $this->iccSegments             = [];
         $this->iccSequence             = [];
         $this->iccExpectedCount        = null;
@@ -543,7 +567,7 @@ final class JpegParser
             }
 
             if ($marker === Marker::APP1) {
-                $this->handleApp1($payload);
+                $this->handleApp1($payload, $offset);
             } elseif ($marker === Marker::APP2) {
                 $this->handleApp2($payload, $offset);
             } elseif ($marker === Marker::APP11) {
@@ -568,6 +592,7 @@ final class JpegParser
             }
         }
 
+        $this->finaliseExtendedXmpPackets();
         $this->finaliseApp11Segments();
         $this->finaliseFlashPixStreams();
 
@@ -752,8 +777,9 @@ final class JpegParser
      * followed by the TIFF header defined in §4.5.
      *
      * @param string $payload Raw APP1 payload including leading signature.
+     * @param int    $offset  Offset in the stream where the marker begins.
      */
-    private function handleApp1(string $payload): void
+    private function handleApp1(string $payload, int $offset): void
     {
         if (str_starts_with($payload, self::EXIF_SIGNATURE)) {
             // EXIF 3.0 §4.7.2 requires APP1 Exif data to start with "Exif\0\0"
@@ -763,8 +789,296 @@ final class JpegParser
             $this->exifBlobs[] = $tiffData;
         } elseif (str_starts_with($payload, self::XMP_SIGNATURE)) {
             $packet = substr($payload, strlen(self::XMP_SIGNATURE));
+            $guid   = $this->extractExtendedXmpGuidFromPacket($packet, $offset);
+
+            if ($guid !== null) {
+                $this->extendedXmpBasePackets[] = [
+                    'packet' => $packet,
+                    'guid'   => $guid,
+                    'offset' => $offset,
+                ];
+
+                return;
+            }
+
             $this->appendXmpPacket($packet);
+        } elseif (str_starts_with($payload, self::EXTENDED_XMP_SIGNATURE)) {
+            $this->handleExtendedXmpSegment($payload, $offset);
         }
+    }
+
+    /**
+     * Parses and stores one ExtendedXMP APP1 chunk.
+     *
+     * Adobe XMP Storage in Files defines the JPEG APP1 extension container as:
+     * signature + GUID + full-length + chunk-offset + chunk bytes.
+     *
+     * @param string $payload Raw APP1 payload containing extended XMP header fields.
+     * @param int    $offset  Offset in the stream where the marker begins.
+     */
+    private function handleExtendedXmpSegment(string $payload, int $offset): void
+    {
+        $signatureLength = strlen(self::EXTENDED_XMP_SIGNATURE);
+        $minimumLength   = $signatureLength + self::EXTENDED_XMP_GUID_LENGTH + self::EXTENDED_XMP_HEADER_LENGTH;
+        if (strlen($payload) < $minimumLength) {
+            throw new ParseError(
+                sprintf('ExtendedXMP APP1 segment at offset %d is too short', $offset),
+                1470,
+            );
+        }
+
+        $guidRaw = substr($payload, $signatureLength, self::EXTENDED_XMP_GUID_LENGTH);
+        if (preg_match('/^[0-9A-Fa-f]{32}$/', $guidRaw) !== 1) {
+            throw new ParseError(
+                sprintf('ExtendedXMP APP1 segment at offset %d has invalid GUID', $offset),
+                1471,
+            );
+        }
+
+        $guid = strtoupper($guidRaw);
+
+        $lengthOffset  = $signatureLength + self::EXTENDED_XMP_GUID_LENGTH;
+        $lengthUnpack  = @unpack('Nlength', substr($payload, $lengthOffset, 4));
+        $offsetUnpack  = @unpack('Noffset', substr($payload, $lengthOffset + 4, 4));
+        $extendedChunk = substr($payload, $lengthOffset + self::EXTENDED_XMP_HEADER_LENGTH);
+
+        if (($lengthUnpack === false) || !isset($lengthUnpack['length'])) {
+            throw new ParseError(
+                sprintf('ExtendedXMP APP1 segment at offset %d has invalid full-length field', $offset),
+                1472,
+            );
+        }
+
+        if (($offsetUnpack === false) || !isset($offsetUnpack['offset'])) {
+            throw new ParseError(
+                sprintf('ExtendedXMP APP1 segment at offset %d has invalid chunk-offset field', $offset),
+                1473,
+            );
+        }
+
+        /** @var array{length:int} $lengthUnpack */
+        $totalLength = $lengthUnpack['length'];
+        if ($totalLength <= 0) {
+            throw new ParseError(
+                sprintf('ExtendedXMP APP1 segment at offset %d has non-positive full length %d', $offset, $totalLength),
+                1472,
+            );
+        }
+
+        /** @var array{offset:int} $offsetUnpack */
+        $chunkOffset = $offsetUnpack['offset'];
+        $chunkLength = strlen($extendedChunk);
+        if ($chunkLength === 0) {
+            throw new ParseError(
+                sprintf('ExtendedXMP APP1 segment at offset %d has empty chunk payload', $offset),
+                1473,
+            );
+        }
+
+        if ($chunkOffset > $totalLength) {
+            throw new ParseError(
+                sprintf(
+                    'ExtendedXMP APP1 segment at offset %d has chunk offset %d outside full length %d',
+                    $offset,
+                    $chunkOffset,
+                    $totalLength,
+                ),
+                1473,
+            );
+        }
+
+        if ($chunkLength > $totalLength || $chunkOffset > ($totalLength - $chunkLength)) {
+            throw new ParseError(
+                sprintf(
+                    'ExtendedXMP APP1 segment at offset %d has out-of-range chunk [%d,%d) for full length %d',
+                    $offset,
+                    $chunkOffset,
+                    $chunkOffset + $chunkLength,
+                    $totalLength,
+                ),
+                1473,
+            );
+        }
+
+        if (!array_key_exists($guid, $this->extendedXmpTotalLength)) {
+            $this->extendedXmpTotalLength[$guid] = $totalLength;
+            $this->extendedXmpFirstOffset[$guid] = $offset;
+            $this->extendedXmpChunks[$guid]      = [];
+        } elseif ($this->extendedXmpTotalLength[$guid] !== $totalLength) {
+            $firstOffset = $this->extendedXmpFirstOffset[$guid] ?? $offset;
+
+            throw new ParseError(
+                sprintf(
+                    'ExtendedXMP GUID %s has inconsistent full length %d at offset %d (first seen %d at offset %d)',
+                    $guid,
+                    $totalLength,
+                    $offset,
+                    $this->extendedXmpTotalLength[$guid],
+                    $firstOffset,
+                ),
+                1474,
+            );
+        }
+
+        $this->extendedXmpChunks[$guid][] = [
+            'offset'        => $chunkOffset,
+            'length'        => $chunkLength,
+            'data'          => $extendedChunk,
+            'segmentOffset' => $offset,
+        ];
+    }
+
+    /**
+     * Extracts xmpNote:HasExtendedXMP GUID references from base XMP packets.
+     *
+     * @param string $packet Raw base XMP packet.
+     * @param int    $offset APP1 marker offset for diagnostics.
+     *
+     * @return string|null Uppercase GUID when present, null otherwise.
+     */
+    private function extractExtendedXmpGuidFromPacket(string $packet, int $offset): ?string
+    {
+        if (!str_contains($packet, 'xmpNote:HasExtendedXMP')) {
+            return null;
+        }
+
+        $attributeMatch = preg_match('/xmpNote:HasExtendedXMP\s*=\s*["\']\s*([0-9A-Fa-f]{32})\s*["\']/', $packet, $matches);
+        if ($attributeMatch === 1) {
+            return strtoupper($matches[1]);
+        }
+
+        $elementMatch = preg_match('/<xmpNote:HasExtendedXMP>\s*([0-9A-Fa-f]{32})\s*<\/xmpNote:HasExtendedXMP>/', $packet, $matches);
+        if ($elementMatch === 1) {
+            return strtoupper($matches[1]);
+        }
+
+        throw new ParseError(
+            sprintf('XMP packet at offset %d has invalid xmpNote:HasExtendedXMP GUID', $offset),
+            1475,
+        );
+    }
+
+    /**
+     * Reassembles ExtendedXMP chunks and merges them with referenced base packets.
+     */
+    private function finaliseExtendedXmpPackets(): void
+    {
+        if ($this->extendedXmpBasePackets === []) {
+            return;
+        }
+
+        $requiredGuids = [];
+        foreach ($this->extendedXmpBasePackets as $basePacket) {
+            $requiredGuids[$basePacket['guid']] = true;
+        }
+
+        foreach (array_keys($this->extendedXmpChunks) as $guid) {
+            if (!array_key_exists($guid, $requiredGuids)) {
+                $offset = $this->extendedXmpFirstOffset[$guid] ?? 0;
+
+                throw new ParseError(
+                    sprintf(
+                        'ExtendedXMP GUID %s from APP1 extension chunk at offset %d has no matching xmpNote:HasExtendedXMP base packet',
+                        $guid,
+                        $offset,
+                    ),
+                    1476,
+                );
+            }
+        }
+
+        /** @var array<string, string> $assembledPayloads */
+        $assembledPayloads = [];
+        foreach ($this->extendedXmpBasePackets as $basePacket) {
+            $guid = $basePacket['guid'];
+            if (!array_key_exists($guid, $this->extendedXmpChunks)) {
+                throw new ParseError(
+                    sprintf(
+                        'XMP packet at offset %d references ExtendedXMP GUID %s but matching extension chunks are missing',
+                        $basePacket['offset'],
+                        $guid,
+                    ),
+                    1477,
+                );
+            }
+
+            if (!array_key_exists($guid, $assembledPayloads)) {
+                $assembledPayloads[$guid] = $this->assembleExtendedXmpPayload($guid, $basePacket['offset']);
+            }
+
+            $this->appendXmpPacket($basePacket['packet'] . $assembledPayloads[$guid]);
+        }
+    }
+
+    /**
+     * Validates and concatenates all ExtendedXMP chunks for one GUID.
+     *
+     * @param string $guid       ExtendedXMP GUID.
+     * @param int    $baseOffset Base APP1 offset for diagnostics.
+     *
+     * @return string
+     */
+    private function assembleExtendedXmpPayload(string $guid, int $baseOffset): string
+    {
+        $chunks      = $this->extendedXmpChunks[$guid] ?? [];
+        $totalLength = $this->extendedXmpTotalLength[$guid] ?? 0;
+        if (($chunks === []) || ($totalLength <= 0)) {
+            throw new ParseError(
+                sprintf('ExtendedXMP GUID %s has no decodable extension chunks', $guid),
+                1477,
+            );
+        }
+
+        usort(
+            $chunks,
+            static fn (array $left, array $right): int => $left['offset'] <=> $right['offset'],
+        );
+
+        $cursor    = 0;
+        $assembled = '';
+        foreach ($chunks as $chunk) {
+            if ($chunk['offset'] > $cursor) {
+                throw new ParseError(
+                    sprintf(
+                        'ExtendedXMP GUID %s is missing bytes at offset %d (next chunk starts at %d)',
+                        $guid,
+                        $cursor,
+                        $chunk['offset'],
+                    ),
+                    1478,
+                );
+            }
+
+            if ($chunk['offset'] < $cursor) {
+                throw new ParseError(
+                    sprintf(
+                        'ExtendedXMP GUID %s has overlapping chunks around offset %d (segment offset %d)',
+                        $guid,
+                        $chunk['offset'],
+                        $chunk['segmentOffset'],
+                    ),
+                    1479,
+                );
+            }
+
+            $assembled .= $chunk['data'];
+            $cursor += $chunk['length'];
+        }
+
+        if ($cursor !== $totalLength) {
+            throw new ParseError(
+                sprintf(
+                    'ExtendedXMP GUID %s is incomplete: expected %d bytes but assembled %d bytes (base offset %d)',
+                    $guid,
+                    $totalLength,
+                    $cursor,
+                    $baseOffset,
+                ),
+                1478,
+            );
+        }
+
+        return $assembled;
     }
 
     /**
