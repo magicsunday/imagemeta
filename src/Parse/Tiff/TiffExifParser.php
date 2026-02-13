@@ -5745,6 +5745,7 @@ final class TiffExifParser
      * @var array<int, string>
      */
     private const array DIGEST_TAGS = [
+        DngTag::PREVIEW_SETTINGS_DIGEST  => 'PreviewSettingsDigest',
         DngTag::RAW_IMAGE_DIGEST         => 'RawImageDigest',
         DngTag::ORIGINAL_RAW_FILE_DIGEST => 'OriginalRawFileDigest',
         DngTag::NEW_RAW_IMAGE_DIGEST     => 'NewRawImageDigest',

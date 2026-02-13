@@ -5083,6 +5083,47 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts a valid PreviewSettingsDigest (BYTE[16]).
+     */
+    #[Test]
+    public function acceptsValidPreviewSettingsDigest(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDigest(DngTag::PREVIEW_SETTINGS_DIGEST, TiffConst::TYPE_BYTE, 16),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects PreviewSettingsDigest with wrong count.
+     */
+    #[Test]
+    public function rejectsPreviewSettingsDigestWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1558);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDigest(DngTag::PREVIEW_SETTINGS_DIGEST, TiffConst::TYPE_BYTE, 17),
+        );
+    }
+
+    /**
+     * Rejects PreviewSettingsDigest with wrong type.
+     */
+    #[Test]
+    public function rejectsPreviewSettingsDigestWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1558);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDigest(DngTag::PREVIEW_SETTINGS_DIGEST, TiffConst::TYPE_UNDEFINED, 16),
+        );
+    }
+
+    /**
      * Builds a DNG with a digest tag in IFD0.
      *
      * @param int $digestTag Digest tag constant
