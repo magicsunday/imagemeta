@@ -744,8 +744,11 @@ final readonly class GpsConverter
 
         if ($value instanceof ExifRational) {
             $numeric = $this->rationalConverter->toFloat($value);
+            if (($numeric === null) || !$this->isWholeNumber($numeric)) {
+                return null;
+            }
 
-            return $numeric === null ? null : $this->normaliseAltitudeRef($numeric);
+            return $this->normaliseAltitudeRef((int) $numeric);
         }
 
         if (is_string($value)) {
@@ -754,11 +757,30 @@ final readonly class GpsConverter
                 return null;
             }
 
-            return $this->normaliseAltitudeRef((float) $clean);
+            if (preg_match('/^[+-]?\d+$/', $clean) !== 1) {
+                return null;
+            }
+
+            return $this->normaliseAltitudeRef((int) $clean);
         }
 
-        if (is_int($value) || is_float($value)) {
-            $normalized = (int) round((float) $value);
+        if (is_int($value)) {
+            $normalized = $value;
+
+            // EXIF 3.0 §4.6.7.1.6: Valid values are 0-3
+            if ($normalized < 0 || $normalized > 3) {
+                return null;
+            }
+
+            return $normalized;
+        }
+
+        if (is_float($value)) {
+            if (!$this->isWholeNumber($value)) {
+                return null;
+            }
+
+            $normalized = (int) $value;
 
             // EXIF 3.0 §4.6.7.1.6: Valid values are 0-3
             if ($normalized < 0 || $normalized > 3) {

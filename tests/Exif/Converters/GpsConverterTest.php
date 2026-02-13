@@ -774,6 +774,93 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Accepts integral GPSAltitudeRef values in the EXIF-defined enum domain.
+     *
+     * @param int|string $value
+     * @param int        $expected
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideValidAltitudeRefValues')]
+    public function acceptsValidAltitudeReferenceValues(int|string $value, int $expected): void
+    {
+        self::assertSame($expected, $this->converter->normaliseAltitudeRef($value));
+    }
+
+    /**
+     * Rejects fractional GPSAltitudeRef values instead of coercing them into enum codes.
+     *
+     * @param float|string|ExifRational $value
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideFractionalAltitudeRefValues')]
+    public function rejectsFractionalAltitudeReferenceValues(float|string|ExifRational $value): void
+    {
+        self::assertNull($this->converter->normaliseAltitudeRef($value));
+    }
+
+    /**
+     * Rejects non-numeric GPSAltitudeRef text values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsNonNumericAltitudeReferenceValue(): void
+    {
+        self::assertNull($this->converter->normaliseAltitudeRef('invalid'));
+    }
+
+    /**
+     * Rejects out-of-domain GPSAltitudeRef values outside EXIF's 0..3 range.
+     *
+     * @param int|string $value
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideOutOfDomainAltitudeRefValues')]
+    public function rejectsOutOfDomainAltitudeReferenceValues(int|string $value): void
+    {
+        self::assertNull($this->converter->normaliseAltitudeRef($value));
+    }
+
+    /**
+     * @return iterable<string, array{0:int|string, 1:int}>
+     */
+    public static function provideValidAltitudeRefValues(): iterable
+    {
+        yield 'zero integer' => [0, 0];
+        yield 'one integer' => [1, 1];
+        yield 'two integer' => [2, 2];
+        yield 'three integer' => [3, 3];
+        yield 'numeric string' => ['1', 1];
+    }
+
+    /**
+     * @return iterable<string, array{0:float|string|ExifRational}>
+     */
+    public static function provideFractionalAltitudeRefValues(): iterable
+    {
+        yield 'float below one' => [0.4];
+        yield 'float midpoint' => [1.5];
+        yield 'numeric string' => ['2.1'];
+        yield 'rational value' => [new ExifRational(3, 2)];
+    }
+
+    /**
+     * @return iterable<string, array{0:int|string}>
+     */
+    public static function provideOutOfDomainAltitudeRefValues(): iterable
+    {
+        yield 'negative integer' => [-1];
+        yield 'above range integer' => [4];
+        yield 'above range string' => ['5'];
+    }
+
+    /**
      * Provides a valid GPSDifferential value (0).
      * Verifies no-correction is accepted per EXIF 3.0 §4.6.7.1.31.
      *
