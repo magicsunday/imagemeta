@@ -1453,4 +1453,144 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', $ifdOffset)
             . $ifdData;
     }
+
+    /**
+     * ProfileToneCurve with odd FLOAT count triggers ParseError.
+     */
+    #[Test]
+    public function rejectsProfileToneCurveWithOddCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1480);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithProfileToneCurve([0.0, 0.0, 0.5]),
+        );
+    }
+
+    /**
+     * ProfileToneCurve with non-increasing x values triggers ParseError.
+     */
+    #[Test]
+    public function rejectsProfileToneCurveWithNonIncreasingX(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1481);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithProfileToneCurve([0.0, 0.0, 0.5, 0.5, 0.3, 0.8, 1.0, 1.0]),
+        );
+    }
+
+    /**
+     * ProfileToneCurve with out-of-range value triggers ParseError.
+     */
+    #[Test]
+    public function rejectsProfileToneCurveWithOutOfRangeValue(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1482);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithProfileToneCurve([0.0, 0.0, 0.5, 1.5, 1.0, 1.0]),
+        );
+    }
+
+    /**
+     * Valid ProfileToneCurve with strictly increasing x parses successfully.
+     */
+    #[Test]
+    public function acceptsValidProfileToneCurve(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithProfileToneCurve([0.0, 0.0, 0.5, 0.5, 1.0, 1.0]),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::PROFILE_TONE_CURVE));
+    }
+
+    /**
+     * SDR ProfileToneCurve without required endpoints triggers ParseError.
+     */
+    #[Test]
+    public function rejectsSdrProfileToneCurveWithWrongEndpoints(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1483);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithProfileToneCurve([0.1, 0.0, 0.5, 0.5, 1.0, 1.0]),
+        );
+    }
+
+    /**
+     * Builds a minimal TIFF with a ProfileToneCurve tag containing FLOAT values.
+     *
+     * @param list<float> $floats Flat list of alternating x,y values
+     * @param bool        $hdr    Whether to include ProfileDynamicRange indicating HDR
+     */
+    private function buildTiffWithProfileToneCurve(
+        array $floats,
+        bool $hdr = false,
+    ): string {
+        $ifdOffset  = 8;
+        $entryCount = $hdr ? 4 : 3;
+
+        // Float data goes out-of-line after the IFD
+        // IFD: 2 (count) + entryCount*12 (entries) + 4 (next IFD)
+        $ifdSize      = 2 + ($entryCount * 12) + 4;
+        $floatOffset  = $ifdOffset + $ifdSize;
+        $floatPayload = '';
+
+        foreach ($floats as $f) {
+            $floatPayload .= pack('g', $f);
+        }
+
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            DngTag::PROFILE_TONE_CURVE => pack('v', DngTag::PROFILE_TONE_CURVE)
+                . pack('v', TiffConst::TYPE_FLOAT)
+                . pack('V', count($floats))
+                . pack('V', $floatOffset),
+        ];
+
+        $dynRangePayload = '';
+
+        if ($hdr) {
+            // ProfileDynamicRange: UNDEFINED, 8 bytes out-of-line
+            $dynRangeOffset  = $floatOffset + strlen($floatPayload);
+            $dynRangePayload = pack('v', 1)   // version = 1
+                . pack('v', 1)                // dynamicRange = 1 (HDR)
+                . pack('g', 1.0);             // hintMaxOutputValue
+
+            $tags[DngTag::PROFILE_DYNAMIC_RANGE] = pack('v', DngTag::PROFILE_DYNAMIC_RANGE)
+                . pack('v', TiffConst::TYPE_UNDEFINED)
+                . pack('V', 8)
+                . pack('V', $dynRangeOffset);
+        }
+
+        ksort($tags);
+
+        $ifdData = pack('v', $entryCount);
+
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData
+            . $floatPayload
+            . $dynRangePayload;
+    }
 }

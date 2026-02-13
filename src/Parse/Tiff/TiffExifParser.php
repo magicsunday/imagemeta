@@ -1280,6 +1280,7 @@ final class TiffExifParser
         $this->validateDngTripleIlluminant($ifd0);
         $this->validateDngWhiteBalanceExclusivity($ifd0);
         $this->validateDngCalibrationIlluminantPairZero($ifd0);
+        $this->validateDngProfileToneCurve($ifd0);
         $this->validateDngInterleaveVersionFloors($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -4057,6 +4058,98 @@ final class TiffExifParser
                 'CalibrationIlluminant1 and CalibrationIlluminant2 must not have value 0 (unknown) when both are present per DNG 1.7.1.0.',
                 1479,
             );
+        }
+    }
+
+    /**
+     * Validates DNG ProfileToneCurve structure and values.
+     */
+    private function validateDngProfileToneCurve(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::PROFILE_TONE_CURVE);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        $value = $entry->value;
+
+        if (!$value instanceof ExifNumericList) {
+            return;
+        }
+
+        $vals = $value->values;
+
+        if (count($vals) % 2 !== 0) {
+            throw new ParseError(
+                'ProfileToneCurve FLOAT count must be even (x,y pairs) per DNG 1.7.1.0.',
+                1480,
+            );
+        }
+
+        // Extract typed float array, bail if any value is not numeric
+        /** @var list<float> $floats */
+        $floats = [];
+
+        foreach ($vals as $v) {
+            if (!is_float($v) && !is_int($v)) {
+                return;
+            }
+
+            $floats[] = (float) $v;
+        }
+
+        // Check all values are finite and in [0.0, 1.0]
+        foreach ($floats as $fv) {
+            if (!is_finite($fv) || $fv < 0.0 || $fv > 1.0) {
+                throw new ParseError(
+                    'ProfileToneCurve values must be finite floats in [0.0, 1.0] per DNG 1.7.1.0.',
+                    1482,
+                );
+            }
+        }
+
+        // Check x values are strictly increasing
+        $prevX = -1.0;
+
+        for ($i = 0, $n = count($floats); $i < $n; $i += 2) {
+            if ($floats[$i] <= $prevX) {
+                throw new ParseError(
+                    'ProfileToneCurve x coordinates must be strictly increasing per DNG 1.7.1.0.',
+                    1481,
+                );
+            }
+
+            $prevX = $floats[$i];
+        }
+
+        // SDR endpoint check: if ProfileDynamicRange is absent or SDR, enforce (0,0) and (1,1)
+        $isSdr    = true;
+        $dynRange = $ifd->get(DngTag::PROFILE_DYNAMIC_RANGE);
+
+        if ($dynRange instanceof IfdEntry && is_string($dynRange->value) && strlen($dynRange->value) >= 4) {
+            // Bytes 2-3 are DynamicRange SHORT (LE): 0=SDR, 1=HDR
+            $range = ord($dynRange->value[2]) | (ord($dynRange->value[3]) << 8);
+
+            if ($range === 1) {
+                $isSdr = false;
+            }
+        }
+
+        if ($isSdr && count($floats) >= 4) {
+            $lastIdx = count($floats) - 1;
+
+            if (
+                $floats[0] !== 0.0
+                || $floats[1] !== 0.0
+                || $floats[$lastIdx - 1] !== 1.0
+                || $floats[$lastIdx] !== 1.0
+            ) {
+                throw new ParseError(
+                    'SDR ProfileToneCurve must start at (0.0,0.0) and end at (1.0,1.0) per DNG 1.7.1.0.',
+                    1483,
+                );
+            }
         }
     }
 
