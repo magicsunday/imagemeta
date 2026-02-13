@@ -3617,4 +3617,150 @@ final class TiffExifParserDngTagTest extends TestCase
 
         return $result;
     }
+
+    /**
+     * Accepts valid ProfileGainTableMap2 with DataType 0 (UINT8).
+     */
+    #[Test]
+    public function acceptsProfileGainTableMap2DataType0(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildDngWithGainTableMap2(dataType: 0, mapPointsV: 2, mapPointsH: 2, mapPointsN: 1),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Accepts valid ProfileGainTableMap2 with DataType 3 (FLOAT32).
+     */
+    #[Test]
+    public function acceptsProfileGainTableMap2DataType3(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildDngWithGainTableMap2(dataType: 3, mapPointsV: 2, mapPointsH: 2, mapPointsN: 1),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects ProfileGainTableMap2 with invalid DataType.
+     */
+    #[Test]
+    public function rejectsGainTableMap2InvalidDataType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1517);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithGainTableMap2(dataType: 5),
+        );
+    }
+
+    /**
+     * Rejects ProfileGainTableMap2 with Gamma out of range.
+     */
+    #[Test]
+    public function rejectsGainTableMap2GammaOutOfRange(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1518);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithGainTableMap2(gamma: 5.0),
+        );
+    }
+
+    /**
+     * Rejects ProfileGainTableMap2 with mismatched count.
+     */
+    #[Test]
+    public function rejectsGainTableMap2CountMismatch(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1519);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithGainTableMap2(dataType: 0, mapPointsV: 2, mapPointsH: 2, mapPointsN: 1, extraBytes: 3),
+        );
+    }
+
+    /**
+     * Builds a DNG TIFF with a ProfileGainTableMap2 payload.
+     */
+    private function buildDngWithGainTableMap2(
+        int $dataType = 0,
+        int $mapPointsV = 1,
+        int $mapPointsH = 1,
+        int $mapPointsN = 1,
+        float $gamma = 1.0,
+        int $extraBytes = 0,
+    ): string {
+        $bytesPerElement = match ($dataType) {
+            0 => 1,
+            1, 2 => 2,
+            3       => 4,
+            default => 1,
+        };
+
+        $gainDataSize = $bytesPerElement * $mapPointsV * $mapPointsH * $mapPointsN + $extraBytes;
+        $gainData     = str_repeat("\x01", $gainDataSize);
+
+        $header = pack('V', $mapPointsV)
+            . pack('V', $mapPointsH)
+            . pack('e', 1.0)                                 // MapSpacingV
+            . pack('e', 1.0)                                 // MapSpacingH
+            . pack('e', 0.0)                                 // MapOriginV
+            . pack('e', 0.0)                                 // MapOriginH
+            . pack('V', $mapPointsN)
+            . pack('g5', 0.333, 0.333, 0.333, 0.0, 0.0)     // MapInputWeights[5]
+            . pack('V', $dataType)
+            . pack('g', $gamma)
+            . pack('g', 0.0)                                 // GainMin
+            . pack('g', 1.0);                                // GainMax
+
+        $payload = $header . $gainData;
+
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::PROFILE_GAIN_TABLE_MAP_2)
+            . pack('v', TiffConst::TYPE_UNDEFINED)
+            . pack('V', strlen($payload))
+            . pack('V', $payloadOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $payload;
+    }
 }

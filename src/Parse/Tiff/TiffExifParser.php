@@ -1297,6 +1297,7 @@ final class TiffExifParser
         $this->validateDngHueSatMapData($ifd0);
         $this->validateDngIlluminantData($ifd0);
         $this->validateDngProfileDynamicRange($ifd0);
+        $this->validateDngProfileGainTableMap2($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -5049,6 +5050,80 @@ final class TiffExifParser
                     1508,
                 );
             }
+        }
+    }
+
+    /**
+     * Bytes-per-element map keyed by ProfileGainTableMap2 DataType.
+     *
+     * @var array<int, int>
+     */
+    private const array GAIN_TABLE_MAP2_ELEMENT_BYTES = [
+        0 => 1,
+        1 => 2,
+        2 => 2,
+        3 => 4,
+    ];
+
+    /**
+     * Validates DNG ProfileGainTableMap2 binary layout per DNG 1.7.1.0.
+     *
+     * 80-byte header followed by gain data whose size must match the count formula.
+     */
+    private function validateDngProfileGainTableMap2(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::PROFILE_GAIN_TABLE_MAP_2);
+
+        if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
+            return;
+        }
+
+        $payload = $entry->value;
+        $length  = strlen($payload);
+
+        if ($length < 80) {
+            throw new ParseError(
+                sprintf('ProfileGainTableMap2 payload must be at least 80 bytes, got %d.', $length),
+                1516,
+            );
+        }
+
+        $mapPointsV = $this->unpackU32(substr($payload, 0, 4));
+        $mapPointsH = $this->unpackU32(substr($payload, 4, 4));
+        $mapPointsN = $this->unpackU32(substr($payload, 40, 4));
+        $dataType   = $this->unpackU32(substr($payload, 64, 4));
+        $gamma      = $this->unpackFloat(substr($payload, 68, 4));
+
+        if (!isset(self::GAIN_TABLE_MAP2_ELEMENT_BYTES[$dataType])) {
+            throw new ParseError(
+                sprintf('ProfileGainTableMap2 DataType must be 0..3, got %d.', $dataType),
+                1517,
+            );
+        }
+
+        if ($gamma < 0.25 || $gamma > 4.0) {
+            throw new ParseError(
+                sprintf('ProfileGainTableMap2 Gamma must be 0.25..4.0, got %g.', $gamma),
+                1518,
+            );
+        }
+
+        $bytesPerElement = self::GAIN_TABLE_MAP2_ELEMENT_BYTES[$dataType];
+        $expectedLength  = 80 + ($bytesPerElement * $mapPointsV * $mapPointsH * $mapPointsN);
+
+        if ($length !== $expectedLength) {
+            throw new ParseError(
+                sprintf(
+                    'ProfileGainTableMap2 count mismatch: expected %d (80 + %d*%d*%d*%d), got %d.',
+                    $expectedLength,
+                    $bytesPerElement,
+                    $mapPointsV,
+                    $mapPointsH,
+                    $mapPointsN,
+                    $length,
+                ),
+                1519,
+            );
         }
     }
 }
