@@ -700,6 +700,60 @@ final readonly class DngTag
     public const int REDUCTION_MATRIX_3 = 0xCD3A;
 
     /**
+     * Spatially varying gain tables (second version) for image processing.
+     * DNG Version 1.7.0.0 (p. 94).
+     */
+    public const int PROFILE_GAIN_TABLE_MAP_2 = 0xCD40;
+
+    /**
+     * Column interleave factor for raw image data layout.
+     * DNG Version 1.7.1.0 (p. 99).
+     */
+    public const int COLUMN_INTERLEAVE_FACTOR = 0xCD43;
+
+    /**
+     * Image sequence information for multi-frame captures.
+     * DNG Version 1.7.0.0 (p. 96).
+     */
+    public const int IMAGE_SEQUENCE_INFO = 0xCD44;
+
+    /**
+     * Statistical summary of image data properties.
+     * DNG Version 1.7.0.0 (p. 97).
+     */
+    public const int IMAGE_STATS = 0xCD46;
+
+    /**
+     * Dynamic range metadata for the camera profile.
+     * DNG Version 1.7.0.0 (p. 98).
+     */
+    public const int PROFILE_DYNAMIC_RANGE = 0xCD47;
+
+    /**
+     * Group name for organizing camera profiles.
+     * DNG Version 1.7.0.0 (p. 98).
+     */
+    public const int PROFILE_GROUP_NAME = 0xCD48;
+
+    /**
+     * JPEG XL encoding distance parameter.
+     * DNG Version 1.7.1.0 (p. 100).
+     */
+    public const int JXL_DISTANCE = 0xCD49;
+
+    /**
+     * JPEG XL encoding effort parameter.
+     * DNG Version 1.7.1.0 (p. 100).
+     */
+    public const int JXL_EFFORT = 0xCD4A;
+
+    /**
+     * JPEG XL decoding speed tier parameter.
+     * DNG Version 1.7.1.0 (p. 101).
+     */
+    public const int JXL_DECODE_SPEED = 0xCD4B;
+
+    /**
      * Prevent instantiation of this constants-only utility class.
      */
     private function __construct()

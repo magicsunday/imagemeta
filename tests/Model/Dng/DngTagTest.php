@@ -48,6 +48,27 @@ final class DngTagTest extends TestCase
     }
 
     /**
+     * DNG 1.7.0.0/1.7.1.0 additional tags are present with distinct IDs.
+     */
+    #[Test]
+    public function dng17AdditionalTagIdsAreDistinct(): void
+    {
+        $ids = [
+            DngTag::PROFILE_GAIN_TABLE_MAP_2,
+            DngTag::COLUMN_INTERLEAVE_FACTOR,
+            DngTag::IMAGE_SEQUENCE_INFO,
+            DngTag::IMAGE_STATS,
+            DngTag::PROFILE_DYNAMIC_RANGE,
+            DngTag::PROFILE_GROUP_NAME,
+            DngTag::JXL_DISTANCE,
+            DngTag::JXL_EFFORT,
+            DngTag::JXL_DECODE_SPEED,
+        ];
+
+        self::assertCount(count($ids), array_unique($ids));
+    }
+
+    /**
      * All public integer constants defined on DngTag have unique tag IDs.
      * This guards against accidental copy-paste collisions.
      */
