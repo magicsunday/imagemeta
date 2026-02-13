@@ -1282,6 +1282,7 @@ final class TiffExifParser
         $this->validateDngCalibrationIlluminantPairZero($ifd0);
         $this->validateDngProfileToneCurve($ifd0);
         $this->validateDngInterleaveVersionFloors($ifd0);
+        $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
         $this->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
@@ -4245,5 +4246,22 @@ final class TiffExifParser
         }
 
         return false;
+    }
+
+    /**
+     * Validates that DNG files include the required Orientation tag.
+     */
+    private function validateDngRequiredOrientation(Ifd $ifd): void
+    {
+        if (!$ifd->get(DngTag::DNG_VERSION) instanceof IfdEntry) {
+            return;
+        }
+
+        if (!$ifd->get(ExifTag::ORIENTATION) instanceof IfdEntry) {
+            throw new ParseError(
+                'DNG requires Orientation tag in IFD0 per DNG 1.7.1.0.',
+                1484,
+            );
+        }
     }
 }

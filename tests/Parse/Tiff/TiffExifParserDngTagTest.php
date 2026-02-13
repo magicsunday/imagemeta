@@ -243,7 +243,7 @@ final class TiffExifParserDngTagTest extends TestCase
     private function buildClassicDngTiff(): string
     {
         $ifdOffset         = 8;
-        $entryCount        = 5;
+        $entryCount        = 6;
         $ifdSize           = 2 + (12 * $entryCount) + 4;
         $uniqueCameraModel = pack('Z*', 'MagicSunday Camera');
         $modelOffset       = $ifdOffset + $ifdSize;
@@ -262,6 +262,11 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0)
+            // Orientation SHORT[1] = 1
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
             . pack('v', DngTag::DNG_VERSION)
             . pack('v', TiffConst::TYPE_BYTE)
             . pack('V', 4)
@@ -1592,5 +1597,96 @@ final class TiffExifParserDngTagTest extends TestCase
             . $ifdData
             . $floatPayload
             . $dynRangePayload;
+    }
+
+    /**
+     * DNG without Orientation triggers ParseError.
+     */
+    #[Test]
+    public function rejectsDngWithoutOrientation(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1484);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithDngOrientation(isDng: true, includeOrientation: false),
+        );
+    }
+
+    /**
+     * DNG with Orientation present is valid.
+     */
+    #[Test]
+    public function acceptsDngWithOrientation(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithDngOrientation(isDng: true, includeOrientation: true),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::ORIENTATION));
+    }
+
+    /**
+     * Non-DNG TIFF without Orientation does not trigger the DNG rule.
+     */
+    #[Test]
+    public function acceptsNonDngTiffWithoutOrientation(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithDngOrientation(isDng: false, includeOrientation: false),
+        );
+
+        self::assertNull($parsed->ifd0->get(ExifTag::ORIENTATION));
+    }
+
+    /**
+     * Builds a minimal TIFF optionally marked as DNG and optionally containing Orientation.
+     */
+    private function buildTiffWithDngOrientation(
+        bool $isDng,
+        bool $includeOrientation,
+    ): string {
+        $ifdOffset = 8;
+
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+        ];
+
+        if ($includeOrientation) {
+            $tags[ExifTag::ORIENTATION] = pack('v', ExifTag::ORIENTATION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 1) . pack('v', 0);
+        }
+
+        if ($isDng) {
+            // DNGVersion: BYTE[4] inline
+            $tags[DngTag::DNG_VERSION] = pack('v', DngTag::DNG_VERSION)
+                . pack('v', TiffConst::TYPE_BYTE)
+                . pack('V', 4)
+                . pack('C4', 1, 7, 1, 0);
+        }
+
+        ksort($tags);
+
+        $ifdData = pack('v', count($tags));
+
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData;
     }
 }
