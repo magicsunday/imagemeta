@@ -557,6 +557,45 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Rejects malformed FPXR ID headers before segment body parsing.
+     *
+     * @param string $payload FPXR APP2 payload including malformed ID header.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideInvalidFlashPixIdHeaders')]
+    public function invalidFlashPixIdHeaderThrowsParseError(string $payload): void
+    {
+        $jpeg = $this->jpeg(self::segment(self::MARKER_APP2, $payload));
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/FPXR|FlashPix/i');
+
+        $extractor->getFlashPixStreams();
+    }
+
+    /**
+     * @return iterable<string, array{0:string}>
+     */
+    public static function provideInvalidFlashPixIdHeaders(): iterable
+    {
+        yield 'missing-nul-after-signature' => [
+            self::FPXR_SIGNATURE . "\x01\x00\x00\x00",
+        ];
+
+        yield 'unsupported-version-byte' => [
+            self::FPXR_SIGNATURE . "\x00\x01\x00\x00",
+        ];
+
+        yield 'short-id-header' => [
+            self::FPXR_SIGNATURE . "\x00",
+        ];
+    }
+
+    /**
      * Embeds two IPTC APP13 payloads with different values.
      * This verifies IPTC payloads are collected as raw blobs.
      *

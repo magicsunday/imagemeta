@@ -786,8 +786,10 @@ final class JpegParser
     /**
      * Extracts the FlashPix payload body after the FPXR signature.
      *
-     * EXIF 3.0 §4.7.3.3 documents an FPXR ID code suffix and version byte.
-     * Current parser compatibility accepts both suffix-bearing and legacy bodies.
+     * EXIF 3.0 §4.7.3.3 requires:
+     * - FPXR signature
+     * - NUL byte (00h)
+     * - version byte (currently 00h)
      *
      * @param string $payload Raw APP2 payload with FPXR prefix.
      * @param int    $offset  Marker offset used for diagnostics.
@@ -803,12 +805,23 @@ final class JpegParser
             throw new ParseError(sprintf('FlashPix segment at offset %d is too short', $offset), 1281);
         }
 
-        // EXIF 3.0 §4.7.3.3: FPXR ID may include trailing 0x00 + version byte.
-        if ($payload[$signatureLength] === "\x00") {
-            return substr($payload, $signatureLength + 2);
+        if ($payload[$signatureLength] !== "\x00") {
+            throw new ParseError(sprintf('FlashPix segment at offset %d has invalid FPXR ID header', $offset), 1324);
         }
 
-        return substr($payload, $signatureLength);
+        $version = ord($payload[$signatureLength + 1]);
+        if ($version !== 0) {
+            throw new ParseError(
+                sprintf(
+                    'FlashPix segment at offset %d has unsupported FPXR version %d',
+                    $offset,
+                    $version,
+                ),
+                1325,
+            );
+        }
+
+        return substr($payload, $signatureLength + 2);
     }
 
     /**
