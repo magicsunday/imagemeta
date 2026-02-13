@@ -3919,4 +3919,125 @@ final class TiffExifParserDngTagTest extends TestCase
             . $ifd2
             . $payload;
     }
+
+    /**
+     * Accepts a valid ImageSequenceInfo payload.
+     */
+    #[Test]
+    public function acceptsValidImageSequenceInfo(): void
+    {
+        $payload = "ABCDEFGH\0"   // SequenceID (8 chars + NUL)
+            . "burst\0"           // SequenceType (5 chars + NUL)
+            . "\0"                // FrameInfo (empty + NUL)
+            . pack('N', 0)        // Index (big-endian)
+            . pack('N', 10)       // Count (big-endian)
+            . "\x01";             // Final
+
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildDngWithImageSequenceInfo($payload),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects ImageSequenceInfo with SequenceID shorter than 8 chars.
+     */
+    #[Test]
+    public function rejectsImageSequenceInfoShortId(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1522);
+
+        $payload = "SHORT\0"      // SequenceID (5 chars — too short)
+            . "burst\0"
+            . "\0"
+            . pack('N', 0)
+            . pack('N', 1)
+            . "\x00";
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithImageSequenceInfo($payload),
+        );
+    }
+
+    /**
+     * Rejects ImageSequenceInfo with missing NUL terminator in SequenceID.
+     */
+    #[Test]
+    public function rejectsImageSequenceInfoNoNulInId(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1521);
+
+        // Payload with no NUL byte at all
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithImageSequenceInfo('ABCDEFGHIJKLMNOP'),
+        );
+    }
+
+    /**
+     * Rejects ImageSequenceInfo with truncated trailing fields.
+     */
+    #[Test]
+    public function rejectsImageSequenceInfoTruncated(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1526);
+
+        $payload = "ABCDEFGH\0"
+            . "burst\0"
+            . "\0"
+            . pack('N', 0);       // Only Index, missing Count + Final
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithImageSequenceInfo($payload),
+        );
+    }
+
+    /**
+     * Builds a DNG TIFF with an ImageSequenceInfo payload.
+     */
+    private function buildDngWithImageSequenceInfo(string $payload): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::IMAGE_SEQUENCE_INFO)
+            . pack('v', TiffConst::TYPE_UNDEFINED)
+            . pack('V', strlen($payload))
+            . pack('V', $payloadOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $payload;
+    }
 }

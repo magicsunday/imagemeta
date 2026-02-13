@@ -1299,6 +1299,7 @@ final class TiffExifParser
         $this->validateDngProfileDynamicRange($ifd0);
         $this->validateDngProfileGainTableMap2($ifd0);
         $this->validateDngGainMapPlacement($ifd0);
+        $this->validateDngImageSequenceInfo($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -5141,6 +5142,75 @@ final class TiffExifParser
             throw new ParseError(
                 'ProfileGainTableMap (0xCD2D) must not appear in IFD 0; it is restricted to Raw IFDs per DNG 1.7.1.0.',
                 1520,
+            );
+        }
+    }
+
+    /**
+     * Validates DNG ImageSequenceInfo payload structure per DNG 1.7.1.0.
+     *
+     * Payload: SequenceID (NUL-terminated, min 8 chars), SequenceType (NUL-terminated, min 1 char),
+     * FrameInfo (NUL-terminated), Index (uint32 big-endian), Count (uint32 big-endian), Final (uint8).
+     */
+    private function validateDngImageSequenceInfo(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::IMAGE_SEQUENCE_INFO);
+
+        if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
+            return;
+        }
+
+        $payload = $entry->value;
+        $length  = strlen($payload);
+        $offset  = 0;
+
+        // SequenceID: NUL-terminated, minimum 8 chars before NUL
+        $nulPos = strpos($payload, "\0", $offset);
+
+        if ($nulPos === false) {
+            throw new ParseError('ImageSequenceInfo SequenceID must be NUL-terminated.', 1521);
+        }
+
+        $seqIdLen = $nulPos - $offset;
+
+        if ($seqIdLen < 8) {
+            throw new ParseError(
+                sprintf('ImageSequenceInfo SequenceID must be at least 8 characters, got %d.', $seqIdLen),
+                1522,
+            );
+        }
+
+        $offset = $nulPos + 1;
+
+        // SequenceType: NUL-terminated, minimum 1 char
+        $nulPos = strpos($payload, "\0", $offset);
+
+        if ($nulPos === false) {
+            throw new ParseError('ImageSequenceInfo SequenceType must be NUL-terminated.', 1523);
+        }
+
+        $seqTypeLen = $nulPos - $offset;
+
+        if ($seqTypeLen < 1) {
+            throw new ParseError('ImageSequenceInfo SequenceType must be at least 1 character.', 1524);
+        }
+
+        $offset = $nulPos + 1;
+
+        // FrameInfo: NUL-terminated (may be empty)
+        $nulPos = strpos($payload, "\0", $offset);
+
+        if ($nulPos === false) {
+            throw new ParseError('ImageSequenceInfo FrameInfo must be NUL-terminated.', 1525);
+        }
+
+        $offset = $nulPos + 1;
+
+        // Index(4) + Count(4) + Final(1) = 9 bytes remaining
+        if (($length - $offset) < 9) {
+            throw new ParseError(
+                sprintf('ImageSequenceInfo payload truncated: need 9 bytes for Index/Count/Final, got %d.', $length - $offset),
+                1526,
             );
         }
     }
