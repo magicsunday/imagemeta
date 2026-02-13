@@ -503,6 +503,108 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Non-monochrome DNG (CfaPlaneColor count > 1) with missing ColorMatrix1
+     * triggers a ParseError per DNG 1.7.1.0.
+     */
+    #[Test]
+    public function rejectsNonMonochromeDngWithoutColorMatrix1(): void
+    {
+        $this->expectException(ParseError::class);
+
+        // CfaPlaneColor with 3 planes but no ColorMatrix1
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCfaPlaneColor(3, false),
+        );
+    }
+
+    /**
+     * Non-monochrome DNG with valid ColorMatrix1 passes per DNG 1.7.1.0.
+     */
+    #[Test]
+    public function acceptsNonMonochromeDngWithColorMatrix1(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildTiffWithCfaPlaneColor(3, true),
+        );
+
+        $entry = $parsed->ifd0->get(DngTag::COLOR_MATRIX_1);
+        self::assertNotNull($entry);
+    }
+
+    /**
+     * Monochrome DNG (CfaPlaneColor count = 1) without ColorMatrix1 is accepted.
+     */
+    #[Test]
+    public function acceptsMonochromeDngWithoutColorMatrix1(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildTiffWithCfaPlaneColor(1, false),
+        );
+
+        self::assertNull($parsed->ifd0->get(DngTag::COLOR_MATRIX_1));
+    }
+
+    /**
+     * Builds a classic TIFF with CfaPlaneColor and optionally ColorMatrix1.
+     *
+     * @param int  $colorPlanes      Number of color planes for CfaPlaneColor.
+     * @param bool $includeColorMat1 Whether to include a ColorMatrix1 tag.
+     */
+    private function buildTiffWithCfaPlaneColor(int $colorPlanes, bool $includeColorMat1): string
+    {
+        $ifdOffset  = 8;
+        $entryCount = $includeColorMat1 ? 4 : 3;
+        $ifdSize    = 2 + (12 * $entryCount) + 4;
+        $valOffset  = $ifdOffset + $ifdSize;
+
+        $cfaValues = '';
+        for ($i = 0; $i < $colorPlanes; ++$i) {
+            $cfaValues .= pack('C', $i);
+        }
+
+        $cfaValues = str_pad($cfaValues, 4, "\0");
+
+        $ifdData = pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', DngTag::CFA_PLANE_COLOR)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', $colorPlanes)
+            . $cfaValues;
+
+        $sratData = '';
+
+        if ($includeColorMat1) {
+            $matCount = $colorPlanes * 3;
+
+            for ($i = 0; $i < $matCount; ++$i) {
+                $sratData .= pack('VV', 1, 1);
+            }
+
+            $ifdData .= pack('v', DngTag::COLOR_MATRIX_1)
+                . pack('v', TiffConst::TYPE_SRATIONAL)
+                . pack('V', $matCount)
+                . pack('V', $valOffset);
+        }
+
+        $ifdData .= pack('V', 0); // next IFD
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData
+            . $sratData;
+    }
+
+    /**
      * Builds a classic TIFF with CfaPlaneColor (establishing ColorPlanes) and a single
      * DNG matrix tag.
      *

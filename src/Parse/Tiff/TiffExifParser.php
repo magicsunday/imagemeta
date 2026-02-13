@@ -3832,6 +3832,14 @@ final class TiffExifParser
 
         $colorPlanes = $cfaEntry->count;
 
+        // DNG 1.7.1.0 p. 32: ColorMatrix1 is required for all non-monochrome DNG files.
+        if ($colorPlanes > 1 && !$ifd->get(DngTag::COLOR_MATRIX_1) instanceof IfdEntry) {
+            throw new ParseError(
+                'ColorMatrix1 is required for non-monochrome DNG files per DNG 1.7.1.0.',
+                1472,
+            );
+        }
+
         foreach (self::DNG_MATRIX_COUNT_RULES as $tag => $formula) {
             $entry = $ifd->get($tag);
 
