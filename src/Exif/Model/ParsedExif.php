@@ -4827,6 +4827,17 @@ final readonly class ParsedExif
     }
 
     /**
+     * Returns JPEGLosslessPredictors tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0205.
+     *
+     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     */
+    public function jpegLosslessPredictors(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+    {
+        return $this->normalisedValue($this->ifd0, TiffTag::JPEG_LOSSLESS_PREDICTORS);
+    }
+
+    /**
      * Returns JPEGPointTransforms tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0206.
      *
