@@ -331,8 +331,11 @@ final readonly class GpsConverter
 
         // EXIF 3.0 §4.6.7.1.13 GPSSpeedRef: 'K', 'M' or 'N'; default 'K'
         $speedRefValue    = $speedRefEntry?->value;
-        $speedOriginalRef = $this->stringConverter->sanitize($speedRefValue);
-        $speedRef         = $this->validateGpsRef(
+        $speedOriginalRef = $this->validateGpsRef(
+            is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null,
+            self::GPS_SPEED_REF_VALUES,
+        );
+        $speedRef = $this->validateGpsRef(
             is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null,
             self::GPS_SPEED_REF_VALUES,
         );
@@ -404,7 +407,11 @@ final readonly class GpsConverter
         $result['dest_bearing'] = $destBearingRefInvalid ? null : $this->normalizeBearing($destBearingValue);
 
         // EXIF 3.0 §4.6.7.1.26 GPSDestDistanceRef: 'K', 'M' or 'N'; default 'K'
-        $destDistanceRefValue        = $destDistRefEntry?->value;
+        $destDistanceRefValue    = $destDistRefEntry?->value;
+        $destDistanceOriginalRef = $this->validateGpsRef(
+            is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null,
+            self::GPS_DISTANCE_REF_VALUES,
+        );
         $result['dest_distance_ref'] = $this->validateGpsRef(
             is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null,
             self::GPS_DISTANCE_REF_VALUES,
@@ -413,7 +420,7 @@ final readonly class GpsConverter
             $result['dest_distance_ref'] = 'K';
         }
 
-        $result['dest_distance_original_ref'] = $this->stringConverter->sanitize($destDistanceRefValue);
+        $result['dest_distance_original_ref'] = $destDistanceOriginalRef;
         $result['dest_distance_original']     = $this->rationalConverter->toFloat($destDistEntry?->value);
         $result['dest_distance_m']            = $this->distanceToMetres($result['dest_distance_ref'], $destDistEntry?->value);
 

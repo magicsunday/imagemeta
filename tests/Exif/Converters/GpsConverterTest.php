@@ -241,6 +241,27 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Supplies a multi-character GPSSpeedRef value ('KM') with a speed value.
+     * Verifies reserved codes do not leak into normalized or original reference fields.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMultiCharacterGpsSpeedRef(): void
+    {
+        $entries = [
+            ExifTag::GPS_SPEED_REF => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 3, 'KM'),
+            ExifTag::GPS_SPEED     => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, 36.0),
+        ];
+
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertNull($result['speed_ref']);
+        self::assertNull($result['speed_ms']);
+        self::assertNull($result['speed_original_ref']);
+    }
+
+    /**
      * Provides a valid GPSTrackRef value ('T') with a track bearing.
      * Verifies the track ref is accepted and bearing is computed per EXIF 3.0 §4.6.7.1.15.
      *
@@ -398,6 +419,27 @@ final class GpsConverterTest extends TestCase
 
         self::assertNull($result['dest_distance_ref']);
         self::assertNull($result['dest_distance_m']);
+    }
+
+    /**
+     * Supplies a multi-character GPSDestDistanceRef value ('NM') with a distance value.
+     * Verifies reserved codes do not leak into normalized or original reference fields.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMultiCharacterGpsDestDistanceRef(): void
+    {
+        $entries = [
+            ExifTag::GPS_DEST_DISTANCE_REF => new IfdEntry(ExifTag::GPS_DEST_DISTANCE_REF, 2, 3, 'NM'),
+            ExifTag::GPS_DEST_DISTANCE     => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, 10.0),
+        ];
+
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertNull($result['dest_distance_ref']);
+        self::assertNull($result['dest_distance_m']);
+        self::assertNull($result['dest_distance_original_ref']);
     }
 
     /**
