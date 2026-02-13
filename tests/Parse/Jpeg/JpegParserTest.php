@@ -31,6 +31,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
+use function array_values;
 use function chr;
 use function count;
 use function file_put_contents;
@@ -42,6 +43,7 @@ use function pack;
 use function rewind;
 use function str_pad;
 use function str_repeat;
+use function str_starts_with;
 use function strlen;
 use function substr;
 use function sys_get_temp_dir;
@@ -424,11 +426,20 @@ final class JpegParserTest extends TestCase
         $fpxrPayload = $this->fpxrContentsListPayload([
             ['size' => 0, 'default' => 0x00, 'name' => '/Root/Stream0'],
         ]);
+        $sofPayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x22\x00"
+            . "\x02\x11\x01"
+            . "\x03\x11\x01";
+        $sosPayload = "\x03\x01\x00\x02\x11\x03\x11";
 
         $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, $fpxrPayload),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml),
+            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_DHT, "\x00"),
+            self::segment(self::MARKER_SOF0, $sofPayload),
+            self::segment(self::MARKER_SOS, $sosPayload),
         );
 
         $extractor = $this->createExtractor($jpeg);
@@ -464,6 +475,117 @@ final class JpegParserTest extends TestCase
         $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
+     * Rejects EXIF streams that reach SOS without a preceding DQT marker.
+     *
+     * @return void
+     */
+    #[Test]
+    public function missingDqtBeforeSosThrowsParseErrorForExif(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+        $sofPayload  = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x22\x00"
+            . "\x02\x11\x01"
+            . "\x03\x11\x01";
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_DHT, "\x00"),
+            self::segment(self::MARKER_SOF0, $sofPayload),
+            self::segment(self::MARKER_SOS, "\x03\x01\x00\x02\x11\x03\x11"),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1488);
+        $this->expectExceptionMessageMatches('/requires DQT|no preceding DQT/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects EXIF streams that reach SOS without a preceding DHT marker.
+     *
+     * @return void
+     */
+    #[Test]
+    public function missingDhtBeforeSosThrowsParseErrorForExif(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+        $sofPayload  = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x22\x00"
+            . "\x02\x11\x01"
+            . "\x03\x11\x01";
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_SOF0, $sofPayload),
+            self::segment(self::MARKER_SOS, "\x03\x01\x00\x02\x11\x03\x11"),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1489);
+        $this->expectExceptionMessageMatches('/requires DHT|no preceding DHT/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects EXIF streams that reach SOS without any preceding SOF marker.
+     *
+     * @return void
+     */
+    #[Test]
+    public function missingSofBeforeSosThrowsParseErrorForExif(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_DHT, "\x00"),
+            self::segment(self::MARKER_SOS, "\x03\x01\x00\x02\x11\x03\x11"),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1490);
+        $this->expectExceptionMessageMatches('/requires SOF|no preceding SOF/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects EXIF streams that end at EOI without any SOS marker.
+     *
+     * @return void
+     */
+    #[Test]
+    public function missingSosThrowsParseErrorForExif(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1487);
+        $this->expectExceptionMessageMatches('/requires SOS.*without SOS|without SOS.*requires SOS/i');
+
+        $extractor->extractExifBlobs();
     }
 
     /**
@@ -586,6 +708,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_APP2, $app2Payload),
             self::segment(self::MARKER_APP11, $app11Payload),
             self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_DHT, "\x00"),
             self::segment(self::MARKER_SOF0, $sofPayload),
             self::segment(self::MARKER_SOS, "\x03\x01\x00\x02\x11\x03\x11"),
         );
@@ -1607,6 +1730,9 @@ final class JpegParserTest extends TestCase
         $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
             . self::segment(self::MARKER_DRI, pack('n', 8))
             . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
             . "\xFF\x00" . 'scan'
@@ -1632,6 +1758,9 @@ final class JpegParserTest extends TestCase
 
         $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
             . self::segment(self::MARKER_DRI, pack('n', 8))
             . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
             . "\xFF\x00" . 'scan'
@@ -1659,6 +1788,9 @@ final class JpegParserTest extends TestCase
 
         $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
             . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
             . "\xFF\x00" . 'scan'
             . "\xFF\xD9";
@@ -1680,6 +1812,9 @@ final class JpegParserTest extends TestCase
 
         $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
             . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
             . "\xFF\x00" . 'scan';
 
@@ -1708,6 +1843,9 @@ final class JpegParserTest extends TestCase
         $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $primaryExif)
             . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
             . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
             . "\xFF\x00" . 'A'
             . "\xFF\xD0"
@@ -1740,6 +1878,9 @@ final class JpegParserTest extends TestCase
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload)
             . self::segment(self::MARKER_APP2, self::ICC_SIGNATURE . "\x01\x01" . $iccProfile)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
             . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
             . 'scan-data'
             . "\xFF\xD9"
@@ -1769,6 +1910,9 @@ final class JpegParserTest extends TestCase
         $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
             . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
             . 'entropy'
             . "\xFF\xD9"
@@ -1791,7 +1935,69 @@ final class JpegParserTest extends TestCase
      */
     private function jpeg(string ...$segments): string
     {
-        return "\xFF\xD8" . implode('', $segments) . "\xFF\xD9";
+        /** @var list<string> $segmentList */
+        $segmentList = array_values($segments);
+
+        if ($this->containsExifApp1Segment($segmentList) && !$this->containsMarkerSegment($segmentList, self::MARKER_SOS)) {
+            if (!$this->containsMarkerSegment($segmentList, self::MARKER_DQT)) {
+                $segmentList[] = self::segment(self::MARKER_DQT, "\x00");
+            }
+
+            if (!$this->containsMarkerSegment($segmentList, self::MARKER_DHT)) {
+                $segmentList[] = self::segment(self::MARKER_DHT, "\x00");
+            }
+
+            if (
+                !$this->containsMarkerSegment($segmentList, self::MARKER_SOF0)
+                && !$this->containsMarkerSegment($segmentList, self::MARKER_SOF2)
+            ) {
+                $segmentList[] = self::segment(self::MARKER_SOF0, $this->defaultSofPayload());
+            }
+
+            $segmentList[] = self::segment(self::MARKER_SOS, "\x03\x01\x00\x02\x11\x03\x11");
+            $segmentList[] = 'scan';
+        }
+
+        return "\xFF\xD8" . implode('', $segmentList) . "\xFF\xD9";
+    }
+
+    /**
+     * @param list<string> $segments
+     */
+    private function containsExifApp1Segment(array $segments): bool
+    {
+        foreach ($segments as $segment) {
+            if (!$this->containsMarkerPrefix($segment, self::MARKER_APP1)) {
+                continue;
+            }
+
+            if (substr($segment, 4, strlen(self::EXIF_SIGNATURE)) === self::EXIF_SIGNATURE) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param list<string> $segments
+     */
+    private function containsMarkerSegment(array $segments, int $marker): bool
+    {
+        return array_any($segments, fn (string $segment): bool => $this->containsMarkerPrefix($segment, $marker));
+    }
+
+    private function containsMarkerPrefix(string $segment, int $marker): bool
+    {
+        return str_starts_with($segment, "\xFF" . chr($marker));
+    }
+
+    private function defaultSofPayload(): string
+    {
+        return "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x22\x00"
+            . "\x02\x11\x01"
+            . "\x03\x11\x01";
     }
 
     /**

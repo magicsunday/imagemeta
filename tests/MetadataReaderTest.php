@@ -215,10 +215,16 @@ final class MetadataReaderTest extends TestCase
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:title="Synthetic" />'
             . '</rdf:RDF>'
             . '</x:xmpmeta>';
+        $sofPayload = $this->buildBaselineStartOfFramePayload(8, 256, 256);
 
         $jpeg = "\xFF\xD8"
             . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
             . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
+            . $this->segment(0xDB, "\x00")
+            . $this->segment(0xC4, "\x00")
+            . $this->segment(0xC0, $sofPayload)
+            . $this->segment(0xDA, "\x03\x01\x00\x02\x11\x03\x11")
+            . 'scan-data'
             . "\xFF\xD9";
 
         $path = $this->writeTempFile($jpeg, 'jpg');
@@ -294,11 +300,17 @@ final class MetadataReaderTest extends TestCase
     #[Test]
     public function readJpegWithDigestsPopulatesChecksums(): void
     {
-        $makerNote = 'digest-maker-note';
-        $tiff      = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R6', $makerNote);
+        $makerNote  = 'digest-maker-note';
+        $tiff       = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R6', $makerNote);
+        $sofPayload = $this->buildBaselineStartOfFramePayload(8, 256, 256);
 
         $jpeg = "\xFF\xD8"
             . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
+            . $this->segment(0xDB, "\x00")
+            . $this->segment(0xC4, "\x00")
+            . $this->segment(0xC0, $sofPayload)
+            . $this->segment(0xDA, "\x03\x01\x00\x02\x11\x03\x11")
+            . 'scan-data'
             . "\xFF\xD9";
 
         $path = $this->writeTempFile($jpeg, 'jpeg');

@@ -37,6 +37,7 @@ composer require magicsunday/imagemeta
 * Strict EXIF-JPEG marker profile now rejects progressive `SOF2`; only baseline `SOF0` is accepted for conformant parsing.
 * JPEG container conformance now requires a valid `EOI` marker after `SOS` scan data and rejects truncated streams that end without `EOI`.
 * JPEG scan validation now enforces DRI/RST consistency by requiring restart markers (`RST0..RST7`) in scan data when a `DRI` marker is declared.
+* EXIF-bearing JPEG streams now enforce mandatory pre-scan marker groups (`DQT`, `DHT`, `SOF`, `SOS`) and fail fast when any required group is missing.
 * APP11/JUMBF metadata extraction now validates transport sequence metadata, reassembles multi-segment payloads per box instance, and surfaces supported XML/XMP payloads while safely skipping unsupported box types.
 * EXIF IFD1 JPEG thumbnail validation enforces SOI/EOI boundaries and rejects APPn, COM, and restart markers in strict thumbnail streams.
 * JPEG-primary EXIF validation now rejects `IFD0` usage of `JPEGInterchangeFormat` and `JPEGInterchangeFormatLength` (thumbnail-only tags).

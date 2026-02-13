@@ -419,15 +419,35 @@ final class JpegParser
         $firstDqtOffset              = null;
         $firstDhtOffset              = null;
         $firstDriOffset              = null;
+        $firstSofOffset              = null;
 
         while (true) {
             [$marker, $offset] = $this->nextMarkerWithOffset();
 
             if ($marker === Marker::EOI) {
+                if ($seenExifApp1) {
+                    throw new ParseError(
+                        sprintf(
+                            'EXIF APP1 marker requires SOS before EOI; EOI marker found at offset %d without SOS marker',
+                            $offset,
+                        ),
+                        1487,
+                    );
+                }
+
                 break;
             }
 
             if ($marker === Marker::SOS) {
+                if ($seenExifApp1) {
+                    $this->validateMandatoryExifPreScanMarkers(
+                        $firstDqtOffset,
+                        $firstDhtOffset,
+                        $firstSofOffset,
+                        $offset,
+                    );
+                }
+
                 $this->requireEoiAfterSos($offset, $firstDriOffset);
                 break; // EXIF 3.0 §4.7.1 restricts metadata APP markers to precede the first SOS.
             }
@@ -597,6 +617,10 @@ final class JpegParser
                     1486,
                 );
             } elseif ($marker === Marker::SOF0) {
+                if ($firstSofOffset === null) {
+                    $firstSofOffset = $offset;
+                }
+
                 $this->handleStartOfFrame($marker, $payload, $offset);
             }
         }
@@ -635,6 +659,54 @@ final class JpegParser
         }
 
         $this->parsed = true;
+    }
+
+    /**
+     * Validates EXIF-mandated pre-scan marker groups before SOS.
+     *
+     * EXIF 3.0 §4.7 (Table 2) requires DQT, DHT, and SOF marker groups before SOS
+     * when the stream advertises Exif APP1 metadata.
+     *
+     * @param int|null $dqtOffset Offset of DQT marker when present.
+     * @param int|null $dhtOffset Offset of DHT marker when present.
+     * @param int|null $sofOffset Offset of SOF marker when present.
+     * @param int      $sosOffset Offset of SOS marker.
+     */
+    private function validateMandatoryExifPreScanMarkers(
+        ?int $dqtOffset,
+        ?int $dhtOffset,
+        ?int $sofOffset,
+        int $sosOffset,
+    ): void {
+        if ($dqtOffset === null) {
+            throw new ParseError(
+                sprintf(
+                    'EXIF APP1 marker requires DQT before SOS; SOS marker at offset %d has no preceding DQT marker',
+                    $sosOffset,
+                ),
+                1488,
+            );
+        }
+
+        if ($dhtOffset === null) {
+            throw new ParseError(
+                sprintf(
+                    'EXIF APP1 marker requires DHT before SOS; SOS marker at offset %d has no preceding DHT marker',
+                    $sosOffset,
+                ),
+                1489,
+            );
+        }
+
+        if ($sofOffset === null) {
+            throw new ParseError(
+                sprintf(
+                    'EXIF APP1 marker requires SOF before SOS; SOS marker at offset %d has no preceding SOF marker',
+                    $sosOffset,
+                ),
+                1490,
+            );
+        }
     }
 
     /**
