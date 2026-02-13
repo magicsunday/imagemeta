@@ -1860,6 +1860,59 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Rejects restart markers that appear before SOS in pre-scan marker parsing.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsRestartMarkerBeforeSos(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'pre-sos-restart';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . "\xFF\xD0"
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1499);
+        $this->expectExceptionMessageMatches('/RST|restart|before SOS/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Accepts a valid stream when no restart marker appears in the pre-scan marker area.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsStreamWithoutPreSosRestartMarkers(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'no-pre-sos-restart';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
      * Rejects SOS headers that reference a component selector missing from SOF.
      *
      * @return void

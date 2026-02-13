@@ -452,8 +452,19 @@ final class JpegParser
                 break; // EXIF 3.0 §4.7.1 restricts metadata APP markers to precede the first SOS.
             }
 
-            if ($marker === Marker::TEM || ($marker >= Marker::RST_FIRST && $marker <= Marker::RST_LAST)) {
-                continue; // EXIF 3.0 §4.7.1 treats restart and TEM markers as non-payload markers.
+            if ($marker === Marker::TEM) {
+                continue; // EXIF 3.0 §4.7.1 treats TEM as a non-payload marker outside segment syntax.
+            }
+
+            if (($marker >= Marker::RST_FIRST) && ($marker <= Marker::RST_LAST)) {
+                throw new ParseError(
+                    sprintf(
+                        'Restart marker 0x%02X at offset %d is not allowed before SOS marker',
+                        $marker,
+                        $offset,
+                    ),
+                    1499,
+                );
             }
 
             $isAppSegment  = $marker >= Marker::APP_FIRST && $marker <= Marker::APP_LAST;
