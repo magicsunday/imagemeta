@@ -4571,6 +4571,185 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts a valid ProfileLookTableDims + ProfileLookTableData pair.
+     */
+    #[Test]
+    public function acceptsValidLookTableDimsAndData(): void
+    {
+        // dims: Hue=1, Sat=2, Val=1 → data count = 1*2*1*3 = 6 FLOATs
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithLookTable([1, 2, 1], 6),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects ProfileLookTableDims with wrong type.
+     */
+    #[Test]
+    public function rejectsLookTableDimsWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1547);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithLookTableDimsOnly([1, 2, 1], TiffConst::TYPE_SHORT),
+        );
+    }
+
+    /**
+     * Rejects ProfileLookTableDims with SaturationDivisions < 2.
+     */
+    #[Test]
+    public function rejectsLookTableDimsSatTooLow(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1549);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithLookTableDimsOnly([1, 1, 1]),
+        );
+    }
+
+    /**
+     * Rejects ProfileLookTableData count mismatch against dims.
+     */
+    #[Test]
+    public function rejectsLookTableDataCountMismatch(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1554);
+
+        // dims: 1*2*1*3 = 6, but data has 9 floats
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithLookTable([1, 2, 1], 9),
+        );
+    }
+
+    /**
+     * Rejects ProfileLookTableDims present without ProfileLookTableData.
+     */
+    #[Test]
+    public function rejectsLookTableDimsWithoutData(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1551);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithLookTableDimsOnly([1, 2, 1]),
+        );
+    }
+
+    /**
+     * Builds a DNG with ProfileLookTableDims only (no data tag).
+     *
+     * @param array{0: int, 1: int, 2: int} $dims Hue, saturation, value divisions
+     * @param int                           $type TIFF type code for the dims entry
+     */
+    private function buildDngWithLookTableDimsOnly(array $dims, int $type = TiffConst::TYPE_LONG): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $dimsOffset        = $modelOffset + strlen($uniqueCameraModel);
+
+        $dimsData = ($type === TiffConst::TYPE_SHORT)
+            ? pack('v3', $dims[0], $dims[1], $dims[2])
+            : pack('V3', $dims[0], $dims[1], $dims[2]);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::PROFILE_LOOK_TABLE_DIMS)
+            . pack('v', $type)
+            . pack('V', 3)
+            . pack('V', $dimsOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $dimsData;
+    }
+
+    /**
+     * Builds a DNG with ProfileLookTableDims and ProfileLookTableData.
+     *
+     * @param array{0: int, 1: int, 2: int} $dims      Hue, saturation, value divisions
+     * @param int                           $dataCount Number of FLOAT values in data tag
+     */
+    private function buildDngWithLookTable(array $dims, int $dataCount): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 7;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $dimsOffset        = $modelOffset + strlen($uniqueCameraModel);
+        $dimsData          = pack('V3', $dims[0], $dims[1], $dims[2]);
+        $dataOffset        = $dimsOffset + strlen($dimsData);
+        $floatData         = str_repeat(pack('g', 1.0), $dataCount);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::PROFILE_LOOK_TABLE_DIMS)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 3)
+            . pack('V', $dimsOffset)
+            . pack('v', DngTag::PROFILE_LOOK_TABLE_DATA)
+            . pack('v', TiffConst::TYPE_FLOAT)
+            . pack('V', $dataCount)
+            . pack('V', $dataOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $dimsData
+            . $floatData;
+    }
+
+    /**
      * Builds a 3-IFD DNG where IFD2 is a semantic mask IFD with MaskSubArea.
      *
      * @param int       $maskType  TIFF type code for MaskSubArea entry

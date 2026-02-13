@@ -1298,6 +1298,8 @@ final class TiffExifParser
         $this->validateDngNoiseProfile($ifd0);
         $this->validateDngHueSatMapDims($ifd0);
         $this->validateDngHueSatMapData($ifd0);
+        $this->validateDngProfileLookTableDims($ifd0);
+        $this->validateDngProfileLookTableData($ifd0);
         $this->validateDngIlluminantData($ifd0);
         $this->validateDngProfileDynamicRange($ifd0);
         $this->validateDngProfileGainTableMap2($ifd0);
@@ -5495,6 +5497,130 @@ final class TiffExifParser
 
             $seenTags[$childTag] = true;
             $offset += $childLength;
+        }
+    }
+
+    /**
+     * Validates ProfileLookTableDims (0xC725) per DNG 1.7.1.0.
+     *
+     * Must be LONG[3]: HueDivisions >= 1, SaturationDivisions >= 2, ValueDivisions >= 1.
+     */
+    private function validateDngProfileLookTableDims(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::PROFILE_LOOK_TABLE_DIMS);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if ($entry->type !== TiffConst::TYPE_LONG || $entry->count !== 3) {
+            throw new ParseError(
+                sprintf('ProfileLookTableDims must be LONG[3], got type %d count %d.', $entry->type, $entry->count),
+                1547,
+            );
+        }
+
+        $value = $entry->value;
+
+        if (!$value instanceof ExifNumericList || count($value->values) !== 3) {
+            return;
+        }
+
+        $hueDivs = $value->values[0];
+        $satDivs = $value->values[1];
+        $valDivs = $value->values[2];
+
+        if (!is_int($hueDivs) || !is_int($satDivs) || !is_int($valDivs)) {
+            return;
+        }
+
+        if ($hueDivs < 1) {
+            throw new ParseError(
+                sprintf('ProfileLookTableDims HueDivisions must be >= 1, got %d.', $hueDivs),
+                1548,
+            );
+        }
+
+        if ($satDivs < 2) {
+            throw new ParseError(
+                sprintf('ProfileLookTableDims SaturationDivisions must be >= 2, got %d.', $satDivs),
+                1549,
+            );
+        }
+
+        if ($valDivs < 1) {
+            throw new ParseError(
+                sprintf('ProfileLookTableDims ValueDivisions must be >= 1, got %d.', $valDivs),
+                1550,
+            );
+        }
+    }
+
+    /**
+     * Validates ProfileLookTableData (0xC726) count against ProfileLookTableDims per DNG 1.7.1.0.
+     *
+     * Type must be FLOAT. Count must equal HueDivisions * SaturationDivisions * ValueDivisions * 3.
+     * If dims is present, data must also be present and vice versa.
+     */
+    private function validateDngProfileLookTableData(Ifd $ifd): void
+    {
+        $dimsEntry = $ifd->get(DngTag::PROFILE_LOOK_TABLE_DIMS);
+        $dataEntry = $ifd->get(DngTag::PROFILE_LOOK_TABLE_DATA);
+
+        // Pair consistency: both must be present or both absent
+        if ($dimsEntry instanceof IfdEntry && !$dataEntry instanceof IfdEntry) {
+            throw new ParseError(
+                'ProfileLookTableDims is present but ProfileLookTableData is missing.',
+                1551,
+            );
+        }
+
+        if (!$dimsEntry instanceof IfdEntry && $dataEntry instanceof IfdEntry) {
+            throw new ParseError(
+                'ProfileLookTableData is present but ProfileLookTableDims is missing.',
+                1552,
+            );
+        }
+
+        if (!$dimsEntry instanceof IfdEntry || !$dataEntry instanceof IfdEntry) {
+            return;
+        }
+
+        if ($dataEntry->type !== TiffConst::TYPE_FLOAT) {
+            throw new ParseError(
+                sprintf('ProfileLookTableData must use FLOAT type, got %d.', $dataEntry->type),
+                1553,
+            );
+        }
+
+        $dimsValue = $dimsEntry->value;
+
+        if (!$dimsValue instanceof ExifNumericList || count($dimsValue->values) !== 3) {
+            return;
+        }
+
+        $hueDivs = $dimsValue->values[0];
+        $satDivs = $dimsValue->values[1];
+        $valDivs = $dimsValue->values[2];
+
+        if (!is_int($hueDivs) || !is_int($satDivs) || !is_int($valDivs)) {
+            return;
+        }
+
+        $expectedCount = $hueDivs * $satDivs * $valDivs * 3;
+
+        if ($dataEntry->count !== $expectedCount) {
+            throw new ParseError(
+                sprintf(
+                    'ProfileLookTableData count %d does not match dims %d*%d*%d*3 = %d.',
+                    $dataEntry->count,
+                    $hueDivs,
+                    $satDivs,
+                    $valDivs,
+                    $expectedCount,
+                ),
+                1554,
+            );
         }
     }
 }
