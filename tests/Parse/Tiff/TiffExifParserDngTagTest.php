@@ -1178,6 +1178,145 @@ final class TiffExifParserDngTagTest extends TestCase
             . $outOfLine;
     }
 
+    /**
+     * RowInterleaveFactor=2 with DNGBackwardVersion < 1.2.0.0 triggers ParseError.
+     */
+    #[Test]
+    public function rejectsRowInterleaveWithOldBackwardVersion(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithInterleaveFactor(
+                DngTag::ROW_INTERLEAVE_FACTOR,
+                2,
+                [1, 1, 0, 0],
+            ),
+        );
+    }
+
+    /**
+     * RowInterleaveFactor=1 with DNGBackwardVersion < 1.2.0.0 is valid (default value).
+     */
+    #[Test]
+    public function acceptsDefaultRowInterleaveWithOldBackwardVersion(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithInterleaveFactor(
+                DngTag::ROW_INTERLEAVE_FACTOR,
+                1,
+                [1, 1, 0, 0],
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::ROW_INTERLEAVE_FACTOR));
+    }
+
+    /**
+     * ColumnInterleaveFactor=2 with DNGBackwardVersion < 1.7.1.0 triggers ParseError.
+     */
+    #[Test]
+    public function rejectsColumnInterleaveWithOldBackwardVersion(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithInterleaveFactor(
+                DngTag::COLUMN_INTERLEAVE_FACTOR,
+                2,
+                [1, 7, 0, 0],
+            ),
+        );
+    }
+
+    /**
+     * ColumnInterleaveFactor=1 with DNGBackwardVersion < 1.7.1.0 is valid (default value).
+     */
+    #[Test]
+    public function acceptsDefaultColumnInterleaveWithOldBackwardVersion(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithInterleaveFactor(
+                DngTag::COLUMN_INTERLEAVE_FACTOR,
+                1,
+                [1, 7, 0, 0],
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::COLUMN_INTERLEAVE_FACTOR));
+    }
+
+    /**
+     * RowInterleaveFactor=2 at minimum required version 1.2.0.0 is valid.
+     */
+    #[Test]
+    public function acceptsRowInterleaveAtMinimumVersion(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithInterleaveFactor(
+                DngTag::ROW_INTERLEAVE_FACTOR,
+                2,
+                [1, 2, 0, 0],
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::ROW_INTERLEAVE_FACTOR));
+    }
+
+    /**
+     * Builds a TIFF with a DNG interleave factor tag and DNGBackwardVersion.
+     *
+     * @param int       $interleaveTag Interleave factor tag constant.
+     * @param int       $factorValue   Interleave factor value.
+     * @param list<int> $backwardVer   DNGBackwardVersion bytes [major, minor, patch, sub].
+     */
+    private function buildTiffWithInterleaveFactor(
+        int $interleaveTag,
+        int $factorValue,
+        array $backwardVer,
+    ): string {
+        $ifdOffset  = 8;
+        $entryCount = 4; // ImageWidth + ImageLength + DNGBackwardVersion + interleave tag
+
+        $tags = [];
+
+        $tags[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+        $tags[ExifTag::IMAGE_LENGTH] = pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // DNGBackwardVersion: BYTE[4], inline
+        $verBytes                           = pack('C4', $backwardVer[0], $backwardVer[1], $backwardVer[2], $backwardVer[3]);
+        $tags[DngTag::DNG_BACKWARD_VERSION] = pack('v', DngTag::DNG_BACKWARD_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . $verBytes;
+
+        // Interleave factor: SHORT[1], inline
+        $tags[$interleaveTag] = pack('v', $interleaveTag)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', $factorValue) . pack('v', 0);
+
+        ksort($tags);
+
+        $ifdData = pack('v', $entryCount);
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData;
+    }
+
     private function buildTiffWithMakerNoteSafety(int $safetyValue): string
     {
         // Layout: header(8) + IFD0(2 + 4*12 + 4 = 54) + EXIF IFD(2 + 12 + 4 = 18)

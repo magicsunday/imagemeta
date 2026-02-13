@@ -1279,6 +1279,7 @@ final class TiffExifParser
         $this->validateDngIlluminantDependencies($ifd0);
         $this->validateDngTripleIlluminant($ifd0);
         $this->validateDngWhiteBalanceExclusivity($ifd0);
+        $this->validateDngInterleaveVersionFloors($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
         $this->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
@@ -4032,5 +4033,99 @@ final class TiffExifParser
                 1477,
             );
         }
+    }
+
+    /**
+     * Minimum DNGBackwardVersion required for non-default interleave factor tags.
+     *
+     * @var array<int, list<int>>
+     */
+    private const array DNG_INTERLEAVE_MIN_VERSIONS = [
+        DngTag::ROW_INTERLEAVE_FACTOR    => [1, 2, 0, 0],
+        DngTag::COLUMN_INTERLEAVE_FACTOR => [1, 7, 1, 0],
+    ];
+
+    /**
+     * Validates that non-default interleave factors have a sufficient DNGBackwardVersion.
+     */
+    private function validateDngInterleaveVersionFloors(Ifd $ifd): void
+    {
+        $bwEntry = $ifd->get(DngTag::DNG_BACKWARD_VERSION);
+
+        if (!$bwEntry instanceof IfdEntry) {
+            return;
+        }
+
+        $bwValue = $bwEntry->value;
+
+        if (!$bwValue instanceof ExifNumericList || count($bwValue->values) !== 4) {
+            return;
+        }
+
+        $bwVer = [];
+
+        foreach ($bwValue->values as $c) {
+            if (!is_int($c)) {
+                return;
+            }
+
+            $bwVer[] = $c;
+        }
+
+        foreach (self::DNG_INTERLEAVE_MIN_VERSIONS as $tag => $minVer) {
+            $entry = $ifd->get($tag);
+
+            if (!$entry instanceof IfdEntry) {
+                continue;
+            }
+
+            if (!is_int($entry->value)) {
+                continue;
+            }
+
+            if ($entry->value <= 1) {
+                continue;
+            }
+
+            if ($this->dngVersionLessThan($bwVer, $minVer)) {
+                throw new ParseError(
+                    sprintf(
+                        'DNG tag 0x%04X with non-default value %d requires DNGBackwardVersion >= %d.%d.%d.%d, got %d.%d.%d.%d per DNG 1.7.1.0.',
+                        $tag,
+                        $entry->value,
+                        $minVer[0],
+                        $minVer[1],
+                        $minVer[2],
+                        $minVer[3],
+                        $bwVer[0],
+                        $bwVer[1],
+                        $bwVer[2],
+                        $bwVer[3],
+                    ),
+                    1478,
+                );
+            }
+        }
+    }
+
+    /**
+     * Returns true if version tuple $a is strictly less than $b.
+     *
+     * @param list<int> $a
+     * @param list<int> $b
+     */
+    private function dngVersionLessThan(array $a, array $b): bool
+    {
+        for ($i = 0; $i < 4; ++$i) {
+            if ($a[$i] < $b[$i]) {
+                return true;
+            }
+
+            if ($a[$i] > $b[$i]) {
+                return false;
+            }
+        }
+
+        return false;
     }
 }
