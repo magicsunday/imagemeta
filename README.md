@@ -40,6 +40,7 @@ composer require magicsunday/imagemeta
 * ISO BMFF `dref` exports are now `meta`-context scoped, so identical `data_reference_index` values from separate metadata contexts stay distinct and cannot overwrite each other.
 * ISO BMFF `iref` exports are now `meta`-context scoped, so identical `item_ID` values from separate metadata contexts remain isolated and cannot be merged ambiguously.
 * ISO BMFF unresolved item reports now include the owning `meta` context offset, making same-`item_ID` diagnostics unambiguous across multiple metadata contexts.
+* Generic EXIF/TIFF rational conversion now treats only denominator `0` as globally invalid; `-1`/`0xFFFFFFFF` sentinels are interpreted only in tag-specific EXIF paths.
 * EXIF-conformant JPEG marker-order validation for APP1/APP2/APP11 placement, plus DQT/DHT/DRI/SOF structural ordering and duplicate-marker guards before SOS.
 * Strict EXIF-JPEG marker profile now rejects progressive `SOF2`; only baseline `SOF0` is accepted for conformant parsing.
 * Strict EXIF-JPEG SOF validation now enforces 8-bit precision, exactly three YCbCr component IDs (`1/2/3`), and legal YCbCr subsampling (`4:2:2`/`4:2:0`).

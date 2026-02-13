@@ -132,11 +132,24 @@ final class ValueConvertersTest extends TestCase
     public static function provideInvalidInputs(): iterable
     {
         yield 'denominator zero' => [new ExifRational(1, 0)];
-        yield 'denominator unknown marker' => [new ExifRational(25, 0xFFFFFFFF)];
-        yield 'denominator signed unknown marker' => [new ExifRational(25, -1)];
         yield 'empty numeric list' => [new ExifNumericList([])];
         yield 'string' => ['invalid'];
         yield 'null' => [null];
+    }
+
+    /**
+     * Converts denominators -1 and 0xFFFFFFFF numerically in generic rational contexts.
+     * It verifies EXIF unknown sentinels are not applied globally by the generic converter.
+     */
+    #[Test]
+    public function convertsSignedAndUnsignedUnknownSentinelDenominatorsGenerically(): void
+    {
+        self::assertSame(-1.0, ValueConverters::rationalToFloat(new ExifRational(1, -1)));
+        self::assertEqualsWithDelta(
+            1.0 / 4294967295.0,
+            ValueConverters::rationalToFloat(new ExifRational(1, 0xFFFFFFFF)),
+            1.0e-18,
+        );
     }
 
     /**
@@ -1395,13 +1408,12 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Returns null when triplets include unknown denominators.
-     * It ensures missing or invalid inputs yield no value.
+     * Converts triplets that include denominator 0xFFFFFFFF numerically in generic context.
      *
      * @return void
      */
     #[Test]
-    public function returnsNullForSrationalTripletWithUnknownDenominator(): void
+    public function convertsSrationalTripletWithUnsignedSentinelDenominator(): void
     {
         $list = new ExifRationalList([
             new ExifRational(10, 100),
@@ -1409,7 +1421,12 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(-10, 100),
         ]);
 
-        self::assertNull(ValueConverters::srationalTripletToFloatVector($list));
+        $result = ValueConverters::srationalTripletToFloatVector($list);
+
+        self::assertIsArray($result);
+        self::assertEqualsWithDelta(0.1, $result[0], 0.001);
+        self::assertEqualsWithDelta(20.0 / 4294967295.0, $result[1], 1.0e-15);
+        self::assertEqualsWithDelta(-0.1, $result[2], 0.001);
     }
 
     /**
@@ -1625,6 +1642,18 @@ final class ValueConvertersTest extends TestCase
     public function formatsBrightnessValue(ExifRational|float|null $value, ?string $expected): void
     {
         self::assertSame($expected, ValueConverters::formatBrightnessValue($value));
+    }
+
+    /**
+     * Keeps EXIF unknown brightness sentinels mapped to null in the tag-specific formatter.
+     *
+     * @return void
+     */
+    #[Test]
+    public function treatsUnknownBrightnessDenominatorsAsNull(): void
+    {
+        self::assertNull(ValueConverters::formatBrightnessValue(new ExifRational(1, -1)));
+        self::assertNull(ValueConverters::formatBrightnessValue(new ExifRational(1, 0xFFFFFFFF)));
     }
 
     /**

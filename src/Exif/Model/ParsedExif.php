@@ -96,6 +96,25 @@ final readonly class ParsedExif
      */
     private const float ACCELERATION_MGAL_TO_MS2 = 1.0e-5;
 
+    /**
+     * EXIF 3.0 §4.6.6.8 uses denominator 0xFFFFFFFF as unknown sentinel.
+     */
+    private const int EXIF_UNKNOWN_DENOMINATOR = 0xFFFFFFFF;
+
+    /**
+     * EXIF tags that define unknown rational denominators in EXIF 3.0 §4.6.6.8.
+     *
+     * @var list<int>
+     */
+    private const array EXIF_UNKNOWN_DENOMINATOR_TAGS = [
+        ExifTag::TEMPERATURE,
+        ExifTag::HUMIDITY,
+        ExifTag::PRESSURE,
+        ExifTag::WATER_DEPTH,
+        ExifTag::ACCELERATION,
+        ExifTag::CAMERA_ELEVATION_ANGLE,
+    ];
+
     private ?string $exifVersion;
 
     private string $exifProfile;
@@ -2002,6 +2021,10 @@ final readonly class ParsedExif
             return null;
         }
 
+        if ($this->containsExifUnknownDenominator($value)) {
+            return null;
+        }
+
         $vector = ValueConverters::srationalTripletToFloatVector($value);
         if ($vector === null) {
             return null;
@@ -2025,6 +2048,10 @@ final readonly class ParsedExif
     public function accelerationMs2(): ?float
     {
         $value = $this->valueFromGpsOrExif(ExifTag::ACCELERATION);
+
+        if ($this->containsExifUnknownDenominator($value)) {
+            return null;
+        }
 
         if ($value instanceof ExifRationalList) {
             $vector = ValueConverters::srationalTripletToFloatVector($value);
@@ -3334,7 +3361,49 @@ final readonly class ParsedExif
             return null;
         }
 
+        if (in_array($tag, self::EXIF_UNKNOWN_DENOMINATOR_TAGS, true) && $this->containsExifUnknownDenominator($value)) {
+            return null;
+        }
+
         return ValueConverters::rationalToFloat($value);
+    }
+
+    /**
+     * Checks whether a rational value contains the EXIF unknown-denominator sentinel.
+     *
+     * EXIF 3.0 §4.6.6.8 defines 0xFFFFFFFF (or signed -1) as unknown for selected
+     * shooting-situation tags.
+     *
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value
+     */
+    private function containsExifUnknownDenominator(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): bool {
+        if ($value instanceof ExifRational) {
+            return $this->isExifUnknownDenominator($value->denominator);
+        }
+
+        if ($value instanceof ExifRationalList) {
+            foreach ($value->values as $component) {
+                if ($this->isExifUnknownDenominator($component->denominator)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns whether a denominator encodes the EXIF unknown sentinel.
+     */
+    private function isExifUnknownDenominator(int $denominator): bool
+    {
+        if ($denominator === -1) {
+            return true;
+        }
+
+        return $denominator === self::EXIF_UNKNOWN_DENOMINATOR;
     }
 
     /**

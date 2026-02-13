@@ -30,6 +30,11 @@ use function sprintf;
 final readonly class ApexConverter
 {
     /**
+     * EXIF unknown denominator sentinel used by BrightnessValue in certain payloads.
+     */
+    private const int EXIF_UNKNOWN_DENOMINATOR = 0xFFFFFFFF;
+
+    /**
      * Creates the converter with its rational dependency.
      *
      * @param RationalConverter $rationalConverter Dependency for rational conversions.
@@ -190,8 +195,7 @@ final readonly class ApexConverter
             return null;
         }
 
-        // Check for "unknown" brightness (0xFFFFFFFF / 0xFFFFFFFF = 1.0 but semantically unknown)
-        if ($value instanceof ExifRational && $this->rationalConverter->isUnknownDenominator($value->denominator)) {
+        if ($value instanceof ExifRational && $this->isUnknownBrightnessDenominator($value->denominator)) {
             return null;
         }
 
@@ -202,6 +206,18 @@ final readonly class ApexConverter
         $formatted = rtrim($formatted, '0');
 
         return rtrim($formatted, '.');
+    }
+
+    /**
+     * Determines whether the denominator represents the EXIF unknown brightness sentinel.
+     */
+    private function isUnknownBrightnessDenominator(int $denominator): bool
+    {
+        if ($denominator === -1) {
+            return true;
+        }
+
+        return $denominator === self::EXIF_UNKNOWN_DENOMINATOR;
     }
 
     /**

@@ -26,18 +26,13 @@ use function is_string;
 use function trim;
 
 /**
- * Converts EXIF RATIONAL and SRATIONAL values to PHP floats.
+ * Converts TIFF/EXIF RATIONAL and SRATIONAL values to PHP floats.
  *
- * EXIF 3.0 §4.6 defines RATIONAL as two 32-bit unsigned integers (numerator/denominator)
- * and SRATIONAL as two 32-bit signed integers.
+ * TIFF 6.0 §2.2 defines RATIONAL/SRATIONAL arithmetic generically as
+ * numerator/denominator division.
  */
 final readonly class RationalConverter
 {
-    /**
-     * EXIF 3.0 §4.6.6.8 defines 0xFFFFFFFF as "unknown" for shooting situation rationals.
-     */
-    private const int UNKNOWN_DENOMINATOR = 0xFFFFFFFF;
-
     /**
      * Creates the converter with its numeric dependency.
      *
@@ -51,9 +46,9 @@ final readonly class RationalConverter
     /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
      *
-     * EXIF 3.0 §4.6 (Exif IFD attribute information) reiterates that RATIONAL and SRATIONAL
-     * values are stored as numerator/denominator pairs; this implementation honours EXIF 3.0 §4.6.6.8
-     * "unknown" denominators encoded as 0xFFFFFFFF.
+     * EXIF 3.0 §4.6 reiterates that RATIONAL and SRATIONAL values are stored as
+     * numerator/denominator pairs. Unknown sentinels are tag-specific EXIF semantics
+     * and are intentionally not handled by this generic converter.
      *
      * @param int|float|string|array<int, int|float|string|array<int, int|float|string>|UInt64|ExifRational>|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The value to convert.
      *
@@ -71,10 +66,6 @@ final readonly class RationalConverter
         }
 
         if ($value instanceof ExifRational) {
-            if ($this->isUnknownDenominator($value->denominator)) {
-                return null;
-            }
-
             return $value->denominator !== 0
                 ? $value->numerator / $value->denominator
                 : null;
@@ -121,10 +112,6 @@ final readonly class RationalConverter
                     return null;
                 }
 
-                if ($this->isUnknownDenominator($denVal)) {
-                    return null;
-                }
-
                 return $numVal / $denVal;
             }
 
@@ -138,10 +125,6 @@ final readonly class RationalConverter
                     $numVal = $this->numericConverter->normaliseComponent($numComponent);
                     $denVal = $this->numericConverter->normaliseComponent($denComponent);
                     if (($numVal === null) || ($denVal === null) || ($denVal === 0.0)) {
-                        return null;
-                    }
-
-                    if ($this->isUnknownDenominator($denVal)) {
                         return null;
                     }
 
@@ -197,24 +180,14 @@ final readonly class RationalConverter
     }
 
     /**
-     * Tests whether the denominator signals "unknown" per EXIF 3.0 §4.6.6.8.
+     * Tests whether the denominator is invalid for generic rational conversion.
      *
      * @param int|float $denominator The denominator to check.
      *
-     * @return bool True if the denominator represents "unknown".
+     * @return bool True if the denominator is zero.
      */
     public function isUnknownDenominator(int|float $denominator): bool
     {
-        // Check for zero
-        if ($denominator === 0 || $denominator === 0.0) {
-            return true;
-        }
-
-        // Check for -1 (signed unknown marker)
-        if ($denominator === -1 || $denominator === -1.0) {
-            return true;
-        }
-
-        return ((int) $denominator) === self::UNKNOWN_DENOMINATOR;
+        return $denominator === 0 || $denominator === 0.0;
     }
 }
