@@ -2399,6 +2399,88 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * ProfileDynamicRange with invalid payload length triggers ParseError.
+     */
+    #[Test]
+    public function rejectsProfileDynamicRangeBadLength(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1505);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithProfileDynamicRange(pack('v', 1) . pack('v', 0)),
+        );
+    }
+
+    /**
+     * ProfileDynamicRange with unsupported Version triggers ParseError.
+     */
+    #[Test]
+    public function rejectsProfileDynamicRangeBadVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1506);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithProfileDynamicRange(pack('v', 2) . pack('v', 0) . pack('g', 0.0)),
+        );
+    }
+
+    /**
+     * ProfileDynamicRange with unsupported DynamicRange triggers ParseError.
+     */
+    #[Test]
+    public function rejectsProfileDynamicRangeBadRange(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1507);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithProfileDynamicRange(pack('v', 1) . pack('v', 3) . pack('g', 0.0)),
+        );
+    }
+
+    /**
+     * SDR ProfileDynamicRange with HintMaxOutputValue > 1 triggers ParseError.
+     */
+    #[Test]
+    public function rejectsProfileDynamicRangeSdrHintAboveOne(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1508);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithProfileDynamicRange(pack('v', 1) . pack('v', 0) . pack('g', 1.5)),
+        );
+    }
+
+    /**
+     * Valid SDR ProfileDynamicRange parses successfully.
+     */
+    #[Test]
+    public function acceptsValidSdrProfileDynamicRange(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithProfileDynamicRange(pack('v', 1) . pack('v', 0) . pack('g', 0.5)),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * Valid HDR ProfileDynamicRange parses successfully.
+     */
+    #[Test]
+    public function acceptsValidHdrProfileDynamicRange(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithProfileDynamicRange(pack('v', 1) . pack('v', 1) . pack('g', 4.0)),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
      * Valid IlluminantData1 DataType=0 (chromaticity) parses successfully.
      */
     #[Test]
@@ -3114,6 +3196,51 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', strlen($uniqueCameraModel))
             . pack('V', $modelOffset)
             . pack('v', DngTag::ILLUMINANT_DATA_1)
+            . pack('v', TiffConst::TYPE_UNDEFINED)
+            . pack('V', strlen($payload))
+            . pack('V', $payloadOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $payload;
+    }
+
+    /**
+     * Builds a DNG TIFF with a ProfileDynamicRange payload.
+     */
+    private function buildDngWithProfileDynamicRange(string $payload): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::PROFILE_DYNAMIC_RANGE)
             . pack('v', TiffConst::TYPE_UNDEFINED)
             . pack('V', strlen($payload))
             . pack('V', $payloadOffset)

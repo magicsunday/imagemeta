@@ -1294,6 +1294,7 @@ final class TiffExifParser
         $this->validateDngNoiseProfile($ifd0);
         $this->validateDngHueSatMapData($ifd0);
         $this->validateDngIlluminantData($ifd0);
+        $this->validateDngProfileDynamicRange($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -4877,6 +4878,59 @@ final class TiffExifParser
                 throw new ParseError(
                     sprintf('IlluminantData 0x%04X spectral NumLambda must be >= 2, got %d.', $tag, $numLambda),
                     1503,
+                );
+            }
+        }
+    }
+
+    /**
+     * Validates DNG ProfileDynamicRange payload structure per DNG 1.7.1.0.
+     *
+     * Payload must be exactly 8 bytes: Version(SHORT)=1, DynamicRange(SHORT) in {0,1},
+     * HintMaxOutputValue(FLOAT) <= 1.0 for SDR (DynamicRange=0).
+     */
+    private function validateDngProfileDynamicRange(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::PROFILE_DYNAMIC_RANGE);
+
+        if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
+            return;
+        }
+
+        $payload = $entry->value;
+
+        if (strlen($payload) !== 8) {
+            throw new ParseError(
+                sprintf('ProfileDynamicRange payload must be 8 bytes, got %d.', strlen($payload)),
+                1505,
+            );
+        }
+
+        $version = $this->unpackU16(substr($payload, 0, 2));
+
+        if ($version !== 1) {
+            throw new ParseError(
+                sprintf('ProfileDynamicRange Version must be 1, got %d.', $version),
+                1506,
+            );
+        }
+
+        $dynamicRange = $this->unpackU16(substr($payload, 2, 2));
+
+        if ($dynamicRange !== 0 && $dynamicRange !== 1) {
+            throw new ParseError(
+                sprintf('ProfileDynamicRange DynamicRange must be 0 or 1, got %d.', $dynamicRange),
+                1507,
+            );
+        }
+
+        if ($dynamicRange === 0) {
+            $hint = $this->unpackFloat(substr($payload, 4, 4));
+
+            if ($hint > 1.0) {
+                throw new ParseError(
+                    sprintf('SDR ProfileDynamicRange HintMaxOutputValue must be <= 1.0, got %g.', $hint),
+                    1508,
                 );
             }
         }
