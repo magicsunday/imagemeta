@@ -2309,6 +2309,33 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * DNG-specific tags without DNGVersion in IFD0 triggers ParseError.
+     */
+    #[Test]
+    public function rejectsDngTagsWithoutDngVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1498);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithDngTagsNoDngVersion(),
+        );
+    }
+
+    /**
+     * DNG with DNGVersion in IFD0 parses successfully (already tested elsewhere but explicit).
+     */
+    #[Test]
+    public function acceptsDngWithDngVersionInIfd0(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildClassicDngTiff(),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::DNG_VERSION));
+    }
+
+    /**
      * ColorimetricReference value 0 with DNG 1.2+ parses successfully.
      */
     #[Test]
@@ -2701,6 +2728,37 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', TiffConst::TYPE_BYTE)
             . pack('V', 4)
             . pack('C4', $bwVer[0], $bwVer[1], $bwVer[2], $bwVer[3])
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel;
+    }
+
+    /**
+     * Builds a TIFF with DNG-specific tags (UniqueCameraModel) but no DNGVersion.
+     */
+    private function buildTiffWithDngTagsNoDngVersion(): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 3;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera');
+        $modelOffset       = $ifdOffset + $ifdSize;
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
             . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
             . pack('v', TiffConst::TYPE_ASCII)
             . pack('V', strlen($uniqueCameraModel))

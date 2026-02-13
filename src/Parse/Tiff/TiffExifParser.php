@@ -1271,6 +1271,7 @@ final class TiffExifParser
             $nextOffset = $nextIfd->nextIfdOffset;
         }
 
+        $this->validateDngRequiredVersion($ifd0);
         $this->validateEnhancedIfd($ifd0);
         foreach ($additionalIfds as $additionalIfd) {
             $this->validateEnhancedIfd($additionalIfd);
@@ -4639,6 +4640,37 @@ final class TiffExifParser
                 ),
                 1496,
             );
+        }
+    }
+
+    /**
+     * DNG sentinel tags whose presence implies the file is a DNG document.
+     *
+     * @var list<int>
+     */
+    private const array DNG_SENTINEL_TAGS = [
+        DngTag::UNIQUE_CAMERA_MODEL,
+    ];
+
+    /**
+     * Requires DNGVersion in IFD0 when DNG-specific tags are present.
+     */
+    private function validateDngRequiredVersion(Ifd $ifd): void
+    {
+        if ($ifd->get(DngTag::DNG_VERSION) instanceof IfdEntry) {
+            return;
+        }
+
+        foreach (self::DNG_SENTINEL_TAGS as $tag) {
+            if ($ifd->get($tag) instanceof IfdEntry) {
+                throw new ParseError(
+                    sprintf(
+                        'DNG tag 0x%04X found in IFD 0 but required DNGVersion tag is missing.',
+                        $tag,
+                    ),
+                    1498,
+                );
+            }
         }
     }
 }
