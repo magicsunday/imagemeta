@@ -3763,4 +3763,160 @@ final class TiffExifParserDngTagTest extends TestCase
             . $uniqueCameraModel
             . $payload;
     }
+
+    /**
+     * Rejects ProfileGainTableMap in IFD0 (restricted to Raw IFDs).
+     */
+    #[Test]
+    public function rejectsGainTableMapInIfd0(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1520);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithGainTableMapInIfd0(),
+        );
+    }
+
+    /**
+     * Accepts ProfileGainTableMap in an additional (Raw) IFD.
+     */
+    #[Test]
+    public function acceptsGainTableMapInRawIfd(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildDngWithGainTableMapInRawIfd(),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Builds a DNG with ProfileGainTableMap in IFD0 (invalid placement).
+     */
+    private function buildDngWithGainTableMapInIfd0(): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $payload           = str_repeat("\x00", 80);
+        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::PROFILE_GAIN_TABLE_MAP)
+            . pack('v', TiffConst::TYPE_UNDEFINED)
+            . pack('V', strlen($payload))
+            . pack('V', $payloadOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $payload;
+    }
+
+    /**
+     * Builds a DNG with ProfileGainTableMap in an additional (Raw) IFD.
+     */
+    private function buildDngWithGainTableMapInRawIfd(): string
+    {
+        $ifdOffset   = 8;
+        $ifd0Entries = 5;
+        $ifd0Size    = 2 + ($ifd0Entries * 12) + 4;
+
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifd0Size;
+
+        $ifd1Offset  = $modelOffset + strlen($uniqueCameraModel);
+        $ifd1Entries = 2;
+        $ifd1Size    = 2 + ($ifd1Entries * 12) + 4;
+
+        $ifd2Offset  = $ifd1Offset + $ifd1Size;
+        $ifd2Entries = 3;
+        $ifd2Size    = 2 + ($ifd2Entries * 12) + 4;
+
+        $payload       = str_repeat("\x00", 80);
+        $payloadOffset = $ifd2Offset + $ifd2Size;
+
+        $ifd0 = pack('v', $ifd0Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('V', $ifd1Offset);
+
+        $ifd1 = pack('v', $ifd1Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('V', $ifd2Offset);
+
+        $ifd2 = pack('v', $ifd2Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', DngTag::PROFILE_GAIN_TABLE_MAP)
+            . pack('v', TiffConst::TYPE_UNDEFINED)
+            . pack('V', strlen($payload))
+            . pack('V', $payloadOffset)
+            . pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifd0
+            . $uniqueCameraModel
+            . $ifd1
+            . $ifd2
+            . $payload;
+    }
 }

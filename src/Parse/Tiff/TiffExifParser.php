@@ -1298,6 +1298,7 @@ final class TiffExifParser
         $this->validateDngIlluminantData($ifd0);
         $this->validateDngProfileDynamicRange($ifd0);
         $this->validateDngProfileGainTableMap2($ifd0);
+        $this->validateDngGainMapPlacement($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -5123,6 +5124,23 @@ final class TiffExifParser
                     $length,
                 ),
                 1519,
+            );
+        }
+    }
+
+    /**
+     * Validates DNG gain-map placement rules per DNG 1.7.1.0.
+     *
+     * ProfileGainTableMap (0xCD2D) is restricted to Raw IFDs and must not appear
+     * in IFD 0. When both ProfileGainTableMap and ProfileGainTableMap2 exist,
+     * ProfileGainTableMap2 supersedes.
+     */
+    private function validateDngGainMapPlacement(Ifd $ifd): void
+    {
+        if ($ifd->get(DngTag::PROFILE_GAIN_TABLE_MAP) instanceof IfdEntry) {
+            throw new ParseError(
+                'ProfileGainTableMap (0xCD2D) must not appear in IFD 0; it is restricted to Raw IFDs per DNG 1.7.1.0.',
+                1520,
             );
         }
     }
