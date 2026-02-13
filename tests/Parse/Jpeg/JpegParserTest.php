@@ -1678,6 +1678,140 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Rejects EXIF SOF payloads that do not use 8-bit sample precision.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsExifSofWithNonEightBitPrecision(): void
+    {
+        $exifPayload  = self::TIFF_HEADER . 'strict-exif';
+        $framePayload = "\x0C" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x22\x00"
+            . "\x02\x11\x01"
+            . "\x03\x11\x01";
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_SOF0, $framePayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1491);
+        $this->expectExceptionMessageMatches('/8-bit|precision/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects EXIF SOF payloads that do not declare exactly three image components.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsExifSofWithInvalidComponentCount(): void
+    {
+        $exifPayload  = self::TIFF_HEADER . 'strict-exif';
+        $framePayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x01"
+            . "\x01\x11\x00";
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_SOF0, $framePayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1492);
+        $this->expectExceptionMessageMatches('/three components|component count/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects EXIF SOF payloads with component identifiers other than Y/Cb/Cr IDs 1/2/3.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsExifSofWithInvalidComponentIdentifiers(): void
+    {
+        $exifPayload  = self::TIFF_HEADER . 'strict-exif';
+        $framePayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x22\x00"
+            . "\x02\x11\x01"
+            . "\x04\x11\x01";
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_SOF0, $framePayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1493);
+        $this->expectExceptionMessageMatches('/component id|YCbCr|1\\/2\\/3/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects EXIF SOF payloads with subsampling values outside EXIF YCbCr 4:2:2/4:2:0.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsExifSofWithUnsupportedYcbcrSubSampling(): void
+    {
+        $exifPayload  = self::TIFF_HEADER . 'strict-exif';
+        $framePayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x32\x00"
+            . "\x02\x11\x01"
+            . "\x03\x11\x01";
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_SOF0, $framePayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1494);
+        $this->expectExceptionMessageMatches('/YCbCr|subsampling|4:2:2|4:2:0/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Keeps non-EXIF JPEG SOF parsing permissive for non-conformant EXIF profile values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function nonExifSofDoesNotApplyStrictExifProfileRules(): void
+    {
+        $framePayload = "\x0C" . pack('n', 32) . pack('n', 64) . "\x01"
+            . "\x01\x11\x00";
+
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayload));
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame(12, $extractor->getFrameSamplePrecision());
+        self::assertSame(
+            [
+                1 => ['horizontal' => 1, 'vertical' => 1],
+            ],
+            $extractor->getFrameComponentSamplingFactors(),
+        );
+        self::assertNull($extractor->getFrameYCbCrSubSampling());
+    }
+
+    /**
      * Provides malformed JPEG structures expected to raise parse errors.
      * Each fixture triggers a different guardrail in segment length handling.
      *

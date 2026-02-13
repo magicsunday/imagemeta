@@ -621,7 +621,7 @@ final class JpegParser
                     $firstSofOffset = $offset;
                 }
 
-                $this->handleStartOfFrame($marker, $payload, $offset);
+                $this->handleStartOfFrame($marker, $payload, $offset, $seenExifApp1);
             }
         }
 
@@ -2232,11 +2232,15 @@ final class JpegParser
     /**
      * Parses baseline start of frame markers to obtain sampling information.
      *
-     * @param int    $marker  Marker code (SOF0).
-     * @param string $payload Raw SOF payload excluding the marker and length field.
-     * @param int    $offset  Offset where the SOF marker begins.
+     * In strict EXIF mode (EXIF APP1 present), EXIF 3.0 §4.8.1 requires 8-bit YCbCr
+     * baseline framing with three components (Y, Cb, Cr) and legal YCbCr subsampling.
+     *
+     * @param int    $marker            Marker code (SOF0).
+     * @param string $payload           Raw SOF payload excluding the marker and length field.
+     * @param int    $offset            Offset where the SOF marker begins.
+     * @param bool   $strictExifProfile Whether strict EXIF SOF profile checks must be applied.
      */
-    private function handleStartOfFrame(int $marker, string $payload, int $offset): void
+    private function handleStartOfFrame(int $marker, string $payload, int $offset, bool $strictExifProfile): void
     {
         if ($this->frameBitsPerSample !== null) {
             return;
@@ -2250,6 +2254,17 @@ final class JpegParser
         $componentCount = ord($payload[5]);
         if ($componentCount === 0) {
             throw new ParseError(sprintf('SOF marker 0x%02X at offset %d reports zero components', $marker, $offset), 1284);
+        }
+
+        if ($strictExifProfile && ($componentCount !== 3)) {
+            throw new ParseError(
+                sprintf(
+                    'SOF marker 0x%02X at offset %d must declare exactly three components in strict EXIF mode',
+                    $marker,
+                    $offset,
+                ),
+                1492,
+            );
         }
 
         $expectedLength = 6 + ($componentCount * 3);
@@ -2296,9 +2311,49 @@ final class JpegParser
             $this->frameSamplesPerLine = $fields['samples'];
         }
 
-        $this->frameBitsPerSample     = ord($payload[0]);
+        $bitsPerSample = ord($payload[0]);
+        if ($strictExifProfile && ($bitsPerSample !== 8)) {
+            throw new ParseError(
+                sprintf(
+                    'SOF marker 0x%02X at offset %d must use 8-bit sample precision in strict EXIF mode',
+                    $marker,
+                    $offset,
+                ),
+                1491,
+            );
+        }
+
+        if ($strictExifProfile) {
+            $componentIdentifiers = array_keys($components);
+            sort($componentIdentifiers);
+
+            if ($componentIdentifiers !== [1, 2, 3]) {
+                throw new ParseError(
+                    sprintf(
+                        'SOF marker 0x%02X at offset %d must use YCbCr component identifiers 1/2/3 in strict EXIF mode',
+                        $marker,
+                        $offset,
+                    ),
+                    1493,
+                );
+            }
+        }
+
+        $derivedSubSampling = $this->deriveYCbCrSubSampling($components);
+        if ($strictExifProfile && ($derivedSubSampling === null)) {
+            throw new ParseError(
+                sprintf(
+                    'SOF marker 0x%02X at offset %d must derive EXIF YCbCr subsampling 4:2:2 or 4:2:0 in strict EXIF mode',
+                    $marker,
+                    $offset,
+                ),
+                1494,
+            );
+        }
+
+        $this->frameBitsPerSample     = $bitsPerSample;
         $this->frameComponentSampling = $components;
-        $this->frameYCbCrSubSampling  = $this->deriveYCbCrSubSampling($components);
+        $this->frameYCbCrSubSampling  = $derivedSubSampling;
     }
 
     /**
