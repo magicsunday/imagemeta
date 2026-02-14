@@ -1359,6 +1359,7 @@ final class TiffExifParser
             $this->validateFillOrderTag($additionalIfd);
             $this->validateSampleDomainTags($additionalIfd);
             $this->validateExtraSamplesTag($additionalIfd);
+            $this->validateGrayResponseTags($additionalIfd);
             $this->validateFaxOptionTags($additionalIfd);
             $this->validateSeparatedImageInkTags($additionalIfd);
             $this->validateSeparatedImageDotRange($additionalIfd);
@@ -1446,6 +1447,7 @@ final class TiffExifParser
         $this->validateFillOrderTag($ifd0);
         $this->validateSampleDomainTags($ifd0);
         $this->validateExtraSamplesTag($ifd0);
+        $this->validateGrayResponseTags($ifd0);
         $this->validateFaxOptionTags($ifd0);
         $this->validateSeparatedImageInkTags($ifd0);
         $this->validateSeparatedImageDotRange($ifd0);
@@ -2369,6 +2371,148 @@ final class TiffExifParser
                 1767,
             );
         }
+    }
+
+    /**
+     * Validates TIFF gray-response tags GrayResponseUnit and GrayResponseCurve.
+     *
+     * TIFF 6.0:
+     * - GrayResponseUnit: SHORT[1], value domain 1..5.
+     * - GrayResponseCurve: SHORT, count = 1 << BitsPerSample.
+     * - Tags apply to grayscale photometric modes (WhiteIsZero/BlackIsZero).
+     */
+    private function validateGrayResponseTags(Ifd $ifd): void
+    {
+        $grayResponseUnit  = $ifd->get(TiffTag::GRAY_RESPONSE_UNIT);
+        $grayResponseCurve = $ifd->get(TiffTag::GRAY_RESPONSE_CURVE);
+
+        if (!($grayResponseUnit instanceof IfdEntry) && !($grayResponseCurve instanceof IfdEntry)) {
+            return;
+        }
+
+        $photometricEntry = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $photometricCode  = (($photometricEntry instanceof IfdEntry) && is_int($photometricEntry->value))
+            ? $photometricEntry->value
+            : null;
+
+        if (!in_array($photometricCode, [0, 1], true)) {
+            throw new ParseError(
+                sprintf(
+                    'GrayResponse tags are only valid for grayscale PhotometricInterpretation {0,1}, got %s.',
+                    $photometricCode !== null ? (string) $photometricCode : 'missing',
+                ),
+                1768,
+            );
+        }
+
+        if ($grayResponseUnit instanceof IfdEntry) {
+            if (
+                ($grayResponseUnit->type !== TiffConst::TYPE_SHORT)
+                || ($grayResponseUnit->count !== 1)
+                || !is_int($grayResponseUnit->value)
+            ) {
+                throw new ParseError('GrayResponseUnit must be SHORT[1].', 1769);
+            }
+
+            if (($grayResponseUnit->value < 1) || ($grayResponseUnit->value > 5)) {
+                throw new ParseError(
+                    sprintf(
+                        'GrayResponseUnit value %d is outside the valid domain 1..5.',
+                        $grayResponseUnit->value,
+                    ),
+                    1770,
+                );
+            }
+        }
+
+        if (!$grayResponseCurve instanceof IfdEntry) {
+            return;
+        }
+
+        if ($grayResponseCurve->type !== TiffConst::TYPE_SHORT) {
+            throw new ParseError(
+                sprintf('GrayResponseCurve must use SHORT type, got type %d.', $grayResponseCurve->type),
+                1771,
+            );
+        }
+
+        $bitsPerSample = $this->resolveGrayResponseBitsPerSample($ifd);
+        $expectedCount = 2 ** $bitsPerSample;
+
+        if ($grayResponseCurve->count !== $expectedCount) {
+            throw new ParseError(
+                sprintf(
+                    'GrayResponseCurve count %d must be 1<<BitsPerSample (%d).',
+                    $grayResponseCurve->count,
+                    $expectedCount,
+                ),
+                1772,
+            );
+        }
+    }
+
+    /**
+     * Resolves a uniform BitsPerSample scalar for gray-response count rules.
+     */
+    private function resolveGrayResponseBitsPerSample(Ifd $ifd): int
+    {
+        $bitsEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
+
+        if (!$bitsEntry instanceof IfdEntry) {
+            throw new ParseError('GrayResponseCurve requires BitsPerSample.', 1773);
+        }
+
+        $bitDepths = [];
+
+        if (is_int($bitsEntry->value)) {
+            $bitDepths[] = $bitsEntry->value;
+        } elseif ($bitsEntry->value instanceof ExifNumericList) {
+            foreach ($bitsEntry->value->values as $component) {
+                if (!is_int($component)) {
+                    throw new ParseError('BitsPerSample must decode to integer components for GrayResponseCurve.', 1774);
+                }
+
+                $bitDepths[] = $component;
+            }
+        } else {
+            throw new ParseError('BitsPerSample must decode to integer components for GrayResponseCurve.', 1774);
+        }
+
+        if ($bitDepths === []) {
+            throw new ParseError('BitsPerSample must provide at least one value for GrayResponseCurve.', 1775);
+        }
+
+        $uniformBitDepth = $bitDepths[0];
+
+        foreach ($bitDepths as $index => $bitDepth) {
+            if ($bitDepth <= 0) {
+                throw new ParseError(
+                    sprintf('BitsPerSample component %d must be >= 1 for GrayResponseCurve.', $index),
+                    1776,
+                );
+            }
+
+            if ($bitDepth !== $uniformBitDepth) {
+                throw new ParseError(
+                    sprintf(
+                        'GrayResponseCurve requires uniform BitsPerSample values; component 0=%d, component %d=%d.',
+                        $uniformBitDepth,
+                        $index,
+                        $bitDepth,
+                    ),
+                    1777,
+                );
+            }
+        }
+
+        if ($uniformBitDepth > 16) {
+            throw new ParseError(
+                sprintf('GrayResponseCurve does not support BitsPerSample=%d (>16).', $uniformBitDepth),
+                1778,
+            );
+        }
+
+        return $uniformBitDepth;
     }
 
     /**
