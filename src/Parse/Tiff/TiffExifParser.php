@@ -1363,6 +1363,7 @@ final class TiffExifParser
             $this->validateSubfileAndPageTags($additionalIfd, !$isDngContainer);
             $this->validatePositionTags($additionalIfd);
             $this->validateThreshholdingAndCellTags($additionalIfd);
+            $this->validateFreeSpaceTags($additionalIfd);
             $this->validateFillOrderTag($additionalIfd);
             $this->validateSampleDomainTags($additionalIfd);
             $this->validateExtraSamplesTag($additionalIfd);
@@ -1455,6 +1456,7 @@ final class TiffExifParser
         $this->validateSubfileAndPageTags($ifd0, !$isDngContainer);
         $this->validatePositionTags($ifd0);
         $this->validateThreshholdingAndCellTags($ifd0);
+        $this->validateFreeSpaceTags($ifd0);
         $this->validateFillOrderTag($ifd0);
         $this->validateSampleDomainTags($ifd0);
         $this->validateExtraSamplesTag($ifd0);
@@ -2410,6 +2412,112 @@ final class TiffExifParser
         }
 
         return $entry->value;
+    }
+
+    /**
+     * Validates paired TIFF free-space bookkeeping tags.
+     *
+     * TIFF 6.0 defines FreeOffsets (Tag 288) and FreeByteCounts (Tag 289) as a
+     * paired map where each offset points to a free-byte range with a matching
+     * positive byte-count entry.
+     */
+    private function validateFreeSpaceTags(Ifd $ifd): void
+    {
+        $freeOffsetsEntry    = $ifd->get(TiffTag::FREE_OFFSETS);
+        $freeByteCountsEntry = $ifd->get(TiffTag::FREE_BYTE_COUNTS);
+
+        if (!($freeOffsetsEntry instanceof IfdEntry) && !($freeByteCountsEntry instanceof IfdEntry)) {
+            return;
+        }
+
+        if (!($freeOffsetsEntry instanceof IfdEntry) || !($freeByteCountsEntry instanceof IfdEntry)) {
+            throw new ParseError('FreeOffsets and FreeByteCounts must both be present', 1809);
+        }
+
+        $freeOffsets    = $this->extractFreeSpaceComponents($freeOffsetsEntry, 'FreeOffsets');
+        $freeByteCounts = $this->extractFreeSpaceComponents($freeByteCountsEntry, 'FreeByteCounts');
+
+        if (count($freeOffsets) !== count($freeByteCounts)) {
+            throw new ParseError(
+                sprintf(
+                    'FreeOffsets count %d must match FreeByteCounts count %d',
+                    count($freeOffsets),
+                    count($freeByteCounts),
+                ),
+                1810,
+            );
+        }
+
+        $fileSize = $this->buffer->size();
+
+        foreach ($freeOffsets as $index => $offset) {
+            $byteCount = $freeByteCounts[$index] ?? 0;
+
+            if ($byteCount <= 0) {
+                throw new ParseError(
+                    sprintf('FreeByteCounts index %d must be > 0', $index),
+                    1811,
+                );
+            }
+
+            if (($offset > $fileSize) || ($offset > PHP_INT_MAX - $byteCount)) {
+                throw new ParseError(
+                    sprintf('Free-space range index %d exceeds TIFF data length', $index),
+                    1812,
+                );
+            }
+
+            if (($offset + $byteCount) > $fileSize) {
+                throw new ParseError(
+                    sprintf('Free-space range index %d exceeds TIFF data length', $index),
+                    1813,
+                );
+            }
+        }
+    }
+
+    /**
+     * Extracts validated integer components for a free-space bookkeeping tag.
+     *
+     * @return list<int>
+     */
+    private function extractFreeSpaceComponents(IfdEntry $entry, string $tagName): array
+    {
+        if ($entry->type !== TiffConst::TYPE_LONG && $entry->type !== TiffConst::TYPE_LONG8) {
+            throw new ParseError(
+                sprintf('%s must use LONG/LONG8 type.', $tagName),
+                1814,
+            );
+        }
+
+        if ($entry->count < 1) {
+            throw new ParseError(
+                sprintf('%s must contain at least one value.', $tagName),
+                1815,
+            );
+        }
+
+        $components = $this->extractIntegerTagComponents($entry, $tagName);
+
+        if (count($components) !== $entry->count) {
+            throw new ParseError(
+                sprintf('%s value count does not match declared component count.', $tagName),
+                1816,
+            );
+        }
+
+        foreach ($components as $index => $component) {
+            if ($component >= 0) {
+                continue;
+            }
+
+            throw new ParseError(
+                sprintf('%s index %d must be >= 0', $tagName, $index),
+                1817,
+            );
+        }
+
+        return $components;
     }
 
     /**

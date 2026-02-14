@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
 use XMLReader;
 
 use function array_key_exists;
+use function defined;
 use function in_array;
 use function sprintf;
 use function trim;
@@ -44,7 +45,12 @@ final class XmpParser
      */
     public function parse(string $xml): XmpDocument
     {
-        $reader = XMLReader::XML($xml, null, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+        $xmlOptions = LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING;
+        if (defined('LIBXML_NO_XXE')) {
+            $xmlOptions |= LIBXML_NO_XXE;
+        }
+
+        $reader = XMLReader::XML($xml, null, $xmlOptions);
         if (!$reader instanceof XMLReader) {
             return new XmpDocument([], [], []);
         }

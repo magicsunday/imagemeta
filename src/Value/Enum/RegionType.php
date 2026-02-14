@@ -16,6 +16,10 @@ use function trim;
 
 /**
  * Describes the semantic classification of an annotated region.
+ *
+ * Metadata Working Group Regions (MWG-RS) defines `mwg-rs:Type` in the
+ * regions schema (`http://www.metadataworkinggroup.com/schemas/regions/`),
+ * where values such as Face/Object classify region semantics.
  */
 enum RegionType: string
 {
