@@ -1360,6 +1360,7 @@ final class TiffExifParser
             $this->validateSampleDomainTags($additionalIfd);
             $this->validateExtraSamplesTag($additionalIfd);
             $this->validateGrayResponseTags($additionalIfd);
+            $this->validateHalftoneHintsTag($additionalIfd);
             $this->validateFaxOptionTags($additionalIfd);
             $this->validateSeparatedImageInkTags($additionalIfd);
             $this->validateSeparatedImageDotRange($additionalIfd);
@@ -1448,6 +1449,7 @@ final class TiffExifParser
         $this->validateSampleDomainTags($ifd0);
         $this->validateExtraSamplesTag($ifd0);
         $this->validateGrayResponseTags($ifd0);
+        $this->validateHalftoneHintsTag($ifd0);
         $this->validateFaxOptionTags($ifd0);
         $this->validateSeparatedImageInkTags($ifd0);
         $this->validateSeparatedImageDotRange($ifd0);
@@ -2509,6 +2511,122 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('GrayResponseCurve does not support BitsPerSample=%d (>16).', $uniformBitDepth),
                 1778,
+            );
+        }
+
+        return $uniformBitDepth;
+    }
+
+    /**
+     * Validates HalftoneHints value range against BitsPerSample.
+     *
+     * TIFF 6.0 §17:
+     * - HalftoneHints is SHORT[2].
+     * - Both hint values are gray codes within [0, (1<<BitsPerSample)-1].
+     */
+    private function validateHalftoneHintsTag(Ifd $ifd): void
+    {
+        $halftoneHintsEntry = $ifd->get(TiffTag::HALFTONE_HINTS);
+
+        if (!$halftoneHintsEntry instanceof IfdEntry) {
+            return;
+        }
+
+        if (
+            ($halftoneHintsEntry->type !== TiffConst::TYPE_SHORT)
+            || ($halftoneHintsEntry->count !== 2)
+        ) {
+            throw new ParseError('HalftoneHints must be SHORT[2].', 1779);
+        }
+
+        $components = $this->extractIntegerTagComponents($halftoneHintsEntry, 'HalftoneHints');
+
+        if (count($components) !== 2) {
+            throw new ParseError(
+                sprintf('HalftoneHints expected 2 components, decoded %d.', count($components)),
+                1780,
+            );
+        }
+
+        $bitsPerSample = $this->resolveHalftoneBitsPerSample($ifd);
+        $maxValue      = (2 ** $bitsPerSample) - 1;
+
+        foreach ($components as $componentIndex => $componentValue) {
+            if (($componentValue >= 0) && ($componentValue <= $maxValue)) {
+                continue;
+            }
+
+            throw new ParseError(
+                sprintf(
+                    'HalftoneHints component %d value %d exceeds max %d for BitsPerSample=%d.',
+                    $componentIndex,
+                    $componentValue,
+                    $maxValue,
+                    $bitsPerSample,
+                ),
+                1781,
+            );
+        }
+    }
+
+    /**
+     * Resolves uniform BitsPerSample for HalftoneHints range checks.
+     */
+    private function resolveHalftoneBitsPerSample(Ifd $ifd): int
+    {
+        $bitsEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
+
+        if (!$bitsEntry instanceof IfdEntry) {
+            throw new ParseError('HalftoneHints validation requires BitsPerSample.', 1782);
+        }
+
+        $bitDepths = [];
+
+        if (is_int($bitsEntry->value)) {
+            $bitDepths[] = $bitsEntry->value;
+        } elseif ($bitsEntry->value instanceof ExifNumericList) {
+            foreach ($bitsEntry->value->values as $component) {
+                if (!is_int($component)) {
+                    throw new ParseError('BitsPerSample must decode to integer components for HalftoneHints.', 1783);
+                }
+
+                $bitDepths[] = $component;
+            }
+        } else {
+            throw new ParseError('BitsPerSample must decode to integer components for HalftoneHints.', 1783);
+        }
+
+        if ($bitDepths === []) {
+            throw new ParseError('BitsPerSample must provide at least one value for HalftoneHints.', 1784);
+        }
+
+        $uniformBitDepth = $bitDepths[0];
+
+        foreach ($bitDepths as $index => $bitDepth) {
+            if ($bitDepth <= 0) {
+                throw new ParseError(
+                    sprintf('BitsPerSample component %d must be >= 1 for HalftoneHints.', $index),
+                    1785,
+                );
+            }
+
+            if ($bitDepth !== $uniformBitDepth) {
+                throw new ParseError(
+                    sprintf(
+                        'HalftoneHints requires uniform BitsPerSample values; component 0=%d, component %d=%d.',
+                        $uniformBitDepth,
+                        $index,
+                        $bitDepth,
+                    ),
+                    1786,
+                );
+            }
+        }
+
+        if ($uniformBitDepth > 16) {
+            throw new ParseError(
+                sprintf('HalftoneHints does not support BitsPerSample=%d (>16).', $uniformBitDepth),
+                1787,
             );
         }
 
