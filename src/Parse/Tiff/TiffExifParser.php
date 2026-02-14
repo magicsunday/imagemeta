@@ -1403,6 +1403,7 @@ final class TiffExifParser
         $this->validateDngImageSequenceInfo($ifd0);
         $this->validateDngRgbTables($ifd0);
         $this->validateDngActiveAndMaskedAreas($ifd0);
+        $this->validateDngBlackWhiteLevelFamily($ifd0);
         $this->validateDngDefaultCropScaleGeometry($ifd0);
         $this->validateDngDefaultUserCrop($ifd0);
         $this->validateDngDepthEnums($ifd0);
@@ -6251,6 +6252,208 @@ final class TiffExifParser
             && ($rightRectangle['top'] < $leftRectangle['bottom'])
             && ($leftRectangle['left'] < $rightRectangle['right'])
             && ($rightRectangle['left'] < $leftRectangle['right']);
+    }
+
+    /**
+     * Validates cross-tag formulas for the DNG black/white-level tag family.
+     *
+     * DNG 1.7.1.0 ("BlackLevelRepeatDim", "BlackLevel", "BlackLevelDeltaH",
+     * "BlackLevelDeltaV", "WhiteLevel") defines type/count constraints and
+     * count formulas based on SamplesPerPixel and ActiveArea geometry.
+     */
+    private function validateDngBlackWhiteLevelFamily(Ifd $ifd): void
+    {
+        $samplesPerPixel = null;
+        $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+
+        if ($samplesEntry instanceof IfdEntry && is_int($samplesEntry->value) && $samplesEntry->value > 0) {
+            $samplesPerPixel = $samplesEntry->value;
+        }
+
+        $repeatRows = null;
+        $repeatCols = null;
+        $repeatDim  = $ifd->get(DngTag::BLACK_LEVEL_REPEAT_DIM);
+
+        if ($repeatDim instanceof IfdEntry) {
+            if (($repeatDim->type !== TiffConst::TYPE_SHORT) || ($repeatDim->count !== 2)) {
+                throw new ParseError(
+                    sprintf(
+                        'BlackLevelRepeatDim must be SHORT[2], got type %d count %d.',
+                        $repeatDim->type,
+                        $repeatDim->count,
+                    ),
+                    1614,
+                );
+            }
+
+            [$repeatRows, $repeatCols] = $this->extractDngPositivePairFromNumericList($repeatDim, 'BlackLevelRepeatDim');
+        }
+
+        $blackLevel = $ifd->get(DngTag::BLACK_LEVEL);
+        if ($blackLevel instanceof IfdEntry) {
+            if (
+                !in_array(
+                    $blackLevel->type,
+                    [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_RATIONAL],
+                    true,
+                )
+            ) {
+                throw new ParseError(
+                    sprintf(
+                        'BlackLevel must be SHORT|LONG|RATIONAL, got type %d.',
+                        $blackLevel->type,
+                    ),
+                    1615,
+                );
+            }
+
+            if (($repeatRows !== null) && ($repeatCols !== null) && ($samplesPerPixel !== null)) {
+                $expectedCount = $repeatRows * $repeatCols * $samplesPerPixel;
+                if ($blackLevel->count !== $expectedCount) {
+                    throw new ParseError(
+                        sprintf(
+                            'BlackLevel count %d does not match expected %d (rows=%d, cols=%d, SamplesPerPixel=%d).',
+                            $blackLevel->count,
+                            $expectedCount,
+                            $repeatRows,
+                            $repeatCols,
+                            $samplesPerPixel,
+                        ),
+                        1616,
+                    );
+                }
+            }
+        }
+
+        $activeWidth  = null;
+        $activeLength = null;
+        $activeArea   = $ifd->get(DngTag::ACTIVE_AREA);
+
+        if (
+            $activeArea instanceof IfdEntry
+            && in_array($activeArea->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)
+            && ($activeArea->count === 4)
+        ) {
+            $rectangles = $this->extractDngRectangles($activeArea, 'ActiveArea');
+            if (count($rectangles) === 1) {
+                $activeWidth  = $rectangles[0]['right'] - $rectangles[0]['left'];
+                $activeLength = $rectangles[0]['bottom'] - $rectangles[0]['top'];
+            }
+        }
+
+        $blackLevelDeltaH = $ifd->get(DngTag::BLACK_LEVEL_DELTA_H);
+        if ($blackLevelDeltaH instanceof IfdEntry) {
+            if ($blackLevelDeltaH->type !== TiffConst::TYPE_SRATIONAL) {
+                throw new ParseError(
+                    sprintf(
+                        'BlackLevelDeltaH must be SRATIONAL, got type %d.',
+                        $blackLevelDeltaH->type,
+                    ),
+                    1617,
+                );
+            }
+
+            if (($activeWidth !== null) && ($blackLevelDeltaH->count !== $activeWidth)) {
+                throw new ParseError(
+                    sprintf(
+                        'BlackLevelDeltaH count %d does not match ActiveArea width %d.',
+                        $blackLevelDeltaH->count,
+                        $activeWidth,
+                    ),
+                    1618,
+                );
+            }
+        }
+
+        $blackLevelDeltaV = $ifd->get(DngTag::BLACK_LEVEL_DELTA_V);
+        if ($blackLevelDeltaV instanceof IfdEntry) {
+            if ($blackLevelDeltaV->type !== TiffConst::TYPE_SRATIONAL) {
+                throw new ParseError(
+                    sprintf(
+                        'BlackLevelDeltaV must be SRATIONAL, got type %d.',
+                        $blackLevelDeltaV->type,
+                    ),
+                    1619,
+                );
+            }
+
+            if (($activeLength !== null) && ($blackLevelDeltaV->count !== $activeLength)) {
+                throw new ParseError(
+                    sprintf(
+                        'BlackLevelDeltaV count %d does not match ActiveArea length %d.',
+                        $blackLevelDeltaV->count,
+                        $activeLength,
+                    ),
+                    1620,
+                );
+            }
+        }
+
+        $whiteLevel = $ifd->get(DngTag::WHITE_LEVEL);
+        if ($whiteLevel instanceof IfdEntry) {
+            if (!in_array($whiteLevel->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)) {
+                throw new ParseError(
+                    sprintf(
+                        'WhiteLevel must be SHORT|LONG, got type %d.',
+                        $whiteLevel->type,
+                    ),
+                    1621,
+                );
+            }
+
+            if (($samplesPerPixel !== null) && ($whiteLevel->count !== $samplesPerPixel)) {
+                throw new ParseError(
+                    sprintf(
+                        'WhiteLevel count %d does not match SamplesPerPixel %d.',
+                        $whiteLevel->count,
+                        $samplesPerPixel,
+                    ),
+                    1622,
+                );
+            }
+        }
+    }
+
+    /**
+     * Extracts two strictly positive integer values from a numeric list payload.
+     *
+     * @return array{0: int, 1: int}
+     */
+    private function extractDngPositivePairFromNumericList(IfdEntry $entry, string $tagName): array
+    {
+        if (!$entry->value instanceof ExifNumericList || count($entry->value->values) !== 2) {
+            throw new ParseError(
+                sprintf('%s must decode to exactly two numeric components.', $tagName),
+                1623,
+            );
+        }
+
+        $components = [];
+        foreach ($entry->value->values as $index => $value) {
+            if ($value instanceof UInt64) {
+                $components[] = $value->toInt(sprintf('%s component %d', $tagName, $index));
+            } elseif (is_int($value)) {
+                $components[] = $value;
+            } else {
+                if ((float) (int) $value !== $value) {
+                    throw new ParseError(
+                        sprintf('%s component %d must be an integer value.', $tagName, $index),
+                        1624,
+                    );
+                }
+
+                $components[] = (int) $value;
+            }
+        }
+
+        if (($components[0] <= 0) || ($components[1] <= 0)) {
+            throw new ParseError(
+                sprintf('%s components must be > 0, got (%d, %d).', $tagName, $components[0], $components[1]),
+                1625,
+            );
+        }
+
+        return [$components[0], $components[1]];
     }
 
     /**

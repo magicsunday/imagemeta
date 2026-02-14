@@ -4954,6 +4954,234 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts a fully valid black/white-level family payload set.
+     */
+    #[Test]
+    public function acceptsValidDngBlackWhiteLevelFamily(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBlackWhiteLevelFamily(),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects BlackLevel when its count does not match repeat-dim * samples-per-pixel.
+     */
+    #[Test]
+    public function rejectsBlackLevelCountMismatchAgainstCrossTagFormula(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBlackWhiteLevelFamily([
+                DngTag::BLACK_LEVEL => [
+                    'count'   => 11,
+                    'payload' => str_repeat(pack('V2', 1, 1), 11),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects BlackLevelDeltaH when count does not match ActiveArea width.
+     */
+    #[Test]
+    public function rejectsBlackLevelDeltaHCountMismatchAgainstActiveAreaWidth(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBlackWhiteLevelFamily([
+                DngTag::BLACK_LEVEL_DELTA_H => [
+                    'count'   => 5,
+                    'payload' => str_repeat(pack('V2', 0, 1), 5),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects BlackLevelDeltaV when count does not match ActiveArea length.
+     */
+    #[Test]
+    public function rejectsBlackLevelDeltaVCountMismatchAgainstActiveAreaLength(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBlackWhiteLevelFamily([
+                DngTag::BLACK_LEVEL_DELTA_V => [
+                    'count'   => 3,
+                    'payload' => str_repeat(pack('V2', 0, 1), 3),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects invalid type for BlackLevelRepeatDim.
+     */
+    #[Test]
+    public function rejectsInvalidTypeForBlackLevelRepeatDim(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBlackWhiteLevelFamily([
+                DngTag::BLACK_LEVEL_REPEAT_DIM => [
+                    'type'    => TiffConst::TYPE_LONG,
+                    'payload' => pack('V2', 2, 2),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects invalid type for BlackLevel.
+     */
+    #[Test]
+    public function rejectsInvalidTypeForBlackLevel(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBlackWhiteLevelFamily([
+                DngTag::BLACK_LEVEL => [
+                    'type'    => TiffConst::TYPE_SRATIONAL,
+                    'payload' => str_repeat(pack('V2', 1, 1), 12),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects invalid type for BlackLevelDeltaH.
+     */
+    #[Test]
+    public function rejectsInvalidTypeForBlackLevelDeltaH(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBlackWhiteLevelFamily([
+                DngTag::BLACK_LEVEL_DELTA_H => [
+                    'type'    => TiffConst::TYPE_RATIONAL,
+                    'payload' => str_repeat(pack('V2', 0, 1), 6),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects invalid type for BlackLevelDeltaV.
+     */
+    #[Test]
+    public function rejectsInvalidTypeForBlackLevelDeltaV(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBlackWhiteLevelFamily([
+                DngTag::BLACK_LEVEL_DELTA_V => [
+                    'type'    => TiffConst::TYPE_RATIONAL,
+                    'payload' => str_repeat(pack('V2', 0, 1), 4),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects invalid type for WhiteLevel.
+     */
+    #[Test]
+    public function rejectsInvalidTypeForWhiteLevel(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBlackWhiteLevelFamily([
+                DngTag::WHITE_LEVEL => [
+                    'type'    => TiffConst::TYPE_RATIONAL,
+                    'payload' => str_repeat(pack('V2', 4095, 1), 3),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Builds a DNG with a valid black/white-level tag family and optional per-tag overrides.
+     *
+     * @param array<int, array{type?: int, count?: int, payload?: string}> $overrides
+     */
+    private function buildDngWithBlackWhiteLevelFamily(array $overrides = []): string
+    {
+        $tags = [
+            ExifTag::SAMPLES_PER_PIXEL => [
+                'tag'     => ExifTag::SAMPLES_PER_PIXEL,
+                'type'    => TiffConst::TYPE_SHORT,
+                'count'   => 1,
+                'payload' => pack('v', 3),
+            ],
+            DngTag::ACTIVE_AREA => [
+                'tag'     => DngTag::ACTIVE_AREA,
+                'type'    => TiffConst::TYPE_LONG,
+                'count'   => 4,
+                'payload' => pack('V4', 0, 0, 4, 6),
+            ],
+            DngTag::BLACK_LEVEL_REPEAT_DIM => [
+                'tag'     => DngTag::BLACK_LEVEL_REPEAT_DIM,
+                'type'    => TiffConst::TYPE_SHORT,
+                'count'   => 2,
+                'payload' => pack('v2', 2, 2),
+            ],
+            DngTag::BLACK_LEVEL => [
+                'tag'     => DngTag::BLACK_LEVEL,
+                'type'    => TiffConst::TYPE_RATIONAL,
+                'count'   => 12,
+                'payload' => str_repeat(pack('V2', 1, 1), 12),
+            ],
+            DngTag::BLACK_LEVEL_DELTA_H => [
+                'tag'     => DngTag::BLACK_LEVEL_DELTA_H,
+                'type'    => TiffConst::TYPE_SRATIONAL,
+                'count'   => 6,
+                'payload' => str_repeat(pack('V2', 0, 1), 6),
+            ],
+            DngTag::BLACK_LEVEL_DELTA_V => [
+                'tag'     => DngTag::BLACK_LEVEL_DELTA_V,
+                'type'    => TiffConst::TYPE_SRATIONAL,
+                'count'   => 4,
+                'payload' => str_repeat(pack('V2', 0, 1), 4),
+            ],
+            DngTag::WHITE_LEVEL => [
+                'tag'     => DngTag::WHITE_LEVEL,
+                'type'    => TiffConst::TYPE_LONG,
+                'count'   => 3,
+                'payload' => pack('V3', 4095, 4095, 4095),
+            ],
+        ];
+
+        foreach ($overrides as $tag => $override) {
+            $baseTag = $tags[$tag] ?? [
+                'tag'     => $tag,
+                'type'    => TiffConst::TYPE_LONG,
+                'count'   => 1,
+                'payload' => pack('V', 1),
+            ];
+
+            $tags[$tag] = [
+                'tag'     => $tag,
+                'type'    => $override['type'] ?? $baseTag['type'],
+                'count'   => $override['count'] ?? $baseTag['count'],
+                'payload' => $override['payload'] ?? $baseTag['payload'],
+            ];
+        }
+
+        return $this->buildDngWithDefaultCropScaleTags(array_values($tags));
+    }
+
+    /**
      * Accepts ProfileHueSatMapEncoding = 0 (Linear) with 3D dims.
      */
     #[Test]
