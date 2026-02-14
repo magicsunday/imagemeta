@@ -1369,6 +1369,7 @@ final class TiffExifParser
         $this->validateDngTripleIlluminant($ifd0);
         $this->validateDngWhiteBalanceExclusivity($ifd0);
         $this->validateDngWhiteBalanceLayout($ifd0);
+        $this->validateDngAnalogBalance($ifd0);
         $this->validateDngCalibrationIlluminantPairZero($ifd0);
         $this->validateDngProfileToneCurve($ifd0);
         $this->validateDngInterleaveVersionFloors($ifd0);
@@ -4291,6 +4292,84 @@ final class TiffExifParser
                 ),
                 1487,
             );
+        }
+    }
+
+    /**
+     * Resolves DNG ColorPlanes from available in-IFD metadata.
+     *
+     * DNG 1.7.1.0 defines ColorPlanes as the number of color components.
+     * This parser resolves it from CfaPlaneColor count first, then
+     * SamplesPerPixel when available.
+     */
+    private function resolveDngColorPlanes(Ifd $ifd): ?int
+    {
+        $cfaEntry = $ifd->get(DngTag::CFA_PLANE_COLOR);
+
+        if (($cfaEntry instanceof IfdEntry) && ($cfaEntry->count > 0)) {
+            return $cfaEntry->count;
+        }
+
+        $samplesPerPixel = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+
+        if (($samplesPerPixel instanceof IfdEntry) && is_int($samplesPerPixel->value) && ($samplesPerPixel->value > 0)) {
+            return $samplesPerPixel->value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Validates AnalogBalance (0xC627) DNG layout and gain-vector semantics.
+     *
+     * DNG 1.7.1.0 defines AnalogBalance as RATIONAL[ColorPlanes] with
+     * positive finite gain components.
+     */
+    private function validateDngAnalogBalance(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::ANALOG_BALANCE);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        $colorPlanes = $this->resolveDngColorPlanes($ifd);
+
+        if (
+            ($entry->type !== TiffConst::TYPE_RATIONAL)
+            || (($colorPlanes !== null) && ($entry->count !== $colorPlanes))
+        ) {
+            throw new ParseError(
+                sprintf(
+                    'AnalogBalance must be RATIONAL with count = ColorPlanes (%s), got type %d count %d.',
+                    $colorPlanes !== null ? (string) $colorPlanes : 'unknown',
+                    $entry->type,
+                    $entry->count,
+                ),
+                1667,
+            );
+        }
+
+        if (!$entry->value instanceof ExifRationalList || count($entry->value->values) !== $entry->count) {
+            throw new ParseError('AnalogBalance must decode to a rational gain vector.', 1668);
+        }
+
+        foreach ($entry->value->values as $index => $component) {
+            if ($component->denominator <= 0) {
+                throw new ParseError(
+                    sprintf('AnalogBalance component %d denominator must be > 0.', $index),
+                    1669,
+                );
+            }
+
+            $gain = $component->numerator / $component->denominator;
+
+            if (!is_finite($gain) || ($gain <= 0.0)) {
+                throw new ParseError(
+                    sprintf('AnalogBalance component %d must be a positive finite gain, got %.6F.', $index, $gain),
+                    1670,
+                );
+            }
         }
     }
 

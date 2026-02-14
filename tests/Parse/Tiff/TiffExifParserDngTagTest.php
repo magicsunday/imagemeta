@@ -1972,6 +1972,7 @@ final class TiffExifParserDngTagTest extends TestCase
         int $wbType,
         int $wbCount,
         int $colorPlanes,
+        ?string $wbPayload = null,
     ): string {
         $ifdOffset = 8;
 
@@ -2026,15 +2027,19 @@ final class TiffExifParserDngTagTest extends TestCase
         $curOffset += strlen($cm1Data);
 
         // WB tag data
-        $wbData = '';
+        if ($wbPayload !== null) {
+            $wbData = $wbPayload;
+        } else {
+            $wbData = '';
 
-        for ($i = 0; $i < $wbCount; ++$i) {
-            if ($wbType === TiffConst::TYPE_RATIONAL || $wbType === TiffConst::TYPE_SRATIONAL) {
-                $wbData .= pack('VV', 1, 3);
-            } elseif ($wbType === TiffConst::TYPE_SHORT) {
-                $wbData .= pack('v', 1);
-            } else {
-                $wbData .= pack('C', 0x31); // Single byte fallback for wrong-type tests
+            for ($i = 0; $i < $wbCount; ++$i) {
+                if ($wbType === TiffConst::TYPE_RATIONAL || $wbType === TiffConst::TYPE_SRATIONAL) {
+                    $wbData .= pack('VV', 1, 3);
+                } elseif ($wbType === TiffConst::TYPE_SHORT) {
+                    $wbData .= pack('v', 1);
+                } else {
+                    $wbData .= pack('C', 0x31); // Single byte fallback for wrong-type tests
+                }
             }
         }
 
@@ -7838,6 +7843,92 @@ final class TiffExifParserDngTagTest extends TestCase
                 self::fail(
                     sprintf('Expected ParseError for invalid baseline scalar value in tag 0x%04X.', $case['tag']),
                 );
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
+     * AnalogBalance accepts RATIONAL[ColorPlanes] with positive finite gains.
+     */
+    #[Test]
+    public function parsesValidAnalogBalanceLayout(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithWhiteBalanceLayout(
+                DngTag::ANALOG_BALANCE,
+                TiffConst::TYPE_RATIONAL,
+                3,
+                3,
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::ANALOG_BALANCE));
+    }
+
+    /**
+     * AnalogBalance rejects wrong field type.
+     */
+    #[Test]
+    public function rejectsAnalogBalanceWithWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithWhiteBalanceLayout(
+                DngTag::ANALOG_BALANCE,
+                TiffConst::TYPE_SHORT,
+                3,
+                3,
+            ),
+        );
+    }
+
+    /**
+     * AnalogBalance rejects count mismatches against ColorPlanes.
+     */
+    #[Test]
+    public function rejectsAnalogBalanceWithWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithWhiteBalanceLayout(
+                DngTag::ANALOG_BALANCE,
+                TiffConst::TYPE_RATIONAL,
+                2,
+                3,
+            ),
+        );
+    }
+
+    /**
+     * AnalogBalance rejects non-positive and non-finite gain components.
+     */
+    #[Test]
+    public function rejectsAnalogBalanceWithInvalidGainValues(): void
+    {
+        $cases = [
+            pack('V6', 1, 1, 0, 1, 1, 1),
+            pack('V6', 1, 1, 1, 0, 1, 1),
+        ];
+        $rejections = 0;
+
+        foreach ($cases as $payload) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildTiffWithWhiteBalanceLayout(
+                        DngTag::ANALOG_BALANCE,
+                        TiffConst::TYPE_RATIONAL,
+                        3,
+                        3,
+                        $payload,
+                    ),
+                );
+                self::fail('Expected ParseError for invalid AnalogBalance gain vector.');
             } catch (ParseError) {
                 ++$rejections;
             }
