@@ -1358,6 +1358,7 @@ final class TiffExifParser
             $this->validateEnhancedIfd($additionalIfd);
             $this->validateFaxOptionTags($additionalIfd);
             $this->validateSeparatedImageInkTags($additionalIfd);
+            $this->validateSeparatedImageDotRange($additionalIfd);
             $this->validateDngRolePhotometric($additionalIfd);
             $this->validateDngIfd0OnlyTags($additionalIfd);
             $this->validateDngJxlTags($additionalIfd);
@@ -1439,6 +1440,7 @@ final class TiffExifParser
         $this->validateCompressionDomain($ifd0, $ifd1);
         $this->validateFaxOptionTags($ifd0);
         $this->validateSeparatedImageInkTags($ifd0);
+        $this->validateSeparatedImageDotRange($ifd0);
         $this->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
         $this->validateCameraControlEnumDomains($ifd0, $exifIfd, $ifd1, ...$additionalIfds);
         $this->validateFlashBitfield($exifIfd);
@@ -2111,6 +2113,180 @@ final class TiffExifParser
                 sprintf('InkNames string count %d must match NumberOfInks %d.', count($names), $numberOfInks),
                 1716,
             );
+        }
+    }
+
+    /**
+     * Validates TIFF DotRange semantics for separated images.
+     *
+     * TIFF 6.0 §16 (Tag 336 / DotRange):
+     * - Type must be BYTE or SHORT.
+     * - Count must be 2 or 2*SamplesPerPixel.
+     * - Values are (black, white) pairs with black < white.
+     * - Values must be within [0, (2^BitsPerSample)-1].
+     */
+    private function validateSeparatedImageDotRange(Ifd $ifd): void
+    {
+        $dotRangeEntry = $ifd->get(TiffTag::DOT_RANGE);
+
+        if (!$dotRangeEntry instanceof IfdEntry) {
+            return;
+        }
+
+        $photometric = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        if (!($photometric instanceof IfdEntry) || !is_int($photometric->value) || ($photometric->value !== 5)) {
+            return;
+        }
+
+        if (($dotRangeEntry->type !== TiffConst::TYPE_BYTE) && ($dotRangeEntry->type !== TiffConst::TYPE_SHORT)) {
+            throw new ParseError(
+                sprintf(
+                    'DotRange (tag 336) expects type BYTE or SHORT, got type %d.',
+                    $dotRangeEntry->type,
+                ),
+                1717,
+            );
+        }
+
+        $samplesPerPixel = 1;
+        $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+        if ($samplesEntry instanceof IfdEntry) {
+            if (!is_int($samplesEntry->value) || ($samplesEntry->value <= 0)) {
+                throw new ParseError('DotRange requires SamplesPerPixel as a positive integer.', 1718);
+            }
+
+            $samplesPerPixel = $samplesEntry->value;
+        }
+
+        $expectedPerComponentCount = 2 * $samplesPerPixel;
+
+        if (($dotRangeEntry->count !== 2) && ($dotRangeEntry->count !== $expectedPerComponentCount)) {
+            throw new ParseError(
+                sprintf(
+                    'DotRange count %d must be 2 or 2*SamplesPerPixel (%d).',
+                    $dotRangeEntry->count,
+                    $expectedPerComponentCount,
+                ),
+                1719,
+            );
+        }
+
+        $dotRangeValues = [];
+
+        if (is_int($dotRangeEntry->value)) {
+            $dotRangeValues[] = $dotRangeEntry->value;
+        } elseif ($dotRangeEntry->value instanceof ExifNumericList) {
+            foreach ($dotRangeEntry->value->values as $component) {
+                if (!is_int($component)) {
+                    throw new ParseError('DotRange values must decode to integers.', 1720);
+                }
+
+                $dotRangeValues[] = $component;
+            }
+        } else {
+            throw new ParseError('DotRange values must decode to integers.', 1720);
+        }
+
+        if (count($dotRangeValues) !== $dotRangeEntry->count) {
+            throw new ParseError(
+                sprintf(
+                    'DotRange expected %d values, decoded %d.',
+                    $dotRangeEntry->count,
+                    count($dotRangeValues),
+                ),
+                1721,
+            );
+        }
+
+        $bitsEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
+        if (!$bitsEntry instanceof IfdEntry) {
+            throw new ParseError('DotRange validation requires BitsPerSample to be present.', 1722);
+        }
+
+        $bitDepths = [];
+
+        if (is_int($bitsEntry->value)) {
+            $bitDepths = array_fill(0, $samplesPerPixel, $bitsEntry->value);
+        } elseif ($bitsEntry->value instanceof ExifNumericList) {
+            foreach ($bitsEntry->value->values as $component) {
+                if (!is_int($component)) {
+                    throw new ParseError('BitsPerSample must decode to integer components.', 1723);
+                }
+
+                $bitDepths[] = $component;
+            }
+        } else {
+            throw new ParseError('BitsPerSample must decode to integer components.', 1723);
+        }
+
+        if (count($bitDepths) === 1) {
+            $bitDepths = array_fill(0, $samplesPerPixel, $bitDepths[0]);
+        }
+
+        if (count($bitDepths) !== $samplesPerPixel) {
+            throw new ParseError(
+                sprintf(
+                    'BitsPerSample count %d must be 1 or SamplesPerPixel (%d) for DotRange checks.',
+                    count($bitDepths),
+                    $samplesPerPixel,
+                ),
+                1724,
+            );
+        }
+
+        $pairCount = intdiv($dotRangeEntry->count, 2);
+        for ($pairIndex = 0; $pairIndex < $pairCount; ++$pairIndex) {
+            $componentIndex = $dotRangeEntry->count === 2 ? 0 : $pairIndex;
+            $bitDepth       = $bitDepths[$componentIndex];
+
+            if ($bitDepth <= 0) {
+                throw new ParseError(
+                    sprintf('BitsPerSample component %d must be >= 1 for DotRange validation.', $componentIndex),
+                    1725,
+                );
+            }
+
+            $maxValue = (2 ** $bitDepth) - 1;
+            $black    = $dotRangeValues[$pairIndex * 2];
+            $white    = $dotRangeValues[($pairIndex * 2) + 1];
+
+            if ($black >= $white) {
+                throw new ParseError(
+                    sprintf(
+                        'DotRange pair index %d requires black < white, got %d >= %d.',
+                        $pairIndex,
+                        $black,
+                        $white,
+                    ),
+                    1726,
+                );
+            }
+
+            if (($black < 0) || ($black > $maxValue)) {
+                throw new ParseError(
+                    sprintf(
+                        'DotRange pair index %d black value %d exceeds max %d (BitsPerSample=%d).',
+                        $pairIndex,
+                        $black,
+                        $maxValue,
+                        $bitDepth,
+                    ),
+                    1727,
+                );
+            }
+
+            if (($white < 0) || ($white > $maxValue)) {
+                throw new ParseError(
+                    sprintf(
+                        'DotRange pair index %d white value %d exceeds max %d (BitsPerSample=%d).',
+                        $pairIndex,
+                        $white,
+                        $maxValue,
+                        $bitDepth,
+                    ),
+                    1728,
+                );
+            }
         }
     }
 
