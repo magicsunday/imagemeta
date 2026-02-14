@@ -1,0 +1,258 @@
+<?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
+
+use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\TestCase;
+
+use function intdiv;
+use function ksort;
+use function str_pad;
+use function strlen;
+
+/**
+ * Verifies TIFF 6.0 tiled-layout semantic constraints.
+ */
+#[CoversClass(TiffExifParser::class)]
+final class TiffExifParserTiledLayoutTest extends TestCase
+{
+    /**
+     * A structurally valid tiled layout parses successfully.
+     */
+    #[Test]
+    public function acceptsValidTiledLayout(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTiledLayout(),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(TiffTag::TILE_OFFSETS));
+        self::assertNotNull($parsed->ifd0->get(TiffTag::TILE_BYTE_COUNTS));
+    }
+
+    /**
+     * TileWidth must be an integer multiple of 16.
+     */
+    #[Test]
+    public function rejectsTileWidthNotMultipleOf16(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('TileWidth 18 must be an integer multiple of 16.');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTiledLayout(tileWidth: 18),
+        );
+    }
+
+    /**
+     * TileLength must be an integer multiple of 16.
+     */
+    #[Test]
+    public function rejectsTileLengthNotMultipleOf16(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('TileLength 18 must be an integer multiple of 16.');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTiledLayout(tileLength: 18),
+        );
+    }
+
+    /**
+     * TileOffsets count must match computed TilesPerImage.
+     */
+    #[Test]
+    public function rejectsTileOffsetsCountMismatch(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('TileOffsets count 11 does not match expected tile count 12');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTiledLayout(tileOffsetsCount: 11),
+        );
+    }
+
+    /**
+     * TileByteCounts count uses SamplesPerPixel multiplier for PlanarConfiguration=2.
+     */
+    #[Test]
+    public function rejectsTileByteCountsCountMismatchForPlanarSeparate(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('TileByteCounts count 23 does not match expected tile count 24');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTiledLayout(
+                imageWidth: 64,
+                imageLength: 32,
+                planarConfiguration: 2,
+                samplesPerPixel: 3,
+                tileByteCountsCount: 23,
+            ),
+        );
+    }
+
+    /**
+     * Strip and tile descriptors must not be mixed in one IFD image organization.
+     */
+    #[Test]
+    public function rejectsMixedStripAndTileLayout(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Strip and tile layout tags must not be mixed');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTiledLayout(includeStripTags: true),
+        );
+    }
+
+    /**
+     * Builds a minimal classic TIFF IFD with tiled layout tags.
+     */
+    private function buildTiffWithTiledLayout(
+        int $imageWidth = 64,
+        int $imageLength = 48,
+        int $tileWidth = 16,
+        int $tileLength = 16,
+        int $planarConfiguration = 1,
+        int $samplesPerPixel = 1,
+        ?int $tileOffsetsCount = null,
+        ?int $tileByteCountsCount = null,
+        bool $includeStripTags = false,
+    ): string {
+        $tilesAcross = intdiv($imageWidth + $tileWidth - 1, $tileWidth);
+        $tilesDown   = intdiv($imageLength + $tileLength - 1, $tileLength);
+        $tileCount   = $tilesAcross * $tilesDown;
+        $expected    = $planarConfiguration === 2 ? $tileCount * $samplesPerPixel : $tileCount;
+
+        $tileOffsetsCount ??= $expected;
+        $tileByteCountsCount ??= $expected;
+
+        $tileOffsetsPayload = $this->packLongList($tileOffsetsCount, 4096);
+        $tileBytesPayload   = $this->packLongList($tileByteCountsCount, 256);
+
+        $entries = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', 1)
+                . pack('V', $imageWidth),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', 1)
+                . pack('V', $imageLength),
+            ExifTag::PLANAR_CONFIGURATION => pack('v', ExifTag::PLANAR_CONFIGURATION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $planarConfiguration) . pack('v', 0),
+            ExifTag::SAMPLES_PER_PIXEL => pack('v', ExifTag::SAMPLES_PER_PIXEL)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $samplesPerPixel) . pack('v', 0),
+            TiffTag::TILE_WIDTH => pack('v', TiffTag::TILE_WIDTH)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', 1)
+                . pack('V', $tileWidth),
+            TiffTag::TILE_LENGTH => pack('v', TiffTag::TILE_LENGTH)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', 1)
+                . pack('V', $tileLength),
+            TiffTag::TILE_OFFSETS => pack('v', TiffTag::TILE_OFFSETS)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', $tileOffsetsCount),
+            TiffTag::TILE_BYTE_COUNTS => pack('v', TiffTag::TILE_BYTE_COUNTS)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', $tileByteCountsCount),
+        ];
+
+        $payloadByTag = [
+            TiffTag::TILE_OFFSETS     => $tileOffsetsPayload,
+            TiffTag::TILE_BYTE_COUNTS => $tileBytesPayload,
+        ];
+
+        if ($includeStripTags) {
+            $rowsPerStrip   = 16;
+            $stripsPerImage = intdiv($imageLength + $rowsPerStrip - 1, $rowsPerStrip);
+            $stripCount     = $planarConfiguration === 2
+                ? $stripsPerImage * $samplesPerPixel
+                : $stripsPerImage;
+
+            $entries[ExifTag::ROWS_PER_STRIP] = pack('v', ExifTag::ROWS_PER_STRIP)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', 1)
+                . pack('V', $rowsPerStrip);
+            $entries[ExifTag::STRIP_OFFSETS] = pack('v', ExifTag::STRIP_OFFSETS)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', $stripCount);
+            $entries[ExifTag::STRIP_BYTE_COUNTS] = pack('v', ExifTag::STRIP_BYTE_COUNTS)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', $stripCount);
+
+            $payloadByTag[ExifTag::STRIP_OFFSETS]     = $this->packLongList($stripCount, 8192);
+            $payloadByTag[ExifTag::STRIP_BYTE_COUNTS] = $this->packLongList($stripCount, 128);
+        }
+
+        ksort($entries);
+
+        $ifdOffset   = 8;
+        $entryCount  = count($entries);
+        $ifdSize     = 2 + (12 * $entryCount) + 4;
+        $nextOffset  = $ifdOffset + $ifdSize;
+        $ifdEntries  = '';
+        $payloadTail = '';
+
+        foreach ($entries as $tag => $prefix) {
+            if (!isset($payloadByTag[$tag])) {
+                $ifdEntries .= $prefix;
+                continue;
+            }
+
+            $payload = $payloadByTag[$tag];
+
+            if (strlen($payload) <= 4) {
+                $ifdEntries .= $prefix . str_pad($payload, 4, "\0");
+                continue;
+            }
+
+            $ifdEntries .= $prefix . pack('V', $nextOffset);
+            $payloadTail .= $payload;
+            $nextOffset += strlen($payload);
+        }
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . $ifdEntries
+            . pack('V', 0)
+            . $payloadTail;
+    }
+
+    /**
+     * Packs LONG array payload with deterministic values.
+     */
+    private function packLongList(int $count, int $baseValue): string
+    {
+        $payload = '';
+
+        for ($i = 0; $i < $count; ++$i) {
+            $payload .= pack('V', $baseValue + $i);
+        }
+
+        return $payload;
+    }
+}

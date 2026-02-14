@@ -1443,6 +1443,7 @@ final class TiffExifParser
         if (!$jpegContext) {
             $this->validateImageDimensions($ifd0);
             $this->validateStripLayoutConsistency($ifd0);
+            $this->validateTileLayoutConsistency($ifd0);
         }
 
         if ($jpegContext) {
@@ -2479,6 +2480,149 @@ final class TiffExifParser
                     $expectedCount,
                 ), 1454);
             }
+        }
+    }
+
+    /**
+     * Validates tiled TIFF layout consistency for non-JPEG primary image data.
+     *
+     * TIFF 6.0 tiled images require TileWidth/TileLength multiples of 16 and tile
+     * offset/byte-count arrays sized to TilesPerImage. For planar separate images
+     * (PlanarConfiguration=2), counts are multiplied by SamplesPerPixel.
+     */
+    private function validateTileLayoutConsistency(Ifd $ifd0): void
+    {
+        $tileWidthEntry      = $ifd0->get(TiffTag::TILE_WIDTH);
+        $tileLengthEntry     = $ifd0->get(TiffTag::TILE_LENGTH);
+        $tileOffsetsEntry    = $ifd0->get(TiffTag::TILE_OFFSETS);
+        $tileByteCountsEntry = $ifd0->get(TiffTag::TILE_BYTE_COUNTS);
+
+        $hasTileFields = ($tileWidthEntry instanceof IfdEntry)
+            || ($tileLengthEntry instanceof IfdEntry)
+            || ($tileOffsetsEntry instanceof IfdEntry)
+            || ($tileByteCountsEntry instanceof IfdEntry);
+
+        if (!$hasTileFields) {
+            return;
+        }
+
+        $hasStripFields = ($ifd0->get(ExifTag::ROWS_PER_STRIP) instanceof IfdEntry)
+            || ($ifd0->get(ExifTag::STRIP_OFFSETS) instanceof IfdEntry)
+            || ($ifd0->get(ExifTag::STRIP_BYTE_COUNTS) instanceof IfdEntry);
+
+        if ($hasStripFields) {
+            throw new ParseError(
+                'Strip and tile layout tags must not be mixed in the same IFD for one image organization.',
+                1694,
+            );
+        }
+
+        if (
+            !$tileWidthEntry instanceof IfdEntry
+            || !is_int($tileWidthEntry->value)
+            || ($tileWidthEntry->value <= 0)
+        ) {
+            throw new ParseError('TileWidth must be a positive integer when tiled layout tags are present.', 1695);
+        }
+
+        if (
+            !$tileLengthEntry instanceof IfdEntry
+            || !is_int($tileLengthEntry->value)
+            || ($tileLengthEntry->value <= 0)
+        ) {
+            throw new ParseError('TileLength must be a positive integer when tiled layout tags are present.', 1696);
+        }
+
+        if (($tileWidthEntry->value % 16) !== 0) {
+            throw new ParseError(
+                sprintf('TileWidth %d must be an integer multiple of 16.', $tileWidthEntry->value),
+                1697,
+            );
+        }
+
+        if (($tileLengthEntry->value % 16) !== 0) {
+            throw new ParseError(
+                sprintf('TileLength %d must be an integer multiple of 16.', $tileLengthEntry->value),
+                1698,
+            );
+        }
+
+        if (!$tileOffsetsEntry instanceof IfdEntry || !$tileByteCountsEntry instanceof IfdEntry) {
+            throw new ParseError(
+                'TileOffsets and TileByteCounts must both be present for tiled image layout.',
+                1699,
+            );
+        }
+
+        $imageWidthEntry  = $ifd0->get(ExifTag::IMAGE_WIDTH);
+        $imageLengthEntry = $ifd0->get(ExifTag::IMAGE_LENGTH);
+        if (
+            !$imageWidthEntry instanceof IfdEntry
+            || !is_int($imageWidthEntry->value)
+            || ($imageWidthEntry->value <= 0)
+            || !$imageLengthEntry instanceof IfdEntry
+            || !is_int($imageLengthEntry->value)
+            || ($imageLengthEntry->value <= 0)
+        ) {
+            return;
+        }
+
+        $tilesAcross = intdiv(
+            $imageWidthEntry->value + $tileWidthEntry->value - 1,
+            $tileWidthEntry->value,
+        );
+        $tilesDown = intdiv(
+            $imageLengthEntry->value + $tileLengthEntry->value - 1,
+            $tileLengthEntry->value,
+        );
+
+        $tilesPerImage = $tilesAcross * $tilesDown;
+
+        $planarConfiguration = 1;
+        $planarEntry         = $ifd0->get(ExifTag::PLANAR_CONFIGURATION);
+        if ($planarEntry instanceof IfdEntry && is_int($planarEntry->value)) {
+            $planarConfiguration = $planarEntry->value;
+        }
+
+        $samplesPerPixel = 1;
+        $samplesEntry    = $ifd0->get(ExifTag::SAMPLES_PER_PIXEL);
+        if ($samplesEntry instanceof IfdEntry && is_int($samplesEntry->value) && $samplesEntry->value > 0) {
+            $samplesPerPixel = $samplesEntry->value;
+        }
+
+        $expectedCount = $tilesPerImage;
+        if ($planarConfiguration === 2) {
+            $expectedCount *= $samplesPerPixel;
+        }
+
+        $offsetCount = $this->countStripFieldValues($tileOffsetsEntry);
+        if ($offsetCount !== $expectedCount) {
+            throw new ParseError(
+                sprintf(
+                    'TileOffsets count %d does not match expected tile count %d (TilesAcross=%d, TilesDown=%d, PlanarConfiguration=%d).',
+                    $offsetCount,
+                    $expectedCount,
+                    $tilesAcross,
+                    $tilesDown,
+                    $planarConfiguration,
+                ),
+                1700,
+            );
+        }
+
+        $byteCountCount = $this->countStripFieldValues($tileByteCountsEntry);
+        if ($byteCountCount !== $expectedCount) {
+            throw new ParseError(
+                sprintf(
+                    'TileByteCounts count %d does not match expected tile count %d (TilesAcross=%d, TilesDown=%d, PlanarConfiguration=%d).',
+                    $byteCountCount,
+                    $expectedCount,
+                    $tilesAcross,
+                    $tilesDown,
+                    $planarConfiguration,
+                ),
+                1701,
+            );
         }
     }
 
