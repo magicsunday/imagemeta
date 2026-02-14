@@ -1361,6 +1361,7 @@ final class TiffExifParser
         foreach ($additionalIfds as $additionalIfd) {
             $this->validateEnhancedIfd($additionalIfd);
             $this->validateSubfileAndPageTags($additionalIfd, !$isDngContainer);
+            $this->validatePositionTags($additionalIfd);
             $this->validateThreshholdingAndCellTags($additionalIfd);
             $this->validateFillOrderTag($additionalIfd);
             $this->validateSampleDomainTags($additionalIfd);
@@ -1452,6 +1453,7 @@ final class TiffExifParser
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
         $this->validateSubfileAndPageTags($ifd0, !$isDngContainer);
+        $this->validatePositionTags($ifd0);
         $this->validateThreshholdingAndCellTags($ifd0);
         $this->validateFillOrderTag($ifd0);
         $this->validateSampleDomainTags($ifd0);
@@ -2346,6 +2348,68 @@ final class TiffExifParser
                 1805,
             );
         }
+    }
+
+    /**
+     * Validates TIFF XPosition/YPosition semantic constraints.
+     *
+     * TIFF 6.0:
+     * - XPosition/YPosition are RATIONAL[1].
+     * - Rational denominator must be non-zero.
+     * - YPosition must be strictly positive.
+     */
+    private function validatePositionTags(Ifd $ifd): void
+    {
+        $xPosition = $ifd->get(TiffTag::X_POSITION);
+        $yPosition = $ifd->get(TiffTag::Y_POSITION);
+
+        if (!($xPosition instanceof IfdEntry) && !($yPosition instanceof IfdEntry)) {
+            return;
+        }
+
+        if ($xPosition instanceof IfdEntry) {
+            $this->validatePositionRational($xPosition, 'XPosition');
+        }
+
+        if (!$yPosition instanceof IfdEntry) {
+            return;
+        }
+
+        $yPositionRational = $this->validatePositionRational($yPosition, 'YPosition');
+        $yPositionValue    = $yPositionRational->numerator / $yPositionRational->denominator;
+
+        if ($yPositionValue <= 0.0) {
+            throw new ParseError(
+                sprintf('YPosition must be > 0, got %.6F.', $yPositionValue),
+                1808,
+            );
+        }
+    }
+
+    /**
+     * Validates a position tag as RATIONAL[1] with non-zero denominator.
+     */
+    private function validatePositionRational(IfdEntry $entry, string $tagName): ExifRational
+    {
+        if (
+            ($entry->type !== TiffConst::TYPE_RATIONAL)
+            || ($entry->count !== 1)
+            || !($entry->value instanceof ExifRational)
+        ) {
+            throw new ParseError(
+                sprintf('%s must be RATIONAL[1].', $tagName),
+                1806,
+            );
+        }
+
+        if ($entry->value->denominator === 0) {
+            throw new ParseError(
+                sprintf('%s denominator must be non-zero.', $tagName),
+                1807,
+            );
+        }
+
+        return $entry->value;
     }
 
     /**
