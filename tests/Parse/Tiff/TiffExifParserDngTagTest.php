@@ -7992,6 +7992,73 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * BaselineExposure accepts valid SRATIONAL[1] payloads.
+     */
+    #[Test]
+    public function parsesValidBaselineExposure(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSingleCustomTag(
+                DngTag::BASELINE_EXPOSURE,
+                TiffConst::TYPE_SRATIONAL,
+                1,
+                pack('V2', 1, 2),
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::BASELINE_EXPOSURE));
+    }
+
+    /**
+     * BaselineExposure rejects wrong type/count layouts.
+     */
+    #[Test]
+    public function rejectsBaselineExposureWithWrongTypeOrCount(): void
+    {
+        $cases = [
+            [TiffConst::TYPE_LONG, 1, pack('V', 1)],
+            [TiffConst::TYPE_SRATIONAL, 2, pack('V4', 1, 2, 1, 2)],
+        ];
+        $rejections = 0;
+
+        foreach ($cases as [$type, $count, $payload]) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithSingleCustomTag(
+                        DngTag::BASELINE_EXPOSURE,
+                        $type,
+                        $count,
+                        $payload,
+                    ),
+                );
+                self::fail('Expected ParseError for invalid BaselineExposure type/count.');
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
+     * BaselineExposure rejects invalid/non-finite SRATIONAL payloads.
+     */
+    #[Test]
+    public function rejectsBaselineExposureWithInvalidScalar(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSingleCustomTag(
+                DngTag::BASELINE_EXPOSURE,
+                TiffConst::TYPE_SRATIONAL,
+                1,
+                pack('V2', 1, 0),
+            ),
+        );
+    }
+
+    /**
      * BayerGreenSplit accepts LONG[1] with non-negative value in Bayer CFA context.
      */
     #[Test]

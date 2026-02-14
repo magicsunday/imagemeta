@@ -1415,6 +1415,7 @@ final class TiffExifParser
         $this->validateDngLinearizationTable($ifd0);
         $this->validateDngBayerGreenSplit($ifd0);
         $this->validateDngRenderScalars($ifd0);
+        $this->validateDngBaselineExposure($ifd0);
         $this->validateDngBaselineScalars($ifd0);
         $this->validateDngLensInfo($ifd0);
         $this->validateDngBestQualityScale($ifd0);
@@ -7249,6 +7250,47 @@ final class TiffExifParser
                 ),
                 1653,
             );
+        }
+    }
+
+    /**
+     * Validates BaselineExposure (0xC62A) DNG layout and scalar sanity.
+     *
+     * DNG 1.7.1.0 defines BaselineExposure as SRATIONAL[1] EV offset.
+     */
+    private function validateDngBaselineExposure(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::BASELINE_EXPOSURE);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (($entry->type !== TiffConst::TYPE_SRATIONAL) || ($entry->count !== 1)) {
+            throw new ParseError(
+                sprintf(
+                    'BaselineExposure must be SRATIONAL[1], got type %d count %d.',
+                    $entry->type,
+                    $entry->count,
+                ),
+                1672,
+            );
+        }
+
+        $value = $entry->value;
+
+        if (!$value instanceof ExifRational) {
+            throw new ParseError('BaselineExposure must decode to one rational component.', 1673);
+        }
+
+        if ($value->denominator === 0) {
+            throw new ParseError('BaselineExposure denominator must not be zero.', 1674);
+        }
+
+        $scalar = $value->numerator / $value->denominator;
+
+        if (!is_finite($scalar)) {
+            throw new ParseError('BaselineExposure must be finite.', 1675);
         }
     }
 
