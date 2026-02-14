@@ -30,6 +30,7 @@ use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Parse\Icc\IccParser;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\SourceExposureTimes;
@@ -1371,6 +1372,7 @@ final class TiffExifParser
         $this->validateDngWhiteBalanceExclusivity($ifd0);
         $this->validateDngWhiteBalanceLayout($ifd0);
         $this->validateDngAnalogBalance($ifd0);
+        $this->validateDngIccProfilePairs($ifd0);
         $this->validateDngCalibrationIlluminantPairZero($ifd0);
         $this->validateDngProfileToneCurve($ifd0);
         $this->validateDngInterleaveVersionFloors($ifd0);
@@ -7250,6 +7252,151 @@ final class TiffExifParser
                 ),
                 1653,
             );
+        }
+    }
+
+    /**
+     * Validates DNG AsShot/Current ICC profile and pre-profile matrix pairs.
+     *
+     * DNG 1.7.1.0 defines paired usage:
+     * - AsShotICCProfile with AsShotPreProfileMatrix
+     * - CurrentICCProfile with CurrentPreProfileMatrix
+     *
+     * ICC payload tags must be UNDEFINED and structurally valid ICC blobs.
+     * Matrix tags must be SRATIONAL with count = (3 * ColorPlanes) or (ColorPlanes^2).
+     */
+    private function validateDngIccProfilePairs(Ifd $ifd): void
+    {
+        /** @var list<array{iccTag: int, iccName: string, matrixTag: int, matrixName: string}> $pairs */
+        $pairs = [
+            [
+                'iccTag'     => DngTag::AS_SHOT_ICC_PROFILE,
+                'iccName'    => 'AsShotICCProfile',
+                'matrixTag'  => DngTag::AS_SHOT_PRE_PROFILE_MATRIX,
+                'matrixName' => 'AsShotPreProfileMatrix',
+            ],
+            [
+                'iccTag'     => DngTag::CURRENT_ICC_PROFILE,
+                'iccName'    => 'CurrentICCProfile',
+                'matrixTag'  => DngTag::CURRENT_PRE_PROFILE_MATRIX,
+                'matrixName' => 'CurrentPreProfileMatrix',
+            ],
+        ];
+
+        $colorPlanes = $this->resolveDngColorPlanes($ifd);
+        $iccParser   = new IccParser();
+
+        foreach ($pairs as $pair) {
+            $iccEntry    = $ifd->get($pair['iccTag']);
+            $matrixEntry = $ifd->get($pair['matrixTag']);
+            $hasIcc      = $iccEntry instanceof IfdEntry;
+            $hasMatrix   = $matrixEntry instanceof IfdEntry;
+
+            if (!$hasIcc && !$hasMatrix) {
+                continue;
+            }
+
+            if ($hasIcc !== $hasMatrix) {
+                throw new ParseError(
+                    sprintf(
+                        '%s and %s must be present as a pair per DNG 1.7.1.0.',
+                        $pair['iccName'],
+                        $pair['matrixName'],
+                    ),
+                    1676,
+                );
+            }
+
+            /** @var IfdEntry $iccEntry */
+            /** @var IfdEntry $matrixEntry */
+            if (
+                ($iccEntry->type !== TiffConst::TYPE_UNDEFINED)
+                || ($iccEntry->count < 1)
+                || !is_string($iccEntry->value)
+                || (strlen($iccEntry->value) !== $iccEntry->count)
+            ) {
+                throw new ParseError(
+                    sprintf(
+                        '%s must be UNDEFINED with byte-count matching payload length, got type %d count %d.',
+                        $pair['iccName'],
+                        $iccEntry->type,
+                        $iccEntry->count,
+                    ),
+                    1677,
+                );
+            }
+
+            try {
+                $iccParser->decode($iccEntry->value);
+            } catch (ParseError $exception) {
+                throw new ParseError(
+                    sprintf('%s payload is not a valid ICC profile: %s', $pair['iccName'], $exception->getMessage()),
+                    1678,
+                );
+            }
+
+            if ($colorPlanes === null) {
+                throw new ParseError(
+                    sprintf('%s requires resolvable ColorPlanes context.', $pair['matrixName']),
+                    1679,
+                );
+            }
+
+            if (($matrixEntry->type !== TiffConst::TYPE_SRATIONAL) || ($matrixEntry->count < 1)) {
+                throw new ParseError(
+                    sprintf(
+                        '%s must be SRATIONAL with positive count, got type %d count %d.',
+                        $pair['matrixName'],
+                        $matrixEntry->type,
+                        $matrixEntry->count,
+                    ),
+                    1680,
+                );
+            }
+
+            $count3n = $colorPlanes * 3;
+            $countNn = $colorPlanes * $colorPlanes;
+
+            if (($matrixEntry->count !== $count3n) && ($matrixEntry->count !== $countNn)) {
+                throw new ParseError(
+                    sprintf(
+                        '%s count %d must be 3*ColorPlanes (%d) or ColorPlanes^2 (%d).',
+                        $pair['matrixName'],
+                        $matrixEntry->count,
+                        $count3n,
+                        $countNn,
+                    ),
+                    1681,
+                );
+            }
+
+            if (
+                !$matrixEntry->value instanceof ExifRationalList
+                || count($matrixEntry->value->values) !== $matrixEntry->count
+            ) {
+                throw new ParseError(
+                    sprintf('%s must decode to SRATIONAL list with %d components.', $pair['matrixName'], $matrixEntry->count),
+                    1682,
+                );
+            }
+
+            foreach ($matrixEntry->value->values as $index => $component) {
+                if ($component->denominator === 0) {
+                    throw new ParseError(
+                        sprintf('%s component %d denominator must not be zero.', $pair['matrixName'], $index),
+                        1683,
+                    );
+                }
+
+                $value = $component->numerator / $component->denominator;
+
+                if (!is_finite($value)) {
+                    throw new ParseError(
+                        sprintf('%s component %d must be finite.', $pair['matrixName'], $index),
+                        1684,
+                    );
+                }
+            }
         }
     }
 

@@ -8059,6 +8059,187 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * AsShot ICC+matrix pair accepts a structurally valid profile and allowed matrix formula.
+     */
+    #[Test]
+    public function parsesValidAsShotIccProfilePair(): void
+    {
+        $iccPayload    = $this->buildMinimalIccProfilePayload();
+        $matrixPayload = str_repeat(pack('V2', 1, 1), 12); // 3 * ColorPlanes (4)
+
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithIccProfilePair(
+                DngTag::AS_SHOT_ICC_PROFILE,
+                TiffConst::TYPE_UNDEFINED,
+                strlen($iccPayload),
+                $iccPayload,
+                DngTag::AS_SHOT_PRE_PROFILE_MATRIX,
+                TiffConst::TYPE_SRATIONAL,
+                12,
+                $matrixPayload,
+                4,
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::AS_SHOT_ICC_PROFILE));
+        self::assertNotNull($parsed->ifd0->get(DngTag::AS_SHOT_PRE_PROFILE_MATRIX));
+    }
+
+    /**
+     * Current ICC+matrix pair accepts both allowed matrix count formulas.
+     */
+    #[Test]
+    public function parsesValidCurrentIccProfilePair(): void
+    {
+        $iccPayload    = $this->buildMinimalIccProfilePayload();
+        $matrixPayload = str_repeat(pack('V2', 1, 1), 16); // ColorPlanes * ColorPlanes (4 * 4)
+
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithIccProfilePair(
+                DngTag::CURRENT_ICC_PROFILE,
+                TiffConst::TYPE_UNDEFINED,
+                strlen($iccPayload),
+                $iccPayload,
+                DngTag::CURRENT_PRE_PROFILE_MATRIX,
+                TiffConst::TYPE_SRATIONAL,
+                16,
+                $matrixPayload,
+                4,
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::CURRENT_ICC_PROFILE));
+        self::assertNotNull($parsed->ifd0->get(DngTag::CURRENT_PRE_PROFILE_MATRIX));
+    }
+
+    /**
+     * ICC profile pair tags reject wrong type/count layouts.
+     */
+    #[Test]
+    public function rejectsIccProfilePairTagsWithWrongTypeOrCount(): void
+    {
+        $validIccPayload    = $this->buildMinimalIccProfilePayload();
+        $validMatrixPayload = str_repeat(pack('V2', 1, 1), 12);
+
+        $cases = [
+            [
+                DngTag::AS_SHOT_ICC_PROFILE,
+                TiffConst::TYPE_LONG,
+                1,
+                pack('V', 1),
+                DngTag::AS_SHOT_PRE_PROFILE_MATRIX,
+                TiffConst::TYPE_SRATIONAL,
+                12,
+                $validMatrixPayload,
+            ],
+            [
+                DngTag::AS_SHOT_ICC_PROFILE,
+                TiffConst::TYPE_UNDEFINED,
+                0,
+                '',
+                DngTag::AS_SHOT_PRE_PROFILE_MATRIX,
+                TiffConst::TYPE_SRATIONAL,
+                12,
+                $validMatrixPayload,
+            ],
+            [
+                DngTag::CURRENT_ICC_PROFILE,
+                TiffConst::TYPE_UNDEFINED,
+                strlen($validIccPayload),
+                $validIccPayload,
+                DngTag::CURRENT_PRE_PROFILE_MATRIX,
+                TiffConst::TYPE_RATIONAL,
+                12,
+                $validMatrixPayload,
+            ],
+            [
+                DngTag::CURRENT_ICC_PROFILE,
+                TiffConst::TYPE_UNDEFINED,
+                strlen($validIccPayload),
+                $validIccPayload,
+                DngTag::CURRENT_PRE_PROFILE_MATRIX,
+                TiffConst::TYPE_SRATIONAL,
+                8,
+                str_repeat(pack('V2', 1, 1), 8),
+            ],
+        ];
+        $rejections = 0;
+
+        foreach ($cases as [$iccTag, $iccType, $iccCount, $iccPayload, $matrixTag, $matrixType, $matrixCount, $matrixPayload]) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithIccProfilePair(
+                        $iccTag,
+                        $iccType,
+                        $iccCount,
+                        $iccPayload,
+                        $matrixTag,
+                        $matrixType,
+                        $matrixCount,
+                        $matrixPayload,
+                        4,
+                    ),
+                );
+                self::fail('Expected ParseError for invalid ICC profile pair layout.');
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
+     * ICC pre-profile matrix count must match 3*ColorPlanes or ColorPlanes*ColorPlanes.
+     */
+    #[Test]
+    public function rejectsIccProfilePairWithInvalidMatrixFormulaCount(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $iccPayload = $this->buildMinimalIccProfilePayload();
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithIccProfilePair(
+                DngTag::AS_SHOT_ICC_PROFILE,
+                TiffConst::TYPE_UNDEFINED,
+                strlen($iccPayload),
+                $iccPayload,
+                DngTag::AS_SHOT_PRE_PROFILE_MATRIX,
+                TiffConst::TYPE_SRATIONAL,
+                7,
+                str_repeat(pack('V2', 1, 1), 7),
+                4,
+            ),
+        );
+    }
+
+    /**
+     * ICC profile payloads with malformed internal structure are rejected.
+     */
+    #[Test]
+    public function rejectsIccProfilePairWithMalformedIccPayload(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $badIccPayload = $this->buildMinimalIccProfilePayload(136);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithIccProfilePair(
+                DngTag::CURRENT_ICC_PROFILE,
+                TiffConst::TYPE_UNDEFINED,
+                strlen($badIccPayload),
+                $badIccPayload,
+                DngTag::CURRENT_PRE_PROFILE_MATRIX,
+                TiffConst::TYPE_SRATIONAL,
+                12,
+                str_repeat(pack('V2', 1, 1), 12),
+                4,
+            ),
+        );
+    }
+
+    /**
      * BayerGreenSplit accepts LONG[1] with non-negative value in Bayer CFA context.
      */
     #[Test]
@@ -8485,6 +8666,124 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', 0)
             . $uniqueCameraModel
             . ($payloadInline ? '' : $payload);
+    }
+
+    /**
+     * Builds a DNG carrying one ICC-profile tag and its matching pre-profile matrix tag.
+     *
+     * @param int    $iccTag        AsShotICCProfile or CurrentICCProfile.
+     * @param int    $iccType       TIFF type for ICC profile tag.
+     * @param int    $iccCount      Declared TIFF count for ICC profile tag.
+     * @param string $iccPayload    ICC profile raw bytes.
+     * @param int    $matrixTag     AsShotPreProfileMatrix or CurrentPreProfileMatrix.
+     * @param int    $matrixType    TIFF type for matrix tag.
+     * @param int    $matrixCount   Declared TIFF count for matrix tag.
+     * @param string $matrixPayload Matrix payload bytes.
+     * @param int    $colorPlanes   SamplesPerPixel value used as ColorPlanes context.
+     */
+    private function buildDngWithIccProfilePair(
+        int $iccTag,
+        int $iccType,
+        int $iccCount,
+        string $iccPayload,
+        int $matrixTag,
+        int $matrixType,
+        int $matrixCount,
+        string $matrixPayload,
+        int $colorPlanes,
+    ): string {
+        $ifdOffset         = 8;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $payloadByTag      = [
+            DngTag::UNIQUE_CAMERA_MODEL => $uniqueCameraModel,
+            $iccTag                     => $iccPayload,
+            $matrixTag                  => $matrixPayload,
+        ];
+
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::ORIENTATION => pack('v', ExifTag::ORIENTATION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 1) . pack('v', 0),
+            ExifTag::SAMPLES_PER_PIXEL => pack('v', ExifTag::SAMPLES_PER_PIXEL)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $colorPlanes) . pack('v', 0),
+            DngTag::DNG_VERSION => pack('v', DngTag::DNG_VERSION)
+                . pack('v', TiffConst::TYPE_BYTE)
+                . pack('V', 4)
+                . pack('C4', 1, 7, 1, 0),
+            DngTag::UNIQUE_CAMERA_MODEL => pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', strlen($uniqueCameraModel)),
+            $iccTag => pack('v', $iccTag)
+                . pack('v', $iccType)
+                . pack('V', $iccCount),
+            $matrixTag => pack('v', $matrixTag)
+                . pack('v', $matrixType)
+                . pack('V', $matrixCount),
+        ];
+
+        ksort($tags);
+
+        $entryCount = count($tags);
+        $ifdSize    = 2 + (12 * $entryCount) + 4;
+        $nextOffset = $ifdOffset + $ifdSize;
+        $ifdEntries = '';
+        $tailData   = '';
+
+        foreach ($tags as $tag => $entryPrefix) {
+            if (isset($payloadByTag[$tag])) {
+                $payload = $payloadByTag[$tag];
+
+                if (strlen($payload) <= 4) {
+                    $ifdEntries .= $entryPrefix . str_pad($payload, 4, "\0");
+                    continue;
+                }
+
+                $ifdEntries .= $entryPrefix . pack('V', $nextOffset);
+                $tailData .= $payload;
+                $nextOffset += strlen($payload);
+                continue;
+            }
+
+            $ifdEntries .= $entryPrefix;
+        }
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . $ifdEntries
+            . pack('V', 0)
+            . $tailData;
+    }
+
+    /**
+     * Builds a minimal structurally valid ICC payload for parser-level conformance checks.
+     *
+     * @param int $declaredLength Profile size written to bytes 0..3 (BE).
+     */
+    private function buildMinimalIccProfilePayload(int $declaredLength = 132): string
+    {
+        $profile = str_repeat("\0", 132);
+        $profile = substr_replace($profile, pack('N', $declaredLength), 0, 4);
+        $profile = substr_replace($profile, pack('C2', 4, 0x30), 8, 2);
+        $profile = substr_replace($profile, 'acsp', 36, 4);
+        // D50 PCS illuminant (ICC.1:2022 §7.2.16) in S15Fixed16 format.
+        $profile = substr_replace($profile, pack('N', 0x0000F6D6), 68, 4);
+        $profile = substr_replace($profile, pack('N', 0x00010000), 72, 4);
+        $profile = substr_replace($profile, pack('N', 0x0000D32D), 76, 4);
+
+        return substr_replace($profile, pack('N', 0), 128, 4);
     }
 
     /**
