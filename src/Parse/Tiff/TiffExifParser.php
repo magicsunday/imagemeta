@@ -1357,6 +1357,7 @@ final class TiffExifParser
         foreach ($additionalIfds as $additionalIfd) {
             $this->validateEnhancedIfd($additionalIfd);
             $this->validateFaxOptionTags($additionalIfd);
+            $this->validateSeparatedImageInkTags($additionalIfd);
             $this->validateDngRolePhotometric($additionalIfd);
             $this->validateDngIfd0OnlyTags($additionalIfd);
             $this->validateDngJxlTags($additionalIfd);
@@ -1437,6 +1438,7 @@ final class TiffExifParser
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
         $this->validateFaxOptionTags($ifd0);
+        $this->validateSeparatedImageInkTags($ifd0);
         $this->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
         $this->validateCameraControlEnumDomains($ifd0, $exifIfd, $ifd1, ...$additionalIfds);
         $this->validateFlashBitfield($exifIfd);
@@ -2019,6 +2021,95 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('T6Options has reserved bits set (value=0x%X); only bit 1 is allowed.', $t6Options->value),
                 1708,
+            );
+        }
+    }
+
+    /**
+     * Validates TIFF separated-image ink tag semantics for PhotometricInterpretation=5.
+     *
+     * TIFF 6.0 separated images:
+     * - InkSet: SHORT[1], domain {1,2}, default 1.
+     * - NumberOfInks: SHORT[1], default 4.
+     * - InkNames: ASCII NUL-separated list, count must match NumberOfInks.
+     *
+     * Cross-tag rules:
+     * - InkSet=1 (CMYK): InkNames must not be present.
+     * - InkSet=2: InkNames must be present and structurally valid.
+     */
+    private function validateSeparatedImageInkTags(Ifd $ifd): void
+    {
+        $photometric = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        if (!($photometric instanceof IfdEntry) || !is_int($photometric->value) || ($photometric->value !== 5)) {
+            return;
+        }
+
+        $inkSet      = 1;
+        $inkSetEntry = $ifd->get(TiffTag::INK_SET);
+        if ($inkSetEntry instanceof IfdEntry) {
+            if (($inkSetEntry->type !== TiffConst::TYPE_SHORT) || ($inkSetEntry->count !== 1) || !is_int($inkSetEntry->value)) {
+                throw new ParseError('InkSet must be SHORT[1] for separated images.', 1709);
+            }
+
+            $inkSet = $inkSetEntry->value;
+        }
+
+        if (($inkSet !== 1) && ($inkSet !== 2)) {
+            throw new ParseError(
+                sprintf('InkSet value %d is invalid; allowed values are 1 (CMYK) or 2 (not CMYK).', $inkSet),
+                1710,
+            );
+        }
+
+        $numberOfInks      = 4;
+        $numberOfInksEntry = $ifd->get(TiffTag::NUMBER_OF_INKS);
+        if ($numberOfInksEntry instanceof IfdEntry) {
+            if (($numberOfInksEntry->type !== TiffConst::TYPE_SHORT) || ($numberOfInksEntry->count !== 1) || !is_int($numberOfInksEntry->value)) {
+                throw new ParseError('NumberOfInks must be SHORT[1] when present.', 1711);
+            }
+
+            if ($numberOfInksEntry->value < 1) {
+                throw new ParseError(
+                    sprintf('NumberOfInks must be >= 1, got %d.', $numberOfInksEntry->value),
+                    1712,
+                );
+            }
+
+            $numberOfInks = $numberOfInksEntry->value;
+        }
+
+        $inkNamesEntry = $ifd->get(TiffTag::INK_NAMES);
+        if ($inkSet === 1) {
+            if ($inkNamesEntry instanceof IfdEntry) {
+                throw new ParseError('InkNames must not be present when InkSet=1 (CMYK).', 1713);
+            }
+
+            return;
+        }
+
+        if (!($inkNamesEntry instanceof IfdEntry) || !is_string($inkNamesEntry->value)) {
+            throw new ParseError('InkSet=2 requires an InkNames ASCII list.', 1714);
+        }
+
+        if ($inkNamesEntry->type !== TiffConst::TYPE_ASCII) {
+            throw new ParseError('InkNames must use ASCII field type.', 1714);
+        }
+
+        $names = explode("\0", $inkNamesEntry->value);
+
+        foreach ($names as $index => $name) {
+            if ($name === '') {
+                throw new ParseError(
+                    sprintf('InkNames contains an empty name entry at position %d.', $index),
+                    1715,
+                );
+            }
+        }
+
+        if (count($names) !== $numberOfInks) {
+            throw new ParseError(
+                sprintf('InkNames string count %d must match NumberOfInks %d.', count($names), $numberOfInks),
+                1716,
             );
         }
     }
