@@ -1357,6 +1357,7 @@ final class TiffExifParser
         foreach ($additionalIfds as $additionalIfd) {
             $this->validateEnhancedIfd($additionalIfd);
             $this->validateFillOrderTag($additionalIfd);
+            $this->validateSampleDomainTags($additionalIfd);
             $this->validateFaxOptionTags($additionalIfd);
             $this->validateSeparatedImageInkTags($additionalIfd);
             $this->validateSeparatedImageDotRange($additionalIfd);
@@ -1442,6 +1443,7 @@ final class TiffExifParser
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
         $this->validateFillOrderTag($ifd0);
+        $this->validateSampleDomainTags($ifd0);
         $this->validateFaxOptionTags($ifd0);
         $this->validateSeparatedImageInkTags($ifd0);
         $this->validateSeparatedImageDotRange($ifd0);
@@ -2105,6 +2107,230 @@ final class TiffExifParser
                     $compressionCode,
                 ),
                 1755,
+            );
+        }
+    }
+
+    /**
+     * Validates TIFF SampleFormat / SMinSampleValue / SMaxSampleValue consistency.
+     *
+     * TIFF 6.0 §19:
+     * - SampleFormat: SHORT[SamplesPerPixel], values {1,2,3,4}.
+     * - SMinSampleValue/SMaxSampleValue: count = SamplesPerPixel.
+     * - SMin/SMax types should match the declared sample representation.
+     * - Per component, SMin must not exceed SMax.
+     */
+    private function validateSampleDomainTags(Ifd $ifd): void
+    {
+        $sampleFormatEntry = $ifd->get(TiffTag::SAMPLE_FORMAT);
+        $sMinEntry         = $ifd->get(TiffTag::S_MIN_SAMPLE_VALUE);
+        $sMaxEntry         = $ifd->get(TiffTag::S_MAX_SAMPLE_VALUE);
+
+        if (
+            !($sampleFormatEntry instanceof IfdEntry)
+            && !($sMinEntry instanceof IfdEntry)
+            && !($sMaxEntry instanceof IfdEntry)
+        ) {
+            return;
+        }
+
+        $samplesPerPixel = 1;
+        $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+        if (($samplesEntry instanceof IfdEntry) && is_int($samplesEntry->value) && ($samplesEntry->value > 0)) {
+            $samplesPerPixel = $samplesEntry->value;
+        }
+
+        $sampleFormats = null;
+
+        if ($sampleFormatEntry instanceof IfdEntry) {
+            if ($sampleFormatEntry->type !== TiffConst::TYPE_SHORT) {
+                throw new ParseError('SampleFormat must use SHORT type.', 1756);
+            }
+
+            if ($sampleFormatEntry->count !== $samplesPerPixel) {
+                throw new ParseError(
+                    sprintf(
+                        'SampleFormat count %d must match SamplesPerPixel %d.',
+                        $sampleFormatEntry->count,
+                        $samplesPerPixel,
+                    ),
+                    1757,
+                );
+            }
+
+            $sampleFormats = $this->extractIntegerTagComponents($sampleFormatEntry, 'SampleFormat');
+
+            foreach ($sampleFormats as $componentIndex => $sampleFormat) {
+                if (!in_array($sampleFormat, [1, 2, 3, 4], true)) {
+                    throw new ParseError(
+                        sprintf(
+                            'SampleFormat component %d value %d is invalid; allowed values are 1,2,3,4.',
+                            $componentIndex,
+                            $sampleFormat,
+                        ),
+                        1758,
+                    );
+                }
+            }
+        }
+
+        $sMinValues = null;
+        if ($sMinEntry instanceof IfdEntry) {
+            if ($sMinEntry->count !== $samplesPerPixel) {
+                throw new ParseError(
+                    sprintf(
+                        'SMinSampleValue count %d must match SamplesPerPixel %d.',
+                        $sMinEntry->count,
+                        $samplesPerPixel,
+                    ),
+                    1759,
+                );
+            }
+
+            $sMinValues = $this->extractNumericTagComponents($sMinEntry, 'SMinSampleValue');
+        }
+
+        $sMaxValues = null;
+        if ($sMaxEntry instanceof IfdEntry) {
+            if ($sMaxEntry->count !== $samplesPerPixel) {
+                throw new ParseError(
+                    sprintf(
+                        'SMaxSampleValue count %d must match SamplesPerPixel %d.',
+                        $sMaxEntry->count,
+                        $samplesPerPixel,
+                    ),
+                    1760,
+                );
+            }
+
+            $sMaxValues = $this->extractNumericTagComponents($sMaxEntry, 'SMaxSampleValue');
+        }
+
+        if ($sampleFormats !== null && ($sMinEntry instanceof IfdEntry)) {
+            $this->validateSampleDomainTypeCompatibility('SMinSampleValue', $sMinEntry->type, $sampleFormats);
+        }
+
+        if ($sampleFormats !== null && ($sMaxEntry instanceof IfdEntry)) {
+            $this->validateSampleDomainTypeCompatibility('SMaxSampleValue', $sMaxEntry->type, $sampleFormats);
+        }
+
+        if (($sMinValues === null) || ($sMaxValues === null)) {
+            return;
+        }
+
+        foreach ($sMinValues as $componentIndex => $sMinValue) {
+            $sMaxValue = $sMaxValues[$componentIndex] ?? null;
+            if ($sMaxValue === null) {
+                continue;
+            }
+
+            if ($sMinValue <= $sMaxValue) {
+                continue;
+            }
+
+            throw new ParseError(
+                sprintf(
+                    'SMinSampleValue component %d must be <= SMaxSampleValue, got %.6F > %.6F.',
+                    $componentIndex,
+                    $sMinValue,
+                    $sMaxValue,
+                ),
+                1761,
+            );
+        }
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function extractIntegerTagComponents(IfdEntry $entry, string $tagName): array
+    {
+        $numericComponents = $this->extractNumericTagComponents($entry, $tagName);
+        $integerComponents = [];
+
+        foreach ($numericComponents as $componentIndex => $numericComponent) {
+            if ((float) (int) $numericComponent !== $numericComponent) {
+                throw new ParseError(
+                    sprintf(
+                        '%s component %d must be an integer, got %.6F.',
+                        $tagName,
+                        $componentIndex,
+                        $numericComponent,
+                    ),
+                    1762,
+                );
+            }
+
+            $integerComponents[] = (int) $numericComponent;
+        }
+
+        return $integerComponents;
+    }
+
+    /**
+     * @return list<float>
+     */
+    private function extractNumericTagComponents(IfdEntry $entry, string $tagName): array
+    {
+        if (is_int($entry->value) || is_float($entry->value)) {
+            return [(float) $entry->value];
+        }
+
+        if ($entry->value instanceof ExifNumericList) {
+            $components = [];
+
+            foreach ($entry->value->values as $component) {
+                if (is_int($component) || is_float($component)) {
+                    $components[] = (float) $component;
+                    continue;
+                }
+
+                throw new ParseError(
+                    sprintf('%s contains unsupported non-numeric component type.', $tagName),
+                    1763,
+                );
+            }
+
+            return $components;
+        }
+
+        throw new ParseError(
+            sprintf('%s must decode to numeric components.', $tagName),
+            1764,
+        );
+    }
+
+    /**
+     * @param list<int> $sampleFormats
+     */
+    private function validateSampleDomainTypeCompatibility(string $tagName, int $tagType, array $sampleFormats): void
+    {
+        foreach ($sampleFormats as $componentIndex => $sampleFormat) {
+            $compatible = match ($sampleFormat) {
+                // Unsigned integer samples.
+                1 => in_array($tagType, [TiffConst::TYPE_BYTE, TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_LONG8], true),
+                // Signed integer samples.
+                2 => in_array($tagType, [TiffConst::TYPE_SBYTE, TiffConst::TYPE_SSHORT, TiffConst::TYPE_SLONG, TiffConst::TYPE_SLONG8], true),
+                // Floating-point samples.
+                3 => in_array($tagType, [TiffConst::TYPE_FLOAT, TiffConst::TYPE_DOUBLE], true),
+                // Undefined samples do not constrain min/max type.
+                4       => true,
+                default => false,
+            };
+
+            if ($compatible) {
+                continue;
+            }
+
+            throw new ParseError(
+                sprintf(
+                    '%s type %d is incompatible with SampleFormat component %d value %d.',
+                    $tagName,
+                    $tagType,
+                    $componentIndex,
+                    $sampleFormat,
+                ),
+                1765,
             );
         }
     }
