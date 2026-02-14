@@ -4868,6 +4868,92 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts valid ActiveArea and two non-overlapping MaskedAreas rectangles.
+     */
+    #[Test]
+    public function acceptsValidActiveAreaAndMaskedAreasRectangles(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultCropScaleTags([
+                [
+                    'tag'     => DngTag::ACTIVE_AREA,
+                    'type'    => TiffConst::TYPE_LONG,
+                    'count'   => 4,
+                    'payload' => pack('V4', 0, 0, 4000, 6000),
+                ],
+                [
+                    'tag'     => DngTag::MASKED_AREAS,
+                    'type'    => TiffConst::TYPE_LONG,
+                    'count'   => 8,
+                    'payload' => pack('V8', 0, 0, 50, 6000, 3950, 0, 4000, 6000),
+                ],
+            ]),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects ActiveArea with invalid rectangle ordering.
+     */
+    #[Test]
+    public function rejectsActiveAreaWithInvalidRectangleOrdering(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultCropScaleTags([
+                [
+                    'tag'     => DngTag::ACTIVE_AREA,
+                    'type'    => TiffConst::TYPE_LONG,
+                    'count'   => 4,
+                    'payload' => pack('V4', 100, 0, 100, 200),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects MaskedAreas when count is not divisible by 4.
+     */
+    #[Test]
+    public function rejectsMaskedAreasWithInvalidCountModulo(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultCropScaleTags([
+                [
+                    'tag'     => DngTag::MASKED_AREAS,
+                    'type'    => TiffConst::TYPE_LONG,
+                    'count'   => 6,
+                    'payload' => pack('V6', 0, 0, 50, 6000, 3950, 0),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects MaskedAreas rectangles that overlap.
+     */
+    #[Test]
+    public function rejectsOverlappingMaskedAreasRectangles(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultCropScaleTags([
+                [
+                    'tag'     => DngTag::MASKED_AREAS,
+                    'type'    => TiffConst::TYPE_LONG,
+                    'count'   => 8,
+                    'payload' => pack('V8', 0, 0, 100, 100, 50, 50, 150, 150),
+                ],
+            ]),
+        );
+    }
+
+    /**
      * Accepts ProfileHueSatMapEncoding = 0 (Linear) with 3D dims.
      */
     #[Test]

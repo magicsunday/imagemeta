@@ -1402,6 +1402,7 @@ final class TiffExifParser
         $this->validateDngImageStats($ifd0);
         $this->validateDngImageSequenceInfo($ifd0);
         $this->validateDngRgbTables($ifd0);
+        $this->validateDngActiveAndMaskedAreas($ifd0);
         $this->validateDngDefaultCropScaleGeometry($ifd0);
         $this->validateDngDefaultUserCrop($ifd0);
         $this->validateDngDepthEnums($ifd0);
@@ -6083,6 +6084,173 @@ final class TiffExifParser
                 1564,
             );
         }
+    }
+
+    /**
+     * Validates ActiveArea and MaskedAreas rectangle layout and geometry.
+     *
+     * DNG 1.7.1.0 ("ActiveArea", "MaskedAreas"):
+     * - ActiveArea: SHORT|LONG[4], order top,left,bottom,right with top<bottom and left<right
+     * - MaskedAreas: SHORT|LONG[4*N], each rectangle uses the same ordering and must not overlap
+     */
+    private function validateDngActiveAndMaskedAreas(Ifd $ifd): void
+    {
+        $activeArea = $ifd->get(DngTag::ACTIVE_AREA);
+        if ($activeArea instanceof IfdEntry) {
+            if (
+                !in_array($activeArea->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)
+                || ($activeArea->count !== 4)
+            ) {
+                throw new ParseError(
+                    sprintf(
+                        'ActiveArea must be SHORT|LONG with count 4, got type %d count %d.',
+                        $activeArea->type,
+                        $activeArea->count,
+                    ),
+                    1605,
+                );
+            }
+
+            $this->extractDngRectangles($activeArea, 'ActiveArea');
+        }
+
+        $maskedAreas = $ifd->get(DngTag::MASKED_AREAS);
+        if ($maskedAreas instanceof IfdEntry) {
+            if (
+                !in_array($maskedAreas->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)
+                || ($maskedAreas->count < 4)
+                || ($maskedAreas->count % 4 !== 0)
+            ) {
+                throw new ParseError(
+                    sprintf(
+                        'MaskedAreas must be SHORT|LONG with count 4*N, got type %d count %d.',
+                        $maskedAreas->type,
+                        $maskedAreas->count,
+                    ),
+                    1606,
+                );
+            }
+
+            $rectangles = $this->extractDngRectangles($maskedAreas, 'MaskedAreas');
+
+            $rectangleCount = count($rectangles);
+            for ($leftIndex = 0; $leftIndex < $rectangleCount; ++$leftIndex) {
+                for ($rightIndex = $leftIndex + 1; $rightIndex < $rectangleCount; ++$rightIndex) {
+                    if ($this->dngRectanglesOverlap($rectangles[$leftIndex], $rectangles[$rightIndex])) {
+                        throw new ParseError(
+                            sprintf(
+                                'MaskedAreas rectangles %d and %d overlap.',
+                                $leftIndex,
+                                $rightIndex,
+                            ),
+                            1607,
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Decodes a tag payload into rectangles (top, left, bottom, right).
+     *
+     * @return list<array{top: int, left: int, bottom: int, right: int}>
+     */
+    private function extractDngRectangles(IfdEntry $entry, string $tagName): array
+    {
+        if (!$entry->value instanceof ExifNumericList) {
+            throw new ParseError(
+                sprintf('%s must decode to a numeric list payload.', $tagName),
+                1608,
+            );
+        }
+
+        $values = [];
+        foreach ($entry->value->values as $index => $component) {
+            if ($component instanceof UInt64) {
+                $values[] = $component->toInt(sprintf('%s component %d', $tagName, $index));
+            } elseif (is_int($component)) {
+                $values[] = $component;
+            } else {
+                if ((float) (int) $component !== $component) {
+                    throw new ParseError(
+                        sprintf('%s contains a non-integer rectangle component at index %d.', $tagName, $index),
+                        1609,
+                    );
+                }
+
+                $values[] = (int) $component;
+            }
+        }
+
+        if (count($values) !== $entry->count) {
+            throw new ParseError(
+                sprintf('%s decoded component count mismatch (expected %d).', $tagName, $entry->count),
+                1610,
+            );
+        }
+
+        if (count($values) % 4 !== 0) {
+            throw new ParseError(
+                sprintf('%s must contain 4 components per rectangle.', $tagName),
+                1611,
+            );
+        }
+
+        $rectangles = [];
+        $counter    = count($values);
+
+        for ($index = 0; $index < $counter; $index += 4) {
+            $top    = $values[$index];
+            $left   = $values[$index + 1];
+            $bottom = $values[$index + 2];
+            $right  = $values[$index + 3];
+
+            if (($top < 0) || ($left < 0) || ($bottom < 0) || ($right < 0)) {
+                throw new ParseError(
+                    sprintf('%s rectangle %d contains negative coordinates.', $tagName, intdiv($index, 4)),
+                    1612,
+                );
+            }
+
+            if (($top >= $bottom) || ($left >= $right)) {
+                throw new ParseError(
+                    sprintf(
+                        '%s rectangle %d must satisfy top < bottom and left < right, got (%d,%d,%d,%d).',
+                        $tagName,
+                        intdiv($index, 4),
+                        $top,
+                        $left,
+                        $bottom,
+                        $right,
+                    ),
+                    1613,
+                );
+            }
+
+            $rectangles[] = [
+                'top'    => $top,
+                'left'   => $left,
+                'bottom' => $bottom,
+                'right'  => $right,
+            ];
+        }
+
+        return $rectangles;
+    }
+
+    /**
+     * Returns true when two rectangles overlap with positive area.
+     *
+     * @param array{top: int, left: int, bottom: int, right: int} $leftRectangle
+     * @param array{top: int, left: int, bottom: int, right: int} $rightRectangle
+     */
+    private function dngRectanglesOverlap(array $leftRectangle, array $rightRectangle): bool
+    {
+        return ($leftRectangle['top'] < $rightRectangle['bottom'])
+            && ($rightRectangle['top'] < $leftRectangle['bottom'])
+            && ($leftRectangle['left'] < $rightRectangle['right'])
+            && ($rightRectangle['left'] < $leftRectangle['right']);
     }
 
     /**
