@@ -11,6 +11,48 @@ echo "Creating GitHub Issues for Forensic Audit..."
 echo "============================================="
 echo ""
 
+# Step 1: Create labels if they don't exist
+echo "Step 1: Creating labels..."
+echo "-------------------------------------------"
+
+# Define labels with colors
+declare -A LABELS=(
+    ["refactoring"]="0366d6"
+    ["architecture"]="d4c5f9"
+    ["priority:high"]="d93f0b"
+    ["priority:medium"]="fbca04"
+    ["priority:low"]="0e8a16"
+    ["SOLID:SRP"]="c5def5"
+    ["SOLID:OCP"]="c5def5"
+    ["SOLID:DIP"]="c5def5"
+    ["DRY"]="f9d0c4"
+    ["KISS"]="f9d0c4"
+    ["code-quality"]="bfdadc"
+    ["SoC"]="f9d0c4"
+    ["GRASP:Polymorphism"]="c5def5"
+    ["testability"]="bfdadc"
+    ["enhancement"]="a2eeef"
+    ["CoC"]="f9d0c4"
+    ["configuration"]="bfdadc"
+    ["YAGNI"]="f9d0c4"
+    ["architecture-review"]="d4c5f9"
+    ["documentation"]="0075ca"
+    ["user-facing"]="7057ff"
+    ["easy-fix"]="0e8a16"
+)
+
+# Create each label if it doesn't exist
+for label in "${!LABELS[@]}"; do
+    color="${LABELS[$label]}"
+    # Try to create label, ignore if it already exists
+    gh label create "$label" --color "$color" --repo "$REPO" 2>/dev/null && echo "  ✓ Created label: $label" || echo "  - Label exists: $label"
+done
+
+echo ""
+echo "Step 2: Creating issues..."
+echo "-------------------------------------------"
+echo ""
+
 # Issue #1: JpegParser Refactoring
 echo "Creating Issue #1: [CRITICAL] Refactor JpegParser..."
 gh issue create \
