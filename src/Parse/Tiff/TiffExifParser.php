@@ -1358,6 +1358,7 @@ final class TiffExifParser
             $this->validateEnhancedIfd($additionalIfd);
             $this->validateFillOrderTag($additionalIfd);
             $this->validateSampleDomainTags($additionalIfd);
+            $this->validateExtraSamplesTag($additionalIfd);
             $this->validateFaxOptionTags($additionalIfd);
             $this->validateSeparatedImageInkTags($additionalIfd);
             $this->validateSeparatedImageDotRange($additionalIfd);
@@ -1444,6 +1445,7 @@ final class TiffExifParser
         $this->validateCompressionDomain($ifd0, $ifd1);
         $this->validateFillOrderTag($ifd0);
         $this->validateSampleDomainTags($ifd0);
+        $this->validateExtraSamplesTag($ifd0);
         $this->validateFaxOptionTags($ifd0);
         $this->validateSeparatedImageInkTags($ifd0);
         $this->validateSeparatedImageDotRange($ifd0);
@@ -2331,6 +2333,40 @@ final class TiffExifParser
                     $sampleFormat,
                 ),
                 1765,
+            );
+        }
+    }
+
+    /**
+     * Validates TIFF 6.0 baseline ExtraSamples semantics.
+     *
+     * TIFF 6.0 baseline profile:
+     * - ExtraSamples (Tag 338) must be SHORT[1]
+     * - Value must be 1 (associated alpha)
+     */
+    private function validateExtraSamplesTag(Ifd $ifd): void
+    {
+        $extraSamplesEntry = $ifd->get(TiffTag::EXTRA_SAMPLES);
+
+        if (!$extraSamplesEntry instanceof IfdEntry) {
+            return;
+        }
+
+        if (
+            ($extraSamplesEntry->type !== TiffConst::TYPE_SHORT)
+            || ($extraSamplesEntry->count !== 1)
+            || !is_int($extraSamplesEntry->value)
+        ) {
+            throw new ParseError('ExtraSamples must be SHORT[1].', 1766);
+        }
+
+        if ($extraSamplesEntry->value !== 1) {
+            throw new ParseError(
+                sprintf(
+                    'ExtraSamples value %d is invalid; strict TIFF 6.0 baseline requires value 1.',
+                    $extraSamplesEntry->value,
+                ),
+                1767,
             );
         }
     }
