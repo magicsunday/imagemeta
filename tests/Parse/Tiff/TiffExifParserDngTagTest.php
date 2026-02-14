@@ -7222,6 +7222,217 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Validates that each original proxy-size tag accepts its allowed type/count layout.
+     */
+    #[Test]
+    public function parsesValidOriginalProxySizeTags(): void
+    {
+        $cases = [
+            [
+                'tag'     => DngTag::ORIGINAL_DEFAULT_FINAL_SIZE,
+                'type'    => TiffConst::TYPE_SHORT,
+                'count'   => 2,
+                'payload' => pack('v2', 4000, 3000),
+            ],
+            [
+                'tag'     => DngTag::ORIGINAL_BEST_QUALITY_FINAL_SIZE,
+                'type'    => TiffConst::TYPE_LONG,
+                'count'   => 2,
+                'payload' => pack('V2', 4000, 3000),
+            ],
+            [
+                'tag'     => DngTag::ORIGINAL_DEFAULT_CROP_SIZE,
+                'type'    => TiffConst::TYPE_RATIONAL,
+                'count'   => 2,
+                'payload' => pack('V4', 4000, 1, 3000, 1),
+            ],
+        ];
+
+        foreach ($cases as $case) {
+            $parsed = (new TiffExifParser())->parseFromBlob(
+                $this->buildDngWithOriginalProxySizeTag(
+                    $case['tag'],
+                    $case['type'],
+                    $case['count'],
+                    $case['payload'],
+                ),
+            );
+
+            self::assertNotNull($parsed->ifd0->get($case['tag']));
+        }
+    }
+
+    /**
+     * Rejects invalid type domains for original proxy-size tags.
+     */
+    #[Test]
+    public function rejectsOriginalProxySizeTagsWithWrongType(): void
+    {
+        $cases = [
+            [
+                'tag'     => DngTag::ORIGINAL_DEFAULT_FINAL_SIZE,
+                'type'    => TiffConst::TYPE_RATIONAL,
+                'count'   => 2,
+                'payload' => pack('V4', 4000, 1, 3000, 1),
+            ],
+            [
+                'tag'     => DngTag::ORIGINAL_BEST_QUALITY_FINAL_SIZE,
+                'type'    => TiffConst::TYPE_ASCII,
+                'count'   => 2,
+                'payload' => "X\0",
+            ],
+            [
+                'tag'     => DngTag::ORIGINAL_DEFAULT_CROP_SIZE,
+                'type'    => TiffConst::TYPE_BYTE,
+                'count'   => 2,
+                'payload' => "\x01\x01",
+            ],
+        ];
+        $rejections = 0;
+
+        foreach ($cases as $case) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithOriginalProxySizeTag(
+                        $case['tag'],
+                        $case['type'],
+                        $case['count'],
+                        $case['payload'],
+                    ),
+                );
+                self::fail(
+                    sprintf('Expected ParseError for invalid type on proxy-size tag 0x%04X.', $case['tag']),
+                );
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
+     * Rejects invalid counts for original proxy-size tags.
+     */
+    #[Test]
+    public function rejectsOriginalProxySizeTagsWithWrongCount(): void
+    {
+        $cases = [
+            [
+                'tag'     => DngTag::ORIGINAL_DEFAULT_FINAL_SIZE,
+                'type'    => TiffConst::TYPE_SHORT,
+                'count'   => 1,
+                'payload' => pack('v', 4000),
+            ],
+            [
+                'tag'     => DngTag::ORIGINAL_BEST_QUALITY_FINAL_SIZE,
+                'type'    => TiffConst::TYPE_LONG,
+                'count'   => 3,
+                'payload' => pack('V3', 4000, 3000, 1000),
+            ],
+            [
+                'tag'     => DngTag::ORIGINAL_DEFAULT_CROP_SIZE,
+                'type'    => TiffConst::TYPE_RATIONAL,
+                'count'   => 1,
+                'payload' => pack('V2', 4000, 1),
+            ],
+        ];
+        $rejections = 0;
+
+        foreach ($cases as $case) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithOriginalProxySizeTag(
+                        $case['tag'],
+                        $case['type'],
+                        $case['count'],
+                        $case['payload'],
+                    ),
+                );
+                self::fail(
+                    sprintf('Expected ParseError for invalid count on proxy-size tag 0x%04X.', $case['tag']),
+                );
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
+     * Rejects non-positive (or equivalent invalid rational) original proxy-size dimensions.
+     */
+    #[Test]
+    public function rejectsOriginalProxySizeTagsWithNonPositiveDimensions(): void
+    {
+        $cases = [
+            [
+                'tag'     => DngTag::ORIGINAL_DEFAULT_FINAL_SIZE,
+                'type'    => TiffConst::TYPE_SHORT,
+                'count'   => 2,
+                'payload' => pack('v2', 0, 3000),
+            ],
+            [
+                'tag'     => DngTag::ORIGINAL_BEST_QUALITY_FINAL_SIZE,
+                'type'    => TiffConst::TYPE_LONG,
+                'count'   => 2,
+                'payload' => pack('V2', 4000, 0),
+            ],
+            [
+                'tag'     => DngTag::ORIGINAL_DEFAULT_CROP_SIZE,
+                'type'    => TiffConst::TYPE_RATIONAL,
+                'count'   => 2,
+                'payload' => pack('V4', 4000, 0, 3000, 1),
+            ],
+        ];
+        $rejections = 0;
+
+        foreach ($cases as $case) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithOriginalProxySizeTag(
+                        $case['tag'],
+                        $case['type'],
+                        $case['count'],
+                        $case['payload'],
+                    ),
+                );
+                self::fail(
+                    sprintf('Expected ParseError for invalid dimensions on proxy-size tag 0x%04X.', $case['tag']),
+                );
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
+     * Regression: missing OriginalDefaultFinalSize must not break fallback handling.
+     *
+     * OriginalBestQualityFinalSize may still be present and valid; readers should
+     * use documented fallback defaults for omitted proxy tags.
+     */
+    #[Test]
+    public function acceptsProxySizeTagsWhenDependentProxyTagsAreMissing(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithOriginalProxySizeTag(
+                DngTag::ORIGINAL_BEST_QUALITY_FINAL_SIZE,
+                TiffConst::TYPE_LONG,
+                2,
+                pack('V2', 5000, 3500),
+            ),
+        );
+
+        self::assertNull($parsed->ifd0->get(DngTag::ORIGINAL_DEFAULT_FINAL_SIZE));
+        self::assertNotNull($parsed->ifd0->get(DngTag::ORIGINAL_BEST_QUALITY_FINAL_SIZE));
+        self::assertNull($parsed->ifd0->get(DngTag::ORIGINAL_DEFAULT_CROP_SIZE));
+    }
+
+    /**
      * DNG opcode-list tags.
      *
      * @var list<int>
@@ -7277,6 +7488,60 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', $tag)
             . pack('v', $type)
             . pack('V', $payloadLen)
+            . ($inline
+                ? str_pad($payload, 4, "\0")
+                : pack('V', $payloadOffset))
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . ($inline ? '' : $payload);
+    }
+
+    /**
+     * Builds a minimal DNG with one original proxy-size tag in IFD0.
+     *
+     * @param int    $tag     One of OriginalDefaultFinalSize, OriginalBestQualityFinalSize, OriginalDefaultCropSize.
+     * @param int    $type    TIFF field type.
+     * @param int    $count   Declared TIFF count value.
+     * @param string $payload Raw payload bytes for the tag.
+     */
+    private function buildDngWithOriginalProxySizeTag(int $tag, int $type, int $count, string $payload): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $payloadLen        = strlen($payload);
+        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+        $inline            = $payloadLen <= 4;
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', $tag)
+            . pack('v', $type)
+            . pack('V', $count)
             . ($inline
                 ? str_pad($payload, 4, "\0")
                 : pack('V', $payloadOffset))

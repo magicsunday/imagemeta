@@ -1408,6 +1408,7 @@ final class TiffExifParser
         $this->validateDngActiveAndMaskedAreas($ifd0);
         $this->validateDngBlackWhiteLevelFamily($ifd0);
         $this->validateDngDefaultCropScaleGeometry($ifd0);
+        $this->validateDngOriginalProxySizes($ifd0);
         $this->validateDngDefaultUserCrop($ifd0);
         $this->validateDngDepthEnums($ifd0);
         $this->validateDngNoiseReductionApplied($ifd0);
@@ -6798,6 +6799,123 @@ final class TiffExifParser
                 );
             }
         }
+    }
+
+    /**
+     * Validates DNG original proxy-size tags and their fallback semantics.
+     *
+     * DNG 1.7.1.0 ("OriginalDefaultFinalSize", "OriginalBestQualityFinalSize",
+     * "OriginalDefaultCropSize") defines:
+     * - OriginalDefaultFinalSize: SHORT|LONG[2], width/length > 0
+     * - OriginalBestQualityFinalSize: SHORT|LONG[2], width/length > 0
+     * - OriginalDefaultCropSize: SHORT|LONG|RATIONAL[2], width/length > 0
+     *
+     * Defaults:
+     * - OriginalBestQualityFinalSize defaults to OriginalDefaultFinalSize if specified.
+     * - OriginalDefaultCropSize defaults to OriginalDefaultFinalSize if specified.
+     * - If OriginalDefaultFinalSize is absent, defaults continue to current-file values.
+     */
+    private function validateDngOriginalProxySizes(Ifd $ifd): void
+    {
+        $originalDefaultFinalSize = $this->extractDngOriginalProxySize(
+            $ifd,
+            DngTag::ORIGINAL_DEFAULT_FINAL_SIZE,
+            'OriginalDefaultFinalSize',
+            [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG],
+        );
+        $originalBestQualityFinalSize = $this->extractDngOriginalProxySize(
+            $ifd,
+            DngTag::ORIGINAL_BEST_QUALITY_FINAL_SIZE,
+            'OriginalBestQualityFinalSize',
+            [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG],
+        );
+        $originalDefaultCropSize = $this->extractDngOriginalProxySize(
+            $ifd,
+            DngTag::ORIGINAL_DEFAULT_CROP_SIZE,
+            'OriginalDefaultCropSize',
+            [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_RATIONAL],
+        );
+
+        // Fallback semantics: missing best-quality/crop size inherit from
+        // OriginalDefaultFinalSize when it is explicitly present.
+        if (($originalBestQualityFinalSize === null) && ($originalDefaultFinalSize !== null)) {
+            $originalBestQualityFinalSize = $originalDefaultFinalSize;
+        }
+
+        if (($originalDefaultCropSize === null) && ($originalDefaultFinalSize !== null)) {
+            $originalDefaultCropSize = $originalDefaultFinalSize;
+        }
+
+        // When OriginalDefaultFinalSize is absent, defaults are based on current-file
+        // size tags; omission is valid and intentionally non-fatal.
+    }
+
+    /**
+     * Extracts and validates one optional original proxy-size tag.
+     *
+     * @param list<int> $allowedTypes Allowed TIFF types for this tag.
+     *
+     * @return array{0: float, 1: float}|null
+     */
+    private function extractDngOriginalProxySize(
+        Ifd $ifd,
+        int $tag,
+        string $tagName,
+        array $allowedTypes,
+    ): ?array {
+        $entry = $ifd->get($tag);
+
+        if (!$entry instanceof IfdEntry) {
+            return null;
+        }
+
+        if (!in_array($entry->type, $allowedTypes, true) || ($entry->count !== 2)) {
+            throw new ParseError(
+                sprintf(
+                    '%s must use %s with count 2, got type %d count %d.',
+                    $tagName,
+                    $this->describeAllowedTiffTypes($allowedTypes),
+                    $entry->type,
+                    $entry->count,
+                ),
+                1639,
+            );
+        }
+
+        [$width, $length] = $this->extractDngCropScalePair($entry, $tagName);
+        if (($width <= 0.0) || ($length <= 0.0)) {
+            throw new ParseError(
+                sprintf(
+                    '%s components must be > 0, got (%.6F, %.6F).',
+                    $tagName,
+                    $width,
+                    $length,
+                ),
+                1640,
+            );
+        }
+
+        return [$width, $length];
+    }
+
+    /**
+     * Builds a human-readable TIFF type list for validation errors.
+     *
+     * @param list<int> $types Allowed TIFF type identifiers.
+     */
+    private function describeAllowedTiffTypes(array $types): string
+    {
+        $names = [];
+        foreach ($types as $type) {
+            $names[] = match ($type) {
+                TiffConst::TYPE_SHORT    => 'SHORT',
+                TiffConst::TYPE_LONG     => 'LONG',
+                TiffConst::TYPE_RATIONAL => 'RATIONAL',
+                default                  => (string) $type,
+            };
+        }
+
+        return implode('|', $names);
     }
 
     /**
