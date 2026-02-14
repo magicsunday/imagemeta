@@ -49,16 +49,16 @@
 
 ## 2) Agent Roles
 
-| Agent           | Responsibility                                                                                         | In/Out                                     |
-| --------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
-| **Planner**     | Read issue/milestone; define file scope, non-goals, guardrails.                                       | In: Issue; Out: Sub-tasks + file scope     |
-| **Spec Writer** | Define acceptance criteria (AC) & test cases (incl. red/failure modes).                               | In: Planner; Out: Test specification       |
-| **Test Agent**  | **RED**: write PHPUnit tests first; synthetic streams/blobs; negative paths (ParseError/BoundsError). | In: Spec; Out: Commits under `tests/**`    |
-| **Implementer** | **GREEN**: implement only in file scope; respect streaming & guards; **add specs/enums/docs**.        | In: red tests; Out: green commits          |
-| **Static/QA**   | PHPStan/PHPCS green; small refactors without semantic change.                                         | In: linter/stan output; Out: commits       |
-| **Security**    | Security review: lengths/offsets, XML flags, DoS mitigation.                                          | In: PR diff; Out: review notes/mini commits|
-| **Reviewer**    | Minimality, readability, **spec refs**, enums, AC coverage, DX.                                       | In: PR; Out: review comments/mini commits  |
-| **Release**     | PR text, changelog, labels/milestone, “Closes #…”, tagging.                                           | In: final PR; Out: release/tag             |
+| Agent           | Responsibility                                                                                        | In/Out                                      |
+|-----------------|-------------------------------------------------------------------------------------------------------|---------------------------------------------|
+| **Planner**     | Read issue/milestone; define file scope, non-goals, guardrails.                                       | In: Issue; Out: Sub-tasks + file scope      |
+| **Spec Writer** | Define acceptance criteria (AC) & test cases (incl. red/failure modes).                               | In: Planner; Out: Test specification        |
+| **Test Agent**  | **RED**: write PHPUnit tests first; synthetic streams/blobs; negative paths (ParseError/BoundsError). | In: Spec; Out: Commits under `tests/**`     |
+| **Implementer** | **GREEN**: implement only in file scope; respect streaming & guards; **add specs/enums/docs**.        | In: red tests; Out: green commits           |
+| **Static/QA**   | PHPStan/PHPCS green; small refactors without semantic change.                                         | In: linter/stan output; Out: commits        |
+| **Security**    | Security review: lengths/offsets, XML flags, DoS mitigation.                                          | In: PR diff; Out: review notes/mini commits |
+| **Reviewer**    | Minimality, readability, **spec refs**, enums, AC coverage, DX.                                       | In: PR; Out: review comments/mini commits   |
+| **Release**     | PR text, changelog, labels/milestone, “Closes #…”, tagging.                                           | In: final PR; Out: release/tag              |
 
 > Roles are **checklists**; one person may hold multiple roles.
 

@@ -1361,6 +1361,7 @@ final class TiffExifParser
         foreach ($additionalIfds as $additionalIfd) {
             $this->validateEnhancedIfd($additionalIfd);
             $this->validateSubfileAndPageTags($additionalIfd, !$isDngContainer);
+            $this->validateThreshholdingAndCellTags($additionalIfd);
             $this->validateFillOrderTag($additionalIfd);
             $this->validateSampleDomainTags($additionalIfd);
             $this->validateExtraSamplesTag($additionalIfd);
@@ -1451,6 +1452,7 @@ final class TiffExifParser
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
         $this->validateSubfileAndPageTags($ifd0, !$isDngContainer);
+        $this->validateThreshholdingAndCellTags($ifd0);
         $this->validateFillOrderTag($ifd0);
         $this->validateSampleDomainTags($ifd0);
         $this->validateExtraSamplesTag($ifd0);
@@ -2265,6 +2267,83 @@ final class TiffExifParser
                     $totalPages,
                 ),
                 1797,
+            );
+        }
+    }
+
+    /**
+     * Validates TIFF Threshholding / CellWidth / CellLength semantic coupling.
+     *
+     * TIFF 6.0:
+     * - Threshholding: SHORT[1], value domain 1..3.
+     * - CellWidth/CellLength: SHORT[1], >0.
+     * - CellWidth/CellLength are valid only when Threshholding=2.
+     * - Threshholding=2 requires both cell tags together.
+     */
+    private function validateThreshholdingAndCellTags(Ifd $ifd): void
+    {
+        $threshholdingEntry = $ifd->get(TiffTag::THRESHHOLDING);
+        $cellWidthEntry     = $ifd->get(TiffTag::CELL_WIDTH);
+        $cellLengthEntry    = $ifd->get(TiffTag::CELL_LENGTH);
+
+        if ($threshholdingEntry instanceof IfdEntry) {
+            if (
+                ($threshholdingEntry->type !== TiffConst::TYPE_SHORT)
+                || ($threshholdingEntry->count !== 1)
+                || !is_int($threshholdingEntry->value)
+            ) {
+                throw new ParseError('Threshholding must be SHORT[1].', 1798);
+            }
+
+            if (($threshholdingEntry->value < 1) || ($threshholdingEntry->value > 3)) {
+                throw new ParseError(
+                    sprintf(
+                        'Threshholding value %d is invalid; allowed values are 1,2,3.',
+                        $threshholdingEntry->value,
+                    ),
+                    1799,
+                );
+            }
+        }
+
+        $hasCellWidth  = $cellWidthEntry instanceof IfdEntry;
+        $hasCellLength = $cellLengthEntry instanceof IfdEntry;
+
+        if ($hasCellWidth) {
+            if (($cellWidthEntry->type !== TiffConst::TYPE_SHORT) || ($cellWidthEntry->count !== 1) || !is_int($cellWidthEntry->value)) {
+                throw new ParseError('CellWidth must be SHORT[1].', 1800);
+            }
+
+            if ($cellWidthEntry->value <= 0) {
+                throw new ParseError(sprintf('CellWidth must be > 0, got %d.', $cellWidthEntry->value), 1801);
+            }
+        }
+
+        if ($hasCellLength) {
+            if (($cellLengthEntry->type !== TiffConst::TYPE_SHORT) || ($cellLengthEntry->count !== 1) || !is_int($cellLengthEntry->value)) {
+                throw new ParseError('CellLength must be SHORT[1].', 1802);
+            }
+
+            if ($cellLengthEntry->value <= 0) {
+                throw new ParseError(sprintf('CellLength must be > 0, got %d.', $cellLengthEntry->value), 1803);
+            }
+        }
+
+        $threshholdingValue = $threshholdingEntry instanceof IfdEntry
+            ? $threshholdingEntry->value
+            : null;
+
+        if (($threshholdingValue === 2) && (!$hasCellWidth || !$hasCellLength)) {
+            throw new ParseError('Threshholding=2 requires both CellWidth and CellLength.', 1804);
+        }
+
+        if (($hasCellWidth || $hasCellLength) && ($threshholdingValue !== 2)) {
+            throw new ParseError(
+                sprintf(
+                    'CellWidth/CellLength are only valid when Threshholding=2, got %s.',
+                    $threshholdingValue !== null ? (string) $threshholdingValue : 'missing',
+                ),
+                1805,
             );
         }
     }
