@@ -1373,6 +1373,7 @@ final class TiffExifParser
         $this->validateDngBackwardVersionGate($ifd0);
         $this->validateDngColorimetricReference($ifd0);
         $this->validateDngMultiProfileName($ifd0, $additionalIfds);
+        $this->validateDngExtraCameraProfiles($ifd0);
         $this->validateDngNoiseProfile($ifd0);
         $this->validateDngHueSatMapDims($ifd0);
         $this->validateDngHueSatMapData($ifd0);
@@ -4885,6 +4886,157 @@ final class TiffExifParser
                 );
             }
         }
+    }
+
+    /**
+     * Validates ExtraCameraProfiles offsets and embedded profile payload headers.
+     *
+     * DNG 1.7.1.0 "ExtraCameraProfiles" defines LONG[count] offsets to camera profile
+     * payloads. Each payload starts with a byte-order marker ("II" or "MM"), magic
+     * value 0x4352, and a 32-bit inner IFD offset relative to the payload start.
+     */
+    private function validateDngExtraCameraProfiles(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::EXTRA_CAMERA_PROFILES);
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if ($entry->type !== TiffConst::TYPE_LONG) {
+            throw new ParseError(
+                'ExtraCameraProfiles must use LONG type per DNG 1.7.1.0.',
+                1586,
+            );
+        }
+
+        if ($entry->count < 1) {
+            throw new ParseError(
+                'ExtraCameraProfiles must contain at least one profile offset per DNG 1.7.1.0.',
+                1587,
+            );
+        }
+
+        $profileOffsets = $this->extractDngExtraCameraProfileOffsets($entry);
+        if (count($profileOffsets) !== $entry->count) {
+            throw new ParseError(
+                'ExtraCameraProfiles count does not match the number of decoded offsets.',
+                1588,
+            );
+        }
+
+        $blobSize = $this->buffer->size();
+
+        foreach ($profileOffsets as $profileIndex => $profileOffset) {
+            if (($profileOffset < 0) || ($profileOffset > ($blobSize - 8))) {
+                throw new ParseError(
+                    sprintf(
+                        'ExtraCameraProfiles offset #%d (%d) is outside TIFF payload bounds.',
+                        $profileIndex + 1,
+                        $profileOffset,
+                    ),
+                    1589,
+                );
+            }
+
+            $cursorBeforeRead = $this->buffer->tell();
+            $this->buffer->seek($profileOffset);
+            $profileHeader = $this->buffer->read(8);
+            $this->buffer->seek($cursorBeforeRead);
+
+            $byteOrderMarker = substr($profileHeader, 0, 2);
+            if ($byteOrderMarker === 'II') {
+                $profileIsLittleEndian = true;
+            } elseif ($byteOrderMarker === 'MM') {
+                $profileIsLittleEndian = false;
+            } else {
+                throw new ParseError(
+                    sprintf(
+                        'ExtraCameraProfiles profile #%d has invalid byte-order marker 0x%02X%02X.',
+                        $profileIndex + 1,
+                        ord($byteOrderMarker[0]),
+                        ord($byteOrderMarker[1]),
+                    ),
+                    1590,
+                );
+            }
+
+            $magicFormat = $profileIsLittleEndian ? 'v' : 'n';
+            $magicValue  = Unpack::int($magicFormat, substr($profileHeader, 2, 2), 'ExtraCameraProfiles magic');
+            if ($magicValue !== 0x4352) {
+                throw new ParseError(
+                    sprintf(
+                        'ExtraCameraProfiles profile #%d has invalid magic 0x%04X (expected 0x4352).',
+                        $profileIndex + 1,
+                        $magicValue,
+                    ),
+                    1591,
+                );
+            }
+
+            $ifdOffsetFormat = $profileIsLittleEndian ? 'V' : 'N';
+            $innerIfdOffset  = Unpack::int(
+                $ifdOffsetFormat,
+                substr($profileHeader, 4, 4),
+                'ExtraCameraProfiles inner IFD offset',
+            );
+
+            if ($innerIfdOffset < 8) {
+                throw new ParseError(
+                    sprintf(
+                        'ExtraCameraProfiles profile #%d inner IFD offset %d must be >= 8.',
+                        $profileIndex + 1,
+                        $innerIfdOffset,
+                    ),
+                    1592,
+                );
+            }
+
+            $absoluteInnerIfdOffset = $profileOffset + $innerIfdOffset;
+            if ($absoluteInnerIfdOffset > ($blobSize - 2)) {
+                throw new ParseError(
+                    sprintf(
+                        'ExtraCameraProfiles profile #%d inner IFD offset %d is outside TIFF payload bounds.',
+                        $profileIndex + 1,
+                        $innerIfdOffset,
+                    ),
+                    1593,
+                );
+            }
+        }
+    }
+
+    /**
+     * Normalises ExtraCameraProfiles offset values into an integer list.
+     *
+     * @return list<int>
+     */
+    private function extractDngExtraCameraProfileOffsets(IfdEntry $entry): array
+    {
+        if (is_int($entry->value)) {
+            return [$entry->value];
+        }
+
+        if ($entry->value instanceof ExifNumericList) {
+            $offsets = [];
+
+            foreach ($entry->value->values as $value) {
+                if (!is_int($value)) {
+                    throw new ParseError(
+                        'ExtraCameraProfiles offsets must be LONG integers.',
+                        1594,
+                    );
+                }
+
+                $offsets[] = $value;
+            }
+
+            return $offsets;
+        }
+
+        throw new ParseError(
+            'ExtraCameraProfiles must contain numeric LONG offsets.',
+            1595,
+        );
     }
 
     /**

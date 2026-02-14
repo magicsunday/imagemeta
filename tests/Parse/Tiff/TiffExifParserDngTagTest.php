@@ -6323,6 +6323,138 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts a valid ExtraCameraProfiles payload with one embedded camera profile header.
+     */
+    #[Test]
+    public function acceptsValidExtraCameraProfilesPayload(): void
+    {
+        $profilePayload = 'II'
+            . pack('v', 0x4352)
+            . pack('V', 8)
+            . pack('v', 0)
+            . pack('V', 0);
+
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithExtraCameraProfiles($profilePayload),
+        );
+
+        $entry = $parsed->ifd0->get(DngTag::EXTRA_CAMERA_PROFILES);
+        self::assertNotNull($entry);
+    }
+
+    /**
+     * Rejects ExtraCameraProfiles entries whose referenced profile offset is out of blob range.
+     */
+    #[Test]
+    public function rejectsExtraCameraProfilesWithOutOfRangeOffset(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithExtraCameraProfiles('', profileOffsetOverride: 0x7FFFFFF0),
+        );
+    }
+
+    /**
+     * Rejects ExtraCameraProfiles entries with a bad camera-profile magic marker.
+     */
+    #[Test]
+    public function rejectsExtraCameraProfilesWithBadProfileMagic(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $profilePayload = 'II'
+            . pack('v', 0x1234)
+            . pack('V', 8)
+            . pack('v', 0)
+            . pack('V', 0);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithExtraCameraProfiles($profilePayload),
+        );
+    }
+
+    /**
+     * Rejects ExtraCameraProfiles entries whose inner IFD offset is outside the profile payload range.
+     */
+    #[Test]
+    public function rejectsExtraCameraProfilesWithInvalidInnerIfdOffset(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $profilePayload = 'II'
+            . pack('v', 0x4352)
+            . pack('V', 0x7FFFFFF0);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithExtraCameraProfiles($profilePayload),
+        );
+    }
+
+    /**
+     * Rejects ExtraCameraProfiles entries when the referenced profile header is truncated.
+     */
+    #[Test]
+    public function rejectsExtraCameraProfilesWithTruncatedProfileHeader(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $profilePayload = 'II' . pack('v', 0x4352);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithExtraCameraProfiles($profilePayload),
+        );
+    }
+
+    /**
+     * Builds a DNG with ExtraCameraProfiles pointing to an embedded camera profile payload.
+     *
+     * @param string   $profilePayload        Embedded profile payload bytes.
+     * @param int|null $profileOffsetOverride Optional override for the profile offset value.
+     */
+    private function buildDngWithExtraCameraProfiles(string $profilePayload, ?int $profileOffsetOverride = null): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $profileOffset     = $profileOffsetOverride ?? ($modelOffset + strlen($uniqueCameraModel));
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::EXTRA_CAMERA_PROFILES)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', $profileOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $profilePayload;
+    }
+
+    /**
      * Builds a DNG with a SHORT[1] tag inline in IFD0.
      *
      * @param int $tag   Tag constant (must be > 0xC614)
