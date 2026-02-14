@@ -1402,6 +1402,7 @@ final class TiffExifParser
         $this->validateDngImageStats($ifd0);
         $this->validateDngImageSequenceInfo($ifd0);
         $this->validateDngRgbTables($ifd0);
+        $this->validateDngDefaultCropScaleGeometry($ifd0);
         $this->validateDngDefaultUserCrop($ifd0);
         $this->validateDngDepthEnums($ifd0);
         $this->validateDngNoiseReductionApplied($ifd0);
@@ -6082,6 +6083,167 @@ final class TiffExifParser
                 1564,
             );
         }
+    }
+
+    /**
+     * Validates DefaultScale, DefaultCropOrigin and DefaultCropSize layout and geometry.
+     *
+     * DNG 1.7.1.0 ("DefaultScale", "DefaultCropOrigin", "DefaultCropSize"):
+     * - DefaultScale: RATIONAL[2], both components > 0
+     * - DefaultCropOrigin: SHORT|LONG|RATIONAL with count 2, components >= 0
+     * - DefaultCropSize: SHORT|LONG|RATIONAL with count 2, components > 0
+     */
+    private function validateDngDefaultCropScaleGeometry(Ifd $ifd): void
+    {
+        $defaultScale = $ifd->get(DngTag::DEFAULT_SCALE);
+        if ($defaultScale instanceof IfdEntry) {
+            if (($defaultScale->type !== TiffConst::TYPE_RATIONAL) || ($defaultScale->count !== 2)) {
+                throw new ParseError(
+                    sprintf(
+                        'DefaultScale must be RATIONAL[2], got type %d count %d.',
+                        $defaultScale->type,
+                        $defaultScale->count,
+                    ),
+                    1596,
+                );
+            }
+
+            [$scaleH, $scaleV] = $this->extractDngCropScalePair($defaultScale, 'DefaultScale');
+            if (($scaleH <= 0.0) || ($scaleV <= 0.0)) {
+                throw new ParseError(
+                    sprintf(
+                        'DefaultScale components must be > 0, got (%.6F, %.6F).',
+                        $scaleH,
+                        $scaleV,
+                    ),
+                    1597,
+                );
+            }
+        }
+
+        $defaultCropOrigin = $ifd->get(DngTag::DEFAULT_CROP_ORIGIN);
+        if ($defaultCropOrigin instanceof IfdEntry) {
+            if (
+                !in_array(
+                    $defaultCropOrigin->type,
+                    [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_RATIONAL],
+                    true,
+                )
+                || ($defaultCropOrigin->count !== 2)
+            ) {
+                throw new ParseError(
+                    sprintf(
+                        'DefaultCropOrigin must be SHORT|LONG|RATIONAL with count 2, got type %d count %d.',
+                        $defaultCropOrigin->type,
+                        $defaultCropOrigin->count,
+                    ),
+                    1598,
+                );
+            }
+
+            [$originH, $originV] = $this->extractDngCropScalePair($defaultCropOrigin, 'DefaultCropOrigin');
+            if (($originH < 0.0) || ($originV < 0.0)) {
+                throw new ParseError(
+                    sprintf(
+                        'DefaultCropOrigin components must be >= 0, got (%.6F, %.6F).',
+                        $originH,
+                        $originV,
+                    ),
+                    1599,
+                );
+            }
+        }
+
+        $defaultCropSize = $ifd->get(DngTag::DEFAULT_CROP_SIZE);
+        if ($defaultCropSize instanceof IfdEntry) {
+            if (
+                !in_array(
+                    $defaultCropSize->type,
+                    [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_RATIONAL],
+                    true,
+                )
+                || ($defaultCropSize->count !== 2)
+            ) {
+                throw new ParseError(
+                    sprintf(
+                        'DefaultCropSize must be SHORT|LONG|RATIONAL with count 2, got type %d count %d.',
+                        $defaultCropSize->type,
+                        $defaultCropSize->count,
+                    ),
+                    1600,
+                );
+            }
+
+            [$sizeH, $sizeV] = $this->extractDngCropScalePair($defaultCropSize, 'DefaultCropSize');
+            if (($sizeH <= 0.0) || ($sizeV <= 0.0)) {
+                throw new ParseError(
+                    sprintf(
+                        'DefaultCropSize components must be > 0, got (%.6F, %.6F).',
+                        $sizeH,
+                        $sizeV,
+                    ),
+                    1601,
+                );
+            }
+        }
+    }
+
+    /**
+     * Extracts two numeric components from crop/scale DNG tags.
+     *
+     * @return array{0: float, 1: float}
+     */
+    private function extractDngCropScalePair(IfdEntry $entry, string $tagName): array
+    {
+        $value = $entry->value;
+
+        if ($value instanceof ExifRationalList) {
+            if (count($value->values) !== 2) {
+                throw new ParseError(
+                    sprintf('%s must decode to exactly two components.', $tagName),
+                    1602,
+                );
+            }
+
+            $values = [];
+            foreach ($value->values as $rational) {
+                if ($rational->denominator <= 0) {
+                    throw new ParseError(
+                        sprintf('%s rational components must have denominator > 0.', $tagName),
+                        1603,
+                    );
+                }
+
+                $values[] = $rational->numerator / $rational->denominator;
+            }
+
+            return [$values[0], $values[1]];
+        }
+
+        if ($value instanceof ExifNumericList) {
+            if (count($value->values) !== 2) {
+                throw new ParseError(
+                    sprintf('%s must decode to exactly two components.', $tagName),
+                    1602,
+                );
+            }
+
+            $values = [];
+            foreach ($value->values as $component) {
+                if ($component instanceof UInt64) {
+                    $values[] = (float) $component->toInt(sprintf('%s component', $tagName));
+                } else {
+                    $values[] = (float) $component;
+                }
+            }
+
+            return [$values[0], $values[1]];
+        }
+
+        throw new ParseError(
+            sprintf('%s must decode to a two-component numeric payload.', $tagName),
+            1604,
+        );
     }
 
     /**

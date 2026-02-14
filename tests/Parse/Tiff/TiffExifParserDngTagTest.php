@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
+use InvalidArgumentException;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -5447,6 +5448,257 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', 0)
             . $uniqueCameraModel
             . $cropData;
+    }
+
+    /**
+     * Accepts valid DefaultScale/DefaultCropOrigin/DefaultCropSize layout and values.
+     */
+    #[Test]
+    public function acceptsValidDefaultScaleCropOriginAndCropSize(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultCropScaleTags([
+                [
+                    'tag'     => DngTag::DEFAULT_SCALE,
+                    'type'    => TiffConst::TYPE_RATIONAL,
+                    'count'   => 2,
+                    'payload' => pack('V4', 1, 1, 3, 2),
+                ],
+                [
+                    'tag'     => DngTag::DEFAULT_CROP_ORIGIN,
+                    'type'    => TiffConst::TYPE_LONG,
+                    'count'   => 2,
+                    'payload' => pack('V2', 0, 10),
+                ],
+                [
+                    'tag'     => DngTag::DEFAULT_CROP_SIZE,
+                    'type'    => TiffConst::TYPE_RATIONAL,
+                    'count'   => 2,
+                    'payload' => pack('V4', 4000, 1, 3000, 1),
+                ],
+            ]),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects DefaultScale when layout is not RATIONAL[2].
+     */
+    #[Test]
+    public function rejectsDefaultScaleWrongLayout(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultCropScaleTags([
+                [
+                    'tag'     => DngTag::DEFAULT_SCALE,
+                    'type'    => TiffConst::TYPE_LONG,
+                    'count'   => 2,
+                    'payload' => pack('V2', 1, 1),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects DefaultCropOrigin when layout is not SHORT|LONG|RATIONAL with count=2.
+     */
+    #[Test]
+    public function rejectsDefaultCropOriginWrongLayout(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultCropScaleTags([
+                [
+                    'tag'     => DngTag::DEFAULT_CROP_ORIGIN,
+                    'type'    => TiffConst::TYPE_SRATIONAL,
+                    'count'   => 2,
+                    'payload' => pack('V4', 1, 1, 5, 1),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects DefaultCropSize when layout is not SHORT|LONG|RATIONAL with count=2.
+     */
+    #[Test]
+    public function rejectsDefaultCropSizeWrongLayout(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultCropScaleTags([
+                [
+                    'tag'     => DngTag::DEFAULT_CROP_SIZE,
+                    'type'    => TiffConst::TYPE_LONG,
+                    'count'   => 1,
+                    'payload' => pack('V', 100),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects DefaultScale when any component is zero.
+     */
+    #[Test]
+    public function rejectsDefaultScaleWithZeroComponent(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultCropScaleTags([
+                [
+                    'tag'     => DngTag::DEFAULT_SCALE,
+                    'type'    => TiffConst::TYPE_RATIONAL,
+                    'count'   => 2,
+                    'payload' => pack('V4', 0, 1, 1, 1),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects DefaultCropSize when any component is not positive.
+     */
+    #[Test]
+    public function rejectsDefaultCropSizeWithNonPositiveValue(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultCropScaleTags([
+                [
+                    'tag'     => DngTag::DEFAULT_CROP_SIZE,
+                    'type'    => TiffConst::TYPE_LONG,
+                    'count'   => 2,
+                    'payload' => pack('V2', 0, 1200),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Rejects DefaultCropOrigin when a negative coordinate is encoded.
+     */
+    #[Test]
+    public function rejectsDefaultCropOriginWithNegativeValue(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDefaultCropScaleTags([
+                [
+                    'tag'     => DngTag::DEFAULT_CROP_ORIGIN,
+                    'type'    => TiffConst::TYPE_SLONG,
+                    'count'   => 2,
+                    'payload' => pack('V2', 0xFFFFFFFF, 5),
+                ],
+            ]),
+        );
+    }
+
+    /**
+     * Builds a DNG with crop/scale base tags used by DefaultScale/DefaultCropOrigin/DefaultCropSize tests.
+     *
+     * @param list<array{tag: int, type: int, count: int, payload: string}> $tags
+     */
+    private function buildDngWithDefaultCropScaleTags(array $tags): string
+    {
+        $ifdOffset         = 8;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $baseEntryCount    = 5;
+        $entryCount        = $baseEntryCount + count($tags);
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $modelOffset       = $ifdOffset + $ifdSize;
+
+        $entries = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::ORIENTATION => pack('v', ExifTag::ORIENTATION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 1) . pack('v', 0),
+            DngTag::DNG_VERSION => pack('v', DngTag::DNG_VERSION)
+                . pack('v', TiffConst::TYPE_BYTE)
+                . pack('V', 4)
+                . pack('C4', 1, 7, 1, 0),
+            DngTag::UNIQUE_CAMERA_MODEL => pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', strlen($uniqueCameraModel))
+                . pack('V', $modelOffset),
+        ];
+
+        $outOfLineData   = $uniqueCameraModel;
+        $nextValueOffset = $modelOffset + strlen($uniqueCameraModel);
+
+        if ($nextValueOffset % 2 !== 0) {
+            $outOfLineData .= "\0";
+            ++$nextValueOffset;
+        }
+
+        foreach ($tags as $tagSpec) {
+            $tag       = $tagSpec['tag'];
+            $type      = $tagSpec['type'];
+            $count     = $tagSpec['count'];
+            $payload   = $tagSpec['payload'];
+            $valueSize = $this->bytesPerTiffTypeForTest($type) * $count;
+
+            if ($valueSize <= 4) {
+                $valueField = str_pad(substr($payload, 0, $valueSize), 4, "\0");
+            } else {
+                if ($nextValueOffset % 2 !== 0) {
+                    $outOfLineData .= "\0";
+                    ++$nextValueOffset;
+                }
+
+                $valueField = pack('V', $nextValueOffset);
+                $outOfLineData .= substr($payload, 0, $valueSize);
+                $nextValueOffset += $valueSize;
+            }
+
+            $entries[$tag] = pack('v', $tag)
+                . pack('v', $type)
+                . pack('V', $count)
+                . $valueField;
+        }
+
+        ksort($entries);
+
+        $ifdData = pack('v', $entryCount);
+        foreach ($entries as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData
+            . $outOfLineData;
+    }
+
+    private function bytesPerTiffTypeForTest(int $type): int
+    {
+        return match ($type) {
+            TiffConst::TYPE_SHORT => 2,
+            TiffConst::TYPE_LONG,
+            TiffConst::TYPE_SLONG => 4,
+            TiffConst::TYPE_RATIONAL,
+            TiffConst::TYPE_SRATIONAL => 8,
+            default                   => throw new InvalidArgumentException('Unsupported TIFF type for crop/scale test builder.'),
+        };
     }
 
     /**
