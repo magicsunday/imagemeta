@@ -20,9 +20,17 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
 use XMLReader;
 
 use function array_key_exists;
+use function defined;
 use function in_array;
 use function sprintf;
 use function trim;
+
+// Define LIBXML_NO_XXE for environments where it's not available (requires libxml2 >= 2.13.0).
+// PHP 8.4+ with libxml2 >= 2.13.0 defines this as 32768 to disable XXE attacks.
+// For older libxml2 versions, we define it as 0 (no-op) since LIBXML_NONET already provides protection.
+if (!defined('LIBXML_NO_XXE')) {
+    define('LIBXML_NO_XXE', 0);
+}
 
 /**
  * Performs a lightweight XMP RDF/XML pass using \XMLReader to capture simple properties.
@@ -44,12 +52,12 @@ final class XmpParser
      */
     public function parse(string $xml): XmpDocument
     {
-        // Defense-in-depth: Disable DTD processing entirely to prevent XXE attacks.
-        // LIBXML_NONET prevents network access; LIBXML_DISALLOW_DOCTYPE rejects DTDs altogether.
+        // Defense-in-depth: Disable XXE attacks and prevent network access.
+        // LIBXML_NONET prevents network access; LIBXML_NO_XXE (PHP 8.4+) disables external entities.
         $reader = XMLReader::XML(
             $xml,
             null,
-            LIBXML_NONET | LIBXML_DISALLOW_DOCTYPE | LIBXML_NOERROR | LIBXML_NOWARNING
+            LIBXML_NONET | LIBXML_NO_XXE | LIBXML_NOERROR | LIBXML_NOWARNING
         );
         if (!$reader instanceof XMLReader) {
             return new XmpDocument([], [], []);
