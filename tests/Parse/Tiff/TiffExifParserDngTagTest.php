@@ -7847,6 +7847,116 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * BayerGreenSplit accepts LONG[1] with non-negative value in Bayer CFA context.
+     */
+    #[Test]
+    public function parsesValidBayerGreenSplitInBayerContext(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBayerGreenSplitTag(
+                TiffConst::TYPE_LONG,
+                1,
+                pack('V', 0),
+                32803,
+                [2, 2],
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::BAYER_GREEN_SPLIT));
+    }
+
+    /**
+     * BayerGreenSplit rejects wrong type/count layouts.
+     */
+    #[Test]
+    public function rejectsBayerGreenSplitWithWrongTypeOrCount(): void
+    {
+        $cases = [
+            [
+                'type'    => TiffConst::TYPE_SHORT,
+                'count'   => 1,
+                'payload' => pack('v', 1),
+            ],
+            [
+                'type'    => TiffConst::TYPE_LONG,
+                'count'   => 2,
+                'payload' => pack('V2', 1, 2),
+            ],
+        ];
+        $rejections = 0;
+
+        foreach ($cases as $case) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithBayerGreenSplitTag(
+                        $case['type'],
+                        $case['count'],
+                        $case['payload'],
+                        32803,
+                        [2, 2],
+                    ),
+                );
+                self::fail('Expected ParseError for invalid BayerGreenSplit type/count.');
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
+     * BayerGreenSplit rejects negative-domain payloads encoded via signed value types.
+     */
+    #[Test]
+    public function rejectsBayerGreenSplitNegativeDomainPayload(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithBayerGreenSplitTag(
+                TiffConst::TYPE_SLONG,
+                1,
+                pack('V', 0xFFFFFFFF),
+                32803,
+                [2, 2],
+            ),
+        );
+    }
+
+    /**
+     * BayerGreenSplit rejects non-Bayer applicability contexts.
+     */
+    #[Test]
+    public function rejectsBayerGreenSplitInNonBayerContext(): void
+    {
+        $cases = [
+            [2, [2, 2]],    // RGB photometric, not CFA
+            [32803, [4, 4]], // CFA but not Bayer 2x2 pattern
+        ];
+        $rejections = 0;
+
+        foreach ($cases as [$photometric, $repeatDim]) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithBayerGreenSplitTag(
+                        TiffConst::TYPE_LONG,
+                        1,
+                        pack('V', 10),
+                        $photometric,
+                        $repeatDim,
+                    ),
+                );
+                self::fail('Expected ParseError for non-Bayer BayerGreenSplit applicability.');
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
      * DNG opcode-list tags.
      *
      * @var list<int>
@@ -7975,6 +8085,101 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', 0)
             . $uniqueCameraModel
             . ($inline ? '' : $payload);
+    }
+
+    /**
+     * Builds a DNG with BayerGreenSplit and optional CFA/Bayer context tags.
+     *
+     * @param int             $type        TIFF field type for BayerGreenSplit.
+     * @param int             $count       Declared TIFF count for BayerGreenSplit.
+     * @param string          $payload     Raw BayerGreenSplit payload.
+     * @param int|null        $photometric Optional PhotometricInterpretation value.
+     * @param array<int>|null $repeatDim   Optional CFARepeatPatternDim [rows, cols].
+     */
+    private function buildDngWithBayerGreenSplitTag(
+        int $type,
+        int $count,
+        string $payload,
+        ?int $photometric,
+        ?array $repeatDim,
+    ): string {
+        $ifdOffset         = 8;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $payloadLength     = strlen($payload);
+        $payloadInline     = $payloadLength <= 4;
+
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::ORIENTATION => pack('v', ExifTag::ORIENTATION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 1) . pack('v', 0),
+            DngTag::DNG_VERSION => pack('v', DngTag::DNG_VERSION)
+                . pack('v', TiffConst::TYPE_BYTE)
+                . pack('V', 4)
+                . pack('C4', 1, 7, 1, 0),
+            DngTag::UNIQUE_CAMERA_MODEL => pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', strlen($uniqueCameraModel)),
+            DngTag::BAYER_GREEN_SPLIT => pack('v', DngTag::BAYER_GREEN_SPLIT)
+                . pack('v', $type)
+                . pack('V', $count),
+        ];
+
+        if ($photometric !== null) {
+            $tags[ExifTag::PHOTOMETRIC_INTERPRETATION] = pack('v', ExifTag::PHOTOMETRIC_INTERPRETATION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $photometric) . pack('v', 0);
+        }
+
+        if ($repeatDim !== null) {
+            $tags[DngTag::CFA_REPEAT_PATTERN_DIM] = pack('v', DngTag::CFA_REPEAT_PATTERN_DIM)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 2)
+                . pack('v', $repeatDim[0]) . pack('v', $repeatDim[1]);
+        }
+
+        ksort($tags);
+
+        $entryCount    = count($tags);
+        $ifdSize       = 2 + (12 * $entryCount) + 4;
+        $modelOffset   = $ifdOffset + $ifdSize;
+        $payloadOffset = $modelOffset + strlen($uniqueCameraModel);
+
+        $ifdEntries = '';
+        foreach ($tags as $tag => $entryPrefix) {
+            if ($tag === DngTag::UNIQUE_CAMERA_MODEL) {
+                $ifdEntries .= $entryPrefix . pack('V', $modelOffset);
+                continue;
+            }
+
+            if ($tag === DngTag::BAYER_GREEN_SPLIT) {
+                $ifdEntries .= $entryPrefix
+                    . ($payloadInline
+                        ? str_pad($payload, 4, "\0")
+                        : pack('V', $payloadOffset));
+                continue;
+            }
+
+            $ifdEntries .= $entryPrefix;
+        }
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . $ifdEntries
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . ($payloadInline ? '' : $payload);
     }
 
     /**

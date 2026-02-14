@@ -1359,6 +1359,7 @@ final class TiffExifParser
             $this->validateDngIfd0OnlyTags($additionalIfd);
             $this->validateDngJxlTags($additionalIfd);
             $this->validateDngCfaPhotometric($additionalIfd);
+            $this->validateDngBayerGreenSplit($additionalIfd);
             $this->validateDngSemanticMaskIdentity($additionalIfd);
             $this->validateDngMaskSubArea($additionalIfd);
         }
@@ -1409,6 +1410,7 @@ final class TiffExifParser
         $this->validateDngBlackWhiteLevelFamily($ifd0);
         $this->validateDngDefaultCropScaleGeometry($ifd0);
         $this->validateDngLinearResponseLimit($ifd0);
+        $this->validateDngBayerGreenSplit($ifd0);
         $this->validateDngBaselineScalars($ifd0);
         $this->validateDngLensInfo($ifd0);
         $this->validateDngBestQualityScale($ifd0);
@@ -6930,6 +6932,76 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('LinearResponseLimit must be in (0.0, 1.0], got %.6F.', $limit),
                 1648,
+            );
+        }
+    }
+
+    /**
+     * Validates BayerGreenSplit (0xC62D) in DNG contexts.
+     *
+     * DNG 1.7.1.0 defines BayerGreenSplit as LONG[1], non-negative, and
+     * applicable to Bayer CFA images.
+     *
+     * Applicability is enforced when contextual tags are present:
+     * - PhotometricInterpretation must be CFA (32803)
+     * - CFARepeatPatternDim must be 2x2 for Bayer
+     */
+    private function validateDngBayerGreenSplit(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::BAYER_GREEN_SPLIT);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (($entry->type !== TiffConst::TYPE_LONG) || ($entry->count !== 1)) {
+            throw new ParseError(
+                sprintf(
+                    'BayerGreenSplit must be LONG[1], got type %d count %d.',
+                    $entry->type,
+                    $entry->count,
+                ),
+                1658,
+            );
+        }
+
+        if (!is_int($entry->value) || ($entry->value < 0)) {
+            throw new ParseError(
+                sprintf('BayerGreenSplit must be a non-negative scalar, got %d.', is_int($entry->value) ? $entry->value : -1),
+                1659,
+            );
+        }
+
+        $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+
+        if (($photo instanceof IfdEntry) && is_int($photo->value) && ($photo->value !== Photometric::CFA->value)) {
+            throw new ParseError(
+                sprintf(
+                    'BayerGreenSplit requires PhotometricInterpretation=%d, got %d.',
+                    Photometric::CFA->value,
+                    $photo->value,
+                ),
+                1660,
+            );
+        }
+
+        $repeat = $ifd->get(DngTag::CFA_REPEAT_PATTERN_DIM);
+
+        if (!$repeat instanceof IfdEntry || !$repeat->value instanceof ExifNumericList || count($repeat->value->values) !== 2) {
+            return;
+        }
+
+        $rows = $repeat->value->values[0];
+        $cols = $repeat->value->values[1];
+
+        if (!is_int($rows) || !is_int($cols)) {
+            return;
+        }
+
+        if (($rows !== 2) || ($cols !== 2)) {
+            throw new ParseError(
+                sprintf('BayerGreenSplit requires Bayer CFARepeatPatternDim=2x2, got %dx%d.', $rows, $cols),
+                1661,
             );
         }
     }
