@@ -1365,6 +1365,7 @@ final class TiffExifParser
             $this->validateThreshholdingAndCellTags($additionalIfd);
             $this->validateFreeSpaceTags($additionalIfd);
             $this->validateFillOrderTag($additionalIfd);
+            $this->validateMinMaxSampleValueTags($additionalIfd);
             $this->validateSampleDomainTags($additionalIfd);
             $this->validateExtraSamplesTag($additionalIfd);
             $this->validateGrayResponseTags($additionalIfd);
@@ -1458,6 +1459,7 @@ final class TiffExifParser
         $this->validateThreshholdingAndCellTags($ifd0);
         $this->validateFreeSpaceTags($ifd0);
         $this->validateFillOrderTag($ifd0);
+        $this->validateMinMaxSampleValueTags($ifd0);
         $this->validateSampleDomainTags($ifd0);
         $this->validateExtraSamplesTag($ifd0);
         $this->validateGrayResponseTags($ifd0);
@@ -2518,6 +2520,156 @@ final class TiffExifParser
         }
 
         return $components;
+    }
+
+    /**
+     * Validates TIFF MinSampleValue/MaxSampleValue structure and component ranges.
+     *
+     * TIFF 6.0 defines MinSampleValue/MaxSampleValue as SHORT vectors whose count
+     * matches SamplesPerPixel and whose values are constrained by BitsPerSample.
+     */
+    private function validateMinMaxSampleValueTags(Ifd $ifd): void
+    {
+        $minSampleValueEntry = $ifd->get(TiffTag::MIN_SAMPLE_VALUE);
+        $maxSampleValueEntry = $ifd->get(TiffTag::MAX_SAMPLE_VALUE);
+
+        if (!($minSampleValueEntry instanceof IfdEntry) && !($maxSampleValueEntry instanceof IfdEntry)) {
+            return;
+        }
+
+        $samplesPerPixel = 1;
+        $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+        if (($samplesEntry instanceof IfdEntry) && is_int($samplesEntry->value) && ($samplesEntry->value > 0)) {
+            $samplesPerPixel = $samplesEntry->value;
+        }
+
+        $minSampleValues = null;
+        $maxSampleValues = null;
+
+        if ($minSampleValueEntry instanceof IfdEntry) {
+            if ($minSampleValueEntry->type !== TiffConst::TYPE_SHORT) {
+                throw new ParseError('MinSampleValue must be SHORT.', 1818);
+            }
+
+            if ($minSampleValueEntry->count !== $samplesPerPixel) {
+                throw new ParseError(
+                    sprintf(
+                        'MinSampleValue count %d must match SamplesPerPixel %d.',
+                        $minSampleValueEntry->count,
+                        $samplesPerPixel,
+                    ),
+                    1819,
+                );
+            }
+
+            $minSampleValues = $this->extractIntegerTagComponents($minSampleValueEntry, 'MinSampleValue');
+            $this->validateMinMaxValueRangeAgainstBitsPerSample($ifd, 'MinSampleValue', $minSampleValues);
+        }
+
+        if ($maxSampleValueEntry instanceof IfdEntry) {
+            if ($maxSampleValueEntry->type !== TiffConst::TYPE_SHORT) {
+                throw new ParseError('MaxSampleValue must be SHORT.', 1820);
+            }
+
+            if ($maxSampleValueEntry->count !== $samplesPerPixel) {
+                throw new ParseError(
+                    sprintf(
+                        'MaxSampleValue count %d must match SamplesPerPixel %d.',
+                        $maxSampleValueEntry->count,
+                        $samplesPerPixel,
+                    ),
+                    1821,
+                );
+            }
+
+            $maxSampleValues = $this->extractIntegerTagComponents($maxSampleValueEntry, 'MaxSampleValue');
+            $this->validateMinMaxValueRangeAgainstBitsPerSample($ifd, 'MaxSampleValue', $maxSampleValues);
+        }
+
+        if (($minSampleValues === null) || ($maxSampleValues === null)) {
+            return;
+        }
+
+        foreach ($minSampleValues as $componentIndex => $minSampleValue) {
+            $maxSampleValue = $maxSampleValues[$componentIndex] ?? null;
+            if ($maxSampleValue === null) {
+                continue;
+            }
+
+            if ($minSampleValue <= $maxSampleValue) {
+                continue;
+            }
+
+            throw new ParseError(
+                sprintf(
+                    'MinSampleValue component %d must be <= MaxSampleValue component %d.',
+                    $componentIndex,
+                    $componentIndex,
+                ),
+                1822,
+            );
+        }
+    }
+
+    /**
+     * Validates MinSampleValue/MaxSampleValue components against BitsPerSample domain.
+     *
+     * @param list<int> $values
+     */
+    private function validateMinMaxValueRangeAgainstBitsPerSample(Ifd $ifd, string $tagName, array $values): void
+    {
+        $bitsPerSampleEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
+        if (!$bitsPerSampleEntry instanceof IfdEntry || ($bitsPerSampleEntry->type !== TiffConst::TYPE_SHORT)) {
+            return;
+        }
+
+        $bitsPerSampleValues = $this->extractIntegerTagComponents($bitsPerSampleEntry, 'BitsPerSample');
+        if ($bitsPerSampleValues === []) {
+            return;
+        }
+
+        foreach ($values as $componentIndex => $value) {
+            $bitsPerSample = $bitsPerSampleValues[0];
+            if (count($bitsPerSampleValues) > 1) {
+                if (!isset($bitsPerSampleValues[$componentIndex])) {
+                    continue;
+                }
+
+                $bitsPerSample = $bitsPerSampleValues[$componentIndex];
+            }
+
+            if ($bitsPerSample >= 16) {
+                continue;
+            }
+
+            if ($bitsPerSample <= 0) {
+                throw new ParseError(
+                    sprintf(
+                        'BitsPerSample component %d must be > 0 when validating %s.',
+                        $componentIndex,
+                        $tagName,
+                    ),
+                    1823,
+                );
+            }
+
+            $maxValue = (1 << $bitsPerSample) - 1;
+            if ($value <= $maxValue) {
+                continue;
+            }
+
+            throw new ParseError(
+                sprintf(
+                    '%s component %d value %d exceeds %d-bit range 0..%d.',
+                    $tagName,
+                    $componentIndex,
+                    $value,
+                    $bitsPerSample,
+                    $maxValue,
+                ),
+                1824,
+            );
+        }
     }
 
     /**
