@@ -7938,6 +7938,60 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * LinearizationTable accepts a non-empty SHORT lookup table.
+     */
+    #[Test]
+    public function parsesValidLinearizationTable(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSingleCustomTag(
+                DngTag::LINEARIZATION_TABLE,
+                TiffConst::TYPE_SHORT,
+                4,
+                pack('v4', 0, 1, 2, 3),
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::LINEARIZATION_TABLE));
+    }
+
+    /**
+     * LinearizationTable rejects non-SHORT field types.
+     */
+    #[Test]
+    public function rejectsLinearizationTableWithWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSingleCustomTag(
+                DngTag::LINEARIZATION_TABLE,
+                TiffConst::TYPE_LONG,
+                4,
+                pack('V4', 0, 1, 2, 3),
+            ),
+        );
+    }
+
+    /**
+     * LinearizationTable rejects empty table declarations.
+     */
+    #[Test]
+    public function rejectsLinearizationTableWithEmptyCount(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSingleCustomTag(
+                DngTag::LINEARIZATION_TABLE,
+                TiffConst::TYPE_SHORT,
+                0,
+                '',
+            ),
+        );
+    }
+
+    /**
      * BayerGreenSplit accepts LONG[1] with non-negative value in Bayer CFA context.
      */
     #[Test]

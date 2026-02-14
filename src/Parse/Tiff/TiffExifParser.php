@@ -1359,6 +1359,7 @@ final class TiffExifParser
             $this->validateDngIfd0OnlyTags($additionalIfd);
             $this->validateDngJxlTags($additionalIfd);
             $this->validateDngCfaPhotometric($additionalIfd);
+            $this->validateDngLinearizationTable($additionalIfd);
             $this->validateDngBayerGreenSplit($additionalIfd);
             $this->validateDngSemanticMaskIdentity($additionalIfd);
             $this->validateDngMaskSubArea($additionalIfd);
@@ -1411,6 +1412,7 @@ final class TiffExifParser
         $this->validateDngBlackWhiteLevelFamily($ifd0);
         $this->validateDngDefaultCropScaleGeometry($ifd0);
         $this->validateDngLinearResponseLimit($ifd0);
+        $this->validateDngLinearizationTable($ifd0);
         $this->validateDngBayerGreenSplit($ifd0);
         $this->validateDngRenderScalars($ifd0);
         $this->validateDngBaselineScalars($ifd0);
@@ -7012,6 +7014,31 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('LinearResponseLimit must be in (0.0, 1.0], got %.6F.', $limit),
                 1648,
+            );
+        }
+    }
+
+    /**
+     * Validates LinearizationTable (0xC618) DNG layout.
+     *
+     * DNG 1.7.1.0 defines LinearizationTable as a non-empty SHORT lookup table.
+     */
+    private function validateDngLinearizationTable(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::LINEARIZATION_TABLE);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (($entry->type !== TiffConst::TYPE_SHORT) || ($entry->count < 1)) {
+            throw new ParseError(
+                sprintf(
+                    'LinearizationTable must be SHORT with count >= 1, got type %d count %d.',
+                    $entry->type,
+                    $entry->count,
+                ),
+                1671,
             );
         }
     }
