@@ -570,13 +570,17 @@ final readonly class DngTag
 
     /**
      * Cache blob for performance optimization.
-     * DNG Version 1.4.0.0 (p. 67).
+     *
+     * Legacy tag: documented in DNG Version 1.4.0.0 (p. 67),
+     * but not present in the tracked DNG 1.7.1.0 HTML specification.
      */
     public const int CACHE_BLOB = 0xC7A9;
 
     /**
      * Cache version identifier.
-     * DNG Version 1.4.0.0 (p. 67).
+     *
+     * Legacy tag: documented in DNG Version 1.4.0.0 (p. 67),
+     * but not present in the tracked DNG 1.7.1.0 HTML specification.
      */
     public const int CACHE_VERSION = 0xC7AA;
 

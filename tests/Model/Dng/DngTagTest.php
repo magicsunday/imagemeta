@@ -16,9 +16,12 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use ReflectionClassConstant;
 
 use function array_values;
 use function count;
+use function sort;
+use function strpos;
 
 /**
  * Verifies DNG tag catalog completeness and ID correctness.
@@ -107,5 +110,68 @@ final class DngTagTest extends TestCase
         $values = array_values($constants);
 
         self::assertCount(count($values), array_unique($values));
+    }
+
+    /**
+     * Legacy cache tags are explicitly marked as non-1.7.1 catalog entries.
+     */
+    #[Test]
+    public function cacheTagsAreMarkedLegacyWithHistoricalProvenance(): void
+    {
+        $reflection  = new ReflectionClass(DngTag::class);
+        $legacyNames = ['CACHE_BLOB', 'CACHE_VERSION'];
+
+        foreach ($legacyNames as $name) {
+            $constant = $reflection->getReflectionConstant($name);
+            self::assertInstanceOf(ReflectionClassConstant::class, $constant);
+
+            $doc = (string) $constant->getDocComment();
+            self::assertNotSame('', $doc, sprintf('Missing PHPDoc for %s.', $name));
+            self::assertNotSame(false, strpos($doc, 'Legacy tag'), sprintf('Legacy marker missing for %s.', $name));
+            self::assertNotSame(false, strpos($doc, 'DNG Version 1.4.0.0'), sprintf('Historical source missing for %s.', $name));
+            self::assertNotSame(false, strpos($doc, 'not present in the tracked DNG 1.7.1.0 HTML specification'), sprintf('Tracked-spec status missing for %s.', $name));
+        }
+    }
+
+    /**
+     * Every DNG tag constant declares provenance and only explicit legacy tags are marked legacy.
+     */
+    #[Test]
+    public function allTagConstantsDeclareProvenance(): void
+    {
+        $reflection   = new ReflectionClass(DngTag::class);
+        $legacyMarked = [];
+
+        foreach ($reflection->getReflectionConstants() as $constant) {
+            if (!$constant->isPublic()) {
+                continue;
+            }
+
+            if ($constant->getName() === 'PROFILE_HUE_SAT_MAP_DATA_3') {
+                continue;
+            }
+
+            $doc = (string) $constant->getDocComment();
+            self::assertNotSame('', $doc, sprintf('Missing PHPDoc for %s.', $constant->getName()));
+
+            $hasVersionProvenance = str_contains($doc, 'DNG Version ')
+                || str_contains($doc, 'DNG 1.');
+            $hasLegacyMarker    = str_contains($doc, 'Legacy tag');
+            $hasAlternateSource = str_contains($doc, 'TIFF/EP')
+                || str_contains($doc, 'EXIF')
+                || str_contains($doc, 'Alias');
+
+            self::assertTrue(
+                $hasVersionProvenance || $hasLegacyMarker || $hasAlternateSource,
+                sprintf('Missing provenance marker for %s.', $constant->getName()),
+            );
+
+            if ($hasLegacyMarker) {
+                $legacyMarked[] = $constant->getName();
+            }
+        }
+
+        sort($legacyMarked);
+        self::assertSame(['CACHE_BLOB', 'CACHE_VERSION'], $legacyMarked);
     }
 }
