@@ -1408,6 +1408,7 @@ final class TiffExifParser
         $this->validateDngActiveAndMaskedAreas($ifd0);
         $this->validateDngBlackWhiteLevelFamily($ifd0);
         $this->validateDngDefaultCropScaleGeometry($ifd0);
+        $this->validateDngBestQualityScale($ifd0);
         $this->validateDngOriginalProxySizes($ifd0);
         $this->validateDngDefaultUserCrop($ifd0);
         $this->validateDngDepthEnums($ifd0);
@@ -6848,6 +6849,44 @@ final class TiffExifParser
 
         // When OriginalDefaultFinalSize is absent, defaults are based on current-file
         // size tags; omission is valid and intentionally non-fatal.
+    }
+
+    /**
+     * Validates BestQualityScale (0xC65C) per DNG 1.7.1.0.
+     *
+     * Must be RATIONAL[1] with a strictly positive numeric value.
+     */
+    private function validateDngBestQualityScale(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::BEST_QUALITY_SCALE);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (($entry->type !== TiffConst::TYPE_RATIONAL) || ($entry->count !== 1)) {
+            throw new ParseError(
+                sprintf(
+                    'BestQualityScale must be RATIONAL[1], got type %d count %d.',
+                    $entry->type,
+                    $entry->count,
+                ),
+                1641,
+            );
+        }
+
+        $value = $entry->value;
+        if (!$value instanceof ExifRational) {
+            throw new ParseError('BestQualityScale must decode to one rational component.', 1642);
+        }
+
+        if ($value->denominator <= 0) {
+            throw new ParseError('BestQualityScale denominator must be > 0.', 1643);
+        }
+
+        if (($value->numerator / $value->denominator) <= 0.0) {
+            throw new ParseError('BestQualityScale value must be > 0.', 1644);
+        }
     }
 
     /**

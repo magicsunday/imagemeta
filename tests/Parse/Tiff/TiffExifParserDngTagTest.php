@@ -7433,6 +7433,81 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * BestQualityScale accepts a positive RATIONAL[1] payload.
+     */
+    #[Test]
+    public function parsesValidBestQualityScale(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSingleCustomTag(
+                DngTag::BEST_QUALITY_SCALE,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                pack('V2', 2, 1),
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::BEST_QUALITY_SCALE));
+    }
+
+    /**
+     * BestQualityScale rejects wrong type/count layouts.
+     */
+    #[Test]
+    public function rejectsBestQualityScaleWithWrongTypeOrCount(): void
+    {
+        $cases = [
+            [
+                'type'    => TiffConst::TYPE_LONG,
+                'count'   => 1,
+                'payload' => pack('V', 1),
+            ],
+            [
+                'type'    => TiffConst::TYPE_RATIONAL,
+                'count'   => 2,
+                'payload' => pack('V4', 1, 1, 1, 1),
+            ],
+        ];
+        $rejections = 0;
+
+        foreach ($cases as $case) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithSingleCustomTag(
+                        DngTag::BEST_QUALITY_SCALE,
+                        $case['type'],
+                        $case['count'],
+                        $case['payload'],
+                    ),
+                );
+                self::fail('Expected ParseError for invalid BestQualityScale type/count.');
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
+     * BestQualityScale rejects non-positive values.
+     */
+    #[Test]
+    public function rejectsBestQualityScaleWithNonPositiveValue(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSingleCustomTag(
+                DngTag::BEST_QUALITY_SCALE,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                pack('V2', 0, 1),
+            ),
+        );
+    }
+
+    /**
      * DNG opcode-list tags.
      *
      * @var list<int>
@@ -7505,6 +7580,19 @@ final class TiffExifParserDngTagTest extends TestCase
      * @param string $payload Raw payload bytes for the tag.
      */
     private function buildDngWithOriginalProxySizeTag(int $tag, int $type, int $count, string $payload): string
+    {
+        return $this->buildDngWithSingleCustomTag($tag, $type, $count, $payload);
+    }
+
+    /**
+     * Builds a minimal DNG with one custom tag in IFD0.
+     *
+     * @param int    $tag     TIFF tag id.
+     * @param int    $type    TIFF field type.
+     * @param int    $count   Declared TIFF count value.
+     * @param string $payload Raw payload bytes for the tag.
+     */
+    private function buildDngWithSingleCustomTag(int $tag, int $type, int $count, string $payload): string
     {
         $ifdOffset         = 8;
         $entryCount        = 6;
