@@ -1356,6 +1356,7 @@ final class TiffExifParser
         $this->validateEnhancedIfd($ifd0);
         foreach ($additionalIfds as $additionalIfd) {
             $this->validateEnhancedIfd($additionalIfd);
+            $this->validateFaxOptionTags($additionalIfd);
             $this->validateDngRolePhotometric($additionalIfd);
             $this->validateDngIfd0OnlyTags($additionalIfd);
             $this->validateDngJxlTags($additionalIfd);
@@ -1435,6 +1436,7 @@ final class TiffExifParser
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
+        $this->validateFaxOptionTags($ifd0);
         $this->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
         $this->validateCameraControlEnumDomains($ifd0, $exifIfd, $ifd1, ...$additionalIfds);
         $this->validateFlashBitfield($exifIfd);
@@ -1959,6 +1961,65 @@ final class TiffExifParser
                 'Compression value %d in IFD1 is invalid; only 1 or 6 is allowed.',
                 $thumbEntry->value,
             ), 1352);
+        }
+    }
+
+    /**
+     * Validates TIFF fax option tags T4Options/T6Options coupling and bitfield domains.
+     *
+     * TIFF 6.0:
+     * - T4Options (Tag 292): LONG[1], only with Compression=3, bits 0..2 allowed.
+     * - T6Options (Tag 293): LONG[1], only with Compression=4, bit 1 allowed; bit 0 and higher bits must be 0.
+     */
+    private function validateFaxOptionTags(Ifd $ifd): void
+    {
+        $t4Options = $ifd->get(TiffTag::T4_OPTIONS);
+
+        if ($t4Options instanceof IfdEntry) {
+            if (($t4Options->type !== TiffConst::TYPE_LONG) || ($t4Options->count !== 1) || !is_int($t4Options->value)) {
+                throw new ParseError('T4Options must be LONG[1].', 1702);
+            }
+
+            $compression = $ifd->get(ExifTag::COMPRESSION);
+            if (!($compression instanceof IfdEntry) || !is_int($compression->value) || ($compression->value !== 3)) {
+                throw new ParseError('T4Options is only valid when Compression = 3 (CCITT Group 3).', 1703);
+            }
+
+            if (($t4Options->value & ~0b111) !== 0) {
+                throw new ParseError(
+                    sprintf('T4Options has reserved bits set (value=0x%X); only bits 0..2 are allowed.', $t4Options->value),
+                    1704,
+                );
+            }
+        }
+
+        $t6Options = $ifd->get(TiffTag::T6_OPTIONS);
+
+        if (!$t6Options instanceof IfdEntry) {
+            return;
+        }
+
+        if (($t6Options->type !== TiffConst::TYPE_LONG) || ($t6Options->count !== 1) || !is_int($t6Options->value)) {
+            throw new ParseError('T6Options must be LONG[1].', 1705);
+        }
+
+        $compression = $ifd->get(ExifTag::COMPRESSION);
+        if (!($compression instanceof IfdEntry) || !is_int($compression->value) || ($compression->value !== 4)) {
+            throw new ParseError('T6Options is only valid when Compression = 4 (CCITT Group 4).', 1706);
+        }
+
+        if (($t6Options->value & 0b1) !== 0) {
+            throw new ParseError(
+                sprintf('T6Options bit 0 is reserved and must be 0 (value=0x%X).', $t6Options->value),
+                1707,
+            );
+        }
+
+        if (($t6Options->value & ~0b10) !== 0) {
+            throw new ParseError(
+                sprintf('T6Options has reserved bits set (value=0x%X); only bit 1 is allowed.', $t6Options->value),
+                1708,
+            );
         }
     }
 
