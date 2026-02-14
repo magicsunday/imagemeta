@@ -1359,6 +1359,7 @@ final class TiffExifParser
             $this->validateFaxOptionTags($additionalIfd);
             $this->validateSeparatedImageInkTags($additionalIfd);
             $this->validateSeparatedImageDotRange($additionalIfd);
+            $this->validateTransferFamilyTags($additionalIfd);
             $this->validateDngRolePhotometric($additionalIfd);
             $this->validateDngIfd0OnlyTags($additionalIfd);
             $this->validateDngJxlTags($additionalIfd);
@@ -1441,6 +1442,7 @@ final class TiffExifParser
         $this->validateFaxOptionTags($ifd0);
         $this->validateSeparatedImageInkTags($ifd0);
         $this->validateSeparatedImageDotRange($ifd0);
+        $this->validateTransferFamilyTags($ifd0);
         $this->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
         $this->validateCameraControlEnumDomains($ifd0, $exifIfd, $ifd1, ...$additionalIfds);
         $this->validateFlashBitfield($exifIfd);
@@ -2288,6 +2290,172 @@ final class TiffExifParser
                 );
             }
         }
+    }
+
+    /**
+     * Validates TIFF transfer/range tag-family semantics.
+     *
+     * TIFF 6.0:
+     * - TransferFunction (301): SHORT, count = {1 or 3} * (1 << BitsPerSample)
+     *   and valid only for WhiteIsZero/BlackIsZero/RGB/Palette/YCbCr photometric modes.
+     * - TransferRange (342): SHORT[6], valid only for RGB or YCbCr.
+     * - ReferenceBlackWhite (532): RATIONAL[6], valid only for RGB or YCbCr.
+     */
+    private function validateTransferFamilyTags(Ifd $ifd): void
+    {
+        $transferFunction = $ifd->get(ExifTag::TRANSFER_FUNCTION);
+        $transferRange    = $ifd->get(TiffTag::TRANSFER_RANGE);
+        $referenceBw      = $ifd->get(ExifTag::REFERENCE_BLACK_WHITE);
+
+        if (
+            !($transferFunction instanceof IfdEntry)
+            && !($transferRange instanceof IfdEntry)
+            && !($referenceBw instanceof IfdEntry)
+        ) {
+            return;
+        }
+
+        $photometricValue = null;
+        $photometricEntry = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        if (($photometricEntry instanceof IfdEntry) && is_int($photometricEntry->value)) {
+            $photometricValue = $photometricEntry->value;
+        }
+
+        if ($transferFunction instanceof IfdEntry) {
+            if ($transferFunction->type !== TiffConst::TYPE_SHORT) {
+                throw new ParseError(
+                    sprintf(
+                        'TransferFunction must use SHORT type, got type %d.',
+                        $transferFunction->type,
+                    ),
+                    1729,
+                );
+            }
+
+            if (($photometricValue !== null) && !in_array($photometricValue, [0, 1, 2, 3, 6], true)) {
+                throw new ParseError(
+                    sprintf(
+                        'TransferFunction is only valid for PhotometricInterpretation {0,1,2,3,6}, got %s.',
+                        (string) $photometricValue,
+                    ),
+                    1730,
+                );
+            }
+
+            $bitsPerSample = $this->resolveTransferFunctionBitsPerSample($ifd);
+            $tableCount    = 2 ** $bitsPerSample;
+
+            if (($transferFunction->count !== $tableCount) && ($transferFunction->count !== (3 * $tableCount))) {
+                throw new ParseError(
+                    sprintf(
+                        'TransferFunction count %d must be %d or %d for BitsPerSample=%d.',
+                        $transferFunction->count,
+                        $tableCount,
+                        3 * $tableCount,
+                        $bitsPerSample,
+                    ),
+                    1731,
+                );
+            }
+        }
+
+        if ($transferRange instanceof IfdEntry) {
+            if (($transferRange->type !== TiffConst::TYPE_SHORT) || ($transferRange->count !== 6)) {
+                throw new ParseError('TransferRange must be SHORT[6].', 1732);
+            }
+
+            if (!in_array($photometricValue, [null, 2, 6], true)) {
+                throw new ParseError(
+                    sprintf(
+                        'TransferRange is only valid for PhotometricInterpretation RGB(2) or YCbCr(6), got %s.',
+                        (string) $photometricValue,
+                    ),
+                    1733,
+                );
+            }
+        }
+
+        if (!$referenceBw instanceof IfdEntry) {
+            return;
+        }
+
+        if (($referenceBw->type !== TiffConst::TYPE_RATIONAL) || ($referenceBw->count !== 6)) {
+            throw new ParseError('ReferenceBlackWhite must be RATIONAL[6].', 1734);
+        }
+
+        if (!in_array($photometricValue, [null, 2, 6], true)) {
+            throw new ParseError(
+                sprintf(
+                    'ReferenceBlackWhite is only valid for PhotometricInterpretation RGB(2) or YCbCr(6), got %s.',
+                    (string) $photometricValue,
+                ),
+                1735,
+            );
+        }
+    }
+
+    /**
+     * Resolves the uniform BitsPerSample scalar used by TransferFunction count rules.
+     */
+    private function resolveTransferFunctionBitsPerSample(Ifd $ifd): int
+    {
+        $bitsEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
+
+        if (!$bitsEntry instanceof IfdEntry) {
+            throw new ParseError('TransferFunction requires BitsPerSample.', 1736);
+        }
+
+        $bitDepths = [];
+
+        if (is_int($bitsEntry->value)) {
+            $bitDepths[] = $bitsEntry->value;
+        } elseif ($bitsEntry->value instanceof ExifNumericList) {
+            foreach ($bitsEntry->value->values as $component) {
+                if (!is_int($component)) {
+                    throw new ParseError('BitsPerSample components must be integers.', 1737);
+                }
+
+                $bitDepths[] = $component;
+            }
+        } else {
+            throw new ParseError('BitsPerSample components must be integers.', 1737);
+        }
+
+        if ($bitDepths === []) {
+            throw new ParseError('BitsPerSample must provide at least one component value.', 1738);
+        }
+
+        $uniformBitDepth = $bitDepths[0];
+
+        foreach ($bitDepths as $index => $bitDepth) {
+            if ($bitDepth <= 0) {
+                throw new ParseError(
+                    sprintf('BitsPerSample component %d must be >= 1.', $index),
+                    1739,
+                );
+            }
+
+            if ($bitDepth !== $uniformBitDepth) {
+                throw new ParseError(
+                    sprintf(
+                        'TransferFunction requires uniform BitsPerSample values; component 0=%d, component %d=%d.',
+                        $uniformBitDepth,
+                        $index,
+                        $bitDepth,
+                    ),
+                    1740,
+                );
+            }
+        }
+
+        if ($uniformBitDepth > 16) {
+            throw new ParseError(
+                sprintf('TransferFunction does not support BitsPerSample=%d (>16).', $uniformBitDepth),
+                1741,
+            );
+        }
+
+        return $uniformBitDepth;
     }
 
     /**
