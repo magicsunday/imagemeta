@@ -7957,6 +7957,99 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * ChromaBlurRadius, AntiAliasStrength and ShadowScale accept valid RATIONAL[1] values.
+     */
+    #[Test]
+    public function parsesValidChromaBlurRadiusAntiAliasStrengthAndShadowScale(): void
+    {
+        $cases = [
+            [DngTag::CHROMA_BLUR_RADIUS, pack('V2', 0, 1)],
+            [DngTag::ANTI_ALIAS_STRENGTH, pack('V2', 0, 1)],
+            [DngTag::SHADOW_SCALE, pack('V2', 5, 4)],
+        ];
+
+        foreach ($cases as [$tag, $payload]) {
+            $parsed = (new TiffExifParser())->parseFromBlob(
+                $this->buildDngWithSingleCustomTag(
+                    $tag,
+                    TiffConst::TYPE_RATIONAL,
+                    1,
+                    $payload,
+                ),
+            );
+
+            self::assertNotNull($parsed->ifd0->get($tag));
+        }
+    }
+
+    /**
+     * ChromaBlurRadius, AntiAliasStrength and ShadowScale reject wrong type/count layouts.
+     */
+    #[Test]
+    public function rejectsChromaBlurRadiusAntiAliasStrengthAndShadowScaleWithWrongTypeOrCount(): void
+    {
+        $cases = [
+            [DngTag::CHROMA_BLUR_RADIUS, TiffConst::TYPE_LONG, 1, pack('V', 1)],
+            [DngTag::CHROMA_BLUR_RADIUS, TiffConst::TYPE_RATIONAL, 2, pack('V4', 1, 1, 1, 1)],
+            [DngTag::ANTI_ALIAS_STRENGTH, TiffConst::TYPE_LONG, 1, pack('V', 1)],
+            [DngTag::ANTI_ALIAS_STRENGTH, TiffConst::TYPE_RATIONAL, 2, pack('V4', 1, 1, 1, 1)],
+            [DngTag::SHADOW_SCALE, TiffConst::TYPE_LONG, 1, pack('V', 1)],
+            [DngTag::SHADOW_SCALE, TiffConst::TYPE_RATIONAL, 2, pack('V4', 1, 1, 1, 1)],
+        ];
+        $rejections = 0;
+
+        foreach ($cases as [$tag, $type, $count, $payload]) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithSingleCustomTag($tag, $type, $count, $payload),
+                );
+                self::fail(
+                    sprintf('Expected ParseError for invalid scalar tag layout 0x%04X.', $tag),
+                );
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
+     * ChromaBlurRadius, AntiAliasStrength and ShadowScale reject invalid scalar values.
+     */
+    #[Test]
+    public function rejectsChromaBlurRadiusAntiAliasStrengthAndShadowScaleWithInvalidValues(): void
+    {
+        $cases = [
+            [DngTag::CHROMA_BLUR_RADIUS, pack('V2', 1, 0)],
+            [DngTag::ANTI_ALIAS_STRENGTH, pack('V2', 1, 0)],
+            [DngTag::SHADOW_SCALE, pack('V2', 0, 1)],
+            [DngTag::SHADOW_SCALE, pack('V2', 1, 0)],
+        ];
+        $rejections = 0;
+
+        foreach ($cases as [$tag, $payload]) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithSingleCustomTag(
+                        $tag,
+                        TiffConst::TYPE_RATIONAL,
+                        1,
+                        $payload,
+                    ),
+                );
+                self::fail(
+                    sprintf('Expected ParseError for invalid scalar tag value 0x%04X.', $tag),
+                );
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
      * DNG opcode-list tags.
      *
      * @var list<int>

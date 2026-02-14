@@ -1411,6 +1411,7 @@ final class TiffExifParser
         $this->validateDngDefaultCropScaleGeometry($ifd0);
         $this->validateDngLinearResponseLimit($ifd0);
         $this->validateDngBayerGreenSplit($ifd0);
+        $this->validateDngRenderScalars($ifd0);
         $this->validateDngBaselineScalars($ifd0);
         $this->validateDngLensInfo($ifd0);
         $this->validateDngBestQualityScale($ifd0);
@@ -7003,6 +7004,79 @@ final class TiffExifParser
                 sprintf('BayerGreenSplit requires Bayer CFARepeatPatternDim=2x2, got %dx%d.', $rows, $cols),
                 1661,
             );
+        }
+    }
+
+    /**
+     * Validates DNG rendering scalar tags.
+     *
+     * DNG 1.7.1.0 defines these tags as RATIONAL[1] processing controls:
+     * - ChromaBlurRadius (>= 0)
+     * - AntiAliasStrength (>= 0)
+     * - ShadowScale (> 0)
+     */
+    private function validateDngRenderScalars(Ifd $ifd): void
+    {
+        /** @var array<int, array{name: string, strictPositive: bool}> $tagRules */
+        $tagRules = [
+            DngTag::CHROMA_BLUR_RADIUS  => ['name' => 'ChromaBlurRadius', 'strictPositive' => false],
+            DngTag::ANTI_ALIAS_STRENGTH => ['name' => 'AntiAliasStrength', 'strictPositive' => false],
+            DngTag::SHADOW_SCALE        => ['name' => 'ShadowScale', 'strictPositive' => true],
+        ];
+
+        foreach ($tagRules as $tag => $rule) {
+            $entry = $ifd->get($tag);
+
+            if (!$entry instanceof IfdEntry) {
+                continue;
+            }
+
+            if (($entry->type !== TiffConst::TYPE_RATIONAL) || ($entry->count !== 1)) {
+                throw new ParseError(
+                    sprintf(
+                        '%s must be RATIONAL[1], got type %d count %d.',
+                        $rule['name'],
+                        $entry->type,
+                        $entry->count,
+                    ),
+                    1662,
+                );
+            }
+
+            if (!$entry->value instanceof ExifRational) {
+                throw new ParseError(
+                    sprintf('%s must decode to one rational component.', $rule['name']),
+                    1663,
+                );
+            }
+
+            if ($entry->value->denominator <= 0) {
+                throw new ParseError(
+                    sprintf('%s denominator must be > 0.', $rule['name']),
+                    1664,
+                );
+            }
+
+            $scalar = $entry->value->numerator / $entry->value->denominator;
+
+            if (!is_finite($scalar)) {
+                throw new ParseError(
+                    sprintf('%s must be finite.', $rule['name']),
+                    1665,
+                );
+            }
+
+            if ($rule['strictPositive'] ? ($scalar <= 0.0) : ($scalar < 0.0)) {
+                throw new ParseError(
+                    sprintf(
+                        '%s must be %s, got %.6F.',
+                        $rule['name'],
+                        $rule['strictPositive'] ? '> 0' : '>= 0',
+                        $scalar,
+                    ),
+                    1666,
+                );
+            }
         }
     }
 
