@@ -6006,7 +6006,9 @@ final class TiffExifParserDngTagTest extends TestCase
     private function bytesPerTiffTypeForTest(int $type): int
     {
         return match ($type) {
-            TiffConst::TYPE_SHORT => 2,
+            TiffConst::TYPE_BYTE,
+            TiffConst::TYPE_UNDEFINED => 1,
+            TiffConst::TYPE_SHORT     => 2,
             TiffConst::TYPE_LONG,
             TiffConst::TYPE_SLONG => 4,
             TiffConst::TYPE_RATIONAL,
@@ -6495,6 +6497,126 @@ final class TiffExifParserDngTagTest extends TestCase
                 "\xC0\xAF\0",
             ),
         );
+    }
+
+    /**
+     * Accepts OriginalRawFileName as NUL-terminated UTF-8.
+     */
+    #[Test]
+    public function acceptsValidOriginalRawFileName(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::ORIGINAL_RAW_FILE_NAME,
+                TiffConst::TYPE_ASCII,
+                "IMG_0001.CR2\0",
+            ),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects OriginalRawFileName when BYTE payload is not NUL-terminated.
+     */
+    #[Test]
+    public function rejectsOriginalRawFileNameMissingNul(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1572);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::ORIGINAL_RAW_FILE_NAME,
+                TiffConst::TYPE_BYTE,
+                'IMG_0001.CR2',
+            ),
+        );
+    }
+
+    /**
+     * Rejects OriginalRawFileName when UTF-8 payload is malformed.
+     */
+    #[Test]
+    public function rejectsOriginalRawFileNameInvalidUtf8(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1573);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::ORIGINAL_RAW_FILE_NAME,
+                TiffConst::TYPE_BYTE,
+                "\xC0\xAF\0",
+            ),
+        );
+    }
+
+    /**
+     * Rejects OriginalRawFileData when type is not UNDEFINED.
+     */
+    #[Test]
+    public function rejectsOriginalRawFileDataWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithOriginalRawFileData(
+                TiffConst::TYPE_LONG,
+                'A',
+            ),
+        );
+    }
+
+    /**
+     * Rejects OriginalRawFileData when the documented block sequence is truncated.
+     */
+    #[Test]
+    public function rejectsOriginalRawFileDataTruncatedBlockSequence(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $payload = $this->buildMinimalOriginalRawFileDataPayload();
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithOriginalRawFileData(
+                TiffConst::TYPE_UNDEFINED,
+                substr($payload, 0, strlen($payload) - 4),
+            ),
+        );
+    }
+
+    /**
+     * Accepts OriginalRawFileData with valid blocks and extra trailing bytes.
+     */
+    #[Test]
+    public function acceptsOriginalRawFileDataWithExtraTrailingBytes(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithOriginalRawFileData(
+                TiffConst::TYPE_UNDEFINED,
+                $this->buildMinimalOriginalRawFileDataPayload() . "\xDE\xAD\xBE\xEF",
+            ),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    private function buildDngWithOriginalRawFileData(int $type, string $payload): string
+    {
+        return $this->buildDngWithDefaultCropScaleTags([
+            [
+                'tag'     => DngTag::ORIGINAL_RAW_FILE_DATA,
+                'type'    => $type,
+                'count'   => strlen($payload),
+                'payload' => $payload,
+            ],
+        ]);
+    }
+
+    private function buildMinimalOriginalRawFileDataPayload(): string
+    {
+        return str_repeat(pack('N', 0), 8);
     }
 
     /**

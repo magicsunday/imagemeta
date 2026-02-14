@@ -1134,6 +1134,7 @@ final class TiffExifParser
         DngTag::PROFILE_CALIBRATION_SIGNATURE,
         DngTag::AS_SHOT_PROFILE_NAME,
         DngTag::PROFILE_COPYRIGHT,
+        DngTag::ORIGINAL_RAW_FILE_NAME,
         DngTag::PREVIEW_APPLICATION_NAME,
         DngTag::PREVIEW_APPLICATION_VERSION,
         DngTag::PREVIEW_SETTINGS_NAME,
@@ -1402,6 +1403,7 @@ final class TiffExifParser
         $this->validateDngImageStats($ifd0);
         $this->validateDngImageSequenceInfo($ifd0);
         $this->validateDngRgbTables($ifd0);
+        $this->validateDngOriginalRawFileData($ifd0);
         $this->validateDngActiveAndMaskedAreas($ifd0);
         $this->validateDngBlackWhiteLevelFamily($ifd0);
         $this->validateDngDefaultCropScaleGeometry($ifd0);
@@ -2895,6 +2897,7 @@ final class TiffExifParser
         DngTag::PROFILE_CALIBRATION_SIGNATURE,
         DngTag::AS_SHOT_PROFILE_NAME,
         DngTag::PROFILE_COPYRIGHT,
+        DngTag::ORIGINAL_RAW_FILE_NAME,
         DngTag::PREVIEW_APPLICATION_NAME,
         DngTag::PREVIEW_APPLICATION_VERSION,
         DngTag::PREVIEW_SETTINGS_NAME,
@@ -5514,6 +5517,130 @@ final class TiffExifParser
                 1526,
             );
         }
+    }
+
+    /**
+     * Validates OriginalRawFileData payload framing.
+     *
+     * DNG 1.7.1.0 ("OriginalRawFileData") defines UNDEFINED payload bytes in big-endian
+     * block order with four compressed forks and four 4-byte type/creator fields.
+     * Trailing bytes are allowed for forward compatibility.
+     */
+    private function validateDngOriginalRawFileData(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::ORIGINAL_RAW_FILE_DATA);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if ($entry->type !== TiffConst::TYPE_UNDEFINED) {
+            throw new ParseError(
+                sprintf('OriginalRawFileData must use UNDEFINED type, got %d.', $entry->type),
+                1626,
+            );
+        }
+
+        if (!is_string($entry->value)) {
+            throw new ParseError('OriginalRawFileData must decode to raw bytes.', 1627);
+        }
+
+        $payload = $entry->value;
+        $offset  = 0;
+
+        $offset = $this->validateDngOriginalRawForkBlock($payload, $offset, 'original raw data fork');
+        $offset = $this->validateDngOriginalRawForkBlock($payload, $offset, 'original raw resource fork');
+        $offset = $this->consumeDngOriginalRawFixedBlock($payload, $offset, 'original raw macOS file type');
+        $offset = $this->consumeDngOriginalRawFixedBlock($payload, $offset, 'original raw macOS file creator');
+        $offset = $this->validateDngOriginalRawForkBlock($payload, $offset, 'sidecar THM data fork');
+        $offset = $this->validateDngOriginalRawForkBlock($payload, $offset, 'sidecar THM resource fork');
+        $offset = $this->consumeDngOriginalRawFixedBlock($payload, $offset, 'sidecar THM macOS file type');
+        $this->consumeDngOriginalRawFixedBlock($payload, $offset, 'sidecar THM macOS file creator');
+    }
+
+    /**
+     * Consumes a fixed 4-byte field from OriginalRawFileData.
+     */
+    private function consumeDngOriginalRawFixedBlock(string $payload, int $offset, string $blockName): int
+    {
+        if ((strlen($payload) - $offset) < 4) {
+            throw new ParseError(
+                sprintf('OriginalRawFileData is truncated before %s block.', $blockName),
+                1628,
+            );
+        }
+
+        return $offset + 4;
+    }
+
+    /**
+     * Validates one compressed-fork block in OriginalRawFileData and returns the next offset.
+     *
+     * @param string $payload   Raw OriginalRawFileData bytes.
+     * @param int    $offset    Current parse cursor.
+     * @param string $blockName Human-readable block name for error context.
+     */
+    private function validateDngOriginalRawForkBlock(string $payload, int $offset, string $blockName): int
+    {
+        $payloadLength = strlen($payload);
+
+        if (($payloadLength - $offset) < 4) {
+            throw new ParseError(
+                sprintf('OriginalRawFileData is truncated before %s length field.', $blockName),
+                1629,
+            );
+        }
+
+        $forkStart  = $offset;
+        $forkLength = Unpack::int('N', substr($payload, $offset, 4), sprintf('%s length', $blockName));
+        $offset += 4;
+
+        if ($forkLength === 0) {
+            return $offset;
+        }
+
+        $forkBlocks = intdiv($forkLength + 65535, 65536);
+        $indexCount = $forkBlocks + 1;
+        $indexBytes = $indexCount * 4;
+
+        if (($payloadLength - $offset) < $indexBytes) {
+            throw new ParseError(
+                sprintf('OriginalRawFileData is truncated in %s index table.', $blockName),
+                1630,
+            );
+        }
+
+        $minimumDataOffset = 4 + $indexBytes;
+        $previousOffset    = -1;
+        $forkDataEnd       = 0;
+
+        for ($index = 0; $index < $indexCount; ++$index) {
+            $relativeOffset = Unpack::int(
+                'N',
+                substr($payload, $offset + ($index * 4), 4),
+                sprintf('%s index offset', $blockName),
+            );
+
+            if (($relativeOffset < $minimumDataOffset) || ($relativeOffset < $previousOffset)) {
+                throw new ParseError(
+                    sprintf('OriginalRawFileData has invalid %s index offsets.', $blockName),
+                    1631,
+                );
+            }
+
+            $previousOffset = $relativeOffset;
+            $forkDataEnd    = $relativeOffset;
+        }
+
+        $forkEnd = $forkStart + $forkDataEnd;
+        if ($forkEnd > $payloadLength) {
+            throw new ParseError(
+                sprintf('OriginalRawFileData is truncated in %s compressed data.', $blockName),
+                1632,
+            );
+        }
+
+        return $forkEnd;
     }
 
     /**
