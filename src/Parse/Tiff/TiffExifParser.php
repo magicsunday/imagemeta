@@ -1409,6 +1409,7 @@ final class TiffExifParser
         $this->validateDngBlackWhiteLevelFamily($ifd0);
         $this->validateDngDefaultCropScaleGeometry($ifd0);
         $this->validateDngLinearResponseLimit($ifd0);
+        $this->validateDngLensInfo($ifd0);
         $this->validateDngBestQualityScale($ifd0);
         $this->validateDngOriginalProxySizes($ifd0);
         $this->validateDngDefaultUserCrop($ifd0);
@@ -6928,6 +6929,72 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('LinearResponseLimit must be in (0.0, 1.0], got %.6F.', $limit),
                 1648,
+            );
+        }
+    }
+
+    /**
+     * Validates LensInfo (0xC630) per DNG 1.7.1.0.
+     *
+     * Must be RATIONAL[4] in this order:
+     * 1) min focal length, 2) max focal length, 3) min f-stop at min focal,
+     * 4) min f-stop at max focal.
+     *
+     * Aperture fields may use 0/0 to indicate unknown values.
+     */
+    private function validateDngLensInfo(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::LENS_INFO);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (($entry->type !== TiffConst::TYPE_RATIONAL) || ($entry->count !== 4)) {
+            throw new ParseError(
+                sprintf(
+                    'LensInfo must be RATIONAL[4], got type %d count %d.',
+                    $entry->type,
+                    $entry->count,
+                ),
+                1649,
+            );
+        }
+
+        $value = $entry->value;
+        if (!$value instanceof ExifRationalList || count($value->values) !== 4) {
+            throw new ParseError('LensInfo must decode to four rational components.', 1650);
+        }
+
+        $components = [];
+        foreach ($value->values as $index => $component) {
+            if ($component->denominator === 0) {
+                $isApertureField = $index >= 2;
+                if ($isApertureField && $component->numerator === 0) {
+                    $components[] = null;
+                    continue;
+                }
+
+                throw new ParseError(
+                    sprintf('LensInfo component %d has invalid zero denominator.', $index),
+                    1651,
+                );
+            }
+
+            $components[] = $component->numerator / $component->denominator;
+        }
+
+        $minFocal = (float) $components[0];
+        $maxFocal = (float) $components[1];
+
+        if ($minFocal > $maxFocal) {
+            throw new ParseError(
+                sprintf(
+                    'LensInfo minimum focal length %.6F must be <= maximum focal length %.6F.',
+                    $minFocal,
+                    $maxFocal,
+                ),
+                1653,
             );
         }
     }

@@ -7601,6 +7601,130 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * LensInfo accepts a valid RATIONAL[4] layout.
+     */
+    #[Test]
+    public function parsesValidLensInfo(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSingleCustomTag(
+                DngTag::LENS_INFO,
+                TiffConst::TYPE_RATIONAL,
+                4,
+                pack('V8', 24, 1, 70, 1, 28, 10, 40, 10),
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::LENS_INFO));
+    }
+
+    /**
+     * LensInfo rejects wrong type/count.
+     */
+    #[Test]
+    public function rejectsLensInfoWithWrongTypeOrCount(): void
+    {
+        $cases = [
+            [
+                'type'    => TiffConst::TYPE_LONG,
+                'count'   => 4,
+                'payload' => pack('V4', 24, 70, 28, 40),
+            ],
+            [
+                'type'    => TiffConst::TYPE_RATIONAL,
+                'count'   => 3,
+                'payload' => pack('V6', 24, 1, 70, 1, 28, 10),
+            ],
+        ];
+        $rejections = 0;
+
+        foreach ($cases as $case) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithSingleCustomTag(
+                        DngTag::LENS_INFO,
+                        $case['type'],
+                        $case['count'],
+                        $case['payload'],
+                    ),
+                );
+                self::fail('Expected ParseError for invalid LensInfo type/count.');
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
+     * LensInfo rejects focal-length ordering inversions.
+     */
+    #[Test]
+    public function rejectsLensInfoWhenMinimumFocalExceedsMaximum(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSingleCustomTag(
+                DngTag::LENS_INFO,
+                TiffConst::TYPE_RATIONAL,
+                4,
+                pack('V8', 70, 1, 24, 1, 28, 10, 40, 10),
+            ),
+        );
+    }
+
+    /**
+     * LensInfo allows 0/0 aperture sentinel values for unknown min f-stop fields.
+     */
+    #[Test]
+    public function acceptsLensInfoApertureUnknownSentinel(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSingleCustomTag(
+                DngTag::LENS_INFO,
+                TiffConst::TYPE_RATIONAL,
+                4,
+                pack('V8', 24, 1, 70, 1, 0, 0, 0, 0),
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::LENS_INFO));
+    }
+
+    /**
+     * LensInfo rejects zero-denominator values outside allowed aperture 0/0 sentinels.
+     */
+    #[Test]
+    public function rejectsLensInfoWithInvalidZeroDenominator(): void
+    {
+        $cases = [
+            pack('V8', 24, 0, 70, 1, 28, 10, 40, 10),
+            pack('V8', 24, 1, 70, 1, 1, 0, 40, 10),
+        ];
+        $rejections = 0;
+
+        foreach ($cases as $payload) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithSingleCustomTag(
+                        DngTag::LENS_INFO,
+                        TiffConst::TYPE_RATIONAL,
+                        4,
+                        $payload,
+                    ),
+                );
+                self::fail('Expected ParseError for invalid LensInfo denominator-zero usage.');
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
      * DNG opcode-list tags.
      *
      * @var list<int>
