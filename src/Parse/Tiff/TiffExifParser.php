@@ -1367,6 +1367,7 @@ final class TiffExifParser
             $this->validateFillOrderTag($additionalIfd);
             $this->validatePredictorTag($additionalIfd);
             $this->validateJpegProcTag($additionalIfd);
+            $this->validateJpegInterchangePairTags($additionalIfd);
             $this->validateMinMaxSampleValueTags($additionalIfd);
             $this->validateSampleDomainTags($additionalIfd);
             $this->validateExtraSamplesTag($additionalIfd);
@@ -1463,6 +1464,7 @@ final class TiffExifParser
         $this->validateFillOrderTag($ifd0);
         $this->validatePredictorTag($ifd0);
         $this->validateJpegProcTag($ifd0);
+        $this->validateJpegInterchangePairTags($ifd0);
         $this->validateMinMaxSampleValueTags($ifd0);
         $this->validateSampleDomainTags($ifd0);
         $this->validateExtraSamplesTag($ifd0);
@@ -2733,6 +2735,67 @@ final class TiffExifParser
 
         if ($isJpegCompression) {
             throw new ParseError('Compression=6 requires JPEGProc per TIFF 6.0 Section 22.', 1829);
+        }
+    }
+
+    /**
+     * Validates JPEGInterchangeFormat/JPEGInterchangeFormatLength pair semantics.
+     *
+     * TIFF 6.0 Section 22 defines these fields as a coupled offset/length pair
+     * for embedded JPEG interchange streams.
+     */
+    private function validateJpegInterchangePairTags(Ifd $ifd): void
+    {
+        $offsetEntry = $ifd->get(ExifTag::JPEG_INTERCHANGE_FORMAT);
+        $lengthEntry = $ifd->get(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
+
+        if (!($offsetEntry instanceof IfdEntry) && !($lengthEntry instanceof IfdEntry)) {
+            return;
+        }
+
+        if ($lengthEntry instanceof IfdEntry && !($offsetEntry instanceof IfdEntry)) {
+            throw new ParseError(
+                'JPEGInterchangeFormatLength requires JPEGInterchangeFormat.',
+                1830,
+            );
+        }
+
+        if (!($offsetEntry instanceof IfdEntry) || !is_int($offsetEntry->value)) {
+            throw new ParseError('JPEGInterchangeFormat must be LONG[1].', 1831);
+        }
+
+        if ($offsetEntry->value <= 0) {
+            if ($lengthEntry instanceof IfdEntry) {
+                throw new ParseError(
+                    'JPEGInterchangeFormatLength is invalid when JPEGInterchangeFormat is zero.',
+                    1832,
+                );
+            }
+
+            return;
+        }
+
+        if (!($lengthEntry instanceof IfdEntry) || !is_int($lengthEntry->value)) {
+            throw new ParseError(
+                'Non-zero JPEGInterchangeFormat requires JPEGInterchangeFormatLength.',
+                1833,
+            );
+        }
+
+        if ($lengthEntry->value <= 0) {
+            throw new ParseError(
+                'JPEGInterchangeFormatLength must be > 0 when JPEGInterchangeFormat is non-zero.',
+                1834,
+            );
+        }
+
+        $blobSize = $this->buffer->size();
+        if (
+            ($offsetEntry->value > $blobSize)
+            || ($lengthEntry->value > $blobSize)
+            || ($offsetEntry->value > ($blobSize - $lengthEntry->value))
+        ) {
+            throw new ParseError('JPEGInterchangeFormat range exceeds TIFF data length.', 1835);
         }
     }
 

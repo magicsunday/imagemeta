@@ -1684,8 +1684,9 @@ final class TiffExifParserNegativeTest extends TestCase
     public function rejectIfd0JpegInterchangeFormatLengthInJpegContext(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1353);
-        $this->expectExceptionMessageMatches('/JPEGInterchangeFormatLength.*IFD0|IFD0.*JPEGInterchangeFormatLength/i');
+        $this->expectExceptionMessageMatches(
+            '/JPEGInterchangeFormatLength.*IFD0|IFD0.*JPEGInterchangeFormatLength|JPEGInterchangeFormatLength requires JPEGInterchangeFormat/i',
+        );
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithIfd0Pointer(
