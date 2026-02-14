@@ -1362,6 +1362,7 @@ final class TiffExifParser
             $this->validateDngCfaPhotometric($additionalIfd);
             $this->validateDngLinearizationTable($additionalIfd);
             $this->validateDngBayerGreenSplit($additionalIfd);
+            $this->validateDngProfileGainTableMapLegacy($additionalIfd);
             $this->validateDngSemanticMaskIdentity($additionalIfd);
             $this->validateDngMaskSubArea($additionalIfd);
         }
@@ -1405,6 +1406,7 @@ final class TiffExifParser
         $this->validateDngProfileDynamicRange($ifd0);
         $this->validateDngProfileGainTableMap2($ifd0);
         $this->validateDngGainMapPlacement($ifd0);
+        $this->validateDngProfileGainTableMapLegacy($ifd0);
         $this->validateDngImageStats($ifd0);
         $this->validateDngImageSequenceInfo($ifd0);
         $this->validateDngRgbTables($ifd0);
@@ -5523,6 +5525,124 @@ final class TiffExifParser
                 ),
                 1519,
             );
+        }
+    }
+
+    /**
+     * Validates legacy DNG ProfileGainTableMap (0xCD2D) payload structure.
+     *
+     * DNG 1.7.1.0 legacy map layout:
+     * - 64-byte header
+     * - gain array of FLOAT32 entries
+     * - total size = 64 + 4 * MapPointsV * MapPointsH * MapPointsN
+     */
+    private function validateDngProfileGainTableMapLegacy(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::PROFILE_GAIN_TABLE_MAP);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (($entry->type !== TiffConst::TYPE_UNDEFINED) || !is_string($entry->value)) {
+            throw new ParseError(
+                sprintf(
+                    'ProfileGainTableMap must be UNDEFINED payload bytes, got type %d.',
+                    $entry->type,
+                ),
+                1685,
+            );
+        }
+
+        $payload = $entry->value;
+        $length  = strlen($payload);
+
+        if ($length < 64) {
+            throw new ParseError(
+                sprintf('ProfileGainTableMap payload must be at least 64 bytes, got %d.', $length),
+                1686,
+            );
+        }
+
+        $mapPointsV = $this->unpackU32(substr($payload, 0, 4));
+        $mapPointsH = $this->unpackU32(substr($payload, 4, 4));
+        $mapPointsN = $this->unpackU32(substr($payload, 40, 4));
+
+        // Decode and validate fixed header scalar fields to enforce binary layout.
+        $headerScalars = [
+            $this->unpackDouble(substr($payload, 8, 8)),
+            $this->unpackDouble(substr($payload, 16, 8)),
+            $this->unpackDouble(substr($payload, 24, 8)),
+            $this->unpackDouble(substr($payload, 32, 8)),
+            $this->unpackFloat(substr($payload, 44, 4)),
+            $this->unpackFloat(substr($payload, 48, 4)),
+            $this->unpackFloat(substr($payload, 52, 4)),
+            $this->unpackFloat(substr($payload, 56, 4)),
+            $this->unpackFloat(substr($payload, 60, 4)),
+        ];
+
+        foreach ($headerScalars as $scalar) {
+            if (!is_finite($scalar)) {
+                throw new ParseError('ProfileGainTableMap header contains non-finite scalar fields.', 1687);
+            }
+        }
+
+        if (($mapPointsV < 1) || ($mapPointsH < 1) || ($mapPointsN < 1)) {
+            throw new ParseError(
+                sprintf(
+                    'ProfileGainTableMap MapPoints must be >= 1, got V=%d H=%d N=%d.',
+                    $mapPointsV,
+                    $mapPointsH,
+                    $mapPointsN,
+                ),
+                1688,
+            );
+        }
+
+        if ($mapPointsV > intdiv(PHP_INT_MAX, $mapPointsH)) {
+            throw new ParseError('ProfileGainTableMap size multiplication overflow (V*H).', 1689);
+        }
+
+        $vh = $mapPointsV * $mapPointsH;
+
+        if ($vh > intdiv(PHP_INT_MAX, $mapPointsN)) {
+            throw new ParseError('ProfileGainTableMap size multiplication overflow (V*H*N).', 1690);
+        }
+
+        $entryCount = $vh * $mapPointsN;
+
+        if ($entryCount > intdiv(PHP_INT_MAX - 64, 4)) {
+            throw new ParseError('ProfileGainTableMap payload size overflow.', 1691);
+        }
+
+        $expectedLength = 64 + (4 * $entryCount);
+
+        if ($length !== $expectedLength) {
+            throw new ParseError(
+                sprintf(
+                    'ProfileGainTableMap payload length mismatch: expected %d (64 + 4*%d*%d*%d), got %d.',
+                    $expectedLength,
+                    $mapPointsV,
+                    $mapPointsH,
+                    $mapPointsN,
+                    $length,
+                ),
+                1692,
+            );
+        }
+
+        $offset = 64;
+
+        for ($i = 0; $i < $entryCount; ++$i) {
+            $gain = $this->unpackFloat(substr($payload, $offset, 4));
+            $offset += 4;
+
+            if (!is_finite($gain) || ($gain < 0.0)) {
+                throw new ParseError(
+                    sprintf('ProfileGainTableMap gain[%d] must be finite and >= 0, got %g.', $i, $gain),
+                    1693,
+                );
+            }
         }
     }
 

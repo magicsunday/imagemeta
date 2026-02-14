@@ -3822,17 +3822,95 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Rejects legacy ProfileGainTableMap in Raw IFD when type is not UNDEFINED.
+     */
+    #[Test]
+    public function rejectsLegacyGainTableMapWithWrongTypeInRawIfd(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithGainTableMapInRawIfd(
+                type: TiffConst::TYPE_LONG,
+                payload: pack('V', 1),
+                countOverride: 1,
+            ),
+        );
+    }
+
+    /**
+     * Rejects legacy ProfileGainTableMap when payload length mismatches the size formula.
+     */
+    #[Test]
+    public function rejectsLegacyGainTableMapLengthMismatchInRawIfd(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithGainTableMapInRawIfd(
+                payload: $this->buildLegacyGainTableMapPayload() . pack('g', 1.0),
+            ),
+        );
+    }
+
+    /**
+     * Rejects legacy ProfileGainTableMap with negative gain entries.
+     */
+    #[Test]
+    public function rejectsLegacyGainTableMapNegativeGainInRawIfd(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithGainTableMapInRawIfd(
+                payload: $this->buildLegacyGainTableMapPayload(gain: -1.0),
+            ),
+        );
+    }
+
+    /**
+     * Rejects legacy ProfileGainTableMap with truncated header or gain-array payload.
+     */
+    #[Test]
+    public function rejectsLegacyGainTableMapTruncationInRawIfd(): void
+    {
+        $validPayload = $this->buildLegacyGainTableMapPayload();
+        $cases        = [
+            substr($validPayload, 0, 60),
+            substr($validPayload, 0, 64),
+        ];
+        $rejections = 0;
+
+        foreach ($cases as $payload) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithGainTableMapInRawIfd(payload: $payload),
+                );
+                self::fail('Expected ParseError for truncated legacy ProfileGainTableMap payload.');
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
      * Builds a DNG with ProfileGainTableMap in IFD0 (invalid placement).
      */
-    private function buildDngWithGainTableMapInIfd0(): string
-    {
+    private function buildDngWithGainTableMapInIfd0(
+        int $type = TiffConst::TYPE_UNDEFINED,
+        ?string $payload = null,
+        ?int $countOverride = null,
+    ): string {
         $ifdOffset         = 8;
         $entryCount        = 6;
         $ifdSize           = 2 + (12 * $entryCount) + 4;
         $uniqueCameraModel = pack('Z*', 'TestCamera0');
         $modelOffset       = $ifdOffset + $ifdSize;
-        $payload           = str_repeat("\x00", 80);
-        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+        $payload ??= $this->buildLegacyGainTableMapPayload();
+        $count         = $countOverride ?? strlen($payload);
+        $payloadOffset = $modelOffset + strlen($uniqueCameraModel);
 
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
@@ -3859,8 +3937,8 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', strlen($uniqueCameraModel))
             . pack('V', $modelOffset)
             . pack('v', DngTag::PROFILE_GAIN_TABLE_MAP)
-            . pack('v', TiffConst::TYPE_UNDEFINED)
-            . pack('V', strlen($payload))
+            . pack('v', $type)
+            . pack('V', $count)
             . pack('V', $payloadOffset)
             . pack('V', 0)
             . $uniqueCameraModel
@@ -3870,8 +3948,11 @@ final class TiffExifParserDngTagTest extends TestCase
     /**
      * Builds a DNG with ProfileGainTableMap in an additional (Raw) IFD.
      */
-    private function buildDngWithGainTableMapInRawIfd(): string
-    {
+    private function buildDngWithGainTableMapInRawIfd(
+        int $type = TiffConst::TYPE_UNDEFINED,
+        ?string $payload = null,
+        ?int $countOverride = null,
+    ): string {
         $ifdOffset   = 8;
         $ifd0Entries = 5;
         $ifd0Size    = 2 + ($ifd0Entries * 12) + 4;
@@ -3887,7 +3968,8 @@ final class TiffExifParserDngTagTest extends TestCase
         $ifd2Entries = 3;
         $ifd2Size    = 2 + ($ifd2Entries * 12) + 4;
 
-        $payload       = str_repeat("\x00", 80);
+        $payload ??= $this->buildLegacyGainTableMapPayload();
+        $count         = $countOverride ?? strlen($payload);
         $payloadOffset = $ifd2Offset + $ifd2Size;
 
         $ifd0 = pack('v', $ifd0Entries)
@@ -3934,8 +4016,8 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0)
             . pack('v', DngTag::PROFILE_GAIN_TABLE_MAP)
-            . pack('v', TiffConst::TYPE_UNDEFINED)
-            . pack('V', strlen($payload))
+            . pack('v', $type)
+            . pack('V', $count)
             . pack('V', $payloadOffset)
             . pack('V', 0);
 
@@ -3947,6 +4029,43 @@ final class TiffExifParserDngTagTest extends TestCase
             . $ifd1
             . $ifd2
             . $payload;
+    }
+
+    /**
+     * Builds a legacy ProfileGainTableMap payload with 64-byte header and float gain array.
+     *
+     * @param int   $mapPointsV Vertical grid points.
+     * @param int   $mapPointsH Horizontal grid points.
+     * @param int   $mapPointsN Channel/grid depth points.
+     * @param float $gain       Gain value for all entries.
+     */
+    private function buildLegacyGainTableMapPayload(
+        int $mapPointsV = 1,
+        int $mapPointsH = 1,
+        int $mapPointsN = 1,
+        float $gain = 1.0,
+    ): string {
+        $header = pack('V', $mapPointsV)
+            . pack('V', $mapPointsH)
+            . pack('e', 1.0) // MapSpacingV
+            . pack('e', 1.0) // MapSpacingH
+            . pack('e', 0.0) // MapOriginV
+            . pack('e', 0.0) // MapOriginH
+            . pack('V', $mapPointsN)
+            . pack('g', 1.0) // MapInputWeights[0]
+            . pack('g', 0.0) // MapInputWeights[1]
+            . pack('g', 0.0) // MapInputWeights[2]
+            . pack('g', 0.0) // MapInputWeights[3]
+            . pack('g', 0.0); // MapInputWeights[4]
+
+        $gainCount = $mapPointsV * $mapPointsH * $mapPointsN;
+        $gains     = '';
+
+        for ($i = 0; $i < $gainCount; ++$i) {
+            $gains .= pack('g', $gain);
+        }
+
+        return $header . $gains;
     }
 
     /**
