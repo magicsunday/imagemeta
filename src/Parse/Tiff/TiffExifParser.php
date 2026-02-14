@@ -1352,10 +1352,15 @@ final class TiffExifParser
             $nextOffset = $nextIfd->nextIfdOffset;
         }
 
+        $isDngContainer = ($ifd0->get(DngTag::DNG_VERSION) instanceof IfdEntry)
+            || ($ifd0->get(DngTag::DNG_BACKWARD_VERSION) instanceof IfdEntry)
+            || ($ifd0->get(DngTag::UNIQUE_CAMERA_MODEL) instanceof IfdEntry);
+
         $this->validateDngRequiredVersion($ifd0);
         $this->validateEnhancedIfd($ifd0);
         foreach ($additionalIfds as $additionalIfd) {
             $this->validateEnhancedIfd($additionalIfd);
+            $this->validateSubfileAndPageTags($additionalIfd, !$isDngContainer);
             $this->validateFillOrderTag($additionalIfd);
             $this->validateSampleDomainTags($additionalIfd);
             $this->validateExtraSamplesTag($additionalIfd);
@@ -1445,6 +1450,7 @@ final class TiffExifParser
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
+        $this->validateSubfileAndPageTags($ifd0, !$isDngContainer);
         $this->validateFillOrderTag($ifd0);
         $this->validateSampleDomainTags($ifd0);
         $this->validateExtraSamplesTag($ifd0);
@@ -2113,6 +2119,152 @@ final class TiffExifParser
                     $compressionCode,
                 ),
                 1755,
+            );
+        }
+    }
+
+    /**
+     * Validates TIFF subfile/page tags for baseline semantics.
+     *
+     * TIFF 6.0:
+     * - NewSubfileType: LONG[1] bitfield (bits 0..2 only in baseline TIFF).
+     * - SubfileType (deprecated): SHORT[1], value domain 1..3.
+     * - PageNumber: SHORT[2], pageIndex < totalPages when totalPages != 0.
+     * - Bit 2 (transparency mask) requires PhotometricInterpretation=4.
+     *
+     * @param bool $strictTiffNewSubfileType True to enforce TIFF-only bit constraints;
+     *                                       false to allow extended DNG NewSubfileType values.
+     */
+    private function validateSubfileAndPageTags(Ifd $ifd, bool $strictTiffNewSubfileType): void
+    {
+        $newSubfileTypeEntry = $ifd->get(TiffTag::NEW_SUBFILE_TYPE);
+
+        if ($newSubfileTypeEntry instanceof IfdEntry) {
+            if (
+                ($newSubfileTypeEntry->type !== TiffConst::TYPE_LONG)
+                || ($newSubfileTypeEntry->count !== 1)
+                || !is_int($newSubfileTypeEntry->value)
+            ) {
+                throw new ParseError('NewSubfileType must be LONG[1].', 1788);
+            }
+
+            $isDngExtendedNewSubfileType = in_array($newSubfileTypeEntry->value, [8, 9, 16, 65540], true);
+
+            if (
+                $strictTiffNewSubfileType
+                && !$isDngExtendedNewSubfileType
+                && (($newSubfileTypeEntry->value & ~0b111) !== 0)
+            ) {
+                throw new ParseError(
+                    sprintf(
+                        'NewSubfileType value %d contains reserved bits outside 0..2.',
+                        $newSubfileTypeEntry->value,
+                    ),
+                    1789,
+                );
+            }
+
+            if (
+                $strictTiffNewSubfileType
+                && !$isDngExtendedNewSubfileType
+                && (($newSubfileTypeEntry->value & 0b100) !== 0)
+            ) {
+                $photometricEntry = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+                $photometricCode  = (($photometricEntry instanceof IfdEntry) && is_int($photometricEntry->value))
+                    ? $photometricEntry->value
+                    : null;
+
+                if ($photometricCode !== 4) {
+                    throw new ParseError(
+                        sprintf(
+                            'NewSubfileType transparency-mask bit requires PhotometricInterpretation=4, got %s.',
+                            $photometricCode !== null ? (string) $photometricCode : 'missing',
+                        ),
+                        1790,
+                    );
+                }
+            }
+        }
+
+        $subfileTypeEntry = $ifd->get(TiffTag::SUBFILE_TYPE);
+        if ($subfileTypeEntry instanceof IfdEntry) {
+            if (
+                ($subfileTypeEntry->type !== TiffConst::TYPE_SHORT)
+                || ($subfileTypeEntry->count !== 1)
+                || !is_int($subfileTypeEntry->value)
+            ) {
+                throw new ParseError('SubfileType must be SHORT[1].', 1791);
+            }
+
+            if (($subfileTypeEntry->value < 1) || ($subfileTypeEntry->value > 3)) {
+                throw new ParseError(
+                    sprintf(
+                        'SubfileType value %d is invalid; allowed values are 1..3.',
+                        $subfileTypeEntry->value,
+                    ),
+                    1792,
+                );
+            }
+        }
+
+        if (
+            $strictTiffNewSubfileType
+            && ($newSubfileTypeEntry instanceof IfdEntry)
+            && ($subfileTypeEntry instanceof IfdEntry)
+            && !in_array($newSubfileTypeEntry->value, [8, 9, 16, 65540], true)
+        ) {
+            $expectedNewSubfileTypeLowBits = $subfileTypeEntry->value - 1;
+            $actualNewSubfileTypeLowBits   = $newSubfileTypeEntry->value & 0b11;
+
+            if ($actualNewSubfileTypeLowBits !== $expectedNewSubfileTypeLowBits) {
+                throw new ParseError(
+                    sprintf(
+                        'SubfileType %d conflicts with NewSubfileType %d.',
+                        $subfileTypeEntry->value,
+                        $newSubfileTypeEntry->value,
+                    ),
+                    1793,
+                );
+            }
+        }
+
+        $pageNumberEntry = $ifd->get(TiffTag::PAGE_NUMBER);
+
+        if (!$pageNumberEntry instanceof IfdEntry) {
+            return;
+        }
+
+        if (($pageNumberEntry->type !== TiffConst::TYPE_SHORT) || ($pageNumberEntry->count !== 2)) {
+            throw new ParseError('PageNumber must be SHORT[2].', 1794);
+        }
+
+        $pageComponents = $this->extractIntegerTagComponents($pageNumberEntry, 'PageNumber');
+
+        if (count($pageComponents) !== 2) {
+            throw new ParseError(
+                sprintf('PageNumber expected 2 components, decoded %d.', count($pageComponents)),
+                1795,
+            );
+        }
+
+        $pageIndex  = $pageComponents[0];
+        $totalPages = $pageComponents[1];
+
+        if ($pageIndex < 0) {
+            throw new ParseError(
+                sprintf('PageNumber page index must be >= 0, got %d.', $pageIndex),
+                1796,
+            );
+        }
+
+        if (($totalPages !== 0) && ($pageIndex >= $totalPages)) {
+            throw new ParseError(
+                sprintf(
+                    'PageNumber index %d must be less than total pages %d when total is known.',
+                    $pageIndex,
+                    $totalPages,
+                ),
+                1797,
             );
         }
     }
