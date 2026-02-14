@@ -1360,6 +1360,7 @@ final class TiffExifParser
             $this->validateSeparatedImageInkTags($additionalIfd);
             $this->validateSeparatedImageDotRange($additionalIfd);
             $this->validateTransferFamilyTags($additionalIfd);
+            $this->validatePaletteColorMapTag($additionalIfd);
             $this->validateDngRolePhotometric($additionalIfd);
             $this->validateDngIfd0OnlyTags($additionalIfd);
             $this->validateDngJxlTags($additionalIfd);
@@ -1443,6 +1444,7 @@ final class TiffExifParser
         $this->validateSeparatedImageInkTags($ifd0);
         $this->validateSeparatedImageDotRange($ifd0);
         $this->validateTransferFamilyTags($ifd0);
+        $this->validatePaletteColorMapTag($ifd0);
         $this->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
         $this->validateCameraControlEnumDomains($ifd0, $exifIfd, $ifd1, ...$additionalIfds);
         $this->validateFlashBitfield($exifIfd);
@@ -2452,6 +2454,129 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('TransferFunction does not support BitsPerSample=%d (>16).', $uniformBitDepth),
                 1741,
+            );
+        }
+
+        return $uniformBitDepth;
+    }
+
+    /**
+     * Validates TIFF ColorMap (Tag 320) palette applicability and count formula.
+     *
+     * TIFF 6.0 §6:
+     * - ColorMap is required when PhotometricInterpretation = 3 (palette color).
+     * - ColorMap type is SHORT.
+     * - ColorMap count is 3 * (1 << BitsPerSample).
+     * - ColorMap shall not be used for non-palette photometric modes.
+     */
+    private function validatePaletteColorMapTag(Ifd $ifd): void
+    {
+        $colorMapEntry   = $ifd->get(TiffTag::COLOR_MAP);
+        $photometric     = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $photometricCode = (($photometric instanceof IfdEntry) && is_int($photometric->value))
+            ? $photometric->value
+            : null;
+
+        if ($photometricCode === 3) {
+            if (!$colorMapEntry instanceof IfdEntry) {
+                throw new ParseError('Palette images (PhotometricInterpretation=3) require ColorMap.', 1742);
+            }
+
+            if ($colorMapEntry->type !== TiffConst::TYPE_SHORT) {
+                throw new ParseError(
+                    sprintf('ColorMap must use SHORT type for palette images, got type %d.', $colorMapEntry->type),
+                    1743,
+                );
+            }
+
+            $bitsPerSample = $this->resolvePaletteColorMapBitsPerSample($ifd);
+            $expectedCount = 3 * (2 ** $bitsPerSample);
+
+            if ($colorMapEntry->count !== $expectedCount) {
+                throw new ParseError(
+                    sprintf(
+                        'ColorMap count %d must be 3*(1<<BitsPerSample) = %d.',
+                        $colorMapEntry->count,
+                        $expectedCount,
+                    ),
+                    1744,
+                );
+            }
+
+            return;
+        }
+
+        if (!$colorMapEntry instanceof IfdEntry) {
+            return;
+        }
+
+        throw new ParseError(
+            sprintf(
+                'ColorMap is only valid for palette images (PhotometricInterpretation=3), got %s.',
+                $photometricCode !== null ? (string) $photometricCode : 'missing',
+            ),
+            1745,
+        );
+    }
+
+    /**
+     * Resolves a uniform BitsPerSample scalar for ColorMap count validation.
+     */
+    private function resolvePaletteColorMapBitsPerSample(Ifd $ifd): int
+    {
+        $bitsEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
+
+        if (!$bitsEntry instanceof IfdEntry) {
+            throw new ParseError('ColorMap validation requires BitsPerSample.', 1746);
+        }
+
+        $bitDepths = [];
+
+        if (is_int($bitsEntry->value)) {
+            $bitDepths[] = $bitsEntry->value;
+        } elseif ($bitsEntry->value instanceof ExifNumericList) {
+            foreach ($bitsEntry->value->values as $component) {
+                if (!is_int($component)) {
+                    throw new ParseError('BitsPerSample components must be integers for ColorMap.', 1747);
+                }
+
+                $bitDepths[] = $component;
+            }
+        } else {
+            throw new ParseError('BitsPerSample components must be integers for ColorMap.', 1747);
+        }
+
+        if ($bitDepths === []) {
+            throw new ParseError('BitsPerSample must provide at least one component value.', 1748);
+        }
+
+        $uniformBitDepth = $bitDepths[0];
+
+        foreach ($bitDepths as $index => $bitDepth) {
+            if ($bitDepth <= 0) {
+                throw new ParseError(
+                    sprintf('BitsPerSample component %d must be >= 1 for ColorMap.', $index),
+                    1749,
+                );
+            }
+
+            if ($bitDepth !== $uniformBitDepth) {
+                throw new ParseError(
+                    sprintf(
+                        'ColorMap requires uniform BitsPerSample values; component 0=%d, component %d=%d.',
+                        $uniformBitDepth,
+                        $index,
+                        $bitDepth,
+                    ),
+                    1750,
+                );
+            }
+        }
+
+        if ($uniformBitDepth > 16) {
+            throw new ParseError(
+                sprintf('ColorMap does not support BitsPerSample=%d (>16).', $uniformBitDepth),
+                1751,
             );
         }
 
