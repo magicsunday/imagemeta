@@ -1461,7 +1461,7 @@ final class TiffExifParserNegativeTest extends TestCase
     private function buildTiffWithJpegThumbnailStream(string $thumbnailStream): string
     {
         $ifd0EntryCount = 2;
-        $ifd1EntryCount = 3;
+        $ifd1EntryCount = 4;
         $ifd0Size       = 2 + ($ifd0EntryCount * 12) + 4;
         $ifd1Offset     = 8 + $ifd0Size;
         $ifd1Size       = 2 + ($ifd1EntryCount * 12) + 4;
@@ -1479,6 +1479,7 @@ final class TiffExifParserNegativeTest extends TestCase
 
         $blob .= pack('v', $ifd1EntryCount)
             . $this->buildIfdShortEntry(ExifTag::COMPRESSION, Compression::JPEG->value)
+            . $this->buildIfdShortEntry(TiffTag::JPEG_PROC, 1)
             . $this->buildIfdLongEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, $thumbOffset)
             . $this->buildIfdLongEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, $thumbLength)
             . pack('V', 0);
@@ -1565,7 +1566,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTwoIfds(
                 [[ExifTag::IMAGE_WIDTH, 100], [ExifTag::IMAGE_LENGTH, 100]],
-                [[ExifTag::COMPRESSION, 6]],
+                [[ExifTag::COMPRESSION, 6], [TiffTag::JPEG_PROC, 1]],
             ),
         );
 
@@ -1611,7 +1612,7 @@ final class TiffExifParserNegativeTest extends TestCase
                     [ExifTag::COMPRESSION, 1],
                     [ExifTag::PHOTOMETRIC_INTERPRETATION, 2],
                 ],
-                [[ExifTag::COMPRESSION, 6]],
+                [[ExifTag::COMPRESSION, 6], [TiffTag::JPEG_PROC, 1]],
             ),
         );
     }
@@ -1634,7 +1635,7 @@ final class TiffExifParserNegativeTest extends TestCase
                     [ExifTag::COMPRESSION, 1],
                     [ExifTag::PHOTOMETRIC_INTERPRETATION, 6],
                 ],
-                [[ExifTag::COMPRESSION, 6]],
+                [[ExifTag::COMPRESSION, 6], [TiffTag::JPEG_PROC, 1]],
             ),
         );
     }
@@ -1648,7 +1649,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTwoIfds(
                 [[ExifTag::ORIENTATION, 1]],
-                [[ExifTag::COMPRESSION, 6]],
+                [[ExifTag::COMPRESSION, 6], [TiffTag::JPEG_PROC, 1]],
             ),
             jpegContext: true,
         );

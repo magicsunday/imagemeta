@@ -300,7 +300,7 @@ final class TiffExifParserExamplesTest extends TestCase
         $ifd0EntryCount       = 3;
         $exifIfdEntryCount    = 1;
         $interopIfdEntryCount = 1;
-        $ifd1EntryCount       = 7;
+        $ifd1EntryCount       = 8;
 
         $ifd0Size       = 2 + (12 * $ifd0EntryCount) + 4;
         $exifIfdSize    = 2 + (12 * $exifIfdEntryCount) + 4;
@@ -377,6 +377,12 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, TiffConst::TYPE_LONG)
             . pack($packLong, 2)
             . pack($packLong, $tileCountsStart)
+            // TIFF 6.0 Section 22: JPEGProc is mandatory for Compression=6.
+            . pack($packShort, TiffTag::JPEG_PROC)
+            . pack($packShort, TiffConst::TYPE_SHORT)
+            . pack($packLong, 1)
+            . pack($packShort, 1)
+            . pack($packShort, 0)
             // TIFF 6.0 §2 requires ascending tag order within each IFD.
             // EXIF 3.0 §4.6.5.2.4 (JPEGInterchangeFormat) and §4.6.5.1.6 (Table 3).
             . pack($packShort, ExifTag::JPEG_INTERCHANGE_FORMAT)

@@ -1366,6 +1366,7 @@ final class TiffExifParser
             $this->validateFreeSpaceTags($additionalIfd);
             $this->validateFillOrderTag($additionalIfd);
             $this->validatePredictorTag($additionalIfd);
+            $this->validateJpegProcTag($additionalIfd);
             $this->validateMinMaxSampleValueTags($additionalIfd);
             $this->validateSampleDomainTags($additionalIfd);
             $this->validateExtraSamplesTag($additionalIfd);
@@ -1461,6 +1462,7 @@ final class TiffExifParser
         $this->validateFreeSpaceTags($ifd0);
         $this->validateFillOrderTag($ifd0);
         $this->validatePredictorTag($ifd0);
+        $this->validateJpegProcTag($ifd0);
         $this->validateMinMaxSampleValueTags($ifd0);
         $this->validateSampleDomainTags($ifd0);
         $this->validateExtraSamplesTag($ifd0);
@@ -2693,6 +2695,45 @@ final class TiffExifParser
         }
 
         throw new ParseError('Predictor=2 requires Compression=5 (LZW) per TIFF 6.0 Section 14.', 1825);
+    }
+
+    /**
+     * Validates JPEGProc structural and cross-tag compression coupling rules.
+     *
+     * TIFF 6.0 Section 22 (JPEG Fields) defines JPEGProc as SHORT[1] with values
+     * {1,14}, mandatory for JPEG-compressed image data and invalid otherwise.
+     */
+    private function validateJpegProcTag(Ifd $ifd): void
+    {
+        $jpegProc    = $ifd->get(TiffTag::JPEG_PROC);
+        $compression = $ifd->get(ExifTag::COMPRESSION);
+
+        $isJpegCompression = ($compression instanceof IfdEntry)
+            && is_int($compression->value)
+            && ($compression->value === Compression::JPEG->value);
+
+        if ($jpegProc instanceof IfdEntry) {
+            if (($jpegProc->type !== TiffConst::TYPE_SHORT) || ($jpegProc->count !== 1) || !is_int($jpegProc->value)) {
+                throw new ParseError('JPEGProc must be SHORT[1].', 1826);
+            }
+
+            if (!in_array($jpegProc->value, [1, 14], true)) {
+                throw new ParseError(
+                    sprintf('JPEGProc value %d is invalid; allowed values are 1 or 14.', $jpegProc->value),
+                    1827,
+                );
+            }
+
+            if (!$isJpegCompression) {
+                throw new ParseError('JPEGProc is only valid when Compression=6 (JPEG).', 1828);
+            }
+
+            return;
+        }
+
+        if ($isJpegCompression) {
+            throw new ParseError('Compression=6 requires JPEGProc per TIFF 6.0 Section 22.', 1829);
+        }
     }
 
     /**
