@@ -1409,6 +1409,7 @@ final class TiffExifParser
         $this->validateDngBlackWhiteLevelFamily($ifd0);
         $this->validateDngDefaultCropScaleGeometry($ifd0);
         $this->validateDngLinearResponseLimit($ifd0);
+        $this->validateDngBaselineScalars($ifd0);
         $this->validateDngLensInfo($ifd0);
         $this->validateDngBestQualityScale($ifd0);
         $this->validateDngOriginalProxySizes($ifd0);
@@ -6996,6 +6997,64 @@ final class TiffExifParser
                 ),
                 1653,
             );
+        }
+    }
+
+    /**
+     * Validates BaselineNoise and BaselineSharpness scalar tags per DNG 1.7.1.0.
+     *
+     * Both tags must be RATIONAL[1] with strictly positive finite values.
+     *
+     * @return void
+     */
+    private function validateDngBaselineScalars(Ifd $ifd): void
+    {
+        $tagNames = [
+            DngTag::BASELINE_NOISE     => 'BaselineNoise',
+            DngTag::BASELINE_SHARPNESS => 'BaselineSharpness',
+        ];
+
+        foreach ($tagNames as $tag => $name) {
+            $entry = $ifd->get($tag);
+
+            if (!$entry instanceof IfdEntry) {
+                continue;
+            }
+
+            if (($entry->type !== TiffConst::TYPE_RATIONAL) || ($entry->count !== 1)) {
+                throw new ParseError(
+                    sprintf(
+                        '%s must be RATIONAL[1], got type %d count %d.',
+                        $name,
+                        $entry->type,
+                        $entry->count,
+                    ),
+                    1654,
+                );
+            }
+
+            $value = $entry->value;
+            if (!$value instanceof ExifRational) {
+                throw new ParseError(
+                    sprintf('%s must decode to one rational component.', $name),
+                    1655,
+                );
+            }
+
+            if ($value->denominator <= 0) {
+                throw new ParseError(
+                    sprintf('%s denominator must be > 0.', $name),
+                    1656,
+                );
+            }
+
+            $scalar = $value->numerator / $value->denominator;
+            if (!is_finite($scalar) || ($scalar <= 0.0)) {
+                throw new ParseError(
+                    sprintf('%s must be a positive finite scalar, got %.6F.', $name, $scalar),
+                    1657,
+                );
+            }
         }
     }
 

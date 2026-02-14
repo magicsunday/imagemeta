@@ -7725,6 +7725,128 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * BaselineNoise and BaselineSharpness accept positive RATIONAL[1] values.
+     */
+    #[Test]
+    public function parsesValidBaselineNoiseAndSharpness(): void
+    {
+        foreach ([DngTag::BASELINE_NOISE, DngTag::BASELINE_SHARPNESS] as $tag) {
+            $parsed = (new TiffExifParser())->parseFromBlob(
+                $this->buildDngWithSingleCustomTag(
+                    $tag,
+                    TiffConst::TYPE_RATIONAL,
+                    1,
+                    pack('V2', 3, 2),
+                ),
+            );
+
+            self::assertNotNull($parsed->ifd0->get($tag));
+        }
+    }
+
+    /**
+     * BaselineNoise and BaselineSharpness reject wrong type/count layouts.
+     */
+    #[Test]
+    public function rejectsBaselineNoiseAndSharpnessWithWrongTypeOrCount(): void
+    {
+        $cases = [
+            [
+                'tag'     => DngTag::BASELINE_NOISE,
+                'type'    => TiffConst::TYPE_LONG,
+                'count'   => 1,
+                'payload' => pack('V', 1),
+            ],
+            [
+                'tag'     => DngTag::BASELINE_NOISE,
+                'type'    => TiffConst::TYPE_RATIONAL,
+                'count'   => 2,
+                'payload' => pack('V4', 1, 1, 1, 1),
+            ],
+            [
+                'tag'     => DngTag::BASELINE_SHARPNESS,
+                'type'    => TiffConst::TYPE_LONG,
+                'count'   => 1,
+                'payload' => pack('V', 1),
+            ],
+            [
+                'tag'     => DngTag::BASELINE_SHARPNESS,
+                'type'    => TiffConst::TYPE_RATIONAL,
+                'count'   => 2,
+                'payload' => pack('V4', 1, 1, 1, 1),
+            ],
+        ];
+        $rejections = 0;
+
+        foreach ($cases as $case) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithSingleCustomTag(
+                        $case['tag'],
+                        $case['type'],
+                        $case['count'],
+                        $case['payload'],
+                    ),
+                );
+                self::fail(
+                    sprintf('Expected ParseError for invalid baseline scalar layout in tag 0x%04X.', $case['tag']),
+                );
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
+     * BaselineNoise and BaselineSharpness reject zero and non-finite rational values.
+     */
+    #[Test]
+    public function rejectsBaselineNoiseAndSharpnessWithInvalidValues(): void
+    {
+        $cases = [
+            [
+                'tag'     => DngTag::BASELINE_NOISE,
+                'payload' => pack('V2', 0, 1),
+            ],
+            [
+                'tag'     => DngTag::BASELINE_NOISE,
+                'payload' => pack('V2', 1, 0),
+            ],
+            [
+                'tag'     => DngTag::BASELINE_SHARPNESS,
+                'payload' => pack('V2', 0, 1),
+            ],
+            [
+                'tag'     => DngTag::BASELINE_SHARPNESS,
+                'payload' => pack('V2', 1, 0),
+            ],
+        ];
+        $rejections = 0;
+
+        foreach ($cases as $case) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithSingleCustomTag(
+                        $case['tag'],
+                        TiffConst::TYPE_RATIONAL,
+                        1,
+                        $case['payload'],
+                    ),
+                );
+                self::fail(
+                    sprintf('Expected ParseError for invalid baseline scalar value in tag 0x%04X.', $case['tag']),
+                );
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
      * DNG opcode-list tags.
      *
      * @var list<int>
