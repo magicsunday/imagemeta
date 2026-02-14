@@ -1365,6 +1365,7 @@ final class TiffExifParser
             $this->validateThreshholdingAndCellTags($additionalIfd);
             $this->validateFreeSpaceTags($additionalIfd);
             $this->validateFillOrderTag($additionalIfd);
+            $this->validatePredictorTag($additionalIfd);
             $this->validateMinMaxSampleValueTags($additionalIfd);
             $this->validateSampleDomainTags($additionalIfd);
             $this->validateExtraSamplesTag($additionalIfd);
@@ -1459,6 +1460,7 @@ final class TiffExifParser
         $this->validateThreshholdingAndCellTags($ifd0);
         $this->validateFreeSpaceTags($ifd0);
         $this->validateFillOrderTag($ifd0);
+        $this->validatePredictorTag($ifd0);
         $this->validateMinMaxSampleValueTags($ifd0);
         $this->validateSampleDomainTags($ifd0);
         $this->validateExtraSamplesTag($ifd0);
@@ -2670,6 +2672,27 @@ final class TiffExifParser
                 1824,
             );
         }
+    }
+
+    /**
+     * Validates Predictor semantic coupling to Compression.
+     *
+     * TIFF 6.0 Section 14 defines Predictor values {1,2} and describes horizontal
+     * differencing (value 2) for LZW-compressed data.
+     */
+    private function validatePredictorTag(Ifd $ifd): void
+    {
+        $predictor = $ifd->get(TiffTag::PREDICTOR);
+        if (!($predictor instanceof IfdEntry) || !is_int($predictor->value) || ($predictor->value !== 2)) {
+            return;
+        }
+
+        $compression = $ifd->get(ExifTag::COMPRESSION);
+        if (($compression instanceof IfdEntry) && is_int($compression->value) && ($compression->value === Compression::LZW->value)) {
+            return;
+        }
+
+        throw new ParseError('Predictor=2 requires Compression=5 (LZW) per TIFF 6.0 Section 14.', 1825);
     }
 
     /**
