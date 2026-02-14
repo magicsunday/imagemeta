@@ -1356,6 +1356,7 @@ final class TiffExifParser
         $this->validateEnhancedIfd($ifd0);
         foreach ($additionalIfds as $additionalIfd) {
             $this->validateEnhancedIfd($additionalIfd);
+            $this->validateFillOrderTag($additionalIfd);
             $this->validateFaxOptionTags($additionalIfd);
             $this->validateSeparatedImageInkTags($additionalIfd);
             $this->validateSeparatedImageDotRange($additionalIfd);
@@ -1440,6 +1441,7 @@ final class TiffExifParser
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
+        $this->validateFillOrderTag($ifd0);
         $this->validateFaxOptionTags($ifd0);
         $this->validateSeparatedImageInkTags($ifd0);
         $this->validateSeparatedImageDotRange($ifd0);
@@ -2027,6 +2029,82 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('T6Options has reserved bits set (value=0x%X); only bit 1 is allowed.', $t6Options->value),
                 1708,
+            );
+        }
+    }
+
+    /**
+     * Validates TIFF FillOrder domain and usage constraints.
+     *
+     * TIFF 6.0 (Tag 266 / FillOrder):
+     * - SHORT[1], values {1,2}, default 1.
+     * - FillOrder=2 is intended for bilevel data (BitsPerSample=1) and
+     *   uncompressed or CCITT compression families.
+     */
+    private function validateFillOrderTag(Ifd $ifd): void
+    {
+        $fillOrderEntry = $ifd->get(TiffTag::FILL_ORDER);
+
+        if (!$fillOrderEntry instanceof IfdEntry) {
+            return;
+        }
+
+        if (
+            ($fillOrderEntry->type !== TiffConst::TYPE_SHORT)
+            || ($fillOrderEntry->count !== 1)
+            || !is_int($fillOrderEntry->value)
+        ) {
+            throw new ParseError('FillOrder must be SHORT[1].', 1752);
+        }
+
+        if (($fillOrderEntry->value !== 1) && ($fillOrderEntry->value !== 2)) {
+            throw new ParseError(
+                sprintf('FillOrder value %d is invalid; allowed values are 1 or 2.', $fillOrderEntry->value),
+                1753,
+            );
+        }
+
+        if ($fillOrderEntry->value !== 2) {
+            return;
+        }
+
+        $bitsPerSampleEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
+
+        if (!$bitsPerSampleEntry instanceof IfdEntry) {
+            throw new ParseError('FillOrder=2 requires BitsPerSample=1.', 1754);
+        }
+
+        $bitDepth = null;
+
+        if (is_int($bitsPerSampleEntry->value)) {
+            $bitDepth = $bitsPerSampleEntry->value;
+        } elseif ($bitsPerSampleEntry->value instanceof ExifNumericList) {
+            $firstComponent = $bitsPerSampleEntry->value->values[0] ?? null;
+            if (is_int($firstComponent)) {
+                $bitDepth = $firstComponent;
+            }
+        }
+
+        if ($bitDepth !== 1) {
+            throw new ParseError(
+                sprintf('FillOrder=2 requires BitsPerSample=1, got %s.', $bitDepth !== null ? (string) $bitDepth : 'missing'),
+                1754,
+            );
+        }
+
+        $compressionCode  = 1;
+        $compressionEntry = $ifd->get(ExifTag::COMPRESSION);
+        if ($compressionEntry instanceof IfdEntry && is_int($compressionEntry->value)) {
+            $compressionCode = $compressionEntry->value;
+        }
+
+        if (!in_array($compressionCode, [1, 2, 3, 4], true)) {
+            throw new ParseError(
+                sprintf(
+                    'FillOrder=2 is only compatible with Compression {1,2,3,4}, got %d.',
+                    $compressionCode,
+                ),
+                1755,
             );
         }
     }
