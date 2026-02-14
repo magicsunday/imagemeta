@@ -1403,6 +1403,7 @@ final class TiffExifParser
         $this->validateDngImageStats($ifd0);
         $this->validateDngImageSequenceInfo($ifd0);
         $this->validateDngRgbTables($ifd0);
+        $this->validateDngOpcodeLists($ifd0);
         $this->validateDngOriginalRawFileData($ifd0);
         $this->validateDngActiveAndMaskedAreas($ifd0);
         $this->validateDngBlackWhiteLevelFamily($ifd0);
@@ -5516,6 +5517,119 @@ final class TiffExifParser
                 sprintf('ImageSequenceInfo payload truncated: need 9 bytes for Index/Count/Final, got %d.', $length - $offset),
                 1526,
             );
+        }
+    }
+
+    /**
+     * Opcode-list tags defined by DNG 1.7.1.0.
+     *
+     * @var array<int, string>
+     */
+    private const array DNG_OPCODE_LIST_TAGS = [
+        DngTag::OPCODE_LIST_1 => 'OpcodeList1',
+        DngTag::OPCODE_LIST_2 => 'OpcodeList2',
+        DngTag::OPCODE_LIST_3 => 'OpcodeList3',
+    ];
+
+    /**
+     * Validates DNG OpcodeList1/2/3 structural framing.
+     *
+     * DNG 1.7.1.0 Chapter 7 ("Opcode List Processing") defines big-endian list framing:
+     * list count (uint32), then per opcode: OpcodeID (uint32), DNGVersion (uint32),
+     * Flags (uint32), ParamByteCount (uint32), and ParamByteCount payload bytes.
+     * The same framing was introduced with these tags in DNG 1.3.0.0 and remains
+     * unchanged in later versions including DNG 1.7.1.0.
+     */
+    private function validateDngOpcodeLists(Ifd $ifd): void
+    {
+        foreach (self::DNG_OPCODE_LIST_TAGS as $tag => $tagName) {
+            $entry = $ifd->get($tag);
+
+            if (!$entry instanceof IfdEntry) {
+                continue;
+            }
+
+            if ($entry->type !== TiffConst::TYPE_UNDEFINED) {
+                throw new ParseError(
+                    sprintf('%s must use UNDEFINED type, got %d.', $tagName, $entry->type),
+                    1633,
+                );
+            }
+
+            if (!is_string($entry->value)) {
+                throw new ParseError(
+                    sprintf('%s must decode to raw bytes.', $tagName),
+                    1634,
+                );
+            }
+
+            $this->validateDngOpcodeListPayload($tagName, $entry->value);
+        }
+    }
+
+    /**
+     * Validates one DNG opcode-list payload for structural integrity.
+     *
+     * @param string $tagName Human-readable opcode-list tag name.
+     * @param string $payload Raw opcode-list bytes.
+     */
+    private function validateDngOpcodeListPayload(string $tagName, string $payload): void
+    {
+        $length = strlen($payload);
+
+        if ($length < 4) {
+            throw new ParseError(
+                sprintf('%s payload is truncated before opcode count.', $tagName),
+                1635,
+            );
+        }
+
+        $opcodeCount = Unpack::int('N', substr($payload, 0, 4), sprintf('%s opcode count', $tagName));
+        $offset      = 4;
+
+        $maxOpcodeCount = intdiv($length - 4, 16);
+        if ($opcodeCount > $maxOpcodeCount) {
+            throw new ParseError(
+                sprintf(
+                    '%s opcode count %d exceeds structural maximum %d for payload length %d.',
+                    $tagName,
+                    $opcodeCount,
+                    $maxOpcodeCount,
+                    $length,
+                ),
+                1636,
+            );
+        }
+
+        for ($index = 0; $index < $opcodeCount; ++$index) {
+            if (($length - $offset) < 16) {
+                throw new ParseError(
+                    sprintf('%s opcode %d is truncated before fixed header.', $tagName, $index),
+                    1637,
+                );
+            }
+
+            $paramByteCount = Unpack::int(
+                'N',
+                substr($payload, $offset + 12, 4),
+                sprintf('%s opcode %d parameter byte count', $tagName, $index),
+            );
+            $offset += 16;
+
+            if (($length - $offset) < $paramByteCount) {
+                throw new ParseError(
+                    sprintf(
+                        '%s opcode %d declares %d parameter bytes but only %d remain.',
+                        $tagName,
+                        $index,
+                        $paramByteCount,
+                        $length - $offset,
+                    ),
+                    1638,
+                );
+            }
+
+            $offset += $paramByteCount;
         }
     }
 

@@ -7095,6 +7095,197 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * DNG 1.7.1.0 Chapter 7: Opcode lists may be empty.
+     *
+     * Ensures OpcodeList1/2/3 accept the canonical empty payload (count = 0).
+     */
+    #[Test]
+    public function parsesEmptyOpcodeListsForAllOpcodeTags(): void
+    {
+        foreach (self::DNG_OPCODE_LIST_TAGS as $tag) {
+            $parsed = (new TiffExifParser())->parseFromBlob(
+                $this->buildDngWithOpcodeListTag($tag, pack('N', 0)),
+            );
+
+            self::assertNotNull($parsed->ifd0->get($tag));
+        }
+    }
+
+    /**
+     * DNG 1.7.1.0 Chapter 7: opcode list entries use big-endian framing.
+     *
+     * Verifies a one-opcode list (unknown ID with skippable payload) parses for
+     * each opcode-list tag.
+     */
+    #[Test]
+    public function parsesWellFormedSingleOpcodeForAllOpcodeTags(): void
+    {
+        $payload = pack('N', 1)
+            . pack('N', 0x7FFFFFFF)
+            . pack('N', 0x01030000)
+            . pack('N', 0)
+            . pack('N', 3)
+            . 'abc';
+
+        foreach (self::DNG_OPCODE_LIST_TAGS as $tag) {
+            $parsed = (new TiffExifParser())->parseFromBlob(
+                $this->buildDngWithOpcodeListTag($tag, $payload),
+            );
+
+            self::assertNotNull($parsed->ifd0->get($tag));
+        }
+    }
+
+    /**
+     * DNG 1.7.1.0 Chapter 7: opcode records require complete fixed-size headers.
+     *
+     * A list declaring one opcode but truncating the opcode header must fail.
+     */
+    #[Test]
+    public function rejectsOpcodeListWithTruncatedOpcodeHeaderForAllOpcodeTags(): void
+    {
+        $payload = pack('N', 1)
+            . pack('N', 1)
+            . pack('N', 0x01030000);
+        $rejections = 0;
+
+        foreach (self::DNG_OPCODE_LIST_TAGS as $tag) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithOpcodeListTag($tag, $payload),
+                );
+                self::fail(
+                    sprintf('Expected ParseError for truncated opcode header in tag 0x%04X.', $tag),
+                );
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count(self::DNG_OPCODE_LIST_TAGS), $rejections);
+    }
+
+    /**
+     * DNG 1.7.1.0 Chapter 7: opcode payload length must fit in remaining bytes.
+     *
+     * A record whose parameter byte count exceeds available bytes must fail.
+     */
+    #[Test]
+    public function rejectsOpcodeListWithOverflowingOpcodePayloadForAllOpcodeTags(): void
+    {
+        $payload = pack('N', 1)
+            . pack('N', 1)
+            . pack('N', 0x01030000)
+            . pack('N', 0)
+            . pack('N', 8)
+            . 'abc';
+        $rejections = 0;
+
+        foreach (self::DNG_OPCODE_LIST_TAGS as $tag) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithOpcodeListTag($tag, $payload),
+                );
+                self::fail(
+                    sprintf('Expected ParseError for overflowing opcode payload in tag 0x%04X.', $tag),
+                );
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count(self::DNG_OPCODE_LIST_TAGS), $rejections);
+    }
+
+    /**
+     * DNG 1.7.1.0 defines OpcodeList1/2/3 as UNDEFINED type tags.
+     */
+    #[Test]
+    public function rejectsOpcodeListWithNonUndefinedType(): void
+    {
+        $rejections = 0;
+
+        foreach (self::DNG_OPCODE_LIST_TAGS as $tag) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithOpcodeListTag($tag, pack('N', 0), TiffConst::TYPE_LONG),
+                );
+                self::fail(
+                    sprintf('Expected ParseError for non-UNDEFINED opcode-list type in tag 0x%04X.', $tag),
+                );
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count(self::DNG_OPCODE_LIST_TAGS), $rejections);
+    }
+
+    /**
+     * DNG opcode-list tags.
+     *
+     * @var list<int>
+     */
+    private const array DNG_OPCODE_LIST_TAGS = [
+        DngTag::OPCODE_LIST_1,
+        DngTag::OPCODE_LIST_2,
+        DngTag::OPCODE_LIST_3,
+    ];
+
+    /**
+     * Builds a minimal DNG with one OpcodeList tag in IFD0.
+     *
+     * @param int    $tag     One of OpcodeList1/2/3.
+     * @param string $payload Raw opcode-list payload bytes.
+     * @param int    $type    TIFF field type for the opcode-list tag.
+     */
+    private function buildDngWithOpcodeListTag(int $tag, string $payload, int $type = TiffConst::TYPE_UNDEFINED): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $payloadLen        = strlen($payload);
+        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+        $inline            = $payloadLen <= 4;
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', $tag)
+            . pack('v', $type)
+            . pack('V', $payloadLen)
+            . ($inline
+                ? str_pad($payload, 4, "\0")
+                : pack('V', $payloadOffset))
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . ($inline ? '' : $payload);
+    }
+
+    /**
      * Builds a DNG with ExtraCameraProfiles pointing to an embedded camera profile payload.
      *
      * @param string   $profilePayload        Embedded profile payload bytes.
