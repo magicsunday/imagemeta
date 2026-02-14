@@ -1408,6 +1408,7 @@ final class TiffExifParser
         $this->validateDngActiveAndMaskedAreas($ifd0);
         $this->validateDngBlackWhiteLevelFamily($ifd0);
         $this->validateDngDefaultCropScaleGeometry($ifd0);
+        $this->validateDngLinearResponseLimit($ifd0);
         $this->validateDngBestQualityScale($ifd0);
         $this->validateDngOriginalProxySizes($ifd0);
         $this->validateDngDefaultUserCrop($ifd0);
@@ -6886,6 +6887,48 @@ final class TiffExifParser
 
         if (($value->numerator / $value->denominator) <= 0.0) {
             throw new ParseError('BestQualityScale value must be > 0.', 1644);
+        }
+    }
+
+    /**
+     * Validates LinearResponseLimit (0xC62E) per DNG 1.7.1.0.
+     *
+     * Must be RATIONAL[1] with fraction semantics: 0 < value <= 1.0.
+     */
+    private function validateDngLinearResponseLimit(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::LINEAR_RESPONSE_LIMIT);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (($entry->type !== TiffConst::TYPE_RATIONAL) || ($entry->count !== 1)) {
+            throw new ParseError(
+                sprintf(
+                    'LinearResponseLimit must be RATIONAL[1], got type %d count %d.',
+                    $entry->type,
+                    $entry->count,
+                ),
+                1645,
+            );
+        }
+
+        $value = $entry->value;
+        if (!$value instanceof ExifRational) {
+            throw new ParseError('LinearResponseLimit must decode to one rational component.', 1646);
+        }
+
+        if ($value->denominator <= 0) {
+            throw new ParseError('LinearResponseLimit denominator must be > 0.', 1647);
+        }
+
+        $limit = $value->numerator / $value->denominator;
+        if (($limit <= 0.0) || ($limit > 1.0)) {
+            throw new ParseError(
+                sprintf('LinearResponseLimit must be in (0.0, 1.0], got %.6F.', $limit),
+                1648,
+            );
         }
     }
 

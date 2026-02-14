@@ -7508,6 +7508,99 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * LinearResponseLimit accepts a positive fractional RATIONAL[1] value.
+     */
+    #[Test]
+    public function parsesValidLinearResponseLimit(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSingleCustomTag(
+                DngTag::LINEAR_RESPONSE_LIMIT,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                pack('V2', 3, 4),
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::LINEAR_RESPONSE_LIMIT));
+    }
+
+    /**
+     * LinearResponseLimit rejects wrong type/count layouts.
+     */
+    #[Test]
+    public function rejectsLinearResponseLimitWithWrongTypeOrCount(): void
+    {
+        $cases = [
+            [
+                'type'    => TiffConst::TYPE_LONG,
+                'count'   => 1,
+                'payload' => pack('V', 1),
+            ],
+            [
+                'type'    => TiffConst::TYPE_RATIONAL,
+                'count'   => 2,
+                'payload' => pack('V4', 1, 1, 1, 1),
+            ],
+        ];
+        $rejections = 0;
+
+        foreach ($cases as $case) {
+            try {
+                (new TiffExifParser())->parseFromBlob(
+                    $this->buildDngWithSingleCustomTag(
+                        DngTag::LINEAR_RESPONSE_LIMIT,
+                        $case['type'],
+                        $case['count'],
+                        $case['payload'],
+                    ),
+                );
+                self::fail('Expected ParseError for invalid LinearResponseLimit type/count.');
+            } catch (ParseError) {
+                ++$rejections;
+            }
+        }
+
+        self::assertSame(count($cases), $rejections);
+    }
+
+    /**
+     * LinearResponseLimit rejects values <= 0.
+     */
+    #[Test]
+    public function rejectsLinearResponseLimitWithNonPositiveValue(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSingleCustomTag(
+                DngTag::LINEAR_RESPONSE_LIMIT,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                pack('V2', 0, 1),
+            ),
+        );
+    }
+
+    /**
+     * LinearResponseLimit rejects values above 1.0.
+     */
+    #[Test]
+    public function rejectsLinearResponseLimitAboveOne(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSingleCustomTag(
+                DngTag::LINEAR_RESPONSE_LIMIT,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                pack('V2', 5, 4),
+            ),
+        );
+    }
+
+    /**
      * DNG opcode-list tags.
      *
      * @var list<int>
