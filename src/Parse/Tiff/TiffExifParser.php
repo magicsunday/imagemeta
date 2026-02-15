@@ -37,7 +37,6 @@ use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 
 use function array_any;
 use function array_slice;
-use function chr;
 use function count;
 use function in_array;
 use function intdiv;
@@ -48,7 +47,6 @@ use function is_string;
 use function ltrim;
 use function mb_check_encoding;
 use function ord;
-use function pack;
 use function preg_match;
 use function rtrim;
 use function sha1;
@@ -1236,6 +1234,12 @@ final class TiffExifParser implements TiffExifParserInterface
      */
     private array $interopVisitedOffsets = [];
 
+    private ?TiffByteOrderHandler $byteOrderHandler = null;
+
+    private ?ExifTagDecoder $tagDecoder = null;
+
+    private ?IfdParser $ifdParser = null;
+
     /**
      * Parses an EXIF TIFF blob into a structured document model.
      *
@@ -1258,6 +1262,9 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->ifdCache              = [];
         $this->bigTiffOffsetSize     = 8;
         $this->interopVisitedOffsets = [];
+        $this->byteOrderHandler ??= new TiffByteOrderHandler();
+        $this->tagDecoder ??= new ExifTagDecoder();
+        $this->ifdParser ??= new IfdParser();
 
         // byte order
         // EXIF 3.0 §4.5.1 follows TIFF 6.0 §2.1 (Image File Header) in defining the
@@ -1616,19 +1623,7 @@ final class TiffExifParser implements TiffExifParserInterface
         for ($i = 0; $i < $entryCount; ++$i) {
             $entry = $this->readDirEntry();
 
-            // TIFF 6.0 §2 requires IFD entries to be sorted by tag identifier in
-            // ascending order so readers can apply deterministic directory traversal.
-            if (($lastTagId !== null) && ($entry->tag < $lastTagId)) {
-                throw new ParseError('IFD entries must be sorted in ascending order by tag per TIFF 6.0 §2.', 1308);
-            }
-
-            // Reject duplicate tag IDs within a single IFD
-            if (isset($entries[$entry->tag])) {
-                throw new ParseError('Duplicate tag ID ' . $entry->tag . ' in IFD per TIFF 6.0 §2.', 1357);
-            }
-
-            $lastTagId            = $entry->tag;
-            $entries[$entry->tag] = $entry;
+            $this->ifdParser?->addEntry($entries, $lastTagId, $entry);
         }
 
         if ($this->bigTiff) {
@@ -5238,48 +5233,8 @@ final class TiffExifParser implements TiffExifParserInterface
 
         // ASCII
         if ($type === TiffConst::TYPE_ASCII) {
-            // EXIF 3.0 §4.6.2 and TIFF 6.0 §2 require ASCII values to be
-            // NUL-terminated, with the declared count including that terminator.
-            if (($count > 0) && ($bytes[$count - 1] !== "\0")) {
-                throw new ParseError(
-                    'ASCII values must be NUL-terminated and include the terminator in count per EXIF 3.0 §4.6.2; TIFF 6.0 §2.',
-                    1329,
-                );
-            }
-
-            // EXIF 3.0 text tags allow UTF-8; strict ASCII applies to all others.
-            $firstHighByteOffset = -1;
-            for ($i = 0; $i < $count; ++$i) {
-                if (ord($bytes[$i]) > 0x7F) {
-                    $firstHighByteOffset = $i;
-
-                    break;
-                }
-            }
-
-            if ($firstHighByteOffset >= 0) {
-                if (in_array($tag, self::EXIF_30_UTF8_TAGS, true)) {
-                    // GH-927: EXIF 3.0 UTF-8-capable tag — validate well-formedness.
-                    $text = rtrim($bytes, "\0");
-                    if (!mb_check_encoding($text, 'UTF-8')) {
-                        throw new ParseError(
-                            'EXIF 3.0 text tag contains malformed UTF-8 per EXIF 3.0 §4.6.5.4.',
-                            1459,
-                        );
-                    }
-
-                    return $text;
-                }
-
-                // TIFF 6.0 §2.2: ASCII bytes must be in the 7-bit domain (0x00–0x7F).
-                throw new ParseError(sprintf(
-                    'ASCII value contains non-7-bit byte 0x%02X at offset %d per TIFF 6.0 §2.2.',
-                    ord($bytes[$firstHighByteOffset]),
-                    $firstHighByteOffset,
-                ), 1330);
-            }
-
-            return rtrim($bytes, "\0");
+            return $this->tagDecoder?->decodeAscii($tag, $count, $bytes, self::EXIF_30_UTF8_TAGS)
+                ?? throw new ParseError('ASCII decoder not initialised', 1628);
         }
 
         if ($type === TiffConst::TYPE_UNDEFINED) {
@@ -5692,7 +5647,8 @@ final class TiffExifParser implements TiffExifParserInterface
      */
     private function readU16(): int
     {
-        return $this->bo === Endian::Little ? $this->buffer->readU16LE() : $this->buffer->readU16BE();
+        return $this->byteOrderHandler?->readUint16($this->buffer, $this->bo)
+            ?? throw new ParseError('byte-order handler not initialised', 1629);
     }
 
     /**
@@ -5702,7 +5658,8 @@ final class TiffExifParser implements TiffExifParserInterface
      */
     private function readU32(): int
     {
-        return $this->bo === Endian::Little ? $this->buffer->readU32LE() : $this->buffer->readU32BE();
+        return $this->byteOrderHandler?->readUint32($this->buffer, $this->bo)
+            ?? throw new ParseError('byte-order handler not initialised', 1629);
     }
 
     /**
@@ -5712,7 +5669,8 @@ final class TiffExifParser implements TiffExifParserInterface
      */
     private function readU64(): UInt64
     {
-        return $this->bo === Endian::Little ? $this->buffer->readU64LE() : $this->buffer->readU64BE();
+        return $this->byteOrderHandler?->readUint64($this->buffer, $this->bo)
+            ?? throw new ParseError('byte-order handler not initialised', 1629);
     }
 
     /**
@@ -5725,33 +5683,8 @@ final class TiffExifParser implements TiffExifParserInterface
      */
     private function uXToBytes(int|UInt64 $v, int $bytes): string
     {
-        // Convert integer to a byte string of specific length using current endianness
-        if ($bytes === 4) {
-            $value = $v instanceof UInt64 ? $v->toInt('Inline 32-bit value') : $v;
-
-            return $this->bo === Endian::Little ? pack('V', $value) : pack('N', $value);
-        }
-
-        if ($bytes === 8) {
-            if ($v instanceof UInt64) {
-                $hi = $v->high();
-                $lo = $v->low();
-            } else {
-                $lo = $v & BitMask::UINT32_MAX;
-                $hi = intdiv($v, BitMask::UINT32_BASE);
-            }
-
-            return $this->bo === Endian::Little ? pack('V2', $lo, $hi) : pack('N2', $hi, $lo);
-        }
-
-        // fallback (shouldn't happen here)
-        $bin   = '';
-        $value = $v instanceof UInt64 ? $v->toInt('Inline value') : $v;
-        for ($i = 0; $i < $bytes; ++$i) {
-            $bin = chr(($value >> ($this->bo === Endian::Little ? ($i * 8) : (($bytes - 1 - $i) * 8))) & BitMask::LOW_BYTE) . $bin;
-        }
-
-        return $bin;
+        return $this->byteOrderHandler?->uintToBytes($v, $bytes, $this->bo)
+            ?? throw new ParseError('byte-order handler not initialised', 1629);
     }
 
     /**
