@@ -199,6 +199,16 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     private const string BOX_TKHD = 'tkhd';
 
     /**
+     * Track-header flag indicating whether a track is enabled.
+     */
+    private const int TKHD_FLAG_TRACK_ENABLED = 0x000001;
+
+    /**
+     * Track-header flag indicating whether a track participates in movie presentation.
+     */
+    private const int TKHD_FLAG_TRACK_IN_MOVIE = 0x000002;
+
+    /**
      * FourCC for media container box.
      */
     private const string BOX_MDIA = 'mdia';
@@ -596,6 +606,13 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $mvhdCount = 0;
         $trakCount = 0;
 
+        /** @var QuickTimeKeyMap|null $selectedVideoTrack */
+        $selectedVideoTrack = null;
+        /** @var QuickTimeKeyMap|null $selectedAudioTrack */
+        $selectedAudioTrack    = null;
+        $hasEligibleVideoTrack = false;
+        $hasEligibleAudioTrack = false;
+
         foreach ($this->walkChildren($moov) as $child) {
             if ($child->type === self::BOX_META) {
                 // QuickTime File Format 2012, "Metadata Structure": only one
@@ -615,7 +632,33 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 $this->parseUdtaBox($child, $context);
             } elseif ($child->type === self::BOX_TRAK) {
                 ++$trakCount;
-                $this->parseTrak($child, $context);
+                $trackSelection = $this->parseTrak($child, $context);
+
+                if ($trackSelection['handler'] === 'vide') {
+                    if (
+                        $this->shouldSelectTrackCandidate(
+                            $selectedVideoTrack,
+                            $hasEligibleVideoTrack,
+                            $trackSelection['keys'],
+                            $trackSelection['isEnabledInMovie'],
+                        )
+                    ) {
+                        $selectedVideoTrack    = $trackSelection['keys'];
+                        $hasEligibleVideoTrack = $trackSelection['isEnabledInMovie'];
+                    }
+                } elseif ($trackSelection['handler'] === 'soun') {
+                    if (
+                        $this->shouldSelectTrackCandidate(
+                            $selectedAudioTrack,
+                            $hasEligibleAudioTrack,
+                            $trackSelection['keys'],
+                            $trackSelection['isEnabledInMovie'],
+                        )
+                    ) {
+                        $selectedAudioTrack    = $trackSelection['keys'];
+                        $hasEligibleAudioTrack = $trackSelection['isEnabledInMovie'];
+                    }
+                }
             } elseif ($child->type === self::BOX_MVHD) {
                 ++$mvhdCount;
 
@@ -625,6 +668,14 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
                 $this->parseMvhd($child);
             }
+        }
+
+        if ($selectedVideoTrack !== null) {
+            $this->mergeTrackKeysIfMissing($context->qtKeys, $selectedVideoTrack);
+        }
+
+        if ($selectedAudioTrack !== null) {
+            $this->mergeTrackKeysIfMissing($context->qtKeys, $selectedAudioTrack);
         }
 
         if ($mvhdCount === 0) {
@@ -808,24 +859,24 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     }
 
     /**
-     * Parses a track box and surfaces relevant video/audio details as QuickTime keys.
-     *
-     * QuickTime File Format 2012, "Track Atoms": a track atom may contain
-     * a user data atom (`udta`) carrying track-level metadata.
+     * Parses a track box and returns selectable metadata extracted from it.
      *
      * @param BoxDescriptor       $trak    Box descriptor for the track container.
      * @param IsoBmffParseContext $context Shared parse-state context.
+     *
+     * @return array{handler:?string, isEnabledInMovie:bool, keys:QuickTimeKeyMap}
      */
-    private function parseTrak(BoxDescriptor $trak, IsoBmffParseContext $context): void
+    private function parseTrak(BoxDescriptor $trak, IsoBmffParseContext $context): array
     {
-        $tkhdWidth   = null;
-        $tkhdHeight  = null;
-        $handler     = null;
-        $handlerName = null;
-        $sampleInfo  = [];
-        $tkhdCount   = 0;
-        $mdiaCount   = 0;
-        $udtaCount   = 0;
+        $tkhdWidth        = null;
+        $tkhdHeight       = null;
+        $handler          = null;
+        $handlerName      = null;
+        $sampleInfo       = [];
+        $isEnabledInMovie = false;
+        $tkhdCount        = 0;
+        $mdiaCount        = 0;
+        $udtaCount        = 0;
 
         foreach ($this->walkChildren($trak) as $child) {
             if ($child->type === self::BOX_TKHD) {
@@ -835,7 +886,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('trak must contain exactly one tkhd box', 1376);
                 }
 
-                [$tkhdWidth, $tkhdHeight] = $this->parseTkhd($child);
+                [$tkhdWidth, $tkhdHeight, $isEnabledInMovie] = $this->parseTkhd($child);
             } elseif ($child->type === self::BOX_MDIA) {
                 ++$mdiaCount;
 
@@ -863,7 +914,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         if ($handler === null) {
-            return;
+            return [
+                'handler'          => null,
+                'isEnabledInMovie' => $isEnabledInMovie,
+                'keys'             => [],
+            ];
         }
 
         if (
@@ -874,71 +929,94 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $context->qtKeys[QuickTimeMeta::HANDLER_DESCRIPTION_KEY] = $handlerName;
         }
 
+        /** @var QuickTimeKeyMap $trackKeys */
+        $trackKeys = [];
+
         if ($handler === 'vide') {
             $width  = $sampleInfo['width'] ?? $tkhdWidth;
             $height = $sampleInfo['height'] ?? $tkhdHeight;
 
-            if (
-                $width !== null
-                && $width > 0
-                && !array_key_exists(QuickTimeMeta::VIDEO_WIDTH_KEY, $context->qtKeys)
-            ) {
-                $context->qtKeys[QuickTimeMeta::VIDEO_WIDTH_KEY] = $width;
+            if ($width !== null && $width > 0) {
+                $trackKeys[QuickTimeMeta::VIDEO_WIDTH_KEY] = $width;
             }
 
-            if (
-                $height !== null
-                && $height > 0
-                && !array_key_exists(QuickTimeMeta::VIDEO_HEIGHT_KEY, $context->qtKeys)
-            ) {
-                $context->qtKeys[QuickTimeMeta::VIDEO_HEIGHT_KEY] = $height;
+            if ($height !== null && $height > 0) {
+                $trackKeys[QuickTimeMeta::VIDEO_HEIGHT_KEY] = $height;
             }
 
-            if (
-                isset($sampleInfo['format'])
-                && $sampleInfo['format'] !== ''
-                && !array_key_exists(QuickTimeMeta::VIDEO_CODEC_KEY, $context->qtKeys)
-            ) {
-                $context->qtKeys[QuickTimeMeta::VIDEO_CODEC_KEY] = $sampleInfo['format'];
+            if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
+                $trackKeys[QuickTimeMeta::VIDEO_CODEC_KEY] = $sampleInfo['format'];
             }
 
-            if (
-                isset($sampleInfo['compressorName'])
-                && $sampleInfo['compressorName'] !== ''
-                && !array_key_exists(QuickTimeMeta::COMPRESSOR_NAME_KEY, $context->qtKeys)
-            ) {
-                $context->qtKeys[QuickTimeMeta::COMPRESSOR_NAME_KEY] = $sampleInfo['compressorName'];
+            if (isset($sampleInfo['compressorName']) && $sampleInfo['compressorName'] !== '') {
+                $trackKeys[QuickTimeMeta::COMPRESSOR_NAME_KEY] = $sampleInfo['compressorName'];
             }
         } elseif ($handler === 'soun') {
             if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
-                if (!array_key_exists(QuickTimeMeta::AUDIO_FORMAT_KEY, $context->qtKeys)) {
-                    $context->qtKeys[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
-                }
-
-                if (!array_key_exists(QuickTimeMeta::AUDIO_CODEC_KEY, $context->qtKeys)) {
-                    $context->qtKeys[QuickTimeMeta::AUDIO_CODEC_KEY] = $sampleInfo['format'];
-                }
+                $trackKeys[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
+                $trackKeys[QuickTimeMeta::AUDIO_CODEC_KEY]  = $sampleInfo['format'];
             }
 
-            if (
-                isset($sampleInfo['channels'])
-                && !array_key_exists(QuickTimeMeta::AUDIO_CHANNELS_KEY, $context->qtKeys)
-            ) {
-                $context->qtKeys[QuickTimeMeta::AUDIO_CHANNELS_KEY] = $sampleInfo['channels'];
+            if (isset($sampleInfo['channels'])) {
+                $trackKeys[QuickTimeMeta::AUDIO_CHANNELS_KEY] = $sampleInfo['channels'];
             }
 
-            if (
-                isset($sampleInfo['bitsPerSample'])
-                && !array_key_exists(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY, $context->qtKeys)
-            ) {
-                $context->qtKeys[QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY] = $sampleInfo['bitsPerSample'];
+            if (isset($sampleInfo['bitsPerSample'])) {
+                $trackKeys[QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY] = $sampleInfo['bitsPerSample'];
             }
 
-            if (
-                isset($sampleInfo['sampleRate'])
-                && !array_key_exists(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY, $context->qtKeys)
-            ) {
-                $context->qtKeys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY] = $sampleInfo['sampleRate'];
+            if (isset($sampleInfo['sampleRate'])) {
+                $trackKeys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY] = $sampleInfo['sampleRate'];
+            }
+        }
+
+        return [
+            'handler'          => $handler,
+            'isEnabledInMovie' => $isEnabledInMovie,
+            'keys'             => $trackKeys,
+        ];
+    }
+
+    /**
+     * Determines whether a new track-derived metadata candidate should replace the current selection.
+     *
+     * @param QuickTimeKeyMap|null $currentKeys         Currently selected track-derived keys.
+     * @param bool                 $currentIsEligible   Whether the current selection is enabled and in-movie.
+     * @param QuickTimeKeyMap      $candidateKeys       Candidate keys extracted from the current track.
+     * @param bool                 $candidateIsEligible Whether the candidate track is enabled and in-movie.
+     */
+    private function shouldSelectTrackCandidate(
+        ?array $currentKeys,
+        bool $currentIsEligible,
+        array $candidateKeys,
+        bool $candidateIsEligible,
+    ): bool {
+        if ($candidateKeys === []) {
+            return false;
+        }
+
+        if ($currentKeys === null) {
+            return true;
+        }
+
+        if ($currentIsEligible) {
+            return false;
+        }
+
+        return $candidateIsEligible;
+    }
+
+    /**
+     * Merges track-derived keys without overwriting already established metadata values.
+     *
+     * @param QuickTimeKeyMap $target
+     * @param QuickTimeKeyMap $trackKeys
+     */
+    private function mergeTrackKeysIfMissing(array &$target, array $trackKeys): void
+    {
+        foreach ($trackKeys as $key => $value) {
+            if (!array_key_exists($key, $target)) {
+                $target[$key] = $value;
             }
         }
     }
@@ -948,7 +1026,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      *
      * @param BoxDescriptor $tkhd Track header descriptor.
      *
-     * @return array{0: ?int, 1: ?int}
+     * @return array{0: ?int, 1: ?int, 2: bool}
      */
     private function parseTkhd(BoxDescriptor $tkhd): array
     {
@@ -1022,7 +1100,12 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $width  = ($widthFixed > 0 && !$isAspectRatio) ? (int) round($widthFixed / 65536) : null;
         $height = ($heightFixed > 0 && !$isAspectRatio) ? (int) round($heightFixed / 65536) : null;
 
-        return [$width, $height];
+        // ISO/IEC 14496-12 §8.3.2: usable movie tracks are enabled and marked in_movie.
+        $isTrackEnabled   = ($flags & self::TKHD_FLAG_TRACK_ENABLED) !== 0;
+        $isTrackInMovie   = ($flags & self::TKHD_FLAG_TRACK_IN_MOVIE) !== 0;
+        $isEnabledInMovie = $isTrackEnabled && $isTrackInMovie;
+
+        return [$width, $height, $isEnabledInMovie];
     }
 
     /**

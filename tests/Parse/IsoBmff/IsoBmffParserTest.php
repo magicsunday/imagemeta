@@ -4170,6 +4170,120 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Prefers an enabled in-movie track over a disabled track.
+     *
+     * @return void
+     */
+    #[Test]
+    public function multiTrackVideoPrefersEnabledInMovieTrackOverDisabledTrack(): void
+    {
+        $disabled = [
+            'format'    => 'hvc1',
+            'width'     => 3840,
+            'height'    => 2160,
+            'tkhdFlags' => 0x000000,
+        ];
+        $enabledInMovie = [
+            'format'    => 'avc1',
+            'width'     => 1920,
+            'height'    => 1080,
+            'tkhdFlags' => 0x000003,
+        ];
+
+        $extractor    = $this->createExtractor($this->createFileWithVideoTrackDescriptors($disabled, $enabledInMovie));
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(1920, $qtMeta->keys[QuickTimeMeta::VIDEO_WIDTH_KEY]);
+        self::assertSame(1080, $qtMeta->keys[QuickTimeMeta::VIDEO_HEIGHT_KEY]);
+        self::assertSame('avc1', $qtMeta->keys[QuickTimeMeta::VIDEO_CODEC_KEY]);
+    }
+
+    /**
+     * Prefers tracks marked as in-movie over tracks that are only enabled.
+     *
+     * @return void
+     */
+    #[Test]
+    public function multiTrackVideoPrefersTrackMarkedInMovie(): void
+    {
+        $enabledOnly = [
+            'format'    => 'hvc1',
+            'width'     => 3840,
+            'height'    => 2160,
+            'tkhdFlags' => 0x000001,
+        ];
+        $inMovie = [
+            'format'    => 'avc1',
+            'width'     => 1920,
+            'height'    => 1080,
+            'tkhdFlags' => 0x000003,
+        ];
+
+        $extractor    = $this->createExtractor($this->createFileWithVideoTrackDescriptors($enabledOnly, $inMovie));
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(1920, $qtMeta->keys[QuickTimeMeta::VIDEO_WIDTH_KEY]);
+        self::assertSame(1080, $qtMeta->keys[QuickTimeMeta::VIDEO_HEIGHT_KEY]);
+        self::assertSame('avc1', $qtMeta->keys[QuickTimeMeta::VIDEO_CODEC_KEY]);
+    }
+
+    /**
+     * Keeps existing behavior for single-track QuickTime files.
+     *
+     * @return void
+     */
+    #[Test]
+    public function singleTrackVideoKeepsCurrentBehaviorWhenFlagsAreUnset(): void
+    {
+        $track = [
+            'format'    => 'avc1',
+            'width'     => 1920,
+            'height'    => 1080,
+            'tkhdFlags' => 0x000000,
+        ];
+
+        $extractor    = $this->createExtractor($this->createFileWithVideoTrackDescriptors($track));
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(1920, $qtMeta->keys[QuickTimeMeta::VIDEO_WIDTH_KEY]);
+        self::assertSame(1080, $qtMeta->keys[QuickTimeMeta::VIDEO_HEIGHT_KEY]);
+        self::assertSame('avc1', $qtMeta->keys[QuickTimeMeta::VIDEO_CODEC_KEY]);
+    }
+
+    /**
+     * Uses the first eligible track when multiple in-movie tracks exist.
+     *
+     * @return void
+     */
+    #[Test]
+    public function multiTrackVideoUsesFirstEligibleTrackDeterministically(): void
+    {
+        $firstEligible = [
+            'format'    => 'avc1',
+            'width'     => 1920,
+            'height'    => 1080,
+            'tkhdFlags' => 0x000003,
+        ];
+        $secondEligible = [
+            'format'    => 'hvc1',
+            'width'     => 3840,
+            'height'    => 2160,
+            'tkhdFlags' => 0x000003,
+        ];
+
+        $extractor    = $this->createExtractor($this->createFileWithVideoTrackDescriptors($firstEligible, $secondEligible));
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(1920, $qtMeta->keys[QuickTimeMeta::VIDEO_WIDTH_KEY]);
+        self::assertSame(1080, $qtMeta->keys[QuickTimeMeta::VIDEO_HEIGHT_KEY]);
+        self::assertSame('avc1', $qtMeta->keys[QuickTimeMeta::VIDEO_CODEC_KEY]);
+    }
+
+    /**
      * Uses two audio tracks with different formats and sample properties.
      * This verifies track-derived audio keys are selected deterministically.
      *
@@ -5061,6 +5175,27 @@ final class IsoBmffParserTest extends TestCase
      */
     private function createFileWithVideoTracks(array ...$tracks): string
     {
+        $descriptors = [];
+
+        foreach ($tracks as $track) {
+            $descriptors[] = [
+                'format'    => $track['format'],
+                'width'     => $track['width'],
+                'height'    => $track['height'],
+                'tkhdFlags' => 0,
+            ];
+        }
+
+        return $this->createFileWithVideoTrackDescriptors(...$descriptors);
+    }
+
+    /**
+     * Builds a minimal QuickTime file with one or more video tracks using explicit tkhd flags.
+     *
+     * @param array{format:string, width:int, height:int, tkhdFlags:int} ...$tracks
+     */
+    private function createFileWithVideoTrackDescriptors(array ...$tracks): string
+    {
         $trakBoxes = '';
         $trackId   = 1;
 
@@ -5076,7 +5211,12 @@ final class IsoBmffParserTest extends TestCase
             $hdlr        = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
             $mdhd        = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
             $mdia        = $this->box('mdia', $hdlr . $mdhd . $minf);
-            $tkhd        = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, $trackId, 0) . str_repeat("\0", 60));
+            $tkhd        = $this->fullBox(
+                'tkhd',
+                pack('NNNx4N', 0, 0, $trackId, 0) . str_repeat("\0", 60),
+                0,
+                $track['tkhdFlags'],
+            );
             $trakBoxes .= $this->box('trak', $tkhd . $mdia);
             ++$trackId;
         }
