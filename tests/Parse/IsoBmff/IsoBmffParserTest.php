@@ -3085,7 +3085,7 @@ final class IsoBmffParserTest extends TestCase
             sampleRate: 44100,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1));
         [, , $quickTime] = $extractor->extract();
 
         self::assertNotNull($quickTime);
@@ -3114,7 +3114,7 @@ final class IsoBmffParserTest extends TestCase
             bytesPerSample: 0,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1));
         [, , $quickTime] = $extractor->extract();
 
         self::assertNotNull($quickTime);
@@ -3122,6 +3122,80 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame(2, $quickTime->intValue(QuickTimeMeta::AUDIO_CHANNELS_KEY));
         self::assertSame(16, $quickTime->intValue(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY));
         self::assertSame(48000, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
+    }
+
+    /**
+     * Rejects version 1 audio sample entries when stsd FullBox version is 0.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdVersion1EntryInStsdVersion0(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample entry version 1 requires stsd version 1');
+
+        $entry = $this->audioSampleEntryVersion1(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 48000,
+            samplesPerPacket: 1024,
+            bytesPerPacket: 0,
+            bytesPerFrame: 0,
+            bytesPerSample: 0,
+        );
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Parses a version 1 audio sample entry using Sampling Rate box override.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesAudioStsdVersion1SamplingRateBoxOverride(): void
+    {
+        $entry = $this->audioSampleEntryVersion1(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 44100,
+            samplesPerPacket: 1024,
+            bytesPerPacket: 0,
+            bytesPerFrame: 0,
+            bytesPerSample: 0,
+        );
+        $entry = $this->box('mp4a', substr($entry, 8) . $this->box('srat', pack('N', 96000)));
+
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame(96000, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
+    }
+
+    /**
+     * Rejects Sampling Rate box usage in non-version-1 audio sample entries.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdVersion0SamplingRateBox(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('sampling rate box is only allowed in audio sample entry version 1');
+
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 44100,
+        );
+        $entry = $this->box('mp4a', substr($entry, 8) . $this->box('srat', pack('N', 48000)));
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
     }
 
     /**

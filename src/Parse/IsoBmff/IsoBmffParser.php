@@ -234,6 +234,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     private const string BOX_STSD = 'stsd';
 
     /**
+     * FourCC for Sampling Rate box inside AudioSampleEntryV1.
+     */
+    private const string BOX_SRAT = 'srat';
+
+    /**
      * FourCC for video media header box.
      */
     private const string BOX_VMHD = 'vmhd';
@@ -1637,7 +1642,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     'compressorName' => $compressor,
                 ];
             } elseif ($result === [] && $handlerType === 'soun') {
-                $result = $this->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $format);
+                $result = $this->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $format, $version);
             }
 
             $pos += $entrySize;
@@ -1659,16 +1664,23 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * - v2 repurposes the legacy words as required constants and appends
      *   Core Audio-style channel/rate fields.
      *
-     * @param StreamWindow $win        Reader positioned at the beginning of sample-entry specific fields.
-     * @param int          $entryStart Absolute offset of the sample-entry specific fields.
-     * @param int          $entryEnd   Absolute offset where this sample entry ends.
-     * @param int          $entrySize  Declared sample entry size (including size+type header).
-     * @param string       $format     Raw fourcc format code.
+     * @param StreamWindow $win         Reader positioned at the beginning of sample-entry specific fields.
+     * @param int          $entryStart  Absolute offset of the sample-entry specific fields.
+     * @param int          $entryEnd    Absolute offset where this sample entry ends.
+     * @param int          $entrySize   Declared sample entry size (including size+type header).
+     * @param string       $format      Raw fourcc format code.
+     * @param int          $stsdVersion FullBox version of the enclosing stsd.
      *
      * @return array{format: string, channels: int, bitsPerSample: int, sampleRate: int}
      */
-    private function parseSoundSampleEntry(StreamWindow $win, int $entryStart, int $entryEnd, int $entrySize, string $format): array
-    {
+    private function parseSoundSampleEntry(
+        StreamWindow $win,
+        int $entryStart,
+        int $entryEnd,
+        int $entrySize,
+        string $format,
+        int $stsdVersion,
+    ): array {
         if ($win->tell() + 8 > $entryEnd) {
             throw new ParseError('audio sample entry truncated', 1160);
         }
@@ -1685,8 +1697,19 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('audio sample entry vendor must be 0', 1456);
         }
 
+        if ($version === 1 && $stsdVersion !== 1) {
+            throw new ParseError('audio sample entry version 1 requires stsd version 1', 1472);
+        }
+
         if ($version === 2) {
-            return $this->parseSoundSampleEntryVersion2($win, $entryStart, $entryEnd, $entrySize, $format);
+            $result = $this->parseSoundSampleEntryVersion2($win, $entryStart, $entryEnd, $entrySize, $format);
+
+            $samplingRateOverride = $this->parseAudioSampleEntrySamplingRateBox($win, $entryEnd, false);
+            if ($samplingRateOverride !== null) {
+                $result['sampleRate'] = $samplingRateOverride;
+            }
+
+            return $result;
         }
 
         if ($version !== 0 && $version !== 1) {
@@ -1719,12 +1742,66 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $win->readU32BE();
         }
 
-        return [
+        $result = [
             'format'        => $this->normaliseFourcc($format),
             'channels'      => $channels,
             'bitsPerSample' => $sampleSize,
             'sampleRate'    => (int) round($sampleRate / 65536),
         ];
+
+        $samplingRateOverride = $this->parseAudioSampleEntrySamplingRateBox($win, $entryEnd, $version === 1);
+        if ($samplingRateOverride !== null) {
+            $result['sampleRate'] = $samplingRateOverride;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Parses trailing AudioSampleEntry child boxes and extracts Sampling Rate box overrides.
+     *
+     * @param StreamWindow $win                  Reader positioned at the start of trailing child bytes.
+     * @param int          $entryEnd             Absolute offset where this sample entry ends.
+     * @param bool         $allowSamplingRateBox Whether a `srat` box is allowed in this entry version.
+     *
+     * @return int|null
+     */
+    private function parseAudioSampleEntrySamplingRateBox(StreamWindow $win, int $entryEnd, bool $allowSamplingRateBox): ?int
+    {
+        $remaining = $entryEnd - $win->tell();
+        if ($remaining <= 0) {
+            return null;
+        }
+
+        $tail     = $win->read($remaining);
+        $tailSize = strlen($tail);
+        $offset   = 0;
+        $override = null;
+
+        while ($offset + 8 <= $tailSize) {
+            $boxSize = Unpack::int('N', substr($tail, $offset, 4), 'audio sample entry child box size');
+
+            if (($boxSize < 8) || (($offset + $boxSize) > $tailSize)) {
+                break;
+            }
+
+            $boxType = substr($tail, $offset + 4, 4);
+            if ($boxType === self::BOX_SRAT) {
+                if (!$allowSamplingRateBox) {
+                    throw new ParseError('sampling rate box is only allowed in audio sample entry version 1', 1473);
+                }
+
+                if ($boxSize < 12) {
+                    throw new ParseError('sampling rate box truncated', 1474);
+                }
+
+                $override = Unpack::int('N', substr($tail, $offset + 8, 4), 'sampling rate box sample rate');
+            }
+
+            $offset += $boxSize;
+        }
+
+        return $override;
     }
 
     /**
