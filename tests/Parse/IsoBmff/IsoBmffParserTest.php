@@ -1716,6 +1716,38 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Parses an iref box with version 1 and 32-bit item identifiers.
+     * This verifies flags=0 remains accepted and IDs are decoded with v1 width.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseIrefVersion1Relationships(): void
+    {
+        $fromItemId = 70_000;
+        $toItemA    = 70_001;
+        $toItemB    = 70_002;
+
+        $entryPayload = pack('N', $fromItemId) . pack('n', 2) . pack('N', $toItemA) . pack('N', $toItemB);
+        $entry        = $this->box('dimg', $entryPayload);
+        $iref         = $this->fullBox('iref', $entry, 1, 0);
+        $meta         = $this->fullBox('meta', $iref);
+        $ftyp         = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor              = $this->createExtractor($ftyp . $meta);
+        [, , , $itemReferences] = $extractor->extract();
+
+        self::assertInstanceOf(IsoBmffItemReferenceMap::class, $itemReferences);
+        self::assertSame([$fromItemId], $itemReferences->fromItemIds());
+
+        $references = $itemReferences->referencesFor($fromItemId);
+        self::assertCount(2, $references);
+        self::assertSame('dimg', $references[0]->relation);
+        self::assertSame($toItemA, $references[0]->toItemId);
+        self::assertSame($toItemB, $references[1]->toItemId);
+    }
+
+    /**
      * Resolves iloc items stored in the idat box using construction method 1.
      * This confirms idat-based extents are read and produce EXIF output.
      *
