@@ -2467,6 +2467,43 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Parses an infe v3 entry and resolves the referenced EXIF item.
+     * Confirms version 3 (32-bit item_ID) remains supported.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesInfeVersion3(): void
+    {
+        $exifBlob = pack('N', 0) . "MM\x00\x2Ainfe-v3";
+
+        $infePayload = "\x03\0\0\0" . pack('N', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $infe        = $this->box('infe', $infePayload);
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
+        $pitm        = $this->box('pitm', "\0\0\0\0" . pack('n', 1));
+
+        $ilocPayload = "\0\0\0\0\x44\0" . pack('n', 1)
+            . pack('n', 1) . pack('n', 0) . pack('n', 1)
+            . pack('N', 0) . pack('N', strlen($exifBlob));
+        $iloc = $this->box('iloc', $ilocPayload);
+        $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat = $this->box('mdat', $exifBlob);
+
+        $offset      = strlen($ftyp) + strlen($meta) + 8;
+        $ilocPayload = "\0\0\0\0\x44\0" . pack('n', 1)
+            . pack('n', 1) . pack('n', 0) . pack('n', 1)
+            . pack('N', $offset) . pack('N', strlen($exifBlob));
+        $iloc = $this->box('iloc', $ilocPayload);
+        $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
+
+        $extractor = $this->createExtractor($ftyp . $meta . $mdat);
+        [$exifs]   = $extractor->extract();
+
+        self::assertSame(["MM\x00\x2Ainfe-v3"], $exifs);
+    }
+
+    /**
      * Builds an infe v2 box with content_encoding and verifies item identification
      * still works. This confirms parseInfe correctly parses the optional third
      * NUL-terminated string without breaking content_type matching.
