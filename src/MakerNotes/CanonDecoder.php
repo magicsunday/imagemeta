@@ -11,27 +11,16 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes;
 
-use function sha1;
-use function strlen;
-
 /**
  * Decoder that extracts basic metadata about Canon maker note payloads.
  */
-final class CanonDecoder implements MakerNotesDecoderInterface
+final class CanonDecoder extends AbstractSimpleDecoder
 {
     /**
-     * Creates a metadata value object that describes the Canon maker note payload.
-     *
-     * @param string      $raw   Raw maker note data stream captured from the image file.
-     * @param string      $make  Reported camera make string.
-     * @param string|null $model Optional camera model identifier for the payload.
+     * Returns the vendor label for Canon maker note records.
      */
-    public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
+    protected function getVendorName(): string
     {
-        return new MakerNotesRecord(
-            'Canon',
-            strlen($raw),
-            sha1($raw)
-        );
+        return 'Canon';
     }
 }
