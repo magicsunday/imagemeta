@@ -87,6 +87,22 @@ final class TiffExifParser implements TiffExifParserInterface
     ];
 
     /**
+     * Integer TIFF field types accepted for strip/tile offset and byte-count tags.
+     *
+     * @var list<int>
+     */
+    private const array COUNTED_IMAGE_DATA_INTEGER_TYPES = [
+        TiffConst::TYPE_SHORT,
+        TiffConst::TYPE_SSHORT,
+        TiffConst::TYPE_LONG,
+        TiffConst::TYPE_SLONG,
+        TiffConst::TYPE_IFD,
+        TiffConst::TYPE_LONG8,
+        TiffConst::TYPE_SLONG8,
+        TiffConst::TYPE_IFD8,
+    ];
+
+    /**
      * Tags whose values encode offsets within the TIFF blob.
      *
      * EXIF 3.0 §4.6.3 lists the Exif, GPS and Interoperability IFD pointer fields that
@@ -1825,7 +1841,7 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         if (in_array($tag, self::COUNTED_IMAGE_DATA_TAGS, true)) {
-            $value = $this->normaliseCountedImageDataField($tag, $type, $cnt, $rawBytes, $value);
+            $value = $this->normaliseCountedImageDataField($tag, $type, $cnt, $rawBytes);
         }
 
         return new IfdEntry($tag, $type, $cnt, $value);
@@ -4907,11 +4923,10 @@ final class TiffExifParser implements TiffExifParserInterface
      * EXIF 3.0 §4.6.2 and §4.6.4 enumerate the strip/tile offset and byte-count
      * tags whose component counts are normalised here.
      *
-     * @param int                                                                   $tag
-     * @param int                                                                   $type     TIFF field type code.
-     * @param int                                                                   $count    Number of values represented.
-     * @param string                                                                $rawBytes Raw value bytes read for the entry.
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value
+     * @param int    $tag
+     * @param int    $type     TIFF field type code.
+     * @param int    $count    Number of values represented.
+     * @param string $rawBytes Raw value bytes read for the entry.
      *
      * @return int|ExifNumericList
      */
@@ -4920,66 +4935,51 @@ final class TiffExifParser implements TiffExifParserInterface
         int $type,
         int $count,
         string $rawBytes,
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value,
     ): int|ExifNumericList {
+        $this->validateCountedImageDataType($tag, $type);
+
         if ($count <= 0) {
             return new ExifNumericList([]);
         }
 
+        $components = $this->decodeCountedComponents($tag, $type, $rawBytes, $count);
+
         if ($count === 1) {
-            if ($value instanceof ExifNumericList) {
-                $first = $value->values[0] ?? null;
-
-                if (is_int($first)) {
-                    return $first;
-                }
-
-                if (is_float($first)) {
-                    return (int) $first;
-                }
-
-                if ($first instanceof UInt64) {
-                    return $first->toInt('counted image data field');
-                }
-            }
-
-            if (is_int($value)) {
-                return $value;
-            }
-
-            if (is_float($value)) {
-                return (int) $value;
-            }
-
-            if ($value instanceof UInt64) {
-                return $value->toInt('counted image data field');
-            }
-
-            $components = $this->decodeCountedComponents($tag, $type, $rawBytes, $count);
-
             return $components[0] ?? 0;
         }
 
-        if ($value instanceof ExifNumericList) {
-            $normalised = [];
+        return new ExifNumericList($components);
+    }
 
-            foreach ($value->values as $component) {
-                if (is_int($component)) {
-                    $normalised[] = $component;
-                } elseif (is_float($component)) {
-                    $normalised[] = (int) $component;
-                } else {
-                    // UInt64 (BigTIFF) - convert to int
-                    $normalised[] = $component->toInt('counted image data field');
-                }
-            }
-
-            return new ExifNumericList($normalised);
+    /**
+     * Validates that strip/tile offset and byte-count tags use integer TIFF field types.
+     */
+    private function validateCountedImageDataType(int $tag, int $type): void
+    {
+        if (in_array($type, self::COUNTED_IMAGE_DATA_INTEGER_TYPES, true)) {
+            return;
         }
 
-        $components = $this->decodeCountedComponents($tag, $type, $rawBytes, $count);
+        throw new ParseError(sprintf(
+            '%s (tag 0x%04X) must use integer TIFF field types; got type %d.',
+            $this->countedImageDataTagName($tag),
+            $tag,
+            $type,
+        ), 1600);
+    }
 
-        return new ExifNumericList($components);
+    /**
+     * Returns the canonical tag label for strip/tile counted image-data fields.
+     */
+    private function countedImageDataTagName(int $tag): string
+    {
+        return match ($tag) {
+            ExifTag::STRIP_OFFSETS     => 'StripOffsets',
+            ExifTag::STRIP_BYTE_COUNTS => 'StripByteCounts',
+            TiffTag::TILE_OFFSETS      => 'TileOffsets',
+            TiffTag::TILE_BYTE_COUNTS  => 'TileByteCounts',
+            default                    => sprintf('IFD tag 0x%04X', $tag),
+        };
     }
 
     /**

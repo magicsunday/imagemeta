@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -88,6 +89,40 @@ final class TiffExifParserStripLayoutTest extends TestCase
         self::assertSame(PlanarConfiguration::PLANAR, $parsed->planarConfiguration());
         self::assertCount(9, $parsed->stripOffsets() ?? []);
         self::assertCount(9, $parsed->stripByteCounts() ?? []);
+    }
+
+    /**
+     * Rejects StripOffsets entries that use floating-point TIFF types.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('floatingPointStripOffsetTypeProvider')]
+    public function rejectsStripOffsetsWithFloatingPointType(int $stripOffsetsType): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('StripOffsets (tag 0x0111) must use integer TIFF field types');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildStripLayoutTiff(
+                imageLength: 10,
+                rowsPerStrip: 4,
+                stripOffsets: [512, 768, 1024],
+                stripByteCounts: [120, 120, 80],
+                planarConfiguration: 1,
+                samplesPerPixel: null,
+                stripOffsetsType: $stripOffsetsType,
+            ),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{0:int}>
+     */
+    public static function floatingPointStripOffsetTypeProvider(): iterable
+    {
+        yield 'float strip offsets' => [TiffConst::TYPE_FLOAT];
+        yield 'double strip offsets' => [TiffConst::TYPE_DOUBLE];
     }
 
     /**
@@ -168,6 +203,8 @@ final class TiffExifParserStripLayoutTest extends TestCase
      * @param list<int> $stripByteCounts     Values for StripByteCounts (tag 0x0117).
      * @param int       $planarConfiguration PlanarConfiguration value (1 or 2).
      * @param int|null  $samplesPerPixel     Optional SamplesPerPixel value.
+     * @param int       $stripOffsetsType    TIFF type for StripOffsets values.
+     * @param int       $stripByteCountsType TIFF type for StripByteCounts values.
      */
     private function buildStripLayoutTiff(
         int $imageLength,
@@ -176,13 +213,15 @@ final class TiffExifParserStripLayoutTest extends TestCase
         array $stripByteCounts,
         int $planarConfiguration,
         ?int $samplesPerPixel,
+        int $stripOffsetsType = TiffConst::TYPE_LONG,
+        int $stripByteCountsType = TiffConst::TYPE_LONG,
     ): string {
         $entries = [
             ['tag' => ExifTag::IMAGE_WIDTH, 'type' => TiffConst::TYPE_LONG, 'values' => [32]],
             ['tag' => ExifTag::IMAGE_LENGTH, 'type' => TiffConst::TYPE_LONG, 'values' => [$imageLength]],
-            ['tag' => ExifTag::STRIP_OFFSETS, 'type' => TiffConst::TYPE_LONG, 'values' => $stripOffsets],
+            ['tag' => ExifTag::STRIP_OFFSETS, 'type' => $stripOffsetsType, 'values' => $stripOffsets],
             ['tag' => ExifTag::ROWS_PER_STRIP, 'type' => TiffConst::TYPE_LONG, 'values' => [$rowsPerStrip]],
-            ['tag' => ExifTag::STRIP_BYTE_COUNTS, 'type' => TiffConst::TYPE_LONG, 'values' => $stripByteCounts],
+            ['tag' => ExifTag::STRIP_BYTE_COUNTS, 'type' => $stripByteCountsType, 'values' => $stripByteCounts],
             ['tag' => ExifTag::PLANAR_CONFIGURATION, 'type' => TiffConst::TYPE_SHORT, 'values' => [$planarConfiguration]],
         ];
 
@@ -201,7 +240,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
     /**
      * Encodes a classic TIFF IFD with optional out-of-line value blocks.
      *
-     * @param list<array{tag:int, type:int, values:list<int>}> $entries
+     * @param list<array{tag:int, type:int, values:list<int|float>}> $entries
      */
     private function buildClassicTiff(array $entries): string
     {
@@ -238,22 +277,23 @@ final class TiffExifParserStripLayoutTest extends TestCase
     }
 
     /**
-     * Encodes SHORT/LONG values using little-endian classic TIFF field encoding.
+     * Encodes numeric values using little-endian classic TIFF field encoding.
      *
-     * @param int       $type   TIFF type constant.
-     * @param list<int> $values Entry values.
+     * @param int             $type   TIFF type constant.
+     * @param list<int|float> $values Entry values.
      */
     private function encodeValues(int $type, array $values): string
     {
         $bytes = '';
 
         foreach ($values as $value) {
-            if ($type === TiffConst::TYPE_SHORT) {
-                $bytes .= pack('v', $value);
-                continue;
-            }
-
-            $bytes .= pack('V', $value);
+            $bytes .= match ($type) {
+                TiffConst::TYPE_SHORT  => pack('v', (int) $value),
+                TiffConst::TYPE_LONG   => pack('V', (int) $value),
+                TiffConst::TYPE_FLOAT  => pack('g', (float) $value),
+                TiffConst::TYPE_DOUBLE => pack('e', (float) $value),
+                default                => pack('V', (int) $value),
+            };
         }
 
         return $bytes;

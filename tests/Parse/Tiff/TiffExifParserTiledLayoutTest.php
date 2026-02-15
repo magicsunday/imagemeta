@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -43,6 +44,30 @@ final class TiffExifParserTiledLayoutTest extends TestCase
 
         self::assertNotNull($parsed->ifd0->get(TiffTag::TILE_OFFSETS));
         self::assertNotNull($parsed->ifd0->get(TiffTag::TILE_BYTE_COUNTS));
+    }
+
+    /**
+     * Rejects TileByteCounts entries that use floating-point TIFF types.
+     */
+    #[Test]
+    #[DataProvider('floatingPointTileByteCountTypeProvider')]
+    public function rejectsTileByteCountsWithFloatingPointType(int $tileByteCountsType): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('TileByteCounts (tag 0x0145) must use integer TIFF field types');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTiledLayout(tileByteCountsType: $tileByteCountsType),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{0:int}>
+     */
+    public static function floatingPointTileByteCountTypeProvider(): iterable
+    {
+        yield 'float tile byte counts' => [TiffConst::TYPE_FLOAT];
+        yield 'double tile byte counts' => [TiffConst::TYPE_DOUBLE];
     }
 
     /**
@@ -133,6 +158,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
         int $samplesPerPixel = 1,
         ?int $tileOffsetsCount = null,
         ?int $tileByteCountsCount = null,
+        int $tileByteCountsType = TiffConst::TYPE_LONG,
         bool $includeStripTags = false,
     ): string {
         $tilesAcross = intdiv($imageWidth + $tileWidth - 1, $tileWidth);
@@ -143,8 +169,8 @@ final class TiffExifParserTiledLayoutTest extends TestCase
         $tileOffsetsCount ??= $expected;
         $tileByteCountsCount ??= $expected;
 
-        $tileOffsetsPayload = $this->packLongList($tileOffsetsCount, 4096);
-        $tileBytesPayload   = $this->packLongList($tileByteCountsCount, 256);
+        $tileOffsetsPayload = $this->packNumericList($tileOffsetsCount, 4096);
+        $tileBytesPayload   = $this->packNumericList($tileByteCountsCount, 256, $tileByteCountsType);
 
         $entries = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
@@ -175,7 +201,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
                 . pack('v', TiffConst::TYPE_LONG)
                 . pack('V', $tileOffsetsCount),
             TiffTag::TILE_BYTE_COUNTS => pack('v', TiffTag::TILE_BYTE_COUNTS)
-                . pack('v', TiffConst::TYPE_LONG)
+                . pack('v', $tileByteCountsType)
                 . pack('V', $tileByteCountsCount),
         ];
 
@@ -202,8 +228,8 @@ final class TiffExifParserTiledLayoutTest extends TestCase
                 . pack('v', TiffConst::TYPE_LONG)
                 . pack('V', $stripCount);
 
-            $payloadByTag[ExifTag::STRIP_OFFSETS]     = $this->packLongList($stripCount, 8192);
-            $payloadByTag[ExifTag::STRIP_BYTE_COUNTS] = $this->packLongList($stripCount, 128);
+            $payloadByTag[ExifTag::STRIP_OFFSETS]     = $this->packNumericList($stripCount, 8192);
+            $payloadByTag[ExifTag::STRIP_BYTE_COUNTS] = $this->packNumericList($stripCount, 128);
         }
 
         ksort($entries);
@@ -243,14 +269,20 @@ final class TiffExifParserTiledLayoutTest extends TestCase
     }
 
     /**
-     * Packs LONG array payload with deterministic values.
+     * Packs deterministic numeric payload values for TIFF list entries.
      */
-    private function packLongList(int $count, int $baseValue): string
+    private function packNumericList(int $count, int $baseValue, int $type = TiffConst::TYPE_LONG): string
     {
         $payload = '';
 
         for ($i = 0; $i < $count; ++$i) {
-            $payload .= pack('V', $baseValue + $i);
+            $value = $baseValue + $i;
+            $payload .= match ($type) {
+                TiffConst::TYPE_LONG   => pack('V', $value),
+                TiffConst::TYPE_FLOAT  => pack('g', (float) $value),
+                TiffConst::TYPE_DOUBLE => pack('e', (float) $value),
+                default                => pack('V', $value),
+            };
         }
 
         return $payload;
