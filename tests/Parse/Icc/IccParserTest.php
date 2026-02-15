@@ -1151,6 +1151,24 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * GH-1117: Rejects profiles with multiple non-zero reserved header bytes.
+     * ICC.1:2022 §7.2.19: bytes 100-127 must be zero.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsMultipleNonZeroHeaderReservedBytes(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        $profile = substr_replace($profile, "\xAA\x55\x01", 110, 3);
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
+    }
+
+    /**
      * Builds a minimal ICC profile with a textType copyright tag.
      */
     private function buildTextTypeProfile(string $text, int $versionBytes = 0x04210000): string
