@@ -2511,6 +2511,30 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds an iinf box claiming 1 entry but containing 2 infe children.
+     * Confirms the parser rejects additional entries beyond declared entry_count.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIinfEntriesBeyondDeclaredEntryCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('iinf contains infe entries beyond declared entry_count');
+
+        $infeExifPayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $infeXmpPayload  = "\x02\0\0\0" . pack('n', 2) . pack('n', 0) . 'xmp ' . "\0" . 'application/rdf+xml' . "\0\0";
+        $infeExif        = $this->box('infe', $infeExifPayload);
+        $infeXmp         = $this->box('infe', $infeXmpPayload);
+        $iinf            = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infeExif . $infeXmp); // claims 1, has 2
+        $meta            = $this->fullBox('meta', $iinf);
+        $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Builds an iinf box with version 2, which is not defined by ISO/IEC 14496-12.
      * Confirms the parser rejects unsupported iinf versions.
      *

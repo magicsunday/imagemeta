@@ -2779,6 +2779,8 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     /**
      * Parses the item information box and returns descriptors for each entry.
      *
+     * ISO/IEC 14496-12:2015 §8.11.6 defines `entry_count` as the number of
+     * item information entries (`infe`) in the box.
      * EXIF 3.0 Annex A.2.2 defines the `iinf` container layout for Exif-in-ISO BMFF
      * metadata collections.
      *
