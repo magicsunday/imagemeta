@@ -3071,6 +3071,127 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Accepts conforming QuickTime video sample-entry core quality/data-size fields.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesVideoStsdEntryWithConformingQualityAndDataSize(): void
+    {
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+            videoVersion: 0,
+            videoRevisionLevel: 0,
+            temporalQuality: 1023,
+            spatialQuality: 1024,
+            dataSize: 0,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
+        self::assertSame(240, $quickTime->intValue(QuickTimeMeta::VIDEO_HEIGHT_KEY));
+    }
+
+    /**
+     * Rejects non-zero revision level in video sample entries.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoStsdEntryWithNonZeroRevisionLevel(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('video sample entry revision level must be 0');
+
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+            videoRevisionLevel: 1,
+        );
+
+        $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects non-zero data-size values in video sample entries.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoStsdEntryWithNonZeroDataSize(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('video sample entry data size must be 0');
+
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+            dataSize: 1,
+        );
+
+        $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects temporal quality values outside the QuickTime domain.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoStsdEntryWithTemporalQualityOutOfRange(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('video sample entry temporal quality must be <= 1023');
+
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+            temporalQuality: 1024,
+        );
+
+        $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects spatial quality values outside the QuickTime domain.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoStsdEntryWithSpatialQualityOutOfRange(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('video sample entry spatial quality must be <= 1024');
+
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+            spatialQuality: 1025,
+        );
+
+        $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
+    }
+
+    /**
      * Accepts valid QuickTime video depth/color-table combinations in stsd entries.
      *
      * @return void
@@ -6388,17 +6509,27 @@ final class IsoBmffParserTest extends TestCase
         int $depth = 24,
         int $colorTableId = -1,
         string $trailingPayload = '',
+        int $videoVersion = 0,
+        int $videoRevisionLevel = 0,
+        int $videoVendor = 0,
+        int $temporalQuality = 0,
+        int $spatialQuality = 0,
+        int $dataSize = 0,
     ): string {
         $compressor = str_pad('', 31, "\0");
 
         $payload = str_repeat("\0", 6)
             . pack('n', 1)
-            . str_repeat("\0", 16)
+            . pack('n', $videoVersion)
+            . pack('n', $videoRevisionLevel)
+            . pack('N', $videoVendor)
+            . pack('N', $temporalQuality)
+            . pack('N', $spatialQuality)
             . pack('n', $width)
             . pack('n', $height)
             . pack('N', 0x00480000)
             . pack('N', 0x00480000)
-            . pack('N', 0)
+            . pack('N', $dataSize)
             . pack('n', 1)
             . "\0"
             . $compressor

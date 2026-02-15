@@ -1680,12 +1680,34 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('video sample entry truncated', 1159);
                 }
 
-                $win->read(16); // pre-defined/reserved
+                $win->readU16BE(); // version
+                $videoRevisionLevel = $win->readU16BE();
+                $win->readU32BE(); // vendor
+                $temporalQuality = $win->readU32BE();
+                $spatialQuality  = $win->readU32BE();
+
+                if ($videoRevisionLevel !== 0) {
+                    throw new ParseError('video sample entry revision level must be 0', 1499);
+                }
+
+                if ($temporalQuality > 1023) {
+                    throw new ParseError('video sample entry temporal quality must be <= 1023', 1500);
+                }
+
+                if ($spatialQuality > 1024) {
+                    throw new ParseError('video sample entry spatial quality must be <= 1024', 1501);
+                }
+
                 $width  = $win->readU16BE();
                 $height = $win->readU16BE();
                 $win->readU32BE(); // horiz resolution
                 $win->readU32BE(); // vert resolution
-                $win->read(4); // reserved
+
+                $dataSize = $win->readU32BE();
+                if ($dataSize !== 0) {
+                    throw new ParseError('video sample entry data size must be 0', 1502);
+                }
+
                 $win->readU16BE(); // frame count
 
                 // GH-836: decode compressorName as strict 32-byte Pascal string
