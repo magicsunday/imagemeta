@@ -589,7 +589,8 @@ final class IccParser implements IccParserInterface
     /**
      * Extracts the profile creation timestamp from the header.
      *
-     * ICC.1:2022 §7.2.6 defines the dateTimeNumber structure.
+     * ICC.1:2022 §4.2 defines dateTimeNumber as six uInt16Number fields in UTC.
+     * ICC.1:2022 §7.2.6 applies that structure to the profile header field.
      *
      * @param string $data Raw ICC profile payload.
      *
@@ -613,7 +614,7 @@ final class IccParser implements IccParserInterface
             return null;
         }
 
-        // ICC.1:2022 §7.2.6: validate calendar/time field ranges.
+        // ICC.1:2022 §4.2 and §7.2.6: validate calendar/time field ranges.
         // Invalid header fields are treated as absent metadata and therefore return null.
         if (
             !checkdate($month, $day, $year)

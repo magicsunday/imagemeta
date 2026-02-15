@@ -495,6 +495,69 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Rejects year zero in ICC dateTimeNumber.
+     * ICC.1:2022 §4.2 and §7.2.6 define a valid date/time value.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsYearZeroInDateTimeNumber(): void
+    {
+        $profile  = IccFixtures::minimalProfile();
+        $dateTime = pack('nnnnnn', 0, 6, 15, 12, 0, 0);
+        $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertNull($result['profileDateTime']);
+        self::assertNull($result['profileDateTimeUtc']);
+    }
+
+    /**
+     * Accepts lower-boundary values in ICC dateTimeNumber.
+     * ICC.1:2022 §4.2 and §7.2.6: month=1, day=1, hour=0, minute=0, second=0.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsLowerBoundaryDateTimeNumber(): void
+    {
+        $profile  = IccFixtures::minimalProfile();
+        $dateTime = pack('nnnnnn', 2024, 1, 1, 0, 0, 0);
+        $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('2024:01:01 00:00:00', $result['profileDateTime']);
+        self::assertSame('2024:01:01 00:00:00Z', $result['profileDateTimeUtc']);
+    }
+
+    /**
+     * Accepts upper-boundary values in ICC dateTimeNumber.
+     * ICC.1:2022 §4.2 and §7.2.6: month=12, day=31, hour=23, minute=59, second=59.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsUpperBoundaryDateTimeNumber(): void
+    {
+        $profile  = IccFixtures::minimalProfile();
+        $dateTime = pack('nnnnnn', 2024, 12, 31, 23, 59, 59);
+        $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('2024:12:31 23:59:59', $result['profileDateTime']);
+        self::assertSame('2024:12:31 23:59:59Z', $result['profileDateTimeUtc']);
+    }
+
+    /**
      * Rejects month zero in ICC dateTimeNumber.
      * ICC.1:2022 §7.2.6 requires month in range 1..12.
      *
