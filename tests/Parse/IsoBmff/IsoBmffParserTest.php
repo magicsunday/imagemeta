@@ -2491,6 +2491,36 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects an stsd box with entry_count=0.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectStsdWithZeroEntryCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('stsd entry count must be at least 1');
+
+        $stsd = $this->fullBox('stsd', pack('N', 0));
+        $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
+        $vmhd = $this->fullBox('vmhd', str_repeat("\0", 8), 0, 1);
+        $url  = $this->fullBox('url ', '', 0, 1);
+        $dref = $this->fullBox('dref', pack('N', 1) . $url);
+        $dinf = $this->box('dinf', $dref);
+        $minf = $this->box('minf', $vmhd . $dinf . $stbl);
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak = $this->box('trak', $tkhd . $mdia);
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $extractor->extract();
+    }
+
+    /**
      * Rejects an stsd box with non-zero version.
      *
      * @return void
@@ -4933,7 +4963,7 @@ final class IsoBmffParserTest extends TestCase
         $url  = $this->fullBox('url ', '', 0, 1);
         $dref = $this->fullBox('dref', pack('N', 1) . $url);
         $dinf = $this->box('dinf', $dref);
-        $stsd = $this->fullBox('stsd', pack('N', 0));
+        $stsd = $this->fullBox('stsd', pack('N', 1) . $this->videoSampleEntry('avc1', 1, 1));
         $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
         $vmhd = $this->fullBox('vmhd', str_repeat("\0", 8), 0, 1);
         $minf = $this->box('minf', $vmhd . $dinf . $stbl);
@@ -4965,7 +4995,7 @@ final class IsoBmffParserTest extends TestCase
         $url  = $this->fullBox('url ', '', 0, 1);
         $dref = $this->fullBox('dref', pack('N', 1) . $url);
         $dinf = $this->box('dinf', $dref);
-        $stsd = $this->fullBox('stsd', pack('N', 0));
+        $stsd = $this->fullBox('stsd', pack('N', 1) . $this->videoSampleEntry('avc1', 1, 1));
         $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
 
         return $this->box('minf', $vmhd . $dinf . $stbl);

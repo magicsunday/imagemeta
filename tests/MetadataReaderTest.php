@@ -851,7 +851,7 @@ final class MetadataReaderTest extends TestCase
         $dref = $this->fullBox('dref', pack('N', 1) . $url);
         $dinf = $this->box('dinf', $dref);
         $vmhd = $this->fullBox('vmhd', str_repeat("\0", 8), 0, 1);
-        $stsd = $this->fullBox('stsd', pack('N', 0));
+        $stsd = $this->fullBox('stsd', pack('N', 1) . $this->videoSampleEntry('avc1', 1, 1));
         $stts = $this->fullBox('stts', pack('N', 0));
         $stsc = $this->fullBox('stsc', pack('N', 0));
         $stsz = $this->fullBox('stsz', pack('NN', 0, 0));
@@ -861,5 +861,26 @@ final class MetadataReaderTest extends TestCase
         $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
 
         return $this->box('trak', $tkhd . $mdia);
+    }
+
+    private function videoSampleEntry(string $format, int $width, int $height): string
+    {
+        $compressor = str_pad('', 31, "\0");
+
+        $payload = str_repeat("\0", 6)
+            . pack('n', 1)
+            . str_repeat("\0", 16)
+            . pack('n', $width)
+            . pack('n', $height)
+            . pack('N', 0x00480000)
+            . pack('N', 0x00480000)
+            . pack('N', 0)
+            . pack('n', 1)
+            . "\0"
+            . $compressor
+            . pack('n', 24)
+            . pack('n', 0xFFFF);
+
+        return $this->box($format, $payload);
     }
 }

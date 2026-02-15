@@ -1417,6 +1417,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
         $entryCount = $win->readU32BE();
 
+        // ISO/IEC 14496-12 §8.5.2: Sample Description Box must contain at least one entry.
+        if ($entryCount === 0) {
+            throw new ParseError('stsd entry count must be at least 1', 1466);
+        }
+
         if ($entryCount > self::MAX_STSD_ENTRIES) {
             throw new ParseError('stsd entry count exceeds maximum allowed', 1156);
         }
