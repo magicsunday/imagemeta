@@ -2234,6 +2234,28 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Creates a keys box with non-zero version and flags.
+     * Confirms the parser rejects combined FullBox header violations.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsKeysBoxWithNonZeroVersionAndFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('keys box version/flags must be 0');
+
+        $payload = pack('N', 1); // entryCount = 1
+        $keys    = $this->fullBox('keys', $payload, 1, 1); // version=1, flags=1
+        $meta    = $this->fullBox('meta', $keys);
+        $moov    = $this->moov($meta);
+        $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $extractor->extract();
+    }
+
+    /**
      * Creates an stsd box with an entry count above the configured maximum.
      * This confirms the parser rejects malformed track tables.
      *
