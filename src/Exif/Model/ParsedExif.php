@@ -190,6 +190,42 @@ final readonly class ParsedExif
     }
 
     /**
+     * Returns ExifIFDPointer (0x8769) from IFD0.
+     *
+     * EXIF 3.0 §4.6.3.1.1 defines this field as the offset pointer to the Exif IFD.
+     *
+     * @return int|null
+     */
+    public function exifIfdPointer(): ?int
+    {
+        return $this->int($this->ifd0, ExifTag::EXIF_IFD_POINTER);
+    }
+
+    /**
+     * Returns GPSInfoIFDPointer (0x8825) from IFD0.
+     *
+     * EXIF 3.0 §4.6.3.2.1 defines this field as the offset pointer to the GPS IFD.
+     *
+     * @return int|null
+     */
+    public function gpsIfdPointer(): ?int
+    {
+        return $this->int($this->ifd0, ExifTag::GPS_IFD_POINTER);
+    }
+
+    /**
+     * Returns InteroperabilityIFDPointer (0xA005) from the Exif IFD.
+     *
+     * EXIF 3.0 §4.6.3.3.1 defines this field as the offset pointer to the Interoperability IFD.
+     *
+     * @return int|null
+     */
+    public function interoperabilityIfdPointer(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::INTEROPERABILITY_IFD_POINTER);
+    }
+
+    /**
      * Returns the camera metadata domain adapter.
      */
     public function cameraMetadata(): CameraMetadataAdapter
