@@ -98,6 +98,61 @@ final readonly class QuickTimeMeta
     public const string AUDIO_BITS_PER_SAMPLE_KEY = 'com.apple.quicktime.audioBitsPerSample';
 
     /**
+     * QuickTime metadata key exposing LPCM format flags from SoundSampleDescription v2.
+     */
+    public const string AUDIO_LPCM_FORMAT_FLAGS_KEY = 'com.apple.quicktime.audioLpcmFormatFlags';
+
+    /**
+     * QuickTime metadata key exposing LPCM numeric format (float or integer).
+     */
+    public const string AUDIO_LPCM_NUMERIC_FORMAT_KEY = 'com.apple.quicktime.audioLpcmNumericFormat';
+
+    /**
+     * QuickTime metadata key exposing LPCM byte order (big or little).
+     */
+    public const string AUDIO_LPCM_ENDIANNESS_KEY = 'com.apple.quicktime.audioLpcmEndianness';
+
+    /**
+     * QuickTime metadata key exposing LPCM sample packing mode (packed or aligned).
+     */
+    public const string AUDIO_LPCM_PACKING_KEY = 'com.apple.quicktime.audioLpcmPacking';
+
+    /**
+     * QuickTime metadata key exposing whether LPCM samples are floating point.
+     */
+    public const string AUDIO_LPCM_IS_FLOAT_KEY = 'com.apple.quicktime.audioLpcmIsFloat';
+
+    /**
+     * QuickTime metadata key exposing whether LPCM integer samples are signed.
+     */
+    public const string AUDIO_LPCM_IS_SIGNED_INTEGER_KEY = 'com.apple.quicktime.audioLpcmIsSignedInteger';
+
+    /**
+     * QuickTime metadata key exposing whether LPCM samples are big-endian.
+     */
+    public const string AUDIO_LPCM_IS_BIG_ENDIAN_KEY = 'com.apple.quicktime.audioLpcmIsBigEndian';
+
+    /**
+     * QuickTime metadata key exposing whether LPCM samples are packed.
+     */
+    public const string AUDIO_LPCM_IS_PACKED_KEY = 'com.apple.quicktime.audioLpcmIsPacked';
+
+    /**
+     * QuickTime metadata key exposing whether LPCM aligned samples are high-aligned.
+     */
+    public const string AUDIO_LPCM_IS_ALIGNED_HIGH_KEY = 'com.apple.quicktime.audioLpcmIsAlignedHigh';
+
+    /**
+     * QuickTime metadata key exposing LPCM bytes per audio packet.
+     */
+    public const string AUDIO_LPCM_BYTES_PER_PACKET_KEY = 'com.apple.quicktime.audioLpcmBytesPerPacket';
+
+    /**
+     * QuickTime metadata key exposing LPCM frames per audio packet.
+     */
+    public const string AUDIO_LPCM_FRAMES_PER_PACKET_KEY = 'com.apple.quicktime.audioLpcmFramesPerPacket';
+
+    /**
      * QuickTime metadata key exposing the track name from a track-level udta name atom.
      */
     public const string TRACK_NAME_KEY = 'com.apple.quicktime.trackName';
@@ -108,43 +163,65 @@ final readonly class QuickTimeMeta
      * @var array<string, list<string>>
      */
     private const array KEY_ALIASES = [
-        self::MAJOR_BRAND_KEY           => [self::MAJOR_BRAND_KEY, 'MajorBrand'],
-        'MajorBrand'                    => ['MajorBrand', self::MAJOR_BRAND_KEY],
-        self::MINOR_VERSION_KEY         => [self::MINOR_VERSION_KEY, 'MinorVersion'],
-        'MinorVersion'                  => ['MinorVersion', self::MINOR_VERSION_KEY],
-        self::COMPATIBLE_BRANDS_KEY     => [self::COMPATIBLE_BRANDS_KEY, 'CompatibleBrands'],
-        'CompatibleBrands'              => ['CompatibleBrands', self::COMPATIBLE_BRANDS_KEY],
-        self::HANDLER_DESCRIPTION_KEY   => [self::HANDLER_DESCRIPTION_KEY, 'HandlerDescription'],
-        'HandlerDescription'            => ['HandlerDescription', self::HANDLER_DESCRIPTION_KEY],
-        self::VIDEO_WIDTH_KEY           => [self::VIDEO_WIDTH_KEY, 'ImageWidth', 'VideoWidth'],
-        'ImageWidth'                    => ['ImageWidth', self::VIDEO_WIDTH_KEY, 'VideoWidth'],
-        self::VIDEO_HEIGHT_KEY          => [self::VIDEO_HEIGHT_KEY, 'ImageHeight', 'VideoHeight'],
-        'ImageHeight'                   => ['ImageHeight', self::VIDEO_HEIGHT_KEY, 'VideoHeight'],
-        self::VIDEO_CODEC_KEY           => [self::VIDEO_CODEC_KEY, 'CompressorID', 'VideoCodecID'],
-        'CompressorID'                  => ['CompressorID', self::VIDEO_CODEC_KEY, 'VideoCodecID'],
-        self::COMPRESSOR_NAME_KEY       => [self::COMPRESSOR_NAME_KEY, 'CompressorName'],
-        'CompressorName'                => ['CompressorName', self::COMPRESSOR_NAME_KEY],
-        self::AUDIO_FORMAT_KEY          => [self::AUDIO_FORMAT_KEY, self::AUDIO_CODEC_KEY, 'AudioFormat', 'AudioCodecID'],
-        self::AUDIO_CODEC_KEY           => [self::AUDIO_CODEC_KEY, self::AUDIO_FORMAT_KEY, 'AudioCodecID', 'AudioFormat'],
-        'AudioFormat'                   => ['AudioFormat', self::AUDIO_FORMAT_KEY, self::AUDIO_CODEC_KEY, 'AudioCodecID'],
-        'AudioCodecID'                  => ['AudioCodecID', self::AUDIO_CODEC_KEY, self::AUDIO_FORMAT_KEY, 'AudioFormat'],
-        self::AUDIO_CHANNELS_KEY        => [self::AUDIO_CHANNELS_KEY, 'AudioChannels'],
-        'AudioChannels'                 => ['AudioChannels', self::AUDIO_CHANNELS_KEY],
-        self::AUDIO_SAMPLE_RATE_KEY     => [self::AUDIO_SAMPLE_RATE_KEY, 'AudioSampleRate'],
-        'AudioSampleRate'               => ['AudioSampleRate', self::AUDIO_SAMPLE_RATE_KEY],
-        self::AUDIO_BITS_PER_SAMPLE_KEY => [self::AUDIO_BITS_PER_SAMPLE_KEY, 'AudioBitsPerSample'],
-        'AudioBitsPerSample'            => ['AudioBitsPerSample', self::AUDIO_BITS_PER_SAMPLE_KEY],
-        'Encoder'                       => ['Encoder', 'com.apple.quicktime.encoder'],
-        'AvgBitrate'                    => ['AvgBitrate', 'com.apple.quicktime.avgBitrate'],
-        'Bitrate'                       => ['Bitrate', 'com.apple.quicktime.bitrate', 'com.apple.quicktime.dataRate'],
-        'Duration'                      => ['Duration', 'com.apple.quicktime.duration'],
-        'VideoFrameRate'                => ['VideoFrameRate', 'com.apple.quicktime.videoFrameRate'],
-        'HDRFormat'                     => ['HDRFormat', 'com.apple.quicktime.hdrFormat'],
-        'TransferFunction'              => ['TransferFunction', 'com.apple.quicktime.transferFunction'],
-        'ColorPrimaries'                => ['ColorPrimaries', 'com.apple.quicktime.colorPrimaries'],
-        'AudioBitsPerChannel'           => ['AudioBitsPerChannel', self::AUDIO_BITS_PER_SAMPLE_KEY],
-        self::TRACK_NAME_KEY            => [self::TRACK_NAME_KEY, 'TrackName'],
-        'TrackName'                     => ['TrackName', self::TRACK_NAME_KEY],
+        self::MAJOR_BRAND_KEY                  => [self::MAJOR_BRAND_KEY, 'MajorBrand'],
+        'MajorBrand'                           => ['MajorBrand', self::MAJOR_BRAND_KEY],
+        self::MINOR_VERSION_KEY                => [self::MINOR_VERSION_KEY, 'MinorVersion'],
+        'MinorVersion'                         => ['MinorVersion', self::MINOR_VERSION_KEY],
+        self::COMPATIBLE_BRANDS_KEY            => [self::COMPATIBLE_BRANDS_KEY, 'CompatibleBrands'],
+        'CompatibleBrands'                     => ['CompatibleBrands', self::COMPATIBLE_BRANDS_KEY],
+        self::HANDLER_DESCRIPTION_KEY          => [self::HANDLER_DESCRIPTION_KEY, 'HandlerDescription'],
+        'HandlerDescription'                   => ['HandlerDescription', self::HANDLER_DESCRIPTION_KEY],
+        self::VIDEO_WIDTH_KEY                  => [self::VIDEO_WIDTH_KEY, 'ImageWidth', 'VideoWidth'],
+        'ImageWidth'                           => ['ImageWidth', self::VIDEO_WIDTH_KEY, 'VideoWidth'],
+        self::VIDEO_HEIGHT_KEY                 => [self::VIDEO_HEIGHT_KEY, 'ImageHeight', 'VideoHeight'],
+        'ImageHeight'                          => ['ImageHeight', self::VIDEO_HEIGHT_KEY, 'VideoHeight'],
+        self::VIDEO_CODEC_KEY                  => [self::VIDEO_CODEC_KEY, 'CompressorID', 'VideoCodecID'],
+        'CompressorID'                         => ['CompressorID', self::VIDEO_CODEC_KEY, 'VideoCodecID'],
+        self::COMPRESSOR_NAME_KEY              => [self::COMPRESSOR_NAME_KEY, 'CompressorName'],
+        'CompressorName'                       => ['CompressorName', self::COMPRESSOR_NAME_KEY],
+        self::AUDIO_FORMAT_KEY                 => [self::AUDIO_FORMAT_KEY, self::AUDIO_CODEC_KEY, 'AudioFormat', 'AudioCodecID'],
+        self::AUDIO_CODEC_KEY                  => [self::AUDIO_CODEC_KEY, self::AUDIO_FORMAT_KEY, 'AudioCodecID', 'AudioFormat'],
+        'AudioFormat'                          => ['AudioFormat', self::AUDIO_FORMAT_KEY, self::AUDIO_CODEC_KEY, 'AudioCodecID'],
+        'AudioCodecID'                         => ['AudioCodecID', self::AUDIO_CODEC_KEY, self::AUDIO_FORMAT_KEY, 'AudioFormat'],
+        self::AUDIO_CHANNELS_KEY               => [self::AUDIO_CHANNELS_KEY, 'AudioChannels'],
+        'AudioChannels'                        => ['AudioChannels', self::AUDIO_CHANNELS_KEY],
+        self::AUDIO_SAMPLE_RATE_KEY            => [self::AUDIO_SAMPLE_RATE_KEY, 'AudioSampleRate'],
+        'AudioSampleRate'                      => ['AudioSampleRate', self::AUDIO_SAMPLE_RATE_KEY],
+        self::AUDIO_BITS_PER_SAMPLE_KEY        => [self::AUDIO_BITS_PER_SAMPLE_KEY, 'AudioBitsPerSample'],
+        'AudioBitsPerSample'                   => ['AudioBitsPerSample', self::AUDIO_BITS_PER_SAMPLE_KEY],
+        self::AUDIO_LPCM_FORMAT_FLAGS_KEY      => [self::AUDIO_LPCM_FORMAT_FLAGS_KEY, 'AudioLpcmFormatFlags'],
+        'AudioLpcmFormatFlags'                 => ['AudioLpcmFormatFlags', self::AUDIO_LPCM_FORMAT_FLAGS_KEY],
+        self::AUDIO_LPCM_NUMERIC_FORMAT_KEY    => [self::AUDIO_LPCM_NUMERIC_FORMAT_KEY, 'AudioLpcmNumericFormat'],
+        'AudioLpcmNumericFormat'               => ['AudioLpcmNumericFormat', self::AUDIO_LPCM_NUMERIC_FORMAT_KEY],
+        self::AUDIO_LPCM_ENDIANNESS_KEY        => [self::AUDIO_LPCM_ENDIANNESS_KEY, 'AudioLpcmEndianness'],
+        'AudioLpcmEndianness'                  => ['AudioLpcmEndianness', self::AUDIO_LPCM_ENDIANNESS_KEY],
+        self::AUDIO_LPCM_PACKING_KEY           => [self::AUDIO_LPCM_PACKING_KEY, 'AudioLpcmPacking'],
+        'AudioLpcmPacking'                     => ['AudioLpcmPacking', self::AUDIO_LPCM_PACKING_KEY],
+        self::AUDIO_LPCM_IS_FLOAT_KEY          => [self::AUDIO_LPCM_IS_FLOAT_KEY, 'AudioLpcmIsFloat'],
+        'AudioLpcmIsFloat'                     => ['AudioLpcmIsFloat', self::AUDIO_LPCM_IS_FLOAT_KEY],
+        self::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY => [self::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY, 'AudioLpcmIsSignedInteger'],
+        'AudioLpcmIsSignedInteger'             => ['AudioLpcmIsSignedInteger', self::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY],
+        self::AUDIO_LPCM_IS_BIG_ENDIAN_KEY     => [self::AUDIO_LPCM_IS_BIG_ENDIAN_KEY, 'AudioLpcmIsBigEndian'],
+        'AudioLpcmIsBigEndian'                 => ['AudioLpcmIsBigEndian', self::AUDIO_LPCM_IS_BIG_ENDIAN_KEY],
+        self::AUDIO_LPCM_IS_PACKED_KEY         => [self::AUDIO_LPCM_IS_PACKED_KEY, 'AudioLpcmIsPacked'],
+        'AudioLpcmIsPacked'                    => ['AudioLpcmIsPacked', self::AUDIO_LPCM_IS_PACKED_KEY],
+        self::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY   => [self::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY, 'AudioLpcmIsAlignedHigh'],
+        'AudioLpcmIsAlignedHigh'               => ['AudioLpcmIsAlignedHigh', self::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY],
+        self::AUDIO_LPCM_BYTES_PER_PACKET_KEY  => [self::AUDIO_LPCM_BYTES_PER_PACKET_KEY, 'AudioLpcmBytesPerPacket'],
+        'AudioLpcmBytesPerPacket'              => ['AudioLpcmBytesPerPacket', self::AUDIO_LPCM_BYTES_PER_PACKET_KEY],
+        self::AUDIO_LPCM_FRAMES_PER_PACKET_KEY => [self::AUDIO_LPCM_FRAMES_PER_PACKET_KEY, 'AudioLpcmFramesPerPacket'],
+        'AudioLpcmFramesPerPacket'             => ['AudioLpcmFramesPerPacket', self::AUDIO_LPCM_FRAMES_PER_PACKET_KEY],
+        'Encoder'                              => ['Encoder', 'com.apple.quicktime.encoder'],
+        'AvgBitrate'                           => ['AvgBitrate', 'com.apple.quicktime.avgBitrate'],
+        'Bitrate'                              => ['Bitrate', 'com.apple.quicktime.bitrate', 'com.apple.quicktime.dataRate'],
+        'Duration'                             => ['Duration', 'com.apple.quicktime.duration'],
+        'VideoFrameRate'                       => ['VideoFrameRate', 'com.apple.quicktime.videoFrameRate'],
+        'HDRFormat'                            => ['HDRFormat', 'com.apple.quicktime.hdrFormat'],
+        'TransferFunction'                     => ['TransferFunction', 'com.apple.quicktime.transferFunction'],
+        'ColorPrimaries'                       => ['ColorPrimaries', 'com.apple.quicktime.colorPrimaries'],
+        'AudioBitsPerChannel'                  => ['AudioBitsPerChannel', self::AUDIO_BITS_PER_SAMPLE_KEY],
+        self::TRACK_NAME_KEY                   => [self::TRACK_NAME_KEY, 'TrackName'],
+        'TrackName'                            => ['TrackName', self::TRACK_NAME_KEY],
     ];
 
     /**

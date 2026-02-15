@@ -3360,6 +3360,92 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Parses LPCM-specific version 2 fields and exposes decoded flag semantics.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesAudioStsdVersion2LpcmFlagSemantics(): void
+    {
+        $entry = $this->audioSampleEntryVersion2(
+            format: 'lpcm',
+            channels: 2,
+            sampleRate: 48000.0,
+            bitsPerChannel: 24,
+            formatSpecificFlags: 0x0000000E,
+            constBytesPerAudioPacket: 6,
+            constLpcmFramesPerAudioPacket: 1,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, mdhdTimescale: 48000));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame('integer', $quickTime->stringValue(QuickTimeMeta::AUDIO_LPCM_NUMERIC_FORMAT_KEY));
+        self::assertSame('big', $quickTime->stringValue(QuickTimeMeta::AUDIO_LPCM_ENDIANNESS_KEY));
+        self::assertSame('packed', $quickTime->stringValue(QuickTimeMeta::AUDIO_LPCM_PACKING_KEY));
+        self::assertSame(14, $quickTime->intValue(QuickTimeMeta::AUDIO_LPCM_FORMAT_FLAGS_KEY));
+        self::assertSame(6, $quickTime->intValue(QuickTimeMeta::AUDIO_LPCM_BYTES_PER_PACKET_KEY));
+        self::assertSame(1, $quickTime->intValue(QuickTimeMeta::AUDIO_LPCM_FRAMES_PER_PACKET_KEY));
+        self::assertFalse($quickTime->boolValue(QuickTimeMeta::AUDIO_LPCM_IS_FLOAT_KEY));
+        self::assertTrue($quickTime->boolValue(QuickTimeMeta::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY));
+        self::assertTrue($quickTime->boolValue(QuickTimeMeta::AUDIO_LPCM_IS_BIG_ENDIAN_KEY));
+        self::assertTrue($quickTime->boolValue(QuickTimeMeta::AUDIO_LPCM_IS_PACKED_KEY));
+        self::assertFalse($quickTime->boolValue(QuickTimeMeta::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY));
+    }
+
+    /**
+     * Rejects contradictory LPCM numeric format flags in version 2 entries.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdVersion2LpcmContradictingNumericFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('lpcm format flags cannot set both float and signed-integer bits');
+
+        $entry = $this->audioSampleEntryVersion2(
+            format: 'lpcm',
+            channels: 2,
+            sampleRate: 48000.0,
+            bitsPerChannel: 32,
+            formatSpecificFlags: 0x0000000D,
+            constBytesPerAudioPacket: 8,
+            constLpcmFramesPerAudioPacket: 1,
+        );
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry, mdhdTimescale: 48000))->extract();
+    }
+
+    /**
+     * Parses non-LPCM version 2 entries without exposing LPCM-specific metadata keys.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesAudioStsdVersion2NonLpcmWithoutLpcmAssumptions(): void
+    {
+        $entry = $this->audioSampleEntryVersion2(
+            format: 'mp4a',
+            channels: 2,
+            sampleRate: 44100.0,
+            bitsPerChannel: 16,
+            formatSpecificFlags: 0x00000000,
+            constBytesPerAudioPacket: 4,
+            constLpcmFramesPerAudioPacket: 1,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame('mp4a', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
+        self::assertNull($quickTime->stringValue(QuickTimeMeta::AUDIO_LPCM_NUMERIC_FORMAT_KEY));
+        self::assertNull($quickTime->boolValue(QuickTimeMeta::AUDIO_LPCM_IS_PACKED_KEY));
+    }
+
+    /**
      * Rejects a version 2 sound sample entry with invalid mandatory constants.
      *
      * @return void
@@ -6205,7 +6291,15 @@ final class IsoBmffParserTest extends TestCase
         float $sampleRate,
         int $bitsPerChannel,
         int $always16 = 16,
+        int $formatSpecificFlags = 0x0000000C,
+        ?int $constBytesPerAudioPacket = null,
+        int $constLpcmFramesPerAudioPacket = 1,
     ): string {
+        if ($constBytesPerAudioPacket === null) {
+            $bytesPerSample           = (int) ceil($bitsPerChannel / 8);
+            $constBytesPerAudioPacket = $bytesPerSample * $channels * $constLpcmFramesPerAudioPacket;
+        }
+
         $sizeOfStructOnly = 72;
         $payload          = str_repeat("\0", 6)
             . pack('n', 1)
@@ -6222,9 +6316,9 @@ final class IsoBmffParserTest extends TestCase
             . pack('N', $channels)
             . pack('N', 0x7F000000)
             . pack('N', $bitsPerChannel)
-            . pack('N', 0)
-            . pack('N', 0)
-            . pack('N', 1);
+            . pack('N', $formatSpecificFlags)
+            . pack('N', $constBytesPerAudioPacket)
+            . pack('N', $constLpcmFramesPerAudioPacket);
 
         return $this->box($format, $payload);
     }

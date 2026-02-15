@@ -239,6 +239,31 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     private const string BOX_SRAT = 'srat';
 
     /**
+     * LPCM flag: payload stores IEEE floating-point samples.
+     */
+    private const int LPCM_FLAG_IS_FLOAT = 1 << 0;
+
+    /**
+     * LPCM flag: payload uses big-endian byte order.
+     */
+    private const int LPCM_FLAG_IS_BIG_ENDIAN = 1 << 1;
+
+    /**
+     * LPCM flag: integer payload uses signed samples.
+     */
+    private const int LPCM_FLAG_IS_SIGNED_INTEGER = 1 << 2;
+
+    /**
+     * LPCM flag: samples are tightly packed.
+     */
+    private const int LPCM_FLAG_IS_PACKED = 1 << 3;
+
+    /**
+     * LPCM flag: aligned samples are high-aligned.
+     */
+    private const int LPCM_FLAG_IS_ALIGNED_HIGH = 1 << 4;
+
+    /**
      * FourCC for video media header box.
      */
     private const string BOX_VMHD = 'vmhd';
@@ -971,6 +996,26 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             if (isset($sampleInfo['sampleRate'])) {
                 $trackKeys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY] = $sampleInfo['sampleRate'];
             }
+
+            $lpcmKeys = [
+                QuickTimeMeta::AUDIO_LPCM_FORMAT_FLAGS_KEY,
+                QuickTimeMeta::AUDIO_LPCM_NUMERIC_FORMAT_KEY,
+                QuickTimeMeta::AUDIO_LPCM_ENDIANNESS_KEY,
+                QuickTimeMeta::AUDIO_LPCM_PACKING_KEY,
+                QuickTimeMeta::AUDIO_LPCM_IS_FLOAT_KEY,
+                QuickTimeMeta::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY,
+                QuickTimeMeta::AUDIO_LPCM_IS_BIG_ENDIAN_KEY,
+                QuickTimeMeta::AUDIO_LPCM_IS_PACKED_KEY,
+                QuickTimeMeta::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY,
+                QuickTimeMeta::AUDIO_LPCM_BYTES_PER_PACKET_KEY,
+                QuickTimeMeta::AUDIO_LPCM_FRAMES_PER_PACKET_KEY,
+            ];
+
+            foreach ($lpcmKeys as $lpcmKey) {
+                if (array_key_exists($lpcmKey, $sampleInfo)) {
+                    $trackKeys[$lpcmKey] = $sampleInfo[$lpcmKey];
+                }
+            }
         }
 
         return [
@@ -1237,7 +1282,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param BoxDescriptor       $mdia    Media box descriptor.
      * @param IsoBmffParseContext $context Shared parse-state context.
      *
-     * @return array{0: ?string, 1: ?string, 2: array<string, int|string>}
+     * @return array{0: ?string, 1: ?string, 2: array<string, int|string|bool>}
      */
     private function parseMdia(BoxDescriptor $mdia, IsoBmffParseContext $context): array
     {
@@ -1390,7 +1435,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param string|null   $handlerType   Declared handler type for the media.
      * @param int|null      $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
      *
-     * @return array<string, int|string>
+     * @return array<string, int|string|bool>
      */
     private function parseMinf(BoxDescriptor $minf, ?string $handlerType, ?int $mdhdTimescale): array
     {
@@ -1464,7 +1509,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param string        $handlerType   Media handler type.
      * @param int|null      $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
      *
-     * @return array<string, int|string>
+     * @return array<string, int|string|bool>
      */
     private function parseStbl(BoxDescriptor $stbl, string $handlerType, ?int $mdhdTimescale): array
     {
@@ -1541,7 +1586,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param BoxDescriptor $stsd        Sample description descriptor.
      * @param string        $handlerType Handler type describing the media kind.
      *
-     * @return array<string, int|string>
+     * @return array<string, int|string|bool>
      */
     private function parseStsd(BoxDescriptor $stsd, string $handlerType, ?int $mdhdTimescale): array
     {
@@ -1677,7 +1722,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param int          $stsdVersion   FullBox version of the enclosing stsd.
      * @param int|null     $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
      *
-     * @return array{format: string, channels: int, bitsPerSample: int, sampleRate: int}
+     * @return array<string, int|string|bool>
      */
     private function parseSoundSampleEntry(
         StreamWindow $win,
@@ -1878,7 +1923,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param int          $entrySize  Declared sample entry size (including size+type header).
      * @param string       $format     Raw fourcc format code.
      *
-     * @return array{format: string, channels: int, bitsPerSample: int, sampleRate: int}
+     * @return array<string, int|string|bool>
      */
     private function parseSoundSampleEntryVersion2(StreamWindow $win, int $entryStart, int $entryEnd, int $entrySize, string $format): array
     {
@@ -1886,19 +1931,19 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('audio sample entry version 2 truncated', 1459);
         }
 
-        $always3          = $win->readU16BE();
-        $always16         = $win->readU16BE();
-        $alwaysMinus2     = $win->readU16BE();
-        $always0          = $win->readU16BE();
-        $always65536      = $win->readU32BE();
-        $sizeOfStructOnly = $win->readU32BE();
-        $audioSampleRate  = Unpack::float('E', $win->read(8), 'audio sample entry version 2 sample rate');
-        $numChannels      = $win->readU32BE();
-        $always7F000000   = $win->readU32BE();
-        $bitsPerChannel   = $win->readU32BE();
-        $win->readU32BE(); // formatSpecificFlags
-        $win->readU32BE(); // constBytesPerAudioPacket
-        $win->readU32BE(); // constLPCMFramesPerAudioPacket
+        $always3                       = $win->readU16BE();
+        $always16                      = $win->readU16BE();
+        $alwaysMinus2                  = $win->readU16BE();
+        $always0                       = $win->readU16BE();
+        $always65536                   = $win->readU32BE();
+        $sizeOfStructOnly              = $win->readU32BE();
+        $audioSampleRate               = Unpack::float('E', $win->read(8), 'audio sample entry version 2 sample rate');
+        $numChannels                   = $win->readU32BE();
+        $always7F000000                = $win->readU32BE();
+        $bitsPerChannel                = $win->readU32BE();
+        $formatSpecificFlags           = $win->readU32BE();
+        $constBytesPerAudioPacket      = $win->readU32BE();
+        $constLpcmFramesPerAudioPacket = $win->readU32BE();
 
         if (
             $always3 !== 3
@@ -1921,12 +1966,91 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('audio sample entry version 2 sizeOfStructOnly exceeds entry bounds', 1462);
         }
 
-        return [
-            'format'        => $this->normaliseFourcc($format),
+        if ($numChannels === 0) {
+            throw new ParseError('audio sample entry version 2 channel count must be positive', 1486);
+        }
+
+        if (!is_finite($audioSampleRate) || $audioSampleRate <= 0.0) {
+            throw new ParseError('audio sample entry version 2 sample rate must be positive', 1487);
+        }
+
+        $sampleRate = (int) round($audioSampleRate);
+        if ($sampleRate <= 0) {
+            throw new ParseError('audio sample entry version 2 sample rate must be positive', 1487);
+        }
+
+        $normalizedFormat = $this->normaliseFourcc($format);
+
+        $result = [
+            'format'        => $normalizedFormat,
             'channels'      => $numChannels,
             'bitsPerSample' => $bitsPerChannel > 0 ? $bitsPerChannel : $always16,
-            'sampleRate'    => (int) round($audioSampleRate),
+            'sampleRate'    => $sampleRate,
         ];
+
+        if ($normalizedFormat !== 'lpcm') {
+            return $result;
+        }
+
+        if ($bitsPerChannel === 0) {
+            throw new ParseError('lpcm bitsPerChannel must be positive', 1488);
+        }
+
+        if ($constBytesPerAudioPacket === 0) {
+            throw new ParseError('lpcm constBytesPerAudioPacket must be positive', 1489);
+        }
+
+        if ($constLpcmFramesPerAudioPacket === 0) {
+            throw new ParseError('lpcm constLPCMFramesPerAudioPacket must be positive', 1490);
+        }
+
+        $isFloat         = ($formatSpecificFlags & self::LPCM_FLAG_IS_FLOAT) !== 0;
+        $isBigEndian     = ($formatSpecificFlags & self::LPCM_FLAG_IS_BIG_ENDIAN) !== 0;
+        $isSignedInteger = ($formatSpecificFlags & self::LPCM_FLAG_IS_SIGNED_INTEGER) !== 0;
+        $isPacked        = ($formatSpecificFlags & self::LPCM_FLAG_IS_PACKED) !== 0;
+        $isAlignedHigh   = ($formatSpecificFlags & self::LPCM_FLAG_IS_ALIGNED_HIGH) !== 0;
+
+        if ($isFloat && $isSignedInteger) {
+            throw new ParseError('lpcm format flags cannot set both float and signed-integer bits', 1491);
+        }
+
+        $minBytesPerAudioPacket = $this->calculateLpcmMinBytesPerAudioPacket(
+            $bitsPerChannel,
+            $numChannels,
+            $constLpcmFramesPerAudioPacket,
+        );
+
+        if ($isPacked && $constBytesPerAudioPacket !== $minBytesPerAudioPacket) {
+            throw new ParseError('lpcm constBytesPerAudioPacket must match packed channel/bit-depth layout', 1492);
+        }
+
+        if (!$isPacked && $constBytesPerAudioPacket < $minBytesPerAudioPacket) {
+            throw new ParseError('lpcm constBytesPerAudioPacket is too small for aligned channel/bit-depth layout', 1493);
+        }
+
+        $result[QuickTimeMeta::AUDIO_LPCM_FORMAT_FLAGS_KEY]      = $formatSpecificFlags;
+        $result[QuickTimeMeta::AUDIO_LPCM_NUMERIC_FORMAT_KEY]    = $isFloat ? 'float' : 'integer';
+        $result[QuickTimeMeta::AUDIO_LPCM_ENDIANNESS_KEY]        = $isBigEndian ? 'big' : 'little';
+        $result[QuickTimeMeta::AUDIO_LPCM_PACKING_KEY]           = $isPacked ? 'packed' : 'aligned';
+        $result[QuickTimeMeta::AUDIO_LPCM_IS_FLOAT_KEY]          = $isFloat;
+        $result[QuickTimeMeta::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY] = $isSignedInteger;
+        $result[QuickTimeMeta::AUDIO_LPCM_IS_BIG_ENDIAN_KEY]     = $isBigEndian;
+        $result[QuickTimeMeta::AUDIO_LPCM_IS_PACKED_KEY]         = $isPacked;
+        $result[QuickTimeMeta::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY]   = $isAlignedHigh;
+        $result[QuickTimeMeta::AUDIO_LPCM_BYTES_PER_PACKET_KEY]  = $constBytesPerAudioPacket;
+        $result[QuickTimeMeta::AUDIO_LPCM_FRAMES_PER_PACKET_KEY] = $constLpcmFramesPerAudioPacket;
+
+        return $result;
+    }
+
+    /**
+     * Calculates the minimum bytes required per audio packet for LPCM sample layouts.
+     */
+    private function calculateLpcmMinBytesPerAudioPacket(int $bitsPerChannel, int $numChannels, int $framesPerPacket): int
+    {
+        $bytesPerSample = intdiv($bitsPerChannel + 7, 8);
+
+        return $bytesPerSample * $numChannels * $framesPerPacket;
     }
 
     /**
