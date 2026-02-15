@@ -4,7 +4,8 @@
 # Basierend auf RE_AUDIT_REPORT.md (2026-02-15)
 # Usage: ./create_all_38_issues.sh
 
-set -e
+# Nicht bei Fehlern abbrechen - wir wollen alle Issues erstellen
+# set -e würde nach dem ersten Fehler stoppen
 
 REPO="magicsunday/imagemeta"
 
@@ -73,14 +74,26 @@ create_issue() {
     
     echo "[$num/38] Erstelle: $title"
     
-    if gh issue create --repo "$REPO" --title "$title" --label "$labels" --body "$body" >/dev/null 2>&1; then
-        echo "  ✓ Erfolgreich"
-        ((CREATED++))
+    # Explizit Fehler ignorieren und weitermachen
+    local output
+    local exit_code
+    
+    set +e  # Temporär Fehlerbehandlung deaktivieren
+    output=$(gh issue create --repo "$REPO" --title "$title" --label "$labels" --body "$body" 2>&1)
+    exit_code=$?
+    set -e  # Wieder aktivieren (hat aber eh keinen Effekt mehr ohne set -e am Anfang)
+    
+    if [ $exit_code -eq 0 ]; then
+        echo "  ✓ Erfolgreich: $output"
+        ((CREATED++)) || true
     else
-        echo "  ✗ Fehler"
-        ((FAILED++))
+        echo "  ✗ Fehler: $output"
+        ((FAILED++)) || true
     fi
     echo ""
+    
+    # Immer erfolgreich zurückkehren, damit das Skript weiterläuft
+    return 0
 }
 
 # ============================================================================
@@ -890,9 +903,14 @@ echo ""
 echo "========================================================================"
 
 if [ $FAILED -gt 0 ]; then
-    echo "⚠️  Einige Issues konnten nicht erstellt werden."
-    echo "    Prüfen Sie die GitHub-Berechtigungen und Labels."
-    exit 1
+    echo "⚠️  Einige Issues ($FAILED) konnten nicht erstellt werden."
+    echo "    Aber $CREATED Issues wurden erfolgreich erstellt."
+    echo "    Prüfen Sie die Fehlermeldungen oben für Details."
+    echo ""
+    echo "✅ Skript hat alle 38 Issues verarbeitet!"
+else
+    echo "✅ Alle 38 Issues erfolgreich erstellt!"
 fi
 
-echo "✅ Alle Issues erfolgreich erstellt!"
+# Erfolgreich beenden, auch wenn einige Issues fehlgeschlagen sind
+exit 0
