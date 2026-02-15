@@ -56,6 +56,74 @@ The script organizes metadata into sections similar to exiftool:
 - XMP data grouped by namespace
 - Binary data detection and indication
 
+---
+
+### create-architecture-issues.sh
+
+Creates GitHub issues from architecture violation tickets with appropriate labels.
+
+**Purpose:**  
+This script automates the creation of GitHub issues from the architecture analysis documented in `ARCHITECTURE_VIOLATIONS_TICKETS.md`. It parses all 14 tickets and creates corresponding issues with proper labels for priority levels and violated principles.
+
+**Prerequisites:**
+- GitHub CLI (`gh`) must be installed and authenticated
+- Write access to the repository
+
+**Usage:**
+```bash
+# Preview what would be created (recommended first)
+./scripts/create-architecture-issues.sh --dry-run
+
+# Create actual issues and labels
+./scripts/create-architecture-issues.sh
+```
+
+**What it does:**
+1. **Validates prerequisites** - checks for `gh` CLI and authentication
+2. **Creates/updates labels** - sets up priority, SOLID, and principle labels
+3. **Parses tickets** - extracts all 14 tickets from the markdown document
+4. **Creates issues** - generates GitHub issues with appropriate titles, descriptions, and labels
+
+**Labels Created:**
+
+- **Priority**: `priority-high`, `priority-medium`, `priority-low`
+- **SOLID Principles**: `solid-srp`, `solid-isp`, `solid-dip`, `solid-ocp`, `solid-lsp`
+- **Other Principles**: `dry`, `kiss`, `yagni`, `grasp`, `lod`, `soc`, `coc`
+- **Types**: `architecture`, `refactoring`, `technical-debt`
+
+**Tickets Created:** 14 issues total
+- 3 High Priority (god classes, fat interfaces)
+- 5 Medium Priority (DRY violations, over-engineering, coupling)
+- 6 Low Priority (method length, enums, documentation)
+
+**Options:**
+- `--dry-run` - Preview changes without creating issues (recommended for testing)
+
+**Example Output:**
+```
+========================================
+Architecture Issues Creator
+========================================
+
+DRY RUN MODE - No changes will be made
+
+✓ Prerequisites OK
+✓ Labels setup complete
+
+Processing Ticket #1 (line 38)...
+[DRY-RUN] Would create issue #1:
+  Title: God Class - TiffExifParser violates SRP with 10,294 LOC and 200 methods
+  Labels: architecture,refactoring,technical-debt,priority-high,solid-srp
+
+...
+
+✓ Processed 14 tickets
+✓ Complete!
+========================================
+```
+
+---
+
 ## Requirements
 
 All scripts require:
