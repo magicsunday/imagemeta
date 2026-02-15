@@ -1,0 +1,824 @@
+# GitHub Issues for All Unresolved Violations
+# Total: 38 Issues (based on RE_AUDIT_REPORT.md)
+# Format: YAML for easy import with gh CLI
+
+issues:
+  # ===========================================================================
+  # SOLID: Single Responsibility Principle (3 issues)
+  # ===========================================================================
+  
+  - id: SRP-1
+    title: "[CRITICAL] Refactor JpegParser - Extract Handler Strategy Pattern"
+    labels:
+      - priority:critical
+      - refactoring
+      - architecture
+      - SOLID:SRP
+      - SOLID:OCP
+      - god-class
+      - tech-debt
+    assignees: []
+    milestone: null
+    body: |
+      ## Violation Summary
+      
+      **Principle**: SOLID - Single Responsibility Principle (SRP)
+      **File**: `src/Parse/Jpeg/JpegParser.php`
+      **Severity**: 🔴 CRITICAL
+      **Status**: UNRESOLVED (Re-Audit 2026-02-15)
+      
+      ### Metrics
+      - **LOC**: 2,651
+      - **Methods**: 50+
+      - **Responsibilities**: 7+ concerns
+      
+      ### Problem
+      God class handling entire JPEG parsing pipeline: marker parsing, APP segments, EXIF, XMP, ICC, audio, MPF, IPTC, FlashPix.
+      
+      ### Solution
+      Extract MarkerHandlerInterface + 7 concrete handlers + HandlerRegistry.
+      
+      ### Effort
+      3-5 days
+      
+      ### References
+      - RE_AUDIT_REPORT.md: Issue #1
+      - FORENSIC_AUDIT.md: SOLID #1, #4
+      
+  - id: SRP-2
+    title: "[CRITICAL] Refactor TiffExifParser - Split Mega Class"
+    labels:
+      - priority:critical
+      - refactoring
+      - architecture
+      - SOLID:SRP
+      - god-class
+      - tech-debt
+    body: |
+      ## Violation Summary
+      
+      **File**: `src/Parse/Tiff/TiffExifParser.php`
+      **LOC**: 9,847 (nearly 10K!)
+      **Methods**: 170
+      
+      ### Problem
+      Largest file in codebase. Handles: TIFF parsing, IFD traversal, type conversion, validation, maker notes, DNG tags.
+      
+      ### Solution
+      Split into: IfdTreeParser, TagMetadataRegistry, DataTypeConverter, MakerNotesResolver, ValueValidator.
+      
+      ### Effort
+      5-7 days (high risk)
+      
+  - id: SRP-3
+    title: "[CRITICAL] Refactor ParsedExif - Extract Domain Adapters"
+    labels:
+      - priority:critical
+      - refactoring
+      - architecture
+      - SOLID:SRP
+      - SoC
+      - god-class
+      - tech-debt
+    body: |
+      ## Violation Summary
+      
+      **File**: `src/Exif/Model/ParsedExif.php`
+      **LOC**: 5,066
+      **Methods**: 275 (was 224 - GROWING!)
+      **Trend**: ⚠️ +51 methods (+23%)
+      
+      ### Problem
+      God class mixing data structure + extraction + conversion + validation. Getting worse!
+      
+      ### Solution
+      Extract 7 domain adapters: Camera, GPS, Temporal, Lens, Exposure, Device, Image.
+      
+      ### Effort
+      5-7 days (backward compatibility critical)
+
+  # ===========================================================================
+  # SOLID: Open/Closed Principle (3 issues)
+  # ===========================================================================
+  
+  - id: OCP-1
+    title: "[HIGH] JpegParser - Replace if-elseif Chain with Strategy Pattern"
+    labels:
+      - priority:high
+      - refactoring
+      - SOLID:OCP
+      - tech-debt
+    body: |
+      ## Violation
+      
+      **File**: `src/Parse/Jpeg/JpegParser.php` (Lines 632-656)
+      
+      ### Problem
+      if-elseif chain for 13 marker types. Adding new markers requires modifying parse loop.
+      
+      ### Solution
+      Part of SRP-1 (handler extraction). Registry pattern enables extension without modification.
+      
+      ### Status
+      Blocked by SRP-1
+      
+  - id: OCP-2
+    title: "[MEDIUM] MetadataReader - Replace Container Type Switch"
+    labels:
+      - priority:medium
+      - refactoring
+      - SOLID:OCP
+    body: |
+      ## Violation
+      
+      **File**: `src/MetadataReader.php` (Lines 86-89)
+      
+      ```php
+      return match ($type) {
+          ContainerType::JPEG => ...,
+          ContainerType::ISOBMFF => ...,
+      };
+      ```
+      
+      ### Problem
+      New container formats require code modification.
+      
+      ### Solution
+      Create ContainerParserInterface + polymorphic factory.
+      
+      ### Effort
+      2-3 days
+      
+  - id: OCP-3
+    title: "[MEDIUM] ValueFactory - Remove Hard-Wired Factory Dependencies"
+    labels:
+      - priority:medium
+      - refactoring
+      - SOLID:OCP
+      - SOLID:DIP
+    body: |
+      ## Violation
+      
+      **File**: `src/Exif/Factory/ValueFactory.php` (Lines 85-98)
+      
+      ### Problem
+      12 factories hard-wired in constructor. Adding new metadata domains requires modifying constructor.
+      
+      ### Solution
+      Registry pattern for dynamic factory registration.
+      
+      ### Effort
+      2 days
+
+  # ===========================================================================
+  # SOLID: Liskov Substitution Principle (4 issues)
+  # ===========================================================================
+  
+  - id: LSP-1
+    title: "[MEDIUM] ImageFactory - Remove Type Guard with Inconsistent Returns"
+    labels:
+      - priority:medium
+      - refactoring
+      - SOLID:LSP
+    body: |
+      ## Violation
+      
+      **File**: `src/Exif/Factory/ImageFactory.php` (Lines 75-76)
+      
+      ```php
+      if (!$exifDocument instanceof ParsedExif) {
+          return new Image(...with nulls...);
+      }
+      ```
+      
+      ### Problem
+      Returns different object types based on runtime check. Violates substitutability.
+      
+      ### Solution
+      Use null object pattern or strict typing.
+      
+      ### Effort
+      4 hours
+      
+  - id: LSP-2
+    title: "[MEDIUM] RegionsFactory - Fix Type Check Early Return"
+    labels:
+      - priority:medium
+      - refactoring
+      - SOLID:LSP
+    body: |
+      ## Violation
+      
+      **File**: `src/Exif/Factory/RegionsFactory.php` (Line 71)
+      
+      ### Solution
+      Same as LSP-1: null object pattern.
+      
+  - id: LSP-3
+    title: "[MEDIUM] LensFactory - Remove Defensive instanceof Check"
+    labels:
+      - priority:medium
+      - refactoring
+      - SOLID:LSP
+    body: |
+      ## Violation
+      
+      **File**: `src/Exif/Factory/LensFactory.php` (Lines 35-44)
+      
+  - id: LSP-4
+    title: "[MEDIUM] GpsFactory - Fix Inconsistent Return Types"
+    labels:
+      - priority:medium
+      - refactoring
+      - SOLID:LSP
+    body: |
+      ## Violation
+      
+      **File**: `src/Exif/Factory/GpsFactory.php` (Lines 60-62)
+
+  # ===========================================================================
+  # SOLID: Interface Segregation Principle (1 issue)
+  # ===========================================================================
+  
+  - id: ISP-1
+    title: "[MEDIUM] Split BinaryReadAccessInterface into Focused Interfaces"
+    labels:
+      - priority:medium
+      - refactoring
+      - SOLID:ISP
+      - architecture
+    body: |
+      ## Violation
+      
+      **File**: `src/Core/BinaryReadAccessInterface.php` (Lines 21-67)
+      
+      ### Problem
+      Fat interface with 8 methods. Not all implementations use all methods.
+      
+      ### Solution
+      ```php
+      interface SequentialReaderInterface {
+          public function read(int $length): string;
+      }
+      
+      interface SeekableReaderInterface extends SequentialReaderInterface {
+          public function seek(int $offset, int $whence): void;
+          public function tell(): int;
+      }
+      
+      interface BigEndianReaderInterface {
+          public function readU16BE(): int;
+          public function readU32BE(): int;
+          public function readU64BE(): int;
+      }
+      ```
+      
+      ### Effort
+      1 day
+
+  # ===========================================================================
+  # SOLID: Dependency Inversion Principle (6 issues)
+  # ===========================================================================
+  
+  - id: DIP-1
+    title: "[HIGH] ValueFactory - Inject IccParser Instead of Direct Instantiation"
+    labels:
+      - priority:high
+      - refactoring
+      - SOLID:DIP
+      - testability
+    body: |
+      ## Violation
+      
+      **File**: `src/Exif/Factory/ValueFactory.php` (Line 285)
+      
+      ```php
+      $iccProfile = (new IccParser())->decode($iccBlob);
+      ```
+      
+      ### Problem
+      Cannot inject mocks for testing. Tight coupling.
+      
+      ### Solution
+      Constructor injection with IccParserInterface.
+      
+  - id: DIP-2
+    title: "[HIGH] StructuredMetadataBuilder - Inject ValueFactory"
+    labels:
+      - priority:high
+      - refactoring
+      - SOLID:DIP
+    body: |
+      ## Violation
+      
+      **File**: `src/Factory/StructuredMetadataBuilder.php` (Line 26)
+      
+      ```php
+      public function __construct(
+          private ValueFactory $valueFactory = new ValueFactory()
+      )
+      ```
+      
+  - id: DIP-3
+    title: "[HIGH] MetadataReader - Inject All Parser Dependencies"
+    labels:
+      - priority:high
+      - refactoring
+      - SOLID:DIP
+      - testability
+    body: |
+      ## Violation
+      
+      **File**: `src/MetadataReader.php` (Lines 54-59, 112, 210)
+      
+      ### Problem
+      Direct instantiation of: TiffExifParser, AppleMakerNotesMerger, XmpParser, IptcParser, FormatDetector, JpegParser, IsoBmffParser.
+      
+      ### Solution
+      Create parser interfaces + constructor injection.
+      
+  - id: DIP-4
+    title: "[MEDIUM] ConverterFactory - Fix Manual Dependency Bootstrapping"
+    labels:
+      - priority:medium
+      - refactoring
+      - SOLID:DIP
+    body: |
+      ## Violation
+      
+      **File**: `src/Exif/Converters/ConverterFactory.php` (Lines 49-79)
+      
+  - id: DIP-5
+    title: "[LOW] Create Parser Interfaces for Dependency Injection"
+    labels:
+      - priority:low
+      - enhancement
+      - SOLID:DIP
+      - testability
+    body: |
+      ## Task
+      
+      Create interfaces for all parsers:
+      - IccParserInterface
+      - TiffExifParserInterface
+      - XmpParserInterface
+      - IptcParserInterface
+      - JpegParserInterface
+      - IsoBmffParserInterface
+      
+      ### Effort
+      1 day
+      
+  - id: DIP-6
+    title: "[LOW] Add Factory Classes for Complex Parser Creation"
+    labels:
+      - priority:low
+      - enhancement
+      - SOLID:DIP
+
+  # ===========================================================================
+  # DRY Violations (4 remaining - 1 already resolved)
+  # ===========================================================================
+  
+  - id: DRY-1
+    title: "[CRITICAL] IsoBmffParser - Extract Parse Context Object"
+    labels:
+      - priority:critical
+      - refactoring
+      - DRY
+      - code-quality
+      - easy-fix
+    body: |
+      ## Violation
+      
+      **File**: `src/Parse/IsoBmff/IsoBmffParser.php`
+      **Pattern**: 8 parameters repeated in 11+ methods
+      
+      ### Problem
+      ```php
+      private function parseMetaBox(
+          BoxDescriptor $box,
+          array &$exifBlobs,
+          array &$xmpBlobs,
+          array &$qtKeys,
+          array &$itemReferences,
+          array &$dataReferences,
+          array &$unresolvedItems,
+          array &$xmpHashes,
+          array &$qtDataAtoms = []
+      ): void
+      ```
+      
+      ### Solution
+      ```php
+      class IsoBmffParseContext {
+          public array $exifBlobs = [];
+          public array $xmpBlobs = [];
+          // ... other properties
+      }
+      
+      private function parseMetaBox(
+          BoxDescriptor $box,
+          IsoBmffParseContext $context
+      ): void
+      ```
+      
+      ### Effort
+      2-3 days (Quick Win!)
+      
+  - id: DRY-2
+    title: "[MEDIUM] GpsConverter - Extract Generic Encoding Decoder"
+    labels:
+      - priority:medium
+      - refactoring
+      - DRY
+      - easy-fix
+    body: |
+      ## Violation
+      
+      **File**: `src/Exif/Converters/GpsConverter.php` (Lines ~350-400)
+      
+      ### Problem
+      3 identical methods: decodeUndefinedUtf8(), decodeUndefinedUnicode(), decodeUndefinedJis()
+      
+      ### Solution
+      ```php
+      private function decodeUndefinedWithEncoding(
+          string $payload,
+          string $sourceEncoding
+      ): ?string
+      ```
+      
+      ### Effort
+      1 day (Quick Win!)
+      
+  - id: DRY-3
+    title: "[MEDIUM] TiffExifParser - Externalize Tag Metadata Definitions"
+    labels:
+      - priority:medium
+      - refactoring
+      - DRY
+      - enhancement
+    body: |
+      ## Violation
+      
+      **File**: `src/Parse/Tiff/TiffExifParser.php` (Lines 300-1200)
+      
+      ### Problem
+      200+ repetitive tag definitions in massive array literal.
+      
+      ### Solution
+      Move to `resources/exif-tags.json` + TagMetadataRegistry loader.
+      
+      ### Effort
+      2 days
+      
+  - id: DRY-4
+    title: "[LOW] RationalConverter - Consolidate Repeated Null/Type Checks"
+    labels:
+      - priority:low
+      - refactoring
+      - DRY
+
+  # ===========================================================================
+  # KISS Violations (3 remaining - 1 partially improved)
+  # ===========================================================================
+  
+  - id: KISS-1
+    title: "[MEDIUM] XmpParser - Complete Nesting Reduction (Currently 6 Levels)"
+    labels:
+      - priority:medium
+      - refactoring
+      - KISS
+      - code-quality
+    body: |
+      ## Violation
+      
+      **File**: `src/Parse/Xmp/XmpParser.php` (Lines 186-243)
+      **Status**: 🟡 PARTIALLY IMPROVED (helpers extracted, but 6-level nesting remains)
+      
+      ### Problem
+      Main parse() method still has 6-level nesting (target: ≤ 3).
+      
+      ### Progress
+      ✅ Helper methods extracted: extractNamespacePrefixes(), extractAttributes(), etc.
+      ⚠️ Main method still complex
+      
+      ### Remaining Work
+      Extract more control flow to focused methods.
+      
+      ### Effort
+      2 days
+      
+  - id: KISS-2
+    title: "[MEDIUM] IsoBmffParser - Extract Conditional Chain Helper Methods"
+    labels:
+      - priority:medium
+      - refactoring
+      - KISS
+    body: |
+      ## Violation
+      
+      **File**: `src/Parse/IsoBmff/IsoBmffParser.php` (Lines 841-900, 833-859)
+      
+      ### Problem
+      Deeply nested conditions with repeated array key checks.
+      
+      ### Solution
+      ```php
+      private function setKeyIfMissing(array &$array, string $key, mixed $value): void
+      ```
+      
+      ### Effort
+      1 day
+      
+  - id: KISS-3
+    title: "[LOW] TiffExifParser - Extract Nested Loop Logic"
+    labels:
+      - priority:low
+      - refactoring
+      - KISS
+      
+  - id: KISS-4
+    title: "[LOW] AppleDecoder - Consider Splitting Large File (1,999 LOC)"
+    labels:
+      - priority:low
+      - refactoring
+      - KISS
+    body: |
+      ## Observation
+      
+      **File**: `src/MakerNotes/AppleDecoder.php`
+      **LOC**: 1,999
+      
+      ### Note
+      File handles: binary plist + keyed archive + semantic style.
+      
+      ### Potential Split
+      - BinaryPlistDecoder
+      - KeyedArchiveUnarchiver  
+      - SemanticStyleProcessor
+      
+      ### Effort
+      3-4 days
+
+  # ===========================================================================
+  # YAGNI Violations (3 issues)
+  # ===========================================================================
+  
+  - id: YAGNI-1
+    title: "[LOW] Evaluate Necessity of 12 Separate Factory Classes"
+    labels:
+      - priority:low
+      - YAGNI
+      - architecture-review
+    body: |
+      ## Observation
+      
+      **File**: `src/Exif/Factory/ValueFactory.php` (Lines 85-97)
+      
+      ### Problem
+      12 factories (CameraFactory, LensFactory, etc.) - each with single create() method.
+      
+      ### Questions
+      - Are they reused elsewhere?
+      - Do they need to be mocked in tests?
+      - Or could they be inline methods?
+      
+      ### Effort
+      2-3 days (research + potential refactoring)
+      
+  - id: YAGNI-2
+    title: "[LOW] Review Sub-Factory Trivial Wrappers"
+    labels:
+      - priority:low
+      - YAGNI
+      
+  - id: YAGNI-3
+    title: "[LOW] Simplify AppleMakerNotes Singleton Cache"
+    labels:
+      - priority:low
+      - YAGNI
+
+  # ===========================================================================
+  # Law of Demeter (LoD) Violations (3 issues)
+  # ===========================================================================
+  
+  - id: LOD-1
+    title: "[MEDIUM] ValueFactory - Add Delegation Methods for Property Chains"
+    labels:
+      - priority:medium
+      - refactoring
+      - LoD
+    body: |
+      ## Violation
+      
+      **File**: `src/Exif/Factory/ValueFactory.php` (Lines 127-130)
+      
+      ```php
+      $appleMakerNotes = $metadata->makerNotes?->apple;
+      ```
+      
+      ### Solution
+      ```php
+      // In Metadata class
+      public function getAppleMakerNotes(): ?AppleMakerNotes
+      ```
+      
+  - id: LOD-2
+    title: "[MEDIUM] RegionsFactory - Avoid Nested Object Access"
+    labels:
+      - priority:medium
+      - refactoring
+      - LoD
+      
+  - id: LOD-3
+    title: "[LOW] ExifReader - Review Facade Delegation Pattern"
+    labels:
+      - priority:low
+      - LoD
+
+  # ===========================================================================
+  # Separation of Concerns (SoC) Violations (3 issues)
+  # ===========================================================================
+  
+  - id: SOC-1
+    title: "[CRITICAL] ParsedExif - Separate Parsing from Conversion"
+    labels:
+      - priority:critical
+      - refactoring
+      - SoC
+    body: |
+      ## Violation
+      
+      Same as SRP-3. ParsedExif mixes data structure + parsing + validation + conversion.
+      
+      ### Status
+      Tracked in SRP-3
+      
+  - id: SOC-2
+    title: "[CRITICAL] JpegParser - Separate I/O from Business Logic"
+    labels:
+      - priority:critical
+      - refactoring
+      - SoC
+    body: |
+      ## Violation
+      
+      Same as SRP-1. JpegParser mixes binary I/O + format detection + segment extraction.
+      
+      ### Status
+      Tracked in SRP-1
+      
+  - id: SOC-3
+    title: "[MEDIUM] MetadataReader - Reduce Parser Coupling"
+    labels:
+      - priority:medium
+      - refactoring
+      - SoC
+
+  # ===========================================================================
+  # Convention over Configuration (CoC) Violations (6 issues)
+  # ===========================================================================
+  
+  - id: COC-1
+    title: "[MEDIUM] JpegParser - Create Configuration Object for Hardcoded Limits"
+    labels:
+      - priority:medium
+      - enhancement
+      - CoC
+      - configuration
+    body: |
+      ## Violation
+      
+      **File**: `src/Parse/Jpeg/JpegParser.php`
+      
+      ```php
+      private const int MAX_APP_SEGMENT_SIZE = 4_194_304; // 4 MiB
+      private const int FLASHPIX_MAX_STREAM_SIZE = 16_777_216; // 16 MiB
+      ```
+      
+      ### Solution
+      ```php
+      class JpegParserConfig {
+          public function __construct(
+              public int $maxAppSegmentSize = 4_194_304,
+              public int $maxFlashPixStreamSize = 16_777_216,
+          ) {}
+      }
+      ```
+      
+      ### Effort
+      2-3 days
+      
+  - id: COC-2
+    title: "[LOW] RegionsFactory - Externalize Namespace URIs"
+    labels:
+      - priority:low
+      - CoC
+      - configuration
+      
+  - id: COC-3
+    title: "[LOW] PhotoCalculator - Make Sensor Constants Configurable"
+    labels:
+      - priority:low
+      - CoC
+      
+  - id: COC-4
+    title: "[LOW] ParsedExif - Replace Magic Numbers with Named Constants"
+    labels:
+      - priority:low
+      - CoC
+      
+  - id: COC-5
+    title: "[LOW] JpegParser - Create Signature Registry"
+    labels:
+      - priority:low
+      - CoC
+      
+  - id: COC-6
+    title: "[LOW] Review Default Factory Instantiation Pattern"
+    labels:
+      - priority:low
+      - CoC
+
+  # ===========================================================================
+  # GRASP Violations (4 issues)
+  # ===========================================================================
+  
+  - id: GRASP-1
+    title: "[MEDIUM] KeyedArchiveUnarchiver - Replace instanceof Chain with Polymorphism"
+    labels:
+      - priority:medium
+      - refactoring
+      - GRASP:Polymorphism
+      - SOLID:OCP
+    body: |
+      ## Violation
+      
+      **File**: `src/MakerNotes/Apple/KeyedArchiveUnarchiver.php` (Lines 89-140)
+      
+      ```php
+      if ($value instanceof ApplePlistDictionary) {
+          // ...
+      } else if ($value instanceof ApplePlistArray) {
+          // ...
+      } else if ($value instanceof ApplePlistScalar) {
+          // ...
+      }
+      ```
+      
+      ### Solution
+      ```php
+      interface ApplePlistValueInterface {
+          public function resolveValue(KeyedArchiveUnarchiver $unarchiver): mixed;
+      }
+      ```
+      
+      ### Effort
+      3-4 days
+      
+  - id: GRASP-2
+    title: "[MEDIUM] AppleDecoder - Use Polymorphism for Type Checks"
+    labels:
+      - priority:medium
+      - refactoring
+      - GRASP:Polymorphism
+      
+  - id: GRASP-3
+    title: "[MEDIUM] TiffExifParser - Replace instanceof with Polymorphism"
+    labels:
+      - priority:medium
+      - refactoring
+      - GRASP:Polymorphism
+      
+  - id: GRASP-4
+    title: "[LOW] GpsConverter - Refactor Nested instanceof Operators"
+    labels:
+      - priority:low
+      - refactoring
+      - GRASP:Polymorphism
+
+  # ===========================================================================
+  # Documentation
+  # ===========================================================================
+  
+  - id: DOC-1
+    title: "[HIGH] Create Migration Guide for Refactored APIs"
+    labels:
+      - priority:high
+      - documentation
+      - user-facing
+    body: |
+      ## Task
+      
+      As refactorings are completed (especially ParsedExif split and JpegParser extraction), create migration guide.
+      
+      ### Contents
+      - Version-by-version breaking changes
+      - Deprecated method mapping
+      - Code examples (before/after)
+      - Upgrade checklist
+      
+      ### Effort
+      1-2 days per major refactoring
