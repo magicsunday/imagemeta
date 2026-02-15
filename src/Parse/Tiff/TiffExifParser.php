@@ -1367,6 +1367,7 @@ final class TiffExifParser implements TiffExifParserInterface
             $this->validateFillOrderTag($additionalIfd);
             $this->validatePredictorTag($additionalIfd);
             $this->validateJpegProcTag($additionalIfd);
+            $this->validateJpegRestartIntervalTag($additionalIfd);
             $this->validateJpegLosslessTags($additionalIfd);
             $this->validateJpegTableTags($additionalIfd);
             $this->validateJpegInterchangePairTags($additionalIfd);
@@ -1466,6 +1467,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->validateFillOrderTag($ifd0);
         $this->validatePredictorTag($ifd0);
         $this->validateJpegProcTag($ifd0);
+        $this->validateJpegRestartIntervalTag($ifd0);
         $this->validateJpegLosslessTags($ifd0);
         $this->validateJpegTableTags($ifd0);
         $this->validateJpegInterchangePairTags($ifd0);
@@ -2816,6 +2818,46 @@ final class TiffExifParser implements TiffExifParserInterface
 
         if ($pointTransformsEntry instanceof IfdEntry) {
             throw new ParseError('JPEGPointTransforms is only valid when JPEGProc=14.', 1841);
+        }
+    }
+
+    /**
+     * Validates JPEGRestartInterval structure and JPEG-only applicability.
+     *
+     * TIFF 6.0 Section 22 defines JPEGRestartInterval as SHORT[1] in the JPEG
+     * field set controlled by Compression=6 and JPEGProc.
+     */
+    private function validateJpegRestartIntervalTag(Ifd $ifd): void
+    {
+        $restartIntervalEntry = $ifd->get(TiffTag::JPEG_RESTART_INTERVAL);
+        if (!$restartIntervalEntry instanceof IfdEntry) {
+            return;
+        }
+
+        if (
+            ($restartIntervalEntry->type !== TiffConst::TYPE_SHORT)
+            || ($restartIntervalEntry->count !== 1)
+            || !is_int($restartIntervalEntry->value)
+        ) {
+            throw new ParseError('JPEGRestartInterval must be SHORT[1].', 1851);
+        }
+
+        $compressionEntry  = $ifd->get(ExifTag::COMPRESSION);
+        $isJpegCompression = ($compressionEntry instanceof IfdEntry)
+            && is_int($compressionEntry->value)
+            && ($compressionEntry->value === Compression::JPEG->value);
+
+        if (!$isJpegCompression) {
+            throw new ParseError('JPEGRestartInterval is only valid when Compression=6 (JPEG).', 1852);
+        }
+
+        $jpegProcEntry = $ifd->get(TiffTag::JPEG_PROC);
+        if (
+            !($jpegProcEntry instanceof IfdEntry)
+            || !is_int($jpegProcEntry->value)
+            || !in_array($jpegProcEntry->value, [1, 14], true)
+        ) {
+            throw new ParseError('JPEGRestartInterval requires valid JPEGProc metadata.', 1853);
         }
     }
 

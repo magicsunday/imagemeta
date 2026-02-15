@@ -144,6 +144,97 @@ final class TiffExifParserJpegProcTest extends TestCase
     }
 
     /**
+     * JPEGRestartInterval accepts positive values when JPEG metadata is coherent.
+     */
+    #[Test]
+    public function acceptsJpegRestartIntervalWithJpegCompression(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                TiffTag::JPEG_PROC             => $this->shortEntry(TiffTag::JPEG_PROC, 1),
+                TiffTag::JPEG_RESTART_INTERVAL => $this->shortEntry(TiffTag::JPEG_RESTART_INTERVAL, 16),
+            ]),
+        );
+
+        self::assertSame(16, $parsed->ifd1?->get(TiffTag::JPEG_RESTART_INTERVAL)?->value);
+    }
+
+    /**
+     * JPEGRestartInterval value 0 is valid and means no restart markers.
+     */
+    #[Test]
+    public function acceptsZeroJpegRestartIntervalWithJpegCompression(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                TiffTag::JPEG_PROC             => $this->shortEntry(TiffTag::JPEG_PROC, 1),
+                TiffTag::JPEG_RESTART_INTERVAL => $this->shortEntry(TiffTag::JPEG_RESTART_INTERVAL, 0),
+            ]),
+        );
+
+        self::assertSame(0, $parsed->ifd1?->get(TiffTag::JPEG_RESTART_INTERVAL)?->value);
+    }
+
+    /**
+     * JPEGRestartInterval must use SHORT[1] layout.
+     */
+    #[Test]
+    public function rejectsInvalidJpegRestartIntervalLayout(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('JPEGRestartInterval must use TIFF type SHORT');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                TiffTag::JPEG_PROC             => $this->shortEntry(TiffTag::JPEG_PROC, 1),
+                TiffTag::JPEG_RESTART_INTERVAL => $this->numericEntry(
+                    TiffTag::JPEG_RESTART_INTERVAL,
+                    TiffConst::TYPE_LONG,
+                    1,
+                    [16],
+                ),
+            ]),
+        );
+    }
+
+    /**
+     * JPEGRestartInterval is invalid outside JPEG compression context.
+     */
+    #[Test]
+    public function rejectsJpegRestartIntervalWithNonJpegCompression(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('JPEGRestartInterval is only valid when Compression=6 (JPEG)');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd0([
+                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::UNCOMPRESSED->value),
+                TiffTag::JPEG_RESTART_INTERVAL => $this->shortEntry(TiffTag::JPEG_RESTART_INTERVAL, 16),
+            ]),
+        );
+    }
+
+    /**
+     * JPEGRestartInterval requires a coherent JPEGProc metadata path.
+     */
+    #[Test]
+    public function rejectsJpegRestartIntervalWhenJpegProcIsMissing(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Compression=6 requires JPEGProc');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                TiffTag::JPEG_RESTART_INTERVAL => $this->shortEntry(TiffTag::JPEG_RESTART_INTERVAL, 16),
+            ]),
+        );
+    }
+
+    /**
      * JPEG lossless tags are valid for JPEGProc=14 with SHORT[SamplesPerPixel] layout.
      */
     #[Test]
