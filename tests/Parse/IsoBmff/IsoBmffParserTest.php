@@ -4540,6 +4540,112 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Parses mdia with required singleton children (mdhd/hdlr/minf).
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseMdiaWithRequiredSingletonChildren(): void
+    {
+        $mdia = $this->box('mdia', $this->minimalMdiaContent());
+        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak = $this->box('trak', $tkhd . $mdia);
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+    }
+
+    /**
+     * Rejects mdia without the mandatory hdlr child.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMdiaMissingHdlr(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('mdia must contain exactly one hdlr box');
+
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia = $this->box('mdia', $mdhd . $this->minimalMinf());
+        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak = $this->box('trak', $tkhd . $mdia);
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
+     * Rejects mdia without the mandatory minf child.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMdiaMissingMinf(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('mdia must contain exactly one minf box');
+
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia = $this->box('mdia', $hdlr . $mdhd);
+        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak = $this->box('trak', $tkhd . $mdia);
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
+     * Rejects mdia with duplicate mandatory hdlr children.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMdiaDuplicateHdlr(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('mdia must contain exactly one hdlr box');
+
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia = $this->box('mdia', $hdlr . $hdlr . $mdhd . $this->minimalMinf());
+        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak = $this->box('trak', $tkhd . $mdia);
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
+     * Rejects mdia without the mandatory mdhd child.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMdiaMissingMdhd(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('mdia must contain exactly one mdhd box');
+
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdia = $this->box('mdia', $hdlr . $this->minimalMinf());
+        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak = $this->box('trak', $tkhd . $mdia);
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
      * Uses two video tracks with different dimensions and codecs.
      * This verifies track-derived video keys are selected deterministically.
      *
