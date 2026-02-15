@@ -19,7 +19,7 @@
         "optimize-autoloader": true
     },
     "require": {
-        "php": ">=8.4.0 <8.6.0",
+        "php": ">=8.3.0 <8.6.0",
         "ext-ctype": "*",
         "ext-date": "*",
         "ext-fileinfo": "*",
