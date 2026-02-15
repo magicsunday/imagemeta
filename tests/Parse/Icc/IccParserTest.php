@@ -1053,6 +1053,25 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * GH-1118: Rejects textType tags without any payload bytes after the type header.
+     * ICC.1:2022 §10.24 requires a NUL-terminated 7-bit ASCII text payload.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsTextTypeWithoutPayload(): void
+    {
+        // ICC v2: textType is permitted as a legacy fallback for cprt
+        $profile = $this->buildTextTypeProfile('', 0x02400000);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertNull($result['copyright']);
+    }
+
+    /**
      * GH-825: Rejects textType tags with non-ASCII bytes.
      * ICC.1:2022 §10.24: textType must contain only 7-bit ASCII (bytes <= 0x7F).
      *
