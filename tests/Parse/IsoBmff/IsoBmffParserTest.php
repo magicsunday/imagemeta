@@ -3089,6 +3089,29 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Accepts an hdlr box with version 0 and flags 0.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseHdlrVersionZeroFlagsZero(): void
+    {
+        $hdlrPayload = "\x00\x00\x00\x00"         // version=0, flags=0
+            . "\x00\x00\x00\x00"                   // pre_defined=0
+            . 'vide'                               // handler_type
+            . str_repeat("\0", 12)                // reserved
+            . "VideoHandler\0";                    // name
+        $hdlr = $this->box('hdlr', $hdlrPayload);
+        $meta = $this->fullBox('meta', $hdlr);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        [, $xmps]  = $extractor->extract();
+
+        self::assertSame([], $xmps);
+    }
+
+    /**
      * Rejects an hdlr box with non-zero pre_defined field.
      *
      * @return void
