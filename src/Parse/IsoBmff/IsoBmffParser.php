@@ -1120,8 +1120,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * timestamps) or 1 (64-bit timestamps). The timescale field must be non-zero.
      *
      * @param BoxDescriptor $mdhd Media header box descriptor.
+     *
+     * @return int
      */
-    private function parseMdhd(BoxDescriptor $mdhd): void
+    private function parseMdhd(BoxDescriptor $mdhd): int
     {
         $win = $mdhd->window;
         $win->seek(0);
@@ -1158,6 +1160,8 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         if ($timescale === 0) {
             throw new ParseError('mdhd timescale must not be zero', 1403);
         }
+
+        return $timescale;
     }
 
     /**
@@ -1239,13 +1243,14 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      */
     private function parseMdia(BoxDescriptor $mdia, IsoBmffParseContext $context): array
     {
-        $handler     = null;
-        $handlerName = null;
-        $sampleInfo  = [];
-        $hdlrCount   = 0;
-        $minfCount   = 0;
-        $mdhdCount   = 0;
-        $udtaCount   = 0;
+        $handler       = null;
+        $handlerName   = null;
+        $sampleInfo    = [];
+        $hdlrCount     = 0;
+        $minfCount     = 0;
+        $mdhdCount     = 0;
+        $udtaCount     = 0;
+        $mdhdTimescale = null;
 
         // GH-881: collect children first so hdlr/minf order does not matter
         $children = [];
@@ -1274,7 +1279,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('mdia must contain exactly one mdhd box', 1380);
                 }
 
-                $this->parseMdhd($child);
+                $mdhdTimescale = $this->parseMdhd($child);
             } elseif ($child->type === self::BOX_UDTA) {
                 ++$udtaCount;
 
@@ -1300,7 +1305,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
         // Parse minf after hdlr so handler type is always available (GH-881)
         foreach ($children as $child) {
-            $sampleInfo = $this->parseMinf($child, $handler);
+            $sampleInfo = $this->parseMinf($child, $handler, $mdhdTimescale);
         }
 
         return [$handler, $handlerName, $sampleInfo];
@@ -1383,12 +1388,13 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     /**
      * Parses the media information box (`minf`) to find sample table details.
      *
-     * @param BoxDescriptor $minf        Media information descriptor.
-     * @param string|null   $handlerType Declared handler type for the media.
+     * @param BoxDescriptor $minf          Media information descriptor.
+     * @param string|null   $handlerType   Declared handler type for the media.
+     * @param int|null      $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
      *
      * @return array<string, int|string>
      */
-    private function parseMinf(BoxDescriptor $minf, ?string $handlerType): array
+    private function parseMinf(BoxDescriptor $minf, ?string $handlerType, ?int $mdhdTimescale): array
     {
         if ($handlerType === null) {
             return [];
@@ -1414,7 +1420,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('minf must contain exactly one stbl box', 1381);
                 }
 
-                $result = $this->parseStbl($child, $handlerType);
+                $result = $this->parseStbl($child, $handlerType, $mdhdTimescale);
             } elseif ($child->type === self::BOX_DINF) {
                 ++$dinfCount;
 
@@ -1456,12 +1462,13 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     /**
      * Parses the sample table box (`stbl`).
      *
-     * @param BoxDescriptor $stbl        Sample table descriptor.
-     * @param string        $handlerType Media handler type.
+     * @param BoxDescriptor $stbl          Sample table descriptor.
+     * @param string        $handlerType   Media handler type.
+     * @param int|null      $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
      *
      * @return array<string, int|string>
      */
-    private function parseStbl(BoxDescriptor $stbl, string $handlerType): array
+    private function parseStbl(BoxDescriptor $stbl, string $handlerType, ?int $mdhdTimescale): array
     {
         $stsdCount = 0;
         $sttsCount = 0;
@@ -1478,7 +1485,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('stbl must contain exactly one stsd box', 1383);
                 }
 
-                $result = $this->parseStsd($child, $handlerType);
+                $result = $this->parseStsd($child, $handlerType, $mdhdTimescale);
             } elseif ($child->type === self::BOX_STTS) {
                 ++$sttsCount;
 
@@ -1538,7 +1545,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      *
      * @return array<string, int|string>
      */
-    private function parseStsd(BoxDescriptor $stsd, string $handlerType): array
+    private function parseStsd(BoxDescriptor $stsd, string $handlerType, ?int $mdhdTimescale): array
     {
         $win = $stsd->window;
         $win->seek(0);
@@ -1642,7 +1649,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     'compressorName' => $compressor,
                 ];
             } elseif ($result === [] && $handlerType === 'soun') {
-                $result = $this->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $format, $version);
+                $result = $this->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $format, $version, $mdhdTimescale);
             }
 
             $pos += $entrySize;
@@ -1664,12 +1671,13 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * - v2 repurposes the legacy words as required constants and appends
      *   Core Audio-style channel/rate fields.
      *
-     * @param StreamWindow $win         Reader positioned at the beginning of sample-entry specific fields.
-     * @param int          $entryStart  Absolute offset of the sample-entry specific fields.
-     * @param int          $entryEnd    Absolute offset where this sample entry ends.
-     * @param int          $entrySize   Declared sample entry size (including size+type header).
-     * @param string       $format      Raw fourcc format code.
-     * @param int          $stsdVersion FullBox version of the enclosing stsd.
+     * @param StreamWindow $win           Reader positioned at the beginning of sample-entry specific fields.
+     * @param int          $entryStart    Absolute offset of the sample-entry specific fields.
+     * @param int          $entryEnd      Absolute offset where this sample entry ends.
+     * @param int          $entrySize     Declared sample entry size (including size+type header).
+     * @param string       $format        Raw fourcc format code.
+     * @param int          $stsdVersion   FullBox version of the enclosing stsd.
+     * @param int|null     $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
      *
      * @return array{format: string, channels: int, bitsPerSample: int, sampleRate: int}
      */
@@ -1680,6 +1688,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         int $entrySize,
         string $format,
         int $stsdVersion,
+        ?int $mdhdTimescale,
     ): array {
         if ($win->tell() + 8 > $entryEnd) {
             throw new ParseError('audio sample entry truncated', 1160);
@@ -1727,7 +1736,8 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $win->readU16BE();
         $win->readU16BE();
 
-        $sampleRate = $win->readU32BE();
+        $sampleRateRaw = $win->readU32BE();
+        $sampleRate    = $this->decodeAudioSampleRate16_16($sampleRateRaw);
 
         if ($version === 1) {
             if ($win->tell() + 16 > $entryEnd) {
@@ -1742,19 +1752,23 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $win->readU32BE();
         }
 
-        $result = [
+        $samplingRateOverride = $this->parseAudioSampleEntrySamplingRateBox($win, $entryEnd, $version === 1);
+        if ($samplingRateOverride !== null) {
+            if ($samplingRateOverride <= 0) {
+                throw new ParseError('audio sample rate must be positive', 1485);
+            }
+
+            $sampleRate = $samplingRateOverride;
+        }
+
+        $this->validateAudioSampleRateTimescaleRelation($sampleRate, $mdhdTimescale);
+
+        return [
             'format'        => $this->normaliseFourcc($format),
             'channels'      => $channels,
             'bitsPerSample' => $sampleSize,
-            'sampleRate'    => (int) round($sampleRate / 65536),
+            'sampleRate'    => $sampleRate,
         ];
-
-        $samplingRateOverride = $this->parseAudioSampleEntrySamplingRateBox($win, $entryEnd, $version === 1);
-        if ($samplingRateOverride !== null) {
-            $result['sampleRate'] = $samplingRateOverride;
-        }
-
-        return $result;
     }
 
     /**
@@ -1802,6 +1816,50 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         return $override;
+    }
+
+    /**
+     * Decodes AudioSampleEntry 16.16 fixed-point sample rate with strict integer semantics.
+     *
+     * @param int $sampleRateRaw Raw 16.16 fixed-point value from the sample entry.
+     *
+     * @return int
+     */
+    private function decodeAudioSampleRate16_16(int $sampleRateRaw): int
+    {
+        if ($sampleRateRaw <= 0) {
+            throw new ParseError('audio sample rate must be positive', 1485);
+        }
+
+        if (($sampleRateRaw & 0xFFFF) !== 0) {
+            throw new ParseError('audio sample entry sampleRate must be an integer 16.16 value', 1483);
+        }
+
+        $sampleRate = $sampleRateRaw >> 16;
+        if ($sampleRate <= 0) {
+            throw new ParseError('audio sample rate must be positive', 1485);
+        }
+
+        return $sampleRate;
+    }
+
+    /**
+     * Validates audio sample rate and mdhd timescale relation (equal or integer multiple/division).
+     *
+     * @param int      $sampleRate    Parsed audio sample rate in Hz.
+     * @param int|null $mdhdTimescale Parsed mdhd timescale.
+     *
+     * @return void
+     */
+    private function validateAudioSampleRateTimescaleRelation(int $sampleRate, ?int $mdhdTimescale): void
+    {
+        if ($mdhdTimescale === null || $mdhdTimescale <= 0) {
+            return;
+        }
+
+        if (($mdhdTimescale % $sampleRate) !== 0 && ($sampleRate % $mdhdTimescale) !== 0) {
+            throw new ParseError('audio sample rate and mdhd timescale must be equal or integer multiple/division', 1484);
+        }
     }
 
     /**

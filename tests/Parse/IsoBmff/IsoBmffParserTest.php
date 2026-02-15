@@ -3085,7 +3085,7 @@ final class IsoBmffParserTest extends TestCase
             sampleRate: 44100,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1));
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
         [, , $quickTime] = $extractor->extract();
 
         self::assertNotNull($quickTime);
@@ -3114,7 +3114,7 @@ final class IsoBmffParserTest extends TestCase
             bytesPerSample: 0,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1));
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1, 48000));
         [, , $quickTime] = $extractor->extract();
 
         self::assertNotNull($quickTime);
@@ -3169,7 +3169,7 @@ final class IsoBmffParserTest extends TestCase
         );
         $entry = $this->box('mp4a', substr($entry, 8) . $this->box('srat', pack('N', 96000)));
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1));
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1, 48000));
         [, , $quickTime] = $extractor->extract();
 
         self::assertNotNull($quickTime);
@@ -3196,6 +3196,115 @@ final class IsoBmffParserTest extends TestCase
         $entry = $this->box('mp4a', substr($entry, 8) . $this->box('srat', pack('N', 48000)));
 
         $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Parses audio when mdhd timescale equals stsd sample rate.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesAudioStsdSampleRateMatchingMdhdTimescale(): void
+    {
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 48000,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 0, 48000));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame(48000, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
+    }
+
+    /**
+     * Parses audio when mdhd timescale is an integer multiple of stsd sample rate.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesAudioStsdSampleRateWithIntegerTimescaleRelation(): void
+    {
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 24000,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 0, 48000));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame(24000, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
+    }
+
+    /**
+     * Rejects non-integer 16.16 sample-rate payloads in legacy audio entries.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdFractionalLegacySampleRatePayload(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample entry sampleRate must be an integer 16.16 value');
+
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 44100,
+        );
+        $entry = substr($entry, 0, -4) . pack('N', (44100 << 16) + 1);
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects zero sample-rate payloads in legacy audio entries.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdZeroLegacySampleRatePayload(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample rate must be positive');
+
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 44100,
+        );
+        $entry = substr($entry, 0, -4) . pack('N', 0);
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects audio entries whose sample rate is inconsistent with mdhd timescale.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdSampleRateInconsistentWithMdhdTimescale(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample rate and mdhd timescale must be equal or integer multiple/division');
+
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 44100,
+        );
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 0, 48000))->extract();
     }
 
     /**
@@ -4894,7 +5003,7 @@ final class IsoBmffParserTest extends TestCase
     public function multiTrackAudioUsesFirstTrackDeterministically(): void
     {
         $audioOne = $this->audioSampleEntryVersion0('mp4a', 2, 16, 44_100);
-        $audioTwo = $this->audioSampleEntryVersion0('sowt', 1, 8, 8_000);
+        $audioTwo = $this->audioSampleEntryVersion0('sowt', 1, 8, 22_050);
 
         $extractor    = $this->createExtractor($this->createFileWithAudioTracks($audioOne, $audioTwo));
         [, , $qtMeta] = $extractor->extract();
@@ -6013,10 +6122,11 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds a minimal QuickTime file with one audio track using a custom stsd sample entry.
      *
-     * @param string $sampleEntry Serialized stsd sample entry bytes.
-     * @param int    $stsdVersion FullBox version for stsd (0 or 1 in supported tests).
+     * @param string $sampleEntry   Serialized stsd sample entry bytes.
+     * @param int    $stsdVersion   FullBox version for stsd (0 or 1 in supported tests).
+     * @param int    $mdhdTimescale Timescale value written into mdhd for relation tests.
      */
-    private function createFileWithAudioStsdEntry(string $sampleEntry, int $stsdVersion = 0): string
+    private function createFileWithAudioStsdEntry(string $sampleEntry, int $stsdVersion = 0, int $mdhdTimescale = 44100): string
     {
         $stsd = $this->fullBox('stsd', pack('N', 1) . $sampleEntry, $stsdVersion, 0);
         $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
@@ -6026,7 +6136,7 @@ final class IsoBmffParserTest extends TestCase
         $dinf = $this->box('dinf', $dref);
         $minf = $this->box('minf', $smhd . $dinf . $stbl);
         $hdlr = $this->fullBox('hdlr', "\0\0\0\0soun" . str_repeat("\0", 12) . "\0");
-        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 44100) . str_repeat("\0", 8));
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, $mdhdTimescale) . str_repeat("\0", 8));
         $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
         $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
         $trak = $this->box('trak', $tkhd . $mdia);
