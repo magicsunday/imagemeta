@@ -1264,7 +1264,7 @@ final class IccParser implements IccParserInterface
     }
 
     /**
-     * Converts up to four bytes into an unsigned big-endian integer.
+     * Converts exactly four bytes into an unsigned big-endian integer.
      *
      * @param string $bytes Raw bytes to interpret as a big-endian integer.
      *
@@ -1272,11 +1272,16 @@ final class IccParser implements IccParserInterface
      */
     private function uInt32Be(string $bytes): int
     {
-        $bytes = substr($bytes . "\0\0\0\0", 0, 4);
+        if (strlen($bytes) !== 4) {
+            throw new ParseError(
+                sprintf('ICC uInt32 field truncated: expected 4 bytes, got %d', strlen($bytes)),
+                1124,
+            );
+        }
 
-        $unpacked = @unpack('Nvalue', $bytes);
+        $unpacked = unpack('Nvalue', $bytes);
         if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
-            return 0;
+            throw new ParseError('Unexpected integer value while decoding ICC profile.', 1124);
         }
 
         $value = $unpacked['value'];
@@ -1288,7 +1293,7 @@ final class IccParser implements IccParserInterface
     }
 
     /**
-     * Converts up to two bytes into an unsigned big-endian integer.
+     * Converts exactly two bytes into an unsigned big-endian integer.
      *
      * @param string $bytes Raw bytes to interpret as a big-endian integer.
      *
@@ -1296,11 +1301,16 @@ final class IccParser implements IccParserInterface
      */
     private function uInt16Be(string $bytes): int
     {
-        $bytes = substr($bytes . "\0\0", 0, 2);
+        if (strlen($bytes) !== 2) {
+            throw new ParseError(
+                sprintf('ICC uInt16 field truncated: expected 2 bytes, got %d', strlen($bytes)),
+                1125,
+            );
+        }
 
-        $unpacked = @unpack('nvalue', $bytes);
+        $unpacked = unpack('nvalue', $bytes);
         if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
-            return 0;
+            throw new ParseError('Unexpected integer value while decoding ICC profile.', 1125);
         }
 
         $value = $unpacked['value'];

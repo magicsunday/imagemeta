@@ -20,6 +20,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 use function chr;
 use function intdiv;
@@ -103,6 +104,76 @@ final class IccParserTest extends TestCase
 
         $this->expectException(ParseError::class);
         $decoder->decode('short');
+    }
+
+    /**
+     * Distinguishes missing ICC payloads from malformed ICC payloads.
+     * Missing data returns null, while malformed present data must throw ParseError.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeDistinguishesMissingProfileFromMalformedProfile(): void
+    {
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode(null));
+
+        $this->expectException(ParseError::class);
+        $decoder->decode('short');
+    }
+
+    /**
+     * Verifies that valid fixed-width unsigned big-endian fields decode deterministically.
+     *
+     * @return void
+     */
+    #[Test]
+    public function uIntHelpersDecodeValidFixedWidthValues(): void
+    {
+        $decoder = new IccParser();
+
+        $uInt32Method = new ReflectionMethod(IccParser::class, 'uInt32Be');
+        $uInt16Method = new ReflectionMethod(IccParser::class, 'uInt16Be');
+
+        self::assertSame(0x01020304, $uInt32Method->invoke($decoder, "\x01\x02\x03\x04"));
+        self::assertSame(0x0102, $uInt16Method->invoke($decoder, "\x01\x02"));
+    }
+
+    /**
+     * Rejects truncated uInt32Number fields instead of applying implicit zero-padding.
+     *
+     * @return void
+     */
+    #[Test]
+    public function uInt32HelperRejectsTruncatedFields(): void
+    {
+        $decoder = new IccParser();
+
+        $uInt32Method = new ReflectionMethod(IccParser::class, 'uInt32Be');
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('ICC uInt32 field truncated: expected 4 bytes, got 3');
+
+        $uInt32Method->invoke($decoder, "\x01\x02\x03");
+    }
+
+    /**
+     * Rejects truncated uInt16Number fields instead of applying implicit zero-padding.
+     *
+     * @return void
+     */
+    #[Test]
+    public function uInt16HelperRejectsTruncatedFields(): void
+    {
+        $decoder = new IccParser();
+
+        $uInt16Method = new ReflectionMethod(IccParser::class, 'uInt16Be');
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('ICC uInt16 field truncated: expected 2 bytes, got 1');
+
+        $uInt16Method->invoke($decoder, "\x01");
     }
 
     /**
