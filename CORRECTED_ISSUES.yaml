@@ -1,0 +1,268 @@
+# Korrigierte GitHub Issues (basierend auf main Branch)
+# Datum: 2026-02-15
+# Nur verbleibende TATSÄCHLICHE Violations
+
+issues:
+  - number: 1
+    title: "[MEDIUM] ParsedExif: Interface Segregation zur Reduktion der God Class"
+    labels:
+      - "refactoring"
+      - "SOLID:ISP"
+      - "code-quality"
+      - "priority:medium"
+    body: |
+      ## Problem
+
+      `ParsedExif` ist mit **5,165 LOC und 234 public methods** immer noch eine God Class, auch wenn sie von ursprünglich 5,823 LOC reduziert wurde.
+
+      **Aktueller Stand (main Branch):**
+      - 5,165 LOC (-658 LOC seit letztem Audit)
+      - 234 public methods (+14 methods für neue Features)
+      - Alle EXIF-Daten in einer Klasse: IFD0, IFD1, Exif IFD, GPS, Interop, MakerNotes
+
+      **Hinweis:** JpegParser-Violations wurden bereits durch GH-1424 und GH-1429 gelöst! ✅
+
+      ## Lösung
+
+      Einführung von **Interface Segregation** nach EXIF-Bereichen:
+
+      ```php
+      interface ExifIfd0Data {
+          public function getImageDescription(): ?string;
+          public function getMake(): ?string;
+          public function getModel(): ?string;
+          // ~30 IFD0-spezifische Methods
+      }
+
+      interface ExifIfd1Data {
+          public function getThumbnailWidth(): ?int;
+          public function getThumbnailHeight(): ?int;
+          // Thumbnail-spezifische Methods
+      }
+
+      interface ExifSubIfdData {
+          public function getExposureTime(): ?Rational;
+          public function getFNumber(): ?Rational;
+          public function getIsoSpeedRatings(): ?array;
+          // ~60 Exif IFD Methods
+      }
+
+      interface ExifGpsData {
+          public function getGpsLatitude(): ?float;
+          public function getGpsLongitude(): ?float;
+          public function getGpsAltitude(): ?float;
+          // ~30 GPS Methods
+      }
+
+      interface ExifInteropData {
+          // Interop-spezifische Methods
+      }
+
+      final class ParsedExif implements
+          ExifIfd0Data,
+          ExifIfd1Data,
+          ExifSubIfdData,
+          ExifGpsData,
+          ExifInteropData
+      {
+          // Implementierung bleibt, aber Nutzer können spezifische Interfaces verwenden
+      }
+      ```
+
+      ## Vorteile
+
+      1. **Selektive Dependencies:** Klassen können nur benötigte Interfaces requiren
+      2. **Bessere Testbarkeit:** Mocks nur für relevante Bereiche
+      3. **Klare Contracts:** Jedes Interface hat eine klare Verantwortung
+      4. **Abwärtskompatibel:** ParsedExif implementiert alle Interfaces
+
+      ## Acceptance Criteria
+
+      - [ ] 5 Interfaces erstellt: `ExifIfd0Data`, `ExifIfd1Data`, `ExifSubIfdData`, `ExifGpsData`, `ExifInteropData`
+      - [ ] `ParsedExif` implementiert alle Interfaces
+      - [ ] Dokumentation in EXIF-Spec-Kommentaren aktualisiert
+      - [ ] Alle Tests grün
+      - [ ] PHPStan grün
+      - [ ] Keine Breaking Changes (BC-kompatibel)
+
+      ## Aufwand
+
+      **Geschätzt:** 3-4 Tage
+
+      ## Priorität
+
+      🟠 **MEDIUM** - Verbesserung der Architektur, aber nicht kritisch (bereits von 5,823 auf 5,165 LOC reduziert)
+
+      ## Related
+
+      - GH-1424: ✅ Marker Handler Strategy (bereits gelöst)
+      - GH-1429: ✅ Dependency Injection (bereits gelöst)
+
+  - number: 2
+    title: "[LOW] TiffExifParser: Optional - Helper-Klassen extrahieren"
+    labels:
+      - "refactoring"
+      - "SOLID:SRP"
+      - "code-quality"
+      - "priority:low"
+      - "optional"
+    body: |
+      ## Problem
+
+      `TiffExifParser` ist mit **10,361 LOC** die größte Klasse im Projekt.
+
+      **Hinweis:** Die Klasse ist von 5,515 LOC auf 10,361 LOC **gewachsen**, weil:
+      - Vollständige EXIF 3.0 Implementierung hinzugefügt
+      - Alle TIFF 6.0 / BigTIFF Features implementiert
+      - 260+ EXIF-Spec-Referenzen dokumentiert
+
+      **Bewertung:** Wachstum ist **funktional gerechtfertigt**. Die Komplexität spiegelt die EXIF/TIFF-Spec-Komplexität wider.
+
+      ## Optionale Verbesserung
+
+      Trotz funktionaler Rechtfertigung könnten Helper-Klassen die Wartbarkeit verbessern:
+
+      ```php
+      // Byte-Order-Handling extrahieren
+      final class TiffByteOrderHandler {
+          public function readUint16(Stream $stream, Endianness $endianness): int;
+          public function readUint32(Stream $stream, Endianness $endianness): int;
+          public function readUint64(Stream $stream, Endianness $endianness): int;
+      }
+
+      // Tag-Decoder extrahieren
+      final class ExifTagDecoder {
+          public function decodeRational(string $data, Endianness $endianness): Rational;
+          public function decodeSRational(string $data, Endianness $endianness): SRational;
+          public function decodeAscii(string $data, CharacterEncoding $encoding): string;
+      }
+
+      // IFD-Parser extrahieren
+      final class IfdParser {
+          public function parseIfdEntries(Stream $stream, int $offset, Endianness $endianness): array;
+      }
+      ```
+
+      ## Vorteile
+
+      1. **Einzeln testbar:** Jeder Helper kann isoliert getestet werden
+      2. **Wiederverwendbar:** Byte-Order-Handler auch für andere Formate nutzbar
+      3. **Übersichtlicher:** TiffExifParser fokussiert auf Koordination
+
+      ## Nachteile
+
+      1. **Mehr Dateien:** 3-4 zusätzliche Klassen
+      2. **Indirektion:** Zusätzliche Abstraktionsebene
+      3. **Aufwand:** 5-7 Tage Refactoring
+
+      ## Acceptance Criteria
+
+      - [ ] `TiffByteOrderHandler` extrahiert (~200 LOC)
+      - [ ] `ExifTagDecoder` extrahiert (~300 LOC)
+      - [ ] `IfdParser` extrahiert (~400 LOC)
+      - [ ] TiffExifParser nutzt Helper (~900 LOC Reduktion)
+      - [ ] Alle Tests grün
+      - [ ] PHPStan grün
+      - [ ] Keine Performance-Regression
+
+      ## Aufwand
+
+      **Geschätzt:** 5-7 Tage
+
+      ## Priorität
+
+      🟡 **LOW / OPTIONAL** - Größe ist funktional gerechtfertigt. Refactoring ist "nice-to-have" aber nicht notwendig.
+
+      ## Empfehlung
+
+      **VERSCHIEBEN** auf zukünftigen Milestone. Fokus auf andere Verbesserungen.
+
+  - number: 3
+    title: "[LOW] IsoBmffParser: Weiterer State in ParseContext verschieben"
+    labels:
+      - "refactoring"
+      - "SoC"
+      - "code-quality"
+      - "priority:low"
+    body: |
+      ## Problem
+
+      `IsoBmffParser` ist mit **4,804 LOC** groß, aber bereits verbessert durch:
+      - `IsoBmffParseContext` (51 LOC) wurde extrahiert ✅
+      - Separation of Concerns teilweise implementiert
+
+      ## Optionale Verbesserung
+
+      Weiterer State könnte in Context verschoben werden:
+
+      ```php
+      final class IsoBmffParseContext {
+          // Aktuell (51 LOC)
+          private array $boxes = [];
+          private int $currentOffset = 0;
+
+          // Erweiterung
+          private ?BoxDescriptor $currentBox = null;
+          private array $handlerStack = [];
+          private array $itemLocations = [];
+      }
+      ```
+
+      ## Vorteile
+
+      1. **Zustandsverwaltung zentralisiert**
+      2. **Parser wird schlanker**
+      3. **Testbarkeit verbessert**
+
+      ## Nachteile
+
+      1. **Kleiner Nutzen:** Context ist schon extrahiert
+      2. **Geringer Impact:** -200-300 LOC max
+
+      ## Acceptance Criteria
+
+      - [ ] Weiterer State in `IsoBmffParseContext` verschoben
+      - [ ] IsoBmffParser nutzt erweiterten Context
+      - [ ] Alle Tests grün
+      - [ ] PHPStan grün
+
+      ## Aufwand
+
+      **Geschätzt:** 2-3 Tage
+
+      ## Priorität
+
+      🟡 **LOW** - Context bereits extrahiert, weitere Verbesserung marginal
+
+      ## Empfehlung
+
+      **OPTIONAL** - Nur wenn Zeit übrig ist nach Issue #1
+
+summary:
+  total_issues: 3
+  total_original: 38
+  reduction: 35
+  critical: 0
+  high: 0
+  medium: 1
+  low: 2
+  resolved_by_existing_refactorings: 35
+
+notes: |
+  ## Wichtige Erkenntnisse
+
+  1. **Original-Audit war fehlerhaft:** Basierte auf veraltetem Code-Stand
+  2. **35 von 38 Violations GELÖST:** Durch GH-1424, GH-1429 und weitere Commits
+  3. **Nur 3 Violations verbleiben:** 1 MEDIUM, 2 LOW
+  4. **Codebase ist in EXZELLENTEM Zustand:** Viel besser als Original-Audit suggerierte
+
+  ## Commits die Violations lösten
+
+  - **GH-1424**: Extract Marker Handler Strategy (-57% LOC in JpegParser)
+  - **GH-1429**: Introduce Dependency Injection (DIP violations gelöst)
+  - **GH-1431**: Configurable Limits
+  - **20+ weitere**: JPEG Strictness-Verbesserungen
+
+  ## Empfehlung
+
+  Erstelle nur die 3 korrigierten Issues. Ignoriere die 38 falschen Issues aus dem Original-Audit.
