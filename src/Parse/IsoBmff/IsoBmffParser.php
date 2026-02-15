@@ -458,23 +458,15 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      */
     public function extract(): array
     {
-        $exifBlobs       = [];
-        $xmpBlobs        = [];
-        $qtKeys          = [];
-        $qtDataAtoms     = [];
-        $queuedUuidXmp   = [];
-        $xmpHashes       = [];
-        $itemReferences  = [];
-        $dataReferences  = [];
-        $unresolvedItems = [];
-
-        $moovCount = 0;
+        $context       = new IsoBmffParseContext();
+        $queuedUuidXmp = [];
+        $moovCount     = 0;
 
         foreach ($this->walkTopLevelBoxes() as $box) {
             if ($box->type === self::BOX_FTYP) {
-                $qtKeys = $this->mergeAssociative($qtKeys, $this->parseFtyp($box));
+                $context->qtKeys = $this->mergeAssociative($context->qtKeys, $this->parseFtyp($box));
             } elseif ($box->type === self::BOX_META) {
-                $this->parseMetaBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
+                $this->parseMetaBox($box, $context);
             } elseif ($box->type === self::BOX_MOOV) {
                 ++$moovCount;
 
@@ -482,9 +474,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('file must contain exactly one moov box', 1373);
                 }
 
-                $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
+                $this->parseMoovBox($box, $context);
             } elseif ($box->type === self::BOX_MOOF) {
-                $this->parseMoofBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
+                $this->parseMoofBox($box, $context);
             } elseif ($box->type === self::BOX_UUID && $box->userType === self::XMP_UUID) {
                 if ($box->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
                     throw new ParseError('uuid XMP payload exceeds maximum allowed size', 1368);
@@ -495,22 +487,22 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         foreach ($queuedUuidXmp as $blob) {
-            $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
+            $this->appendUniqueXmp($context->xmpBlobs, $context->xmpHashes, $blob);
         }
 
         /** @var array<string, list<QuickTimeDataAtom>> $dataAtomVOs */
         $dataAtomVOs = [];
-        foreach ($qtDataAtoms as $key => $rawAtoms) {
+        foreach ($context->qtDataAtoms as $key => $rawAtoms) {
             foreach ($rawAtoms as $raw) {
                 $dataAtomVOs[$key][] = new QuickTimeDataAtom($raw['type'], $raw['locale'], $raw['value']);
             }
         }
 
-        $qt               = ($qtKeys === [] && $dataAtomVOs === []) ? null : new QuickTimeMeta($qtKeys, $dataAtomVOs);
-        $itemReferenceMap = $itemReferences === [] ? null : new IsoBmffItemReferenceMap($itemReferences);
-        $dataReferenceMap = $dataReferences === [] ? null : new IsoBmffDataReferenceMap($dataReferences);
+        $qt               = ($context->qtKeys === [] && $dataAtomVOs === []) ? null : new QuickTimeMeta($context->qtKeys, $dataAtomVOs);
+        $itemReferenceMap = $context->itemReferences === [] ? null : new IsoBmffItemReferenceMap($context->itemReferences);
+        $dataReferenceMap = $context->dataReferences === [] ? null : new IsoBmffDataReferenceMap($context->dataReferences);
 
-        return [$exifBlobs, $xmpBlobs, $qt, $itemReferenceMap, $dataReferenceMap, $unresolvedItems];
+        return [$context->exifBlobs, $context->xmpBlobs, $qt, $itemReferenceMap, $dataReferenceMap, $context->unresolvedItems];
     }
 
     /**
@@ -537,17 +529,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     /**
      * Parses the `moov` box, collecting nested metadata boxes of interest.
      *
-     * @param BoxDescriptor                                      $moov            Box descriptor for the movie box.
-     * @param list<string>                                       $exifBlobs
-     * @param list<string>                                       $xmpBlobs
-     * @param array<int, array<int, list<IsoBmffItemReference>>> $itemReferences
-     * @param array<int, array<int, IsoBmffDataReference>>       $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                        $unresolvedItems
-     * @param array<string, bool>                                $xmpHashes
-     * @param QuickTimeKeyMap                                    $qtKeys
-     * @param QuickTimeDataAtomList                              $qtDataAtoms
+     * @param BoxDescriptor       $moov    Box descriptor for the movie box.
+     * @param IsoBmffParseContext $context Shared parse-state context.
      */
-    private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
+    private function parseMoovBox(BoxDescriptor $moov, IsoBmffParseContext $context): void
     {
         $metaSeen  = false;
         $udtaCount = 0;
@@ -563,17 +548,17 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 }
 
                 $metaSeen = true;
-                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
+                $this->parseMetaBox($child, $context);
             } elseif ($child->type === self::BOX_UDTA) {
                 ++$udtaCount;
                 if ($udtaCount > 1) {
                     throw new ParseError('duplicate udta box in moov', 1417);
                 }
 
-                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
+                $this->parseUdtaBox($child, $context);
             } elseif ($child->type === self::BOX_TRAK) {
                 ++$trakCount;
-                $this->parseTrak($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
+                $this->parseTrak($child, $context);
             } elseif ($child->type === self::BOX_MVHD) {
                 ++$mvhdCount;
 
@@ -601,17 +586,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * `iloc` file-offset items in this context, §8.11.3 defines the origin as
      * the first byte of the enclosing `moof` box.
      *
-     * @param BoxDescriptor                                      $moof            Box descriptor for the movie fragment.
-     * @param list<string>                                       $exifBlobs
-     * @param list<string>                                       $xmpBlobs
-     * @param array<int, array<int, list<IsoBmffItemReference>>> $itemReferences
-     * @param array<int, array<int, IsoBmffDataReference>>       $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                        $unresolvedItems
-     * @param array<string, bool>                                $xmpHashes
-     * @param QuickTimeKeyMap                                    $qtKeys
-     * @param QuickTimeDataAtomList                              $qtDataAtoms
+     * @param BoxDescriptor       $moof    Box descriptor for the movie fragment.
+     * @param IsoBmffParseContext $context Shared parse-state context.
      */
-    private function parseMoofBox(BoxDescriptor $moof, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
+    private function parseMoofBox(BoxDescriptor $moof, IsoBmffParseContext $context): void
     {
         $metaSeen = false;
 
@@ -622,9 +600,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 }
 
                 $metaSeen = true;
-                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms, $moof->offset);
+                $this->parseMetaBox($child, $context, $moof->offset);
             } elseif ($child->type === self::BOX_UDTA) {
-                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms, $moof->offset);
+                $this->parseUdtaBox($child, $context, $moof->offset);
             }
         }
     }
@@ -667,18 +645,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     /**
      * Parses the `udta` user data box for embedded metadata containers.
      *
-     * @param BoxDescriptor                                      $udta             Box descriptor for the user data box.
-     * @param list<string>                                       $exifBlobs
-     * @param list<string>                                       $xmpBlobs
-     * @param array<int, array<int, list<IsoBmffItemReference>>> $itemReferences
-     * @param array<int, array<int, IsoBmffDataReference>>       $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                        $unresolvedItems
-     * @param array<string, bool>                                $xmpHashes
-     * @param QuickTimeKeyMap                                    $qtKeys
-     * @param QuickTimeDataAtomList                              $qtDataAtoms
-     * @param int                                                $fileOffsetOrigin Absolute file-offset origin for nested iloc metadata.
+     * @param BoxDescriptor       $udta             Box descriptor for the user data box.
+     * @param IsoBmffParseContext $context          Shared parse-state context.
+     * @param int                 $fileOffsetOrigin Absolute file-offset origin for nested iloc metadata.
      */
-    private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = [], int $fileOffsetOrigin = 0): void
+    private function parseUdtaBox(BoxDescriptor $udta, IsoBmffParseContext $context, int $fileOffsetOrigin = 0): void
     {
         $metaSeen = false;
 
@@ -691,11 +662,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 }
 
                 $metaSeen = true;
-                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms, $fileOffsetOrigin);
+                $this->parseMetaBox($child, $context, $fileOffsetOrigin);
             } elseif ($child->type === self::BOX_NAME) {
-                $this->parseUdtaNameAtom($child, $qtKeys);
+                $this->parseUdtaNameAtom($child, $context);
             } else {
-                $this->parseUdtaTextAtom($child, $qtKeys);
+                $this->parseUdtaTextAtom($child, $context);
             }
         }
     }
@@ -706,10 +677,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * QuickTime File Format 2012, "Track Name": the name atom contains
      * a NULL-terminated UTF-8 string representing the track name.
      *
-     * @param BoxDescriptor   $name   Box descriptor for the name atom.
-     * @param QuickTimeKeyMap $qtKeys
+     * @param BoxDescriptor       $name    Box descriptor for the name atom.
+     * @param IsoBmffParseContext $context Shared parse-state context.
      */
-    private function parseUdtaNameAtom(BoxDescriptor $name, array &$qtKeys): void
+    private function parseUdtaNameAtom(BoxDescriptor $name, IsoBmffParseContext $context): void
     {
         if ($name->contentSize < 1) {
             return;
@@ -728,8 +699,8 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         // Only set track name if not already present (movie-level takes precedence)
-        if (!array_key_exists(QuickTimeMeta::TRACK_NAME_KEY, $qtKeys)) {
-            $qtKeys[QuickTimeMeta::TRACK_NAME_KEY] = $value;
+        if (!array_key_exists(QuickTimeMeta::TRACK_NAME_KEY, $context->qtKeys)) {
+            $context->qtKeys[QuickTimeMeta::TRACK_NAME_KEY] = $value;
         }
     }
 
@@ -739,10 +710,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * QuickTime File Format 2012 §2 "User Data Atoms": recognized atom types are
      * decoded, unknown atom types are ignored without failing the container parse.
      *
-     * @param BoxDescriptor   $atom   Box descriptor for a direct udta child atom.
-     * @param QuickTimeKeyMap $qtKeys
+     * @param BoxDescriptor       $atom    Box descriptor for a direct udta child atom.
+     * @param IsoBmffParseContext $context Shared parse-state context.
      */
-    private function parseUdtaTextAtom(BoxDescriptor $atom, array &$qtKeys): void
+    private function parseUdtaTextAtom(BoxDescriptor $atom, IsoBmffParseContext $context): void
     {
         $key = self::UDTA_TEXT_KEYS[$atom->type] ?? null;
         if ($key === null || $atom->contentSize < 1) {
@@ -759,8 +730,8 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             return;
         }
 
-        if (!array_key_exists($key, $qtKeys)) {
-            $qtKeys[$key] = $value;
+        if (!array_key_exists($key, $context->qtKeys)) {
+            $context->qtKeys[$key] = $value;
         }
     }
 
@@ -770,17 +741,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * QuickTime File Format 2012, "Track Atoms": a track atom may contain
      * a user data atom (`udta`) carrying track-level metadata.
      *
-     * @param BoxDescriptor                                      $trak            Box descriptor for the track container.
-     * @param list<string>                                       $exifBlobs
-     * @param list<string>                                       $xmpBlobs
-     * @param array<int, array<int, list<IsoBmffItemReference>>> $itemReferences
-     * @param array<int, array<int, IsoBmffDataReference>>       $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                        $unresolvedItems
-     * @param array<string, bool>                                $xmpHashes
-     * @param QuickTimeKeyMap                                    $qtKeys
-     * @param QuickTimeDataAtomList                              $qtDataAtoms
+     * @param BoxDescriptor       $trak    Box descriptor for the track container.
+     * @param IsoBmffParseContext $context Shared parse-state context.
      */
-    private function parseTrak(BoxDescriptor $trak, array &$exifBlobs = [], array &$xmpBlobs = [], array &$qtKeys = [], array &$itemReferences = [], array &$dataReferences = [], array &$unresolvedItems = [], array &$xmpHashes = [], array &$qtDataAtoms = []): void
+    private function parseTrak(BoxDescriptor $trak, IsoBmffParseContext $context): void
     {
         $tkhdWidth   = null;
         $tkhdHeight  = null;
@@ -807,14 +771,14 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('trak must contain exactly one mdia box', 1377);
                 }
 
-                [$handler, $handlerName, $sampleInfo] = $this->parseMdia($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
+                [$handler, $handlerName, $sampleInfo] = $this->parseMdia($child, $context);
             } elseif ($child->type === self::BOX_UDTA) {
                 ++$udtaCount;
                 if ($udtaCount > 1) {
                     throw new ParseError('duplicate udta box in trak', 1418);
                 }
 
-                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
+                $this->parseUdtaBox($child, $context);
             }
         }
 
@@ -833,9 +797,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         if (
             $handlerName !== null
             && $handlerName !== ''
-            && !array_key_exists(QuickTimeMeta::HANDLER_DESCRIPTION_KEY, $qtKeys)
+            && !array_key_exists(QuickTimeMeta::HANDLER_DESCRIPTION_KEY, $context->qtKeys)
         ) {
-            $qtKeys[QuickTimeMeta::HANDLER_DESCRIPTION_KEY] = $handlerName;
+            $context->qtKeys[QuickTimeMeta::HANDLER_DESCRIPTION_KEY] = $handlerName;
         }
 
         if ($handler === 'vide') {
@@ -845,64 +809,64 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             if (
                 $width !== null
                 && $width > 0
-                && !array_key_exists(QuickTimeMeta::VIDEO_WIDTH_KEY, $qtKeys)
+                && !array_key_exists(QuickTimeMeta::VIDEO_WIDTH_KEY, $context->qtKeys)
             ) {
-                $qtKeys[QuickTimeMeta::VIDEO_WIDTH_KEY] = $width;
+                $context->qtKeys[QuickTimeMeta::VIDEO_WIDTH_KEY] = $width;
             }
 
             if (
                 $height !== null
                 && $height > 0
-                && !array_key_exists(QuickTimeMeta::VIDEO_HEIGHT_KEY, $qtKeys)
+                && !array_key_exists(QuickTimeMeta::VIDEO_HEIGHT_KEY, $context->qtKeys)
             ) {
-                $qtKeys[QuickTimeMeta::VIDEO_HEIGHT_KEY] = $height;
+                $context->qtKeys[QuickTimeMeta::VIDEO_HEIGHT_KEY] = $height;
             }
 
             if (
                 isset($sampleInfo['format'])
                 && $sampleInfo['format'] !== ''
-                && !array_key_exists(QuickTimeMeta::VIDEO_CODEC_KEY, $qtKeys)
+                && !array_key_exists(QuickTimeMeta::VIDEO_CODEC_KEY, $context->qtKeys)
             ) {
-                $qtKeys[QuickTimeMeta::VIDEO_CODEC_KEY] = $sampleInfo['format'];
+                $context->qtKeys[QuickTimeMeta::VIDEO_CODEC_KEY] = $sampleInfo['format'];
             }
 
             if (
                 isset($sampleInfo['compressorName'])
                 && $sampleInfo['compressorName'] !== ''
-                && !array_key_exists(QuickTimeMeta::COMPRESSOR_NAME_KEY, $qtKeys)
+                && !array_key_exists(QuickTimeMeta::COMPRESSOR_NAME_KEY, $context->qtKeys)
             ) {
-                $qtKeys[QuickTimeMeta::COMPRESSOR_NAME_KEY] = $sampleInfo['compressorName'];
+                $context->qtKeys[QuickTimeMeta::COMPRESSOR_NAME_KEY] = $sampleInfo['compressorName'];
             }
         } elseif ($handler === 'soun') {
             if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
-                if (!array_key_exists(QuickTimeMeta::AUDIO_FORMAT_KEY, $qtKeys)) {
-                    $qtKeys[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
+                if (!array_key_exists(QuickTimeMeta::AUDIO_FORMAT_KEY, $context->qtKeys)) {
+                    $context->qtKeys[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
                 }
 
-                if (!array_key_exists(QuickTimeMeta::AUDIO_CODEC_KEY, $qtKeys)) {
-                    $qtKeys[QuickTimeMeta::AUDIO_CODEC_KEY] = $sampleInfo['format'];
+                if (!array_key_exists(QuickTimeMeta::AUDIO_CODEC_KEY, $context->qtKeys)) {
+                    $context->qtKeys[QuickTimeMeta::AUDIO_CODEC_KEY] = $sampleInfo['format'];
                 }
             }
 
             if (
                 isset($sampleInfo['channels'])
-                && !array_key_exists(QuickTimeMeta::AUDIO_CHANNELS_KEY, $qtKeys)
+                && !array_key_exists(QuickTimeMeta::AUDIO_CHANNELS_KEY, $context->qtKeys)
             ) {
-                $qtKeys[QuickTimeMeta::AUDIO_CHANNELS_KEY] = $sampleInfo['channels'];
+                $context->qtKeys[QuickTimeMeta::AUDIO_CHANNELS_KEY] = $sampleInfo['channels'];
             }
 
             if (
                 isset($sampleInfo['bitsPerSample'])
-                && !array_key_exists(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY, $qtKeys)
+                && !array_key_exists(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY, $context->qtKeys)
             ) {
-                $qtKeys[QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY] = $sampleInfo['bitsPerSample'];
+                $context->qtKeys[QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY] = $sampleInfo['bitsPerSample'];
             }
 
             if (
                 isset($sampleInfo['sampleRate'])
-                && !array_key_exists(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY, $qtKeys)
+                && !array_key_exists(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY, $context->qtKeys)
             ) {
-                $qtKeys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY] = $sampleInfo['sampleRate'];
+                $context->qtKeys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY] = $sampleInfo['sampleRate'];
             }
         }
     }
@@ -1108,19 +1072,12 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * child of mdia in addition to moov and trak. Media-level user data is
      * parsed with the same strategy as other udta paths (GH-1004).
      *
-     * @param BoxDescriptor                                      $mdia            Media box descriptor.
-     * @param list<string>                                       $exifBlobs
-     * @param list<string>                                       $xmpBlobs
-     * @param array<int, array<int, list<IsoBmffItemReference>>> $itemReferences
-     * @param array<int, array<int, IsoBmffDataReference>>       $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                        $unresolvedItems
-     * @param array<string, bool>                                $xmpHashes
-     * @param QuickTimeKeyMap                                    $qtKeys
-     * @param QuickTimeDataAtomList                              $qtDataAtoms
+     * @param BoxDescriptor       $mdia    Media box descriptor.
+     * @param IsoBmffParseContext $context Shared parse-state context.
      *
      * @return array{0: ?string, 1: ?string, 2: array<string, int|string>}
      */
-    private function parseMdia(BoxDescriptor $mdia, array &$exifBlobs = [], array &$xmpBlobs = [], array &$qtKeys = [], array &$itemReferences = [], array &$dataReferences = [], array &$unresolvedItems = [], array &$xmpHashes = [], array &$qtDataAtoms = []): array
+    private function parseMdia(BoxDescriptor $mdia, IsoBmffParseContext $context): array
     {
         $handler     = null;
         $handlerName = null;
@@ -1165,7 +1122,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('duplicate udta box in mdia', 1463);
                 }
 
-                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
+                $this->parseUdtaBox($child, $context);
             }
         }
 
@@ -1690,18 +1647,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     /**
      * Parses the ISO BMFF metadata box and resolves payload references.
      *
-     * @param BoxDescriptor                                      $meta             Box descriptor for the metadata box.
-     * @param list<string>                                       $exifBlobs
-     * @param list<string>                                       $xmpBlobs
-     * @param array<int, array<int, list<IsoBmffItemReference>>> $itemReferences
-     * @param array<int, array<int, IsoBmffDataReference>>       $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                        $unresolvedItems
-     * @param array<string, bool>                                $xmpHashes
-     * @param QuickTimeKeyMap                                    $qtKeys
-     * @param QuickTimeDataAtomList                              $qtDataAtoms
-     * @param int                                                $fileOffsetOrigin Absolute file-offset origin for iloc file-offset items.
+     * @param BoxDescriptor       $meta             Box descriptor for the metadata box.
+     * @param IsoBmffParseContext $context          Shared parse-state context.
+     * @param int                 $fileOffsetOrigin Absolute file-offset origin for iloc file-offset items.
      */
-    private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = [], int $fileOffsetOrigin = 0): void
+    private function parseMetaBox(BoxDescriptor $meta, IsoBmffParseContext $context, int $fileOffsetOrigin = 0): void
     {
         if ($meta->contentSize < 4) {
             throw new ParseError('meta box truncated', 1162);
@@ -1710,41 +1660,53 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         // EXIF 3.0 Annex A.2 describes how the `meta` box aggregates
         // direct Exif boxes, UUID-wrapped payloads and item references, so we collect each
         // channel before normalising the referenced data.
-        $payloads       = $this->collectDirectPayloads($meta, $fileOffsetOrigin);
-        $itemReferences = $this->mergeItemReferencesByContext($itemReferences, $meta->offset, $payloads['itemReferences']);
-        $dataReferences = $this->mergeDataReferencesByContext($dataReferences, $meta->offset, $payloads['dataReferences']);
-        $idatPayload    = $payloads['idatPayload'];
+        $payloads                = $this->collectDirectPayloads($meta, $fileOffsetOrigin);
+        $context->itemReferences = $this->mergeItemReferencesByContext($context->itemReferences, $meta->offset, $payloads['itemReferences']);
+        $context->dataReferences = $this->mergeDataReferencesByContext($context->dataReferences, $meta->offset, $payloads['dataReferences']);
+
+        $idatPayload = $payloads['idatPayload'];
 
         [$exifItemIds, $xmpItemIds] = $this->gatherItemIds($payloads['itemInfos'], $payloads['primaryItemId']);
 
         // Resolve EXIF item payloads and normalize leading headers.
         // EXIF 3.0 §4.8 notes that item payloads omit the APP1 signature; some
         // encoders still include it, so we normalise accordingly.
-        foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $payloads['itemReferences'], $this->normalizeExifBlob(...), $payloads['dataReferences'], $idatPayload, $unresolvedItems, $meta->offset) as $blob) {
-            $exifBlobs[] = $blob;
+        foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $payloads['itemReferences'], $this->normalizeExifBlob(...), $payloads['dataReferences'], $idatPayload, $context->unresolvedItems, $meta->offset) as $blob) {
+            $context->exifBlobs[] = $blob;
         }
 
         // EXIF 3.0 Annex A item metadata: when both item-based and direct Exif payloads
         // are present, keep item-based payloads first so pitm-driven default selection
         // remains deterministic for MetadataReader::fromIsoBmff().
         foreach ($payloads['directExif'] as $blob) {
-            $exifBlobs[] = $blob;
+            $context->exifBlobs[] = $blob;
         }
 
         // Resolve referenced XMP payloads in declared priority order.
-        foreach ($this->resolveQueuedItems($xmpItemIds, $payloads['locations'], $payloads['itemReferences'], null, $payloads['dataReferences'], $idatPayload, $unresolvedItems, $meta->offset) as $blob) {
-            $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
+        foreach ($this->resolveQueuedItems($xmpItemIds, $payloads['locations'], $payloads['itemReferences'], null, $payloads['dataReferences'], $idatPayload, $context->unresolvedItems, $meta->offset) as $blob) {
+            $this->appendUniqueXmp($context->xmpBlobs, $context->xmpHashes, $blob);
         }
 
         foreach ($payloads['directXmp'] as $blob) {
-            $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
+            $this->appendUniqueXmp($context->xmpBlobs, $context->xmpHashes, $blob);
         }
 
         foreach ($payloads['uuidXmp'] as $blob) {
-            $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
+            $this->appendUniqueXmp($context->xmpBlobs, $context->xmpHashes, $blob);
         }
 
-        [$qtKeys, $qtDataAtoms] = $this->mergeQuickTimeKeys($qtKeys, $payloads['keysMaps'], $payloads['ilstBoxes'], $qtDataAtoms, $payloads['hasMhdr'], $payloads['countryLists'], $payloads['languageLists'], $payloads['isMdta']);
+        [$mergedQtKeys, $mergedQtDataAtoms] = $this->mergeQuickTimeKeys(
+            $context->qtKeys,
+            $payloads['keysMaps'],
+            $payloads['ilstBoxes'],
+            $context->qtDataAtoms,
+            $payloads['hasMhdr'],
+            $payloads['countryLists'],
+            $payloads['languageLists'],
+            $payloads['isMdta'],
+        );
+        $context->qtKeys      = $mergedQtKeys;
+        $context->qtDataAtoms = $mergedQtDataAtoms;
     }
 
     /**
