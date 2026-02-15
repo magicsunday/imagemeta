@@ -267,3 +267,19 @@ Bit-mask sources such as `SceneFlags`, `ImageProcessingFlags` and `PhotosAppFeat
 * `PhotosAppFeatureFlags`: bit 0 → `personInPhoto`, bit 1 → `petInPhoto`
 
 Explicit boolean keys continue to override the derived values when both representations are present.
+
+## Security
+
+ImageMeta implements multiple security controls to ensure safe parsing of untrusted image files:
+
+* **XXE Protection:** All XML parsing uses `LIBXML_NONET | LIBXML_NO_XXE` flags to prevent XML External Entity attacks
+* **DoS Protection:** Hard limits on IFD entries (10,000), payload sizes (8 MB), and nesting depth
+* **Bounds Checking:** All stream operations are bounds-checked to prevent buffer overflows
+* **Zero External Dependencies:** No composer dependencies, minimal attack surface
+* **Streaming Architecture:** No full-file reads, minimizing memory exhaustion risks
+
+For reporting security vulnerabilities, please see our [Security Policy](SECURITY.md).
+
+## License
+
+This library is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
