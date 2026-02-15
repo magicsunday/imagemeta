@@ -524,6 +524,33 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects an iloc box with version 255.
+     * Confirms upper-bound version gating rejects any value above 2.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocUnsupportedVersion255(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported iloc box version');
+
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+
+        $ilocPayload = "\x44";       // offset_size=4, length_size=4
+        $ilocPayload .= "\x00";       // base_offset_size=0, index_size=0
+        $ilocPayload .= pack('N', 0); // version 255 would still use v2-like widths if not rejected
+        $iloc = $this->fullBox('iloc', $ilocPayload, 255, 0);
+
+        $meta = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Rejects an iloc box with non-zero flags.
      *
      * @return void
