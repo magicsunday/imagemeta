@@ -1899,12 +1899,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('audio sample entry truncated', 1160);
         }
 
-        $channels      = $win->readU16BE();
-        $sampleSize    = $win->readU16BE();
-        $compressionId = $win->readU16BE();
-        // Packet size is retained for container compatibility but is not currently
-        // surfaced in the extracted metadata model.
-        $win->readU16BE();
+        $channels         = $win->readU16BE();
+        $sampleSize       = $win->readU16BE();
+        $compressionId    = $win->readU16BE();
+        $packetSize       = $win->readU16BE();
+        $normalizedFormat = $this->normaliseFourcc($format);
 
         if ($version === 0) {
             if ($channels !== 1 && $channels !== 2) {
@@ -1918,10 +1917,23 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             if ($compressionId !== 0) {
                 throw new ParseError('audio sample entry version 0 compression ID must be 0', 1505);
             }
+
+            if ($packetSize !== 0) {
+                throw new ParseError('audio sample entry version 0 packet size must be 0', 1506);
+            }
+
+            $legacyFormat = rtrim($normalizedFormat, ' ');
+            if ($legacyFormat !== 'raw' && $legacyFormat !== 'twos') {
+                throw new ParseError('audio sample entry version 0 format must be "raw " or "twos"', 1507);
+            }
         }
 
         $sampleRateRaw = $win->readU32BE();
-        $sampleRate    = $this->decodeAudioSampleRate16_16($sampleRateRaw);
+        if ($version === 0 && $sampleRateRaw > 0xFFFF0000) {
+            throw new ParseError('audio sample entry version 0 sampleRate must be <= 65535', 1508);
+        }
+
+        $sampleRate = $this->decodeAudioSampleRate16_16($sampleRateRaw);
 
         if ($version === 1) {
             if ($win->tell() + 16 > $entryEnd) {
@@ -1948,7 +1960,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $this->validateAudioSampleRateTimescaleRelation($sampleRate, $mdhdTimescale);
 
         return [
-            'format'        => $this->normaliseFourcc($format),
+            'format'        => $normalizedFormat,
             'channels'      => $channels,
             'bitsPerSample' => $sampleSize,
             'sampleRate'    => $sampleRate,

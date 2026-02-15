@@ -3397,7 +3397,7 @@ final class IsoBmffParserTest extends TestCase
     public function parsesAudioStsdVersion0Entry(): void
     {
         $entry = $this->audioSampleEntryVersion0(
-            format: 'mp4a',
+            format: 'raw ',
             channels: 2,
             sampleSize: 16,
             sampleRate: 44100,
@@ -3407,7 +3407,7 @@ final class IsoBmffParserTest extends TestCase
         [, , $quickTime] = $extractor->extract();
 
         self::assertNotNull($quickTime);
-        self::assertSame('mp4a', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
+        self::assertSame('raw', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
         self::assertSame(2, $quickTime->intValue(QuickTimeMeta::AUDIO_CHANNELS_KEY));
         self::assertSame(16, $quickTime->intValue(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY));
         self::assertSame(44100, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
@@ -3425,7 +3425,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('audio sample entry version 0 channels must be 1 or 2');
 
         $entry = $this->audioSampleEntryVersion0(
-            format: 'mp4a',
+            format: 'raw ',
             channels: 6,
             sampleSize: 16,
             sampleRate: 44100,
@@ -3446,7 +3446,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('audio sample entry version 0 sample size must be 8 or 16 bits');
 
         $entry = $this->audioSampleEntryVersion0(
-            format: 'mp4a',
+            format: 'raw ',
             channels: 2,
             sampleSize: 24,
             sampleRate: 44100,
@@ -3467,11 +3467,54 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('audio sample entry version 0 compression ID must be 0');
 
         $entry = $this->audioSampleEntryVersion0(
-            format: 'mp4a',
+            format: 'raw ',
             channels: 2,
             sampleSize: 16,
             sampleRate: 44100,
             compressionId: 1,
+        );
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects version 0 audio sample entries with non-zero packet sizes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdVersion0EntryWithNonZeroPacketSize(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample entry version 0 packet size must be 0');
+
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'raw ',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 44100,
+            packetSize: 1,
+        );
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects version 0 audio sample entries with non-legacy format codes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdVersion0EntryWithNonLegacyFormat(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample entry version 0 format must be "raw " or "twos"');
+
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 44100,
         );
 
         $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
@@ -3570,12 +3613,12 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('sampling rate box is only allowed in audio sample entry version 1');
 
         $entry = $this->audioSampleEntryVersion0(
-            format: 'mp4a',
+            format: 'raw ',
             channels: 2,
             sampleSize: 16,
             sampleRate: 44100,
         );
-        $entry = $this->box('mp4a', substr($entry, 8) . $this->box('srat', pack('N', 48000)));
+        $entry = $this->box('raw ', substr($entry, 8) . $this->box('srat', pack('N', 48000)));
 
         $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
     }
@@ -3589,7 +3632,7 @@ final class IsoBmffParserTest extends TestCase
     public function parsesAudioStsdSampleRateMatchingMdhdTimescale(): void
     {
         $entry = $this->audioSampleEntryVersion0(
-            format: 'mp4a',
+            format: 'raw ',
             channels: 2,
             sampleSize: 16,
             sampleRate: 48000,
@@ -3611,7 +3654,7 @@ final class IsoBmffParserTest extends TestCase
     public function parsesAudioStsdSampleRateWithIntegerTimescaleRelation(): void
     {
         $entry = $this->audioSampleEntryVersion0(
-            format: 'mp4a',
+            format: 'raw ',
             channels: 2,
             sampleSize: 16,
             sampleRate: 24000,
@@ -3636,7 +3679,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('audio sample entry sampleRate must be an integer 16.16 value');
 
         $entry = $this->audioSampleEntryVersion0(
-            format: 'mp4a',
+            format: 'raw ',
             channels: 2,
             sampleSize: 16,
             sampleRate: 44100,
@@ -3658,12 +3701,34 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('audio sample rate must be positive');
 
         $entry = $this->audioSampleEntryVersion0(
-            format: 'mp4a',
+            format: 'raw ',
             channels: 2,
             sampleSize: 16,
             sampleRate: 44100,
         );
         $entry = substr($entry, 0, -4) . pack('N', 0);
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects version 0 audio sample entries above the documented 16.16 ceiling.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdVersion0EntryWithSampleRateAboveDocumentedLimit(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample entry version 0 sampleRate must be <= 65535');
+
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'raw ',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 44100,
+        );
+        $entry = substr($entry, 0, -4) . pack('N', 0xFFFF0001);
 
         $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
     }
@@ -3680,7 +3745,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('audio sample rate and mdhd timescale must be equal or integer multiple/division');
 
         $entry = $this->audioSampleEntryVersion0(
-            format: 'mp4a',
+            format: 'raw ',
             channels: 2,
             sampleSize: 16,
             sampleRate: 44100,
@@ -5470,15 +5535,15 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function multiTrackAudioUsesFirstTrackDeterministically(): void
     {
-        $audioOne = $this->audioSampleEntryVersion0('mp4a', 2, 16, 44_100);
-        $audioTwo = $this->audioSampleEntryVersion0('sowt', 1, 8, 22_050);
+        $audioOne = $this->audioSampleEntryVersion0('raw ', 2, 16, 44_100);
+        $audioTwo = $this->audioSampleEntryVersion0('twos', 1, 8, 22_050);
 
         $extractor    = $this->createExtractor($this->createFileWithAudioTracks($audioOne, $audioTwo));
         [, , $qtMeta] = $extractor->extract();
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
-        self::assertSame('mp4a', $qtMeta->keys[QuickTimeMeta::AUDIO_FORMAT_KEY]);
-        self::assertSame('mp4a', $qtMeta->keys[QuickTimeMeta::AUDIO_CODEC_KEY]);
+        self::assertSame('raw ', $qtMeta->keys[QuickTimeMeta::AUDIO_FORMAT_KEY]);
+        self::assertSame('raw ', $qtMeta->keys[QuickTimeMeta::AUDIO_CODEC_KEY]);
         self::assertSame(2, $qtMeta->keys[QuickTimeMeta::AUDIO_CHANNELS_KEY]);
         self::assertSame(16, $qtMeta->keys[QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY]);
         self::assertSame(44_100, $qtMeta->keys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY]);
