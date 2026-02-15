@@ -1217,6 +1217,66 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Uses a PCM APP2 audio segment with 24-bit samples.
+     * This verifies EXIF 3.0-compliant 24-bit PCM streams are accepted.
+     *
+     * @return void
+     */
+    #[Test]
+    public function pcmTwentyFourBitAudioSegmentIsCollected(): void
+    {
+        $pcmData = "\x01\x02\x03\x04\x05\x06";
+        $segment = self::segment(self::MARKER_APP2, $this->audioPayload(0, 1, 44_100, 24, $pcmData));
+        $jpeg    = $this->jpeg($segment);
+
+        $extractor = $this->createExtractor($jpeg);
+        $streams   = $extractor->getAudioStreams();
+
+        self::assertCount(1, $streams);
+        self::assertSame('PCM', $streams[0]->format);
+        self::assertSame(24, $streams[0]->bitDepth);
+        self::assertSame($pcmData, $streams[0]->data);
+    }
+
+    /**
+     * Uses a PCM APP2 audio segment with a non-conformant bit depth.
+     * This asserts a ParseError for bit depths outside EXIF 3.0 §5.4.2.
+     *
+     * @return void
+     */
+    #[Test]
+    public function pcmAudioSegmentWithUnsupportedBitDepthThrows(): void
+    {
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(0, 1, 44_100, 12, str_repeat("\x00", 8)));
+        $jpeg    = $this->jpeg($payload);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+
+        $extractor->getAudioStreams();
+    }
+
+    /**
+     * Uses a 24-bit PCM APP2 segment with payload length inconsistent to sample metadata.
+     * This verifies malformed sample-length combinations still throw ParseError.
+     *
+     * @return void
+     */
+    #[Test]
+    public function pcmTwentyFourBitAudioSegmentWithInconsistentDataLengthThrows(): void
+    {
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(0, 2, 44_100, 24, "\x01\x02\x03\x04\x05\x06\x07"));
+        $jpeg    = $this->jpeg($payload);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+
+        $extractor->getAudioStreams();
+    }
+
+    /**
      * Splits an MPF payload across two APP2 segments.
      * This confirms the MPF parser receives a reassembled payload with expected entries.
      *
