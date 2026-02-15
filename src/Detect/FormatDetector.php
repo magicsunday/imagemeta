@@ -27,6 +27,9 @@ final readonly class FormatDetector
     /**
      * Box types that indicate an ISO BMFF / QuickTime container.
      *
+     * Note: 'uuid' is a generic user-extension box and is not treated as a
+     * definitive signature without additional structural evidence.
+     *
      * @var array<string, bool>
      */
     private const array ISO_BMFF_SIGNATURE_BOXES = [
@@ -37,7 +40,6 @@ final readonly class FormatDetector
         'meta' => true,
         'moof' => true,
         'mfra' => true,
-        'uuid' => true,
     ];
 
     /**

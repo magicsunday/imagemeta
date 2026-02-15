@@ -26,7 +26,9 @@ use PHPUnit\Framework\TestCase;
 
 use function fopen;
 use function fwrite;
+use function hex2bin;
 use function rewind;
+use function str_repeat;
 use function strlen;
 
 /**
@@ -100,6 +102,42 @@ final class FormatDetectorTest extends TestCase
     {
         $stream = $this->createStream("\x00\x00\x00\x08free\x00\x00\x00\x18ftypqt  ");
 
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::ISOBMFF, $detected);
+    }
+
+    /**
+     * Leading uuid alone is not sufficient evidence for ISO-BMFF detection.
+     *
+     * @return void
+     */
+    #[Test]
+    public function detectRejectsUuidOnlyTopLevelSignature(): void
+    {
+        $uuidOnly = hex2bin('0000001875756964' . str_repeat('00', 16));
+        self::assertIsString($uuidOnly);
+
+        $stream = $this->createStream($uuidOnly);
+        $this->expectException(ParseError::class);
+
+        (new FormatDetector())->detect($stream);
+    }
+
+    /**
+     * Leading uuid followed by a valid structural signature must still detect ISO-BMFF.
+     *
+     * @return void
+     */
+    #[Test]
+    public function detectRecognisesIsoBmffAfterLeadingUuid(): void
+    {
+        $uuidBox = hex2bin('0000001875756964' . str_repeat('00', 16));
+        $ftyp    = hex2bin('000000106674797069736F6D00000000');
+        self::assertIsString($uuidBox);
+        self::assertIsString($ftyp);
+
+        $stream   = $this->createStream($uuidBox . $ftyp);
         $detected = (new FormatDetector())->detect($stream);
 
         self::assertSame(ContainerType::ISOBMFF, $detected);
