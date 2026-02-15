@@ -5138,6 +5138,42 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * UTF-8 payloads with a leading NUL byte are preserved as-is.
+     */
+    #[Test]
+    public function preservesLeadingNullByteInUtf8DataPayload(): void
+    {
+        $payload = hex2bin('00616263');
+        self::assertIsString($payload);
+
+        $file = $this->createQuickTimeMetaWithDataPayload(1, $payload);
+
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame($payload, $qtMeta->keys['com.apple.quicktime.content.identifier']);
+    }
+
+    /**
+     * UTF-8 payloads with a trailing NUL byte are preserved as-is.
+     */
+    #[Test]
+    public function preservesTrailingNullByteInUtf8DataPayload(): void
+    {
+        $payload = hex2bin('61626300');
+        self::assertIsString($payload);
+
+        $file = $this->createQuickTimeMetaWithDataPayload(1, $payload);
+
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame($payload, $qtMeta->keys['com.apple.quicktime.content.identifier']);
+    }
+
+    /**
      * Invalid UTF-8 byte sequence in data payload triggers ParseError.
      */
     #[Test]

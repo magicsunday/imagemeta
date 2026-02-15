@@ -4241,8 +4241,8 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             }
 
             // QuickTime File Format 2012, Table 3-5: UTF-8 variants are stored
-            // without NUL terminator; tolerate trailing NUL bytes from encoders.
-            return rtrim($payload, "\0");
+            // as raw UTF-8 bytes without count/terminator metadata.
+            return $payload;
         }
 
         if ($type === self::DATA_TYPE_SHIFT_JIS) {
