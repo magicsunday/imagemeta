@@ -16,6 +16,13 @@ use DateTimeZone;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Exif\Adapter\CameraMetadataAdapter;
+use MagicSunday\ImageMeta\Exif\Adapter\DeviceMetadataAdapter;
+use MagicSunday\ImageMeta\Exif\Adapter\ExposureMetadataAdapter;
+use MagicSunday\ImageMeta\Exif\Adapter\GpsMetadataAdapter;
+use MagicSunday\ImageMeta\Exif\Adapter\ImageMetadataAdapter;
+use MagicSunday\ImageMeta\Exif\Adapter\LensMetadataAdapter;
+use MagicSunday\ImageMeta\Exif\Adapter\TemporalMetadataAdapter;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
 use MagicSunday\ImageMeta\Exif\Text\JisTextDecoder;
 use MagicSunday\ImageMeta\Exif\Text\UndefinedTextMarker;
@@ -180,6 +187,62 @@ final readonly class ParsedExif
     public function subIfds(): array
     {
         return $this->subIfds;
+    }
+
+    /**
+     * Returns the camera metadata domain adapter.
+     */
+    public function cameraMetadata(): CameraMetadataAdapter
+    {
+        return new CameraMetadataAdapter($this);
+    }
+
+    /**
+     * Returns the lens metadata domain adapter.
+     */
+    public function lensMetadata(): LensMetadataAdapter
+    {
+        return new LensMetadataAdapter($this);
+    }
+
+    /**
+     * Returns the exposure metadata domain adapter.
+     */
+    public function exposureMetadata(): ExposureMetadataAdapter
+    {
+        return new ExposureMetadataAdapter($this);
+    }
+
+    /**
+     * Returns the device metadata domain adapter.
+     */
+    public function deviceMetadata(): DeviceMetadataAdapter
+    {
+        return new DeviceMetadataAdapter($this);
+    }
+
+    /**
+     * Returns the image metadata domain adapter.
+     */
+    public function imageMetadata(): ImageMetadataAdapter
+    {
+        return new ImageMetadataAdapter($this);
+    }
+
+    /**
+     * Returns the temporal metadata domain adapter.
+     */
+    public function temporalMetadata(): TemporalMetadataAdapter
+    {
+        return new TemporalMetadataAdapter($this);
+    }
+
+    /**
+     * Returns the GPS metadata domain adapter.
+     */
+    public function gpsMetadata(): GpsMetadataAdapter
+    {
+        return new GpsMetadataAdapter($this);
     }
 
     /**
