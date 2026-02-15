@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
@@ -48,15 +49,17 @@ final class TiffExifParserJpegProcTest extends TestCase
     }
 
     /**
-     * Compression=6 with JPEGProc=14 is valid.
+     * Compression=6 with JPEGProc=14 is valid when lossless predictors are present.
      */
     #[Test]
     public function acceptsJpegProcLosslessWithJpegCompression(): void
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
-                TiffTag::JPEG_PROC   => $this->shortEntry(TiffTag::JPEG_PROC, 14),
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
+                TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 14),
+                TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 1),
             ]),
         );
 
@@ -136,6 +139,127 @@ final class TiffExifParserJpegProcTest extends TestCase
     }
 
     /**
+     * JPEG lossless tags are valid for JPEGProc=14 with SHORT[SamplesPerPixel] layout.
+     */
+    #[Test]
+    public function acceptsLosslessJpegPredictorsAndPointTransforms(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 14),
+                ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
+                TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 4),
+                TiffTag::JPEG_POINT_TRANSFORMS    => $this->shortEntry(TiffTag::JPEG_POINT_TRANSFORMS, 0),
+            ]),
+        );
+
+        $ifd1 = $parsed->ifd1;
+        self::assertInstanceOf(Ifd::class, $ifd1);
+        self::assertSame(4, $ifd1->get(TiffTag::JPEG_LOSSLESS_PREDICTORS)?->value);
+        self::assertSame(0, $ifd1->get(TiffTag::JPEG_POINT_TRANSFORMS)?->value);
+    }
+
+    /**
+     * JPEGProc=14 requires JPEGLosslessPredictors.
+     */
+    #[Test]
+    public function rejectsLosslessJpegProcWithoutPredictors(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('JPEGProc=14 requires JPEGLosslessPredictors');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                TiffTag::JPEG_PROC         => $this->shortEntry(TiffTag::JPEG_PROC, 14),
+                ExifTag::SAMPLES_PER_PIXEL => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
+            ]),
+        );
+    }
+
+    /**
+     * JPEGLosslessPredictors values are restricted to 1..7.
+     */
+    #[Test]
+    public function rejectsOutOfRangeLosslessPredictorValue(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('JPEGLosslessPredictors component 0 value 8 is invalid');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 14),
+                ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
+                TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 8),
+            ]),
+        );
+    }
+
+    /**
+     * JPEGLosslessPredictors and JPEGPointTransforms must use SHORT[SamplesPerPixel].
+     */
+    #[Test]
+    public function rejectsInvalidLosslessJpegTagLayout(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('JPEGLosslessPredictors must be SHORT[SamplesPerPixel]');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 14),
+                ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 2),
+                TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->numericEntry(
+                    TiffTag::JPEG_LOSSLESS_PREDICTORS,
+                    TiffConst::TYPE_LONG,
+                    1,
+                    [4],
+                ),
+            ]),
+        );
+    }
+
+    /**
+     * JPEGLosslessPredictors is invalid unless JPEGProc=14.
+     */
+    #[Test]
+    public function rejectsLosslessPredictorsWithNonLosslessJpegProc(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('JPEGLosslessPredictors is only valid when JPEGProc=14');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 1),
+                ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
+                TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 4),
+            ]),
+        );
+    }
+
+    /**
+     * JPEGPointTransforms is invalid unless JPEGProc=14.
+     */
+    #[Test]
+    public function rejectsPointTransformsWithNonLosslessJpegProc(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('JPEGPointTransforms is only valid when JPEGProc=14');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                TiffTag::JPEG_PROC             => $this->shortEntry(TiffTag::JPEG_PROC, 1),
+                ExifTag::SAMPLES_PER_PIXEL     => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
+                TiffTag::JPEG_POINT_TRANSFORMS => $this->shortEntry(TiffTag::JPEG_POINT_TRANSFORMS, 0),
+            ]),
+        );
+    }
+
+    /**
      * @param array<int, string> $ifd0ExtraEntries
      */
     private function buildBlobWithIfd0(array $ifd0ExtraEntries): string
@@ -143,8 +267,11 @@ final class TiffExifParserJpegProcTest extends TestCase
         $ifd0Entries = [
             ExifTag::IMAGE_WIDTH  => $this->shortEntry(ExifTag::IMAGE_WIDTH, 64),
             ExifTag::IMAGE_LENGTH => $this->shortEntry(ExifTag::IMAGE_LENGTH, 64),
-            ...$ifd0ExtraEntries,
         ];
+
+        foreach ($ifd0ExtraEntries as $tag => $entry) {
+            $ifd0Entries[$tag] = $entry;
+        }
 
         ksort($ifd0Entries);
 
@@ -169,8 +296,11 @@ final class TiffExifParserJpegProcTest extends TestCase
         $ifd1Entries = [
             ExifTag::IMAGE_WIDTH  => $this->shortEntry(ExifTag::IMAGE_WIDTH, 16),
             ExifTag::IMAGE_LENGTH => $this->shortEntry(ExifTag::IMAGE_LENGTH, 16),
-            ...$ifd1ExtraEntries,
         ];
+
+        foreach ($ifd1ExtraEntries as $tag => $entry) {
+            $ifd1Entries[$tag] = $entry;
+        }
 
         ksort($ifd0Entries);
         ksort($ifd1Entries);

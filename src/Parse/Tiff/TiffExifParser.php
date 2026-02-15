@@ -1367,6 +1367,7 @@ final class TiffExifParser implements TiffExifParserInterface
             $this->validateFillOrderTag($additionalIfd);
             $this->validatePredictorTag($additionalIfd);
             $this->validateJpegProcTag($additionalIfd);
+            $this->validateJpegLosslessTags($additionalIfd);
             $this->validateJpegInterchangePairTags($additionalIfd);
             $this->validateMinMaxSampleValueTags($additionalIfd);
             $this->validateSampleDomainTags($additionalIfd);
@@ -1464,6 +1465,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->validateFillOrderTag($ifd0);
         $this->validatePredictorTag($ifd0);
         $this->validateJpegProcTag($ifd0);
+        $this->validateJpegLosslessTags($ifd0);
         $this->validateJpegInterchangePairTags($ifd0);
         $this->validateMinMaxSampleValueTags($ifd0);
         $this->validateSampleDomainTags($ifd0);
@@ -2735,6 +2737,83 @@ final class TiffExifParser implements TiffExifParserInterface
 
         if ($isJpegCompression) {
             throw new ParseError('Compression=6 requires JPEGProc per TIFF 6.0 Section 22.', 1829);
+        }
+    }
+
+    /**
+     * Validates lossless JPEG predictor/point-transform semantics.
+     *
+     * TIFF 6.0 Section 22 defines JPEGLosslessPredictors and JPEGPointTransforms
+     * as SHORT arrays with count SamplesPerPixel. JPEGLosslessPredictors is
+     * mandatory for JPEGProc=14 and predictor values are limited to 1..7.
+     * JPEGPointTransforms defaults to zero per component when omitted.
+     */
+    private function validateJpegLosslessTags(Ifd $ifd): void
+    {
+        $jpegProcEntry = $ifd->get(TiffTag::JPEG_PROC);
+        $jpegProc      = (($jpegProcEntry instanceof IfdEntry) && is_int($jpegProcEntry->value))
+            ? $jpegProcEntry->value
+            : null;
+
+        $samplesPerPixelEntry = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+        $samplesPerPixel      = 1;
+
+        if (($samplesPerPixelEntry instanceof IfdEntry) && is_int($samplesPerPixelEntry->value) && ($samplesPerPixelEntry->value > 0)) {
+            $samplesPerPixel = $samplesPerPixelEntry->value;
+        }
+
+        $losslessPredictorsEntry = $ifd->get(TiffTag::JPEG_LOSSLESS_PREDICTORS);
+        if ($losslessPredictorsEntry instanceof IfdEntry) {
+            if (
+                ($losslessPredictorsEntry->type !== TiffConst::TYPE_SHORT)
+                || ($losslessPredictorsEntry->count !== $samplesPerPixel)
+            ) {
+                throw new ParseError('JPEGLosslessPredictors must be SHORT[SamplesPerPixel].', 1836);
+            }
+
+            $predictorValues = $this->extractIntegerTagComponents($losslessPredictorsEntry, 'JPEGLosslessPredictors');
+            foreach ($predictorValues as $componentIndex => $predictorValue) {
+                if (($predictorValue >= 1) && ($predictorValue <= 7)) {
+                    continue;
+                }
+
+                throw new ParseError(
+                    sprintf(
+                        'JPEGLosslessPredictors component %d value %d is invalid; allowed values are 1..7.',
+                        $componentIndex,
+                        $predictorValue,
+                    ),
+                    1837,
+                );
+            }
+        }
+
+        $pointTransformsEntry = $ifd->get(TiffTag::JPEG_POINT_TRANSFORMS);
+        if ($pointTransformsEntry instanceof IfdEntry) {
+            if (
+                ($pointTransformsEntry->type !== TiffConst::TYPE_SHORT)
+                || ($pointTransformsEntry->count !== $samplesPerPixel)
+            ) {
+                throw new ParseError('JPEGPointTransforms must be SHORT[SamplesPerPixel].', 1838);
+            }
+
+            $this->extractIntegerTagComponents($pointTransformsEntry, 'JPEGPointTransforms');
+        }
+
+        if ($jpegProc === 14) {
+            if (!$losslessPredictorsEntry instanceof IfdEntry) {
+                throw new ParseError('JPEGProc=14 requires JPEGLosslessPredictors.', 1839);
+            }
+
+            return;
+        }
+
+        if ($losslessPredictorsEntry instanceof IfdEntry) {
+            throw new ParseError('JPEGLosslessPredictors is only valid when JPEGProc=14.', 1840);
+        }
+
+        if ($pointTransformsEntry instanceof IfdEntry) {
+            throw new ParseError('JPEGPointTransforms is only valid when JPEGProc=14.', 1841);
         }
     }
 
