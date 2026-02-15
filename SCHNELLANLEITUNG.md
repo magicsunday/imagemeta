@@ -4,6 +4,11 @@
 
 Sie haben jetzt **`create_all_38_issues.sh`** - ein vollständiges Shell-Skript, das ALLE 38 Issues auf einmal erstellt.
 
+## ⚡ Update (2026-02-15)
+
+**Problem behoben**: Das Skript brach nach dem ersten Issue ab (`set -e` Flag).  
+**Lösung**: Fehlerbehandlung verbessert - Skript verarbeitet jetzt **alle 38 Issues**, auch wenn einzelne fehlschlagen.
+
 ## Vorteile
 
 ✅ **Keine Python-Installation** nötig  
@@ -141,6 +146,21 @@ gh auth login --web
 ### "Label not found"
 
 Das Skript erstellt automatisch alle Labels im ersten Schritt. Falls es fehlschlägt, prüfen Sie Ihre Berechtigungen.
+
+### Skript bricht nach Issue 1/38 ab
+
+**Problem gelöst!** (Version 2026-02-15)
+
+Das Skript hatte ein `set -e` Flag, das bei jedem Fehler das komplette Skript abbrach. Das ist jetzt behoben:
+
+✅ **Neue Version**: Verarbeitet ALLE 38 Issues  
+✅ **Robuste Fehlerbehandlung**: Zeigt Fehler, läuft aber weiter  
+✅ **Besseres Debugging**: Zeigt gh CLI Output für jeden Fehler
+
+Wenn Sie die alte Version haben, aktualisieren Sie:
+```bash
+git pull origin copilot/forensic-audit-code-compliance
+```
 
 ## Nach der Erstellung
 
