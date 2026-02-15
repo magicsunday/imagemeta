@@ -1777,9 +1777,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         /** @var list<array<int, QuickTimeKeyEntry>> $keysMaps */
         $keysMaps = [];
         /** @var list<BoxDescriptor> $ilstBoxes */
-        $ilstBoxes   = [];
-        $handlerType = null;
-        $hasMhdr     = false;
+        $ilstBoxes    = [];
+        $handlerType  = null;
+        $hdlrCount    = 0;
+        $requiresHdlr = false;
+        $hasMhdr      = false;
         /** @var list<list<int>> $countryLists */
         $countryLists = [];
         /** @var list<list<int>> $languageLists */
@@ -1789,6 +1791,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         foreach ($this->walkChildren($meta, $childOffset) as $child) {
             switch ($child->type) {
                 case self::BOX_HDLR:
+                    ++$hdlrCount;
+                    if ($hdlrCount > 1) {
+                        throw new ParseError('meta must contain exactly one hdlr box', 1478);
+                    }
+
                     [$handlerType] = $this->parseHdlr($child);
                     break;
                 case self::BOX_EXIF:
@@ -1864,21 +1871,29 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     break;
                 case self::BOX_MHDR:
                     $this->parseMhdr($child);
-                    $hasMhdr = true;
+                    $requiresHdlr = true;
+                    $hasMhdr      = true;
                     break;
                 case self::BOX_KEYS:
-                    $keysMaps[] = $this->parseKeys($child);
+                    $requiresHdlr = true;
+                    $keysMaps[]   = $this->parseKeys($child);
                     break;
                 case self::BOX_ILST:
                     $ilstBoxes[] = $child;
                     break;
                 case self::BOX_CTRY:
+                    $requiresHdlr = true;
                     $countryLists = $this->parseLocaleListAtom($child, 'ctry');
                     break;
                 case self::BOX_LANG:
+                    $requiresHdlr  = true;
                     $languageLists = $this->parseLocaleListAtom($child, 'lang');
                     break;
             }
+        }
+
+        if (($hdlrCount !== 1) && $requiresHdlr) {
+            throw new ParseError('meta must contain exactly one hdlr box', 1478);
         }
 
         // QuickTime File Format 2012, "Metadata Atom": a reader should confirm the

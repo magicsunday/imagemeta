@@ -138,22 +138,9 @@ final class IsoBmffParserTest extends TestCase
     public function decodeOneBytUnsignedIntPayload(): void
     {
         $keyName = 'com.apple.quicktime.live-photo.auto';
+        $file    = $this->createQuickTimeKeysFileWithCustomKey($keyName, 0x16, "\x01");
 
-        $keysPayload = pack('N', 1);
-        $keysPayload .= pack('N', 9 + strlen($keyName));
-        $keysPayload .= 'mdta';
-        $keysPayload .= $keyName . "\0";
-        $keys = $this->fullBox('keys', $keysPayload);
-
-        $dataPayload = pack('N', 0x16) . pack('N', 0) . "\x01";
-        $data        = $this->box('data', $dataPayload);
-        $entry       = $this->box(pack('N', 1), $data);
-        $ilst        = $this->box('ilst', $entry);
-
-        $meta = $this->fullBox('meta', $keys . $ilst);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
-
-        $extractor       = $this->createExtractor($ftyp . $meta);
+        $extractor       = $this->createExtractor($file);
         [, , $quickTime] = $extractor->extract();
 
         self::assertNotNull($quickTime);
@@ -171,22 +158,9 @@ final class IsoBmffParserTest extends TestCase
     public function decodeOneByteSignedIntPayload(): void
     {
         $keyName = 'com.apple.quicktime.live-photo.auto';
+        $file    = $this->createQuickTimeKeysFileWithCustomKey($keyName, 0x15, "\x01");
 
-        $keysPayload = pack('N', 1);
-        $keysPayload .= pack('N', 9 + strlen($keyName));
-        $keysPayload .= 'mdta';
-        $keysPayload .= $keyName . "\0";
-        $keys = $this->fullBox('keys', $keysPayload);
-
-        $dataPayload = pack('N', 0x15) . pack('N', 0) . "\x01";
-        $data        = $this->box('data', $dataPayload);
-        $entry       = $this->box(pack('N', 1), $data);
-        $ilst        = $this->box('ilst', $entry);
-
-        $meta = $this->fullBox('meta', $keys . $ilst);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
-
-        $extractor       = $this->createExtractor($ftyp . $meta);
+        $extractor       = $this->createExtractor($file);
         [, , $quickTime] = $extractor->extract();
 
         self::assertNotNull($quickTime);
@@ -1133,7 +1107,8 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $metaPayload = "\0\0\0\0" . $keys . $ilst;
+        $hdlr        = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $metaPayload = "\0\0\0\0" . $hdlr . $keys . $ilst;
         $meta        = $this->box('meta', $metaPayload);
 
         // Append 4-byte zero terminator inside udta
@@ -1262,7 +1237,8 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry2 = $this->box(pack('N', 2), $dataBox2);
         $ilst       = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
 
-        $meta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
         $moov = $this->moov($this->box('udta', $meta));
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
@@ -1297,7 +1273,8 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $meta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
         $moov = $this->moov($this->box('udta', $meta));
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
@@ -2246,7 +2223,8 @@ final class IsoBmffParserTest extends TestCase
         $entry          = $this->box(pack('N', 1), $dataBox1 . $dataBox2);
         $ilst           = $this->box('ilst', $entry);
 
-        $meta = $this->fullBox('meta', $keys . $ilst);
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0mdta" . str_repeat("\0", 12) . "\0");
+        $meta = $this->fullBox('meta', $hdlr . $keys . $ilst);
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor       = $this->createExtractor($ftyp . $meta);
@@ -2304,7 +2282,8 @@ final class IsoBmffParserTest extends TestCase
         $entry          = $this->box(pack('N', 1), $dataBox1 . $dataBox2);
         $ilst           = $this->box('ilst', $entry);
 
-        $meta = $this->fullBox('meta', $keys . $ilst);
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0mdta" . str_repeat("\0", 12) . "\0");
+        $meta = $this->fullBox('meta', $hdlr . $keys . $ilst);
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $this->createExtractor($ftyp . $meta)->extract();
@@ -2352,12 +2331,13 @@ final class IsoBmffParserTest extends TestCase
             . $key
             . "\0";
         $keys = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keysEntry);
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
 
         $dataBox   = $this->box('data', pack('N', $type) . pack('N', 0) . $encodedData);
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $metaPayload = "\0\0\0\0" . $keys . $ilst;
+        $metaPayload = "\0\0\0\0" . $hdlr . $keys . $ilst;
         $meta        = $this->box('meta', $metaPayload);
         $moov        = $this->moov($this->box('udta', $meta));
 
@@ -3634,6 +3614,55 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects a meta box without a required hdlr child.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMetaMissingHdlr(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('meta must contain exactly one hdlr box');
+
+        $keyName = 'com.apple.quicktime.content.identifier';
+        $keys    = $this->box(
+            'keys',
+            "\0\0\0\0"
+            . pack('N', 1)
+            . pack('N', 9 + strlen($keyName))
+            . 'mdta'
+            . $keyName
+            . "\0",
+        );
+        $data = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
+        $ilst = $this->box('ilst', $this->box(pack('N', 1), $data));
+        $meta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Rejects a meta box with duplicate hdlr children.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMetaDuplicateHdlr(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('meta must contain exactly one hdlr box');
+
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0pict" . str_repeat("\0", 12) . "\0");
+        $meta = $this->fullBox('meta', $hdlr . $hdlr);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Rejects duplicate meta boxes inside a moov container.
      *
      * @return void
@@ -3684,7 +3713,8 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $metaPayload = "\0\0\0\0" . $keys . $ilst;
+        $hdlr        = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $metaPayload = "\0\0\0\0" . $hdlr . $keys . $ilst;
         $meta        = $this->box('meta', $metaPayload);
         $udta        = $this->box('udta', $meta);
         $trak        = $this->box('trak', $this->minimalTrakContent() . $udta);
@@ -3749,7 +3779,8 @@ final class IsoBmffParserTest extends TestCase
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
         $dataBox  = $this->box('data', pack('N', 1) . pack('N', 0) . 'meta-value');
         $ilst     = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
-        $meta     = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+        $hdlr     = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta     = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
 
         $udta = $this->box('udta', $titleAtom . $meta);
         $moov = $this->moov($udta);
@@ -3795,7 +3826,8 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $movieMeta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $movieMeta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
         $movieUdta = $this->box('udta', $movieMeta);
 
         // Track-level udta with same key but different value
@@ -3803,7 +3835,7 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry2 = $this->box(pack('N', 1), $dataBox2);
         $ilst2      = $this->box('ilst', $ilstEntry2);
 
-        $trackMeta = $this->box('meta', "\0\0\0\0" . $keys . $ilst2);
+        $trackMeta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst2);
         $trackUdta = $this->box('udta', $trackMeta);
         $trak      = $this->box('trak', $this->minimalTrakContent() . $trackUdta);
 
@@ -4120,7 +4152,8 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry = $this->box(pack('N', 1), $itif . $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $meta = $this->box('meta', "\0\0\0\0" . $mhdr . $keys . $ilst);
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $mhdr . $keys . $ilst);
         $udta = $this->box('udta', $meta);
         $moov = $this->moov($udta);
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
@@ -4151,7 +4184,8 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry2 = $this->box(pack('N', 2), $itif2 . $dataBox2);
 
         $ilst = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
-        $meta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
         $udta = $this->box('udta', $meta);
         $moov = $this->moov($udta);
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));

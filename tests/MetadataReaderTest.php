@@ -832,7 +832,8 @@ final class MetadataReaderTest extends TestCase
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $metaPayload = "\0\0\0\0" . $keys . $ilst;
+        $hdlr        = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $metaPayload = "\0\0\0\0" . $hdlr . $keys . $ilst;
         $meta        = $this->box('meta', $metaPayload);
         $udta        = $this->box('udta', $meta);
 
