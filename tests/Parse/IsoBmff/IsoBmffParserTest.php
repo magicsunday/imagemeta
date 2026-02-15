@@ -328,6 +328,37 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects an iloc v2 payload that encodes item_ID as legacy 16-bit.
+     * ISO/IEC 14496-12:2015 §8.11.3.2 requires 32-bit item_ID for version 2.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocVersion2Legacy16BitItemIdLayout(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('iloc construction_method value out of range');
+
+        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
+
+        // Deliberately malformed for v2: item_ID encoded as 16-bit like v0/v1.
+        $ilocPayload = "\x44";       // offset_size=4, length_size=4
+        $ilocPayload .= "\x00";       // base_offset_size=0, index_size=0
+        $ilocPayload .= pack('N', 1); // item_count = 1 (v2 uses 32-bit count)
+        $ilocPayload .= pack('n', 1); // legacy 16-bit item_ID (invalid for v2)
+        $ilocPayload .= pack('n', 0); // legacy construction_method field
+        $ilocPayload .= pack('n', 4); // legacy data_reference_index (misread as construction_method)
+        $ilocPayload .= pack('n', 0); // extent_count = 0
+        $iloc = $this->fullBox('iloc', $ilocPayload, 2, 0);
+
+        $meta = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'heic' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Parses direct XMP metadata from a moof-embedded meta box.
      * ISO/IEC 14496-12 §8.8.17 allows metadata containers in movie fragments.
      *
