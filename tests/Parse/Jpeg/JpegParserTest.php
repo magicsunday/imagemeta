@@ -1277,6 +1277,44 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Uses a PCM APP2 audio segment with dwSampleLength=0 and non-empty payload.
+     * This verifies malformed zero sample counts are rejected for PCM data.
+     *
+     * @return void
+     */
+    #[Test]
+    public function pcmAudioSegmentWithZeroSampleCountAndNonEmptyPayloadThrows(): void
+    {
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(0, 1, 44_100, 16, "\x01\x02", 0));
+        $jpeg    = $this->jpeg($payload);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+
+        $extractor->getAudioStreams();
+    }
+
+    /**
+     * Uses a μ-law APP2 audio segment with dwSampleLength=0 and non-empty payload.
+     * This verifies malformed zero sample counts are rejected for μ-law data.
+     *
+     * @return void
+     */
+    #[Test]
+    public function muLawAudioSegmentWithZeroSampleCountAndNonEmptyPayloadThrows(): void
+    {
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(1, 1, 8_000, 8, "\x01", 0));
+        $jpeg    = $this->jpeg($payload);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+
+        $extractor->getAudioStreams();
+    }
+
+    /**
      * Splits an MPF payload across two APP2 segments.
      * This confirms the MPF parser receives a reassembled payload with expected entries.
      *
@@ -2966,7 +3004,7 @@ final class JpegParserTest extends TestCase
      * Builds an EXIF audio APP2 payload with the provided metadata fields.
      * It computes sample count for PCM formats and appends the raw audio data.
      */
-    private function audioPayload(int $format, int $channels, int $sampleRate, int $bitDepth, string $data): string
+    private function audioPayload(int $format, int $channels, int $sampleRate, int $bitDepth, string $data, ?int $sampleCountOverride = null): string
     {
         $sampleCount = 0;
         if ($format !== 2) {
@@ -2974,6 +3012,10 @@ final class JpegParserTest extends TestCase
             if ($bytesPerSample > 0) {
                 $sampleCount = (int) (strlen($data) / $bytesPerSample);
             }
+        }
+
+        if ($sampleCountOverride !== null) {
+            $sampleCount = $sampleCountOverride;
         }
 
         $header = self::AUDIO_SIGNATURE

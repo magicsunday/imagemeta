@@ -1908,7 +1908,7 @@ final class JpegParser implements JpegParserInterface
             throw new ParseError(sprintf('Audio segment at offset %d has invalid IMA-ADPCM bit depth %d', $offset, $bitDepth), 1278);
         }
 
-        if ($sampleCount > 0 && $format !== self::AUDIO_FORMAT_IMA_ADPCM) {
+        if ($format !== self::AUDIO_FORMAT_IMA_ADPCM) {
             $bytesPerSample = (int) (($bitDepth / 8) * $channels);
             if ($bytesPerSample > 0) {
                 $expectedLength = $sampleCount * $bytesPerSample;
