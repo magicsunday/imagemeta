@@ -684,6 +684,66 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Decodes iloc v2 construction_method from the low nibble and preserves method=1 semantics.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeIlocVersion2ConstructionMethodFromLowNibble(): void
+    {
+        $extractor                   = $this->createExtractor($this->createFileWithSingleExifIlocItem(2, 0x0001));
+        [, , , , , $unresolvedItems] = $extractor->extract();
+
+        self::assertCount(1, $unresolvedItems);
+        self::assertSame(ConstructionMethod::IdatOffset, $unresolvedItems[0]->constructionMethod);
+    }
+
+    /**
+     * Keeps construction_method=0 mapped to file_offset semantics.
+     *
+     * @return void
+     */
+    #[Test]
+    public function mapIlocConstructionMethodZeroToFileOffset(): void
+    {
+        $extractor                   = $this->createExtractor($this->createFileWithSingleExifIlocItem(1, 0x0000));
+        [, , , , , $unresolvedItems] = $extractor->extract();
+
+        self::assertCount(1, $unresolvedItems);
+        self::assertSame(ConstructionMethod::FileOffset, $unresolvedItems[0]->constructionMethod);
+    }
+
+    /**
+     * Keeps construction_method=1 mapped to idat_offset semantics.
+     *
+     * @return void
+     */
+    #[Test]
+    public function mapIlocConstructionMethodOneToIdatOffset(): void
+    {
+        $extractor                   = $this->createExtractor($this->createFileWithSingleExifIlocItem(1, 0x0001));
+        [, , , , , $unresolvedItems] = $extractor->extract();
+
+        self::assertCount(1, $unresolvedItems);
+        self::assertSame(ConstructionMethod::IdatOffset, $unresolvedItems[0]->constructionMethod);
+    }
+
+    /**
+     * Keeps construction_method=2 mapped to item_offset semantics.
+     *
+     * @return void
+     */
+    #[Test]
+    public function mapIlocConstructionMethodTwoToItemOffset(): void
+    {
+        $extractor                   = $this->createExtractor($this->createFileWithSingleExifIlocItem(1, 0x0002));
+        [, , , , , $unresolvedItems] = $extractor->extract();
+
+        self::assertCount(1, $unresolvedItems);
+        self::assertSame(ConstructionMethod::ItemOffset, $unresolvedItems[0]->constructionMethod);
+    }
+
+    /**
      * Rejects iloc boxes with duplicate item_ID entries.
      * ISO/IEC 14496-12 §8.11.3: item_ID values must be unique within one iloc box.
      *
@@ -5257,6 +5317,45 @@ final class IsoBmffParserTest extends TestCase
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         return $ftyp . $moov;
+    }
+
+    /**
+     * Builds a minimal ISO BMFF file with one Exif item and one iloc entry.
+     *
+     * @param int $version            iloc version (1 or 2).
+     * @param int $constructionMethod iloc construction_method value (0..2).
+     *
+     * @return string Serialized file bytes.
+     */
+    private function createFileWithSingleExifIlocItem(int $version, int $constructionMethod): string
+    {
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
+        $infe        = $this->box('infe', $infePayload);
+        $iinfPayload = "\0\0\0\0" . pack('n', 1) . $infe;
+        $iinf        = $this->box('iinf', $iinfPayload);
+
+        $payload = "\x44";
+        $payload .= "\x00";
+
+        if ($version === 1) {
+            $payload .= pack('n', 1);
+            $payload .= pack('n', 1);
+        } else {
+            $payload .= pack('N', 1);
+            $payload .= pack('N', 1);
+        }
+
+        $payload .= pack('n', $constructionMethod);
+        $payload .= pack('n', 1);
+        $payload .= pack('n', 1);
+        $payload .= pack('N', 0);
+        $payload .= pack('N', 1);
+
+        $iloc = $this->fullBox('iloc', $payload, $version, 0);
+        $meta = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        return $ftyp . $meta;
     }
 
     private function videoSampleEntry(string $format, int $width, int $height): string
