@@ -3413,6 +3413,63 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Accepts dref payloads when entry_count exactly matches the number of children.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseDrefWithExactDeclaredEntryCount(): void
+    {
+        $urlEntry                                         = $this->fullBox('url ', "https://example.test/exif\0");
+        $extractor                                        = $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $urlEntry));
+        [$exifs, , , , $dataReferences, $unresolvedItems] = $extractor->extract();
+
+        self::assertSame([], $exifs);
+        self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
+
+        $reference = $dataReferences->referenceForIndex(1);
+        self::assertNotNull($reference);
+        self::assertSame('url ', $reference->type);
+        self::assertSame('https://example.test/exif', $reference->uri);
+
+        self::assertCount(1, $unresolvedItems);
+        self::assertSame(ConstructionMethod::FileOffset, $unresolvedItems[0]->constructionMethod);
+        self::assertSame(1, $unresolvedItems[0]->dataReferenceIndex);
+    }
+
+    /**
+     * Rejects dref boxes with fewer children than declared by entry_count.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectDrefWhenDeclaredEntryCountExceedsActualChildren(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('dref entry count mismatch');
+
+        $urlEntry = $this->fullBox('url ', "https://example.test/exif\0");
+        $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(2, $urlEntry))->extract();
+    }
+
+    /**
+     * Rejects dref boxes with trailing children beyond declared entry_count.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectDrefWhenActualChildrenExceedDeclaredEntryCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('dref contains entries beyond declared entry_count');
+
+        $urlEntry = $this->fullBox('url ', "https://example.test/exif\0");
+        $urnEntry = $this->fullBox('urn ', "name\0urn:example:test\0");
+
+        $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $urlEntry, $urnEntry))->extract();
+    }
+
+    /**
      * Builds a meta box with FullBox version=1 instead of 0.
      * Confirms the parser rejects unsupported meta versions.
      *
@@ -5317,6 +5374,41 @@ final class IsoBmffParserTest extends TestCase
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         return $ftyp . $moov;
+    }
+
+    /**
+     * Builds a minimal file containing iloc + dinf/dref with a custom dref entry list.
+     *
+     * @param int    $entryCount Declared dref entry_count.
+     * @param string ...$entries Serialized dref child DataEntryBox values.
+     *
+     * @return string Serialized file bytes.
+     */
+    private function createFileWithIlocExternalReferenceAndDref(int $entryCount, string ...$entries): string
+    {
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
+        $infe        = $this->box('infe', $infePayload);
+        $iinfPayload = "\0\0\0\0" . pack('n', 1) . $infe;
+        $iinf        = $this->box('iinf', $iinfPayload);
+
+        $ilocPayload = "\x44";
+        $ilocPayload .= "\x00";
+        $ilocPayload .= pack('n', 1);
+        $ilocPayload .= pack('n', 1);
+        $ilocPayload .= pack('n', 0x0000);
+        $ilocPayload .= pack('n', 1);
+        $ilocPayload .= pack('n', 1);
+        $ilocPayload .= pack('N', 0);
+        $ilocPayload .= pack('N', 4);
+        $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
+
+        $dref = $this->fullBox('dref', pack('N', $entryCount) . implode('', $entries));
+        $dinf = $this->box('dinf', $dref);
+
+        $meta = $this->fullBox('meta', $iinf . $iloc . $dinf);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        return $ftyp . $meta;
     }
 
     /**
