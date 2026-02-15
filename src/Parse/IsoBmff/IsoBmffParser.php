@@ -1298,7 +1298,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param BoxDescriptor       $mdia    Media box descriptor.
      * @param IsoBmffParseContext $context Shared parse-state context.
      *
-     * @return array{0: ?string, 1: ?string, 2: array<string, int|string|bool>}
+     * @return array{0: ?string, 1: ?string, 2: array<string, int|float|string|bool>}
      */
     private function parseMdia(BoxDescriptor $mdia, IsoBmffParseContext $context): array
     {
@@ -1451,7 +1451,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param string|null   $handlerType   Declared handler type for the media.
      * @param int|null      $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
      *
-     * @return array<string, int|string|bool>
+     * @return array<string, int|float|string|bool>
      */
     private function parseMinf(BoxDescriptor $minf, ?string $handlerType, ?int $mdhdTimescale): array
     {
@@ -1525,7 +1525,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param string        $handlerType   Media handler type.
      * @param int|null      $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
      *
-     * @return array<string, int|string|bool>
+     * @return array<string, int|float|string|bool>
      */
     private function parseStbl(BoxDescriptor $stbl, string $handlerType, ?int $mdhdTimescale): array
     {
@@ -1602,7 +1602,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param BoxDescriptor $stsd        Sample description descriptor.
      * @param string        $handlerType Handler type describing the media kind.
      *
-     * @return array<string, int|string|bool>
+     * @return array<string, int|float|string|bool>
      */
     private function parseStsd(BoxDescriptor $stsd, string $handlerType, ?int $mdhdTimescale): array
     {
@@ -1849,7 +1849,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param int          $stsdVersion   FullBox version of the enclosing stsd.
      * @param int|null     $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
      *
-     * @return array<string, int|string|bool>
+     * @return array<string, int|float|string|bool>
      */
     private function parseSoundSampleEntry(
         StreamWindow $win,
@@ -2015,41 +2015,48 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     }
 
     /**
-     * Decodes AudioSampleEntry 16.16 fixed-point sample rate with strict integer semantics.
+     * Decodes an AudioSampleEntry 16.16 fixed-point sample rate.
      *
      * @param int $sampleRateRaw Raw 16.16 fixed-point value from the sample entry.
      *
-     * @return int
+     * @return int|float
      */
-    private function decodeAudioSampleRate16_16(int $sampleRateRaw): int
+    private function decodeAudioSampleRate16_16(int $sampleRateRaw): int|float
     {
         if ($sampleRateRaw <= 0) {
             throw new ParseError('audio sample rate must be positive', 1485);
         }
 
-        if (($sampleRateRaw & 0xFFFF) !== 0) {
-            throw new ParseError('audio sample entry sampleRate must be an integer 16.16 value', 1483);
-        }
-
-        $sampleRate = $sampleRateRaw >> 16;
-        if ($sampleRate <= 0) {
+        $integerPart = $sampleRateRaw >> 16;
+        if ($integerPart <= 0) {
             throw new ParseError('audio sample rate must be positive', 1485);
         }
 
-        return $sampleRate;
+        $fractionalPart = $sampleRateRaw & 0xFFFF;
+        if ($fractionalPart === 0) {
+            return $integerPart;
+        }
+
+        return $sampleRateRaw / 65536.0;
     }
 
     /**
      * Validates audio sample rate and mdhd timescale relation (equal or integer multiple/division).
      *
-     * @param int      $sampleRate    Parsed audio sample rate in Hz.
-     * @param int|null $mdhdTimescale Parsed mdhd timescale.
+     * Fractional legacy 16.16 rates are preserved and excluded from the integer-relation check.
+     *
+     * @param int|float $sampleRate    Parsed audio sample rate in Hz.
+     * @param int|null  $mdhdTimescale Parsed mdhd timescale.
      *
      * @return void
      */
-    private function validateAudioSampleRateTimescaleRelation(int $sampleRate, ?int $mdhdTimescale): void
+    private function validateAudioSampleRateTimescaleRelation(int|float $sampleRate, ?int $mdhdTimescale): void
     {
         if ($mdhdTimescale === null || $mdhdTimescale <= 0) {
+            return;
+        }
+
+        if (is_float($sampleRate)) {
             return;
         }
 
@@ -2076,7 +2083,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param int          $entrySize  Declared sample entry size (including size+type header).
      * @param string       $format     Raw fourcc format code.
      *
-     * @return array<string, int|string|bool>
+     * @return array<string, int|float|string|bool>
      */
     private function parseSoundSampleEntryVersion2(StreamWindow $win, int $entryStart, int $entryEnd, int $entrySize, string $format): array
     {

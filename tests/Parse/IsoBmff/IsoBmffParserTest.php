@@ -3668,16 +3668,13 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects non-integer 16.16 sample-rate payloads in legacy audio entries.
+     * Preserves fractional 16.16 sample-rate payloads in legacy audio entries.
      *
      * @return void
      */
     #[Test]
-    public function rejectsAudioStsdFractionalLegacySampleRatePayload(): void
+    public function preservesAudioStsdFractionalLegacySampleRatePayload(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample entry sampleRate must be an integer 16.16 value');
-
         $entry = $this->audioSampleEntryVersion0(
             format: 'raw ',
             channels: 2,
@@ -3686,7 +3683,35 @@ final class IsoBmffParserTest extends TestCase
         );
         $entry = substr($entry, 0, -4) . pack('N', (44100 << 16) + 1);
 
-        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertIsFloat($quickTime->keys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY]);
+        self::assertEqualsWithDelta(44100.00001525879, $quickTime->floatValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY), 0.0000000001);
+    }
+
+    /**
+     * Decodes legacy-like fractional 16.16 payloads deterministically.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesAudioStsdLegacyLikeFractionalSampleRateDeterministically(): void
+    {
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'raw ',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 22254,
+        );
+        $entry = substr($entry, 0, -4) . pack('N', 0x56EE8BA3);
+
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertEqualsWithDelta(22254.545455932617, $quickTime->floatValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY), 0.0000000001);
     }
 
     /**
