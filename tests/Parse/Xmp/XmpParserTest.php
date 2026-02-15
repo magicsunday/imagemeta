@@ -22,6 +22,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 /**
  * Exercises the lightweight XMP parser across attribute and element extraction paths.
@@ -1258,5 +1259,68 @@ XML;
 
         self::assertSame('Nikon', $document->get(self::TIFF_NS, 'Make'));
         self::assertSame('Test', $document->get(self::XMP_NS, 'CreatorTool'));
+    }
+
+    /**
+     * Returns nearest list container metadata for the given element depth.
+     *
+     * @return void
+     */
+    #[Test]
+    public function findParentListBufferReturnsNearestListContext(): void
+    {
+        $method = new ReflectionMethod(XmpParser::class, 'findParentListBuffer');
+        $result = $method->invoke(
+            new XmpParser(),
+            [1 => ['root'], 3 => ['child']],
+            [1 => 'Bag', 3 => 'Alt'],
+            5,
+            'en-US',
+        );
+
+        self::assertSame(
+            [
+                'depth' => 3,
+                'kind'  => 'Alt',
+            ],
+            $result,
+        );
+    }
+
+    /**
+     * Returns null when no parent list container exists.
+     *
+     * @return void
+     */
+    #[Test]
+    public function findParentListBufferReturnsNullWithoutParentList(): void
+    {
+        $method = new ReflectionMethod(XmpParser::class, 'findParentListBuffer');
+        $result = $method->invoke(
+            new XmpParser(),
+            [],
+            [],
+            3,
+            '',
+        );
+
+        self::assertNull($result);
+    }
+
+    /**
+     * Rejects rdf:Alt list entries without xml:lang in helper validation.
+     *
+     * @return void
+     */
+    #[Test]
+    public function validateAltContainerLangRejectsMissingLanguageQualifier(): void
+    {
+        $method = new ReflectionMethod(XmpParser::class, 'validateAltContainerLang');
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1350);
+        $this->expectExceptionMessage('rdf:li in rdf:Alt must have an xml:lang qualifier');
+
+        $method->invoke(new XmpParser(), 'Alt', '');
     }
 }

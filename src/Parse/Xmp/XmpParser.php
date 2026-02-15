@@ -184,25 +184,20 @@ final class XmpParser
                     }
 
                     if ($namespace === self::RDF_NAMESPACE && $localName === 'li') {
-                        $text = trim($textBuffers[$depth] ?? '');
-                        for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
-                            if (isset($listBuffers[$parentDepth])) {
-                                if (($listKinds[$parentDepth] ?? '') === 'Alt') {
-                                    $lang = $languageBuffers[$depth] ?? '';
+                        $text             = trim($textBuffers[$depth] ?? '');
+                        $lang             = $languageBuffers[$depth] ?? '';
+                        $parentListBuffer = $this->findParentListBuffer($listBuffers, $listKinds, $depth, $lang);
+                        if ($parentListBuffer !== null) {
+                            $parentDepth = $parentListBuffer['depth'];
+                            $kind        = $parentListBuffer['kind'];
 
-                                    if ($lang === '') {
-                                        throw new ParseError('rdf:li in rdf:Alt must have an xml:lang qualifier per XMP spec LanguageAlternative.', 1350);
-                                    }
-
-                                    $altBuffers[$parentDepth][] = [
-                                        'lang'  => $lang,
-                                        'value' => $text,
-                                    ];
-                                } else {
-                                    $listBuffers[$parentDepth][] = $text;
-                                }
-
-                                break;
+                            if ($kind === 'Alt') {
+                                $altBuffers[$parentDepth][] = [
+                                    'lang'  => $lang,
+                                    'value' => $text,
+                                ];
+                            } else {
+                                $listBuffers[$parentDepth][] = $text;
                             }
                         }
                     } elseif ($namespace === self::RDF_NAMESPACE && $localName === 'value') {
@@ -560,6 +555,48 @@ final class XmpParser
         $reader->moveToElement();
 
         return $language;
+    }
+
+    /**
+     * Finds the nearest parent list buffer and associated RDF container kind.
+     *
+     * @param array<int, list<string>> $listBuffers
+     * @param array<int, string>       $listKinds
+     *
+     * @return array{depth:int, kind:string}|null
+     */
+    private function findParentListBuffer(array $listBuffers, array $listKinds, int $depth, string $lang): ?array
+    {
+        for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
+            if (!isset($listBuffers[$parentDepth])) {
+                continue;
+            }
+
+            $kind = $listKinds[$parentDepth] ?? '';
+            $this->validateAltContainerLang($kind, $lang);
+
+            return [
+                'depth' => $parentDepth,
+                'kind'  => $kind,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Validates xml:lang requirements for rdf:Alt container items.
+     */
+    private function validateAltContainerLang(string $kind, string $lang): void
+    {
+        if (($kind !== 'Alt') || ($lang !== '')) {
+            return;
+        }
+
+        throw new ParseError(
+            'rdf:li in rdf:Alt must have an xml:lang qualifier per XMP spec LanguageAlternative.',
+            1350,
+        );
     }
 
     /**
