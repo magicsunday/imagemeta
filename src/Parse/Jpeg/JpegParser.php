@@ -196,6 +196,8 @@ final class JpegParser
     /** @var array{0:int,1:int}|null */
     private ?array $frameYCbCrSubSampling = null;
 
+    private readonly MarkerHandlerRegistry $markerHandlerRegistry;
+
     /**
      * Initialises the extractor with a seekable stream.
      *
@@ -203,6 +205,7 @@ final class JpegParser
      */
     public function __construct(private readonly Stream $stream)
     {
+        $this->markerHandlerRegistry = $this->createDefaultMarkerHandlerRegistry();
     }
 
     /**
@@ -629,15 +632,19 @@ final class JpegParser
                 $firstStructuralMarkerOffset = $offset;
             }
 
-            if ($marker === Marker::APP1) {
-                $this->handleApp1($payload, $offset);
-            } elseif ($marker === Marker::APP2) {
-                $this->handleApp2($payload, $offset);
-            } elseif ($marker === Marker::APP11) {
+            if ($this->markerHandlerRegistry->supports($marker)) {
+                $this->markerHandlerRegistry->dispatch($marker, $this->stream, $payload, $offset);
+
+                continue;
+            }
+
+            if ($marker === Marker::APP11) {
                 $this->handleApp11($payload, $offset);
-            } elseif ($marker === Marker::APP13) {
-                $this->handleApp13($payload);
-            } elseif ($marker === Marker::SOF2) {
+
+                continue;
+            }
+
+            if ($marker === Marker::SOF2) {
                 throw new ParseError(
                     sprintf(
                         'Progressive SOF2 marker at offset %d is not allowed in strict EXIF JPEG mode per EXIF 3.0 §4.8.1.',
@@ -645,7 +652,9 @@ final class JpegParser
                     ),
                     1486,
                 );
-            } elseif ($marker === Marker::SOF0) {
+            }
+
+            if ($marker === Marker::SOF0) {
                 // EXIF 3.0 §4.7 Table 2 defines one frame-header declaration in the
                 // marker flow before SOS; additional SOF markers are non-conformant.
                 if ($firstSofOffset !== null) {
@@ -698,6 +707,24 @@ final class JpegParser
         }
 
         $this->parsed = true;
+    }
+
+    /**
+     * Creates the default APP marker-handler strategy registry.
+     */
+    private function createDefaultMarkerHandlerRegistry(): MarkerHandlerRegistry
+    {
+        return new MarkerHandlerRegistry([
+            new ExifSegmentHandler($this->handleApp1(...)),
+            new XmpSegmentHandler($this->handleApp1(...)),
+            new IccProfileHandler($this->handleApp2(...)),
+            new AudioStreamHandler($this->handleApp2(...)),
+            new MpfDocumentHandler($this->handleApp2(...)),
+            new FlashPixHandler($this->handleApp2(...)),
+            new IptcSegmentHandler(function (string $payload, int $offset): void {
+                $this->handleApp13($payload);
+            }),
+        ]);
     }
 
     /**
