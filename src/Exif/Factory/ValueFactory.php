@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
+use MagicSunday\ImageMeta\Parse\Icc\IccParserInterface;
 use MagicSunday\ImageMeta\Value\Audio as ValueAudio;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
@@ -69,6 +70,7 @@ final readonly class ValueFactory
     /**
      * Constructs the ValueFactory with specialized sub-factories.
      *
+     * @param IccParserInterface  $iccParser           Parser used for ICC profile decoding.
      * @param CameraFactory       $cameraFactory       Factory for camera metadata.
      * @param LensFactory         $lensFactory         Factory for lens metadata.
      * @param ExposureFactory     $exposureFactory     Factory for exposure metadata.
@@ -83,6 +85,7 @@ final readonly class ValueFactory
      * @param MultiPictureFactory $multiPictureFactory Factory for multi-picture metadata.
      */
     public function __construct(
+        private IccParserInterface $iccParser,
         private CameraFactory $cameraFactory = new CameraFactory(),
         private LensFactory $lensFactory = new LensFactory(),
         private ExposureFactory $exposureFactory = new ExposureFactory(),
@@ -96,6 +99,14 @@ final readonly class ValueFactory
         private RegionsFactory $regionsFactory = new RegionsFactory(),
         private MultiPictureFactory $multiPictureFactory = new MultiPictureFactory(),
     ) {
+    }
+
+    /**
+     * Creates a ValueFactory with default concrete parser and sub-factory dependencies.
+     */
+    public static function createDefault(): self
+    {
+        return new self(new IccParser());
     }
 
     /**
@@ -282,7 +293,7 @@ final readonly class ValueFactory
 
         $iccData = null;
         if ($metadata->iccProfile !== null || $metadata->iccSegments !== []) {
-            $iccData = (new IccParser())->decode($metadata->iccProfile, $metadata->iccSegments);
+            $iccData = $this->iccParser->decode($metadata->iccProfile, $metadata->iccSegments);
         }
 
         $colorProfile = new ValueColorProfile(

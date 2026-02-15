@@ -23,8 +23,16 @@ final readonly class StructuredMetadataBuilder
     /**
      * @param ValueFactory $valueFactory Factory used to build structured components.
      */
-    public function __construct(private ValueFactory $valueFactory = new ValueFactory())
+    public function __construct(private ValueFactory $valueFactory)
     {
+    }
+
+    /**
+     * Creates a builder with default concrete dependencies.
+     */
+    public static function createDefault(): self
+    {
+        return new self(ValueFactory::createDefault());
     }
 
     /**

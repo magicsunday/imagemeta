@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Convenience;
 
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParserInterface;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
 
 /**
@@ -23,14 +24,21 @@ final readonly class ExifReader
     private MetadataReader $metadataReader;
 
     /**
-     * @param TiffExifParser $tiffReader Optional TIFF EXIF reader reused across calls.
+     * @param TiffExifParserInterface $tiffReader Optional TIFF EXIF reader reused across calls.
      *
-     * Providing a custom reader allows sharing caches or maker-notes registries in higher-level
-     * code while defaulting to a new reader instance when no dependency is supplied.
+     * Providing a custom reader allows sharing caches or maker-notes registries in higher-level code.
      */
-    public function __construct(private TiffExifParser $tiffReader = new TiffExifParser())
+    public function __construct(private TiffExifParserInterface $tiffReader)
     {
-        $this->metadataReader = new MetadataReader($this->tiffReader);
+        $this->metadataReader = MetadataReader::createDefault($this->tiffReader);
+    }
+
+    /**
+     * Creates an EXIF reader with default parser dependencies.
+     */
+    public static function createDefault(): self
+    {
+        return new self(new TiffExifParser());
     }
 
     /**

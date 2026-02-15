@@ -28,7 +28,7 @@ use function trim;
 /**
  * Performs a lightweight XMP RDF/XML pass using \XMLReader to capture simple properties.
  */
-final class XmpParser
+final class XmpParser implements XmpParserInterface
 {
     private const string RDF_NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
 

@@ -23,10 +23,15 @@ use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
-use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
-use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
+use MagicSunday\ImageMeta\Parse\Iptc\IptcParserInterface;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactory;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactoryInterface;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParserInterface;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
+use MagicSunday\ImageMeta\Parse\Xmp\XmpParserInterface;
 
 use function class_exists;
 use function filesize;
@@ -44,19 +49,39 @@ use const PATHINFO_EXTENSION;
 final readonly class MetadataReader
 {
     /**
-     * @param TiffExifParser        $tiffReader     TIFF/EXIF parser instance.
-     * @param AppleMakerNotesMerger $appleMerger    Apple maker notes merger.
-     * @param XmpParser             $xmpParser      XMP parser instance.
-     * @param IptcParser            $iptcParser     IPTC parser instance.
-     * @param FormatDetector        $formatDetector Container format detector.
+     * @param TiffExifParserInterface       $tiffReader           TIFF/EXIF parser instance.
+     * @param AppleMakerNotesMerger         $appleMerger          Apple maker notes merger.
+     * @param XmpParserInterface            $xmpParser            XMP parser instance.
+     * @param IptcParserInterface           $iptcParser           IPTC parser instance.
+     * @param FormatDetector                $formatDetector       Container format detector.
+     * @param JpegParserFactoryInterface    $jpegParserFactory    Factory creating JPEG parser instances.
+     * @param IsoBmffParserFactoryInterface $isoBmffParserFactory Factory creating ISO BMFF parser instances.
      */
     public function __construct(
-        private TiffExifParser $tiffReader = new TiffExifParser(),
-        private AppleMakerNotesMerger $appleMerger = new AppleMakerNotesMerger(),
-        private XmpParser $xmpParser = new XmpParser(),
-        private IptcParser $iptcParser = new IptcParser(),
-        private FormatDetector $formatDetector = new FormatDetector(),
+        private TiffExifParserInterface $tiffReader,
+        private AppleMakerNotesMerger $appleMerger,
+        private XmpParserInterface $xmpParser,
+        private IptcParserInterface $iptcParser,
+        private FormatDetector $formatDetector,
+        private JpegParserFactoryInterface $jpegParserFactory,
+        private IsoBmffParserFactoryInterface $isoBmffParserFactory,
     ) {
+    }
+
+    /**
+     * Creates a metadata reader with default parser dependencies.
+     */
+    public static function createDefault(?TiffExifParserInterface $tiffReader = null): self
+    {
+        return new self(
+            $tiffReader ?? new TiffExifParser(),
+            new AppleMakerNotesMerger(),
+            new XmpParser(),
+            new IptcParser(),
+            new FormatDetector(),
+            new JpegParserFactory(),
+            new IsoBmffParserFactory(),
+        );
     }
 
     /**
@@ -109,7 +134,7 @@ final readonly class MetadataReader
         ?string $digestSha1,
         ?string $digestMd5,
     ): Metadata {
-        $jpeg = new JpegParser($stream);
+        $jpeg = $this->jpegParserFactory->create($stream);
         // Extract the JPEG segments along with frame and auxiliary stream data.
         $exifBlobs       = $jpeg->extractExifBlobs();
         $xmpBlobs        = $jpeg->extractXmpPackets();
@@ -207,7 +232,7 @@ final readonly class MetadataReader
         ?string $digestSha1,
         ?string $digestMd5,
     ): Metadata {
-        [$exifBlobs, $xmpBlobs, $qt, $isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems] = (new IsoBmffParser($stream))->extract();
+        [$exifBlobs, $xmpBlobs, $qt, $isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems] = $this->isoBmffParserFactory->create($stream)->extract();
 
         $exifDoc    = null;
         $xmpDoc     = null;

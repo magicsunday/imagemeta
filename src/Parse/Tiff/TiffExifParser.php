@@ -66,7 +66,7 @@ use function substr;
  * structure and byte order, §2.2 defines field types, and §8 provides the
  * baseline directory semantics shared by both formats.
  */
-final class TiffExifParser
+final class TiffExifParser implements TiffExifParserInterface
 {
     /**
      * GH-898: Maximum number of IFD entries to prevent DoS via pathologically large payloads.

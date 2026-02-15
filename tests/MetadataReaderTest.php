@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests;
 
+use Closure;
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Stream;
@@ -39,19 +40,28 @@ use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\MakerNotes\SonyDecoder;
 use MagicSunday\ImageMeta\MetadataReader;
+use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Parse\Iptc\IptcParserInterface;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactoryInterface;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserInterface;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactoryInterface;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserInterface;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParserInterface;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
+use MagicSunday\ImageMeta\Parse\Xmp\XmpParserInterface;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
@@ -94,6 +104,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function chr;
 use function count;
@@ -230,7 +241,7 @@ final class MetadataReaderTest extends TestCase
         $path = $this->writeTempFile($jpeg, 'jpg');
 
         try {
-            $metadata = (new MetadataReader())->read($path);
+            $metadata = MetadataReader::createDefault()->read($path);
         } finally {
             @unlink($path);
         }
@@ -292,6 +303,177 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
+     * Uses injected parser dependencies when reading JPEG metadata.
+     *
+     * @return void
+     */
+    #[Test]
+    public function readUsesInjectedParserDependencies(): void
+    {
+        $xmpPacket   = '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" />';
+        $xmpPayloads = [];
+
+        $jpegParserFactory = new readonly class($xmpPacket) implements JpegParserFactoryInterface {
+            public function __construct(private string $xmpPacket)
+            {
+            }
+
+            public function create(Stream $stream): JpegParserInterface
+            {
+                return new readonly class($this->xmpPacket) implements JpegParserInterface {
+                    public function __construct(private string $xmpPacket)
+                    {
+                    }
+
+                    /**
+                     * @return array{}
+                     */
+                    public function extractExifBlobs(): array
+                    {
+                        return [];
+                    }
+
+                    /**
+                     * @return list<string>
+                     */
+                    public function extractXmpPackets(): array
+                    {
+                        return [$this->xmpPacket];
+                    }
+
+                    public function getIccProfile(): ?string
+                    {
+                        return null;
+                    }
+
+                    /**
+                     * @return array{}
+                     */
+                    public function getIccSegments(): array
+                    {
+                        return [];
+                    }
+
+                    /**
+                     * @return array{}
+                     */
+                    public function getIptcPayloads(): array
+                    {
+                        return [];
+                    }
+
+                    /**
+                     * @return array{}
+                     */
+                    public function getFlashPixStreams(): array
+                    {
+                        return [];
+                    }
+
+                    /**
+                     * @return array{}
+                     */
+                    public function getAudioStreams(): array
+                    {
+                        return [];
+                    }
+
+                    public function getMpfDocument(): ?MpfDocument
+                    {
+                        return null;
+                    }
+
+                    public function getFrameSamplePrecision(): ?int
+                    {
+                        return null;
+                    }
+
+                    public function getFrameHeight(): ?int
+                    {
+                        return null;
+                    }
+
+                    public function getFrameWidth(): ?int
+                    {
+                        return null;
+                    }
+
+                    public function getFrameComponentSamplingFactors(): ?array
+                    {
+                        return null;
+                    }
+
+                    public function getFrameYCbCrSubSampling(): ?array
+                    {
+                        return null;
+                    }
+                };
+            }
+        };
+
+        $xmpParser = new readonly class(function (string $xml) use (&$xmpPayloads): void {
+            $xmpPayloads[] = $xml;
+        }) implements XmpParserInterface {
+            public function __construct(
+                /** @var Closure(string):void $onParse */
+                private Closure $onParse,
+            ) {
+            }
+
+            public function parse(string $xml): XmpDocument
+            {
+                ($this->onParse)($xml);
+
+                return new XmpDocument([]);
+            }
+        };
+
+        $tiffParser = new class implements TiffExifParserInterface {
+            public function parseFromBlob(
+                string $tiffBlob,
+                ?Registry $registry = null,
+                bool $jpegContext = false,
+            ): ParsedExif {
+                throw new RuntimeException('EXIF parser must not be called');
+            }
+        };
+
+        $iptcParser = new class implements IptcParserInterface {
+            public function parse(string $payload): IptcDocument
+            {
+                return new IptcDocument([]);
+            }
+        };
+
+        $isoFactory = new class implements IsoBmffParserFactoryInterface {
+            public function create(Stream $stream): IsoBmffParserInterface
+            {
+                throw new RuntimeException('ISO BMFF parser factory must not be called');
+            }
+        };
+
+        $path = $this->writeTempFile("\xFF\xD8\xFF\xD9", 'jpg');
+
+        try {
+            $metadata = new MetadataReader(
+                tiffReader: $tiffParser,
+                appleMerger: new AppleMakerNotesMerger(),
+                xmpParser: $xmpParser,
+                iptcParser: $iptcParser,
+                formatDetector: new FormatDetector(),
+                jpegParserFactory: $jpegParserFactory,
+                isoBmffParserFactory: $isoFactory,
+            );
+            $result = $metadata->read($path);
+        } finally {
+            @unlink($path);
+        }
+
+        self::assertSame([$xmpPacket], $result->xmpBlobs);
+        self::assertSame([$xmpPacket], $xmpPayloads);
+    }
+
+    /**
      * Reads a JPEG while requesting digest computation.
      * Ensures both SHA-1 and MD5 checksums are calculated and propagated to structured file metadata.
      *
@@ -316,7 +498,7 @@ final class MetadataReaderTest extends TestCase
         $path = $this->writeTempFile($jpeg, 'jpeg');
 
         try {
-            $metadata = (new MetadataReader())->read($path, true);
+            $metadata = MetadataReader::createDefault()->read($path, true);
         } finally {
             @unlink($path);
         }
@@ -350,7 +532,7 @@ final class MetadataReaderTest extends TestCase
         $path = $this->writeTempFile($jpeg, 'jpg');
 
         try {
-            $metadata = (new MetadataReader())->read($path);
+            $metadata = MetadataReader::createDefault()->read($path);
         } finally {
             @unlink($path);
         }
@@ -393,7 +575,7 @@ final class MetadataReaderTest extends TestCase
         $path = $this->writeTempFile($isoPayload);
 
         try {
-            $metadata = (new MetadataReader())->read($path);
+            $metadata = MetadataReader::createDefault()->read($path);
         } finally {
             @unlink($path);
         }
@@ -438,7 +620,7 @@ final class MetadataReaderTest extends TestCase
         $path = $this->writeTempFile($jpeg);
 
         try {
-            $metadata = (new MetadataReader())->read($path);
+            $metadata = MetadataReader::createDefault()->read($path);
         } finally {
             @unlink($path);
         }

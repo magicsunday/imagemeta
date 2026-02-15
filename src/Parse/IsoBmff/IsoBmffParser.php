@@ -71,7 +71,7 @@ use function trim;
  * @phpstan-type QuickTimeCoercedDataAtom = array{type: int, locale: int, value: string|int|float|bool}
  * @phpstan-type QuickTimeDataAtomList = array<string, list<QuickTimeCoercedDataAtom>>
  */
-final readonly class IsoBmffParser
+final readonly class IsoBmffParser implements IsoBmffParserInterface
 {
     /**
      * UUID identifying XMP payload boxes within ISO BMFF containers.

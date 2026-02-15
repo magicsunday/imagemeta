@@ -50,7 +50,7 @@ use function usort;
  * EXIF 3.0 §4.7.2 documents the APP1 encapsulation for Exif payloads; EXIF 3.0 §4.7.3
  * defines the audio APP2 layout.
  */
-final class JpegParser
+final class JpegParser implements JpegParserInterface
 {
     private const int MAX_APP_SEGMENT_SIZE = 4_194_304; // 4 MiB payload limit
 

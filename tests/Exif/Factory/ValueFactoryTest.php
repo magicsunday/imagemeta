@@ -11,10 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Factory;
 
+use Closure;
 use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Parse\Icc\IccParserInterface;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\DepthMap;
@@ -75,7 +77,7 @@ XML;
             xmpDoc: (new XmpParser())->parse($xml),
         );
 
-        $structured = (new StructuredMetadataBuilder())->assemble($metadata);
+        $structured = StructuredMetadataBuilder::createDefault()->assemble($metadata);
 
         /** @phpstan-ignore staticMethod.alreadyNarrowedType */
         self::assertInstanceOf(DepthMap::class, $structured->depthMap);
@@ -131,7 +133,7 @@ XML;
             xmpDoc: (new XmpParser())->parse($xml),
         );
 
-        $structured = (new StructuredMetadataBuilder())->assemble($metadata);
+        $structured = StructuredMetadataBuilder::createDefault()->assemble($metadata);
 
         self::assertSame('Sample Title', $structured->image->title);
         self::assertSame('Sample Description', $structured->image->description);
@@ -163,9 +165,95 @@ XML;
             iptcBlobs: [$payload],
         );
 
-        $structured = (new StructuredMetadataBuilder())->assemble($metadata);
+        $structured = StructuredMetadataBuilder::createDefault()->assemble($metadata);
 
         self::assertSame('Object Name', $structured->iptc->document?->first(2, 5));
+    }
+
+    /**
+     * Uses an injected ICC parser to populate color profile values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function usesInjectedIccParserDependency(): void
+    {
+        $called = false;
+
+        $iccParser = new readonly class(function () use (&$called): void {
+            $called = true;
+        }) implements IccParserInterface {
+            public function __construct(
+                /** @var Closure():void $onDecode */
+                private Closure $onDecode,
+            ) {
+            }
+
+            /**
+             * @return array{
+             *     description: string|null,
+             *     copyright: string|null,
+             *     whitePoint: array{x: float, y: float, z: float}|null,
+             *     version: string|null,
+             *     pcs: string|null,
+             *     renderingIntent: string|null,
+             *     profileId: string|null,
+             *     cmmType: string|null,
+             *     profileClass: string|null,
+             *     colorSpace: string|null,
+             *     profileDateTime: string|null,
+             *     profileDateTimeUtc: string|null,
+             *     profileSignature: string|null,
+             *     profileFlags: string|null,
+             *     primaryPlatform: string|null,
+             *     deviceManufacturer: string|null,
+             *     deviceModel: string|null,
+             *     deviceAttributes: string|null,
+             *     profileCreator: string|null,
+             *     illuminant: array{x: float, y: float, z: float}|null,
+             * }
+             */
+            public function decode(?string $profileData, array $segments = []): array
+            {
+                ($this->onDecode)();
+
+                return [
+                    'description'        => 'Injected ICC',
+                    'copyright'          => null,
+                    'whitePoint'         => null,
+                    'version'            => '4.4',
+                    'pcs'                => null,
+                    'renderingIntent'    => null,
+                    'profileId'          => null,
+                    'cmmType'            => null,
+                    'profileClass'       => null,
+                    'colorSpace'         => null,
+                    'profileDateTime'    => null,
+                    'profileDateTimeUtc' => null,
+                    'profileSignature'   => null,
+                    'profileFlags'       => null,
+                    'primaryPlatform'    => null,
+                    'deviceManufacturer' => null,
+                    'deviceModel'        => null,
+                    'deviceAttributes'   => null,
+                    'profileCreator'     => null,
+                    'illuminant'         => null,
+                ];
+            }
+        };
+
+        $factory  = new ValueFactory(iccParser: $iccParser);
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            iccProfile: 'mock-profile',
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertTrue($called);
+        self::assertSame('Injected ICC', $components['colorProfile']->profileName);
+        self::assertSame('4.4', $components['colorProfile']->profileVersion);
     }
 
     private const string PHOTOSHOP_SIGNATURE = "Photoshop 3.0\0";

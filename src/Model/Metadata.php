@@ -92,7 +92,7 @@ final readonly class Metadata
         public array $iptcBlobs = [],
         public ?IptcDocument $iptcDoc = null,
     ) {
-        $this->structuredCache = new StructuredMetadataCache();
+        $this->structuredCache = StructuredMetadataCache::createDefault();
     }
 
     /**

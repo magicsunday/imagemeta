@@ -24,9 +24,16 @@ final class StructuredMetadataCache
     /**
      * @param StructuredMetadataBuilder $builder Builder used to build structured metadata.
      */
-    public function __construct(
-        private readonly StructuredMetadataBuilder $builder = new StructuredMetadataBuilder(),
-    ) {
+    public function __construct(private readonly StructuredMetadataBuilder $builder)
+    {
+    }
+
+    /**
+     * Creates a cache using the default builder dependencies.
+     */
+    public static function createDefault(): self
+    {
+        return new self(StructuredMetadataBuilder::createDefault());
     }
 
     /**

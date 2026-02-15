@@ -27,7 +27,7 @@ use function unpack;
 /**
  * Parses IPTC IIM datasets embedded in Photoshop APP13 resource blocks.
  */
-final class IptcParser
+final class IptcParser implements IptcParserInterface
 {
     private const string PHOTOSHOP_SIGNATURE = "Photoshop 3.0\0";
 

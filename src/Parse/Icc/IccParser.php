@@ -43,7 +43,7 @@ use function usort;
 /**
  * Decodes ICC profiles to expose header information and human readable tags.
  */
-final class IccParser
+final class IccParser implements IccParserInterface
 {
     private const int HEADER_LENGTH = 128;
 
