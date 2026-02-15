@@ -3100,6 +3100,50 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects video sample entries with width 0.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoStsdEntryWithZeroWidth(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('video sample entry width must be > 0');
+
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 0,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+        );
+
+        $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects video sample entries with height 0.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoStsdEntryWithZeroHeight(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('video sample entry height must be > 0');
+
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 0,
+            depth: 24,
+            colorTableId: -1,
+        );
+
+        $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
+    }
+
+    /**
      * Rejects non-zero revision level in video sample entries.
      *
      * @return void

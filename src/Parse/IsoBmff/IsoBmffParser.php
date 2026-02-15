@@ -1700,6 +1700,15 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
                 $width  = $win->readU16BE();
                 $height = $win->readU16BE();
+
+                if ($width === 0) {
+                    throw new ParseError('video sample entry width must be > 0', 1601);
+                }
+
+                if ($height === 0) {
+                    throw new ParseError('video sample entry height must be > 0', 1602);
+                }
+
                 $win->readU32BE(); // horiz resolution
                 $win->readU32BE(); // vert resolution
 
