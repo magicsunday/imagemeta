@@ -3470,6 +3470,35 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects dref boxes that declare zero data-entry children.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectDrefWithZeroDeclaredEntries(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('dref must contain at least one data reference entry');
+
+        $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(0))->extract();
+    }
+
+    /**
+     * Rejects dref entries that are neither url nor urn data entry boxes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectDrefWithoutUrlOrUrnEntries(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported dref entry type "free"');
+
+        $invalidEntry = $this->fullBox('free', '');
+        $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $invalidEntry))->extract();
+    }
+
+    /**
      * Builds a meta box with FullBox version=1 instead of 0.
      * Confirms the parser rejects unsupported meta versions.
      *
