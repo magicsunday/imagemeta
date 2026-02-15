@@ -1740,24 +1740,65 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('video sample entry depth without color table must use colorTableId -1', 1495);
         }
 
-        if ($colorTableId !== 0) {
-            return;
+        if ($colorTableId === 0) {
+            $tailOffset = $win->tell();
+            $remaining  = $entryEnd - $tailOffset;
+
+            if ($remaining < 8) {
+                throw new ParseError('video sample entry colorTableId=0 requires trailing ctab atom', 1496);
+            }
+
+            $colorTableSize = Unpack::int('N', $win->read(4), 'video sample entry ctab atom size');
+            $colorTableType = $win->read(4);
+
+            if ($colorTableType !== 'ctab') {
+                throw new ParseError('video sample entry colorTableId=0 requires trailing ctab atom', 1496);
+            }
+
+            if ($colorTableSize < 8 || $colorTableSize > $remaining) {
+                throw new ParseError('video sample entry ctab atom is truncated', 1498);
+            }
+
+            $win->seek($tailOffset + $colorTableSize);
         }
 
-        $remaining = $entryEnd - $win->tell();
-        if ($remaining < 8) {
-            throw new ParseError('video sample entry colorTableId=0 requires trailing ctab atom', 1496);
-        }
+        $this->validateVideoSampleEntryTrailingPayload($win, $entryEnd);
+    }
 
-        $colorTableSize = Unpack::int('N', $win->read(4), 'video sample entry ctab atom size');
-        $colorTableType = $win->read(4);
+    /**
+     * Validates trailing bytes in visual sample entries.
+     *
+     * Accepts empty tails, coherent child-box sequences, and an optional final
+     * 4-byte zero terminator documented by QuickTime.
+     */
+    private function validateVideoSampleEntryTrailingPayload(StreamWindow $win, int $entryEnd): void
+    {
+        $offset = $win->tell();
 
-        if ($colorTableType !== 'ctab') {
-            throw new ParseError('video sample entry colorTableId=0 requires trailing ctab atom', 1496);
-        }
+        while ($offset < $entryEnd) {
+            $remaining = $entryEnd - $offset;
 
-        if ($colorTableSize < 8 || $colorTableSize > $remaining) {
-            throw new ParseError('video sample entry ctab atom is truncated', 1498);
+            if ($remaining === 4) {
+                $win->seek($offset);
+                if ($win->read(4) !== pack('N', 0)) {
+                    throw new ParseError('video sample entry trailing payload is malformed', 1497);
+                }
+
+                return;
+            }
+
+            if ($remaining < 8) {
+                throw new ParseError('video sample entry trailing payload is malformed', 1497);
+            }
+
+            $win->seek($offset);
+            $boxSize = $win->readU32BE();
+
+            if ($boxSize < 8 || $boxSize > $remaining) {
+                throw new ParseError('video sample entry trailing payload is malformed', 1497);
+            }
+
+            $offset += $boxSize;
         }
     }
 

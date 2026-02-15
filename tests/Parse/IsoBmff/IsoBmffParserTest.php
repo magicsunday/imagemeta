@@ -3097,6 +3097,109 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Accepts video sample entries with coherent trailing extension boxes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesVideoStsdEntryWithGenericExtensionBox(): void
+    {
+        $pasp  = $this->box('pasp', pack('NN', 1, 1));
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+            trailingPayload: $pasp,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
+        self::assertSame(240, $quickTime->intValue(QuickTimeMeta::VIDEO_HEIGHT_KEY));
+    }
+
+    /**
+     * Accepts the documented optional 4-byte zero terminator after video extensions.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesVideoStsdEntryWithFourByteZeroTerminator(): void
+    {
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+            trailingPayload: "\0\0\0\0",
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
+        self::assertSame(240, $quickTime->intValue(QuickTimeMeta::VIDEO_HEIGHT_KEY));
+    }
+
+    /**
+     * Rejects pseudo-terminators shorter than the documented 4-byte zero suffix.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoStsdEntryWithPartialZeroTerminator(): void
+    {
+        $tails = ["\0", "\0\0", "\0\0\0"];
+
+        foreach ($tails as $tail) {
+            try {
+                $entry = $this->videoSampleEntry(
+                    format: 'raw ',
+                    width: 320,
+                    height: 240,
+                    depth: 24,
+                    colorTableId: -1,
+                    trailingPayload: $tail,
+                );
+
+                $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
+                self::fail('Expected ParseError for partial video sample entry terminator payload.');
+            } catch (ParseError $exception) {
+                self::assertStringContainsString('video sample entry trailing payload is malformed', $exception->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Rejects trailing non-box garbage in video sample entry tails.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoStsdEntryWithTrailingNonBoxGarbage(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('video sample entry trailing payload is malformed');
+
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+            trailingPayload: 'garbage',
+        );
+
+        $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
+    }
+
+    /**
      * Rejects unsupported QuickTime visual sample-entry depth values.
      *
      * @return void
