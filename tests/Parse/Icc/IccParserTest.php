@@ -1015,6 +1015,24 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * GH-1116: Rejects profiles with both non-zero reserved bytes in version field.
+     * ICC.1:2022 §7.2.4: bytes 10-11 must be 0x00.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsBothNonZeroVersionReservedBytes(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        $profile = substr_replace($profile, "\x01\xFF", 10, 2);
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
+    }
+
+    /**
      * GH-825: Rejects textType tags without trailing NUL byte.
      * ICC.1:2022 §10.24: textType must be NUL-terminated.
      *
