@@ -629,7 +629,12 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('ftyp box payload too small for mandatory fields', 1361);
         }
 
-        $majorBrand = $this->normaliseFourcc($win->read(4));
+        $majorBrandRaw = $win->read(4);
+        if (!$this->isPrintableFourcc($majorBrandRaw)) {
+            throw new ParseError('ftyp major_brand must be a printable 4CC', 1476);
+        }
+
+        $majorBrand = $this->normaliseFourcc($majorBrandRaw);
         $minor      = $win->readU32BE();
 
         if (($ftyp->contentSize - 8) % 4 !== 0) {
@@ -638,7 +643,12 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
         $brands = [];
         while ($win->tell() + 4 <= $ftyp->contentSize) {
-            $brands[] = $this->normaliseFourcc($win->read(4));
+            $brandRaw = $win->read(4);
+            if (!$this->isPrintableFourcc($brandRaw)) {
+                throw new ParseError('ftyp compatible_brand must be a printable 4CC', 1477);
+            }
+
+            $brands[] = $this->normaliseFourcc($brandRaw);
         }
 
         if (($majorBrand === self::BRAND_QUICKTIME) || in_array(self::BRAND_QUICKTIME, $brands, true)) {

@@ -3407,6 +3407,59 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Parses an ftyp box with printable major and compatible brand codes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseFtypWithPrintableBrands(): void
+    {
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 512) . 'mif1heic');
+
+        $extractor           = $this->createExtractor($ftyp);
+        [, , $quickTimeMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $quickTimeMeta);
+        self::assertSame('isom', $quickTimeMeta->keys[QuickTimeMeta::MAJOR_BRAND_KEY]);
+        self::assertSame(512, $quickTimeMeta->keys[QuickTimeMeta::MINOR_VERSION_KEY]);
+        self::assertSame('mif1 heic', $quickTimeMeta->keys[QuickTimeMeta::COMPATIBLE_BRANDS_KEY]);
+    }
+
+    /**
+     * Rejects an ftyp box with a non-printable major_brand code.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectFtypNonPrintableMajorBrand(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('ftyp major_brand must be a printable 4CC');
+
+        $ftyp = $this->box('ftyp', "\x00\x00\x00\x01" . pack('N', 0) . 'isom');
+
+        $extractor = $this->createExtractor($ftyp);
+        $extractor->extract();
+    }
+
+    /**
+     * Rejects an ftyp box with a non-printable compatible_brand code.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectFtypNonPrintableCompatibleBrand(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('ftyp compatible_brand must be a printable 4CC');
+
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0) . 'mif1' . "\x00\x00\x00\x01");
+
+        $extractor = $this->createExtractor($ftyp);
+        $extractor->extract();
+    }
+
+    /**
      * Rejects a tkhd box with unsupported version (2).
      *
      * @return void
