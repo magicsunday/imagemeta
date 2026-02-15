@@ -1391,12 +1391,18 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $version      = ord($versionFlags[0]);
         $flags        = (ord($versionFlags[1]) << 16) | (ord($versionFlags[2]) << 8) | ord($versionFlags[3]);
 
-        if ($version !== 0) {
+        // ISO/IEC 14496-12 §8.5.2.2/§8.5.2.3: stsd is a FullBox with flags=0.
+        // Version 1 is only valid in audio sample-description context.
+        if (($version !== 0) && ($version !== 1)) {
             throw new ParseError('unsupported stsd box version', 1154);
         }
 
         if ($flags !== 0) {
             throw new ParseError('unsupported stsd box flags', 1155);
+        }
+
+        if (($version === 1) && ($handlerType !== 'soun')) {
+            throw new ParseError('stsd version 1 requires audio handler context', 1465);
         }
 
         $entryCount = $win->readU32BE();

@@ -2302,7 +2302,36 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('unsupported stsd box version');
 
         $payload = pack('N', 0);
-        $stsd    = $this->fullBox('stsd', $payload, 1); // version=1
+        $stsd    = $this->fullBox('stsd', $payload, 2); // version=2
+        $stbl    = $this->box('stbl', $stsd);
+        $minf    = $this->box('minf', $stbl);
+
+        $hdlrPayload = pack('N', 0) . "\0\0\0\0" . 'vide' . str_repeat("\0", 12);
+        $hdlr        = $this->box('hdlr', $hdlrPayload);
+
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $trak = $this->box('trak', $mdia);
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $extractor->extract();
+    }
+
+    /**
+     * Rejects stsd version 1 in non-audio context.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectStsdVersion1InNonAudioContext(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('stsd version 1 requires audio handler context');
+
+        $payload = pack('N', 0);
+        $stsd    = $this->fullBox('stsd', $payload, 1, 0); // version=1
         $stbl    = $this->box('stbl', $stsd);
         $minf    = $this->box('minf', $stbl);
 
@@ -2400,6 +2429,33 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame(2, $quickTime->intValue(QuickTimeMeta::AUDIO_CHANNELS_KEY));
         self::assertSame(16, $quickTime->intValue(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY));
         self::assertSame(48000, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
+    }
+
+    /**
+     * Parses an audio stsd entry when the stsd FullBox itself uses version 1.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesAudioStsdVersion1FullBox(): void
+    {
+        $entry = $this->audioSampleEntryVersion1(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 44100,
+            samplesPerPacket: 1024,
+            bytesPerPacket: 0,
+            bytesPerFrame: 0,
+            bytesPerSample: 0,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame('mp4a', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
+        self::assertSame(44100, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
     }
 
     /**
@@ -4273,10 +4329,11 @@ final class IsoBmffParserTest extends TestCase
      * Builds a minimal QuickTime file with one audio track using a custom stsd sample entry.
      *
      * @param string $sampleEntry Serialized stsd sample entry bytes.
+     * @param int    $stsdVersion FullBox version for stsd (0 or 1 in supported tests).
      */
-    private function createFileWithAudioStsdEntry(string $sampleEntry): string
+    private function createFileWithAudioStsdEntry(string $sampleEntry, int $stsdVersion = 0): string
     {
-        $stsd = $this->fullBox('stsd', pack('N', 1) . $sampleEntry);
+        $stsd = $this->fullBox('stsd', pack('N', 1) . $sampleEntry, $stsdVersion, 0);
         $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
         $smhd = $this->fullBox('smhd', pack('n', 0) . pack('n', 0));
         $url  = $this->fullBox('url ', '', 0, 1);
