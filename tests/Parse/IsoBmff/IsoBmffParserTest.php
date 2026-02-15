@@ -1030,6 +1030,31 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Free-form keys with short name payloads keep all bytes of the name atom value.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseMdtaFreeformShortNamePayload(): void
+    {
+        $mean     = $this->box('mean', pack('N', 0) . 'com.apple.quicktime');
+        $name     = $this->box('name', pack('N', 0) . 'abc');
+        $data     = $this->box('data', pack('N', 1) . pack('N', 0) . 'short-name-value');
+        $freeform = $this->box('----', $mean . $name . $data);
+        $ilst     = $this->box('ilst', $freeform);
+
+        $meta = $this->box('meta', pack('N', 0) . $ilst);
+        $moov = $this->moov($meta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('short-name-value', $qtMeta->keys['com.apple.quicktime.abc']);
+    }
+
+    /**
      * Uses a free-form name atom with non-zero FullAtom version.
      * Verifies the parser rejects malformed name atom headers.
      *
@@ -1772,7 +1797,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
 
         $key  = 'com.apple.quicktime.test';
-        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, '    ');
+        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, pack('N', 0) . chr(1));
         $this->createExtractor($file)->extract();
     }
 
@@ -5392,7 +5417,7 @@ final class IsoBmffParserTest extends TestCase
     {
         $this->expectException(ParseError::class);
 
-        $file = $this->createQuickTimeMetaWithDataPayload(28, '     ');
+        $file = $this->createQuickTimeMetaWithDataPayload(28, str_repeat(chr(0), 5));
         $this->createExtractor($file)->extract();
     }
 
@@ -5486,19 +5511,19 @@ final class IsoBmffParserTest extends TestCase
             $keysEntries .= pack('N', 9 + strlen($entry['key']))
                 . 'mdta'
                 . $entry['key']
-                . ' ';
+                . chr(0);
 
             $dataBox = $this->box('data', pack('N', $entry['type']) . pack('N', 0) . $entry['payload']);
             $ilstEntries .= $this->box(pack('N', $index), $dataBox);
             ++$index;
         }
 
-        $keys = $this->box('keys', '    ' . pack('N', count($entries)) . $keysEntries);
-        $hdlr = $this->box('hdlr', '        mdta' . str_repeat(' ', 12));
+        $keys = $this->box('keys', pack('N', 0) . pack('N', count($entries)) . $keysEntries);
+        $hdlr = $this->box('hdlr', pack('N', 0) . pack('N', 0) . 'mdta' . str_repeat(chr(0), 12));
         $ilst = $this->box('ilst', $ilstEntries);
 
         // Return FullBox(meta) content (version/flags + children), without outer box header.
-        return '    ' . $hdlr . $keys . $ilst;
+        return pack('N', 0) . $hdlr . $keys . $ilst;
     }
 
     /**
