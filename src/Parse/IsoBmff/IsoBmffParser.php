@@ -33,6 +33,8 @@ use function array_values;
 use function bin2hex;
 use function count;
 use function explode;
+use function fopen;
+use function fwrite;
 use function iconv;
 use function implode;
 use function in_array;
@@ -42,9 +44,12 @@ use function is_float;
 use function is_int;
 use function is_numeric;
 use function is_string;
+use function ksort;
 use function mb_check_encoding;
 use function ord;
+use function pack;
 use function preg_match;
+use function rewind;
 use function round;
 use function rtrim;
 use function sha1;
@@ -67,7 +72,7 @@ use function trim;
  * @phpstan-type QuickTimeValue = string|int|float|bool
  * @phpstan-type QuickTimeKeyMap = array<string, QuickTimeValue>
  * @phpstan-type QuickTimeKeyEntry = array{namespace: string, name: string}
- * @phpstan-type QuickTimeRawDataAtom = array{type: int, locale: int, value: string|int|float}
+ * @phpstan-type QuickTimeRawDataAtom = array{type: int, locale: int, value: string|int|float, nestedKeys?: QuickTimeKeyMap, nestedAtoms?: QuickTimeDataAtomList}
  * @phpstan-type QuickTimeCoercedDataAtom = array{type: int, locale: int, value: string|int|float|bool}
  * @phpstan-type QuickTimeDataAtomList = array<string, list<QuickTimeCoercedDataAtom>>
  */
@@ -336,6 +341,17 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     private const int DATA_TYPE_FLOAT64 = 0x18;
 
     /**
+     * QuickTime `data` box type code for nested metadata atom payloads.
+     * QuickTime File Format 2012, Table 3-5, type code 28.
+     */
+    private const int DATA_TYPE_NESTED_METADATA = 0x1C;
+
+    /**
+     * Maximum supported nesting depth for data-type 28 metadata payloads.
+     */
+    private const int MAX_NESTED_METADATA_DEPTH = 1;
+
+    /**
      * FourCC for QuickTime metadata header atom.
      */
     private const string BOX_MHDR = 'mhdr';
@@ -470,7 +486,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      *
      * @param Stream $stream Stream positioned at the beginning of the media file to parse.
      */
-    public function __construct(private Stream $stream)
+    public function __construct(private Stream $stream, private int $nestedMetadataDepth = 0)
     {
     }
 
@@ -3482,6 +3498,23 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                         continue;
                     }
 
+                    if (
+                        ($structured['type'] === self::DATA_TYPE_NESTED_METADATA)
+                        && array_key_exists('nestedKeys', $structured)
+                        && array_key_exists('nestedAtoms', $structured)
+                    ) {
+                        $this->mergeNestedType28Values(
+                            $effectiveKey,
+                            $structured['nestedKeys'],
+                            $structured['nestedAtoms'],
+                            $result,
+                            $atomsList,
+                            $structured['locale'],
+                        );
+
+                        continue;
+                    }
+
                     $coerced = $this->coerceQuickTimeValue($effectiveKey, $structured['value']);
 
                     if (!array_key_exists($effectiveKey, $result)) {
@@ -3509,6 +3542,106 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         return [$result, $atomsList, $seenItemIds !== []];
+    }
+
+    /**
+     * Parses nested metadata atom content from QuickTime data type 28 payloads.
+     *
+     * QuickTime File Format 2012, Table 3-5 defines type 28 as a block containing
+     * Metadata atom structure. Parse the nested structure using the existing meta
+     * parsing flow on a bounded in-memory stream.
+     *
+     * @param string $payload Raw data box payload bytes for type 28.
+     *
+     * @return array{keys: QuickTimeKeyMap, atoms: QuickTimeDataAtomList}
+     */
+    private function parseNestedMetadataPayload(string $payload): array
+    {
+        if ($this->nestedMetadataDepth >= self::MAX_NESTED_METADATA_DEPTH) {
+            throw new ParseError('data box nested metadata depth exceeds maximum allowed.', 1458);
+        }
+
+        if (strlen($payload) > self::MAX_ITEM_PAYLOAD_SIZE) {
+            throw new ParseError('data box nested metadata payload exceeds maximum allowed size.', 1459);
+        }
+
+        $metaSize = 8 + strlen($payload);
+
+        $handle = fopen('php://temp', 'w+b');
+        if ($handle === false) {
+            throw new ParseError('unable to create nested metadata stream.', 1464);
+        }
+
+        $written = fwrite($handle, pack('N', $metaSize) . self::BOX_META . $payload);
+        if (!is_int($written) || ($written !== $metaSize)) {
+            throw new ParseError('unable to write nested metadata payload.', 1465);
+        }
+
+        rewind($handle);
+
+        $nestedStream = new Stream($handle, $metaSize);
+        $nestedParser = new self($nestedStream, $this->nestedMetadataDepth + 1);
+        $context      = new IsoBmffParseContext();
+
+        $meta = $nestedParser->readBoxAt(0, $metaSize);
+        if ($meta->type !== self::BOX_META) {
+            throw new ParseError('nested metadata payload is not a valid meta atom.', 1466);
+        }
+
+        $nestedParser->parseMetaBox($meta, $context);
+
+        return [
+            'keys'  => $context->qtKeys,
+            'atoms' => $context->qtDataAtoms,
+        ];
+    }
+
+    /**
+     * Flattens nested type-28 metadata into deterministic parent-prefixed keys.
+     *
+     * @param string                $parentKey    Effective key name of the parent data atom.
+     * @param QuickTimeKeyMap       $nestedKeys   Nested key/value pairs.
+     * @param QuickTimeDataAtomList $nestedAtoms  Nested data atom entries.
+     * @param QuickTimeKeyMap       $result       Accumulated top-level key map.
+     * @param QuickTimeDataAtomList $atomsList    Accumulated top-level data atom list.
+     * @param int                   $parentLocale Locale indicator of the parent data atom.
+     */
+    private function mergeNestedType28Values(
+        string $parentKey,
+        array $nestedKeys,
+        array $nestedAtoms,
+        array &$result,
+        array &$atomsList,
+        int $parentLocale,
+    ): void {
+        ksort($nestedKeys);
+
+        foreach ($nestedKeys as $nestedKey => $nestedValue) {
+            $flattenedKey = $parentKey . '.' . $nestedKey;
+            $coerced      = $this->coerceQuickTimeValue($flattenedKey, $nestedValue);
+
+            if (!array_key_exists($flattenedKey, $result)) {
+                $result[$flattenedKey] = $coerced;
+            }
+
+            if (array_key_exists($nestedKey, $nestedAtoms)) {
+                foreach ($nestedAtoms[$nestedKey] as $atom) {
+                    $atomsList[$flattenedKey][] = [
+                        'type'   => $atom['type'],
+                        'locale' => $atom['locale'],
+                        'value'  => $this->coerceQuickTimeValue($flattenedKey, $atom['value']),
+                    ];
+                }
+
+                continue;
+            }
+
+            $atomsList[$flattenedKey][] = [
+                'type'   => self::DATA_TYPE_NESTED_METADATA,
+                'locale' => $parentLocale,
+                'value'  => $coerced,
+            ];
+        }
     }
 
     /**
@@ -3966,6 +4099,18 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $locale      = $win->readU32BE();
         $payloadSize = $data->contentSize - 8;
         $payload     = $payloadSize > 0 ? $win->read($payloadSize) : '';
+
+        if ($type === self::DATA_TYPE_NESTED_METADATA) {
+            $nested = $this->parseNestedMetadataPayload($payload);
+
+            return [
+                'type'        => $type,
+                'locale'      => $locale,
+                'value'       => '',
+                'nestedKeys'  => $nested['keys'],
+                'nestedAtoms' => $nested['atoms'],
+            ];
+        }
 
         return [
             'type'   => $type,

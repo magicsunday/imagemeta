@@ -4696,6 +4696,109 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Parses QuickTime data type 28 payloads as nested metadata atom structures.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesNestedMetadataDataBoxType28Payload(): void
+    {
+        $nestedPayload = $this->createNestedMetaPayloadWithData(
+            'com.apple.quicktime.title',
+            1,
+            'Nested Title',
+        );
+        $file = $this->createQuickTimeMetaWithDataPayload(28, $nestedPayload);
+
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(
+            'Nested Title',
+            $qtMeta->stringValue('com.apple.quicktime.content.identifier.com.apple.quicktime.title'),
+        );
+    }
+
+    /**
+     * Merges nested mdta keys from type-28 payloads into deterministic flattened output keys.
+     *
+     * @return void
+     */
+    #[Test]
+    public function mergesNestedMdtaKeysDeterministicallyFromType28Payload(): void
+    {
+        $nestedPayload = $this->createNestedMetaPayloadWithEntries([
+            ['key' => 'com.apple.quicktime.beta', 'type' => 1, 'payload' => 'B'],
+            ['key' => 'com.apple.quicktime.alpha', 'type' => 1, 'payload' => 'A'],
+        ]);
+        $file = $this->createQuickTimeMetaWithDataPayload(28, $nestedPayload);
+
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('A', $qtMeta->stringValue('com.apple.quicktime.content.identifier.com.apple.quicktime.alpha'));
+        self::assertSame('B', $qtMeta->stringValue('com.apple.quicktime.content.identifier.com.apple.quicktime.beta'));
+    }
+
+    /**
+     * Rejects malformed nested metadata atom payloads in type-28 data boxes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMalformedNestedMetadataType28Payload(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $file = $this->createQuickTimeMetaWithDataPayload(28, '     ');
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Enforces recursion guard for nested type-28 metadata payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function enforceNestedMetadataType28RecursionGuard(): void
+    {
+        $deepPayload = $this->createNestedMetaPayloadWithData(
+            'com.apple.quicktime.deep',
+            1,
+            'deep-value',
+        );
+        $nestedPayload = $this->createNestedMetaPayloadWithData(
+            'com.apple.quicktime.outer',
+            28,
+            $deepPayload,
+        );
+
+        $this->expectException(ParseError::class);
+
+        $file = $this->createQuickTimeMetaWithDataPayload(28, $nestedPayload);
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Regression: existing scalar data atom types remain unchanged.
+     *
+     * @return void
+     */
+    #[Test]
+    public function scalarDataTypesRemainUnchangedAfterType28Support(): void
+    {
+        $file = $this->createQuickTimeMetaWithDataPayload(1, 'Plain Scalar Value');
+
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('Plain Scalar Value', $qtMeta->contentIdentifier());
+    }
+
+    /**
      * Creates a QuickTime file with a data atom using a specific type and payload.
      *
      * @param int    $dataType Well-known type code (1=UTF-8, 2=UTF-16BE, etc.).
@@ -4716,6 +4819,46 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($meta);
 
         return $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
+    }
+
+    /**
+     * Builds a nested QuickTime metadata atom payload for a single key/value entry.
+     */
+    private function createNestedMetaPayloadWithData(string $key, int $type, string $payload): string
+    {
+        return $this->createNestedMetaPayloadWithEntries([
+            ['key' => $key, 'type' => $type, 'payload' => $payload],
+        ]);
+    }
+
+    /**
+     * Builds nested QuickTime metadata atom payload bytes used by type-28 tests.
+     *
+     * @param list<array{key: string, type: int, payload: string}> $entries
+     */
+    private function createNestedMetaPayloadWithEntries(array $entries): string
+    {
+        $keysEntries = '';
+        $ilstEntries = '';
+        $index       = 1;
+
+        foreach ($entries as $entry) {
+            $keysEntries .= pack('N', 9 + strlen($entry['key']))
+                . 'mdta'
+                . $entry['key']
+                . ' ';
+
+            $dataBox = $this->box('data', pack('N', $entry['type']) . pack('N', 0) . $entry['payload']);
+            $ilstEntries .= $this->box(pack('N', $index), $dataBox);
+            ++$index;
+        }
+
+        $keys = $this->box('keys', '    ' . pack('N', count($entries)) . $keysEntries);
+        $hdlr = $this->box('hdlr', '        mdta' . str_repeat(' ', 12));
+        $ilst = $this->box('ilst', $ilstEntries);
+
+        // Return FullBox(meta) content (version/flags + children), without outer box header.
+        return '    ' . $hdlr . $keys . $ilst;
     }
 
     /**
