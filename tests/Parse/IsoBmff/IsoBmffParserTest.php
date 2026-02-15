@@ -149,6 +149,26 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Type 22 with 1-byte payload decodes the maximum unsigned 8-bit value.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeOneByteUnsignedIntMaxPayload(): void
+    {
+        $key     = 'com.apple.quicktime.test';
+        $payload = hex2bin('FF');
+        self::assertIsString($payload);
+
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(255, $qtMeta->keys[$key]);
+    }
+
+    /**
      * Decodes a 1-byte signed integer data box payload.
      * QuickTime File Format 2012, Table 3-5: type 21 supports 1-4 byte payloads.
      *
@@ -1665,6 +1685,61 @@ final class IsoBmffParserTest extends TestCase
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(65534, $qtMeta->keys[$key]);
+    }
+
+    /**
+     * Type 22 with 2-byte payload decodes the maximum unsigned 16-bit value.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeTwoByteUnsignedIntMaxPayload(): void
+    {
+        $key     = 'com.apple.quicktime.test';
+        $payload = hex2bin('FFFF');
+        self::assertIsString($payload);
+
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(65535, $qtMeta->keys[$key]);
+    }
+
+    /**
+     * Type 22 with 3-byte payload decodes the maximum unsigned 24-bit value.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeThreeByteUnsignedIntMaxPayload(): void
+    {
+        $key     = 'com.apple.quicktime.test';
+        $payload = hex2bin('FFFFFF');
+        self::assertIsString($payload);
+
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(16777215, $qtMeta->keys[$key]);
+    }
+
+    /**
+     * Type 22 with empty payload (0 bytes) raises ParseError.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsEmptyUnsignedIntPayload(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $key  = 'com.apple.quicktime.test';
+        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, '');
+        $this->createExtractor($file)->extract();
     }
 
     /**
