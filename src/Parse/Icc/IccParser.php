@@ -1036,7 +1036,8 @@ final class IccParser implements IccParserInterface
     /**
      * Parses an ICC 'text' tag (textType) to retrieve its ASCII text.
      *
-     * ICC.1:2022 §10.24: textType structure is signature (4) + reserved (4) + ASCII text.
+     * ICC.1:2022 §10.1: all tag types begin with signature (4) + reserved bytes (4, must be zero).
+     * ICC.1:2022 §10.24: textType payload stores 7-bit ASCII text after that header.
      * Text must be 7-bit ASCII (all bytes <= 0x7F) and terminated with a NUL byte.
      *
      * @param string $data Raw tag payload beginning with the type signature.
@@ -1049,7 +1050,7 @@ final class IccParser implements IccParserInterface
             return null;
         }
 
-        // GH-901: ICC.1:2022 §10.24 reserved bytes 4..7 must be zero
+        // GH-901: ICC.1:2022 §10.1 + §10.24 reserved bytes 4..7 must be zero.
         $reserved = substr($data, 4, 4);
         if ($reserved !== "\0\0\0\0") {
             return null;
@@ -1076,7 +1077,8 @@ final class IccParser implements IccParserInterface
     /**
      * Parses an ICC 'desc' tag to retrieve its ASCII description.
      *
-     * ICC spec: desc tag format:
+     * ICC.1:2022 §10.1: all tag types begin with signature (4) + reserved bytes (4, must be zero).
+     * ICC.1:2001 §6.5.17 describes the legacy descType payload layout:
      * - bytes 0-3: 'desc' signature
      * - bytes 4-7: reserved (0)
      * - bytes 8-11: ASCII description length (including NUL) as uint32 BE
@@ -1092,7 +1094,7 @@ final class IccParser implements IccParserInterface
             return null;
         }
 
-        // GH-902: reserved bytes 4..7 must be zero
+        // GH-902: ICC.1:2022 §10.1 reserved bytes 4..7 must be zero.
         $reserved = substr($data, 4, 4);
         if ($reserved !== "\0\0\0\0") {
             return null;
@@ -1146,7 +1148,7 @@ final class IccParser implements IccParserInterface
             return null;
         }
 
-        // GH-851: ICC.1:2022 Table 54 reserved bytes 4..7 must be zero
+        // GH-851: ICC.1:2022 §10.1 + Table 54 reserved bytes 4..7 must be zero.
         $reserved = substr($data, 4, 4);
         if ($reserved !== "\0\0\0\0") {
             throw new ParseError('ICC mluc reserved bytes 4..7 are non-zero', 1137);

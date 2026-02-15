@@ -766,6 +766,28 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Rejects mluc payloads with non-zero reserved bytes in the type header.
+     * ICC.1:2022 §10.1 and Table 54: bytes 4..7 must be zero.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMlucTagWithNonZeroTypeReservedBytes(): void
+    {
+        $profile = $this->buildMlucProfile("\x00\x48\x00\x69");
+
+        $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
+        $profile       = substr_replace($profile, "\0\0\0\x01", $tagDataOffset + 4, 4);
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('reserved bytes 4..7');
+
+        $decoder->decode($profile);
+    }
+
+    /**
      * Multi-record mluc with reordered records yields same selected output.
      *
      * The parser must select deterministically by locale, not by record order.
@@ -1052,6 +1074,27 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * GH-1115: Rejects textType tags with non-zero reserved bytes in the type header.
+     * ICC.1:2022 §10.1 and §10.24: bytes 4..7 must be zero.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsTextTypeWithNonZeroReservedBytes(): void
+    {
+        $profile = $this->buildTextTypeProfile("Valid ASCII Text\0", 0x02400000);
+
+        $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
+        $profile       = substr_replace($profile, "\0\0\0\x01", $tagDataOffset + 4, 4);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertNull($result['copyright']);
+    }
+
+    /**
      * GH-831: Rejects profiles with non-zero reserved header bytes.
      * ICC.1:2022 §7.2.19: bytes 100-127 must be zero.
      *
@@ -1213,6 +1256,27 @@ final class IccParserTest extends TestCase
 
         self::assertNotNull($result);
         self::assertNull($result['description']); // desc tag is invalid
+    }
+
+    /**
+     * GH-1115: Rejects desc tags with non-zero reserved bytes in the type header.
+     * ICC.1:2022 §10.1: bytes 4..7 must be zero.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsDescTagWithNonZeroReservedBytes(): void
+    {
+        $profile = $this->buildDescTypeProfile("Valid ASCII\0", 0x02400000);
+
+        $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
+        $profile       = substr_replace($profile, "\0\0\0\x01", $tagDataOffset + 4, 4);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertNull($result['description']);
     }
 
     /**
