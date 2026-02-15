@@ -66,6 +66,20 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
     }
 
     /**
+     * Mixed binary UNDEFINED payloads must remain byte-exact.
+     */
+    #[Test]
+    public function keepsMixedBinaryUndefinedPayloadByteExact(): void
+    {
+        $payload = "\xFF\x00\x7F\x80\x41\x00\xFE";
+        $parsed  = $this->parseWithExifUndefinedTag(ExifTag::MAKER_NOTE, $payload);
+
+        $entry = $parsed->exifIfd?->get(ExifTag::MAKER_NOTE);
+        self::assertNotNull($entry);
+        self::assertSame($payload, $entry->value);
+    }
+
+    /**
      * Tag-specific UNDEFINED converters remain responsible for textual interpretation.
      *
      * EXIF 3.0 §4.6.4 defines UserComment with an 8-byte character-code prefix.
@@ -80,6 +94,121 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
         self::assertNotNull($entry);
         self::assertSame($payload, $entry->value);
         self::assertSame('Hello World', $parsed->userComment());
+    }
+
+    /**
+     * GPS undefined-text decoding remains functional when parser keeps raw UNDEFINED bytes.
+     */
+    #[Test]
+    public function keepsGpsUndefinedConvertersWorkingWithRawBytes(): void
+    {
+        $payload = "ASCII\0\0\0GPS";
+        $parsed  = $this->parseWithGpsUndefinedTag(ExifTag::GPS_PROCESSING_METHOD, $payload);
+
+        $entry = $parsed->gpsIfd?->get(ExifTag::GPS_PROCESSING_METHOD);
+        self::assertNotNull($entry);
+        self::assertSame($payload, $entry->value);
+        self::assertSame('GPS', $parsed->gps()['processing_method']);
+    }
+
+    /**
+     * Non-UNDEFINED decoding paths remain unchanged.
+     */
+    #[Test]
+    public function keepsAsciiDecodingUnchangedForNonUndefinedTypes(): void
+    {
+        $parsed = $this->parseWithIfd0AsciiTag(ExifTag::MAKE, 'Canon');
+
+        $entry = $parsed->ifd0->get(ExifTag::MAKE);
+        self::assertNotNull($entry);
+        self::assertSame('Canon', $entry->value);
+    }
+
+    /**
+     * Builds and parses a minimal classic TIFF with one GPS IFD UNDEFINED entry.
+     *
+     * @param int    $tag     GPS tag stored in GPS IFD.
+     * @param string $payload Raw UNDEFINED payload.
+     */
+    private function parseWithGpsUndefinedTag(int $tag, string $payload): ParsedExif
+    {
+        $ifd0Offset      = 8;
+        $ifd0EntryCount  = 3;
+        $ifd0Size        = 2 + ($ifd0EntryCount * 12) + 4;
+        $gpsIfdOffset    = $ifd0Offset + $ifd0Size;
+        $gpsEntryCount   = 1;
+        $gpsIfdSize      = 2 + ($gpsEntryCount * 12) + 4;
+        $payloadOffset   = $gpsIfdOffset + $gpsIfdSize;
+        $payloadByteSize = strlen($payload);
+
+        $ifd0 = pack('v', $ifd0EntryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::GPS_IFD_POINTER)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', $gpsIfdOffset)
+            . pack('V', 0);
+
+        $gpsIfd = pack('v', $gpsEntryCount)
+            . pack('v', $tag)
+            . pack('v', TiffConst::TYPE_UNDEFINED)
+            . pack('V', $payloadByteSize)
+            . pack('V', $payloadOffset)
+            . pack('V', 0);
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifd0Offset)
+            . $ifd0
+            . $gpsIfd
+            . $payload;
+
+        return (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Builds and parses a minimal classic TIFF with one IFD0 ASCII entry.
+     *
+     * @param int    $tag   IFD0 tag stored as ASCII.
+     * @param string $value ASCII text without trailing NUL.
+     */
+    private function parseWithIfd0AsciiTag(int $tag, string $value): ParsedExif
+    {
+        $ifd0Offset     = 8;
+        $ifd0EntryCount = 3;
+        $ifd0Size       = 2 + ($ifd0EntryCount * 12) + 4;
+        $asciiPayload   = $value . "\0";
+        $payloadOffset  = $ifd0Offset + $ifd0Size;
+
+        $ifd0 = pack('v', $ifd0EntryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', $tag)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($asciiPayload))
+            . pack('V', $payloadOffset)
+            . pack('V', 0);
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifd0Offset)
+            . $ifd0
+            . $asciiPayload;
+
+        return (new TiffExifParser())->parseFromBlob($blob);
     }
 
     /**
