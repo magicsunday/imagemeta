@@ -40,8 +40,12 @@ final class TiffExifParserJpegProcTest extends TestCase
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
-                TiffTag::JPEG_PROC   => $this->shortEntry(TiffTag::JPEG_PROC, 1),
+                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::SAMPLES_PER_PIXEL => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
+                TiffTag::JPEG_PROC         => $this->shortEntry(TiffTag::JPEG_PROC, 1),
+                TiffTag::JPEG_Q_TABLES     => $this->numericEntry(TiffTag::JPEG_Q_TABLES, TiffConst::TYPE_LONG, 1, [8]),
+                TiffTag::JPEG_DC_TABLES    => $this->numericEntry(TiffTag::JPEG_DC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
+                TiffTag::JPEG_AC_TABLES    => $this->numericEntry(TiffTag::JPEG_AC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
             ]),
         );
 
@@ -60,6 +64,7 @@ final class TiffExifParserJpegProcTest extends TestCase
                 ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 14),
                 TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 1),
+                TiffTag::JPEG_DC_TABLES           => $this->numericEntry(TiffTag::JPEG_DC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
             ]),
         );
 
@@ -151,6 +156,7 @@ final class TiffExifParserJpegProcTest extends TestCase
                 ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 4),
                 TiffTag::JPEG_POINT_TRANSFORMS    => $this->shortEntry(TiffTag::JPEG_POINT_TRANSFORMS, 0),
+                TiffTag::JPEG_DC_TABLES           => $this->numericEntry(TiffTag::JPEG_DC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
             ]),
         );
 
@@ -255,6 +261,131 @@ final class TiffExifParserJpegProcTest extends TestCase
                 TiffTag::JPEG_PROC             => $this->shortEntry(TiffTag::JPEG_PROC, 1),
                 ExifTag::SAMPLES_PER_PIXEL     => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_POINT_TRANSFORMS => $this->shortEntry(TiffTag::JPEG_POINT_TRANSFORMS, 0),
+            ]),
+        );
+    }
+
+    /**
+     * JPEGProc=1 accepts Q/DC/AC table offsets with LONG[SamplesPerPixel] layout.
+     */
+    #[Test]
+    public function acceptsJpegDctProcessWithAllTableOffsets(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::SAMPLES_PER_PIXEL => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
+                TiffTag::JPEG_PROC         => $this->shortEntry(TiffTag::JPEG_PROC, 1),
+                TiffTag::JPEG_Q_TABLES     => $this->numericEntry(TiffTag::JPEG_Q_TABLES, TiffConst::TYPE_LONG, 1, [8]),
+                TiffTag::JPEG_DC_TABLES    => $this->numericEntry(TiffTag::JPEG_DC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
+                TiffTag::JPEG_AC_TABLES    => $this->numericEntry(TiffTag::JPEG_AC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
+            ]),
+        );
+
+        $ifd1 = $parsed->ifd1;
+        self::assertInstanceOf(Ifd::class, $ifd1);
+        self::assertSame(8, $ifd1->get(TiffTag::JPEG_Q_TABLES)?->value);
+        self::assertSame(8, $ifd1->get(TiffTag::JPEG_DC_TABLES)?->value);
+        self::assertSame(8, $ifd1->get(TiffTag::JPEG_AC_TABLES)?->value);
+    }
+
+    /**
+     * JPEGProc=14 accepts DC table offsets without AC tables.
+     */
+    #[Test]
+    public function acceptsJpegLosslessProcessWithDcTablesOnly(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
+                TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 14),
+                TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 1),
+                TiffTag::JPEG_DC_TABLES           => $this->numericEntry(TiffTag::JPEG_DC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
+            ]),
+        );
+
+        self::assertSame(8, $parsed->ifd1?->get(TiffTag::JPEG_DC_TABLES)?->value);
+    }
+
+    /**
+     * JPEGProc=1 requires JPEGQTables and JPEGACTables in addition to JPEGDCTables.
+     */
+    #[Test]
+    public function rejectsMissingMandatoryDctTableFields(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('JPEGQTables and JPEGACTables are required when JPEGProc=1');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::SAMPLES_PER_PIXEL => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
+                TiffTag::JPEG_PROC         => $this->shortEntry(TiffTag::JPEG_PROC, 1),
+                TiffTag::JPEG_DC_TABLES    => $this->numericEntry(TiffTag::JPEG_DC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
+            ]),
+        );
+    }
+
+    /**
+     * JPEGProc=14 requires JPEGDCTables and forbids JPEGACTables.
+     */
+    #[Test]
+    public function rejectsForbiddenAcTablesForLosslessProcess(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('JPEGACTables are not used when JPEGProc=14');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
+                TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 14),
+                TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 1),
+                TiffTag::JPEG_DC_TABLES           => $this->numericEntry(TiffTag::JPEG_DC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
+                TiffTag::JPEG_AC_TABLES           => $this->numericEntry(TiffTag::JPEG_AC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
+            ]),
+        );
+    }
+
+    /**
+     * JPEG table tags must use LONG[SamplesPerPixel] layout.
+     */
+    #[Test]
+    public function rejectsInvalidJpegTableTagLayout(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('JPEGQTables must be LONG[SamplesPerPixel]');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::SAMPLES_PER_PIXEL => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 2),
+                TiffTag::JPEG_PROC         => $this->shortEntry(TiffTag::JPEG_PROC, 1),
+                TiffTag::JPEG_Q_TABLES     => $this->shortEntry(TiffTag::JPEG_Q_TABLES, 8),
+                TiffTag::JPEG_DC_TABLES    => $this->numericEntry(TiffTag::JPEG_DC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
+                TiffTag::JPEG_AC_TABLES    => $this->numericEntry(TiffTag::JPEG_AC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
+            ]),
+        );
+    }
+
+    /**
+     * JPEG table offsets must point inside the TIFF blob.
+     */
+    #[Test]
+    public function rejectsOutOfRangeJpegTableOffsets(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('JPEGDCTables component 0 offset');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1([
+                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::SAMPLES_PER_PIXEL => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
+                TiffTag::JPEG_PROC         => $this->shortEntry(TiffTag::JPEG_PROC, 1),
+                TiffTag::JPEG_Q_TABLES     => $this->numericEntry(TiffTag::JPEG_Q_TABLES, TiffConst::TYPE_LONG, 1, [8]),
+                TiffTag::JPEG_DC_TABLES    => $this->numericEntry(TiffTag::JPEG_DC_TABLES, TiffConst::TYPE_LONG, 1, [0x7FFFFFFF]),
+                TiffTag::JPEG_AC_TABLES    => $this->numericEntry(TiffTag::JPEG_AC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
             ]),
         );
     }

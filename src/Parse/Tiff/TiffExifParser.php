@@ -1368,6 +1368,7 @@ final class TiffExifParser implements TiffExifParserInterface
             $this->validatePredictorTag($additionalIfd);
             $this->validateJpegProcTag($additionalIfd);
             $this->validateJpegLosslessTags($additionalIfd);
+            $this->validateJpegTableTags($additionalIfd);
             $this->validateJpegInterchangePairTags($additionalIfd);
             $this->validateMinMaxSampleValueTags($additionalIfd);
             $this->validateSampleDomainTags($additionalIfd);
@@ -1466,6 +1467,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->validatePredictorTag($ifd0);
         $this->validateJpegProcTag($ifd0);
         $this->validateJpegLosslessTags($ifd0);
+        $this->validateJpegTableTags($ifd0);
         $this->validateJpegInterchangePairTags($ifd0);
         $this->validateMinMaxSampleValueTags($ifd0);
         $this->validateSampleDomainTags($ifd0);
@@ -2814,6 +2816,118 @@ final class TiffExifParser implements TiffExifParserInterface
 
         if ($pointTransformsEntry instanceof IfdEntry) {
             throw new ParseError('JPEGPointTransforms is only valid when JPEGProc=14.', 1841);
+        }
+    }
+
+    /**
+     * Validates JPEG table offset tags and process-specific requirements.
+     *
+     * TIFF 6.0 Section 22 defines JPEGQTables, JPEGDCTables and JPEGACTables as
+     * LONG arrays with count SamplesPerPixel whose values are offsets within the
+     * TIFF blob. Mandatory fields depend on the JPEG process (JPEGProc).
+     */
+    private function validateJpegTableTags(Ifd $ifd): void
+    {
+        $jpegProcEntry = $ifd->get(TiffTag::JPEG_PROC);
+        $jpegProc      = (($jpegProcEntry instanceof IfdEntry) && is_int($jpegProcEntry->value))
+            ? $jpegProcEntry->value
+            : null;
+
+        $samplesPerPixelEntry = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+        $samplesPerPixel      = 1;
+
+        if (($samplesPerPixelEntry instanceof IfdEntry) && is_int($samplesPerPixelEntry->value) && ($samplesPerPixelEntry->value > 0)) {
+            $samplesPerPixel = $samplesPerPixelEntry->value;
+        }
+
+        $jpegQTablesEntry  = $ifd->get(TiffTag::JPEG_Q_TABLES);
+        $jpegDcTablesEntry = $ifd->get(TiffTag::JPEG_DC_TABLES);
+        $jpegAcTablesEntry = $ifd->get(TiffTag::JPEG_AC_TABLES);
+
+        if ($jpegQTablesEntry instanceof IfdEntry) {
+            if (($jpegQTablesEntry->type !== TiffConst::TYPE_LONG) || ($jpegQTablesEntry->count !== $samplesPerPixel)) {
+                throw new ParseError('JPEGQTables must be LONG[SamplesPerPixel].', 1842);
+            }
+
+            $this->validateJpegTableOffsets($jpegQTablesEntry, 'JPEGQTables');
+        }
+
+        if ($jpegDcTablesEntry instanceof IfdEntry) {
+            if (($jpegDcTablesEntry->type !== TiffConst::TYPE_LONG) || ($jpegDcTablesEntry->count !== $samplesPerPixel)) {
+                throw new ParseError('JPEGDCTables must be LONG[SamplesPerPixel].', 1843);
+            }
+
+            $this->validateJpegTableOffsets($jpegDcTablesEntry, 'JPEGDCTables');
+        }
+
+        if ($jpegAcTablesEntry instanceof IfdEntry) {
+            if (($jpegAcTablesEntry->type !== TiffConst::TYPE_LONG) || ($jpegAcTablesEntry->count !== $samplesPerPixel)) {
+                throw new ParseError('JPEGACTables must be LONG[SamplesPerPixel].', 1844);
+            }
+
+            $this->validateJpegTableOffsets($jpegAcTablesEntry, 'JPEGACTables');
+        }
+
+        $hasJpegTableTags = ($jpegQTablesEntry instanceof IfdEntry)
+            || ($jpegDcTablesEntry instanceof IfdEntry)
+            || ($jpegAcTablesEntry instanceof IfdEntry);
+
+        if (!$hasJpegTableTags) {
+            return;
+        }
+
+        if ($jpegProc === 1) {
+            if (!$jpegDcTablesEntry instanceof IfdEntry) {
+                throw new ParseError('JPEGDCTables is required when JPEGProc=1.', 1845);
+            }
+
+            if (!($jpegQTablesEntry instanceof IfdEntry) || !($jpegAcTablesEntry instanceof IfdEntry)) {
+                throw new ParseError('JPEGQTables and JPEGACTables are required when JPEGProc=1.', 1846);
+            }
+
+            return;
+        }
+
+        if ($jpegProc === 14) {
+            if (!$jpegDcTablesEntry instanceof IfdEntry) {
+                throw new ParseError('JPEGDCTables is required when JPEGProc=14.', 1847);
+            }
+
+            if ($jpegAcTablesEntry instanceof IfdEntry) {
+                throw new ParseError('JPEGACTables are not used when JPEGProc=14.', 1848);
+            }
+
+            return;
+        }
+
+        throw new ParseError('JPEG table tags are only valid when JPEGProc is 1 or 14.', 1849);
+    }
+
+    /**
+     * Validates that all JPEG table offsets point inside the TIFF blob.
+     *
+     * TIFF 6.0 Section 22 uses LONG offsets for JPEG table pointers.
+     */
+    private function validateJpegTableOffsets(IfdEntry $entry, string $tagName): void
+    {
+        $tableOffsets = $this->extractIntegerTagComponents($entry, $tagName);
+        $blobSize     = $this->buffer->size();
+
+        foreach ($tableOffsets as $componentIndex => $tableOffset) {
+            if (($tableOffset > 0) && ($tableOffset < $blobSize)) {
+                continue;
+            }
+
+            throw new ParseError(
+                sprintf(
+                    '%s component %d offset %d is outside TIFF bounds 1..%d.',
+                    $tagName,
+                    $componentIndex,
+                    $tableOffset,
+                    $blobSize - 1,
+                ),
+                1850,
+            );
         }
     }
 
