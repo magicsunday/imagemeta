@@ -1899,12 +1899,26 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('audio sample entry truncated', 1160);
         }
 
-        $channels   = $win->readU16BE();
-        $sampleSize = $win->readU16BE();
-        // Compression ID and packet size are retained for container compatibility
-        // but are not currently surfaced in the extracted metadata model.
+        $channels      = $win->readU16BE();
+        $sampleSize    = $win->readU16BE();
+        $compressionId = $win->readU16BE();
+        // Packet size is retained for container compatibility but is not currently
+        // surfaced in the extracted metadata model.
         $win->readU16BE();
-        $win->readU16BE();
+
+        if ($version === 0) {
+            if ($channels !== 1 && $channels !== 2) {
+                throw new ParseError('audio sample entry version 0 channels must be 1 or 2', 1503);
+            }
+
+            if ($sampleSize !== 8 && $sampleSize !== 16) {
+                throw new ParseError('audio sample entry version 0 sample size must be 8 or 16 bits', 1504);
+            }
+
+            if ($compressionId !== 0) {
+                throw new ParseError('audio sample entry version 0 compression ID must be 0', 1505);
+            }
+        }
 
         $sampleRateRaw = $win->readU32BE();
         $sampleRate    = $this->decodeAudioSampleRate16_16($sampleRateRaw);

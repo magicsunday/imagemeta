@@ -3414,6 +3414,70 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects version 0 audio sample entries with unsupported channel counts.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdVersion0EntryWithInvalidChannelCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample entry version 0 channels must be 1 or 2');
+
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'mp4a',
+            channels: 6,
+            sampleSize: 16,
+            sampleRate: 44100,
+        );
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects version 0 audio sample entries with unsupported sample sizes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdVersion0EntryWithInvalidSampleSize(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample entry version 0 sample size must be 8 or 16 bits');
+
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 24,
+            sampleRate: 44100,
+        );
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects version 0 audio sample entries with non-zero compression IDs.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdVersion0EntryWithNonZeroCompressionId(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample entry version 0 compression ID must be 0');
+
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 44100,
+            compressionId: 1,
+        );
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
      * Parses an audio stsd entry with sound sample description version 1.
      *
      * @return void
@@ -6595,8 +6659,14 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Creates a version 0 audio sample entry for an stsd box.
      */
-    private function audioSampleEntryVersion0(string $format, int $channels, int $sampleSize, int $sampleRate): string
-    {
+    private function audioSampleEntryVersion0(
+        string $format,
+        int $channels,
+        int $sampleSize,
+        int $sampleRate,
+        int $compressionId = 0,
+        int $packetSize = 0,
+    ): string {
         $payload = str_repeat("\0", 6)
             . pack('n', 1)
             . pack('n', 0)
@@ -6604,8 +6674,8 @@ final class IsoBmffParserTest extends TestCase
             . pack('N', 0)
             . pack('n', $channels)
             . pack('n', $sampleSize)
-            . pack('n', 0)
-            . pack('n', 0)
+            . pack('n', $compressionId & 0xFFFF)
+            . pack('n', $packetSize)
             . pack('N', $sampleRate << 16);
 
         return $this->box($format, $payload);
