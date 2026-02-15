@@ -109,6 +109,26 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects a headerless meta box for non-QuickTime BMFF brands.
+     * ISO/IEC 14496-12:2015 defines meta as FullBox(version=0, flags=0).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectNonFullMetaBoxInIsoBmff(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('meta box missing required FullBox header');
+
+        $exifPayload = pack('N', 0) . "MM\x00\x2Aisom-exif";
+        $meta        = $this->box('meta', $this->box('Exif', $exifPayload));
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Decodes a 1-byte unsigned integer data box payload.
      * QuickTime File Format 2012, Table 3-5: type 22 supports 1-4 byte payloads.
      *

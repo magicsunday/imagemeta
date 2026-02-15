@@ -43,4 +43,9 @@ final class IsoBmffParseContext
 
     /** @var array<string, list<array{type: int, locale: int, value: string|int|float|bool}>> */
     public array $qtDataAtoms = [];
+
+    /**
+     * True when the parsed ftyp brands explicitly allow QuickTime compatibility parsing.
+     */
+    public bool $allowQuickTimeMetaWithoutFullBox = false;
 }

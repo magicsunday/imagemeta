@@ -89,6 +89,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     private const string BOX_FTYP = 'ftyp';
 
     /**
+     * QuickTime-compatible file type brand.
+     */
+    private const string BRAND_QUICKTIME = 'qt  ';
+
+    /**
      * FourCC for QuickTime movie box.
      */
     private const string BOX_MOOV = 'moov';
@@ -464,7 +469,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
         foreach ($this->walkTopLevelBoxes() as $box) {
             if ($box->type === self::BOX_FTYP) {
-                $context->qtKeys = $this->mergeAssociative($context->qtKeys, $this->parseFtyp($box));
+                $context->qtKeys = $this->mergeAssociative($context->qtKeys, $this->parseFtyp($box, $context));
             } elseif ($box->type === self::BOX_META) {
                 $this->parseMetaBox($box, $context);
             } elseif ($box->type === self::BOX_MOOV) {
@@ -610,11 +615,12 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     /**
      * Parses the file type box (`ftyp`) and exposes container brands as metadata keys.
      *
-     * @param BoxDescriptor $ftyp Box descriptor representing the file type declaration.
+     * @param BoxDescriptor       $ftyp    Box descriptor representing the file type declaration.
+     * @param IsoBmffParseContext $context Shared parse-state context.
      *
      * @return QuickTimeKeyMap
      */
-    private function parseFtyp(BoxDescriptor $ftyp): array
+    private function parseFtyp(BoxDescriptor $ftyp, IsoBmffParseContext $context): array
     {
         $win = $ftyp->window;
         $win->seek(0);
@@ -633,6 +639,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $brands = [];
         while ($win->tell() + 4 <= $ftyp->contentSize) {
             $brands[] = $this->normaliseFourcc($win->read(4));
+        }
+
+        if (($majorBrand === self::BRAND_QUICKTIME) || in_array(self::BRAND_QUICKTIME, $brands, true)) {
+            $context->allowQuickTimeMetaWithoutFullBox = true;
         }
 
         return [
@@ -1666,7 +1676,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         // EXIF 3.0 Annex A.2 describes how the `meta` box aggregates
         // direct Exif boxes, UUID-wrapped payloads and item references, so we collect each
         // channel before normalising the referenced data.
-        $payloads                = $this->collectDirectPayloads($meta, $fileOffsetOrigin);
+        $payloads                = $this->collectDirectPayloads($meta, $context, $fileOffsetOrigin);
         $context->itemReferences = $this->mergeItemReferencesByContext($context->itemReferences, $meta->offset, $payloads['itemReferences']);
         $context->dataReferences = $this->mergeDataReferencesByContext($context->dataReferences, $meta->offset, $payloads['dataReferences']);
 
@@ -1734,7 +1744,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      *     isMdta: bool
      * }
      */
-    private function collectDirectPayloads(BoxDescriptor $meta, int $fileOffsetOrigin = 0): array
+    private function collectDirectPayloads(BoxDescriptor $meta, IsoBmffParseContext $context, int $fileOffsetOrigin = 0): array
     {
         /** @var array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos */
         $itemInfos = [];
@@ -1760,7 +1770,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         /** @var list<list<int>> $languageLists */
         $languageLists = [];
 
-        $childOffset = $this->detectMetaChildOffset($meta);
+        $childOffset = $this->detectMetaChildOffset($meta, $context->allowQuickTimeMetaWithoutFullBox);
         foreach ($this->walkChildren($meta, $childOffset) as $child) {
             switch ($child->type) {
                 case self::BOX_HDLR:
@@ -1906,29 +1916,16 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     /**
      * Determines whether the meta box includes a full box header (version/flags).
      */
-    private function detectMetaChildOffset(BoxDescriptor $meta): int
+    private function detectMetaChildOffset(BoxDescriptor $meta, bool $allowQuickTimeMetaWithoutFullBox): int
     {
-        // ISO/IEC 14496-12 §8.11.1 defines `meta` as a FullBox, but some QuickTime
-        // files omit the version/flags header, so probe for the first child box.
-        if ($meta->contentSize < 8) {
-            return 0;
-        }
-
+        // ISO/IEC 14496-12 §8.11.1 defines `meta` as FullBox(version=0, flags=0).
+        // QuickTime compatibility mode may omit this 4-byte header.
         $window = $meta->window;
         $window->seek(0);
 
         $peekLength = $meta->contentSize < 12 ? $meta->contentSize : 12;
         $peek       = $window->read($peekLength);
         $peekSize   = strlen($peek);
-
-        if ($peekSize >= 8) {
-            $size = $this->readU32FromBytes($peek, 0, 'meta child size');
-            $type = substr($peek, 4, 4);
-
-            if ($this->isPrintableFourcc($type) && $this->isPlausibleBoxSize($size, $meta->contentSize)) {
-                return 0;
-            }
-        }
 
         if ($peekSize >= 12) {
             $size = $this->readU32FromBytes($peek, 4, 'meta child size');
@@ -1939,6 +1936,25 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
                 return 4;
             }
+        }
+
+        if ($peekSize >= 8) {
+            $size = $this->readU32FromBytes($peek, 0, 'meta child size');
+            $type = substr($peek, 4, 4);
+
+            if ($this->isPrintableFourcc($type) && $this->isPlausibleBoxSize($size, $meta->contentSize)) {
+                if ($allowQuickTimeMetaWithoutFullBox) {
+                    return 0;
+                }
+
+                throw new ParseError('meta box missing required FullBox header', 1454);
+            }
+        }
+
+        if ($allowQuickTimeMetaWithoutFullBox === false && $peekSize >= 4) {
+            $this->validateMetaFullBoxHeader($peek);
+
+            return 4;
         }
 
         // GH-945: reject ambiguous meta header layout instead of defaulting
