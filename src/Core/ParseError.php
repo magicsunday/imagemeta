@@ -18,4 +18,7 @@ use RuntimeException;
  */
 class ParseError extends RuntimeException
 {
+    public const int XMP_ALT_DUPLICATE_LANG = 1121;
+
+    public const int XMP_ALT_MISSING_LANG = 1350;
 }

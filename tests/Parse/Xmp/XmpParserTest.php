@@ -1143,6 +1143,7 @@ XML;
         $parser = new XmpParser();
 
         $this->expectException(ParseError::class);
+        $this->expectExceptionCode(ParseError::XMP_ALT_DUPLICATE_LANG);
         $this->expectExceptionMessage('Duplicate xml:lang "en-US" in rdf:Alt');
 
         $parser->parse($xml);
@@ -1318,7 +1319,7 @@ XML;
         $method = new ReflectionMethod(XmpParser::class, 'validateAltContainerLang');
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1350);
+        $this->expectExceptionCode(ParseError::XMP_ALT_MISSING_LANG);
         $this->expectExceptionMessage('rdf:li in rdf:Alt must have an xml:lang qualifier');
 
         $method->invoke(new XmpParser(), 'Alt', '');

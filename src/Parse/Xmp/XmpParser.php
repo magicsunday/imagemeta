@@ -595,7 +595,7 @@ final class XmpParser
 
         throw new ParseError(
             'rdf:li in rdf:Alt must have an xml:lang qualifier per XMP spec LanguageAlternative.',
-            1350,
+            ParseError::XMP_ALT_MISSING_LANG,
         );
     }
 
