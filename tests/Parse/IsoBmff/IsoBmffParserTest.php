@@ -1572,6 +1572,46 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Type 21 with 1-byte payload decodes negative values via sign extension.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeOneByteSignedIntNegativePayload(): void
+    {
+        $key     = 'com.apple.quicktime.test';
+        $payload = hex2bin('FF'); // -1 as signed 8-bit
+        self::assertIsString($payload);
+
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(-1, $qtMeta->keys[$key]);
+    }
+
+    /**
+     * Type 21 with 2-byte payload decodes the minimum signed 16-bit value.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeTwoByteSignedIntMinimumPayload(): void
+    {
+        $key     = 'com.apple.quicktime.test';
+        $payload = hex2bin('8000'); // -32768 as signed 16-bit BE
+        self::assertIsString($payload);
+
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(-32768, $qtMeta->keys[$key]);
+    }
+
+    /**
      * Type 21 with 3-byte payload decodes to expected signed integer.
      *
      * @return void
@@ -1587,6 +1627,26 @@ final class IsoBmffParserTest extends TestCase
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(256, $qtMeta->keys[$key]);
+    }
+
+    /**
+     * Type 21 with 3-byte payload decodes negative values with proper sign extension.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeThreeByteSignedIntNegativePayload(): void
+    {
+        $key     = 'com.apple.quicktime.test';
+        $payload = hex2bin('FF0000'); // -65536 as signed 24-bit BE
+        self::assertIsString($payload);
+
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(-65536, $qtMeta->keys[$key]);
     }
 
     /**
@@ -1621,6 +1681,23 @@ final class IsoBmffParserTest extends TestCase
 
         $key  = 'com.apple.quicktime.test';
         $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, '');
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Type 21 with 5-byte payload (>4 bytes) raises ParseError.
+     *
+     * QuickTime File Format 2012, Table 3-5: type 21 requires 1–4 bytes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsOversizedSignedIntPayload(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $key  = 'com.apple.quicktime.test';
+        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, '    ');
         $this->createExtractor($file)->extract();
     }
 
