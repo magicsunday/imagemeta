@@ -277,6 +277,23 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Rejects profiles that declare the 128-byte header size but omit the tag-count field.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsHeaderOnlyProfileWithoutTagTableBytes(): void
+    {
+        $profile = substr(IccFixtures::minimalProfile(), 0, 128);
+        $profile = substr_replace($profile, pack('N', 128), 0, 4);
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
+    }
+
+    /**
      * Builds a profile with two tags sharing the same signature.
      * Confirms the parser rejects duplicate tag signatures per ICC.1:2022 §7.3.
      *
