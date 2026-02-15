@@ -1124,7 +1124,7 @@ final readonly class GpsConverter
         }
 
         if (preg_match('//u', $payload) === 1) {
-            return $this->stringConverter->sanitize($payload);
+            return $this->decodeUndefinedWithEncoding($payload, CharacterEncoding::UTF8);
         }
 
         return $this->decodeUndefinedUnicode($payload);
@@ -1154,12 +1154,7 @@ final readonly class GpsConverter
             return null;
         }
 
-        $converted = @iconv($encoding->value, 'UTF-8', $content);
-        if ($converted === false) {
-            return null;
-        }
-
-        return $this->stringConverter->sanitize($converted);
+        return $this->decodeUndefinedWithEncoding($content, $encoding);
     }
 
     /**
@@ -1167,6 +1162,28 @@ final readonly class GpsConverter
      */
     private function decodeUndefinedJis(string $payload): ?string
     {
-        return JisTextDecoder::decode($payload);
+        return $this->decodeUndefinedWithEncoding($payload, CharacterEncoding::JIS);
+    }
+
+    /**
+     * Decodes a GPS undefined payload with the selected source encoding.
+     */
+    private function decodeUndefinedWithEncoding(string $payload, CharacterEncoding $sourceEncoding): ?string
+    {
+        if ($payload === '') {
+            return null;
+        }
+
+        $decoded = match ($sourceEncoding) {
+            CharacterEncoding::JIS  => JisTextDecoder::decode($payload),
+            CharacterEncoding::UTF8 => $payload,
+            default                 => @iconv($sourceEncoding->value, CharacterEncoding::UTF8->value, $payload),
+        };
+
+        if (!is_string($decoded) || $decoded === '') {
+            return null;
+        }
+
+        return $this->stringConverter->sanitize($decoded);
     }
 }
