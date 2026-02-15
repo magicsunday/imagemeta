@@ -1065,6 +1065,132 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Decodes QuickTime data type 3 (S/JIS) payloads to UTF-8 strings.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeShiftJisDataBoxTypeToUtf8(): void
+    {
+        $value    = '東京';
+        $shiftJis = iconv('UTF-8', 'SJIS', $value);
+        self::assertIsString($shiftJis);
+        $file       = $this->createQuickTimeKeysFileWithData(3, $shiftJis);
+        $extractor  = $this->createExtractor($file);
+        [, , $meta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $meta);
+        self::assertSame($value, $meta->contentIdentifier());
+    }
+
+    /**
+     * Decodes QuickTime data type 4 (UTF-8 sort) payloads as UTF-8 text.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeUtf8SortDataBoxTypeToUtf8(): void
+    {
+        $value      = 'Sort UTF8';
+        $file       = $this->createQuickTimeKeysFileWithData(4, $value);
+        $extractor  = $this->createExtractor($file);
+        [, , $meta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $meta);
+        self::assertSame($value, $meta->contentIdentifier());
+    }
+
+    /**
+     * Decodes QuickTime data type 5 (UTF-16 sort) payloads as UTF-16BE text.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeUtf16SortDataBoxTypeToUtf8(): void
+    {
+        $value = 'Sort UTF16';
+        $utf16 = iconv('UTF-8', 'UTF-16BE', $value);
+        self::assertIsString($utf16);
+        $file       = $this->createQuickTimeKeysFileWithData(5, $utf16);
+        $extractor  = $this->createExtractor($file);
+        [, , $meta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $meta);
+        self::assertSame($value, $meta->contentIdentifier());
+    }
+
+    /**
+     * Rejects malformed QuickTime data type 3 (S/JIS) payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMalformedShiftJisDataBoxPayload(): void
+    {
+        $this->expectException(ParseError::class);
+
+        // Lone lead byte in Shift-JIS.
+        $file = $this->createQuickTimeKeysFileWithData(3, "\x82");
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Rejects malformed QuickTime data type 4 (UTF-8 sort) payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMalformedUtf8SortDataBoxPayload(): void
+    {
+        $this->expectException(ParseError::class);
+
+        // 0xFE is never valid UTF-8.
+        $file = $this->createQuickTimeKeysFileWithData(4, "hello\xFEworld");
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Rejects malformed QuickTime data type 5 (UTF-16 sort) payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMalformedUtf16SortDataBoxPayload(): void
+    {
+        $this->expectException(ParseError::class);
+
+        // Odd byte count is not valid UTF-16BE.
+        $file = $this->createQuickTimeKeysFileWithData(5, "\x00H\x00");
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Regression: existing text data types 1/2/7 remain unchanged.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesExistingQuickTimeTextDataTypesUnchanged(): void
+    {
+        $utf8File     = $this->createQuickTimeKeysFileWithData(1, 'Plain UTF-8');
+        $utf16Payload = iconv('UTF-8', 'UTF-16BE', 'UTF16 Legacy');
+        self::assertIsString($utf16Payload);
+        $utf16File    = $this->createQuickTimeKeysFileWithData(2, $utf16Payload);
+        $macRomanFile = $this->createQuickTimeKeysFileWithData(7, 'Caf' . chr(0x8E) . ' Legacy' . "\0");
+
+        [, , $utf8Meta]  = $this->createExtractor($utf8File)->extract();
+        [, , $utf16Meta] = $this->createExtractor($utf16File)->extract();
+        [, , $macMeta]   = $this->createExtractor($macRomanFile)->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $utf8Meta);
+        self::assertInstanceOf(QuickTimeMeta::class, $utf16Meta);
+        self::assertInstanceOf(QuickTimeMeta::class, $macMeta);
+        self::assertSame('Plain UTF-8', $utf8Meta->contentIdentifier());
+        self::assertSame('UTF16 Legacy', $utf16Meta->contentIdentifier());
+        self::assertSame('Café Legacy', $macMeta->contentIdentifier());
+    }
+
+    /**
      * Reads a legacy four-character code key from an ilst entry.
      * This verifies that non-mdta keys are still captured in QuickTime metadata.
      *

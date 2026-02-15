@@ -289,6 +289,24 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     private const int DATA_TYPE_UTF16 = 2;
 
     /**
+     * QuickTime `data` box type code for Shift-JIS encoded text payloads.
+     * QuickTime File Format 2012, Table 3-5, type code 3.
+     */
+    private const int DATA_TYPE_SHIFT_JIS = 3;
+
+    /**
+     * QuickTime `data` box type code for UTF-8 sort-string text payloads.
+     * QuickTime File Format 2012, Table 3-5, type code 4.
+     */
+    private const int DATA_TYPE_UTF8_SORT = 4;
+
+    /**
+     * QuickTime `data` box type code for UTF-16BE sort-string text payloads.
+     * QuickTime File Format 2012, Table 3-5, type code 5.
+     */
+    private const int DATA_TYPE_UTF16_SORT = 5;
+
+    /**
      * QuickTime `data` box type code for classic MacRoman encoded text payloads.
      */
     private const int DATA_TYPE_MAC_ROMAN = 7;
@@ -3967,19 +3985,31 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      */
     private function decodeDataPayload(int $type, string $payload, int $payloadSize): string|int|float
     {
-        if ($type === self::DATA_TYPE_UTF8) {
+        if (($type === self::DATA_TYPE_UTF8) || ($type === self::DATA_TYPE_UTF8_SORT)) {
             if (!mb_check_encoding($payload, 'UTF-8')) {
                 throw new ParseError('data box UTF-8 payload contains invalid byte sequence.', 1253);
             }
 
-            // QuickTime File Format 2012, Table 3-5: UTF-8 "without NULL
-            // terminator".  Tolerate a single trailing NUL that real-world
-            // encoders append, but nothing more.
+            // QuickTime File Format 2012, Table 3-5: UTF-8 variants are stored
+            // without NUL terminator; tolerate trailing NUL bytes from encoders.
             return rtrim($payload, "\0");
         }
 
-        if ($type === self::DATA_TYPE_UTF16) {
-            if ($payloadSize % 2 !== 0) {
+        if ($type === self::DATA_TYPE_SHIFT_JIS) {
+            if (!mb_check_encoding($payload, 'SJIS')) {
+                throw new ParseError('data box Shift-JIS payload contains malformed sequence.', 1450);
+            }
+
+            $converted = iconv('SJIS', 'UTF-8', $payload);
+            if ($converted === false) {
+                throw new ParseError('data box Shift-JIS payload contains malformed sequence.', 1450);
+            }
+
+            return rtrim($converted, "\0");
+        }
+
+        if (($type === self::DATA_TYPE_UTF16) || ($type === self::DATA_TYPE_UTF16_SORT)) {
+            if (($payloadSize % 2) !== 0) {
                 throw new ParseError('data box UTF-16BE payload has odd byte count.', 1254);
             }
 
