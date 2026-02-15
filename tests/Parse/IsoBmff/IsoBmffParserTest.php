@@ -3273,6 +3273,28 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects a truncated version 2 sound sample entry payload.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdVersion2TruncatedPayload(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample entry version 2 truncated');
+
+        $entry = $this->audioSampleEntryVersion2(
+            format: 'lpcm',
+            channels: 2,
+            sampleRate: 44100.0,
+            bitsPerChannel: 16,
+        );
+        $entry = $this->box('lpcm', substr($entry, 8, -4));
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
      * Builds an infe box with version 4, which is not defined by ISO/IEC 14496-12.
      * Confirms the parser rejects unsupported infe versions.
      *
