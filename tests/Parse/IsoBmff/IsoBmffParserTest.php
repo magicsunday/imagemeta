@@ -1517,6 +1517,74 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects a float32 data box payload with extra trailing bytes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsOversizedFloat32DataBoxPayload(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('data box float32 payload must be exactly 4 bytes');
+
+        $key  = 'com.apple.quicktime.videoOrientation';
+        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x17, pack('G', 1.25) . "\0");
+
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Rejects a float64 data box payload with extra trailing bytes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsOversizedFloat64DataBoxPayload(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('data box float64 payload must be exactly 8 bytes');
+
+        $key  = 'com.apple.quicktime.videoOrientation';
+        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x18, pack('E', 1.25) . "\0");
+
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Rejects a truncated float32 payload.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsTruncatedFloat32DataBoxPayload(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('data box float32 payload truncated');
+
+        $key  = 'com.apple.quicktime.videoOrientation';
+        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x17, "\x40\x48\xF5");
+
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Rejects a truncated float64 payload.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsTruncatedFloat64DataBoxPayload(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('data box float64 payload truncated');
+
+        $key  = 'com.apple.quicktime.videoOrientation';
+        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x18, "\x40\x09\x21\xFB\x54\x44\x2D");
+
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
      * Provides a numeric string value for a QuickTime key.
      * This ensures numeric strings are coerced to integer values.
      *

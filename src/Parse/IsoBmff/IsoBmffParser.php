@@ -3995,6 +3995,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 throw new ParseError('data box float32 payload truncated', 1418);
             }
 
+            if ($payloadSize > 4) {
+                throw new ParseError('data box float32 payload must be exactly 4 bytes', 1418);
+            }
+
             return Unpack::float('G', substr($payload, 0, 4), 'QuickTime float32 payload');
         }
 
@@ -4002,6 +4006,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             // GH-987: reject truncated float64 payloads
             if ($payloadSize < 8) {
                 throw new ParseError('data box float64 payload truncated', 1419);
+            }
+
+            if ($payloadSize > 8) {
+                throw new ParseError('data box float64 payload must be exactly 8 bytes', 1419);
             }
 
             return Unpack::float('E', substr($payload, 0, 8), 'QuickTime float64 payload');
