@@ -3330,9 +3330,26 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
             $name = $win->read($size - 8);
 
-            // GH-815: validate UTF-8 encoding for mdta namespace keys
-            if ($namespace === self::QUICKTIME_MDTA && !mb_check_encoding($name, 'UTF-8')) {
-                throw new ParseError('keys mdta key_value contains invalid UTF-8', 1385);
+            if ($namespace === self::QUICKTIME_MDTA) {
+                // QuickTime File Format 2012, "Metadata item keys atom": mdta key_value is
+                // a NUL-terminated UTF-8 string; strip terminator before storing key names.
+                if (!str_ends_with($name, "\0")) {
+                    throw new ParseError('keys mdta key_value missing NUL terminator', 1455);
+                }
+
+                $name = substr($name, 0, -1);
+
+                if ($name === '') {
+                    throw new ParseError('keys mdta key_value is empty after NUL terminator removal', 1456);
+                }
+
+                if (str_contains($name, "\0")) {
+                    throw new ParseError('keys mdta key_value contains embedded NUL bytes', 1457);
+                }
+
+                if (!mb_check_encoding($name, 'UTF-8')) {
+                    throw new ParseError('keys mdta key_value contains invalid UTF-8', 1385);
+                }
             }
 
             $map[$i] = [

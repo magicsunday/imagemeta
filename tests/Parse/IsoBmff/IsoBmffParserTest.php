@@ -140,9 +140,9 @@ final class IsoBmffParserTest extends TestCase
         $keyName = 'com.apple.quicktime.live-photo.auto';
 
         $keysPayload = pack('N', 1);
-        $keysPayload .= pack('N', 8 + strlen($keyName));
+        $keysPayload .= pack('N', 9 + strlen($keyName));
         $keysPayload .= 'mdta';
-        $keysPayload .= $keyName;
+        $keysPayload .= $keyName . "\0";
         $keys = $this->fullBox('keys', $keysPayload);
 
         $dataPayload = pack('N', 0x16) . pack('N', 0) . "\x01";
@@ -173,9 +173,9 @@ final class IsoBmffParserTest extends TestCase
         $keyName = 'com.apple.quicktime.live-photo.auto';
 
         $keysPayload = pack('N', 1);
-        $keysPayload .= pack('N', 8 + strlen($keyName));
+        $keysPayload .= pack('N', 9 + strlen($keyName));
         $keysPayload .= 'mdta';
-        $keysPayload .= $keyName;
+        $keysPayload .= $keyName . "\0";
         $keys = $this->fullBox('keys', $keysPayload);
 
         $dataPayload = pack('N', 0x15) . pack('N', 0) . "\x01";
@@ -1051,7 +1051,7 @@ final class IsoBmffParserTest extends TestCase
     public function toleratesUdtaTrailingZeroTerminator(): void
     {
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'udta-terminator-value');
@@ -1086,7 +1086,7 @@ final class IsoBmffParserTest extends TestCase
     public function ignoresKeysIlstWhenHdlrIsNotMdta(): void
     {
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'should-be-ignored');
@@ -1149,7 +1149,7 @@ final class IsoBmffParserTest extends TestCase
         $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
 
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys);
@@ -1176,7 +1176,7 @@ final class IsoBmffParserTest extends TestCase
         $customKey = 'custom.vendor.key';
 
         // Build two key entries: one mdta, one with custom 'cust' namespace
-        $mdtaEntry = pack('N', 8 + strlen($mdtaKey)) . 'mdta' . $mdtaKey;
+        $mdtaEntry = pack('N', 9 + strlen($mdtaKey)) . 'mdta' . $mdtaKey . "\0";
         $custEntry = pack('N', 8 + strlen($customKey)) . 'cust' . $customKey;
         $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 2) . $mdtaEntry . $custEntry);
 
@@ -1203,6 +1203,78 @@ final class IsoBmffParserTest extends TestCase
         $prefixedKey = 'cust:' . $customKey;
         self::assertArrayHasKey($prefixedKey, $qtMeta->keys);
         self::assertSame('cust-value', $qtMeta->keys[$prefixedKey]);
+    }
+
+    /**
+     * Uses an mdta key entry with a NUL-terminated UTF-8 key name.
+     * Verifies the parser strips the terminator before exposing the key.
+     *
+     * @return void
+     */
+    #[Test]
+    public function mdtaKeyNameWithNullTerminatorIsNormalized(): void
+    {
+        $mdtaKey   = 'com.apple.quicktime.content.identifier';
+        $mdtaEntry = pack('N', 9 + strlen($mdtaKey)) . 'mdta' . $mdtaKey . "\0";
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $mdtaEntry);
+
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'normalized-value');
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $meta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+        $moov = $this->moov($this->box('udta', $meta));
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertArrayHasKey($mdtaKey, $qtMeta->keys);
+        self::assertArrayNotHasKey($mdtaKey . "\0", $qtMeta->keys);
+        self::assertSame('normalized-value', $qtMeta->keys[$mdtaKey]);
+    }
+
+    /**
+     * Uses an mdta key entry without the required trailing NUL terminator.
+     * Verifies the parser rejects malformed QuickTime key declarations.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMdtaKeyNameWithoutNullTerminator(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('keys mdta key_value missing NUL terminator');
+
+        $mdtaKey   = 'com.apple.quicktime.content.identifier';
+        $mdtaEntry = pack('N', 8 + strlen($mdtaKey)) . 'mdta' . $mdtaKey;
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $mdtaEntry);
+        $meta      = $this->box('meta', "\0\0\0\0" . $keys);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $this->createExtractor($ftyp . $meta)->extract();
+    }
+
+    /**
+     * Uses an mdta key entry containing malformed UTF-8 before the NUL terminator.
+     * Verifies invalid key-name encoding is rejected with ParseError.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMdtaKeyNameWithInvalidUtf8(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('keys mdta key_value contains invalid UTF-8');
+
+        $invalidName = "\xC3\x28";
+        $mdtaEntry   = pack('N', 9 + strlen($invalidName)) . 'mdta' . $invalidName . "\0";
+        $keys        = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $mdtaEntry);
+        $meta        = $this->box('meta', "\0\0\0\0" . $keys);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $this->createExtractor($ftyp . $meta)->extract();
     }
 
     /**
@@ -1986,9 +2058,9 @@ final class IsoBmffParserTest extends TestCase
         $keyName = 'com.apple.quicktime.content.identifier';
 
         $keysPayload = pack('N', 1);
-        $keysPayload .= pack('N', 8 + strlen($keyName));
+        $keysPayload .= pack('N', 9 + strlen($keyName));
         $keysPayload .= 'mdta';
-        $keysPayload .= $keyName;
+        $keysPayload .= $keyName . "\0";
         $keys = $this->fullBox('keys', $keysPayload);
 
         // Ordered from specific locale to generic locale.
@@ -2044,9 +2116,9 @@ final class IsoBmffParserTest extends TestCase
         $keyName = 'com.apple.quicktime.content.identifier';
 
         $keysPayload = pack('N', 1);
-        $keysPayload .= pack('N', 8 + strlen($keyName));
+        $keysPayload .= pack('N', 9 + strlen($keyName));
         $keysPayload .= 'mdta';
-        $keysPayload .= $keyName;
+        $keysPayload .= $keyName . "\0";
         $keys = $this->fullBox('keys', $keysPayload);
 
         // Invalid ordering: default locale first, specific locale second.
@@ -2100,9 +2172,10 @@ final class IsoBmffParserTest extends TestCase
      */
     private function createQuickTimeKeysFileWithCustomKey(string $key, int $type, string $encodedData): string
     {
-        $keysEntry = pack('N', 8 + strlen($key))
+        $keysEntry = pack('N', 9 + strlen($key))
             . 'mdta'
-            . $key;
+            . $key
+            . "\0";
         $keys = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keysEntry);
 
         $dataBox   = $this->box('data', pack('N', $type) . pack('N', 0) . $encodedData);
@@ -3301,7 +3374,7 @@ final class IsoBmffParserTest extends TestCase
     {
         // Build a keys/ilst metadata inside udta inside trak
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'track-meta-value');
@@ -3369,7 +3442,7 @@ final class IsoBmffParserTest extends TestCase
         $titleAtom = $this->box("\xA9nam", "Movie Title\0");
 
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
         $dataBox  = $this->box('data', pack('N', 1) . pack('N', 0) . 'meta-value');
         $ilst     = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
@@ -3412,7 +3485,7 @@ final class IsoBmffParserTest extends TestCase
     {
         // Movie-level udta with keys/ilst
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'movie-level-value');
@@ -3731,7 +3804,7 @@ final class IsoBmffParserTest extends TestCase
     public function parsesItifAtomWithValidItemId(): void
     {
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         // mhdr: version=0, flags=0, nextItemID=43
@@ -3763,7 +3836,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('duplicate Item_ID 7 in ilst itif atoms');
 
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 2) . $keyEntry . $keyEntry);
 
         $itif1      = $this->box('itif', "\0\0\0\0" . pack('N', 7));
@@ -3846,7 +3919,7 @@ final class IsoBmffParserTest extends TestCase
     public function acceptsItifWithValidMhdr(): void
     {
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         // mhdr: version=0, flags=0, nextItemID=43
@@ -3877,7 +3950,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('metadata header atom (mhdr) required when ilst items have itif atoms');
 
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $itif      = $this->box('itif', "\0\0\0\0" . pack('N', 1));
@@ -3903,7 +3976,7 @@ final class IsoBmffParserTest extends TestCase
         $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
 
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
         $dataBox  = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
         $ilst     = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
@@ -3919,7 +3992,7 @@ final class IsoBmffParserTest extends TestCase
     public function acceptsIlstWithoutItifAndNoMhdr(): void
     {
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'no-itif-value');
@@ -4038,7 +4111,7 @@ final class IsoBmffParserTest extends TestCase
         $hdlr        = $this->box('hdlr', $hdlrPayload);
 
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
         $dataBox  = $this->box('data', pack('N', 1) . pack('N', 0) . 'test');
         $ilst     = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
@@ -4168,7 +4241,7 @@ final class IsoBmffParserTest extends TestCase
     private function createQuickTimeMetaWithDataPayload(int $dataType, string $payload): string
     {
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', $dataType) . pack('N', 0) . $payload);
@@ -4217,7 +4290,7 @@ final class IsoBmffParserTest extends TestCase
     private function createQuickTimeMetaWithLocale(?string $ctryPayload, ?string $langPayload, int $locale): string
     {
         $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', $locale) . 'locale-test');

@@ -822,9 +822,10 @@ final class MetadataReaderTest extends TestCase
      */
     private function quickTimeMoov(string $value): string
     {
-        $keysEntry = pack('N', 8 + strlen('com.apple.quicktime.content.identifier'))
+        $keysEntry = pack('N', 9 + strlen('com.apple.quicktime.content.identifier'))
             . 'mdta'
-            . 'com.apple.quicktime.content.identifier';
+            . 'com.apple.quicktime.content.identifier'
+            . "\0";
         $keys = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keysEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . $value);
