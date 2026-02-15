@@ -52,8 +52,6 @@ use function usort;
  */
 final class JpegParser implements JpegParserInterface
 {
-    private const int MAX_APP_SEGMENT_SIZE = 4_194_304; // 4 MiB payload limit
-
     /**
      * Signatures identifying metadata-bearing APP segments as defined by the
      * Exif JPEG recording rules (EXIF 3.0 §4.7.2).
@@ -63,8 +61,6 @@ final class JpegParser implements JpegParserInterface
     private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
 
     private const string EXTENDED_XMP_SIGNATURE = "http://ns.adobe.com/xmp/extension/\0";
-
-    private const int EXTENDED_XMP_GUID_LENGTH = 32;
 
     private const int EXTENDED_XMP_HEADER_LENGTH = 8;
 
@@ -93,10 +89,6 @@ final class JpegParser implements JpegParserInterface
     private const string FPXR_SIGNATURE = 'FPXR';
 
     private const int FLASHPIX_STORAGE_ENTITY_SIZE = 0xFFFFFFFF;
-
-    private const int FLASHPIX_MAX_CONTENT_ENTRIES = 1024;
-
-    private const int FLASHPIX_MAX_STREAM_SIZE = 16_777_216; // 16 MiB per stream
 
     private const int APP11_TRANSPORT_HEADER_LENGTH = 10;
 
@@ -201,9 +193,10 @@ final class JpegParser implements JpegParserInterface
     /**
      * Initialises the extractor with a seekable stream.
      *
-     * @param Stream $stream Stream representing the JPEG binary stream.
+     * @param Stream           $stream Stream representing the JPEG binary stream.
+     * @param JpegParserConfig $config Parser limit configuration.
      */
-    public function __construct(private readonly Stream $stream)
+    public function __construct(private readonly Stream $stream, private readonly JpegParserConfig $config = new JpegParserConfig())
     {
         $this->markerHandlerRegistry = $this->createDefaultMarkerHandlerRegistry();
     }
@@ -1062,7 +1055,7 @@ final class JpegParser implements JpegParserInterface
 
         if ($enforceMax) {
             $payloadLength = $length - 2;
-            if ($payloadLength > self::MAX_APP_SEGMENT_SIZE) {
+            if ($payloadLength > $this->config->maxAppSegmentSize) {
                 // EXIF 3.0 §4.5.2 keeps APP1/APP2 payloads within the JPEG
                 // 64 KiB segment budget; this wider ceiling rejects obviously pathological blobs
                 // before the TIFF parser is invoked.
@@ -1071,7 +1064,7 @@ final class JpegParser implements JpegParserInterface
                         'APP segment 0x%02X at offset %d exceeds maximum payload of %d bytes',
                         $marker,
                         $offset,
-                        self::MAX_APP_SEGMENT_SIZE,
+                        $this->config->maxAppSegmentSize,
                     ),
                     1266,
                 );
@@ -1169,7 +1162,8 @@ final class JpegParser implements JpegParserInterface
     private function handleExtendedXmpSegment(string $payload, int $offset): void
     {
         $signatureLength = strlen(self::EXTENDED_XMP_SIGNATURE);
-        $minimumLength   = $signatureLength + self::EXTENDED_XMP_GUID_LENGTH + self::EXTENDED_XMP_HEADER_LENGTH;
+        $guidLength      = $this->config->extendedXmpGuidLength;
+        $minimumLength   = $signatureLength + $guidLength + self::EXTENDED_XMP_HEADER_LENGTH;
         if (strlen($payload) < $minimumLength) {
             throw new ParseError(
                 sprintf('ExtendedXMP APP1 segment at offset %d is too short', $offset),
@@ -1177,8 +1171,9 @@ final class JpegParser implements JpegParserInterface
             );
         }
 
-        $guidRaw = substr($payload, $signatureLength, self::EXTENDED_XMP_GUID_LENGTH);
-        if (preg_match('/^[0-9A-Fa-f]{32}$/', $guidRaw) !== 1) {
+        $guidRaw     = substr($payload, $signatureLength, $guidLength);
+        $guidPattern = '/^[0-9A-Fa-f]{' . $guidLength . '}$/';
+        if (preg_match($guidPattern, $guidRaw) !== 1) {
             throw new ParseError(
                 sprintf('ExtendedXMP APP1 segment at offset %d has invalid GUID', $offset),
                 1471,
@@ -1187,7 +1182,7 @@ final class JpegParser implements JpegParserInterface
 
         $guid = strtoupper($guidRaw);
 
-        $lengthOffset  = $signatureLength + self::EXTENDED_XMP_GUID_LENGTH;
+        $lengthOffset  = $signatureLength + $guidLength;
         $lengthUnpack  = @unpack('Nlength', substr($payload, $lengthOffset, 4));
         $offsetUnpack  = @unpack('Noffset', substr($payload, $lengthOffset + 4, 4));
         $extendedChunk = substr($payload, $lengthOffset + self::EXTENDED_XMP_HEADER_LENGTH);
@@ -2037,7 +2032,7 @@ final class JpegParser implements JpegParserInterface
 
         $entryCount = (ord($body[0]) << 8) | ord($body[1]);
 
-        if ($entryCount > self::FLASHPIX_MAX_CONTENT_ENTRIES) {
+        if ($entryCount > $this->config->flashPixMaxContentEntries) {
             throw new ParseError(
                 sprintf(
                     'FlashPix contents list at offset %d has too many entries (%d)',
@@ -2085,7 +2080,7 @@ final class JpegParser implements JpegParserInterface
             }
 
             $isStorage = $entitySize === self::FLASHPIX_STORAGE_ENTITY_SIZE;
-            if (!$isStorage && $entitySize > self::FLASHPIX_MAX_STREAM_SIZE) {
+            if (!$isStorage && $entitySize > $this->config->flashPixMaxStreamSize) {
                 throw new ParseError(
                     sprintf(
                         'FlashPix stream entry %d at offset %d exceeds maximum size',

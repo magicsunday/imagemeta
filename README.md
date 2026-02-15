@@ -156,6 +156,33 @@ $exif->camera->make;
 $exif->exposure->iso;
 ```
 
+### Custom JPEG parser limits
+
+For JPEG-only workflows you can configure parser guard limits explicitly:
+
+```php
+<?php
+use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserConfig;
+
+$file = fopen('photo.jpg', 'rb');
+if ($file === false) {
+    throw new RuntimeException('Unable to open JPEG file.');
+}
+
+$stream = new Stream($file, filesize('photo.jpg'));
+$parser = new JpegParser(
+    $stream,
+    new JpegParserConfig(
+        maxAppSegmentSize: 1_048_576, // 1 MiB
+        flashPixMaxStreamSize: 8_388_608, // 8 MiB
+    ),
+);
+
+$exifBlobs = $parser->extractExifBlobs();
+```
+
 ## Structured Metadata API
 
 The structured aggregate described above exposes typed value objects while keeping container-specific tag handling encapsulated.

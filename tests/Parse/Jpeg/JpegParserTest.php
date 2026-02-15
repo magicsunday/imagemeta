@@ -23,6 +23,7 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserConfig;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -69,6 +70,7 @@ use function unlink;
 #[UsesClass(MpfDocument::class)]
 #[UsesClass(MpfEntry::class)]
 #[UsesClass(MpfParser::class)]
+#[UsesClass(JpegParserConfig::class)]
 final class JpegParserTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";
@@ -3021,6 +3023,25 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Applies a custom APP payload limit through parser configuration.
+     * Confirms oversized APP segments are rejected against configured bounds.
+     *
+     * @return void
+     */
+    #[Test]
+    public function customConfigLimitsMaximumAppSegmentPayload(): void
+    {
+        $exifPayload = self::TIFF_HEADER . str_repeat('A', 64);
+        $jpeg        = $this->jpeg(self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload));
+        $extractor   = $this->createExtractor($jpeg, new JpegParserConfig(maxAppSegmentSize: 16));
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1266);
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
      * Creates a stream-backed extractor for an in-memory JPEG binary.
      * This helper keeps parser instantiation consistent across tests.
      *
@@ -3028,7 +3049,7 @@ final class JpegParserTest extends TestCase
      *
      * @return JpegParser
      */
-    private function createExtractor(string $jpeg): JpegParser
+    private function createExtractor(string $jpeg, ?JpegParserConfig $config = null): JpegParser
     {
         $fh = fopen('php://temp', 'wb+');
         if ($fh === false) {
@@ -3038,6 +3059,6 @@ final class JpegParserTest extends TestCase
         fwrite($fh, $jpeg);
         rewind($fh);
 
-        return new JpegParser(new Stream($fh, strlen($jpeg)));
+        return new JpegParser(new Stream($fh, strlen($jpeg)), $config ?? new JpegParserConfig());
     }
 }

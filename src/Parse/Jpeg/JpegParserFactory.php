@@ -16,13 +16,20 @@ use MagicSunday\ImageMeta\Core\Stream;
 /**
  * Default JPEG parser factory creating the built-in parser implementation.
  */
-final class JpegParserFactory implements JpegParserFactoryInterface
+final readonly class JpegParserFactory implements JpegParserFactoryInterface
 {
+    /**
+     * Initialises the factory with an optional JPEG parser configuration.
+     */
+    public function __construct(private JpegParserConfig $config = new JpegParserConfig())
+    {
+    }
+
     /**
      * Creates the built-in JPEG parser for the supplied stream.
      */
     public function create(Stream $stream): JpegParserInterface
     {
-        return new JpegParser($stream);
+        return new JpegParser($stream, $this->config);
     }
 }
