@@ -96,7 +96,7 @@ use function trim;
  * EXIF 3.0 §4 and Annex A summarise the logical grouping of tags mirrored by
  * the accessors provided in this value object.
  */
-final readonly class ParsedExif
+final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, ExifGpsData, ExifInteropData
 {
     /**
      * EXIF Acceleration is specified in mGal (10^-5 m/s²).
