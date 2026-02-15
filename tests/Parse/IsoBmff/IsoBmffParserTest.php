@@ -601,6 +601,37 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds an iloc v2 box with non-zero reserved bits in the construction_method field.
+     * This validates the same reserved-bit rule for version 2 item entries.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocVersion2NonZeroConstructionMethodReservedBits(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('iloc construction_method reserved bits must be zero');
+
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+
+        $ilocPayload = "\x44";         // offset_size=4, length_size=4
+        $ilocPayload .= "\x00";         // base_offset_size=0, index_size=0
+        $ilocPayload .= pack('N', 1);   // item_count = 1 (v2 uses 32-bit)
+        $ilocPayload .= pack('N', 1);   // item_id = 1 (32-bit)
+        $ilocPayload .= pack('n', 0x0010); // reserved bits set (bit 4)
+        $ilocPayload .= pack('n', 0);   // data_reference_index = 0
+        $ilocPayload .= pack('n', 0);   // extent_count = 0
+        $iloc = $this->fullBox('iloc', $ilocPayload, 2, 0);
+
+        $meta = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Builds an iloc v1 box with construction_method = 4, which is outside the defined range 0–2.
      * This verifies that invalid construction method values are rejected per ISO/IEC 14496-12 §8.11.3.
      *
