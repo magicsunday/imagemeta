@@ -788,6 +788,72 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Rejects mluc payloads when recordSize is not exactly 12.
+     * ICC.1:2022 Table 54 defines a fixed 12-byte record structure.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMlucTagWithInvalidRecordSize(): void
+    {
+        $profile = $this->buildMlucProfile("\x00\x48\x00\x69");
+
+        $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
+        $profile       = substr_replace($profile, pack('N', 16), $tagDataOffset + 12, 4);
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('recordSize must be 12');
+
+        $decoder->decode($profile);
+    }
+
+    /**
+     * Rejects mluc payloads with truncated record table data.
+     * ICC.1:2022 Table 54: 16 + recordCount * recordSize must fit in the tag payload.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMlucTagWithTruncatedRecordTable(): void
+    {
+        $profile = $this->buildMlucProfile("\x00\x48\x00\x69");
+
+        $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
+        $profile       = substr_replace($profile, pack('N', 2), $tagDataOffset + 8, 4);
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('record table exceeds payload bounds');
+
+        $decoder->decode($profile);
+    }
+
+    /**
+     * Rejects mluc payloads with out-of-bounds string ranges.
+     * ICC.1:2022 Table 54: each string offset/length must stay within the tag payload.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMlucTagWithOutOfBoundsStringRange(): void
+    {
+        $profile = $this->buildMlucProfile("\x00\x48\x00\x69");
+
+        $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
+        $profile       = substr_replace($profile, pack('N', 100), $tagDataOffset + 20, 4);
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('string range');
+
+        $decoder->decode($profile);
+    }
+
+    /**
      * Multi-record mluc with reordered records yields same selected output.
      *
      * The parser must select deterministically by locale, not by record order.
