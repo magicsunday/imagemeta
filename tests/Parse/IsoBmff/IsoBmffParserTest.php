@@ -2967,6 +2967,51 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds a pitm box with version 1 and a valid 32-bit primary item id.
+     * Confirms the parser accepts v1 layout and resolves the referenced EXIF item.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptPitmVersion1WithValidPrimaryItemId(): void
+    {
+        $rawExif = pack('N', 0) . "MM\x00\x2Apitm-v1-primary";
+
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/exif' . "\0\0";
+        $infe        = $this->box('infe', $infePayload);
+        $iinfPayload = "\0\0\0\0" . pack('n', 1) . $infe;
+        $iinf        = $this->box('iinf', $iinfPayload);
+
+        $pitm = $this->fullBox('pitm', pack('N', 1), 1, 0);
+
+        $ilocBuilder = function (int $offset, int $length): string {
+            $payload = "\0\0\0\0";
+            $payload .= "\x44"; // offset/length = 4 bytes
+            $payload .= "\0";
+            $payload .= pack('n', 1); // item_count
+            $payload .= pack('n', 1); // item_ID
+            $payload .= pack('n', 0); // data_reference_index
+            $payload .= pack('n', 1); // extent_count
+            $payload .= pack('N', $offset) . pack('N', $length);
+
+            return $this->box('iloc', $payload);
+        };
+
+        $meta = $this->fullBox('meta', $pitm . $iinf . $ilocBuilder(0, strlen($rawExif)));
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat = $this->box('mdat', $rawExif);
+
+        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
+        $iloc       = $ilocBuilder($offsetBase, strlen($rawExif));
+        $meta       = $this->fullBox('meta', $pitm . $iinf . $iloc);
+
+        $extractor = $this->createExtractor($ftyp . $meta . $mdat);
+        [$exifs]   = $extractor->extract();
+
+        self::assertSame(["MM\x00\x2Apitm-v1-primary"], $exifs);
+    }
+
+    /**
      * Builds a pitm box with version 2, which is not defined by ISO/IEC 14496-12.
      * Confirms the parser rejects unsupported pitm versions.
      *
