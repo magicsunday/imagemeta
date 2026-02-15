@@ -317,6 +317,24 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     private const int DATA_TYPE_MAC_ROMAN = 7;
 
     /**
+     * QuickTime `data` box type code for JPEG payloads in JFIF-compatible wrapper.
+     * QuickTime File Format 2012, Table 3-5, type code 13.
+     */
+    private const int DATA_TYPE_JPEG_WRAPPER = 0x0D;
+
+    /**
+     * QuickTime `data` box type code for PNG payloads in PNG wrapper.
+     * QuickTime File Format 2012, Table 3-5, type code 14.
+     */
+    private const int DATA_TYPE_PNG_WRAPPER = 0x0E;
+
+    /**
+     * QuickTime `data` box type code for BMP payloads in Windows bitmap wrapper.
+     * QuickTime File Format 2012, Table 3-5, type code 27.
+     */
+    private const int DATA_TYPE_BMP_WRAPPER = 0x1B;
+
+    /**
      * QuickTime `data` box type code for signed big-endian integer payloads.
      * QuickTime File Format 2012, Table 3-5, type code 21.
      */
@@ -4165,6 +4183,30 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             }
 
             return rtrim($converted, "\0");
+        }
+
+        if ($type === self::DATA_TYPE_JPEG_WRAPPER) {
+            if (($payloadSize < 2) || (!str_starts_with($payload, "\xFF\xD8"))) {
+                throw new ParseError('data box type 13 payload does not match JPEG/JFIF signature.', 1467);
+            }
+
+            return $payload;
+        }
+
+        if ($type === self::DATA_TYPE_PNG_WRAPPER) {
+            if (($payloadSize < 8) || (!str_starts_with($payload, "\x89PNG\x0D\x0A\x1A\x0A"))) {
+                throw new ParseError('data box type 14 payload does not match PNG signature.', 1468);
+            }
+
+            return $payload;
+        }
+
+        if ($type === self::DATA_TYPE_BMP_WRAPPER) {
+            if (($payloadSize < 2) || (!str_starts_with($payload, 'BM'))) {
+                throw new ParseError('data box type 27 payload does not match BMP signature.', 1469);
+            }
+
+            return $payload;
         }
 
         $trimmed = trim($payload, "\0");

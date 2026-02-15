@@ -4696,6 +4696,122 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Accepts type-13 payloads that start with JPEG/JFIF-compatible magic bytes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsType13JpegWrapperPayload(): void
+    {
+        $payload = chr(0xFF) . chr(0xD8) . chr(0xFF) . chr(0xE0) . 'JFIF' . chr(0) . 'payload';
+        $file    = $this->createQuickTimeMetaWithDataPayload(13, $payload);
+
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame($payload, $qtMeta->dataAtoms['com.apple.quicktime.content.identifier'][0]->value);
+    }
+
+    /**
+     * Accepts type-14 payloads that start with the PNG magic signature.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsType14PngWrapperPayload(): void
+    {
+        $payload = chr(0x89) . 'PNG' . chr(0x0D) . chr(0x0A) . chr(0x1A) . chr(0x0A) . 'rest';
+
+        $file = $this->createQuickTimeMetaWithDataPayload(14, $payload);
+
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame($payload, $qtMeta->dataAtoms['com.apple.quicktime.content.identifier'][0]->value);
+    }
+
+    /**
+     * Accepts type-27 payloads that start with the BMP magic signature.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsType27BmpWrapperPayload(): void
+    {
+        $payload = 'BM' . chr(0x36) . chr(0) . chr(0) . chr(0) . 'payload';
+        $file    = $this->createQuickTimeMetaWithDataPayload(27, $payload);
+
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame($payload, $qtMeta->dataAtoms['com.apple.quicktime.content.identifier'][0]->value);
+    }
+
+    /**
+     * Rejects type-13 payloads when JPEG/JFIF wrapper magic bytes do not match.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectType13PayloadWithWrongMagicBytes(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $file = $this->createQuickTimeMetaWithDataPayload(13, chr(0x89) . 'PNG' . chr(0x0D) . chr(0x0A) . chr(0x1A) . chr(0x0A));
+
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Rejects type-14 payloads when PNG wrapper magic bytes do not match.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectType14PayloadWithWrongMagicBytes(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $file = $this->createQuickTimeMetaWithDataPayload(14, chr(0xFF) . chr(0xD8) . chr(0xFF) . chr(0xE0));
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Rejects type-27 payloads when BMP wrapper magic bytes do not match.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectType27PayloadWithWrongMagicBytes(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $file = $this->createQuickTimeMetaWithDataPayload(27, chr(0xFF) . chr(0xD8) . chr(0xFF) . chr(0xE0));
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Regression: unknown binary data types remain unchanged.
+     *
+     * @return void
+     */
+    #[Test]
+    public function unknownBinaryDataTypeRemainsUnchanged(): void
+    {
+        $payload = chr(0) . 'BIN' . chr(0xFF);
+        $file    = $this->createQuickTimeMetaWithDataPayload(99, $payload);
+
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame($payload, $qtMeta->dataAtoms['com.apple.quicktime.content.identifier'][0]->value);
+    }
+
+    /**
      * Parses QuickTime data type 28 payloads as nested metadata atom structures.
      *
      * @return void
