@@ -2609,6 +2609,43 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Applies type coercion to the first selected data atom when multiple values exist.
+     *
+     * @return void
+     */
+    #[Test]
+    public function selectedFirstDataAtomKeepsTypeCoercion(): void
+    {
+        $keyName = 'com.apple.quicktime.videoOrientation';
+
+        $keysPayload = pack('N', 1);
+        $keysPayload .= pack('N', 9 + strlen($keyName));
+        $keysPayload .= 'mdta';
+        $keysPayload .= $keyName . chr(0);
+        $keys = $this->fullBox('keys', $keysPayload);
+
+        $localeSpecific = 0x555315C7;
+        $localeDefault  = 0x00000000;
+        $specificValue  = hex2bin('02');
+        self::assertIsString($specificValue);
+
+        $specificData = $this->box('data', pack('N', 0x15) . pack('N', $localeSpecific) . $specificValue);
+        $fallbackData = $this->box('data', pack('N', 1) . pack('N', $localeDefault) . 'fallback-orientation');
+        $entry        = $this->box(pack('N', 1), $specificData . $fallbackData);
+        $ilst         = $this->box('ilst', $entry);
+
+        $hdlr = $this->fullBox('hdlr', hex2bin('00000000') . 'mdta' . str_repeat(chr(0), 12) . chr(0));
+        $meta = $this->fullBox('meta', $hdlr . $keys . $ilst);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor       = $this->createExtractor($ftyp . $meta);
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame(2, $quickTime->keys[$keyName]);
+    }
+
+    /**
      * Rejects metadata data atoms that are not ordered from specific to generic.
      *
      * @return void
