@@ -976,6 +976,81 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Uses a free-form name atom with non-zero FullAtom version.
+     * Verifies the parser rejects malformed name atom headers.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMdtaFreeformNameAtomWithNonZeroVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('name atom version must be 0');
+
+        $mean     = $this->box('mean', pack('N', 0) . 'com.apple.quicktime');
+        $name     = $this->box('name', pack('C4', 1, 0, 0, 0) . 'content.identifier');
+        $data     = $this->box('data', pack('N', 1) . pack('N', 0) . 'id-value');
+        $freeform = $this->box('----', $mean . $name . $data);
+        $ilst     = $this->box('ilst', $freeform);
+
+        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
+        $moov = $this->moov($meta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
+     * Uses a free-form name atom with non-zero FullAtom flags.
+     * Verifies the parser rejects malformed name atom headers.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMdtaFreeformNameAtomWithNonZeroFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('name atom flags must be 0');
+
+        $mean     = $this->box('mean', pack('N', 0) . 'com.apple.quicktime');
+        $name     = $this->box('name', pack('C4', 0, 0, 0, 1) . 'content.identifier');
+        $data     = $this->box('data', pack('N', 1) . pack('N', 0) . 'id-value');
+        $freeform = $this->box('----', $mean . $name . $data);
+        $ilst     = $this->box('ilst', $freeform);
+
+        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
+        $moov = $this->moov($meta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
+     * Uses a free-form name atom payload with malformed UTF-8.
+     * Verifies invalid key-name encoding is rejected.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMdtaFreeformNameAtomWithInvalidUtf8(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('name atom contains invalid UTF-8');
+
+        $mean     = $this->box('mean', pack('N', 0) . 'com.apple.quicktime');
+        $name     = $this->box('name', pack('N', 0) . "\xC3\x28");
+        $data     = $this->box('data', pack('N', 1) . pack('N', 0) . 'id-value');
+        $freeform = $this->box('----', $mean . $name . $data);
+        $ilst     = $this->box('ilst', $freeform);
+
+        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
+        $moov = $this->moov($meta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
      * Encodes a UTF-16BE data box and decodes it back to UTF-8.
      * This verifies Unicode content identifiers are normalized correctly.
      *
