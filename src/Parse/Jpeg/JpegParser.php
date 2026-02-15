@@ -94,6 +94,14 @@ final class JpegParser implements JpegParserInterface
 
     private const int APP11_MAX_SEQUENCE_NUMBER = 65_535;
 
+    /**
+     * Maximum APP payload length implied by JPEG 16-bit segment length semantics.
+     *
+     * JPEG segment length includes its own two-byte length field, so payload is
+     * bounded to 65535 - 2 = 65533 bytes.
+     */
+    private const int MAX_JPEG_APP_PAYLOAD_BYTES = 65_533;
+
     private bool $parsed = false;
 
     /** @var list<string> */
@@ -1055,16 +1063,15 @@ final class JpegParser implements JpegParserInterface
 
         if ($enforceMax) {
             $payloadLength = $length - 2;
-            if ($payloadLength > $this->config->maxAppSegmentSize) {
-                // EXIF 3.0 §4.5.2 keeps APP1/APP2 payloads within the JPEG
-                // 64 KiB segment budget; this wider ceiling rejects obviously pathological blobs
-                // before the TIFF parser is invoked.
+            $maxPayload    = min($this->config->maxAppSegmentSize, self::MAX_JPEG_APP_PAYLOAD_BYTES);
+
+            if ($payloadLength > $maxPayload) {
                 throw new ParseError(
                     sprintf(
                         'APP segment 0x%02X at offset %d exceeds maximum payload of %d bytes',
                         $marker,
                         $offset,
-                        $this->config->maxAppSegmentSize,
+                        $maxPayload,
                     ),
                     1266,
                 );

@@ -19,13 +19,13 @@ use InvalidArgumentException;
 final readonly class JpegParserConfig
 {
     /**
-     * @param int $maxAppSegmentSize         Maximum APP payload length in bytes.
+     * @param int $maxAppSegmentSize         Maximum APP payload length in bytes (JPEG 16-bit bound: 65,533).
      * @param int $extendedXmpGuidLength     Extended XMP GUID byte length.
      * @param int $flashPixMaxContentEntries Maximum allowed FlashPix contents-list entries.
      * @param int $flashPixMaxStreamSize     Maximum allowed FlashPix stream size per entry in bytes.
      */
     public function __construct(
-        public int $maxAppSegmentSize = 4_194_304,
+        public int $maxAppSegmentSize = 65_533,
         public int $extendedXmpGuidLength = 32,
         public int $flashPixMaxContentEntries = 1024,
         public int $flashPixMaxStreamSize = 16_777_216,

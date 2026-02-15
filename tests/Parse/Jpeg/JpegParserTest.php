@@ -3125,6 +3125,74 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Accepts APP payloads at the JPEG structural upper bound (65533 bytes).
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsAppPayloadAtJpegStructuralUpperBound(): void
+    {
+        $payload   = str_repeat('A', 65_533);
+        $jpeg      = chr(0xFF) . chr(0xD8) . self::segment(self::MARKER_APP1, $payload) . chr(0xFF) . chr(0xD9);
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([], $extractor->extractExifBlobs());
+    }
+
+    /**
+     * Rejects APP segments whose 16-bit length field is smaller than two bytes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAppSegmentLengthFieldBelowTwo(): void
+    {
+        $jpeg = chr(0xFF) . chr(0xD8)
+            . chr(0xFF) . chr(self::MARKER_APP1) . "\x00\x01"
+            . chr(0xFF) . chr(0xD9);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1265);
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Uses the JPEG 16-bit segment semantics as default APP payload limit.
+     *
+     * @return void
+     */
+    #[Test]
+    public function defaultAppPayloadLimitMatchesJpegSegmentSemantics(): void
+    {
+        self::assertSame(65_533, (new JpegParserConfig())->maxAppSegmentSize);
+    }
+
+    /**
+     * Regression: normal APP1/APP2 metadata extraction remains unchanged.
+     *
+     * @return void
+     */
+    #[Test]
+    public function normalApp1App2MetadataExtractionRemainsUnchanged(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'exif-regression';
+        $iccPayload  = self::ICC_SIGNATURE . chr(1) . chr(1) . 'icc-regression';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, $iccPayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertSame('icc-regression', $extractor->getIccProfile());
+    }
+
+    /**
      * Applies a custom APP payload limit through parser configuration.
      * Confirms oversized APP segments are rejected against configured bounds.
      *
