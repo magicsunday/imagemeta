@@ -530,9 +530,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      */
     public function extract(): array
     {
-        $context       = new IsoBmffParseContext();
-        $queuedUuidXmp = [];
-        $moovCount     = 0;
+        $context = new IsoBmffParseContext();
 
         foreach ($this->walkTopLevelBoxes() as $box) {
             if ($box->type === self::BOX_FTYP) {
@@ -540,9 +538,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             } elseif ($box->type === self::BOX_META) {
                 $this->parseMetaBox($box, $context);
             } elseif ($box->type === self::BOX_MOOV) {
-                ++$moovCount;
+                ++$context->moovCount;
 
-                if ($moovCount > 1) {
+                if ($context->moovCount > 1) {
                     throw new ParseError('file must contain exactly one moov box', 1373);
                 }
 
@@ -554,11 +552,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('uuid XMP payload exceeds maximum allowed size', 1368);
                 }
 
-                $queuedUuidXmp[] = $this->readAll($box->window);
+                $context->queuedUuidXmp[] = $this->readAll($box->window);
             }
         }
 
-        foreach ($queuedUuidXmp as $blob) {
+        foreach ($context->queuedUuidXmp as $blob) {
             $this->appendUniqueXmp($context->xmpBlobs, $context->xmpHashes, $blob);
         }
 

@@ -49,6 +49,9 @@ final class IsoBmffParseContextTest extends TestCase
         self::assertSame([], $context->unresolvedItems);
         self::assertSame([], $context->xmpHashes);
         self::assertSame([], $context->qtDataAtoms);
+        self::assertSame([], $context->queuedUuidXmp);
+        self::assertSame(0, $context->moovCount);
+        self::assertFalse($context->allowQuickTimeMetaWithoutFullBox);
     }
 
     /**

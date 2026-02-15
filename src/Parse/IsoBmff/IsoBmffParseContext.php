@@ -44,6 +44,11 @@ final class IsoBmffParseContext
     /** @var array<string, list<array{type: int, locale: int, value: string|int|float|bool}>> */
     public array $qtDataAtoms = [];
 
+    /** @var list<string> */
+    public array $queuedUuidXmp = [];
+
+    public int $moovCount = 0;
+
     /**
      * True when the parsed ftyp brands explicitly allow QuickTime compatibility parsing.
      */
