@@ -1008,18 +1008,16 @@ final class IccParser implements IccParserInterface
         $cursor = $tableEnd;
 
         foreach ($uniqueEntries as $entry) {
-            if ($entry['offset'] < $cursor) {
-                return false;
-            }
-
-            if (!$this->paddingIsNull($data, $cursor, $entry['offset'] - $cursor)) {
+            // ICC.1:2022 §7.3: Tag data elements form a contiguous sequence.
+            if ($entry['offset'] !== $cursor) {
                 return false;
             }
 
             $cursor = $entry['offset'] + $entry['size'];
         }
 
-        return $this->paddingIsNull($data, $cursor, $length - $cursor);
+        // ICC.1:2022 §7.3: The contiguous sequence must cover the full profile payload.
+        return $cursor === $length;
     }
 
     /**

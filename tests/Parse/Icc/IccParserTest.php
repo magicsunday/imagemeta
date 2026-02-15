@@ -357,6 +357,102 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Accepts a valid tag table with contiguous non-overlapping data ranges.
+     *
+     * ICC.1:2022 §7.3 allows distinct tags when ranges are disjoint and contiguous.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeAcceptsContiguousNonOverlappingTagTableRanges(): void
+    {
+        $profile = $this->buildProfileWithCustomTagTable(
+            [
+                ['signature' => 'desc', 'offset' => 156, 'size' => 4],
+                ['signature' => 'cprt', 'offset' => 160, 'size' => 4],
+            ],
+            'ABCDWXYZ',
+        );
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+    }
+
+    /**
+     * Rejects partially overlapping tag data ranges.
+     *
+     * ICC.1:2022 §7.3 forbids partial overlap between distinct tag data elements.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsPartiallyOverlappingTagDataRanges(): void
+    {
+        $profile = $this->buildProfileWithCustomTagTable(
+            [
+                ['signature' => 'desc', 'offset' => 156, 'size' => 8],
+                ['signature' => 'cprt', 'offset' => 160, 'size' => 8],
+            ],
+            'abcdefghijkl',
+        );
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
+    }
+
+    /**
+     * Rejects gaps between tag data elements.
+     *
+     * ICC.1:2022 §7.3 requires a contiguous tag data sequence.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsGapBetweenTagDataElements(): void
+    {
+        $profile = $this->buildProfileWithCustomTagTable(
+            [
+                ['signature' => 'desc', 'offset' => 156, 'size' => 4],
+                ['signature' => 'cprt', 'offset' => 164, 'size' => 4],
+            ],
+            'ABCD    WXYZ',
+        );
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
+    }
+
+    /**
+     * Accepts shared tag data when offset and size are identical.
+     *
+     * ICC.1:2022 §7.3 allows aliasing only for exactly matching data elements.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeAcceptsSharedOffsetWithMatchingSize(): void
+    {
+        $profile = $this->buildProfileWithCustomTagTable(
+            [
+                ['signature' => 'desc', 'offset' => 156, 'size' => 8],
+                ['signature' => 'cprt', 'offset' => 156, 'size' => 8],
+            ],
+            'ABCDEFGH',
+        );
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+    }
+
+    /**
      * Parses an ICC profile with version 2.1.3 encoding.
      * This verifies version parsing uses the correct byte layout:
      * byte 8 = major, byte 9 high nibble = minor, low nibble = bugfix.
@@ -1148,6 +1244,28 @@ final class IccParserTest extends TestCase
         $profile = $header . $tagTable . $descTag;
 
         // Patch profile size
+        return pack('N', strlen($profile)) . substr($profile, 4);
+    }
+
+    /**
+     * Builds a minimal profile with a caller-specified tag table and payload bytes.
+     *
+     * @param list<array{signature: string, offset: int, size: int}> $records
+     * @param string                                                 $payload
+     */
+    private function buildProfileWithCustomTagTable(array $records, string $payload): string
+    {
+        $header   = substr(IccFixtures::minimalProfile(), 0, 128);
+        $tagTable = pack('N', count($records));
+
+        foreach ($records as $record) {
+            $tagTable .= $record['signature']
+                . pack('N', $record['offset'])
+                . pack('N', $record['size']);
+        }
+
+        $profile = $header . $tagTable . $payload;
+
         return pack('N', strlen($profile)) . substr($profile, 4);
     }
 
