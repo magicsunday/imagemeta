@@ -74,4 +74,14 @@ final class ApplePlistDictionary implements ApplePlistValueInterface
 
         return $clone;
     }
+
+    /**
+     * Resolves the dictionary using keyed-archive dispatch logic.
+     *
+     * @return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
+     */
+    public function resolveValue(KeyedArchiveUnarchiver $unarchiver): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
+    {
+        return $unarchiver->resolveDictionaryValue($this);
+    }
 }

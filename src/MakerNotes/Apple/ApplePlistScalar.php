@@ -137,4 +137,14 @@ final readonly class ApplePlistScalar implements ApplePlistValueInterface
 
         return $this->value;
     }
+
+    /**
+     * Resolves scalar values using keyed-archive dispatch logic.
+     *
+     * @return ApplePlistScalar
+     */
+    public function resolveValue(KeyedArchiveUnarchiver $unarchiver): ApplePlistScalar
+    {
+        return $unarchiver->resolveScalarValue($this);
+    }
 }

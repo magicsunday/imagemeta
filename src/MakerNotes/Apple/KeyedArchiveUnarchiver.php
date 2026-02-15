@@ -86,60 +86,78 @@ final class KeyedArchiveUnarchiver
      */
     private function resolveValue(ApplePlistValueInterface $value): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
     {
-        if ($value instanceof ApplePlistDictionary) {
-            if ($this->isUidReference($value)) {
-                $uidValue = $value->get('CF$UID');
-                if (!$uidValue instanceof ApplePlistScalar) {
-                    throw new ParseError('The keyed archive UID reference is invalid.', 1095);
-                }
+        return $value->resolveValue($this);
+    }
 
-                $uid = $uidValue->value();
-                if (!is_int($uid)) {
-                    throw new ParseError('The keyed archive UID reference is invalid.', 1096);
-                }
-
-                return $this->resolveUid($uid);
+    /**
+     * Resolves dictionary values using keyed-archive dictionary semantics.
+     *
+     * @phpstan-return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
+     */
+    public function resolveDictionaryValue(ApplePlistDictionary $value): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
+    {
+        if ($this->isUidReference($value)) {
+            $uidValue = $value->get('CF$UID');
+            if (!$uidValue instanceof ApplePlistScalar) {
+                throw new ParseError('The keyed archive UID reference is invalid.', 1095);
             }
 
-            if (
-                $value->has('NS.keys')
-                && $value->has('NS.objects')
-            ) {
-                return $this->resolveDictionary($value);
+            $uid = $uidValue->value();
+            if (!is_int($uid)) {
+                throw new ParseError('The keyed archive UID reference is invalid.', 1096);
             }
 
-            if ($value->has('NS.objects') && !$value->has('NS.keys')) {
-                return $this->resolveArray($value);
-            }
-
-            /** @var KeyedArchiveDictionary $resolved */
-            $resolved = [];
-            foreach ($value->entries() as $key => $entry) {
-                if ($key === '$class') {
-                    continue;
-                }
-
-                $resolved[$key] = $this->resolveValue($entry);
-            }
-
-            return new ApplePlistDictionary($resolved);
+            return $this->resolveUid($uid);
         }
 
-        if ($value instanceof ApplePlistArray) {
-            /** @var KeyedArchiveArray $resolved */
-            $resolved = [];
-            foreach ($value->values() as $entry) {
-                $resolved[] = $this->resolveValue($entry);
+        if (
+            $value->has('NS.keys')
+            && $value->has('NS.objects')
+        ) {
+            return $this->resolveDictionary($value);
+        }
+
+        if ($value->has('NS.objects') && !$value->has('NS.keys')) {
+            return $this->resolveReferencedArray($value);
+        }
+
+        /** @var KeyedArchiveDictionary $resolved */
+        $resolved = [];
+        foreach ($value->entries() as $key => $entry) {
+            if ($key === '$class') {
+                continue;
             }
 
-            return new ApplePlistArray($resolved);
+            $resolved[$key] = $this->resolveValue($entry);
         }
 
-        if ($value instanceof ApplePlistScalar) {
-            return $value;
+        return new ApplePlistDictionary($resolved);
+    }
+
+    /**
+     * Resolves array values using keyed-archive list semantics.
+     *
+     * @return ApplePlistArray
+     */
+    public function resolveArrayValue(ApplePlistArray $value): ApplePlistArray
+    {
+        /** @var KeyedArchiveArray $resolved */
+        $resolved = [];
+        foreach ($value->values() as $entry) {
+            $resolved[] = $this->resolveValue($entry);
         }
 
-        throw new ParseError('Unsupported keyed archive value encountered.', 1097);
+        return new ApplePlistArray($resolved);
+    }
+
+    /**
+     * Resolves scalar values.
+     *
+     * @return ApplePlistScalar
+     */
+    public function resolveScalarValue(ApplePlistScalar $value): ApplePlistScalar
+    {
+        return $value;
     }
 
     /**
@@ -266,7 +284,7 @@ final class KeyedArchiveUnarchiver
      *
      * @throws ParseError If array structure is invalid.
      */
-    private function resolveArray(ApplePlistDictionary $array): ApplePlistArray
+    private function resolveReferencedArray(ApplePlistDictionary $array): ApplePlistArray
     {
         $objects = $array->get('NS.objects');
         if (!$objects instanceof ApplePlistArray) {
