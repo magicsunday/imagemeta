@@ -264,6 +264,22 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     private const int LPCM_FLAG_IS_ALIGNED_HIGH = 1 << 4;
 
     /**
+     * Allowed QuickTime visual sample-entry depth values.
+     *
+     * QuickTime File Format 2012, "Video Sample Description".
+     *
+     * @var list<int>
+     */
+    private const array QUICKTIME_VIDEO_DEPTH_VALUES = [1, 2, 4, 8, 16, 24, 32, 34, 36, 40];
+
+    /**
+     * Depth values that must not reference color tables.
+     *
+     * @var list<int>
+     */
+    private const array QUICKTIME_VIDEO_NO_COLOR_TABLE_DEPTHS = [16, 24, 32];
+
+    /**
      * FourCC for video media header box.
      */
     private const string BOX_VMHD = 'vmhd';
@@ -1682,8 +1698,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
                 $compressor = $nameLength > 0 ? substr($nameData, 0, $nameLength) : '';
 
-                $win->readU16BE(); // depth
-                $win->readU16BE(); // pre-defined
+                $depth        = $win->readU16BE();
+                $colorTableId = $this->decodeSigned16($win->readU16BE());
+                $this->validateVideoSampleEntryDepthAndColorTable($depth, $colorTableId, $win, $entryEnd);
 
                 $result = [
                     'format'         => $this->normaliseFourcc($format),
@@ -1703,6 +1720,53 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         return $result;
+    }
+
+    /**
+     * Validates QuickTime visual sample-entry depth and color-table semantics.
+     *
+     * @param int          $depth        Visual sample-entry depth field.
+     * @param int          $colorTableId Signed color-table identifier field.
+     * @param StreamWindow $win          Reader positioned at trailing sample-entry payload.
+     * @param int          $entryEnd     Absolute sample-entry end offset.
+     */
+    private function validateVideoSampleEntryDepthAndColorTable(int $depth, int $colorTableId, StreamWindow $win, int $entryEnd): void
+    {
+        if (!in_array($depth, self::QUICKTIME_VIDEO_DEPTH_VALUES, true)) {
+            throw new ParseError('video sample entry depth is not allowed by QuickTime domain', 1494);
+        }
+
+        if (in_array($depth, self::QUICKTIME_VIDEO_NO_COLOR_TABLE_DEPTHS, true) && $colorTableId !== -1) {
+            throw new ParseError('video sample entry depth without color table must use colorTableId -1', 1495);
+        }
+
+        if ($colorTableId !== 0) {
+            return;
+        }
+
+        $remaining = $entryEnd - $win->tell();
+        if ($remaining < 8) {
+            throw new ParseError('video sample entry colorTableId=0 requires trailing ctab atom', 1496);
+        }
+
+        $colorTableSize = Unpack::int('N', $win->read(4), 'video sample entry ctab atom size');
+        $colorTableType = $win->read(4);
+
+        if ($colorTableType !== 'ctab') {
+            throw new ParseError('video sample entry colorTableId=0 requires trailing ctab atom', 1496);
+        }
+
+        if ($colorTableSize < 8 || $colorTableSize > $remaining) {
+            throw new ParseError('video sample entry ctab atom is truncated', 1498);
+        }
+    }
+
+    /**
+     * Decodes a 16-bit unsigned value as signed two's-complement integer.
+     */
+    private function decodeSigned16(int $value): int
+    {
+        return $value >= 0x8000 ? $value - 0x10000 : $value;
     }
 
     /**

@@ -3071,6 +3071,100 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Accepts valid QuickTime video depth/color-table combinations in stsd entries.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesVideoStsdEntryWithExplicitColorTableAtom(): void
+    {
+        $ctab  = $this->box('ctab', pack('Nnn', 0, 0, 0));
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 8,
+            colorTableId: 0,
+            trailingPayload: $ctab,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
+        self::assertSame(240, $quickTime->intValue(QuickTimeMeta::VIDEO_HEIGHT_KEY));
+    }
+
+    /**
+     * Rejects unsupported QuickTime visual sample-entry depth values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoStsdEntryWithInvalidDepthValue(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('video sample entry depth is not allowed by QuickTime domain');
+
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 12,
+            colorTableId: -1,
+        );
+
+        $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects explicit color-table usage for direct-color depths.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoDepth24WithExplicitColorTable(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('video sample entry depth without color table must use colorTableId -1');
+
+        $ctab  = $this->box('ctab', pack('Nnn', 0, 0, 0));
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: 0,
+            trailingPayload: $ctab,
+        );
+
+        $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects colorTableId=0 when no valid trailing ctab atom is present.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoColorTableIdZeroWithoutValidColorTableAtom(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('video sample entry colorTableId=0 requires trailing ctab atom');
+
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 8,
+            colorTableId: 0,
+        );
+
+        $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
+    }
+
+    /**
      * Parses an audio stsd entry with sound sample description version 0.
      *
      * @return void
@@ -6184,8 +6278,14 @@ final class IsoBmffParserTest extends TestCase
         return $ftyp . $meta;
     }
 
-    private function videoSampleEntry(string $format, int $width, int $height): string
-    {
+    private function videoSampleEntry(
+        string $format,
+        int $width,
+        int $height,
+        int $depth = 24,
+        int $colorTableId = -1,
+        string $trailingPayload = '',
+    ): string {
         $compressor = str_pad('', 31, "\0");
 
         $payload = str_repeat("\0", 6)
@@ -6199,10 +6299,36 @@ final class IsoBmffParserTest extends TestCase
             . pack('n', 1)
             . "\0"
             . $compressor
-            . pack('n', 24)
-            . pack('n', 0xFFFF);
+            . pack('n', $depth)
+            . pack('n', $colorTableId & 0xFFFF)
+            . $trailingPayload;
 
         return $this->box($format, $payload);
+    }
+
+    /**
+     * Builds a minimal QuickTime file with one video track using a custom stsd sample entry.
+     *
+     * @param string $sampleEntry Serialized stsd sample entry bytes.
+     */
+    private function createFileWithVideoStsdEntry(string $sampleEntry): string
+    {
+        $stsd = $this->fullBox('stsd', pack('N', 1) . $sampleEntry);
+        $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
+        $vmhd = $this->fullBox('vmhd', str_repeat("\0", 8), 0, 1);
+        $url  = $this->fullBox('url ', '', 0, 1);
+        $dref = $this->fullBox('dref', pack('N', 1) . $url);
+        $dinf = $this->box('dinf', $dref);
+        $minf = $this->box('minf', $vmhd . $dinf . $stbl);
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak = $this->box('trak', $tkhd . $mdia);
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        return $ftyp . $moov;
     }
 
     /**
