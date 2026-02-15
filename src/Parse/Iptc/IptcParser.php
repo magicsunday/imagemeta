@@ -106,6 +106,14 @@ final class IptcParser implements IptcParserInterface
                     throw new BoundsError('APP13 resource name padding exceeds payload length.', 1131);
                 }
 
+                $paddingByte = $payload[$offset];
+                if ($paddingByte !== "\0") {
+                    throw new ParseError(
+                        sprintf('APP13 resource name padding byte must be 0x00, got 0x%02X.', ord($paddingByte)),
+                        1143,
+                    );
+                }
+
                 ++$offset;
             }
 
@@ -126,6 +134,14 @@ final class IptcParser implements IptcParserInterface
             if (($resourceSize % 2) !== 0) {
                 if (($length - $offset) < 1) {
                     throw new BoundsError('APP13 resource data padding exceeds payload length.', 1142);
+                }
+
+                $paddingByte = $payload[$offset];
+                if ($paddingByte !== "\0") {
+                    throw new ParseError(
+                        sprintf('APP13 resource data padding byte must be 0x00, got 0x%02X.', ord($paddingByte)),
+                        1144,
+                    );
                 }
 
                 ++$offset;

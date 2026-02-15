@@ -130,6 +130,76 @@ final class IptcParserTest extends TestCase
     }
 
     /**
+     * Accepts odd-length name/data fields when required alignment padding bytes are zero.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesOddSizedNameAndDataWithZeroAlignmentPadding(): void
+    {
+        $iimData = $this->iimDataset(2, 5, 'AB'); // odd resource data length
+        $block   = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, 'AB');
+        $payload = self::PHOTOSHOP_SIGNATURE . $block;
+
+        $document = (new IptcParser())->parse($payload);
+
+        self::assertSame('AB', $document->first(2, 5));
+    }
+
+    /**
+     * Rejects odd-length name fields when the alignment pad byte is non-zero.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsOddSizedNameWithNonZeroAlignmentPadding(): void
+    {
+        $iimData = $this->iimDataset(2, 5, 'AB');
+        $block   = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, 'AB', chr(1));
+        $payload = self::PHOTOSHOP_SIGNATURE . $block;
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/name padding|padding/i');
+
+        (new IptcParser())->parse($payload);
+    }
+
+    /**
+     * Rejects odd-length resource data when the alignment pad byte is non-zero.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsOddSizedDataWithNonZeroAlignmentPadding(): void
+    {
+        $iimData = $this->iimDataset(2, 5, 'AB');
+        $block   = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, '', chr(0), chr(1));
+        $payload = self::PHOTOSHOP_SIGNATURE . $block;
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/data padding|padding/i');
+
+        (new IptcParser())->parse($payload);
+    }
+
+    /**
+     * Keeps even-length APP13 resource blocks unaffected by alignment padding checks.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesEvenSizedBlocksWithoutAlignmentPadding(): void
+    {
+        $iimData = $this->iimDataset(2, 5, 'A'); // even resource data length
+        $block   = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, 'A');
+        $payload = self::PHOTOSHOP_SIGNATURE . $block;
+
+        $document = (new IptcParser())->parse($payload);
+
+        self::assertSame('A', $document->first(2, 5));
+    }
+
+    /**
      * Rejects odd-sized resource data when trailing alignment padding is missing.
      *
      * @return void
@@ -184,10 +254,20 @@ final class IptcParserTest extends TestCase
 
     private function resourceBlock(int $resourceId, string $data, string $name = ''): string
     {
+        return $this->resourceBlockWithExplicitPadding($resourceId, $data, $name, "\0", "\0");
+    }
+
+    private function resourceBlockWithExplicitPadding(
+        int $resourceId,
+        string $data,
+        string $name = '',
+        string $namePaddingByte = "\0",
+        string $dataPaddingByte = "\0",
+    ): string {
         $nameLength = strlen($name);
         $nameField  = chr($nameLength) . $name;
         if ((strlen($nameField) % 2) !== 0) {
-            $nameField .= "\0";
+            $nameField .= $namePaddingByte;
         }
 
         $block = '8BIM'
@@ -197,7 +277,7 @@ final class IptcParserTest extends TestCase
             . $data;
 
         if ((strlen($data) % 2) !== 0) {
-            $block .= "\0";
+            $block .= $dataPaddingByte;
         }
 
         return $block;
