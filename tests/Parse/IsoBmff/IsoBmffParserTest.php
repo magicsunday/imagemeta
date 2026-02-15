@@ -3008,6 +3008,41 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Accepts a tkhd box with version 1 layout.
+     * ISO/IEC 14496-12 defines version 1 with 64-bit time fields.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseTkhdVersion1(): void
+    {
+        $tkhdPayload = pack('NN', 0, 0)      // creation_time (64)
+            . pack('NN', 0, 0)               // modification_time (64)
+            . pack('N', 1)                   // track_ID
+            . pack('N', 0)                   // reserved
+            . pack('NN', 0, 0)               // duration (64)
+            . str_repeat("\0", 8)           // reserved
+            . pack('n', 0)                   // layer
+            . pack('n', 0)                   // alternate_group
+            . pack('n', 0)                   // volume
+            . pack('n', 0)                   // reserved
+            . str_repeat("\0", 36)          // matrix
+            . pack('N', 1920 << 16)          // width (16.16)
+            . pack('N', 1080 << 16);         // height (16.16)
+
+        $mdia = $this->box('mdia', $this->minimalMdiaContent());
+        $tkhd = $this->fullBox('tkhd', $tkhdPayload, 1, 0);
+        $trak = $this->box('trak', $tkhd . $mdia);
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        [, $xmps]  = $extractor->extract();
+
+        self::assertSame([], $xmps);
+    }
+
+    /**
      * Rejects an hdlr box with non-zero version.
      *
      * @return void
