@@ -2244,6 +2244,21 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects iloc data_reference_index values that point outside available dref entries.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocOutOfRangeDataReferenceIndex(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('iloc data_reference_index 2 out of range');
+
+        $urlEntry = $this->fullBox('url ', "https://example.test/exif\0");
+        $this->createExtractor($this->createFileWithIlocDataReferenceAndDref(1, 2, $urlEntry))->extract();
+    }
+
+    /**
      * Builds two independent meta contexts that both use data_reference_index=1.
      * This verifies exported data references remain context-scoped and are not overwritten globally.
      */
@@ -5415,6 +5430,20 @@ final class IsoBmffParserTest extends TestCase
      */
     private function createFileWithIlocExternalReferenceAndDref(int $entryCount, string ...$entries): string
     {
+        return $this->createFileWithIlocDataReferenceAndDref($entryCount, 1, ...$entries);
+    }
+
+    /**
+     * Builds a minimal file containing iloc + dinf/dref with configurable data_reference_index.
+     *
+     * @param int    $entryCount         Declared dref entry_count.
+     * @param int    $dataReferenceIndex iloc data_reference_index value.
+     * @param string ...$entries         Serialized dref child DataEntryBox values.
+     *
+     * @return string Serialized file bytes.
+     */
+    private function createFileWithIlocDataReferenceAndDref(int $entryCount, int $dataReferenceIndex, string ...$entries): string
+    {
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
         $infe        = $this->box('infe', $infePayload);
         $iinfPayload = "\0\0\0\0" . pack('n', 1) . $infe;
@@ -5425,7 +5454,7 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload .= pack('n', 1);
         $ilocPayload .= pack('n', 1);
         $ilocPayload .= pack('n', 0x0000);
-        $ilocPayload .= pack('n', 1);
+        $ilocPayload .= pack('n', $dataReferenceIndex);
         $ilocPayload .= pack('n', 1);
         $ilocPayload .= pack('N', 0);
         $ilocPayload .= pack('N', 4);
@@ -5473,7 +5502,12 @@ final class IsoBmffParserTest extends TestCase
         $payload .= pack('N', 1);
 
         $iloc = $this->fullBox('iloc', $payload, $version, 0);
-        $meta = $this->fullBox('meta', $iinf . $iloc);
+
+        $drefEntry = $this->fullBox('url ', "https://example.test/exif\0");
+        $dref      = $this->fullBox('dref', pack('N', 1) . $drefEntry);
+        $dinf      = $this->box('dinf', $dref);
+
+        $meta = $this->fullBox('meta', $iinf . $iloc . $dinf);
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         return $ftyp . $meta;

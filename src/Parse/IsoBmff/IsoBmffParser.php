@@ -2948,7 +2948,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     {
         $dataReference      = null;
         $dataReferenceIndex = $location['dataReferenceIndex'];
-        if ($dataReferenceIndex > 0 && isset($dataReferences[$dataReferenceIndex])) {
+        if ($dataReferenceIndex > 0) {
+            if (!isset($dataReferences[$dataReferenceIndex])) {
+                throw new ParseError(sprintf('iloc data_reference_index %d out of range', $dataReferenceIndex), 1497);
+            }
+
             $dataReference = $dataReferences[$dataReferenceIndex];
         }
 
