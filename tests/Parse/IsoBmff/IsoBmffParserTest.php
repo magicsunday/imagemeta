@@ -3453,6 +3453,30 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Accepts dref payloads containing only urn data-entry boxes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseDrefWithUrnEntryOnly(): void
+    {
+        $urnEntry                                         = $this->fullBox('urn ', "name\0urn:example:test\0");
+        $extractor                                        = $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $urnEntry));
+        [$exifs, , , , $dataReferences, $unresolvedItems] = $extractor->extract();
+
+        self::assertSame([], $exifs);
+        self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
+
+        $reference = $dataReferences->referenceForIndex(1);
+        self::assertNotNull($reference);
+        self::assertSame('urn ', $reference->type);
+        self::assertSame("name\0urn:example:test", $reference->uri);
+
+        self::assertCount(1, $unresolvedItems);
+        self::assertSame($reference, $unresolvedItems[0]->dataReference);
+    }
+
+    /**
      * Rejects dref boxes with fewer children than declared by entry_count.
      *
      * @return void
