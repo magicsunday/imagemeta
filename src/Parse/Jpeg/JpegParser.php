@@ -416,8 +416,6 @@ final class JpegParser implements JpegParserInterface
         $this->frameSamplesPerLine           = null;
 
         $seenExifApp1                = false;
-        $markersBeforeExifApp1       = 0;
-        $firstMarkerBeforeExifOffset = null;
         $firstApp2BeforeExifOffset   = null;
         $seenApp1OrApp2              = false;
         $seenApp11                   = false;
@@ -559,32 +557,15 @@ final class JpegParser implements JpegParserInterface
                         );
                     }
 
-                    if (($markersBeforeExifApp1 > 0) && ($firstMarkerBeforeExifOffset !== null)) {
-                        throw new ParseError(
-                            sprintf(
-                                'APP1 Exif marker at offset %d must be the first metadata marker after SOI (first marker seen at offset %d)',
-                                $offset,
-                                $firstMarkerBeforeExifOffset,
-                            ),
-                            1327,
-                        );
-                    }
-
                     $seenExifApp1 = true;
-                } else {
-                    ++$markersBeforeExifApp1;
-
-                    if ($firstMarkerBeforeExifOffset === null) {
-                        $firstMarkerBeforeExifOffset = $offset;
-                    }
-
-                    if (
-                        ($firstApp2BeforeExifOffset === null)
-                        && ($marker === Marker::APP2)
-                        && $this->isExifApp2ExtensionPayload($payload)
-                    ) {
-                        $firstApp2BeforeExifOffset = $offset;
-                    }
+                } elseif (
+                    ($marker === Marker::APP2)
+                    && $this->isExifApp2ExtensionPayload($payload)
+                ) {
+                    // EXIF 3.0 §4.7.3: APP2 Exif extension must follow APP1 Exif.
+                    // Non-Exif APPn/COM markers are not governed by Exif and are
+                    // tolerated before APP1 (JFIF APP0, IPTC APP13, Adobe APP14, etc.).
+                    $firstApp2BeforeExifOffset ??= $offset;
                 }
             }
 

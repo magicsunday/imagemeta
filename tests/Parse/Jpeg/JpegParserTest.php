@@ -433,13 +433,13 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Places APP1 Exif after a preceding marker.
-     * This verifies APP1 Exif must be first metadata marker after SOI.
+     * Non-Exif APPn markers (JFIF APP0, vendor APP3, etc.) before Exif APP1
+     * are tolerated per EXIF 3.0 §4.7 — readers must skip unknown APPn/COM.
      *
      * @return void
      */
     #[Test]
-    public function exifApp1AfterOtherMarkerThrowsParseError(): void
+    public function exifApp1AfterNonExifMarkerIsAccepted(): void
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
@@ -449,11 +449,9 @@ final class JpegParserTest extends TestCase
         );
 
         $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/APP1 Exif.*first metadata marker/i');
-
-        $extractor->extractExifBlobs();
+        self::assertCount(1, $blobs);
     }
 
     /**
