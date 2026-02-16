@@ -203,7 +203,10 @@ final readonly class FormatDetector
                 }
             }
 
-            $scanned += $size;
+            // Count only header bytes examined, not payload bytes skipped
+            // via seek().  A seek() over a large mdat is essentially free;
+            // the budget exists to bound actual I/O and parsing cost.
+            $scanned += $headerSize;
         }
 
         return false;

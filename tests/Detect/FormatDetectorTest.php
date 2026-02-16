@@ -273,6 +273,42 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
+     * Classic QuickTime MOV layout: large mdat followed by moov.
+     * The scan budget must count only header bytes, not skipped payload.
+     */
+    #[Test]
+    public function detectRecognisesIsoBmffWhenLargeMdatFollowedByMoov(): void
+    {
+        $wide            = "\x00\x00\x00\x08wide";
+        $mdatPayloadSize = 100_000;
+        $mdatSize        = 8 + $mdatPayloadSize;
+        $mdat            = pack('N', $mdatSize) . 'mdat' . str_repeat("\x00", $mdatPayloadSize);
+        $moov            = "\x00\x00\x00\x08moov";
+
+        $stream   = $this->createStream($wide . $mdat . $moov);
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::ISOBMFF, $detected);
+    }
+
+    /**
+     * Header budget still rejects streams with too many padding boxes.
+     */
+    #[Test]
+    public function detectRejectsTooManyPaddingBoxesExceedingHeaderBudget(): void
+    {
+        $padding = str_repeat("\x00\x00\x00\x08free", 8193);
+        $ftyp    = "\x00\x00\x00\x10ftypisom\x00\x00\x00\x00";
+
+        $stream = $this->createStream($padding . $ftyp);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unsupported or unknown container');
+
+        (new FormatDetector())->detect($stream);
+    }
+
+    /**
      * Rejects ftyp with size=0 (extends to EOF) as it lacks proper box boundaries.
      */
     #[Test]
