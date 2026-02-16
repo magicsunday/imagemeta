@@ -1991,12 +1991,12 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects EXIF SOF payloads with subsampling values outside EXIF YCbCr 4:2:2/4:2:0.
+     * Accepts EXIF SOF payloads with non-standard subsampling factors (Postel's Law).
      *
      * @return void
      */
     #[Test]
-    public function rejectsExifSofWithUnsupportedYcbcrSubSampling(): void
+    public function acceptsExifSofWithNonStandardYcbcrSubSampling(): void
     {
         $exifPayload  = self::TIFF_HEADER . 'strict-exif';
         $framePayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
@@ -2010,12 +2010,9 @@ final class JpegParserTest extends TestCase
         );
 
         $extractor = $this->createExtractor($jpeg);
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1494);
-        $this->expectExceptionMessageMatches('/YCbCr|subsampling|4:2:2|4:2:0/i');
-
         $extractor->extractExifBlobs();
+
+        $this->addToAssertionCount(1);
     }
 
     /**

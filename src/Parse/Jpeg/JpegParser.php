@@ -2506,16 +2506,6 @@ final class JpegParser implements JpegParserInterface
         }
 
         $derivedSubSampling = $this->deriveYCbCrSubSampling($components);
-        if ($strictExifProfile && ($derivedSubSampling === null)) {
-            throw new ParseError(
-                sprintf(
-                    'SOF marker 0x%02X at offset %d must derive EXIF YCbCr subsampling 4:2:2 or 4:2:0 in strict EXIF mode',
-                    $marker,
-                    $offset,
-                ),
-                1494,
-            );
-        }
 
         $this->frameBitsPerSample     = $bitsPerSample;
         $this->frameComponentSampling = $components;
