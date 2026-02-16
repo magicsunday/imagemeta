@@ -84,119 +84,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     private const string XMP_UUID = "\xBE\x7A\xCF\xCB\x97\xA9\x42\xE8\x9C\x71\x99\x94\x91\xE3\xAF\xAC";
 
     /**
-     * FourCC for QuickTime metadata box.
-     */
-    private const string BOX_META = 'meta';
-
-    /**
-     * FourCC for file type box describing the major brand.
-     */
-    private const string BOX_FTYP = 'ftyp';
-
-    /**
      * QuickTime-compatible file type brand.
      */
     private const string BRAND_QUICKTIME = 'qt  ';
-
-    /**
-     * FourCC for QuickTime movie box.
-     */
-    private const string BOX_MOOV = 'moov';
-
-    /**
-     * FourCC for movie fragment box.
-     */
-    private const string BOX_MOOF = 'moof';
-
-    /**
-     * FourCC for UUID box used to store custom payloads.
-     */
-    private const string BOX_UUID = 'uuid';
-
-    /**
-     * FourCC for embedded Exif box (EXIF 3.0 §4.8).
-     */
-    private const string BOX_EXIF = 'Exif';
-
-    /**
-     * FourCC for item information box.
-     */
-    private const string BOX_IINF = 'iinf';
-
-    /**
-     * FourCC for item location box.
-     */
-    private const string BOX_ILOC = 'iloc';
-
-    /**
-     * FourCC for item data box.
-     */
-    private const string BOX_IDAT = 'idat';
-
-    /**
-     * FourCC for primary item box.
-     */
-    private const string BOX_PITM = 'pitm';
-
-    /**
-     * FourCC for item reference box.
-     */
-    private const string BOX_IREF = 'iref';
-
-    /**
-     * FourCC for data information box.
-     */
-    private const string BOX_DINF = 'dinf';
-
-    /**
-     * FourCC for data reference box.
-     */
-    private const string BOX_DREF = 'dref';
-
-    /**
-     * FourCC for URL data references.
-     */
-    private const string BOX_URL = 'url ';
-
-    /**
-     * FourCC for URN data references.
-     */
-    private const string BOX_URN = 'urn ';
-
-    /**
-     * FourCC for embedded XMP metadata box.
-     */
-    private const string BOX_XMP = 'XMP ';
-
-    /**
-     * FourCC for QuickTime metadata keys box.
-     */
-    private const string BOX_KEYS = 'keys';
-
-    /**
-     * FourCC for QuickTime item list box.
-     */
-    private const string BOX_ILST = 'ilst';
-
-    /**
-     * FourCC for QuickTime user data box.
-     */
-    private const string BOX_UDTA = 'udta';
-
-    /**
-     * FourCC for QuickTime track name atom inside user data.
-     */
-    private const string BOX_NAME = 'name';
-
-    /**
-     * FourCC for QuickTime track container.
-     */
-    private const string BOX_TRAK = 'trak';
-
-    /**
-     * FourCC for track header box.
-     */
-    private const string BOX_TKHD = 'tkhd';
 
     /**
      * Track-header flag indicating whether a track is enabled.
@@ -207,36 +97,6 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * Track-header flag indicating whether a track participates in movie presentation.
      */
     private const int TKHD_FLAG_TRACK_IN_MOVIE = 0x000002;
-
-    /**
-     * FourCC for media container box.
-     */
-    private const string BOX_MDIA = 'mdia';
-
-    /**
-     * FourCC for handler reference box.
-     */
-    private const string BOX_HDLR = 'hdlr';
-
-    /**
-     * FourCC for media information box.
-     */
-    private const string BOX_MINF = 'minf';
-
-    /**
-     * FourCC for sample table box.
-     */
-    private const string BOX_STBL = 'stbl';
-
-    /**
-     * FourCC for sample description box.
-     */
-    private const string BOX_STSD = 'stsd';
-
-    /**
-     * FourCC for Sampling Rate box inside AudioSampleEntryV1.
-     */
-    private const string BOX_SRAT = 'srat';
 
     /**
      * LPCM flag: payload stores IEEE floating-point samples.
@@ -278,66 +138,6 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @var list<int>
      */
     private const array QUICKTIME_VIDEO_NO_COLOR_TABLE_DEPTHS = [16, 24, 32];
-
-    /**
-     * FourCC for video media header box.
-     */
-    private const string BOX_VMHD = 'vmhd';
-
-    /**
-     * FourCC for sound media header box.
-     */
-    private const string BOX_SMHD = 'smhd';
-
-    /**
-     * FourCC for null media header box.
-     */
-    private const string BOX_NMHD = 'nmhd';
-
-    /**
-     * FourCC for time-to-sample box.
-     */
-    private const string BOX_STTS = 'stts';
-
-    /**
-     * FourCC for sample-to-chunk box.
-     */
-    private const string BOX_STSC = 'stsc';
-
-    /**
-     * FourCC for sample size box.
-     */
-    private const string BOX_STSZ = 'stsz';
-
-    /**
-     * FourCC for compact sample size box.
-     */
-    private const string BOX_STZ2 = 'stz2';
-
-    /**
-     * FourCC for chunk offset box.
-     */
-    private const string BOX_STCO = 'stco';
-
-    /**
-     * FourCC for large chunk offset box.
-     */
-    private const string BOX_CO64 = 'co64';
-
-    /**
-     * FourCC for item information entry box.
-     */
-    private const string BOX_INFE = 'infe';
-
-    /**
-     * FourCC for QuickTime free-form metadata box.
-     */
-    private const string BOX_FREEFORM = '----';
-
-    /**
-     * FourCC for QuickTime data box.
-     */
-    private const string BOX_DATA = 'data';
 
     /**
      * QuickTime `data` box type code for UTF-8 encoded text payloads.
@@ -424,36 +224,6 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * Maximum supported nesting depth for data-type 28 metadata payloads.
      */
     private const int MAX_NESTED_METADATA_DEPTH = 1;
-
-    /**
-     * FourCC for QuickTime metadata header atom.
-     */
-    private const string BOX_MHDR = 'mhdr';
-
-    /**
-     * FourCC for QuickTime item information atom inside metadata items.
-     */
-    private const string BOX_ITIF = 'itif';
-
-    /**
-     * FourCC for QuickTime country list atom.
-     */
-    private const string BOX_CTRY = 'ctry';
-
-    /**
-     * FourCC for QuickTime language list atom.
-     */
-    private const string BOX_LANG = 'lang';
-
-    /**
-     * FourCC for the movie header box.
-     */
-    private const string BOX_MVHD = 'mvhd';
-
-    /**
-     * FourCC for the media header box.
-     */
-    private const string BOX_MDHD = 'mdhd';
 
     /**
      * FourCC for QuickTime mean payload in free-form metadata.
@@ -574,11 +344,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $context = new IsoBmffParseContext();
 
         foreach ($this->walkTopLevelBoxes() as $box) {
-            if ($box->type === self::BOX_FTYP) {
+            if ($box->type === BoxType::FTYP->value) {
                 $context->qtKeys = $this->mergeAssociative($context->qtKeys, $this->parseFtyp($box, $context));
-            } elseif ($box->type === self::BOX_META) {
+            } elseif ($box->type === BoxType::META->value) {
                 $this->parseMetaBox($box, $context);
-            } elseif ($box->type === self::BOX_MOOV) {
+            } elseif ($box->type === BoxType::MOOV->value) {
                 ++$context->moovCount;
 
                 if ($context->moovCount > 1) {
@@ -586,9 +356,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 }
 
                 $this->parseMoovBox($box, $context);
-            } elseif ($box->type === self::BOX_MOOF) {
+            } elseif ($box->type === BoxType::MOOF->value) {
                 $this->parseMoofBox($box, $context);
-            } elseif ($box->type === self::BOX_UUID && $box->userType === self::XMP_UUID) {
+            } elseif ($box->type === BoxType::UUID->value && $box->userType === self::XMP_UUID) {
                 if ($box->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
                     throw new ParseError('uuid XMP payload exceeds maximum allowed size', 1368);
                 }
@@ -658,7 +428,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $hasEligibleAudioTrack = false;
 
         foreach ($this->walkChildren($moov) as $child) {
-            if ($child->type === self::BOX_META) {
+            if ($child->type === BoxType::META->value) {
                 // QuickTime File Format 2012, "Metadata Structure": only one
                 // metadata atom is allowed per container location.
                 if ($metaSeen) {
@@ -667,14 +437,14 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
                 $metaSeen = true;
                 $this->parseMetaBox($child, $context);
-            } elseif ($child->type === self::BOX_UDTA) {
+            } elseif ($child->type === BoxType::UDTA->value) {
                 ++$udtaCount;
                 if ($udtaCount > 1) {
                     throw new ParseError('duplicate udta box in moov', 1417);
                 }
 
                 $this->parseUdtaBox($child, $context);
-            } elseif ($child->type === self::BOX_TRAK) {
+            } elseif ($child->type === BoxType::TRAK->value) {
                 ++$trakCount;
                 $trackSelection = $this->parseTrak($child, $context);
 
@@ -703,7 +473,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                         $hasEligibleAudioTrack = $trackSelection['isEnabledInMovie'];
                     }
                 }
-            } elseif ($child->type === self::BOX_MVHD) {
+            } elseif ($child->type === BoxType::MVHD->value) {
                 ++$mvhdCount;
 
                 if ($mvhdCount > 1) {
@@ -746,14 +516,14 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $metaSeen = false;
 
         foreach ($this->walkChildren($moof) as $child) {
-            if ($child->type === self::BOX_META) {
+            if ($child->type === BoxType::META->value) {
                 if ($metaSeen) {
                     throw new ParseError('duplicate meta box in moof', 1416);
                 }
 
                 $metaSeen = true;
                 $this->parseMetaBox($child, $context, $moof->offset);
-            } elseif ($child->type === self::BOX_UDTA) {
+            } elseif ($child->type === BoxType::UDTA->value) {
                 $this->parseUdtaBox($child, $context, $moof->offset);
             }
         }
@@ -821,7 +591,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $metaSeen = false;
 
         foreach ($this->walkChildren($udta, allowTrailingTerminator: true) as $child) {
-            if ($child->type === self::BOX_META) {
+            if ($child->type === BoxType::META->value) {
                 // QuickTime File Format 2012, "Metadata Structure": only one
                 // metadata atom is allowed per container location.
                 if ($metaSeen) {
@@ -830,7 +600,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
                 $metaSeen = true;
                 $this->parseMetaBox($child, $context, $fileOffsetOrigin);
-            } elseif ($child->type === self::BOX_NAME) {
+            } elseif ($child->type === BoxType::NAME->value) {
                 $this->parseUdtaNameAtom($child, $context);
             } else {
                 $this->parseUdtaTextAtom($child, $context);
@@ -923,7 +693,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $udtaCount        = 0;
 
         foreach ($this->walkChildren($trak) as $child) {
-            if ($child->type === self::BOX_TKHD) {
+            if ($child->type === BoxType::TKHD->value) {
                 ++$tkhdCount;
 
                 if ($tkhdCount > 1) {
@@ -931,7 +701,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 }
 
                 [$tkhdWidth, $tkhdHeight, $isEnabledInMovie] = $this->parseTkhd($child);
-            } elseif ($child->type === self::BOX_MDIA) {
+            } elseif ($child->type === BoxType::MDIA->value) {
                 ++$mdiaCount;
 
                 if ($mdiaCount > 1) {
@@ -939,7 +709,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 }
 
                 [$handler, $handlerName, $sampleInfo] = $this->parseMdia($child, $context);
-            } elseif ($child->type === self::BOX_UDTA) {
+            } elseif ($child->type === BoxType::UDTA->value) {
                 ++$udtaCount;
                 if ($udtaCount > 1) {
                     throw new ParseError('duplicate udta box in trak', 1418);
@@ -1327,7 +1097,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $children = [];
 
         foreach ($this->walkChildren($mdia) as $child) {
-            if ($child->type === self::BOX_HDLR) {
+            if ($child->type === BoxType::HDLR->value) {
                 ++$hdlrCount;
 
                 if ($hdlrCount > 1) {
@@ -1335,7 +1105,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 }
 
                 [$handler, $handlerName] = $this->parseHdlr($child);
-            } elseif ($child->type === self::BOX_MINF) {
+            } elseif ($child->type === BoxType::MINF->value) {
                 ++$minfCount;
 
                 if ($minfCount > 1) {
@@ -1343,7 +1113,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 }
 
                 $children[] = $child;
-            } elseif ($child->type === self::BOX_MDHD) {
+            } elseif ($child->type === BoxType::MDHD->value) {
                 ++$mdhdCount;
 
                 if ($mdhdCount > 1) {
@@ -1351,7 +1121,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 }
 
                 $mdhdTimescale = $this->parseMdhd($child);
-            } elseif ($child->type === self::BOX_UDTA) {
+            } elseif ($child->type === BoxType::UDTA->value) {
                 ++$udtaCount;
 
                 if ($udtaCount > 1) {
@@ -1478,13 +1248,13 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
         // Determine expected media header box from handler type
         $expectedMediaHdr = match ($handlerType) {
-            'vide'  => self::BOX_VMHD,
-            'soun'  => self::BOX_SMHD,
-            default => self::BOX_NMHD,
+            'vide'  => BoxType::VMHD->value,
+            'soun'  => BoxType::SMHD->value,
+            default => BoxType::NMHD->value,
         };
 
         foreach ($this->walkChildren($minf) as $child) {
-            if ($child->type === self::BOX_STBL) {
+            if ($child->type === BoxType::STBL->value) {
                 ++$stblCount;
 
                 if ($stblCount > 1) {
@@ -1492,7 +1262,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 }
 
                 $result = $this->parseStbl($child, $handlerType, $mdhdTimescale);
-            } elseif ($child->type === self::BOX_DINF) {
+            } elseif ($child->type === BoxType::DINF->value) {
                 ++$dinfCount;
 
                 if ($dinfCount > 1) {
@@ -1500,7 +1270,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 }
 
                 $this->parseDinf($child);
-            } elseif (in_array($child->type, [self::BOX_VMHD, self::BOX_SMHD, self::BOX_NMHD], true)) {
+            } elseif (in_array($child->type, [BoxType::VMHD->value, BoxType::SMHD->value, BoxType::NMHD->value], true)) {
                 // Enforce exactly one handler-matching media header
                 if ($mediaHdrType !== null) {
                     throw new ParseError('minf must contain exactly one media header box', 1421);
@@ -1549,7 +1319,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $result    = [];
 
         foreach ($this->walkChildren($stbl) as $child) {
-            if ($child->type === self::BOX_STSD) {
+            if ($child->type === BoxType::STSD->value) {
                 ++$stsdCount;
 
                 if ($stsdCount > 1) {
@@ -1557,25 +1327,25 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 }
 
                 $result = $this->parseStsd($child, $handlerType, $mdhdTimescale);
-            } elseif ($child->type === self::BOX_STTS) {
+            } elseif ($child->type === BoxType::STTS->value) {
                 ++$sttsCount;
 
                 if ($sttsCount > 1) {
                     throw new ParseError('stbl must contain exactly one stts box', 1424);
                 }
-            } elseif ($child->type === self::BOX_STSC) {
+            } elseif ($child->type === BoxType::STSC->value) {
                 ++$stscCount;
 
                 if ($stscCount > 1) {
                     throw new ParseError('stbl must contain exactly one stsc box', 1425);
                 }
-            } elseif ($child->type === self::BOX_STSZ || $child->type === self::BOX_STZ2) {
+            } elseif ($child->type === BoxType::STSZ->value || $child->type === BoxType::STZ2->value) {
                 ++$stszCount;
 
                 if ($stszCount > 1) {
                     throw new ParseError('stbl must contain exactly one stsz or stz2 box', 1426);
                 }
-            } elseif ($child->type === self::BOX_STCO || $child->type === self::BOX_CO64) {
+            } elseif ($child->type === BoxType::STCO->value || $child->type === BoxType::CO64->value) {
                 ++$stcoCount;
 
                 if ($stcoCount > 1) {
@@ -2023,7 +1793,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             }
 
             $boxType = substr($tail, $offset + 4, 4);
-            if ($boxType === self::BOX_SRAT) {
+            if ($boxType === BoxType::SRAT->value) {
                 if (!$allowSamplingRateBox) {
                     throw new ParseError('sampling rate box is only allowed in audio sample entry version 1', 1473);
                 }
@@ -2400,7 +2170,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $childOffset = $this->detectMetaChildOffset($meta, $context->allowQuickTimeMetaWithoutFullBox);
         foreach ($this->walkChildren($meta, $childOffset) as $child) {
             switch ($child->type) {
-                case self::BOX_HDLR:
+                case BoxType::HDLR->value:
                     ++$hdlrCount;
                     if ($hdlrCount > 1) {
                         throw new ParseError('meta must contain exactly one hdlr box', 1478);
@@ -2408,7 +2178,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
                     [$handlerType] = $this->parseHdlr($child);
                     break;
-                case self::BOX_EXIF:
+                case BoxType::EXIF->value:
                     // Enforce payload cap before reading direct Exif box
                     if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
                         throw new ParseError('direct Exif box payload exceeds maximum allowed size', 1396);
@@ -2418,20 +2188,20 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     $blob         = $this->readAll($child->window);
                     $directExif[] = $this->normalizeExifBlob($blob);
                     break;
-                case self::BOX_IINF:
+                case BoxType::IINF->value:
                     foreach ($this->parseIinf($child) as $info) {
                         $itemInfos[$info['id']] = $info;
                     }
 
                     break;
-                case self::BOX_ILOC:
+                case BoxType::ILOC->value:
                     if ($locations !== []) {
                         throw new ParseError('meta context must contain at most one iloc box', 1413);
                     }
 
                     $locations = $this->parseIloc($child, $fileOffsetOrigin);
                     break;
-                case self::BOX_IDAT:
+                case BoxType::IDAT->value:
                     // ISO/IEC 14496-12 §8.11.11.2 specifies aligned(8), but
                     // virtually all Apple and Android encoders produce idat
                     // boxes at non-aligned offsets.  Skip the alignment check.
@@ -2447,16 +2217,16 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     $idatPayload = $this->readAll($child->window);
 
                     break;
-                case self::BOX_PITM:
+                case BoxType::PITM->value:
                     $primaryItemId = $this->parsePitm($child);
                     break;
-                case self::BOX_IREF:
+                case BoxType::IREF->value:
                     $itemReferences = $this->mergeItemReferences($itemReferences, $this->parseIref($child));
                     break;
-                case self::BOX_DINF:
+                case BoxType::DINF->value:
                     $dataReferences = $this->mergeDataReferences($dataReferences, $this->parseDinf($child));
                     break;
-                case self::BOX_XMP:
+                case BoxType::XMP->value:
                     // Enforce payload cap before reading direct XMP box
                     if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
                         throw new ParseError('direct XMP box payload exceeds maximum allowed size', 1397);
@@ -2464,7 +2234,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
                     $directXmp[] = $this->readAll($child->window);
                     break;
-                case self::BOX_UUID:
+                case BoxType::UUID->value:
                     if ($child->userType === self::XMP_UUID) {
                         // Enforce payload cap before reading uuid XMP box
                         if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
@@ -2475,12 +2245,12 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     }
 
                     break;
-                case self::BOX_MHDR:
+                case BoxType::MHDR->value:
                     $this->parseMhdr($child);
                     $requiresHdlr = true;
                     $hasMhdr      = true;
                     break;
-                case self::BOX_KEYS:
+                case BoxType::KEYS->value:
                     $requiresHdlr = true;
 
                     if ($keysMaps !== []) {
@@ -2489,18 +2259,18 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
                     $keysMaps[] = $this->parseKeys($child);
                     break;
-                case self::BOX_ILST:
+                case BoxType::ILST->value:
                     if ($ilstBoxes !== []) {
                         throw new ParseError('meta must contain at most one ilst atom', 1504);
                     }
 
                     $ilstBoxes[] = $child;
                     break;
-                case self::BOX_CTRY:
+                case BoxType::CTRY->value:
                     $requiresHdlr = true;
                     $countryLists = $this->parseLocaleListAtom($child, 'ctry');
                     break;
-                case self::BOX_LANG:
+                case BoxType::LANG->value:
                     $requiresHdlr  = true;
                     $languageLists = $this->parseLocaleListAtom($child, 'lang');
                     break;
@@ -2991,7 +2761,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $drefCount  = 0;
 
         foreach ($this->walkChildren($dinf) as $child) {
-            if ($child->type === self::BOX_DREF) {
+            if ($child->type === BoxType::DREF->value) {
                 ++$drefCount;
 
                 if ($drefCount > 1) {
@@ -3076,7 +2846,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      */
     private function parseDataReferenceEntry(BoxDescriptor $entry, int $index): IsoBmffDataReference
     {
-        if ($entry->type !== self::BOX_URL && $entry->type !== self::BOX_URN) {
+        if ($entry->type !== BoxType::URL->value && $entry->type !== BoxType::URN->value) {
             throw new ParseError(sprintf('unsupported dref entry type "%s"', $entry->type), 1367);
         }
 
@@ -3120,7 +2890,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 throw new ParseError('dref entry URL/URN payload contains invalid UTF-8', 1390);
             }
 
-            if ($entry->type === self::BOX_URL) {
+            if ($entry->type === BoxType::URL->value) {
                 $urlLocation = $trimmed !== '' ? $trimmed : null;
                 $uri         = $urlLocation;
             } else {
@@ -3139,7 +2909,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             }
         }
 
-        if ((!$selfContained) && ($entry->type === self::BOX_URN) && ($urnName === null)) {
+        if ((!$selfContained) && ($entry->type === BoxType::URN->value) && ($urnName === null)) {
             throw new ParseError('dref urn entry requires non-empty name field', 1603);
         }
 
@@ -3559,7 +3329,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $index = 0;
 
         foreach ($this->walkChildren($iinf, $start) as $child) {
-            if ($child->type !== self::BOX_INFE) {
+            if ($child->type !== BoxType::INFE->value) {
                 continue;
             }
 
@@ -4124,7 +3894,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
             if (($index !== null) && isset($keyIndex[$index])) {
                 $keyName = $this->resolveKeyName($keyIndex[$index]);
-            } elseif ($entry->type === self::BOX_FREEFORM) {
+            } elseif ($entry->type === BoxType::FREEFORM->value) {
                 $keyName = $this->parseFreeformKey($entry);
             } elseif ($isMdta) {
                 // In mdta mode, ilst entries must reference keys by index
@@ -4145,7 +3915,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
             // Freeform entries ('----') handle 'name' children in parseFreeformKey()
             // as data boxes; only non-freeform entries use the spec Name atom.
-            $isFreeform = ($entry->type === self::BOX_FREEFORM);
+            $isFreeform = ($entry->type === BoxType::FREEFORM->value);
             $entryAtoms = [];
 
             foreach ($this->walkChildren($entry) as $sub) {
@@ -4156,7 +3926,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     );
                 }
 
-                if ($sub->type === self::BOX_DATA) {
+                if ($sub->type === BoxType::DATA->value) {
                     $structured = $this->parseDataBoxStructured($sub);
                     $this->validateLocaleIndicator($structured['locale'], $countryLists, $languageLists);
                     $entryAtoms[] = $structured;
@@ -4194,14 +3964,14 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                         'locale' => $structured['locale'],
                         'value'  => $coerced,
                     ];
-                } elseif ($sub->type === self::BOX_NAME && !$isFreeform) {
+                } elseif ($sub->type === BoxType::NAME->value && !$isFreeform) {
                     $itemName = $this->parseIlstNameAtom($sub, $seenNames);
 
                     // Use name as fallback key when no key index or fourcc is available
                     if ($keyName === null) {
                         $keyName = $itemName;
                     }
-                } elseif ($sub->type === self::BOX_ITIF) {
+                } elseif ($sub->type === BoxType::ITIF->value) {
                     $this->parseIlstItemInfo($sub, $seenItemIds);
                 }
             }
@@ -4240,7 +4010,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('unable to create nested metadata stream.', 1464);
         }
 
-        $written = fwrite($handle, pack('N', $metaSize) . self::BOX_META . $payload);
+        $written = fwrite($handle, pack('N', $metaSize) . BoxType::META->value . $payload);
         if (!is_int($written) || ($written !== $metaSize)) {
             throw new ParseError('unable to write nested metadata payload.', 1465);
         }
@@ -4252,7 +4022,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $context      = new IsoBmffParseContext();
 
         $meta = $nestedParser->readBoxAt(0, $metaSize);
-        if ($meta->type !== self::BOX_META) {
+        if ($meta->type !== BoxType::META->value) {
             throw new ParseError('nested metadata payload is not a valid meta atom.', 1466);
         }
 
@@ -5084,12 +4854,12 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     private function isExifItem(array $info): bool
     {
         $itemType = $info['itemType'] ?? null;
-        if (is_string($itemType) && strcasecmp($itemType, self::BOX_EXIF) === 0) {
+        if (is_string($itemType) && strcasecmp($itemType, BoxType::EXIF->value) === 0) {
             return true;
         }
 
         $name = $info['name'] ?? null;
-        if (is_string($name) && strcasecmp($name, self::BOX_EXIF) === 0) {
+        if (is_string($name) && strcasecmp($name, BoxType::EXIF->value) === 0) {
             return true;
         }
 
@@ -5305,7 +5075,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         $userType = null;
-        if ($type === self::BOX_UUID) {
+        if ($type === BoxType::UUID->value) {
             // uuid box must be at least 24 bytes (8-byte header + 16-byte userType)
             if ($size < 24) {
                 throw new ParseError('uuid box size must be at least 24 bytes', 1420);
