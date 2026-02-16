@@ -30,7 +30,9 @@ use PHPUnit\Framework\TestCase;
 use function count;
 use function ksort;
 use function pack;
+use function str_pad;
 use function strlen;
+use function unpack;
 
 /**
  * Verifies parsing and exposure of baseline DNG tags from TIFF/EXIF payloads.
@@ -1334,6 +1336,154 @@ final class TiffExifParserDngTagTest extends TestCase
         $this->expectExceptionMessage('DNGBackwardVersion');
 
         (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * When both LocalizedCameraModel and UniqueCameraModel are present,
+     * the explicit LocalizedCameraModel value takes precedence.
+     */
+    #[Test]
+    public function localizedCameraModelUsesExplicitValueWhenPresent(): void
+    {
+        $blob = $this->buildTiffWithDngCameraModels("UniqueModel\0", "LocalizedModel\0");
+
+        $result = (new TiffExifParser())->parseFromBlob($blob);
+
+        self::assertSame('LocalizedModel', $result->localizedCameraModel());
+    }
+
+    /**
+     * When only UniqueCameraModel is present and LocalizedCameraModel is absent,
+     * the effective LocalizedCameraModel defaults to UniqueCameraModel per DNG 1.7.1.0.
+     */
+    #[Test]
+    public function localizedCameraModelFallsBackToUniqueCameraModel(): void
+    {
+        $blob = $this->buildTiffWithDngCameraModels("UniqueModel\0", null);
+
+        $result = (new TiffExifParser())->parseFromBlob($blob);
+
+        self::assertSame('UniqueModel', $result->localizedCameraModel());
+    }
+
+    /**
+     * Builds a minimal DNG TIFF with UniqueCameraModel and optional LocalizedCameraModel.
+     *
+     * @param string      $uniqueModel    NUL-terminated UniqueCameraModel value.
+     * @param string|null $localizedModel NUL-terminated LocalizedCameraModel value, or null to omit.
+     */
+    private function buildTiffWithDngCameraModels(string $uniqueModel, ?string $localizedModel): string
+    {
+        $ifdOffset = 8;
+
+        $tags = [];
+
+        $tags[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        $tags[ExifTag::IMAGE_LENGTH] = pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        $tags[ExifTag::ORIENTATION] = pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0);
+
+        $tags[DngTag::DNG_VERSION] = pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0);
+
+        // UniqueCameraModel — always present; inline if ≤ 4 bytes, otherwise out-of-band
+        $uniqueLen = strlen($uniqueModel);
+
+        if ($uniqueLen <= 4) {
+            $tags[DngTag::UNIQUE_CAMERA_MODEL] = pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', $uniqueLen)
+                . str_pad($uniqueModel, 4, "\0");
+        } else {
+            // placeholder — offset patched below
+            $tags[DngTag::UNIQUE_CAMERA_MODEL] = pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', $uniqueLen)
+                . pack('V', 0); // offset placeholder
+        }
+
+        if ($localizedModel !== null) {
+            $localizedLen = strlen($localizedModel);
+
+            if ($localizedLen <= 4) {
+                $tags[DngTag::LOCALIZED_CAMERA_MODEL] = pack('v', DngTag::LOCALIZED_CAMERA_MODEL)
+                    . pack('v', TiffConst::TYPE_ASCII)
+                    . pack('V', $localizedLen)
+                    . str_pad($localizedModel, 4, "\0");
+            } else {
+                $tags[DngTag::LOCALIZED_CAMERA_MODEL] = pack('v', DngTag::LOCALIZED_CAMERA_MODEL)
+                    . pack('v', TiffConst::TYPE_ASCII)
+                    . pack('V', $localizedLen)
+                    . pack('V', 0); // offset placeholder
+            }
+        }
+
+        ksort($tags);
+
+        $ifdData = pack('v', count($tags));
+
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0); // next IFD offset
+
+        $blob      = 'II' . pack('v', TiffConst::MAGIC_CLASSIC) . pack('V', $ifdOffset) . $ifdData;
+        $outOfBand = '';
+
+        // Patch out-of-band string offsets
+        if ($uniqueLen > 4) {
+            $offset = strlen($blob) + strlen($outOfBand);
+            $outOfBand .= $uniqueModel;
+            $this->patchOffset($blob, DngTag::UNIQUE_CAMERA_MODEL, $offset);
+        }
+
+        if ($localizedModel !== null && strlen($localizedModel) > 4) {
+            $offset = strlen($blob) + strlen($outOfBand);
+            $outOfBand .= $localizedModel;
+            $this->patchOffset($blob, DngTag::LOCALIZED_CAMERA_MODEL, $offset);
+        }
+
+        return $blob . $outOfBand;
+    }
+
+    /**
+     * Patches the 4-byte value/offset field of the IFD entry for the given tag.
+     */
+    private function patchOffset(string &$blob, int $tag, int $offset): void
+    {
+        $ifdStart   = 8; // right after TIFF header
+        $countData  = unpack('v', $blob, $ifdStart);
+        $entryCount = $countData !== false ? $countData[1] : 0;
+
+        for ($i = 0; $i < $entryCount; ++$i) {
+            $entryPos = $ifdStart + 2 + ($i * 12);
+            $tagData  = unpack('v', $blob, $entryPos);
+            $entryTag = $tagData !== false ? $tagData[1] : 0;
+
+            if ($entryTag === $tag) {
+                // Value/offset field is at entryPos + 8
+                $packed = pack('V', $offset);
+
+                for ($b = 0; $b < 4; ++$b) {
+                    $blob[$entryPos + 8 + $b] = $packed[$b];
+                }
+
+                return;
+            }
+        }
     }
 
     /**

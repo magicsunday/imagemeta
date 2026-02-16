@@ -565,6 +565,18 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     }
 
     /**
+     * Returns the localized DNG camera model from IFD0.
+     *
+     * DNG 1.7.1.0 (DNG Tags, LocalizedCameraModel): ASCII or BYTE, NUL-terminated UTF-8.
+     * Default: same as UniqueCameraModel when absent.
+     */
+    public function localizedCameraModel(): ?string
+    {
+        return $this->str($this->ifd0, DngTag::LOCALIZED_CAMERA_MODEL)
+            ?? $this->str($this->ifd0, DngTag::UNIQUE_CAMERA_MODEL);
+    }
+
+    /**
      * Returns the derived EXIF capability profile identifier.
      */
     public function exifProfile(): string
