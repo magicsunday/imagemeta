@@ -24,6 +24,7 @@ use PHPUnit\Framework\TestCase;
 use function intdiv;
 use function ksort;
 use function str_pad;
+use function str_repeat;
 use function strlen;
 
 /**
@@ -39,7 +40,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
     public function acceptsValidTiledLayout(): void
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
-            $this->buildTiffWithTiledLayout(),
+            $this->buildTiffWithTiledLayout(padToStorageRanges: true),
         );
 
         self::assertNotNull($parsed->ifd0->get(TiffTag::TILE_OFFSETS));
@@ -133,6 +134,24 @@ final class TiffExifParserTiledLayoutTest extends TestCase
     }
 
     /**
+     * Rejects tile storage entries whose offset+byteCount range exceeds TIFF blob bounds.
+     */
+    #[Test]
+    public function rejectsTileStorageRangeExceedingBlobBounds(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('TileOffsets[0]=4096 with TileByteCounts[0]=256 exceeds TIFF data bounds');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTiledLayout(
+                tileOffsetsBase: 4096,
+                tileByteCountsBase: 256,
+                padToStorageRanges: false,
+            ),
+        );
+    }
+
+    /**
      * Strip and tile descriptors must not be mixed in one IFD image organization.
      */
     #[Test]
@@ -160,6 +179,9 @@ final class TiffExifParserTiledLayoutTest extends TestCase
         ?int $tileByteCountsCount = null,
         int $tileByteCountsType = TiffConst::TYPE_LONG,
         bool $includeStripTags = false,
+        int $tileOffsetsBase = 64,
+        int $tileByteCountsBase = 8,
+        bool $padToStorageRanges = false,
     ): string {
         $tilesAcross = intdiv($imageWidth + $tileWidth - 1, $tileWidth);
         $tilesDown   = intdiv($imageLength + $tileLength - 1, $tileLength);
@@ -169,8 +191,8 @@ final class TiffExifParserTiledLayoutTest extends TestCase
         $tileOffsetsCount ??= $expected;
         $tileByteCountsCount ??= $expected;
 
-        $tileOffsetsPayload = $this->packNumericList($tileOffsetsCount, 4096);
-        $tileBytesPayload   = $this->packNumericList($tileByteCountsCount, 256, $tileByteCountsType);
+        $tileOffsetsPayload = $this->packNumericList($tileOffsetsCount, $tileOffsetsBase);
+        $tileBytesPayload   = $this->packNumericList($tileByteCountsCount, $tileByteCountsBase, $tileByteCountsType);
 
         $entries = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
@@ -259,13 +281,37 @@ final class TiffExifParserTiledLayoutTest extends TestCase
             $nextOffset += strlen($payload);
         }
 
-        return 'II'
+        $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . pack('v', $entryCount)
             . $ifdEntries
             . pack('V', 0)
             . $payloadTail;
+
+        if ($padToStorageRanges) {
+            $requiredLength = 0;
+            $pairCount      = min($tileOffsetsCount, $tileByteCountsCount);
+            for ($i = 0; $i < $pairCount; ++$i) {
+                $offset    = $tileOffsetsBase + $i;
+                $byteCount = $tileByteCountsBase + $i;
+                if ($offset < 0) {
+                    continue;
+                }
+
+                if ($byteCount < 0) {
+                    continue;
+                }
+
+                $requiredLength = max($requiredLength, $offset + $byteCount);
+            }
+
+            if (strlen($blob) < $requiredLength) {
+                $blob .= str_repeat("\0", $requiredLength - strlen($blob));
+            }
+        }
+
+        return $blob;
     }
 
     /**

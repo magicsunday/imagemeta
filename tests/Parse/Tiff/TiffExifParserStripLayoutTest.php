@@ -28,6 +28,7 @@ use PHPUnit\Framework\TestCase;
 use function count;
 use function pack;
 use function str_pad;
+use function str_repeat;
 use function strlen;
 use function usort;
 
@@ -58,6 +59,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
             stripByteCounts: [120, 120, 80],
             planarConfiguration: 1,
             samplesPerPixel: null,
+            padToStorageRanges: true,
         );
 
         $parsed = (new TiffExifParser())->parseFromBlob($blob);
@@ -82,6 +84,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
             stripByteCounts: [32, 32, 16, 32, 32, 16, 32, 32, 16],
             planarConfiguration: 2,
             samplesPerPixel: 3,
+            padToStorageRanges: true,
         );
 
         $parsed = (new TiffExifParser())->parseFromBlob($blob);
@@ -172,6 +175,30 @@ final class TiffExifParserStripLayoutTest extends TestCase
     }
 
     /**
+     * Rejects strip storage entries whose offset+byteCount range exceeds TIFF blob bounds.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsStripStorageRangeExceedingBlobBounds(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('exceeds TIFF data bounds');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildStripLayoutTiff(
+                imageLength: 10,
+                rowsPerStrip: 4,
+                stripOffsets: [512, 768, 1024],
+                stripByteCounts: [120, 120, 80],
+                planarConfiguration: 1,
+                samplesPerPixel: null,
+                padToStorageRanges: false,
+            ),
+        );
+    }
+
+    /**
      * Rejects zero RowsPerStrip when strip tags are present.
      *
      * @return void
@@ -215,6 +242,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
         ?int $samplesPerPixel,
         int $stripOffsetsType = TiffConst::TYPE_LONG,
         int $stripByteCountsType = TiffConst::TYPE_LONG,
+        bool $padToStorageRanges = false,
     ): string {
         $entries = [
             ['tag' => ExifTag::IMAGE_WIDTH, 'type' => TiffConst::TYPE_LONG, 'values' => [32]],
@@ -234,7 +262,29 @@ final class TiffExifParserStripLayoutTest extends TestCase
             static fn (array $left, array $right): int => $left['tag'] <=> $right['tag'],
         );
 
-        return $this->buildClassicTiff($entries);
+        $blob = $this->buildClassicTiff($entries);
+
+        if ($padToStorageRanges) {
+            $requiredLength = 0;
+            foreach ($stripOffsets as $index => $offset) {
+                $byteCount = $stripByteCounts[$index] ?? 0;
+                if ($offset < 0) {
+                    continue;
+                }
+
+                if ($byteCount < 0) {
+                    continue;
+                }
+
+                $requiredLength = max($requiredLength, $offset + $byteCount);
+            }
+
+            if (strlen($blob) < $requiredLength) {
+                $blob .= str_repeat("\0", $requiredLength - strlen($blob));
+            }
+        }
+
+        return $blob;
     }
 
     /**

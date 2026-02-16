@@ -4693,6 +4693,14 @@ final class TiffExifParser implements TiffExifParserInterface
             return;
         }
 
+        $hasTileFields = ($ifd0->get(TiffTag::TILE_WIDTH) instanceof IfdEntry)
+            || ($ifd0->get(TiffTag::TILE_LENGTH) instanceof IfdEntry)
+            || ($ifd0->get(TiffTag::TILE_OFFSETS) instanceof IfdEntry)
+            || ($ifd0->get(TiffTag::TILE_BYTE_COUNTS) instanceof IfdEntry);
+        if ($hasTileFields) {
+            return;
+        }
+
         $rowsPerStripEntry = $ifd0->get(ExifTag::ROWS_PER_STRIP);
         if (!$rowsPerStripEntry instanceof IfdEntry || !is_int($rowsPerStripEntry->value) || $rowsPerStripEntry->value <= 0) {
             throw new ParseError(
@@ -4745,6 +4753,15 @@ final class TiffExifParser implements TiffExifParserInterface
                     $expectedCount,
                 ), 1454);
             }
+        }
+
+        if ($stripOffsetsEntry instanceof IfdEntry && $stripByteCountsEntry instanceof IfdEntry) {
+            $this->validateCountedImageDataRanges(
+                ExifTag::STRIP_OFFSETS,
+                $this->countedImageDataValues($stripOffsetsEntry, ExifTag::STRIP_OFFSETS),
+                ExifTag::STRIP_BYTE_COUNTS,
+                $this->countedImageDataValues($stripByteCountsEntry, ExifTag::STRIP_BYTE_COUNTS),
+            );
         }
     }
 
@@ -4889,6 +4906,13 @@ final class TiffExifParser implements TiffExifParserInterface
                 1701,
             );
         }
+
+        $this->validateCountedImageDataRanges(
+            TiffTag::TILE_OFFSETS,
+            $this->countedImageDataValues($tileOffsetsEntry, TiffTag::TILE_OFFSETS),
+            TiffTag::TILE_BYTE_COUNTS,
+            $this->countedImageDataValues($tileByteCountsEntry, TiffTag::TILE_BYTE_COUNTS),
+        );
     }
 
     /**
@@ -4905,6 +4929,83 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         return 0;
+    }
+
+    /**
+     * Converts strip/tile offset or byte-count field values to integer lists.
+     *
+     * @return list<int>
+     */
+    private function countedImageDataValues(IfdEntry $entry, int $tag): array
+    {
+        if (is_int($entry->value)) {
+            return [$entry->value];
+        }
+
+        if ($entry->value instanceof ExifNumericList) {
+            $values = [];
+            foreach ($entry->value->values as $index => $component) {
+                if (!is_int($component)) {
+                    throw new ParseError(sprintf(
+                        '%s contains a non-integer component at index %d.',
+                        $this->countedImageDataTagName($tag),
+                        $index,
+                    ), 1702);
+                }
+
+                $values[] = $component;
+            }
+
+            return $values;
+        }
+
+        throw new ParseError(sprintf(
+            '%s has unsupported value representation for range validation.',
+            $this->countedImageDataTagName($tag),
+        ), 1702);
+    }
+
+    /**
+     * Validates strip/tile offset+byteCount pairs against TIFF blob bounds.
+     *
+     * @param int[] $offsets
+     * @param int[] $byteCounts
+     */
+    private function validateCountedImageDataRanges(
+        int $offsetTag,
+        array $offsets,
+        int $byteCountTag,
+        array $byteCounts,
+    ): void {
+        $blobSize  = $this->buffer->size();
+        $pairCount = count($offsets);
+
+        for ($index = 0; $index < $pairCount; ++$index) {
+            $offset    = $offsets[$index] ?? 0;
+            $byteCount = $byteCounts[$index] ?? 0;
+
+            if (
+                ($offset < 0)
+                || ($byteCount < 0)
+                || ($offset > $blobSize)
+                || ($byteCount > $blobSize)
+                || ($offset > ($blobSize - $byteCount))
+            ) {
+                throw new ParseError(
+                    sprintf(
+                        '%s[%d]=%d with %s[%d]=%d exceeds TIFF data bounds (size=%d).',
+                        $this->countedImageDataTagName($offsetTag),
+                        $index,
+                        $offset,
+                        $this->countedImageDataTagName($byteCountTag),
+                        $index,
+                        $byteCount,
+                        $blobSize,
+                    ),
+                    1702,
+                );
+            }
+        }
     }
 
     /**
