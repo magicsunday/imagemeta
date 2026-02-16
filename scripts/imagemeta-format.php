@@ -64,6 +64,7 @@ use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
+use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
 use ReflectionClass;
 use ReflectionProperty;
@@ -780,6 +781,23 @@ final class MetadataFormatter
             }
 
             return implode(', ', $parts);
+        }
+
+        // XMP LanguageAlternative values (dc:title, dc:description, etc.) are
+        // structured objects with lang/value pairs.  Extract the x-default entry
+        // or fall back to the first available entry.  (GH-1536)
+        if ($value instanceof XmpLanguageAlternative) {
+            if ($value->entries === []) {
+                return '(none)';
+            }
+
+            foreach ($value->entries as $entry) {
+                if ($entry['lang'] === 'x-default') {
+                    return $entry['value'];
+                }
+            }
+
+            return $value->entries[0]['value'];
         }
 
         if ($value instanceof ExifRational) {

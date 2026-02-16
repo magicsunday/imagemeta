@@ -1414,12 +1414,14 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         // MOV files commonly write 'mhlr' or 'dhlr' here.
         $win->readU32BE();
 
-        $handler  = $win->read(4);
-        $reserved = $win->read(12);
+        $handler = $win->read(4);
+        $win->read(12);
 
-        if ($reserved !== "\0\0\0\0\0\0\0\0\0\0\0\0") {
-            throw new ParseError('hdlr reserved fields must be 0', 1151);
-        }
+        // Postel's Law: ISO 14496-12 §8.4.3.1 requires these 12 bytes to be zero,
+        // but Apple QuickTime historically used them for component manufacturer,
+        // component type, and component flags.  Many real-world MOV files have
+        // non-zero values here.  Tolerate silently — the fields are unused for
+        // metadata extraction.  (GH-1534)
 
         $handlerType = $this->normaliseFourcc($handler);
         $remaining   = $hdlr->contentSize - $win->tell();

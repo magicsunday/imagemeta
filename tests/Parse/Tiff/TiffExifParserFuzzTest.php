@@ -150,12 +150,13 @@ final class TiffExifParserFuzzTest extends TestCase
 
     /**
      * Declares a BYTE entry with an INT_MAX count to overflow expected data size.
-     * Ensures bounds checks reject the entry before any unsafe reads occur.
+     * The entry triggers a BoundsError internally which is caught — the entry
+     * is silently skipped and parsing succeeds (Postel's Law, GH-1549).
      *
      * @return void
      */
     #[Test]
-    public function rejectsEntryWithOverflowCount(): void
+    public function skipsEntryWithOverflowCount(): void
     {
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
@@ -172,10 +173,9 @@ final class TiffExifParserFuzzTest extends TestCase
         $blob .= pack('V', 0);
 
         $reader = new TiffExifParser();
-
-        $this->expectException(BoundsError::class);
-
         $reader->parseFromBlob($blob);
+
+        $this->addToAssertionCount(1);
     }
 
     /**

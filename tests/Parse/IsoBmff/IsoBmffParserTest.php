@@ -5418,31 +5418,6 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects an hdlr box with non-zero reserved fields.
-     *
-     * @return void
-     */
-    #[Test]
-    public function rejectHdlrNonZeroReserved(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('hdlr reserved fields must be 0');
-
-        $hdlrPayload = "\x00\x00\x00\x00"         // version=0, flags=0
-            . "\x00\x00\x00\x00"                   // pre_defined=0
-            . 'vide'                               // handler_type
-            . "\x00\x00\x00\x01"                   // reserved[0] = 1 (invalid)
-            . "\x00\x00\x00\x00"                   // reserved[1] = 0
-            . "\x00\x00\x00\x00";                  // reserved[2] = 0
-        $hdlr = $this->box('hdlr', $hdlrPayload);
-        $meta = $this->fullBox('meta', $hdlr);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
-
-        $extractor = $this->createExtractor($ftyp . $meta);
-        $extractor->extract();
-    }
-
-    /**
      * Rejects a meta box without a required hdlr child.
      *
      * @return void

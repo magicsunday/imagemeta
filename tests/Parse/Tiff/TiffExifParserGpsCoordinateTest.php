@@ -107,27 +107,6 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
     }
 
     /**
-     * Rejects GPS coordinate tags with wrong count.
-     */
-    #[Test]
-    #[DataProvider('provideGpsCoordinateTags')]
-    public function rejectsGpsCoordinateTagsWithWrongCount(int $tag, string $name, int $_refTag, string $_refValue, string $_resultKey): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-        $this->expectExceptionMessage($name . ' must contain exactly 3 bytes');
-
-        (new TiffExifParser())->parseFromBlob(
-            $this->buildClassicTiffWithSingleGpsEntry(
-                $tag,
-                TiffConst::TYPE_RATIONAL,
-                2,
-                pack('V2', 45, 1) . pack('V2', 30, 1),
-            ),
-        );
-    }
-
-    /**
      * Accepts GPSAltitude encoded as RATIONAL[1] in the GPS IFD.
      */
     #[Test]
@@ -167,26 +146,6 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
         }
 
         $this->addToAssertionCount(1);
-    }
-
-    /**
-     * Rejects GPSAltitude with wrong count.
-     */
-    #[Test]
-    public function rejectsGpsAltitudeWithWrongCount(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-        $this->expectExceptionMessage('GPSAltitude must contain exactly 1 bytes');
-
-        (new TiffExifParser())->parseFromBlob(
-            $this->buildClassicTiffWithSingleGpsEntry(
-                ExifTag::GPS_ALTITUDE,
-                TiffConst::TYPE_RATIONAL,
-                2,
-                pack('V2', 100, 1) . pack('V2', 200, 1),
-            ),
-        );
     }
 
     /**

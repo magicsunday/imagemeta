@@ -1760,7 +1760,15 @@ final class TiffExifParser implements TiffExifParserInterface
         $entries   = [];
         $lastTagId = null;
         for ($i = 0; $i < $entryCount; ++$i) {
-            $entry = $this->readDirEntry();
+            try {
+                $entry = $this->readDirEntry();
+            } catch (BoundsError) {
+                // Postel's Law: when an individual IFD entry references data
+                // beyond the TIFF boundary (common in truncated RAW files and
+                // maker-note blobs), skip the entry and continue extracting
+                // remaining valid metadata instead of aborting.  (GH-1549)
+                continue;
+            }
 
             $this->ifdParser?->addEntry($entries, $lastTagId, $entry);
         }
@@ -1918,9 +1926,14 @@ final class TiffExifParser implements TiffExifParserInterface
             ), 1313);
         }
 
-        if ($tag === ExifTag::RESOLUTION_UNIT && is_int($value) && $value !== 2 && $value !== 3) {
+        // Postel's Law: EXIF 3.0 §4.6.5.1.11 restricts ResolutionUnit to {2, 3}
+        // (inches, centimeters), but TIFF 6.0 §5 also defines value 1 ("No
+        // Absolute Unit of Measurement") for aspect-ratio-only resolution.  Many
+        // older scanners and image editors use value 1.  Accept the full TIFF
+        // domain {1, 2, 3} to avoid aborting on otherwise valid images.  (GH-1537)
+        if ($tag === ExifTag::RESOLUTION_UNIT && is_int($value) && $value !== 1 && $value !== 2 && $value !== 3) {
             throw new ParseError(sprintf(
-                'ResolutionUnit value %d is outside the valid domain {2, 3} per EXIF 3.0 §4.6.5.1.11.',
+                'ResolutionUnit value %d is outside the valid domain {1, 2, 3} per TIFF 6.0 §5.',
                 $value,
             ), 1314);
         }
@@ -1962,7 +1975,10 @@ final class TiffExifParser implements TiffExifParserInterface
             return;
         }
 
-        $rule = self::FIXED_LENGTH_TAGS[$tag];
+        $rule                    = self::FIXED_LENGTH_TAGS[$tag];
+        $gpsTypeToleranceApplied = false;
+
+        // --- Type validation (Postel's Law: tolerate common real-world deviations) ---
 
         if ($type !== $rule['type']) {
             // EXIF 3.0 §4.6.6.1.1/§4.6.6.1.2 specify UNDEFINED for version tags,
@@ -1970,15 +1986,22 @@ final class TiffExifParser implements TiffExifParserInterface
             $asciiUndefinedSwap = ($type === TiffConst::TYPE_UNDEFINED && $rule['type'] === TiffConst::TYPE_ASCII)
                 || ($type === TiffConst::TYPE_ASCII && $rule['type'] === TiffConst::TYPE_UNDEFINED);
 
+            // Postel's Law: RATIONAL (unsigned) and SRATIONAL (signed) share the
+            // same 8-byte binary layout (two int32).  Many cameras swap them for
+            // exposure value tags (ShutterSpeedValue, ApertureValue, BrightnessValue,
+            // ExposureBiasValue, MaxApertureValue, SubjectDistance).  (GH-1538)
+            $rationalSrationalSwap = ($type === TiffConst::TYPE_RATIONAL && $rule['type'] === TiffConst::TYPE_SRATIONAL)
+                || ($type === TiffConst::TYPE_SRATIONAL && $rule['type'] === TiffConst::TYPE_RATIONAL);
+
             // EXIF 3.0 §4.6.7 specifies strict types for GPS value tags, but
             // real-world cameras write a wide range of numeric types
             // (SRATIONAL, SHORT, LONG, etc.) and swap UNDEFINED/ASCII.
             // Skip the type check for GPS RATIONAL and UNDEFINED tags
-            // to follow Postel's Law; the count check still runs.
+            // to follow Postel's Law.
             $gpsTypeTolerance = ($rule['type'] === TiffConst::TYPE_RATIONAL || $rule['type'] === TiffConst::TYPE_UNDEFINED)
                 && str_starts_with((string) $rule['spec'], 'EXIF 3.0 §4.6.7');
 
-            if (!$asciiUndefinedSwap && !$gpsTypeTolerance) {
+            if (!$asciiUndefinedSwap && !$rationalSrationalSwap && !$gpsTypeTolerance) {
                 throw new ParseError(sprintf(
                     '%s must use TIFF type %s per %s.',
                     $rule['name'],
@@ -1986,17 +2009,64 @@ final class TiffExifParser implements TiffExifParserInterface
                     $rule['spec'],
                 ), 1317);
             }
+
+            $gpsTypeToleranceApplied = $gpsTypeTolerance;
+        }
+
+        // --- Count validation (Postel's Law: tolerate common real-world deviations) ---
+
+        if ($count === $rule['count']) {
+            return;
+        }
+
+        // Postel's Law: when GPS type tolerance fired the actual type differs from
+        // spec (e.g. ASCII instead of RATIONAL), so the count field has different
+        // semantics (string byte-length vs. value count).  Skip the count check
+        // entirely — the value will be parsed according to its actual type.
+        // (GH-1542)
+        if ($gpsTypeToleranceApplied) {
+            return;
         }
 
         // ComponentsConfiguration commonly has non-4-byte payloads in the wild.
-        if ($count !== $rule['count'] && $tag !== ExifTag::COMPONENTS_CONFIGURATION) {
-            throw new ParseError(sprintf(
-                '%s must contain exactly %d bytes per %s.',
-                $rule['name'],
-                $rule['count'],
-                $rule['spec'],
-            ), 1318);
+        if ($tag === ExifTag::COMPONENTS_CONFIGURATION) {
+            return;
         }
+
+        // Postel's Law: many cameras write GPS coordinates with count=4 instead of
+        // the spec-mandated 3, adding a fourth zero RATIONAL value.  Accept any
+        // count ≥ expected for GPS RATIONAL tags — only the first N values are
+        // used.  (GH-1535)
+        if ($count > $rule['count']
+            && $rule['type'] === TiffConst::TYPE_RATIONAL
+            && str_starts_with((string) $rule['spec'], 'EXIF 3.0 §4.6.7')
+        ) {
+            return;
+        }
+
+        // Postel's Law: DateTime, DateTimeOriginal, DateTimeDigitized require
+        // count=20 (19 printable chars + NUL), but some cameras (e.g. Kodak)
+        // write count=19 omitting the NUL terminator.  The ASCII string parser
+        // already handles both NUL-terminated and non-NUL-terminated strings.
+        // (GH-1541)
+        if ($rule['type'] === TiffConst::TYPE_ASCII && $rule['count'] === 20 && $count === 19) {
+            return;
+        }
+
+        // Postel's Law: ExifVersion/FlashpixVersion are informational 4-byte
+        // version strings.  Some cameras add a NUL terminator (count=5) or use
+        // other lengths.  Accept any count — the version string is non-critical
+        // for parsing.  (GH-1545)
+        if ($tag === ExifTag::EXIF_VERSION || $tag === ExifTag::FLASHPIX_VERSION) {
+            return;
+        }
+
+        throw new ParseError(sprintf(
+            '%s must contain exactly %d bytes per %s.',
+            $rule['name'],
+            $rule['count'],
+            $rule['spec'],
+        ), 1318);
     }
 
     /**
@@ -2075,14 +2145,31 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         $rule = self::TYPE_ONLY_TAGS[$tag];
-        if ($type !== $rule['type']) {
-            throw new ParseError(sprintf(
-                '%s must use TIFF type %s per %s.',
-                $rule['name'],
-                $rule['typeName'],
-                $rule['spec'],
-            ), 1317);
+
+        if ($type === $rule['type']) {
+            return;
         }
+
+        // Postel's Law: GPS text tags (GPSProcessingMethod §4.6.7.1.28,
+        // GPSAreaInformation §4.6.7.1.29) are specified as UNDEFINED with an
+        // 8-byte character-code prefix, but some cameras (e.g. HMD/Nokia)
+        // write them as plain ASCII without the prefix.  Accept ASCII↔UNDEFINED
+        // swaps for GPS tags to avoid aborting on otherwise valid metadata.
+        // (GH-1540)
+        $gpsUndefinedAsciiSwap = str_starts_with($rule['spec'], 'EXIF 3.0 §4.6.7')
+            && (($type === TiffConst::TYPE_ASCII && $rule['type'] === TiffConst::TYPE_UNDEFINED)
+                || ($type === TiffConst::TYPE_UNDEFINED && $rule['type'] === TiffConst::TYPE_ASCII));
+
+        if ($gpsUndefinedAsciiSwap) {
+            return;
+        }
+
+        throw new ParseError(sprintf(
+            '%s must use TIFF type %s per %s.',
+            $rule['name'],
+            $rule['typeName'],
+            $rule['spec'],
+        ), 1317);
     }
 
     /**
@@ -4632,15 +4719,18 @@ final class TiffExifParser implements TiffExifParserInterface
      *
      * @var list<array{int, string}> JPEG_PROHIBITED_TAGS
      */
+    // Postel's Law: EXIF 3.0 §4.6.5.1 says several tags "shall not be recorded"
+    // in IFD0 for JPEG-compressed primary images, but many cameras include them
+    // anyway (e.g. BitsPerSample=8, SamplesPerPixel=3).  We only reject tags
+    // that would cause structural parsing conflicts — strip-based storage and
+    // JPEG interchange pointers.  Informational tags like BitsPerSample,
+    // SamplesPerPixel, PhotometricInterpretation, PlanarConfiguration, and
+    // Compression are tolerated because they are redundant (derivable from the
+    // JPEG SOF marker) and harmless.  (GH-1546)
     private const array JPEG_PROHIBITED_TAGS = [
-        [ExifTag::BITS_PER_SAMPLE, 'BitsPerSample'],
-        [ExifTag::SAMPLES_PER_PIXEL, 'SamplesPerPixel'],
-        [ExifTag::PHOTOMETRIC_INTERPRETATION, 'PhotometricInterpretation'],
         [ExifTag::STRIP_OFFSETS, 'StripOffsets'],
         [ExifTag::ROWS_PER_STRIP, 'RowsPerStrip'],
         [ExifTag::STRIP_BYTE_COUNTS, 'StripByteCounts'],
-        [ExifTag::PLANAR_CONFIGURATION, 'PlanarConfiguration'],
-        [ExifTag::COMPRESSION, 'Compression'],
         [ExifTag::JPEG_INTERCHANGE_FORMAT, 'JPEGInterchangeFormat'],
         [ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 'JPEGInterchangeFormatLength'],
     ];
@@ -4674,11 +4764,14 @@ final class TiffExifParser implements TiffExifParserInterface
         $widthEntry  = $ifd0->get(ExifTag::IMAGE_WIDTH);
         $lengthEntry = $ifd0->get(ExifTag::IMAGE_LENGTH);
 
-        if (!$widthEntry instanceof IfdEntry) {
-            throw new ParseError(
-                'ImageWidth tag is required in IFD0 for non-JPEG primary image per EXIF 3.0 §4.6.4.',
-                1355,
-            );
+        // Postel's Law: EXIF 3.0 §4.6.4 requires ImageWidth/ImageLength in IFD0
+        // for non-JPEG primary images, but RAW formats (NEF, CR2, ARW, etc.) use
+        // SubIFD-based layouts where IFD0 holds only metadata and a thumbnail.
+        // Also, IFD0 with NewSubFileType != 0 indicates a non-primary image.
+        // Skip the dimension check when tags are absent — the image dimensions
+        // are not needed for metadata extraction.  (GH-1548)
+        if (!$widthEntry instanceof IfdEntry || !$lengthEntry instanceof IfdEntry) {
+            return;
         }
 
         if (is_int($widthEntry->value) && $widthEntry->value <= 0) {
@@ -4686,13 +4779,6 @@ final class TiffExifParser implements TiffExifParserInterface
                 'ImageWidth value %d is invalid; must be a positive integer per EXIF 3.0 §4.6.4.',
                 $widthEntry->value,
             ), 1355);
-        }
-
-        if (!$lengthEntry instanceof IfdEntry) {
-            throw new ParseError(
-                'ImageLength tag is required in IFD0 for non-JPEG primary image per EXIF 3.0 §4.6.4.',
-                1356,
-            );
         }
 
         if (is_int($lengthEntry->value) && $lengthEntry->value <= 0) {
@@ -5549,6 +5635,36 @@ final class TiffExifParser implements TiffExifParserInterface
         $horizontalRepeatPixelUnit = $this->unpackU16(substr($bytes, 0, 2));
         $verticalRepeatPixelUnit   = $this->unpackU16(substr($bytes, 2, 2));
 
+        // Postel's Law: some cameras write the CFA columns/rows header in the
+        // opposite byte order from the TIFF header.  When the decoded dimensions
+        // produce an expected size that doesn't match the payload, try swapping
+        // the byte order for the header.  A standard 2×2 Bayer pattern is 8
+        // bytes regardless of byte order.  (GH-1543)
+        $payloadLen            = strlen($bytes);
+        $expectedPatternValues = $horizontalRepeatPixelUnit * $verticalRepeatPixelUnit;
+        $expectedSize          = 4 + $expectedPatternValues;
+
+        if ($expectedSize !== $payloadLen && ($horizontalRepeatPixelUnit > 0 && $verticalRepeatPixelUnit > 0)) {
+            // Try the opposite byte order for the two USHORT header fields.
+            // Manual decode avoids unpack() return-type complexity for PHPStan.
+            if ($this->bo === Endian::Little) {
+                // File is LE → try BE interpretation.
+                $swappedH = (ord($bytes[0]) << 8) | ord($bytes[1]);
+                $swappedV = (ord($bytes[2]) << 8) | ord($bytes[3]);
+            } else {
+                // File is BE → try LE interpretation.
+                $swappedH = ord($bytes[0]) | (ord($bytes[1]) << 8);
+                $swappedV = ord($bytes[2]) | (ord($bytes[3]) << 8);
+            }
+
+            if ($swappedH > 0 && $swappedV > 0 && (4 + $swappedH * $swappedV) === $payloadLen) {
+                $horizontalRepeatPixelUnit = $swappedH;
+                $verticalRepeatPixelUnit   = $swappedV;
+                $expectedPatternValues     = $swappedH * $swappedV;
+                $expectedSize              = $payloadLen;
+            }
+        }
+
         if ($horizontalRepeatPixelUnit === 0 || $verticalRepeatPixelUnit === 0) {
             throw new ParseError(
                 sprintf('CFAPattern repeat units must be non-zero, got %d x %d', $horizontalRepeatPixelUnit, $verticalRepeatPixelUnit),
@@ -5556,12 +5672,9 @@ final class TiffExifParser implements TiffExifParserInterface
             );
         }
 
-        $expectedPatternValues = $horizontalRepeatPixelUnit * $verticalRepeatPixelUnit;
-        $expectedSize          = 4 + $expectedPatternValues;
-
-        if (strlen($bytes) !== $expectedSize) {
+        if ($payloadLen !== $expectedSize) {
             throw new ParseError(
-                sprintf('CFAPattern payload size %d does not match expected %d (4 + %d x %d)', strlen($bytes), $expectedSize, $horizontalRepeatPixelUnit, $verticalRepeatPixelUnit),
+                sprintf('CFAPattern payload size %d does not match expected %d (4 + %d x %d)', $payloadLen, $expectedSize, $horizontalRepeatPixelUnit, $verticalRepeatPixelUnit),
                 1507,
             );
         }
@@ -6193,16 +6306,24 @@ final class TiffExifParser implements TiffExifParserInterface
 
         // Accept non-1 count — use the first offset value (Postel's Law).
 
+        // Postel's Law: EXIF 3.0 requires LONG or IFD type for pointer tags, but
+        // some cameras use other 4-byte integer types (SHORT, SLONG).  The actual
+        // value is a file offset that works regardless of signedness.  Accept any
+        // integer type whose component size matches the expected pointer width.
+        // (GH-1544)
         $allowedTypes = $this->bigTiff
             ? [
                 TiffConst::TYPE_LONG,
                 TiffConst::TYPE_IFD,
                 TiffConst::TYPE_LONG8,
                 TiffConst::TYPE_IFD8,
+                TiffConst::TYPE_SLONG,
             ]
             : [
                 TiffConst::TYPE_LONG,
                 TiffConst::TYPE_IFD,
+                TiffConst::TYPE_SLONG,
+                TiffConst::TYPE_SHORT,
             ];
 
         if (!in_array($entry->type, $allowedTypes, true)) {

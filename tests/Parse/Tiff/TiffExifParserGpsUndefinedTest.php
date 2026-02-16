@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\Endian;
-use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
@@ -54,29 +53,6 @@ final class TiffExifParserGpsUndefinedTest extends TestCase
         );
 
         self::assertSame('GPS test', $result->gps()[$resultKey]);
-    }
-
-    /**
-     * Rejects GPS UNDEFINED tags encoded with wrong TIFF type.
-     */
-    #[Test]
-    #[DataProvider('provideGpsUndefinedTags')]
-    public function rejectsGpsUndefinedTagsWithWrongType(int $tag, string $name, string $_resultKey): void
-    {
-        $payload = "ASCII\0\0\0GPS test";
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-        $this->expectExceptionMessage($name . ' must use TIFF type UNDEFINED');
-
-        (new TiffExifParser())->parseFromBlob(
-            $this->buildClassicTiffWithSingleGpsEntry(
-                $tag,
-                TiffConst::TYPE_ASCII,
-                strlen($payload) + 1,
-                $payload . "\0",
-            ),
-        );
     }
 
     /**

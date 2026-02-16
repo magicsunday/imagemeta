@@ -38,7 +38,6 @@ use function strtoupper;
 use function substr;
 use function substr_replace;
 use function unpack;
-use function usort;
 
 /**
  * Decodes ICC profiles to expose header information and human readable tags.
@@ -199,16 +198,17 @@ final class IccParser implements IccParserInterface
             );
         }
 
-        // ICC.1:2022 §7.2.19: Reserved field (bytes 100-127) must be zero.
-        $reserved = substr($data, IccTag::RESERVED, 28);
-        if ($reserved !== str_repeat("\0", 28)) {
-            throw new ParseError('ICC reserved field (bytes 100-127) is not zero', 1447);
-        }
+        // Postel's Law: ICC.1:2022 §7.2.19 requires bytes 100-127 to be zero,
+        // but many widely deployed profiles (e.g. the ubiquitous Heidelberger
+        // "Lino" sRGB profile) have non-zero reserved bytes.  Tolerate silently
+        // — the reserved field has no semantic impact on tag extraction.
+        // (GH-1539)
 
-        // ICC.1:2022 §7.1: Tag data must follow the tag table with NULL padding.
-        if (!$this->validateTagTable($data, $profileSize)) {
-            throw new ParseError('ICC tag table layout or padding is invalid', 1448);
-        }
+        // Postel's Law: ICC.1:2022 §7.1 requires contiguous tag data with NULL
+        // padding after the tag table.  Many real-world profiles have padding
+        // gaps, overlapping tags, or non-zero padding bytes.  Since tags are
+        // accessed by their individual offset+size, layout deviations are
+        // harmless for data extraction.  Skip the layout check.  (GH-1539)
 
         // ICC.1:2022 §7.2.4: Validate version field including reserved bytes
         $version = $this->extractVersion($data);
@@ -905,132 +905,6 @@ final class IccParser implements IccParserInterface
         }
 
         return null;
-    }
-
-    /**
-     * Validates the tag table layout and padding rules.
-     *
-     * ICC.1:2022 §7.1: Tag data begins immediately after the tag table and
-     * padding between tag data blocks (and after the last block) is NULL.
-     */
-    private function validateTagTable(string $data, int $profileSize): bool
-    {
-        if ($profileSize < self::HEADER_LENGTH + 4) {
-            return false;
-        }
-
-        $length         = min(strlen($data), $profileSize);
-        $tagCountOffset = self::HEADER_LENGTH;
-        if (($tagCountOffset + 4) > $length) {
-            return false;
-        }
-
-        $tagCount = $this->uInt32Be(substr($data, $tagCountOffset, 4));
-        $tableEnd = $tagCountOffset + 4 + ($tagCount * self::TAG_RECORD_LENGTH);
-        if ($tableEnd > $length) {
-            return false;
-        }
-
-        $entries   = [];
-        $seenSigs  = [];
-        $offsetMap = [];
-        $cursor    = $tagCountOffset + 4;
-
-        for ($i = 0; $i < $tagCount; ++$i) {
-            if (($cursor + self::TAG_RECORD_LENGTH) > $length) {
-                return false;
-            }
-
-            $signature = substr($data, $cursor, 4);
-            $offset    = $this->uInt32Be(substr($data, $cursor + 4, 4));
-            $size      = $this->uInt32Be(substr($data, $cursor + 8, 4));
-            $cursor += self::TAG_RECORD_LENGTH;
-
-            // ICC.1:2022 §7.3: Tag signatures must be unique.
-            if (isset($seenSigs[$signature])) {
-                return false;
-            }
-
-            $seenSigs[$signature] = true;
-
-            if ($size === 0) {
-                continue;
-            }
-
-            if ((($offset % 4) !== 0) || (($size % 4) !== 0)) {
-                return false;
-            }
-
-            if ($offset < $tableEnd) {
-                return false;
-            }
-
-            if (($offset + $size) > $length) {
-                return false;
-            }
-
-            // ICC.1:2022 §7.3: Shared offsets must have identical sizes.
-            if (isset($offsetMap[$offset])) {
-                if ($offsetMap[$offset] !== $size) {
-                    return false;
-                }
-            } else {
-                $offsetMap[$offset] = $size;
-            }
-
-            $entries[] = [
-                'offset' => $offset,
-                'size'   => $size,
-            ];
-        }
-
-        // Deduplicate entries with shared offsets (already validated for size equality).
-        $uniqueEntries = [];
-        foreach ($offsetMap as $offset => $size) {
-            $uniqueEntries[] = [
-                'offset' => $offset,
-                'size'   => $size,
-            ];
-        }
-
-        if ($uniqueEntries === []) {
-            return $this->paddingIsNull($data, $tableEnd, $length - $tableEnd);
-        }
-
-        usort(
-            $uniqueEntries,
-            static fn (array $left, array $right): int => $left['offset'] <=> $right['offset'],
-        );
-
-        if ($uniqueEntries[0]['offset'] !== $tableEnd) {
-            return false;
-        }
-
-        $cursor = $tableEnd;
-
-        foreach ($uniqueEntries as $entry) {
-            // ICC.1:2022 §7.3: Tag data elements form a contiguous sequence.
-            if ($entry['offset'] !== $cursor) {
-                return false;
-            }
-
-            $cursor = $entry['offset'] + $entry['size'];
-        }
-
-        // ICC.1:2022 §7.3: The contiguous sequence must cover the full profile payload.
-        return $cursor === $length;
-    }
-
-    /**
-     * Confirms that the specified range is fully NULL padded.
-     */
-    private function paddingIsNull(string $data, int $offset, int $length): bool
-    {
-        if ($length <= 0) {
-            return true;
-        }
-
-        return substr($data, $offset, $length) === str_repeat("\0", $length);
     }
 
     /**

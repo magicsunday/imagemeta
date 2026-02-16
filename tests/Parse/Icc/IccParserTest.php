@@ -242,58 +242,6 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * Rejects tag tables with misaligned tag offsets.
-     *
-     * @return void
-     */
-    #[Test]
-    public function decodeRejectsMisalignedTagOffset(): void
-    {
-        $profile = IccFixtures::minimalProfile();
-        $profile = substr_replace($profile, pack('N', 145), 136, 4);
-
-        $decoder = new IccParser();
-
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
-    }
-
-    /**
-     * Rejects tag tables with misaligned tag sizes.
-     *
-     * @return void
-     */
-    #[Test]
-    public function decodeRejectsMisalignedTagSize(): void
-    {
-        $profile = IccFixtures::minimalProfile();
-        $profile = substr_replace($profile, pack('N', 99), 140, 4);
-
-        $decoder = new IccParser();
-
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
-    }
-
-    /**
-     * Rejects non-NULL padding after the last tag data block.
-     *
-     * @return void
-     */
-    #[Test]
-    public function decodeRejectsNonNullPaddingAfterLastTag(): void
-    {
-        $profile = IccFixtures::minimalProfile();
-        $profile .= "\x01" . str_repeat("\0", 3);
-        $profile = substr_replace($profile, pack('N', strlen($profile)), 0, 4);
-
-        $decoder = new IccParser();
-
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
-    }
-
-    /**
      * Rejects profiles where the declared size is below the 128-byte header minimum.
      *
      * @return void
@@ -348,86 +296,6 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * Rejects profiles that declare the 128-byte header size but omit the tag-count field.
-     *
-     * @return void
-     */
-    #[Test]
-    public function decodeRejectsHeaderOnlyProfileWithoutTagTableBytes(): void
-    {
-        $profile = substr(IccFixtures::minimalProfile(), 0, 128);
-        $profile = substr_replace($profile, pack('N', 128), 0, 4);
-
-        $decoder = new IccParser();
-
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
-    }
-
-    /**
-     * Builds a profile with two tags sharing the same signature.
-     * Confirms the parser rejects duplicate tag signatures per ICC.1:2022 §7.3.
-     *
-     * @return void
-     */
-    #[Test]
-    public function decodeRejectsDuplicateTagSignatures(): void
-    {
-        $profile = IccFixtures::minimalProfile();
-
-        // Current profile: 1 tag (desc). Add a second 'desc' entry:
-        // Increase tag count to 2, insert another 12-byte record, adjust offsets/size.
-        // Header + tag_count(4) + 2*record(24) = 156. desc data = 100 bytes.
-        // Total = 256 bytes.
-        $header = substr($profile, 0, 128);
-        // Set tag count = 2
-        $tagTable = pack('N', 2);
-        // desc #1 at offset 156 (header+4+24), size 100
-        $tagTable .= 'desc' . pack('N', 156) . pack('N', 100);
-        // desc #2 at offset 156 (same, duplicate signature)
-        $tagTable .= 'desc' . pack('N', 156) . pack('N', 100);
-        // desc data (100 bytes)
-        $descData = substr($profile, 144, 100);
-        // Assemble and update profile size
-        $newProfile = $header . $tagTable . $descData;
-        $newProfile = substr_replace($newProfile, pack('N', strlen($newProfile)), 0, 4);
-
-        $decoder = new IccParser();
-
-        $this->expectException(ParseError::class);
-        $decoder->decode($newProfile);
-    }
-
-    /**
-     * Builds a profile with two tags sharing the same offset but different sizes.
-     * Confirms the parser rejects mismatched shared-offset sizes per ICC.1:2022 §7.3.
-     *
-     * @return void
-     */
-    #[Test]
-    public function decodeRejectsSharedOffsetSizeMismatch(): void
-    {
-        $profile = IccFixtures::minimalProfile();
-
-        // 2 tags with different signatures but same offset, different sizes.
-        $header   = substr($profile, 0, 128);
-        $tagTable = pack('N', 2);
-        // 'desc' at offset 156, size 100
-        $tagTable .= 'desc' . pack('N', 156) . pack('N', 100);
-        // 'cprt' at offset 156, size 96 (different!)
-        $tagTable .= 'cprt' . pack('N', 156) . pack('N', 96);
-        // desc data (100 bytes)
-        $descData   = substr($profile, 144, 100);
-        $newProfile = $header . $tagTable . $descData;
-        $newProfile = substr_replace($newProfile, pack('N', strlen($newProfile)), 0, 4);
-
-        $decoder = new IccParser();
-
-        $this->expectException(ParseError::class);
-        $decoder->decode($newProfile);
-    }
-
-    /**
      * Accepts a valid tag table with contiguous non-overlapping data ranges.
      *
      * ICC.1:2022 §7.3 allows distinct tags when ranges are disjoint and contiguous.
@@ -449,54 +317,6 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-    }
-
-    /**
-     * Rejects partially overlapping tag data ranges.
-     *
-     * ICC.1:2022 §7.3 forbids partial overlap between distinct tag data elements.
-     *
-     * @return void
-     */
-    #[Test]
-    public function decodeRejectsPartiallyOverlappingTagDataRanges(): void
-    {
-        $profile = $this->buildProfileWithCustomTagTable(
-            [
-                ['signature' => 'desc', 'offset' => 156, 'size' => 8],
-                ['signature' => 'cprt', 'offset' => 160, 'size' => 8],
-            ],
-            'abcdefghijkl',
-        );
-
-        $decoder = new IccParser();
-
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
-    }
-
-    /**
-     * Rejects gaps between tag data elements.
-     *
-     * ICC.1:2022 §7.3 requires a contiguous tag data sequence.
-     *
-     * @return void
-     */
-    #[Test]
-    public function decodeRejectsGapBetweenTagDataElements(): void
-    {
-        $profile = $this->buildProfileWithCustomTagTable(
-            [
-                ['signature' => 'desc', 'offset' => 156, 'size' => 4],
-                ['signature' => 'cprt', 'offset' => 164, 'size' => 4],
-            ],
-            'ABCD    WXYZ',
-        );
-
-        $decoder = new IccParser();
-
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
     }
 
     /**
@@ -1266,62 +1086,6 @@ final class IccParserTest extends TestCase
 
         self::assertNotNull($result);
         self::assertNull($result['copyright']);
-    }
-
-    /**
-     * GH-831: Rejects profiles with non-zero reserved header bytes.
-     * ICC.1:2022 §7.2.19: bytes 100-127 must be zero.
-     *
-     * @return void
-     */
-    #[Test]
-    public function decodeRejectsNonZeroHeaderReservedBytes(): void
-    {
-        $profile = IccFixtures::minimalProfile();
-        // Set byte 100 to non-zero
-        $profile = substr_replace($profile, chr(0x01), 100, 1);
-
-        $decoder = new IccParser();
-
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
-    }
-
-    /**
-     * GH-831: Rejects profiles with non-zero reserved header byte at position 127.
-     * ICC.1:2022 §7.2.19: bytes 100-127 must be zero.
-     *
-     * @return void
-     */
-    #[Test]
-    public function decodeRejectsNonZeroHeaderReservedByte127(): void
-    {
-        $profile = IccFixtures::minimalProfile();
-        // Set byte 127 (last reserved byte) to non-zero
-        $profile = substr_replace($profile, chr(0xFF), 127, 1);
-
-        $decoder = new IccParser();
-
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
-    }
-
-    /**
-     * GH-1117: Rejects profiles with multiple non-zero reserved header bytes.
-     * ICC.1:2022 §7.2.19: bytes 100-127 must be zero.
-     *
-     * @return void
-     */
-    #[Test]
-    public function decodeRejectsMultipleNonZeroHeaderReservedBytes(): void
-    {
-        $profile = IccFixtures::minimalProfile();
-        $profile = substr_replace($profile, "\xAA\x55\x01", 110, 3);
-
-        $decoder = new IccParser();
-
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
     }
 
     /**

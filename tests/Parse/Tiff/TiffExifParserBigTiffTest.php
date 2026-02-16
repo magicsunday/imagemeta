@@ -308,12 +308,12 @@ final class TiffExifParserBigTiffTest extends TestCase
 
     /**
      * Provides an entry whose value offset is beyond 4 GiB.
-     * Confirms bounds checking rejects the out-of-range offset.
+     * The parser skips such entries gracefully (GH-1549).
      *
      * @return void
      */
     #[Test]
-    public function rejectsBigTiffValueOffsetBeyond4GB(): void
+    public function skipsBigTiffValueOffsetBeyond4GB(): void
     {
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_BIG)
@@ -333,9 +333,9 @@ final class TiffExifParserBigTiffTest extends TestCase
 
         $reader = new TiffExifParser();
 
-        $this->expectException(BoundsError::class);
-
         $reader->parseFromBlob($blob);
+
+        $this->addToAssertionCount(1);
     }
 
     /**

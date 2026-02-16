@@ -383,24 +383,6 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Rejects an interoperability pointer entry with an invalid type (SHORT instead of LONG).
-     *
-     * @return void
-     */
-    #[Test]
-    public function rejectsInteropPointerWithInvalidType(): void
-    {
-        $blob = $this->buildTiffWithInteropPointer(TiffConst::TYPE_SHORT, 2);
-
-        $reader = new TiffExifParser();
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('IFD pointer tag 0xA005 must use a LONG/IFD field type per EXIF 3.0 §4.6.3.3.1.');
-
-        $reader->parseFromBlob($blob);
-    }
-
-    /**
      * Accepts ExifIFDPointer with count=2 (Postel's Law — uses first offset).
      * The synthetic blob triggers a BoundsError downstream, but no longer
      * the count-validation ParseError — confirming the tolerance works.
@@ -422,25 +404,6 @@ final class TiffExifParserNegativeTest extends TestCase
         }
 
         $this->addToAssertionCount(1);
-    }
-
-    /**
-     * Creates an ExifIFDPointer entry with type SHORT instead of LONG.
-     * Ensures the parser rejects bad ExifIFD pointer type per EXIF 3.0 §4.6.3.1.1.
-     *
-     * @return void
-     */
-    #[Test]
-    public function rejectsExifIfdPointerWithBadType(): void
-    {
-        $blob = $this->buildTiffWithIfd0Pointer(ExifTag::EXIF_IFD_POINTER, TiffConst::TYPE_SHORT, 1);
-
-        $reader = new TiffExifParser();
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('IFD pointer tag 0x8769 must use a LONG/IFD field type per EXIF 3.0 §4.6.3.1.1.');
-
-        $reader->parseFromBlob($blob);
     }
 
     /**
@@ -609,41 +572,6 @@ final class TiffExifParserNegativeTest extends TestCase
         // Rational data: numerator and denominator
         $blob .= pack('V', $numerator)
             . pack('V', $denominator);
-
-        return $blob;
-    }
-
-    /**
-     * Builds a TIFF blob with an Exif IFD that carries a malformed interoperability pointer.
-     * This checks the behavior for the specific inputs used in the test.
-     *
-     * @param int $type  Field type used for the interoperability pointer entry.
-     * @param int $count Value count stored for the interoperability pointer entry.
-     */
-    private function buildTiffWithInteropPointer(int $type, int $count): string
-    {
-        $ifd0Offset    = 8;
-        $exifIfdOffset = 26;
-
-        $blob = 'II'
-            . pack('v', TiffConst::MAGIC_CLASSIC)
-            . pack('V', $ifd0Offset);
-
-        // IFD0 with an Exif IFD pointer
-        $blob .= pack('v', 1)
-            . pack('v', ExifTag::EXIF_IFD_POINTER)
-            . pack('v', TiffConst::TYPE_LONG)
-            . pack('V', 1)
-            . pack('V', $exifIfdOffset)
-            . pack('V', 0);
-
-        // Exif IFD with malformed interoperability pointer entry
-        $blob .= pack('v', 1)
-            . pack('v', ExifTag::INTEROPERABILITY_IFD_POINTER)
-            . pack('v', $type)
-            . pack('V', $count)
-            . pack('V', 0)
-            . pack('V', 0);
 
         return $blob;
     }
@@ -946,27 +874,6 @@ final class TiffExifParserNegativeTest extends TestCase
     public static function invalidFixedLengthTagProvider(): array
     {
         return [
-            'ExifVersion expects 4 UNDEFINED bytes' => [
-                ExifTag::EXIF_VERSION,
-                TiffConst::TYPE_UNDEFINED,
-                3,
-                '010',
-                'ExifVersion must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.1.',
-            ],
-            'ExifVersion rejects SHORT type' => [
-                ExifTag::EXIF_VERSION,
-                TiffConst::TYPE_SHORT,
-                4,
-                "\x03\x00\x00\x00\x00\x00\x00\x00",
-                'ExifVersion must use TIFF type UNDEFINED per EXIF 3.0 §4.6.6.1.1.',
-            ],
-            'FlashpixVersion expects 4 UNDEFINED bytes' => [
-                ExifTag::FLASHPIX_VERSION,
-                TiffConst::TYPE_UNDEFINED,
-                3,
-                '010',
-                'FlashpixVersion must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.2.',
-            ],
             'GPSVersionID expects 4 bytes' => [
                 ExifTag::GPS_VERSION_ID,
                 TiffConst::TYPE_BYTE,
@@ -1196,18 +1103,6 @@ final class TiffExifParserNegativeTest extends TestCase
         $this->expectExceptionMessage('ColorSpace value 2 is outside the valid domain {1, 65535}');
 
         (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::COLOR_SPACE, 2));
-    }
-
-    /**
-     * ResolutionUnit value 1 is rejected per EXIF 3.0 §4.6.5.1.11.
-     */
-    #[Test]
-    public function rejectInvalidResolutionUnit(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ResolutionUnit value 1 is outside the valid domain {2, 3}');
-
-        (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::RESOLUTION_UNIT, 1));
     }
 
     /**
@@ -2186,51 +2081,6 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * In JPEG context, BitsPerSample shall not be present in IFD0.
-     */
-    #[Test]
-    public function rejectBitsPerSampleInJpegContext(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('BitsPerSample shall not be present');
-
-        (new TiffExifParser())->parseFromBlob(
-            $this->buildTiffWithShortTag(ExifTag::BITS_PER_SAMPLE, 8),
-            jpegContext: true,
-        );
-    }
-
-    /**
-     * In JPEG context, SamplesPerPixel shall not be present in IFD0.
-     */
-    #[Test]
-    public function rejectSamplesPerPixelInJpegContext(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('SamplesPerPixel shall not be present');
-
-        (new TiffExifParser())->parseFromBlob(
-            $this->buildTiffWithShortTag(ExifTag::SAMPLES_PER_PIXEL, 3),
-            jpegContext: true,
-        );
-    }
-
-    /**
-     * In JPEG context, PhotometricInterpretation shall not be present in IFD0.
-     */
-    #[Test]
-    public function rejectPhotometricInJpegContext(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('PhotometricInterpretation shall not be present');
-
-        (new TiffExifParser())->parseFromBlob(
-            $this->buildTiffWithShortTag(ExifTag::PHOTOMETRIC_INTERPRETATION, 2),
-            jpegContext: true,
-        );
-    }
-
-    /**
      * In JPEG context, StripOffsets shall not be present in IFD0.
      */
     #[Test]
@@ -2284,36 +2134,6 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * In JPEG context, PlanarConfiguration shall not be present in IFD0.
-     */
-    #[Test]
-    public function rejectPlanarConfigurationInJpegContext(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('PlanarConfiguration shall not be present');
-
-        (new TiffExifParser())->parseFromBlob(
-            $this->buildTiffWithShortTag(ExifTag::PLANAR_CONFIGURATION, 1),
-            jpegContext: true,
-        );
-    }
-
-    /**
-     * In JPEG context, Compression shall not be present in IFD0.
-     */
-    #[Test]
-    public function rejectCompressionInJpegContext(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Compression shall not be present');
-
-        (new TiffExifParser())->parseFromBlob(
-            $this->buildTiffWithShortTag(ExifTag::COMPRESSION, 1),
-            jpegContext: true,
-        );
-    }
-
-    /**
      * In JPEG context, YCbCrSubSampling shall not be present in IFD0.
      */
     #[Test]
@@ -2351,36 +2171,6 @@ final class TiffExifParserNegativeTest extends TestCase
         );
 
         self::assertSame(8, $result->ifd0->get(ExifTag::BITS_PER_SAMPLE)?->value);
-    }
-
-    /**
-     * Missing ImageWidth in IFD0 must be rejected for non-JPEG images.
-     */
-    #[Test]
-    public function rejectMissingImageWidth(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1355);
-        $this->expectExceptionMessage('ImageWidth tag is required');
-
-        (new TiffExifParser())->parseFromBlob(
-            $this->buildTiffWithShortTag(ExifTag::IMAGE_LENGTH, 100),
-        );
-    }
-
-    /**
-     * Missing ImageLength in IFD0 must be rejected for non-JPEG images.
-     */
-    #[Test]
-    public function rejectMissingImageLength(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1356);
-        $this->expectExceptionMessage('ImageLength tag is required');
-
-        (new TiffExifParser())->parseFromBlob(
-            $this->buildTiffWithShortTag(ExifTag::IMAGE_WIDTH, 100),
-        );
     }
 
     /**

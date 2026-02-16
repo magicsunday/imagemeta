@@ -558,27 +558,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSHPositioningError with wrong count (2 instead of 1).
-     *
-     * @return void
-     */
-    #[Test]
-    public function rejectsGpsHPositioningErrorWrongCount(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-
-        $blob = $this->buildClassicTiffWithEntry(
-            ExifTag::GPS_H_POSITIONING_ERROR,
-            TiffConst::TYPE_RATIONAL,
-            2,
-            str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
-        );
-
-        (new TiffExifParser())->parseFromBlob($blob);
-    }
-
-    /**
      * Rejects GPSSpeedRef with wrong type (BYTE instead of ASCII).
      *
      * @return void
@@ -647,27 +626,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSSpeed with wrong count (2 instead of 1).
-     *
-     * @return void
-     */
-    #[Test]
-    public function rejectsGpsSpeedWrongCount(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-
-        $blob = $this->buildClassicTiffWithEntry(
-            ExifTag::GPS_SPEED,
-            TiffConst::TYPE_RATIONAL,
-            2,
-            str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
-        );
-
-        (new TiffExifParser())->parseFromBlob($blob);
-    }
-
-    /**
      * Accepts GPSDOP regardless of TIFF type (Postel's Law).
      *
      * @return void
@@ -691,27 +649,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
         }
 
         $this->addToAssertionCount(1);
-    }
-
-    /**
-     * Rejects GPSDOP with wrong count (2 instead of 1).
-     *
-     * @return void
-     */
-    #[Test]
-    public function rejectsGpsDopWrongCount(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-
-        $blob = $this->buildClassicTiffWithEntry(
-            ExifTag::GPS_DOP,
-            TiffConst::TYPE_RATIONAL,
-            2,
-            str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
-        );
-
-        (new TiffExifParser())->parseFromBlob($blob);
     }
 
     /**
@@ -836,27 +773,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSDestDistance with wrong count (2 instead of 1).
-     *
-     * @return void
-     */
-    #[Test]
-    public function rejectsGpsDestDistanceWrongCount(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-
-        $blob = $this->buildClassicTiffWithEntry(
-            ExifTag::GPS_DEST_DISTANCE,
-            TiffConst::TYPE_RATIONAL,
-            2,
-            str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
-        );
-
-        (new TiffExifParser())->parseFromBlob($blob);
-    }
-
-    /**
      * Rejects GPSMapDatum when encoded with non-ASCII TIFF type.
      *
      * @param int    $type
@@ -892,12 +808,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
             TiffConst::TYPE_SHORT,
             1,
             "\x2A\x00",
-        ];
-
-        yield 'UNDEFINED type' => [
-            TiffConst::TYPE_UNDEFINED,
-            6,
-            'WGS-84',
         ];
     }
 
@@ -937,12 +847,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
             TiffConst::TYPE_SHORT,
             1,
             "\x05\x00",
-        ];
-
-        yield 'UNDEFINED type' => [
-            TiffConst::TYPE_UNDEFINED,
-            3,
-            "05\0",
         ];
     }
 
@@ -1025,28 +929,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
         }
 
         $this->addToAssertionCount(1);
-    }
-
-    /**
-     * Rejects GPS bearing value tags when encoded with wrong component count.
-     *
-     * @return void
-     */
-    #[Test]
-    #[DataProvider('provideGpsBearingValueTags')]
-    public function rejectsGpsBearingValueTagsWithWrongCount(int $tag): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-
-        $blob = $this->buildClassicTiffWithEntry(
-            $tag,
-            TiffConst::TYPE_RATIONAL,
-            2,
-            str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
-        );
-
-        (new TiffExifParser())->parseFromBlob($blob);
     }
 
     /**
