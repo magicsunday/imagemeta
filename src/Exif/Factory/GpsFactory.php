@@ -405,6 +405,10 @@ final readonly class GpsFactory
             $sec = XmpDocument::parseNumericValue($parts[2]);
 
             if ($deg !== null && $min !== null && $sec !== null) {
+                if ($deg < 0.0 || $min < 0.0 || $sec < 0.0) {
+                    return null;
+                }
+
                 if ($min >= 60.0 || $sec >= 60.0) {
                     return null;
                 }
@@ -421,7 +425,7 @@ final readonly class GpsFactory
         }
 
         $numeric = XmpDocument::parseNumericValue($parts[0]);
-        if ($numeric === null) {
+        if ($numeric === null || $numeric < 0.0) {
             return null;
         }
 

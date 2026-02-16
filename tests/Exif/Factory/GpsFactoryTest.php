@@ -451,6 +451,52 @@ final class GpsFactoryTest extends TestCase
         self::assertNull($gps->latitude);
     }
 
+    /**
+     * XMP negative decimal magnitude with valid ref yields null.
+     */
+    #[Test]
+    public function xmpNegativeDecimalMagnitudeYieldsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '-52.5',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'S',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->latitude);
+    }
+
+    /**
+     * XMP negative DMS degree component yields null.
+     */
+    #[Test]
+    public function xmpNegativeDmsDegreeComponentYieldsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '-10,30,0',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->latitude);
+    }
+
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     private function parsedExif(
