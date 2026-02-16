@@ -159,7 +159,8 @@ final readonly class FormatDetector
                 }
             }
 
-            if (isset(self::ISO_BMFF_SIGNATURE_BOXES[$boxType])) {
+            // GH-1223: signature boxes must have a well-defined size
+            if ($size !== 0 && isset(self::ISO_BMFF_SIGNATURE_BOXES[$boxType])) {
                 return true;
             }
 

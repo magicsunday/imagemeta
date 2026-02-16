@@ -178,6 +178,21 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
+     * Rejects ftyp with size=0 (extends to EOF) as it lacks proper box boundaries.
+     */
+    #[Test]
+    public function detectRejectsIsoBmffWhenFtypHasZeroSize(): void
+    {
+        // size=0, type='ftyp', followed by payload
+        $stream = $this->createStream("\x00\x00\x00\x00ftypisom\x00\x00\x00\x00");
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unsupported or unknown container');
+
+        (new FormatDetector())->detect($stream);
+    }
+
+    /**
      * Supplies a stream with an unsupported signature.
      * This confirms a ParseError is thrown for unknown container bytes.
      *
