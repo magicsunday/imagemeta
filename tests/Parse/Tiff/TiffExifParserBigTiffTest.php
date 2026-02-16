@@ -54,21 +54,19 @@ use function pack;
 final class TiffExifParserBigTiffTest extends TestCase
 {
     /**
-     * Builds a BigTIFF header that uses the 16-byte offset size variant.
-     * Confirms the parser accepts this supported offset size and yields an empty IFD.
+     * Rejects BigTIFF header with offset-size=16 (only 8 is valid per spec).
      *
      * @return void
      */
     #[Test]
-    public function acceptsBigTiffWithOffsetSize16(): void
+    public function rejectsBigTiffWithOffsetSize16(): void
     {
-        // Header: II(2) + magic(2) + offSize(2) + reserved(2) + firstIfd(16) = 24 bytes
         $blob = $this->buildBigTiffHeader(16, 0, 24);
 
-        $reader = new TiffExifParser();
-        $result = $reader->parseFromBlob($blob);
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unsupported BigTIFF offset size');
 
-        self::assertCount(3, $result->ifd0->entries);
+        (new TiffExifParser())->parseFromBlob($blob);
     }
 
     /**

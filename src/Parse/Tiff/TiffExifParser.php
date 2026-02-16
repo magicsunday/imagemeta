@@ -36,7 +36,6 @@ use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 
 use function array_any;
-use function array_slice;
 use function count;
 use function in_array;
 use function intdiv;
@@ -1412,7 +1411,7 @@ final class TiffExifParser implements TiffExifParserInterface
             $firstIfd = $this->readBigTiffOffsetValue();
 
             // EXIF 3.0 §4.5.1: the 0th IFD offset must point past the header.
-            if (($firstIfd instanceof UInt64) && $firstIfd->isZero()) {
+            if ($firstIfd->isZero()) {
                 throw new ParseError('missing 0th IFD offset', 1302);
             }
 
@@ -1672,13 +1671,13 @@ final class TiffExifParser implements TiffExifParserInterface
      */
     private function parseBigTiffHeader(): void
     {
-        // BigTIFF header after magic: 2 bytes offset size (8 or 16), 2 bytes reserved, then the first IFD offset
+        // BigTIFF header after magic: 2 bytes offset size, 2 bytes reserved, then the first IFD offset
         $offSize  = $this->readU16();
         $reserved = $this->readU16();
 
-        // EXIF 3.0 §4.5.1 restricts BigTIFF offset sizes to 8 or 16 bytes.
-        if ($offSize !== 8 && $offSize !== 16) {
-            throw new ParseError('Unsupported BigTIFF offset size (expected 8 or 16)', 1305);
+        // GH-1236: BigTIFF offset size is fixed to 8 bytes per spec.
+        if ($offSize !== 8) {
+            throw new ParseError('Unsupported BigTIFF offset size (expected 8)', 1305);
         }
 
         // The reserved field must remain zero (EXIF 3.0 §4.5.1; TIFF 6.0 §8 legacy rule).
@@ -6320,159 +6319,13 @@ final class TiffExifParser implements TiffExifParserInterface
     }
 
     /**
-     * Reads a BigTIFF offset using the configured field width.
+     * Reads a BigTIFF 8-byte offset value.
      *
-     * EXIF 3.0 §4.5.2 and TIFF 6.0 §8 define the BigTIFF offset field
-     * width (8 or 16 bytes), null-pointer semantics, and the handling of offsets that
-     * exceed native integer precision, so this helper normalises the raw value into
-     * the closest PHP representation.
+     * GH-1236: only 8-byte offsets are supported (16-byte path removed).
      */
-    private function readBigTiffOffsetValue(): int|UInt64|string
+    private function readBigTiffOffsetValue(): UInt64
     {
-        if ($this->bigTiffOffsetSize === 8) {
-            return $this->readU64();
-        }
-
-        if ($this->bigTiffOffsetSize !== 16) {
-            throw new ParseError('Unsupported BigTIFF offset size.', 1343);
-        }
-
-        $required  = $this->bigTiffOffsetSize;
-        $remaining = $this->buffer->size() - $this->buffer->tell();
-
-        // GH-907: reject truncated BigTIFF offset fields instead of zero-padding
-        if ($remaining < $required) {
-            throw new ParseError(
-                sprintf(
-                    'Truncated BigTIFF offset field: need %d bytes, only %d available',
-                    $required,
-                    $remaining,
-                ),
-                1361,
-            );
-        }
-
-        $raw = $this->buffer->read($required);
-
-        $little = $this->bo === Endian::Little;
-
-        $lowBytes  = $little ? substr($raw, 0, 8) : substr($raw, 8, 8);
-        $highBytes = $little ? substr($raw, 8, 8) : substr($raw, 0, 8);
-
-        $low  = Unpack::uint64($lowBytes, $little, 'BigTIFF offset (low)');
-        $high = Unpack::uint64($highBytes, $little, 'BigTIFF offset (high)');
-
-        if (!$high->isZero()) {
-            return $this->uint128ToDecimal($high, $low);
-        }
-
-        if ($low->fitsSignedInt()) {
-            return $low->toInt('BigTIFF offset');
-        }
-
-        return $this->uint64ToDecimal($low);
-    }
-
-    /**
-     * Converts an unsigned 64-bit integer into its decimal string representation.
-     */
-    private function uint64ToDecimal(UInt64 $value): string
-    {
-        return $this->wordsToDecimal([
-            $value->high(),
-            $value->low(),
-        ]);
-    }
-
-    /**
-     * Converts a 128-bit unsigned integer into a decimal string.
-     */
-    private function uint128ToDecimal(UInt64 $high, UInt64 $low): string
-    {
-        return $this->wordsToDecimal([
-            $high->high(),
-            $high->low(),
-            $low->high(),
-            $low->low(),
-        ]);
-    }
-
-    /**
-     * Converts an array of base-2^32 words (most significant first) into a decimal string.
-     *
-     * @param array<int> $words
-     */
-    private function wordsToDecimal(array $words): string
-    {
-        $words = $this->trimLeadingZeroWords($words);
-
-        if ($words === []) {
-            return '0';
-        }
-
-        $digits = '';
-
-        while ($words !== []) {
-            [$words, $remainder] = $this->divModWordsBy10($words);
-            $digits              = $remainder . $digits;
-            $words               = $this->trimLeadingZeroWords($words);
-        }
-
-        return $digits;
-    }
-
-    /**
-     * Divides a base-2^32 big integer by 10.
-     *
-     * @param array<int> $words
-     *
-     * @return array{0: array<int>, 1: int}
-     */
-    private function divModWordsBy10(array $words): array
-    {
-        $quotient = [];
-        $carry    = 0;
-
-        foreach ($words as $word) {
-            $value = ($carry << 32) + $word;
-            $q     = intdiv($value, 10);
-            $r     = $value - ($q * 10);
-
-            if ($quotient !== [] || $q !== 0) {
-                $quotient[] = $q;
-            }
-
-            $carry = $r;
-        }
-
-        return [$quotient, $carry];
-    }
-
-    /**
-     * Removes leading zero words from a base-2^32 representation.
-     *
-     * @param array<int> $words
-     *
-     * @return array<int>
-     */
-    private function trimLeadingZeroWords(array $words): array
-    {
-        $index = 0;
-        $count = count($words);
-
-        while ($index < $count && $words[$index] === 0) {
-            ++$index;
-        }
-
-        if ($index === 0) {
-            return $words;
-        }
-
-        if ($index >= $count) {
-            return [];
-        }
-
-        return array_slice($words, $index);
+        return $this->readU64();
     }
 
     /**
