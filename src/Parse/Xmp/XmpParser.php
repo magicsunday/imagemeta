@@ -581,6 +581,12 @@ final class XmpParser implements XmpParserInterface
             }
 
             $kind = $listKinds[$parentDepth] ?? '';
+
+            // GH-1234: rdf:li is only valid inside rdf:Bag, rdf:Seq or rdf:Alt
+            if ($kind === '') {
+                continue;
+            }
+
             $this->validateAltContainerLang($kind, $lang);
 
             return [

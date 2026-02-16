@@ -1378,4 +1378,26 @@ XML;
 
         $method->invoke(new XmpParser(), 'Alt', '');
     }
+
+    /**
+     * Stray rdf:li outside any rdf:Bag/rdf:Seq/rdf:Alt container must not inject values.
+     */
+    #[Test]
+    public function parseIgnoresStrayRdfLiOutsideContainer(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:subject>
+      <rdf:li>stray</rdf:li>
+    </dc:subject>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $document = (new XmpParser())->parse($xml);
+
+        self::assertSame([], $document->stringList(self::DC_NS, 'subject'));
+    }
 }
