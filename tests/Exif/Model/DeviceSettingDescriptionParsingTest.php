@@ -132,7 +132,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     }
 
     /**
-     * Encodes a UTF-16LE "Test" payload after the dimension header.
+     * Encodes a BOM-framed UTF-16LE "Test" payload after the dimension header.
      * Verifies the decoded settings entry matches the text and dimensions remain intact.
      *
      * @return void
@@ -141,8 +141,8 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     public function parsesWithUtf16LESettings(): void
     {
         // Little-endian: 3 columns, 7 rows
-        // UTF-16LE: "Test" = T(0x54 0x00) e(0x65 0x00) s(0x73 0x00) t(0x74 0x00) \0(0x00 0x00)
-        $data  = "\x03\x00\x07\x00T\x00e\x00s\x00t\x00\x00\x00";
+        // BOM (FF FE) + UTF-16LE "Test" + NULL terminator
+        $data  = "\x03\x00\x07\x00\xFF\xFET\x00e\x00s\x00t\x00\x00\x00";
         $entry = new IfdEntry(
             tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
             type: 7, // UNDEFINED
@@ -162,7 +162,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     }
 
     /**
-     * Encodes a UTF-16BE payload after the dimension header to exercise byte-order detection.
+     * Encodes a BOM-framed UTF-16BE payload after the dimension header.
      * Ensures the settings text is decoded correctly and dimensions are preserved.
      *
      * @return void
@@ -171,8 +171,8 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     public function parsesWithUtf16BESettings(): void
     {
         // Little-endian: 3 columns, 7 rows
-        // UTF-16BE: "Test" = T(0x00 0x54) e(0x00 0x65) s(0x00 0x73) t(0x00 0x74) \0(0x00 0x00)
-        $data  = "\x03\x00\x07\x00\x00T\x00e\x00s\x00t\x00\x00";
+        // BOM (FE FF) + UTF-16BE "Test" + NULL terminator
+        $data  = "\x03\x00\x07\x00\xFE\xFF\x00T\x00e\x00s\x00t\x00\x00";
         $entry = new IfdEntry(
             tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
             type: 7, // UNDEFINED
@@ -192,7 +192,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     }
 
     /**
-     * Uses a realistic UTF-16LE settings string with separators and spaces.
+     * Uses a BOM-framed UTF-16LE settings string with separators and spaces.
      * Confirms the full text is preserved in the settings list with expected dimensions.
      *
      * @return void
@@ -201,10 +201,10 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     public function parsesComplexSettings(): void
     {
         // Little-endian: 5 columns, 10 rows
-        // UTF-16LE: "ISO:100 WB:Auto"
+        // BOM (FF FE) + UTF-16LE "ISO:100 WB:Auto"
         $settingsText = 'ISO:100 WB:Auto';
         $utf16le      = mb_convert_encoding($settingsText, 'UTF-16LE', 'UTF-8');
-        $data         = "\x05\x00\x0A\x00" . $utf16le . "\x00\x00";
+        $data         = "\x05\x00\x0A\x00\xFF\xFE" . $utf16le . "\x00\x00";
         $entry        = new IfdEntry(
             tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
             type: 7, // UNDEFINED
@@ -221,6 +221,36 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertSame(5, $result->columns);
         self::assertSame(10, $result->rows);
         self::assertSame([$settingsText], $result->settings);
+    }
+
+    /**
+     * Settings without BOM signature are rejected per EXIF 3.0 §4.6.6.7.45.
+     * Returns dimensions with empty settings list.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsSettingsWithoutBom(): void
+    {
+        // Little-endian: 3 columns, 7 rows
+        // UTF-16LE "Test" WITHOUT BOM
+        $data  = "\x03\x00\x07\x00T\x00e\x00s\x00t\x00\x00\x00";
+        $entry = new IfdEntry(
+            tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
+            type: 7, // UNDEFINED
+            count: strlen($data),
+            value: $data,
+        );
+
+        $exifIfd    = new Ifd([ExifTag::DEVICE_SETTING_DESCRIPTION => $entry]);
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        $result = $parsedExif->deviceSettingDescription();
+
+        self::assertInstanceOf(DeviceSettingDescription::class, $result);
+        self::assertSame(3, $result->columns);
+        self::assertSame(7, $result->rows);
+        self::assertSame([], $result->settings);
     }
 
     /**
@@ -254,7 +284,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     }
 
     /**
-     * Provides two UTF-16LE settings strings separated by null terminators.
+     * Provides two BOM-framed UTF-16LE settings strings separated by null terminators.
      * Verifies the parser splits them into separate entries and keeps the dimensions.
      *
      * @return void
@@ -264,8 +294,10 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     {
         $firstSetting  = mb_convert_encoding('ISO:100', 'UTF-16LE', 'UTF-8');
         $secondSetting = mb_convert_encoding('WB:Auto', 'UTF-16LE', 'UTF-8');
-        $data          = "\x02\x00\x02\x00" . $firstSetting . "\x00\x00" . $secondSetting . "\x00\x00";
-        $entry         = new IfdEntry(
+        $data          = "\x02\x00\x02\x00"
+            . "\xFF\xFE" . $firstSetting . "\x00\x00"
+            . "\xFF\xFE" . $secondSetting . "\x00\x00";
+        $entry = new IfdEntry(
             tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
             type: 7, // UNDEFINED
             count: strlen($data),

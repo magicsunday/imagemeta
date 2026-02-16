@@ -85,7 +85,6 @@ use function sqrt;
 use function str_pad;
 use function str_replace;
 use function strlen;
-use function strpos;
 use function substr;
 use function substr_count;
 use function trim;
@@ -4266,51 +4265,6 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     }
 
     /**
-     * Decodes a UTF-16 encoded user comment.
-     */
-    private function decodeUnicodeComment(string $content): ?string
-    {
-        if ($content === '') {
-            return null;
-        }
-
-        $encodings = ['UTF-16LE', 'UTF-16BE'];
-
-        if (strlen($content) >= 2) {
-            $first  = $content[0];
-            $second = $content[1];
-
-            if (($first === "\0") && ($second !== "\0")) {
-                $encodings = ['UTF-16BE', 'UTF-16LE'];
-            } elseif (($second === "\0") && ($first !== "\0")) {
-                $encodings = ['UTF-16LE', 'UTF-16BE'];
-            }
-        }
-
-        foreach ($encodings as $encoding) {
-            $converted = @iconv($encoding, 'UTF-8', $content);
-
-            if ($converted === false) {
-                continue;
-            }
-
-            $converted = trim($converted, "\0");
-            if ($converted !== '') {
-                return $converted;
-            }
-        }
-
-        $stripped = preg_replace('/\x00/u', '', $content);
-        if ($stripped === null) {
-            return null;
-        }
-
-        $stripped = trim($stripped, "\0");
-
-        return $stripped === '' ? null : $stripped;
-    }
-
-    /**
      * Infers the most likely user comment encoding based on the raw payload.
      */
     private function inferUserCommentEncoding(string $content): ?string
@@ -4455,7 +4409,12 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     /**
      * Parses UTF-16 encoded camera settings entries following the display grid dimensions.
      *
-     * EXIF 3.0 §4.6.6.7.45
+     * EXIF 3.0 §4.6.6.7.45: each setting is a UTF-16 string recorded
+     * **including Signature** (BOM) and NULL-terminated.  Only BOM-framed
+     * segments are accepted; heuristic decoding is not applied.
+     *
+     * Null terminators are scanned at code-unit-aligned positions (every
+     * 2 bytes after the BOM) to avoid false matches inside UTF-16 data.
      *
      * @return list<string>
      */
@@ -4463,29 +4422,43 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     {
         $length = strlen($payload);
 
-        if ($length === 0) {
+        if ($length < 4) {
             return [];
         }
 
         $settings = [];
         $offset   = 0;
 
-        while ($offset < $length) {
-            $terminatorPosition = strpos($payload, "\0\0", $offset);
+        while (($offset + 4) <= $length) {
+            $bom = substr($payload, $offset, 2);
 
-            if ($terminatorPosition === false) {
+            if ($bom !== "\xFF\xFE" && $bom !== "\xFE\xFF") {
+                break;
+            }
+
+            // Scan for the null code unit at even offsets after the BOM.
+            $pos       = $offset + 2;
+            $termFound = false;
+
+            while (($pos + 1) < $length) {
+                if ($payload[$pos] === "\x00" && $payload[$pos + 1] === "\x00") {
+                    $termFound = true;
+
+                    break;
+                }
+
+                $pos += 2;
+            }
+
+            if ($termFound) {
+                $segment = substr($payload, $offset, $pos - $offset);
+                $offset  = $pos + 2;
+            } else {
                 $segment = substr($payload, $offset);
                 $offset  = $length;
-            } else {
-                $segment = substr($payload, $offset, $terminatorPosition - $offset);
-                $offset  = $terminatorPosition + 2;
             }
 
-            if ($segment === '') {
-                continue;
-            }
-
-            $decoded = $this->decodeUnicodeComment($segment);
+            $decoded = $this->decodeLegacyUnicodeCommentFromBom($segment);
 
             if ($decoded !== null) {
                 $settings[] = $decoded;
