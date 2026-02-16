@@ -356,6 +356,12 @@ final readonly class MatrixConverter
             $values[] = $rowValues;
         }
 
+        // EXIF 3.0 §4.6.6.7.6/§4.6.6.7.24: the structured payload must be
+        // fully consumed; trailing bytes indicate a malformed matrix.
+        if ($offset !== $length) {
+            return null;
+        }
+
         return [
             'columns' => $columns,
             'rows'    => $rows,
