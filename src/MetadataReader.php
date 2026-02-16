@@ -238,8 +238,13 @@ final readonly class MetadataReader
         $xmpDoc     = null;
         $makerNotes = null;
         if ($exifBlobs !== []) {
-            $registry   = $this->createMakerNotesRegistry();
-            $exifDoc    = $this->tiffReader->parseFromBlob($exifBlobs[0], $registry);
+            $registry = $this->createMakerNotesRegistry();
+
+            // ISO BMFF containers store image dimensions in the ispe box and
+            // image data in mdat — TIFF-level dimension/strip/tile tags are
+            // not required.  Unlike JPEG context, JPEG-prohibited tags
+            // (ImageWidth etc.) may legitimately appear in the EXIF blob.
+            $exifDoc    = $this->tiffReader->parseFromBlob($exifBlobs[0], $registry, embeddedContext: true);
             $makerNotes = $exifDoc->makerNotes();
         }
 

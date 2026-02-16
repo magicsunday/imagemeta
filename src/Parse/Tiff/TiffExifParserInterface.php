@@ -22,5 +22,5 @@ interface TiffExifParserInterface
     /**
      * Parses a TIFF/EXIF blob and returns the decoded EXIF document.
      */
-    public function parseFromBlob(string $tiffBlob, ?Registry $registry = null, bool $jpegContext = false): ParsedExif;
+    public function parseFromBlob(string $tiffBlob, ?Registry $registry = null, bool $jpegContext = false, bool $embeddedContext = false): ParsedExif;
 }

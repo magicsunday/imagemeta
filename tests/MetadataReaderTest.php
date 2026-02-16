@@ -433,6 +433,7 @@ final class MetadataReaderTest extends TestCase
                 string $tiffBlob,
                 ?Registry $registry = null,
                 bool $jpegContext = false,
+                bool $embeddedContext = false,
             ): ParsedExif {
                 throw new RuntimeException('EXIF parser must not be called');
             }

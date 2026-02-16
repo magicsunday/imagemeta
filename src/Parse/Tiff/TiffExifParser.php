@@ -1378,7 +1378,7 @@ final class TiffExifParser implements TiffExifParserInterface
      *
      * @return ParsedExif
      */
-    public function parseFromBlob(string $tiffBlob, ?Registry $registry = null, bool $jpegContext = false): ParsedExif
+    public function parseFromBlob(string $tiffBlob, ?Registry $registry = null, bool $jpegContext = false, bool $embeddedContext = false): ParsedExif
     {
         $this->buffer = new MemoryBuffer($tiffBlob);
         $this->buffer->seek(0);
@@ -1628,7 +1628,10 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->validateFlashBitfield($exifIfd);
         $this->validateJpegThumbnailStream($ifd1);
 
-        if (!$jpegContext) {
+        // JPEG and ISO BMFF containers provide image dimensions/layout
+        // externally (SOF header / ispe box), so TIFF-level structural tags
+        // are not required.
+        if (!$jpegContext && !$embeddedContext) {
             $this->validateImageDimensions($ifd0);
             $this->validateStripLayoutConsistency($ifd0);
             $this->validateTileLayoutConsistency($ifd0);
