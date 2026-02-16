@@ -35,7 +35,6 @@ final readonly class FormatDetector
     private const array ISO_BMFF_SIGNATURE_BOXES = [
         'ftyp' => true,
         'moov' => true,
-        'mdat' => true,
         'styp' => true,
         'meta' => true,
         'moof' => true,

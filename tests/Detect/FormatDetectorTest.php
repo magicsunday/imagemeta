@@ -118,7 +118,7 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesQuickTimeWideBox(): void
     {
-        $stream = $this->createStream("\x00\x00\x00\x08wide\x00\x00\x00\x08mdat");
+        $stream = $this->createStream("\x00\x00\x00\x08wide\x00\x00\x00\x08moov");
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -172,6 +172,38 @@ final class FormatDetectorTest extends TestCase
         self::assertIsString($ftyp);
 
         $stream   = $this->createStream($uuidBox . $ftyp);
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::ISOBMFF, $detected);
+    }
+
+    /**
+     * Rejects a stream with only an mdat box as sole ISO-BMFF evidence.
+     */
+    #[Test]
+    public function detectRejectsMdatOnlyAsIsoBmff(): void
+    {
+        // size=16, type='mdat', followed by 8 bytes of payload
+        $stream = $this->createStream("\x00\x00\x00\x10mdat" . str_repeat("\x00", 8));
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unsupported or unknown container');
+
+        (new FormatDetector())->detect($stream);
+    }
+
+    /**
+     * Detects ISO-BMFF when mdat is followed by a valid moov box within scan window.
+     */
+    #[Test]
+    public function detectRecognisesIsoBmffWhenMdatFollowedByMoov(): void
+    {
+        // mdat(size=16) + moov(size=8)
+        $stream = $this->createStream(
+            "\x00\x00\x00\x10mdat" . str_repeat("\x00", 8)
+            . "\x00\x00\x00\x08moov"
+        );
+
         $detected = (new FormatDetector())->detect($stream);
 
         self::assertSame(ContainerType::ISOBMFF, $detected);
