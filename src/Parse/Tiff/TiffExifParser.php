@@ -139,6 +139,12 @@ final class TiffExifParser implements TiffExifParserInterface
             'typeName' => 'ASCII',
             'spec'     => 'EXIF 3.0 §4.6.7.1.19',
         ],
+        ExifTag::GPS_SATELLITES => [
+            'name'     => 'GPSSatellites',
+            'type'     => TiffConst::TYPE_ASCII,
+            'typeName' => 'ASCII',
+            'spec'     => 'EXIF 3.0 §4.6.7.1.9',
+        ],
     ];
 
     private const array FIXED_LENGTH_TAGS = [

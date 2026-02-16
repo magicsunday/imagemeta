@@ -236,6 +236,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 7,
                 "WGS-84\0",
             ],
+            'GPSSatellites ASCII count 3' => [
+                ExifTag::GPS_SATELLITES,
+                TiffConst::TYPE_ASCII,
+                3,
+                "05\0",
+            ],
             'FileSource count 1' => [
                 ExifTag::FILE_SOURCE,
                 TiffConst::TYPE_UNDEFINED,
@@ -759,6 +765,51 @@ final class TiffExifParserFixedLengthTest extends TestCase
             TiffConst::TYPE_UNDEFINED,
             6,
             'WGS-84',
+        ];
+    }
+
+    /**
+     * Rejects GPSSatellites when encoded with non-ASCII TIFF type.
+     *
+     * @param int    $type
+     * @param int    $count
+     * @param string $valueBytes
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideInvalidGpsSatellitesTypes')]
+    public function rejectsGpsSatellitesWithWrongType(int $type, int $count, string $valueBytes): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+        $this->expectExceptionMessage('GPSSatellites must use TIFF type ASCII');
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_SATELLITES,
+            $type,
+            $count,
+            $valueBytes,
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * @return iterable<string, array{0:int,1:int,2:string}>
+     */
+    public static function provideInvalidGpsSatellitesTypes(): iterable
+    {
+        yield 'SHORT type' => [
+            TiffConst::TYPE_SHORT,
+            1,
+            "\x05\x00",
+        ];
+
+        yield 'UNDEFINED type' => [
+            TiffConst::TYPE_UNDEFINED,
+            3,
+            "05\0",
         ];
     }
 
