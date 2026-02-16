@@ -571,79 +571,6 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Builds an iloc box with version 3, which is undefined in ISO/IEC 14496-12 §8.11.3.
-     * Confirms the parser rejects unsupported iloc versions.
-     *
-     * @return void
-     */
-    #[Test]
-    public function rejectIlocUnsupportedVersion(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported iloc box version');
-
-        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
-        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
-
-        $ilocPayload = "\x44";       // offset_size=4, length_size=4
-        $ilocPayload .= "\x00";       // base_offset_size=0, index_size=0
-        $ilocPayload .= pack('n', 0); // item_count = 0
-        $iloc = $this->fullBox('iloc', $ilocPayload, 3, 0);
-
-        $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
-
-        $extractor = $this->createExtractor($ftyp . $meta);
-        $extractor->extract();
-    }
-
-    /**
-     * Rejects an iloc box with version 255.
-     * Confirms upper-bound version gating rejects any value above 2.
-     *
-     * @return void
-     */
-    #[Test]
-    public function rejectIlocUnsupportedVersion255(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported iloc box version');
-
-        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
-        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
-
-        $ilocPayload = "\x44";       // offset_size=4, length_size=4
-        $ilocPayload .= "\x00";       // base_offset_size=0, index_size=0
-        $ilocPayload .= pack('N', 0); // version 255 would still use v2-like widths if not rejected
-        $iloc = $this->fullBox('iloc', $ilocPayload, 255, 0);
-
-        $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
-
-        $extractor = $this->createExtractor($ftyp . $meta);
-        $extractor->extract();
-    }
-
-    /**
-     * Rejects an iloc box with non-zero flags.
-     *
-     * @return void
-     */
-    #[Test]
-    public function rejectIlocNonZeroFlags(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported iloc box flags');
-
-        $ilocPayload = "\x44\x00" . pack('n', 0);
-        $iloc        = $this->fullBox('iloc', $ilocPayload, flags: 1);
-        $meta        = $this->fullBox('meta', $iloc);
-        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
-
-        $this->createExtractor($ftyp . $meta)->extract();
-    }
-
-    /**
      * Builds an iloc v0 box where the low nibble of the base_offset/index byte is non-zero.
      * This confirms the reserved nibble is validated per ISO/IEC 14496-12 §8.11.3.
      *
@@ -2686,26 +2613,6 @@ final class IsoBmffParserTest extends TestCase
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
-    }
-
-    /**
-     * Rejects an iref box with non-zero flags.
-     *
-     * @return void
-     */
-    #[Test]
-    public function rejectIrefNonZeroFlags(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported iref box flags');
-
-        $entryPayload = pack('n', 1) . pack('n', 1) . pack('n', 2);
-        $entry        = $this->box('dimg', $entryPayload);
-        $iref         = $this->fullBox('iref', $entry, flags: 1);
-        $meta         = $this->fullBox('meta', $iref);
-        $ftyp         = $this->box('ftyp', 'isom' . pack('N', 0));
-
-        $this->createExtractor($ftyp . $meta)->extract();
     }
 
     /**
@@ -4752,27 +4659,6 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Builds a pitm box with version 2, which is not defined by ISO/IEC 14496-12.
-     * Confirms the parser rejects unsupported pitm versions.
-     *
-     * @return void
-     */
-    #[Test]
-    public function rejectPitmUnsupportedVersion(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported pitm box version');
-
-        $pitmPayload = "\x02\0\0\0" . pack('N', 1); // version=2, flags=0, item_ID=1
-        $pitm        = $this->box('pitm', $pitmPayload);
-        $meta        = $this->fullBox('meta', $pitm);
-        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
-
-        $extractor = $this->createExtractor($ftyp . $meta);
-        $extractor->extract();
-    }
-
-    /**
      * Builds a pitm v0 box with only 3 bytes of payload (needs 6: 4 header + 2 item_ID).
      * Confirms the parser rejects truncated pitm payloads.
      *
@@ -5130,26 +5016,6 @@ final class IsoBmffParserTest extends TestCase
         $iinf        = $this->fullBox('iinf', pack('n', 1) . $infe);
         $meta        = $this->fullBox('meta', $iinf);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
-
-        $extractor = $this->createExtractor($ftyp . $meta);
-        $extractor->extract();
-    }
-
-    /**
-     * Rejects a pitm box with non-zero flags.
-     *
-     * @return void
-     */
-    #[Test]
-    public function rejectPitmUnsupportedFlags(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported pitm box flags');
-
-        $pitm = $this->fullBox('pitm', pack('n', 1), 0, 1); // flags=1
-        $iinf = $this->fullBox('iinf', pack('n', 0));
-        $meta = $this->fullBox('meta', $iinf . $pitm);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();

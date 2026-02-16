@@ -3732,13 +3732,12 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $version = $win->readU8();
         $flags   = $this->readUInt24($win);
 
-        // ISO/IEC 14496-12 §8.11.3: only versions 0, 1 and 2 are defined
-        if ($version > 2) {
-            throw new ParseError('unsupported iloc box version', 1202);
-        }
-
-        if ($flags !== 0) {
-            throw new ParseError('unsupported iloc box flags', 1203);
+        // ISO/IEC 14496-12 §8.11.3: only versions 0, 1 and 2 are defined.
+        // Skip unsupported versions gracefully instead of failing the
+        // entire parse — the spec requires readers to ignore boxes with
+        // unrecognized versions.
+        if ($version > 2 || $flags !== 0) {
+            return [];
         }
 
         // ISO/IEC 14496-12 §8.11.3: offset_size and length_size are packed in 4-bit nibbles
@@ -3848,9 +3847,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      *
      * @param BoxDescriptor $pitm Box descriptor containing the primary item payload.
      *
-     * @return int
+     * @return int|null Primary item ID or null when the box uses an unsupported version.
      */
-    private function parsePitm(BoxDescriptor $pitm): int
+    private function parsePitm(BoxDescriptor $pitm): ?int
     {
         $win = $pitm->window;
         $win->seek(0);
@@ -3863,12 +3862,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $version = $win->readU8();
         $flags   = $this->readUInt24($win);
 
-        if ($version !== 0 && $version !== 1) {
-            throw new ParseError('unsupported pitm box version', 1211);
-        }
-
-        if ($flags !== 0) {
-            throw new ParseError('unsupported pitm box flags', 1212);
+        // Skip unsupported versions/flags gracefully — the spec requires
+        // readers to ignore boxes with unrecognized versions.
+        if (($version !== 0 && $version !== 1) || $flags !== 0) {
+            return null;
         }
 
         if ($version === 0) {
@@ -3905,12 +3902,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $version = $win->readU8();
         $flags   = $this->readUInt24($win);
 
-        if ($version !== 0 && $version !== 1) {
-            throw new ParseError('unsupported iref box version', 1215);
-        }
-
-        if ($flags !== 0) {
-            throw new ParseError('unsupported iref box flags', 1216);
+        // Skip unsupported versions/flags gracefully — the spec requires
+        // readers to ignore boxes with unrecognized versions.
+        if (($version !== 0 && $version !== 1) || $flags !== 0) {
+            return [];
         }
 
         $references = [];

@@ -428,23 +428,27 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     /**
      * Returns the image width, preferring the compressed-specific EXIF tag when applicable.
      *
-     * EXIF 3.0 §4.6.6.3.1 defines PixelXDimension for compressed image data only;
-     * uncompressed images rely on the base ImageWidth tag instead.
+     * Prefers PixelXDimension from the Exif IFD when present (EXIF 3.0
+     * §4.6.6.3.1), falling back to ImageWidth from IFD0 (TIFF 6.0 §8).
      *
-     * EXIF 3.0 §4.6.5.1.1 defines ImageWidth (Tag 0x0100) as a SHORT or LONG with a single
-     * value and no default; JPEG-encoded images convey the dimension via JPEG markers
-     * instead of this tag.
+     * PixelXDimension is skipped only when the Compression tag is
+     * explicitly set to UNCOMPRESSED. When the tag is absent (valid for
+     * JPEG primary images per EXIF 3.0 §4.6.5.1.4), PixelXDimension
+     * takes priority so the defaulted UNCOMPRESSED value does not
+     * suppress dimension tags that are actually present.
      *
      * @return int|null
      */
     public function imageWidth(): ?int
     {
-        $compression     = $this->compression();
-        $isCompressed    = $compression !== Compression::UNCOMPRESSED;
-        $compressedWidth = $isCompressed ? $this->int($this->exifIfd, ExifTag::PIXEL_X_DIMENSION) : null;
+        $explicitlyUncompressed = $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry
+            && $this->compression() === Compression::UNCOMPRESSED;
 
-        if ($compressedWidth !== null) {
-            return $compressedWidth;
+        if (!$explicitlyUncompressed) {
+            $pixelWidth = $this->int($this->exifIfd, ExifTag::PIXEL_X_DIMENSION);
+            if ($pixelWidth !== null) {
+                return $pixelWidth;
+            }
         }
 
         return $this->int($this->ifd0, ExifTag::IMAGE_WIDTH);
@@ -453,21 +457,21 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     /**
      * Returns the image height, preferring the compressed-specific EXIF tag when applicable.
      *
-     * EXIF 3.0 §4.6.6.3.2 defines PixelYDimension for compressed image data only;
-     * uncompressed images rely on the base ImageLength tag instead.
-     *
-     * EXIF 3.0 §4.6.5.1.2 ImageLength (Tag 0x0101, type SHORT or LONG, count 1; no default; not used for JPEG compressed data).
+     * Prefers PixelYDimension from the Exif IFD when present (EXIF 3.0
+     * §4.6.6.3.2), falling back to ImageLength from IFD0 (TIFF 6.0 §8).
      *
      * @return int|null
      */
     public function imageHeight(): ?int
     {
-        $compression      = $this->compression();
-        $isCompressed     = $compression !== Compression::UNCOMPRESSED;
-        $compressedHeight = $isCompressed ? $this->int($this->exifIfd, ExifTag::PIXEL_Y_DIMENSION) : null;
+        $explicitlyUncompressed = $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry
+            && $this->compression() === Compression::UNCOMPRESSED;
 
-        if ($compressedHeight !== null) {
-            return $compressedHeight;
+        if (!$explicitlyUncompressed) {
+            $pixelHeight = $this->int($this->exifIfd, ExifTag::PIXEL_Y_DIMENSION);
+            if ($pixelHeight !== null) {
+                return $pixelHeight;
+            }
         }
 
         return $this->int($this->ifd0, ExifTag::IMAGE_LENGTH);
