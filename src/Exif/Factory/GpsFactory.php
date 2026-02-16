@@ -564,6 +564,11 @@ final readonly class GpsFactory
             return null;
         }
 
+        // Accept only ISO 8601 date-time: YYYY-MM-DDThh:mm:ss[.frac][Z|±hh:mm]
+        if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/', $value) !== 1) {
+            return null;
+        }
+
         try {
             $dateTime = new DateTimeImmutable($value);
         } catch (Exception) {

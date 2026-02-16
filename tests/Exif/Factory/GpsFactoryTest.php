@@ -589,6 +589,51 @@ final class GpsFactoryTest extends TestCase
         self::assertNull($gps->longitude);
     }
 
+    /**
+     * XMP GPSDateTime with valid ISO 8601 value parses to UTC.
+     */
+    #[Test]
+    public function xmpGpsDateTimeWithValidIsoParses(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDateTime', self::NS_EXIF) => '2023-06-15T14:30:00Z',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertInstanceOf(DateTimeImmutable::class, $gps->timestamp);
+        self::assertSame('2023-06-15T14:30:00+00:00', $gps->timestamp->format('Y-m-d\TH:i:sP'));
+    }
+
+    /**
+     * XMP GPSDateTime with non-ISO free-form string yields null.
+     */
+    #[Test]
+    public function xmpGpsDateTimeWithFreeFormStringYieldsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDateTime', self::NS_EXIF) => 'June 15, 2023 2:30 PM',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->timestamp);
+    }
+
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     private function parsedExif(
