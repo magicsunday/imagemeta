@@ -336,6 +336,55 @@ final class XmpDocumentTest extends TestCase
     }
 
     /**
+     * Accepts strict decimal integer forms for XMP Integer type.
+     */
+    #[Test]
+    public function intAcceptsStrictDecimalIntegers(): void
+    {
+        $ns = 'http://example.com/xmp/';
+
+        $doc = new XmpDocument([
+            sprintf('{%s}A', $ns) => '0',
+            sprintf('{%s}B', $ns) => '-12',
+            sprintf('{%s}C', $ns) => '+34',
+        ]);
+
+        self::assertSame(0, $doc->int($ns, 'A'));
+        self::assertSame(-12, $doc->int($ns, 'B'));
+        self::assertSame(34, $doc->int($ns, 'C'));
+    }
+
+    /**
+     * Rejects non-integer forms for XMP Integer accessor.
+     *
+     * @param string $value Non-integer string to test.
+     */
+    #[Test]
+    #[DataProvider('nonIntegerValueProvider')]
+    public function intRejectsNonIntegerForms(string $value): void
+    {
+        $ns  = 'http://example.com/xmp/';
+        $doc = new XmpDocument([sprintf('{%s}Val', $ns) => $value]);
+
+        self::assertNull($doc->int($ns, 'Val'));
+    }
+
+    /**
+     * Provides non-integer string forms that must be rejected by int().
+     *
+     * @return array<string, array{string}>
+     */
+    public static function nonIntegerValueProvider(): array
+    {
+        return [
+            'decimal'    => ['1.0'],
+            'scientific' => ['1e3'],
+            'rational'   => ['1/2'],
+            'embedded'   => ['foo42'],
+        ];
+    }
+
+    /**
      * Provides zero-equivalent denominators for rational parsing tests.
      *
      * @return array<string, array{string}>

@@ -20,6 +20,7 @@ use function explode;
 use function is_array;
 use function is_numeric;
 use function is_string;
+use function preg_match;
 use function sprintf;
 use function str_contains;
 use function strpos;
@@ -200,9 +201,12 @@ final readonly class XmpDocument
             return null;
         }
 
-        $numeric = self::parseNumericValue($string);
+        // XMP Integer: strict decimal integer grammar (A.2.2.3)
+        if (preg_match('/^[+-]?\d+$/', $string) !== 1) {
+            return null;
+        }
 
-        return $numeric !== null ? (int) $numeric : null;
+        return (int) $string;
     }
 
     /**
