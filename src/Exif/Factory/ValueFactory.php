@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Factory;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
@@ -293,7 +294,13 @@ final readonly class ValueFactory
 
         $iccData = null;
         if ($metadata->iccProfile !== null || $metadata->iccSegments !== []) {
-            $iccData = $this->iccParser->decode($metadata->iccProfile, $metadata->iccSegments);
+            try {
+                $iccData = $this->iccParser->decode($metadata->iccProfile, $metadata->iccSegments);
+            } catch (ParseError) {
+                // Malformed ICC profiles (non-standard padding, tag table layout,
+                // etc.) are common in the wild.  Degrade gracefully so EXIF/XMP
+                // metadata extraction is not blocked.
+            }
         }
 
         $colorProfile = new ValueColorProfile(
