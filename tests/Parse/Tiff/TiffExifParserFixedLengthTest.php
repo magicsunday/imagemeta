@@ -532,24 +532,29 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSHPositioningError with wrong type (LONG instead of RATIONAL).
+     * Accepts GPSHPositioningError regardless of TIFF type (Postel's Law).
      *
      * @return void
      */
     #[Test]
-    public function rejectsGpsHPositioningErrorWrongType(): void
+    public function acceptsGpsHPositioningErrorWithNonRationalType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
+        try {
+            (new TiffExifParser())->parseFromBlob(
+                $this->buildClassicTiffWithEntry(
+                    ExifTag::GPS_H_POSITIONING_ERROR,
+                    TiffConst::TYPE_LONG,
+                    1,
+                    "\x00\x00\x00\x01",
+                ),
+            );
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type check must not reject non-RATIONAL GPSHPositioningError');
 
-        $blob = $this->buildClassicTiffWithEntry(
-            ExifTag::GPS_H_POSITIONING_ERROR,
-            TiffConst::TYPE_LONG,
-            1,
-            "\x00\x00\x00\x01",
-        );
+            return;
+        }
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -616,24 +621,29 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSSpeed with wrong type (LONG instead of RATIONAL).
+     * Accepts GPSSpeed regardless of TIFF type (Postel's Law).
      *
      * @return void
      */
     #[Test]
-    public function rejectsGpsSpeedWrongType(): void
+    public function acceptsGpsSpeedWithNonRationalType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
+        try {
+            (new TiffExifParser())->parseFromBlob(
+                $this->buildClassicTiffWithEntry(
+                    ExifTag::GPS_SPEED,
+                    TiffConst::TYPE_LONG,
+                    1,
+                    "\x00\x00\x00\x01",
+                ),
+            );
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type check must not reject non-RATIONAL GPSSpeed');
 
-        $blob = $this->buildClassicTiffWithEntry(
-            ExifTag::GPS_SPEED,
-            TiffConst::TYPE_LONG,
-            1,
-            "\x00\x00\x00\x01",
-        );
+            return;
+        }
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -658,24 +668,29 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSDOP with wrong type (LONG instead of RATIONAL).
+     * Accepts GPSDOP regardless of TIFF type (Postel's Law).
      *
      * @return void
      */
     #[Test]
-    public function rejectsGpsDopWrongType(): void
+    public function acceptsGpsDopWithNonRationalType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
+        try {
+            (new TiffExifParser())->parseFromBlob(
+                $this->buildClassicTiffWithEntry(
+                    ExifTag::GPS_DOP,
+                    TiffConst::TYPE_LONG,
+                    1,
+                    "\x00\x00\x00\x01",
+                ),
+            );
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type check must not reject non-RATIONAL GPSDOP');
 
-        $blob = $this->buildClassicTiffWithEntry(
-            ExifTag::GPS_DOP,
-            TiffConst::TYPE_LONG,
-            1,
-            "\x00\x00\x00\x01",
-        );
+            return;
+        }
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -795,24 +810,29 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSDestDistance with wrong type (LONG instead of RATIONAL).
+     * Accepts GPSDestDistance regardless of TIFF type (Postel's Law).
      *
      * @return void
      */
     #[Test]
-    public function rejectsGpsDestDistanceWrongType(): void
+    public function acceptsGpsDestDistanceWithNonRationalType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
+        try {
+            (new TiffExifParser())->parseFromBlob(
+                $this->buildClassicTiffWithEntry(
+                    ExifTag::GPS_DEST_DISTANCE,
+                    TiffConst::TYPE_LONG,
+                    1,
+                    "\x00\x00\x00\x01",
+                ),
+            );
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type check must not reject non-RATIONAL GPSDestDistance');
 
-        $blob = $this->buildClassicTiffWithEntry(
-            ExifTag::GPS_DEST_DISTANCE,
-            TiffConst::TYPE_LONG,
-            1,
-            "\x00\x00\x00\x01",
-        );
+            return;
+        }
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -981,25 +1001,30 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPS bearing value tags when encoded with non-RATIONAL TIFF type.
+     * Accepts GPS bearing value tags regardless of TIFF type (Postel's Law).
      *
      * @return void
      */
     #[Test]
     #[DataProvider('provideGpsBearingValueTags')]
-    public function rejectsGpsBearingValueTagsWithWrongType(int $tag): void
+    public function acceptsGpsBearingValueTagsWithNonRationalType(int $tag): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
+        try {
+            (new TiffExifParser())->parseFromBlob(
+                $this->buildClassicTiffWithEntry(
+                    $tag,
+                    TiffConst::TYPE_LONG,
+                    1,
+                    "\x00\x00\x00\x01",
+                ),
+            );
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type check must not reject non-RATIONAL GPS bearing value');
 
-        $blob = $this->buildClassicTiffWithEntry(
-            $tag,
-            TiffConst::TYPE_LONG,
-            1,
-            "\x00\x00\x00\x01",
-        );
+            return;
+        }
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        $this->addToAssertionCount(1);
     }
 
     /**

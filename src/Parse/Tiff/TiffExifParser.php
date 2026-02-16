@@ -51,6 +51,7 @@ use function preg_match;
 use function rtrim;
 use function sha1;
 use function sprintf;
+use function str_starts_with;
 use function strlen;
 use function strpos;
 use function strspn;
@@ -1980,26 +1981,24 @@ final class TiffExifParser implements TiffExifParserInterface
         if ($type !== $rule['type']) {
             // EXIF 3.0 §4.6.6.1.1/§4.6.6.1.2 specify UNDEFINED for version tags,
             // but many cameras use ASCII. Accept both directions for compatibility.
-            if (
-                ($type === TiffConst::TYPE_UNDEFINED && $rule['type'] === TiffConst::TYPE_ASCII)
-                || ($type === TiffConst::TYPE_ASCII && $rule['type'] === TiffConst::TYPE_UNDEFINED)
-            ) {
-                return;
-            }
+            $asciiUndefinedSwap = ($type === TiffConst::TYPE_UNDEFINED && $rule['type'] === TiffConst::TYPE_ASCII)
+                || ($type === TiffConst::TYPE_ASCII && $rule['type'] === TiffConst::TYPE_UNDEFINED);
 
-            // EXIF 3.0 §4.6.7 specifies RATIONAL for GPS coordinate values.
-            // Legacy cameras wrote SRATIONAL instead; both types use identical
-            // 8-byte layout and GPS values are always positive magnitudes.
-            if ($rule['type'] === TiffConst::TYPE_RATIONAL && $type === TiffConst::TYPE_SRATIONAL) {
-                return;
-            }
+            // EXIF 3.0 §4.6.7 specifies RATIONAL for GPS value tags, but
+            // real-world cameras write a wide range of numeric types
+            // (SRATIONAL, SHORT, LONG, etc.).  Skip the type check for
+            // GPS tags to follow Postel's Law; the count check still runs.
+            $gpsRationalTolerance = $rule['type'] === TiffConst::TYPE_RATIONAL
+                && str_starts_with((string) $rule['spec'], 'EXIF 3.0 §4.6.7');
 
-            throw new ParseError(sprintf(
-                '%s must use TIFF type %s per %s.',
-                $rule['name'],
-                $rule['typeName'],
-                $rule['spec'],
-            ), 1317);
+            if (!$asciiUndefinedSwap && !$gpsRationalTolerance) {
+                throw new ParseError(sprintf(
+                    '%s must use TIFF type %s per %s.',
+                    $rule['name'],
+                    $rule['typeName'],
+                    $rule['spec'],
+                ), 1317);
+            }
         }
 
         if ($count !== $rule['count']) {
@@ -2063,18 +2062,9 @@ final class TiffExifParser implements TiffExifParserInterface
             }
 
             // EXIF 3.0 §4.6.7 specifies RATIONAL for GPS coordinate values.
-            // Legacy cameras (Canon IXUS, Fujifilm MX-1700, Sony Cybershot)
-            // wrote SRATIONAL instead.  Both types use identical 8-byte layout
-            // per component, and GPS values are always positive (sign determined
-            // by reference tags N/S/E/W), so SRATIONAL is functionally equivalent.
-            if ($entry->type !== $rule['type'] && $entry->type !== TiffConst::TYPE_SRATIONAL) {
-                throw new ParseError(sprintf(
-                    '%s must use TIFF type %s per %s.',
-                    $rule['name'],
-                    $rule['typeName'],
-                    $rule['spec'],
-                ), 1317);
-            }
+            // Real-world cameras write a wide range of numeric types (SRATIONAL,
+            // SHORT, LONG, etc.).  Skip the type check and only validate the
+            // component count to follow Postel's Law.
 
             if ($entry->count !== $rule['count']) {
                 throw new ParseError(sprintf(

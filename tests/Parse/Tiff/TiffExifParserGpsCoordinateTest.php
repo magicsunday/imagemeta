@@ -81,24 +81,29 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
     }
 
     /**
-     * Rejects GPS coordinate tags encoded with non-RATIONAL TIFF type.
+     * Accepts GPS coordinate tags regardless of TIFF type (Postel's Law).
+     * Many real-world cameras write non-RATIONAL types for GPS coordinates.
      */
     #[Test]
     #[DataProvider('provideGpsCoordinateTags')]
-    public function rejectsGpsCoordinateTagsWithWrongType(int $tag, string $name, int $_refTag, string $_refValue, string $_resultKey): void
+    public function acceptsGpsCoordinateTagsWithNonRationalType(int $tag, string $_name, int $_refTag, string $_refValue, string $_resultKey): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-        $this->expectExceptionMessage($name . ' must use TIFF type RATIONAL');
+        try {
+            (new TiffExifParser())->parseFromBlob(
+                $this->buildClassicTiffWithSingleGpsEntry(
+                    $tag,
+                    TiffConst::TYPE_ASCII,
+                    3,
+                    pack('V2', 45, 1) . pack('V2', 30, 1) . pack('V2', 0, 1),
+                ),
+            );
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type check must not reject non-RATIONAL GPS coordinate types');
 
-        (new TiffExifParser())->parseFromBlob(
-            $this->buildClassicTiffWithSingleGpsEntry(
-                $tag,
-                TiffConst::TYPE_ASCII,
-                3,
-                pack('V2', 45, 1) . pack('V2', 30, 1) . pack('V2', 0, 1),
-            ),
-        );
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -141,23 +146,27 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
     }
 
     /**
-     * Rejects GPSAltitude encoded with non-RATIONAL TIFF type.
+     * Accepts GPSAltitude regardless of TIFF type (Postel's Law).
      */
     #[Test]
-    public function rejectsGpsAltitudeWithWrongType(): void
+    public function acceptsGpsAltitudeWithNonRationalType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-        $this->expectExceptionMessage('GPSAltitude must use TIFF type RATIONAL');
+        try {
+            (new TiffExifParser())->parseFromBlob(
+                $this->buildClassicTiffWithSingleGpsEntry(
+                    ExifTag::GPS_ALTITUDE,
+                    TiffConst::TYPE_ASCII,
+                    1,
+                    pack('V2', 100, 1),
+                ),
+            );
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type check must not reject non-RATIONAL GPSAltitude');
 
-        (new TiffExifParser())->parseFromBlob(
-            $this->buildClassicTiffWithSingleGpsEntry(
-                ExifTag::GPS_ALTITUDE,
-                TiffConst::TYPE_ASCII,
-                1,
-                pack('V2', 100, 1),
-            ),
-        );
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
