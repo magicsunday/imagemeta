@@ -64,6 +64,7 @@ use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
 use MagicSunday\ImageMeta\Value\SubjectArea;
 
+use function array_fill;
 use function array_find;
 use function array_map;
 use function array_slice;
@@ -2858,7 +2859,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     }
 
     /**
-     * Returns the bits per sample defined for the primary image.
+     * Returns the first component of BitsPerSample (convenience scalar).
      *
      * EXIF 3.0 §4.6.5.1.3 states JPEG compressed data shall not record this
      * tag; precision comes from the JPEG SOF marker instead. Returns null in
@@ -2869,15 +2870,37 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function bitsPerSample(): ?int
     {
-        $bitsPerSample = $this->int($this->ifd0, ExifTag::BITS_PER_SAMPLE);
+        $list = $this->bitsPerSampleList();
 
-        if ($bitsPerSample !== null) {
-            return $bitsPerSample;
+        return $list !== null ? $list[0] : null;
+    }
+
+    /**
+     * Returns the per-sample BitsPerSample vector.
+     *
+     * TIFF 6.0 defines BitsPerSample as a per-component field whose count
+     * matches SamplesPerPixel. Returns null in JPEG context (no Compression
+     * tag) so callers can fall back to SOF precision.
+     *
+     * @return list<int>|null
+     */
+    public function bitsPerSampleList(): ?array
+    {
+        $values = $this->numericList($this->ifd0, ExifTag::BITS_PER_SAMPLE);
+
+        if ($values !== null) {
+            return $values;
         }
 
         // JPEG context: let caller use SOF precision fallback
-        // TIFF context: EXIF 3.0 §4.6.5.1.3 default 8 for RGB
-        return $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry ? 8 : null;
+        if (!$this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry) {
+            return null;
+        }
+
+        // TIFF context: default 8 per component, replicated per SamplesPerPixel
+        $spp = $this->samplesPerPixel();
+
+        return array_fill(0, $spp, 8);
     }
 
     /**

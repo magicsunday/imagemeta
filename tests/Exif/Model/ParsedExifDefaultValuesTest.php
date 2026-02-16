@@ -41,9 +41,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
 {
     /**
      * Omits BitsPerSample in TIFF context (Compression tag present).
-     * Verifies the EXIF default of 8 is returned.
-     *
-     * @see EXIF 3.0 §4.6.5.1.3: BitsPerSample default is 8 8 8 (RGB)
+     * Scalar accessor returns 8 (first component of default vector).
      *
      * @return void
      */
@@ -62,8 +60,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
      * Omits BitsPerSample in JPEG context (no Compression tag).
      * Returns null so SOF precision fallback can apply.
      *
-     * @see EXIF 3.0 §4.6.5.1.3: JPEG data shall not record BitsPerSample
-     *
      * @return void
      */
     #[Test]
@@ -73,6 +69,55 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertNull($parsedExif->bitsPerSample());
+    }
+
+    /**
+     * BitsPerSampleList returns per-component vector in TIFF context.
+     * Defaults to [8] per SamplesPerPixel when tag is absent.
+     *
+     * @return void
+     */
+    #[Test]
+    public function bitsPerSampleListReturnsDefaultVector(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::UNCOMPRESSED->value),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        // Default: SamplesPerPixel=1 for TIFF context without photometric → [8]
+        self::assertSame([8], $parsedExif->bitsPerSampleList());
+    }
+
+    /**
+     * BitsPerSampleList preserves multi-component values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function bitsPerSampleListPreservesMultipleComponents(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::BITS_PER_SAMPLE => new IfdEntry(ExifTag::BITS_PER_SAMPLE, 3, 3, [8, 10, 8]),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame([8, 10, 8], $parsedExif->bitsPerSampleList());
+        self::assertSame(8, $parsedExif->bitsPerSample());
+    }
+
+    /**
+     * BitsPerSampleList returns null in JPEG context.
+     *
+     * @return void
+     */
+    #[Test]
+    public function bitsPerSampleListReturnsNullInJpegContext(): void
+    {
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertNull($parsedExif->bitsPerSampleList());
     }
 
     /**
