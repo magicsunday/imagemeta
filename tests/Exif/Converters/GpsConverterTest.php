@@ -917,6 +917,30 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Rejects negative GPSDOP values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsNegativeGpsDop(): void
+    {
+        $entries = [
+            ExifTag::GPS_DOP => new IfdEntry(
+                ExifTag::GPS_DOP,
+                5,
+                1,
+                new ExifRational(-1, 1),
+            ),
+        ];
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1469);
+        $this->expectExceptionMessage('GPSDOP');
+
+        $this->converter->fromIfd(new Ifd($entries));
+    }
+
+    /**
      * Accepts non-negative GPSHPositioningError values.
      *
      * @return void

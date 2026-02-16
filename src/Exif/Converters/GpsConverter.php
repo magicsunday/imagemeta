@@ -327,7 +327,15 @@ final readonly class GpsConverter
             is_string($measureSanitized) ? strtoupper(trim($measureSanitized)) : null,
             self::GPS_MEASURE_MODE_VALUES,
         );
-        $result['dop'] = $this->rationalConverter->toFloat($dopEntry?->value);
+        $dopValue = $this->rationalConverter->toFloat($dopEntry?->value);
+        if ($dopEntry instanceof IfdEntry && $dopValue !== null && $dopValue < 0.0) {
+            throw new ParseError(sprintf(
+                'GPSDOP %s must be non-negative per EXIF 3.0 §4.6.7.1.12.',
+                $dopValue,
+            ), 1469);
+        }
+
+        $result['dop'] = $dopValue;
 
         // EXIF 3.0 §4.6.7.1.13 GPSSpeedRef: 'K', 'M' or 'N'; default 'K'
         $speedRefValue    = $speedRefEntry?->value;

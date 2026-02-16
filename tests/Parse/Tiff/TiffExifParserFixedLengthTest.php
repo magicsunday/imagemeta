@@ -176,6 +176,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 2,
                 "K\0",
             ],
+            'GPSDOP count 1' => [
+                ExifTag::GPS_DOP,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                "\x00\x00\x00\x19\x00\x00\x00\x0A",
+            ],
             'GPSSpeed count 1' => [
                 ExifTag::GPS_SPEED,
                 TiffConst::TYPE_RATIONAL,
@@ -631,6 +637,48 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
         $blob = $this->buildClassicTiffWithEntry(
             ExifTag::GPS_SPEED,
+            TiffConst::TYPE_RATIONAL,
+            2,
+            str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSDOP with wrong type (LONG instead of RATIONAL).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsDopWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_DOP,
+            TiffConst::TYPE_LONG,
+            1,
+            "\x00\x00\x00\x01",
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSDOP with wrong count (2 instead of 1).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsDopWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_DOP,
             TiffConst::TYPE_RATIONAL,
             2,
             str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
