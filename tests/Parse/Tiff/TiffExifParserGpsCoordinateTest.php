@@ -98,6 +98,64 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
     }
 
     /**
+     * Accepts GPSAltitude encoded as RATIONAL[1] in the GPS IFD.
+     */
+    #[Test]
+    public function acceptsGpsAltitudeWithRationalCountOne(): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildClassicTiffWithSingleGpsEntry(
+                ExifTag::GPS_ALTITUDE,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                pack('V2', 100, 1),
+            ),
+        );
+
+        self::assertEqualsWithDelta(100.0, $result->gps()['alt'], 0.000001);
+    }
+
+    /**
+     * Rejects GPSAltitude encoded with non-RATIONAL TIFF type.
+     */
+    #[Test]
+    public function rejectsGpsAltitudeWithWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+        $this->expectExceptionMessage('GPSAltitude must use TIFF type RATIONAL');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildClassicTiffWithSingleGpsEntry(
+                ExifTag::GPS_ALTITUDE,
+                TiffConst::TYPE_SRATIONAL,
+                1,
+                pack('V2', 100, 1),
+            ),
+        );
+    }
+
+    /**
+     * Rejects GPSAltitude with wrong count.
+     */
+    #[Test]
+    public function rejectsGpsAltitudeWithWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+        $this->expectExceptionMessage('GPSAltitude must contain exactly 1 bytes');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildClassicTiffWithSingleGpsEntry(
+                ExifTag::GPS_ALTITUDE,
+                TiffConst::TYPE_RATIONAL,
+                2,
+                pack('V2', 100, 1) . pack('V2', 200, 1),
+            ),
+        );
+    }
+
+    /**
      * Regression: valid coordinate decoding remains unchanged after enforcement.
      */
     #[Test]

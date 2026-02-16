@@ -229,6 +229,13 @@ final class TiffExifParser implements TiffExifParserInterface
             'typeName' => 'RATIONAL',
             'spec'     => 'EXIF 3.0 §4.6.7.1.23',
         ],
+        ExifTag::GPS_ALTITUDE => [
+            'name'     => 'GPSAltitude',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_RATIONAL,
+            'typeName' => 'RATIONAL',
+            'spec'     => 'EXIF 3.0 §4.6.7.1.7',
+        ],
     ];
 
     private const array FIXED_LENGTH_TAGS = [
