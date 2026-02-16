@@ -72,19 +72,19 @@ final class TiffExifParserJpegProcTest extends TestCase
     }
 
     /**
-     * Compression=6 requires JPEGProc.
+     * Compression=6 without JPEGProc is tolerated — the JPEG stream's SOF
+     * marker is self-describing, so JPEGProc is not needed for decoding.
      */
     #[Test]
-    public function rejectsMissingJpegProcForJpegCompression(): void
+    public function acceptsMissingJpegProcForJpegCompression(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Compression=6 requires JPEGProc');
-
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
                 ExifTag::COMPRESSION => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
             ]),
         );
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -218,20 +218,19 @@ final class TiffExifParserJpegProcTest extends TestCase
     }
 
     /**
-     * JPEGRestartInterval requires a coherent JPEGProc metadata path.
+     * JPEGRestartInterval is accepted even without JPEGProc when Compression=6.
      */
     #[Test]
-    public function rejectsJpegRestartIntervalWhenJpegProcIsMissing(): void
+    public function acceptsJpegRestartIntervalWhenJpegProcIsMissing(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Compression=6 requires JPEGProc');
-
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
                 ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
                 TiffTag::JPEG_RESTART_INTERVAL => $this->shortEntry(TiffTag::JPEG_RESTART_INTERVAL, 16),
             ]),
         );
+
+        $this->addToAssertionCount(1);
     }
 
     /**

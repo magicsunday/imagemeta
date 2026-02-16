@@ -2968,9 +2968,10 @@ final class TiffExifParser implements TiffExifParserInterface
             return;
         }
 
-        if ($isJpegCompression) {
-            throw new ParseError('Compression=6 requires JPEGProc per TIFF 6.0 Section 22.', 1829);
-        }
+        // TIFF 6.0 Section 22 requires JPEGProc for Compression=6 (old-style
+        // JPEG), but Compression=6 was deprecated by TIFF Technical Note 2.
+        // Many encoders that use Compression=6 in embedded thumbnails omit
+        // JPEGProc because the JPEG stream's SOF marker is self-describing.
     }
 
     /**
@@ -3080,11 +3081,11 @@ final class TiffExifParser implements TiffExifParserInterface
             throw new ParseError('JPEGRestartInterval is only valid when Compression=6 (JPEG).', 1852);
         }
 
+        // JPEGProc may be absent when Compression=6 — see validateJpegProcTag().
         $jpegProcEntry = $ifd->get(TiffTag::JPEG_PROC);
         if (
-            !($jpegProcEntry instanceof IfdEntry)
-            || !is_int($jpegProcEntry->value)
-            || !in_array($jpegProcEntry->value, [1, 14], true)
+            ($jpegProcEntry instanceof IfdEntry)
+            && (!is_int($jpegProcEntry->value) || !in_array($jpegProcEntry->value, [1, 14], true))
         ) {
             throw new ParseError('JPEGRestartInterval requires valid JPEGProc metadata.', 1853);
         }
