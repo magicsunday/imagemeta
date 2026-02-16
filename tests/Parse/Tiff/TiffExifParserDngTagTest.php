@@ -157,48 +157,46 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
-     * DNGPrivateData without NUL terminator is rejected.
+     * Accepts DNGPrivateData without NUL terminator (Postel's Law).
+     * Non-DNG RAW formats use proprietary semantics for this tag.
      */
     #[Test]
-    public function rejectDngPrivateDataWithoutNulTerminator(): void
+    public function acceptsDngPrivateDataWithoutNulTerminator(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DNGPrivateData block must start with a NUL-terminated ASCII string per DNG 1.7.1.0.');
-
         $privateData = 'AdobeNoNul';
         $blob        = $this->buildTiffWithDngPrivateData($privateData);
 
         (new TiffExifParser())->parseFromBlob($blob);
+
+        $this->addToAssertionCount(1);
     }
 
     /**
-     * DNGPrivateData with non-ASCII byte in prefix is rejected.
+     * Accepts DNGPrivateData with non-ASCII byte in prefix (Postel's Law).
      */
     #[Test]
-    public function rejectDngPrivateDataWithNonAsciiPrefix(): void
+    public function acceptsDngPrivateDataWithNonAsciiPrefix(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DNGPrivateData manufacturer name contains non-ASCII byte 0x80 at offset 5 per DNG 1.7.1.0.');
-
         $privateData = "Adobe\x80\0\x01\x02";
         $blob        = $this->buildTiffWithDngPrivateData($privateData);
 
         (new TiffExifParser())->parseFromBlob($blob);
+
+        $this->addToAssertionCount(1);
     }
 
     /**
-     * DNGPrivateData with empty manufacturer name is rejected.
+     * Accepts DNGPrivateData with empty manufacturer name (Postel's Law).
      */
     #[Test]
-    public function rejectDngPrivateDataWithEmptyManufacturerName(): void
+    public function acceptsDngPrivateDataWithEmptyManufacturerName(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DNGPrivateData manufacturer name must not be empty per DNG 1.7.1.0.');
-
         $privateData = "\0\x01\x02\x03\x04";
         $blob        = $this->buildTiffWithDngPrivateData($privateData);
 
         (new TiffExifParser())->parseFromBlob($blob);
+
+        $this->addToAssertionCount(1);
     }
 
     /**
