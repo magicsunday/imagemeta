@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Model;
 
+use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
@@ -27,6 +28,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function count;
+use function round;
 
 /**
  * Exercises TIFF/EXIF default tag values when specific fields are absent.
@@ -525,6 +527,109 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $parsedExif = new ParsedExif($complete, null, null, null, null);
 
         self::assertSame($table, $parsedExif->transferFunction());
+    }
+
+    /**
+     * Omits TransferFunction tag in TIFF context.
+     * Materializes the NTSC gamma 2.2 default table (768 entries for 8-bit).
+     *
+     * @return void
+     */
+    #[Test]
+    public function transferFunctionDefaultsToGamma22InTiffContext(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::UNCOMPRESSED->value),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        $table = $parsedExif->transferFunction();
+
+        self::assertNotNull($table);
+        self::assertCount(768, $table);
+        self::assertSame(0, $table[0]);
+        self::assertSame(65535, $table[255]);
+        // Verify midpoint matches gamma 2.2 curve
+        self::assertSame((int) round((128 / 255) ** 2.2 * 65535), $table[128]);
+    }
+
+    /**
+     * Omits TransferFunction tag in JPEG context.
+     * Returns null so no synthetic table is emitted.
+     *
+     * @return void
+     */
+    #[Test]
+    public function transferFunctionReturnsNullInJpegContext(): void
+    {
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertNull($parsedExif->transferFunction());
+    }
+
+    /**
+     * Omits MinSampleValue — defaults to 0 per TIFF 6.0 §8.
+     *
+     * @return void
+     */
+    #[Test]
+    public function minSampleValueDefaultsToZero(): void
+    {
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(0, $parsedExif->minSampleValue());
+    }
+
+    /**
+     * Omits MaxSampleValue in TIFF 8-bit context — defaults to 255.
+     *
+     * @return void
+     */
+    #[Test]
+    public function maxSampleValueDefaultsTo255For8Bit(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::UNCOMPRESSED->value),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(255, $parsedExif->maxSampleValue());
+    }
+
+    /**
+     * Omits TransferRange in TIFF 8-bit context.
+     * Defaults to [0, 255, 0, 255, 0, 255] per TIFF 6.0 §8.
+     *
+     * @return void
+     */
+    #[Test]
+    public function transferRangeDefaultsInTiffContext(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::UNCOMPRESSED->value),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        $range = $parsedExif->transferRange();
+
+        self::assertInstanceOf(ExifNumericList::class, $range);
+        self::assertSame([0, 255, 0, 255, 0, 255], $range->toArray());
+    }
+
+    /**
+     * Omits TransferRange in JPEG context — returns null.
+     *
+     * @return void
+     */
+    #[Test]
+    public function transferRangeReturnsNullInJpegContext(): void
+    {
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertNull($parsedExif->transferRange());
     }
 
     /**

@@ -811,15 +811,50 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     {
         $values = $this->numericList($this->ifd0, ExifTag::TRANSFER_FUNCTION);
 
-        if ($values === null) {
+        if ($values !== null) {
+            return count($values) === 3 * 256 ? $values : null;
+        }
+
+        $bps = $this->bitsPerSample();
+
+        if ($bps === null) {
             return null;
         }
 
-        if (count($values) !== 3 * 256) {
-            return null;
+        return $this->defaultTransferFunction($bps);
+    }
+
+    /**
+     * Computes the NTSC gamma 2.2 transfer function table per TIFF 6.0.
+     *
+     * Returns 3 × (2^bitsPerSample) SHORT values mapping sample values
+     * to the 0–65535 linear range. The same single-channel table is
+     * replicated for R, G and B.
+     *
+     * @return list<int>
+     */
+    private function defaultTransferFunction(int $bitsPerSample): array
+    {
+        /** @var array<int, list<int>> $cache */
+        static $cache = [];
+
+        if (isset($cache[$bitsPerSample])) {
+            return $cache[$bitsPerSample];
         }
 
-        return $values;
+        $n     = 1 << $bitsPerSample;
+        $max   = $n - 1;
+        $table = [];
+
+        for ($i = 0; $i < $n; ++$i) {
+            $table[] = (int) round(($i / $max) ** 2.2 * 65535);
+        }
+
+        // Same curve for all three channels
+        $result                = [...$table, ...$table, ...$table];
+        $cache[$bitsPerSample] = $result;
+
+        return $result;
     }
 
     /**
@@ -4878,24 +4913,25 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
 
     /**
      * Returns MinSampleValue tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0118.
+     * TIFF 6.0 §8: default is 0 when tag is absent.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList
      */
-    public function minSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+    public function minSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
-        return $this->normalisedValue($this->ifd0, TiffTag::MIN_SAMPLE_VALUE);
+        return $this->normalisedValue($this->ifd0, TiffTag::MIN_SAMPLE_VALUE) ?? 0;
     }
 
     /**
      * Returns MaxSampleValue tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0119.
+     * TIFF 6.0 §8: default is (2^BitsPerSample)-1 when tag is absent.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList
      */
-    public function maxSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+    public function maxSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
-        return $this->normalisedValue($this->ifd0, TiffTag::MAX_SAMPLE_VALUE);
+        return $this->normalisedValue($this->ifd0, TiffTag::MAX_SAMPLE_VALUE)
+            ?? ((1 << ($this->bitsPerSample() ?? 8)) - 1);
     }
 
     /**
@@ -5137,13 +5173,27 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
 
     /**
      * Returns TransferRange tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0156.
+     * TIFF 6.0 §8: default is [0, NV, 0, NV, 0, NV] where NV = (2^BitsPerSample)-1.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function transferRange(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->normalisedValue($this->ifd0, TiffTag::TRANSFER_RANGE);
+        $value = $this->normalisedValue($this->ifd0, TiffTag::TRANSFER_RANGE);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        $bps = $this->bitsPerSample();
+
+        if ($bps === null) {
+            return null;
+        }
+
+        $nv = (1 << $bps) - 1;
+
+        return new ExifNumericList([0, $nv, 0, $nv, 0, $nv]);
     }
 
     /**
