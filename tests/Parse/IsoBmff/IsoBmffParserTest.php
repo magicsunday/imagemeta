@@ -6981,6 +6981,40 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Clamps an oversized mdat box to the remaining file space instead of
+     * throwing, so the parser can continue scanning for metadata boxes.
+     */
+    #[Test]
+    public function truncatedMdatIsClamped(): void
+    {
+        $ftyp               = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdatHeader         = pack('N', 1000) . 'mdat';
+        $mdatPartialPayload = str_repeat("\x00", 50);
+
+        $extractor = $this->createExtractor($ftyp . $mdatHeader . $mdatPartialPayload);
+        $extractor->extract();
+
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * Non-mdat boxes exceeding container bounds still throw.
+     */
+    #[Test]
+    public function nonMdatBoxExceedingBoundsStillThrows(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('exceeds container bounds');
+
+        $ftyp               = $this->box('ftyp', 'isom' . pack('N', 0));
+        $moovHeader         = pack('N', 1000) . 'moov';
+        $moovPartialPayload = str_repeat("\x00", 50);
+
+        $extractor = $this->createExtractor($ftyp . $moovHeader . $moovPartialPayload);
+        $extractor->extract();
+    }
+
+    /**
      * Creates a QuickTime file with a data atom using a specific type and payload.
      *
      * @param int    $dataType Well-known type code (1=UTF-8, 2=UTF-16BE, etc.).

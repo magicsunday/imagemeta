@@ -5329,8 +5329,17 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         if ($offset + $size > $limit) {
-            throw new ParseError(
-                sprintf('box %s exceeds container bounds', $type), 1262);
+            // Truncated recordings (e.g. interrupted drone/camera captures)
+            // commonly have an mdat header written with the intended full
+            // recording size while the file ends mid-stream.  Clamping the
+            // effective size lets the parser continue scanning for metadata
+            // boxes that may follow (or precede) the mdat.
+            if ($type === 'mdat' && $allowImplicitSize) {
+                $size = $limit - $offset;
+            } else {
+                throw new ParseError(
+                    sprintf('box %s exceeds container bounds', $type), 1262);
+            }
         }
 
         $contentOffset = $offset + $headerSize;
