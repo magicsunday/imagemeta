@@ -664,6 +664,50 @@ final class GpsFactoryTest extends TestCase
         }
     }
 
+    /**
+     * XMP GPS date in non-conformant format yields null date.
+     */
+    #[Test]
+    public function xmpNonConformantDateYieldsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDateStamp', self::NS_EXIF) => 'June 15, 2023',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->date);
+    }
+
+    /**
+     * XMP GPS date in EXIF colon format is normalised.
+     */
+    #[Test]
+    public function xmpConformantDateIsNormalised(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDateStamp', self::NS_EXIF) => '2023:06:15',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertSame('2023-06-15', $gps->date);
+    }
+
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     private function parsedExif(
