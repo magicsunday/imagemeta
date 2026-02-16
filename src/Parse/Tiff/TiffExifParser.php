@@ -183,6 +183,42 @@ final class TiffExifParser implements TiffExifParserInterface
         ],
     ];
 
+    /**
+     * GPS coordinate value tags with strict EXIF layout requirements in the GPS IFD context.
+     *
+     * @var array<int, array{name: string, count: int, type: int, typeName: string, spec: string}>
+     */
+    private const array GPS_COORDINATE_TAG_LAYOUTS = [
+        ExifTag::GPS_LATITUDE => [
+            'name'     => 'GPSLatitude',
+            'count'    => 3,
+            'type'     => TiffConst::TYPE_RATIONAL,
+            'typeName' => 'RATIONAL',
+            'spec'     => 'EXIF 3.0 §4.6.7.1.3',
+        ],
+        ExifTag::GPS_LONGITUDE => [
+            'name'     => 'GPSLongitude',
+            'count'    => 3,
+            'type'     => TiffConst::TYPE_RATIONAL,
+            'typeName' => 'RATIONAL',
+            'spec'     => 'EXIF 3.0 §4.6.7.1.5',
+        ],
+        ExifTag::GPS_DEST_LATITUDE => [
+            'name'     => 'GPSDestLatitude',
+            'count'    => 3,
+            'type'     => TiffConst::TYPE_RATIONAL,
+            'typeName' => 'RATIONAL',
+            'spec'     => 'EXIF 3.0 §4.6.7.1.21',
+        ],
+        ExifTag::GPS_DEST_LONGITUDE => [
+            'name'     => 'GPSDestLongitude',
+            'count'    => 3,
+            'type'     => TiffConst::TYPE_RATIONAL,
+            'typeName' => 'RATIONAL',
+            'spec'     => 'EXIF 3.0 §4.6.7.1.23',
+        ],
+    ];
+
     private const array FIXED_LENGTH_TAGS = [
         // --- TIFF 6.0 Baseline Tags ---
         TiffTag::NEW_SUBFILE_TYPE => [
@@ -1411,6 +1447,7 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         $this->validateGpsReferenceTagLayouts($gpsIfd);
+        $this->validateGpsCoordinateTagLayouts($gpsIfd);
 
         $additionalIfds = [];
         $visitedOffsets = [];
@@ -1955,6 +1992,41 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         foreach (self::GPS_REFERENCE_TAG_LAYOUTS as $tag => $rule) {
+            $entry = $gpsIfd->get($tag);
+            if (!$entry instanceof IfdEntry) {
+                continue;
+            }
+
+            if ($entry->type !== $rule['type']) {
+                throw new ParseError(sprintf(
+                    '%s must use TIFF type %s per %s.',
+                    $rule['name'],
+                    $rule['typeName'],
+                    $rule['spec'],
+                ), 1317);
+            }
+
+            if ($entry->count !== $rule['count']) {
+                throw new ParseError(sprintf(
+                    '%s must contain exactly %d bytes per %s.',
+                    $rule['name'],
+                    $rule['count'],
+                    $rule['spec'],
+                ), 1318);
+            }
+        }
+    }
+
+    /**
+     * Validates strict GPS coordinate value tag layouts within the GPS IFD.
+     */
+    private function validateGpsCoordinateTagLayouts(?Ifd $gpsIfd): void
+    {
+        if (!$gpsIfd instanceof Ifd) {
+            return;
+        }
+
+        foreach (self::GPS_COORDINATE_TAG_LAYOUTS as $tag => $rule) {
             $entry = $gpsIfd->get($tag);
             if (!$entry instanceof IfdEntry) {
                 continue;
