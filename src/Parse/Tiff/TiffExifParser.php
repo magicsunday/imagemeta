@@ -2425,94 +2425,155 @@ final class TiffExifParser implements TiffExifParserInterface
         $newSubfileTypeEntry = $ifd->get(TiffTag::NEW_SUBFILE_TYPE);
 
         if ($newSubfileTypeEntry instanceof IfdEntry) {
-            if (
-                ($newSubfileTypeEntry->type !== TiffConst::TYPE_LONG)
-                || ($newSubfileTypeEntry->count !== 1)
-                || !is_int($newSubfileTypeEntry->value)
-            ) {
-                throw new ParseError('NewSubfileType must be LONG[1].', 1788);
-            }
-
-            $isDngExtendedNewSubfileType = in_array($newSubfileTypeEntry->value, [8, 9, 16, 65540], true);
-
-            if (
-                $strictTiffNewSubfileType
-                && !$isDngExtendedNewSubfileType
-                && (($newSubfileTypeEntry->value & ~0b111) !== 0)
-            ) {
-                throw new ParseError(
-                    sprintf(
-                        'NewSubfileType value %d contains reserved bits outside 0..2.',
-                        $newSubfileTypeEntry->value,
-                    ),
-                    1789,
-                );
-            }
-
-            if (
-                $strictTiffNewSubfileType
-                && !$isDngExtendedNewSubfileType
-                && (($newSubfileTypeEntry->value & 0b100) !== 0)
-            ) {
-                $photometricEntry = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
-                $photometricCode  = (($photometricEntry instanceof IfdEntry) && is_int($photometricEntry->value))
-                    ? $photometricEntry->value
-                    : null;
-
-                if ($photometricCode !== 4) {
-                    throw new ParseError(
-                        sprintf(
-                            'NewSubfileType transparency-mask bit requires PhotometricInterpretation=4, got %s.',
-                            $photometricCode !== null ? (string) $photometricCode : 'missing',
-                        ),
-                        1790,
-                    );
-                }
-            }
+            $this->validateNewSubfileTypeEntry($ifd, $newSubfileTypeEntry, $strictTiffNewSubfileType);
         }
 
         $subfileTypeEntry = $ifd->get(TiffTag::SUBFILE_TYPE);
-        if ($subfileTypeEntry instanceof IfdEntry) {
-            if (
-                ($subfileTypeEntry->type !== TiffConst::TYPE_SHORT)
-                || ($subfileTypeEntry->count !== 1)
-                || !is_int($subfileTypeEntry->value)
-            ) {
-                throw new ParseError('SubfileType must be SHORT[1].', 1791);
-            }
 
-            if (($subfileTypeEntry->value < 1) || ($subfileTypeEntry->value > 3)) {
-                throw new ParseError(
-                    sprintf(
-                        'SubfileType value %d is invalid; allowed values are 1..3.',
-                        $subfileTypeEntry->value,
-                    ),
-                    1792,
-                );
-            }
+        if ($subfileTypeEntry instanceof IfdEntry) {
+            $this->validateSubfileTypeEntry($subfileTypeEntry);
+        }
+
+        $this->validateSubfileTypeConsistency(
+            $newSubfileTypeEntry instanceof IfdEntry ? $newSubfileTypeEntry : null,
+            $subfileTypeEntry instanceof IfdEntry ? $subfileTypeEntry : null,
+            $strictTiffNewSubfileType,
+        );
+
+        $this->validatePageNumberEntry($ifd);
+    }
+
+    /**
+     * Validates NewSubfileType field type, bit constraints and transparency-mask semantics.
+     *
+     * TIFF 6.0:
+     * - NewSubfileType: LONG[1] bitfield (bits 0..2 only in baseline TIFF).
+     * - Bit 2 (transparency mask) requires PhotometricInterpretation=4.
+     */
+    private function validateNewSubfileTypeEntry(
+        Ifd $ifd,
+        IfdEntry $newSubfileTypeEntry,
+        bool $strictTiffNewSubfileType,
+    ): void {
+        if (
+            ($newSubfileTypeEntry->type !== TiffConst::TYPE_LONG)
+            || ($newSubfileTypeEntry->count !== 1)
+            || !is_int($newSubfileTypeEntry->value)
+        ) {
+            throw new ParseError('NewSubfileType must be LONG[1].', 1788);
+        }
+
+        $isDngExtendedNewSubfileType = in_array($newSubfileTypeEntry->value, [8, 9, 16, 65540], true);
+
+        if (
+            $strictTiffNewSubfileType
+            && !$isDngExtendedNewSubfileType
+            && (($newSubfileTypeEntry->value & ~0b111) !== 0)
+        ) {
+            throw new ParseError(
+                sprintf(
+                    'NewSubfileType value %d contains reserved bits outside 0..2.',
+                    $newSubfileTypeEntry->value,
+                ),
+                1789,
+            );
         }
 
         if (
             $strictTiffNewSubfileType
-            && ($newSubfileTypeEntry instanceof IfdEntry)
-            && ($subfileTypeEntry instanceof IfdEntry)
-            && !in_array($newSubfileTypeEntry->value, [8, 9, 16, 65540], true)
+            && !$isDngExtendedNewSubfileType
+            && (($newSubfileTypeEntry->value & 0b100) !== 0)
         ) {
-            $expectedNewSubfileTypeLowBits = $subfileTypeEntry->value - 1;
-            $actualNewSubfileTypeLowBits   = $newSubfileTypeEntry->value & 0b11;
+            $photometricEntry = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+            $photometricCode  = (($photometricEntry instanceof IfdEntry) && is_int($photometricEntry->value))
+                ? $photometricEntry->value
+                : null;
 
-            if ($actualNewSubfileTypeLowBits !== $expectedNewSubfileTypeLowBits) {
+            if ($photometricCode !== 4) {
                 throw new ParseError(
                     sprintf(
-                        'SubfileType %d conflicts with NewSubfileType %d.',
-                        $subfileTypeEntry->value,
-                        $newSubfileTypeEntry->value,
+                        'NewSubfileType transparency-mask bit requires PhotometricInterpretation=4, got %s.',
+                        $photometricCode !== null ? (string) $photometricCode : 'missing',
                     ),
-                    1793,
+                    1790,
                 );
             }
         }
+    }
 
+    /**
+     * Validates SubfileType (deprecated) field type and value domain.
+     *
+     * TIFF 6.0:
+     * - SubfileType (deprecated): SHORT[1], value domain 1..3.
+     */
+    private function validateSubfileTypeEntry(IfdEntry $subfileTypeEntry): void
+    {
+        if (
+            ($subfileTypeEntry->type !== TiffConst::TYPE_SHORT)
+            || ($subfileTypeEntry->count !== 1)
+            || !is_int($subfileTypeEntry->value)
+        ) {
+            throw new ParseError('SubfileType must be SHORT[1].', 1791);
+        }
+
+        if (($subfileTypeEntry->value < 1) || ($subfileTypeEntry->value > 3)) {
+            throw new ParseError(
+                sprintf(
+                    'SubfileType value %d is invalid; allowed values are 1..3.',
+                    $subfileTypeEntry->value,
+                ),
+                1792,
+            );
+        }
+    }
+
+    /**
+     * Validates NewSubfileType and SubfileType low-bit consistency.
+     *
+     * TIFF 6.0:
+     * - When both NewSubfileType and SubfileType are present, the low two bits
+     *   of NewSubfileType must equal (SubfileType - 1).
+     */
+    private function validateSubfileTypeConsistency(
+        ?IfdEntry $newSubfileTypeEntry,
+        ?IfdEntry $subfileTypeEntry,
+        bool $strictTiffNewSubfileType,
+    ): void {
+        if (
+            !$strictTiffNewSubfileType
+            || (!$newSubfileTypeEntry instanceof IfdEntry)
+            || (!$subfileTypeEntry instanceof IfdEntry)
+            || !is_int($newSubfileTypeEntry->value)
+            || !is_int($subfileTypeEntry->value)
+            || in_array($newSubfileTypeEntry->value, [8, 9, 16, 65540], true)
+        ) {
+            return;
+        }
+
+        $expectedNewSubfileTypeLowBits = $subfileTypeEntry->value - 1;
+        $actualNewSubfileTypeLowBits   = $newSubfileTypeEntry->value & 0b11;
+
+        if ($actualNewSubfileTypeLowBits !== $expectedNewSubfileTypeLowBits) {
+            throw new ParseError(
+                sprintf(
+                    'SubfileType %d conflicts with NewSubfileType %d.',
+                    $subfileTypeEntry->value,
+                    $newSubfileTypeEntry->value,
+                ),
+                1793,
+            );
+        }
+    }
+
+    /**
+     * Validates PageNumber field type, component count and index/total semantics.
+     *
+     * TIFF 6.0:
+     * - PageNumber: SHORT[2], pageIndex < totalPages when totalPages != 0.
+     */
+    private function validatePageNumberEntry(Ifd $ifd): void
+    {
         $pageNumberEntry = $ifd->get(TiffTag::PAGE_NUMBER);
 
         if (!$pageNumberEntry instanceof IfdEntry) {
@@ -3329,72 +3390,117 @@ final class TiffExifParser implements TiffExifParserInterface
             $samplesPerPixel = $samplesEntry->value;
         }
 
-        $sampleFormats = null;
+        $sampleFormats = ($sampleFormatEntry instanceof IfdEntry)
+            ? $this->validateSampleFormatEntry($sampleFormatEntry, $samplesPerPixel)
+            : null;
 
-        if ($sampleFormatEntry instanceof IfdEntry) {
-            if ($sampleFormatEntry->type !== TiffConst::TYPE_SHORT) {
-                throw new ParseError('SampleFormat must use SHORT type.', 1756);
-            }
+        $sMinValues = ($sMinEntry instanceof IfdEntry)
+            ? $this->validateSampleBoundEntry($sMinEntry, 'SMinSampleValue', $samplesPerPixel, 1759)
+            : null;
 
-            if ($sampleFormatEntry->count !== $samplesPerPixel) {
+        $sMaxValues = ($sMaxEntry instanceof IfdEntry)
+            ? $this->validateSampleBoundEntry($sMaxEntry, 'SMaxSampleValue', $samplesPerPixel, 1760)
+            : null;
+
+        $this->validateSampleDomainCrossConstraints(
+            $sampleFormats,
+            $sMinEntry instanceof IfdEntry ? $sMinEntry : null,
+            $sMaxEntry instanceof IfdEntry ? $sMaxEntry : null,
+            $sMinValues,
+            $sMaxValues,
+        );
+    }
+
+    /**
+     * Validates SampleFormat field type, count against SamplesPerPixel and value domain.
+     *
+     * TIFF 6.0 §19:
+     * - SampleFormat: SHORT[SamplesPerPixel], values {1,2,3,4}.
+     *
+     * @return list<int>
+     */
+    private function validateSampleFormatEntry(IfdEntry $sampleFormatEntry, int $samplesPerPixel): array
+    {
+        if ($sampleFormatEntry->type !== TiffConst::TYPE_SHORT) {
+            throw new ParseError('SampleFormat must use SHORT type.', 1756);
+        }
+
+        if ($sampleFormatEntry->count !== $samplesPerPixel) {
+            throw new ParseError(
+                sprintf(
+                    'SampleFormat count %d must match SamplesPerPixel %d.',
+                    $sampleFormatEntry->count,
+                    $samplesPerPixel,
+                ),
+                1757,
+            );
+        }
+
+        $sampleFormats = $this->extractIntegerTagComponents($sampleFormatEntry, 'SampleFormat');
+
+        foreach ($sampleFormats as $componentIndex => $sampleFormat) {
+            if (!in_array($sampleFormat, [1, 2, 3, 4], true)) {
                 throw new ParseError(
                     sprintf(
-                        'SampleFormat count %d must match SamplesPerPixel %d.',
-                        $sampleFormatEntry->count,
-                        $samplesPerPixel,
+                        'SampleFormat component %d value %d is invalid; allowed values are 1,2,3,4.',
+                        $componentIndex,
+                        $sampleFormat,
                     ),
-                    1757,
+                    1758,
                 );
-            }
-
-            $sampleFormats = $this->extractIntegerTagComponents($sampleFormatEntry, 'SampleFormat');
-
-            foreach ($sampleFormats as $componentIndex => $sampleFormat) {
-                if (!in_array($sampleFormat, [1, 2, 3, 4], true)) {
-                    throw new ParseError(
-                        sprintf(
-                            'SampleFormat component %d value %d is invalid; allowed values are 1,2,3,4.',
-                            $componentIndex,
-                            $sampleFormat,
-                        ),
-                        1758,
-                    );
-                }
             }
         }
 
-        $sMinValues = null;
-        if ($sMinEntry instanceof IfdEntry) {
-            if ($sMinEntry->count !== $samplesPerPixel) {
-                throw new ParseError(
-                    sprintf(
-                        'SMinSampleValue count %d must match SamplesPerPixel %d.',
-                        $sMinEntry->count,
-                        $samplesPerPixel,
-                    ),
-                    1759,
-                );
-            }
+        return $sampleFormats;
+    }
 
-            $sMinValues = $this->extractNumericTagComponents($sMinEntry, 'SMinSampleValue');
+    /**
+     * Validates SMinSampleValue or SMaxSampleValue count and extracts numeric components.
+     *
+     * TIFF 6.0 §19:
+     * - SMinSampleValue/SMaxSampleValue: count = SamplesPerPixel.
+     *
+     * @return list<int|float>
+     */
+    private function validateSampleBoundEntry(
+        IfdEntry $entry,
+        string $tagName,
+        int $samplesPerPixel,
+        int $errorCode,
+    ): array {
+        if ($entry->count !== $samplesPerPixel) {
+            throw new ParseError(
+                sprintf(
+                    '%s count %d must match SamplesPerPixel %d.',
+                    $tagName,
+                    $entry->count,
+                    $samplesPerPixel,
+                ),
+                $errorCode,
+            );
         }
 
-        $sMaxValues = null;
-        if ($sMaxEntry instanceof IfdEntry) {
-            if ($sMaxEntry->count !== $samplesPerPixel) {
-                throw new ParseError(
-                    sprintf(
-                        'SMaxSampleValue count %d must match SamplesPerPixel %d.',
-                        $sMaxEntry->count,
-                        $samplesPerPixel,
-                    ),
-                    1760,
-                );
-            }
+        return $this->extractNumericTagComponents($entry, $tagName);
+    }
 
-            $sMaxValues = $this->extractNumericTagComponents($sMaxEntry, 'SMaxSampleValue');
-        }
-
+    /**
+     * Cross-validates SampleFormat type compatibility and SMin <= SMax ordering.
+     *
+     * TIFF 6.0 §19:
+     * - SMin/SMax types should match the declared sample representation.
+     * - Per component, SMin must not exceed SMax.
+     *
+     * @param list<int>|null       $sampleFormats
+     * @param list<int|float>|null $sMinValues
+     * @param list<int|float>|null $sMaxValues
+     */
+    private function validateSampleDomainCrossConstraints(
+        ?array $sampleFormats,
+        ?IfdEntry $sMinEntry,
+        ?IfdEntry $sMaxEntry,
+        ?array $sMinValues,
+        ?array $sMaxValues,
+    ): void {
         if ($sampleFormats !== null && ($sMinEntry instanceof IfdEntry)) {
             $this->validateSampleDomainTypeCompatibility('SMinSampleValue', $sMinEntry->type, $sampleFormats);
         }
@@ -3955,6 +4061,22 @@ final class TiffExifParser implements TiffExifParserInterface
             return;
         }
 
+        $samplesPerPixel = $this->validateDotRangeTypeAndCount($ifd, $dotRangeEntry);
+        $dotRangeValues  = $this->extractDotRangeValues($dotRangeEntry);
+        $bitDepths       = $this->extractDotRangeBitDepths($ifd, $samplesPerPixel);
+
+        $this->validateDotRangePairs($dotRangeEntry->count, $dotRangeValues, $bitDepths);
+    }
+
+    /**
+     * Validates DotRange field type, resolves SamplesPerPixel and checks count.
+     *
+     * TIFF 6.0 §16 (Tag 336 / DotRange):
+     * - Type must be BYTE or SHORT.
+     * - Count must be 2 or 2*SamplesPerPixel.
+     */
+    private function validateDotRangeTypeAndCount(Ifd $ifd, IfdEntry $dotRangeEntry): int
+    {
         if (($dotRangeEntry->type !== TiffConst::TYPE_BYTE) && ($dotRangeEntry->type !== TiffConst::TYPE_SHORT)) {
             throw new ParseError(
                 sprintf(
@@ -3988,6 +4110,19 @@ final class TiffExifParser implements TiffExifParserInterface
             );
         }
 
+        return $samplesPerPixel;
+    }
+
+    /**
+     * Extracts and validates integer DotRange values from the IFD entry payload.
+     *
+     * TIFF 6.0 §16 (Tag 336 / DotRange):
+     * - Values are integer (black, white) pairs.
+     *
+     * @return list<int>
+     */
+    private function extractDotRangeValues(IfdEntry $dotRangeEntry): array
+    {
         $dotRangeValues = [];
 
         if (is_int($dotRangeEntry->value)) {
@@ -4015,6 +4150,19 @@ final class TiffExifParser implements TiffExifParserInterface
             );
         }
 
+        return $dotRangeValues;
+    }
+
+    /**
+     * Extracts BitsPerSample bit-depth array for DotRange bound checking.
+     *
+     * TIFF 6.0 §16 (Tag 336 / DotRange):
+     * - Values must be within [0, (2^BitsPerSample)-1].
+     *
+     * @return list<int>
+     */
+    private function extractDotRangeBitDepths(Ifd $ifd, int $samplesPerPixel): array
+    {
         $bitsEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
         if (!$bitsEntry instanceof IfdEntry) {
             throw new ParseError('DotRange validation requires BitsPerSample to be present.', 1722);
@@ -4051,9 +4199,24 @@ final class TiffExifParser implements TiffExifParserInterface
             );
         }
 
-        $pairCount = intdiv($dotRangeEntry->count, 2);
+        return $bitDepths;
+    }
+
+    /**
+     * Validates DotRange (black, white) pairs against bit-depth bounds.
+     *
+     * TIFF 6.0 §16 (Tag 336 / DotRange):
+     * - Values are (black, white) pairs with black < white.
+     * - Values must be within [0, (2^BitsPerSample)-1].
+     *
+     * @param list<int> $dotRangeValues
+     * @param list<int> $bitDepths
+     */
+    private function validateDotRangePairs(int $dotRangeCount, array $dotRangeValues, array $bitDepths): void
+    {
+        $pairCount = intdiv($dotRangeCount, 2);
         for ($pairIndex = 0; $pairIndex < $pairCount; ++$pairIndex) {
-            $componentIndex = $dotRangeEntry->count === 2 ? 0 : $pairIndex;
+            $componentIndex = $dotRangeCount === 2 ? 0 : $pairIndex;
             $bitDepth       = $bitDepths[$componentIndex];
 
             if ($bitDepth <= 0) {
@@ -4063,47 +4226,62 @@ final class TiffExifParser implements TiffExifParserInterface
                 );
             }
 
-            $maxValue = (2 ** $bitDepth) - 1;
-            $black    = $dotRangeValues[$pairIndex * 2];
-            $white    = $dotRangeValues[($pairIndex * 2) + 1];
+            $this->validateDotRangePairBounds(
+                $pairIndex,
+                $dotRangeValues[$pairIndex * 2],
+                $dotRangeValues[($pairIndex * 2) + 1],
+                $bitDepth,
+            );
+        }
+    }
 
-            if ($black >= $white) {
-                throw new ParseError(
-                    sprintf(
-                        'DotRange pair index %d requires black < white, got %d >= %d.',
-                        $pairIndex,
-                        $black,
-                        $white,
-                    ),
-                    1726,
-                );
-            }
+    /**
+     * Validates a single DotRange (black, white) pair ordering and bit-depth bounds.
+     *
+     * TIFF 6.0 §16 (Tag 336 / DotRange):
+     * - Each pair must satisfy black < white.
+     * - Both values must be within [0, (2^BitsPerSample)-1].
+     */
+    private function validateDotRangePairBounds(int $pairIndex, int $black, int $white, int $bitDepth): void
+    {
+        $maxValue = (2 ** $bitDepth) - 1;
 
-            if (($black < 0) || ($black > $maxValue)) {
-                throw new ParseError(
-                    sprintf(
-                        'DotRange pair index %d black value %d exceeds max %d (BitsPerSample=%d).',
-                        $pairIndex,
-                        $black,
-                        $maxValue,
-                        $bitDepth,
-                    ),
-                    1727,
-                );
-            }
+        if ($black >= $white) {
+            throw new ParseError(
+                sprintf(
+                    'DotRange pair index %d requires black < white, got %d >= %d.',
+                    $pairIndex,
+                    $black,
+                    $white,
+                ),
+                1726,
+            );
+        }
 
-            if (($white < 0) || ($white > $maxValue)) {
-                throw new ParseError(
-                    sprintf(
-                        'DotRange pair index %d white value %d exceeds max %d (BitsPerSample=%d).',
-                        $pairIndex,
-                        $white,
-                        $maxValue,
-                        $bitDepth,
-                    ),
-                    1728,
-                );
-            }
+        if (($black < 0) || ($black > $maxValue)) {
+            throw new ParseError(
+                sprintf(
+                    'DotRange pair index %d black value %d exceeds max %d (BitsPerSample=%d).',
+                    $pairIndex,
+                    $black,
+                    $maxValue,
+                    $bitDepth,
+                ),
+                1727,
+            );
+        }
+
+        if (($white < 0) || ($white > $maxValue)) {
+            throw new ParseError(
+                sprintf(
+                    'DotRange pair index %d white value %d exceeds max %d (BitsPerSample=%d).',
+                    $pairIndex,
+                    $white,
+                    $maxValue,
+                    $bitDepth,
+                ),
+                1728,
+            );
         }
     }
 
@@ -4912,6 +5090,28 @@ final class TiffExifParser implements TiffExifParserInterface
             return;
         }
 
+        $this->validateTileStripExclusion($ifd0);
+
+        [$tileWidth, $tileLength] = $this->validateTileDimensions($tileWidthEntry, $tileLengthEntry);
+
+        if (!$tileOffsetsEntry instanceof IfdEntry || !$tileByteCountsEntry instanceof IfdEntry) {
+            throw new ParseError(
+                'TileOffsets and TileByteCounts must both be present for tiled image layout.',
+                1699,
+            );
+        }
+
+        $this->validateTileCountArrays($ifd0, $tileWidth, $tileLength, $tileOffsetsEntry, $tileByteCountsEntry);
+    }
+
+    /**
+     * Rejects IFDs that mix strip and tile layout tags.
+     *
+     * TIFF 6.0 requires a single image organization per IFD: either strip-based
+     * or tile-based, never both.
+     */
+    private function validateTileStripExclusion(Ifd $ifd0): void
+    {
         $hasStripFields = ($ifd0->get(ExifTag::ROWS_PER_STRIP) instanceof IfdEntry)
             || ($ifd0->get(ExifTag::STRIP_OFFSETS) instanceof IfdEntry)
             || ($ifd0->get(ExifTag::STRIP_BYTE_COUNTS) instanceof IfdEntry);
@@ -4922,7 +5122,18 @@ final class TiffExifParser implements TiffExifParserInterface
                 1694,
             );
         }
+    }
 
+    /**
+     * Validates TileWidth/TileLength presence, positivity and mod-16 constraint.
+     *
+     * TIFF 6.0 tiled images require TileWidth and TileLength to be positive
+     * integer multiples of 16.
+     *
+     * @return array{0: int, 1: int} Validated tile width and tile length.
+     */
+    private function validateTileDimensions(?IfdEntry $tileWidthEntry, ?IfdEntry $tileLengthEntry): array
+    {
         if (
             !$tileWidthEntry instanceof IfdEntry
             || !is_int($tileWidthEntry->value)
@@ -4953,13 +5164,23 @@ final class TiffExifParser implements TiffExifParserInterface
             );
         }
 
-        if (!$tileOffsetsEntry instanceof IfdEntry || !$tileByteCountsEntry instanceof IfdEntry) {
-            throw new ParseError(
-                'TileOffsets and TileByteCounts must both be present for tiled image layout.',
-                1699,
-            );
-        }
+        return [$tileWidthEntry->value, $tileLengthEntry->value];
+    }
 
+    /**
+     * Validates TileOffsets/TileByteCounts array sizes against computed TilesPerImage.
+     *
+     * TIFF 6.0 tiled images require tile offset/byte-count arrays sized to
+     * TilesPerImage. For planar separate images (PlanarConfiguration=2),
+     * counts are multiplied by SamplesPerPixel.
+     */
+    private function validateTileCountArrays(
+        Ifd $ifd0,
+        int $tileWidth,
+        int $tileLength,
+        IfdEntry $tileOffsetsEntry,
+        IfdEntry $tileByteCountsEntry,
+    ): void {
         $imageWidthEntry  = $ifd0->get(ExifTag::IMAGE_WIDTH);
         $imageLengthEntry = $ifd0->get(ExifTag::IMAGE_LENGTH);
         if (
@@ -4973,14 +5194,8 @@ final class TiffExifParser implements TiffExifParserInterface
             return;
         }
 
-        $tilesAcross = intdiv(
-            $imageWidthEntry->value + $tileWidthEntry->value - 1,
-            $tileWidthEntry->value,
-        );
-        $tilesDown = intdiv(
-            $imageLengthEntry->value + $tileLengthEntry->value - 1,
-            $tileLengthEntry->value,
-        );
+        $tilesAcross = intdiv($imageWidthEntry->value + $tileWidth - 1, $tileWidth);
+        $tilesDown   = intdiv($imageLengthEntry->value + $tileLength - 1, $tileLength);
 
         $tilesPerImage = $tilesAcross * $tilesDown;
 
@@ -5001,6 +5216,30 @@ final class TiffExifParser implements TiffExifParserInterface
             $expectedCount *= $samplesPerPixel;
         }
 
+        $this->validateTileOffsetAndByteCountSizes(
+            $tileOffsetsEntry,
+            $tileByteCountsEntry,
+            $expectedCount,
+            $tilesAcross,
+            $tilesDown,
+            $planarConfiguration,
+        );
+    }
+
+    /**
+     * Validates TileOffsets/TileByteCounts array sizes and data ranges.
+     *
+     * TIFF 6.0 tiled images require tile offset/byte-count arrays sized
+     * to TilesPerImage (adjusted for PlanarConfiguration=2).
+     */
+    private function validateTileOffsetAndByteCountSizes(
+        IfdEntry $tileOffsetsEntry,
+        IfdEntry $tileByteCountsEntry,
+        int $expectedCount,
+        int $tilesAcross,
+        int $tilesDown,
+        int $planarConfiguration,
+    ): void {
         $offsetCount = $this->countStripFieldValues($tileOffsetsEntry);
         if ($offsetCount !== $expectedCount) {
             throw new ParseError(
@@ -9464,6 +9703,30 @@ final class TiffExifParser implements TiffExifParserInterface
             $samplesPerPixel = $samplesEntry->value;
         }
 
+        [$repeatRows, $repeatCols] = $this->validateDngBlackLevelRepeatDimAndLevel(
+            $ifd,
+            $samplesPerPixel,
+        );
+
+        [$activeWidth, $activeLength] = $this->resolveDngActiveAreaDimensions($ifd);
+
+        $this->validateDngBlackLevelDeltas($ifd, $activeWidth, $activeLength);
+        $this->validateDngWhiteLevel($ifd, $samplesPerPixel);
+    }
+
+    /**
+     * Validates BlackLevelRepeatDim and BlackLevel type/count constraints.
+     *
+     * DNG 1.7.1.0:
+     * - BlackLevelRepeatDim: SHORT[2], both values positive.
+     * - BlackLevel: SHORT|LONG|RATIONAL, count = rows * cols * SamplesPerPixel.
+     *
+     * @return array{0: int|null, 1: int|null} Repeat rows and columns (null when absent).
+     */
+    private function validateDngBlackLevelRepeatDimAndLevel(
+        Ifd $ifd,
+        ?int $samplesPerPixel,
+    ): array {
         $repeatRows = null;
         $repeatCols = null;
         $repeatDim  = $ifd->get(DngTag::BLACK_LEVEL_REPEAT_DIM);
@@ -9483,42 +9746,72 @@ final class TiffExifParser implements TiffExifParserInterface
             [$repeatRows, $repeatCols] = $this->extractDngPositivePairFromNumericList($repeatDim, 'BlackLevelRepeatDim');
         }
 
-        $blackLevel = $ifd->get(DngTag::BLACK_LEVEL);
-        if ($blackLevel instanceof IfdEntry) {
-            if (
-                !in_array(
-                    $blackLevel->type,
-                    [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_RATIONAL],
-                    true,
-                )
-            ) {
-                throw new ParseError(
-                    sprintf(
-                        'BlackLevel must be SHORT|LONG|RATIONAL, got type %d.',
-                        $blackLevel->type,
-                    ),
-                    1615,
-                );
-            }
+        $this->validateDngBlackLevelEntry($ifd, $repeatRows, $repeatCols, $samplesPerPixel);
 
-            if (($repeatRows !== null) && ($repeatCols !== null) && ($samplesPerPixel !== null)) {
-                $expectedCount = $repeatRows * $repeatCols * $samplesPerPixel;
-                if ($blackLevel->count !== $expectedCount) {
-                    throw new ParseError(
-                        sprintf(
-                            'BlackLevel count %d does not match expected %d (rows=%d, cols=%d, SamplesPerPixel=%d).',
-                            $blackLevel->count,
-                            $expectedCount,
-                            $repeatRows,
-                            $repeatCols,
-                            $samplesPerPixel,
-                        ),
-                        1616,
-                    );
-                }
-            }
+        return [$repeatRows, $repeatCols];
+    }
+
+    /**
+     * Validates BlackLevel type and count against RepeatDim and SamplesPerPixel.
+     *
+     * DNG 1.7.1.0:
+     * - BlackLevel: SHORT|LONG|RATIONAL, count = rows * cols * SamplesPerPixel.
+     */
+    private function validateDngBlackLevelEntry(
+        Ifd $ifd,
+        ?int $repeatRows,
+        ?int $repeatCols,
+        ?int $samplesPerPixel,
+    ): void {
+        $blackLevel = $ifd->get(DngTag::BLACK_LEVEL);
+        if (!$blackLevel instanceof IfdEntry) {
+            return;
         }
 
+        if (
+            !in_array(
+                $blackLevel->type,
+                [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_RATIONAL],
+                true,
+            )
+        ) {
+            throw new ParseError(
+                sprintf(
+                    'BlackLevel must be SHORT|LONG|RATIONAL, got type %d.',
+                    $blackLevel->type,
+                ),
+                1615,
+            );
+        }
+
+        if (($repeatRows !== null) && ($repeatCols !== null) && ($samplesPerPixel !== null)) {
+            $expectedCount = $repeatRows * $repeatCols * $samplesPerPixel;
+            if ($blackLevel->count !== $expectedCount) {
+                throw new ParseError(
+                    sprintf(
+                        'BlackLevel count %d does not match expected %d (rows=%d, cols=%d, SamplesPerPixel=%d).',
+                        $blackLevel->count,
+                        $expectedCount,
+                        $repeatRows,
+                        $repeatCols,
+                        $samplesPerPixel,
+                    ),
+                    1616,
+                );
+            }
+        }
+    }
+
+    /**
+     * Resolves ActiveArea dimensions for BlackLevelDelta count validation.
+     *
+     * DNG 1.7.1.0:
+     * - ActiveArea: SHORT|LONG[4] rectangle (top, left, bottom, right).
+     *
+     * @return array{0: int|null, 1: int|null} Active width and length (null when absent/unusable).
+     */
+    private function resolveDngActiveAreaDimensions(Ifd $ifd): array
+    {
         $activeWidth  = null;
         $activeLength = null;
         $activeArea   = $ifd->get(DngTag::ACTIVE_AREA);
@@ -9535,76 +9828,117 @@ final class TiffExifParser implements TiffExifParserInterface
             }
         }
 
+        return [$activeWidth, $activeLength];
+    }
+
+    /**
+     * Validates BlackLevelDeltaH and BlackLevelDeltaV type and count constraints.
+     *
+     * DNG 1.7.1.0:
+     * - BlackLevelDeltaH: SRATIONAL, count = ActiveArea width.
+     * - BlackLevelDeltaV: SRATIONAL, count = ActiveArea length.
+     */
+    private function validateDngBlackLevelDeltas(
+        Ifd $ifd,
+        ?int $activeWidth,
+        ?int $activeLength,
+    ): void {
         $blackLevelDeltaH = $ifd->get(DngTag::BLACK_LEVEL_DELTA_H);
         if ($blackLevelDeltaH instanceof IfdEntry) {
-            if ($blackLevelDeltaH->type !== TiffConst::TYPE_SRATIONAL) {
-                throw new ParseError(
-                    sprintf(
-                        'BlackLevelDeltaH must be SRATIONAL, got type %d.',
-                        $blackLevelDeltaH->type,
-                    ),
-                    1617,
-                );
-            }
-
-            if (($activeWidth !== null) && ($blackLevelDeltaH->count !== $activeWidth)) {
-                throw new ParseError(
-                    sprintf(
-                        'BlackLevelDeltaH count %d does not match ActiveArea width %d.',
-                        $blackLevelDeltaH->count,
-                        $activeWidth,
-                    ),
-                    1618,
-                );
-            }
+            $this->validateDngBlackLevelDeltaEntry(
+                $blackLevelDeltaH,
+                'BlackLevelDeltaH',
+                $activeWidth,
+                'ActiveArea width',
+                1617,
+                1618,
+            );
         }
 
         $blackLevelDeltaV = $ifd->get(DngTag::BLACK_LEVEL_DELTA_V);
         if ($blackLevelDeltaV instanceof IfdEntry) {
-            if ($blackLevelDeltaV->type !== TiffConst::TYPE_SRATIONAL) {
-                throw new ParseError(
-                    sprintf(
-                        'BlackLevelDeltaV must be SRATIONAL, got type %d.',
-                        $blackLevelDeltaV->type,
-                    ),
-                    1619,
-                );
-            }
+            $this->validateDngBlackLevelDeltaEntry(
+                $blackLevelDeltaV,
+                'BlackLevelDeltaV',
+                $activeLength,
+                'ActiveArea length',
+                1619,
+                1620,
+            );
+        }
+    }
 
-            if (($activeLength !== null) && ($blackLevelDeltaV->count !== $activeLength)) {
-                throw new ParseError(
-                    sprintf(
-                        'BlackLevelDeltaV count %d does not match ActiveArea length %d.',
-                        $blackLevelDeltaV->count,
-                        $activeLength,
-                    ),
-                    1620,
-                );
-            }
+    /**
+     * Validates a single BlackLevelDelta entry type and count against an ActiveArea dimension.
+     *
+     * DNG 1.7.1.0:
+     * - BlackLevelDeltaH/V: SRATIONAL, count = ActiveArea width/length.
+     */
+    private function validateDngBlackLevelDeltaEntry(
+        IfdEntry $entry,
+        string $tagName,
+        ?int $expectedCount,
+        string $dimensionName,
+        int $typeErrorCode,
+        int $countErrorCode,
+    ): void {
+        if ($entry->type !== TiffConst::TYPE_SRATIONAL) {
+            throw new ParseError(
+                sprintf(
+                    '%s must be SRATIONAL, got type %d.',
+                    $tagName,
+                    $entry->type,
+                ),
+                $typeErrorCode,
+            );
         }
 
-        $whiteLevel = $ifd->get(DngTag::WHITE_LEVEL);
-        if ($whiteLevel instanceof IfdEntry) {
-            if (!in_array($whiteLevel->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)) {
-                throw new ParseError(
-                    sprintf(
-                        'WhiteLevel must be SHORT|LONG, got type %d.',
-                        $whiteLevel->type,
-                    ),
-                    1621,
-                );
-            }
+        if (($expectedCount !== null) && ($entry->count !== $expectedCount)) {
+            throw new ParseError(
+                sprintf(
+                    '%s count %d does not match %s %d.',
+                    $tagName,
+                    $entry->count,
+                    $dimensionName,
+                    $expectedCount,
+                ),
+                $countErrorCode,
+            );
+        }
+    }
 
-            if (($samplesPerPixel !== null) && ($whiteLevel->count !== $samplesPerPixel)) {
-                throw new ParseError(
-                    sprintf(
-                        'WhiteLevel count %d does not match SamplesPerPixel %d.',
-                        $whiteLevel->count,
-                        $samplesPerPixel,
-                    ),
-                    1622,
-                );
-            }
+    /**
+     * Validates WhiteLevel type and count against SamplesPerPixel.
+     *
+     * DNG 1.7.1.0:
+     * - WhiteLevel: SHORT|LONG, count = SamplesPerPixel.
+     */
+    private function validateDngWhiteLevel(Ifd $ifd, ?int $samplesPerPixel): void
+    {
+        $whiteLevel = $ifd->get(DngTag::WHITE_LEVEL);
+        if (!$whiteLevel instanceof IfdEntry) {
+            return;
+        }
+
+        if (!in_array($whiteLevel->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)) {
+            throw new ParseError(
+                sprintf(
+                    'WhiteLevel must be SHORT|LONG, got type %d.',
+                    $whiteLevel->type,
+                ),
+                1621,
+            );
+        }
+
+        if (($samplesPerPixel !== null) && ($whiteLevel->count !== $samplesPerPixel)) {
+            throw new ParseError(
+                sprintf(
+                    'WhiteLevel count %d does not match SamplesPerPixel %d.',
+                    $whiteLevel->count,
+                    $samplesPerPixel,
+                ),
+                1622,
+            );
         }
     }
 
@@ -10170,93 +10504,133 @@ final class TiffExifParser implements TiffExifParserInterface
 
             /** @var IfdEntry $iccEntry */
             /** @var IfdEntry $matrixEntry */
-            if (
-                ($iccEntry->type !== TiffConst::TYPE_UNDEFINED)
-                || ($iccEntry->count < 1)
-                || !is_string($iccEntry->value)
-                || (strlen($iccEntry->value) !== $iccEntry->count)
-            ) {
+            $this->validateDngIccPayloadEntry($iccEntry, $pair['iccName'], $iccParser);
+            $this->validateDngPreProfileMatrixEntry($matrixEntry, $pair['matrixName'], $colorPlanes);
+        }
+    }
+
+    /**
+     * Validates a single DNG ICC profile payload entry (type, length and ICC structure).
+     *
+     * DNG 1.7.1.0:
+     * - ICC payload tags must be UNDEFINED and structurally valid ICC blobs.
+     */
+    private function validateDngIccPayloadEntry(
+        IfdEntry $iccEntry,
+        string $iccName,
+        IccParser $iccParser,
+    ): void {
+        if (
+            ($iccEntry->type !== TiffConst::TYPE_UNDEFINED)
+            || ($iccEntry->count < 1)
+            || !is_string($iccEntry->value)
+            || (strlen($iccEntry->value) !== $iccEntry->count)
+        ) {
+            throw new ParseError(
+                sprintf(
+                    '%s must be UNDEFINED with byte-count matching payload length, got type %d count %d.',
+                    $iccName,
+                    $iccEntry->type,
+                    $iccEntry->count,
+                ),
+                1677,
+            );
+        }
+
+        try {
+            $iccParser->decode($iccEntry->value);
+        } catch (ParseError $exception) {
+            throw new ParseError(
+                sprintf('%s payload is not a valid ICC profile: %s', $iccName, $exception->getMessage()),
+                1678,
+            );
+        }
+    }
+
+    /**
+     * Validates a single DNG pre-profile matrix entry (type, count and component values).
+     *
+     * DNG 1.7.1.0:
+     * - Matrix tags must be SRATIONAL with count = (3 * ColorPlanes) or (ColorPlanes^2).
+     * - All components must have non-zero denominators and finite values.
+     */
+    private function validateDngPreProfileMatrixEntry(
+        IfdEntry $matrixEntry,
+        string $matrixName,
+        ?int $colorPlanes,
+    ): void {
+        if ($colorPlanes === null) {
+            throw new ParseError(
+                sprintf('%s requires resolvable ColorPlanes context.', $matrixName),
+                1679,
+            );
+        }
+
+        if (($matrixEntry->type !== TiffConst::TYPE_SRATIONAL) || ($matrixEntry->count < 1)) {
+            throw new ParseError(
+                sprintf(
+                    '%s must be SRATIONAL with positive count, got type %d count %d.',
+                    $matrixName,
+                    $matrixEntry->type,
+                    $matrixEntry->count,
+                ),
+                1680,
+            );
+        }
+
+        $count3n = $colorPlanes * 3;
+        $countNn = $colorPlanes * $colorPlanes;
+
+        if (($matrixEntry->count !== $count3n) && ($matrixEntry->count !== $countNn)) {
+            throw new ParseError(
+                sprintf(
+                    '%s count %d must be 3*ColorPlanes (%d) or ColorPlanes^2 (%d).',
+                    $matrixName,
+                    $matrixEntry->count,
+                    $count3n,
+                    $countNn,
+                ),
+                1681,
+            );
+        }
+
+        $this->validateDngPreProfileMatrixComponents($matrixEntry, $matrixName);
+    }
+
+    /**
+     * Validates DNG pre-profile matrix SRATIONAL component list and finiteness.
+     *
+     * DNG 1.7.1.0:
+     * - All components must decode to SRATIONAL list.
+     * - Denominators must not be zero and values must be finite.
+     */
+    private function validateDngPreProfileMatrixComponents(IfdEntry $matrixEntry, string $matrixName): void
+    {
+        if (
+            !$matrixEntry->value instanceof ExifRationalList
+            || count($matrixEntry->value->values) !== $matrixEntry->count
+        ) {
+            throw new ParseError(
+                sprintf('%s must decode to SRATIONAL list with %d components.', $matrixName, $matrixEntry->count),
+                1682,
+            );
+        }
+
+        foreach ($matrixEntry->value->values as $index => $component) {
+            if ($component->denominator === 0) {
                 throw new ParseError(
-                    sprintf(
-                        '%s must be UNDEFINED with byte-count matching payload length, got type %d count %d.',
-                        $pair['iccName'],
-                        $iccEntry->type,
-                        $iccEntry->count,
-                    ),
-                    1677,
+                    sprintf('%s component %d denominator must not be zero.', $matrixName, $index),
+                    1683,
                 );
             }
 
-            try {
-                $iccParser->decode($iccEntry->value);
-            } catch (ParseError $exception) {
+            $value = $component->numerator / $component->denominator;
+
+            if (!is_finite($value)) {
                 throw new ParseError(
-                    sprintf('%s payload is not a valid ICC profile: %s', $pair['iccName'], $exception->getMessage()),
-                    1678,
+                    sprintf('%s component %d must be finite.', $matrixName, $index),
+                    1684,
                 );
-            }
-
-            if ($colorPlanes === null) {
-                throw new ParseError(
-                    sprintf('%s requires resolvable ColorPlanes context.', $pair['matrixName']),
-                    1679,
-                );
-            }
-
-            if (($matrixEntry->type !== TiffConst::TYPE_SRATIONAL) || ($matrixEntry->count < 1)) {
-                throw new ParseError(
-                    sprintf(
-                        '%s must be SRATIONAL with positive count, got type %d count %d.',
-                        $pair['matrixName'],
-                        $matrixEntry->type,
-                        $matrixEntry->count,
-                    ),
-                    1680,
-                );
-            }
-
-            $count3n = $colorPlanes * 3;
-            $countNn = $colorPlanes * $colorPlanes;
-
-            if (($matrixEntry->count !== $count3n) && ($matrixEntry->count !== $countNn)) {
-                throw new ParseError(
-                    sprintf(
-                        '%s count %d must be 3*ColorPlanes (%d) or ColorPlanes^2 (%d).',
-                        $pair['matrixName'],
-                        $matrixEntry->count,
-                        $count3n,
-                        $countNn,
-                    ),
-                    1681,
-                );
-            }
-
-            if (
-                !$matrixEntry->value instanceof ExifRationalList
-                || count($matrixEntry->value->values) !== $matrixEntry->count
-            ) {
-                throw new ParseError(
-                    sprintf('%s must decode to SRATIONAL list with %d components.', $pair['matrixName'], $matrixEntry->count),
-                    1682,
-                );
-            }
-
-            foreach ($matrixEntry->value->values as $index => $component) {
-                if ($component->denominator === 0) {
-                    throw new ParseError(
-                        sprintf('%s component %d denominator must not be zero.', $pair['matrixName'], $index),
-                        1683,
-                    );
-                }
-
-                $value = $component->numerator / $component->denominator;
-
-                if (!is_finite($value)) {
-                    throw new ParseError(
-                        sprintf('%s component %d must be finite.', $pair['matrixName'], $index),
-                        1684,
-                    );
-                }
             }
         }
     }
