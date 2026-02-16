@@ -91,15 +91,15 @@ final class TiffExifParser implements TiffExifParserInterface
      *
      * GH-1232: signed types (SSHORT, SLONG, SLONG8) are rejected because
      * TIFF 6.0 defines these tags as unsigned offset/count fields.
+     * GH-1233: IFD/IFD8 pointer types are rejected as they encode directory
+     * offsets, not storage layout descriptors.
      *
      * @var list<int>
      */
     private const array COUNTED_IMAGE_DATA_INTEGER_TYPES = [
         TiffConst::TYPE_SHORT,
         TiffConst::TYPE_LONG,
-        TiffConst::TYPE_IFD,
         TiffConst::TYPE_LONG8,
-        TiffConst::TYPE_IFD8,
     ];
 
     /**
@@ -5346,11 +5346,9 @@ final class TiffExifParser implements TiffExifParserInterface
 
             $value = match ($type) {
                 TiffConst::TYPE_SHORT => $this->unpackU16($chunk),
-                TiffConst::TYPE_LONG,
-                TiffConst::TYPE_IFD => $this->unpackU32($chunk),
-                TiffConst::TYPE_LONG8,
-                TiffConst::TYPE_IFD8 => $this->unpackU64($chunk),
-                default              => throw new ParseError('Unsupported numeric type for strip/tile field: ' . $type, 1327),
+                TiffConst::TYPE_LONG  => $this->unpackU32($chunk),
+                TiffConst::TYPE_LONG8 => $this->unpackU64($chunk),
+                default               => throw new ParseError('Unsupported numeric type for strip/tile field: ' . $type, 1327),
             };
 
             if ($value instanceof UInt64) {

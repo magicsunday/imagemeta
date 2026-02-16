@@ -268,6 +268,29 @@ final class TiffExifParserStripLayoutTest extends TestCase
     }
 
     /**
+     * Rejects StripByteCounts encoded with IFD pointer type.
+     */
+    #[Test]
+    public function rejectsStripByteCountsWithIfdType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1600);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildStripLayoutTiff(
+                imageLength: 10,
+                rowsPerStrip: 10,
+                stripOffsets: [512],
+                stripByteCounts: [120],
+                planarConfiguration: 1,
+                samplesPerPixel: null,
+                stripByteCountsType: TiffConst::TYPE_IFD,
+                padToStorageRanges: true,
+            ),
+        );
+    }
+
+    /**
      * Builds a classic TIFF with strip-layout tags in IFD0.
      *
      * @param int       $imageLength         Value for ImageLength (tag 0x0101).
@@ -387,7 +410,8 @@ final class TiffExifParserStripLayoutTest extends TestCase
                 TiffConst::TYPE_SHORT,
                 TiffConst::TYPE_SSHORT => pack('v', (int) $value),
                 TiffConst::TYPE_LONG,
-                TiffConst::TYPE_SLONG  => pack('V', (int) $value),
+                TiffConst::TYPE_SLONG,
+                TiffConst::TYPE_IFD    => pack('V', (int) $value),
                 TiffConst::TYPE_FLOAT  => pack('g', (float) $value),
                 TiffConst::TYPE_DOUBLE => pack('e', (float) $value),
                 default                => pack('V', (int) $value),
