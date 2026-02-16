@@ -1315,6 +1315,24 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Rejects IMA-ADPCM APP2 audio with non-empty payload and dwSampleLength=0.
+     *
+     * @return void
+     */
+    #[Test]
+    public function imaAdpcmAudioSegmentWithZeroSampleCountAndNonEmptyPayloadThrows(): void
+    {
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(2, 1, 8_000, 4, "\x01\x02\x03\x04", 0));
+        $jpeg    = $this->jpeg($payload);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+
+        $extractor->getAudioStreams();
+    }
+
+    /**
      * Splits an MPF payload across two APP2 segments.
      * This confirms the MPF parser receives a reassembled payload with expected entries.
      *

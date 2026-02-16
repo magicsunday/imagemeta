@@ -1925,6 +1925,11 @@ final class JpegParser implements JpegParserInterface
             }
         }
 
+        // GH-1235: non-empty IMA-ADPCM payload with dwSampleLength=0 is semantically inconsistent
+        if ($format === self::AUDIO_FORMAT_IMA_ADPCM && $sampleCount === 0 && $data !== '') {
+            throw new ParseError(sprintf('Audio segment at offset %d has non-empty IMA-ADPCM payload with zero sample count', $offset), 1280);
+        }
+
         $version = sprintf('%d.%02d', $major, $minor);
 
         $this->audioStreams[] = new JpegAudioStream(
