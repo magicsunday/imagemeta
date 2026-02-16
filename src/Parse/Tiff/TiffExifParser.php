@@ -1469,6 +1469,8 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->validateGpsReferenceTagLayouts($gpsIfd);
         $this->validateGpsCoordinateTagLayouts($gpsIfd);
 
+        $subIfds = $this->resolveSubIfds($ifd0);
+
         $additionalIfds = [];
         $visitedOffsets = [];
 
@@ -1664,6 +1666,7 @@ final class TiffExifParser implements TiffExifParserInterface
             $ifd1,
             $makerNotes,
             $additionalIfds,
+            $subIfds,
         );
 
         $this->validateCompositeImageDependencies($exifIfd, $parsedExif);
@@ -6227,6 +6230,77 @@ final class TiffExifParser implements TiffExifParserInterface
         $sign = 1 << ($bits - 1);
 
         return (($u & $sign) !== 0) ? $u - (1 << $bits) : $u;
+    }
+
+    /**
+     * Resolves SubIFD pointers (Tag 0x014A) from the given parent IFD.
+     *
+     * Reads each offset, parses it as an IFD, and returns an offset-indexed
+     * map. Cyclic references are detected via the readIfd() cache and the
+     * visited-offsets set.
+     *
+     * @return array<int, Ifd>
+     */
+    private function resolveSubIfds(Ifd $parentIfd): array
+    {
+        $entry = $parentIfd->get(TiffTag::SUB_IFDS);
+
+        if (!$entry instanceof IfdEntry) {
+            return [];
+        }
+
+        $offsets = $this->extractPointerOffsets($entry);
+        $result  = [];
+
+        foreach ($offsets as $offset) {
+            $result[$offset] = $this->readIfd($offset);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Extracts one or more pointer offsets from an IFD entry value.
+     *
+     * Handles scalar int, UInt64, float, and ExifNumericList (multi-offset).
+     *
+     * @return list<int>
+     */
+    private function extractPointerOffsets(IfdEntry $entry): array
+    {
+        $value = $entry->value;
+
+        if (is_int($value)) {
+            $offset = $this->validatePointerOffset($value, $entry->tag);
+
+            return $offset !== null ? [$offset] : [];
+        }
+
+        if ($value instanceof UInt64) {
+            if ($value->isZero()) {
+                return [];
+            }
+
+            return [$this->ensureOffset($value, sprintf('SubIFDs tag 0x%04X', $entry->tag))];
+        }
+
+        if ($value instanceof ExifNumericList) {
+            $offsets = [];
+            foreach ($value->values as $component) {
+                if (is_int($component)) {
+                    $offset = $this->validatePointerOffset($component, $entry->tag);
+                    if ($offset !== null) {
+                        $offsets[] = $offset;
+                    }
+                } elseif ($component instanceof UInt64 && !$component->isZero()) {
+                    $offsets[] = $this->ensureOffset($component, sprintf('SubIFDs tag 0x%04X', $entry->tag));
+                }
+            }
+
+            return $offsets;
+        }
+
+        return [];
     }
 
     /**

@@ -249,6 +249,15 @@ final readonly class TiffTag
     public const int TILE_BYTE_COUNTS = 0x0145;
 
     /**
+     * Offsets of child IFDs forming a SubIFD tree.
+     *
+     * TIFF Supplement 1 / DNG 1.7.1.0 defines SubIFDs for organizing
+     * reduced-resolution and alternate representation IFDs below a parent.
+     * Tag ID: 330 (0x014A), Type: LONG or IFD8 (BigTIFF), Count: N
+     */
+    public const int SUB_IFDS = 0x014A;
+
+    /**
      * Set of inks used in separated color image.
      *
      * TIFF 6.0 §16 defines InkSet for CMYK and multi-ink printing applications.
