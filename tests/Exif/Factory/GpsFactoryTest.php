@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
 use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
@@ -26,9 +27,12 @@ use MagicSunday\ImageMeta\Value\Enum\GpsMeasureMode;
 use MagicSunday\ImageMeta\Value\Enum\GpsSpeedRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsStatus;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function sprintf;
 use function strlen;
 
 /**
@@ -40,6 +44,7 @@ use function strlen;
  * @internal
  */
 #[CoversClass(GpsFactory::class)]
+#[UsesClass(XmpDocument::class)]
 final class GpsFactoryTest extends TestCase
 {
     /**
@@ -219,6 +224,74 @@ final class GpsFactoryTest extends TestCase
 
         self::assertSame('2023-06-15', $gps->date);
     }
+
+    /**
+     * XMP altitude with ref 3 (below sea level) yields negative altitude.
+     */
+    #[Test]
+    #[DataProvider('provideXmpNegativeAltitudeRefs')]
+    public function xmpAltitudeWithBelowRefYieldsNegative(int $ref): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSAltitude', self::NS_EXIF)    => '100.0',
+            sprintf('{%s}GPSAltitudeRef', self::NS_EXIF) => (string) $ref,
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertSame(-100.0, $gps->altitude);
+    }
+
+    /**
+     * @return iterable<string, array{0: int}>
+     */
+    public static function provideXmpNegativeAltitudeRefs(): iterable
+    {
+        yield 'ref 1 (below ellipsoidal)' => [1];
+        yield 'ref 3 (below sea level)' => [3];
+    }
+
+    /**
+     * XMP altitude with ref 0/2 (above) yields positive altitude.
+     */
+    #[Test]
+    #[DataProvider('provideXmpPositiveAltitudeRefs')]
+    public function xmpAltitudeWithAboveRefYieldsPositive(int $ref): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSAltitude', self::NS_EXIF)    => '100.0',
+            sprintf('{%s}GPSAltitudeRef', self::NS_EXIF) => (string) $ref,
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertSame(100.0, $gps->altitude);
+    }
+
+    /**
+     * @return iterable<string, array{0: int}>
+     */
+    public static function provideXmpPositiveAltitudeRefs(): iterable
+    {
+        yield 'ref 0 (above ellipsoidal)' => [0];
+        yield 'ref 2 (above sea level)' => [2];
+    }
+
+    private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     private function parsedExif(
         ?GpsLatLonRef $latRef,

@@ -217,7 +217,7 @@ final readonly class GpsFactory
                 $altRefXmp = $this->intValue($xmpDocument->int(self::NS_EXIF, 'GPSAltitudeRef'));
                 $altRef    = $altitudeRef ?? $altRefXmp;
 
-                if ($altRef === 1) {
+                if ($altRef === 1 || $altRef === 3) {
                     $altitudeXmp = -$altitudeXmp;
                 }
 
