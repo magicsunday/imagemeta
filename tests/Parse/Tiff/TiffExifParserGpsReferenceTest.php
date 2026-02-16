@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -48,17 +49,7 @@ final class TiffExifParserGpsReferenceTest extends TestCase
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob($this->buildGpsExample(Endian::Little));
 
-        $gps = $result->gps();
-
-        $expectedLatitude  = -1 * (12 + (34 / 60) + (5678 / 100 / 3600));
-        $expectedLongitude = -1 * (98 + (45 / 60) + (4321 / 100 / 3600));
-
-        self::assertSame('S', $gps['lat_ref']);
-        self::assertSame('W', $gps['lon_ref']);
-        self::assertEqualsWithDelta($expectedLatitude, $gps['lat'], 0.000001);
-        self::assertEqualsWithDelta($expectedLongitude, $gps['lon'], 0.000001);
-        self::assertSame(1, $gps['alt_ref']);
-        self::assertEqualsWithDelta(-5.5, $gps['alt'], 0.000001);
+        $this->assertSouthWestReferenceCoordinates($result->gps());
     }
 
     /**
@@ -78,6 +69,69 @@ final class TiffExifParserGpsReferenceTest extends TestCase
         self::assertSame('E', $gps['lon_ref']);
         self::assertEqualsWithDelta(90.0, $gps['lat'], 0.000001);
         self::assertEqualsWithDelta(180.0, $gps['lon'], 0.000001);
+    }
+
+    /**
+     * Accepts GPS reference tags encoded as ASCII[2] in the GPS IFD.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideGpsReferenceTags')]
+    public function acceptsGpsReferenceTagsWithAsciiCountTwo(int $tag, string $value, string $resultKey): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildClassicTiffWithSingleGpsEntry($tag, TiffConst::TYPE_ASCII, 2, $value . "\0"),
+        );
+
+        self::assertSame($value, $result->gps()[$resultKey]);
+    }
+
+    /**
+     * Rejects GPS reference tags encoded with non-ASCII TIFF type.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideGpsReferenceTags')]
+    public function rejectsGpsReferenceTagsWithWrongType(int $tag, string $value, string $_resultKey): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+        $this->expectExceptionMessage('must use TIFF type ASCII');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildClassicTiffWithSingleGpsEntry($tag, TiffConst::TYPE_BYTE, 2, $value . "\0"),
+        );
+    }
+
+    /**
+     * Rejects GPS reference tags encoded with wrong count.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideGpsReferenceTags')]
+    public function rejectsGpsReferenceTagsWithWrongCount(int $tag, string $value, string $_resultKey): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+        $this->expectExceptionMessage('must contain exactly 2 bytes');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildClassicTiffWithSingleGpsEntry($tag, TiffConst::TYPE_ASCII, 3, $value . "\0\0"),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{0:int,1:string,2:string}>
+     */
+    public static function provideGpsReferenceTags(): iterable
+    {
+        yield 'GPSLatitudeRef N' => [ExifTag::GPS_LATITUDE_REF, 'N', 'lat_ref'];
+        yield 'GPSLongitudeRef W' => [ExifTag::GPS_LONGITUDE_REF, 'W', 'lon_ref'];
+        yield 'GPSDestLatitudeRef S' => [ExifTag::GPS_DEST_LATITUDE_REF, 'S', 'dest_lat_ref'];
+        yield 'GPSDestLongitudeRef E' => [ExifTag::GPS_DEST_LONGITUDE_REF, 'E', 'dest_lon_ref'];
     }
 
     /**
@@ -189,8 +243,16 @@ final class TiffExifParserGpsReferenceTest extends TestCase
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob($this->buildBigTiffGpsExample(Endian::Little));
 
-        $gps = $result->gps();
+        $this->assertSouthWestReferenceCoordinates($result->gps());
+    }
 
+    /**
+     * Asserts signed S/W coordinate and altitude semantics for the synthetic GPS fixture.
+     *
+     * @param array<string, mixed> $gps
+     */
+    private function assertSouthWestReferenceCoordinates(array $gps): void
+    {
         $expectedLatitude  = -1 * (12 + (34 / 60) + (5678 / 100 / 3600));
         $expectedLongitude = -1 * (98 + (45 / 60) + (4321 / 100 / 3600));
 
@@ -387,23 +449,14 @@ final class TiffExifParserGpsReferenceTest extends TestCase
         return $header . $ifd0 . $gpsIfd . $gpsData;
     }
 
-    /**
-     * Builds a classic TIFF with GPS coordinates and explicit GPSDateStamp/GPSTimeStamp.
-     *
-     * @param string                   $dateStamp GPSDateStamp ASCII payload (must include count bytes).
-     * @param list<array{0:int,1:int}> $timeParts GPSTimeStamp RATIONAL triplet [hour, minute, second].
-     */
-    private function buildGpsDateTimeExample(string $dateStamp, array $timeParts): string
+    private function classicIfd0WithGpsPointerLength(): int
     {
-        $header = Endian::Little->value
-            . pack('v', TiffConst::MAGIC_CLASSIC)
-            . pack('V', 8);
+        return 2 + (3 * 12) + 4;
+    }
 
-        $ifd0EntryCount = 3;
-        $ifd0Length     = 2 + ($ifd0EntryCount * 12) + 4;
-        $gpsIfdOffset   = strlen($header) + $ifd0Length;
-
-        $ifd0 = pack('v', $ifd0EntryCount)
+    private function buildClassicIfd0WithGpsPointer(int $gpsIfdOffset): string
+    {
+        return pack('v', 3)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -417,6 +470,79 @@ final class TiffExifParserGpsReferenceTest extends TestCase
             . pack('V', 1)
             . pack('V', $gpsIfdOffset)
             . pack('V', 0);
+    }
+
+    /**
+     * Builds a classic TIFF containing exactly one configurable GPS IFD entry.
+     */
+    private function buildClassicTiffWithSingleGpsEntry(int $tag, int $type, int $count, string $valueBytes): string
+    {
+        $header = Endian::Little->value
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8);
+
+        $ifd0Length   = $this->classicIfd0WithGpsPointerLength();
+        $gpsIfdOffset = strlen($header) + $ifd0Length;
+        $ifd0         = $this->buildClassicIfd0WithGpsPointer($gpsIfdOffset);
+
+        $componentSize = $this->bytesPerComponent($type);
+        $dataSize      = $componentSize * $count;
+        $dataBytes     = strlen($valueBytes) >= $dataSize
+            ? substr($valueBytes, 0, $dataSize)
+            : str_pad($valueBytes, $dataSize, "\0");
+
+        $gpsIfdLength = 2 + 12 + 4;
+        $dataOffset   = strlen($header . $ifd0) + $gpsIfdLength;
+
+        $entry = pack('v', $tag)
+            . pack('v', $type)
+            . pack('V', $count);
+
+        if ($dataSize > 4) {
+            $entry .= pack('V', $dataOffset);
+            $payload = $dataBytes;
+        } else {
+            $entry .= str_pad($dataBytes, 4, "\0");
+            $payload = '';
+        }
+
+        $gpsIfd = pack('v', 1)
+            . $entry
+            . pack('V', 0);
+
+        return $header . $ifd0 . $gpsIfd . $payload;
+    }
+
+    private function bytesPerComponent(int $type): int
+    {
+        return match ($type) {
+            TiffConst::TYPE_ASCII,
+            TiffConst::TYPE_BYTE,
+            TiffConst::TYPE_UNDEFINED => 1,
+            TiffConst::TYPE_SHORT     => 2,
+            TiffConst::TYPE_LONG,
+            TiffConst::TYPE_SLONG => 4,
+            TiffConst::TYPE_RATIONAL,
+            TiffConst::TYPE_SRATIONAL => 8,
+            default                   => 1,
+        };
+    }
+
+    /**
+     * Builds a classic TIFF with GPS coordinates and explicit GPSDateStamp/GPSTimeStamp.
+     *
+     * @param string                   $dateStamp GPSDateStamp ASCII payload (must include count bytes).
+     * @param list<array{0:int,1:int}> $timeParts GPSTimeStamp RATIONAL triplet [hour, minute, second].
+     */
+    private function buildGpsDateTimeExample(string $dateStamp, array $timeParts): string
+    {
+        $header = Endian::Little->value
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8);
+
+        $ifd0Length   = $this->classicIfd0WithGpsPointerLength();
+        $gpsIfdOffset = strlen($header) + $ifd0Length;
+        $ifd0         = $this->buildClassicIfd0WithGpsPointer($gpsIfdOffset);
 
         $gpsEntryCount = 6;
         $gpsIfdLength  = 2 + ($gpsEntryCount * 12) + 4;
