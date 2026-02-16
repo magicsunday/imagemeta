@@ -68,11 +68,45 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesIsoBmffBrand(): void
     {
-        $stream = $this->createStream("\x00\x00\x00\x18ftypisom");
+        $stream = $this->createStream("\x00\x00\x00\x10ftypisom\x00\x00\x00\x00");
 
         $detected = (new FormatDetector())->detect($stream);
 
         self::assertSame(ContainerType::ISOBMFF, $detected);
+    }
+
+    /**
+     * Rejects an ftyp box when its declared size exceeds remaining stream bytes.
+     * This prevents false-positive ISO BMFF detection on truncated signatures.
+     *
+     * @return void
+     */
+    #[Test]
+    public function detectRejectsIsoBmffWhenFtypDeclaredSizeExceedsStreamBounds(): void
+    {
+        $stream = $this->createStream("\x00\x00\x00\x18ftypisom");
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unsupported or unknown container');
+
+        (new FormatDetector())->detect($stream);
+    }
+
+    /**
+     * Rejects an extended-size ftyp box when largesize exceeds remaining stream bytes.
+     * This hardens signature scanning against out-of-bounds 64-bit size declarations.
+     *
+     * @return void
+     */
+    #[Test]
+    public function detectRejectsIsoBmffWhenFtypLargeSizeExceedsStreamBounds(): void
+    {
+        $stream = $this->createStream("\x00\x00\x00\x01ftyp\x00\x00\x00\x00\x00\x00\x00\x20isom");
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unsupported or unknown container');
+
+        (new FormatDetector())->detect($stream);
     }
 
     /**
@@ -100,7 +134,7 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesIsoBmffAfterFreePadding(): void
     {
-        $stream = $this->createStream("\x00\x00\x00\x08free\x00\x00\x00\x18ftypqt  ");
+        $stream = $this->createStream("\x00\x00\x00\x08free\x00\x00\x00\x10ftypqt  \x00\x00\x00\x00");
 
         $detected = (new FormatDetector())->detect($stream);
 

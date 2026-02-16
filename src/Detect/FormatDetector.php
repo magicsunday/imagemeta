@@ -150,6 +150,15 @@ final readonly class FormatDetector
                 return false;
             }
 
+            // GH-1230: declared 32-bit/64-bit box sizes must stay within stream bounds
+            if ($size !== 0) {
+                $boxStart           = $stream->tell() - $headerSize;
+                $remainingBoxStream = $stream->size() - $boxStart;
+                if ($size > $remainingBoxStream) {
+                    return false;
+                }
+            }
+
             if (isset(self::ISO_BMFF_SIGNATURE_BOXES[$boxType])) {
                 return true;
             }
