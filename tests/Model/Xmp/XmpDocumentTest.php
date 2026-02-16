@@ -315,6 +315,27 @@ final class XmpDocumentTest extends TestCase
     }
 
     /**
+     * Rejects text that contains embedded digits but is not a strict numeric form.
+     * Prevents accidental coercion of textual metadata into numeric values.
+     */
+    #[Test]
+    public function parseNumericValueRejectsEmbeddedNumbers(): void
+    {
+        self::assertNull(XmpDocument::parseNumericValue('abc123def'));
+    }
+
+    /**
+     * Parses strict numeric forms: integer, negative float, and rational.
+     */
+    #[Test]
+    public function parseNumericValueAcceptsStrictNumericForms(): void
+    {
+        self::assertSame(42.0, XmpDocument::parseNumericValue('42'));
+        self::assertSame(-1.5, XmpDocument::parseNumericValue('-1.5'));
+        self::assertSame(1.5, XmpDocument::parseNumericValue('3/2'));
+    }
+
+    /**
      * Provides zero-equivalent denominators for rational parsing tests.
      *
      * @return array<string, array{string}>

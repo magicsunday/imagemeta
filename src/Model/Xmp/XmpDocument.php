@@ -20,7 +20,6 @@ use function explode;
 use function is_array;
 use function is_numeric;
 use function is_string;
-use function preg_match;
 use function sprintf;
 use function str_contains;
 use function strpos;
@@ -371,10 +370,6 @@ final readonly class XmpDocument
 
                 return (float) $numerator / $denominatorValue;
             }
-        }
-
-        if (preg_match('/(-?\d+(?:\.\d+)?)/', $trimmed, $matches) === 1) {
-            return (float) $matches[1];
         }
 
         return null;
