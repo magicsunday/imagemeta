@@ -17,7 +17,6 @@ use function in_array;
 use function mb_check_encoding;
 use function ord;
 use function rtrim;
-use function sprintf;
 
 /**
  * Decodes tag payload primitives that can be handled independently of parser state.
@@ -53,9 +52,10 @@ final readonly class ExifTagDecoder
         }
 
         if ($firstHighByteOffset >= 0) {
-            if (in_array($tag, $utf8Tags, true)) {
-                $text = rtrim($bytes, "\0");
+            $text = rtrim($bytes, "\0");
 
+            // EXIF 3.0 §4.6.5.4 designates certain tags as UTF-8 text.
+            if (in_array($tag, $utf8Tags, true)) {
                 if (!mb_check_encoding($text, 'UTF-8')) {
                     throw new ParseError(
                         'EXIF 3.0 text tag contains malformed UTF-8 per EXIF 3.0 §4.6.5.4.',
@@ -66,11 +66,16 @@ final readonly class ExifTagDecoder
                 return $text;
             }
 
-            throw new ParseError(sprintf(
-                'ASCII value contains non-7-bit byte 0x%02X at offset %d per TIFF 6.0 §2.2.',
-                ord($bytes[$firstHighByteOffset]),
-                $firstHighByteOffset,
-            ), 1330);
+            // TIFF 6.0 §2.2 defines ASCII as 7-bit, but real-world cameras
+            // commonly write Latin-1 (ISO-8859-1) or UTF-8 in ASCII fields
+            // for accented characters in names and locations.  Strategy: try
+            // UTF-8 first (superset of ASCII), fall back to Latin-1 (every
+            // byte sequence is valid Latin-1).
+            if (mb_check_encoding($text, 'UTF-8')) {
+                return $text;
+            }
+
+            return mb_convert_encoding($text, 'UTF-8', 'ISO-8859-1');
         }
 
         return rtrim($bytes, "\0");

@@ -1295,14 +1295,12 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * ASCII value containing a byte > 0x7F is rejected per TIFF 6.0 §2.2.
+     * ASCII value containing bytes > 0x7F is decoded via Latin-1 fallback.
+     * Real-world cameras write accented characters in ASCII fields.
      */
     #[Test]
-    public function rejectAsciiValueWithNon7BitByte(): void
+    public function acceptAsciiValueWithNon7BitByteViaLatin1Fallback(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ASCII value contains non-7-bit byte');
-
         // IFD with one ASCII entry containing 0x80 (>4 bytes to force out-of-line)
         $asciiData = "hello\x80\0\0";
         $ifdOffset = 8;
@@ -1320,7 +1318,17 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('V', 0)
             . $asciiData;
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            // Any error other than the old non-7-bit rejection is acceptable
+            // — the minimal blob lacks required IFD0 tags.
+            self::assertStringNotContainsString('non-7-bit byte', $e->getMessage());
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**

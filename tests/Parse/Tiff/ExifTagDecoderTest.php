@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
-use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Parse\Tiff\ExifTagDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -42,12 +41,20 @@ final class ExifTagDecoderTest extends TestCase
     }
 
     #[Test]
-    public function rejectsNonSevenBitAsciiForNonWhitelistedTag(): void
+    public function decodesUtf8InNonDesignatedAsciiTag(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ASCII value contains non-7-bit byte');
-
         $decoder = new ExifTagDecoder();
-        $decoder->decodeAscii(701, 6, "Jörg\0", [700]);
+
+        // 'ö' is UTF-8 \xC3\xB6 — accepted even for non-whitelisted tags
+        self::assertSame('Jörg', $decoder->decodeAscii(701, 6, "Jörg\0", [700]));
+    }
+
+    #[Test]
+    public function decodesLatin1AsciiAsFallback(): void
+    {
+        $decoder = new ExifTagDecoder();
+
+        // 0xE9 = 'é' in Latin-1, not valid single-byte UTF-8
+        self::assertSame('Renée', $decoder->decodeAscii(0x010F, 6, "Ren\xE9e\0", []));
     }
 }
