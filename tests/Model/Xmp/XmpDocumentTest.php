@@ -221,6 +221,34 @@ final class XmpDocumentTest extends TestCase
     }
 
     /**
+     * Returns scalar text with leading/trailing spaces preserved via rawString().
+     */
+    #[Test]
+    public function rawStringPreservesWhitespace(): void
+    {
+        $namespace = 'http://example.com/xmp/';
+        $document  = new XmpDocument([
+            sprintf('{%s}Title', $namespace) => '  Hello World  ',
+        ]);
+
+        self::assertSame('  Hello World  ', $document->rawString($namespace, 'Title'));
+    }
+
+    /**
+     * Returns array values with per-item leading/trailing spaces preserved via rawStringList().
+     */
+    #[Test]
+    public function rawStringListPreservesPerItemWhitespace(): void
+    {
+        $namespace = 'http://example.com/xmp/';
+        $document  = new XmpDocument([
+            sprintf('{%s}Keywords', $namespace) => ['  one ', ' two ', ''],
+        ]);
+
+        self::assertSame(['  one ', ' two ', ''], $document->rawStringList($namespace, 'Keywords'));
+    }
+
+    /**
      * Parses canonical XMP boolean strings.
      * Ensures strict True/False values are interpreted correctly.
      *

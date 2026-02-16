@@ -164,6 +164,52 @@ final readonly class XmpDocument
     }
 
     /**
+     * Returns the raw string value without trimming for the given namespace/local name pair.
+     */
+    public function rawString(string $namespaceUri, string $localName): ?string
+    {
+        $value = $this->get($namespaceUri, $localName);
+
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if ($value instanceof XmpLanguageAlternative) {
+            return $value->defaultValue();
+        }
+
+        if (is_array($value)) {
+            return $value[0] ?? null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns all string values without trimming for the given namespace/local name pair.
+     *
+     * @return list<string>
+     */
+    public function rawStringList(string $namespaceUri, string $localName): array
+    {
+        $value = $this->get($namespaceUri, $localName);
+
+        if (is_string($value)) {
+            return [$value];
+        }
+
+        if ($value instanceof XmpLanguageAlternative) {
+            return $value->values();
+        }
+
+        if (is_array($value)) {
+            return array_values($value);
+        }
+
+        return [];
+    }
+
+    /**
      * Indicates whether the document contains the specified property.
      */
     public function has(string $namespaceUri, string $localName): bool
