@@ -708,6 +708,53 @@ final class GpsFactoryTest extends TestCase
         self::assertSame('2023-06-15', $gps->date);
     }
 
+    /**
+     * XMP destination latitude is surfaced when EXIF value is missing.
+     */
+    #[Test]
+    public function xmpDestinationLatitudeIsMapped(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDestLatitude', self::NS_EXIF)    => '48,51,24',
+            sprintf('{%s}GPSDestLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertEqualsWithDelta(48.856667, $gps->destinationLatitude, 0.001);
+        self::assertSame(GpsLatLonRef::NORTH, $gps->destinationLatitudeRef);
+    }
+
+    /**
+     * XMP destination bearing is surfaced when EXIF value is missing.
+     */
+    #[Test]
+    public function xmpDestinationBearingIsMapped(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDestBearing', self::NS_EXIF)    => '120.5',
+            sprintf('{%s}GPSDestBearingRef', self::NS_EXIF) => 'T',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertSame(120.5, $gps->destinationBearing);
+    }
+
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     private function parsedExif(

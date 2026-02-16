@@ -247,6 +247,42 @@ final readonly class GpsFactory
             }
         }
 
+        $xmpDestLatRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSDestLatitudeRef'));
+        if ($destLatRef === null) {
+            $destLatRef = $xmpDestLatRef;
+        }
+
+        if ($destLat === null) {
+            $destLat = $this->parseCoordinate(
+                $xmpDocument?->string(self::NS_EXIF, 'GPSDestLatitude'),
+                $xmpDestLatRef ?? $destLatRef,
+            );
+        }
+
+        $xmpDestLonRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSDestLongitudeRef'));
+        if ($destLonRef === null) {
+            $destLonRef = $xmpDestLonRef;
+        }
+
+        if ($destLon === null) {
+            $destLon = $this->parseCoordinate(
+                $xmpDocument?->string(self::NS_EXIF, 'GPSDestLongitude'),
+                $xmpDestLonRef ?? $destLonRef,
+            );
+        }
+
+        $xmpDestBearRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSDestBearingRef'));
+        if ($destBearRef === null) {
+            $destBearRef = $xmpDestBearRef;
+        }
+
+        if ($destBear === null) {
+            $xmpDestBear = $xmpDocument?->float(self::NS_EXIF, 'GPSDestBearing');
+            if ($xmpDestBear !== null) {
+                $destBear = $xmpDestBear;
+            }
+        }
+
         $xmpDestDistRef = $xmpDocument?->string(self::NS_EXIF, 'GPSDestDistanceRef');
         if ($destDistRef === null) {
             $destDistRef = $this->uppercase($xmpDestDistRef);
