@@ -680,6 +680,80 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Rejects DMS minutes >= 60 for capture coordinates.
+     *
+     * @param int                      $refTag
+     * @param int                      $valueTag
+     * @param string                   $ref
+     * @param list<array{0:int,1:int}> $dms
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideOutOfRangeDmsComponents')]
+    public function rejectsOutOfRangeDmsComponents(int $refTag, int $valueTag, string $ref, array $dms): void
+    {
+        $entries = [
+            $refTag   => new IfdEntry($refTag, 2, 2, $ref),
+            $valueTag => new IfdEntry($valueTag, 10, 3, $dms),
+        ];
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1470);
+        $this->expectExceptionMessage('must be in range [0, 60)');
+
+        $this->converter->fromIfd(new Ifd($entries));
+    }
+
+    /**
+     * @return iterable<string, array{0:int, 1:int, 2:string, 3:list<array{0:int,1:int}>}>
+     */
+    public static function provideOutOfRangeDmsComponents(): iterable
+    {
+        yield 'latitude-minutes-60' => [
+            ExifTag::GPS_LATITUDE_REF,
+            ExifTag::GPS_LATITUDE,
+            'N',
+            [[12, 1], [60, 1], [0, 1]],
+        ];
+
+        yield 'latitude-seconds-60' => [
+            ExifTag::GPS_LATITUDE_REF,
+            ExifTag::GPS_LATITUDE,
+            'S',
+            [[12, 1], [30, 1], [60, 1]],
+        ];
+
+        yield 'longitude-minutes-61' => [
+            ExifTag::GPS_LONGITUDE_REF,
+            ExifTag::GPS_LONGITUDE,
+            'E',
+            [[13, 1], [61, 1], [0, 1]],
+        ];
+
+        yield 'longitude-seconds-70' => [
+            ExifTag::GPS_LONGITUDE_REF,
+            ExifTag::GPS_LONGITUDE,
+            'W',
+            [[13, 1], [30, 1], [70, 1]],
+        ];
+
+        yield 'dest-latitude-minutes-60' => [
+            ExifTag::GPS_DEST_LATITUDE_REF,
+            ExifTag::GPS_DEST_LATITUDE,
+            'N',
+            [[45, 1], [60, 1], [0, 1]],
+        ];
+
+        yield 'dest-longitude-seconds-60' => [
+            ExifTag::GPS_DEST_LONGITUDE_REF,
+            ExifTag::GPS_DEST_LONGITUDE,
+            'E',
+            [[90, 1], [0, 1], [60, 1]],
+        ];
+    }
+
+    /**
      * Rejects capture latitude values above +90°.
      *
      * @return void

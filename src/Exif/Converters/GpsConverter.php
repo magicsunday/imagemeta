@@ -721,6 +721,20 @@ final readonly class GpsConverter
         $min = $components[1];
         $sec = $components[2];
 
+        if ($min >= 60.0) {
+            throw new ParseError(
+                'GPS minutes component must be in range [0, 60) per DMS semantics.',
+                1470,
+            );
+        }
+
+        if ($sec >= 60.0) {
+            throw new ParseError(
+                'GPS seconds component must be in range [0, 60) per DMS semantics.',
+                1470,
+            );
+        }
+
         $sign  = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
         $value = $sign * ($deg + $min / 60.0 + $sec / 3600.0);
 
