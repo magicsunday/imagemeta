@@ -762,15 +762,9 @@ final class JpegParser implements JpegParserInterface
                 return;
             }
 
-            throw new ParseError(
-                sprintf(
-                    'Unexpected marker 0x%02X at offset %d in scan data after SOS marker at offset %d',
-                    $marker,
-                    $markerOffset,
-                    $sosOffset,
-                ),
-                1503,
-            );
+            // Unexpected marker in scan data — treat as end-of-scan
+            // (Postel's Law: corrupted files may contain stray markers).
+            return;
         }
     }
 

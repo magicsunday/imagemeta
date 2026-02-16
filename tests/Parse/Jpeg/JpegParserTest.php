@@ -2606,12 +2606,13 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects APP markers that appear in the scan-data region after SOS.
+     * Tolerates APP markers that appear in the scan-data region after SOS.
+     * The pre-SOS metadata is still extracted successfully.
      *
      * @return void
      */
     #[Test]
-    public function rejectsAppMarkerInScanDataRegionAfterSos(): void
+    public function acceptsAppMarkerInScanDataRegionAfterSos(): void
     {
         $primaryExif = self::TIFF_HEADER . 'primary-before-sos';
         $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">BeforeSOS</x:xmpmeta>';
@@ -2631,21 +2632,19 @@ final class JpegParserTest extends TestCase
             . "\xFF\xD9";
 
         $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1503);
-        $this->expectExceptionMessageMatches('/scan data|APP|post-SOS|after SOS/i');
-
-        $extractor->extractExifBlobs();
+        self::assertSame($primaryExif, $blobs[0]);
     }
 
     /**
-     * Rejects a second SOS marker encountered after scan-data parsing has started.
+     * Tolerates a second SOS marker encountered after scan-data parsing has started.
+     * The pre-SOS metadata is still extracted successfully.
      *
      * @return void
      */
     #[Test]
-    public function rejectsSecondSosMarkerInScanDataRegion(): void
+    public function acceptsSecondSosMarkerInScanDataRegion(): void
     {
         $exifPayload = self::TIFF_HEADER . 'double-sos';
 
@@ -2660,12 +2659,9 @@ final class JpegParserTest extends TestCase
             . "\xFF\xD9";
 
         $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1503);
-        $this->expectExceptionMessageMatches('/scan data|second SOS|post-SOS|after SOS/i');
-
-        $extractor->extractExifBlobs();
+        self::assertSame($exifPayload, $blobs[0]);
     }
 
     /**
