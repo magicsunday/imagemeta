@@ -3692,6 +3692,50 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects version 0 audio sample entries with non-zero revision level.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdVersion0EntryWithNonZeroRevisionLevel(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample entry revision level must be 0');
+
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'raw ',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 44100,
+            revisionLevel: 1,
+        );
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Rejects version 0 audio sample entries with non-zero vendor.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdVersion0EntryWithNonZeroVendor(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample entry vendor must be 0');
+
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'raw ',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 44100,
+            vendor: 1,
+        );
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
      * Rejects version 0 audio sample entries with unsupported channel counts.
      *
      * @return void
@@ -7085,12 +7129,14 @@ final class IsoBmffParserTest extends TestCase
         int $sampleRate,
         int $compressionId = 0,
         int $packetSize = 0,
+        int $revisionLevel = 0,
+        int $vendor = 0,
     ): string {
         $payload = str_repeat("\0", 6)
             . pack('n', 1)
             . pack('n', 0)
-            . pack('n', 0)
-            . pack('N', 0)
+            . pack('n', $revisionLevel)
+            . pack('N', $vendor)
             . pack('n', $channels)
             . pack('n', $sampleSize)
             . pack('n', $compressionId & 0xFFFF)
