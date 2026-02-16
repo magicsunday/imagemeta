@@ -3012,6 +3012,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $selfContained = ($flags & BitMask::BIT_0) !== 0;
         $payload       = $payloadSize > 0 ? $win->read($payloadSize) : '';
         $uri           = null;
+        $urlLocation   = null;
+        $urnName       = null;
+        $urnLocation   = null;
 
         if ($selfContained) {
             // ISO/IEC 14496-12 §8.7.2: self-contained entries must have no payload
@@ -3026,11 +3029,31 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
             $trimmed = rtrim($payload, "\0");
 
-            if ($trimmed !== '' && !mb_check_encoding($trimmed, 'UTF-8')) {
+            if (($trimmed !== '') && !mb_check_encoding($trimmed, 'UTF-8')) {
                 throw new ParseError('dref entry URL/URN payload contains invalid UTF-8', 1390);
             }
 
-            $uri = $trimmed !== '' ? $trimmed : null;
+            if ($entry->type === self::BOX_URL) {
+                $urlLocation = $trimmed !== '' ? $trimmed : null;
+                $uri         = $urlLocation;
+            } else {
+                // ISO/IEC 14496-12:2015 §8.7.2.2 (`DataEntryUrnBox`) separates
+                // required `name` and optional `location` string fields.
+                $parts    = explode("\0", $trimmed, 2);
+                $urnName  = $parts[0] !== '' ? $parts[0] : null;
+                $location = $parts[1] ?? null;
+
+                if ($urnName === null) {
+                    throw new ParseError('dref urn entry requires non-empty name field', 1603);
+                }
+
+                $urnLocation = (($location !== null) && ($location !== '')) ? $location : null;
+                $uri         = $urnLocation !== null ? $urnName . "\0" . $urnLocation : $urnName;
+            }
+        }
+
+        if ((!$selfContained) && ($entry->type === self::BOX_URN) && ($urnName === null)) {
+            throw new ParseError('dref urn entry requires non-empty name field', 1603);
         }
 
         return new IsoBmffDataReference(
@@ -3038,6 +3061,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $this->normaliseFourcc($entry->type),
             $uri,
             $selfContained,
+            $urlLocation,
+            $urnName,
+            $urnLocation,
         );
     }
 

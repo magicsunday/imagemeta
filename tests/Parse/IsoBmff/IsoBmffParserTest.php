@@ -2410,6 +2410,9 @@ final class IsoBmffParserTest extends TestCase
         self::assertNotNull($reference);
         self::assertSame('url ', $reference->type);
         self::assertSame('https://example.test/exif', $reference->uri);
+        self::assertSame('https://example.test/exif', $reference->urlLocation);
+        self::assertNull($reference->urnName);
+        self::assertNull($reference->urnLocation);
 
         self::assertCount(1, $unresolvedItems);
         $unresolved = $unresolvedItems[0];
@@ -4467,6 +4470,9 @@ final class IsoBmffParserTest extends TestCase
         self::assertNotNull($reference);
         self::assertSame('url ', $reference->type);
         self::assertSame('https://example.test/exif', $reference->uri);
+        self::assertSame('https://example.test/exif', $reference->urlLocation);
+        self::assertNull($reference->urnName);
+        self::assertNull($reference->urnLocation);
 
         self::assertCount(1, $unresolvedItems);
         self::assertSame(ConstructionMethod::FileOffset, $unresolvedItems[0]->constructionMethod);
@@ -4492,9 +4498,54 @@ final class IsoBmffParserTest extends TestCase
         self::assertNotNull($reference);
         self::assertSame('urn ', $reference->type);
         self::assertSame("name\0urn:example:test", $reference->uri);
+        self::assertNull($reference->urlLocation);
+        self::assertSame('name', $reference->urnName);
+        self::assertSame('urn:example:test', $reference->urnLocation);
 
         self::assertCount(1, $unresolvedItems);
         self::assertSame($reference, $unresolvedItems[0]->dataReference);
+    }
+
+    /**
+     * Accepts urn entries that only contain the required name field.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseDrefWithUrnNameOnly(): void
+    {
+        $urnEntry                                         = $this->fullBox('urn ', "name\0");
+        $extractor                                        = $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $urnEntry));
+        [$exifs, , , , $dataReferences, $unresolvedItems] = $extractor->extract();
+
+        self::assertSame([], $exifs);
+        self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
+
+        $reference = $dataReferences->referenceForIndex(1);
+        self::assertNotNull($reference);
+        self::assertSame('urn ', $reference->type);
+        self::assertSame('name', $reference->uri);
+        self::assertNull($reference->urlLocation);
+        self::assertSame('name', $reference->urnName);
+        self::assertNull($reference->urnLocation);
+
+        self::assertCount(1, $unresolvedItems);
+        self::assertSame($reference, $unresolvedItems[0]->dataReference);
+    }
+
+    /**
+     * Rejects urn entries without the required name field.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectDrefUrnEntryWithoutName(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('dref urn entry requires non-empty name field');
+
+        $urnEntry = $this->fullBox('urn ', "\0urn:example:test\0");
+        $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $urnEntry))->extract();
     }
 
     /**
