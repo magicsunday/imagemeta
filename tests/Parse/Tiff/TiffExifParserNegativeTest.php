@@ -1773,57 +1773,54 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Rejects APPn markers in strict JPEG thumbnail validation.
+     * Accepts APPn markers in JPEG thumbnail streams (Postel's Law).
      */
     #[Test]
-    public function rejectIfd1JpegThumbnailWithAppMarker(): void
+    public function acceptIfd1JpegThumbnailWithAppMarker(): void
     {
         $thumbnailStream = "\xFF\xD8"
             . "\xFF\xE1\x00\x04\x00\x00"
             . "\xFF\xD9";
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/thumbnail stream.*APP marker|APP marker.*thumbnail stream/i');
-
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithJpegThumbnailStream($thumbnailStream),
         );
+
+        $this->addToAssertionCount(1);
     }
 
     /**
-     * Rejects COM markers in strict JPEG thumbnail validation.
+     * Accepts COM markers in JPEG thumbnail streams (Postel's Law).
      */
     #[Test]
-    public function rejectIfd1JpegThumbnailWithComMarker(): void
+    public function acceptIfd1JpegThumbnailWithComMarker(): void
     {
         $thumbnailStream = "\xFF\xD8"
             . "\xFF\xFE\x00\x04\x00\x00"
             . "\xFF\xD9";
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/thumbnail stream.*COM marker|COM marker.*thumbnail stream/i');
-
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithJpegThumbnailStream($thumbnailStream),
         );
+
+        $this->addToAssertionCount(1);
     }
 
     /**
-     * Rejects restart markers in strict JPEG thumbnail validation.
+     * Accepts restart markers in JPEG thumbnail streams (Postel's Law).
      */
     #[Test]
-    public function rejectIfd1JpegThumbnailWithRestartMarker(): void
+    public function acceptIfd1JpegThumbnailWithRestartMarker(): void
     {
         $thumbnailStream = "\xFF\xD8"
             . "\x11\x22\xFF\xD0\x33\x44"
             . "\xFF\xD9";
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/thumbnail stream.*restart marker|restart marker.*thumbnail stream/i');
-
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithJpegThumbnailStream($thumbnailStream),
         );
+
+        $this->addToAssertionCount(1);
     }
 
     /**

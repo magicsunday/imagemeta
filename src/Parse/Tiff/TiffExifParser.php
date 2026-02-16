@@ -4655,7 +4655,7 @@ final class TiffExifParser implements TiffExifParserInterface
             );
         }
 
-        $this->validateJpegThumbnailDisallowedMarkers($thumbnailBytes, $thumbnailOffset);
+        $this->validateJpegThumbnailDisallowedMarkers();
     }
 
     /**
@@ -4667,59 +4667,16 @@ final class TiffExifParser implements TiffExifParserInterface
      * @param string $thumbnailBytes  Raw JPEG thumbnail stream bytes.
      * @param int    $thumbnailOffset Absolute TIFF offset of the thumbnail stream.
      */
-    private function validateJpegThumbnailDisallowedMarkers(string $thumbnailBytes, int $thumbnailOffset): void
+    /**
+     * Validates JPEG thumbnail marker compliance.
+     *
+     * EXIF 3.0 §4.8 restricts certain markers, but virtually all cameras
+     * and editors embed APP0, APP14, restart markers, and COM markers in
+     * thumbnail streams.  This method is intentionally a no-op to follow
+     * Postel's Law and accept these common deviations.
+     */
+    private function validateJpegThumbnailDisallowedMarkers(): void
     {
-        $lastIndex = strlen($thumbnailBytes) - 1;
-
-        for ($index = 0; $index < $lastIndex; ++$index) {
-            if ($thumbnailBytes[$index] !== "\xFF") {
-                continue;
-            }
-
-            $marker = ord($thumbnailBytes[$index + 1]);
-            if ($marker === 0x00) {
-                continue;
-            }
-
-            if ($marker === 0xFF) {
-                continue;
-            }
-
-            if ($marker >= 0xE0 && $marker <= 0xEF) {
-                throw new ParseError(
-                    sprintf(
-                        'JPEG thumbnail stream at offset %d contains disallowed APP marker 0x%02X at offset %d',
-                        $thumbnailOffset,
-                        $marker,
-                        $thumbnailOffset + $index,
-                    ),
-                    1414,
-                );
-            }
-
-            if ($marker === 0xFE) {
-                throw new ParseError(
-                    sprintf(
-                        'JPEG thumbnail stream at offset %d contains disallowed COM marker at offset %d',
-                        $thumbnailOffset,
-                        $thumbnailOffset + $index,
-                    ),
-                    1414,
-                );
-            }
-
-            if ($marker >= 0xD0 && $marker <= 0xD7) {
-                throw new ParseError(
-                    sprintf(
-                        'JPEG thumbnail stream at offset %d contains disallowed restart marker 0x%02X at offset %d',
-                        $thumbnailOffset,
-                        $marker,
-                        $thumbnailOffset + $index,
-                    ),
-                    1415,
-                );
-            }
-        }
     }
 
     /**
