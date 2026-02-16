@@ -170,6 +170,18 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 11,
                 "2024:05:06\0",
             ],
+            'GPSStatus count 2' => [
+                ExifTag::GPS_STATUS,
+                TiffConst::TYPE_ASCII,
+                2,
+                "A\0",
+            ],
+            'GPSMeasureMode count 2' => [
+                ExifTag::GPS_MEASURE_MODE,
+                TiffConst::TYPE_ASCII,
+                2,
+                "2\0",
+            ],
             'GPSSpeedRef count 2' => [
                 ExifTag::GPS_SPEED_REF,
                 TiffConst::TYPE_ASCII,
@@ -685,6 +697,59 @@ final class TiffExifParserFixedLengthTest extends TestCase
         );
 
         (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSStatus/GPSMeasureMode tags when encoded with non-ASCII TIFF type.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideGpsStatusAndMeasureModeTags')]
+    public function rejectsGpsStatusAndMeasureModeWrongType(int $tag): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            $tag,
+            TiffConst::TYPE_BYTE,
+            2,
+            "A\0",
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSStatus/GPSMeasureMode tags when encoded with wrong component count.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideGpsStatusAndMeasureModeTags')]
+    public function rejectsGpsStatusAndMeasureModeWrongCount(int $tag): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            $tag,
+            TiffConst::TYPE_ASCII,
+            1,
+            'A',
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * @return iterable<string, array{0:int}>
+     */
+    public static function provideGpsStatusAndMeasureModeTags(): iterable
+    {
+        yield 'GPSStatus' => [ExifTag::GPS_STATUS];
+        yield 'GPSMeasureMode' => [ExifTag::GPS_MEASURE_MODE];
     }
 
     /**
