@@ -1524,7 +1524,8 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function exposureProgram(): ?ExposureProgram
     {
-        $value = $this->enumValue($this->exifIfd, ExifTag::EXPOSURE_PROGRAM);
+        // EXIF 3.0 §4.6.6.7.3: default is 0 (Not defined).
+        $value = $this->enumValue($this->exifIfd, ExifTag::EXPOSURE_PROGRAM) ?? 0;
 
         return ExposureProgram::fromExifValue($value);
     }
@@ -1538,7 +1539,8 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function meteringMode(): ?MeteringMode
     {
-        $rawMeteringMode = $this->enumValue($this->exifIfd, ExifTag::METERING_MODE);
+        // EXIF 3.0 §4.6.6.7.19: default is 0 (Unknown).
+        $rawMeteringMode = $this->enumValue($this->exifIfd, ExifTag::METERING_MODE) ?? 0;
 
         return MeteringMode::fromExifValue($rawMeteringMode);
     }
@@ -1679,9 +1681,10 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      * EXIF 3.0 §4.6.6.7.28 reuses the {@see ResolutionUnit} scale for focal
      * plane resolution values.
      */
-    public function focalPlaneResolutionUnit(): ?int
+    public function focalPlaneResolutionUnit(): int
     {
-        return $this->int($this->exifIfd, ExifTag::FOCAL_PLANE_RESOLUTION_UNIT);
+        // EXIF 3.0 §4.6.6.7.28: default is 2 (inches).
+        return $this->int($this->exifIfd, ExifTag::FOCAL_PLANE_RESOLUTION_UNIT) ?? 2;
     }
 
     /**
@@ -1981,7 +1984,8 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return SceneType::fromExifValue(ord($value[0]));
         }
 
-        return null;
+        // EXIF 3.0 §4.6.6.7.33: default is 1 (directly photographed image).
+        return SceneType::fromExifValue(1);
     }
 
     /**
@@ -1991,7 +1995,8 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function customRendered(): ?CustomRendered
     {
-        $value = $this->int($this->exifIfd, ExifTag::CUSTOM_RENDERED);
+        // EXIF 3.0 §4.6.6.7.35: default is 0 (Normal process).
+        $value = $this->int($this->exifIfd, ExifTag::CUSTOM_RENDERED) ?? 0;
 
         return CustomRendered::fromExifValue($value);
     }
@@ -2003,7 +2008,8 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function contrast(): ?Contrast
     {
-        $value = $this->int($this->exifIfd, ExifTag::CONTRAST);
+        // EXIF 3.0 §4.6.6.7.42: default is 0 (Normal).
+        $value = $this->int($this->exifIfd, ExifTag::CONTRAST) ?? 0;
 
         return Contrast::fromExifValue($value);
     }
@@ -2015,7 +2021,8 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function saturation(): ?Saturation
     {
-        $value = $this->int($this->exifIfd, ExifTag::SATURATION);
+        // EXIF 3.0 §4.6.6.7.43: default is 0 (Normal).
+        $value = $this->int($this->exifIfd, ExifTag::SATURATION) ?? 0;
 
         return Saturation::fromExifValue($value);
     }
@@ -2027,7 +2034,8 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function sharpness(): ?Sharpness
     {
-        $value = $this->int($this->exifIfd, ExifTag::SHARPNESS);
+        // EXIF 3.0 §4.6.6.7.44: default is 0 (Normal).
+        $value = $this->int($this->exifIfd, ExifTag::SHARPNESS) ?? 0;
 
         return Sharpness::fromExifValue($value);
     }
@@ -2838,7 +2846,8 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        return $this->int($this->ifd0, ExifTag::ROWS_PER_STRIP);
+        // TIFF 6.0 §8: default is 2^32−1 (entire image in one strip).
+        return $this->int($this->ifd0, ExifTag::ROWS_PER_STRIP) ?? 4294967295;
     }
 
     /**
@@ -3084,9 +3093,10 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      * TIFF 6.0 §14 defines the Predictor tag as a mathematical operator applied before
      * compression. Valid values: 1 = No prediction (default), 2 = Horizontal differencing.
      */
-    public function predictor(): ?int
+    public function predictor(): int
     {
-        return $this->int($this->ifd0, TiffTag::PREDICTOR);
+        // TIFF 6.0 §14: default is 1 (no prediction scheme).
+        return $this->int($this->ifd0, TiffTag::PREDICTOR) ?? 1;
     }
 
     /**
@@ -3222,7 +3232,8 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             }
         }
 
-        return null;
+        // EXIF 3.0 §4.6.6.7.32: default is 3 (DSC).
+        return FileSource::fromExifValue(3);
     }
 
     /**
@@ -3247,9 +3258,9 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function lightSource(): ?LightSource
     {
-        $rawLightSource = $this->enumValue($this->exifIfd, ExifTag::LIGHT_SOURCE);
+        // EXIF 3.0 §4.6.6.7.20: default is 0 (Unknown).
+        $rawLightSource = $this->enumValue($this->exifIfd, ExifTag::LIGHT_SOURCE) ?? 0;
 
-        // The enum helper accepts integers as well as numeric strings.
         return LightSource::fromExifValue($rawLightSource);
     }
 
@@ -3262,7 +3273,8 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function sceneCaptureType(): ?SceneCaptureType
     {
-        $rawSceneCaptureType = $this->enumValue($this->exifIfd, ExifTag::SCENE_CAPTURE_TYPE);
+        // EXIF 3.0 §4.6.6.7.40: default is 0 (Standard).
+        $rawSceneCaptureType = $this->enumValue($this->exifIfd, ExifTag::SCENE_CAPTURE_TYPE) ?? 0;
 
         return SceneCaptureType::fromExifValue($rawSceneCaptureType);
     }
@@ -4719,11 +4731,12 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      * Returns NewSubfileType tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x00FE.
      *
-     * @return int|null
+     * @return int
      */
-    public function newSubfileType(): ?int
+    public function newSubfileType(): int
     {
-        return $this->int($this->ifd0, TiffTag::NEW_SUBFILE_TYPE);
+        // TIFF 6.0 §8: default is 0 (full-resolution image data).
+        return $this->int($this->ifd0, TiffTag::NEW_SUBFILE_TYPE) ?? 0;
     }
 
     /**
@@ -4741,11 +4754,12 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      * Returns Threshholding tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0107.
      *
-     * @return int|null
+     * @return int
      */
-    public function threshholding(): ?int
+    public function threshholding(): int
     {
-        return $this->int($this->ifd0, TiffTag::THRESHHOLDING);
+        // TIFF 6.0 §8: default is 1 (No dithering or halftoning).
+        return $this->int($this->ifd0, TiffTag::THRESHHOLDING) ?? 1;
     }
 
     /**
@@ -4774,11 +4788,12 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      * Returns FillOrder tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x010A.
      *
-     * @return int|null
+     * @return int
      */
-    public function fillOrder(): ?int
+    public function fillOrder(): int
     {
-        return $this->int($this->ifd0, TiffTag::FILL_ORDER);
+        // TIFF 6.0 §8: default is 1 (most significant bits first).
+        return $this->int($this->ifd0, TiffTag::FILL_ORDER) ?? 1;
     }
 
     /**
@@ -4862,11 +4877,12 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      * Returns GrayResponseUnit tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0122.
      *
-     * @return int|null
+     * @return int
      */
-    public function grayResponseUnit(): ?int
+    public function grayResponseUnit(): int
     {
-        return $this->int($this->ifd0, TiffTag::GRAY_RESPONSE_UNIT);
+        // TIFF 6.0 §8: default is 2 (hundredths of a unit).
+        return $this->int($this->ifd0, TiffTag::GRAY_RESPONSE_UNIT) ?? 2;
     }
 
     /**
@@ -4884,22 +4900,24 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      * Returns T4Options tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0124.
      *
-     * @return int|null
+     * @return int
      */
-    public function t4Options(): ?int
+    public function t4Options(): int
     {
-        return $this->int($this->ifd0, TiffTag::T4_OPTIONS);
+        // TIFF 6.0 §11: default is 0 (1-D encoding).
+        return $this->int($this->ifd0, TiffTag::T4_OPTIONS) ?? 0;
     }
 
     /**
      * Returns T6Options tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0125.
      *
-     * @return int|null
+     * @return int
      */
-    public function t6Options(): ?int
+    public function t6Options(): int
     {
-        return $this->int($this->ifd0, TiffTag::T6_OPTIONS);
+        // TIFF 6.0 §11: default is 0 (no uncompressed mode).
+        return $this->int($this->ifd0, TiffTag::T6_OPTIONS) ?? 0;
     }
 
     /**
@@ -4939,11 +4957,12 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      * Returns InkSet tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014C.
      *
-     * @return int|null
+     * @return int
      */
-    public function inkSet(): ?int
+    public function inkSet(): int
     {
-        return $this->int($this->ifd0, TiffTag::INK_SET);
+        // TIFF 6.0 §8: default is 1 (CMYK).
+        return $this->int($this->ifd0, TiffTag::INK_SET) ?? 1;
     }
 
     /**
@@ -4961,11 +4980,12 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      * Returns NumberOfInks tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014E.
      *
-     * @return int|null
+     * @return int
      */
-    public function numberOfInks(): ?int
+    public function numberOfInks(): int
     {
-        return $this->int($this->ifd0, TiffTag::NUMBER_OF_INKS);
+        // TIFF 6.0 §8: default is 4 (for CMYK).
+        return $this->int($this->ifd0, TiffTag::NUMBER_OF_INKS) ?? 4;
     }
 
     /**
@@ -5005,11 +5025,12 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      * Returns SampleFormat tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0153.
      *
-     * @return int|null
+     * @return int
      */
-    public function sampleFormat(): ?int
+    public function sampleFormat(): int
     {
-        return $this->int($this->ifd0, TiffTag::SAMPLE_FORMAT);
+        // TIFF 6.0 §8: default is 1 (unsigned integer data).
+        return $this->int($this->ifd0, TiffTag::SAMPLE_FORMAT) ?? 1;
     }
 
     /**

@@ -125,7 +125,7 @@ final class CameraFactoryTest extends TestCase
         self::assertNull($camera->model);
         self::assertNull($camera->ownerName);
         self::assertNull($camera->firmware);
-        self::assertNull($camera->fileSource);
+        self::assertSame(FileSource::DIGITAL_CAMERA, $camera->fileSource);
         self::assertNull($camera->sensingMethod);
     }
 
