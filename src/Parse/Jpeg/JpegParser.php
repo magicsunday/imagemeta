@@ -2489,22 +2489,6 @@ final class JpegParser implements JpegParserInterface
             );
         }
 
-        if ($strictExifProfile) {
-            $componentIdentifiers = array_keys($components);
-            sort($componentIdentifiers);
-
-            if ($componentIdentifiers !== [1, 2, 3]) {
-                throw new ParseError(
-                    sprintf(
-                        'SOF marker 0x%02X at offset %d must use YCbCr component identifiers 1/2/3 in strict EXIF mode',
-                        $marker,
-                        $offset,
-                    ),
-                    1493,
-                );
-            }
-        }
-
         $derivedSubSampling = $this->deriveYCbCrSubSampling($components);
 
         $this->frameBitsPerSample     = $bitsPerSample;
