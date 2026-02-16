@@ -218,6 +218,18 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 1,
                 "\x00\x00\x00\x2D\x00\x00\x00\x01",
             ],
+            'GPSDestDistanceRef count 2' => [
+                ExifTag::GPS_DEST_DISTANCE_REF,
+                TiffConst::TYPE_ASCII,
+                2,
+                "K\0",
+            ],
+            'GPSDestDistance count 1' => [
+                ExifTag::GPS_DEST_DISTANCE,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                "\x00\x00\x00\x2A\x00\x00\x00\x01",
+            ],
             'FileSource count 1' => [
                 ExifTag::FILE_SOURCE,
                 TiffConst::TYPE_UNDEFINED,
@@ -607,6 +619,90 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
         $blob = $this->buildClassicTiffWithEntry(
             ExifTag::GPS_SPEED,
+            TiffConst::TYPE_RATIONAL,
+            2,
+            str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSDestDistanceRef with wrong type (BYTE instead of ASCII).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsDestDistanceRefWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_DEST_DISTANCE_REF,
+            TiffConst::TYPE_BYTE,
+            2,
+            "K\0",
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSDestDistanceRef with wrong count (1 instead of 2).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsDestDistanceRefWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_DEST_DISTANCE_REF,
+            TiffConst::TYPE_ASCII,
+            1,
+            'K',
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSDestDistance with wrong type (LONG instead of RATIONAL).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsDestDistanceWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_DEST_DISTANCE,
+            TiffConst::TYPE_LONG,
+            1,
+            "\x00\x00\x00\x01",
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSDestDistance with wrong count (2 instead of 1).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsDestDistanceWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_DEST_DISTANCE,
             TiffConst::TYPE_RATIONAL,
             2,
             str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
