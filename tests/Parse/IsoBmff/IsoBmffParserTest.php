@@ -2294,14 +2294,12 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects idat box that is not 8-byte aligned per ISO/IEC 14496-12 §8.11.11.2.
+     * Accepts idat box at non-aligned offset (Postel's Law).
+     * Apple and Android encoders commonly produce non-aligned idat boxes.
      */
     #[Test]
-    public function rejectMisalignedIdatBox(): void
+    public function acceptMisalignedIdatBox(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('idat box at offset');
-
         // ftyp(12) + meta header(12) = 24; add a 9-byte free box to misalign idat
         $freeBox = $this->box('free', 'X');
         $idat    = $this->box('idat', 'payload');
@@ -2309,6 +2307,8 @@ final class IsoBmffParserTest extends TestCase
         $ftyp    = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $meta)->extract();
+
+        $this->addToAssertionCount(1);
     }
 
     /**

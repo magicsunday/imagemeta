@@ -2432,13 +2432,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     $locations = $this->parseIloc($child, $fileOffsetOrigin);
                     break;
                 case self::BOX_IDAT:
-                    // ISO/IEC 14496-12 §8.11.11.2: aligned(8) class ItemDataBox
-                    if ($child->offset % 8 !== 0) {
-                        throw new ParseError(sprintf(
-                            'idat box at offset %d is not 8-byte aligned per ISO/IEC 14496-12 §8.11.11.2.',
-                            $child->offset,
-                        ), 1163);
-                    }
+                    // ISO/IEC 14496-12 §8.11.11.2 specifies aligned(8), but
+                    // virtually all Apple and Android encoders produce idat
+                    // boxes at non-aligned offsets.  Skip the alignment check.
 
                     if ($idatPayload !== null) {
                         throw new ParseError('meta context must contain at most one idat box', 1414);
