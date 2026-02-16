@@ -200,6 +200,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 1,
                 "\x01\x00",
             ],
+            'GPSHPositioningError count 1' => [
+                ExifTag::GPS_H_POSITIONING_ERROR,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                "\x00\x00\x00\x03\x00\x00\x00\x02",
+            ],
             'CFALayout count 1' => [
                 DngTag::CFA_LAYOUT,
                 TiffConst::TYPE_SHORT,
@@ -430,6 +436,48 @@ final class TiffExifParserFixedLengthTest extends TestCase
             TiffConst::TYPE_DOUBLE,
             2,
             pack('e', 1.0) . pack('e', 2.0),
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSHPositioningError with wrong type (LONG instead of RATIONAL).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsHPositioningErrorWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_H_POSITIONING_ERROR,
+            TiffConst::TYPE_LONG,
+            1,
+            "\x00\x00\x00\x01",
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSHPositioningError with wrong count (2 instead of 1).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsHPositioningErrorWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_H_POSITIONING_ERROR,
+            TiffConst::TYPE_RATIONAL,
+            2,
+            str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
         );
 
         (new TiffExifParser())->parseFromBlob($blob);

@@ -465,8 +465,21 @@ final readonly class GpsConverter
             $result['differential'] = $diffValue;
         }
 
-        $hPositionEntry                = $gps->get(ExifTag::GPS_H_POSITIONING_ERROR);
-        $result['h_positioning_error'] = $this->rationalConverter->toFloat($hPositionEntry?->value);
+        $hPositionEntry         = $gps->get(ExifTag::GPS_H_POSITIONING_ERROR);
+        $hPositioningErrorValue = $this->rationalConverter->toFloat($hPositionEntry?->value);
+
+        if (
+            $hPositionEntry instanceof IfdEntry
+            && $hPositioningErrorValue !== null
+            && $hPositioningErrorValue < 0.0
+        ) {
+            throw new ParseError(sprintf(
+                'GPSHPositioningError %s must be non-negative per EXIF 3.0 §4.6.7.1.32.',
+                $hPositioningErrorValue,
+            ), 1468);
+        }
+
+        $result['h_positioning_error'] = $hPositioningErrorValue;
 
         return $result;
     }

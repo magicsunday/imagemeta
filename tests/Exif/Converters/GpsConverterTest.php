@@ -917,6 +917,52 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Accepts non-negative GPSHPositioningError values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsNonNegativeGpsHPositioningError(): void
+    {
+        $entries = [
+            ExifTag::GPS_H_POSITIONING_ERROR => new IfdEntry(
+                ExifTag::GPS_H_POSITIONING_ERROR,
+                5,
+                1,
+                new ExifRational(15, 10),
+            ),
+        ];
+
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertEqualsWithDelta(1.5, $result['h_positioning_error'], 0.000001);
+    }
+
+    /**
+     * Rejects negative GPSHPositioningError values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsNegativeGpsHPositioningError(): void
+    {
+        $entries = [
+            ExifTag::GPS_H_POSITIONING_ERROR => new IfdEntry(
+                ExifTag::GPS_H_POSITIONING_ERROR,
+                5,
+                1,
+                new ExifRational(-1, 1),
+            ),
+        ];
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1468);
+        $this->expectExceptionMessage('GPSHPositioningError');
+
+        $this->converter->fromIfd(new Ifd($entries));
+    }
+
+    /**
      * Builds an IFD containing a GPS reference tag and matching coordinate data.
      *
      * @param int    $refTag   The GPS reference tag constant (e.g. ExifTag::GPS_LATITUDE_REF).
