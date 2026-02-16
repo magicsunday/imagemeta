@@ -6833,6 +6833,58 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Duplicate keys atoms inside a single meta box are rejected.
+     */
+    #[Test]
+    public function rejectsDuplicateKeysInMeta(): void
+    {
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys1    = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $keys2    = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys1 . $keys2 . $ilst);
+        $moov = $this->moov($meta);
+        $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('keys');
+
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Duplicate ilst atoms inside a single meta box are rejected.
+     */
+    #[Test]
+    public function rejectsDuplicateIlstInMeta(): void
+    {
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $ilst1     = $this->box('ilst', $ilstEntry);
+        $ilst2     = $this->box('ilst', $ilstEntry);
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst1 . $ilst2);
+        $moov = $this->moov($meta);
+        $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('ilst');
+
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
      * A free-space atom nested inside an ilst entry is rejected.
      *
      * QuickTime File Format 2012 states: "The free space atom may not occur

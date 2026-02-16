@@ -2486,9 +2486,18 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     break;
                 case self::BOX_KEYS:
                     $requiresHdlr = true;
-                    $keysMaps[]   = $this->parseKeys($child);
+
+                    if ($keysMaps !== []) {
+                        throw new ParseError('meta must contain at most one keys atom', 1503);
+                    }
+
+                    $keysMaps[] = $this->parseKeys($child);
                     break;
                 case self::BOX_ILST:
+                    if ($ilstBoxes !== []) {
+                        throw new ParseError('meta must contain at most one ilst atom', 1504);
+                    }
+
                     $ilstBoxes[] = $child;
                     break;
                 case self::BOX_CTRY:
