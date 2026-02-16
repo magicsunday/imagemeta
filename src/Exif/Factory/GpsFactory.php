@@ -570,7 +570,8 @@ final readonly class GpsFactory
         }
 
         try {
-            $dateTime = new DateTimeImmutable($value);
+            // Parse with UTC fallback for timezone-less values (GPS time is always UTC)
+            $dateTime = new DateTimeImmutable($value, new DateTimeZone('UTC'));
         } catch (Exception) {
             return null;
         }

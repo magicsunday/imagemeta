@@ -634,6 +634,36 @@ final class GpsFactoryTest extends TestCase
         self::assertNull($gps->timestamp);
     }
 
+    /**
+     * XMP GPSDateTime without timezone is interpreted as UTC, not local time.
+     */
+    #[Test]
+    public function xmpGpsDateTimeWithoutTimezoneIsTreatedAsUtc(): void
+    {
+        $previousTimezone = date_default_timezone_get();
+        date_default_timezone_set('America/New_York');
+
+        try {
+            $xmpDoc = new XmpDocument([
+                sprintf('{%s}GPSDateTime', self::NS_EXIF) => '2023-06-15T14:30:00',
+            ]);
+
+            $metadata = new Metadata(
+                exifBlobs: [],
+                quickTime: null,
+                xmpDoc: $xmpDoc,
+            );
+
+            $factory = new GpsFactory();
+            $gps     = $factory->create($metadata);
+
+            self::assertInstanceOf(DateTimeImmutable::class, $gps->timestamp);
+            self::assertSame('2023-06-15T14:30:00+00:00', $gps->timestamp->format('Y-m-d\TH:i:sP'));
+        } finally {
+            date_default_timezone_set($previousTimezone);
+        }
+    }
+
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     private function parsedExif(
