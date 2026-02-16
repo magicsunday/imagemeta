@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Exif\Factory;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use MagicSunday\ImageMeta\Exif\Factory\TemporalFactory;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -25,6 +26,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function date_default_timezone_get;
+use function date_default_timezone_set;
 use function strlen;
 
 /**
@@ -234,6 +237,38 @@ final class TemporalFactoryTest extends TestCase
 
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
         self::assertSame('2023-06-15', $temporal->create->format('Y-m-d'));
+    }
+
+    /**
+     * Sets the process timezone to America/New_York and provides a timezone-less XMP date.
+     * Expects the factory to treat it as UTC, not local time.
+     */
+    #[Test]
+    public function xmpTimezoneLessDateIsTreatedAsUtc(): void
+    {
+        $previous = date_default_timezone_get();
+
+        try {
+            date_default_timezone_set('America/New_York');
+
+            $xmp = new XmpDocument([
+                '{http://ns.adobe.com/xap/1.0/}CreateDate' => '2023-06-15T14:30:00',
+            ]);
+
+            $metadata = new Metadata(
+                exifBlobs: [],
+                quickTime: null,
+                xmpDoc: $xmp,
+            );
+
+            $factory  = new TemporalFactory();
+            $temporal = $factory->create($metadata);
+
+            self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+            self::assertSame('14:30:00', $temporal->create->setTimezone(new DateTimeZone('UTC'))->format('H:i:s'));
+        } finally {
+            date_default_timezone_set($previous);
+        }
     }
 
     private function parsedExif(

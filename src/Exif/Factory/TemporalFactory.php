@@ -252,7 +252,7 @@ final readonly class TemporalFactory
         }
 
         try {
-            return new DateTimeImmutable($value);
+            return new DateTimeImmutable($value, new DateTimeZone('UTC'));
         } catch (Exception) {
             return null;
         }
