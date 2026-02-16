@@ -572,7 +572,7 @@ final class MetadataFormatter
             exit(1);
         }
 
-        $reader   = new MetadataReader();
+        $reader   = MetadataReader::createDefault();
         $metadata = $reader->read($filePath, withDigests: true);
 
         // ImageMeta section
