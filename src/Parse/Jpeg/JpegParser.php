@@ -510,37 +510,20 @@ final class JpegParser implements JpegParserInterface
                 );
             }
 
+            // ITU-T T.81 §B.2.4.1: DQT, DHT, and DRI are "tables/miscellaneous"
+            // markers with zero-or-more repetitions.  Multiple segments are valid
+            // (e.g. one DQT per quantization table).  Record first occurrence for
+            // validateMandatoryExifPreScanMarkers() but accept duplicates.
             if ($marker === Marker::DQT) {
-                if ($firstDqtOffset !== null) {
-                    throw new ParseError(
-                        sprintf('DQT marker at offset %d duplicates DQT marker at offset %d', $offset, $firstDqtOffset),
-                        1341,
-                    );
-                }
-
-                $firstDqtOffset = $offset;
+                $firstDqtOffset ??= $offset;
             }
 
             if ($marker === Marker::DHT) {
-                if ($firstDhtOffset !== null) {
-                    throw new ParseError(
-                        sprintf('DHT marker at offset %d duplicates DHT marker at offset %d', $offset, $firstDhtOffset),
-                        1342,
-                    );
-                }
-
-                $firstDhtOffset = $offset;
+                $firstDhtOffset ??= $offset;
             }
 
             if ($marker === Marker::DRI) {
-                if ($firstDriOffset !== null) {
-                    throw new ParseError(
-                        sprintf('DRI marker at offset %d duplicates DRI marker at offset %d', $offset, $firstDriOffset),
-                        1343,
-                    );
-                }
-
-                $firstDriOffset = $offset;
+                $firstDriOffset ??= $offset;
             }
 
             if (!$seenExifApp1) {

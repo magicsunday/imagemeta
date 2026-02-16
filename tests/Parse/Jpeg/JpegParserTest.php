@@ -656,60 +656,56 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects duplicate DQT marker segments.
+     * ITU-T T.81 §B.2.4.1: multiple DQT segments are valid.
      *
      * @return void
      */
     #[Test]
-    public function duplicateDqtThrowsParseError(): void
+    public function multipleDqtSegmentsAreAccepted(): void
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
         $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DQT, "\x00"),
-            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_DQT, "\x01"),
         );
 
         $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/DQT.*duplicate|duplicate.*DQT/i');
-
-        $extractor->extractExifBlobs();
+        self::assertCount(1, $blobs);
     }
 
     /**
-     * Rejects duplicate DHT marker segments.
+     * ITU-T T.81 §B.2.4.1: multiple DHT segments are valid.
      *
      * @return void
      */
     #[Test]
-    public function duplicateDhtThrowsParseError(): void
+    public function multipleDhtSegmentsAreAccepted(): void
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
         $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DHT, "\x00"),
-            self::segment(self::MARKER_DHT, "\x00"),
+            self::segment(self::MARKER_DHT, "\x01"),
         );
 
         $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/DHT.*duplicate|duplicate.*DHT/i');
-
-        $extractor->extractExifBlobs();
+        self::assertCount(1, $blobs);
     }
 
     /**
-     * Rejects duplicate DRI marker segments.
+     * ITU-T T.81 §B.2.4.1: multiple DRI segments are valid.
      *
      * @return void
      */
     #[Test]
-    public function duplicateDriThrowsParseError(): void
+    public function multipleDriSegmentsAreAccepted(): void
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
@@ -717,14 +713,17 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DRI, "\x00\x01"),
             self::segment(self::MARKER_DRI, "\x00\x02"),
+            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_DHT, "\x00"),
+            self::segment(self::MARKER_SOF0, $this->defaultSofPayload()),
+            self::segment(self::MARKER_SOS, $this->defaultSosPayload()),
+            "scan\xFF\xD0",
         );
 
         $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/DRI.*duplicate|duplicate.*DRI/i');
-
-        $extractor->extractExifBlobs();
+        self::assertCount(1, $blobs);
     }
 
     /**
