@@ -2410,17 +2410,6 @@ final class JpegParser implements JpegParserInterface
             throw new ParseError(sprintf('SOF marker 0x%02X at offset %d reports zero components', $marker, $offset), 1284);
         }
 
-        if ($strictExifProfile && ($componentCount !== 3)) {
-            throw new ParseError(
-                sprintf(
-                    'SOF marker 0x%02X at offset %d must declare exactly three components in strict EXIF mode',
-                    $marker,
-                    $offset,
-                ),
-                1492,
-            );
-        }
-
         $expectedLength = 6 + ($componentCount * 3);
         if ($length < $expectedLength) {
             throw new ParseError(sprintf('SOF marker 0x%02X at offset %d is truncated', $marker, $offset), 1285);

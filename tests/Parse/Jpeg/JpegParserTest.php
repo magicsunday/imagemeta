@@ -1914,29 +1914,34 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects EXIF SOF payloads that do not declare exactly three image components.
+     * Accepts EXIF SOF payloads with non-3-component frames (Postel's Law).
+     * Grayscale JPEGs have 1 component.
      *
      * @return void
      */
     #[Test]
-    public function rejectsExifSofWithInvalidComponentCount(): void
+    public function acceptsExifSofWithGrayscaleComponentCount(): void
     {
-        $exifPayload  = self::TIFF_HEADER . 'strict-exif';
-        $framePayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x01"
+        $exifPayload = self::TIFF_HEADER . 'strict-exif';
+        $sofPayload  = "\x08" . pack('n', 32) . pack('n', 64) . "\x01"
             . "\x01\x11\x00";
+        $sosPayload = "\x01"
+            . "\x01\x00"
+            . "\x00\x3F\x00";
 
-        $jpeg = $this->jpeg(
-            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
-            self::segment(self::MARKER_SOF0, $framePayload),
-        );
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $sofPayload)
+            . self::segment(self::MARKER_SOS, $sosPayload)
+            . 'scan'
+            . "\xFF\xD9";
 
         $extractor = $this->createExtractor($jpeg);
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1492);
-        $this->expectExceptionMessageMatches('/three components|component count/i');
-
         $extractor->extractExifBlobs();
+
+        $this->addToAssertionCount(1);
     }
 
     /**
