@@ -2891,19 +2891,28 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     /**
      * Returns the planar configuration enum.
      *
-     * EXIF 3.0 §4.6.5.1.10 / TIFF 6.0 §8 specify default value 1 (chunky format)
-     * when not present. JPEG compressed data shall not record this tag because
-     * the JPEG marker carries the equivalent information.
+     * TIFF 6.0 §8 specifies default value 1 (chunky format) when not present.
+     * EXIF 3.0 §4.6.5.1.10 states JPEG compressed data shall not record
+     * this tag because the JPEG marker carries the equivalent information.
+     * Returns null when the tag is absent in JPEG context (no Compression tag).
      *
-     * @return PlanarConfiguration
+     * @return PlanarConfiguration|null
      */
-    public function planarConfiguration(): PlanarConfiguration
+    public function planarConfiguration(): ?PlanarConfiguration
     {
         $value  = $this->enumValue($this->ifd0, ExifTag::PLANAR_CONFIGURATION);
         $config = PlanarConfiguration::fromExifValue($value);
 
-        // TIFF 6.0 §8: Default is 1 (CHUNKY) when tag is not present
-        return $config ?? PlanarConfiguration::CHUNKY;
+        if ($config instanceof PlanarConfiguration) {
+            return $config;
+        }
+
+        // TIFF 6.0 §8: Default is CHUNKY when tag is absent in TIFF context.
+        // When Compression is absent (JPEG primary image), do not emit a
+        // synthetic TIFF-layout value.
+        return $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry
+            ? PlanarConfiguration::CHUNKY
+            : null;
     }
 
     /**
@@ -2950,14 +2959,18 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     /**
      * Returns the YCbCr positioning enum describing the chroma siting.
      *
-     * @see EXIF 3.0 §4.6.5.1.13: Default to centered positioning when tag is absent
+     * EXIF 3.0 §4.6.5.1.13 defines the default as centered, but the tag
+     * is only semantically applicable when the photometric interpretation
+     * is YCbCr. Non-YCbCr images return null when the tag is absent.
      */
     public function ycbcrPositioning(): ?YCbCrPositioning
     {
         $rawValue = $this->value($this->ifd0, ExifTag::YCBCR_POSITIONING);
 
         if ($rawValue === null) {
-            return YCbCrPositioning::CENTERED;
+            return $this->photometric() === Photometric::YCBCR
+                ? YCbCrPositioning::CENTERED
+                : null;
         }
 
         $value = $this->normaliseEnumScalar($rawValue);

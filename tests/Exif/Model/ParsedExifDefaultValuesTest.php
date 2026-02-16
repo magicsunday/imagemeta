@@ -140,21 +140,39 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Omits PlanarConfiguration so ParsedExif must use the default layout.
+     * Omits PlanarConfiguration in TIFF context (Compression tag present).
      * Ensures the returned enum is CHUNKY for interleaved samples.
      *
      * @see TIFF 6.0 §8: PlanarConfiguration default is 1 (chunky format)
-     * @see EXIF 3.0 §4.6.5.1.10: PlanarConfiguration default is 1
      *
      * @return void
      */
     #[Test]
-    public function planarConfigurationReturnsDefaultWhenMissing(): void
+    public function planarConfigurationReturnsChunkyInTiffContext(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::UNCOMPRESSED->value),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(PlanarConfiguration::CHUNKY, $parsedExif->planarConfiguration());
+    }
+
+    /**
+     * Omits PlanarConfiguration in JPEG context (no Compression tag).
+     * Returns null because JPEG markers carry the equivalent information.
+     *
+     * @see EXIF 3.0 §4.6.5.1.10
+     *
+     * @return void
+     */
+    #[Test]
+    public function planarConfigurationReturnsNullInJpegContext(): void
     {
         $ifd0       = new Ifd([]);
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
-        self::assertSame(PlanarConfiguration::CHUNKY, $parsedExif->planarConfiguration());
+        self::assertNull($parsedExif->planarConfiguration());
     }
 
     /**
@@ -176,7 +194,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Omits YCbCrPositioning from the IFD to trigger the default selection.
+     * Omits YCbCrPositioning when photometric is YCbCr.
      * Verifies the default is CENTERED when the tag is missing.
      *
      * @see EXIF 3.0 §4.6.5.1.13: Default value is 1 (centered) if missing
@@ -184,12 +202,41 @@ final class ParsedExifDefaultValuesTest extends TestCase
      * @return void
      */
     #[Test]
-    public function ycbcrPositioningDefaultsToCenteredWhenMissing(): void
+    public function ycbcrPositioningDefaultsToCenteredForYcbcr(): void
     {
-        $ifd0       = new Ifd([]);
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                ExifTag::PHOTOMETRIC_INTERPRETATION,
+                3,
+                1,
+                Photometric::YCBCR->value,
+            ),
+        ]);
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(YCbCrPositioning::CENTERED, $parsedExif->ycbcrPositioning());
+    }
+
+    /**
+     * Omits YCbCrPositioning when photometric is RGB.
+     * Returns null because positioning is only applicable to YCbCr images.
+     *
+     * @return void
+     */
+    #[Test]
+    public function ycbcrPositioningReturnsNullForNonYcbcr(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                ExifTag::PHOTOMETRIC_INTERPRETATION,
+                3,
+                1,
+                Photometric::RGB->value,
+            ),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertNull($parsedExif->ycbcrPositioning());
     }
 
     /**
