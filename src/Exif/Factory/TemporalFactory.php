@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Value\Temporal;
 use function abs;
 use function intdiv;
 use function is_string;
+use function preg_match;
 use function preg_replace;
 use function sprintf;
 use function str_pad;
@@ -242,6 +243,11 @@ final readonly class TemporalFactory
     private function parseFlexibleDate(?string $value): ?DateTimeImmutable
     {
         if ($value === null || $value === '') {
+            return null;
+        }
+
+        // XMP Date value type: ISO 8601 subset (YYYY through YYYY-MM-DDThh:mm:ss.sTZD)
+        if (preg_match('/^\d{4}(-\d{2}(-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})?)?)?)?$/', $value) !== 1) {
             return null;
         }
 

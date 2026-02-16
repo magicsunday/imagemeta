@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function strlen;
@@ -35,6 +36,7 @@ use function strlen;
  * @internal
  */
 #[CoversClass(TemporalFactory::class)]
+#[UsesClass(XmpDocument::class)]
 final class TemporalFactoryTest extends TestCase
 {
     /**
@@ -185,6 +187,53 @@ final class TemporalFactoryTest extends TestCase
         self::assertNull($temporal->modify);
         self::assertNull($temporal->original);
         self::assertNull($temporal->tz);
+    }
+
+    /**
+     * Provides a non-ISO free-form date string in XMP CreateDate.
+     * Expects the factory to reject it and return null for the create field.
+     */
+    #[Test]
+    public function xmpNonIsoDateStringIsRejected(): void
+    {
+        $xmp = new XmpDocument([
+            '{http://ns.adobe.com/xap/1.0/}CreateDate' => 'June 15, 2023 2:30 PM',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmp,
+        );
+
+        $factory  = new TemporalFactory();
+        $temporal = $factory->create($metadata);
+
+        self::assertNull($temporal->create);
+    }
+
+    /**
+     * Provides a valid ISO 8601 date string in XMP CreateDate.
+     * Confirms it is accepted and parsed correctly.
+     */
+    #[Test]
+    public function xmpValidIsoDateStringIsAccepted(): void
+    {
+        $xmp = new XmpDocument([
+            '{http://ns.adobe.com/xap/1.0/}CreateDate' => '2023-06-15T14:30:00+02:00',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmp,
+        );
+
+        $factory  = new TemporalFactory();
+        $temporal = $factory->create($metadata);
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2023-06-15', $temporal->create->format('Y-m-d'));
     }
 
     private function parsedExif(
