@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Model;
 
+use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
@@ -102,8 +103,8 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     }
 
     /**
-     * Provides data that reads as unreasonable LE values so the parser should fall back to BE.
-     * Confirms the BE interpretation produces expected dimensions and no settings.
+     * Provides big-endian columns and rows with no UTF-16 settings payload.
+     * Verifies the description decodes dimensions using the TIFF byte order.
      *
      * @return void
      */
@@ -111,8 +112,6 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     public function parsesBigEndianWithoutSettings(): void
     {
         // Big-endian: 5 columns (0x00 0x05), 10 rows (0x00 0x0A)
-        // These will initially be read as LE (1280, 2560) which are unreasonable
-        // The parser should fall back to BE interpretation
         $data  = "\x00\x05\x00\x0A";
         $entry = new IfdEntry(
             tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
@@ -122,7 +121,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         );
 
         $exifIfd    = new Ifd([ExifTag::DEVICE_SETTING_DESCRIPTION => $entry]);
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null, byteOrder: Endian::Big);
 
         $result = $parsedExif->deviceSettingDescription();
 

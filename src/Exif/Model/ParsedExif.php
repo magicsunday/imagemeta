@@ -4422,15 +4422,17 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        // Try unpacking as little-endian first, then big-endian
-        $unpackedLE = unpack('v2', substr($raw, 0, 4));
+        // EXIF 3.0 §4.6.6.7.45: columns/rows are TIFF SHORT fields —
+        // decode using the EXIF/TIFF byte order context.
+        $format   = $this->byteOrder === Endian::Little ? 'v2' : 'n2';
+        $unpacked = unpack($format, substr($raw, 0, 4));
 
-        if ($unpackedLE === false) {
+        if ($unpacked === false) {
             return null;
         }
 
-        $columns = $unpackedLE[1] ?? null;
-        $rows    = $unpackedLE[2] ?? null;
+        $columns = $unpacked[1] ?? null;
+        $rows    = $unpacked[2] ?? null;
 
         if (
             !is_int($columns)
@@ -4442,36 +4444,6 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
         // Extract camera settings (skip the 4-byte header)
         $settingsBytes = substr($raw, 4);
         $settings      = $this->parseDeviceSettingStrings($settingsBytes);
-
-        // Validate that columns and rows are reasonable values
-        // If they seem invalid, try big-endian
-        // Display settings typically have modest dimensions (e.g., 3-20 columns, 5-50 rows)
-        // We use 500 as a generous upper bound to detect byte order issues
-        if (
-            ($columns > 500)
-            || ($rows > 500)
-            || ($columns === 0)
-            || ($rows === 0)
-        ) {
-            $unpackedBE = unpack('n2', substr($raw, 0, 4));
-
-            if ($unpackedBE !== false) {
-                $columnsBE = $unpackedBE[1] ?? null;
-                $rowsBE    = $unpackedBE[2] ?? null;
-
-                if (
-                    is_int($columnsBE)
-                    && is_int($rowsBE)
-                    && ($columnsBE <= 500)
-                    && ($rowsBE <= 500)
-                    && ($columnsBE > 0)
-                    && ($rowsBE > 0)
-                ) {
-                    $columns = $columnsBE;
-                    $rows    = $rowsBE;
-                }
-            }
-        }
 
         return new DeviceSettingDescription(
             columns: $columns,
