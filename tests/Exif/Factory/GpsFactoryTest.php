@@ -543,6 +543,52 @@ final class GpsFactoryTest extends TestCase
         self::assertNull($gps->latitude);
     }
 
+    /**
+     * XMP latitude above 90 yields null.
+     */
+    #[Test]
+    public function xmpLatitudeAboveNinetyYieldsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '91.0',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->latitude);
+    }
+
+    /**
+     * XMP longitude above 180 yields null.
+     */
+    #[Test]
+    public function xmpLongitudeAboveOneEightyYieldsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLongitude', self::NS_EXIF)    => '181.0',
+            sprintf('{%s}GPSLongitudeRef', self::NS_EXIF) => 'E',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->longitude);
+    }
+
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     private function parsedExif(

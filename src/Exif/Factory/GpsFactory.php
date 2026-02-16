@@ -420,7 +420,7 @@ final readonly class GpsFactory
 
                 $coordinate = $sign * ($deg + ($min / 60.0) + ($sec / 3600.0));
 
-                return round($coordinate, 6);
+                return $this->validateCoordinateRange(round($coordinate, 6), $ref);
             }
         }
 
@@ -440,7 +440,22 @@ final readonly class GpsFactory
 
         $coordinate = $numeric * $sign;
 
-        return round($coordinate, 6);
+        return $this->validateCoordinateRange(round($coordinate, 6), $ref);
+    }
+
+    /**
+     * Returns the coordinate if within geographic bounds, null otherwise.
+     */
+    private function validateCoordinateRange(float $coordinate, ?string $ref): ?float
+    {
+        $isLatitude = $ref === 'N' || $ref === 'S';
+        $limit      = $isLatitude ? 90.0 : 180.0;
+
+        if ($coordinate < -$limit || $coordinate > $limit) {
+            return null;
+        }
+
+        return $coordinate;
     }
 
     /**
