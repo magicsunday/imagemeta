@@ -5736,14 +5736,9 @@ final class TiffExifParser implements TiffExifParserInterface
 
         $this->assertOffsetRange($offset64, $length, $context);
 
-        $result = $offset64->toInt($context);
-
-        // TIFF 6.0 §2: offsets must begin on a word boundary (even byte offset).
-        if ($result % 2 !== 0) {
-            throw new ParseError(sprintf('%s is not word-aligned (offset %d) per TIFF 6.0.', $context, $result), 1332);
-        }
-
-        return $result;
+        // TIFF 6.0 §2 recommends word-aligned offsets for memory access efficiency,
+        // but explicitly states readers should accept non-aligned data.
+        return $offset64->toInt($context);
     }
 
     /**
@@ -6383,14 +6378,9 @@ final class TiffExifParser implements TiffExifParserInterface
             }
         }
 
-        $result = (int) $normalised;
-
-        // TIFF 6.0 §2: offsets must begin on a word boundary (even byte offset).
-        if ($result % 2 !== 0) {
-            throw new ParseError(sprintf('%s is not word-aligned (offset %d) per TIFF 6.0.', $context, $result), 1347);
-        }
-
-        return $result;
+        // TIFF 6.0 §2 recommends word-aligned offsets for memory access efficiency,
+        // but explicitly states readers should accept non-aligned data.
+        return (int) $normalised;
     }
 
     /**
