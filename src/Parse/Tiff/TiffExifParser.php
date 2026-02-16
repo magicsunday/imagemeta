@@ -4633,8 +4633,6 @@ final class TiffExifParser implements TiffExifParserInterface
      * @var list<array{int, string}> JPEG_PROHIBITED_TAGS
      */
     private const array JPEG_PROHIBITED_TAGS = [
-        [ExifTag::IMAGE_WIDTH, 'ImageWidth'],
-        [ExifTag::IMAGE_LENGTH, 'ImageLength'],
         [ExifTag::BITS_PER_SAMPLE, 'BitsPerSample'],
         [ExifTag::SAMPLES_PER_PIXEL, 'SamplesPerPixel'],
         [ExifTag::PHOTOMETRIC_INTERPRETATION, 'PhotometricInterpretation'],
