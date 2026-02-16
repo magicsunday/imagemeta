@@ -6594,6 +6594,32 @@ final class TiffExifParser implements TiffExifParserInterface
     }
 
     /**
+     * Returns the effective DNG backward version for validation.
+     *
+     * If the explicit DNGBackwardVersion tag is present, its tuple is returned.
+     * Otherwise, per DNG 1.7.1.0 §2 the default is derived from DNGVersion
+     * as [major, minor, 0, 0].
+     *
+     * @return list<int>|null Four-element version tuple, or null when DNGVersion is absent.
+     */
+    private function getEffectiveDngBackwardVersion(Ifd $ifd): ?array
+    {
+        $explicit = $this->extractDngVersionTuple($ifd, DngTag::DNG_BACKWARD_VERSION);
+
+        if ($explicit !== null) {
+            return $explicit;
+        }
+
+        $dngVer = $this->extractDngVersionTuple($ifd, DngTag::DNG_VERSION);
+
+        if ($dngVer === null) {
+            return null;
+        }
+
+        return [$dngVer[0], $dngVer[1], 0, 0];
+    }
+
+    /**
      * DNG calibration illuminant → illuminant data dependency pairs.
      *
      * DNG 1.7.1.0 pp. 43–44, 86, 91–93: when a CalibrationIlluminant tag has value
@@ -7000,26 +7026,10 @@ final class TiffExifParser implements TiffExifParserInterface
      */
     private function validateDngInterleaveVersionFloors(Ifd $ifd): void
     {
-        $bwEntry = $ifd->get(DngTag::DNG_BACKWARD_VERSION);
+        $bwVer = $this->getEffectiveDngBackwardVersion($ifd);
 
-        if (!$bwEntry instanceof IfdEntry) {
+        if ($bwVer === null) {
             return;
-        }
-
-        $bwValue = $bwEntry->value;
-
-        if (!$bwValue instanceof ExifNumericList || count($bwValue->values) !== 4) {
-            return;
-        }
-
-        $bwVer = [];
-
-        foreach ($bwValue->values as $c) {
-            if (!is_int($c)) {
-                return;
-            }
-
-            $bwVer[] = $c;
         }
 
         foreach (self::DNG_INTERLEAVE_MIN_VERSIONS as $tag => $minVer) {
@@ -7325,26 +7335,10 @@ final class TiffExifParser implements TiffExifParserInterface
             return;
         }
 
-        $bwEntry = $ifd->get(DngTag::DNG_BACKWARD_VERSION);
+        $bwVer = $this->getEffectiveDngBackwardVersion($ifd);
 
-        if (!$bwEntry instanceof IfdEntry) {
+        if ($bwVer === null) {
             return;
-        }
-
-        $bwValue = $bwEntry->value;
-
-        if (!$bwValue instanceof ExifNumericList || count($bwValue->values) !== 4) {
-            return;
-        }
-
-        $bwVer = [];
-
-        foreach ($bwValue->values as $c) {
-            if (!is_int($c)) {
-                return;
-            }
-
-            $bwVer[] = $c;
         }
 
         if ($this->dngVersionLessThan($bwVer, [1, 7, 0, 0])) {
@@ -7373,26 +7367,10 @@ final class TiffExifParser implements TiffExifParserInterface
      */
     private function validateDngBackwardVersionGate(Ifd $ifd): void
     {
-        $bwEntry = $ifd->get(DngTag::DNG_BACKWARD_VERSION);
+        $bwVer = $this->getEffectiveDngBackwardVersion($ifd);
 
-        if (!$bwEntry instanceof IfdEntry) {
+        if ($bwVer === null) {
             return;
-        }
-
-        $bwValue = $bwEntry->value;
-
-        if (!$bwValue instanceof ExifNumericList || count($bwValue->values) !== 4) {
-            return;
-        }
-
-        $bwVer = [];
-
-        foreach ($bwValue->values as $c) {
-            if (!is_int($c)) {
-                return;
-            }
-
-            $bwVer[] = $c;
         }
 
         if ($this->dngVersionLessThan(self::SUPPORTED_DNG_VERSION, $bwVer)) {
@@ -10551,32 +10529,20 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         if ($entry->value >= 6) {
-            $bwEntry = $ifd->get(DngTag::DNG_BACKWARD_VERSION);
+            $bwVer = $this->getEffectiveDngBackwardVersion($ifd);
 
-            if ($bwEntry instanceof IfdEntry && $bwEntry->value instanceof ExifNumericList) {
-                $bwVer = [];
-
-                foreach ($bwEntry->value->values as $c) {
-                    if (!is_int($c)) {
-                        return;
-                    }
-
-                    $bwVer[] = $c;
-                }
-
-                if (count($bwVer) === 4 && $this->dngVersionLessThan($bwVer, [1, 3, 0, 0])) {
-                    throw new ParseError(
-                        sprintf(
-                            'CFALayout value %d requires DNGBackwardVersion >= 1.3.0.0, got %d.%d.%d.%d.',
-                            $entry->value,
-                            $bwVer[0],
-                            $bwVer[1],
-                            $bwVer[2],
-                            $bwVer[3],
-                        ),
-                        1585,
-                    );
-                }
+            if ($bwVer !== null && $this->dngVersionLessThan($bwVer, [1, 3, 0, 0])) {
+                throw new ParseError(
+                    sprintf(
+                        'CFALayout value %d requires DNGBackwardVersion >= 1.3.0.0, got %d.%d.%d.%d.',
+                        $entry->value,
+                        $bwVer[0],
+                        $bwVer[1],
+                        $bwVer[2],
+                        $bwVer[3],
+                    ),
+                    1585,
+                );
             }
         }
     }

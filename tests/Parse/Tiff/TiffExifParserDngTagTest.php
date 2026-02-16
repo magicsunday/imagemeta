@@ -1280,6 +1280,63 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Rejects RowInterleaveFactor=2 when DNGBackwardVersion is absent and
+     * effective backward version (from DNGVersion) is below the 1.2.0.0 floor.
+     */
+    #[Test]
+    public function rejectsRowInterleaveWithImpliedBackwardVersionBelowFloor(): void
+    {
+        $ifdOffset = 8;
+
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            DngTag::DNG_VERSION => pack('v', DngTag::DNG_VERSION)
+                . pack('v', TiffConst::TYPE_BYTE)
+                . pack('V', 4)
+                . pack('C4', 1, 1, 0, 0),
+            DngTag::UNIQUE_CAMERA_MODEL => pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', 2)
+                . "X\0\0\0",
+            ExifTag::ORIENTATION => pack('v', ExifTag::ORIENTATION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 1) . pack('v', 0),
+            DngTag::ROW_INTERLEAVE_FACTOR => pack('v', DngTag::ROW_INTERLEAVE_FACTOR)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 2) . pack('v', 0),
+        ];
+
+        ksort($tags);
+
+        $ifdData = pack('v', count($tags));
+
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0);
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData;
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('DNGBackwardVersion');
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
      * Builds a TIFF with a DNG interleave factor tag and DNGBackwardVersion.
      *
      * @param int       $interleaveTag Interleave factor tag constant.
