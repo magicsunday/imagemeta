@@ -55,20 +55,79 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Leaves SamplesPerPixel unset so the default is applied.
-     * Confirms the method returns 3 for the standard RGB/YCbCr case.
-     *
-     * @see EXIF 3.0 §4.6.5.1.7: SamplesPerPixel defaults to 3 for RGB/YCbCr
+     * Leaves SamplesPerPixel unset in JPEG context (no Compression tag).
+     * Confirms the method returns 3 per EXIF 3.0 §4.6.5.1.7.
      *
      * @return void
      */
     #[Test]
-    public function samplesPerPixelReturnsDefaultWhenMissing(): void
+    public function samplesPerPixelReturnsThreeInJpegContext(): void
     {
         $ifd0       = new Ifd([]);
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(3, $parsedExif->samplesPerPixel());
+    }
+
+    /**
+     * Leaves SamplesPerPixel unset for a TIFF grayscale image.
+     * Confirms the method returns 1 instead of the EXIF default 3.
+     *
+     * @return void
+     */
+    #[Test]
+    public function samplesPerPixelReturnsOneForGrayscale(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                ExifTag::PHOTOMETRIC_INTERPRETATION,
+                3,
+                1,
+                Photometric::BLACK_IS_ZERO->value,
+            ),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(1, $parsedExif->samplesPerPixel());
+    }
+
+    /**
+     * Leaves SamplesPerPixel unset for an RGB photometric image.
+     * Confirms the method returns 3 when photometric is RGB.
+     *
+     * @return void
+     */
+    #[Test]
+    public function samplesPerPixelReturnsThreeForRgb(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                ExifTag::PHOTOMETRIC_INTERPRETATION,
+                3,
+                1,
+                Photometric::RGB->value,
+            ),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(3, $parsedExif->samplesPerPixel());
+    }
+
+    /**
+     * Leaves SamplesPerPixel unset in TIFF context without photometric.
+     * Confirms the TIFF 6.0 default of 1 is returned.
+     *
+     * @return void
+     */
+    #[Test]
+    public function samplesPerPixelReturnsOneInTiffContextWithoutPhotometric(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::UNCOMPRESSED->value),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(1, $parsedExif->samplesPerPixel());
     }
 
     /**
@@ -194,6 +253,40 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
+     * Omits XResolution/YResolution in JPEG context (no Compression tag).
+     * Confirms 72.0 dpi fallback per EXIF 3.0 §4.6.5.1.8-9.
+     *
+     * @return void
+     */
+    #[Test]
+    public function resolutionDefaultsTo72InJpegContext(): void
+    {
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(72.0, $parsedExif->xResolution());
+        self::assertSame(72.0, $parsedExif->yResolution());
+    }
+
+    /**
+     * Omits XResolution/YResolution in TIFF context (Compression tag present).
+     * TIFF 6.0 defines no default, so null is returned.
+     *
+     * @return void
+     */
+    #[Test]
+    public function resolutionReturnsNullInTiffContext(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::UNCOMPRESSED->value),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertNull($parsedExif->xResolution());
+        self::assertNull($parsedExif->yResolution());
+    }
+
+    /**
      * Omits YCbCrPositioning when photometric is YCbCr.
      * Verifies the default is CENTERED when the tag is missing.
      *
@@ -237,6 +330,67 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertNull($parsedExif->ycbcrPositioning());
+    }
+
+    /**
+     * Omits YCbCrSubSampling in TIFF YCbCr context.
+     * TIFF 6.0 §21 defines default [2,2] for YCbCr images.
+     *
+     * @return void
+     */
+    #[Test]
+    public function ycbcrSubSamplingDefaultsInTiffYcbcrContext(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::COMPRESSION                => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::UNCOMPRESSED->value),
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                ExifTag::PHOTOMETRIC_INTERPRETATION,
+                3,
+                1,
+                Photometric::YCBCR->value,
+            ),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame([2, 2], $parsedExif->ycbcrSubSampling());
+    }
+
+    /**
+     * Omits YCbCrSubSampling in JPEG context (no Compression tag).
+     * Returns null so SOF-derived subsampling can take precedence.
+     *
+     * @return void
+     */
+    #[Test]
+    public function ycbcrSubSamplingReturnsNullInJpegContext(): void
+    {
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertNull($parsedExif->ycbcrSubSampling());
+    }
+
+    /**
+     * Omits YCbCrSubSampling in TIFF RGB context.
+     * Returns null because the default only applies to YCbCr images.
+     *
+     * @return void
+     */
+    #[Test]
+    public function ycbcrSubSamplingReturnsNullForNonYcbcr(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::COMPRESSION                => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::UNCOMPRESSED->value),
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                ExifTag::PHOTOMETRIC_INTERPRETATION,
+                3,
+                1,
+                Photometric::RGB->value,
+            ),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertNull($parsedExif->ycbcrSubSampling());
     }
 
     /**

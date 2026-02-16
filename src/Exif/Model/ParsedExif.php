@@ -2826,16 +2826,33 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     /**
      * Returns the number of samples per pixel.
      *
-     * EXIF 3.0 §4.6.5.1.7 specifies a default of 3 samples for RGB/YCbCr images.
-     * TIFF 6.0 §8 lists 1 as the grayscale default; the EXIF profile overrides
-     * this for the supported colour models.
+     * When absent, defaults depend on photometric interpretation:
+     * RGB, YCbCr, CIELab → 3; grayscale/palette/mask → 1.
+     * JPEG context (no Compression tag) defaults to 3 per EXIF 3.0 §4.6.5.1.7;
+     * TIFF context defaults to 1 per TIFF 6.0 §8.
      *
      * @return int
      */
     public function samplesPerPixel(): int
     {
-        // EXIF 3.0 §4.6.5.1.7: Default is 3 when tag is not present (RGB/YCbCr)
-        return $this->int($this->ifd0, ExifTag::SAMPLES_PER_PIXEL) ?? 3;
+        $explicit = $this->int($this->ifd0, ExifTag::SAMPLES_PER_PIXEL);
+
+        if ($explicit !== null) {
+            return $explicit;
+        }
+
+        $photometric = $this->photometric();
+
+        if ($photometric instanceof Photometric) {
+            return match ($photometric) {
+                Photometric::RGB, Photometric::YCBCR, Photometric::CIELAB => 3,
+                default => 1,
+            };
+        }
+
+        // JPEG context (no Compression tag) → EXIF default 3;
+        // TIFF context → TIFF 6.0 default 1.
+        return $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry ? 1 : 3;
     }
 
     /**
@@ -2934,17 +2951,29 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
 
     /**
      * Returns the horizontal resolution value expressed in the resolution unit.
+     *
+     * EXIF 3.0 §4.6.5.1.8 defaults to 72 dpi for JPEG primary images.
+     * TIFF 6.0 defines no default; returns null in TIFF context.
      */
-    public function xResolution(): float
+    public function xResolution(): ?float
     {
-        // EXIF 3.0 §4.6.5.1.8: Default is 72 dpi when resolution is unknown
-        return $this->rational($this->ifd0, ExifTag::X_RESOLUTION) ?? 72.0;
+        $resolution = $this->rational($this->ifd0, ExifTag::X_RESOLUTION);
+
+        if ($resolution !== null) {
+            return $resolution;
+        }
+
+        // JPEG context (no Compression tag) → EXIF default 72 dpi
+        return $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry ? null : 72.0;
     }
 
     /**
      * Returns the vertical resolution value expressed in the resolution unit.
+     *
+     * Defaults to XResolution when absent per EXIF 3.0 §4.6.5.1.9.
+     * Returns null in TIFF context when both tags are absent.
      */
-    public function yResolution(): float
+    public function yResolution(): ?float
     {
         $resolution = $this->rational($this->ifd0, ExifTag::Y_RESOLUTION);
 
@@ -2952,7 +2981,6 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return $resolution;
         }
 
-        // EXIF 3.0 §4.6.5.1.9: Default matches XResolution (72 dpi when unknown)
         return $this->xResolution();
     }
 
@@ -2986,6 +3014,10 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      * compressed data because the JPEG marker stream already encodes the
      * sampling factors.
      *
+     * TIFF 6.0 §21 defines the default as [2,2] for YCbCr images when the
+     * tag is absent. In JPEG context (no Compression tag) we return null so
+     * SOF-derived subsampling can be used by the caller.
+     *
      * @return array{0:int,1:int}|null
      */
     public function ycbcrSubSampling(): ?array
@@ -3002,13 +3034,22 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
 
         $raw = $this->rawString($this->ifd0, ExifTag::YCBCR_SUB_SAMPLING);
 
-        if ($raw === null) {
-            return null;
+        if ($raw !== null) {
+            $pair = ValueConverters::ycbcrSubSamplingToPair($raw);
+
+            return $pair !== null ? $this->validateYcbcrPair($pair[0], $pair[1]) : null;
         }
 
-        $pair = ValueConverters::ycbcrSubSamplingToPair($raw);
+        // TIFF 6.0 §21: Default [2,2] for YCbCr in TIFF context.
+        // In JPEG context, let SOF-derived subsampling take precedence.
+        if (
+            $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry
+            && $this->photometric() === Photometric::YCBCR
+        ) {
+            return [2, 2];
+        }
 
-        return $pair !== null ? $this->validateYcbcrPair($pair[0], $pair[1]) : null;
+        return null;
     }
 
     /**
