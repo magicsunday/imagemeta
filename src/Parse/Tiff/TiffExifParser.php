@@ -1494,6 +1494,7 @@ final class TiffExifParser implements TiffExifParserInterface
             || ($ifd0->get(DngTag::UNIQUE_CAMERA_MODEL) instanceof IfdEntry);
 
         $this->validateDngRequiredVersion($ifd0);
+        $this->validateDngRequiredUniqueCameraModel($ifd0);
         $this->validateEnhancedIfd($ifd0);
         foreach ($additionalIfds as $additionalIfd) {
             $this->validateEnhancedIfd($additionalIfd);
@@ -7437,6 +7438,23 @@ final class TiffExifParser implements TiffExifParserInterface
                     1498,
                 );
             }
+        }
+    }
+
+    /**
+     * GH-1239: Requires UniqueCameraModel in IFD0 when DNGVersion is present.
+     */
+    private function validateDngRequiredUniqueCameraModel(Ifd $ifd): void
+    {
+        if (!$ifd->get(DngTag::DNG_VERSION) instanceof IfdEntry) {
+            return;
+        }
+
+        if (!$ifd->get(DngTag::UNIQUE_CAMERA_MODEL) instanceof IfdEntry) {
+            throw new ParseError(
+                'DNG requires UniqueCameraModel tag in IFD0 per DNG 1.7.1.0.',
+                1499,
+            );
         }
     }
 

@@ -1683,6 +1683,11 @@ final class TiffExifParserDngTagTest extends TestCase
                 . pack('v', TiffConst::TYPE_BYTE)
                 . pack('V', 4)
                 . pack('C4', 1, 7, 1, 0);
+            // UniqueCameraModel: ASCII, NUL-terminated, inline
+            $tags[DngTag::UNIQUE_CAMERA_MODEL] = pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', 2)
+                . "X\0\0\0";
         }
 
         ksort($tags);
@@ -9161,6 +9166,10 @@ final class TiffExifParserDngTagTest extends TestCase
                 . pack('v', TiffConst::TYPE_BYTE)
                 . pack('V', 4)
                 . pack('C4', ...$dngVersion),
+            DngTag::UNIQUE_CAMERA_MODEL => pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', 2)
+                . "X\0\0\0",
             $illuminantTag => pack('v', $illuminantTag)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -9182,5 +9191,54 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . $ifdData;
+    }
+
+    /**
+     * Rejects DNG payload with DNGVersion but missing UniqueCameraModel.
+     */
+    #[Test]
+    public function rejectsDngWithoutUniqueCameraModel(): void
+    {
+        $ifdOffset = 8;
+
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::ORIENTATION => pack('v', ExifTag::ORIENTATION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 1) . pack('v', 0),
+            DngTag::DNG_VERSION => pack('v', DngTag::DNG_VERSION)
+                . pack('v', TiffConst::TYPE_BYTE)
+                . pack('V', 4)
+                . pack('C4', 1, 7, 1, 0),
+        ];
+
+        ksort($tags);
+
+        $entryCount = count($tags);
+        $ifdData    = pack('v', $entryCount);
+
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0);
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData;
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('UniqueCameraModel');
+
+        (new TiffExifParser())->parseFromBlob($blob);
     }
 }
