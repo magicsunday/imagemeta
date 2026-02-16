@@ -27,6 +27,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function count;
+use function ksort;
 use function pack;
 use function strlen;
 
@@ -9090,5 +9092,95 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', $value)
             . pack('V', 0)
             . $uniqueCameraModel;
+    }
+
+    /**
+     * Rejects CalibrationIlluminant1 with a value outside the EXIF LightSource domain.
+     */
+    #[Test]
+    public function rejectsCalibrationIlluminantWithInvalidLightSourceValue(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('CalibrationIlluminant');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngCalibrationIlluminantBlob(
+                dngVersion: [1, 6, 0, 0],
+                illuminantTag: DngTag::CALIBRATION_ILLUMINANT_1,
+                illuminantValue: 5,
+            ),
+        );
+    }
+
+    /**
+     * Rejects CalibrationIlluminant1=255 when DNGVersion < 1.6.0.0.
+     */
+    #[Test]
+    public function rejectsCalibrationIlluminantOtherBeforeDng160(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('requires DNG');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngCalibrationIlluminantBlob(
+                dngVersion: [1, 5, 0, 0],
+                illuminantTag: DngTag::CALIBRATION_ILLUMINANT_1,
+                illuminantValue: 255,
+            ),
+        );
+    }
+
+    /**
+     * Builds a minimal classic TIFF with DNGVersion and a single CalibrationIlluminant tag.
+     *
+     * @param list<int> $dngVersion      Four-byte DNG version tuple.
+     * @param int       $illuminantTag   CalibrationIlluminant tag ID.
+     * @param int       $illuminantValue Illuminant value to encode as SHORT.
+     */
+    private function buildDngCalibrationIlluminantBlob(
+        array $dngVersion,
+        int $illuminantTag,
+        int $illuminantValue,
+    ): string {
+        $ifdOffset = 8;
+
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::ORIENTATION => pack('v', ExifTag::ORIENTATION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 1) . pack('v', 0),
+            DngTag::DNG_VERSION => pack('v', DngTag::DNG_VERSION)
+                . pack('v', TiffConst::TYPE_BYTE)
+                . pack('V', 4)
+                . pack('C4', ...$dngVersion),
+            $illuminantTag => pack('v', $illuminantTag)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $illuminantValue) . pack('v', 0),
+        ];
+
+        ksort($tags);
+
+        $entryCount = count($tags);
+        $ifdData    = pack('v', $entryCount);
+
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData;
     }
 }

@@ -32,6 +32,7 @@ use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
+use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 
@@ -1529,6 +1530,7 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         $this->validateDngMatrixTags($ifd0);
+        $this->validateDngCalibrationIlluminantDomain($ifd0);
         $this->validateDngIlluminantDependencies($ifd0);
         $this->validateDngTripleIlluminant($ifd0);
         $this->validateDngWhiteBalanceExclusivity($ifd0);
@@ -6501,6 +6503,93 @@ final class TiffExifParser implements TiffExifParserInterface
                 );
             }
         }
+    }
+
+    /**
+     * GH-1238: CalibrationIlluminant tags that must have valid LightSource values.
+     *
+     * @var list<int>
+     */
+    private const array DNG_CALIBRATION_ILLUMINANT_TAGS = [
+        DngTag::CALIBRATION_ILLUMINANT_1,
+        DngTag::CALIBRATION_ILLUMINANT_2,
+        DngTag::CALIBRATION_ILLUMINANT_3,
+    ];
+
+    /**
+     * GH-1238: Validates CalibrationIlluminant values against the EXIF LightSource domain
+     * and enforces DNG version gating for value 255 (Other).
+     */
+    private function validateDngCalibrationIlluminantDomain(Ifd $ifd): void
+    {
+        $dngVer = $this->extractDngVersionTuple($ifd, DngTag::DNG_VERSION);
+
+        foreach (self::DNG_CALIBRATION_ILLUMINANT_TAGS as $tag) {
+            $entry = $ifd->get($tag);
+            if (!$entry instanceof IfdEntry) {
+                continue;
+            }
+
+            if (!is_int($entry->value)) {
+                continue;
+            }
+
+            $value = $entry->value;
+
+            if (LightSource::tryFrom($value) === null) {
+                throw new ParseError(
+                    sprintf(
+                        'CalibrationIlluminant 0x%04X value %d is not a valid EXIF LightSource.',
+                        $tag,
+                        $value,
+                    ),
+                    1496,
+                );
+            }
+
+            if ($value === 255 && $dngVer !== null && $this->dngVersionLessThan($dngVer, [1, 6, 0, 0])) {
+                throw new ParseError(
+                    sprintf(
+                        'CalibrationIlluminant 0x%04X = 255 (Other) requires DNG >= 1.6.0.0, got %d.%d.%d.%d.',
+                        $tag,
+                        $dngVer[0],
+                        $dngVer[1],
+                        $dngVer[2],
+                        $dngVer[3],
+                    ),
+                    1497,
+                );
+            }
+        }
+    }
+
+    /**
+     * Extracts a 4-byte DNG version tuple from the given IFD entry.
+     *
+     * @return list<int>|null
+     */
+    private function extractDngVersionTuple(Ifd $ifd, int $tag): ?array
+    {
+        $entry = $ifd->get($tag);
+        if (!$entry instanceof IfdEntry) {
+            return null;
+        }
+
+        $value = $entry->value;
+        if (!$value instanceof ExifNumericList || count($value->values) !== 4) {
+            return null;
+        }
+
+        $tuple = [];
+        foreach ($value->values as $c) {
+            if (!is_int($c)) {
+                return null;
+            }
+
+            $tuple[] = $c;
+        }
+
+        return $tuple;
     }
 
     /**
