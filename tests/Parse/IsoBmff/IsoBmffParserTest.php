@@ -2311,6 +2311,76 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Resolves extent_index=1 to the first iloc item reference target.
+     *
+     * @return void
+     */
+    #[Test]
+    public function resolveIlocItemOffsetExtentIndexOneUsesFirstReference(): void
+    {
+        $extractor = $this->createExtractor($this->createFileWithIlocItemOffsetReferenceTargets(1, 4));
+        [$exifs]   = $extractor->extract();
+
+        self::assertSame(["MM\x00\x2Aitem-ref-one"], $exifs);
+    }
+
+    /**
+     * Resolves extent_index=2 to the second iloc item reference target.
+     *
+     * @return void
+     */
+    #[Test]
+    public function resolveIlocItemOffsetExtentIndexTwoUsesSecondReference(): void
+    {
+        $extractor = $this->createExtractor($this->createFileWithIlocItemOffsetReferenceTargets(2, 4));
+        [$exifs]   = $extractor->extract();
+
+        self::assertSame(["MM\x00\x2Aitem-ref-two"], $exifs);
+    }
+
+    /**
+     * Uses the first reference target when index_size==0 implies extent_index=1.
+     *
+     * @return void
+     */
+    #[Test]
+    public function resolveIlocItemOffsetWithZeroIndexSizeUsesFirstReference(): void
+    {
+        $extractor = $this->createExtractor($this->createFileWithIlocItemOffsetReferenceTargets(null, 0));
+        [$exifs]   = $extractor->extract();
+
+        self::assertSame(["MM\x00\x2Aitem-ref-one"], $exifs);
+    }
+
+    /**
+     * Rejects out-of-range extent_index values for item_offset reference lists.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocItemOffsetExtentIndexOutOfRange(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('iloc extent_index 3 out of range for 2 references');
+
+        $this->createExtractor($this->createFileWithIlocItemOffsetReferenceTargets(3, 4))->extract();
+    }
+
+    /**
+     * Rejects reserved extent_index=0 for construction_method=2 entries.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocItemOffsetExtentIndexZeroReserved(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('iloc extent_index 0 is reserved');
+
+        $this->createExtractor($this->createFileWithIlocItemOffsetReferenceTargets(0, 4))->extract();
+    }
+
+    /**
      * Uses an extent that exceeds the referenced item length.
      * This asserts a ParseError is thrown for invalid item offset extents.
      *
@@ -7250,6 +7320,77 @@ final class IsoBmffParserTest extends TestCase
         }
 
         $mdat = $this->box('mdat', $mdatPayload);
+
+        return $ftyp . $meta . $mdat;
+    }
+
+    /**
+     * Builds an ISO BMFF file where iloc item_offset references can target two distinct item payloads.
+     *
+     * @param int|null $extentIndex 1-based extent_index value; null means index_size=0 implied index 1.
+     * @param int      $indexSize   iloc index_size nibble (0 or 4 in these tests).
+     */
+    private function createFileWithIlocItemOffsetReferenceTargets(?int $extentIndex, int $indexSize): string
+    {
+        $firstReferencePayload  = pack('N', 0) . "MM\x00\x2Aitem-ref-one";
+        $secondReferencePayload = pack('N', 0) . "MM\x00\x2Aitem-ref-two";
+
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+
+        // GH-910: construction_method=2 (item_offset) resolves only via 'iloc' item references.
+        $irefEntry = $this->box('iloc', pack('n', 1) . pack('n', 2) . pack('n', 2) . pack('n', 3));
+        $iref      = $this->fullBox('iref', $irefEntry);
+
+        $ilocBuilder = function (int $item2Offset, int $item3Offset) use ($extentIndex, $indexSize, $firstReferencePayload, $secondReferencePayload): string {
+            $payload = "\x44"; // offset_size=4, length_size=4
+            $payload .= chr($indexSize); // base_offset_size=0 (high nibble), index_size in low nibble
+            $payload .= pack('n', 3); // item_count = 3
+
+            $payload .= pack('n', 1); // item_id = 1 (Exif descriptor)
+            $payload .= pack('n', 0x0002); // construction_method=2 (item_offset)
+            $payload .= pack('n', 0); // data_reference_index = 0
+            $payload .= pack('n', 1); // extent_count = 1
+            if ($indexSize > 0) {
+                $payload .= pack('N', $extentIndex ?? 1); // explicit 1-based extent_index
+            }
+
+            $payload .= pack('N', 0); // extent_offset = 0
+            $payload .= pack('N', strlen($firstReferencePayload)); // extent_length
+
+            $payload .= pack('n', 2); // item_id = 2 (first reference target)
+            $payload .= pack('n', 0x0000); // construction_method=0 (file_offset)
+            $payload .= pack('n', 0); // data_reference_index = 0
+            $payload .= pack('n', 1); // extent_count = 1
+            if ($indexSize > 0) {
+                $payload .= pack('N', 0); // unused for method 0
+            }
+
+            $payload .= pack('N', $item2Offset); // extent_offset
+            $payload .= pack('N', strlen($firstReferencePayload)); // extent_length
+
+            $payload .= pack('n', 3); // item_id = 3 (second reference target)
+            $payload .= pack('n', 0x0000); // construction_method=0
+            $payload .= pack('n', 0); // data_reference_index = 0
+            $payload .= pack('n', 1); // extent_count = 1
+            if ($indexSize > 0) {
+                $payload .= pack('N', 0); // unused for method 0
+            }
+
+            $payload .= pack('N', $item3Offset); // extent_offset
+            $payload .= pack('N', strlen($secondReferencePayload)); // extent_length
+
+            return $this->fullBox('iloc', $payload, 1, 0);
+        };
+
+        $placeholderIloc = $ilocBuilder(0, 0);
+        $meta            = $this->fullBox('meta', $iinf . $iref . $placeholderIloc);
+        $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
+        $iloc       = $ilocBuilder($offsetBase, $offsetBase + strlen($firstReferencePayload));
+        $meta       = $this->fullBox('meta', $iinf . $iref . $iloc);
+        $mdat       = $this->box('mdat', $firstReferencePayload . $secondReferencePayload);
 
         return $ftyp . $meta . $mdat;
     }

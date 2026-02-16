@@ -3362,16 +3362,21 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('iloc item payload exceeds configured limit', 1188);
                 }
 
-                // extent_index is optional; treat it as zero-based with a one-based fallback.
-                $referencePosition = $extent['index'] ?? 0;
-                if (!isset($references[$referencePosition]) && ($referencePosition > 0) && isset($references[$referencePosition - 1])) {
-                    --$referencePosition;
+                $extentIndex = $extent['index'];
+                if ($extentIndex === null) {
+                    // ISO/IEC 14496-12 §8.11.3.2: when index_size==0, extent_index=1 is implied.
+                    $referencePosition = 0;
+                } else {
+                    // ISO/IEC 14496-12 §8.11.3.2: extent_index is 1-based.
+                    $referencePosition = $extentIndex - 1;
                 }
 
                 if (!isset($references[$referencePosition])) {
-                    $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
-
-                    return null;
+                    throw new ParseError(sprintf(
+                        'iloc extent_index %d out of range for %d references',
+                        $extentIndex ?? 1,
+                        count($references),
+                    ), 1607);
                 }
 
                 $referenceItemId = $references[$referencePosition]->toItemId;
