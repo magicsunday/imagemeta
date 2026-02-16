@@ -182,6 +182,42 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 1,
                 "\x00\x00\x00\x46\x00\x00\x00\x01",
             ],
+            'GPSTrackRef count 2' => [
+                ExifTag::GPS_TRACK_REF,
+                TiffConst::TYPE_ASCII,
+                2,
+                "T\0",
+            ],
+            'GPSTrack count 1' => [
+                ExifTag::GPS_TRACK,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                "\x00\x00\x00\x7B\x00\x00\x00\x01",
+            ],
+            'GPSImgDirectionRef count 2' => [
+                ExifTag::GPS_IMG_DIRECTION_REF,
+                TiffConst::TYPE_ASCII,
+                2,
+                "M\0",
+            ],
+            'GPSImgDirection count 1' => [
+                ExifTag::GPS_IMG_DIRECTION,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                "\x00\x00\x00\xB4\x00\x00\x00\x01",
+            ],
+            'GPSDestBearingRef count 2' => [
+                ExifTag::GPS_DEST_BEARING_REF,
+                TiffConst::TYPE_ASCII,
+                2,
+                "T\0",
+            ],
+            'GPSDestBearing count 1' => [
+                ExifTag::GPS_DEST_BEARING,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                "\x00\x00\x00\x2D\x00\x00\x00\x01",
+            ],
             'FileSource count 1' => [
                 ExifTag::FILE_SOURCE,
                 TiffConst::TYPE_UNDEFINED,
@@ -577,6 +613,114 @@ final class TiffExifParserFixedLengthTest extends TestCase
         );
 
         (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPS bearing reference tags when encoded with non-ASCII TIFF type.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideGpsBearingRefTags')]
+    public function rejectsGpsBearingReferenceTagsWithWrongType(int $tag): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            $tag,
+            TiffConst::TYPE_BYTE,
+            2,
+            "T\0",
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPS bearing reference tags when encoded with wrong component count.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideGpsBearingRefTags')]
+    public function rejectsGpsBearingReferenceTagsWithWrongCount(int $tag): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            $tag,
+            TiffConst::TYPE_ASCII,
+            1,
+            'T',
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * @return iterable<string, array{0:int}>
+     */
+    public static function provideGpsBearingRefTags(): iterable
+    {
+        yield 'GPSTrackRef' => [ExifTag::GPS_TRACK_REF];
+        yield 'GPSImgDirectionRef' => [ExifTag::GPS_IMG_DIRECTION_REF];
+        yield 'GPSDestBearingRef' => [ExifTag::GPS_DEST_BEARING_REF];
+    }
+
+    /**
+     * Rejects GPS bearing value tags when encoded with non-RATIONAL TIFF type.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideGpsBearingValueTags')]
+    public function rejectsGpsBearingValueTagsWithWrongType(int $tag): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            $tag,
+            TiffConst::TYPE_LONG,
+            1,
+            "\x00\x00\x00\x01",
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPS bearing value tags when encoded with wrong component count.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideGpsBearingValueTags')]
+    public function rejectsGpsBearingValueTagsWithWrongCount(int $tag): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            $tag,
+            TiffConst::TYPE_RATIONAL,
+            2,
+            str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * @return iterable<string, array{0:int}>
+     */
+    public static function provideGpsBearingValueTags(): iterable
+    {
+        yield 'GPSTrack' => [ExifTag::GPS_TRACK];
+        yield 'GPSImgDirection' => [ExifTag::GPS_IMG_DIRECTION];
+        yield 'GPSDestBearing' => [ExifTag::GPS_DEST_BEARING];
     }
 
     private function buildClassicTiffWithEntry(int $tag, int $type, int $count, string $valueBytes): string
