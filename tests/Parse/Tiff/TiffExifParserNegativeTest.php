@@ -347,16 +347,14 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Builds an IFD with descending tag identifiers.
-     * Verifies the parser rejects unsorted directory entries per TIFF 6.0.
-     *
-     * @return void
+     * Accepts an IFD with descending tag identifiers.
+     * TIFF 6.0 §2 sorting is a writer-side constraint; unsorted IFDs are
+     * common from mobile devices and tolerated per Postel's law.
      */
     #[Test]
-    public function rejectsIfdEntriesThatAreNotSortedByTag(): void
+    public function acceptsUnsortedIfdEntries(): void
     {
-        // Use Software (0x0131) before Artist (0x013B) — wrong order: 0x0131 < 0x013B is correct,
-        // so reverse them: Artist (0x013B) first, then Software (0x0131) — descending = invalid.
+        // Artist (0x013B) before Software (0x0131) — descending order
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
@@ -371,12 +369,19 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('V', 0x00434241)
             . pack('V', 0);
 
-        $reader = new TiffExifParser();
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            // Any error other than the old sort-order rejection is acceptable
+            // here — the minimal blob lacks required IFD0 tags, so later
+            // validation may still throw.
+            self::assertNotSame(1308, $e->getCode());
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('IFD entries must be sorted in ascending order by tag per TIFF 6.0 §2.');
+            return;
+        }
 
-        $reader->parseFromBlob($blob);
+        // If no exception, the unsorted entries were accepted too.
+        $this->addToAssertionCount(1);
     }
 
     /**

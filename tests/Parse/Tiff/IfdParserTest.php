@@ -44,20 +44,21 @@ final class IfdParserTest extends TestCase
     }
 
     #[Test]
-    public function rejectsOutOfOrderEntries(): void
+    public function acceptsUnsortedIfdEntries(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('IFD entries must be sorted in ascending order by tag');
-
         $parser = new IfdParser();
-        $entry1 = new IfdEntry(0x0101, 4, 1, 20);
-        $entry2 = new IfdEntry(0x0100, 4, 1, 10);
+        $entry1 = new IfdEntry(0x0112, 3, 1, 1);
+        $entry2 = new IfdEntry(0x010F, 2, 5, 'Test');
 
         $entries   = [];
         $lastTagId = null;
 
         $parser->addEntry($entries, $lastTagId, $entry1);
         $parser->addEntry($entries, $lastTagId, $entry2);
+
+        self::assertCount(2, $entries);
+        self::assertArrayHasKey(0x010F, $entries);
+        self::assertArrayHasKey(0x0112, $entries);
     }
 
     #[Test]
