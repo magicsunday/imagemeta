@@ -985,6 +985,93 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Positive raw GPSAltitude with ref 0/2 yields positive result.
+     */
+    #[Test]
+    #[DataProvider('providePositiveAltitudeRefs')]
+    public function acceptsPositiveAltitudeWithAboveSeaLevelRef(int $ref): void
+    {
+        $entries = [
+            ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, $ref),
+            ExifTag::GPS_ALTITUDE     => new IfdEntry(
+                ExifTag::GPS_ALTITUDE,
+                5,
+                1,
+                new ExifRational(500, 1),
+            ),
+        ];
+
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertSame($ref, $result['alt_ref']);
+        self::assertEqualsWithDelta(500.0, $result['alt'], 0.000001);
+    }
+
+    /**
+     * @return iterable<string, array{0: int}>
+     */
+    public static function providePositiveAltitudeRefs(): iterable
+    {
+        yield 'ref 0 (above sea level)' => [0];
+        yield 'ref 2 (above ellipsoid)' => [2];
+    }
+
+    /**
+     * Positive raw GPSAltitude with ref 1/3 yields negative result.
+     */
+    #[Test]
+    #[DataProvider('provideNegativeAltitudeRefs')]
+    public function acceptsPositiveAltitudeWithBelowSeaLevelRef(int $ref): void
+    {
+        $entries = [
+            ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, $ref),
+            ExifTag::GPS_ALTITUDE     => new IfdEntry(
+                ExifTag::GPS_ALTITUDE,
+                5,
+                1,
+                new ExifRational(500, 1),
+            ),
+        ];
+
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertSame($ref, $result['alt_ref']);
+        self::assertEqualsWithDelta(-500.0, $result['alt'], 0.000001);
+    }
+
+    /**
+     * @return iterable<string, array{0: int}>
+     */
+    public static function provideNegativeAltitudeRefs(): iterable
+    {
+        yield 'ref 1 (below sea level)' => [1];
+        yield 'ref 3 (below ellipsoid)' => [3];
+    }
+
+    /**
+     * Rejects negative raw GPSAltitude magnitude.
+     */
+    #[Test]
+    public function rejectsNegativeRawAltitudeMagnitude(): void
+    {
+        $entries = [
+            ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
+            ExifTag::GPS_ALTITUDE     => new IfdEntry(
+                ExifTag::GPS_ALTITUDE,
+                5,
+                1,
+                new ExifRational(-100, 1),
+            ),
+        ];
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1471);
+        $this->expectExceptionMessage('GPSAltitude');
+
+        $this->converter->fromIfd(new Ifd($entries));
+    }
+
+    /**
      * Provides a valid GPSDifferential value (0).
      * Verifies no-correction is accepted per EXIF 3.0 §4.6.7.1.31.
      *

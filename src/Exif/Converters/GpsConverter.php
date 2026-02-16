@@ -266,6 +266,13 @@ final readonly class GpsConverter
         if ($altEntry instanceof IfdEntry) {
             $alt = $this->rationalConverter->toFloat($altEntry->value);
 
+            if ($alt !== null && $alt < 0.0) {
+                throw new ParseError(
+                    'GPSAltitude must be a non-negative magnitude per EXIF 3.0 §4.6.7.1.7; sign is derived from GPSAltitudeRef.',
+                    1471,
+                );
+            }
+
             // EXIF 3.0 §4.6.7.1.6: Values 1 (below ellipsoidal) and 3 (below sea level) indicate negative altitude
             if ($alt !== null && ($result['alt_ref'] === 1 || $result['alt_ref'] === 3)) {
                 $alt = -$alt;
