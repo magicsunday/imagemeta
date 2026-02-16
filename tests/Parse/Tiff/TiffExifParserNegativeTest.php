@@ -1248,14 +1248,11 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Orientation value 0 is rejected per EXIF 3.0 §4.6.5.1.6.
+     * Orientation value 0 is accepted (Postel's Law) — commonly means "unspecified".
      */
     #[Test]
-    public function rejectOrientationValueZero(): void
+    public function acceptOrientationValueZero(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Orientation value 0 is outside the valid domain 1..8');
-
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
@@ -1266,7 +1263,9 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('v', 0) . pack('v', 0) // value=0 inline
             . pack('V', 0);
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -1276,7 +1275,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function rejectOrientationValueNine(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Orientation value 9 is outside the valid domain 1..8');
+        $this->expectExceptionMessage('Orientation value 9 is outside the valid domain 0..8');
 
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)

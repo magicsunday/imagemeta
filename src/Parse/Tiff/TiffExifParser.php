@@ -1894,9 +1894,11 @@ final class TiffExifParser implements TiffExifParserInterface
             ), 1310);
         }
 
-        if ($tag === ExifTag::ORIENTATION && is_int($value) && ($value < 1 || $value > 8)) {
+        // Orientation 0 is not defined by EXIF 3.0 §4.6.5.1.6 (domain 1..8) but
+        // is commonly written by tools like ImageMagick to mean "unspecified".
+        if ($tag === ExifTag::ORIENTATION && is_int($value) && ($value < 0 || $value > 8)) {
             throw new ParseError(sprintf(
-                'Orientation value %d is outside the valid domain 1..8 per EXIF 3.0 §4.6.5.1.6.',
+                'Orientation value %d is outside the valid domain 0..8 per EXIF 3.0 §4.6.5.1.6.',
                 $value,
             ), 1311);
         }
