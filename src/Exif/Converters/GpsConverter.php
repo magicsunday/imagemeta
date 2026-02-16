@@ -320,15 +320,10 @@ final readonly class GpsConverter
         $dateEntry        = $gps->get(ExifTag::GPS_DATE_STAMP);
         $timeEntry        = $gps->get(ExifTag::GPS_TIME_STAMP);
 
-        // EXIF 3.0 §4.6.7.1.1 — when GPSVersionID is present, validate it.
+        // EXIF 3.0 §4.6.7.1.1 defines 2.4.0.0 as current; earlier versions
+        // (2.2.0.0, 2.3.0.0) are common in pre-3.0 cameras and fully compatible.
         $versionParts      = $this->formatVersion($versionEntry?->value);
         $result['version'] = $versionParts['normalized'];
-        if ($versionEntry instanceof IfdEntry && $result['version'] !== self::DEFAULT_GPS_VERSION) {
-            throw new ParseError(sprintf(
-                'GPSVersionID "%s" is reserved; only "2.4.0.0" is allowed per EXIF 3.0 §4.6.7.1.1.',
-                $result['version'],
-            ), 1462);
-        }
 
         $result['version_raw'] = $versionParts['raw'];
         $result['satellites']  = $this->stringConverter->sanitize($satellitesEntry?->value);
