@@ -405,6 +405,10 @@ final readonly class GpsFactory
             $sec = XmpDocument::parseNumericValue($parts[2]);
 
             if ($deg !== null && $min !== null && $sec !== null) {
+                if ($min >= 60.0 || $sec >= 60.0) {
+                    return null;
+                }
+
                 $sign = $this->coordinateSign($ref);
                 if ($sign === null) {
                     return null;
