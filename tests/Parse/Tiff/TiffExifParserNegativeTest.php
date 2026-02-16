@@ -960,13 +960,6 @@ final class TiffExifParserNegativeTest extends TestCase
                 '010',
                 'FlashpixVersion must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.2.',
             ],
-            'ComponentsConfiguration expects 4 bytes' => [
-                ExifTag::COMPONENTS_CONFIGURATION,
-                TiffConst::TYPE_UNDEFINED,
-                3,
-                "\x01\x02\x03",
-                'ComponentsConfiguration must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.3.',
-            ],
             'GPSVersionID expects 4 bytes' => [
                 ExifTag::GPS_VERSION_ID,
                 TiffConst::TYPE_BYTE,

@@ -1988,7 +1988,8 @@ final class TiffExifParser implements TiffExifParserInterface
             }
         }
 
-        if ($count !== $rule['count']) {
+        // ComponentsConfiguration commonly has non-4-byte payloads in the wild.
+        if ($count !== $rule['count'] && $tag !== ExifTag::COMPONENTS_CONFIGURATION) {
             throw new ParseError(sprintf(
                 '%s must contain exactly %d bytes per %s.',
                 $rule['name'],
