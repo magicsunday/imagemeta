@@ -1438,6 +1438,99 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Third-illuminant tag with DNGBackwardVersion below 1.6.0.0 is rejected.
+     */
+    #[Test]
+    public function rejectsThirdIlluminantWithBackwardVersionBelow160(): void
+    {
+        $blob = $this->buildTiffWithThirdIlluminant([1, 5, 0, 0]);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('DNGBackwardVersion');
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Third-illuminant tag with DNGBackwardVersion at 1.6.0.0 passes version gating.
+     * The subsequent dependency check (CalibrationIlluminant1/2 required) still applies,
+     * confirming that the version floor itself is not the reason for failure.
+     */
+    #[Test]
+    public function thirdIlluminantWithBackwardVersion160PassesVersionGating(): void
+    {
+        $blob = $this->buildTiffWithThirdIlluminant([1, 6, 0, 0]);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('CalibrationIlluminant3 requires');
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Builds a minimal DNG TIFF with CalibrationIlluminant3 and the given DNGBackwardVersion.
+     *
+     * @param list<int> $backwardVersion DNGBackwardVersion bytes.
+     */
+    private function buildTiffWithThirdIlluminant(array $backwardVersion): string
+    {
+        $ifdOffset = 8;
+
+        $tags = [];
+
+        $tags[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        $tags[ExifTag::IMAGE_LENGTH] = pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        $tags[ExifTag::ORIENTATION] = pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0);
+
+        $tags[DngTag::DNG_VERSION] = pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0);
+
+        $tags[DngTag::DNG_BACKWARD_VERSION] = pack('v', DngTag::DNG_BACKWARD_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', $backwardVersion[0], $backwardVersion[1], $backwardVersion[2], $backwardVersion[3]);
+
+        $tags[DngTag::UNIQUE_CAMERA_MODEL] = pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', 2)
+            . "X\0\0\0";
+
+        // CalibrationIlluminant3: SHORT[1] = 1 (Daylight)
+        $tags[DngTag::CALIBRATION_ILLUMINANT_3] = pack('v', DngTag::CALIBRATION_ILLUMINANT_3)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0);
+
+        ksort($tags);
+
+        $ifdData = pack('v', count($tags));
+
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData;
+    }
+
+    /**
      * DNGVersion 0.0.0.0 is rejected as an invalid zero tuple.
      */
     #[Test]

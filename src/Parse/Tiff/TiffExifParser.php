@@ -1533,6 +1533,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->validateDngMatrixTags($ifd0);
         $this->validateDngCalibrationIlluminantDomain($ifd0);
         $this->validateDngIlluminantDependencies($ifd0);
+        $this->validateDngThirdIlluminantVersionFloor($ifd0);
         $this->validateDngTripleIlluminant($ifd0);
         $this->validateDngWhiteBalanceExclusivity($ifd0);
         $this->validateDngWhiteBalanceLayout($ifd0);
@@ -6683,6 +6684,51 @@ final class TiffExifParser implements TiffExifParserInterface
         [DngTag::FORWARD_MATRIX_1, DngTag::FORWARD_MATRIX_2, DngTag::FORWARD_MATRIX_3],
         [DngTag::REDUCTION_MATRIX_1, DngTag::REDUCTION_MATRIX_2, DngTag::REDUCTION_MATRIX_3],
     ];
+
+    /**
+     * Third-illuminant tags requiring DNGBackwardVersion >= 1.6.0.0.
+     *
+     * @var list<int>
+     */
+    private const array DNG_THIRD_ILLUMINANT_TAGS = [
+        DngTag::CALIBRATION_ILLUMINANT_3,
+        DngTag::COLOR_MATRIX_3,
+        DngTag::FORWARD_MATRIX_3,
+        DngTag::ILLUMINANT_DATA_3,
+    ];
+
+    /**
+     * Rejects third-illuminant tags when DNGBackwardVersion < 1.6.0.0.
+     *
+     * DNG 1.7.1.0 Appendix A: third calibration set requires version >= 1.6.0.0.
+     */
+    private function validateDngThirdIlluminantVersionFloor(Ifd $ifd): void
+    {
+        $hasThird = array_any(self::DNG_THIRD_ILLUMINANT_TAGS, fn (int $tag): bool => $ifd->get($tag) instanceof IfdEntry);
+
+        if (!$hasThird) {
+            return;
+        }
+
+        $bwVer = $this->getEffectiveDngBackwardVersion($ifd);
+
+        if ($bwVer === null) {
+            return;
+        }
+
+        if ($this->dngVersionLessThan($bwVer, [1, 6, 0, 0])) {
+            throw new ParseError(
+                sprintf(
+                    'Third-illuminant tags require DNGBackwardVersion >= 1.6.0.0, got %d.%d.%d.%d.',
+                    $bwVer[0],
+                    $bwVer[1],
+                    $bwVer[2],
+                    $bwVer[3],
+                ),
+                1500,
+            );
+        }
+    }
 
     /**
      * Validates DNG triple-illuminant cross-tag dependencies.
