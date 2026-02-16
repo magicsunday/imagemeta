@@ -5242,7 +5242,7 @@ final class TiffExifParser implements TiffExifParserInterface
     private function decodeCountedComponents(int $tag, int $type, string $rawBytes, int $count): array
     {
         $componentSize   = $this->bytesPerComponent($type);
-        $expectedLength  = $componentSize * $count;
+        $expectedLength  = $this->safeValueByteCount($componentSize, $count);
         $availableLength = strlen($rawBytes);
 
         if ($availableLength < $expectedLength) {
@@ -5456,7 +5456,7 @@ final class TiffExifParser implements TiffExifParserInterface
     {
         $componentSize = $this->bytesPerComponent($type);
         $bytesLength   = strlen($bytes);
-        $expectedBytes = $componentSize * $count;
+        $expectedBytes = $this->safeValueByteCount($componentSize, $count);
 
         if ($bytesLength < $expectedBytes) {
             throw new ParseError(
@@ -5599,7 +5599,7 @@ final class TiffExifParser implements TiffExifParserInterface
     {
         $componentSize   = $this->bytesPerComponent($type);
         $inlineThreshold = $this->bigTiff ? $this->bigTiffOffsetSize : 4;
-        $valueBytes      = $componentSize * $count;
+        $valueBytes      = $this->safeValueByteCount($componentSize, $count);
 
         // TIFF 6.0 §2: if the value fits in the Value/Offset field it is
         // stored left-justified in the lower-numbered bytes.  We read the
@@ -5713,7 +5713,7 @@ final class TiffExifParser implements TiffExifParserInterface
     private function valueBytes(int $type, int $count, int|UInt64|string $valueOrOffset, ?string $inlineBytes = null): array
     {
         $unitSize        = $this->bytesPerComponent($type);
-        $dataSize        = $unitSize * $count;
+        $dataSize        = $this->safeValueByteCount($unitSize, $count);
         $inlineThreshold = $this->bigTiff ? 8 : 4;
 
         if ($inlineBytes !== null) {
@@ -5890,6 +5890,29 @@ final class TiffExifParser implements TiffExifParserInterface
 
             default => throw new ParseError('Unsupported TIFF type: ' . $type, 1338),
         };
+    }
+
+    /**
+     * Returns count × componentSize with an overflow guard.
+     *
+     * TIFF 6.0 §8 / EXIF 3.0 §4.5.2: the product must remain within PHP
+     * integer range so that downstream offset/length APIs receive strict
+     * integers instead of float values from overflowed multiplication.
+     */
+    private function safeValueByteCount(int $componentSize, int $count): int
+    {
+        if ($count > intdiv(PHP_INT_MAX, $componentSize)) {
+            throw new ParseError(
+                sprintf(
+                    'TIFF entry count %d × component size %d overflows integer range',
+                    $count,
+                    $componentSize,
+                ),
+                1339,
+            );
+        }
+
+        return $componentSize * $count;
     }
 
     /**

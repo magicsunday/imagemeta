@@ -2445,4 +2445,34 @@ final class TiffExifParserNegativeTest extends TestCase
 
         $reader->parseFromBlob($blob);
     }
+
+    /**
+     * A BigTIFF IFD entry whose count × component-size overflows PHP integer
+     * range must raise ParseError (not TypeError from float coercion).
+     */
+    #[Test]
+    public function rejectsOverflowingCountTimesComponentSize(): void
+    {
+        // BigTIFF header: II + magic 0x002B + offsetSize 8 + reserved 0 + first IFD offset (16)
+        $header = 'II'
+            . pack('v', TiffConst::MAGIC_BIG)
+            . pack('v', 8)
+            . pack('v', 0)
+            . pack('P', 16);
+
+        // BigTIFF IFD: 8-byte entry count + entries (20 bytes each) + 8-byte next-IFD
+        // One entry: tag(2) + type(2) + count(8) + value/offset(8)
+        $hugeCount = (int) (PHP_INT_MAX / 4) + 1; // overflow when × 4 (TYPE_LONG)
+        $ifd       = pack('P', 1)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('P', $hugeCount)
+            . pack('P', 0)
+            . pack('P', 0);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1339);
+
+        (new TiffExifParser())->parseFromBlob($header . $ifd, jpegContext: true);
+    }
 }
