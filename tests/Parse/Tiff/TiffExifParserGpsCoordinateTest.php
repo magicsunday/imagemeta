@@ -58,6 +58,29 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
     }
 
     /**
+     * Accepts GPS coordinate tags encoded as SRATIONAL[3] in the GPS IFD.
+     * Legacy cameras wrote SRATIONAL instead of RATIONAL; both are functionally
+     * equivalent for positive GPS coordinate values.
+     */
+    #[Test]
+    #[DataProvider('provideGpsCoordinateTags')]
+    public function acceptsGpsCoordinateTagsWithSrationalType(int $tag, string $_name, int $refTag, string $refValue, string $resultKey): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildClassicTiffWithGpsRefAndValue(
+                $refTag,
+                $refValue,
+                $tag,
+                TiffConst::TYPE_SRATIONAL,
+                3,
+                pack('V2', 45, 1) . pack('V2', 30, 1) . pack('V2', 0, 1),
+            ),
+        );
+
+        self::assertEqualsWithDelta(45.5, $result->gps()[$resultKey], 0.000001);
+    }
+
+    /**
      * Rejects GPS coordinate tags encoded with non-RATIONAL TIFF type.
      */
     #[Test]
@@ -71,7 +94,7 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
         (new TiffExifParser())->parseFromBlob(
             $this->buildClassicTiffWithSingleGpsEntry(
                 $tag,
-                TiffConst::TYPE_SRATIONAL,
+                TiffConst::TYPE_ASCII,
                 3,
                 pack('V2', 45, 1) . pack('V2', 30, 1) . pack('V2', 0, 1),
             ),
@@ -130,7 +153,7 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
         (new TiffExifParser())->parseFromBlob(
             $this->buildClassicTiffWithSingleGpsEntry(
                 ExifTag::GPS_ALTITUDE,
-                TiffConst::TYPE_SRATIONAL,
+                TiffConst::TYPE_ASCII,
                 1,
                 pack('V2', 100, 1),
             ),

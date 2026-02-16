@@ -1984,6 +1984,13 @@ final class TiffExifParser implements TiffExifParserInterface
                 return;
             }
 
+            // EXIF 3.0 §4.6.7 specifies RATIONAL for GPS coordinate values.
+            // Legacy cameras wrote SRATIONAL instead; both types use identical
+            // 8-byte layout and GPS values are always positive magnitudes.
+            if ($rule['type'] === TiffConst::TYPE_RATIONAL && $type === TiffConst::TYPE_SRATIONAL) {
+                return;
+            }
+
             throw new ParseError(sprintf(
                 '%s must use TIFF type %s per %s.',
                 $rule['name'],
@@ -2052,7 +2059,12 @@ final class TiffExifParser implements TiffExifParserInterface
                 continue;
             }
 
-            if ($entry->type !== $rule['type']) {
+            // EXIF 3.0 §4.6.7 specifies RATIONAL for GPS coordinate values.
+            // Legacy cameras (Canon IXUS, Fujifilm MX-1700, Sony Cybershot)
+            // wrote SRATIONAL instead.  Both types use identical 8-byte layout
+            // per component, and GPS values are always positive (sign determined
+            // by reference tags N/S/E/W), so SRATIONAL is functionally equivalent.
+            if ($entry->type !== $rule['type'] && $entry->type !== TiffConst::TYPE_SRATIONAL) {
                 throw new ParseError(sprintf(
                     '%s must use TIFF type %s per %s.',
                     $rule['name'],
