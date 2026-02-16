@@ -424,6 +424,10 @@ final readonly class GpsFactory
             }
         }
 
+        if (count($parts) !== 1) {
+            return null;
+        }
+
         $numeric = XmpDocument::parseNumericValue($parts[0]);
         if ($numeric === null || $numeric < 0.0) {
             return null;

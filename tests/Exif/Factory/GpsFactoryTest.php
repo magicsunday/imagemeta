@@ -497,6 +497,52 @@ final class GpsFactoryTest extends TestCase
         self::assertNull($gps->latitude);
     }
 
+    /**
+     * XMP coordinate with 2 tokens yields null.
+     */
+    #[Test]
+    public function xmpCoordinateWithTwoTokensYieldsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52 31',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->latitude);
+    }
+
+    /**
+     * XMP coordinate with 4 tokens yields null.
+     */
+    #[Test]
+    public function xmpCoordinateWithFourTokensYieldsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '12 34 56 78',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->latitude);
+    }
+
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     private function parsedExif(
