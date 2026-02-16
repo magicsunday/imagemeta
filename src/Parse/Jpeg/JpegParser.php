@@ -492,23 +492,11 @@ final class JpegParser implements JpegParserInterface
             $payloadLength = $segmentLength - 2;
             $payload       = $this->readSegmentPayload($marker, $offset, $payloadLength);
 
-            if (
-                $isAppSegment
-                && ($marker !== Marker::APP11)
-                && ($firstStructuralMarker !== null)
-                && ($firstStructuralMarkerOffset !== null)
-            ) {
-                throw new ParseError(
-                    sprintf(
-                        'APP marker 0x%02X at offset %d appears after structural marker 0x%02X at offset %d',
-                        $marker,
-                        $offset,
-                        $firstStructuralMarker,
-                        $firstStructuralMarkerOffset,
-                    ),
-                    1340,
-                );
-            }
+            // ITU-T T.81 §B.2.2: APP markers are "miscellaneous" markers that may
+            // appear alongside DQT/DHT/DRI in any order before SOS.  EXIF 3.0 §4.7
+            // only constrains APP11 ordering relative to structural markers; non-Exif
+            // APP markers (APP0/JFIF, APP13/IPTC, APP14/Adobe) are tolerated here.
+            // The APP11-after-structural check is enforced separately below.
 
             // ITU-T T.81 §B.2.4.1: DQT, DHT, and DRI are "tables/miscellaneous"
             // markers with zero-or-more repetitions.  Multiple segments are valid

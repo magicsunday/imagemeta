@@ -631,12 +631,13 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects APP markers that appear after DQT or DHT structural markers.
+     * Non-Exif APP markers after structural markers (DQT/DHT) are tolerated
+     * per ITU-T T.81 §B.2.2 (miscellaneous marker interleaving).
      *
      * @return void
      */
     #[Test]
-    public function dqtOrDhtBeforeFinalAppMarkerThrowsParseError(): void
+    public function nonExifAppMarkerAfterStructuralMarkersIsAccepted(): void
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
@@ -648,11 +649,9 @@ final class JpegParserTest extends TestCase
         );
 
         $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/APP marker.*after structural|after structural.*APP marker/i');
-
-        $extractor->extractExifBlobs();
+        self::assertCount(1, $blobs);
     }
 
     /**
