@@ -3689,7 +3689,21 @@ final class TiffExifParser implements TiffExifParserInterface
      */
     private function validateSeparatedImageInkTags(Ifd $ifd): void
     {
-        $photometric = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $photometric        = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $targetPrinterEntry = $ifd->get(TiffTag::TARGET_PRINTER);
+
+        if (
+            ($targetPrinterEntry instanceof IfdEntry)
+            && ($photometric instanceof IfdEntry)
+            && is_int($photometric->value)
+            && ($photometric->value !== 5)
+        ) {
+            throw new ParseError(
+                'TargetPrinter (tag 337) is only valid when PhotometricInterpretation=5 (Separated).',
+                1721,
+            );
+        }
+
         if (!($photometric instanceof IfdEntry) || !is_int($photometric->value) || ($photometric->value !== 5)) {
             return;
         }
@@ -3781,7 +3795,21 @@ final class TiffExifParser implements TiffExifParserInterface
             return;
         }
 
-        $photometric = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $photometric        = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $targetPrinterEntry = $ifd->get(TiffTag::TARGET_PRINTER);
+
+        if (
+            ($targetPrinterEntry instanceof IfdEntry)
+            && ($photometric instanceof IfdEntry)
+            && is_int($photometric->value)
+            && ($photometric->value !== 5)
+        ) {
+            throw new ParseError(
+                'TargetPrinter (tag 337) is only valid when PhotometricInterpretation=5 (Separated).',
+                1721,
+            );
+        }
+
         if (!($photometric instanceof IfdEntry) || !is_int($photometric->value) || ($photometric->value !== 5)) {
             return;
         }

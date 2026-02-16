@@ -45,6 +45,62 @@ final class TiffExifParserSeparatedImageInkTagsTest extends TestCase
     }
 
     /**
+     * TargetPrinter is valid for separated images.
+     */
+    #[Test]
+    public function acceptsTargetPrinterForSeparatedPhotometricInterpretation(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildSeparatedImageInkTiff(
+                inkSetType: TiffConst::TYPE_SHORT,
+                inkSetCount: 1,
+                inkSetValue: 1,
+                targetPrinterPayload: "ProofDevice\0",
+            ),
+        );
+
+        self::assertSame('ProofDevice', $parsed->targetPrinter());
+    }
+
+    /**
+     * TargetPrinter must be rejected in non-separated photometric contexts.
+     */
+    #[Test]
+    public function rejectsTargetPrinterForNonSeparatedPhotometricInterpretation(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('TargetPrinter (tag 337) is only valid when PhotometricInterpretation=5 (Separated).');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildSeparatedImageInkTiff(
+                inkSetType: TiffConst::TYPE_SHORT,
+                inkSetCount: 1,
+                inkSetValue: 1,
+                photometricInterpretation: 2,
+                targetPrinterPayload: "ProofDevice\0",
+            ),
+        );
+    }
+
+    /**
+     * Omitting TargetPrinter in non-separated contexts keeps existing behavior.
+     */
+    #[Test]
+    public function acceptsMissingTargetPrinterForNonSeparatedPhotometricInterpretation(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildSeparatedImageInkTiff(
+                inkSetType: TiffConst::TYPE_SHORT,
+                inkSetCount: 1,
+                inkSetValue: 1,
+                photometricInterpretation: 2,
+            ),
+        );
+
+        self::assertNull($parsed->targetPrinter());
+    }
+
+    /**
      * InkNames is forbidden for InkSet=1.
      */
     #[Test]
@@ -147,6 +203,8 @@ final class TiffExifParserSeparatedImageInkTagsTest extends TestCase
         ?int $numberOfInks = null,
         ?string $inkNamesPayload = null,
         ?string $inkSetRawPayload = null,
+        int $photometricInterpretation = 5,
+        ?string $targetPrinterPayload = null,
     ): string {
         $ifdOffset = 8;
 
@@ -162,7 +220,7 @@ final class TiffExifParserSeparatedImageInkTagsTest extends TestCase
             ExifTag::PHOTOMETRIC_INTERPRETATION => pack('v', ExifTag::PHOTOMETRIC_INTERPRETATION)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
-                . pack('v', 5) . pack('v', 0),
+                . pack('v', $photometricInterpretation) . pack('v', 0),
             TiffTag::INK_SET => pack('v', TiffTag::INK_SET)
                 . pack('v', $inkSetType)
                 . pack('V', $inkSetCount),
@@ -192,6 +250,13 @@ final class TiffExifParserSeparatedImageInkTagsTest extends TestCase
                 . pack('v', TiffConst::TYPE_ASCII)
                 . pack('V', strlen($inkNamesPayload));
             $payloadByTag[TiffTag::INK_NAMES] = $inkNamesPayload;
+        }
+
+        if ($targetPrinterPayload !== null) {
+            $entries[TiffTag::TARGET_PRINTER] = pack('v', TiffTag::TARGET_PRINTER)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', strlen($targetPrinterPayload));
+            $payloadByTag[TiffTag::TARGET_PRINTER] = $targetPrinterPayload;
         }
 
         ksort($entries);
