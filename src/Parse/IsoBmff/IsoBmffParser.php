@@ -1410,11 +1410,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('unsupported hdlr box flags', 1149);
         }
 
-        $preDefined = $win->readU32BE();
-
-        if ($preDefined !== 0) {
-            throw new ParseError('hdlr pre_defined must be 0', 1150);
-        }
+        // pre_defined (ISO) / component type (QuickTime) — skip without validating;
+        // MOV files commonly write 'mhlr' or 'dhlr' here.
+        $win->readU32BE();
 
         $handler  = $win->read(4);
         $reserved = $win->read(12);

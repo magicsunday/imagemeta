@@ -5395,16 +5395,14 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects an hdlr box with non-zero pre_defined field.
+     * Accepts an hdlr box with non-zero pre_defined field (Postel's Law).
+     * MOV files commonly write 'mhlr' or 'dhlr' in this field.
      *
      * @return void
      */
     #[Test]
-    public function rejectHdlrNonZeroPreDefined(): void
+    public function acceptHdlrNonZeroPreDefined(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('hdlr pre_defined must be 0');
-
         $hdlrPayload = "\x00\x00\x00\x00"         // version=0, flags=0
             . "\x00\x00\x00\x01"                   // pre_defined=1
             . 'vide'                               // handler_type
@@ -5415,6 +5413,8 @@ final class IsoBmffParserTest extends TestCase
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
+
+        $this->addToAssertionCount(1);
     }
 
     /**
