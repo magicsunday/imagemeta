@@ -77,14 +77,21 @@ final class EnumMappingTest extends TestCase
     {
         self::assertSame(Compression::JPEG, Compression::fromExifValue(6));
         self::assertSame(Compression::JPEG_NEW_STYLE, Compression::fromExifValue(7));
+        self::assertSame(Photometric::WHITE_IS_ZERO, Photometric::fromExifValue(0));
+        self::assertSame(Photometric::BLACK_IS_ZERO, Photometric::fromExifValue(1));
+        self::assertSame(Photometric::RGB, Photometric::fromExifValue(2));
+        self::assertSame(Photometric::PALETTE_COLOR, Photometric::fromExifValue(3));
+        self::assertSame(Photometric::TRANSPARENCY_MASK, Photometric::fromExifValue(4));
+        self::assertSame(Photometric::SEPARATED, Photometric::fromExifValue(5));
         self::assertSame(Photometric::YCBCR, Photometric::fromExifValue(6));
+        self::assertSame(Photometric::CIELAB, Photometric::fromExifValue(8));
         self::assertSame(Photometric::CFA, Photometric::fromExifValue(32803));
         self::assertSame(Photometric::LINEAR_RAW, Photometric::fromExifValue(34892));
         self::assertSame(Photometric::DEPTH, Photometric::fromExifValue(51177));
         self::assertSame(Photometric::PHOTOMETRIC_MASK, Photometric::fromExifValue(52527));
         self::assertSame(PlanarConfiguration::CHUNKY, PlanarConfiguration::fromExifValue(1));
+        self::assertSame(ResolutionUnit::NONE, ResolutionUnit::fromExifValue(1));
         self::assertSame(ResolutionUnit::CENTIMETER, ResolutionUnit::fromExifValue(3));
-        self::assertNull(ResolutionUnit::fromExifValue(1));
         self::assertSame(YCbCrPositioning::CO_SITED, YCbCrPositioning::fromExifValue(2));
         self::assertSame(ExposureMode::AUTO_BRACKET, ExposureMode::fromExifValue(2));
         self::assertSame(GainControl::HIGH_GAIN_UP, GainControl::fromExifValue(2));
@@ -212,17 +219,17 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Supplies photometric codes that are reserved or invalid.
+     * Supplies photometric codes outside the TIFF/DNG defined set.
      * Verifies the mapping returns null for these unsupported values.
      *
      * @return void
      */
     #[Test]
-    public function returnsNullForReservedPhotometricCodes(): void
+    public function returnsNullForUndefinedPhotometricCodes(): void
     {
-        self::assertNull(Photometric::fromExifValue(0));
-        self::assertNull(Photometric::fromExifValue(3));
-        self::assertNull(Photometric::fromExifValue(8));
+        self::assertNull(Photometric::fromExifValue(7));
+        self::assertNull(Photometric::fromExifValue(9));
+        self::assertNull(Photometric::fromExifValue(99));
     }
 
     /**

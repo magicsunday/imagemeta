@@ -24,4 +24,7 @@ enum ContainerType
 
     /** TIFF-based format such as TIFF, DNG, NEF, or ARW. */
     case TIFF;
+
+    /** JPEG XL container or bare codestream. */
+    case JXL;
 }

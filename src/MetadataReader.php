@@ -112,6 +112,7 @@ final readonly class MetadataReader
             ContainerType::JPEG    => $this->fromJpeg($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
             ContainerType::ISOBMFF => $this->fromIsoBmff($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
             ContainerType::TIFF    => $this->fromTiff($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
+            ContainerType::JXL     => throw new ParseError('JPEG XL (JXL) container detected but parsing is not yet supported', 1550),
         };
     }
 

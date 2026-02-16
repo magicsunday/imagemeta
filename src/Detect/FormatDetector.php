@@ -83,8 +83,18 @@ final readonly class FormatDetector
             return $this->detectJpeg($stream);
         }
 
+        // Bare JPEG XL codestream: 0xFF 0x0A
+        if ($magic2 === "\xFF\x0A") {
+            return ContainerType::JXL;
+        }
+
         if ($this->looksLikeTiff($stream, $magic2)) {
             return ContainerType::TIFF;
+        }
+
+        // JPEG XL ISO BMFF container: starts with a 12-byte JXL signature box
+        if ($this->looksLikeJxl($stream)) {
+            return ContainerType::JXL;
         }
 
         try {
@@ -123,6 +133,24 @@ final readonly class FormatDetector
         }
 
         return ContainerType::JPEG;
+    }
+
+    /**
+     * Checks whether the stream starts with the 12-byte JPEG XL signature box.
+     *
+     * ISO/IEC 18181-2: the JXL container begins with a box of type 'JXL '
+     * (size=12) containing the two-byte content 0x0D0A 0x870A.
+     */
+    private function looksLikeJxl(Stream $stream): bool
+    {
+        try {
+            $stream->seek(0);
+            $header = $stream->read(12);
+        } catch (BoundsError) {
+            return false;
+        }
+
+        return $header === "\x00\x00\x00\x0C\x4A\x58\x4C\x20\x0D\x0A\x87\x0A";
     }
 
     /**

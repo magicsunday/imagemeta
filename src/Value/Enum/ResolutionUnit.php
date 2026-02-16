@@ -14,33 +14,17 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
 
 /**
- * Enumerates the resolution units recorded by the XResolution/YResolution tags
- * in EXIF 3.0 §4.6.5.1.11 (image data structure), continuing the EXIF
- * 2.32 §4.6.5.1.11 set.
+ * Enumerates the resolution units recorded by the XResolution/YResolution tags.
+ *
+ * TIFF 6.0 §8 defines: 1 = no absolute unit, 2 = inch, 3 = centimeter.
+ * EXIF 3.0 §4.6.5.1.11 narrows the set for EXIF profiles but all three
+ * TIFF values are valid at the model layer.
  */
 enum ResolutionUnit: int
 {
-    use EnumFromIntStringNullable {
-        EnumFromIntStringNullable::fromExifValue as private fromExifValueNullable;
-    }
+    use EnumFromIntStringNullable;
 
     case NONE       = 1;
     case INCHES     = 2;
     case CENTIMETER = 3;
-
-    /**
-     * Returns only valid EXIF resolution unit values per EXIF 3.0 §4.6.5.1.11.
-     *
-     * Values outside the defined set (2 = inches, 3 = centimeters) are
-     * considered reserved and rejected.
-     */
-    public static function fromExifValue(int|string|null $value): ?self
-    {
-        $resolved = self::fromExifValueNullable($value);
-
-        return match ($resolved) {
-            self::INCHES, self::CENTIMETER => $resolved,
-            default => null,
-        };
-    }
 }

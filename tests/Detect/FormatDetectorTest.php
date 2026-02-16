@@ -405,6 +405,47 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
+     * Detects a bare JPEG XL codestream by its 0xFF 0x0A signature.
+     */
+    #[Test]
+    public function detectRecognisesBareJxlCodestream(): void
+    {
+        $stream = $this->createStream("\xFF\x0A" . str_repeat("\x00", 8));
+
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::JXL, $detected);
+    }
+
+    /**
+     * Detects a JPEG XL ISO BMFF container by its 12-byte signature box.
+     */
+    #[Test]
+    public function detectRecognisesJxlContainer(): void
+    {
+        $jxlSignature = "\x00\x00\x00\x0C\x4A\x58\x4C\x20\x0D\x0A\x87\x0A";
+        $stream       = $this->createStream($jxlSignature . str_repeat("\x00", 8));
+
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::JXL, $detected);
+    }
+
+    /**
+     * Rejects a truncated JXL container signature (fewer than 12 bytes).
+     */
+    #[Test]
+    public function detectRejectsTruncatedJxlSignature(): void
+    {
+        $stream = $this->createStream("\x00\x00\x00\x0C\x4A\x58\x4C\x20\x0D\x0A\x87");
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unsupported or unknown container');
+
+        (new FormatDetector())->detect($stream);
+    }
+
+    /**
      * Supplies a stream with an unsupported signature.
      * This confirms a ParseError is thrown for unknown container bytes.
      *
