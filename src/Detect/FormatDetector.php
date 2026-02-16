@@ -42,6 +42,19 @@ final readonly class FormatDetector
     ];
 
     /**
+     * GH-1225: Padding box types that may be safely skipped during detection.
+     *
+     * @var array<string, bool>
+     */
+    private const array PADDING_BOXES = [
+        'free' => true,
+        'skip' => true,
+        'wide' => true,
+        'mdat' => true,
+        'uuid' => true,
+    ];
+
+    /**
      * GH-969: Maximum byte budget for ISO BMFF detection scanning.
      */
     private const int ISO_BMFF_MAX_SCAN_BYTES = 65536;
@@ -161,6 +174,11 @@ final readonly class FormatDetector
             // GH-1223: signature boxes must have a well-defined size
             if ($size !== 0 && isset(self::ISO_BMFF_SIGNATURE_BOXES[$boxType])) {
                 return true;
+            }
+
+            // GH-1225: only skip known padding boxes; reject unknown non-signature types
+            if (!isset(self::PADDING_BOXES[$boxType])) {
+                return false;
             }
 
             // size == 0 means box extends to EOF — cannot skip

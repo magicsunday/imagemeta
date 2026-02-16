@@ -178,6 +178,39 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
+     * Rejects a stream with an unknown non-padding box before the signature.
+     */
+    #[Test]
+    public function detectRejectsUnknownNonPaddingLeadingBox(): void
+    {
+        // unknown box 'abcd'(size=8) + ftyp(size=16)
+        $stream = $this->createStream(
+            "\x00\x00\x00\x08abcd"
+            . "\x00\x00\x00\x10ftypisom\x00\x00\x00\x00"
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unsupported or unknown container');
+
+        (new FormatDetector())->detect($stream);
+    }
+
+    /**
+     * Detects ISO-BMFF when more than four leading padding boxes precede ftyp.
+     */
+    #[Test]
+    public function detectRecognisesIsoBmffAfterManyPaddingBoxes(): void
+    {
+        $padding = str_repeat("\x00\x00\x00\x08free", 5);
+        $ftyp    = "\x00\x00\x00\x10ftypisom\x00\x00\x00\x00";
+
+        $stream   = $this->createStream($padding . $ftyp);
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::ISOBMFF, $detected);
+    }
+
+    /**
      * Rejects a stream with only an mdat box as sole ISO-BMFF evidence.
      */
     #[Test]
