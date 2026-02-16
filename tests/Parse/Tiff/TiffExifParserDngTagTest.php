@@ -1438,6 +1438,34 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * DNGVersion 0.0.0.0 is rejected as an invalid zero tuple.
+     */
+    #[Test]
+    public function rejectsDngVersionZeroTuple(): void
+    {
+        $blob = $this->buildTiffWithDngVersionPair([0, 0, 0, 0], [0, 0, 0, 0]);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('DNGVersion');
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * DNGVersion beyond the supported range is rejected.
+     */
+    #[Test]
+    public function rejectsDngVersionBeyondSupportedRange(): void
+    {
+        $blob = $this->buildTiffWithDngVersionPair([2, 0, 0, 0], [1, 7, 0, 0]);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('DNGVersion');
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
      * When both LocalizedCameraModel and UniqueCameraModel are present,
      * the explicit LocalizedCameraModel value takes precedence.
      */

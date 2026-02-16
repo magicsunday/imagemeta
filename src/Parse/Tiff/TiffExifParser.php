@@ -1541,6 +1541,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->validateDngCalibrationIlluminantPairZero($ifd0);
         $this->validateDngProfileToneCurve($ifd0);
         $this->validateDngInterleaveVersionFloors($ifd0);
+        $this->validateDngVersionValidity($ifd0);
         $this->validateDngBackwardVersionGate($ifd0);
         $this->validateDngBackwardVersionConsistency($ifd0);
         $this->validateDngColorimetricReference($ifd0);
@@ -7385,6 +7386,48 @@ final class TiffExifParser implements TiffExifParserInterface
                     ...self::SUPPORTED_DNG_VERSION,
                 ),
                 1496,
+            );
+        }
+    }
+
+    /**
+     * Validates the semantic contents of DNGVersion.
+     *
+     * Rejects zero tuples (e.g. 0.0.0.0) and versions beyond this library's
+     * supported range per DNG 1.7.1.0.
+     */
+    private function validateDngVersionValidity(Ifd $ifd): void
+    {
+        $dngVer = $this->extractDngVersionTuple($ifd, DngTag::DNG_VERSION);
+
+        if ($dngVer === null) {
+            return;
+        }
+
+        if ($dngVer[0] === 0) {
+            throw new ParseError(
+                sprintf(
+                    'DNGVersion %d.%d.%d.%d is invalid (zero major version).',
+                    $dngVer[0],
+                    $dngVer[1],
+                    $dngVer[2],
+                    $dngVer[3],
+                ),
+                1498,
+            );
+        }
+
+        if ($this->dngVersionLessThan(self::SUPPORTED_DNG_VERSION, $dngVer)) {
+            throw new ParseError(
+                sprintf(
+                    'DNGVersion %d.%d.%d.%d exceeds supported version %d.%d.%d.%d.',
+                    $dngVer[0],
+                    $dngVer[1],
+                    $dngVer[2],
+                    $dngVer[3],
+                    ...self::SUPPORTED_DNG_VERSION,
+                ),
+                1499,
             );
         }
     }
