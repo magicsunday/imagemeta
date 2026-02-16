@@ -1602,7 +1602,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->validateDngRowInterleaveFactor($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
-        $this->validateCompressionDomain($ifd0, $ifd1);
+        $this->validateCompressionDomain($ifd0, $ifd1, $jpegContext);
         $this->validateSubfileAndPageTags($ifd0, !$isDngContainer);
         $this->validatePositionTags($ifd0);
         $this->validateThreshholdingAndCellTags($ifd0);
@@ -2194,21 +2194,26 @@ final class TiffExifParser implements TiffExifParserInterface
     /**
      * Validates Compression tag values per EXIF-specific domain rules.
      *
-     * EXIF 3.0 §4.6.5.1.4: IFD0 allows only 1 (uncompressed); IFD1 allows 1 or 6.
+     * EXIF 3.0 §4.6.5.1.4: In JPEG context, IFD0 allows only 1 (uncompressed);
+     * IFD1 allows 1 or 6.  Standalone TIFF/DNG/NEF containers use many
+     * compression methods (LZW, Deflate, etc.), so the IFD0 restriction is
+     * only enforced in JPEG context.
      */
-    private function validateCompressionDomain(Ifd $ifd0, ?Ifd $ifd1): void
+    private function validateCompressionDomain(Ifd $ifd0, ?Ifd $ifd1, bool $jpegContext): void
     {
-        $entry = $ifd0->get(ExifTag::COMPRESSION);
+        if ($jpegContext) {
+            $entry = $ifd0->get(ExifTag::COMPRESSION);
 
-        if (
-            $entry instanceof IfdEntry
-            && is_int($entry->value)
-            && $entry->value !== 1
-        ) {
-            throw new ParseError(sprintf(
-                'Compression value %d in IFD0 is invalid; only 1 (uncompressed) is allowed.',
-                $entry->value,
-            ), 1351);
+            if (
+                $entry instanceof IfdEntry
+                && is_int($entry->value)
+                && $entry->value !== 1
+            ) {
+                throw new ParseError(sprintf(
+                    'Compression value %d in IFD0 is invalid; only 1 (uncompressed) is allowed.',
+                    $entry->value,
+                ), 1351);
+            }
         }
 
         if (!$ifd1 instanceof Ifd) {

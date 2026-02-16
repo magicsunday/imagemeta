@@ -1548,17 +1548,35 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * IFD0 Compression=6 must be rejected per EXIF 3.0 §4.6.5.1.4.
+     * IFD0 Compression=6 must be rejected in JPEG context per EXIF 3.0 §4.6.5.1.4.
      */
     #[Test]
-    public function rejectIfd0CompressionJpeg(): void
+    public function rejectIfd0CompressionJpegInJpegContext(): void
     {
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Compression value 6 in IFD0');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithShortTag(ExifTag::COMPRESSION, 6),
+            jpegContext: true,
         );
+    }
+
+    /**
+     * IFD0 Compression=5 (LZW) must be accepted in standalone TIFF context.
+     */
+    #[Test]
+    public function acceptIfd0CompressionLzwInTiffContext(): void
+    {
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTags([
+                [ExifTag::IMAGE_WIDTH, 100],
+                [ExifTag::IMAGE_LENGTH, 100],
+                [ExifTag::COMPRESSION, 5],
+            ]),
+        );
+
+        $this->addToAssertionCount(1);
     }
 
     /**
