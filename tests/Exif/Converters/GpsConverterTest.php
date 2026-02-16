@@ -1049,6 +1049,75 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Rejects GPS coordinate value present without matching ref tag.
+     *
+     * @param int $refTag
+     * @param int $valueTag
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideCoordinatePairs')]
+    public function rejectsCoordinateValueWithoutRef(int $refTag, int $valueTag): void
+    {
+        $entries = [
+            $valueTag => new IfdEntry($valueTag, 10, 3, [[45, 1], [30, 1], [0, 1]]),
+        ];
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1472);
+        $this->expectExceptionMessage('without matching');
+
+        $this->converter->fromIfd(new Ifd($entries));
+    }
+
+    /**
+     * Rejects GPS coordinate ref present without matching value tag.
+     *
+     * @param int    $refTag
+     * @param int    $valueTag
+     * @param string $refValue
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideCoordinatePairsWithRefs')]
+    public function rejectsCoordinateRefWithoutValue(int $refTag, int $valueTag, string $refValue): void
+    {
+        $entries = [
+            $refTag => new IfdEntry($refTag, 2, 2, $refValue),
+        ];
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1472);
+        $this->expectExceptionMessage('without matching');
+
+        $this->converter->fromIfd(new Ifd($entries));
+    }
+
+    /**
+     * @return iterable<string, array{0: int, 1: int}>
+     */
+    public static function provideCoordinatePairs(): iterable
+    {
+        yield 'latitude' => [ExifTag::GPS_LATITUDE_REF, ExifTag::GPS_LATITUDE];
+        yield 'longitude' => [ExifTag::GPS_LONGITUDE_REF, ExifTag::GPS_LONGITUDE];
+        yield 'dest latitude' => [ExifTag::GPS_DEST_LATITUDE_REF, ExifTag::GPS_DEST_LATITUDE];
+        yield 'dest longitude' => [ExifTag::GPS_DEST_LONGITUDE_REF, ExifTag::GPS_DEST_LONGITUDE];
+    }
+
+    /**
+     * @return iterable<string, array{0: int, 1: int, 2: string}>
+     */
+    public static function provideCoordinatePairsWithRefs(): iterable
+    {
+        yield 'latitude' => [ExifTag::GPS_LATITUDE_REF, ExifTag::GPS_LATITUDE, 'N'];
+        yield 'longitude' => [ExifTag::GPS_LONGITUDE_REF, ExifTag::GPS_LONGITUDE, 'E'];
+        yield 'dest latitude' => [ExifTag::GPS_DEST_LATITUDE_REF, ExifTag::GPS_DEST_LATITUDE, 'S'];
+        yield 'dest longitude' => [ExifTag::GPS_DEST_LONGITUDE_REF, ExifTag::GPS_DEST_LONGITUDE, 'W'];
+    }
+
+    /**
      * Rejects negative raw GPSAltitude magnitude.
      */
     #[Test]

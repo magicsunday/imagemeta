@@ -233,6 +233,9 @@ final readonly class GpsConverter
         $lonRefEntry = $gps->get(ExifTag::GPS_LONGITUDE_REF);
         $lonValEntry = $gps->get(ExifTag::GPS_LONGITUDE);
 
+        $this->validateCoordinatePairConsistency($latRefEntry, $latValEntry, 'GPSLatitudeRef', 'GPSLatitude');
+        $this->validateCoordinatePairConsistency($lonRefEntry, $lonValEntry, 'GPSLongitudeRef', 'GPSLongitude');
+
         $latRef = $latRefEntry?->value;
         $latVal = $latValEntry?->value;
         $lonRef = $lonRefEntry?->value;
@@ -283,22 +286,26 @@ final readonly class GpsConverter
             }
         }
 
-        $versionEntry     = $gps->get(ExifTag::GPS_VERSION_ID);
-        $satellitesEntry  = $gps->get(ExifTag::GPS_SATELLITES);
-        $statusEntry      = $gps->get(ExifTag::GPS_STATUS);
-        $measureEntry     = $gps->get(ExifTag::GPS_MEASURE_MODE);
-        $dopEntry         = $gps->get(ExifTag::GPS_DOP);
-        $speedRefEntry    = $gps->get(ExifTag::GPS_SPEED_REF);
-        $speedEntry       = $gps->get(ExifTag::GPS_SPEED);
-        $trackRefEntry    = $gps->get(ExifTag::GPS_TRACK_REF);
-        $trackEntry       = $gps->get(ExifTag::GPS_TRACK);
-        $imgDirRefEntry   = $gps->get(ExifTag::GPS_IMG_DIRECTION_REF);
-        $imgDirEntry      = $gps->get(ExifTag::GPS_IMG_DIRECTION);
-        $mapDatumEntry    = $gps->get(ExifTag::GPS_MAP_DATUM);
-        $destLatRefEntry  = $gps->get(ExifTag::GPS_DEST_LATITUDE_REF);
-        $destLatEntry     = $gps->get(ExifTag::GPS_DEST_LATITUDE);
-        $destLonRefEntry  = $gps->get(ExifTag::GPS_DEST_LONGITUDE_REF);
-        $destLonEntry     = $gps->get(ExifTag::GPS_DEST_LONGITUDE);
+        $versionEntry    = $gps->get(ExifTag::GPS_VERSION_ID);
+        $satellitesEntry = $gps->get(ExifTag::GPS_SATELLITES);
+        $statusEntry     = $gps->get(ExifTag::GPS_STATUS);
+        $measureEntry    = $gps->get(ExifTag::GPS_MEASURE_MODE);
+        $dopEntry        = $gps->get(ExifTag::GPS_DOP);
+        $speedRefEntry   = $gps->get(ExifTag::GPS_SPEED_REF);
+        $speedEntry      = $gps->get(ExifTag::GPS_SPEED);
+        $trackRefEntry   = $gps->get(ExifTag::GPS_TRACK_REF);
+        $trackEntry      = $gps->get(ExifTag::GPS_TRACK);
+        $imgDirRefEntry  = $gps->get(ExifTag::GPS_IMG_DIRECTION_REF);
+        $imgDirEntry     = $gps->get(ExifTag::GPS_IMG_DIRECTION);
+        $mapDatumEntry   = $gps->get(ExifTag::GPS_MAP_DATUM);
+        $destLatRefEntry = $gps->get(ExifTag::GPS_DEST_LATITUDE_REF);
+        $destLatEntry    = $gps->get(ExifTag::GPS_DEST_LATITUDE);
+        $destLonRefEntry = $gps->get(ExifTag::GPS_DEST_LONGITUDE_REF);
+        $destLonEntry    = $gps->get(ExifTag::GPS_DEST_LONGITUDE);
+
+        $this->validateCoordinatePairConsistency($destLatRefEntry, $destLatEntry, 'GPSDestLatitudeRef', 'GPSDestLatitude');
+        $this->validateCoordinatePairConsistency($destLonRefEntry, $destLonEntry, 'GPSDestLongitudeRef', 'GPSDestLongitude');
+
         $destBearRefEntry = $gps->get(ExifTag::GPS_DEST_BEARING_REF);
         $destBearEntry    = $gps->get(ExifTag::GPS_DEST_BEARING);
         $destDistRefEntry = $gps->get(ExifTag::GPS_DEST_DISTANCE_REF);
@@ -578,6 +585,37 @@ final readonly class GpsConverter
         }
 
         return in_array($value, $allowed, true) ? $value : null;
+    }
+
+    /**
+     * Validates that GPS coordinate ref and value tags are either both present or both absent.
+     */
+    private function validateCoordinatePairConsistency(
+        ?IfdEntry $refEntry,
+        ?IfdEntry $valueEntry,
+        string $refName,
+        string $valueName,
+    ): void {
+        $hasRef   = $refEntry instanceof IfdEntry;
+        $hasValue = $valueEntry instanceof IfdEntry;
+
+        if ($hasRef === $hasValue) {
+            return;
+        }
+
+        if ($hasValue) {
+            throw new ParseError(sprintf(
+                '%s present without matching %s per EXIF 3.0.',
+                $valueName,
+                $refName,
+            ), 1472);
+        }
+
+        throw new ParseError(sprintf(
+            '%s present without matching %s per EXIF 3.0.',
+            $refName,
+            $valueName,
+        ), 1472);
     }
 
     /**

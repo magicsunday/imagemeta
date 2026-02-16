@@ -41,10 +41,12 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
      */
     #[Test]
     #[DataProvider('provideGpsCoordinateTags')]
-    public function acceptsGpsCoordinateTagsWithRationalCountThree(int $tag, string $_name): void
+    public function acceptsGpsCoordinateTagsWithRationalCountThree(int $tag, string $_name, int $refTag, string $refValue, string $resultKey): void
     {
         $result = (new TiffExifParser())->parseFromBlob(
-            $this->buildClassicTiffWithSingleGpsEntry(
+            $this->buildClassicTiffWithGpsRefAndValue(
+                $refTag,
+                $refValue,
                 $tag,
                 TiffConst::TYPE_RATIONAL,
                 3,
@@ -52,7 +54,7 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
             ),
         );
 
-        self::assertNull($result->gps()['lat']);
+        self::assertEqualsWithDelta(45.5, $result->gps()[$resultKey], 0.000001);
     }
 
     /**
@@ -60,7 +62,7 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
      */
     #[Test]
     #[DataProvider('provideGpsCoordinateTags')]
-    public function rejectsGpsCoordinateTagsWithWrongType(int $tag, string $name): void
+    public function rejectsGpsCoordinateTagsWithWrongType(int $tag, string $name, int $_refTag, string $_refValue, string $_resultKey): void
     {
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1317);
@@ -81,7 +83,7 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
      */
     #[Test]
     #[DataProvider('provideGpsCoordinateTags')]
-    public function rejectsGpsCoordinateTagsWithWrongCount(int $tag, string $name): void
+    public function rejectsGpsCoordinateTagsWithWrongCount(int $tag, string $name, int $_refTag, string $_refValue, string $_resultKey): void
     {
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1318);
@@ -174,14 +176,14 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{0: int, 1: string}>
+     * @return iterable<string, array{0: int, 1: string, 2: int, 3: string, 4: string}>
      */
     public static function provideGpsCoordinateTags(): iterable
     {
-        yield 'GPSLatitude' => [ExifTag::GPS_LATITUDE, 'GPSLatitude'];
-        yield 'GPSLongitude' => [ExifTag::GPS_LONGITUDE, 'GPSLongitude'];
-        yield 'GPSDestLatitude' => [ExifTag::GPS_DEST_LATITUDE, 'GPSDestLatitude'];
-        yield 'GPSDestLongitude' => [ExifTag::GPS_DEST_LONGITUDE, 'GPSDestLongitude'];
+        yield 'GPSLatitude' => [ExifTag::GPS_LATITUDE, 'GPSLatitude', ExifTag::GPS_LATITUDE_REF, 'N', 'lat'];
+        yield 'GPSLongitude' => [ExifTag::GPS_LONGITUDE, 'GPSLongitude', ExifTag::GPS_LONGITUDE_REF, 'E', 'lon'];
+        yield 'GPSDestLatitude' => [ExifTag::GPS_DEST_LATITUDE, 'GPSDestLatitude', ExifTag::GPS_DEST_LATITUDE_REF, 'N', 'dest_lat'];
+        yield 'GPSDestLongitude' => [ExifTag::GPS_DEST_LONGITUDE, 'GPSDestLongitude', ExifTag::GPS_DEST_LONGITUDE_REF, 'E', 'dest_lon'];
     }
 
     private function classicIfd0WithGpsPointerLength(): int
@@ -205,6 +207,62 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
             . pack('V', 1)
             . pack('V', $gpsIfdOffset)
             . pack('V', 0);
+    }
+
+    /**
+     * Builds a classic TIFF with a GPS ref entry and a configurable GPS value entry.
+     */
+    private function buildClassicTiffWithGpsRefAndValue(
+        int $refTag,
+        string $refValue,
+        int $valueTag,
+        int $valueType,
+        int $valueCount,
+        string $valueBytes,
+    ): string {
+        $header = Endian::Little->value
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8);
+
+        $ifd0Length   = $this->classicIfd0WithGpsPointerLength();
+        $gpsIfdOffset = strlen($header) + $ifd0Length;
+        $ifd0         = $this->buildClassicIfd0WithGpsPointer($gpsIfdOffset);
+
+        $componentSize = $this->bytesPerComponent($valueType);
+        $dataSize      = $componentSize * $valueCount;
+        $dataBytes     = strlen($valueBytes) >= $dataSize
+            ? substr($valueBytes, 0, $dataSize)
+            : str_pad($valueBytes, $dataSize, "\0");
+
+        // GPS IFD: count(2) + 2×entry(12) + nextIfd(4)
+        $gpsIfdLength = 2 + (2 * 12) + 4;
+        $dataOffset   = strlen($header . $ifd0) + $gpsIfdLength;
+
+        // Ref entry: ASCII[2] fits inline (≤ 4 bytes)
+        $refEntry = pack('v', $refTag)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', 2)
+            . pack('a4', $refValue);
+
+        // Value entry
+        $valEntry = pack('v', $valueTag)
+            . pack('v', $valueType)
+            . pack('V', $valueCount);
+
+        if ($dataSize > 4) {
+            $valEntry .= pack('V', $dataOffset);
+            $payload = $dataBytes;
+        } else {
+            $valEntry .= str_pad($dataBytes, 4, "\0");
+            $payload = '';
+        }
+
+        $gpsIfd = pack('v', 2)
+            . $refEntry
+            . $valEntry
+            . pack('V', 0);
+
+        return $header . $ifd0 . $gpsIfd . $payload;
     }
 
     /**
