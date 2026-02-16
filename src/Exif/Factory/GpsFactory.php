@@ -45,6 +45,11 @@ final readonly class GpsFactory
 {
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
+    public function __construct(
+        private ValueConverters $converters = new ValueConverters(),
+    ) {
+    }
+
     /**
      * Creates a GPS value object from EXIF and XMP metadata.
      *
@@ -114,7 +119,7 @@ final readonly class GpsFactory
          *     h_positioning_error: float|null,
          * } $gpsData
          */
-        $gpsData = $exifDocument?->gps() ?? ValueConverters::emptyGpsResult();
+        $gpsData = $exifDocument?->gps() ?? $this->converters->emptyGpsResult();
 
         $latitude     = $this->floatValue($gpsData['lat']);
         $longitude    = $this->floatValue($gpsData['lon']);

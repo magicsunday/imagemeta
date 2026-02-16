@@ -37,6 +37,11 @@ use function trim;
  */
 final readonly class TemporalFactory
 {
+    public function __construct(
+        private ValueConverters $converters = new ValueConverters(),
+    ) {
+    }
+
     /**
      * Creates a Temporal value object from EXIF, QuickTime and XMP metadata.
      *
@@ -106,7 +111,7 @@ final readonly class TemporalFactory
         if (
             ($tz instanceof DateTimeZone)
             && ($offsetTimeOriginal !== null)
-            && (ValueConverters::parseOffset($offsetTimeOriginal) instanceof DateTimeZone)
+            && ($this->converters->parseOffset($offsetTimeOriginal) instanceof DateTimeZone)
         ) {
             $tzSource = 'OffsetTimeOriginal';
         }
@@ -153,7 +158,7 @@ final readonly class TemporalFactory
         }
 
         $offsetString = $this->normaliseOffsetValue($offset);
-        $timezone     = ValueConverters::parseOffset($offsetString);
+        $timezone     = $this->converters->parseOffset($offsetString);
 
         if ($timezone instanceof DateTimeZone && $original instanceof DateTimeImmutable) {
             $original = $original->setTimezone($timezone);

@@ -84,6 +84,7 @@ final readonly class ValueFactory
      * @param TemporalFactory     $temporalFactory     Factory for temporal metadata.
      * @param RegionsFactory      $regionsFactory      Factory for regions metadata.
      * @param MultiPictureFactory $multiPictureFactory Factory for multi-picture metadata.
+     * @param ValueConverters     $converters          Value converter facade for EXIF type normalization.
      */
     public function __construct(
         private IccParserInterface $iccParser,
@@ -99,6 +100,7 @@ final readonly class ValueFactory
         private TemporalFactory $temporalFactory = new TemporalFactory(),
         private RegionsFactory $regionsFactory = new RegionsFactory(),
         private MultiPictureFactory $multiPictureFactory = new MultiPictureFactory(),
+        private ValueConverters $converters = new ValueConverters(),
     ) {
     }
 
@@ -376,26 +378,26 @@ final readonly class ValueFactory
             imageEditor: $exifDocument?->imageEditor(),
         );
 
-        $cropFactor          = ValueConverters::calcCropFactor($lens->focalLengthIn35mm, $lens->focalLengthMm);
+        $cropFactor          = $this->converters->calcCropFactor($lens->focalLengthIn35mm, $lens->focalLengthMm);
         $circleOfConfusionMm = $cropFactor !== null
-            ? ValueConverters::calcCircleOfConfusionMm($cropFactor)
+            ? $this->converters->calcCircleOfConfusionMm($cropFactor)
             : null;
 
         $derived = new Derived(
-            ev100: ValueConverters::calcEv100(
+            ev100: $this->converters->calcEv100(
                 $exposure->exposureTimeSec,
                 $exposure->fNumber,
                 $exposure->iso,
             ),
-            hyperfocalDistanceMetres: ValueConverters::calcHyperfocalM(
+            hyperfocalDistanceMetres: $this->converters->calcHyperfocalM(
                 $lens->focalLengthMm,
                 $exposure->fNumber,
                 $circleOfConfusionMm,
             ),
             circleOfConfusionMm: $circleOfConfusionMm,
-            fieldOfViewDiagonalDeg: ValueConverters::calcFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
-            fieldOfViewHorizontalDeg: ValueConverters::calcHorizontalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
-            fieldOfViewVerticalDeg: ValueConverters::calcVerticalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
+            fieldOfViewDiagonalDeg: $this->converters->calcFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
+            fieldOfViewHorizontalDeg: $this->converters->calcHorizontalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
+            fieldOfViewVerticalDeg: $this->converters->calcVerticalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
             equivalent35mm: $lens->focalLengthIn35mm,
             cropFactor: $cropFactor,
         );

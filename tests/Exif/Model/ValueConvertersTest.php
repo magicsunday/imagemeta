@@ -55,6 +55,13 @@ use function substr;
 #[CoversClass(ValueConverters::class)]
 final class ValueConvertersTest extends TestCase
 {
+    private ValueConverters $converters;
+
+    protected function setUp(): void
+    {
+        $this->converters = new ValueConverters();
+    }
+
     /**
      * Converts rational values (including lists) to floats.
      * It validates the transformation using representative inputs.
@@ -68,7 +75,7 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideValidRationals')]
     public function convertsRationalPairsToFloat(ExifRational|ExifRationalList $value, float $expected): void
     {
-        self::assertSame($expected, ValueConverters::rationalToFloat($value));
+        self::assertSame($expected, $this->converters->rationalToFloat($value));
     }
 
     /**
@@ -100,7 +107,7 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideScalarInputs')]
     public function convertsScalarsToFloat(int|float $value, float $expected): void
     {
-        self::assertSame($expected, ValueConverters::rationalToFloat($value));
+        self::assertSame($expected, $this->converters->rationalToFloat($value));
     }
 
     /**
@@ -124,7 +131,7 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideInvalidInputs')]
     public function returnsNullForInvalidRationalInputs(ExifRational|ExifNumericList|string|null $value): void
     {
-        self::assertNull(ValueConverters::rationalToFloat($value));
+        self::assertNull($this->converters->rationalToFloat($value));
     }
 
     /**
@@ -145,10 +152,10 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function convertsSignedAndUnsignedUnknownSentinelDenominatorsGenerically(): void
     {
-        self::assertSame(-1.0, ValueConverters::rationalToFloat(new ExifRational(1, -1)));
+        self::assertSame(-1.0, $this->converters->rationalToFloat(new ExifRational(1, -1)));
         self::assertEqualsWithDelta(
             1.0 / 4294967295.0,
-            ValueConverters::rationalToFloat(new ExifRational(1, 0xFFFFFFFF)),
+            $this->converters->rationalToFloat(new ExifRational(1, 0xFFFFFFFF)),
             1.0e-18,
         );
     }
@@ -166,7 +173,7 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideApexValues')]
     public function convertsApexValuesToFNumber(ExifRational|string $value, ?float $expected): void
     {
-        $result = ValueConverters::apexToFNumber($value);
+        $result = $this->converters->apexToFNumber($value);
 
         if ($expected === null) {
             self::assertNull($result);
@@ -187,10 +194,10 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function convertsApexShutterSpeedToSeconds(): void
     {
-        self::assertEqualsWithDelta(1 / 128, ValueConverters::apexShutterSpeedToSeconds(new ExifRational(7, 1)), 0.0000001);
-        self::assertEqualsWithDelta(1.0, ValueConverters::apexShutterSpeedToSeconds(new ExifRational(0, 1)), 0.0000001);
-        self::assertEqualsWithDelta(1 / 60, ValueConverters::apexShutterSpeedToSeconds(new ExifRational(59, 10)), 0.0001);
-        self::assertNull(ValueConverters::apexShutterSpeedToSeconds(new ExifRational(1, 0)));
+        self::assertEqualsWithDelta(1 / 128, $this->converters->apexShutterSpeedToSeconds(new ExifRational(7, 1)), 0.0000001);
+        self::assertEqualsWithDelta(1.0, $this->converters->apexShutterSpeedToSeconds(new ExifRational(0, 1)), 0.0000001);
+        self::assertEqualsWithDelta(1 / 60, $this->converters->apexShutterSpeedToSeconds(new ExifRational(59, 10)), 0.0001);
+        self::assertNull($this->converters->apexShutterSpeedToSeconds(new ExifRational(1, 0)));
     }
 
     /**
@@ -204,9 +211,9 @@ final class ValueConvertersTest extends TestCase
     {
         $values = new ExifNumericList([1, 2, 3, 0]);
 
-        self::assertSame(['Y', 'Cb', 'Cr', '-'], ValueConverters::componentsConfigurationLabels($values));
-        self::assertSame('Y Cb Cr -', ValueConverters::componentsConfigurationDescription($values));
-        self::assertNull(ValueConverters::componentsConfigurationLabels(new ExifNumericList([])));
+        self::assertSame(['Y', 'Cb', 'Cr', '-'], $this->converters->componentsConfigurationLabels($values));
+        self::assertSame('Y Cb Cr -', $this->converters->componentsConfigurationDescription($values));
+        self::assertNull($this->converters->componentsConfigurationLabels(new ExifNumericList([])));
     }
 
     /**
@@ -220,10 +227,10 @@ final class ValueConvertersTest extends TestCase
     {
         $values = new ExifNumericList([1, 2, 3, 0]);
 
-        self::assertSame([1, 2, 3, 0], ValueConverters::componentsConfiguration($values));
-        self::assertSame([4, 5], ValueConverters::componentsConfiguration([4, 5]));
-        self::assertNull(ValueConverters::componentsConfiguration(new ExifNumericList([])));
-        self::assertNull(ValueConverters::componentsConfiguration(null));
+        self::assertSame([1, 2, 3, 0], $this->converters->componentsConfiguration($values));
+        self::assertSame([4, 5], $this->converters->componentsConfiguration([4, 5]));
+        self::assertNull($this->converters->componentsConfiguration(new ExifNumericList([])));
+        self::assertNull($this->converters->componentsConfiguration(null));
     }
 
     /**
@@ -237,8 +244,8 @@ final class ValueConvertersTest extends TestCase
     {
         $values = new ExifNumericList([1, 2, 7, 0]);
 
-        self::assertNull(ValueConverters::componentsConfigurationLabels($values));
-        self::assertNull(ValueConverters::componentsConfigurationDescription($values));
+        self::assertNull($this->converters->componentsConfigurationLabels($values));
+        self::assertNull($this->converters->componentsConfigurationDescription($values));
     }
 
     /**
@@ -250,11 +257,11 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function convertsMakerNoteSafetyFlags(): void
     {
-        self::assertTrue(ValueConverters::makerNoteSafety(1));
-        self::assertFalse(ValueConverters::makerNoteSafety(0));
-        self::assertTrue(ValueConverters::makerNoteSafety(new ExifNumericList([1])));
-        self::assertNull(ValueConverters::makerNoteSafety(new ExifNumericList([])));
-        self::assertNull(ValueConverters::makerNoteSafety('invalid'));
+        self::assertTrue($this->converters->makerNoteSafety(1));
+        self::assertFalse($this->converters->makerNoteSafety(0));
+        self::assertTrue($this->converters->makerNoteSafety(new ExifNumericList([1])));
+        self::assertNull($this->converters->makerNoteSafety(new ExifNumericList([])));
+        self::assertNull($this->converters->makerNoteSafety('invalid'));
     }
 
     /**
@@ -282,7 +289,7 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideGpsSpeedValues')]
     public function convertsGpsSpeedToMetresPerSecond(?string $ref, ExifRational|string $value, ?float $expected): void
     {
-        $result = ValueConverters::gpsSpeedToMs($ref, $value);
+        $result = $this->converters->gpsSpeedToMs($ref, $value);
 
         if ($expected === null) {
             self::assertNull($result);
@@ -317,7 +324,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function convertsFlashShortToValueObject(): void
     {
-        $info = ValueConverters::flashFromShort(new ExifNumericList([63]));
+        $info = $this->converters->flashFromShort(new ExifNumericList([63]));
 
         self::assertInstanceOf(FlashInfo::class, $info);
         self::assertTrue($info->fired);
@@ -336,8 +343,8 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function returnsNullForInvalidFlashValue(): void
     {
-        self::assertNull(ValueConverters::flashFromShort(new ExifRational(1, 0)));
-        self::assertNull(ValueConverters::flashFromShort('invalid'));
+        self::assertNull($this->converters->flashFromShort(new ExifRational(1, 0)));
+        self::assertNull($this->converters->flashFromShort('invalid'));
     }
 
     /**
@@ -353,7 +360,7 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideOffsetStrings')]
     public function normalisesOffsetStrings(int|float|string|ExifRational|ExifRationalList|null $value, ?string $expected): void
     {
-        self::assertSame($expected, ValueConverters::parseOffsetString($value));
+        self::assertSame($expected, $this->converters->parseOffsetString($value));
     }
 
     /**
@@ -390,7 +397,7 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideOffsetMinutes')]
     public function convertsOffsetToMinutes(int|float|string|ExifRational|ExifRationalList|null $value, ?int $expected): void
     {
-        self::assertSame($expected, ValueConverters::offsetToMinutes($value));
+        self::assertSame($expected, $this->converters->offsetToMinutes($value));
     }
 
     /**
@@ -458,7 +465,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertEqualsWithDelta(51.5, $result['lat'], 0.000001);
         self::assertEqualsWithDelta(0.125, $result['lon'], 0.000001);
@@ -506,7 +513,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertEqualsWithDelta(-33.255, $result['lat'], 0.000001);
         self::assertEqualsWithDelta(-70.75, $result['lon'], 0.000001);
@@ -547,7 +554,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertEqualsWithDelta(10.0, $result['lat'], 0.000001);
         self::assertEqualsWithDelta(20.5, $result['lon'], 0.000001);
@@ -587,7 +594,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertEqualsWithDelta(40.504166, $result['lat'] ?? 0.0, 1e-6);
         self::assertEqualsWithDelta(7.758333, $result['lon'] ?? 0.0, 1e-6);
@@ -635,7 +642,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertEqualsWithDelta(-33.0, $result['lat'] ?? 0.0, 1e-6);
         self::assertEqualsWithDelta(18.5, $result['lon'] ?? 0.0, 1e-6);
@@ -677,7 +684,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertNull($result['lat']);
         self::assertEqualsWithDelta(56.0, $result['lon'] ?? 0.0, 1e-6);
@@ -772,7 +779,7 @@ final class ValueConvertersTest extends TestCase
             ExifTag::GPS_H_POSITIONING_ERROR => new IfdEntry(ExifTag::GPS_H_POSITIONING_ERROR, 5, 1, new ExifRational(15, 10)),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertEqualsWithDelta(51.5, $result['lat'], 0.000001);
         self::assertEqualsWithDelta(8.5, $result['lon'], 0.000001);
@@ -847,7 +854,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertSame('測位方式', $result['processing_method']);
         self::assertSame('東京', $result['area_information']);
@@ -872,7 +879,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertNull($result['area_information']);
     }
@@ -896,7 +903,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertNull($result['area_information']);
     }
@@ -920,7 +927,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertSame('測位方式', $result['processing_method']);
     }
@@ -944,7 +951,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertNull($result['processing_method']);
     }
@@ -969,7 +976,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertNull($result['processing_method']);
     }
@@ -987,7 +994,7 @@ final class ValueConvertersTest extends TestCase
             ExifTag::GPS_VERSION_ID => new IfdEntry(ExifTag::GPS_VERSION_ID, 1, 4, [2, 4, 0, 0]),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertSame('2.4.0.0', $result['version']);
         self::assertNull($result['version_raw']);
@@ -1004,7 +1011,7 @@ final class ValueConvertersTest extends TestCase
     {
         $gps = new Ifd([]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertSame('2.4.0.0', $result['version']);
         self::assertNull($result['version_raw']);
@@ -1023,7 +1030,7 @@ final class ValueConvertersTest extends TestCase
             ExifTag::GPS_VERSION_ID => new IfdEntry(ExifTag::GPS_VERSION_ID, 2, 4, "\0\0\0\0"),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertSame('2.4.0.0', $result['version']);
         self::assertSame("\0\0\0\0", $result['version_raw']);
@@ -1043,7 +1050,7 @@ final class ValueConvertersTest extends TestCase
         $payload .= "Beta\0";
         $payload .= $this->packSrational(1, 1);
 
-        $result = ValueConverters::decodeSpatialFrequencyResponse($payload);
+        $result = $this->converters->decodeSpatialFrequencyResponse($payload);
 
         self::assertNotNull($result);
         self::assertSame(['Alpha'], $result['labels']['columns']);
@@ -1061,7 +1068,7 @@ final class ValueConvertersTest extends TestCase
     {
         $payload = $this->buildSpatialFrequencyResponsePayload();
 
-        $result = ValueConverters::decodeSpatialFrequencyResponse($payload);
+        $result = $this->converters->decodeSpatialFrequencyResponse($payload);
 
         self::assertNotNull($result);
         self::assertSame(3, $result['columns']);
@@ -1087,7 +1094,7 @@ final class ValueConvertersTest extends TestCase
     {
         $payload = substr($this->buildSpatialFrequencyResponsePayload(), 0, 8);
 
-        self::assertNull(ValueConverters::decodeSpatialFrequencyResponse($payload));
+        self::assertNull($this->converters->decodeSpatialFrequencyResponse($payload));
     }
 
     /**
@@ -1099,8 +1106,8 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function convertsRationalsAndApexValues(): void
     {
-        self::assertSame(0.5, ValueConverters::rationalToFloat([1, 2]));
-        self::assertSame(2.8284271247461903, ValueConverters::apexToFNumber(3.0));
+        self::assertSame(0.5, $this->converters->rationalToFloat([1, 2]));
+        self::assertSame(2.8284271247461903, $this->converters->apexToFNumber(3.0));
     }
 
     /**
@@ -1112,17 +1119,17 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function normalisesExifVersionAndFlash(): void
     {
-        self::assertSame('1.00', ValueConverters::toExifVersion('0100'));
-        self::assertSame('2.00', ValueConverters::toExifVersion('0200'));
-        self::assertSame('2.20', ValueConverters::toExifVersion('0220'));
-        self::assertSame('2.31', ValueConverters::toExifVersion('0231'));
-        self::assertSame('3.00', ValueConverters::toExifVersion('0300'));
-        self::assertNull(ValueConverters::toExifVersion("0100\0\0"));
-        self::assertNull(ValueConverters::toExifVersion('Exif'));
-        self::assertNull(ValueConverters::toExifVersion('0240'));
-        self::assertNull(ValueConverters::toExifVersion("\x01\x02\x03\x04"));
+        self::assertSame('1.00', $this->converters->toExifVersion('0100'));
+        self::assertSame('2.00', $this->converters->toExifVersion('0200'));
+        self::assertSame('2.20', $this->converters->toExifVersion('0220'));
+        self::assertSame('2.31', $this->converters->toExifVersion('0231'));
+        self::assertSame('3.00', $this->converters->toExifVersion('0300'));
+        self::assertNull($this->converters->toExifVersion("0100\0\0"));
+        self::assertNull($this->converters->toExifVersion('Exif'));
+        self::assertNull($this->converters->toExifVersion('0240'));
+        self::assertNull($this->converters->toExifVersion("\x01\x02\x03\x04"));
 
-        $flash = ValueConverters::flashFromShort(0x59);
+        $flash = $this->converters->flashFromShort(0x59);
         self::assertInstanceOf(FlashInfo::class, $flash);
         self::assertTrue($flash->fired);
         self::assertSame(FlashMode::AUTO, $flash->mode);
@@ -1138,36 +1145,36 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function normalisesOffsetsAndSubjectAreas(): void
     {
-        self::assertSame('+01:00', ValueConverters::parseOffset('+01:00')?->getName());
-        self::assertSame('-05:30', ValueConverters::parseOffset('-05:30')?->getName());
-        self::assertSame('+14:00', ValueConverters::parseOffset('+14:00')?->getName());
-        self::assertNull(ValueConverters::parseOffset('UTC'));
-        self::assertNull(ValueConverters::parseOffset('GMT'));
-        self::assertNull(ValueConverters::parseOffset('Europe/Berlin'));
-        self::assertNull(ValueConverters::parseOffset('Z'));
-        self::assertNull(ValueConverters::parseOffset('+0100'));
-        self::assertNull(ValueConverters::parseOffset('+1'));
-        self::assertNull(ValueConverters::parseOffset('+9:00'));
-        self::assertNull(ValueConverters::parseOffset('+1401'));
-        self::assertNull(ValueConverters::parseOffset('+15:00'));
-        self::assertNull(ValueConverters::parseOffset('+01:61'));
+        self::assertSame('+01:00', $this->converters->parseOffset('+01:00')?->getName());
+        self::assertSame('-05:30', $this->converters->parseOffset('-05:30')?->getName());
+        self::assertSame('+14:00', $this->converters->parseOffset('+14:00')?->getName());
+        self::assertNull($this->converters->parseOffset('UTC'));
+        self::assertNull($this->converters->parseOffset('GMT'));
+        self::assertNull($this->converters->parseOffset('Europe/Berlin'));
+        self::assertNull($this->converters->parseOffset('Z'));
+        self::assertNull($this->converters->parseOffset('+0100'));
+        self::assertNull($this->converters->parseOffset('+1'));
+        self::assertNull($this->converters->parseOffset('+9:00'));
+        self::assertNull($this->converters->parseOffset('+1401'));
+        self::assertNull($this->converters->parseOffset('+15:00'));
+        self::assertNull($this->converters->parseOffset('+01:61'));
 
         self::assertSame(
             ['x' => 10, 'y' => 20, 'w' => null, 'h' => null],
-            ValueConverters::subjectAreaToRect([10, 20]),
+            $this->converters->subjectAreaToRect([10, 20]),
         );
         self::assertSame(
             ['x' => 100, 'y' => 120, 'w' => 25, 'h' => 25],
-            ValueConverters::subjectAreaToRect([100, 120, 25]),
+            $this->converters->subjectAreaToRect([100, 120, 25]),
         );
         self::assertSame(
             ['x' => 10, 'y' => 20, 'w' => 30, 'h' => 40],
-            ValueConverters::subjectAreaToRect([10, 20, 30, 40]),
+            $this->converters->subjectAreaToRect([10, 20, 30, 40]),
         );
-        self::assertNull(ValueConverters::subjectAreaToRect([10]));
-        self::assertNull(ValueConverters::subjectAreaToRect([10, 20, -5]));
-        self::assertNull(ValueConverters::subjectAreaToRect(['a', 'b']));
-        self::assertNull(ValueConverters::subjectAreaToRect([1, 2, 3, 4, 5]));
+        self::assertNull($this->converters->subjectAreaToRect([10]));
+        self::assertNull($this->converters->subjectAreaToRect([10, 20, -5]));
+        self::assertNull($this->converters->subjectAreaToRect(['a', 'b']));
+        self::assertNull($this->converters->subjectAreaToRect([1, 2, 3, 4, 5]));
     }
 
     /**
@@ -1179,7 +1186,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function parsesSamplingAndChromaticities(): void
     {
-        self::assertSame([2, 2], ValueConverters::ycbcrSubSamplingToPair('2 2'));
+        self::assertSame([2, 2], $this->converters->ycbcrSubSamplingToPair('2 2'));
 
         $list = new ExifRationalList([
             new ExifRational(6400, 10000),
@@ -1190,7 +1197,7 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(6000, 10000),
         ]);
 
-        self::assertSame([0.64, 0.33, 0.3, 0.6, 0.15, 0.6], ValueConverters::toPrimaryChromaticities($list));
+        self::assertSame([0.64, 0.33, 0.3, 0.6, 0.15, 0.6], $this->converters->toPrimaryChromaticities($list));
     }
 
     /**
@@ -1203,12 +1210,12 @@ final class ValueConvertersTest extends TestCase
     public function acceptsLegalYCbCrSubSamplingValues(): void
     {
         // EXIF 3.0 §4.6.5.1.12 defines only [2,1] and [2,2] as legal YCbCr subsampling values
-        self::assertSame([2, 1], ValueConverters::ycbcrSubSamplingToPair('2 1'));
-        self::assertSame([2, 2], ValueConverters::ycbcrSubSamplingToPair('2 2'));
+        self::assertSame([2, 1], $this->converters->ycbcrSubSamplingToPair('2 1'));
+        self::assertSame([2, 2], $this->converters->ycbcrSubSamplingToPair('2 2'));
 
         // Test with different delimiters (comma, semicolon)
-        self::assertSame([2, 1], ValueConverters::ycbcrSubSamplingToPair('2,1'));
-        self::assertSame([2, 2], ValueConverters::ycbcrSubSamplingToPair('2;2'));
+        self::assertSame([2, 1], $this->converters->ycbcrSubSamplingToPair('2,1'));
+        self::assertSame([2, 2], $this->converters->ycbcrSubSamplingToPair('2;2'));
     }
 
     /**
@@ -1221,34 +1228,34 @@ final class ValueConvertersTest extends TestCase
     public function rejectsIllegalYCbCrSubSamplingValues(): void
     {
         // Reserved values per EXIF 3.0 §4.6.5.1.12
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('4 1'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('4 2'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('4 4'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('4 1'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('4 2'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('4 4'));
 
         // Invalid horizontal/vertical combinations
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('1 1'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('1 2'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('2 3'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('3 1'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('3 2'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('3 3'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('4 3'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('5 1'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('8 8'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('1 1'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('1 2'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('2 3'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('3 1'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('3 2'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('3 3'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('4 3'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('5 1'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('8 8'));
 
         // Edge cases
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('0 0'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('0 1'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('1 0'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('-1 2'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('2 -1'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('0 0'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('0 1'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('1 0'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('-1 2'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('2 -1'));
 
         // Invalid formats
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair(''));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair(null));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('invalid'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('2'));
-        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('2 2 2'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair(''));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair(null));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('invalid'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('2'));
+        self::assertNull($this->converters->ycbcrSubSamplingToPair('2 2 2'));
     }
 
     /**
@@ -1266,7 +1273,7 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(1, 4),
         ]);
 
-        self::assertSame('[1.0,0.5,0.25]', ValueConverters::dngMatrixToString($matrix));
+        self::assertSame('[1.0,0.5,0.25]', $this->converters->dngMatrixToString($matrix));
     }
 
     /**
@@ -1283,13 +1290,13 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(3290, 10000),
         ]);
 
-        self::assertSame([0.3127, 0.329], ValueConverters::toWhitePoint($whitePoint));
+        self::assertSame([0.3127, 0.329], $this->converters->toWhitePoint($whitePoint));
         self::assertSame(
             ResolutionUnit::INCHES,
-            ValueConverters::toEnumOrNull(ResolutionUnit::class, (string) ResolutionUnit::INCHES->value),
+            $this->converters->toEnumOrNull(ResolutionUnit::class, (string) ResolutionUnit::INCHES->value),
         );
-        self::assertNull(ValueConverters::toEnumOrNull(ResolutionUnit::class, 99));
-        self::assertNull(ValueConverters::toEnumOrNull(ResolutionUnit::class, null));
+        self::assertNull($this->converters->toEnumOrNull(ResolutionUnit::class, 99));
+        self::assertNull($this->converters->toEnumOrNull(ResolutionUnit::class, null));
     }
 
     /**
@@ -1307,7 +1314,7 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(1, 2),
         ]);
 
-        self::assertNull(ValueConverters::toWhitePoint($whitePoint));
+        self::assertNull($this->converters->toWhitePoint($whitePoint));
 
         $chromaticities = new ExifRationalList([
             new ExifRational(1, 1),
@@ -1316,7 +1323,7 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(1, 1),
         ]);
 
-        self::assertNull(ValueConverters::toPrimaryChromaticities($chromaticities));
+        self::assertNull($this->converters->toPrimaryChromaticities($chromaticities));
     }
 
     /**
@@ -1328,21 +1335,21 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function calculatesFieldOfViewAndHyperfocalMetrics(): void
     {
-        $cropFactor = ValueConverters::calcCropFactor(75, 50.0);
+        $cropFactor = $this->converters->calcCropFactor(75, 50.0);
         self::assertEqualsWithDelta(1.5, $cropFactor, 1e-12);
 
-        $circleOfConfusion = ValueConverters::calcCircleOfConfusionMm($cropFactor);
+        $circleOfConfusion = $this->converters->calcCircleOfConfusionMm($cropFactor);
         self::assertEqualsWithDelta(0.02, $circleOfConfusion, 1e-12);
-        self::assertEqualsWithDelta(0.03, ValueConverters::calcCircleOfConfusionMm(null), 1e-12);
-        self::assertNull(ValueConverters::calcCircleOfConfusionMm(0.0));
+        self::assertEqualsWithDelta(0.03, $this->converters->calcCircleOfConfusionMm(null), 1e-12);
+        self::assertNull($this->converters->calcCircleOfConfusionMm(0.0));
 
-        $hyperfocal = ValueConverters::calcHyperfocalM(50.0, 8.0, $circleOfConfusion);
+        $hyperfocal = $this->converters->calcHyperfocalM(50.0, 8.0, $circleOfConfusion);
         self::assertEqualsWithDelta(15.675, $hyperfocal, 1e-12);
 
-        self::assertEqualsWithDelta(32.179788109672, ValueConverters::calcFovDeg(75, $cropFactor, 50.0), 1e-12);
-        self::assertEqualsWithDelta(26.991466561592, ValueConverters::calcHorizontalFovDeg(75, $cropFactor, 50.0), 1e-12);
-        self::assertEqualsWithDelta(18.180553841645, ValueConverters::calcVerticalFovDeg(75, $cropFactor, 50.0), 1e-12);
-        self::assertEqualsWithDelta(10.0, ValueConverters::calcEv100(1.0 / 1024.0, 1.0, 100), 1e-12);
+        self::assertEqualsWithDelta(32.179788109672, $this->converters->calcFovDeg(75, $cropFactor, 50.0), 1e-12);
+        self::assertEqualsWithDelta(26.991466561592, $this->converters->calcHorizontalFovDeg(75, $cropFactor, 50.0), 1e-12);
+        self::assertEqualsWithDelta(18.180553841645, $this->converters->calcVerticalFovDeg(75, $cropFactor, 50.0), 1e-12);
+        self::assertEqualsWithDelta(10.0, $this->converters->calcEv100(1.0 / 1024.0, 1.0, 100), 1e-12);
     }
 
     /**
@@ -1364,28 +1371,28 @@ final class ValueConvertersTest extends TestCase
         float $expectedFovHorizontal,
         float $expectedFovVertical,
     ): void {
-        $cropFactor = ValueConverters::calcCropFactor($focalLength35mm, $focalLengthMm);
+        $cropFactor = $this->converters->calcCropFactor($focalLength35mm, $focalLengthMm);
         self::assertEqualsWithDelta($expectedCropFactor, $cropFactor, 1e-9);
 
-        $circleOfConfusion = ValueConverters::calcCircleOfConfusionMm($cropFactor);
+        $circleOfConfusion = $this->converters->calcCircleOfConfusionMm($cropFactor);
         self::assertEqualsWithDelta($expectedCircleOfConfusion, $circleOfConfusion, 1e-9);
 
-        $hyperfocal = ValueConverters::calcHyperfocalM($focalLengthMm, $fNumber, $circleOfConfusion);
+        $hyperfocal = $this->converters->calcHyperfocalM($focalLengthMm, $fNumber, $circleOfConfusion);
         self::assertEqualsWithDelta($expectedHyperfocal, $hyperfocal, 1e-6);
 
         self::assertEqualsWithDelta(
             $expectedFovDiagonal,
-            ValueConverters::calcFovDeg($focalLength35mm, $cropFactor, $focalLengthMm),
+            $this->converters->calcFovDeg($focalLength35mm, $cropFactor, $focalLengthMm),
             1e-6,
         );
         self::assertEqualsWithDelta(
             $expectedFovHorizontal,
-            ValueConverters::calcHorizontalFovDeg($focalLength35mm, $cropFactor, $focalLengthMm),
+            $this->converters->calcHorizontalFovDeg($focalLength35mm, $cropFactor, $focalLengthMm),
             1e-6,
         );
         self::assertEqualsWithDelta(
             $expectedFovVertical,
-            ValueConverters::calcVerticalFovDeg($focalLength35mm, $cropFactor, $focalLengthMm),
+            $this->converters->calcVerticalFovDeg($focalLength35mm, $cropFactor, $focalLengthMm),
             1e-6,
         );
     }
@@ -1495,7 +1502,7 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(980, 100),  // 9.8 m/s²
         ]);
 
-        $result = ValueConverters::srationalTripletToFloatVector($list);
+        $result = $this->converters->srationalTripletToFloatVector($list);
 
         self::assertIsArray($result);
         self::assertEqualsWithDelta(0.5, $result[0], 0.001);
@@ -1518,7 +1525,7 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(981, 100),  // Near gravity
         ]);
 
-        $result = ValueConverters::srationalTripletToFloatVector($list);
+        $result = $this->converters->srationalTripletToFloatVector($list);
 
         self::assertIsArray($result);
         self::assertEqualsWithDelta(0.0, $result[0], 0.001);
@@ -1540,7 +1547,7 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(-10, 100),
         ]);
 
-        $result = ValueConverters::srationalTripletToFloatVector($list);
+        $result = $this->converters->srationalTripletToFloatVector($list);
 
         self::assertIsArray($result);
         self::assertEqualsWithDelta(0.1, $result[0], 0.001);
@@ -1562,7 +1569,7 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(20, 100),
         ]);
 
-        self::assertNull(ValueConverters::srationalTripletToFloatVector($listWithTwo));
+        self::assertNull($this->converters->srationalTripletToFloatVector($listWithTwo));
 
         $listWithFour = new ExifRationalList([
             new ExifRational(10, 100),
@@ -1571,7 +1578,7 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(40, 100),
         ]);
 
-        self::assertNull(ValueConverters::srationalTripletToFloatVector($listWithFour));
+        self::assertNull($this->converters->srationalTripletToFloatVector($listWithFour));
     }
 
     /**
@@ -1589,7 +1596,7 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(980, 100),
         ]);
 
-        $result = ValueConverters::srationalTripletToFloatVector($list);
+        $result = $this->converters->srationalTripletToFloatVector($list);
 
         self::assertNull($result);
     }
@@ -1610,7 +1617,7 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(100000, 1000),  // 100 m/s²
         ]);
 
-        $result = ValueConverters::srationalTripletToFloatVector($list);
+        $result = $this->converters->srationalTripletToFloatVector($list);
 
         self::assertIsArray($result);
         self::assertEqualsWithDelta(500.0, $result[0], 0.001);
@@ -1633,7 +1640,7 @@ final class ValueConvertersTest extends TestCase
             new ExifRational(-20, 100),
         ]);
 
-        $result = ValueConverters::srationalTripletToFloatVector($list);
+        $result = $this->converters->srationalTripletToFloatVector($list);
 
         self::assertIsArray($result);
         self::assertEqualsWithDelta(-0.3, $result[0], 0.001);
@@ -1651,7 +1658,7 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideExposureTimeValues')]
     public function formatsExposureTime(?float $seconds, ?string $expected): void
     {
-        self::assertSame($expected, ValueConverters::formatExposureTime($seconds));
+        self::assertSame($expected, $this->converters->formatExposureTime($seconds));
     }
 
     /**
@@ -1684,13 +1691,13 @@ final class ValueConvertersTest extends TestCase
     {
         // APEX value 4.32 => 2^(-4.32) ≈ 0.05 seconds => "1/20"
         $apexValue = new ExifRational(64736, 14979);
-        $formatted = ValueConverters::formatShutterSpeedFromApex($apexValue);
+        $formatted = $this->converters->formatShutterSpeedFromApex($apexValue);
 
         self::assertSame('1/20', $formatted);
 
         // APEX value 6.64 => 2^(-6.64) ≈ 0.01 seconds => "1/100"
         $apexValue2 = new ExifRational(664, 100);
-        $formatted2 = ValueConverters::formatShutterSpeedFromApex($apexValue2);
+        $formatted2 = $this->converters->formatShutterSpeedFromApex($apexValue2);
 
         self::assertSame('1/100', $formatted2);
     }
@@ -1705,7 +1712,7 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideFNumberValues')]
     public function formatsFNumber(?float $fNumber, ?string $expected): void
     {
-        self::assertSame($expected, ValueConverters::formatFNumber($fNumber));
+        self::assertSame($expected, $this->converters->formatFNumber($fNumber));
     }
 
     /**
@@ -1739,13 +1746,13 @@ final class ValueConvertersTest extends TestCase
     {
         // APEX value 1.85 => 2^(1.85/2) ≈ 1.9 => "f/1.9"
         $apexValue = new ExifRational(16384, 8847);
-        $formatted = ValueConverters::formatApertureFromApex($apexValue);
+        $formatted = $this->converters->formatApertureFromApex($apexValue);
 
         self::assertSame('f/1.9', $formatted);
 
         // APEX value 3.0 => 2^(3/2) ≈ 2.83 => "f/2.8"
         $apexValue2 = new ExifRational(3, 1);
-        $formatted2 = ValueConverters::formatApertureFromApex($apexValue2);
+        $formatted2 = $this->converters->formatApertureFromApex($apexValue2);
 
         self::assertSame('f/2.8', $formatted2);
     }
@@ -1760,7 +1767,7 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideBrightnessValues')]
     public function formatsBrightnessValue(ExifRational|float|null $value, ?string $expected): void
     {
-        self::assertSame($expected, ValueConverters::formatBrightnessValue($value));
+        self::assertSame($expected, $this->converters->formatBrightnessValue($value));
     }
 
     /**
@@ -1771,8 +1778,8 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function treatsUnknownBrightnessDenominatorsAsNull(): void
     {
-        self::assertNull(ValueConverters::formatBrightnessValue(new ExifRational(1, -1)));
-        self::assertNull(ValueConverters::formatBrightnessValue(new ExifRational(1, 0xFFFFFFFF)));
+        self::assertNull($this->converters->formatBrightnessValue(new ExifRational(1, -1)));
+        self::assertNull($this->converters->formatBrightnessValue(new ExifRational(1, 0xFFFFFFFF)));
     }
 
     /**

@@ -141,6 +141,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      * @param MakerNotesRecord|null $makerNotes     Decoded maker note metadata provided by vendor decoders.
      * @param list<Ifd>             $subsequentIfds Additional linked IFDs discovered via the next-pointer chain.
      * @param array<int, Ifd>       $subIfds        Parsed SubIFDs indexed by their file offsets.
+     * @param ValueConverters       $converters     Value converter facade for EXIF type normalization.
      */
     public function __construct(
         public Ifd $ifd0,
@@ -152,9 +153,10 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
         public array $subsequentIfds = [],
         public array $subIfds = [],
         ?Endian $byteOrder = null,
+        private ValueConverters $converters = new ValueConverters(),
     ) {
         $rawVersion        = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
-        $this->exifVersion = ValueConverters::toExifVersion($rawVersion);
+        $this->exifVersion = $this->converters->toExifVersion($rawVersion);
         $this->exifProfile = ExifCapabilities::fromVersion($this->exifVersion);
         $this->byteOrder   = $byteOrder ?? Endian::Little;
     }
@@ -550,7 +552,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return '1.00';
         }
 
-        return ValueConverters::toExifVersion($value);
+        return $this->converters->toExifVersion($value);
     }
 
     /**
@@ -1032,7 +1034,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     {
         $value = $this->componentsInput($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
 
-        return ValueConverters::componentsConfiguration($value);
+        return $this->converters->componentsConfiguration($value);
     }
 
     /**
@@ -1046,7 +1048,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     {
         $value = $this->componentsInput($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
 
-        return ValueConverters::componentsConfigurationLabels($value);
+        return $this->converters->componentsConfigurationLabels($value);
     }
 
     /**
@@ -1056,7 +1058,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     {
         $value = $this->componentsInput($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
 
-        return ValueConverters::componentsConfigurationDescription($value);
+        return $this->converters->componentsConfigurationDescription($value);
     }
 
     /**
@@ -1170,7 +1172,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        $matrix = ValueConverters::decodeOecf($payload, $this->byteOrder);
+        $matrix = $this->converters->decodeOecf($payload, $this->byteOrder);
 
         return Oecf::fromMatrix($matrix);
     }
@@ -1467,7 +1469,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     {
         $seconds = $this->exposureTime();
 
-        return ValueConverters::formatExposureTime($seconds);
+        return $this->converters->formatExposureTime($seconds);
     }
 
     /**
@@ -1491,7 +1493,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        return ValueConverters::apexShutterSpeedToSeconds($raw);
+        return $this->converters->apexShutterSpeedToSeconds($raw);
     }
 
     /**
@@ -1508,7 +1510,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        return ValueConverters::formatShutterSpeedFromApex($raw);
+        return $this->converters->formatShutterSpeedFromApex($raw);
     }
 
     /**
@@ -1547,7 +1549,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        return ValueConverters::formatApertureFromApex($raw);
+        return $this->converters->formatApertureFromApex($raw);
     }
 
     /**
@@ -1618,7 +1620,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function flashInfo(): ?FlashInfo
     {
-        return ValueConverters::flashFromShort($this->flash());
+        return $this->converters->flashFromShort($this->flash());
     }
 
     /**
@@ -1672,7 +1674,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        return ValueConverters::rationalToFloat($value);
+        return $this->converters->rationalToFloat($value);
     }
 
     /**
@@ -1689,7 +1691,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        return ValueConverters::formatBrightnessValue($value);
+        return $this->converters->formatBrightnessValue($value);
     }
 
     /**
@@ -1792,7 +1794,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     public function spatialFrequencyResponse(): ?SpatialFrequencyResponse
     {
         $payload = $this->rawString($this->exifIfd, ExifTag::SPATIAL_FREQUENCY_RESPONSE);
-        $matrix  = ValueConverters::decodeSpatialFrequencyResponse($payload, $this->byteOrder);
+        $matrix  = $this->converters->decodeSpatialFrequencyResponse($payload, $this->byteOrder);
 
         return SpatialFrequencyResponse::fromMatrix($matrix);
     }
@@ -2180,7 +2182,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        $vector = ValueConverters::srationalTripletToFloatVector($value);
+        $vector = $this->converters->srationalTripletToFloatVector($value);
         if ($vector === null) {
             return null;
         }
@@ -2209,7 +2211,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
         }
 
         if ($value instanceof ExifRationalList) {
-            $vector = ValueConverters::srationalTripletToFloatVector($value);
+            $vector = $this->converters->srationalTripletToFloatVector($value);
             if ($vector === null) {
                 return null;
             }
@@ -2222,7 +2224,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return sqrt(($scaled[0] ** 2) + ($scaled[1] ** 2) + ($scaled[2] ** 2));
         }
 
-        $scalar = ValueConverters::rationalToFloat($value);
+        $scalar = $this->converters->rationalToFloat($value);
         if ($scalar === null) {
             return null;
         }
@@ -2588,10 +2590,10 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     public function gps(): array
     {
         if (!$this->gpsIfd instanceof Ifd) {
-            return ValueConverters::emptyGpsResult();
+            return $this->converters->emptyGpsResult();
         }
 
-        return ValueConverters::gpsFromIfd($this->gpsIfd);
+        return $this->converters->gpsFromIfd($this->gpsIfd);
     }
 
     /**
@@ -3115,7 +3117,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
         $raw = $this->rawString($this->ifd0, ExifTag::YCBCR_SUB_SAMPLING);
 
         if ($raw !== null) {
-            $pair = ValueConverters::ycbcrSubSamplingToPair($raw);
+            $pair = $this->converters->ycbcrSubSamplingToPair($raw);
 
             return $pair !== null ? $this->validateYcbcrPair($pair[0], $pair[1]) : null;
         }
@@ -3177,7 +3179,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
         if ($value instanceof ExifRationalList) {
             $coeffs = [];
             foreach ($value->values as $component) {
-                $float = ValueConverters::rationalToFloat($component);
+                $float = $this->converters->rationalToFloat($component);
                 if ($float === null) {
                     return null;
                 }
@@ -3204,7 +3206,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
         $value = $this->value($this->ifd0, ExifTag::WHITE_POINT);
 
         return $value instanceof ExifRationalList || $value instanceof ExifNumericList
-            ? ValueConverters::toWhitePoint($value)
+            ? $this->converters->toWhitePoint($value)
             : null;
     }
 
@@ -3221,7 +3223,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
         $value = $this->value($this->ifd0, ExifTag::PRIMARY_CHROMATICITIES);
 
         return $value instanceof ExifRationalList || $value instanceof ExifNumericList
-            ? ValueConverters::toPrimaryChromaticities($value)
+            ? $this->converters->toPrimaryChromaticities($value)
             : null;
     }
 
@@ -3487,7 +3489,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return INF;
         }
 
-        return ValueConverters::rationalToFloat($value);
+        return $this->converters->rationalToFloat($value);
     }
 
     /**
@@ -3619,7 +3621,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        return ValueConverters::rationalToFloat($value);
+        return $this->converters->rationalToFloat($value);
     }
 
     /**
@@ -3678,7 +3680,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        return ValueConverters::rationalToFloat($value);
+        return $this->converters->rationalToFloat($value);
     }
 
     /**
@@ -3860,7 +3862,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
 
         if ($value instanceof ExifRational) {
             // Reduce rationals to a rounded integer for enum lookups.
-            $float = ValueConverters::rationalToFloat($value);
+            $float = $this->converters->rationalToFloat($value);
 
             return $float === null ? null : $this->normaliseEnumScalar($float);
         }
@@ -3931,13 +3933,13 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
                 return null;
             }
 
-            $float = ValueConverters::rationalToFloat($first);
+            $float = $this->converters->rationalToFloat($first);
 
             return $float === null ? null : $this->componentsInputFromScalar($float);
         }
 
         if ($value instanceof ExifRational) {
-            $float = ValueConverters::rationalToFloat($value);
+            $float = $this->converters->rationalToFloat($value);
 
             return $float === null ? null : $this->componentsInputFromScalar($float);
         }
@@ -4040,7 +4042,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
         }
 
         if ($value instanceof ExifRational) {
-            $float = ValueConverters::rationalToFloat($value);
+            $float = $this->converters->rationalToFloat($value);
 
             return $float === null ? null : (int) round($float);
         }
@@ -4273,7 +4275,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
         if ($value instanceof ExifRationalList) {
             $result = [];
             foreach ($value->values as $item) {
-                $float = ValueConverters::rationalToFloat($item);
+                $float = $this->converters->rationalToFloat($item);
                 if ($float === null) {
                     return null;
                 }
@@ -4285,7 +4287,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
         }
 
         if ($value instanceof ExifRational) {
-            $float = ValueConverters::rationalToFloat($value);
+            $float = $this->converters->rationalToFloat($value);
 
             return $float !== null ? [$float] : null;
         }
@@ -4638,7 +4640,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
                 $value = $value->toInt('EXIF offset normalisation');
             }
         } elseif ($value instanceof ExifRationalList || $value instanceof ExifRational) {
-            $value = ValueConverters::rationalToFloat($value);
+            $value = $this->converters->rationalToFloat($value);
         }
 
         if (is_string($value)) {
@@ -4660,7 +4662,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        return ValueConverters::parseOffsetString($value);
+        return $this->converters->parseOffsetString($value);
     }
 
     /**
@@ -4745,7 +4747,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        $timeZone = ValueConverters::parseOffset($rawOffset);
+        $timeZone = $this->converters->parseOffset($rawOffset);
         if (!$timeZone instanceof DateTimeZone) {
             return null;
         }

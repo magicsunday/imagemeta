@@ -37,6 +37,13 @@ use function strlen;
 #[UsesClass(ValueConverters::class)]
 final class GpsUndefinedStringTest extends TestCase
 {
+    private ValueConverters $converters;
+
+    protected function setUp(): void
+    {
+        $this->converters = new ValueConverters();
+    }
+
     /**
      * Supplies a GPSProcessingMethod shorter than 8 bytes without a prefix.
      * Confirms that payloads missing the character code area are rejected.
@@ -46,7 +53,7 @@ final class GpsUndefinedStringTest extends TestCase
     #[Test]
     public function rejectsProcessingMethodShorterThanEightBytes(): void
     {
-        $result = ValueConverters::gpsFromIfd($this->gpsIfdWithProcessingMethod('GPS'));
+        $result = $this->converters->gpsFromIfd($this->gpsIfdWithProcessingMethod('GPS'));
 
         self::assertNull($result['processing_method']);
     }
@@ -60,7 +67,7 @@ final class GpsUndefinedStringTest extends TestCase
     #[Test]
     public function rejectsProcessingMethodWithUnknownPrefix(): void
     {
-        $result = ValueConverters::gpsFromIfd($this->gpsIfdWithProcessingMethod("INVALID\0GPS data"));
+        $result = $this->converters->gpsFromIfd($this->gpsIfdWithProcessingMethod("INVALID\0GPS data"));
 
         self::assertNull($result['processing_method']);
     }
@@ -74,7 +81,7 @@ final class GpsUndefinedStringTest extends TestCase
     #[Test]
     public function acceptsProcessingMethodWithAsciiPrefix(): void
     {
-        $result = ValueConverters::gpsFromIfd($this->gpsIfdWithProcessingMethod("ASCII\0\0\0NETWORK"));
+        $result = $this->converters->gpsFromIfd($this->gpsIfdWithProcessingMethod("ASCII\0\0\0NETWORK"));
 
         self::assertSame('NETWORK', $result['processing_method']);
     }
@@ -97,7 +104,7 @@ final class GpsUndefinedStringTest extends TestCase
             ),
         ]);
 
-        $result = ValueConverters::gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertNull($result['area_information']);
     }

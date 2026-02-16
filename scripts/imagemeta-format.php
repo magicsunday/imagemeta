@@ -184,8 +184,11 @@ final class MetadataFormatter
      */
     private array $xmpPropertyToEnumMap = [];
 
+    private ValueConverters $converters;
+
     public function __construct()
     {
+        $this->converters = new ValueConverters();
         $this->buildTagMaps();
         $this->buildXmpEnumMap();
     }
@@ -1063,14 +1066,14 @@ final class MetadataFormatter
         }
 
         if ($localName === 'ExposureTime' && is_numeric($value)) {
-            $formatted = ValueConverters::formatExposureTime((float) $value);
+            $formatted = $this->converters->formatExposureTime((float) $value);
 
             return $formatted ?? $value;
         }
 
         if ($localName === 'ShutterSpeedValue' && is_numeric($value)) {
             $floatVal = (float) $value;
-            $formatted = ValueConverters::formatShutterSpeedFromApex($floatVal);
+            $formatted = $this->converters->formatShutterSpeedFromApex($floatVal);
             if ($formatted !== null) {
                 return $formatted;
             }
@@ -1176,7 +1179,7 @@ final class MetadataFormatter
 
             // ApertureValue - Convert APEX value to f-number
             // EXIF 3.0 §4.6.6.7.14
-            ExifTag::APERTURE_VALUE => ValueConverters::apexToFNumber($exifDoc->apertureValue()),
+            ExifTag::APERTURE_VALUE => $this->converters->apexToFNumber($exifDoc->apertureValue()),
 
             // BrightnessValue - Convert APEX value to decimal EV
             // EXIF 3.0 §4.6.6.7.15
@@ -1192,7 +1195,7 @@ final class MetadataFormatter
 
             // MaxApertureValue - Convert APEX to f-number
             // EXIF 3.0 §4.6.6.7.17
-            ExifTag::MAX_APERTURE_VALUE => ValueConverters::apexToFNumber($exifDoc->maxApertureApex()),
+            ExifTag::MAX_APERTURE_VALUE => $this->converters->apexToFNumber($exifDoc->maxApertureApex()),
 
             // FocalLength - Format in millimetres
             // EXIF 3.0 §4.6.6.7.23

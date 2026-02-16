@@ -21,6 +21,11 @@ use MagicSunday\ImageMeta\Value\Lens;
  */
 final readonly class LensFactory
 {
+    public function __construct(
+        private ValueConverters $converters = new ValueConverters(),
+    ) {
+    }
+
     /**
      * Creates a Lens value object from EXIF metadata.
      *
@@ -44,7 +49,7 @@ final readonly class LensFactory
         }
 
         $maxApex = $exifDocument->maxApertureApex();
-        $maxF    = $maxApex !== null ? ValueConverters::apexToFNumber($maxApex) : null;
+        $maxF    = $maxApex !== null ? $this->converters->apexToFNumber($maxApex) : null;
 
         return new Lens(
             lensMake: $exifDocument->lensMake(),
