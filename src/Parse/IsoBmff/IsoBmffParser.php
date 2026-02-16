@@ -4101,6 +4101,15 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $seenItemIds = [];
 
         foreach ($this->walkChildren($ilst) as $entry) {
+            // QuickTime File Format 2012, Metadata Structure: "The free space atom
+            // may not occur within any other subatom contained in the metadata atom."
+            if ($entry->type === 'free' || $entry->type === 'skip') {
+                throw new ParseError(
+                    sprintf('free-space atom "%s" is not allowed inside ilst', $entry->type),
+                    1501,
+                );
+            }
+
             $keyName  = null;
             $itemName = null;
             $index    = $this->fourccToIndex($entry->type);
@@ -4132,6 +4141,13 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $entryAtoms = [];
 
             foreach ($this->walkChildren($entry) as $sub) {
+                if ($sub->type === 'free' || $sub->type === 'skip') {
+                    throw new ParseError(
+                        sprintf('free-space atom "%s" is not allowed inside metadata item entry', $sub->type),
+                        1502,
+                    );
+                }
+
                 if ($sub->type === self::BOX_DATA) {
                     $structured = $this->parseDataBoxStructured($sub);
                     $this->validateLocaleIndicator($structured['locale'], $countryLists, $languageLists);

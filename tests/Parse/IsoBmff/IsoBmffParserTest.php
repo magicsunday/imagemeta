@@ -6833,6 +6833,61 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * A free-space atom nested inside an ilst entry is rejected.
+     *
+     * QuickTime File Format 2012 states: "The free space atom may not occur
+     * within any other subatom contained in the metadata atom."
+     */
+    #[Test]
+    public function rejectsFreeAtomInsideIlstEntry(): void
+    {
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
+        $freeBox   = $this->box('free', str_repeat("\0", 4));
+        $ilstEntry = $this->box(pack('N', 1), $dataBox . $freeBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov = $this->moov($meta);
+        $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('free');
+
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * A free-space atom directly inside ilst (as a sibling of entries) is rejected.
+     */
+    #[Test]
+    public function rejectsFreeAtomDirectlyInsideIlst(): void
+    {
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $freeBox   = $this->box('free', str_repeat("\0", 4));
+        $ilst      = $this->box('ilst', $ilstEntry . $freeBox);
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov = $this->moov($meta);
+        $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('free');
+
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
      * Creates a QuickTime file with a data atom using a specific type and payload.
      *
      * @param int    $dataType Well-known type code (1=UTF-8, 2=UTF-16BE, etc.).
