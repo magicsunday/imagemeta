@@ -1181,7 +1181,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function rejectInvalidYCbCrPositioning(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('YCbCrPositioning value 3 is outside the valid domain {1, 2}');
+        $this->expectExceptionMessage('YCbCrPositioning value 3 is outside the valid domain {0, 1, 2}');
 
         (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::YCBCR_POSITIONING, 3));
     }

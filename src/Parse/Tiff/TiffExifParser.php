@@ -1903,9 +1903,11 @@ final class TiffExifParser implements TiffExifParserInterface
             ), 1311);
         }
 
-        if ($tag === ExifTag::YCBCR_POSITIONING && is_int($value) && $value !== 1 && $value !== 2) {
+        // YCbCrPositioning 0 is not defined by EXIF 3.0 §4.6.5.1.13 (domain {1, 2})
+        // but DNG/RAW files commonly write 0 when YCbCr is not applicable.
+        if ($tag === ExifTag::YCBCR_POSITIONING && is_int($value) && $value !== 0 && $value !== 1 && $value !== 2) {
             throw new ParseError(sprintf(
-                'YCbCrPositioning value %d is outside the valid domain {1, 2} per EXIF 3.0 §4.6.5.1.13.',
+                'YCbCrPositioning value %d is outside the valid domain {0, 1, 2} per EXIF 3.0 §4.6.5.1.13.',
                 $value,
             ), 1312);
         }
