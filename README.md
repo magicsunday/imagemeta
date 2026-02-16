@@ -140,6 +140,7 @@ $metadata->structured()->derived->fieldOfViewDiagonalDeg;
 ```
 
 For multi-track QuickTime/MP4 files, track-derived video/audio keys are taken from the first matching track to avoid order-dependent overwrites.
+QuickTime `stsd` video resolution fields are exposed as decoded 16.16 pixels-per-inch values via `QuickTimeMeta::VIDEO_HORIZONTAL_RESOLUTION_KEY` and `QuickTimeMeta::VIDEO_VERTICAL_RESOLUTION_KEY`.
 
 ### Reading EXIF only
 

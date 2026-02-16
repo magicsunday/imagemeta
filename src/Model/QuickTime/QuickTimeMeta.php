@@ -63,6 +63,16 @@ final readonly class QuickTimeMeta
     public const string VIDEO_HEIGHT_KEY = 'com.apple.quicktime.videoHeight';
 
     /**
+     * QuickTime metadata key exposing horizontal video resolution in pixels per inch.
+     */
+    public const string VIDEO_HORIZONTAL_RESOLUTION_KEY = 'com.apple.quicktime.videoHorizontalResolution';
+
+    /**
+     * QuickTime metadata key exposing vertical video resolution in pixels per inch.
+     */
+    public const string VIDEO_VERTICAL_RESOLUTION_KEY = 'com.apple.quicktime.videoVerticalResolution';
+
+    /**
      * QuickTime metadata key describing the codec four-character code for video.
      */
     public const string VIDEO_CODEC_KEY = 'com.apple.quicktime.videoCodec';
@@ -175,6 +185,12 @@ final readonly class QuickTimeMeta
         'ImageWidth'                           => ['ImageWidth', self::VIDEO_WIDTH_KEY, 'VideoWidth'],
         self::VIDEO_HEIGHT_KEY                 => [self::VIDEO_HEIGHT_KEY, 'ImageHeight', 'VideoHeight'],
         'ImageHeight'                          => ['ImageHeight', self::VIDEO_HEIGHT_KEY, 'VideoHeight'],
+        self::VIDEO_HORIZONTAL_RESOLUTION_KEY  => [self::VIDEO_HORIZONTAL_RESOLUTION_KEY, 'VideoHorizontalResolution', 'HorizontalResolution'],
+        'VideoHorizontalResolution'            => ['VideoHorizontalResolution', self::VIDEO_HORIZONTAL_RESOLUTION_KEY, 'HorizontalResolution'],
+        'HorizontalResolution'                 => ['HorizontalResolution', self::VIDEO_HORIZONTAL_RESOLUTION_KEY, 'VideoHorizontalResolution'],
+        self::VIDEO_VERTICAL_RESOLUTION_KEY    => [self::VIDEO_VERTICAL_RESOLUTION_KEY, 'VideoVerticalResolution', 'VerticalResolution'],
+        'VideoVerticalResolution'              => ['VideoVerticalResolution', self::VIDEO_VERTICAL_RESOLUTION_KEY, 'VerticalResolution'],
+        'VerticalResolution'                   => ['VerticalResolution', self::VIDEO_VERTICAL_RESOLUTION_KEY, 'VideoVerticalResolution'],
         self::VIDEO_CODEC_KEY                  => [self::VIDEO_CODEC_KEY, 'CompressorID', 'VideoCodecID'],
         'CompressorID'                         => ['CompressorID', self::VIDEO_CODEC_KEY, 'VideoCodecID'],
         self::COMPRESSOR_NAME_KEY              => [self::COMPRESSOR_NAME_KEY, 'CompressorName'],

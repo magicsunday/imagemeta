@@ -995,6 +995,14 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             if (isset($sampleInfo['compressorName']) && $sampleInfo['compressorName'] !== '') {
                 $trackKeys[QuickTimeMeta::COMPRESSOR_NAME_KEY] = $sampleInfo['compressorName'];
             }
+
+            if (isset($sampleInfo['horizontalResolution'])) {
+                $trackKeys[QuickTimeMeta::VIDEO_HORIZONTAL_RESOLUTION_KEY] = $sampleInfo['horizontalResolution'];
+            }
+
+            if (isset($sampleInfo['verticalResolution'])) {
+                $trackKeys[QuickTimeMeta::VIDEO_VERTICAL_RESOLUTION_KEY] = $sampleInfo['verticalResolution'];
+            }
         } elseif ($handler === 'soun') {
             if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
                 $trackKeys[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
@@ -1709,8 +1717,8 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('video sample entry height must be > 0', 1602);
                 }
 
-                $win->readU32BE(); // horiz resolution
-                $win->readU32BE(); // vert resolution
+                $horizontalResolution = $this->decodeVideoResolution16_16($win->readU32BE(), 'horizontal');
+                $verticalResolution   = $this->decodeVideoResolution16_16($win->readU32BE(), 'vertical');
 
                 $dataSize = $win->readU32BE();
                 if ($dataSize !== 0) {
@@ -1734,10 +1742,12 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 $this->validateVideoSampleEntryDepthAndColorTable($depth, $colorTableId, $win, $entryEnd);
 
                 $result = [
-                    'format'         => $this->normaliseFourcc($format),
-                    'width'          => $width,
-                    'height'         => $height,
-                    'compressorName' => $compressor,
+                    'format'               => $this->normaliseFourcc($format),
+                    'width'                => $width,
+                    'height'               => $height,
+                    'horizontalResolution' => $horizontalResolution,
+                    'verticalResolution'   => $verticalResolution,
+                    'compressorName'       => $compressor,
                 ];
             } elseif ($result === [] && $handlerType === 'soun') {
                 $result = $this->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $format, $version, $mdhdTimescale);
@@ -2021,6 +2031,37 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         return $override;
+    }
+
+    /**
+     * Decodes a QuickTime video sample-entry resolution 16.16 fixed-point value.
+     *
+     * @param int    $resolutionRaw Raw unsigned 16.16 fixed-point value.
+     * @param string $axis          Resolution axis (`horizontal` or `vertical`) for diagnostics.
+     *
+     * @return int|float
+     */
+    private function decodeVideoResolution16_16(int $resolutionRaw, string $axis): int|float
+    {
+        if ($resolutionRaw <= 0) {
+            throw new ParseError(sprintf('video sample entry %s resolution must be > 0', $axis), 1604);
+        }
+
+        if (($resolutionRaw & 0x80000000) !== 0) {
+            throw new ParseError(sprintf('video sample entry %s resolution exceeds supported 16.16 range', $axis), 1605);
+        }
+
+        $integerPart = $resolutionRaw >> 16;
+        if ($integerPart <= 0) {
+            throw new ParseError(sprintf('video sample entry %s resolution must be > 0', $axis), 1604);
+        }
+
+        $fractionalPart = $resolutionRaw & 0xFFFF;
+        if ($fractionalPart === 0) {
+            return $integerPart;
+        }
+
+        return $resolutionRaw / 65536.0;
     }
 
     /**

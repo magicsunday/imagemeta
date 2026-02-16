@@ -3103,6 +3103,160 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Decodes and exposes QuickTime horizontal/vertical resolution from 16.16 fields.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesVideoStsdEntryWithValidResolution1616Values(): void
+    {
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+            horizontalResolution: 0x00488000,
+            verticalResolution: 0x003A0000,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
+        self::assertSame(240, $quickTime->intValue(QuickTimeMeta::VIDEO_HEIGHT_KEY));
+        self::assertSame('raw', $quickTime->stringValue(QuickTimeMeta::VIDEO_CODEC_KEY));
+        self::assertEqualsWithDelta(72.5, $quickTime->floatValue(QuickTimeMeta::VIDEO_HORIZONTAL_RESOLUTION_KEY), 1e-12);
+        self::assertEqualsWithDelta(58.0, $quickTime->floatValue(QuickTimeMeta::VIDEO_VERTICAL_RESOLUTION_KEY), 1e-12);
+    }
+
+    /**
+     * Rejects video sample entries where resolution fields are truncated.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoStsdEntryWithTruncatedResolutionFields(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('video sample entry truncated');
+
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+        );
+
+        $truncated = substr($entry, 0, -1);
+        $truncated = pack('N', strlen($truncated)) . substr($truncated, 4);
+
+        $this->createExtractor($this->createFileWithVideoStsdEntry($truncated))->extract();
+    }
+
+    /**
+     * Rejects invalid video sample-entry resolution encodings (zero and overflow-like).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoStsdEntryWithInvalidResolutionDomainValues(): void
+    {
+        $invalidCases = [
+            [
+                'horizontalResolution' => 0x00000000,
+                'verticalResolution'   => 0x00480000,
+                'message'              => 'video sample entry horizontal resolution must be > 0',
+            ],
+            [
+                'horizontalResolution' => 0x00480000,
+                'verticalResolution'   => 0x00000000,
+                'message'              => 'video sample entry vertical resolution must be > 0',
+            ],
+            [
+                'horizontalResolution' => 0x80000000,
+                'verticalResolution'   => 0x00480000,
+                'message'              => 'video sample entry horizontal resolution exceeds supported 16.16 range',
+            ],
+        ];
+
+        foreach ($invalidCases as $case) {
+            try {
+                $entry = $this->videoSampleEntry(
+                    format: 'raw ',
+                    width: 320,
+                    height: 240,
+                    depth: 24,
+                    colorTableId: -1,
+                    horizontalResolution: $case['horizontalResolution'],
+                    verticalResolution: $case['verticalResolution'],
+                );
+
+                $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
+                self::fail('Expected ParseError for invalid video sample entry resolution fields.');
+            } catch (ParseError $exception) {
+                self::assertStringContainsString($case['message'], $exception->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Uses the first stsd sample entry when multiple video sample entries exist.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesVideoStsdResolutionDeterministicallyWithMultipleEntries(): void
+    {
+        $firstEntry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+            horizontalResolution: 0x00488000,
+            verticalResolution: 0x00480000,
+        );
+
+        $secondEntry = $this->videoSampleEntry(
+            format: 'avc1',
+            width: 640,
+            height: 360,
+            depth: 24,
+            colorTableId: -1,
+            horizontalResolution: 0x003C0000,
+            verticalResolution: 0x003C0000,
+        );
+
+        $stsd = $this->fullBox('stsd', pack('N', 2) . $firstEntry . $secondEntry);
+        $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
+        $vmhd = $this->fullBox('vmhd', str_repeat("\0", 8), 0, 1);
+        $url  = $this->fullBox('url ', '', 0, 1);
+        $dref = $this->fullBox('dref', pack('N', 1) . $url);
+        $dinf = $this->box('dinf', $dref);
+        $minf = $this->box('minf', $vmhd . $dinf . $stbl);
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak = $this->box('trak', $tkhd . $mdia);
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor       = $this->createExtractor($ftyp . $moov);
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
+        self::assertSame(240, $quickTime->intValue(QuickTimeMeta::VIDEO_HEIGHT_KEY));
+        self::assertSame('raw', $quickTime->stringValue(QuickTimeMeta::VIDEO_CODEC_KEY));
+        self::assertEqualsWithDelta(72.5, $quickTime->floatValue(QuickTimeMeta::VIDEO_HORIZONTAL_RESOLUTION_KEY), 1e-12);
+        self::assertEqualsWithDelta(72.0, $quickTime->floatValue(QuickTimeMeta::VIDEO_VERTICAL_RESOLUTION_KEY), 1e-12);
+    }
+
+    /**
      * Rejects video sample entries with width 0.
      *
      * @return void
@@ -6764,6 +6918,8 @@ final class IsoBmffParserTest extends TestCase
         int $temporalQuality = 0,
         int $spatialQuality = 0,
         int $dataSize = 0,
+        int $horizontalResolution = 0x00480000,
+        int $verticalResolution = 0x00480000,
     ): string {
         $compressor = str_pad('', 31, "\0");
 
@@ -6776,8 +6932,8 @@ final class IsoBmffParserTest extends TestCase
             . pack('N', $spatialQuality)
             . pack('n', $width)
             . pack('n', $height)
-            . pack('N', 0x00480000)
-            . pack('N', 0x00480000)
+            . pack('N', $horizontalResolution)
+            . pack('N', $verticalResolution)
             . pack('N', $dataSize)
             . pack('n', 1)
             . "\0"
