@@ -73,6 +73,11 @@ final readonly class QuickTimeMeta
     public const string VIDEO_VERTICAL_RESOLUTION_KEY = 'com.apple.quicktime.videoVerticalResolution';
 
     /**
+     * QuickTime metadata key exposing video sample-entry frame count for the primary track.
+     */
+    public const string VIDEO_FRAME_COUNT_KEY = 'com.apple.quicktime.videoFrameCount';
+
+    /**
      * QuickTime metadata key describing the codec four-character code for video.
      */
     public const string VIDEO_CODEC_KEY = 'com.apple.quicktime.videoCodec';
@@ -191,6 +196,8 @@ final readonly class QuickTimeMeta
         self::VIDEO_VERTICAL_RESOLUTION_KEY    => [self::VIDEO_VERTICAL_RESOLUTION_KEY, 'VideoVerticalResolution', 'VerticalResolution'],
         'VideoVerticalResolution'              => ['VideoVerticalResolution', self::VIDEO_VERTICAL_RESOLUTION_KEY, 'VerticalResolution'],
         'VerticalResolution'                   => ['VerticalResolution', self::VIDEO_VERTICAL_RESOLUTION_KEY, 'VideoVerticalResolution'],
+        self::VIDEO_FRAME_COUNT_KEY            => [self::VIDEO_FRAME_COUNT_KEY, 'VideoFrameCount'],
+        'VideoFrameCount'                      => ['VideoFrameCount', self::VIDEO_FRAME_COUNT_KEY],
         self::VIDEO_CODEC_KEY                  => [self::VIDEO_CODEC_KEY, 'CompressorID', 'VideoCodecID'],
         'CompressorID'                         => ['CompressorID', self::VIDEO_CODEC_KEY, 'VideoCodecID'],
         self::COMPRESSOR_NAME_KEY              => [self::COMPRESSOR_NAME_KEY, 'CompressorName'],

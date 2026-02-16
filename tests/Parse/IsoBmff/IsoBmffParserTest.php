@@ -3103,6 +3103,83 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Accepts frame_count=1 and keeps existing width/height/codec extraction behavior.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesVideoStsdEntryWithFrameCountOne(): void
+    {
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+            frameCount: 1,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
+        self::assertSame(240, $quickTime->intValue(QuickTimeMeta::VIDEO_HEIGHT_KEY));
+        self::assertSame('raw', $quickTime->stringValue(QuickTimeMeta::VIDEO_CODEC_KEY));
+        self::assertNull($quickTime->intValue(QuickTimeMeta::VIDEO_FRAME_COUNT_KEY));
+    }
+
+    /**
+     * Rejects frame_count=0 in QuickTime video sample entries.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsVideoStsdEntryWithZeroFrameCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('video sample entry frame count must be > 0');
+
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+            frameCount: 0,
+        );
+
+        $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
+    }
+
+    /**
+     * Preserves non-default positive frame_count values in QuickTime metadata.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesVideoStsdEntryWithNonDefaultFrameCount(): void
+    {
+        $entry = $this->videoSampleEntry(
+            format: 'raw ',
+            width: 320,
+            height: 240,
+            depth: 24,
+            colorTableId: -1,
+            frameCount: 3,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
+        self::assertSame(240, $quickTime->intValue(QuickTimeMeta::VIDEO_HEIGHT_KEY));
+        self::assertSame('raw', $quickTime->stringValue(QuickTimeMeta::VIDEO_CODEC_KEY));
+        self::assertSame(3, $quickTime->intValue(QuickTimeMeta::VIDEO_FRAME_COUNT_KEY));
+    }
+
+    /**
      * Decodes and exposes QuickTime horizontal/vertical resolution from 16.16 fields.
      *
      * @return void
@@ -6918,6 +6995,7 @@ final class IsoBmffParserTest extends TestCase
         int $temporalQuality = 0,
         int $spatialQuality = 0,
         int $dataSize = 0,
+        int $frameCount = 1,
         int $horizontalResolution = 0x00480000,
         int $verticalResolution = 0x00480000,
     ): string {
@@ -6935,7 +7013,7 @@ final class IsoBmffParserTest extends TestCase
             . pack('N', $horizontalResolution)
             . pack('N', $verticalResolution)
             . pack('N', $dataSize)
-            . pack('n', 1)
+            . pack('n', $frameCount)
             . "\0"
             . $compressor
             . pack('n', $depth)

@@ -1003,6 +1003,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             if (isset($sampleInfo['verticalResolution'])) {
                 $trackKeys[QuickTimeMeta::VIDEO_VERTICAL_RESOLUTION_KEY] = $sampleInfo['verticalResolution'];
             }
+
+            if (isset($sampleInfo['frameCount']) && $sampleInfo['frameCount'] !== 1) {
+                $trackKeys[QuickTimeMeta::VIDEO_FRAME_COUNT_KEY] = $sampleInfo['frameCount'];
+            }
         } elseif ($handler === 'soun') {
             if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
                 $trackKeys[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
@@ -1725,7 +1729,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('video sample entry data size must be 0', 1502);
                 }
 
-                $win->readU16BE(); // frame count
+                $frameCount = $win->readU16BE();
+                if ($frameCount === 0) {
+                    throw new ParseError('video sample entry frame count must be > 0', 1606);
+                }
 
                 // GH-836: decode compressorName as strict 32-byte Pascal string
                 $nameLength = $win->readU8();
@@ -1747,6 +1754,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     'height'               => $height,
                     'horizontalResolution' => $horizontalResolution,
                     'verticalResolution'   => $verticalResolution,
+                    'frameCount'           => $frameCount,
                     'compressorName'       => $compressor,
                 ];
             } elseif ($result === [] && $handlerType === 'soun') {
