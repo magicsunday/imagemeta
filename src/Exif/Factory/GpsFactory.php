@@ -227,6 +227,38 @@ final readonly class GpsFactory
             }
         }
 
+        if ($status === null) {
+            $status = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSStatus'));
+        }
+
+        if ($measureMode === null) {
+            $measureMode = $this->stringValue($xmpDocument?->string(self::NS_EXIF, 'GPSMeasureMode'));
+        }
+
+        if ($dop === null) {
+            $dop = $this->floatValue($xmpDocument?->float(self::NS_EXIF, 'GPSDOP'));
+        }
+
+        if ($trackRef === null) {
+            $trackRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSTrackRef'));
+        }
+
+        if ($track === null) {
+            $track = $this->floatValue($xmpDocument?->float(self::NS_EXIF, 'GPSTrack'));
+        }
+
+        if ($imgDirRef === null) {
+            $imgDirRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSImgDirectionRef'));
+        }
+
+        if ($imgDir === null) {
+            $imgDir = $this->floatValue($xmpDocument?->float(self::NS_EXIF, 'GPSImgDirection'));
+        }
+
+        if ($mapDatum === null) {
+            $mapDatum = $this->stringValue($xmpDocument?->string(self::NS_EXIF, 'GPSMapDatum'));
+        }
+
         $xmpSpeedRef = $xmpDocument?->string(self::NS_EXIF, 'GPSSpeedRef');
         if ($speedRef === null) {
             $speedRef = $this->uppercase($xmpSpeedRef);

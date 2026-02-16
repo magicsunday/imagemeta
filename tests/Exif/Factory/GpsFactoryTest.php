@@ -755,6 +755,40 @@ final class GpsFactoryTest extends TestCase
         self::assertSame(120.5, $gps->destinationBearing);
     }
 
+    /**
+     * XMP navigation context fields are surfaced when EXIF values are missing.
+     */
+    #[Test]
+    public function xmpNavigationContextFieldsAreMapped(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSStatus', self::NS_EXIF)          => 'A',
+            sprintf('{%s}GPSMeasureMode', self::NS_EXIF)     => '3',
+            sprintf('{%s}GPSDOP', self::NS_EXIF)             => '1.5',
+            sprintf('{%s}GPSTrack', self::NS_EXIF)           => '90.0',
+            sprintf('{%s}GPSTrackRef', self::NS_EXIF)        => 'T',
+            sprintf('{%s}GPSImgDirection', self::NS_EXIF)    => '180.0',
+            sprintf('{%s}GPSImgDirectionRef', self::NS_EXIF) => 'M',
+            sprintf('{%s}GPSMapDatum', self::NS_EXIF)        => 'WGS-84',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertSame(GpsStatus::MEASUREMENT_IN_PROGRESS, $gps->status);
+        self::assertSame(GpsMeasureMode::THREE_DIMENSIONAL, $gps->measureMode);
+        self::assertSame(1.5, $gps->dop);
+        self::assertSame(90.0, $gps->track);
+        self::assertSame(180.0, $gps->imageDirection);
+        self::assertSame('WGS-84', $gps->mapDatum);
+    }
+
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     private function parsedExif(
