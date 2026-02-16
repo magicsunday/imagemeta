@@ -178,6 +178,36 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
+     * Rejects ftyp when payload is too short for major_brand + minor_version (< 8 bytes).
+     */
+    #[Test]
+    public function detectRejectsFtypWithTooShortPayload(): void
+    {
+        // size=12 → payload=4 bytes (< 8 required), type='ftyp', 4 bytes payload
+        $stream = $this->createStream("\x00\x00\x00\x0Cftypisom");
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unsupported or unknown container');
+
+        (new FormatDetector())->detect($stream);
+    }
+
+    /**
+     * Rejects ftyp when compatible-brands table is not aligned to 4 bytes.
+     */
+    #[Test]
+    public function detectRejectsFtypWithMisalignedBrandsTable(): void
+    {
+        // size=19 → payload=11 bytes (8 + 3 leftover), type='ftyp'
+        $stream = $this->createStream("\x00\x00\x00\x13ftypisom\x00\x00\x00\x00abc");
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unsupported or unknown container');
+
+        (new FormatDetector())->detect($stream);
+    }
+
+    /**
      * Rejects a stream with an unknown non-padding box before the signature.
      */
     #[Test]

@@ -173,6 +173,14 @@ final readonly class FormatDetector
 
             // GH-1223: signature boxes must have a well-defined size
             if ($size !== 0 && isset(self::ISO_BMFF_SIGNATURE_BOXES[$boxType])) {
+                // GH-1226: ftyp/styp require at least 8 payload bytes and 4-byte brand alignment
+                if ($boxType === 'ftyp' || $boxType === 'styp') {
+                    $payload = $size - $headerSize;
+                    if ($payload < 8 || ($payload - 8) % 4 !== 0) {
+                        return false;
+                    }
+                }
+
                 return true;
             }
 
