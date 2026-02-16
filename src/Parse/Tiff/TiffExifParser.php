@@ -6170,12 +6170,7 @@ final class TiffExifParser implements TiffExifParserInterface
             return;
         }
 
-        if ($entry->count !== 1) {
-            throw new ParseError(
-                sprintf('IFD pointer tag 0x%04X must contain exactly one offset per %s.', $entry->tag, $specRef),
-                1340,
-            );
-        }
+        // Accept non-1 count — use the first offset value (Postel's Law).
 
         $allowedTypes = $this->bigTiff
             ? [

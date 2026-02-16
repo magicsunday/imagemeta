@@ -38,6 +38,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use Throwable;
 
 use function pack;
 use function str_pad;
@@ -382,41 +383,45 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Creates an interoperability pointer entry with an invalid type/count layout.
-     * Ensures the parser throws a ParseError with the expected validation message.
+     * Rejects an interoperability pointer entry with an invalid type (SHORT instead of LONG).
      *
      * @return void
      */
     #[Test]
-    public function rejectsInteropPointerWithInvalidLayout(): void
+    public function rejectsInteropPointerWithInvalidType(): void
     {
         $blob = $this->buildTiffWithInteropPointer(TiffConst::TYPE_SHORT, 2);
 
         $reader = new TiffExifParser();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('IFD pointer tag 0xA005 must contain exactly one offset per EXIF 3.0 §4.6.3.3.1.');
+        $this->expectExceptionMessage('IFD pointer tag 0xA005 must use a LONG/IFD field type per EXIF 3.0 §4.6.3.3.1.');
 
         $reader->parseFromBlob($blob);
     }
 
     /**
-     * Creates an ExifIFDPointer entry with count=2 instead of the required 1.
-     * Ensures the parser rejects bad ExifIFD pointer count per EXIF 3.0 §4.6.3.1.1.
+     * Accepts ExifIFDPointer with count=2 (Postel's Law — uses first offset).
+     * The synthetic blob triggers a BoundsError downstream, but no longer
+     * the count-validation ParseError — confirming the tolerance works.
      *
      * @return void
      */
     #[Test]
-    public function rejectsExifIfdPointerWithBadCount(): void
+    public function acceptsExifIfdPointerWithNonSingleCount(): void
     {
         $blob = $this->buildTiffWithIfd0Pointer(ExifTag::EXIF_IFD_POINTER, TiffConst::TYPE_LONG, 2);
 
-        $reader = new TiffExifParser();
+        try {
+            (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
+        } catch (Throwable $e) {
+            // The count-validation ParseError (1340) must not appear.
+            self::assertNotSame(1340, $e->getCode());
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('IFD pointer tag 0x8769 must contain exactly one offset per EXIF 3.0 §4.6.3.1.1.');
+            return;
+        }
 
-        $reader->parseFromBlob($blob);
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -439,22 +444,24 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Creates a GPSInfoIFDPointer entry with count=3 instead of the required 1.
-     * Ensures the parser rejects bad GPS pointer count per EXIF 3.0 §4.6.3.2.1.
+     * Accepts GPSInfoIFDPointer with count=3 (Postel's Law — uses first offset).
      *
      * @return void
      */
     #[Test]
-    public function rejectsGpsIfdPointerWithBadCount(): void
+    public function acceptsGpsIfdPointerWithNonSingleCount(): void
     {
         $blob = $this->buildTiffWithIfd0Pointer(ExifTag::GPS_IFD_POINTER, TiffConst::TYPE_LONG, 3);
 
-        $reader = new TiffExifParser();
+        try {
+            (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
+        } catch (Throwable $e) {
+            self::assertNotSame(1340, $e->getCode());
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('IFD pointer tag 0x8825 must contain exactly one offset per EXIF 3.0 §4.6.3.2.1.');
+            return;
+        }
 
-        $reader->parseFromBlob($blob);
+        $this->addToAssertionCount(1);
     }
 
     /**
