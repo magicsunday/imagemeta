@@ -118,6 +118,32 @@ final class TiffExifParserCfaPatternTest extends TestCase
     }
 
     /**
+     * A CFA matrix byte with an undefined code (> 7) is rejected.
+     */
+    #[Test]
+    public function rejectsCfaPatternWithUndefinedCode(): void
+    {
+        // 1x1 pattern with code 8 (undefined)
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('undefined CFA code');
+
+        $this->parseWithCfaPattern(pack('v', 1) . pack('v', 1) . "\x08");
+    }
+
+    /**
+     * A CFA matrix with mixed valid and invalid codes is rejected at the first invalid byte.
+     */
+    #[Test]
+    public function rejectsCfaPatternWithMixedValidAndInvalidCodes(): void
+    {
+        // 2x2 pattern: codes 0, 1, 2, 255 — last one is invalid
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('undefined CFA code');
+
+        $this->parseWithCfaPattern(pack('v', 2) . pack('v', 2) . "\x00\x01\x02\xFF");
+    }
+
+    /**
      * Builds a minimal TIFF with a CFAPattern tag in the EXIF sub-IFD.
      */
     private function parseWithCfaPattern(string $payload): ParsedExif

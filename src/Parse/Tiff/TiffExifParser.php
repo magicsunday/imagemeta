@@ -5659,7 +5659,16 @@ final class TiffExifParser implements TiffExifParserInterface
 
         $components = [$horizontalRepeatPixelUnit, $verticalRepeatPixelUnit];
         for ($index = 0; $index < $expectedPatternValues; ++$index) {
-            $components[] = ord($bytes[4 + $index]);
+            $code = ord($bytes[4 + $index]);
+
+            if ($code > 7) {
+                throw new ParseError(
+                    sprintf('CFAPattern matrix byte %d has undefined CFA code %d (valid: 0..7 per EXIF 3.0 Table 13)', $index, $code),
+                    1508,
+                );
+            }
+
+            $components[] = $code;
         }
 
         return new ExifNumericList($components);
