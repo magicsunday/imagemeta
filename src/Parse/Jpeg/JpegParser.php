@@ -2581,8 +2581,13 @@ final class JpegParser implements JpegParserInterface
         $derivedH = (int) ($luma['horizontal'] / $horizontal);
         $derivedV = (int) ($luma['vertical'] / $vertical);
 
-        // EXIF 3.0 §4.6.5.1.12: legal values are [2,1] (YCbCr4:2:2) and [2,2] (YCbCr4:2:0)
+        // EXIF 3.0 §4.6.5.1.12 lists only [2,1] (4:2:2) and [2,2] (4:2:0)
+        // as writer-side requirements.  ITU-T T.81 §B.2.2 allows arbitrary
+        // sampling factors including [1,1] (4:4:4 — full chroma resolution).
+        // Professional cameras and image editors legitimately produce 4:4:4
+        // JPEGs with EXIF metadata.
         $legalValues = [
+            [1, 1],
             [2, 1],
             [2, 2],
         ];

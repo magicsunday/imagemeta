@@ -1965,6 +1965,29 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Accepts 4:4:4 subsampling (all components 1x1) as permitted by ITU-T T.81.
+     */
+    #[Test]
+    public function acceptsExifSofWithYcbcr444SubSampling(): void
+    {
+        $exifPayload  = self::TIFF_HEADER . 'strict-exif';
+        $framePayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x11\x00"
+            . "\x02\x11\x01"
+            . "\x03\x11\x01";
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_SOF0, $framePayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
+
+        self::assertCount(1, $blobs);
+    }
+
+    /**
      * Rejects EXIF SOF payloads with subsampling values outside EXIF YCbCr 4:2:2/4:2:0.
      *
      * @return void
