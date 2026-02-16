@@ -455,6 +455,14 @@ final class XmpParser implements XmpParserInterface
         $fields   = $structuredBuffers[$depth] ?? [];
 
         if ($fields !== []) {
+            // XMP §7.9.3: When rdf:value promoted text to the parent, include it
+            // in the structured value so qualified-property semantics are preserved.
+            $trimmedText = trim($text);
+            if ($trimmedText !== '') {
+                $rdfValueKey          = sprintf('{%s}value', self::RDF_NAMESPACE);
+                $fields[$rdfValueKey] = $trimmedText;
+            }
+
             return new XmpStructuredValue($fields);
         }
 

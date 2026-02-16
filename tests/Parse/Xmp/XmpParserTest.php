@@ -46,6 +46,8 @@ final class XmpParserTest extends TestCase
 
     private const string TIFF_NS = 'http://ns.adobe.com/tiff/1.0/';
 
+    private const string RDF_NS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+
     private const string IPTC_CORE_NS = 'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/';
 
     /**
@@ -1306,6 +1308,58 @@ XML;
         );
 
         self::assertNull($result);
+    }
+
+    /**
+     * Preserves both rdf:value and qualifier in a qualified property.
+     * The primary value (rdf:value) must appear in the structured representation
+     * alongside the qualifier, not be silently discarded.
+     */
+    #[Test]
+    public function qualifiedPropertyPreservesRdfValueAndQualifier(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:tiff="http://ns.adobe.com/tiff/1.0/">
+  <rdf:Description>
+    <tiff:Model rdf:parseType="Resource">
+      <rdf:value>Canon EOS R5</rdf:value>
+      <tiff:Make>Canon</tiff:Make>
+    </tiff:Model>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $document = (new XmpParser())->parse($xml);
+        $model    = $document->get(self::TIFF_NS, 'Model');
+
+        self::assertInstanceOf(XmpStructuredValue::class, $model);
+        self::assertSame('Canon EOS R5', $model->get(self::RDF_NS, 'value'));
+        self::assertSame('Canon', $model->get(self::TIFF_NS, 'Make'));
+    }
+
+    /**
+     * Qualifier elements inside a qualified property must not leak as top-level properties.
+     */
+    #[Test]
+    public function qualifiedPropertyDoesNotLeakQualifierAsTopLevel(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:tiff="http://ns.adobe.com/tiff/1.0/">
+  <rdf:Description>
+    <tiff:Model rdf:parseType="Resource">
+      <rdf:value>Canon EOS R5</rdf:value>
+      <tiff:Make>Canon</tiff:Make>
+    </tiff:Model>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $document = (new XmpParser())->parse($xml);
+
+        // tiff:Make is a qualifier of tiff:Model, not a standalone property
+        self::assertNull($document->get(self::TIFF_NS, 'Make'));
     }
 
     /**
