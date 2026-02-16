@@ -31,12 +31,14 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 use function chr;
 use function fopen;
 use function fwrite;
 use function hex2bin;
 use function iconv;
+use function is_int;
 use function pack;
 use function rewind;
 use function sort;
@@ -126,6 +128,64 @@ final class IsoBmffParserTest extends TestCase
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
+    }
+
+    /**
+     * Rejects meta probes where a size==1 child candidate is truncated before largesize.
+     *
+     * @return void
+     */
+    #[Test]
+    public function detectMetaChildOffsetRejectsTruncatedExtendedChildCandidate(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $payload = "\0\0\0\0" . pack('N', 1) . 'hdlr';
+        $this->detectMetaChildOffsetForPayload($payload, true);
+    }
+
+    /**
+     * Rejects meta probes where an extended-size child candidate reports largesize < header length.
+     *
+     * @return void
+     */
+    #[Test]
+    public function detectMetaChildOffsetRejectsInvalidExtendedChildLargeSize(): void
+    {
+        $this->expectException(ParseError::class);
+
+        $payload = "\0\0\0\0" . pack('N', 1) . 'hdlr' . $this->packU64(8);
+        $this->detectMetaChildOffsetForPayload($payload, true);
+    }
+
+    /**
+     * Accepts a valid extended-size child candidate at offset 0 (QuickTime-style meta without FullBox).
+     *
+     * @return void
+     */
+    #[Test]
+    public function detectMetaChildOffsetAcceptsValidExtendedChildAtOffsetZero(): void
+    {
+        $payload = $this->extendedBox('hdlr', "\0\0\0\0");
+
+        $offset = $this->detectMetaChildOffsetForPayload($payload, true);
+
+        self::assertSame(0, $offset);
+    }
+
+    /**
+     * Accepts a valid extended-size child candidate at offset 4 (ISO FullBox meta).
+     *
+     * @return void
+     */
+    #[Test]
+    public function detectMetaChildOffsetAcceptsValidExtendedChildAtOffsetFour(): void
+    {
+        $payload = "\0\0\0\0" . $this->extendedBox('hdlr', "\0\0\0\0");
+
+        $offset = $this->detectMetaChildOffsetForPayload($payload, false);
+
+        self::assertSame(4, $offset);
     }
 
     /**
@@ -7554,6 +7614,50 @@ final class IsoBmffParserTest extends TestCase
         rewind($fh);
 
         return new IsoBmffParser(new Stream($fh, strlen($data)));
+    }
+
+    /**
+     * Invokes meta child-offset detection for a synthetic meta payload via private parser methods.
+     */
+    private function detectMetaChildOffsetForPayload(string $metaPayload, bool $allowQuickTimeMetaWithoutFullBox): int
+    {
+        $meta = $this->box('meta', $metaPayload);
+
+        $parser = $this->createExtractor($meta);
+
+        $readBoxAt = new ReflectionMethod(IsoBmffParser::class, 'readBoxAt');
+
+        $metaBox = $readBoxAt->invoke($parser, 0, strlen($meta), true);
+
+        $detect = new ReflectionMethod(IsoBmffParser::class, 'detectMetaChildOffset');
+
+        $detectedOffset = $detect->invoke($parser, $metaBox, $allowQuickTimeMetaWithoutFullBox);
+        if (!is_int($detectedOffset)) {
+            throw new ParseError('detectMetaChildOffset() must return int.', 1453);
+        }
+
+        return $detectedOffset;
+    }
+
+    /**
+     * Creates an ISO BMFF box using extended-size (size==1 + largesize).
+     */
+    private function extendedBox(string $type, string $payload, ?int $largeSize = null): string
+    {
+        $resolvedLargeSize = $largeSize ?? (16 + strlen($payload));
+
+        return pack('N', 1) . $type . $this->packU64($resolvedLargeSize) . $payload;
+    }
+
+    /**
+     * Packs a positive integer into an unsigned 64-bit big-endian string.
+     */
+    private function packU64(int $value): string
+    {
+        $high = intdiv($value, 0x100000000);
+        $low  = $value % 0x100000000;
+
+        return pack('N2', $high, $low);
     }
 
     /**

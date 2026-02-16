@@ -2563,7 +2563,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $window = $meta->window;
         $window->seek(0);
 
-        $peekLength = $meta->contentSize < 12 ? $meta->contentSize : 12;
+        $peekLength = $meta->contentSize < 20 ? $meta->contentSize : 20;
         $peek       = $window->read($peekLength);
         $peekSize   = strlen($peek);
 
@@ -2571,7 +2571,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $size = $this->readU32FromBytes($peek, 4, 'meta child size');
             $type = substr($peek, 8, 4);
 
-            if ($this->isPrintableFourcc($type) && $this->isPlausibleBoxSize($size, $meta->contentSize - 4)) {
+            if ($this->isPrintableFourcc($type) && $this->isPlausibleBoxSize($peek, 4, $meta->contentSize - 4)) {
                 $this->validateMetaFullBoxHeader($peek);
 
                 return 4;
@@ -2582,7 +2582,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $size = $this->readU32FromBytes($peek, 0, 'meta child size');
             $type = substr($peek, 4, 4);
 
-            if ($this->isPrintableFourcc($type) && $this->isPlausibleBoxSize($size, $meta->contentSize)) {
+            if ($this->isPrintableFourcc($type) && $this->isPlausibleBoxSize($peek, 0, $meta->contentSize)) {
                 if ($allowQuickTimeMetaWithoutFullBox) {
                     return 0;
                 }
@@ -2645,12 +2645,45 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     }
 
     /**
+     * Reads a big-endian 64-bit unsigned integer from a byte sequence.
+     */
+    private function readU64FromBytes(string $bytes, int $offset, string $context): int
+    {
+        if ($offset < 0 || ($offset + 8) > strlen($bytes)) {
+            throw new ParseError('Insufficient bytes for ' . $context . '.', 1170);
+        }
+
+        return Unpack::uint64(substr($bytes, $offset, 8), false, $context)->toInt($context);
+    }
+
+    /**
      * Checks if a box size value is plausible for the provided container size.
      */
-    private function isPlausibleBoxSize(int $size, int $limit): bool
+    private function isPlausibleBoxSize(string $peek, int $offset, int $limit): bool
     {
-        if ($size === 0 || $size === 1) {
+        $size = $this->readU32FromBytes($peek, $offset, 'meta child size');
+
+        if ($size === 0) {
             return true;
+        }
+
+        if ($size === 1) {
+            $largeSizeOffset = $offset + 8;
+            if (($largeSizeOffset + 8) > strlen($peek)) {
+                return false;
+            }
+
+            try {
+                $largeSize = $this->readU64FromBytes($peek, $largeSizeOffset, 'meta child large size');
+            } catch (ParseError) {
+                return false;
+            }
+
+            if ($largeSize === 0 || $largeSize < 16) {
+                return false;
+            }
+
+            return $largeSize <= $limit;
         }
 
         if ($size < 8) {
