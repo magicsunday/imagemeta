@@ -230,6 +230,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 1,
                 "\x00\x00\x00\x2A\x00\x00\x00\x01",
             ],
+            'GPSMapDatum ASCII count 7' => [
+                ExifTag::GPS_MAP_DATUM,
+                TiffConst::TYPE_ASCII,
+                7,
+                "WGS-84\0",
+            ],
             'FileSource count 1' => [
                 ExifTag::FILE_SOURCE,
                 TiffConst::TYPE_UNDEFINED,
@@ -709,6 +715,51 @@ final class TiffExifParserFixedLengthTest extends TestCase
         );
 
         (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSMapDatum when encoded with non-ASCII TIFF type.
+     *
+     * @param int    $type
+     * @param int    $count
+     * @param string $valueBytes
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideInvalidGpsMapDatumTypes')]
+    public function rejectsGpsMapDatumWithWrongType(int $type, int $count, string $valueBytes): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+        $this->expectExceptionMessage('GPSMapDatum must use TIFF type ASCII');
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_MAP_DATUM,
+            $type,
+            $count,
+            $valueBytes,
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * @return iterable<string, array{0:int,1:int,2:string}>
+     */
+    public static function provideInvalidGpsMapDatumTypes(): iterable
+    {
+        yield 'SHORT type' => [
+            TiffConst::TYPE_SHORT,
+            1,
+            "\x2A\x00",
+        ];
+
+        yield 'UNDEFINED type' => [
+            TiffConst::TYPE_UNDEFINED,
+            6,
+            'WGS-84',
+        ];
     }
 
     /**

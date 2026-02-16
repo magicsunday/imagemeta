@@ -127,6 +127,20 @@ final class TiffExifParser implements TiffExifParserInterface
      *
      * @var array<int, array{name: string, count: int, type: int, typeName: string, spec: string}>
      */
+    /**
+     * Tags with strict TIFF type requirements but variable component count.
+     *
+     * @var array<int, array{name: string, type: int, typeName: string, spec: string}>
+     */
+    private const array TYPE_ONLY_TAGS = [
+        ExifTag::GPS_MAP_DATUM => [
+            'name'     => 'GPSMapDatum',
+            'type'     => TiffConst::TYPE_ASCII,
+            'typeName' => 'ASCII',
+            'spec'     => 'EXIF 3.0 §4.6.7.1.19',
+        ],
+    ];
+
     private const array FIXED_LENGTH_TAGS = [
         // --- TIFF 6.0 Baseline Tags ---
         TiffTag::NEW_SUBFILE_TYPE => [
@@ -1683,6 +1697,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $cnt = $this->bigTiff ? $this->readU64()->toInt('directory entry value count') : $this->readU32();
 
         $this->validateFixedLengthTagLayout($tag, $type, $cnt);
+        $this->validateTypeOnlyTagLayout($tag, $type);
 
         // Read the Value/Offset field.  For inline values (data fits within the
         // field) the raw bytes are returned directly to avoid endianness-dependent
@@ -1883,6 +1898,26 @@ final class TiffExifParser implements TiffExifParserInterface
                 $rule['count'],
                 $rule['spec'],
             ), 1318);
+        }
+    }
+
+    /**
+     * Validates tags that have a strict TIFF type but no fixed component count.
+     */
+    private function validateTypeOnlyTagLayout(int $tag, int $type): void
+    {
+        if (!isset(self::TYPE_ONLY_TAGS[$tag])) {
+            return;
+        }
+
+        $rule = self::TYPE_ONLY_TAGS[$tag];
+        if ($type !== $rule['type']) {
+            throw new ParseError(sprintf(
+                '%s must use TIFF type %s per %s.',
+                $rule['name'],
+                $rule['typeName'],
+                $rule['spec'],
+            ), 1317);
         }
     }
 
