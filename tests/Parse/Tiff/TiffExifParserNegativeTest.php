@@ -1954,7 +1954,6 @@ final class TiffExifParserNegativeTest extends TestCase
      */
     public static function provideInvalidFlashBitfields(): iterable
     {
-        yield 'reserved high bits set' => [0x80, 1417];
         yield 'reserved return-status combination' => [0x02, 1418];
         yield 'return-not-detected without fired bit' => [0x04, 1419];
         yield 'return-detected without fired bit' => [0x06, 1419];

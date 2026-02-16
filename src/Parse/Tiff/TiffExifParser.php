@@ -4531,13 +4531,8 @@ final class TiffExifParser implements TiffExifParserInterface
             return;
         }
 
-        $flashBits = $entry->value;
-        if (($flashBits < 0) || ($flashBits > 0x7F)) {
-            throw new ParseError(
-                sprintf('Flash value %d uses reserved high-order bits per EXIF 3.0 §4.6.6.7.21', $flashBits),
-                1417,
-            );
-        }
+        // Mask to bits 0–6; ignore reserved high-order bits (Postel's Law).
+        $flashBits = $entry->value & 0x7F;
 
         $fired      = ($flashBits & 0x01) !== 0;
         $returnBits = ($flashBits >> 1) & 0x03;
