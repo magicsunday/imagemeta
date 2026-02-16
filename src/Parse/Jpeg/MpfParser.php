@@ -112,7 +112,7 @@ final class MpfParser
             throw new ParseError('MP Index IFD offset outside payload bounds', 1291);
         }
 
-        // GH-840: MP Index IFD tag type/count constraints per EXIF 3.0 §4.6.2
+        // MP Index IFD tag type/count constraints per EXIF 3.0 §4.6.2
         $indexConstraints = [
             self::TAG_MPF_VERSION => [
                 'type'    => self::TYPE_ASCII,
@@ -159,7 +159,7 @@ final class MpfParser
                 throw new ParseError('MP Attribute IFD offset outside payload bounds', 1294);
             }
 
-            // GH-899: MP Attribute IFD tag type/count constraints per EXIF 3.0 §4.6.4
+            // MP Attribute IFD tag type/count constraints per EXIF 3.0 §4.6.4
             $attributeConstraints = [
                 self::TAG_IMAGE_UID_LIST => [
                     'type'    => self::TYPE_UNDEFINED,
@@ -244,7 +244,7 @@ final class MpfParser
                 throw new ParseError('MPF entry reports unreasonable component count', 1296);
             }
 
-            // GH-840/GH-899: enforce per-tag type/count constraints
+            // Enforce per-tag type/count constraints
             if (isset($constraints[$tag])) {
                 $constraint = $constraints[$tag];
                 if ($type !== $constraint['type']) {
@@ -450,7 +450,7 @@ final class MpfParser
             $dep1       = $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
             $dep2       = $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
 
-            // GH-900: validate Individual Image Attribute bitfield per MPF spec
+            // Validate Individual Image Attribute bitfield per MPF spec
             // Bits 27..29 must be zero (reserved)
             $reservedBits = ($attributes >> 27) & 0x07;
             if ($reservedBits !== 0) {

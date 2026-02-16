@@ -42,7 +42,7 @@ final readonly class FormatDetector
     ];
 
     /**
-     * GH-1225: Padding box types that may be safely skipped during detection.
+     * Padding box types that may be safely skipped during detection.
      *
      * @var array<string, bool>
      */
@@ -55,7 +55,7 @@ final readonly class FormatDetector
     ];
 
     /**
-     * GH-969: Maximum byte budget for ISO BMFF detection scanning.
+     * Maximum byte budget for ISO BMFF detection scanning.
      */
     private const int ISO_BMFF_MAX_SCAN_BYTES = 65536;
 
@@ -77,7 +77,7 @@ final readonly class FormatDetector
             throw new ParseError('Unable to read container signature', 1031, $exception);
         }
 
-        // GH-983: require at least one plausible marker after SOI
+        // Require at least one plausible marker after SOI
         if ($magic2 === "\xFF\xD8") {
             return $this->detectJpeg($stream);
         }
@@ -95,7 +95,7 @@ final readonly class FormatDetector
     }
 
     /**
-     * GH-983: Validates JPEG marker structure beyond just SOI.
+     * Validates JPEG marker structure beyond just SOI.
      *
      * @throws ParseError when the stream has SOI but no valid marker structure
      */
@@ -121,7 +121,7 @@ final readonly class FormatDetector
     }
 
     /**
-     * GH-969, GH-970: Detects ISO BMFF signatures by scanning top-level boxes with a byte budget.
+     * Detects ISO BMFF signatures by scanning top-level boxes with a byte budget.
      *
      * Tolerates unknown box types by skipping them via their declared size.
      * Validates box header semantics before accepting signature boxes.
@@ -152,17 +152,17 @@ final readonly class FormatDetector
                 $headerSize = 16;
             }
 
-            // GH-970: validate box size covers at least the header
+            // Validate box size covers at least the header
             if ($size !== 0 && $size < $headerSize) {
                 return false;
             }
 
-            // GH-970: uuid boxes need at least 24 bytes (header + 16-byte usertype)
+            // uuid boxes need at least 24 bytes (header + 16-byte usertype)
             if ($boxType === 'uuid' && $size !== 0 && $size < 24) {
                 return false;
             }
 
-            // GH-1230: declared 32-bit/64-bit box sizes must stay within stream bounds
+            // Declared 32-bit/64-bit box sizes must stay within stream bounds
             if ($size !== 0) {
                 $boxStart           = $stream->tell() - $headerSize;
                 $remainingBoxStream = $stream->size() - $boxStart;
@@ -171,9 +171,9 @@ final readonly class FormatDetector
                 }
             }
 
-            // GH-1223: signature boxes must have a well-defined size
+            // Signature boxes must have a well-defined size
             if ($size !== 0 && isset(self::ISO_BMFF_SIGNATURE_BOXES[$boxType])) {
-                // GH-1226: ftyp/styp require at least 8 payload bytes and 4-byte brand alignment
+                // ftyp/styp require at least 8 payload bytes and 4-byte brand alignment
                 if ($boxType === 'ftyp' || $boxType === 'styp') {
                     $payload = $size - $headerSize;
                     if ($payload < 8 || ($payload - 8) % 4 !== 0) {
@@ -184,7 +184,7 @@ final readonly class FormatDetector
                 return true;
             }
 
-            // GH-1225: only skip known padding boxes; reject unknown non-signature types
+            // Only skip known padding boxes; reject unknown non-signature types
             if (!isset(self::PADDING_BOXES[$boxType])) {
                 return false;
             }

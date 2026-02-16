@@ -2325,7 +2325,7 @@ final class IsoBmffParserTest extends TestCase
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
-        // GH-910: SingleItemTypeReferenceBox must use 'iloc' relation type
+        // SingleItemTypeReferenceBox must use 'iloc' relation type
         // for construction_method=2 item-offset resolution.
         $irefEntry = $this->box('iloc', pack('n', 1) . pack('n', 1) . pack('n', 2));
         $iref      = $this->fullBox('iref', $irefEntry);
@@ -2457,7 +2457,7 @@ final class IsoBmffParserTest extends TestCase
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
-        // GH-910: SingleItemTypeReferenceBox must use 'iloc' relation type
+        // SingleItemTypeReferenceBox must use 'iloc' relation type
         // for construction_method=2 item-offset resolution.
         $irefEntry = $this->box('iloc', pack('n', 1) . pack('n', 1) . pack('n', 2));
         $iref      = $this->fullBox('iref', $irefEntry);
@@ -7546,7 +7546,7 @@ final class IsoBmffParserTest extends TestCase
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
-        // GH-910: construction_method=2 (item_offset) resolves only via 'iloc' item references.
+        // construction_method=2 (item_offset) resolves only via 'iloc' item references.
         $irefEntry = $this->box('iloc', pack('n', 1) . pack('n', 2) . pack('n', 2) . pack('n', 3));
         $iref      = $this->fullBox('iref', $irefEntry);
 

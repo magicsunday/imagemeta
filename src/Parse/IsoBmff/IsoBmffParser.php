@@ -1172,7 +1172,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         // width/height represent aspect ratio, not pixel dimensions
         $isAspectRatio = ($flags & 0x000008) !== 0;
 
-        // GH-890: decode 16.16 fixed-point with rounding instead of truncation
+        // Decode 16.16 fixed-point with rounding instead of truncation
         $width  = ($widthFixed > 0 && !$isAspectRatio) ? (int) round($widthFixed / 65536) : null;
         $height = ($heightFixed > 0 && !$isAspectRatio) ? (int) round($heightFixed / 65536) : null;
 
@@ -1305,7 +1305,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      *
      * QuickTime File Format (2012), "User Data Atoms": udta may appear as a
      * child of mdia in addition to moov and trak. Media-level user data is
-     * parsed with the same strategy as other udta paths (GH-1004).
+     * parsed with the same strategy as other udta paths.
      *
      * @param BoxDescriptor       $mdia    Media box descriptor.
      * @param IsoBmffParseContext $context Shared parse-state context.
@@ -1323,7 +1323,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $udtaCount     = 0;
         $mdhdTimescale = null;
 
-        // GH-881: collect children first so hdlr/minf order does not matter
+        // Collect children first so hdlr/minf order does not matter
         $children = [];
 
         foreach ($this->walkChildren($mdia) as $child) {
@@ -1374,7 +1374,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('mdia must contain exactly one mdhd box', 1380);
         }
 
-        // Parse minf after hdlr so handler type is always available (GH-881)
+        // Parse minf after hdlr so handler type is always available
         foreach ($children as $child) {
             $sampleInfo = $this->parseMinf($child, $handler, $mdhdTimescale);
         }
@@ -1476,7 +1476,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $mediaHdrType = null;
         $result       = [];
 
-        // GH-877: determine expected media header box from handler type
+        // Determine expected media header box from handler type
         $expectedMediaHdr = match ($handlerType) {
             'vide'  => self::BOX_VMHD,
             'soun'  => self::BOX_SMHD,
@@ -1501,7 +1501,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
                 $this->parseDinf($child);
             } elseif (in_array($child->type, [self::BOX_VMHD, self::BOX_SMHD, self::BOX_NMHD], true)) {
-                // GH-877: enforce exactly one handler-matching media header
+                // Enforce exactly one handler-matching media header
                 if ($mediaHdrType !== null) {
                     throw new ParseError('minf must contain exactly one media header box', 1421);
                 }
@@ -1518,7 +1518,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('minf must contain exactly one dinf box', 1382);
         }
 
-        // GH-877: validate media header presence and handler match
+        // Validate media header presence and handler match
         if ($mediaHdrType === null) {
             throw new ParseError(sprintf('minf missing required media header box %s for handler %s', $expectedMediaHdr, $handlerType), 1422);
         }
@@ -1588,7 +1588,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('stbl must contain exactly one stsd box', 1383);
         }
 
-        // GH-878: enforce mandatory core sample-table boxes
+        // Enforce mandatory core sample-table boxes
         if ($sttsCount === 0) {
             throw new ParseError('stbl must contain exactly one stts box', 1424);
         }
@@ -1673,19 +1673,19 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $entryStart = $win->tell();
             $entryEnd   = $pos + $entrySize;
 
-            // GH-860: ISO 14496-12 §8.5.2.2: the 6-byte reserved field must be all zeros
+            // ISO 14496-12 §8.5.2.2: the 6-byte reserved field must be all zeros
             $reserved6 = $win->read(6);
             if ($reserved6 !== "\0\0\0\0\0\0") {
                 throw new ParseError('stsd sample entry reserved field must be zero', 1398);
             }
 
-            // GH-865: ISO 14496-12 §8.5.2.2: data_reference_index is 1-based
+            // ISO 14496-12 §8.5.2.2: data_reference_index is 1-based
             $dataRefIndex = $win->readU16BE();
             if ($dataRefIndex === 0) {
                 throw new ParseError('stsd sample entry data_reference_index must be >= 1', 1399);
             }
 
-            // GH-835: use first entry only; skip parsing subsequent entries to
+            // Use first entry only; skip parsing subsequent entries to
             // avoid implicit 'last entry wins' when entry_count > 1
             if ($result === [] && $handlerType === 'vide') {
                 if ($win->tell() + 70 > $entryEnd) {
@@ -1734,7 +1734,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('video sample entry frame count must be > 0', 1606);
                 }
 
-                // GH-836: decode compressorName as strict 32-byte Pascal string
+                // Decode compressorName as strict 32-byte Pascal string
                 $nameLength = $win->readU8();
                 $nameData   = $win->read(31);
 
@@ -2409,7 +2409,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     [$handlerType] = $this->parseHdlr($child);
                     break;
                 case self::BOX_EXIF:
-                    // GH-859: enforce payload cap before reading direct Exif box
+                    // Enforce payload cap before reading direct Exif box
                     if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
                         throw new ParseError('direct Exif box payload exceeds maximum allowed size', 1396);
                     }
@@ -2461,7 +2461,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     $dataReferences = $this->mergeDataReferences($dataReferences, $this->parseDinf($child));
                     break;
                 case self::BOX_XMP:
-                    // GH-859: enforce payload cap before reading direct XMP box
+                    // Enforce payload cap before reading direct XMP box
                     if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
                         throw new ParseError('direct XMP box payload exceeds maximum allowed size', 1397);
                     }
@@ -2470,7 +2470,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     break;
                 case self::BOX_UUID:
                     if ($child->userType === self::XMP_UUID) {
-                        // GH-859: enforce payload cap before reading uuid XMP box
+                        // Enforce payload cap before reading uuid XMP box
                         if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
                             throw new ParseError('uuid XMP box payload exceeds maximum allowed size', 1397);
                         }
@@ -2606,7 +2606,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             return 4;
         }
 
-        // GH-945: reject ambiguous meta header layout instead of defaulting
+        // Reject ambiguous meta header layout instead of defaulting
         throw new ParseError(
             sprintf(
                 'meta box has ambiguous header layout (contentSize=%d)',
@@ -3171,7 +3171,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      */
     private function normalizeExifBlob(string $blob): string
     {
-        // GH-842: strict 4-byte TIFF-header offset validation
+        // Strict 4-byte TIFF-header offset validation
         if (strlen($blob) < 4) {
             throw new ParseError('Exif item payload too short for TIFF-header offset prefix', 1394);
         }
@@ -3226,7 +3226,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         if ($location['constructionMethod'] === ConstructionMethod::FileOffset->value) {
-            // GH-912: data_reference_index gating applies only to file_offset (method 0).
+            // data_reference_index gating applies only to file_offset (method 0).
             // ISO/IEC 14496-12 §8.11.3.2: methods 1 and 2 do not use data_reference_index.
             if ($location['dataReferenceIndex'] !== 0) {
                 $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
@@ -3241,7 +3241,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             foreach ($location['extents'] as $extent) {
                 $length = $extent['length'];
 
-                // GH-1000: implied extent_length semantics for single-extent items
+                // Implied extent_length semantics for single-extent items
                 if ($length === 0) {
                     if ($extentCount !== 1) {
                         continue;
@@ -3323,7 +3323,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             foreach ($location['extents'] as $extent) {
                 $length = $extent['length'];
 
-                // GH-1000: implied extent_length semantics for single-extent items
+                // Implied extent_length semantics for single-extent items
                 if ($length === 0) {
                     if ($extentCount !== 1) {
                         continue;
@@ -3379,7 +3379,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         if ($location['constructionMethod'] === ConstructionMethod::ItemOffset->value) {
-            // GH-910: ISO/IEC 14496-12 §8.11.3.2 — only 'iloc' references are
+            // ISO/IEC 14496-12 §8.11.3.2 — only 'iloc' references are
             // valid lookup targets for item-offset construction.
             $allRefs    = $itemReferences[$itemId] ?? [];
             $references = array_values(array_filter(
@@ -3450,7 +3450,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
                 $offset = $baseOffset + $extentOffset;
 
-                // GH-1000: implied extent_length semantics for single-extent items
+                // Implied extent_length semantics for single-extent items
                 if ($length === 0) {
                     if ($extentCount !== 1) {
                         continue;
@@ -3580,7 +3580,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('iinf entry count mismatch', 1197);
         }
 
-        // GH-967: reject duplicate item_ID values across infe entries
+        // Reject duplicate item_ID values across infe entries
         $seenIds = [];
         foreach ($items as $item) {
             if (isset($seenIds[$item['id']])) {
@@ -3672,7 +3672,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $contentType     = $this->readNulString($payload, $cursor);
         $contentEncoding = $this->readNulString($payload, $cursor);
 
-        // GH-832: ISO 14496-12 §8.11.6: if item_type == 'uri ', the post-name
+        // ISO 14496-12 §8.11.6: if item_type == 'uri ', the post-name
         // payload is a single NUL-terminated item_uri_type (no content_type/content_encoding)
         if ($itemType === 'uri ') {
             $itemUriType = $this->readNulString($payload, $cursor);
@@ -3693,7 +3693,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             ];
         }
 
-        // GH-820: ISO 14496-12 §8.11.6: when item_type == 'mime', content_type
+        // ISO 14496-12 §8.11.6: when item_type == 'mime', content_type
         // is mandatory and must be non-empty
         if ($itemType === 'mime' && ($contentType === null || $contentType === '')) {
             throw new ParseError('infe mime item requires non-empty content_type', 1391);
@@ -3797,7 +3797,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $baseOffset         = $baseOffsetSize > 0 ? $this->readUInt($win, $baseOffsetSize) : 0;
             $extentCount        = $win->readU16BE();
 
-            // GH-893: enforce maximum extent_count per item
+            // Enforce maximum extent_count per item
             if ($extentCount > self::MAX_ILOC_EXTENTS) {
                 throw new ParseError('iloc extent count exceeds maximum allowed', 1411);
             }
@@ -3923,7 +3923,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         foreach ($this->walkChildren($iref, 4) as $child) {
             ++$entryCount;
 
-            // GH-894: enforce maximum number of reference entry boxes
+            // Enforce maximum number of reference entry boxes
             if ($entryCount > self::MAX_IREF_ENTRIES) {
                 throw new ParseError('iref entry count exceeds maximum allowed', 1412);
             }
@@ -4043,12 +4043,12 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 throw new ParseError('invalid keys entry size', 1225);
             }
 
-            // GH-991: validate key_namespace as proper 4CC code (printable ASCII)
+            // Validate key_namespace as proper 4CC code (printable ASCII)
             if (preg_match('/^[\x20-\x7E]{4}$/', $namespace) !== 1) {
                 throw new ParseError('keys entry key_namespace is not a valid 4CC code', 1416);
             }
 
-            // GH-977: reject empty key_value entries (size <= 8 means no actual key data)
+            // Reject empty key_value entries (size <= 8 means no actual key data)
             if ($size <= 8) {
                 throw new ParseError('keys entry has empty key_value', 1417);
             }
@@ -4136,7 +4136,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             } elseif ($entry->type === self::BOX_FREEFORM) {
                 $keyName = $this->parseFreeformKey($entry);
             } elseif ($isMdta) {
-                // GH-814: in mdta mode, ilst entries must reference keys by index
+                // In mdta mode, ilst entries must reference keys by index
                 if ($index !== null) {
                     throw new ParseError(sprintf(
                         'mdta ilst entry key index %d out of range',
@@ -4891,7 +4891,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         if ($type === self::DATA_TYPE_FLOAT32) {
-            // GH-987: reject truncated float32 payloads
+            // Reject truncated float32 payloads
             if ($payloadSize < 4) {
                 throw new ParseError('data box float32 payload truncated', 1418);
             }
@@ -4904,7 +4904,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         if ($type === self::DATA_TYPE_FLOAT64) {
-            // GH-987: reject truncated float64 payloads
+            // Reject truncated float64 payloads
             if ($payloadSize < 8) {
                 throw new ParseError('data box float64 payload truncated', 1419);
             }
@@ -5315,7 +5315,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
         $userType = null;
         if ($type === self::BOX_UUID) {
-            // GH-1011: uuid box must be at least 24 bytes (8-byte header + 16-byte userType)
+            // uuid box must be at least 24 bytes (8-byte header + 16-byte userType)
             if ($size < 24) {
                 throw new ParseError('uuid box size must be at least 24 bytes', 1420);
             }

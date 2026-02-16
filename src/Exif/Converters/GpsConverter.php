@@ -320,7 +320,7 @@ final readonly class GpsConverter
         $dateEntry        = $gps->get(ExifTag::GPS_DATE_STAMP);
         $timeEntry        = $gps->get(ExifTag::GPS_TIME_STAMP);
 
-        // GH-935: EXIF 3.0 §4.6.7.1.1 — when GPSVersionID is present, validate it.
+        // EXIF 3.0 §4.6.7.1.1 — when GPSVersionID is present, validate it.
         $versionParts      = $this->formatVersion($versionEntry?->value);
         $result['version'] = $versionParts['normalized'];
         if ($versionEntry instanceof IfdEntry && $result['version'] !== self::DEFAULT_GPS_VERSION) {

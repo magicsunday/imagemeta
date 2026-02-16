@@ -67,7 +67,7 @@ use function substr;
 final class TiffExifParser implements TiffExifParserInterface
 {
     /**
-     * GH-898: Maximum number of IFD entries to prevent DoS via pathologically large payloads.
+     * Maximum number of IFD entries to prevent DoS via pathologically large payloads.
      */
     private const int MAX_IFD_ENTRIES = 10_000;
 
@@ -89,9 +89,9 @@ final class TiffExifParser implements TiffExifParserInterface
     /**
      * Unsigned integer TIFF field types accepted for strip/tile offset and byte-count tags.
      *
-     * GH-1232: signed types (SSHORT, SLONG, SLONG8) are rejected because
+     * Signed types (SSHORT, SLONG, SLONG8) are rejected because
      * TIFF 6.0 defines these tags as unsigned offset/count fields.
-     * GH-1233: IFD/IFD8 pointer types are rejected as they encode directory
+     * IFD/IFD8 pointer types are rejected as they encode directory
      * offsets, not storage layout descriptors.
      *
      * @var list<int>
@@ -1681,7 +1681,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $offSize  = $this->readU16();
         $reserved = $this->readU16();
 
-        // GH-1236: BigTIFF offset size is fixed to 8 bytes per spec.
+        // BigTIFF offset size is fixed to 8 bytes per spec.
         if ($offSize !== 8) {
             throw new ParseError('Unsupported BigTIFF offset size (expected 8)', 1305);
         }
@@ -1743,7 +1743,7 @@ final class TiffExifParser implements TiffExifParserInterface
             throw new ParseError('IFD must contain at least one entry per TIFF 6.0.', 1307);
         }
 
-        // GH-898: enforce maximum IFD entry count to prevent DoS
+        // Enforce maximum IFD entry count to prevent DoS
         if ($entryCount > self::MAX_IFD_ENTRIES) {
             throw new ParseError(
                 sprintf('IFD entry count %d exceeds maximum allowed %d', $entryCount, self::MAX_IFD_ENTRIES),
@@ -1939,7 +1939,7 @@ final class TiffExifParser implements TiffExifParserInterface
             ), 1358);
         }
 
-        // GH-915: enforce 8.3 filename semantics for RelatedSoundFile per EXIF 3.0 §4.6.6.5.1
+        // Enforce 8.3 filename semantics for RelatedSoundFile per EXIF 3.0 §4.6.6.5.1
         if ($tag === ExifTag::RELATED_SOUND_FILE && is_string($value)) {
             if (preg_match('/[\\\\\\/]/', $value) === 1) {
                 throw new ParseError(
@@ -6341,7 +6341,7 @@ final class TiffExifParser implements TiffExifParserInterface
     /**
      * Reads a BigTIFF 8-byte offset value.
      *
-     * GH-1236: only 8-byte offsets are supported (16-byte path removed).
+     * Only 8-byte offsets are supported (16-byte path removed).
      */
     private function readBigTiffOffsetValue(): UInt64
     {
@@ -6524,7 +6524,7 @@ final class TiffExifParser implements TiffExifParserInterface
     }
 
     /**
-     * GH-1238: CalibrationIlluminant tags that must have valid LightSource values.
+     * CalibrationIlluminant tags that must have valid LightSource values.
      *
      * @var list<int>
      */
@@ -6535,7 +6535,7 @@ final class TiffExifParser implements TiffExifParserInterface
     ];
 
     /**
-     * GH-1238: Validates CalibrationIlluminant values against the EXIF LightSource domain
+     * Validates CalibrationIlluminant values against the EXIF LightSource domain
      * and enforces DNG version gating for value 255 (Other).
      */
     private function validateDngCalibrationIlluminantDomain(Ifd $ifd): void
@@ -7559,7 +7559,7 @@ final class TiffExifParser implements TiffExifParserInterface
     }
 
     /**
-     * GH-1239: Requires UniqueCameraModel in IFD0 when DNGVersion is present.
+     * Requires UniqueCameraModel in IFD0 when DNGVersion is present.
      */
     private function validateDngRequiredUniqueCameraModel(Ifd $ifd): void
     {

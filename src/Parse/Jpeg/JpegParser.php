@@ -1723,7 +1723,7 @@ final class JpegParser implements JpegParserInterface
 
         $this->iccSegments[] = $payload;
 
-        // GH-896: sequence count must not be zero
+        // Sequence count must not be zero
         if ($sequenceCount === 0) {
             throw new ParseError(
                 sprintf('ICC segment at offset %d has zero sequence count', $offset),
@@ -1731,7 +1731,7 @@ final class JpegParser implements JpegParserInterface
             );
         }
 
-        // GH-896: sequence number must be in range 1..sequenceCount
+        // Sequence number must be in range 1..sequenceCount
         if ($sequenceNumber === 0 || $sequenceNumber > $sequenceCount) {
             throw new ParseError(
                 sprintf(
@@ -1744,7 +1744,7 @@ final class JpegParser implements JpegParserInterface
             );
         }
 
-        // GH-896: all chunks must agree on the total count
+        // All chunks must agree on the total count
         if ($this->iccExpectedCount === null) {
             $this->iccExpectedCount = $sequenceCount;
         } elseif ($this->iccExpectedCount !== $sequenceCount) {
@@ -1759,7 +1759,7 @@ final class JpegParser implements JpegParserInterface
             );
         }
 
-        // GH-852: reject duplicate sequence numbers
+        // Reject duplicate sequence numbers
         if (array_key_exists($sequenceNumber, $this->iccSequence)) {
             throw new ParseError(
                 sprintf(
@@ -1794,7 +1794,7 @@ final class JpegParser implements JpegParserInterface
         $major           = ord($payload[$signatureLength]);
         $minor           = ord($payload[$signatureLength + 1]);
 
-        // GH-922: validate audio version compatibility per EXIF 3.0 §5.2
+        // Validate audio version compatibility per EXIF 3.0 §5.2
         if ($major !== 1) {
             throw new ParseError(
                 sprintf('Audio segment at offset %d uses unsupported major version %d', $offset, $major),
@@ -1831,7 +1831,7 @@ final class JpegParser implements JpegParserInterface
             throw new ParseError(sprintf('Audio segment at offset %d has unsupported channel count %d', $offset, $channels), 1272);
         }
 
-        // GH-913: format-aware sampling rate validation per EXIF 3.0 §5.4.1
+        // Format-aware sampling rate validation per EXIF 3.0 §5.4.1
         $allowedSampleRates = match ($format) {
             self::AUDIO_FORMAT_PCM       => [8_000, 11_025, 22_050, 32_000, 44_100, 48_000, 96_000, 192_000],
             self::AUDIO_FORMAT_MU_LAW    => [8_000],
@@ -1854,7 +1854,7 @@ final class JpegParser implements JpegParserInterface
             throw new ParseError(sprintf('Audio segment at offset %d uses unknown format %d', $offset, $format), 1275);
         }
 
-        // GH-914: allow PCM 24-bit sample size per EXIF 3.0 §5.4.2
+        // Allow PCM 24-bit sample size per EXIF 3.0 §5.4.2
         if ($format === self::AUDIO_FORMAT_PCM && !in_array($bitDepth, [8, 16, 24], true)) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid PCM bit depth %d', $offset, $bitDepth), 1276);
         }
@@ -1877,7 +1877,7 @@ final class JpegParser implements JpegParserInterface
             }
         }
 
-        // GH-1235: non-empty IMA-ADPCM payload with dwSampleLength=0 is semantically inconsistent
+        // Non-empty IMA-ADPCM payload with dwSampleLength=0 is semantically inconsistent
         if ($format === self::AUDIO_FORMAT_IMA_ADPCM && $sampleCount === 0 && $data !== '') {
             throw new ParseError(sprintf('Audio segment at offset %d has non-empty IMA-ADPCM payload with zero sample count', $offset), 1280);
         }

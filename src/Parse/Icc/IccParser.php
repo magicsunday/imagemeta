@@ -146,12 +146,12 @@ final class IccParser implements IccParserInterface
             }
         }
 
-        // GH-930: no ICC data at all — return null (absence, not error)
+        // No ICC data at all — return null (absence, not error)
         if ($data === null) {
             return null;
         }
 
-        // GH-930: ICC data present but too short — malformed
+        // ICC data present but too short — malformed
         if (strlen($data) < self::HEADER_LENGTH) {
             throw new ParseError(
                 sprintf(
@@ -220,7 +220,7 @@ final class IccParser implements IccParserInterface
         $colorSpace   = $this->extractSignature(substr($data, IccTag::COLOR_SPACE, 4));
         $pcs          = $this->extractSignature(substr($data, IccTag::PCS, 4));
 
-        // GH-883: validate constrained header signatures
+        // Validate constrained header signatures
         if ($profileClass !== null && !in_array($profileClass, self::ALLOWED_PROFILE_CLASSES, true)) {
             throw new ParseError(
                 sprintf('ICC profile class signature "%s" is not in the allowed set', $profileClass),
@@ -259,7 +259,7 @@ final class IccParser implements IccParserInterface
         $deviceAttributes   = $this->extractHexField($data, IccTag::DEVICE_ATTRIBUTES, 8, true);
         $profileCreator     = $this->extractSignature(substr($data, IccTag::PROFILE_CREATOR, 4));
 
-        // GH-908: validate primary platform against ICC.1:2022 Table 20
+        // Validate primary platform against ICC.1:2022 Table 20
         if ($primaryPlatform !== null && !in_array($primaryPlatform, self::ALLOWED_PLATFORMS, true)) {
             throw new ParseError(
                 sprintf('ICC primary platform signature "%s" is not in the allowed set', $primaryPlatform),
@@ -267,7 +267,7 @@ final class IccParser implements IccParserInterface
             );
         }
 
-        // GH-909: validate profile creator as printable ASCII signature
+        // Validate profile creator as printable ASCII signature
         if ($profileCreator !== null && !$this->isPrintableAsciiSignature($profileCreator)) {
             throw new ParseError(
                 sprintf(
@@ -278,7 +278,7 @@ final class IccParser implements IccParserInterface
             );
         }
 
-        // GH-911: validate CMM type as printable ASCII signature
+        // Validate CMM type as printable ASCII signature
         if ($cmmType !== null && !$this->isPrintableAsciiSignature($cmmType)) {
             throw new ParseError(
                 sprintf(
@@ -289,7 +289,7 @@ final class IccParser implements IccParserInterface
             );
         }
 
-        // GH-911: validate device manufacturer as printable ASCII signature
+        // Validate device manufacturer as printable ASCII signature
         if ($deviceManufacturer !== null && !$this->isPrintableAsciiSignature($deviceManufacturer)) {
             throw new ParseError(
                 sprintf(
@@ -300,7 +300,7 @@ final class IccParser implements IccParserInterface
             );
         }
 
-        // GH-911: validate device model as printable ASCII signature
+        // Validate device model as printable ASCII signature
         if ($deviceModel !== null && !$this->isPrintableAsciiSignature($deviceModel)) {
             throw new ParseError(
                 sprintf(
@@ -311,10 +311,10 @@ final class IccParser implements IccParserInterface
             );
         }
 
-        // GH-919: validate profileFlags per ICC.1:2022 §7.2.11 / Table 21
+        // Validate profileFlags per ICC.1:2022 §7.2.11 / Table 21
         $this->validateProfileFlags($data);
 
-        // GH-920: validate deviceAttributes per ICC.1:2022 §7.2.14 / Table 22
+        // Validate deviceAttributes per ICC.1:2022 §7.2.14 / Table 22
         $this->validateDeviceAttributes($data);
         $illuminant = $this->extractIlluminant($data);
 
@@ -386,7 +386,7 @@ final class IccParser implements IccParserInterface
                 );
             }
 
-            // GH-887: reject out-of-range sequence numbers
+            // Reject out-of-range sequence numbers
             if ($sequenceNumber === 0 || $sequenceNumber > $sequenceCount) {
                 throw new ParseError(
                     sprintf(
@@ -398,7 +398,7 @@ final class IccParser implements IccParserInterface
                 );
             }
 
-            // GH-887: reject duplicate sequence numbers
+            // Reject duplicate sequence numbers
             if (array_key_exists($sequenceNumber, $sequence)) {
                 throw new ParseError(
                     sprintf('ICC chunk assembly: duplicate sequence number %d', $sequenceNumber),
@@ -415,7 +415,7 @@ final class IccParser implements IccParserInterface
 
         $iccData = '';
         for ($i = 1; $i <= $expectedCount; ++$i) {
-            // GH-923: missing chunk in assembled sequence is an error, not absence
+            // Missing chunk in assembled sequence is an error, not absence
             if (!array_key_exists($i, $sequence)) {
                 throw new ParseError(
                     sprintf(
@@ -521,7 +521,7 @@ final class IccParser implements IccParserInterface
     {
         $raw = $this->uInt32Be(substr($data, IccTag::RENDERING_INTENT, 4));
 
-        // GH-903: upper 16 bits must be zero
+        // Upper 16 bits must be zero
         $upper = ($raw >> 16) & 0xFFFF;
         if ($upper !== 0) {
             throw new ParseError(
@@ -561,7 +561,7 @@ final class IccParser implements IccParserInterface
             return null;
         }
 
-        // GH-906: compute expected MD5 per §7.2.18
+        // Compute expected MD5 per §7.2.18
         $zeroed = $data;
         // Zero profile flags (bytes 44..47)
         $zeroed = substr_replace($zeroed, "\0\0\0\0", 44, 4);
@@ -649,7 +649,7 @@ final class IccParser implements IccParserInterface
         $y    = $this->s15Fixed16($data, $base + 4);
         $z    = $this->s15Fixed16($data, $base + 8);
 
-        // GH-904: validate D50 requirement at 4-decimal rounding
+        // Validate D50 requirement at 4-decimal rounding
         if (
             round($x, 4) !== 0.9642
             || round($y, 4) !== 1.0
@@ -816,13 +816,13 @@ final class IccParser implements IccParserInterface
             return null;
         }
 
-        // GH-905: ICC.1:2022 §10.31 reserved bytes 4..7 must be zero
+        // ICC.1:2022 §10.31 reserved bytes 4..7 must be zero
         $reserved = substr($tagData, 4, 4);
         if ($reserved !== "\0\0\0\0") {
             throw new ParseError('ICC wtpt XYZType reserved bytes 4..7 are non-zero', 1141);
         }
 
-        // GH-905: wtpt must contain exactly one XYZNumber (20 bytes total)
+        // Wtpt must contain exactly one XYZNumber (20 bytes total)
         if (strlen($tagData) !== 20) {
             throw new ParseError(
                 sprintf('ICC wtpt XYZType payload must be exactly 20 bytes, got %d', strlen($tagData)),
@@ -1050,7 +1050,7 @@ final class IccParser implements IccParserInterface
             return null;
         }
 
-        // GH-901: ICC.1:2022 §10.1 + §10.24 reserved bytes 4..7 must be zero.
+        // ICC.1:2022 §10.1 + §10.24 reserved bytes 4..7 must be zero.
         $reserved = substr($data, 4, 4);
         if ($reserved !== "\0\0\0\0") {
             return null;
@@ -1094,7 +1094,7 @@ final class IccParser implements IccParserInterface
             return null;
         }
 
-        // GH-902: ICC.1:2022 §10.1 reserved bytes 4..7 must be zero.
+        // ICC.1:2022 §10.1 reserved bytes 4..7 must be zero.
         $reserved = substr($data, 4, 4);
         if ($reserved !== "\0\0\0\0") {
             return null;
@@ -1132,7 +1132,7 @@ final class IccParser implements IccParserInterface
      * Parses an ICC 'mluc' tag with deterministic language-aware record selection.
      *
      * ICC.1:2022 §10.13: multiLocalizedUnicodeType stores locale-qualified
-     * strings. Selection policy (GH-1009):
+     * strings. Selection policy:
      * 1. Prefer 'enUS' record when present.
      * 2. Fall back to any 'en' language record.
      * 3. Otherwise use the first non-empty record.
@@ -1148,7 +1148,7 @@ final class IccParser implements IccParserInterface
             return null;
         }
 
-        // GH-851: ICC.1:2022 §10.1 + Table 54 reserved bytes 4..7 must be zero.
+        // ICC.1:2022 §10.1 + Table 54 reserved bytes 4..7 must be zero.
         $reserved = substr($data, 4, 4);
         if ($reserved !== "\0\0\0\0") {
             throw new ParseError('ICC mluc reserved bytes 4..7 are non-zero', 1137);
@@ -1161,7 +1161,7 @@ final class IccParser implements IccParserInterface
             return null;
         }
 
-        // GH-851: recordSize must be exactly 12
+        // RecordSize must be exactly 12
         if ($recordSize !== 12) {
             throw new ParseError(
                 sprintf('ICC mluc recordSize must be 12, got %d', $recordSize),
@@ -1169,7 +1169,7 @@ final class IccParser implements IccParserInterface
             );
         }
 
-        // GH-851: record table must fit within payload
+        // Record table must fit within payload
         $tableEnd = 16 + ($recordCount * $recordSize);
         if ($tableEnd > $length) {
             throw new ParseError('ICC mluc record table exceeds payload bounds', 1139);
@@ -1192,7 +1192,7 @@ final class IccParser implements IccParserInterface
                 continue;
             }
 
-            // GH-851: each record's string must be fully bounded within payload
+            // Each record's string must be fully bounded within payload
             if ($stringOffset + $stringLength > $length) {
                 throw new ParseError(
                     sprintf(
@@ -1259,7 +1259,7 @@ final class IccParser implements IccParserInterface
             return $converted === false ? null : $converted;
         }
 
-        // GH-897: no Imagick fallback; return null when no pure-PHP conversion is available
+        // No Imagick fallback; return null when no pure-PHP conversion is available
         return null;
     }
 

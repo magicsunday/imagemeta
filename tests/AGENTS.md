@@ -48,7 +48,7 @@ GH-<number>: <Message starting with capital letter>
 Example:
 
 ```
-GH-812: Add coverage for truncated IFD entries
+Add coverage for truncated IFD entries
 ```
 
 ### 1.3 Ticket Handling (Hard Rule)
