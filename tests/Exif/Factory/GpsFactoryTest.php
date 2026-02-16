@@ -291,6 +291,52 @@ final class GpsFactoryTest extends TestCase
         yield 'ref 2 (above sea level)' => [2];
     }
 
+    /**
+     * XMP speed with invalid ref does not produce a converted m/s value.
+     */
+    #[Test]
+    public function xmpSpeedWithInvalidRefYieldsNullSpeed(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSSpeed', self::NS_EXIF)    => '50.0',
+            sprintf('{%s}GPSSpeedRef', self::NS_EXIF) => 'X',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->speedMs);
+    }
+
+    /**
+     * XMP speed with valid ref K yields correct m/s conversion.
+     */
+    #[Test]
+    public function xmpSpeedWithKilometresRefYieldsMetresPerSecond(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSSpeed', self::NS_EXIF)    => '36.0',
+            sprintf('{%s}GPSSpeedRef', self::NS_EXIF) => 'K',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertSame(36.0 / 3.6, $gps->speedMs);
+    }
+
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     private function parsedExif(

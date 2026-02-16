@@ -587,13 +587,13 @@ final readonly class GpsFactory
     /**
      * Converts speed in the provided unit to metres per second using GPSSpeedRef semantics.
      */
-    private function convertSpeedToMetresPerSecond(float $speed, string $speedRef): float
+    private function convertSpeedToMetresPerSecond(float $speed, string $speedRef): ?float
     {
         return match ($speedRef) {
             'K'     => $speed / 3.6,
             'M'     => $speed * 0.44704,
             'N'     => $speed * 0.514444,
-            default => $speed,
+            default => null,
         };
     }
 
