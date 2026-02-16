@@ -170,6 +170,18 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 11,
                 "2024:05:06\0",
             ],
+            'GPSSpeedRef count 2' => [
+                ExifTag::GPS_SPEED_REF,
+                TiffConst::TYPE_ASCII,
+                2,
+                "K\0",
+            ],
+            'GPSSpeed count 1' => [
+                ExifTag::GPS_SPEED,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                "\x00\x00\x00\x46\x00\x00\x00\x01",
+            ],
             'FileSource count 1' => [
                 ExifTag::FILE_SOURCE,
                 TiffConst::TYPE_UNDEFINED,
@@ -475,6 +487,90 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
         $blob = $this->buildClassicTiffWithEntry(
             ExifTag::GPS_H_POSITIONING_ERROR,
+            TiffConst::TYPE_RATIONAL,
+            2,
+            str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSSpeedRef with wrong type (BYTE instead of ASCII).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsSpeedRefWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_SPEED_REF,
+            TiffConst::TYPE_BYTE,
+            2,
+            "K\0",
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSSpeedRef with wrong count (1 instead of 2).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsSpeedRefWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_SPEED_REF,
+            TiffConst::TYPE_ASCII,
+            1,
+            'K',
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSSpeed with wrong type (LONG instead of RATIONAL).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsSpeedWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_SPEED,
+            TiffConst::TYPE_LONG,
+            1,
+            "\x00\x00\x00\x01",
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects GPSSpeed with wrong count (2 instead of 1).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsSpeedWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            ExifTag::GPS_SPEED,
             TiffConst::TYPE_RATIONAL,
             2,
             str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
