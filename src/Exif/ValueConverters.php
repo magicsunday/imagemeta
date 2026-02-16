@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Exif;
 
 use BackedEnum;
 use DateTimeZone;
+use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Converters\ConverterFactory;
 use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
@@ -303,21 +304,22 @@ final class ValueConverters
      *
      * @return array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null
      */
-    public static function decodeSpatialFrequencyResponse(?string $payload): ?array
+    public static function decodeSpatialFrequencyResponse(?string $payload, Endian $endian = Endian::Big): ?array
     {
-        return self::factory()->matrixConverter()->decodeSpatialFrequencyResponse($payload);
+        return self::factory()->matrixConverter()->decodeSpatialFrequencyResponse($payload, $endian);
     }
 
     /**
      * Decodes the opto-electronic conversion function payload.
      *
      * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
+     * @param Endian      $endian  TIFF byte order of the enclosing EXIF document.
      *
      * @return array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null
      */
-    public static function decodeOecf(?string $payload): ?array
+    public static function decodeOecf(?string $payload, Endian $endian = Endian::Big): ?array
     {
-        return self::factory()->matrixConverter()->decodeOecf($payload);
+        return self::factory()->matrixConverter()->decodeOecf($payload, $endian);
     }
 
     /**

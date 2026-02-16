@@ -1115,7 +1115,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
             return null;
         }
 
-        $matrix = ValueConverters::decodeOecf($payload);
+        $matrix = ValueConverters::decodeOecf($payload, $this->byteOrder);
 
         return Oecf::fromMatrix($matrix);
     }
@@ -1734,7 +1734,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     public function spatialFrequencyResponse(): ?SpatialFrequencyResponse
     {
         $payload = $this->rawString($this->exifIfd, ExifTag::SPATIAL_FREQUENCY_RESPONSE);
-        $matrix  = ValueConverters::decodeSpatialFrequencyResponse($payload);
+        $matrix  = ValueConverters::decodeSpatialFrequencyResponse($payload, $this->byteOrder);
 
         return SpatialFrequencyResponse::fromMatrix($matrix);
     }
@@ -4422,7 +4422,9 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     {
         $length = strlen($payload);
 
-        if ($length < 4) {
+        // EXIF 3.0 §4.6.6.7.45: UTF-16 encoded strings require even byte
+        // length for code-unit alignment.  Odd-length payloads are malformed.
+        if ($length < 4 || ($length % 2) !== 0) {
             return [];
         }
 

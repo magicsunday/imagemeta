@@ -329,7 +329,7 @@ final class XmpParser implements XmpParserInterface
             // XMP Specification Part 1 §7.9.2.2: Skip RDF structural attributes
             if (
                 $attrNamespace === self::RDF_NAMESPACE
-                    && in_array($attrLocalName, ['about', 'datatype', 'ID', 'nodeID', 'parseType', 'resource'], true)
+                    && in_array($attrLocalName, ['about', 'datatype', 'ID', 'nodeID', 'parseType', 'resource', 'type'], true)
             ) {
                 continue;
             }

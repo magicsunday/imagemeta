@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Exif\Converters;
 
 use JsonException;
 use MagicSunday\ImageMeta\Core\BitMask;
+use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -30,7 +31,6 @@ use function json_encode;
 use function strlen;
 use function strpos;
 use function substr;
-use function trim;
 use function unpack;
 
 use const JSON_PRESERVE_ZERO_FRACTION;
@@ -44,16 +44,6 @@ use const PHP_INT_MAX;
  */
 final readonly class MatrixConverter
 {
-    /**
-     * EXIF 3.0 Annex C.3: maximum SRATIONAL matrix dimension is 64×64.
-     */
-    private const int MAX_SRATIONAL_MATRIX_DIMENSION = 64;
-
-    /**
-     * EXIF 3.0 Annex C.3 limits SRATIONAL matrix labels to 255 bytes.
-     */
-    private const int MAX_SRATIONAL_MATRIX_LABEL_LENGTH = 255;
-
     /**
      * SRATIONAL entries use two signed 32-bit integers per EXIF 3.0 Annex C.3.
      */
@@ -236,9 +226,9 @@ final readonly class MatrixConverter
      *
      * @return array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null
      */
-    public function decodeSpatialFrequencyResponse(?string $payload): ?array
+    public function decodeSpatialFrequencyResponse(?string $payload, Endian $endian = Endian::Big): ?array
     {
-        return $this->decodeSrationalMatrix($payload);
+        return $this->decodeSrationalMatrix($payload, $endian);
     }
 
     /**
@@ -247,12 +237,13 @@ final readonly class MatrixConverter
      * EXIF 3.0 §4.6.6.7.6 (figure 16, table 11).
      *
      * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
+     * @param Endian      $endian  TIFF byte order of the enclosing EXIF document.
      *
      * @return array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null
      */
-    public function decodeOecf(?string $payload): ?array
+    public function decodeOecf(?string $payload, Endian $endian = Endian::Big): ?array
     {
-        return $this->decodeSrationalMatrix($payload);
+        return $this->decodeSrationalMatrix($payload, $endian);
     }
 
     /**
@@ -262,7 +253,7 @@ final readonly class MatrixConverter
      *
      * @return array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null
      */
-    private function decodeSrationalMatrix(?string $payload): ?array
+    private function decodeSrationalMatrix(?string $payload, Endian $endian = Endian::Big): ?array
     {
         if ($payload === null || $payload === '') {
             return null;
@@ -273,7 +264,10 @@ final readonly class MatrixConverter
             return null;
         }
 
-        $header = @unpack('ncolumns/nrows', substr($payload, 0, 4));
+        // GH-1255: decode header using the TIFF byte order of the enclosing
+        // EXIF document instead of hardcoded big-endian.
+        $shortFmt = $endian === Endian::Little ? 'vcolumns/vrows' : 'ncolumns/nrows';
+        $header   = @unpack($shortFmt, substr($payload, 0, 4));
         if (!is_array($header)) {
             return null;
         }
@@ -291,10 +285,8 @@ final readonly class MatrixConverter
             return null;
         }
 
-        if ($columns > self::MAX_SRATIONAL_MATRIX_DIMENSION || $rows > self::MAX_SRATIONAL_MATRIX_DIMENSION) {
-            return null;
-        }
-
+        // GH-1256: no spec-mandated hard cap — validate by payload-consistency
+        // and integer-overflow-safe arithmetic instead of a fixed 64×64 limit.
         if ($columns > intdiv(PHP_INT_MAX, $rows)) {
             return null;
         }
@@ -337,17 +329,19 @@ final readonly class MatrixConverter
             $rowValues = [];
 
             for ($colIndex = 0; $colIndex < $columns; ++$colIndex) {
-                $numerator   = $this->readSrationalInt32($payload, $offset, $length);
-                $denominator = $this->readSrationalInt32($payload, $offset + 4, $length);
+                $numerator   = $this->readSrationalInt32($payload, $offset, $length, $endian);
+                $denominator = $this->readSrationalInt32($payload, $offset + 4, $length, $endian);
                 if ($numerator === null || $denominator === null) {
                     return null;
                 }
 
                 $offset += self::SRATIONAL_VALUE_SIZE;
 
+                // GH-1258: EXIF does not define a zero-denominator sentinel for
+                // OECF/SpatialFrequencyResponse SRATIONAL cells.  Treat as
+                // malformed payload.
                 if ($denominator === 0) {
-                    $rowValues[] = null;
-                    continue;
+                    return null;
                 }
 
                 $rowValues[] = (float) $numerator / (float) $denominator;
@@ -384,17 +378,21 @@ final readonly class MatrixConverter
             return null;
         }
 
+        // GH-1257: no spec-mandated per-label cap — rely on NUL-terminator
+        // presence within payload bounds as the only length constraint.
         $end = strpos($payload, "\0", $offset);
         if ($end === false) {
             return null;
         }
 
         $labelLength = $end - $offset;
-        if ($labelLength < 0 || $labelLength > self::MAX_SRATIONAL_MATRIX_LABEL_LENGTH) {
+        if ($labelLength < 0) {
             return null;
         }
 
-        $label  = trim(substr($payload, $offset, $labelLength));
+        // GH-1261: preserve label bytes faithfully; the EXIF layout defines
+        // binary representation, not semantic trimming.
+        $label  = substr($payload, $offset, $labelLength);
         $offset = $end + 1;
 
         return [$label, $offset];
@@ -402,14 +400,17 @@ final readonly class MatrixConverter
 
     /**
      * Reads a signed 32-bit integer from the SRATIONAL matrix payload.
+     *
+     * GH-1255: uses the TIFF byte order of the enclosing EXIF document.
      */
-    private function readSrationalInt32(string $payload, int $offset, int $length): ?int
+    private function readSrationalInt32(string $payload, int $offset, int $length, Endian $endian = Endian::Big): ?int
     {
         if ($offset + 4 > $length) {
             return null;
         }
 
-        $value = @unpack('N', substr($payload, $offset, 4));
+        $fmt   = $endian === Endian::Little ? 'V' : 'N';
+        $value = @unpack($fmt, substr($payload, $offset, 4));
         if (!is_array($value)) {
             return null;
         }
