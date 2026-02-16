@@ -145,6 +145,18 @@ final class TiffExifParser implements TiffExifParserInterface
             'typeName' => 'ASCII',
             'spec'     => 'EXIF 3.0 §4.6.7.1.9',
         ],
+        ExifTag::GPS_PROCESSING_METHOD => [
+            'name'     => 'GPSProcessingMethod',
+            'type'     => TiffConst::TYPE_UNDEFINED,
+            'typeName' => 'UNDEFINED',
+            'spec'     => 'EXIF 3.0 §4.6.7.1.28',
+        ],
+        ExifTag::GPS_AREA_INFORMATION => [
+            'name'     => 'GPSAreaInformation',
+            'type'     => TiffConst::TYPE_UNDEFINED,
+            'typeName' => 'UNDEFINED',
+            'spec'     => 'EXIF 3.0 §4.6.7.1.29',
+        ],
     ];
 
     /**
