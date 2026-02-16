@@ -382,6 +382,54 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Rejects out-of-range GPS bearing values for track/image/destination bearings.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideOutOfRangeBearingValues')]
+    public function rejectsOutOfRangeGpsBearingValues(int $refTag, int $valueTag, string $ref, float $value): void
+    {
+        $entries = [
+            $refTag   => new IfdEntry($refTag, 2, 2, $ref),
+            $valueTag => new IfdEntry($valueTag, 5, 1, $value),
+        ];
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1460);
+        $this->expectExceptionMessage('outside the valid range');
+
+        $this->converter->fromIfd(new Ifd($entries));
+    }
+
+    /**
+     * @return iterable<string, array{0:int,1:int,2:string,3:float}>
+     */
+    public static function provideOutOfRangeBearingValues(): iterable
+    {
+        yield 'track negative' => [
+            ExifTag::GPS_TRACK_REF,
+            ExifTag::GPS_TRACK,
+            'T',
+            -1.0,
+        ];
+
+        yield 'image direction >= 360' => [
+            ExifTag::GPS_IMG_DIRECTION_REF,
+            ExifTag::GPS_IMG_DIRECTION,
+            'M',
+            360.0,
+        ];
+
+        yield 'destination bearing far above range' => [
+            ExifTag::GPS_DEST_BEARING_REF,
+            ExifTag::GPS_DEST_BEARING,
+            'T',
+            720.0,
+        ];
+    }
+
+    /**
      * Provides a valid GPSDestDistanceRef value ('K') with a distance value.
      * Verifies the ref is accepted and distance_m is computed per EXIF 3.0 §4.6.7.1.26.
      *
