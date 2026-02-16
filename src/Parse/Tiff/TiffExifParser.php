@@ -1872,11 +1872,7 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         if ($tag === ExifTag::CFA_PATTERN && is_string($value)) {
-            $decodedPattern = $this->decodeCfaPatternPayload($rawBytes);
-
-            if ($decodedPattern instanceof ExifNumericList) {
-                $value = $decodedPattern;
-            }
+            $value = $this->decodeCfaPatternPayload($rawBytes);
         }
 
         if ($tag === ExifTag::MAKER_NOTE) {
@@ -5632,24 +5628,33 @@ final class TiffExifParser implements TiffExifParserInterface
      * EXIF 3.0 §4.6.6.7.34 defines the CFA pattern as two SHORT repeat units followed by m×n
      * bytes describing the colour filter layout.
      */
-    private function decodeCfaPatternPayload(string $bytes): ?ExifNumericList
+    private function decodeCfaPatternPayload(string $bytes): ExifNumericList
     {
         if (strlen($bytes) < 4) {
-            return null;
+            throw new ParseError(
+                sprintf('CFAPattern payload too short (%d bytes, minimum 4)', strlen($bytes)),
+                1505,
+            );
         }
 
         $horizontalRepeatPixelUnit = $this->unpackU16(substr($bytes, 0, 2));
         $verticalRepeatPixelUnit   = $this->unpackU16(substr($bytes, 2, 2));
 
-        if ($horizontalRepeatPixelUnit <= 0 || $verticalRepeatPixelUnit <= 0) {
-            return null;
+        if ($horizontalRepeatPixelUnit === 0 || $verticalRepeatPixelUnit === 0) {
+            throw new ParseError(
+                sprintf('CFAPattern repeat units must be non-zero, got %d x %d', $horizontalRepeatPixelUnit, $verticalRepeatPixelUnit),
+                1506,
+            );
         }
 
         $expectedPatternValues = $horizontalRepeatPixelUnit * $verticalRepeatPixelUnit;
-        $availableBytes        = strlen($bytes) - 4;
+        $expectedSize          = 4 + $expectedPatternValues;
 
-        if ($availableBytes < $expectedPatternValues) {
-            return null;
+        if (strlen($bytes) !== $expectedSize) {
+            throw new ParseError(
+                sprintf('CFAPattern payload size %d does not match expected %d (4 + %d x %d)', strlen($bytes), $expectedSize, $horizontalRepeatPixelUnit, $verticalRepeatPixelUnit),
+                1507,
+            );
         }
 
         $components = [$horizontalRepeatPixelUnit, $verticalRepeatPixelUnit];
