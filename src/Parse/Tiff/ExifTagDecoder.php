@@ -35,12 +35,8 @@ final readonly class ExifTagDecoder
      */
     public function decodeAscii(int $tag, int $count, string $bytes, array $utf8Tags): string
     {
-        if (($count > 0) && ($bytes[$count - 1] !== "\0")) {
-            throw new ParseError(
-                'ASCII values must be NUL-terminated and include the terminator in count per EXIF 3.0 §4.6.2; TIFF 6.0 §2.',
-                1329,
-            );
-        }
+        // EXIF 3.0 §4.6.2 / TIFF 6.0 §2 require NUL termination, but many
+        // legacy cameras omit the terminator.  Accept as-is when missing.
 
         $firstHighByteOffset = -1;
         for ($i = 0; $i < $count; ++$i) {

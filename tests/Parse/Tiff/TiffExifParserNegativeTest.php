@@ -320,13 +320,13 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Uses an ASCII entry whose declared payload omits the required trailing NUL.
-     * Ensures the parser rejects non-conformant ASCII values.
+     * Accepts ASCII entry whose declared payload omits the trailing NUL (Postel's Law).
+     * Many legacy cameras omit the NUL terminator in ASCII values.
      *
      * @return void
      */
     #[Test]
-    public function rejectsAsciiValueWithoutNullTerminator(): void
+    public function acceptsAsciiValueWithoutNullTerminator(): void
     {
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
@@ -338,12 +338,9 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('V', 0x44434241)
             . pack('V', 0);
 
-        $reader = new TiffExifParser();
+        $result = (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ASCII values must be NUL-terminated and include the terminator in count per EXIF 3.0 §4.6.2; TIFF 6.0 §2.');
-
-        $reader->parseFromBlob($blob);
+        self::assertSame('ABCD', $result->cameraMake());
     }
 
     /**
