@@ -1372,22 +1372,25 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Provides an MPF segment that contains only the signature.
-     * This verifies the parser rejects missing MPF payload data.
-     *
-     * @return void
+     * A malformed MPF segment is silently discarded — MPF is optional
+     * supplementary metadata that must not block EXIF extraction.
      */
     #[Test]
-    public function mpfSegmentWithoutPayloadThrowsParseError(): void
+    public function malformedMpfDoesNotPreventExifExtraction(): void
     {
-        $segment = self::segment(self::MARKER_APP2, self::MPF_SIGNATURE);
-        $jpeg    = $this->jpeg($segment);
+        $exifPayload = self::TIFF_HEADER . 'test';
+        $mpfPayload  = self::MPF_SIGNATURE . "\x00\x00\x00\x00";
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, $mpfPayload),
+        );
 
         $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
-        $this->expectException(ParseError::class);
-
-        $extractor->getMpfDocument();
+        self::assertCount(1, $blobs);
+        self::assertNull($extractor->getMpfDocument());
     }
 
     /**

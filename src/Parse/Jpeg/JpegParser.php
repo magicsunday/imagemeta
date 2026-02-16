@@ -174,8 +174,6 @@ final class JpegParser implements JpegParserInterface
     /** @var list<string> */
     private array $mpfSegments = [];
 
-    private ?int $mpfFirstOffset = null;
-
     private ?MpfDocument $mpfDocument = null;
 
     /** @var list<JpegAudioStream> */
@@ -403,7 +401,6 @@ final class JpegParser implements JpegParserInterface
         $this->flashPixLastStreamIndex       = null;
         $this->flashPixStreams               = [];
         $this->mpfSegments                   = [];
-        $this->mpfFirstOffset                = null;
         $this->mpfDocument                   = null;
         $this->audioStreams                  = [];
         $this->iptcPayloads                  = [];
@@ -648,14 +645,11 @@ final class JpegParser implements JpegParserInterface
 
             try {
                 $this->mpfDocument = (new MpfParser())->parse($payload);
-            } catch (ParseError $exception) {
-                $offset = $this->mpfFirstOffset ?? 0;
-
-                throw new ParseError(
-                    sprintf('Invalid MPF payload at offset %d', $offset),
-                    1264,
-                    $exception,
-                );
+            } catch (ParseError) {
+                // MPF (Multi-Picture Format) is optional supplementary
+                // metadata.  A malformed MPF APP2 segment must not prevent
+                // extraction of primary EXIF, XMP, and ICC data.
+                $this->mpfDocument = null;
             }
         }
 
@@ -1904,10 +1898,6 @@ final class JpegParser implements JpegParserInterface
         $signatureLength = strlen(self::MPF_SIGNATURE);
         if (strlen($payload) <= $signatureLength) {
             throw new ParseError(sprintf('MPF segment at offset %d is too short', $offset), 1280);
-        }
-
-        if ($this->mpfSegments === []) {
-            $this->mpfFirstOffset = $offset;
         }
 
         $this->mpfSegments[] = substr($payload, $signatureLength);
