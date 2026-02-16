@@ -406,6 +406,9 @@ final readonly class GpsFactory
 
             if ($deg !== null && $min !== null && $sec !== null) {
                 $sign = $this->coordinateSign($ref);
+                if ($sign === null) {
+                    return null;
+                }
 
                 $coordinate = $sign * ($deg + ($min / 60.0) + ($sec / 3600.0));
 
@@ -419,6 +422,9 @@ final readonly class GpsFactory
         }
 
         $sign = $this->coordinateSign($ref);
+        if ($sign === null) {
+            return null;
+        }
 
         $coordinate = $numeric * $sign;
 
@@ -428,13 +434,13 @@ final readonly class GpsFactory
     /**
      * Determines the sign for the given coordinate reference.
      */
-    private function coordinateSign(?string $ref): float
+    private function coordinateSign(?string $ref): ?float
     {
-        if ($ref === 'S' || $ref === 'W') {
-            return -1.0;
-        }
-
-        return 1.0;
+        return match ($ref) {
+            'N', 'E' => 1.0,
+            'S', 'W' => -1.0,
+            default => null,
+        };
     }
 
     /**

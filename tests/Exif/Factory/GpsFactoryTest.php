@@ -337,6 +337,74 @@ final class GpsFactoryTest extends TestCase
         self::assertSame(36.0 / 3.6, $gps->speedMs);
     }
 
+    /**
+     * XMP coordinate with missing ref does not produce a parsed value.
+     */
+    #[Test]
+    public function xmpCoordinateWithMissingRefYieldsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF) => '52,31,15',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->latitude);
+    }
+
+    /**
+     * XMP coordinate with invalid ref does not produce a parsed value.
+     */
+    #[Test]
+    public function xmpCoordinateWithInvalidRefYieldsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52,31,15',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'X',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->latitude);
+    }
+
+    /**
+     * XMP coordinate with valid ref parses correctly.
+     */
+    #[Test]
+    public function xmpCoordinateWithValidRefParsesCorrectly(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52,31,15',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertEqualsWithDelta(52.520833, $gps->latitude, 0.001);
+    }
+
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     private function parsedExif(
