@@ -4738,6 +4738,12 @@ final class TiffExifParser implements TiffExifParserInterface
         [ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 'JPEGInterchangeFormatLength'],
     ];
 
+    /**
+     * Validates that tags prohibited in JPEG-compressed primary images are absent from IFD0.
+     *
+     * EXIF 3.0 §4.6.5.1 prohibits strip/tile storage descriptors and
+     * YCbCrSubSampling in IFD0 when the primary image is JPEG-compressed.
+     */
     private function validateJpegContextProhibitions(Ifd $ifd0): void
     {
         foreach (self::JPEG_PROHIBITED_TAGS as [$tag, $name]) {
