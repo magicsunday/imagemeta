@@ -1969,14 +1969,15 @@ final class TiffExifParser implements TiffExifParserInterface
             $asciiUndefinedSwap = ($type === TiffConst::TYPE_UNDEFINED && $rule['type'] === TiffConst::TYPE_ASCII)
                 || ($type === TiffConst::TYPE_ASCII && $rule['type'] === TiffConst::TYPE_UNDEFINED);
 
-            // EXIF 3.0 §4.6.7 specifies RATIONAL for GPS value tags, but
+            // EXIF 3.0 §4.6.7 specifies strict types for GPS value tags, but
             // real-world cameras write a wide range of numeric types
-            // (SRATIONAL, SHORT, LONG, etc.).  Skip the type check for
-            // GPS tags to follow Postel's Law; the count check still runs.
-            $gpsRationalTolerance = $rule['type'] === TiffConst::TYPE_RATIONAL
+            // (SRATIONAL, SHORT, LONG, etc.) and swap UNDEFINED/ASCII.
+            // Skip the type check for GPS RATIONAL and UNDEFINED tags
+            // to follow Postel's Law; the count check still runs.
+            $gpsTypeTolerance = ($rule['type'] === TiffConst::TYPE_RATIONAL || $rule['type'] === TiffConst::TYPE_UNDEFINED)
                 && str_starts_with((string) $rule['spec'], 'EXIF 3.0 §4.6.7');
 
-            if (!$asciiUndefinedSwap && !$gpsRationalTolerance) {
+            if (!$asciiUndefinedSwap && !$gpsTypeTolerance) {
                 throw new ParseError(sprintf(
                     '%s must use TIFF type %s per %s.',
                     $rule['name'],
