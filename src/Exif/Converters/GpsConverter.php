@@ -267,6 +267,11 @@ final readonly class GpsConverter
 
         $altEntry = $gps->get(ExifTag::GPS_ALTITUDE);
         if ($altEntry instanceof IfdEntry) {
+            // EXIF 3.0 §4.6.7.1.6: default GPSAltitudeRef is 0 when tag is missing
+            if ($result['alt_ref'] === null) {
+                $result['alt_ref'] = 0;
+            }
+
             $alt = $this->rationalConverter->toFloat($altEntry->value);
 
             if ($alt !== null && $alt < 0.0) {

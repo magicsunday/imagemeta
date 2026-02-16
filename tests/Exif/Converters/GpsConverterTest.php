@@ -1049,6 +1049,27 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Missing GPSAltitudeRef defaults to 0 (above sea level) per EXIF 3.0 §4.6.7.1.6.
+     */
+    #[Test]
+    public function defaultsAltitudeRefToZeroWhenMissing(): void
+    {
+        $entries = [
+            ExifTag::GPS_ALTITUDE => new IfdEntry(
+                ExifTag::GPS_ALTITUDE,
+                5,
+                1,
+                new ExifRational(250, 1),
+            ),
+        ];
+
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertSame(0, $result['alt_ref']);
+        self::assertEqualsWithDelta(250.0, $result['alt'], 0.000001);
+    }
+
+    /**
      * Rejects GPS coordinate value present without matching ref tag.
      *
      * @param int $refTag
