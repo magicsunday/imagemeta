@@ -478,15 +478,30 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     }
 
     /**
-     * Returns the colour space enumeration if present.
+     * Returns the colour space enumeration.
      *
-     * EXIF 3.0 §4.6.6.2.1 (ColorSpace)
+     * EXIF 3.0 §4.6.6.2.1 states ColorSpace is always recorded when an
+     * ExifIFD is present. When the tag is absent despite ExifIFD existing,
+     * sRGB is assumed per the most common real-world usage. An explicitly
+     * present but unrecognized value still returns null.
      */
     public function colorSpace(): ?ColorSpace
     {
         $value = $this->enumValue($this->exifIfd, ExifTag::COLOR_SPACE);
+        $space = ColorSpace::fromExifValue($value);
 
-        return ColorSpace::fromExifValue($value);
+        if ($space instanceof ColorSpace) {
+            return $space;
+        }
+
+        // Tag present with unrecognized value → null (don't override)
+        if ($this->exifIfd?->get(ExifTag::COLOR_SPACE) instanceof IfdEntry) {
+            return null;
+        }
+
+        // EXIF 3.0 §4.6.6.2.1: ColorSpace is required when ExifIFD exists.
+        // Default to sRGB for non-conformant files that omit the tag.
+        return $this->exifIfd instanceof Ifd ? ColorSpace::SRGB : null;
     }
 
     /**
@@ -2810,17 +2825,24 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
     /**
      * Returns the bits per sample defined for the primary image.
      *
-     * EXIF 3.0 §4.6.5.1.3 defines three SHORT values with a default of 8 8 8 for
-     * RGB components. JPEG compressed data relies on the frame header precision
-     * instead of this tag.
+     * EXIF 3.0 §4.6.5.1.3 states JPEG compressed data shall not record this
+     * tag; precision comes from the JPEG SOF marker instead. Returns null in
+     * JPEG context (no Compression tag) so callers can fall back to SOF.
+     * TIFF 6.0 §8 default is 1 per component; EXIF profile uses 8 for RGB.
      *
-     * @return int
+     * @return int|null
      */
-    public function bitsPerSample(): int
+    public function bitsPerSample(): ?int
     {
         $bitsPerSample = $this->int($this->ifd0, ExifTag::BITS_PER_SAMPLE);
 
-        return $bitsPerSample ?? 8;
+        if ($bitsPerSample !== null) {
+            return $bitsPerSample;
+        }
+
+        // JPEG context: let caller use SOF precision fallback
+        // TIFF context: EXIF 3.0 §4.6.5.1.3 default 8 for RGB
+        return $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry ? 8 : null;
     }
 
     /**

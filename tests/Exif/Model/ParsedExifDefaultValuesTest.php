@@ -38,20 +38,39 @@ use function count;
 final class ParsedExifDefaultValuesTest extends TestCase
 {
     /**
-     * Omits BitsPerSample from the IFD to exercise the default path.
-     * Verifies ParsedExif returns the TIFF/EXIF default of 8 bits per sample.
+     * Omits BitsPerSample in TIFF context (Compression tag present).
+     * Verifies the EXIF default of 8 is returned.
      *
      * @see EXIF 3.0 §4.6.5.1.3: BitsPerSample default is 8 8 8 (RGB)
      *
      * @return void
      */
     #[Test]
-    public function bitsPerSampleReturnsDefaultWhenMissing(): void
+    public function bitsPerSampleReturnsDefaultInTiffContext(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::UNCOMPRESSED->value),
+        ]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(8, $parsedExif->bitsPerSample());
+    }
+
+    /**
+     * Omits BitsPerSample in JPEG context (no Compression tag).
+     * Returns null so SOF precision fallback can apply.
+     *
+     * @see EXIF 3.0 §4.6.5.1.3: JPEG data shall not record BitsPerSample
+     *
+     * @return void
+     */
+    #[Test]
+    public function bitsPerSampleReturnsNullInJpegContext(): void
     {
         $ifd0       = new Ifd([]);
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
-        self::assertSame(8, $parsedExif->bitsPerSample());
+        self::assertNull($parsedExif->bitsPerSample());
     }
 
     /**

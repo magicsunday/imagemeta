@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -44,6 +45,34 @@ final class ParsedExifColorSpaceAndGammaTest extends TestCase
         ]);
 
         $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertNull($parsedExif->colorSpace());
+    }
+
+    /**
+     * Omits ColorSpace tag when ExifIFD is present.
+     * Defaults to sRGB per EXIF 3.0 §4.6.6.2.1 required-tag fallback.
+     *
+     * @return void
+     */
+    #[Test]
+    public function colorSpaceDefaultsToSrgbWhenAbsentInExifIfd(): void
+    {
+        $parsedExif = new ParsedExif(new Ifd([]), new Ifd([]), null, null, null);
+
+        self::assertSame(ColorSpace::SRGB, $parsedExif->colorSpace());
+    }
+
+    /**
+     * Omits ExifIFD entirely.
+     * Returns null because there is no ExifIFD to carry ColorSpace.
+     *
+     * @return void
+     */
+    #[Test]
+    public function colorSpaceReturnsNullWithoutExifIfd(): void
+    {
+        $parsedExif = new ParsedExif(new Ifd([]), null, null, null, null);
 
         self::assertNull($parsedExif->colorSpace());
     }
