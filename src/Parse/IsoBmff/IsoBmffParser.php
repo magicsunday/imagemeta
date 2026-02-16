@@ -3525,7 +3525,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      *
      * @param BoxDescriptor $iinf Box descriptor containing the item information payload.
      *
-     * @return list<array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string, itemUriType?: string}>
+     * @return list<array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string, itemUriType?: string, hidden: bool}>
      */
     private function parseIinf(BoxDescriptor $iinf): array
     {
@@ -3601,7 +3601,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      *
      * @param BoxDescriptor $infe Box descriptor for the entry being parsed.
      *
-     * @return array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string, itemUriType?: string}
+     * @return array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string, itemUriType?: string, hidden: bool}
      */
     private function parseInfe(BoxDescriptor $infe): array
     {
@@ -3619,9 +3619,14 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('unsupported infe box version', 1199);
         }
 
-        if ($flags !== 0) {
+        // Bit 0 is the hidden_item flag (ISO/IEC 14496-12 Amd.2:2018 §8.11.6).
+        // Apple HEIC files set this on tile and metadata items that compose a
+        // grid image.  Bits 1–23 are reserved and must be zero.
+        if (($flags & ~0x01) !== 0) {
             throw new ParseError('unsupported infe box flags', 1200);
         }
+
+        $hidden = ($flags & 0x01) !== 0;
 
         if ($version === 0 || $version === 1) {
             $itemId = $win->readU16BE();
@@ -3642,6 +3647,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 'contentType'     => $contentType,
                 'contentEncoding' => $contentEncoding,
                 'extensionType'   => null,
+                'hidden'          => $hidden,
             ];
         }
 
@@ -3683,6 +3689,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 'contentEncoding' => null,
                 'extensionType'   => null,
                 'itemUriType'     => $itemUriType,
+                'hidden'          => $hidden,
             ];
         }
 
@@ -3706,6 +3713,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             'contentType'     => $contentType,
             'contentEncoding' => $contentEncoding,
             'extensionType'   => $extensionType,
+            'hidden'          => $hidden,
         ];
     }
 

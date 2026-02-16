@@ -5074,18 +5074,59 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects an infe box with non-zero flags.
+     * Accepts the hidden_item flag (bit 0) in infe box flags.
      *
      * @return void
      */
     #[Test]
-    public function rejectInfeUnsupportedFlags(): void
+    public function acceptInfeHiddenItemFlag(): void
+    {
+        $infePayload = pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
+        $infe        = $this->fullBox('infe', $infePayload, 2, 1); // flags=1 (hidden)
+        $iinf        = $this->fullBox('iinf', pack('n', 1) . $infe);
+        $meta        = $this->fullBox('meta', $iinf);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * Rejects an infe box with reserved flag bits (bits 1-23).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectInfeReservedFlags(): void
     {
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('unsupported infe box flags');
 
         $infePayload = pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
-        $infe        = $this->fullBox('infe', $infePayload, 2, 1); // flags=1
+        $infe        = $this->fullBox('infe', $infePayload, 2, 2); // flags=2 (reserved)
+        $iinf        = $this->fullBox('iinf', pack('n', 1) . $infe);
+        $meta        = $this->fullBox('meta', $iinf);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Rejects an infe box with hidden + reserved flags combined.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectInfeHiddenPlusReservedFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported infe box flags');
+
+        $infePayload = pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
+        $infe        = $this->fullBox('infe', $infePayload, 2, 3); // flags=3
         $iinf        = $this->fullBox('iinf', pack('n', 1) . $infe);
         $meta        = $this->fullBox('meta', $iinf);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
