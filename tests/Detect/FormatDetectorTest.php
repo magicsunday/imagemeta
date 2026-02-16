@@ -27,6 +27,7 @@ use PHPUnit\Framework\TestCase;
 use function fopen;
 use function fwrite;
 use function hex2bin;
+use function pack;
 use function rewind;
 use function str_repeat;
 use function strlen;
@@ -316,6 +317,86 @@ final class FormatDetectorTest extends TestCase
     {
         // size=0, type='ftyp', followed by payload
         $stream = $this->createStream("\x00\x00\x00\x00ftypisom\x00\x00\x00\x00");
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unsupported or unknown container');
+
+        (new FormatDetector())->detect($stream);
+    }
+
+    /**
+     * Detects classic TIFF with little-endian byte order (II + 0x002A).
+     */
+    #[Test]
+    public function detectRecognisesClassicTiffLittleEndian(): void
+    {
+        $stream = $this->createStream('II' . pack('v', 0x002A) . pack('V', 8));
+
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::TIFF, $detected);
+    }
+
+    /**
+     * Detects classic TIFF with big-endian byte order (MM + 0x002A).
+     */
+    #[Test]
+    public function detectRecognisesClassicTiffBigEndian(): void
+    {
+        $stream = $this->createStream('MM' . pack('n', 0x002A) . pack('N', 8));
+
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::TIFF, $detected);
+    }
+
+    /**
+     * Detects BigTIFF with little-endian byte order (II + 0x002B).
+     */
+    #[Test]
+    public function detectRecognisesBigTiffLittleEndian(): void
+    {
+        $stream = $this->createStream('II' . pack('v', 0x002B) . pack('v', 8) . pack('v', 0) . pack('P', 16));
+
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::TIFF, $detected);
+    }
+
+    /**
+     * Detects BigTIFF with big-endian byte order (MM + 0x002B).
+     */
+    #[Test]
+    public function detectRecognisesBigTiffBigEndian(): void
+    {
+        $stream = $this->createStream('MM' . pack('n', 0x002B) . pack('n', 8) . pack('n', 0) . pack('J', 16));
+
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::TIFF, $detected);
+    }
+
+    /**
+     * Rejects a stream starting with a valid byte-order mark but an invalid TIFF magic.
+     */
+    #[Test]
+    public function detectRejectsTiffWithInvalidMagic(): void
+    {
+        $stream = $this->createStream('II' . pack('v', 0x0099) . pack('V', 8));
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unsupported or unknown container');
+
+        (new FormatDetector())->detect($stream);
+    }
+
+    /**
+     * Rejects a stream starting with II but too short to contain the magic number.
+     */
+    #[Test]
+    public function detectRejectsTruncatedTiffHeader(): void
+    {
+        $stream = $this->createStream('II*');
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Unsupported or unknown container');

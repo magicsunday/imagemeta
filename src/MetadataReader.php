@@ -111,6 +111,7 @@ final readonly class MetadataReader
         return match ($type) {
             ContainerType::JPEG    => $this->fromJpeg($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
             ContainerType::ISOBMFF => $this->fromIsoBmff($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
+            ContainerType::TIFF    => $this->fromTiff($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
         };
     }
 
@@ -283,6 +284,57 @@ final readonly class MetadataReader
             isoBmffItemReferences: $isoBmffItemReferences,
             isoBmffDataReferences: $isoBmffDataReferences,
             isoBmffUnresolvedItems: $isoBmffUnresolvedItems,
+        );
+    }
+
+    /**
+     * Extracts metadata from a standalone TIFF-based container (TIFF, DNG, NEF, ARW).
+     *
+     * @param Stream  $stream     Source stream positioned at the start of the file.
+     * @param ?string $mimeType   MIME type associated with the inspected file.
+     * @param ?int    $fileSize   File size in bytes if it could be determined.
+     * @param ?string $extension  File extension detected from the path or stream.
+     * @param ?string $digestSha1 Pre-computed SHA-1 digest for the stream contents.
+     * @param ?string $digestMd5  Pre-computed MD5 digest for the stream contents.
+     *
+     * @return Metadata
+     */
+    private function fromTiff(
+        Stream $stream,
+        ?string $mimeType,
+        ?int $fileSize,
+        ?string $extension,
+        ?string $digestSha1,
+        ?string $digestMd5,
+    ): Metadata {
+        $stream->seek(0);
+        $tiffBlob = $stream->read($stream->size());
+
+        $registry   = $this->createMakerNotesRegistry();
+        $exifDoc    = $this->tiffReader->parseFromBlob($tiffBlob, $registry);
+        $makerNotes = $exifDoc->makerNotes();
+        $makerNotes = $this->appleMerger->merge($makerNotes, null);
+
+        return new Metadata(
+            [$tiffBlob],
+            null,
+            $exifDoc,
+            [],
+            null,
+            $makerNotes,
+            null,
+            [],
+            [],
+            null,
+            [],
+            null,
+            null,
+            null,
+            $mimeType,
+            $fileSize,
+            $extension,
+            $digestSha1,
+            $digestMd5,
         );
     }
 

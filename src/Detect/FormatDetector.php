@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 
 use function ord;
+use function unpack;
 
 use const SEEK_CUR;
 
@@ -82,6 +83,10 @@ final readonly class FormatDetector
             return $this->detectJpeg($stream);
         }
 
+        if ($this->looksLikeTiff($stream, $magic2)) {
+            return ContainerType::TIFF;
+        }
+
         try {
             if ($this->looksLikeIsoBmff($stream)) {
                 return ContainerType::ISOBMFF;
@@ -118,6 +123,32 @@ final readonly class FormatDetector
         }
 
         return ContainerType::JPEG;
+    }
+
+    /**
+     * Checks whether the first two bytes are a TIFF byte-order mark and the following
+     * two bytes contain a classic TIFF (0x002A) or BigTIFF (0x002B) magic number.
+     */
+    private function looksLikeTiff(Stream $stream, string $magic2): bool
+    {
+        if ($magic2 !== 'II' && $magic2 !== 'MM') {
+            return false;
+        }
+
+        try {
+            $rawMagic = $stream->read(2);
+        } catch (BoundsError) {
+            return false;
+        }
+
+        /** @var array{1: int}|false $unpacked */
+        $unpacked = unpack($magic2 === 'II' ? 'v1' : 'n1', $rawMagic);
+
+        if ($unpacked === false) {
+            return false;
+        }
+
+        return $unpacked[1] === 0x002A || $unpacked[1] === 0x002B;
     }
 
     /**

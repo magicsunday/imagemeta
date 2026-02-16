@@ -21,4 +21,7 @@ enum ContainerType
 
     /** ISO Base Media File Format such as HEIC, AVIF, MP4, or MOV. */
     case ISOBMFF;
+
+    /** TIFF-based format such as TIFF, DNG, NEF, or ARW. */
+    case TIFF;
 }
