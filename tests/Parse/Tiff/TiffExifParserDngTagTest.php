@@ -1339,6 +1339,105 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * DNGVersion=1.7.0.0, DNGBackwardVersion=1.6.0.0 is valid (backward < version).
+     */
+    #[Test]
+    public function acceptsDngBackwardVersionBelowDngVersion(): void
+    {
+        $blob = $this->buildTiffWithDngVersionPair([1, 7, 0, 0], [1, 6, 0, 0]);
+
+        $result = (new TiffExifParser())->parseFromBlob($blob);
+
+        self::assertCount(6, $result->ifd0->entries);
+    }
+
+    /**
+     * DNGVersion=1.6.0.0, DNGBackwardVersion=1.6.0.0 is valid (equality).
+     */
+    #[Test]
+    public function acceptsDngBackwardVersionEqualToDngVersion(): void
+    {
+        $blob = $this->buildTiffWithDngVersionPair([1, 6, 0, 0], [1, 6, 0, 0]);
+
+        $result = (new TiffExifParser())->parseFromBlob($blob);
+
+        self::assertCount(6, $result->ifd0->entries);
+    }
+
+    /**
+     * DNGVersion=1.6.0.0, DNGBackwardVersion=1.7.0.0 is invalid (backward > version).
+     */
+    #[Test]
+    public function rejectsDngBackwardVersionAboveDngVersion(): void
+    {
+        $blob = $this->buildTiffWithDngVersionPair([1, 6, 0, 0], [1, 7, 0, 0]);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('DNGBackwardVersion');
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Builds a minimal DNG TIFF with DNGVersion and DNGBackwardVersion.
+     *
+     * @param list<int> $dngVersion      DNGVersion bytes [major, minor, patch, sub].
+     * @param list<int> $backwardVersion DNGBackwardVersion bytes [major, minor, patch, sub].
+     */
+    private function buildTiffWithDngVersionPair(array $dngVersion, array $backwardVersion): string
+    {
+        $ifdOffset = 8;
+
+        $tags = [];
+
+        $tags[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        $tags[ExifTag::IMAGE_LENGTH] = pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        $tags[ExifTag::ORIENTATION] = pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0);
+
+        $tags[DngTag::DNG_VERSION] = pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', $dngVersion[0], $dngVersion[1], $dngVersion[2], $dngVersion[3]);
+
+        $tags[DngTag::DNG_BACKWARD_VERSION] = pack('v', DngTag::DNG_BACKWARD_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', $backwardVersion[0], $backwardVersion[1], $backwardVersion[2], $backwardVersion[3]);
+
+        // UniqueCameraModel required for DNG
+        $tags[DngTag::UNIQUE_CAMERA_MODEL] = pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', 2)
+            . "X\0\0\0";
+
+        ksort($tags);
+
+        $ifdData = pack('v', count($tags));
+
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData;
+    }
+
+    /**
      * When both LocalizedCameraModel and UniqueCameraModel are present,
      * the explicit LocalizedCameraModel value takes precedence.
      */

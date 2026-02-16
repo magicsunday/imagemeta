@@ -1542,6 +1542,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->validateDngProfileToneCurve($ifd0);
         $this->validateDngInterleaveVersionFloors($ifd0);
         $this->validateDngBackwardVersionGate($ifd0);
+        $this->validateDngBackwardVersionConsistency($ifd0);
         $this->validateDngColorimetricReference($ifd0);
         $this->validateDngMultiProfileName($ifd0, $additionalIfds);
         $this->validateDngExtraCameraProfiles($ifd0);
@@ -7384,6 +7385,41 @@ final class TiffExifParser implements TiffExifParserInterface
                     ...self::SUPPORTED_DNG_VERSION,
                 ),
                 1496,
+            );
+        }
+    }
+
+    /**
+     * Rejects DNG files where DNGBackwardVersion is higher than DNGVersion.
+     */
+    private function validateDngBackwardVersionConsistency(Ifd $ifd): void
+    {
+        $dngVer = $this->extractDngVersionTuple($ifd, DngTag::DNG_VERSION);
+
+        if ($dngVer === null) {
+            return;
+        }
+
+        $bwVer = $this->extractDngVersionTuple($ifd, DngTag::DNG_BACKWARD_VERSION);
+
+        if ($bwVer === null) {
+            return;
+        }
+
+        if ($this->dngVersionLessThan($dngVer, $bwVer)) {
+            throw new ParseError(
+                sprintf(
+                    'DNGBackwardVersion %d.%d.%d.%d exceeds DNGVersion %d.%d.%d.%d.',
+                    $bwVer[0],
+                    $bwVer[1],
+                    $bwVer[2],
+                    $bwVer[3],
+                    $dngVer[0],
+                    $dngVer[1],
+                    $dngVer[2],
+                    $dngVer[3],
+                ),
+                1497,
             );
         }
     }
