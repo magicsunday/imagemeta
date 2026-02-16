@@ -594,17 +594,7 @@ final class JpegParser implements JpegParserInterface
                 continue;
             }
 
-            if ($marker === Marker::SOF2) {
-                throw new ParseError(
-                    sprintf(
-                        'Progressive SOF2 marker at offset %d is not allowed in strict EXIF JPEG mode per EXIF 3.0 §4.8.1.',
-                        $offset,
-                    ),
-                    1486,
-                );
-            }
-
-            if ($marker === Marker::SOF0) {
+            if ($marker === Marker::SOF0 || $marker === Marker::SOF2) {
                 // EXIF 3.0 §4.7 Table 2 defines one frame-header declaration in the
                 // marker flow before SOS; additional SOF markers are non-conformant.
                 if ($firstSofOffset !== null) {

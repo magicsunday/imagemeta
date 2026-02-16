@@ -1863,26 +1863,28 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects progressive SOF2 markers in strict EXIF-JPEG conformance mode.
+     * Accepts progressive SOF2 markers in EXIF mode (Postel's Law).
      *
      * @return void
      */
     #[Test]
-    public function rejectsProgressiveSof2InStrictExifMode(): void
+    public function acceptsProgressiveSof2InExifMode(): void
     {
+        $exifPayload  = self::TIFF_HEADER . 'strict-exif';
         $framePayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
             . "\x01\x22\x00"
             . "\x02\x11\x01"
             . "\x03\x11\x01";
 
-        $jpeg      = $this->jpeg(self::segment(self::MARKER_SOF2, $framePayload));
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_SOF2, $framePayload),
+        );
+
         $extractor = $this->createExtractor($jpeg);
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1486);
-        $this->expectExceptionMessageMatches('/SOF2.*strict EXIF|strict EXIF.*SOF2/i');
-
         $extractor->extractExifBlobs();
+
+        $this->addToAssertionCount(1);
     }
 
     /**
