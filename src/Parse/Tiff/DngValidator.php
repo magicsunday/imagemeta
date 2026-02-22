@@ -3858,6 +3858,7 @@ final readonly class DngValidator
             throw new ParseError(
                 sprintf('%s payload is not a valid ICC profile: %s', $iccName, $exception->getMessage()),
                 1678,
+                $exception,
             );
         }
     }
