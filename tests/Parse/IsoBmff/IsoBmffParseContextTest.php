@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParseContext;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\TrackMediaParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -28,6 +29,7 @@ use ReflectionClass;
  */
 #[CoversClass(IsoBmffParseContext::class)]
 #[UsesClass(IsoBmffParser::class)]
+#[UsesClass(TrackMediaParser::class)]
 final class IsoBmffParseContextTest extends TestCase
 {
     /**
@@ -63,27 +65,36 @@ final class IsoBmffParseContextTest extends TestCase
     #[Test]
     public function parserPrivateParseMethodsAcceptSharedContextParameter(): void
     {
-        $class = new ReflectionClass(IsoBmffParser::class);
+        $parserClass = new ReflectionClass(IsoBmffParser::class);
 
-        $twoParameterMethods = [
+        $parserTwoParameterMethods = [
             'parseMoovBox',
             'parseMoofBox',
-            'parseTrak',
-            'parseMdia',
         ];
 
-        foreach ($twoParameterMethods as $methodName) {
-            $method = $class->getMethod($methodName);
+        foreach ($parserTwoParameterMethods as $methodName) {
+            $method = $parserClass->getMethod($methodName);
             self::assertCount(2, $method->getParameters());
             self::assertSame(IsoBmffParseContext::class, (string) $method->getParameters()[1]->getType());
         }
 
-        $metaMethod = $class->getMethod('parseMetaBox');
+        $metaMethod = $parserClass->getMethod('parseMetaBox');
         self::assertCount(3, $metaMethod->getParameters());
         self::assertSame(IsoBmffParseContext::class, (string) $metaMethod->getParameters()[1]->getType());
 
-        $udtaMethod = $class->getMethod('parseUdtaBox');
+        $udtaMethod = $parserClass->getMethod('parseUdtaBox');
         self::assertCount(3, $udtaMethod->getParameters());
         self::assertSame(IsoBmffParseContext::class, (string) $udtaMethod->getParameters()[1]->getType());
+
+        // parseTrak and parseMdia now live on TrackMediaParser
+        $trackClass = new ReflectionClass(TrackMediaParser::class);
+
+        $trackMethod = $trackClass->getMethod('parseTrak');
+        self::assertCount(2, $trackMethod->getParameters());
+        self::assertSame(IsoBmffParseContext::class, (string) $trackMethod->getParameters()[1]->getType());
+
+        $mdiaMethod = $trackClass->getMethod('parseMdia');
+        self::assertCount(2, $mdiaMethod->getParameters());
+        self::assertSame(IsoBmffParseContext::class, (string) $mdiaMethod->getParameters()[1]->getType());
     }
 }
