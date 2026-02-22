@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Factory;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
@@ -121,10 +122,14 @@ final readonly class ValueFactory
      */
     public function createComponents(Metadata $metadata): array
     {
-        $xmpDocument  = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
-        $iptcDocument = $metadata->iptcDoc ?? $metadata->selectiveIptcDocument();
+        $xmpDocument     = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $iptcDocument    = $metadata->iptcDoc ?? $metadata->selectiveIptcDocument();
+        $exifDocument    = $metadata->exifDoc;
+        $quickTimeLookup = new QuickTimeLookup($metadata->quickTime);
+        $appleMakerNotes = $metadata->makerNotes?->apple;
+        $apple           = $appleMakerNotes ?? AppleMakerNotes::empty();
 
-        // Use sub-factories for modular metadata creation
+        // Sub-factory delegation
         $gps          = $this->gpsFactory->create($metadata);
         $camera       = $this->cameraFactory->create($metadata);
         $lens         = $this->lensFactory->create($metadata);
@@ -138,15 +143,188 @@ final readonly class ValueFactory
         $multiPicture = $this->multiPictureFactory->create($metadata);
         $scene        = $this->sceneFactory->create($metadata, $this->countFaceRegions($regions));
 
-        $exifDocument    = $metadata->exifDoc;
-        $quickTimeMeta   = $metadata->quickTime;
-        $quickTimeLookup = new QuickTimeLookup($quickTimeMeta);
-        $appleMakerNotes = $metadata->makerNotes?->apple;
+        // Cohesive private methods for complex value-object creation
+        $tiff         = $this->createTiffData($exifDocument, $metadata);
+        $thumbnail    = $this->createThumbnail($exifDocument);
+        $colorProfile = $this->createColorProfile($metadata, $exifDocument);
+        $author       = $this->createAuthor($exifDocument, $xmpDocument);
+        $rights       = $this->createRights($exifDocument, $xmpDocument);
+        $derived      = $this->createDerived($lens, $exposure);
+        $integrity    = $this->createIntegrity($xmpDocument);
 
         $interop = new ValueInterop(
             index: $exifDocument?->interopIndex(),
         );
 
+        $composite = new CompositeImageInfo(
+            type: $exifDocument?->compositeImage(),
+            counts: $exifDocument?->sourceImageNumberOfCompositeImage(),
+            sourceExposureTimes: $exifDocument?->sourceExposureTimesOfCompositeImage(),
+        );
+
+        $standards = new ValueStandards(
+            exifVersion: $exifDocument?->exifVersion(),
+            profile: $exifDocument?->exifProfile() ?? 'unknown',
+            flashpixVersion: $exifDocument?->flashpixVersion(),
+        );
+
+        $capture = new Capture(
+            dateTime: $exifDocument?->captureDateTime(),
+            temperatureC: $exifDocument?->temperatureCelsius(),
+            humidityPercent: $exifDocument?->humidityPercent(),
+            pressureHPa: $exifDocument?->pressureHPa(),
+            waterDepthM: $exifDocument?->waterDepthMeters(),
+            accelerationMs2: $exifDocument?->accelerationMs2(),
+            cameraElevationAngleDeg: $exifDocument?->cameraElevationAngleDeg(),
+        );
+
+        $file = new ValueFile(
+            $metadata->mimeType,
+            $metadata->fileSize,
+            $metadata->extension,
+            $metadata->digestSha1,
+            $metadata->digestMd5,
+        );
+
+        $container = new Container(
+            format: $quickTimeLookup->string(QuickTimeMeta::MAJOR_BRAND_KEY),
+            encoder: $quickTimeLookup->string('com.apple.quicktime.encoder',
+                'Encoder',
+            ),
+            bitrate: $quickTimeLookup->int('AvgBitrate', 'Bitrate'),
+            videoCodec: $quickTimeLookup->string(QuickTimeMeta::COMPRESSOR_NAME_KEY,
+                QuickTimeMeta::VIDEO_CODEC_KEY,
+                QuickTimeMeta::HANDLER_DESCRIPTION_KEY,
+            ),
+            audioCodec: $quickTimeLookup->string(QuickTimeMeta::AUDIO_FORMAT_KEY,
+                QuickTimeMeta::AUDIO_CODEC_KEY,
+            ),
+        );
+
+        $video = new Video(
+            durationSec: $quickTimeLookup->float('com.apple.quicktime.duration'),
+            frameRate: $quickTimeLookup->float('com.apple.quicktime.videoFrameRate'),
+            width: $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY),
+            height: $quickTimeLookup->int(QuickTimeMeta::VIDEO_HEIGHT_KEY),
+            codec: $quickTimeLookup->string(QuickTimeMeta::COMPRESSOR_NAME_KEY,
+                QuickTimeMeta::VIDEO_CODEC_KEY,
+            ),
+            hdr: $quickTimeLookup->bool('com.apple.quicktime.hdrFormat') ?? false,
+            transferFunction: $quickTimeLookup->string('com.apple.quicktime.transferFunction'),
+            colorPrimaries: $quickTimeLookup->string('com.apple.quicktime.colorPrimaries'),
+        );
+
+        $audio = new ValueAudio(
+            channels: $quickTimeLookup->int(QuickTimeMeta::AUDIO_CHANNELS_KEY),
+            sampleRate: $quickTimeLookup->int(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY),
+            codec: $quickTimeLookup->string(QuickTimeMeta::AUDIO_FORMAT_KEY,
+                QuickTimeMeta::AUDIO_CODEC_KEY,
+            ),
+            bitDepth: $quickTimeLookup->int(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY),
+        );
+
+        $embeddedAudio = AudioClips::fromJpegAudioStreams($metadata->jpegAudioStreams);
+        $flashPix      = new FlashPix($metadata->flashPixStreams);
+
+        $processing = new ValueProcessingSettings(
+            sharpness: $exifDocument?->sharpness(),
+            contrast: $exifDocument?->contrast(),
+            saturation: $exifDocument?->saturation(),
+            pictureStyle: null,
+            clarity: null,
+            customRendered: $exifDocument?->customRendered()?->value,
+            deviceSettingDescription: $exifDocument?->deviceSettingDescription(),
+        );
+
+        $whiteBalanceDetails = new WhiteBalanceDetails(
+            mode: $exposure->whiteBalance,
+            kelvin: $apple->colorTemperature ?? $quickTimeLookup->int('ColorTemperature'),
+            rgGain: null,
+            bgGain: null,
+        );
+
+        $focus = new Focus(
+            subjectDistanceM: $exifDocument?->subjectDistance(),
+            subjectArea: $exifDocument?->subjectArea(),
+            afMode: null,
+        );
+
+        $flatKeywords         = $xmpDocument?->stringList('http://purl.org/dc/elements/1.1/', 'subject') ?? [];
+        $hierarchicalKeywords = $xmpDocument?->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject') ?? [];
+
+        $keywords = new Keywords(
+            flat: $flatKeywords,
+            hierarchical: $hierarchicalKeywords !== [] ? $hierarchicalKeywords : null,
+        );
+
+        $panoramaFlag = $xmpDocument?->bool('http://ns.google.com/photos/1.0/panorama/', 'UsePanoramaViewer');
+        $related      = new RelatedAssets(
+            livePhotoPairId: $metadata->quickTime?->contentIdentifier(),
+            burstId: $quickTimeLookup->string('BurstUUID'),
+            isPrimaryInBurst: $quickTimeLookup->bool('BurstSelected') ?? false,
+            panoramaId: $panoramaFlag === true ? 'panorama' : null,
+            depthDataId: $quickTimeLookup->string('DepthData'),
+            relatedSoundFile: $exifDocument?->relatedSoundFile(),
+        );
+
+        $depthMapNamespace = 'http://ns.google.com/photos/1.0/depthmap/';
+        $depthMap          = new DepthMap(
+            data: $xmpDocument?->string($depthMapNamespace, 'Data'),
+            mime: $xmpDocument?->string($depthMapNamespace, 'Mime'),
+            near: $xmpDocument?->float($depthMapNamespace, 'Near'),
+            far: $xmpDocument?->float($depthMapNamespace, 'Far'),
+        );
+
+        return [
+            'audio'           => $audio,
+            'author'          => $author,
+            'camera'          => $camera,
+            'capture'         => $capture,
+            'colorProfile'    => $colorProfile,
+            'composite'       => $composite,
+            'container'       => $container,
+            'derived'         => $derived,
+            'depthMap'        => $depthMap,
+            'device'          => $device,
+            'embeddedAudio'   => $embeddedAudio,
+            'exposure'        => $exposure,
+            'file'            => $file,
+            'flashPix'        => $flashPix,
+            'focus'           => $focus,
+            'gps'             => $gps,
+            'image'           => $image,
+            'integrity'       => $integrity,
+            'interop'         => $interop,
+            'iptc'            => new ValueIptc($iptcDocument),
+            'keywords'        => $keywords,
+            'lens'            => $lens,
+            'motion'          => $motion,
+            'multiPicture'    => $multiPicture,
+            'processing'      => $processing,
+            'regions'         => $regions,
+            'related'         => $related,
+            'rights'          => $rights,
+            'scene'           => $scene,
+            'sensor'          => $sensor,
+            'standards'       => $standards,
+            'temporal'        => $temporal,
+            'thumbnail'       => $thumbnail,
+            'tiff'            => $tiff,
+            'video'           => $video,
+            'whiteBalance'    => $whiteBalanceDetails,
+            'xmp'             => new ValueXmp($xmpDocument),
+            'makerNotesApple' => $apple,
+        ];
+    }
+
+    /**
+     * Creates TIFF-level metadata from EXIF document and JPEG frame data.
+     *
+     * @param ParsedExif|null $exifDocument Parsed EXIF document.
+     * @param Metadata        $metadata     Source metadata container.
+     */
+    private function createTiffData(?ParsedExif $exifDocument, Metadata $metadata): TiffData
+    {
         $bitsPerSample    = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
         $ycbcrSubSampling = $exifDocument?->ycbcrSubSampling() ?? $metadata->jpegYCbCrSubSampling;
 
@@ -167,7 +345,7 @@ final readonly class ValueFactory
             }
         }
 
-        $tiff = new TiffData(
+        return new TiffData(
             samplesPerPixel: $exifDocument?->samplesPerPixel(),
             bitsPerSample: $bitsPerSample,
             rowsPerStrip: $exifDocument?->rowsPerStrip(),
@@ -194,106 +372,37 @@ final readonly class ValueFactory
             referenceBlackWhite: $referenceBlackWhite,
             copyright: $exifDocument?->copyright(),
         );
+    }
 
-        $composite = new CompositeImageInfo(
-            type: $exifDocument?->compositeImage(),
-            counts: $exifDocument?->sourceImageNumberOfCompositeImage(),
-            sourceExposureTimes: $exifDocument?->sourceExposureTimesOfCompositeImage(),
-        );
-
-        $exifVersion = $exifDocument?->exifVersion();
-        $profile     = $exifDocument?->exifProfile() ?? 'unknown';
-
-        $standards = new ValueStandards(
-            exifVersion: $exifVersion,
-            profile: $profile,
-            flashpixVersion: $exifDocument?->flashpixVersion(),
-        );
-
-        $flashPix = new FlashPix($metadata->flashPixStreams);
-
-        $capture = new Capture(
-            dateTime: $exifDocument?->captureDateTime(),
-            temperatureC: $exifDocument?->temperatureCelsius(),
-            humidityPercent: $exifDocument?->humidityPercent(),
-            pressureHPa: $exifDocument?->pressureHPa(),
-            waterDepthM: $exifDocument?->waterDepthMeters(),
-            accelerationMs2: $exifDocument?->accelerationMs2(),
-            cameraElevationAngleDeg: $exifDocument?->cameraElevationAngleDeg(),
-        );
-
-        $apple = $appleMakerNotes ?? AppleMakerNotes::empty();
-        $xmp   = new ValueXmp($xmpDocument);
-        $iptc  = new ValueIptc($iptcDocument);
-
-        $file = new ValueFile(
-            $metadata->mimeType,
-            $metadata->fileSize,
-            $metadata->extension,
-            $metadata->digestSha1,
-            $metadata->digestMd5,
-        );
-
-        $container = new Container(
-            format: $quickTimeLookup->string(QuickTimeMeta::MAJOR_BRAND_KEY),
-            encoder: $quickTimeLookup->string('com.apple.quicktime.encoder',
-                'Encoder',
-            ),
-            bitrate: $quickTimeLookup->int('AvgBitrate', 'Bitrate'),
-            videoCodec: $quickTimeLookup->string(QuickTimeMeta::COMPRESSOR_NAME_KEY,
-                QuickTimeMeta::VIDEO_CODEC_KEY,
-                QuickTimeMeta::HANDLER_DESCRIPTION_KEY,
-            ),
-            audioCodec: $quickTimeLookup->string(QuickTimeMeta::AUDIO_FORMAT_KEY,
-                QuickTimeMeta::AUDIO_CODEC_KEY,
-            ),
-        );
-
-        $thumbnailCompression  = $exifDocument?->thumbnailCompression();
-        $thumbnailStripOffsets = $exifDocument?->thumbnailStripOffsets();
-        $thumbnailStripCounts  = $exifDocument?->thumbnailStripByteCounts();
-        $thumbnailTileOffsets  = $exifDocument?->thumbnailTileOffsets();
-        $thumbnailTileCounts   = $exifDocument?->thumbnailTileByteCounts();
-        $thumbnailTileWidth    = $exifDocument?->thumbnailTileWidth();
-        $thumbnailTileLength   = $exifDocument?->thumbnailTileLength();
-
-        $thumbnail = new Thumbnail(
+    /**
+     * Creates thumbnail metadata from EXIF IFD1 entries.
+     *
+     * @param ParsedExif|null $exifDocument Parsed EXIF document.
+     */
+    private function createThumbnail(?ParsedExif $exifDocument): Thumbnail
+    {
+        return new Thumbnail(
             hasThumbnail: $exifDocument?->hasThumbnail() ?? false,
             thumbnailOffset: $exifDocument?->thumbnailJpegInterchangeFormat(),
             thumbnailLength: $exifDocument?->thumbnailJpegInterchangeFormatLength(),
-            thumbnailCompression: $thumbnailCompression,
-            thumbnailTileWidth: $thumbnailTileWidth,
-            thumbnailTileLength: $thumbnailTileLength,
-            thumbnailTileOffsets: $thumbnailTileOffsets,
-            thumbnailTileByteCounts: $thumbnailTileCounts,
-            thumbnailStripOffsets: $thumbnailStripOffsets,
-            thumbnailStripByteCounts: $thumbnailStripCounts,
+            thumbnailCompression: $exifDocument?->thumbnailCompression(),
+            thumbnailTileWidth: $exifDocument?->thumbnailTileWidth(),
+            thumbnailTileLength: $exifDocument?->thumbnailTileLength(),
+            thumbnailTileOffsets: $exifDocument?->thumbnailTileOffsets(),
+            thumbnailTileByteCounts: $exifDocument?->thumbnailTileByteCounts(),
+            thumbnailStripOffsets: $exifDocument?->thumbnailStripOffsets(),
+            thumbnailStripByteCounts: $exifDocument?->thumbnailStripByteCounts(),
         );
+    }
 
-        $video = new Video(
-            durationSec: $quickTimeLookup->float('com.apple.quicktime.duration'),
-            frameRate: $quickTimeLookup->float('com.apple.quicktime.videoFrameRate'),
-            width: $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY),
-            height: $quickTimeLookup->int(QuickTimeMeta::VIDEO_HEIGHT_KEY),
-            codec: $quickTimeLookup->string(QuickTimeMeta::COMPRESSOR_NAME_KEY,
-                QuickTimeMeta::VIDEO_CODEC_KEY,
-            ),
-            hdr: $quickTimeLookup->bool('com.apple.quicktime.hdrFormat') ?? false,
-            transferFunction: $quickTimeLookup->string('com.apple.quicktime.transferFunction'),
-            colorPrimaries: $quickTimeLookup->string('com.apple.quicktime.colorPrimaries'),
-        );
-
-        $audio = new ValueAudio(
-            channels: $quickTimeLookup->int(QuickTimeMeta::AUDIO_CHANNELS_KEY),
-            sampleRate: $quickTimeLookup->int(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY),
-            codec: $quickTimeLookup->string(QuickTimeMeta::AUDIO_FORMAT_KEY,
-                QuickTimeMeta::AUDIO_CODEC_KEY,
-            ),
-            bitDepth: $quickTimeLookup->int(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY),
-        );
-
-        $embeddedAudio = AudioClips::fromJpegAudioStreams($metadata->jpegAudioStreams);
-
+    /**
+     * Creates color profile metadata from ICC data and EXIF gamma.
+     *
+     * @param Metadata        $metadata     Source metadata container.
+     * @param ParsedExif|null $exifDocument Parsed EXIF document.
+     */
+    private function createColorProfile(Metadata $metadata, ?ParsedExif $exifDocument): ValueColorProfile
+    {
         $iccData = null;
         if ($metadata->iccProfile !== null || $metadata->iccSegments !== []) {
             try {
@@ -305,7 +414,7 @@ final readonly class ValueFactory
             }
         }
 
-        $colorProfile = new ValueColorProfile(
+        return new ValueColorProfile(
             profileName: $iccData['description'] ?? null,
             profileVersion: $iccData['version'] ?? null,
             pcs: $iccData['pcs'] ?? null,
@@ -313,56 +422,20 @@ final readonly class ValueFactory
             gamma: $exifDocument?->gamma(),
             profileId: $iccData['profileId'] ?? null,
         );
+    }
 
-        $processing = new ValueProcessingSettings(
-            sharpness: $exifDocument?->sharpness(),
-            contrast: $exifDocument?->contrast(),
-            saturation: $exifDocument?->saturation(),
-            pictureStyle: null,
-            clarity: null,
-            customRendered: $exifDocument?->customRendered()?->value,
-            deviceSettingDescription: $exifDocument?->deviceSettingDescription(),
-        );
-
-        $whiteBalanceKelvin = $apple->colorTemperature;
-        if ($whiteBalanceKelvin === null) {
-            $whiteBalanceKelvin = $quickTimeLookup->int('ColorTemperature');
-        }
-
-        $whiteBalanceDetails = new WhiteBalanceDetails(
-            mode: $exposure->whiteBalance,
-            kelvin: $whiteBalanceKelvin,
-            rgGain: null,
-            bgGain: null,
-        );
-
-        $subjectArea = $exifDocument?->subjectArea();
-
-        $focus = new Focus(
-            subjectDistanceM: $exifDocument?->subjectDistance(),
-            subjectArea: $subjectArea,
-            afMode: null,
-        );
-
-        $flatKeywords         = $xmpDocument?->stringList('http://purl.org/dc/elements/1.1/', 'subject') ?? [];
-        $hierarchicalKeywords = $xmpDocument?->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject') ?? [];
-
-        $keywords = new Keywords(
-            flat: $flatKeywords,
-            hierarchical: $hierarchicalKeywords !== [] ? $hierarchicalKeywords : null,
-        );
-
-        $rights = new Rights(
-            copyright: $exifDocument?->copyright(),
-            usageTerms: $xmpDocument?->string('http://ns.adobe.com/xap/1.0/rights/', 'UsageTerms'),
-            licenseUrl: $xmpDocument?->string('http://ns.adobe.com/xap/1.0/rights/', 'WebStatement'),
-            creditLine: $xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'Credit'),
-        );
-
+    /**
+     * Creates author and creator contact metadata from EXIF and XMP sources.
+     *
+     * @param ParsedExif|null  $exifDocument Parsed EXIF document.
+     * @param XmpDocument|null $xmpDocument  Parsed XMP document.
+     */
+    private function createAuthor(?ParsedExif $exifDocument, ?XmpDocument $xmpDocument): Author
+    {
         $iptcNamespace      = 'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/';
         $creatorContactInfo = $xmpDocument?->structured($iptcNamespace, 'CreatorContactInfo');
 
-        $author = new Author(
+        return new Author(
             artist: $exifDocument?->artist(),
             ownerName: $exifDocument?->ownerName(),
             creator: $this->firstListValue($xmpDocument?->stringList('http://purl.org/dc/elements/1.1/', 'creator') ?? []),
@@ -377,13 +450,38 @@ final readonly class ValueFactory
             photographer: $exifDocument?->photographer(),
             imageEditor: $exifDocument?->imageEditor(),
         );
+    }
 
+    /**
+     * Creates copyright and usage rights metadata from EXIF and XMP sources.
+     *
+     * @param ParsedExif|null  $exifDocument Parsed EXIF document.
+     * @param XmpDocument|null $xmpDocument  Parsed XMP document.
+     */
+    private function createRights(?ParsedExif $exifDocument, ?XmpDocument $xmpDocument): Rights
+    {
+        return new Rights(
+            copyright: $exifDocument?->copyright(),
+            usageTerms: $xmpDocument?->string('http://ns.adobe.com/xap/1.0/rights/', 'UsageTerms'),
+            licenseUrl: $xmpDocument?->string('http://ns.adobe.com/xap/1.0/rights/', 'WebStatement'),
+            creditLine: $xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'Credit'),
+        );
+    }
+
+    /**
+     * Creates derived photography values from lens and exposure data.
+     *
+     * @param Lens     $lens     Lens metadata.
+     * @param Exposure $exposure Exposure metadata.
+     */
+    private function createDerived(Lens $lens, Exposure $exposure): Derived
+    {
         $cropFactor          = $this->converters->calcCropFactor($lens->focalLengthIn35mm, $lens->focalLengthMm);
         $circleOfConfusionMm = $cropFactor !== null
             ? $this->converters->calcCircleOfConfusionMm($cropFactor)
             : null;
 
-        $derived = new Derived(
+        return new Derived(
             ev100: $this->converters->calcEv100(
                 $exposure->exposureTimeSec,
                 $exposure->fNumber,
@@ -401,74 +499,23 @@ final readonly class ValueFactory
             equivalent35mm: $lens->focalLengthIn35mm,
             cropFactor: $cropFactor,
         );
+    }
 
-        $panoramaFlag = $xmpDocument?->bool('http://ns.google.com/photos/1.0/panorama/', 'UsePanoramaViewer');
-        $related      = new RelatedAssets(
-            livePhotoPairId: $metadata->quickTime?->contentIdentifier(),
-            burstId: $quickTimeLookup->string('BurstUUID'),
-            isPrimaryInBurst: $quickTimeLookup->bool('BurstSelected') ?? false,
-            panoramaId: $panoramaFlag === true ? 'panorama' : null,
-            depthDataId: $quickTimeLookup->string('DepthData'),
-            relatedSoundFile: $exifDocument?->relatedSoundFile(),
-        );
-
-        $depthMapNamespace = 'http://ns.google.com/photos/1.0/depthmap/';
-        $depthMap          = new DepthMap(
-            data: $xmpDocument?->string($depthMapNamespace, 'Data'),
-            mime: $xmpDocument?->string($depthMapNamespace, 'Mime'),
-            near: $xmpDocument?->float($depthMapNamespace, 'Near'),
-            far: $xmpDocument?->float($depthMapNamespace, 'Far'),
-        );
-
+    /**
+     * Creates file integrity metadata from XMP edit-history indicators.
+     *
+     * @param XmpDocument|null $xmpDocument Parsed XMP document.
+     */
+    private function createIntegrity(?XmpDocument $xmpDocument): Integrity
+    {
         $hasHistory = $xmpDocument?->has('http://ns.adobe.com/xap/1.0/mm/', 'History') ?? false;
 
-        $integrity = new Integrity(
+        return new Integrity(
             originalFileName: $xmpDocument?->string('http://ns.adobe.com/tiff/1.0/', 'OriginalFileName'),
             originalDigest: null,
             edited: $hasHistory ? true : null,
             historyLastSoftware: null,
         );
-
-        return [
-            'audio'           => $audio,
-            'author'          => $author,
-            'camera'          => $camera,
-            'capture'         => $capture,
-            'colorProfile'    => $colorProfile,
-            'composite'       => $composite,
-            'container'       => $container,
-            'derived'         => $derived,
-            'depthMap'        => $depthMap,
-            'device'          => $device,
-            'embeddedAudio'   => $embeddedAudio,
-            'exposure'        => $exposure,
-            'file'            => $file,
-            'flashPix'        => $flashPix,
-            'focus'           => $focus,
-            'gps'             => $gps,
-            'image'           => $image,
-            'integrity'       => $integrity,
-            'interop'         => $interop,
-            'iptc'            => $iptc,
-            'keywords'        => $keywords,
-            'lens'            => $lens,
-            'motion'          => $motion,
-            'multiPicture'    => $multiPicture,
-            'processing'      => $processing,
-            'regions'         => $regions,
-            'related'         => $related,
-            'rights'          => $rights,
-            'scene'           => $scene,
-            'sensor'          => $sensor,
-            'standards'       => $standards,
-            'temporal'        => $temporal,
-            'thumbnail'       => $thumbnail,
-            'tiff'            => $tiff,
-            'video'           => $video,
-            'whiteBalance'    => $whiteBalanceDetails,
-            'xmp'             => $xmp,
-            'makerNotesApple' => $apple,
-        ];
     }
 
     /**
@@ -526,12 +573,4 @@ final readonly class ValueFactory
 
         return $creatorContact?->string($namespace, $localName);
     }
-
-    /**
-     * Normalises EXIF fractional second strings.
-     *
-     * @param string|null $value Raw fractional second string as stored in EXIF tags.
-     *
-     * @return string|null Cleaned fractional second string or null when empty.
-     */
 }
