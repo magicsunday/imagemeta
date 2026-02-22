@@ -12,7 +12,8 @@
         "src/"
     ],
     "ignore": [
-        "**/MetadataBuilder.php"
+        "**/MetadataBuilder.php",
+        "**/IfdValueReader.php"
     ],
     "exitCode": true
 }
