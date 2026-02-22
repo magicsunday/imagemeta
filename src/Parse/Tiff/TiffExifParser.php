@@ -30,6 +30,7 @@ use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Parse\ParserLimits;
 use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 
 use function array_any;
@@ -61,11 +62,6 @@ use function substr;
  */
 final class TiffExifParser implements TiffExifParserInterface
 {
-    /**
-     * Maximum number of IFD entries to prevent DoS via pathologically large payloads.
-     */
-    private const int MAX_IFD_ENTRIES = 10_000;
-
     /**
      * Tag identifiers that store counted image data such as strips or tiles.
      *
@@ -1754,9 +1750,9 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         // Enforce maximum IFD entry count to prevent DoS
-        if ($entryCount > self::MAX_IFD_ENTRIES) {
+        if ($entryCount > ParserLimits::MAX_IFD_ENTRIES) {
             throw new ParseError(
-                sprintf('IFD entry count %d exceeds maximum allowed %d', $entryCount, self::MAX_IFD_ENTRIES),
+                sprintf('IFD entry count %d exceeds maximum allowed %d', $entryCount, ParserLimits::MAX_IFD_ENTRIES),
                 1360,
             );
         }

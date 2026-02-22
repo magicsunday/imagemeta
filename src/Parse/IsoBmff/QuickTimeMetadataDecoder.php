@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Parse\ParserLimits;
 
 use function array_key_exists;
 use function count;
@@ -155,12 +156,9 @@ final readonly class QuickTimeMetadataDecoder
     public const string QUICKTIME_MDTA = 'mdta';
 
     /**
-     * Maximum number of keys in a keys box to prevent DoS attacks.
-     */
-    private const int MAX_KEYS_ENTRIES = 1000;
-
-    /**
      * Maximum number of entries in a ctry/lang locale list atom.
+     *
+     * Protocol-defined ceiling (fits in a single byte).
      */
     private const int MAX_LOCALE_LIST_ENTRIES = 255;
 
@@ -363,7 +361,7 @@ final readonly class QuickTimeMetadataDecoder
 
         $entryCount = $win->readU32BE();
 
-        if ($entryCount > self::MAX_KEYS_ENTRIES) {
+        if ($entryCount > ParserLimits::MAX_KEYS_ENTRIES) {
             throw new ParseError('keys entry count exceeds maximum allowed', 1223);
         }
 

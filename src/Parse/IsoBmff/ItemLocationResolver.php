@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
+use MagicSunday\ImageMeta\Parse\ParserLimits;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
 use function array_filter;
@@ -54,36 +55,6 @@ use function unpack;
  */
 final readonly class ItemLocationResolver
 {
-    /**
-     * Maximum number of items allowed in an iloc box to prevent DoS attacks.
-     */
-    private const int MAX_ILOC_ITEMS = 10000;
-
-    /**
-     * Maximum number of extents per item in an iloc box to prevent DoS attacks.
-     */
-    private const int MAX_ILOC_EXTENTS = 10000;
-
-    /**
-     * Maximum number of entries in an iinf box to prevent DoS attacks.
-     */
-    private const int MAX_IINF_ENTRIES = 10000;
-
-    /**
-     * Maximum number of item references allowed per iref entry.
-     */
-    private const int MAX_IREF_REFERENCES = 10000;
-
-    /**
-     * Maximum number of reference entry boxes allowed in an iref box.
-     */
-    private const int MAX_IREF_ENTRIES = 10000;
-
-    /**
-     * Maximum number of data references allowed per dref entry.
-     */
-    private const int MAX_DREF_ENTRIES = 1000;
-
     /**
      * Initialises the resolver with the source stream that contains the ISO BMFF structure.
      *
@@ -419,7 +390,7 @@ final readonly class ItemLocationResolver
 
         $entryCount = $version === 0 ? $win->readU16BE() : $win->readU32BE();
 
-        if ($entryCount > self::MAX_IINF_ENTRIES) {
+        if ($entryCount > ParserLimits::MAX_IINF_ENTRIES) {
             throw new ParseError('iinf entry count exceeds maximum allowed', 1196);
         }
 
@@ -506,7 +477,7 @@ final readonly class ItemLocationResolver
 
         $itemCount = $version < 2 ? $win->readU16BE() : $win->readU32BE();
 
-        if ($itemCount > self::MAX_ILOC_ITEMS) {
+        if ($itemCount > ParserLimits::MAX_ILOC_ITEMS) {
             throw new ParseError('iloc item count exceeds maximum allowed', 1205);
         }
 
@@ -538,7 +509,7 @@ final readonly class ItemLocationResolver
             $extentCount        = $win->readU16BE();
 
             // Enforce maximum extent_count per item
-            if ($extentCount > self::MAX_ILOC_EXTENTS) {
+            if ($extentCount > ParserLimits::MAX_ILOC_EXTENTS) {
                 throw new ParseError('iloc extent count exceeds maximum allowed', 1411);
             }
 
@@ -660,7 +631,7 @@ final readonly class ItemLocationResolver
             ++$entryCount;
 
             // Enforce maximum number of reference entry boxes
-            if ($entryCount > self::MAX_IREF_ENTRIES) {
+            if ($entryCount > ParserLimits::MAX_IREF_ENTRIES) {
                 throw new ParseError('iref entry count exceeds maximum allowed', 1412);
             }
 
@@ -708,7 +679,7 @@ final readonly class ItemLocationResolver
             throw new ParseError('dref must contain at least one data reference entry', 1365);
         }
 
-        if ($entryCount > self::MAX_DREF_ENTRIES) {
+        if ($entryCount > ParserLimits::MAX_DREF_ENTRIES) {
             throw new ParseError('dref entry count exceeds maximum allowed', 1174);
         }
 
@@ -970,7 +941,7 @@ final readonly class ItemLocationResolver
         $fromItemId     = $idSize === 2 ? $win->readU16BE() : $win->readU32BE();
         $referenceCount = $win->readU16BE();
 
-        if ($referenceCount > self::MAX_IREF_REFERENCES) {
+        if ($referenceCount > ParserLimits::MAX_IREF_REFERENCES) {
             throw new ParseError('iref reference count exceeds maximum allowed', 1218);
         }
 

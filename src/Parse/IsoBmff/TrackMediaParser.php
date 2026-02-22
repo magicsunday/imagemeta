@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Parse\ParserLimits;
 
 use function array_key_exists;
 use function bin2hex;
@@ -93,11 +94,6 @@ final readonly class TrackMediaParser
      * @var list<int>
      */
     private const array QUICKTIME_VIDEO_NO_COLOR_TABLE_DEPTHS = [16, 24, 32];
-
-    /**
-     * Maximum number of sample entries in an stsd box to prevent DoS attacks.
-     */
-    private const int MAX_STSD_ENTRIES = 100;
 
     /**
      * @param Stream  $stream         Stream to read box data from.
@@ -815,7 +811,7 @@ final readonly class TrackMediaParser
             throw new ParseError('stsd entry count must be at least 1', 1466);
         }
 
-        if ($entryCount > self::MAX_STSD_ENTRIES) {
+        if ($entryCount > ParserLimits::MAX_STSD_ENTRIES) {
             throw new ParseError('stsd entry count exceeds maximum allowed', 1156);
         }
 
