@@ -13,13 +13,6 @@ namespace MagicSunday\ImageMeta\Exif\Model;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Core\Endian;
-use MagicSunday\ImageMeta\Exif\Adapter\CameraMetadataAdapter;
-use MagicSunday\ImageMeta\Exif\Adapter\DeviceMetadataAdapter;
-use MagicSunday\ImageMeta\Exif\Adapter\ExposureMetadataAdapter;
-use MagicSunday\ImageMeta\Exif\Adapter\GpsMetadataAdapter;
-use MagicSunday\ImageMeta\Exif\Adapter\ImageMetadataAdapter;
-use MagicSunday\ImageMeta\Exif\Adapter\LensMetadataAdapter;
-use MagicSunday\ImageMeta\Exif\Adapter\TemporalMetadataAdapter;
 use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
 use MagicSunday\ImageMeta\Exif\Reader\DeviceExifReader;
@@ -81,20 +74,6 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
     private readonly string $exifProfile;
 
     private readonly Endian $byteOrder;
-
-    private ?CameraMetadataAdapter $cachedCameraAdapter = null;
-
-    private ?LensMetadataAdapter $cachedLensAdapter = null;
-
-    private ?ExposureMetadataAdapter $cachedExposureAdapter = null;
-
-    private ?DeviceMetadataAdapter $cachedDeviceAdapter = null;
-
-    private ?ImageMetadataAdapter $cachedImageAdapter = null;
-
-    private ?TemporalMetadataAdapter $cachedTemporalAdapter = null;
-
-    private ?GpsMetadataAdapter $cachedGpsAdapter = null;
 
     private ?IfdValueReader $cachedReader = null;
 
@@ -179,43 +158,6 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
     public function interoperabilityIfdPointer(): ?int
     {
         return $this->reader()->int($this->exifIfd, ExifTag::INTEROPERABILITY_IFD_POINTER);
-    }
-
-    // ── Adapter factories ───────────────────────────────────────
-
-    public function cameraMetadata(): CameraMetadataAdapter
-    {
-        return $this->cachedCameraAdapter ??= new CameraMetadataAdapter($this);
-    }
-
-    public function lensMetadata(): LensMetadataAdapter
-    {
-        return $this->cachedLensAdapter ??= new LensMetadataAdapter($this);
-    }
-
-    public function exposureMetadata(): ExposureMetadataAdapter
-    {
-        return $this->cachedExposureAdapter ??= new ExposureMetadataAdapter($this);
-    }
-
-    public function deviceMetadata(): DeviceMetadataAdapter
-    {
-        return $this->cachedDeviceAdapter ??= new DeviceMetadataAdapter($this);
-    }
-
-    public function imageMetadata(): ImageMetadataAdapter
-    {
-        return $this->cachedImageAdapter ??= new ImageMetadataAdapter($this);
-    }
-
-    public function temporalMetadata(): TemporalMetadataAdapter
-    {
-        return $this->cachedTemporalAdapter ??= new TemporalMetadataAdapter($this);
-    }
-
-    public function gpsMetadata(): GpsMetadataAdapter
-    {
-        return $this->cachedGpsAdapter ??= new GpsMetadataAdapter($this);
     }
 
     // ── Image domain ────────────────────────────────────────────
