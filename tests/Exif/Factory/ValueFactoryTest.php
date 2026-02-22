@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Parse\Icc\IccParserInterface;
+use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\DepthMap;
@@ -46,6 +47,7 @@ use function strlen;
 #[UsesClass(Image::class)]
 #[UsesClass(Iptc::class)]
 #[UsesClass(IptcDocument::class)]
+#[UsesClass(IptcParser::class)]
 #[UsesClass(StructuredMetadata::class)]
 #[UsesClass(DepthMap::class)]
 final class ValueFactoryTest extends TestCase
@@ -163,6 +165,7 @@ XML;
             exifBlobs: [],
             quickTime: null,
             iptcBlobs: [$payload],
+            iptcParser: new IptcParser(),
         );
 
         $structured = StructuredMetadataBuilder::createDefault()->assemble($metadata);

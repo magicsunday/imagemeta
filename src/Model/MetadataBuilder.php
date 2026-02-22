@@ -21,6 +21,10 @@ use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
+use MagicSunday\ImageMeta\Parse\Iptc\IptcParserInterface;
+use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
+use MagicSunday\ImageMeta\Parse\Xmp\XmpParserInterface;
 
 /**
  * Fluent builder for assembling {@see Metadata} aggregates from domain-specific groups.
@@ -89,6 +93,24 @@ final class MetadataBuilder
     private ?string $digestSha1 = null;
 
     private ?string $digestMd5 = null;
+
+    private ?XmpParserInterface $xmpParser = null;
+
+    private ?IptcParserInterface $iptcParser = null;
+
+    /**
+     * Configures parser instances for selective document creation.
+     *
+     * @param XmpParserInterface  $xmpParser  XMP parser used by {@see Metadata::selectiveXmpDocument()}.
+     * @param IptcParserInterface $iptcParser IPTC parser used by {@see Metadata::selectiveIptcDocument()}.
+     */
+    public function withParsers(XmpParserInterface $xmpParser, IptcParserInterface $iptcParser): self
+    {
+        $this->xmpParser  = $xmpParser;
+        $this->iptcParser = $iptcParser;
+
+        return $this;
+    }
 
     /**
      * Configures EXIF data sources.
@@ -270,6 +292,8 @@ final class MetadataBuilder
             isoBmffUnresolvedItems: $this->isoBmffUnresolvedItems,
             iptcBlobs: $this->iptcBlobs,
             iptcDoc: $this->iptcDoc,
+            xmpParser: $this->xmpParser ?? new XmpParser(),
+            iptcParser: $this->iptcParser ?? new IptcParser(),
         );
     }
 }

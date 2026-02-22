@@ -22,8 +22,8 @@ use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
-use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
-use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
+use MagicSunday\ImageMeta\Parse\Iptc\IptcParserInterface;
+use MagicSunday\ImageMeta\Parse\Xmp\XmpParserInterface;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
 
 /**
@@ -63,6 +63,8 @@ final readonly class Metadata
      * @param list<IsoBmffUnresolvedItem>                          $isoBmffUnresolvedItems   ISO BMFF item payloads that could not be resolved.
      * @param list<string>                                         $iptcBlobs                IPTC payloads captured from JPEG APP13 segments.
      * @param IptcDocument|null                                    $iptcDoc                  Parsed IPTC IIM datasets from APP13 payloads.
+     * @param XmpParserInterface|null                              $xmpParser                Injected XMP parser for selective document creation.
+     * @param IptcParserInterface|null                             $iptcParser               Injected IPTC parser for selective document creation.
      */
     public function __construct(
         public array $exifBlobs,
@@ -91,6 +93,8 @@ final readonly class Metadata
         public array $isoBmffUnresolvedItems = [],
         public array $iptcBlobs = [],
         public ?IptcDocument $iptcDoc = null,
+        private ?XmpParserInterface $xmpParser = null,
+        private ?IptcParserInterface $iptcParser = null,
     ) {
         $this->structuredCache = StructuredMetadataCache::createDefault();
     }
@@ -109,15 +113,14 @@ final readonly class Metadata
             return $this->xmpDoc;
         }
 
-        if ($this->xmpBlobs === []) {
+        if ($this->xmpBlobs === [] || !$this->xmpParser instanceof XmpParserInterface) {
             return null;
         }
 
-        $parser    = new XmpParser();
         $documents = [];
 
         foreach ($this->xmpBlobs as $blob) {
-            $documents[] = $parser->parse($blob);
+            $documents[] = $this->xmpParser->parse($blob);
         }
 
         return XmpDocument::merge(...$documents);
@@ -132,15 +135,14 @@ final readonly class Metadata
             return $this->iptcDoc;
         }
 
-        if ($this->iptcBlobs === []) {
+        if ($this->iptcBlobs === [] || !$this->iptcParser instanceof IptcParserInterface) {
             return null;
         }
 
-        $parser    = new IptcParser();
         $documents = [];
 
         foreach ($this->iptcBlobs as $blob) {
-            $documents[] = $parser->parse($blob);
+            $documents[] = $this->iptcParser->parse($blob);
         }
 
         return IptcDocument::merge(...$documents);

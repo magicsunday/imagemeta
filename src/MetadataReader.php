@@ -178,6 +178,7 @@ final readonly class MetadataReader
 
         // Assemble the final metadata aggregate with container context.
         return (new MetadataBuilder())
+            ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif($exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($xmpBlobs, $xmpDoc)
             ->withJpegSegments($iccProfile, $iccSegments, $flashPixStreams, $mpfDocument, $audioStreams)
@@ -226,6 +227,7 @@ final readonly class MetadataReader
         $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
 
         return (new MetadataBuilder())
+            ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif($exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($xmpBlobs, $xmpDoc)
             ->withQuickTime($qt)
@@ -263,6 +265,7 @@ final readonly class MetadataReader
         $makerNotes = $this->appleMerger->merge($makerNotes, null);
 
         return (new MetadataBuilder())
+            ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif([$tiffBlob], $exifDoc, $makerNotes)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
             ->build();

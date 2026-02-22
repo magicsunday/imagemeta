@@ -29,6 +29,7 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\AudioClips;
@@ -88,6 +89,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(IsoBmffItemReference::class)]
 #[UsesClass(IsoBmffItemReferenceMap::class)]
 #[UsesClass(XmpDocument::class)]
+#[UsesClass(IptcParser::class)]
 #[UsesClass(XmpParser::class)]
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(ValueConverters::class)]
@@ -328,7 +330,7 @@ final class MetadataTest extends TestCase
 </x:xmpmeta>
 XML;
 
-        $metadata = new Metadata([], null, null, [$xmp]);
+        $metadata = new Metadata([], null, xmpBlobs: [$xmp], xmpParser: new XmpParser());
 
         $document = $metadata->selectiveXmpDocument();
 
@@ -366,7 +368,7 @@ XML;
 </x:xmpmeta>
 XML;
 
-        $metadata = new Metadata([], null, null, [$exifBlob, $tiffBlob]);
+        $metadata = new Metadata([], null, xmpBlobs: [$exifBlob, $tiffBlob], xmpParser: new XmpParser());
 
         $document = $metadata->selectiveXmpDocument();
 
@@ -417,6 +419,7 @@ XML;
             exifBlobs: [],
             quickTime: null,
             iptcBlobs: [$payload],
+            iptcParser: new IptcParser(),
         );
 
         $document = $metadata->selectiveIptcDocument();
