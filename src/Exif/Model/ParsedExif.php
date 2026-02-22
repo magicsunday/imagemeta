@@ -96,7 +96,7 @@ use function trim;
  * EXIF 3.0 §4 and Annex A summarise the logical grouping of tags mirrored by
  * the accessors provided in this value object.
  */
-final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, ExifGpsData, ExifInteropData
+final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, ExifGpsData, ExifInteropData
 {
     /**
      * EXIF Acceleration is specified in mGal (10^-5 m/s²).
@@ -122,11 +122,25 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
         ExifTag::CAMERA_ELEVATION_ANGLE,
     ];
 
-    private ?string $exifVersion;
+    private readonly ?string $exifVersion;
 
-    private string $exifProfile;
+    private readonly string $exifProfile;
 
-    private Endian $byteOrder;
+    private readonly Endian $byteOrder;
+
+    private ?CameraMetadataAdapter $cachedCameraAdapter = null;
+
+    private ?LensMetadataAdapter $cachedLensAdapter = null;
+
+    private ?ExposureMetadataAdapter $cachedExposureAdapter = null;
+
+    private ?DeviceMetadataAdapter $cachedDeviceAdapter = null;
+
+    private ?ImageMetadataAdapter $cachedImageAdapter = null;
+
+    private ?TemporalMetadataAdapter $cachedTemporalAdapter = null;
+
+    private ?GpsMetadataAdapter $cachedGpsAdapter = null;
 
     private const int RATIONAL_BYTE_LENGTH = 8;
 
@@ -144,16 +158,16 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      * @param ValueConverters       $converters     Value converter facade for EXIF type normalization.
      */
     public function __construct(
-        public Ifd $ifd0,
-        public ?Ifd $exifIfd,
-        public ?Ifd $gpsIfd,
-        public ?Ifd $interopIfd,
-        public ?Ifd $ifd1,
-        public ?MakerNotesRecord $makerNotes = null,
-        public array $subsequentIfds = [],
-        public array $subIfds = [],
+        public readonly Ifd $ifd0,
+        public readonly ?Ifd $exifIfd,
+        public readonly ?Ifd $gpsIfd,
+        public readonly ?Ifd $interopIfd,
+        public readonly ?Ifd $ifd1,
+        public readonly ?MakerNotesRecord $makerNotes = null,
+        public readonly array $subsequentIfds = [],
+        public readonly array $subIfds = [],
         ?Endian $byteOrder = null,
-        private ValueConverters $converters = new ValueConverters(),
+        private readonly ValueConverters $converters = new ValueConverters(),
     ) {
         $rawVersion        = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
         $this->exifVersion = $this->converters->toExifVersion($rawVersion);
@@ -232,7 +246,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function cameraMetadata(): CameraMetadataAdapter
     {
-        return new CameraMetadataAdapter($this);
+        return $this->cachedCameraAdapter ??= new CameraMetadataAdapter($this);
     }
 
     /**
@@ -240,7 +254,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function lensMetadata(): LensMetadataAdapter
     {
-        return new LensMetadataAdapter($this);
+        return $this->cachedLensAdapter ??= new LensMetadataAdapter($this);
     }
 
     /**
@@ -248,7 +262,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function exposureMetadata(): ExposureMetadataAdapter
     {
-        return new ExposureMetadataAdapter($this);
+        return $this->cachedExposureAdapter ??= new ExposureMetadataAdapter($this);
     }
 
     /**
@@ -256,7 +270,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function deviceMetadata(): DeviceMetadataAdapter
     {
-        return new DeviceMetadataAdapter($this);
+        return $this->cachedDeviceAdapter ??= new DeviceMetadataAdapter($this);
     }
 
     /**
@@ -264,7 +278,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function imageMetadata(): ImageMetadataAdapter
     {
-        return new ImageMetadataAdapter($this);
+        return $this->cachedImageAdapter ??= new ImageMetadataAdapter($this);
     }
 
     /**
@@ -272,7 +286,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function temporalMetadata(): TemporalMetadataAdapter
     {
-        return new TemporalMetadataAdapter($this);
+        return $this->cachedTemporalAdapter ??= new TemporalMetadataAdapter($this);
     }
 
     /**
@@ -280,7 +294,7 @@ final readonly class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIf
      */
     public function gpsMetadata(): GpsMetadataAdapter
     {
-        return new GpsMetadataAdapter($this);
+        return $this->cachedGpsAdapter ??= new GpsMetadataAdapter($this);
     }
 
     /**
