@@ -80,7 +80,7 @@
 - **Priorität:** Hoch
 - **Evidenz (Code):**
   - Mehrfach-Interface + breite API: `/home/runner/work/imagemeta/imagemeta/src/Exif/Model/ParsedExif.php:99`
-  - Sehr große Klasse: `/home/runner/work/imagemeta/imagemeta/src/Exif/Model/ParsedExif.php` (5k+ LOC)
+  - Sehr große Klasse: `/home/runner/work/imagemeta/imagemeta/src/Exif/Model/ParsedExif.php` (über 5.000 LOC)
   - Adapter-Caches: `:131-143`
 - **Warum Verstoß:** Eine Klasse vereint sehr viele EXIF-Domänen (IFD0, EXIF, GPS, Interop, Thumbnail, Derived) und liefert zahlreiche Convenience-Zugriffe.
 - **Risiko / Wartbarkeitskosten:** Niedrige Kohäsion, breite Änderungsfläche, hohe Regressionsgefahr.
@@ -119,7 +119,12 @@
 - **Prinzipien:** Convention over Configuration, KISS
 - **Priorität:** Mittel
 - **Evidenz (Code):**
-  - Grenzwerte: `/home/runner/work/imagemeta/imagemeta/src/Parse/IsoBmff/ItemLocationResolver.php:60-85`
+  - `MAX_ILOC_ITEMS`: `/home/runner/work/imagemeta/imagemeta/src/Parse/IsoBmff/ItemLocationResolver.php:60`
+  - `MAX_ILOC_EXTENTS`: `/home/runner/work/imagemeta/imagemeta/src/Parse/IsoBmff/ItemLocationResolver.php:65`
+  - `MAX_IINF_ENTRIES`: `/home/runner/work/imagemeta/imagemeta/src/Parse/IsoBmff/ItemLocationResolver.php:70`
+  - `MAX_IREF_REFERENCES`: `/home/runner/work/imagemeta/imagemeta/src/Parse/IsoBmff/ItemLocationResolver.php:75`
+  - `MAX_IREF_ENTRIES`: `/home/runner/work/imagemeta/imagemeta/src/Parse/IsoBmff/ItemLocationResolver.php:80`
+  - `MAX_DREF_ENTRIES`: `/home/runner/work/imagemeta/imagemeta/src/Parse/IsoBmff/ItemLocationResolver.php:85`
 - **Warum Verstoß:** Mehrere numerische Limits sind lokal hart kodiert; Policy ist nicht zentralisiert und nur teilweise konsistent (`MAX_DREF_ENTRIES=1000`, sonst meist `10000`).
 - **Risiko / Wartbarkeitskosten:** Sicherheits-/Performance-Policies schwer zentral steuerbar; inkonsistente Anpassungen möglich.
 - **Minimaler Lösungsansatz:** Limits in zentralem Policy-Objekt oder Shared-Constants bündeln (inkl. begründeter Defaultwerte).
