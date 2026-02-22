@@ -1,0 +1,113 @@
+name: "Agent Task"
+description: "Ticket-Template mit harten Regeln für Agenten-Umsetzung (Specs, Tests, Minimal-Change, Close-on-green)."
+title: "GH-<number>: <Title starting with capital letter>"
+labels:
+    - agent
+    - needs-implementation
+body:
+    - type: markdown
+      attributes:
+          value: |
+              ## Agent Instructions (Read First)
+              This repo is governed by `AGENTS.md` (and `tests/AGENTS.md` for work under `tests/`).
+              If you would need to guess, expand scope, or relax guards: **STOP** and ask.
+              
+              **Commit workflow:** commit directly to `main`  
+              **Commit message:** `GH-<number>: <Message starting with capital letter>`  
+              **Close rule:** if `ci:test` is fully green → close this issue immediately.
+
+    - type: input
+      id: gh_number
+      attributes:
+          label: "GH number"
+          description: "Issue number used in commit message, e.g. 421"
+          placeholder: "421"
+      validations:
+          required: true
+
+    - type: textarea
+      id: goal
+      attributes:
+          label: "Goal"
+          description: "What should be achieved? State observable behavior, not implementation."
+          placeholder: |
+              Example:
+              - Parse BigTIFF SRATIONAL values correctly (including sign)
+              - Throw BoundsError on truncated IFD entry
+      validations:
+          required: true
+
+    - type: textarea
+      id: scope
+      attributes:
+          label: "Allowed file scope (required)"
+          description: "List the ONLY files/paths the agent may modify. If more are needed, the agent must STOP."
+          placeholder: |
+              Example:
+              - src/Parse/Tiff/TiffValueReader.php
+              - tests/Parse/Tiff/TiffValueReaderTest.php
+      validations:
+          required: true
+
+    - type: textarea
+      id: specs
+      attributes:
+          label: "Specs to consult (docs/)"
+          description: "Point to relevant HTML/PDF specs under docs/. Include chapter/section if known."
+          placeholder: |
+              Example:
+              - docs/EXIF-300.pdf (EXIF 3.0 §4.6.4)
+              - docs/EXIF-232.pdf (EXIF 2.32 §...)
+              - docs/TIFF6.pdf (TIFF 6.0 §...)
+      validations:
+          required: false
+
+    - type: textarea
+      id: acceptance
+      attributes:
+          label: "Acceptance criteria (AC)"
+          description: "Concrete pass/fail criteria."
+          placeholder: |
+              Example:
+              - PHPUnit green
+              - At least 1 positive + 1 negative test (ParseError/BoundsError) where applicable
+              - Spec references added near changed parser code (EXIF <version> §<chapter>)
+              - No full reads; streaming preserved; bounds & max limits enforced
+      validations:
+          required: true
+
+    - type: textarea
+      id: tests_required
+      attributes:
+          label: "Tests (what to add/adjust)"
+          description: "Describe minimal test cases. If tests-only, say so."
+          placeholder: |
+              Example:
+              - Add test: itThrowsBoundsErrorOnTruncatedIfdEntry
+              - Add test: itParsesBigTiffSrationalCorrectly
+              - Use synthetic streams/blobs (no large fixtures)
+      validations:
+          required: false
+
+    - type: textarea
+      id: risks
+      attributes:
+          label: "Risks / notes"
+          description: "Anything security/bounds-sensitive or tricky."
+          placeholder: |
+              Example:
+              - Bounds/offset sensitive: reject malformed input early
+              - Spec ambiguity: propose interpretations and STOP for guidance
+      validations:
+          required: false
+
+    - type: markdown
+      attributes:
+          value: |
+              ## Copilot/Codex Kurzform (copy into agent)
+              - Follow `AGENTS.md` (and `tests/AGENTS.md` under tests/). If guessing/scope expansion/guard relaxation is required: **STOP**.
+              - Read specs under `docs/` before behavior changes; cite inline: `EXIF <version> §<chapter>` (latest + older diffs).
+              - Tests (if applicable): ≥1 positive + ≥1 negative (`ParseError`/`BoundsError`); synthetic blobs/streams; CamelCase test methods.
+              - Minimal change only; keep streaming & bounds limits strict.
+              - Commit to `main`: `GH-<number>: <Message starting with capital letter>`.
+              - When `ci:test` is fully green: close the issue immediately.

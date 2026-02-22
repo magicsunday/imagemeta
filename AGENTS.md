@@ -8,6 +8,14 @@
 ✔ Commit message format is mandatory
 ✔ Tickets are closed automatically after successful CI (see §1.5)
 
+**Issue Authority:**
+Issues created via `.github/ISSUE_TEMPLATE/agent-task.yml`
+contain the **authoritative task instructions** for agents
+(scope, acceptance criteria, specs, completion rules).
+
+If there is a conflict between an issue description and assumptions made by the agent:
+**the issue content wins**.
+
 ---
 
 ## 0. Rule Hierarchy (Conflict Resolution)
