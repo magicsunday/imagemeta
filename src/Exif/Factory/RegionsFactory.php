@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Exif\Factory;
 
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Value\Enum\RegionType;
 use MagicSunday\ImageMeta\Value\Region;
 use MagicSunday\ImageMeta\Value\RegionCollection;
@@ -35,14 +36,6 @@ use function trim;
  */
 final readonly class RegionsFactory
 {
-    private const string NS_MWG_REGIONS = 'http://www.metadataworkinggroup.com/schemas/regions/';
-
-    private const string NS_ST_AREA = 'http://ns.adobe.com/xmp/sType/Area#';
-
-    private const string NS_ST_DIMENSIONS = 'http://ns.adobe.com/xmp/sType/Dimensions#';
-
-    private const string NS_APPLE_FACEINFO = 'http://ns.apple.com/faceinfo/1.0/';
-
     private const float MATCH_THRESHOLD = 0.12;
 
     /**
@@ -105,15 +98,15 @@ final readonly class RegionsFactory
      */
     private function extractMwgRegions(XmpDocument $document, ?array $dimensions): array
     {
-        $types        = $this->stringValues($document, self::NS_MWG_REGIONS, 'Type');
-        $names        = $this->stringValues($document, self::NS_MWG_REGIONS, 'Name');
-        $displayNames = $this->stringValues($document, self::NS_MWG_REGIONS, 'PersonDisplayName');
-        $confidences  = $this->floatValues($document, self::NS_MWG_REGIONS, 'Confidence');
-        $rotations    = $this->floatValues($document, self::NS_MWG_REGIONS, 'Rotation');
-        $centersX     = $this->floatValues($document, self::NS_ST_AREA, 'x');
-        $centersY     = $this->floatValues($document, self::NS_ST_AREA, 'y');
-        $widths       = $this->floatValues($document, self::NS_ST_AREA, 'w');
-        $heights      = $this->floatValues($document, self::NS_ST_AREA, 'h');
+        $types        = $this->stringValues($document, XmpNamespace::MWG_REGIONS->value, 'Type');
+        $names        = $this->stringValues($document, XmpNamespace::MWG_REGIONS->value, 'Name');
+        $displayNames = $this->stringValues($document, XmpNamespace::MWG_REGIONS->value, 'PersonDisplayName');
+        $confidences  = $this->floatValues($document, XmpNamespace::MWG_REGIONS->value, 'Confidence');
+        $rotations    = $this->floatValues($document, XmpNamespace::MWG_REGIONS->value, 'Rotation');
+        $centersX     = $this->floatValues($document, XmpNamespace::ST_AREA->value, 'x');
+        $centersY     = $this->floatValues($document, XmpNamespace::ST_AREA->value, 'y');
+        $widths       = $this->floatValues($document, XmpNamespace::ST_AREA->value, 'w');
+        $heights      = $this->floatValues($document, XmpNamespace::ST_AREA->value, 'h');
         $regionCount  = max(count($centersX), count($centersY), count($widths), count($heights));
         $resolved     = [];
 
@@ -194,26 +187,26 @@ final readonly class RegionsFactory
      */
     private function appleFaceEntries(XmpDocument $document, ?array $dimensions): array
     {
-        $centersX         = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'CenterX');
-        $centersY         = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'CenterY');
-        $widths           = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Width');
-        $heights          = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Height');
-        $confidenceLevels = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'ConfidenceLevel');
-        $confidences      = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Confidence');
-        $angleInfoRolls   = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'AngleInfoRoll');
-        $rolls            = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Roll');
-        $yaws             = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Yaw');
+        $centersX         = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'CenterX');
+        $centersY         = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'CenterY');
+        $widths           = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Width');
+        $heights          = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Height');
+        $confidenceLevels = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'ConfidenceLevel');
+        $confidences      = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Confidence');
+        $angleInfoRolls   = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'AngleInfoRoll');
+        $rolls            = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Roll');
+        $yaws             = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Yaw');
 
         $confidenceScale = $this->confidenceScale($confidenceLevels, $confidences);
 
-        $names = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'Name');
+        $names = $this->stringValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Name');
         if ($names === []) {
-            $names = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'FullName');
+            $names = $this->stringValues($document, XmpNamespace::APPLE_FACEINFO->value, 'FullName');
         }
 
-        $faceIds = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'FaceID');
+        $faceIds = $this->stringValues($document, XmpNamespace::APPLE_FACEINFO->value, 'FaceID');
         if ($faceIds === []) {
-            $faceIds = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'FaceUUID');
+            $faceIds = $this->stringValues($document, XmpNamespace::APPLE_FACEINFO->value, 'FaceUUID');
         }
 
         $count = 0;
@@ -788,8 +781,8 @@ final readonly class RegionsFactory
      */
     private function appliedDimensions(XmpDocument $document): ?array
     {
-        $widths  = $this->floatValues($document, self::NS_ST_DIMENSIONS, 'w');
-        $heights = $this->floatValues($document, self::NS_ST_DIMENSIONS, 'h');
+        $widths  = $this->floatValues($document, XmpNamespace::ST_DIMENSIONS->value, 'w');
+        $heights = $this->floatValues($document, XmpNamespace::ST_DIMENSIONS->value, 'h');
 
         $width  = $widths[0] ?? null;
         $height = $heights[0] ?? null;

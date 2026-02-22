@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Value\Temporal;
 
 use function abs;
@@ -75,11 +76,11 @@ final readonly class TemporalFactory
         $exifCreate = $exifDocument?->dateTimeDigitized();
         $exifModify = $exifDocument?->dateTime();
 
-        $xmpCreate = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'))
-            ?? $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/exif/1.0/', 'CreateDate'));
-        $xmpModify = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'))
-            ?? $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/exif/1.0/', 'ModifyDate'));
-        $xmpDateCreated  = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
+        $xmpCreate = $this->parseFlexibleDate($xmpDocument?->string(XmpNamespace::XAP->value, 'CreateDate'))
+            ?? $this->parseFlexibleDate($xmpDocument?->string(XmpNamespace::EXIF->value, 'CreateDate'));
+        $xmpModify = $this->parseFlexibleDate($xmpDocument?->string(XmpNamespace::XAP->value, 'ModifyDate'))
+            ?? $this->parseFlexibleDate($xmpDocument?->string(XmpNamespace::EXIF->value, 'ModifyDate'));
+        $xmpDateCreated  = $this->parseFlexibleDate($xmpDocument?->string(XmpNamespace::PHOTOSHOP->value, 'DateCreated'));
         $lookup          = new QuickTimeLookup($quickTime);
         $quickTimeCreate = $this->parseFlexibleDate($lookup->string('CreationDate'));
         $quickTimeModify = $this->parseFlexibleDate($lookup->string('ModifyDate'));

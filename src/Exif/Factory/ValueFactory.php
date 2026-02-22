@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccParserInterface;
@@ -249,15 +250,15 @@ final readonly class ValueFactory
             afMode: null,
         );
 
-        $flatKeywords         = $xmpDocument?->stringList('http://purl.org/dc/elements/1.1/', 'subject') ?? [];
-        $hierarchicalKeywords = $xmpDocument?->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject') ?? [];
+        $flatKeywords         = $xmpDocument?->stringList(XmpNamespace::DC->value, 'subject') ?? [];
+        $hierarchicalKeywords = $xmpDocument?->stringList(XmpNamespace::LIGHTROOM->value, 'hierarchicalSubject') ?? [];
 
         $keywords = new Keywords(
             flat: $flatKeywords,
             hierarchical: $hierarchicalKeywords !== [] ? $hierarchicalKeywords : null,
         );
 
-        $panoramaFlag = $xmpDocument?->bool('http://ns.google.com/photos/1.0/panorama/', 'UsePanoramaViewer');
+        $panoramaFlag = $xmpDocument?->bool(XmpNamespace::GOOGLE_PANORAMA->value, 'UsePanoramaViewer');
         $related      = new RelatedAssets(
             livePhotoPairId: $metadata->quickTime?->contentIdentifier(),
             burstId: $quickTimeLookup->string('BurstUUID'),
@@ -267,12 +268,11 @@ final readonly class ValueFactory
             relatedSoundFile: $exifDocument?->relatedSoundFile(),
         );
 
-        $depthMapNamespace = 'http://ns.google.com/photos/1.0/depthmap/';
-        $depthMap          = new DepthMap(
-            data: $xmpDocument?->string($depthMapNamespace, 'Data'),
-            mime: $xmpDocument?->string($depthMapNamespace, 'Mime'),
-            near: $xmpDocument?->float($depthMapNamespace, 'Near'),
-            far: $xmpDocument?->float($depthMapNamespace, 'Far'),
+        $depthMap = new DepthMap(
+            data: $xmpDocument?->string(XmpNamespace::GOOGLE_DEPTH_MAP->value, 'Data'),
+            mime: $xmpDocument?->string(XmpNamespace::GOOGLE_DEPTH_MAP->value, 'Mime'),
+            near: $xmpDocument?->float(XmpNamespace::GOOGLE_DEPTH_MAP->value, 'Near'),
+            far: $xmpDocument?->float(XmpNamespace::GOOGLE_DEPTH_MAP->value, 'Far'),
         );
 
         return [
@@ -432,13 +432,13 @@ final readonly class ValueFactory
      */
     private function createAuthor(?ParsedExif $exifDocument, ?XmpDocument $xmpDocument): Author
     {
-        $iptcNamespace      = 'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/';
+        $iptcNamespace      = XmpNamespace::IPTC_CORE->value;
         $creatorContactInfo = $xmpDocument?->structured($iptcNamespace, 'CreatorContactInfo');
 
         return new Author(
             artist: $exifDocument?->artist(),
             ownerName: $exifDocument?->ownerName(),
-            creator: $this->firstListValue($xmpDocument?->stringList('http://purl.org/dc/elements/1.1/', 'creator') ?? []),
+            creator: $this->firstListValue($xmpDocument?->stringList(XmpNamespace::DC->value, 'creator') ?? []),
             creatorEmail: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiEmailWork'),
             creatorPhone: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiTelWork'),
             creatorAddress: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrExtadr'),
@@ -462,9 +462,9 @@ final readonly class ValueFactory
     {
         return new Rights(
             copyright: $exifDocument?->copyright(),
-            usageTerms: $xmpDocument?->string('http://ns.adobe.com/xap/1.0/rights/', 'UsageTerms'),
-            licenseUrl: $xmpDocument?->string('http://ns.adobe.com/xap/1.0/rights/', 'WebStatement'),
-            creditLine: $xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'Credit'),
+            usageTerms: $xmpDocument?->string(XmpNamespace::XAP_RIGHTS->value, 'UsageTerms'),
+            licenseUrl: $xmpDocument?->string(XmpNamespace::XAP_RIGHTS->value, 'WebStatement'),
+            creditLine: $xmpDocument?->string(XmpNamespace::PHOTOSHOP->value, 'Credit'),
         );
     }
 
@@ -508,10 +508,10 @@ final readonly class ValueFactory
      */
     private function createIntegrity(?XmpDocument $xmpDocument): Integrity
     {
-        $hasHistory = $xmpDocument?->has('http://ns.adobe.com/xap/1.0/mm/', 'History') ?? false;
+        $hasHistory = $xmpDocument?->has(XmpNamespace::XAP_MM->value, 'History') ?? false;
 
         return new Integrity(
-            originalFileName: $xmpDocument?->string('http://ns.adobe.com/tiff/1.0/', 'OriginalFileName'),
+            originalFileName: $xmpDocument?->string(XmpNamespace::TIFF->value, 'OriginalFileName'),
             originalDigest: null,
             edited: $hasHistory ? true : null,
             historyLastSoftware: null,

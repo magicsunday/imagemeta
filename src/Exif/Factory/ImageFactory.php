@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Exif\Factory;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Image;
 
@@ -42,9 +43,9 @@ final readonly class ImageFactory
         $orientation   = $exifDocument?->orientation();
         $bitsPerSample = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
 
-        $xmpTitle       = $xmpDocument?->string('http://purl.org/dc/elements/1.1/', 'title');
-        $xmpHeadline    = $xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'Headline');
-        $xmpDescription = $xmpDocument?->string('http://purl.org/dc/elements/1.1/', 'description');
+        $xmpTitle       = $xmpDocument?->string(XmpNamespace::DC->value, 'title');
+        $xmpHeadline    = $xmpDocument?->string(XmpNamespace::PHOTOSHOP->value, 'Headline');
+        $xmpDescription = $xmpDocument?->string(XmpNamespace::DC->value, 'description');
 
         return new Image(
             width: $width,

@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Convenience;
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Temporal;
@@ -118,7 +119,7 @@ final readonly class CaptureDateResolver
      */
     private function readXmpCreateDate(XmpDocument $document): ?string
     {
-        $value = $document->get('http://ns.adobe.com/xap/1.0/', 'CreateDate');
+        $value = $document->get(XmpNamespace::XAP->value, 'CreateDate');
 
         if (is_array($value)) {
             $value = $value[0] ?? null;

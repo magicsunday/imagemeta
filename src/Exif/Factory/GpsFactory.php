@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Value\Enum as GpsEnum;
 use MagicSunday\ImageMeta\Value\Gps;
 
@@ -43,8 +44,6 @@ use const PREG_SPLIT_NO_EMPTY;
  */
 final readonly class GpsFactory
 {
-    private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
-
     public function __construct(
         private ValueConverters $converters = new ValueConverters(),
     ) {
@@ -184,26 +183,26 @@ final readonly class GpsFactory
         }
 
         // Fill from XMP when EXIF values are absent.
-        $xmpLatRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSLatitudeRef'));
+        $xmpLatRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLatitudeRef'));
         if ($latitudeRef === null) {
             $latitudeRef = $xmpLatRef;
         }
 
         if ($latitude === null) {
             $latitude = $this->parseCoordinate(
-                $xmpDocument?->string(self::NS_EXIF, 'GPSLatitude'),
+                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLatitude'),
                 $xmpLatRef ?? $latitudeRef,
             );
         }
 
-        $xmpLonRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSLongitudeRef'));
+        $xmpLonRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLongitudeRef'));
         if ($longitudeRef === null) {
             $longitudeRef = $xmpLonRef;
         }
 
         if ($longitude === null) {
             $longitude = $this->parseCoordinate(
-                $xmpDocument?->string(self::NS_EXIF, 'GPSLongitude'),
+                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLongitude'),
                 $xmpLonRef ?? $longitudeRef,
             );
         }
@@ -217,9 +216,9 @@ final readonly class GpsFactory
         }
 
         if ($altitude === null && $xmpDocument instanceof XmpDocument) {
-            $altitudeXmp = $xmpDocument->float(self::NS_EXIF, 'GPSAltitude');
+            $altitudeXmp = $xmpDocument->float(XmpNamespace::EXIF->value, 'GPSAltitude');
             if ($altitudeXmp !== null) {
-                $altRefXmp = $this->intValue($xmpDocument->int(self::NS_EXIF, 'GPSAltitudeRef'));
+                $altRefXmp = $this->intValue($xmpDocument->int(XmpNamespace::EXIF->value, 'GPSAltitudeRef'));
                 $altRef    = $altitudeRef ?? $altRefXmp;
 
                 if ($altRef === 1 || $altRef === 3) {
@@ -233,38 +232,38 @@ final readonly class GpsFactory
         }
 
         if ($status === null) {
-            $status = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSStatus'));
+            $status = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSStatus'));
         }
 
         if ($measureMode === null) {
-            $measureMode = $this->stringValue($xmpDocument?->string(self::NS_EXIF, 'GPSMeasureMode'));
+            $measureMode = $this->stringValue($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSMeasureMode'));
         }
 
         if ($dop === null) {
-            $dop = $this->floatValue($xmpDocument?->float(self::NS_EXIF, 'GPSDOP'));
+            $dop = $this->floatValue($xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSDOP'));
         }
 
         if ($trackRef === null) {
-            $trackRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSTrackRef'));
+            $trackRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSTrackRef'));
         }
 
         if ($track === null) {
-            $track = $this->floatValue($xmpDocument?->float(self::NS_EXIF, 'GPSTrack'));
+            $track = $this->floatValue($xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSTrack'));
         }
 
         if ($imgDirRef === null) {
-            $imgDirRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSImgDirectionRef'));
+            $imgDirRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSImgDirectionRef'));
         }
 
         if ($imgDir === null) {
-            $imgDir = $this->floatValue($xmpDocument?->float(self::NS_EXIF, 'GPSImgDirection'));
+            $imgDir = $this->floatValue($xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSImgDirection'));
         }
 
         if ($mapDatum === null) {
-            $mapDatum = $this->stringValue($xmpDocument?->string(self::NS_EXIF, 'GPSMapDatum'));
+            $mapDatum = $this->stringValue($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSMapDatum'));
         }
 
-        $xmpSpeedRef = $xmpDocument?->string(self::NS_EXIF, 'GPSSpeedRef');
+        $xmpSpeedRef = $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSSpeedRef');
         if ($speedRef === null) {
             $speedRef = $this->uppercase($xmpSpeedRef);
         }
@@ -273,7 +272,7 @@ final readonly class GpsFactory
             $speedOriginalRef = $this->stringValue($xmpSpeedRef);
         }
 
-        $speedValue = $xmpDocument?->float(self::NS_EXIF, 'GPSSpeed');
+        $speedValue = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSSpeed');
         if ($speedValue !== null) {
             if ($speedMs === null && $speedRef !== null) {
                 $speedMs = $this->convertSpeedToMetresPerSecond($speedValue, $speedRef);
@@ -284,43 +283,43 @@ final readonly class GpsFactory
             }
         }
 
-        $xmpDestLatRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSDestLatitudeRef'));
+        $xmpDestLatRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLatitudeRef'));
         if ($destLatRef === null) {
             $destLatRef = $xmpDestLatRef;
         }
 
         if ($destLat === null) {
             $destLat = $this->parseCoordinate(
-                $xmpDocument?->string(self::NS_EXIF, 'GPSDestLatitude'),
+                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLatitude'),
                 $xmpDestLatRef ?? $destLatRef,
             );
         }
 
-        $xmpDestLonRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSDestLongitudeRef'));
+        $xmpDestLonRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLongitudeRef'));
         if ($destLonRef === null) {
             $destLonRef = $xmpDestLonRef;
         }
 
         if ($destLon === null) {
             $destLon = $this->parseCoordinate(
-                $xmpDocument?->string(self::NS_EXIF, 'GPSDestLongitude'),
+                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLongitude'),
                 $xmpDestLonRef ?? $destLonRef,
             );
         }
 
-        $xmpDestBearRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSDestBearingRef'));
+        $xmpDestBearRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestBearingRef'));
         if ($destBearRef === null) {
             $destBearRef = $xmpDestBearRef;
         }
 
         if ($destBear === null) {
-            $xmpDestBear = $xmpDocument?->float(self::NS_EXIF, 'GPSDestBearing');
+            $xmpDestBear = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSDestBearing');
             if ($xmpDestBear !== null) {
                 $destBear = $xmpDestBear;
             }
         }
 
-        $xmpDestDistRef = $xmpDocument?->string(self::NS_EXIF, 'GPSDestDistanceRef');
+        $xmpDestDistRef = $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestDistanceRef');
         if ($destDistRef === null) {
             $destDistRef = $this->uppercase($xmpDestDistRef);
         }
@@ -329,7 +328,7 @@ final readonly class GpsFactory
             $destDistOriginalRef = $this->stringValue($xmpDestDistRef);
         }
 
-        $destDistValue = $xmpDocument?->float(self::NS_EXIF, 'GPSDestDistance');
+        $destDistValue = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSDestDistance');
         if ($destDistValue !== null) {
             if ($destDistMetre === null && $destDistRef !== null) {
                 $convertedDistance = $this->convertDistanceToMetres($destDistValue, $destDistRef);
@@ -344,11 +343,11 @@ final readonly class GpsFactory
         }
 
         if ($date === null) {
-            $date = $this->normaliseDate($xmpDocument?->string(self::NS_EXIF, 'GPSDateStamp'));
+            $date = $this->normaliseDate($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDateStamp'));
         }
 
         if ($time === null) {
-            $time = $this->stringValue($xmpDocument?->string(self::NS_EXIF, 'GPSTimeStamp'));
+            $time = $this->stringValue($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSTimeStamp'));
         }
 
         if (!$timestamp instanceof DateTimeImmutable) {
@@ -636,7 +635,7 @@ final readonly class GpsFactory
      */
     private function parseXmpTimestamp(?XmpDocument $document): ?DateTimeImmutable
     {
-        $value = $document?->string(self::NS_EXIF, 'GPSDateTime');
+        $value = $document?->string(XmpNamespace::EXIF->value, 'GPSDateTime');
         if ($value === null) {
             return null;
         }
