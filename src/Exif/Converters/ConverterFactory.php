@@ -55,13 +55,17 @@ final readonly class ConverterFactory
         $this->subjectAreaConverter = new SubjectAreaConverter();
         $this->flashConverter       = new FlashConverter();
 
-        // Create NumericConverter with RationalConverter for full functionality
-        // Note: We create a temporary NumericConverter first, then use it to create
-        // the RationalConverter, and finally create the real NumericConverter with RationalConverter
-        $tempNumericConverter    = new NumericConverter();
-        $tempRationalConverter   = new RationalConverter($tempNumericConverter);
-        $this->numericConverter  = new NumericConverter($tempRationalConverter);
+        // Break circular dependency via lazy closure: NumericConverter receives
+        // a callback that delegates to RationalConverter once the graph is complete.
+        $rationalRef            = null;
+        $this->numericConverter = new NumericConverter(
+            static function (mixed $value) use (&$rationalRef): ?float {
+                /** @var RationalConverter $rationalRef */
+                return $rationalRef->toFloat($value);
+            },
+        );
         $this->rationalConverter = new RationalConverter($this->numericConverter);
+        $rationalRef             = $this->rationalConverter;
 
         // Create converters that depend on RationalConverter
         $this->apexConverter   = new ApexConverter($this->rationalConverter);

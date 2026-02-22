@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
+use Closure;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -33,12 +34,15 @@ use function strlen;
 final readonly class NumericConverter
 {
     /**
-     * Creates the converter with an optional rational dependency.
+     * Creates the converter with an optional rational-to-float callback.
      *
-     * @param RationalConverter|null $rationalConverter Dependency for rational conversions.
+     * The callback breaks the circular dependency between NumericConverter
+     * and RationalConverter by deferring the rational conversion to a closure.
+     *
+     * @param (Closure(int|float|string|array<int, int|float|string|array<int, int|float|string>|UInt64|ExifRational>|ExifRational|ExifRationalList|ExifNumericList|UInt64|null): ?float)|null $rationalToFloat Callback for rational-to-float conversions.
      */
     public function __construct(
-        private ?RationalConverter $rationalConverter = null,
+        private ?Closure $rationalToFloat = null,
     ) {
     }
 
@@ -122,7 +126,7 @@ final readonly class NumericConverter
 
             $ints = [];
             foreach ($value->values as $component) {
-                $numeric = $this->rationalConverter?->toFloat($component);
+                $numeric = $this->rationalToFloat instanceof Closure ? ($this->rationalToFloat)($component) : null;
                 if ($numeric === null || fmod($numeric, 1.0) !== 0.0) {
                     return null;
                 }
@@ -134,7 +138,7 @@ final readonly class NumericConverter
         }
 
         if ($value instanceof ExifRational) {
-            $numeric = $this->rationalConverter?->toFloat($value);
+            $numeric = $this->rationalToFloat instanceof Closure ? ($this->rationalToFloat)($value) : null;
             if ($numeric === null || fmod($numeric, 1.0) !== 0.0) {
                 return null;
             }
