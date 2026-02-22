@@ -4,6 +4,25 @@ This directory contains utility scripts for the ImageMeta library.
 
 ## Available Scripts
 
+### create-architecture-issues.sh
+
+Creates GitHub issues from `ARCHITECTURE_VIOLATIONS_TICKETS.md` and applies meaningful labels.
+If a required label does not exist yet, the script creates it automatically.
+
+**Usage:**
+```bash
+scripts/create-architecture-issues.sh [--dry-run] [--file /absolute/path/to/tickets.md]
+```
+
+**Examples:**
+```bash
+# Preview the issues and labels without creating anything
+scripts/create-architecture-issues.sh --dry-run
+
+# Create issues in GitHub from the default ticket file
+scripts/create-architecture-issues.sh
+```
+
 ### exiftool-format.php
 
 Generates output similar to `exiftool -H -a -u -g1` for comparing metadata extraction results.
