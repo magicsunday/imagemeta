@@ -22,27 +22,19 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use function array_key_exists;
 use function array_keys;
 use function count;
-use function iconv;
 use function implode;
 use function in_array;
 use function ksort;
-use function max;
 use function min;
 use function ord;
-use function preg_match;
 use function range;
 use function sha1;
 use function sort;
 use function sprintf;
-use function str_contains;
 use function str_starts_with;
 use function strlen;
-use function strpos;
-use function strtoupper;
 use function substr;
-use function trim;
 use function unpack;
-use function usort;
 
 /**
  * Parses JPEG streams to extract metadata-bearing APP segments.
@@ -59,10 +51,6 @@ final class JpegParser implements JpegParserInterface
     private const string EXIF_SIGNATURE = "Exif\0\0";
 
     private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
-
-    private const string EXTENDED_XMP_SIGNATURE = "http://ns.adobe.com/xmp/extension/\0";
-
-    private const int EXTENDED_XMP_HEADER_LENGTH = 8;
 
     private const string ICC_SIGNATURE = "ICC_PROFILE\0";
 
@@ -88,12 +76,6 @@ final class JpegParser implements JpegParserInterface
 
     private const string FPXR_SIGNATURE = 'FPXR';
 
-    private const int FLASHPIX_STORAGE_ENTITY_SIZE = 0xFFFFFFFF;
-
-    private const int APP11_TRANSPORT_HEADER_LENGTH = 10;
-
-    private const int APP11_MAX_SEQUENCE_NUMBER = 65_535;
-
     /**
      * Maximum APP payload length implied by JPEG 16-bit segment length semantics.
      *
@@ -115,18 +97,6 @@ final class JpegParser implements JpegParserInterface
     /** @var array<string, bool> */
     private array $xmpPacketHashes = [];
 
-    /** @var list<array{packet:string, guid:string, offset:int}> */
-    private array $extendedXmpBasePackets = [];
-
-    /** @var array<string, list<array{offset:int, length:int, data:string, segmentOffset:int}>> */
-    private array $extendedXmpChunks = [];
-
-    /** @var array<string, int> */
-    private array $extendedXmpTotalLength = [];
-
-    /** @var array<string, int> */
-    private array $extendedXmpFirstOffset = [];
-
     /** @var list<string> */
     private array $iccSegments = [];
 
@@ -136,37 +106,6 @@ final class JpegParser implements JpegParserInterface
     private ?int $iccExpectedCount = null;
 
     private ?string $iccProfile = null;
-
-    /** @var array<int, array<int, string>> */
-    private array $app11Sequence = [];
-
-    /** @var array<int, string> */
-    private array $app11Identifier = [];
-
-    /** @var array<int, int> */
-    private array $app11FirstOffset = [];
-
-    /** @var array<int, array{size:int, defaultByte:int, isStorage:bool}> */
-    private array $flashPixContents = [];
-
-    /** @var array<int, list<array{offset:int, data:string}>> */
-    private array $flashPixChunks = [];
-
-    /** @var array<int, list<array{start:int, end:int}>> */
-    private array $flashPixRanges = [];
-
-    /** @var array<int, int> */
-    private array $flashPixSequenceExpectedCount = [];
-
-    /** @var array<int, array<int, bool>> */
-    private array $flashPixSequenceSeen = [];
-
-    /** @var array<int, int> */
-    private array $flashPixSequenceFirstOffset = [];
-
-    private bool $flashPixContentsSeen = false;
-
-    private ?int $flashPixLastStreamIndex = null;
 
     /** @var array<int, string> */
     private array $flashPixStreams = [];
@@ -196,6 +135,12 @@ final class JpegParser implements JpegParserInterface
 
     private readonly MarkerHandlerRegistry $markerHandlerRegistry;
 
+    private ExtendedXmpAssembler $extendedXmpAssembler;
+
+    private FlashPixStreamAssembler $flashPixAssembler;
+
+    private JumbfTransportParser $jumbfParser;
+
     /**
      * Initialises the extractor with a seekable stream.
      *
@@ -205,6 +150,15 @@ final class JpegParser implements JpegParserInterface
     public function __construct(private readonly Stream $stream, private readonly JpegParserConfig $config = new JpegParserConfig())
     {
         $this->markerHandlerRegistry = $this->createDefaultMarkerHandlerRegistry();
+        $this->extendedXmpAssembler  = new ExtendedXmpAssembler(
+            $config->extendedXmpGuidLength,
+            $this->appendXmpPacket(...),
+        );
+        $this->flashPixAssembler = new FlashPixStreamAssembler(
+            $config->flashPixMaxContentEntries,
+            $config->flashPixMaxStreamSize,
+        );
+        $this->jumbfParser = new JumbfTransportParser($this->appendXmpPacket(...));
     }
 
     /**
@@ -378,39 +332,33 @@ final class JpegParser implements JpegParserInterface
             throw new ParseError('Not a JPEG (missing SOI marker)', 1263);
         }
 
-        $this->exifBlobs                     = [];
-        $this->xmpPackets                    = [];
-        $this->extendedXmpBasePackets        = [];
-        $this->extendedXmpChunks             = [];
-        $this->extendedXmpTotalLength        = [];
-        $this->extendedXmpFirstOffset        = [];
-        $this->iccSegments                   = [];
-        $this->iccSequence                   = [];
-        $this->iccExpectedCount              = null;
-        $this->iccProfile                    = null;
-        $this->app11Sequence                 = [];
-        $this->app11Identifier               = [];
-        $this->app11FirstOffset              = [];
-        $this->flashPixContents              = [];
-        $this->flashPixChunks                = [];
-        $this->flashPixRanges                = [];
-        $this->flashPixSequenceExpectedCount = [];
-        $this->flashPixSequenceSeen          = [];
-        $this->flashPixSequenceFirstOffset   = [];
-        $this->flashPixContentsSeen          = false;
-        $this->flashPixLastStreamIndex       = null;
-        $this->flashPixStreams               = [];
-        $this->mpfSegments                   = [];
-        $this->mpfDocument                   = null;
-        $this->audioStreams                  = [];
-        $this->iptcPayloads                  = [];
-        $this->xmpPacketHashes               = [];
-        $this->firstExifApp1Offset           = null;
-        $this->frameBitsPerSample            = null;
-        $this->frameComponentSampling        = null;
-        $this->frameYCbCrSubSampling         = null;
-        $this->frameLines                    = null;
-        $this->frameSamplesPerLine           = null;
+        $this->exifBlobs            = [];
+        $this->xmpPackets           = [];
+        $this->extendedXmpAssembler = new ExtendedXmpAssembler(
+            $this->config->extendedXmpGuidLength,
+            $this->appendXmpPacket(...),
+        );
+        $this->iccSegments       = [];
+        $this->iccSequence       = [];
+        $this->iccExpectedCount  = null;
+        $this->iccProfile        = null;
+        $this->jumbfParser       = new JumbfTransportParser($this->appendXmpPacket(...));
+        $this->flashPixAssembler = new FlashPixStreamAssembler(
+            $this->config->flashPixMaxContentEntries,
+            $this->config->flashPixMaxStreamSize,
+        );
+        $this->flashPixStreams        = [];
+        $this->mpfSegments            = [];
+        $this->mpfDocument            = null;
+        $this->audioStreams           = [];
+        $this->iptcPayloads           = [];
+        $this->xmpPacketHashes        = [];
+        $this->firstExifApp1Offset    = null;
+        $this->frameBitsPerSample     = null;
+        $this->frameComponentSampling = null;
+        $this->frameYCbCrSubSampling  = null;
+        $this->frameLines             = null;
+        $this->frameSamplesPerLine    = null;
 
         $seenExifApp1                = false;
         $firstApp2BeforeExifOffset   = null;
@@ -589,7 +537,7 @@ final class JpegParser implements JpegParserInterface
             }
 
             if ($marker === Marker::APP11) {
-                $this->handleApp11($payload, $offset);
+                $this->jumbfParser->handleSegment($payload, $offset);
 
                 continue;
             }
@@ -626,9 +574,10 @@ final class JpegParser implements JpegParserInterface
             }
         }
 
-        $this->finaliseExtendedXmpPackets();
-        $this->finaliseApp11Segments();
-        $this->finaliseFlashPixStreams();
+        $this->extendedXmpAssembler->finalise();
+        $this->jumbfParser->finalise();
+        $this->flashPixAssembler->finalise();
+        $this->flashPixStreams = $this->flashPixAssembler->getStreams();
 
         if ($this->mpfSegments !== []) {
             $payload = implode('', $this->mpfSegments);
@@ -1069,298 +1018,18 @@ final class JpegParser implements JpegParserInterface
             $this->exifBlobs[] = $tiffData;
         } elseif (str_starts_with($payload, self::XMP_SIGNATURE)) {
             $packet = substr($payload, strlen(self::XMP_SIGNATURE));
-            $guid   = $this->extractExtendedXmpGuidFromPacket($packet, $offset);
+            $guid   = $this->extendedXmpAssembler->extractGuidFromPacket($packet, $offset);
 
             if ($guid !== null) {
-                $this->extendedXmpBasePackets[] = [
-                    'packet' => $packet,
-                    'guid'   => $guid,
-                    'offset' => $offset,
-                ];
+                $this->extendedXmpAssembler->addBasePacket($packet, $guid, $offset);
 
                 return;
             }
 
             $this->appendXmpPacket($packet);
-        } elseif (str_starts_with($payload, self::EXTENDED_XMP_SIGNATURE)) {
-            $this->handleExtendedXmpSegment($payload, $offset);
+        } elseif (str_starts_with($payload, ExtendedXmpAssembler::SIGNATURE)) {
+            $this->extendedXmpAssembler->handleSegment($payload, $offset);
         }
-    }
-
-    /**
-     * Parses and stores one ExtendedXMP APP1 chunk.
-     *
-     * Adobe XMP Storage in Files defines the JPEG APP1 extension container as:
-     * signature + GUID + full-length + chunk-offset + chunk bytes.
-     *
-     * @param string $payload Raw APP1 payload containing extended XMP header fields.
-     * @param int    $offset  Offset in the stream where the marker begins.
-     */
-    private function handleExtendedXmpSegment(string $payload, int $offset): void
-    {
-        $signatureLength = strlen(self::EXTENDED_XMP_SIGNATURE);
-        $guidLength      = $this->config->extendedXmpGuidLength;
-        $minimumLength   = $signatureLength + $guidLength + self::EXTENDED_XMP_HEADER_LENGTH;
-        if (strlen($payload) < $minimumLength) {
-            throw new ParseError(
-                sprintf('ExtendedXMP APP1 segment at offset %d is too short', $offset),
-                1470,
-            );
-        }
-
-        $guidRaw     = substr($payload, $signatureLength, $guidLength);
-        $guidPattern = '/^[0-9A-Fa-f]{' . $guidLength . '}$/';
-        if (preg_match($guidPattern, $guidRaw) !== 1) {
-            throw new ParseError(
-                sprintf('ExtendedXMP APP1 segment at offset %d has invalid GUID', $offset),
-                1471,
-            );
-        }
-
-        $guid = strtoupper($guidRaw);
-
-        $lengthOffset  = $signatureLength + $guidLength;
-        $lengthUnpack  = @unpack('Nlength', substr($payload, $lengthOffset, 4));
-        $offsetUnpack  = @unpack('Noffset', substr($payload, $lengthOffset + 4, 4));
-        $extendedChunk = substr($payload, $lengthOffset + self::EXTENDED_XMP_HEADER_LENGTH);
-
-        if (($lengthUnpack === false) || !isset($lengthUnpack['length'])) {
-            throw new ParseError(
-                sprintf('ExtendedXMP APP1 segment at offset %d has invalid full-length field', $offset),
-                1472,
-            );
-        }
-
-        if (($offsetUnpack === false) || !isset($offsetUnpack['offset'])) {
-            throw new ParseError(
-                sprintf('ExtendedXMP APP1 segment at offset %d has invalid chunk-offset field', $offset),
-                1473,
-            );
-        }
-
-        /** @var array{length:int} $lengthUnpack */
-        $totalLength = $lengthUnpack['length'];
-        if ($totalLength <= 0) {
-            throw new ParseError(
-                sprintf('ExtendedXMP APP1 segment at offset %d has non-positive full length %d', $offset, $totalLength),
-                1472,
-            );
-        }
-
-        /** @var array{offset:int} $offsetUnpack */
-        $chunkOffset = $offsetUnpack['offset'];
-        $chunkLength = strlen($extendedChunk);
-        if ($chunkLength === 0) {
-            throw new ParseError(
-                sprintf('ExtendedXMP APP1 segment at offset %d has empty chunk payload', $offset),
-                1473,
-            );
-        }
-
-        if ($chunkOffset > $totalLength) {
-            throw new ParseError(
-                sprintf(
-                    'ExtendedXMP APP1 segment at offset %d has chunk offset %d outside full length %d',
-                    $offset,
-                    $chunkOffset,
-                    $totalLength,
-                ),
-                1473,
-            );
-        }
-
-        if ($chunkLength > $totalLength || $chunkOffset > ($totalLength - $chunkLength)) {
-            throw new ParseError(
-                sprintf(
-                    'ExtendedXMP APP1 segment at offset %d has out-of-range chunk [%d,%d) for full length %d',
-                    $offset,
-                    $chunkOffset,
-                    $chunkOffset + $chunkLength,
-                    $totalLength,
-                ),
-                1473,
-            );
-        }
-
-        if (!array_key_exists($guid, $this->extendedXmpTotalLength)) {
-            $this->extendedXmpTotalLength[$guid] = $totalLength;
-            $this->extendedXmpFirstOffset[$guid] = $offset;
-            $this->extendedXmpChunks[$guid]      = [];
-        } elseif ($this->extendedXmpTotalLength[$guid] !== $totalLength) {
-            $firstOffset = $this->extendedXmpFirstOffset[$guid] ?? $offset;
-
-            throw new ParseError(
-                sprintf(
-                    'ExtendedXMP GUID %s has inconsistent full length %d at offset %d (first seen %d at offset %d)',
-                    $guid,
-                    $totalLength,
-                    $offset,
-                    $this->extendedXmpTotalLength[$guid],
-                    $firstOffset,
-                ),
-                1474,
-            );
-        }
-
-        $this->extendedXmpChunks[$guid][] = [
-            'offset'        => $chunkOffset,
-            'length'        => $chunkLength,
-            'data'          => $extendedChunk,
-            'segmentOffset' => $offset,
-        ];
-    }
-
-    /**
-     * Extracts xmpNote:HasExtendedXMP GUID references from base XMP packets.
-     *
-     * @param string $packet Raw base XMP packet.
-     * @param int    $offset APP1 marker offset for diagnostics.
-     *
-     * @return string|null Uppercase GUID when present, null otherwise.
-     */
-    private function extractExtendedXmpGuidFromPacket(string $packet, int $offset): ?string
-    {
-        if (!str_contains($packet, 'xmpNote:HasExtendedXMP')) {
-            return null;
-        }
-
-        $attributeMatch = preg_match('/xmpNote:HasExtendedXMP\s*=\s*["\']\s*([0-9A-Fa-f]{32})\s*["\']/', $packet, $matches);
-        if ($attributeMatch === 1) {
-            return strtoupper($matches[1]);
-        }
-
-        $elementMatch = preg_match('/<xmpNote:HasExtendedXMP>\s*([0-9A-Fa-f]{32})\s*<\/xmpNote:HasExtendedXMP>/', $packet, $matches);
-        if ($elementMatch === 1) {
-            return strtoupper($matches[1]);
-        }
-
-        throw new ParseError(
-            sprintf('XMP packet at offset %d has invalid xmpNote:HasExtendedXMP GUID', $offset),
-            1475,
-        );
-    }
-
-    /**
-     * Reassembles ExtendedXMP chunks and merges them with referenced base packets.
-     */
-    private function finaliseExtendedXmpPackets(): void
-    {
-        if ($this->extendedXmpBasePackets === []) {
-            return;
-        }
-
-        $requiredGuids = [];
-        foreach ($this->extendedXmpBasePackets as $basePacket) {
-            $requiredGuids[$basePacket['guid']] = true;
-        }
-
-        foreach (array_keys($this->extendedXmpChunks) as $guid) {
-            if (!array_key_exists($guid, $requiredGuids)) {
-                $offset = $this->extendedXmpFirstOffset[$guid] ?? 0;
-
-                throw new ParseError(
-                    sprintf(
-                        'ExtendedXMP GUID %s from APP1 extension chunk at offset %d has no matching xmpNote:HasExtendedXMP base packet',
-                        $guid,
-                        $offset,
-                    ),
-                    1476,
-                );
-            }
-        }
-
-        /** @var array<string, string> $assembledPayloads */
-        $assembledPayloads = [];
-        foreach ($this->extendedXmpBasePackets as $basePacket) {
-            $guid = $basePacket['guid'];
-            if (!array_key_exists($guid, $this->extendedXmpChunks)) {
-                throw new ParseError(
-                    sprintf(
-                        'XMP packet at offset %d references ExtendedXMP GUID %s but matching extension chunks are missing',
-                        $basePacket['offset'],
-                        $guid,
-                    ),
-                    1477,
-                );
-            }
-
-            if (!array_key_exists($guid, $assembledPayloads)) {
-                $assembledPayloads[$guid] = $this->assembleExtendedXmpPayload($guid, $basePacket['offset']);
-            }
-
-            $this->appendXmpPacket($basePacket['packet'] . $assembledPayloads[$guid]);
-        }
-    }
-
-    /**
-     * Validates and concatenates all ExtendedXMP chunks for one GUID.
-     *
-     * @param string $guid       ExtendedXMP GUID.
-     * @param int    $baseOffset Base APP1 offset for diagnostics.
-     *
-     * @return string
-     */
-    private function assembleExtendedXmpPayload(string $guid, int $baseOffset): string
-    {
-        $chunks      = $this->extendedXmpChunks[$guid] ?? [];
-        $totalLength = $this->extendedXmpTotalLength[$guid] ?? 0;
-        if (($chunks === []) || ($totalLength <= 0)) {
-            throw new ParseError(
-                sprintf('ExtendedXMP GUID %s has no decodable extension chunks', $guid),
-                1477,
-            );
-        }
-
-        usort(
-            $chunks,
-            static fn (array $left, array $right): int => $left['offset'] <=> $right['offset'],
-        );
-
-        $cursor    = 0;
-        $assembled = '';
-        foreach ($chunks as $chunk) {
-            if ($chunk['offset'] > $cursor) {
-                throw new ParseError(
-                    sprintf(
-                        'ExtendedXMP GUID %s is missing bytes at offset %d (next chunk starts at %d)',
-                        $guid,
-                        $cursor,
-                        $chunk['offset'],
-                    ),
-                    1478,
-                );
-            }
-
-            if ($chunk['offset'] < $cursor) {
-                throw new ParseError(
-                    sprintf(
-                        'ExtendedXMP GUID %s has overlapping chunks around offset %d (segment offset %d)',
-                        $guid,
-                        $chunk['offset'],
-                        $chunk['segmentOffset'],
-                    ),
-                    1479,
-                );
-            }
-
-            $assembled .= $chunk['data'];
-            $cursor += $chunk['length'];
-        }
-
-        if ($cursor !== $totalLength) {
-            throw new ParseError(
-                sprintf(
-                    'ExtendedXMP GUID %s is incomplete: expected %d bytes but assembled %d bytes (base offset %d)',
-                    $guid,
-                    $totalLength,
-                    $cursor,
-                    $baseOffset,
-                ),
-                1478,
-            );
-        }
-
-        return $assembled;
     }
 
     /**
@@ -1391,295 +1060,10 @@ final class JpegParser implements JpegParserInterface
         } elseif (str_starts_with($payload, self::MPF_SIGNATURE)) {
             $this->handleMpfSegment($payload, $offset);
         } elseif (str_starts_with($payload, self::FPXR_SIGNATURE)) {
-            $this->handleFlashPixSegment($payload, $offset);
+            $this->flashPixAssembler->handleSegment($payload, $offset);
         } elseif (str_starts_with($payload, self::AUDIO_SIGNATURE)) {
             $this->handleAudioSegment($payload, $offset);
         }
-    }
-
-    /**
-     * Processes APP11 payloads carrying JUMBF box-structured metadata.
-     *
-     * EXIF 3.0 §4.7.5.3 defines the APP11 transport wrapper and stores JUMBF
-     * superboxes for annotation metadata. Supported XML/XMP payloads are
-     * surfaced through the existing XMP packet collection.
-     *
-     * @param string $payload Raw APP11 payload.
-     * @param int    $offset  Offset in the stream where the marker begins.
-     */
-    private function handleApp11(string $payload, int $offset): void
-    {
-        if (!str_starts_with($payload, 'JP')) {
-            return;
-        }
-
-        $header         = $this->parseApp11TransportHeader($payload, $offset);
-        $identifier     = $header['identifier'];
-        $instanceNumber = $header['instance'];
-        $sequenceNumber = $header['sequence'];
-        $transportData  = $header['data'];
-
-        if (!array_key_exists($instanceNumber, $this->app11Identifier)) {
-            $this->app11Identifier[$instanceNumber]  = $identifier;
-            $this->app11FirstOffset[$instanceNumber] = $offset;
-        } elseif ($this->app11Identifier[$instanceNumber] !== $identifier) {
-            throw new ParseError(
-                sprintf(
-                    'APP11 segment at offset %d has inconsistent instance metadata for instance %d',
-                    $offset,
-                    $instanceNumber,
-                ),
-                1337,
-            );
-        }
-
-        if (!array_key_exists($instanceNumber, $this->app11Sequence)) {
-            $this->app11Sequence[$instanceNumber] = [];
-        }
-
-        if (array_key_exists($sequenceNumber, $this->app11Sequence[$instanceNumber])) {
-            throw new ParseError(
-                sprintf(
-                    'APP11 segment at offset %d has duplicate sequence number %d for instance %d',
-                    $offset,
-                    $sequenceNumber,
-                    $instanceNumber,
-                ),
-                1338,
-            );
-        }
-
-        $this->app11Sequence[$instanceNumber][$sequenceNumber] = $transportData;
-    }
-
-    /**
-     * Parses the APP11 transport header and returns sequence metadata.
-     *
-     * EXIF 3.0 §4.7.5.3 defines the APP11 transport wrapper as identifier, box
-     * instance number, packet sequence number, and payload bytes.
-     *
-     * @param string $payload Raw APP11 payload bytes.
-     * @param int    $offset  APP11 marker offset for diagnostics.
-     *
-     * @return array{identifier:string, instance:int, sequence:int, data:string}
-     */
-    private function parseApp11TransportHeader(string $payload, int $offset): array
-    {
-        if (strlen($payload) < self::APP11_TRANSPORT_HEADER_LENGTH) {
-            throw new ParseError(sprintf('APP11 segment at offset %d is too short', $offset), 1331);
-        }
-
-        $identifier = substr($payload, 0, 4);
-
-        $instanceUnpack = @unpack('ninstance', substr($payload, 4, 2));
-        if (($instanceUnpack === false) || !isset($instanceUnpack['instance'])) {
-            throw new ParseError(
-                sprintf('APP11 segment at offset %d has invalid instance number', $offset),
-                1335,
-            );
-        }
-
-        /** @var array{instance:int} $instanceUnpack */
-        $instanceNumber = $instanceUnpack['instance'];
-        if ($instanceNumber === 0) {
-            throw new ParseError(
-                sprintf('APP11 segment at offset %d has out-of-range instance number %d', $offset, $instanceNumber),
-                1335,
-            );
-        }
-
-        $sequenceUnpack = @unpack('Nsequence', substr($payload, 6, 4));
-        if (($sequenceUnpack === false) || !isset($sequenceUnpack['sequence'])) {
-            throw new ParseError(
-                sprintf('APP11 segment at offset %d has invalid sequence number', $offset),
-                1336,
-            );
-        }
-
-        /** @var array{sequence:int} $sequenceUnpack */
-        $sequenceNumber = $sequenceUnpack['sequence'];
-        if (
-            ($sequenceNumber === 0)
-            || ($sequenceNumber > self::APP11_MAX_SEQUENCE_NUMBER)
-        ) {
-            throw new ParseError(
-                sprintf('APP11 segment at offset %d has out-of-range sequence number %d', $offset, $sequenceNumber),
-                1336,
-            );
-        }
-
-        return [
-            'identifier' => $identifier,
-            'instance'   => $instanceNumber,
-            'sequence'   => $sequenceNumber,
-            'data'       => substr($payload, self::APP11_TRANSPORT_HEADER_LENGTH),
-        ];
-    }
-
-    /**
-     * Finalises APP11 transport streams by validating and reassembling chunks.
-     *
-     * EXIF 3.0 §4.7.5.1 and §4.7.5.3 define APP11 sequence metadata for
-     * marker-segment merging when logically identical JUMBF data is split.
-     */
-    private function finaliseApp11Segments(): void
-    {
-        foreach ($this->app11Sequence as $instanceNumber => $sequenceChunks) {
-            if ($sequenceChunks === []) {
-                continue;
-            }
-
-            $offset      = $this->app11FirstOffset[$instanceNumber] ?? 0;
-            $maxSequence = max(array_keys($sequenceChunks));
-
-            for ($expectedSequence = 1; $expectedSequence <= $maxSequence; ++$expectedSequence) {
-                if (!array_key_exists($expectedSequence, $sequenceChunks)) {
-                    throw new ParseError(
-                        sprintf(
-                            'APP11 segment sequence is missing sequence number %d for instance %d (at offset %d)',
-                            $expectedSequence,
-                            $instanceNumber,
-                            $offset,
-                        ),
-                        1339,
-                    );
-                }
-            }
-
-            ksort($sequenceChunks);
-            $transportPayload = implode('', $sequenceChunks);
-            $jumbfSuperbox    = $this->extractApp11JumbfSuperbox($transportPayload, $offset);
-            $this->collectApp11XmlPacketsFromBoxes($jumbfSuperbox, $offset);
-        }
-    }
-
-    /**
-     * Extracts the first valid JUMBF superbox from APP11 transport payload data.
-     *
-     * @param string $payload Reassembled APP11 transport payload bytes.
-     * @param int    $offset  APP11 marker offset for diagnostics.
-     *
-     * @return string Raw bytes of the JUMBF superbox.
-     */
-    private function extractApp11JumbfSuperbox(string $payload, int $offset): string
-    {
-        $length = strlen($payload);
-        if ($length < 12) {
-            throw new ParseError(sprintf('APP11 segment at offset %d is too short', $offset), 1331);
-        }
-
-        for ($position = 0; $position + 8 <= $length; ++$position) {
-            if (substr($payload, $position + 4, 4) !== 'jumb') {
-                continue;
-            }
-
-            $sizeUnpack = @unpack('Nsize', substr($payload, $position, 4));
-            if (($sizeUnpack === false) || !isset($sizeUnpack['size'])) {
-                throw new ParseError(sprintf('APP11 segment at offset %d has invalid JUMBF size field', $offset), 1332);
-            }
-
-            /** @var array{size:int} $sizeUnpack */
-            $boxLength = $sizeUnpack['size'];
-            if ($boxLength < 8) {
-                throw new ParseError(
-                    sprintf('APP11 segment at offset %d has invalid JUMBF box length %d', $offset, $boxLength),
-                    1332,
-                );
-            }
-
-            if ($position + $boxLength > $length) {
-                throw new ParseError(sprintf('APP11 segment at offset %d has truncated JUMBF box', $offset), 1334);
-            }
-
-            return substr($payload, $position, $boxLength);
-        }
-
-        throw new ParseError(sprintf('APP11 segment at offset %d does not contain a JUMBF superbox', $offset), 1333);
-    }
-
-    /**
-     * Traverses JUMBF boxes and collects XML/XMP payloads.
-     *
-     * @param string $boxStream Box stream beginning with one or more ISO-BMFF-style boxes.
-     * @param int    $offset    APP11 marker offset for diagnostics.
-     */
-    private function collectApp11XmlPacketsFromBoxes(string $boxStream, int $offset): void
-    {
-        $length   = strlen($boxStream);
-        $position = 0;
-
-        while ($position + 8 <= $length) {
-            $sizeUnpack = @unpack('Nsize', substr($boxStream, $position, 4));
-            if (($sizeUnpack === false) || !isset($sizeUnpack['size'])) {
-                throw new ParseError(sprintf('APP11 segment at offset %d has invalid JUMBF child size field', $offset), 1332);
-            }
-
-            /** @var array{size:int} $sizeUnpack */
-            $boxLength = $sizeUnpack['size'];
-            if ($boxLength < 8) {
-                throw new ParseError(
-                    sprintf('APP11 segment at offset %d has invalid JUMBF child box length %d', $offset, $boxLength),
-                    1332,
-                );
-            }
-
-            if ($position + $boxLength > $length) {
-                throw new ParseError(sprintf('APP11 segment at offset %d has truncated JUMBF child box', $offset), 1334);
-            }
-
-            $boxType    = substr($boxStream, $position + 4, 4);
-            $boxPayload = substr($boxStream, $position + 8, $boxLength - 8);
-
-            if ($boxType === 'jumb') {
-                $this->collectApp11XmlPacketsFromBoxes($boxPayload, $offset);
-            } elseif ($boxType === 'xml ' || $boxType === 'bidb') {
-                $candidate = $this->extractApp11XmlPacketCandidate($boxPayload);
-                if ($candidate !== null) {
-                    $this->appendXmpPacket($candidate);
-                }
-            }
-
-            $position += $boxLength;
-        }
-
-        if ($position !== $length) {
-            throw new ParseError(sprintf('APP11 segment at offset %d has trailing JUMBF bytes', $offset), 1334);
-        }
-    }
-
-    /**
-     * Extracts XML/XMP packet text from a JUMBF payload when recognizable.
-     *
-     * @param string $payload Raw JUMBF content payload.
-     *
-     * @return string|null XML/XMP packet text or null when not recognized.
-     */
-    private function extractApp11XmlPacketCandidate(string $payload): ?string
-    {
-        if (str_starts_with($payload, self::XMP_SIGNATURE)) {
-            return substr($payload, strlen(self::XMP_SIGNATURE));
-        }
-
-        if (!str_contains($payload, '<')) {
-            return null;
-        }
-
-        if (
-            !str_contains($payload, '<?xml')
-            && !str_contains($payload, '<x:xmpmeta')
-            && !str_contains($payload, '<rdf:RDF')
-        ) {
-            return null;
-        }
-
-        $start = strpos($payload, '<');
-        if ($start === false) {
-            return null;
-        }
-
-        $candidate = trim(substr($payload, $start));
-
-        return $candidate !== '' ? $candidate : null;
     }
 
     /**
@@ -1885,474 +1269,6 @@ final class JpegParser implements JpegParserInterface
         }
 
         $this->mpfSegments[] = substr($payload, $signatureLength);
-    }
-
-    /**
-     * Processes FlashPix extension segments contained within APP2 markers.
-     *
-     * EXIF 3.0 §4.7.3.1 requires APP2 ordering as Contents List first, then Stream Data.
-     * EXIF 3.0 §4.7.3.4 and §4.7.3.5 define field-level structures for both segment bodies.
-     *
-     * @param string $payload Raw segment payload including signature.
-     * @param int    $offset  Offset in the stream where the marker begins.
-     */
-    private function handleFlashPixSegment(string $payload, int $offset): void
-    {
-        $body = $this->extractFlashPixBody($payload, $offset);
-
-        if (!$this->flashPixContentsSeen) {
-            $this->parseFlashPixContentsList($body, $offset);
-            $this->flashPixContentsSeen = true;
-
-            return;
-        }
-
-        $this->parseFlashPixStreamData($body, $offset);
-    }
-
-    /**
-     * Extracts the FlashPix payload body after the FPXR signature.
-     *
-     * EXIF 3.0 §4.7.3.3 requires:
-     * - FPXR signature
-     * - NUL byte (00h)
-     * - version byte (currently 00h)
-     *
-     * @param string $payload Raw APP2 payload with FPXR prefix.
-     * @param int    $offset  Marker offset used for diagnostics.
-     *
-     * @return string
-     */
-    private function extractFlashPixBody(string $payload, int $offset): string
-    {
-        $signatureLength = strlen(self::FPXR_SIGNATURE);
-        $payloadLength   = strlen($payload);
-
-        if ($payloadLength < $signatureLength + 2) {
-            throw new ParseError(sprintf('FlashPix segment at offset %d is too short', $offset), 1281);
-        }
-
-        if ($payload[$signatureLength] !== "\x00") {
-            throw new ParseError(sprintf('FlashPix segment at offset %d has invalid FPXR ID header', $offset), 1324);
-        }
-
-        $version = ord($payload[$signatureLength + 1]);
-        if ($version !== 0) {
-            throw new ParseError(
-                sprintf(
-                    'FlashPix segment at offset %d has unsupported FPXR version %d',
-                    $offset,
-                    $version,
-                ),
-                1325,
-            );
-        }
-
-        return substr($payload, $signatureLength + 2);
-    }
-
-    /**
-     * Parses the first FPXR APP2 body as a Contents List segment.
-     *
-     * EXIF 3.0 §4.7.3.4:
-     * - first two bytes: entry count
-     * - each entry: entity size (BE), default byte, UTF-16LE NUL-terminated name
-     * - storage entries (entity size 0xFFFFFFFF) include a 16-byte ClassID
-     *
-     * @param string $body   FPXR segment body without signature.
-     * @param int    $offset Marker offset used for diagnostics.
-     */
-    private function parseFlashPixContentsList(string $body, int $offset): void
-    {
-        if (strlen($body) < 2) {
-            throw new ParseError(sprintf('FlashPix contents list at offset %d is too short', $offset), 1282);
-        }
-
-        $entryCount = (ord($body[0]) << 8) | ord($body[1]);
-
-        if ($entryCount > $this->config->flashPixMaxContentEntries) {
-            throw new ParseError(
-                sprintf(
-                    'FlashPix contents list at offset %d has too many entries (%d)',
-                    $offset,
-                    $entryCount,
-                ),
-                1306,
-            );
-        }
-
-        $cursor                 = 2;
-        $length                 = strlen($body);
-        $this->flashPixContents = [];
-
-        for ($index = 0; $index < $entryCount; ++$index) {
-            if (($length - $cursor) < 5) {
-                throw new ParseError(
-                    sprintf(
-                        'FlashPix contents entry %d at offset %d is truncated',
-                        $index,
-                        $offset,
-                    ),
-                    1307,
-                );
-            }
-
-            $entitySize = (ord($body[$cursor]) << 24)
-                | (ord($body[$cursor + 1]) << 16)
-                | (ord($body[$cursor + 2]) << 8)
-                | ord($body[$cursor + 3]);
-            $defaultByte = ord($body[$cursor + 4]);
-            $cursor += 5;
-
-            [$name, $cursor] = $this->parseFlashPixName($body, $cursor, $offset, $index);
-
-            if ($name[0] !== '/') {
-                throw new ParseError(
-                    sprintf(
-                        'FlashPix contents entry %d at offset %d has invalid name prefix',
-                        $index,
-                        $offset,
-                    ),
-                    1309,
-                );
-            }
-
-            $isStorage = $entitySize === self::FLASHPIX_STORAGE_ENTITY_SIZE;
-            if (!$isStorage && $entitySize > $this->config->flashPixMaxStreamSize) {
-                throw new ParseError(
-                    sprintf(
-                        'FlashPix stream entry %d at offset %d exceeds maximum size',
-                        $index,
-                        $offset,
-                    ),
-                    1310,
-                );
-            }
-
-            if ($isStorage) {
-                if (($length - $cursor) < 16) {
-                    throw new ParseError(
-                        sprintf(
-                            'FlashPix storage entry %d at offset %d is missing ClassID',
-                            $index,
-                            $offset,
-                        ),
-                        1311,
-                    );
-                }
-
-                $cursor += 16;
-            }
-
-            $this->flashPixContents[$index] = [
-                'size'        => $entitySize,
-                'defaultByte' => $defaultByte,
-                'isStorage'   => $isStorage,
-            ];
-        }
-
-        if ($cursor !== $length) {
-            throw new ParseError(sprintf('FlashPix contents list at offset %d has trailing bytes', $offset), 1312);
-        }
-    }
-
-    /**
-     * Parses one UTF-16LE NUL-terminated FlashPix contents-list name.
-     *
-     * @param string $body   FPXR contents-list body.
-     * @param int    $cursor Current parsing offset in $body.
-     * @param int    $offset APP2 marker offset for diagnostics.
-     * @param int    $index  Contents-list entry index.
-     *
-     * @return array{0:string, 1:int}
-     */
-    private function parseFlashPixName(string $body, int $cursor, int $offset, int $index): array
-    {
-        $length    = strlen($body);
-        $nameBytes = '';
-
-        while (true) {
-            if (($length - $cursor) < 2) {
-                throw new ParseError(
-                    sprintf(
-                        'FlashPix contents entry %d at offset %d has unterminated name',
-                        $index,
-                        $offset,
-                    ),
-                    1313,
-                );
-            }
-
-            $codeUnit = substr($body, $cursor, 2);
-            $cursor += 2;
-
-            if ($codeUnit === "\x00\x00") {
-                break;
-            }
-
-            $nameBytes .= $codeUnit;
-        }
-
-        if ($nameBytes === '') {
-            throw new ParseError(
-                sprintf(
-                    'FlashPix contents entry %d at offset %d has empty name',
-                    $index,
-                    $offset,
-                ),
-                1314,
-            );
-        }
-
-        $decoded = iconv('UTF-16LE', 'UTF-8', $nameBytes);
-        if ($decoded === false) {
-            throw new ParseError(
-                sprintf(
-                    'FlashPix contents entry %d at offset %d has invalid UTF-16LE name',
-                    $index,
-                    $offset,
-                ),
-                1315,
-            );
-        }
-
-        return [$decoded, $cursor];
-    }
-
-    /**
-     * Parses one FPXR Stream Data segment and records validated stream chunks.
-     *
-     * EXIF 3.0 §4.7.3.5:
-     * - index into contents list (0-based)
-     * - sequence number / sequence count for segment assembly
-     * - offset into full stream
-     * - remaining bytes are stream data
-     *
-     * @param string $body   FPXR segment body without signature.
-     * @param int    $offset Marker offset used for diagnostics.
-     */
-    private function parseFlashPixStreamData(string $body, int $offset): void
-    {
-        if (!$this->flashPixContentsSeen) {
-            throw new ParseError(sprintf('FlashPix stream data at offset %d appears before contents list', $offset), 1316);
-        }
-
-        if (strlen($body) < 10) {
-            throw new ParseError(sprintf('FlashPix stream data at offset %d is too short', $offset), 1317);
-        }
-
-        $index          = (ord($body[0]) << 8) | ord($body[1]);
-        $sequenceNumber = (ord($body[2]) << 8) | ord($body[3]);
-        $sequenceCount  = (ord($body[4]) << 8) | ord($body[5]);
-        $streamOffset   = (ord($body[6]) << 24)
-            | (ord($body[7]) << 16)
-            | (ord($body[8]) << 8)
-            | ord($body[9]);
-        $data = substr($body, 10);
-
-        if (!array_key_exists($index, $this->flashPixContents)) {
-            throw new ParseError(
-                sprintf(
-                    'FlashPix stream data at offset %d has invalid contents-list index %d',
-                    $offset,
-                    $index,
-                ),
-                1319,
-            );
-        }
-
-        if (($sequenceCount === 0) || ($sequenceNumber === 0) || ($sequenceNumber > $sequenceCount)) {
-            throw new ParseError(
-                sprintf(
-                    'FlashPix stream data at offset %d has invalid sequence metadata (%d/%d) for entry %d',
-                    $offset,
-                    $sequenceNumber,
-                    $sequenceCount,
-                    $index,
-                ),
-                1480,
-            );
-        }
-
-        if (!array_key_exists($index, $this->flashPixSequenceExpectedCount)) {
-            $this->flashPixSequenceExpectedCount[$index] = $sequenceCount;
-            $this->flashPixSequenceSeen[$index]          = [];
-            $this->flashPixSequenceFirstOffset[$index]   = $offset;
-        } elseif ($this->flashPixSequenceExpectedCount[$index] !== $sequenceCount) {
-            $firstOffset = $this->flashPixSequenceFirstOffset[$index] ?? $offset;
-
-            throw new ParseError(
-                sprintf(
-                    'FlashPix stream entry %d has inconsistent sequence count %d at offset %d (expected %d from offset %d)',
-                    $index,
-                    $sequenceCount,
-                    $offset,
-                    $this->flashPixSequenceExpectedCount[$index],
-                    $firstOffset,
-                ),
-                1481,
-            );
-        }
-
-        if (array_key_exists($sequenceNumber, $this->flashPixSequenceSeen[$index])) {
-            throw new ParseError(
-                sprintf(
-                    'FlashPix stream entry %d has duplicate sequence number %d at offset %d',
-                    $index,
-                    $sequenceNumber,
-                    $offset,
-                ),
-                1482,
-            );
-        }
-
-        $this->flashPixSequenceSeen[$index][$sequenceNumber] = true;
-
-        $entry = $this->flashPixContents[$index];
-        if ($entry['isStorage']) {
-            throw new ParseError(
-                sprintf(
-                    'FlashPix stream data at offset %d references storage entry %d',
-                    $offset,
-                    $index,
-                ),
-                1320,
-            );
-        }
-
-        if (
-            $streamOffset > $entry['size']
-            || ($streamOffset + strlen($data)) > $entry['size']
-        ) {
-            throw new ParseError(
-                sprintf(
-                    'FlashPix stream data at offset %d exceeds declared stream size for entry %d',
-                    $offset,
-                    $index,
-                ),
-                1321,
-            );
-        }
-
-        if (($this->flashPixLastStreamIndex !== null) && ($index < $this->flashPixLastStreamIndex)) {
-            throw new ParseError(
-                sprintf(
-                    'FlashPix stream data at offset %d breaks contents-list order',
-                    $offset,
-                ),
-                1322,
-            );
-        }
-
-        $this->flashPixLastStreamIndex = $index;
-
-        $chunkLength = strlen($data);
-        if ($chunkLength === 0) {
-            return;
-        }
-
-        $start = $streamOffset;
-        $end   = $streamOffset + $chunkLength;
-
-        if (!array_key_exists($index, $this->flashPixRanges)) {
-            $this->flashPixRanges[$index] = [];
-        }
-
-        foreach ($this->flashPixRanges[$index] as $range) {
-            if (($start < $range['end']) && ($end > $range['start'])) {
-                throw new ParseError(
-                    sprintf(
-                        'FlashPix stream data at offset %d overlaps existing data for entry %d',
-                        $offset,
-                        $index,
-                    ),
-                    1323,
-                );
-            }
-        }
-
-        $this->flashPixRanges[$index][] = ['start' => $start, 'end' => $end];
-
-        if (!array_key_exists($index, $this->flashPixChunks)) {
-            $this->flashPixChunks[$index] = [];
-        }
-
-        $this->flashPixChunks[$index][] = ['offset' => $start, 'data' => $data];
-    }
-
-    /**
-     * Materialises validated FlashPix stream chunks into full stream byte strings.
-     *
-     * Gaps in stream data are filled with the declared entry default byte
-     * (EXIF 3.0 §4.7.3.4 / §4.7.3.5).
-     */
-    private function finaliseFlashPixStreams(): void
-    {
-        $this->flashPixStreams = [];
-
-        foreach ($this->flashPixSequenceExpectedCount as $index => $sequenceCount) {
-            $seen = $this->flashPixSequenceSeen[$index] ?? [];
-
-            for ($expected = 1; $expected <= $sequenceCount; ++$expected) {
-                if (!array_key_exists($expected, $seen)) {
-                    $firstOffset = $this->flashPixSequenceFirstOffset[$index] ?? 0;
-
-                    throw new ParseError(
-                        sprintf(
-                            'FlashPix stream entry %d is missing sequence number %d of %d (first seen at offset %d)',
-                            $index,
-                            $expected,
-                            $sequenceCount,
-                            $firstOffset,
-                        ),
-                        1483,
-                    );
-                }
-            }
-        }
-
-        foreach ($this->flashPixContents as $index => $entry) {
-            if ($entry['isStorage']) {
-                continue;
-            }
-
-            if (!array_key_exists($index, $this->flashPixChunks)) {
-                continue;
-            }
-
-            $chunks = $this->flashPixChunks[$index];
-            if ($chunks === []) {
-                continue;
-            }
-
-            usort(
-                $chunks,
-                static fn (array $left, array $right): int => $left['offset'] <=> $right['offset'],
-            );
-
-            $assembled = '';
-            $cursor    = 0;
-            $fillByte  = chr($entry['defaultByte']);
-
-            foreach ($chunks as $chunk) {
-                if ($chunk['offset'] > $cursor) {
-                    $assembled .= str_repeat($fillByte, $chunk['offset'] - $cursor);
-                }
-
-                $assembled .= $chunk['data'];
-                $cursor = $chunk['offset'] + strlen($chunk['data']);
-            }
-
-            if ($cursor < $entry['size']) {
-                $assembled .= str_repeat($fillByte, $entry['size'] - $cursor);
-            }
-
-            $this->flashPixStreams[$index] = $assembled;
-        }
-
-        if ($this->flashPixStreams !== []) {
-            ksort($this->flashPixStreams);
-        }
     }
 
     /**
