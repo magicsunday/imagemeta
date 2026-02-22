@@ -153,7 +153,6 @@ final readonly class MetadataReader
         $subSampling     = $jpeg->getFrameYCbCrSubSampling();
 
         $exifDoc    = null;
-        $xmpDoc     = null;
         $makerNotes = null;
         // Parse the primary EXIF blob and map vendor-specific maker notes.
         if ($exifBlobs !== []) {
@@ -163,17 +162,7 @@ final readonly class MetadataReader
         }
 
         $makerNotes = $this->appleMerger->merge($makerNotes, null);
-
-        // Parse the embedded XMP packet when present.
-        if ($xmpBlobs !== []) {
-            $documents = [];
-
-            foreach ($xmpBlobs as $blob) {
-                $documents[] = $this->xmpParser->parse($blob);
-            }
-
-            $xmpDoc = XmpDocument::merge(...$documents);
-        }
+        $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
 
         $iptcDoc = null;
         if ($iptcBlobs !== []) {
@@ -237,7 +226,6 @@ final readonly class MetadataReader
         [$exifBlobs, $xmpBlobs, $qt, $isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems] = $this->isoBmffParserFactory->create($stream)->extract();
 
         $exifDoc    = null;
-        $xmpDoc     = null;
         $makerNotes = null;
         if ($exifBlobs !== []) {
             $registry = $this->createMakerNotesRegistry();
@@ -251,16 +239,7 @@ final readonly class MetadataReader
         }
 
         $makerNotes = $this->appleMerger->merge($makerNotes, $qt);
-
-        if ($xmpBlobs !== []) {
-            $documents = [];
-
-            foreach ($xmpBlobs as $blob) {
-                $documents[] = $this->xmpParser->parse($blob);
-            }
-
-            $xmpDoc = XmpDocument::merge(...$documents);
-        }
+        $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
 
         return new Metadata(
             $exifBlobs,
@@ -337,6 +316,28 @@ final readonly class MetadataReader
             $digestSha1,
             $digestMd5,
         );
+    }
+
+    /**
+     * Parses XMP blobs and merges them into a single document.
+     *
+     * @param list<string> $xmpBlobs Raw XMP packet strings.
+     *
+     * @return XmpDocument|null
+     */
+    private function parseXmpBlobs(array $xmpBlobs): ?XmpDocument
+    {
+        if ($xmpBlobs === []) {
+            return null;
+        }
+
+        $documents = [];
+
+        foreach ($xmpBlobs as $blob) {
+            $documents[] = $this->xmpParser->parse($blob);
+        }
+
+        return XmpDocument::merge(...$documents);
     }
 
     /**
