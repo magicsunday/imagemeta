@@ -146,7 +146,11 @@ append_labels_from_content() {
     if grep -qiE 'Separation of Concerns|\bSoC\b' <<<"$content"; then selected["principle:soc"]=1; fi
     if grep -qiE 'Convention over Configuration|\bCoC\b' <<<"$content"; then selected["principle:coc"]=1; fi
 
-    priority="$(sed -n 's/^- \*\*Priorität:\*\* \(.*\)$/\1/p' <<<"$content" | head -n 1 | tr '[:upper:]' '[:lower:]')"
+    priority="$(
+        sed -n -e 's/^- \*\*Priorität:\*\* \(.*\)$/\1/p' -e 's/^- \*\*Priority:\*\* \(.*\)$/\1/p' <<<"$content" \
+            | head -n 1 \
+            | tr '[:upper:]' '[:lower:]'
+    )"
     case "$priority" in
         hoch|high)
             selected["priority:high"]=1
@@ -174,7 +178,7 @@ create_issue() {
     local content="$2"
 
     local body
-    body=$'Automatisch erstellt aus `ARCHITECTURE_VIOLATIONS_TICKETS.md`.\n\n'
+    body=$'Automatically created from `ARCHITECTURE_VIOLATIONS_TICKETS.md`.\n\n'
     body+="$content"
 
     append_labels_from_content "$content"
