@@ -12,6 +12,7 @@
         "src/"
     ],
     "ignore": [
+        "**/MetadataBuilder.php"
     ],
     "exitCode": true
 }

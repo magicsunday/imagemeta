@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\MetadataBuilder;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParserInterface;
@@ -176,31 +177,14 @@ final readonly class MetadataReader
         }
 
         // Assemble the final metadata aggregate with container context.
-        return new Metadata(
-            $exifBlobs,
-            null,
-            $exifDoc,
-            $xmpBlobs,
-            $xmpDoc,
-            $makerNotes,
-            $iccProfile,
-            $iccSegments,
-            $flashPixStreams,
-            $mpfDocument,
-            $audioStreams,
-            $bitsPerSample,
-            $sampling,
-            $subSampling,
-            mimeType: $mimeType,
-            fileSize: $fileSize,
-            extension: $extension,
-            digestSha1: $digestSha1,
-            digestMd5: $digestMd5,
-            jpegFrameWidth: $frameWidth,
-            jpegFrameHeight: $frameHeight,
-            iptcBlobs: $iptcBlobs,
-            iptcDoc: $iptcDoc,
-        );
+        return (new MetadataBuilder())
+            ->withExif($exifBlobs, $exifDoc, $makerNotes)
+            ->withXmp($xmpBlobs, $xmpDoc)
+            ->withJpegSegments($iccProfile, $iccSegments, $flashPixStreams, $mpfDocument, $audioStreams)
+            ->withJpegFrame($frameWidth, $frameHeight, $bitsPerSample, $sampling, $subSampling)
+            ->withIptc($iptcBlobs, $iptcDoc)
+            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
+            ->build();
     }
 
     /**
@@ -241,30 +225,13 @@ final readonly class MetadataReader
         $makerNotes = $this->appleMerger->merge($makerNotes, $qt);
         $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
 
-        return new Metadata(
-            $exifBlobs,
-            $qt,
-            $exifDoc,
-            $xmpBlobs,
-            $xmpDoc,
-            $makerNotes,
-            null,
-            [],
-            [],
-            null,
-            [],
-            null,
-            null,
-            null,
-            $mimeType,
-            $fileSize,
-            $extension,
-            $digestSha1,
-            $digestMd5,
-            isoBmffItemReferences: $isoBmffItemReferences,
-            isoBmffDataReferences: $isoBmffDataReferences,
-            isoBmffUnresolvedItems: $isoBmffUnresolvedItems,
-        );
+        return (new MetadataBuilder())
+            ->withExif($exifBlobs, $exifDoc, $makerNotes)
+            ->withXmp($xmpBlobs, $xmpDoc)
+            ->withQuickTime($qt)
+            ->withIsoBmff($isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems)
+            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
+            ->build();
     }
 
     /**
@@ -295,27 +262,10 @@ final readonly class MetadataReader
         $makerNotes = $exifDoc->makerNotes();
         $makerNotes = $this->appleMerger->merge($makerNotes, null);
 
-        return new Metadata(
-            [$tiffBlob],
-            null,
-            $exifDoc,
-            [],
-            null,
-            $makerNotes,
-            null,
-            [],
-            [],
-            null,
-            [],
-            null,
-            null,
-            null,
-            $mimeType,
-            $fileSize,
-            $extension,
-            $digestSha1,
-            $digestMd5,
-        );
+        return (new MetadataBuilder())
+            ->withExif([$tiffBlob], $exifDoc, $makerNotes)
+            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
+            ->build();
     }
 
     /**
