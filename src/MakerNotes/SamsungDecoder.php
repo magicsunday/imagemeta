@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes;
 
+use Closure;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
@@ -111,9 +112,8 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
                 return null;
             }
 
-            $makerNoteVersion = null;
-            $deviceType       = null;
-            $modelId          = null;
+            $handlers = $this->tagHandlers($endian);
+            $results  = [];
 
             for ($index = 0; $index < $entryCount; ++$index) {
                 $entryOffset = $ifdStart + 2 + ($index * 12);
@@ -136,20 +136,18 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
                     continue;
                 }
 
-                switch ($tag) {
-                    case self::TAG_MAKER_NOTE_VERSION:
-                        $makerNoteVersion = $this->parseAscii($valueBytes);
-                        break;
-                    case self::TAG_DEVICE_TYPE:
-                        $deviceType = $this->parseAscii($valueBytes);
-                        break;
-                    case self::TAG_MODEL_ID:
-                        $modelId = $this->parseInt($valueBytes, $type, $endian);
-                        break;
-                    default:
-                        break;
+                $handler = $handlers[$tag] ?? null;
+                if ($handler !== null) {
+                    $results[$tag] = $handler($valueBytes, $type);
                 }
             }
+
+            /** @var string|null $makerNoteVersion */
+            $makerNoteVersion = $results[self::TAG_MAKER_NOTE_VERSION] ?? null;
+            /** @var string|null $deviceType */
+            $deviceType = $results[self::TAG_DEVICE_TYPE] ?? null;
+            /** @var int|null $modelId */
+            $modelId = $results[self::TAG_MODEL_ID] ?? null;
         } catch (ParseError) {
             return null;
         }
@@ -159,6 +157,20 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
         }
 
         return new SamsungMakerNotes($makerNoteVersion, $deviceType, $modelId);
+    }
+
+    /**
+     * Returns a tag-ID-to-parser mapping for Samsung maker note tags.
+     *
+     * @return array<int, Closure(string, int): (string|int|null)>
+     */
+    private function tagHandlers(Endian $endian): array
+    {
+        return [
+            self::TAG_MAKER_NOTE_VERSION => fn (string $bytes, int $type): ?string => $this->parseAscii($bytes),
+            self::TAG_DEVICE_TYPE        => fn (string $bytes, int $type): ?string => $this->parseAscii($bytes),
+            self::TAG_MODEL_ID           => fn (string $bytes, int $type): ?int => $this->parseInt($bytes, $type, $endian),
+        ];
     }
 
     /**
