@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
+use MagicSunday\ImageMeta\MakerNotes\Apple\PlistBinaryReader;
 use MagicSunday\ImageMeta\MakerNotes\Apple\PlistTextCursor;
 use MagicSunday\ImageMeta\MakerNotes\Apple\PlistTextParser;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
@@ -66,6 +67,7 @@ use function strlen;
 #[UsesClass(ApplePlistDictionary::class)]
 #[UsesClass(ApplePlistScalar::class)]
 #[UsesClass(BinaryPlistDecoder::class)]
+#[UsesClass(PlistBinaryReader::class)]
 #[UsesClass(KeyedArchiveUnarchiver::class)]
 #[UsesClass(PlistTextCursor::class)]
 #[UsesClass(PlistTextParser::class)]

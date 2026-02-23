@@ -19,12 +19,9 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function array_any;
 use function array_key_exists;
-use function chr;
 use function iconv;
 use function intdiv;
-use function is_int;
 use function is_string;
-use function ltrim;
 use function ord;
 use function sprintf;
 use function strlen;
@@ -44,6 +41,8 @@ use function substr;
  */
 final class BinaryPlistDecoder
 {
+    private readonly PlistBinaryReader $reader;
+
     /** @var int Simple marker type */
     private const int MARKER_TYPE_SIMPLE = 0;
 
@@ -107,9 +106,6 @@ final class BinaryPlistDecoder
     /** @var int Mask to isolate info nibble */
     private const int MARKER_INFO_MASK = BitMask::LOW_NIBBLE;
 
-    /** @var string Raw data payload (only valid during decode) */
-    private string $data = '';
-
     /**
      * Offset table with byte offsets for each object in the payload.
      *
@@ -120,14 +116,16 @@ final class BinaryPlistDecoder
     /** @var int Number of bytes used for object references inside arrays/dictionaries */
     private int $objectRefSize = 0;
 
-    /** @var int Length of in bytes */
-    private int $length = 0;
-
     /** @var int Index of the top-level object in the offset table */
     private int $topObjectIndex = 0;
 
     /** @var int Total number of objects inside the payload */
     private int $objectCount = 0;
+
+    public function __construct()
+    {
+        $this->reader = new PlistBinaryReader();
+    }
 
     /**
      * Decodes the supplied binary property list and returns the top level value.
@@ -158,8 +156,7 @@ final class BinaryPlistDecoder
             throw new ParseError('The property list payload is too small.', 1036);
         }
 
-        $this->data          = $data;
-        $this->length        = strlen($data);
+        $this->reader->load($data);
         $this->offsetTable   = [];
         $this->objectRefSize = 0;
         $this->objectCount   = 0;
@@ -184,16 +181,16 @@ final class BinaryPlistDecoder
      */
     private function decodeTrailer(): void
     {
-        $trailer = substr($this->data, -32);
+        $trailer = substr($this->reader->data(), -32);
         if (strlen($trailer) !== 32) {
             throw new ParseError('Invalid property list trailer.', 1039);
         }
 
         $offsetIntSize    = ord($trailer[6]);
         $objectRefSize    = ord($trailer[7]);
-        $numObjects       = $this->readUint64($trailer, 8);
-        $topObject        = $this->readUint64($trailer, 16);
-        $offsetTableStart = $this->readUint64($trailer, 24);
+        $numObjects       = $this->reader->readUint64($trailer, 8);
+        $topObject        = $this->reader->readUint64($trailer, 16);
+        $offsetTableStart = $this->reader->readUint64($trailer, 24);
 
         if ($offsetIntSize < 1 || $objectRefSize < 1) {
             throw new ParseError('Invalid property list integer sizing.', 1040);
@@ -207,7 +204,7 @@ final class BinaryPlistDecoder
             throw new ParseError('The property list contains too many objects.', 1042);
         }
 
-        if ($offsetTableStart >= $this->length) {
+        if ($offsetTableStart >= $this->reader->length()) {
             throw new ParseError('The offset table is located outside of the payload.', 1043);
         }
 
@@ -215,7 +212,7 @@ final class BinaryPlistDecoder
             throw new ParseError('The top level object index exceeds platform limits.', 1044);
         }
 
-        $trailerStart = $this->length - 32;
+        $trailerStart = $this->reader->length() - 32;
 
         if ($offsetTableStart < 8) {
             throw new ParseError('The offset table offset is invalid.', 1045);
@@ -262,7 +259,7 @@ final class BinaryPlistDecoder
         $cursor          = $offsetTableStart;
         $maxObjectOffset = $offsetTableStart - 1;
         for ($idx = 0; $idx < $numObjects; ++$idx) {
-            $offset = $this->readUint($cursor, $offsetIntSize);
+            $offset = $this->reader->readUint($cursor, $offsetIntSize);
             if ($offset < 8 || $offset > $maxObjectOffset) {
                 throw new ParseError('Object offset is outside of the object table range.', 1052);
             }
@@ -295,11 +292,11 @@ final class BinaryPlistDecoder
         }
 
         $offset = $this->offsetTable[$index];
-        if ($offset >= $this->length) {
+        if ($offset >= $this->reader->length()) {
             throw new ParseError('The property list object offset is invalid.', 1055);
         }
 
-        $marker = ord($this->data[$offset]);
+        $marker = ord($this->reader->data()[$offset]);
         $type   = $marker >> 4;
         $info   = $marker & self::MARKER_INFO_MASK;
 
@@ -376,7 +373,7 @@ final class BinaryPlistDecoder
             throw new ParseError('Integer object without payload.', 1058);
         }
 
-        return $this->readUint($offset + 1, $size);
+        return $this->reader->readUint($offset + 1, $size);
     }
 
     /**
@@ -394,7 +391,7 @@ final class BinaryPlistDecoder
         $size = 1 << $info;
 
         if ($size === 4) {
-            $bytes = substr($this->data, $offset + 1, 4);
+            $bytes = substr($this->reader->data(), $offset + 1, 4);
             if (strlen($bytes) !== 4) {
                 throw new ParseError('Incomplete real payload.', 1059);
             }
@@ -403,7 +400,7 @@ final class BinaryPlistDecoder
         }
 
         if ($size === 8) {
-            $bytes = substr($this->data, $offset + 1, 8);
+            $bytes = substr($this->reader->data(), $offset + 1, 8);
             if (strlen($bytes) !== 8) {
                 throw new ParseError('Incomplete double payload.', 1062);
             }
@@ -431,7 +428,7 @@ final class BinaryPlistDecoder
             throw new ParseError('Date objects must use eight byte payloads.', 1066);
         }
 
-        $payload = substr($this->data, $offset + 1, $size);
+        $payload = substr($this->reader->data(), $offset + 1, $size);
         if (strlen($payload) !== $size) {
             throw new ParseError('Incomplete date payload.', 1067);
         }
@@ -487,9 +484,9 @@ final class BinaryPlistDecoder
      */
     private function parseData(int $offset, int $info): string
     {
-        [$size, $header] = $this->readLength($offset, $info);
+        [$size, $header] = $this->reader->readLength($offset, $info);
 
-        $payload = substr($this->data, $offset + $header, $size);
+        $payload = substr($this->reader->data(), $offset + $header, $size);
         if (strlen($payload) !== $size) {
             throw new ParseError('Incomplete data payload.', 1071);
         }
@@ -509,9 +506,9 @@ final class BinaryPlistDecoder
      */
     private function parseAscii(int $offset, int $info): string
     {
-        [$size, $header] = $this->readLength($offset, $info);
+        [$size, $header] = $this->reader->readLength($offset, $info);
 
-        $payload = substr($this->data, $offset + $header, $size);
+        $payload = substr($this->reader->data(), $offset + $header, $size);
         if (strlen($payload) !== $size) {
             throw new ParseError('Incomplete ASCII string payload.', 1072);
         }
@@ -531,10 +528,10 @@ final class BinaryPlistDecoder
      */
     private function parseUnicode(int $offset, int $info): string
     {
-        [$size, $header] = $this->readLength($offset, $info);
+        [$size, $header] = $this->reader->readLength($offset, $info);
 
         $byteLength = $size * 2;
-        $payload    = substr($this->data, $offset + $header, $byteLength);
+        $payload    = substr($this->reader->data(), $offset + $header, $byteLength);
         if (strlen($payload) !== $byteLength) {
             throw new ParseError('Incomplete Unicode string payload.', 1073);
         }
@@ -559,9 +556,9 @@ final class BinaryPlistDecoder
      */
     private function parseUtf8(int $offset, int $info): string
     {
-        [$size, $header] = $this->readLength($offset, $info);
+        [$size, $header] = $this->reader->readLength($offset, $info);
 
-        $payload = substr($this->data, $offset + $header, $size);
+        $payload = substr($this->reader->data(), $offset + $header, $size);
         if (strlen($payload) !== $size) {
             throw new ParseError('Incomplete UTF-8 string payload.', 1075);
         }
@@ -587,7 +584,7 @@ final class BinaryPlistDecoder
      */
     private function parseUid(int $offset, int $info): int|string
     {
-        [$lengthValue, $header] = $this->readLength($offset, $info);
+        [$lengthValue, $header] = $this->reader->readLength($offset, $info);
 
         // UID special-case: if info != EXTENDED, the info nibble encodes "size - 1"
         if ($info === self::MARKER_INFO_EXTENDED) {
@@ -602,12 +599,12 @@ final class BinaryPlistDecoder
         }
 
         $payloadOffset = $offset + $header;
-        if (($payloadOffset + $size) > $this->length) {
+        if (($payloadOffset + $size) > $this->reader->length()) {
             throw new ParseError('Incomplete UID payload.', 1078);
         }
 
         if ($size <= PHP_INT_SIZE) {
-            $value = $this->readUint($payloadOffset, $size);
+            $value = $this->reader->readUint($payloadOffset, $size);
 
             // Handle platform-dependent overflow edge case:
             if ($size === PHP_INT_SIZE && $value < 0) {
@@ -617,63 +614,12 @@ final class BinaryPlistDecoder
             return $value;
         }
 
-        $payload = substr($this->data, $payloadOffset, $size);
+        $payload = substr($this->reader->data(), $payloadOffset, $size);
         if (strlen($payload) !== $size) {
             throw new ParseError('Incomplete UID payload.', 1079);
         }
 
-        return $this->convertUidPayloadToDecimalString($payload);
-    }
-
-    /**
-     * Convert an arbitrary-length big-endian byte string to a decimal string.
-     *
-     * @param string $payload Raw big-endian bytes.
-     *
-     * @return string Decimal representation.
-     */
-    private function convertUidPayloadToDecimalString(string $payload): string
-    {
-        $value  = '0';
-        $length = strlen($payload);
-
-        // Multiply-and-add in decimal to avoid GMP/BCMath requirements.
-        for ($idx = 0; $idx < $length; ++$idx) {
-            $value = $this->multiplyAndAddDecimalString($value, 256, ord($payload[$idx]));
-        }
-
-        return $value;
-    }
-
-    /**
-     * Multiply a base-10 number (as string) by an integer and add another integer (also base-10 result).
-     *
-     * @param string $decimal    Base-10 integer as string.
-     * @param int    $multiplier Multiplier (e.g., 256).
-     * @param int    $addend     Addend to add after multiplication.
-     *
-     * @return string Result in base-10 as string.
-     */
-    private function multiplyAndAddDecimalString(string $decimal, int $multiplier, int $addend): string
-    {
-        $carry  = $addend;
-        $result = '';
-
-        for ($idx = strlen($decimal) - 1; $idx >= 0; --$idx) {
-            $digit   = ord($decimal[$idx]) - 48; // ASCII '0' => 48
-            $product = ($digit * $multiplier) + $carry;
-            $result  = chr(($product % 10) + 48) . $result;
-            $carry   = intdiv($product, 10);
-        }
-
-        while ($carry > 0) {
-            $result = chr(($carry % 10) + 48) . $result;
-            $carry  = intdiv($carry, 10);
-        }
-
-        $trimmed = ltrim($result, '0');
-
-        return $trimmed === '' ? '0' : $trimmed;
+        return $this->reader->convertUidPayloadToDecimalString($payload);
     }
 
     /**
@@ -688,21 +634,21 @@ final class BinaryPlistDecoder
      */
     private function parseArray(int $offset, int $info): ApplePlistArray
     {
-        [$count, $header] = $this->readLength($offset, $info);
+        [$count, $header] = $this->reader->readLength($offset, $info);
         if ($count === 0) {
             return new ApplePlistArray([]);
         }
 
         $refsOffset = $offset + $header;
         $bytes      = $count * $this->objectRefSize;
-        if (($refsOffset + $bytes) > $this->length) {
+        if (($refsOffset + $bytes) > $this->reader->length()) {
             throw new ParseError('Array references exceed payload bounds.', 1080);
         }
 
         /** @var BinaryPlistArray $result */
         $result = [];
         for ($idx = 0; $idx < $count; ++$idx) {
-            $reference = $this->readUint($refsOffset + ($idx * $this->objectRefSize), $this->objectRefSize);
+            $reference = $this->reader->readUint($refsOffset + ($idx * $this->objectRefSize), $this->objectRefSize);
             $result[]  = $this->parseObject($reference);
         }
 
@@ -721,14 +667,14 @@ final class BinaryPlistDecoder
      */
     private function parseDictionary(int $offset, int $info): ApplePlistDictionary
     {
-        [$count, $header] = $this->readLength($offset, $info);
+        [$count, $header] = $this->reader->readLength($offset, $info);
         if ($count === 0) {
             return new ApplePlistDictionary([]);
         }
 
         $refsOffset = $offset + $header;
         $bytes      = $count * $this->objectRefSize * 2;
-        if (($refsOffset + $bytes) > $this->length) {
+        if (($refsOffset + $bytes) > $this->reader->length()) {
             throw new ParseError('Dictionary references exceed payload bounds.', 1081);
         }
 
@@ -738,8 +684,8 @@ final class BinaryPlistDecoder
         $values = [];
 
         for ($idx = 0; $idx < $count; ++$idx) {
-            $keyRef = $this->readUint($refsOffset + ($idx * $this->objectRefSize), $this->objectRefSize);
-            $valRef = $this->readUint(
+            $keyRef = $this->reader->readUint($refsOffset + ($idx * $this->objectRefSize), $this->objectRefSize);
+            $valRef = $this->reader->readUint(
                 $refsOffset + ($count * $this->objectRefSize) + ($idx * $this->objectRefSize),
                 $this->objectRefSize
             );
@@ -773,99 +719,5 @@ final class BinaryPlistDecoder
         }
 
         return new ApplePlistDictionary($entries);
-    }
-
-    /**
-     * Read a length header (inline nibble or extended integer).
-     *
-     * @param int $offset Object start offset.
-     * @param int $info   Info nibble.
-     *
-     * @return array{0:int,1:int} [length, headerByteCount]
-     *
-     * @throws ParseError
-     */
-    private function readLength(int $offset, int $info): array
-    {
-        if ($info !== self::MARKER_INFO_EXTENDED) {
-            return [$info, 1];
-        }
-
-        $sizeMarkerOffset = $offset + 1;
-        if ($sizeMarkerOffset >= $this->length) {
-            throw new ParseError('The property list size marker exceeds the payload.', 1084);
-        }
-
-        $marker    = ord($this->data[$sizeMarkerOffset]);
-        $type      = $marker >> 4;
-        $innerInfo = $marker & self::MARKER_INFO_MASK;
-        if ($type !== self::MARKER_TYPE_INTEGER) {
-            throw new ParseError('Size marker does not encode an integer.', 1085);
-        }
-
-        $sizeBytes = 1 << $innerInfo;
-        $value     = $this->readUint($sizeMarkerOffset + 1, $sizeBytes);
-
-        return [$value, 2 + $sizeBytes];
-    }
-
-    /**
-     * Read an unsigned big-endian integer of length $length starting at $offset.
-     *
-     * @param int $offset Start offset.
-     * @param int $length Number of bytes to read.
-     *
-     * @return int
-     *
-     * @throws ParseError
-     */
-    private function readUint(int $offset, int $length): int
-    {
-        if ($length < 1) {
-            throw new ParseError('Cannot read zero length integers.', 1086);
-        }
-
-        if (($offset < 0) || (($offset + $length) > $this->length)) {
-            throw new ParseError('Attempted to read outside of the payload.', 1087);
-        }
-
-        $value = 0;
-        for ($idx = 0; $idx < $length; ++$idx) {
-            $value = ($value << 8) | ord($this->data[$offset + $idx]);
-        }
-
-        return $value;
-    }
-
-    /**
-     * Read an unsigned 64-bit big-endian integer from a slice.
-     *
-     * @param string $data   32-byte trailer slice.
-     * @param int    $offset Offset in $data.
-     *
-     * @return int
-     *
-     * @throws ParseError
-     */
-    private function readUint64(string $data, int $offset): int
-    {
-        $slice = substr($data, $offset, 8);
-        if (strlen($slice) !== 8) {
-            throw new ParseError('Failed to read 64-bit integer.', 1088);
-        }
-
-        $parts = @unpack('Nhigh/Nlow', $slice);
-        if ($parts === false || !array_key_exists('high', $parts) || !array_key_exists('low', $parts)) {
-            throw new ParseError('Failed to unpack 64-bit integer.', 1089);
-        }
-
-        $rawHigh = $parts['high'];
-        $rawLow  = $parts['low'];
-
-        if (!is_int($rawHigh) || !is_int($rawLow)) {
-            throw new ParseError('Unexpected 64-bit integer components.', 1090);
-        }
-
-        return ($rawHigh << 32) | $rawLow;
     }
 }
