@@ -12,8 +12,10 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleDictionaryValueExtractor;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleRationalNormaliser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,6 +27,7 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(AppleDictionaryValueExtractor::class)]
+#[UsesClass(AppleRationalNormaliser::class)]
 final class AppleDecoderNumericValueTest extends TestCase
 {
     /**
@@ -57,9 +60,9 @@ final class AppleDecoderNumericValueTest extends TestCase
     #[Test]
     public function numericScalarValueParsesWhitespaceSeparatedPairs(): void
     {
-        $extractor = new AppleDictionaryValueExtractor();
+        $normaliser = new AppleRationalNormaliser();
 
-        $result = $extractor->numericScalarValue('44 1610612736');
+        $result = $normaliser->numericScalarValue('44 1610612736');
 
         self::assertNotNull($result);
         self::assertEqualsWithDelta(44 / 1610612736, $result, 1e-12);
