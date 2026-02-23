@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Convenience;
 
+use DateMalformedStringException;
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -18,7 +19,6 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Temporal;
-use Throwable;
 
 use function is_array;
 use function is_string;
@@ -60,7 +60,7 @@ final readonly class CaptureDateResolver
             if ($createDate !== null) {
                 try {
                     return new DateTimeImmutable($createDate);
-                } catch (Throwable) {
+                } catch (DateMalformedStringException) {
                     // Ignore malformed timestamps and continue searching for fallbacks.
                 }
             }

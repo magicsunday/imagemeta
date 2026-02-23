@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Factory;
 
+use DateMalformedStringException;
 use DateTimeImmutable;
 use DateTimeZone;
-use Exception;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
@@ -259,7 +259,8 @@ final readonly class TemporalFactory
 
         try {
             return new DateTimeImmutable($value, new DateTimeZone('UTC'));
-        } catch (Exception) {
+        } catch (DateMalformedStringException) {
+            // XMP date formats may be incomplete or malformed; yield null for graceful degradation.
             return null;
         }
     }

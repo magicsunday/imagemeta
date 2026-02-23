@@ -131,6 +131,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         try {
             $value = (new BinaryPlistDecoder())->decode($payload);
         } catch (ParseError) {
+            // Apple binary plist formats vary across iOS versions; decode failures yield null.
             return null;
         }
 
@@ -164,6 +165,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         try {
             $dictionary = $this->parseDictionary($raw, $offset, $length);
         } catch (ParseError) {
+            // Apple text dictionary formats are not formally specified; parse failures yield null.
             return null;
         }
 
@@ -660,6 +662,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             /** @phpstan-ignore-next-line */
             return $this->isStringKeyedArray($native) ? $native : null;
         } catch (ParseError) {
+            // Keyed archive blobs may use unsupported archive versions; decode failures yield null.
             return null;
         }
     }

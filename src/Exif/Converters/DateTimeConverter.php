@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
+use DateInvalidTimeZoneException;
 use DateTimeZone;
-use Exception;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 
@@ -76,7 +76,8 @@ final readonly class DateTimeConverter
 
         try {
             return new DateTimeZone($trimmed);
-        } catch (Exception) {
+        } catch (DateInvalidTimeZoneException) {
+            // EXIF timezone offsets may be malformed; return null to let callers use fallbacks.
             return null;
         }
     }

@@ -149,6 +149,7 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
             /** @var int|null $modelId */
             $modelId = $results[self::TAG_MODEL_ID] ?? null;
         } catch (ParseError) {
+            // Samsung maker notes may use non-standard IFD layouts; parse failures yield null.
             return null;
         }
 

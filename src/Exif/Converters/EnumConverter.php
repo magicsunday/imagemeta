@@ -15,7 +15,7 @@ use BackedEnum;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
-use Throwable;
+use ValueError;
 
 use function ctype_digit;
 use function fmod;
@@ -71,7 +71,8 @@ final readonly class EnumConverter
             $resolved = $enumClass::from($value);
 
             return $resolved;
-        } catch (Throwable) {
+        } catch (ValueError) {
+            // Graceful degradation: unknown enum backing values yield null.
             return null;
         }
     }

@@ -213,6 +213,7 @@ final readonly class MatrixConverter
         try {
             return json_encode($values, JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR);
         } catch (JsonException) {
+            // Fallback to CSV when JSON encoding fails on exotic matrix values.
             return implode(',', $values);
         }
     }

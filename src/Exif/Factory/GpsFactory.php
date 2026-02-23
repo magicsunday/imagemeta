@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Factory;
 
+use DateMalformedStringException;
 use DateTimeImmutable;
 use DateTimeZone;
-use Exception;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -648,7 +648,8 @@ final readonly class GpsFactory
         try {
             // Parse with UTC fallback for timezone-less values (GPS time is always UTC)
             $dateTime = new DateTimeImmutable($value, new DateTimeZone('UTC'));
-        } catch (Exception) {
+        } catch (DateMalformedStringException) {
+            // GPS timestamps from camera firmware may be malformed; yield null for graceful degradation.
             return null;
         }
 
@@ -679,7 +680,8 @@ final readonly class GpsFactory
 
         try {
             $dateTime = new DateTimeImmutable($dateTimeString);
-        } catch (Exception) {
+        } catch (DateMalformedStringException) {
+            // GPS timestamps from camera firmware may be malformed; yield null for graceful degradation.
             return null;
         }
 
