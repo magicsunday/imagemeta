@@ -827,6 +827,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             try {
                 $largeSize = $this->readU64FromBytes($peek, $largeSizeOffset, 'meta child large size');
             } catch (ParseError) {
+                // Unparseable large-size field indicates an implausible box size.
                 return false;
             }
 

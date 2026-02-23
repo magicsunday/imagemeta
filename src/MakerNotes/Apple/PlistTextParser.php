@@ -53,6 +53,7 @@ final readonly class PlistTextParser
         try {
             $dictionary = $this->parseDictionary($cursor);
         } catch (ParseError) {
+            // Malformed plist structure; yield null for graceful degradation.
             return null;
         }
 
