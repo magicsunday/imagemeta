@@ -16,9 +16,13 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
 use MagicSunday\ImageMeta\Exif\Reader\DeviceExifReader;
-use MagicSunday\ImageMeta\Exif\Reader\ExposureExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ExposureParameterReader;
+use MagicSunday\ImageMeta\Exif\Reader\FocalReader;
 use MagicSunday\ImageMeta\Exif\Reader\GpsExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\ImageExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\IsoSensitivityReader;
+use MagicSunday\ImageMeta\Exif\Reader\SceneModeReader;
+use MagicSunday\ImageMeta\Exif\Reader\SensorDataReader;
 use MagicSunday\ImageMeta\Exif\Reader\TemporalExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\ThumbnailExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\TiffBaselineExifReader;
@@ -83,7 +87,15 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
 
     private ?TemporalExifReader $cachedTemporalReader = null;
 
-    private ?ExposureExifReader $cachedExposureReader = null;
+    private ?ExposureParameterReader $cachedExposureParameterReader = null;
+
+    private ?IsoSensitivityReader $cachedIsoSensitivityReader = null;
+
+    private ?SceneModeReader $cachedSceneModeReader = null;
+
+    private ?FocalReader $cachedFocalReader = null;
+
+    private ?SensorDataReader $cachedSensorDataReader = null;
 
     private ?ImageExifReader $cachedImageReader = null;
 
@@ -568,172 +580,172 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
 
     public function spectralSensitivity(): ?string
     {
-        return $this->exposureReader()->spectralSensitivity();
+        return $this->isoSensitivityReader()->spectralSensitivity();
     }
 
     public function oecf(): ?Oecf
     {
-        return $this->exposureReader()->oecf();
+        return $this->sensorDataReader()->oecf();
     }
 
     public function oecfPayload(): ?string
     {
-        return $this->exposureReader()->oecfPayload();
+        return $this->sensorDataReader()->oecfPayload();
     }
 
     public function sensitivityType(): ?SensitivityType
     {
-        return $this->exposureReader()->sensitivityType();
+        return $this->isoSensitivityReader()->sensitivityType();
     }
 
     public function standardOutputSensitivity(): ?int
     {
-        return $this->exposureReader()->standardOutputSensitivity();
+        return $this->isoSensitivityReader()->standardOutputSensitivity();
     }
 
     public function recommendedExposureIndex(): ?int
     {
-        return $this->exposureReader()->recommendedExposureIndex();
+        return $this->isoSensitivityReader()->recommendedExposureIndex();
     }
 
     public function isoSpeedValue(): ?int
     {
-        return $this->exposureReader()->isoSpeedValue();
+        return $this->isoSensitivityReader()->isoSpeedValue();
     }
 
     public function iso(): ?int
     {
-        return $this->exposureReader()->iso();
+        return $this->isoSensitivityReader()->iso();
     }
 
     public function isoBestEffort(): ?int
     {
-        return $this->exposureReader()->isoBestEffort();
+        return $this->isoSensitivityReader()->isoBestEffort();
     }
 
     public function isoSpeedLatitudeYyy(): ?int
     {
-        return $this->exposureReader()->isoSpeedLatitudeYyy();
+        return $this->isoSensitivityReader()->isoSpeedLatitudeYyy();
     }
 
     public function isoSpeedLatitudeZzz(): ?int
     {
-        return $this->exposureReader()->isoSpeedLatitudeZzz();
+        return $this->isoSensitivityReader()->isoSpeedLatitudeZzz();
     }
 
     public function exposureTime(): ?float
     {
-        return $this->exposureReader()->exposureTime();
+        return $this->exposureParameterReader()->exposureTime();
     }
 
     public function exposureTimeFormatted(): ?string
     {
-        return $this->exposureReader()->exposureTimeFormatted();
+        return $this->exposureParameterReader()->exposureTimeFormatted();
     }
 
     public function shutterSpeedValue(): ?float
     {
-        return $this->exposureReader()->shutterSpeedValue();
+        return $this->exposureParameterReader()->shutterSpeedValue();
     }
 
     public function shutterSpeedSeconds(): ?float
     {
-        return $this->exposureReader()->shutterSpeedSeconds();
+        return $this->exposureParameterReader()->shutterSpeedSeconds();
     }
 
     public function shutterSpeedFormatted(): ?string
     {
-        return $this->exposureReader()->shutterSpeedFormatted();
+        return $this->exposureParameterReader()->shutterSpeedFormatted();
     }
 
     public function fNumber(): ?float
     {
-        return $this->exposureReader()->fNumber();
+        return $this->exposureParameterReader()->fNumber();
     }
 
     public function apertureValue(): ?float
     {
-        return $this->exposureReader()->apertureValue();
+        return $this->exposureParameterReader()->apertureValue();
     }
 
     public function apertureValueFormatted(): ?string
     {
-        return $this->exposureReader()->apertureValueFormatted();
+        return $this->exposureParameterReader()->apertureValueFormatted();
     }
 
     public function focalLengthMm(): ?float
     {
-        return $this->exposureReader()->focalLengthMm();
+        return $this->focalReader()->focalLengthMm();
     }
 
     public function focalLength35Mm(): ?int
     {
-        return $this->exposureReader()->focalLength35Mm();
+        return $this->focalReader()->focalLength35Mm();
     }
 
     public function exposureProgram(): ?ExposureProgram
     {
-        return $this->exposureReader()->exposureProgram();
+        return $this->exposureParameterReader()->exposureProgram();
     }
 
     public function meteringMode(): ?MeteringMode
     {
-        return $this->exposureReader()->meteringMode();
+        return $this->sceneModeReader()->meteringMode();
     }
 
     public function flash(): ?int
     {
-        return $this->exposureReader()->flash();
+        return $this->sceneModeReader()->flash();
     }
 
     public function flashInfo(): ?FlashInfo
     {
-        return $this->exposureReader()->flashInfo();
+        return $this->sceneModeReader()->flashInfo();
     }
 
     public function flashEnergy(): ?float
     {
-        return $this->exposureReader()->flashEnergy();
+        return $this->sceneModeReader()->flashEnergy();
     }
 
     public function whiteBalance(): ?WhiteBalance
     {
-        return $this->exposureReader()->whiteBalance();
+        return $this->sceneModeReader()->whiteBalance();
     }
 
     public function exposureBias(): ?float
     {
-        return $this->exposureReader()->exposureBias();
+        return $this->exposureParameterReader()->exposureBias();
     }
 
     public function brightnessValue(): ?float
     {
-        return $this->exposureReader()->brightnessValue();
+        return $this->exposureParameterReader()->brightnessValue();
     }
 
     public function brightnessValueFormatted(): ?string
     {
-        return $this->exposureReader()->brightnessValueFormatted();
+        return $this->exposureParameterReader()->brightnessValueFormatted();
     }
 
     public function maxApertureApex(): ?float
     {
-        return $this->exposureReader()->maxApertureApex();
+        return $this->exposureParameterReader()->maxApertureApex();
     }
 
     public function focalPlaneXResolution(): ?float
     {
-        return $this->exposureReader()->focalPlaneXResolution();
+        return $this->focalReader()->focalPlaneXResolution();
     }
 
     public function focalPlaneYResolution(): ?float
     {
-        return $this->exposureReader()->focalPlaneYResolution();
+        return $this->focalReader()->focalPlaneYResolution();
     }
 
     public function focalPlaneResolutionUnit(): int
     {
-        return $this->exposureReader()->focalPlaneResolutionUnit();
+        return $this->focalReader()->focalPlaneResolutionUnit();
     }
 
     /**
@@ -741,12 +753,12 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
      */
     public function subjectLocation(): ?array
     {
-        return $this->exposureReader()->subjectLocation();
+        return $this->sceneModeReader()->subjectLocation();
     }
 
     public function exposureIndex(): ?float
     {
-        return $this->exposureReader()->exposureIndex();
+        return $this->exposureParameterReader()->exposureIndex();
     }
 
     public function relatedSoundFile(): ?string
@@ -756,12 +768,12 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
 
     public function spatialFrequencyResponse(): ?SpatialFrequencyResponse
     {
-        return $this->exposureReader()->spatialFrequencyResponse();
+        return $this->sensorDataReader()->spatialFrequencyResponse();
     }
 
     public function compositeImage(): ?CompositeImage
     {
-        return $this->exposureReader()->compositeImage();
+        return $this->sensorDataReader()->compositeImage();
     }
 
     /**
@@ -769,17 +781,17 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
      */
     public function sourceImageNumberOfCompositeImage(): ?array
     {
-        return $this->exposureReader()->sourceImageNumberOfCompositeImage();
+        return $this->sensorDataReader()->sourceImageNumberOfCompositeImage();
     }
 
     public function sourceExposureTimesOfCompositeImage(): ?SourceExposureTimes
     {
-        return $this->exposureReader()->sourceExposureTimesOfCompositeImage();
+        return $this->sensorDataReader()->sourceExposureTimesOfCompositeImage();
     }
 
     public function cfaPattern(): ?CfaPattern
     {
-        return $this->exposureReader()->cfaPattern();
+        return $this->focalReader()->cfaPattern();
     }
 
     /**
@@ -787,32 +799,32 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
      */
     public function cfaPatternColors(): ?array
     {
-        return $this->exposureReader()->cfaPatternColors();
+        return $this->focalReader()->cfaPatternColors();
     }
 
     public function sceneType(): ?SceneType
     {
-        return $this->exposureReader()->sceneType();
+        return $this->sceneModeReader()->sceneType();
     }
 
     public function customRendered(): ?CustomRendered
     {
-        return $this->exposureReader()->customRendered();
+        return $this->sceneModeReader()->customRendered();
     }
 
     public function contrast(): ?Contrast
     {
-        return $this->exposureReader()->contrast();
+        return $this->sceneModeReader()->contrast();
     }
 
     public function saturation(): ?Saturation
     {
-        return $this->exposureReader()->saturation();
+        return $this->sceneModeReader()->saturation();
     }
 
     public function sharpness(): ?Sharpness
     {
-        return $this->exposureReader()->sharpness();
+        return $this->sceneModeReader()->sharpness();
     }
 
     public function sensingMethod(): ?SensingMethod
@@ -822,89 +834,89 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
 
     public function lightSource(): ?LightSource
     {
-        return $this->exposureReader()->lightSource();
+        return $this->sceneModeReader()->lightSource();
     }
 
     public function sceneCaptureType(): ?SceneCaptureType
     {
-        return $this->exposureReader()->sceneCaptureType();
+        return $this->sceneModeReader()->sceneCaptureType();
     }
 
     public function subjectDistanceRange(): ?SubjectDistanceRange
     {
-        return $this->exposureReader()->subjectDistanceRange();
+        return $this->sceneModeReader()->subjectDistanceRange();
     }
 
     public function subjectDistance(): ?float
     {
-        return $this->exposureReader()->subjectDistance();
+        return $this->sceneModeReader()->subjectDistance();
     }
 
     public function subjectArea(): ?SubjectArea
     {
-        return $this->exposureReader()->subjectArea();
+        return $this->sceneModeReader()->subjectArea();
     }
 
     public function digitalZoomRatio(): ?float
     {
-        return $this->exposureReader()->digitalZoomRatio();
+        return $this->exposureParameterReader()->digitalZoomRatio();
     }
 
     public function exposureMode(): ?ExposureMode
     {
-        return $this->exposureReader()->exposureMode();
+        return $this->exposureParameterReader()->exposureMode();
     }
 
     public function gainControl(): ?GainControl
     {
-        return $this->exposureReader()->gainControl();
+        return $this->sceneModeReader()->gainControl();
     }
 
     public function fileSource(): ?FileSource
     {
-        return $this->exposureReader()->fileSource();
+        return $this->focalReader()->fileSource();
     }
 
     public function interopIndex(): ?string
     {
-        return $this->exposureReader()->interopIndex();
+        return $this->focalReader()->interopIndex();
     }
 
     // ── Exposure aliases ────────────────────────────────────────
 
     public function isoLatitudeYyy(): ?int
     {
-        return $this->exposureReader()->isoLatitudeYyy();
+        return $this->isoSensitivityReader()->isoLatitudeYyy();
     }
 
     public function isoLatitudeZzz(): ?int
     {
-        return $this->exposureReader()->isoLatitudeZzz();
+        return $this->isoSensitivityReader()->isoLatitudeZzz();
     }
 
     public function shutterSpeedEv(): ?float
     {
-        return $this->exposureReader()->shutterSpeedEv();
+        return $this->exposureParameterReader()->shutterSpeedEv();
     }
 
     public function apertureEv(): ?float
     {
-        return $this->exposureReader()->apertureEv();
+        return $this->exposureParameterReader()->apertureEv();
     }
 
     public function photographicSensitivity(): ?int
     {
-        return $this->exposureReader()->photographicSensitivity();
+        return $this->isoSensitivityReader()->photographicSensitivity();
     }
 
     public function iSOSpeed(): ?int
     {
-        return $this->exposureReader()->iSOSpeed();
+        return $this->isoSensitivityReader()->iSOSpeed();
     }
 
     public function focalLengthIn35mmFilm(): ?int
     {
-        return $this->exposureReader()->focalLengthIn35mmFilm();
+        return $this->focalReader()->focalLengthIn35mmFilm();
     }
 
     // ── Device domain ───────────────────────────────────────────
@@ -1392,15 +1404,50 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
         );
     }
 
-    private function exposureReader(): ExposureExifReader
+    private function exposureParameterReader(): ExposureParameterReader
     {
-        return $this->cachedExposureReader ??= new ExposureExifReader(
+        return $this->cachedExposureParameterReader ??= new ExposureParameterReader(
             $this->reader(),
             $this->converters,
+            $this->exifIfd,
+        );
+    }
+
+    private function isoSensitivityReader(): IsoSensitivityReader
+    {
+        return $this->cachedIsoSensitivityReader ??= new IsoSensitivityReader(
+            $this->reader(),
             $this->ifd0,
             $this->exifIfd,
-            $this->interopIfd,
             $this->fallbackIfdSet(),
+        );
+    }
+
+    private function sceneModeReader(): SceneModeReader
+    {
+        return $this->cachedSceneModeReader ??= new SceneModeReader(
+            $this->reader(),
+            $this->converters,
+            $this->exifIfd,
+        );
+    }
+
+    private function focalReader(): FocalReader
+    {
+        return $this->cachedFocalReader ??= new FocalReader(
+            $this->reader(),
+            $this->exifIfd,
+            $this->ifd0,
+            $this->interopIfd,
+        );
+    }
+
+    private function sensorDataReader(): SensorDataReader
+    {
+        return $this->cachedSensorDataReader ??= new SensorDataReader(
+            $this->reader(),
+            $this->converters,
+            $this->exifIfd,
             $this->byteOrder,
         );
     }

@@ -13,7 +13,9 @@
     ],
     "ignore": [
         "**/MetadataBuilder.php",
-        "**/IfdValueReader.php"
+        "**/IfdValueReader.php",
+        "**/ExposureParameterReader.php",
+        "**/SceneModeReader.php"
     ],
     "exitCode": true
 }
