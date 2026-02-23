@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleLivePhoto;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -47,26 +48,15 @@ final class MotionFactoryTest extends TestCase
     public function createsFromAppleMakerNotes(): void
     {
         $apple = new AppleMakerNotes(
-            contentIdentifier: null,
-            cameraType: null,
-            hdrHeadroom: null,
-            hdrGain: null,
-            snr: null,
-            aeStable: null,
-            aeTarget: null,
-            aeAverage: null,
-            afStable: null,
-            afPerformance: null,
-            signalToNoiseRatioType: null,
-            luminanceNoiseAmplitude: null,
-            focusPosition: null,
-            livePhotoIndex: null,
-            colorTemperature: null,
-            semanticStylePreset: null,
-            semanticStyleWarmth: null,
-            semanticStyleTone: null,
+            identity: null,
+            hdr: null,
+            autoExposure: null,
+            autoFocus: null,
+            noise: null,
+            semanticStyle: null,
+            livePhoto: new AppleLivePhoto(index: null, time: null, runTime: null, accelerationVector: [0.1, 0.2, 0.98]),
+            camera: null,
             flags: [],
-            accelerationVector: [0.1, 0.2, 0.98],
         );
 
         $makerNotes = new MakerNotesRecord(
@@ -127,26 +117,15 @@ final class MotionFactoryTest extends TestCase
         $exifDoc = $this->parsedExifWithAccelerationVector(-0.1, -0.2, -0.98);
 
         $apple = new AppleMakerNotes(
-            contentIdentifier: null,
-            cameraType: null,
-            hdrHeadroom: null,
-            hdrGain: null,
-            snr: null,
-            aeStable: null,
-            aeTarget: null,
-            aeAverage: null,
-            afStable: null,
-            afPerformance: null,
-            signalToNoiseRatioType: null,
-            luminanceNoiseAmplitude: null,
-            focusPosition: null,
-            livePhotoIndex: null,
-            colorTemperature: null,
-            semanticStylePreset: null,
-            semanticStyleWarmth: null,
-            semanticStyleTone: null,
+            identity: null,
+            hdr: null,
+            autoExposure: null,
+            autoFocus: null,
+            noise: null,
+            semanticStyle: null,
+            livePhoto: new AppleLivePhoto(index: null, time: null, runTime: null, accelerationVector: [0.5, 0.6, 0.7]),
+            camera: null,
             flags: [],
-            accelerationVector: [0.5, 0.6, 0.7],
         );
 
         $makerNotes = new MakerNotesRecord(
@@ -203,26 +182,15 @@ final class MotionFactoryTest extends TestCase
     public function handlesPartialAccelerationVectorFromApple(): void
     {
         $apple = new AppleMakerNotes(
-            contentIdentifier: null,
-            cameraType: null,
-            hdrHeadroom: null,
-            hdrGain: null,
-            snr: null,
-            aeStable: null,
-            aeTarget: null,
-            aeAverage: null,
-            afStable: null,
-            afPerformance: null,
-            signalToNoiseRatioType: null,
-            luminanceNoiseAmplitude: null,
-            focusPosition: null,
-            livePhotoIndex: null,
-            colorTemperature: null,
-            semanticStylePreset: null,
-            semanticStyleWarmth: null,
-            semanticStyleTone: null,
+            identity: null,
+            hdr: null,
+            autoExposure: null,
+            autoFocus: null,
+            noise: null,
+            semanticStyle: null,
+            livePhoto: new AppleLivePhoto(index: null, time: null, runTime: null, accelerationVector: [0.1, 0.2]),
+            camera: null,
             flags: [],
-            accelerationVector: [0.1, 0.2],
         );
 
         $makerNotes = new MakerNotesRecord(

@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleHdr;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -81,26 +82,15 @@ final class SceneFactoryTest extends TestCase
     public function detectsHdrSceneFromAppleHeadroom(): void
     {
         $apple = new AppleMakerNotes(
-            contentIdentifier: null,
-            cameraType: null,
-            hdrHeadroom: 2.5,
-            hdrGain: null,
-            snr: null,
-            aeStable: null,
-            aeTarget: null,
-            aeAverage: null,
-            afStable: null,
-            afPerformance: null,
-            signalToNoiseRatioType: null,
-            luminanceNoiseAmplitude: null,
-            focusPosition: null,
-            livePhotoIndex: null,
-            colorTemperature: null,
-            semanticStylePreset: null,
-            semanticStyleWarmth: null,
-            semanticStyleTone: null,
+            identity: null,
+            hdr: new AppleHdr(headroom: 2.5, gain: null, imageType: null),
+            autoExposure: null,
+            autoFocus: null,
+            noise: null,
+            semanticStyle: null,
+            livePhoto: null,
+            camera: null,
             flags: [],
-            accelerationVector: null,
         );
 
         $makerNotes = new MakerNotesRecord(
@@ -156,26 +146,15 @@ final class SceneFactoryTest extends TestCase
     public function detectsHdrFromAppleFlags(): void
     {
         $apple = new AppleMakerNotes(
-            contentIdentifier: null,
-            cameraType: null,
-            hdrHeadroom: null,
-            hdrGain: null,
-            snr: null,
-            aeStable: null,
-            aeTarget: null,
-            aeAverage: null,
-            afStable: null,
-            afPerformance: null,
-            signalToNoiseRatioType: null,
-            luminanceNoiseAmplitude: null,
-            focusPosition: null,
-            livePhotoIndex: null,
-            colorTemperature: null,
-            semanticStylePreset: null,
-            semanticStyleWarmth: null,
-            semanticStyleTone: null,
+            identity: null,
+            hdr: null,
+            autoExposure: null,
+            autoFocus: null,
+            noise: null,
+            semanticStyle: null,
+            livePhoto: null,
+            camera: null,
             flags: ['hdrEnabled' => true],
-            accelerationVector: null,
         );
 
         $makerNotes = new MakerNotesRecord(

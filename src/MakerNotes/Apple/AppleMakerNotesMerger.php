@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Value\RunTime;
 
 use function array_any;
 use function array_key_exists;
@@ -78,59 +79,129 @@ final class AppleMakerNotesMerger
     ): AppleMakerNotes {
         $lookup = new QuickTimeLookup($quickTime);
 
-        $contentIdentifier = $makerNotes?->contentIdentifier;
+        $contentIdentifier = $makerNotes?->identity?->contentIdentifier;
         if ($contentIdentifier === null && $quickTime instanceof QuickTimeMeta) {
             $contentIdentifier = $quickTime->contentIdentifier();
         }
 
-        $cameraType = $makerNotes?->cameraType;
-        if ($cameraType === null) {
-            $cameraType = $lookup->string('CameraType');
+        $imageCaptureRequestId = $makerNotes?->identity?->imageCaptureRequestId;
+        if ($imageCaptureRequestId === null) {
+            $imageCaptureRequestId = $lookup->string('ImageCaptureRequestID');
         }
 
-        $hdrHeadroom = $makerNotes?->hdrHeadroom;
+        $burstUuid = $makerNotes?->identity?->burstUuid;
+        if ($burstUuid === null) {
+            $burstUuid = $lookup->string('BurstUUID');
+        }
+
+        $imageUniqueId = $makerNotes?->identity?->imageUniqueId;
+        if ($imageUniqueId === null) {
+            $imageUniqueId = $lookup->string('ImageUniqueID');
+        }
+
+        $photoIdentifier = $makerNotes?->identity?->photoIdentifier;
+        if ($photoIdentifier === null) {
+            $photoIdentifier = $lookup->string('PhotoIdentifier');
+        }
+
+        $hdrHeadroom = $makerNotes?->hdr?->headroom;
         if ($hdrHeadroom === null) {
             $hdrHeadroom = $lookup->float('HdrHeadroom', 'HDRHeadroom');
         }
 
-        $hdrGain = $makerNotes?->hdrGain;
+        $hdrGain = $makerNotes?->hdr?->gain;
         if ($hdrGain === null) {
             $hdrGain = $this->quickTimeFloatList($lookup, 'HdrGain', 'HDRGain');
         }
 
-        $snr = $makerNotes?->snr;
+        $hdrImageType = $this->normalizeEnumerated($makerNotes?->hdr?->imageType, AppleMaps::HDR_IMAGE_TYPES);
+        if ($hdrImageType === null) {
+            $hdrImageType = $this->quickTimeEnumerated($lookup, AppleMaps::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
+        }
+
+        $snr = $makerNotes?->noise?->snr;
         if ($snr === null) {
             $snr = $lookup->float('SNRSetting', 'SNR');
         }
 
-        $focusPosition = $makerNotes?->focusPosition;
+        $focusPosition = $makerNotes?->autoFocus?->focusPosition;
         if ($focusPosition === null) {
             $focusPosition = $lookup->float('FocusPosition');
         }
 
-        $livePhotoIndex = $makerNotes?->livePhotoIndex;
+        $focusDistanceRange = $makerNotes?->autoFocus?->focusDistanceRange;
+        if ($focusDistanceRange === null) {
+            $focusDistanceRange = $this->quickTimeFocusDistanceRange($lookup);
+        }
+
+        $afMeasuredDepth = $makerNotes?->autoFocus?->measuredDepth;
+        if ($afMeasuredDepth === null) {
+            $afMeasuredDepth = $lookup->float('AFMeasuredDepth');
+        }
+
+        $afConfidence = $makerNotes?->autoFocus?->confidence;
+        if ($afConfidence === null) {
+            $afConfidence = $lookup->float('AFConfidence');
+        }
+
+        $livePhotoIndex = $makerNotes?->livePhoto?->index;
         if ($livePhotoIndex === null) {
             $livePhotoIndex = $lookup->int('LivePhotoVideoIndex', 'LivePhotoMovieIndex');
         }
 
-        $livePhotoTime = $makerNotes?->livePhotoTime;
+        $livePhotoTime = $makerNotes?->livePhoto?->time;
 
-        $colorTemperature = $makerNotes?->colorTemperature;
+        $accelerationVector = $makerNotes?->livePhoto?->accelerationVector;
+        if ($accelerationVector === null) {
+            $accelerationVector = $this->quickTimeFloatList($lookup, 'AccelerationVector');
+        }
+
+        $cameraType = $makerNotes?->camera?->cameraType;
+        if ($cameraType === null) {
+            $cameraType = $lookup->string('CameraType');
+        }
+
+        $colorTemperature = $makerNotes?->camera?->colorTemperature;
         if ($colorTemperature === null) {
             $colorTemperature = $lookup->int('ColorTemperature');
         }
 
-        $semanticPreset = $makerNotes?->semanticStylePreset;
+        $qualityHint = $makerNotes?->camera?->qualityHint;
+        if ($qualityHint === null) {
+            $qualityHint = $this->quickTimeStringOrNumeric($lookup, 'QualityHint');
+        }
+
+        $colorCorrectionMatrix = $makerNotes?->camera?->colorCorrectionMatrix;
+        if ($colorCorrectionMatrix === null) {
+            $colorCorrectionMatrix = $this->quickTimeFloatList($lookup, 'ColorCorrectionMatrix');
+        }
+
+        $makerNoteVersion = $makerNotes?->camera?->makerNoteVersion;
+        if ($makerNoteVersion === null) {
+            $makerNoteVersion = $lookup->string('MakerNoteVersion');
+        }
+
+        $oisMode = $makerNotes?->camera?->oisMode;
+        if ($oisMode === null) {
+            $oisMode = $this->quickTimeStringOrNumeric($lookup, 'OISMode');
+        }
+
+        $imageCaptureType = $this->normalizeEnumerated($makerNotes?->camera?->imageCaptureType, AppleMaps::IMAGE_CAPTURE_TYPES);
+        if ($imageCaptureType === null) {
+            $imageCaptureType = $this->quickTimeEnumerated($lookup, AppleMaps::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
+        }
+
+        $semanticPreset = $makerNotes?->semanticStyle?->preset;
         if ($semanticPreset === null) {
             $semanticPreset = $lookup->string('SemanticStylePreset');
         }
 
-        $semanticWarmth = $makerNotes?->semanticStyleWarmth;
+        $semanticWarmth = $makerNotes?->semanticStyle?->warmth;
         if ($semanticWarmth === null) {
             $semanticWarmth = $lookup->float('SemanticStyleWarmth');
         }
 
-        $semanticTone = $makerNotes?->semanticStyleTone;
+        $semanticTone = $makerNotes?->semanticStyle?->tone;
         if ($semanticTone === null) {
             $semanticTone = $lookup->float('SemanticStyleTone');
         }
@@ -152,11 +223,6 @@ final class AppleMakerNotesMerger
             }
         }
 
-        $accelerationVector = $makerNotes?->accelerationVector;
-        if ($accelerationVector === null) {
-            $accelerationVector = $this->quickTimeFloatList($lookup, 'AccelerationVector');
-        }
-
         $flags = $makerNotes?->flags;
         if ($flags === null) {
             $flags = [];
@@ -169,107 +235,46 @@ final class AppleMakerNotesMerger
             }
         }
 
-        $imageCaptureRequestId = $makerNotes?->imageCaptureRequestId;
-        if ($imageCaptureRequestId === null) {
-            $imageCaptureRequestId = $lookup->string('ImageCaptureRequestID');
-        }
+        $identity = AppleCaptureIdentity::createIfPresent($contentIdentifier, $imageCaptureRequestId, $burstUuid, $imageUniqueId, $photoIdentifier);
 
-        $qualityHint = $makerNotes?->qualityHint;
-        if ($qualityHint === null) {
-            $qualityHint = $this->quickTimeStringOrNumeric($lookup, 'QualityHint');
-        }
+        $hdr = AppleHdr::createIfPresent($hdrHeadroom, $hdrGain, $hdrImageType);
 
-        $colorCorrectionMatrix = $makerNotes?->colorCorrectionMatrix;
-        if ($colorCorrectionMatrix === null) {
-            $colorCorrectionMatrix = $this->quickTimeFloatList($lookup, 'ColorCorrectionMatrix');
-        }
+        $autoExposure = $makerNotes?->autoExposure;
 
-        $makerNoteVersion = $makerNotes?->makerNoteVersion;
-        if ($makerNoteVersion === null) {
-            $makerNoteVersion = $lookup->string('MakerNoteVersion');
-        }
+        $autoFocus = ($makerNotes?->autoFocus?->stable !== null || $makerNotes?->autoFocus?->performance !== null
+            || $afMeasuredDepth !== null || $afConfidence !== null || $focusPosition !== null || $focusDistanceRange !== null)
+            ? new AppleAutoFocus($makerNotes?->autoFocus?->stable, $makerNotes?->autoFocus?->performance, $afMeasuredDepth, $afConfidence, $focusPosition, $focusDistanceRange)
+            : null;
 
-        $hdrImageType = $this->normalizeEnumerated($makerNotes?->hdrImageType, AppleMaps::HDR_IMAGE_TYPES);
-        if ($hdrImageType === null) {
-            $hdrImageType = $this->quickTimeEnumerated($lookup, AppleMaps::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
-        }
+        $noise = ($snr !== null || $makerNotes?->noise?->signalToNoiseRatioType !== null
+            || $makerNotes?->noise?->luminanceNoiseAmplitude !== null)
+            ? new AppleNoise($snr, $makerNotes?->noise?->signalToNoiseRatioType, $makerNotes?->noise?->luminanceNoiseAmplitude)
+            : null;
 
-        $burstUuid = $makerNotes?->burstUuid;
-        if ($burstUuid === null) {
-            $burstUuid = $lookup->string('BurstUUID');
-        }
+        $style = ($semanticPreset !== null || $semanticWarmth !== null || $semanticTone !== null)
+            ? new AppleSemanticStyle($semanticPreset, $semanticWarmth, $semanticTone)
+            : null;
 
-        $focusDistanceRange = $makerNotes?->focusDistanceRange;
-        if ($focusDistanceRange === null) {
-            $focusDistanceRange = $this->quickTimeFocusDistanceRange($lookup);
-        }
+        $livePhoto = ($livePhotoIndex !== null || $livePhotoTime !== null
+            || $makerNotes?->livePhoto?->runTime instanceof RunTime || $accelerationVector !== null)
+            ? new AppleLivePhoto($livePhotoIndex, $livePhotoTime, $makerNotes?->livePhoto?->runTime, $accelerationVector)
+            : null;
 
-        $oisMode = $makerNotes?->oisMode;
-        if ($oisMode === null) {
-            $oisMode = $this->quickTimeStringOrNumeric($lookup, 'OISMode');
-        }
-
-        $imageCaptureType = $this->normalizeEnumerated($makerNotes?->imageCaptureType, AppleMaps::IMAGE_CAPTURE_TYPES);
-        if ($imageCaptureType === null) {
-            $imageCaptureType = $this->quickTimeEnumerated($lookup, AppleMaps::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
-        }
-
-        $imageUniqueId = $makerNotes?->imageUniqueId;
-        if ($imageUniqueId === null) {
-            $imageUniqueId = $lookup->string('ImageUniqueID');
-        }
-
-        $photoIdentifier = $makerNotes?->photoIdentifier;
-        if ($photoIdentifier === null) {
-            $photoIdentifier = $lookup->string('PhotoIdentifier');
-        }
-
-        $afMeasuredDepth = $makerNotes?->afMeasuredDepth;
-        if ($afMeasuredDepth === null) {
-            $afMeasuredDepth = $lookup->float('AFMeasuredDepth');
-        }
-
-        $afConfidence = $makerNotes?->afConfidence;
-        if ($afConfidence === null) {
-            $afConfidence = $lookup->float('AFConfidence');
-        }
+        $camera = ($cameraType !== null || $imageCaptureType !== null || $makerNoteVersion !== null
+            || $qualityHint !== null || $oisMode !== null || $colorTemperature !== null || $colorCorrectionMatrix !== null)
+            ? new AppleCameraCapture($cameraType, $imageCaptureType, $makerNoteVersion, $qualityHint, $oisMode, $colorTemperature, $colorCorrectionMatrix)
+            : null;
 
         return new AppleMakerNotes(
-            contentIdentifier: $contentIdentifier,
-            cameraType: $cameraType,
-            hdrHeadroom: $hdrHeadroom,
-            hdrGain: $hdrGain,
-            snr: $snr,
-            aeStable: $makerNotes?->aeStable,
-            aeTarget: $makerNotes?->aeTarget,
-            aeAverage: $makerNotes?->aeAverage,
-            afStable: $makerNotes?->afStable,
-            afPerformance: $makerNotes?->afPerformance,
-            signalToNoiseRatioType: $makerNotes?->signalToNoiseRatioType,
-            luminanceNoiseAmplitude: $makerNotes?->luminanceNoiseAmplitude,
-            focusPosition: $focusPosition,
-            livePhotoIndex: $livePhotoIndex,
-            colorTemperature: $colorTemperature,
-            semanticStylePreset: $semanticPreset,
-            semanticStyleWarmth: $semanticWarmth,
-            semanticStyleTone: $semanticTone,
-            flags: $flags,
-            accelerationVector: $accelerationVector,
-            imageCaptureRequestId: $imageCaptureRequestId,
-            qualityHint: $qualityHint,
-            colorCorrectionMatrix: $colorCorrectionMatrix,
-            livePhotoTime: $livePhotoTime,
-            runTime: $makerNotes?->runTime,
-            makerNoteVersion: $makerNoteVersion,
-            hdrImageType: $hdrImageType,
-            burstUuid: $burstUuid,
-            focusDistanceRange: $focusDistanceRange,
-            oisMode: $oisMode,
-            imageCaptureType: $imageCaptureType,
-            imageUniqueId: $imageUniqueId,
-            photoIdentifier: $photoIdentifier,
-            afMeasuredDepth: $afMeasuredDepth,
-            afConfidence: $afConfidence,
+            $identity,
+            $hdr,
+            $autoExposure,
+            $autoFocus,
+            $noise,
+            $style,
+            $livePhoto,
+            $camera,
+            $flags,
         );
     }
 

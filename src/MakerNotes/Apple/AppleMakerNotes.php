@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
-use MagicSunday\ImageMeta\Value\RunTime;
-
 /**
  * Represents curated maker note data extracted from Apple devices.
  */
@@ -25,26 +23,15 @@ final readonly class AppleMakerNotes
 
         if ($empty === null) {
             $empty = new self(
-                contentIdentifier: null,
-                cameraType: null,
-                hdrHeadroom: null,
-                hdrGain: null,
-                snr: null,
-                aeStable: null,
-                aeTarget: null,
-                aeAverage: null,
-                afStable: null,
-                afPerformance: null,
-                signalToNoiseRatioType: null,
-                luminanceNoiseAmplitude: null,
-                focusPosition: null,
-                livePhotoIndex: null,
-                colorTemperature: null,
-                semanticStylePreset: null,
-                semanticStyleWarmth: null,
-                semanticStyleTone: null,
+                identity: null,
+                hdr: null,
+                autoExposure: null,
+                autoFocus: null,
+                noise: null,
+                semanticStyle: null,
+                livePhoto: null,
+                camera: null,
                 flags: [],
-                accelerationVector: null,
             );
         }
 
@@ -52,78 +39,26 @@ final readonly class AppleMakerNotes
     }
 
     /**
-     * @param string|null         $contentIdentifier       Unique content identifier assigned by Apple platforms.
-     * @param string|int|null     $cameraType              Describes the hardware camera (e.g. "Wide", "Tele").
-     * @param float|null          $hdrHeadroom             HDR headroom value reported by the device.
-     * @param list<float>|null    $hdrGain                 HDR gain values per colour channel.
-     * @param float|null          $snr                     Signal-to-noise ratio setting.
-     * @param bool|null           $aeStable                Indicates whether auto exposure was stable during capture.
-     * @param float|null          $aeTarget                Auto exposure target luminance value.
-     * @param float|null          $aeAverage               Auto exposure average luminance value.
-     * @param bool|null           $afStable                Indicates whether auto focus was stable during capture.
-     * @param float|null          $afPerformance           Auto focus performance metric reported by the device.
-     * @param string|int|null     $signalToNoiseRatioType  Signal-to-noise ratio measurement type identifier.
-     * @param float|null          $luminanceNoiseAmplitude Luminance noise amplitude measured for the capture.
-     * @param float|null          $focusPosition           Lens focus position in the native scale.
-     * @param int|null            $livePhotoIndex          Index of the representative frame in a Live Photo sequence.
-     * @param int|null            $colorTemperature        White balance colour temperature in Kelvin.
-     * @param string|null         $semanticStylePreset     Selected semantic style preset name.
-     * @param float|null          $semanticStyleWarmth     Semantic style warmth adjustment.
-     * @param float|null          $semanticStyleTone       Semantic style tone adjustment.
-     * @param array<string, bool> $flags                   Boolean flags derived from maker note keys.
-     * @param list<float>|null    $accelerationVector      Acceleration vector recorded during capture.
-     * @param string|int|null     $imageCaptureRequestId   Identifier for the originating image capture request.
-     * @param string|null         $qualityHint             Quality hint reported by the processing pipeline.
-     * @param list<float>|null    $colorCorrectionMatrix   Color correction matrix components in row-major order.
-     * @param float|null          $livePhotoTime           Normalised Live Photo timestamp in seconds.
-     * @param RunTime|null        $runTime                 Capture runtime metadata describing the CMTime payload.
-     * @param string|null         $makerNoteVersion        Normalised maker note version string reported by the device.
-     * @param string|null         $hdrImageType            HDR image classification (e.g. "HDR").
-     * @param string|null         $burstUuid               Identifier referencing the originating burst.
-     * @param list<float>|null    $focusDistanceRange      Near and far focus distance bounds in meters.
-     * @param string|null         $oisMode                 Optical image stabilisation mode.
-     * @param string|null         $imageCaptureType        Capture type enumeration label.
-     * @param string|null         $imageUniqueId           Unique image identifier distinct from EXIF/ImageUniqueID.
-     * @param string|null         $photoIdentifier         Photos framework identifier for the asset.
-     * @param float|null          $afMeasuredDepth         Autofocus measured depth value in meters.
-     * @param float|null          $afConfidence            Autofocus confidence score between 0.0 and 1.0.
+     * @param AppleCaptureIdentity|null $identity      Unique identifiers for the captured image.
+     * @param AppleHdr|null             $hdr           HDR capture metadata.
+     * @param AppleAutoExposure|null    $autoExposure  Auto exposure parameters.
+     * @param AppleAutoFocus|null       $autoFocus     Auto focus parameters.
+     * @param AppleNoise|null           $noise         Signal-to-noise and luminance noise data.
+     * @param AppleSemanticStyle|null   $semanticStyle Semantic style adjustments.
+     * @param AppleLivePhoto|null       $livePhoto     Live Photo and motion metadata.
+     * @param AppleCameraCapture|null   $camera        Camera hardware and capture settings.
+     * @param array<string, bool>       $flags         Boolean flags derived from maker note keys.
      */
     public function __construct(
-        public ?string $contentIdentifier,
-        public string|int|null $cameraType,
-        public ?float $hdrHeadroom,
-        public ?array $hdrGain,
-        public ?float $snr,
-        public ?bool $aeStable,
-        public ?float $aeTarget,
-        public ?float $aeAverage,
-        public ?bool $afStable,
-        public ?float $afPerformance,
-        public string|int|null $signalToNoiseRatioType,
-        public ?float $luminanceNoiseAmplitude,
-        public ?float $focusPosition,
-        public ?int $livePhotoIndex,
-        public ?int $colorTemperature,
-        public ?string $semanticStylePreset,
-        public ?float $semanticStyleWarmth,
-        public ?float $semanticStyleTone,
+        public ?AppleCaptureIdentity $identity,
+        public ?AppleHdr $hdr,
+        public ?AppleAutoExposure $autoExposure,
+        public ?AppleAutoFocus $autoFocus,
+        public ?AppleNoise $noise,
+        public ?AppleSemanticStyle $semanticStyle,
+        public ?AppleLivePhoto $livePhoto,
+        public ?AppleCameraCapture $camera,
         public array $flags,
-        public ?array $accelerationVector,
-        public string|int|null $imageCaptureRequestId = null,
-        public ?string $qualityHint = null,
-        public ?array $colorCorrectionMatrix = null,
-        public ?float $livePhotoTime = null,
-        public ?RunTime $runTime = null,
-        public ?string $makerNoteVersion = null,
-        public ?string $hdrImageType = null,
-        public ?string $burstUuid = null,
-        public ?array $focusDistanceRange = null,
-        public ?string $oisMode = null,
-        public ?string $imageCaptureType = null,
-        public ?string $imageUniqueId = null,
-        public ?string $photoIdentifier = null,
-        public ?float $afMeasuredDepth = null,
-        public ?float $afConfidence = null,
     ) {
     }
 }

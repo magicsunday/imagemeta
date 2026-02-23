@@ -243,7 +243,7 @@ final readonly class ValueFactory
 
         $whiteBalanceDetails = new WhiteBalanceDetails(
             mode: $exposure->adjustments?->whiteBalance,
-            kelvin: $apple->colorTemperature ?? $quickTimeLookup->int('ColorTemperature'),
+            kelvin: $apple->camera->colorTemperature ?? $quickTimeLookup->int('ColorTemperature'),
             rgGain: null,
             bgGain: null,
         );

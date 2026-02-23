@@ -52,7 +52,7 @@ final readonly class MotionFactory
      */
     private function buildMotion(?ParsedExif $exif, AppleMakerNotes $apple): Motion
     {
-        $vector = $apple->accelerationVector;
+        $vector = $apple->livePhoto?->accelerationVector;
 
         if (!is_array($vector)) {
             $vector = $exif?->accelerationVector();

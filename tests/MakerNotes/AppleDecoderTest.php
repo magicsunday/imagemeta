@@ -11,13 +11,21 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleAutoExposure;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleAutoFocus;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleCameraCapture;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleCaptureIdentity;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleDictionaryValueExtractor;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleFlagExtractor;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleHdr;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleLivePhoto;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleNoise;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleSemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
@@ -48,7 +56,15 @@ use function strlen;
  */
 #[CoversClass(AppleDecoder::class)]
 #[CoversClass(AppleMakerNotesBuilder::class)]
+#[UsesClass(AppleAutoExposure::class)]
+#[UsesClass(AppleAutoFocus::class)]
+#[UsesClass(AppleCameraCapture::class)]
+#[UsesClass(AppleCaptureIdentity::class)]
+#[UsesClass(AppleHdr::class)]
+#[UsesClass(AppleLivePhoto::class)]
 #[UsesClass(AppleMakerNotes::class)]
+#[UsesClass(AppleNoise::class)]
+#[UsesClass(AppleSemanticStyle::class)]
 #[UsesClass(ApplePlistArray::class)]
 #[UsesClass(ApplePlistDictionary::class)]
 #[UsesClass(ApplePlistScalar::class)]
@@ -93,8 +109,8 @@ final class AppleDecoderTest extends TestCase
 
         $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
-        self::assertSame('archived-photo-uuid', $apple->contentIdentifier);
-        self::assertSame('Front', $apple->cameraType);
+        self::assertSame('archived-photo-uuid', $apple->identity?->contentIdentifier);
+        self::assertSame('Front', $apple->camera?->cameraType);
     }
 
     /**
@@ -132,16 +148,16 @@ final class AppleDecoderTest extends TestCase
 
         $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
-        self::assertSame('archived-photo-uuid', $apple->contentIdentifier);
-        self::assertEqualsWithDelta(3.25, $apple->hdrHeadroom, 1e-12);
-        self::assertSame([1.0, 1.5, 1.75], $apple->hdrGain);
-        self::assertEqualsWithDelta(23.5, $apple->snr, 1e-12);
-        self::assertEqualsWithDelta(0.58, $apple->focusPosition, 1e-12);
-        self::assertSame(5, $apple->livePhotoIndex);
-        self::assertSame('DramaticWarm', $apple->semanticStylePreset);
-        self::assertEqualsWithDelta(0.3, $apple->semanticStyleWarmth, 1e-12);
-        self::assertEqualsWithDelta(-0.15, $apple->semanticStyleTone, 1e-12);
-        self::assertSame([0.12, -0.34, 0.56], $apple->accelerationVector);
+        self::assertSame('archived-photo-uuid', $apple->identity?->contentIdentifier);
+        self::assertEqualsWithDelta(3.25, $apple->hdr?->headroom, 1e-12);
+        self::assertSame([1.0, 1.5, 1.75], $apple->hdr?->gain);
+        self::assertEqualsWithDelta(23.5, $apple->noise?->snr, 1e-12);
+        self::assertEqualsWithDelta(0.58, $apple->autoFocus?->focusPosition, 1e-12);
+        self::assertSame(5, $apple->livePhoto?->index);
+        self::assertSame('DramaticWarm', $apple->semanticStyle?->preset);
+        self::assertEqualsWithDelta(0.3, $apple->semanticStyle->warmth, 1e-12);
+        self::assertEqualsWithDelta(-0.15, $apple->semanticStyle->tone, 1e-12);
+        self::assertSame([0.12, -0.34, 0.56], $apple->livePhoto->accelerationVector);
 
         self::assertArrayHasKey('hdrAuto', $apple->flags);
         self::assertArrayHasKey('hdrEnabled', $apple->flags);
@@ -175,18 +191,18 @@ final class AppleDecoderTest extends TestCase
 
         $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
-        self::assertSame('photo-uuid', $apple->contentIdentifier);
-        self::assertSame('Tele', $apple->cameraType);
-        self::assertEqualsWithDelta(2.5, $apple->hdrHeadroom, 1e-12);
-        self::assertSame([1.0, 1.2, 1.3], $apple->hdrGain);
-        self::assertEqualsWithDelta(24.5, $apple->snr, 1e-12);
-        self::assertEqualsWithDelta(0.62, $apple->focusPosition, 1e-12);
-        self::assertSame(2, $apple->livePhotoIndex);
-        self::assertSame(5000, $apple->colorTemperature);
-        self::assertSame('Warm', $apple->semanticStylePreset);
-        self::assertEqualsWithDelta(0.15, $apple->semanticStyleWarmth, 1e-12);
-        self::assertEqualsWithDelta(-0.05, $apple->semanticStyleTone, 1e-12);
-        self::assertSame([0.1, -0.2, 0.3], $apple->accelerationVector);
+        self::assertSame('photo-uuid', $apple->identity?->contentIdentifier);
+        self::assertSame('Tele', $apple->camera?->cameraType);
+        self::assertEqualsWithDelta(2.5, $apple->hdr?->headroom, 1e-12);
+        self::assertSame([1.0, 1.2, 1.3], $apple->hdr?->gain);
+        self::assertEqualsWithDelta(24.5, $apple->noise?->snr, 1e-12);
+        self::assertEqualsWithDelta(0.62, $apple->autoFocus?->focusPosition, 1e-12);
+        self::assertSame(2, $apple->livePhoto?->index);
+        self::assertSame(5000, $apple->camera->colorTemperature);
+        self::assertSame('Warm', $apple->semanticStyle?->preset);
+        self::assertEqualsWithDelta(0.15, $apple->semanticStyle->warmth, 1e-12);
+        self::assertEqualsWithDelta(-0.05, $apple->semanticStyle->tone, 1e-12);
+        self::assertSame([0.1, -0.2, 0.3], $apple->livePhoto->accelerationVector);
 
         self::assertTrue($apple->flags['livePhotoAuto']);
         self::assertArrayHasKey('nightMode', $apple->flags);
@@ -210,7 +226,7 @@ final class AppleDecoderTest extends TestCase
 
         $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
-        self::assertSame('padded', $apple->contentIdentifier);
+        self::assertSame('padded', $apple->identity?->contentIdentifier);
         self::assertTrue($apple->flags['livePhotoAuto']);
     }
 
@@ -231,7 +247,7 @@ final class AppleDecoderTest extends TestCase
 
         $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
-        self::assertSame('flags-zero', $apple->contentIdentifier);
+        self::assertSame('flags-zero', $apple->identity?->contentIdentifier);
 
         self::assertArrayHasKey('nightMode', $apple->flags);
         self::assertArrayHasKey('longExposure', $apple->flags);
@@ -264,7 +280,7 @@ final class AppleDecoderTest extends TestCase
 
         $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
-        self::assertSame(2, $apple->livePhotoIndex);
+        self::assertSame(2, $apple->livePhoto?->index);
     }
 
     /**
@@ -283,10 +299,10 @@ final class AppleDecoderTest extends TestCase
 
         $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
-        self::assertSame('compact-style', $apple->contentIdentifier);
-        self::assertSame('Vivid', $apple->semanticStylePreset);
-        self::assertEqualsWithDelta(0.25, $apple->semanticStyleWarmth, 1e-12);
-        self::assertEqualsWithDelta(-0.1, $apple->semanticStyleTone, 1e-12);
+        self::assertSame('compact-style', $apple->identity?->contentIdentifier);
+        self::assertSame('Vivid', $apple->semanticStyle?->preset);
+        self::assertEqualsWithDelta(0.25, $apple->semanticStyle->warmth, 1e-12);
+        self::assertEqualsWithDelta(-0.1, $apple->semanticStyle->tone, 1e-12);
     }
 
     /**
@@ -316,16 +332,16 @@ final class AppleDecoderTest extends TestCase
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
-        self::assertSame('2.1', $notes->makerNoteVersion);
-        self::assertSame('HDR', $notes->hdrImageType);
-        self::assertSame('burst-uuid', $notes->burstUuid);
-        self::assertSame([0.45, 1.5], $notes->focusDistanceRange);
-        self::assertSame('2', $notes->oisMode);
-        self::assertSame('Burst', $notes->imageCaptureType);
-        self::assertSame('unique-id', $notes->imageUniqueId);
-        self::assertSame('photo-id', $notes->photoIdentifier);
-        self::assertEqualsWithDelta(0.75, $notes->afMeasuredDepth, 1e-12);
-        self::assertEqualsWithDelta(0.8, $notes->afConfidence, 1e-12);
+        self::assertSame('2.1', $notes->camera?->makerNoteVersion);
+        self::assertSame('HDR', $notes->hdr?->imageType);
+        self::assertSame('burst-uuid', $notes->identity?->burstUuid);
+        self::assertSame([0.45, 1.5], $notes->autoFocus?->focusDistanceRange);
+        self::assertSame('2', $notes->camera->oisMode);
+        self::assertSame('Burst', $notes->camera->imageCaptureType);
+        self::assertSame('unique-id', $notes->identity->imageUniqueId);
+        self::assertSame('photo-id', $notes->identity->photoIdentifier);
+        self::assertEqualsWithDelta(0.75, $notes->autoFocus->measuredDepth, 1e-12);
+        self::assertEqualsWithDelta(0.8, $notes->autoFocus->confidence, 1e-12);
     }
 
     /**
@@ -349,7 +365,7 @@ final class AppleDecoderTest extends TestCase
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
-        self::assertSame($expected, $notes->makerNoteVersion);
+        self::assertSame($expected, $notes->camera?->makerNoteVersion);
     }
 
     /**
@@ -383,9 +399,9 @@ final class AppleDecoderTest extends TestCase
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
-        self::assertSame([0.3, 2.8], $notes->focusDistanceRange);
-        self::assertSame('HDR3', $notes->hdrImageType);
-        self::assertSame('Portrait', $notes->imageCaptureType);
+        self::assertSame([0.3, 2.8], $notes->autoFocus?->focusDistanceRange);
+        self::assertSame('HDR3', $notes->hdr?->imageType);
+        self::assertSame('Portrait', $notes->camera?->imageCaptureType);
     }
 
     /**
@@ -406,7 +422,7 @@ final class AppleDecoderTest extends TestCase
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
-        self::assertSame([0.42], $notes->focusDistanceRange);
+        self::assertSame([0.42], $notes->autoFocus?->focusDistanceRange);
     }
 
     /**
@@ -427,7 +443,7 @@ final class AppleDecoderTest extends TestCase
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
-        self::assertSame([1.75], $notes->focusDistanceRange);
+        self::assertSame([1.75], $notes->autoFocus?->focusDistanceRange);
     }
 
     /**
@@ -449,8 +465,8 @@ final class AppleDecoderTest extends TestCase
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
-        self::assertSame('99', $notes->hdrImageType);
-        self::assertSame('42', $notes->imageCaptureType);
+        self::assertSame('99', $notes->hdr?->imageType);
+        self::assertSame('42', $notes->camera?->imageCaptureType);
     }
 
     /**
@@ -472,7 +488,7 @@ final class AppleDecoderTest extends TestCase
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
-        self::assertSame($label, $notes->hdrImageType);
+        self::assertSame($label, $notes->hdr?->imageType);
     }
 
     /**
@@ -506,7 +522,7 @@ final class AppleDecoderTest extends TestCase
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
-        self::assertSame($label, $notes->imageCaptureType);
+        self::assertSame($label, $notes->camera?->imageCaptureType);
     }
 
     /**
@@ -545,17 +561,17 @@ final class AppleDecoderTest extends TestCase
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
         $apple    = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
-        self::assertSame('textual', $apple->contentIdentifier);
-        self::assertSame('1.4', $apple->makerNoteVersion);
-        self::assertSame('HDR2', $apple->hdrImageType);
-        self::assertSame('text-burst', $apple->burstUuid);
-        self::assertSame([0.4, 1.6], $apple->focusDistanceRange);
-        self::assertSame('5', $apple->oisMode);
-        self::assertSame('Live Photo Long Exposure', $apple->imageCaptureType);
-        self::assertSame('text-unique', $apple->imageUniqueId);
-        self::assertSame('text-photo', $apple->photoIdentifier);
-        self::assertEqualsWithDelta(1.1, $apple->afMeasuredDepth, 1e-12);
-        self::assertEqualsWithDelta(0.65, $apple->afConfidence, 1e-12);
+        self::assertSame('textual', $apple->identity?->contentIdentifier);
+        self::assertSame('1.4', $apple->camera?->makerNoteVersion);
+        self::assertSame('HDR2', $apple->hdr?->imageType);
+        self::assertSame('text-burst', $apple->identity->burstUuid);
+        self::assertSame([0.4, 1.6], $apple->autoFocus?->focusDistanceRange);
+        self::assertSame('5', $apple->camera->oisMode);
+        self::assertSame('Live Photo Long Exposure', $apple->camera->imageCaptureType);
+        self::assertSame('text-unique', $apple->identity->imageUniqueId);
+        self::assertSame('text-photo', $apple->identity->photoIdentifier);
+        self::assertEqualsWithDelta(1.1, $apple->autoFocus->measuredDepth, 1e-12);
+        self::assertEqualsWithDelta(0.65, $apple->autoFocus->confidence, 1e-12);
     }
 
     /**
@@ -581,8 +597,8 @@ final class AppleDecoderTest extends TestCase
 
         self::assertInstanceOf(AppleMakerNotes::class, $mapped);
         self::assertInstanceOf(AppleMakerNotes::class, $unknown);
-        self::assertSame('Back Wide Angle', $mapped->cameraType);
-        self::assertSame(42, $unknown->cameraType);
+        self::assertSame('Back Wide Angle', $mapped->camera?->cameraType);
+        self::assertSame(42, $unknown->camera?->cameraType);
     }
 
     /**
@@ -608,9 +624,9 @@ final class AppleDecoderTest extends TestCase
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
-        self::assertSame('DictionaryPreset', $notes->semanticStylePreset);
-        self::assertEqualsWithDelta(0.45, $notes->semanticStyleWarmth, 1e-12);
-        self::assertEqualsWithDelta(-0.25, $notes->semanticStyleTone, 1e-12);
+        self::assertSame('DictionaryPreset', $notes->semanticStyle?->preset);
+        self::assertEqualsWithDelta(0.45, $notes->semanticStyle->warmth, 1e-12);
+        self::assertEqualsWithDelta(-0.25, $notes->semanticStyle->tone, 1e-12);
     }
 
     /**
@@ -638,9 +654,9 @@ final class AppleDecoderTest extends TestCase
         $notes = $builder->build($dictionary);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
-        self::assertSame(1200, $notes->livePhotoIndex);
-        self::assertEqualsWithDelta(2.0, $notes->livePhotoTime, 1e-12);
-        $runTime = $notes->runTime;
+        self::assertSame(1200, $notes->livePhoto?->index);
+        self::assertEqualsWithDelta(2.0, $notes->livePhoto->time, 1e-12);
+        $runTime = $notes->livePhoto->runTime;
         self::assertInstanceOf(RunTime::class, $runTime);
         self::assertSame(2, $runTime->epoch);
         self::assertSame(600, $runTime->timescale);
@@ -675,16 +691,16 @@ final class AppleDecoderTest extends TestCase
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
-        self::assertTrue($notes->aeStable);
-        self::assertEqualsWithDelta(3.7, $notes->aeTarget, 1e-12);
-        self::assertEqualsWithDelta(0.25, $notes->aeAverage, 1e-12);
-        self::assertFalse($notes->afStable);
-        self::assertEqualsWithDelta(1.5, $notes->afPerformance, 1e-12);
-        self::assertSame(2, $notes->signalToNoiseRatioType);
-        self::assertEqualsWithDelta(2.5, $notes->luminanceNoiseAmplitude, 1e-12);
-        self::assertSame('REQ-12345', $notes->imageCaptureRequestId);
-        self::assertSame('LowLight', $notes->qualityHint);
-        self::assertSame([1.0, 0.5, 0.25], $notes->colorCorrectionMatrix);
+        self::assertTrue($notes->autoExposure?->stable);
+        self::assertEqualsWithDelta(3.7, $notes->autoExposure->target, 1e-12);
+        self::assertEqualsWithDelta(0.25, $notes->autoExposure->average, 1e-12);
+        self::assertFalse($notes->autoFocus?->stable);
+        self::assertEqualsWithDelta(1.5, $notes->autoFocus->performance, 1e-12);
+        self::assertSame(2, $notes->noise?->signalToNoiseRatioType);
+        self::assertEqualsWithDelta(2.5, $notes->noise->luminanceNoiseAmplitude, 1e-12);
+        self::assertSame('REQ-12345', $notes->identity?->imageCaptureRequestId);
+        self::assertSame('LowLight', $notes->camera?->qualityHint);
+        self::assertSame([1.0, 0.5, 0.25], $notes->camera->colorCorrectionMatrix);
     }
 
     /**

@@ -12,10 +12,16 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
 use LogicException;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleAutoFocus;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleCameraCapture;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleCaptureIdentity;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleDictionaryValueExtractor;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleFlagExtractor;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleHdr;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleLivePhoto;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleNoise;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
@@ -61,8 +67,14 @@ use function strlen;
 #[CoversClass(KeyedArchiveResolver::class)]
 #[UsesClass(AppleDictionaryValueExtractor::class)]
 #[UsesClass(AppleFlagExtractor::class)]
+#[UsesClass(AppleAutoFocus::class)]
+#[UsesClass(AppleCameraCapture::class)]
+#[UsesClass(AppleCaptureIdentity::class)]
+#[UsesClass(AppleHdr::class)]
+#[UsesClass(AppleLivePhoto::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(AppleMakerNotesBuilder::class)]
+#[UsesClass(AppleNoise::class)]
 #[UsesClass(ApplePlistArray::class)]
 #[UsesClass(ApplePlistDictionary::class)]
 #[UsesClass(ApplePlistScalar::class)]
@@ -92,16 +104,16 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
         $apple    = $metadata->apple;
 
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
-        self::assertSame('content-identifier-xyz', $apple->contentIdentifier);
-        self::assertSame(6.25, $apple->hdrHeadroom);
-        self::assertSame([1.1, 1.2, 1.3], $apple->hdrGain);
-        self::assertSame(10.5, $apple->snr);
-        self::assertSame(0.75, $apple->focusPosition);
-        self::assertSame(5, $apple->livePhotoIndex);
-        self::assertEqualsWithDelta(0.5, $apple->livePhotoTime, 1e-12);
-        self::assertSame(6500, $apple->colorTemperature);
-        self::assertSame([0.1, 0.2, 0.3], $apple->accelerationVector);
-        $runTime = $apple->runTime;
+        self::assertSame('content-identifier-xyz', $apple->identity?->contentIdentifier);
+        self::assertSame(6.25, $apple->hdr?->headroom);
+        self::assertSame([1.1, 1.2, 1.3], $apple->hdr->gain);
+        self::assertSame(10.5, $apple->noise?->snr);
+        self::assertSame(0.75, $apple->autoFocus?->focusPosition);
+        self::assertSame(5, $apple->livePhoto?->index);
+        self::assertEqualsWithDelta(0.5, $apple->livePhoto->time, 1e-12);
+        self::assertSame(6500, $apple->camera?->colorTemperature);
+        self::assertSame([0.1, 0.2, 0.3], $apple->livePhoto->accelerationVector);
+        $runTime = $apple->livePhoto->runTime;
         self::assertInstanceOf(RunTime::class, $runTime);
         self::assertSame(1, $runTime->epoch);
         self::assertSame(10, $runTime->timescale);

@@ -142,82 +142,61 @@ final readonly class AppleMakerNotesBuilder
         $afMeasuredDepth    = $this->extractor->floatValue($dictionary, 'AFMeasuredDepth');
         $afConfidence       = $this->extractor->floatValue($dictionary, 'AFConfidence');
 
+        $identity = AppleCaptureIdentity::createIfPresent($contentIdentifier, $imageCaptureRequestId, $burstUuid, $imageUniqueId, $photoIdentifier);
+
+        $hdr = AppleHdr::createIfPresent($hdrHeadroom, $hdrGain, $hdrImageType);
+
+        $autoExposure = ($aeStable !== null || $aeTarget !== null || $aeAverage !== null)
+            ? new AppleAutoExposure($aeStable, $aeTarget, $aeAverage)
+            : null;
+
+        $autoFocus = ($afStable !== null || $afPerformance !== null || $afMeasuredDepth !== null
+            || $afConfidence !== null || $focusPosition !== null || $focusDistanceRange !== null)
+            ? new AppleAutoFocus($afStable, $afPerformance, $afMeasuredDepth, $afConfidence, $focusPosition, $focusDistanceRange)
+            : null;
+
+        $noise = ($snr !== null || $signalToNoiseRatioType !== null || $luminanceNoiseAmplitude !== null)
+            ? new AppleNoise($snr, $signalToNoiseRatioType, $luminanceNoiseAmplitude)
+            : null;
+
+        $style = ($semanticStylePreset !== null || $semanticStyleWarmth !== null || $semanticStyleTone !== null)
+            ? new AppleSemanticStyle($semanticStylePreset, $semanticStyleWarmth, $semanticStyleTone)
+            : null;
+
+        $livePhoto = ($livePhotoIndex !== null || $livePhotoTime !== null
+            || $runTime instanceof RunTime || $accelerationVector !== null)
+            ? new AppleLivePhoto($livePhotoIndex, $livePhotoTime, $runTime, $accelerationVector)
+            : null;
+
+        $camera = ($cameraType !== null || $imageCaptureType !== null || $makerNoteVersion !== null
+            || $qualityHint !== null || $oisMode !== null || $colorTemperature !== null || $colorCorrectionMatrix !== null)
+            ? new AppleCameraCapture($cameraType, $imageCaptureType, $makerNoteVersion, $qualityHint, $oisMode, $colorTemperature, $colorCorrectionMatrix)
+            : null;
+
         if (
-            $contentIdentifier === null
-            && $cameraType === null
-            && $hdrHeadroom === null
-            && $hdrGain === null
-            && $snr === null
-            && $aeStable === null
-            && $aeTarget === null
-            && $aeAverage === null
-            && $afStable === null
-            && $afPerformance === null
-            && $signalToNoiseRatioType === null
-            && $luminanceNoiseAmplitude === null
-            && $focusPosition === null
-            && $livePhotoIndex === null
-            && $livePhotoTime === null
-            && $colorTemperature === null
-            && $semanticStylePreset === null
-            && $semanticStyleWarmth === null
-            && $semanticStyleTone === null
+            !$identity instanceof AppleCaptureIdentity
+            && !$hdr instanceof AppleHdr
+            && !$autoExposure instanceof AppleAutoExposure
+            && !$autoFocus instanceof AppleAutoFocus
+            && !$noise instanceof AppleNoise
+            && !$style instanceof AppleSemanticStyle
+            && !$livePhoto instanceof AppleLivePhoto
+            && !$camera instanceof AppleCameraCapture
             && $flags === []
-            && $accelerationVector === null
-            && $imageCaptureRequestId === null
-            && $qualityHint === null
-            && $colorCorrectionMatrix === null
-            && !$runTime instanceof RunTime
-            && $makerNoteVersion === null
-            && $hdrImageType === null
-            && $burstUuid === null
-            && $focusDistanceRange === null
-            && $oisMode === null
-            && $imageCaptureType === null
-            && $imageUniqueId === null
-            && $photoIdentifier === null
-            && $afMeasuredDepth === null
-            && $afConfidence === null
         ) {
             return null;
         }
 
         return new AppleMakerNotes(
-            $contentIdentifier,
-            $cameraType,
-            $hdrHeadroom,
-            $hdrGain,
-            $snr,
-            $aeStable,
-            $aeTarget,
-            $aeAverage,
-            $afStable,
-            $afPerformance,
-            $signalToNoiseRatioType,
-            $luminanceNoiseAmplitude,
-            $focusPosition,
-            $livePhotoIndex,
-            $colorTemperature,
-            $semanticStylePreset,
-            $semanticStyleWarmth,
-            $semanticStyleTone,
+            $identity,
+            $hdr,
+            $autoExposure,
+            $autoFocus,
+            $noise,
+            $style,
+            $livePhoto,
+            $camera,
             $flags,
-            $accelerationVector,
-            $imageCaptureRequestId,
-            $qualityHint,
-            $colorCorrectionMatrix,
-            $livePhotoTime,
-            $runTime,
-            $makerNoteVersion,
-            $hdrImageType,
-            $burstUuid,
-            $focusDistanceRange,
-            $oisMode,
-            $imageCaptureType,
-            $imageUniqueId,
-            $photoIdentifier,
-            $afMeasuredDepth,
-            $afConfidence,
         );
     }
 }

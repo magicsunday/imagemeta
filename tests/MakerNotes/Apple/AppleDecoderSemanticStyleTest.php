@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleDictionaryValueExtractor;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleFlagExtractor;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleSemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -33,6 +34,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(AppleDictionaryValueExtractor::class)]
 #[UsesClass(AppleFlagExtractor::class)]
 #[UsesClass(AppleMakerNotes::class)]
+#[UsesClass(AppleSemanticStyle::class)]
 #[UsesClass(SemanticStyle::class)]
 final class AppleDecoderSemanticStyleTest extends TestCase
 {
@@ -59,8 +61,8 @@ final class AppleDecoderSemanticStyleTest extends TestCase
         $makerNotes = $builder->build($dictionary);
 
         self::assertInstanceOf(AppleMakerNotes::class, $makerNotes);
-        self::assertSame('RichWarm', $makerNotes->semanticStylePreset);
-        self::assertSame(0.25, $makerNotes->semanticStyleWarmth);
-        self::assertSame(-0.4, $makerNotes->semanticStyleTone);
+        self::assertSame('RichWarm', $makerNotes->semanticStyle?->preset);
+        self::assertSame(0.25, $makerNotes->semanticStyle->warmth);
+        self::assertSame(-0.4, $makerNotes->semanticStyle->tone);
     }
 }

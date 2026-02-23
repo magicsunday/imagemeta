@@ -65,7 +65,7 @@ final readonly class SceneFactory
         ?int $faceCount,
     ): Scene {
         $appleFlags = $apple->flags;
-        $hdrLabel   = $apple->hdrImageType;
+        $hdrLabel   = $apple->hdr?->imageType;
         $nightMode  = null;
 
         if ($quickTime instanceof QuickTimeMeta) {
@@ -89,7 +89,7 @@ final readonly class SceneFactory
         }
 
         if ($hdrScene === null) {
-            $hdrHeadroom = $apple->hdrHeadroom;
+            $hdrHeadroom = $apple->hdr?->headroom;
 
             if ($hdrHeadroom !== null && $hdrHeadroom > 0.0) {
                 $hdrScene = true;

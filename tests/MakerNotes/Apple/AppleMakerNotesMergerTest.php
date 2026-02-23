@@ -11,8 +11,16 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleAutoExposure;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleAutoFocus;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleCameraCapture;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleCaptureIdentity;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleHdr;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleLivePhoto;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleNoise;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleSemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
@@ -33,7 +41,15 @@ use function str_repeat;
  * @internal
  */
 #[CoversClass(AppleMakerNotesMerger::class)]
+#[UsesClass(AppleAutoExposure::class)]
+#[UsesClass(AppleAutoFocus::class)]
+#[UsesClass(AppleCameraCapture::class)]
+#[UsesClass(AppleCaptureIdentity::class)]
+#[UsesClass(AppleHdr::class)]
+#[UsesClass(AppleLivePhoto::class)]
 #[UsesClass(AppleMakerNotes::class)]
+#[UsesClass(AppleNoise::class)]
+#[UsesClass(AppleSemanticStyle::class)]
 #[UsesClass(QuickTimeLookup::class)]
 #[UsesClass(SemanticStyle::class)]
 #[UsesClass(MakerNotesRecord::class)]
@@ -54,41 +70,15 @@ final class AppleMakerNotesMergerTest extends TestCase
             128,
             str_repeat('1', 40),
             new AppleMakerNotes(
-                contentIdentifier: 'maker-note',
-                cameraType: 'Maker Camera',
-                hdrHeadroom: 2.1,
-                hdrGain: [1.1, 1.2, 1.3],
-                snr: 12.5,
-                aeStable: true,
-                aeTarget: 0.9,
-                aeAverage: 0.8,
-                afStable: false,
-                afPerformance: 0.5,
-                signalToNoiseRatioType: 'maker',
-                luminanceNoiseAmplitude: 0.5,
-                focusPosition: 0.4,
-                livePhotoIndex: 3,
-                colorTemperature: 5200,
-                semanticStylePreset: 'MakerPreset',
-                semanticStyleWarmth: 0.2,
-                semanticStyleTone: -0.1,
+                identity: new AppleCaptureIdentity('maker-note', 'maker-req', 'maker-burst', 'maker-unique', 'maker-photo'),
+                hdr: new AppleHdr(2.1, [1.1, 1.2, 1.3], 'HDR'),
+                autoExposure: new AppleAutoExposure(true, 0.9, 0.8),
+                autoFocus: new AppleAutoFocus(false, 0.5, 1.4, 0.7, 0.4, [0.3, 1.2]),
+                noise: new AppleNoise(12.5, 'maker', 0.5),
+                semanticStyle: new AppleSemanticStyle('MakerPreset', 0.2, -0.1),
+                livePhoto: new AppleLivePhoto(3, 0.5, null, [0.1, 0.2, 0.3]),
+                camera: new AppleCameraCapture('Maker Camera', 'Portrait', '2.0', 'High', 'Maker', 5200, [1.0, 0.0, 0.0]),
                 flags: ['nightMode' => true],
-                accelerationVector: [0.1, 0.2, 0.3],
-                imageCaptureRequestId: 'maker-req',
-                qualityHint: 'High',
-                colorCorrectionMatrix: [1.0, 0.0, 0.0],
-                livePhotoTime: 0.5,
-                runTime: null,
-                makerNoteVersion: '2.0',
-                hdrImageType: 'HDR',
-                burstUuid: 'maker-burst',
-                focusDistanceRange: [0.3, 1.2],
-                oisMode: 'Maker',
-                imageCaptureType: 'Portrait',
-                imageUniqueId: 'maker-unique',
-                photoIdentifier: 'maker-photo',
-                afMeasuredDepth: 1.4,
-                afConfidence: 0.7,
             ),
         );
 
@@ -120,13 +110,13 @@ final class AppleMakerNotesMergerTest extends TestCase
         self::assertSame(str_repeat('1', 40), $mapped->sha1);
 
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
-        self::assertSame('maker-note', $apple->contentIdentifier);
-        self::assertSame('Maker Camera', $apple->cameraType);
-        self::assertSame([1.1, 1.2, 1.3], $apple->hdrGain);
-        self::assertSame('MakerPreset', $apple->semanticStylePreset);
-        self::assertSame('Portrait', $apple->imageCaptureType);
-        self::assertSame('Maker', $apple->oisMode);
-        self::assertSame('maker-burst', $apple->burstUuid);
+        self::assertSame('maker-note', $apple->identity?->contentIdentifier);
+        self::assertSame('Maker Camera', $apple->camera?->cameraType);
+        self::assertSame([1.1, 1.2, 1.3], $apple->hdr?->gain);
+        self::assertSame('MakerPreset', $apple->semanticStyle?->preset);
+        self::assertSame('Portrait', $apple->camera->imageCaptureType);
+        self::assertSame('Maker', $apple->camera->oisMode);
+        self::assertSame('maker-burst', $apple->identity->burstUuid);
     }
 
     /**
@@ -143,26 +133,15 @@ final class AppleMakerNotesMergerTest extends TestCase
             64,
             str_repeat('2', 40),
             new AppleMakerNotes(
-                contentIdentifier: null,
-                cameraType: null,
-                hdrHeadroom: null,
-                hdrGain: null,
-                snr: null,
-                aeStable: null,
-                aeTarget: null,
-                aeAverage: null,
-                afStable: null,
-                afPerformance: null,
-                signalToNoiseRatioType: null,
-                luminanceNoiseAmplitude: null,
-                focusPosition: null,
-                livePhotoIndex: null,
-                colorTemperature: null,
-                semanticStylePreset: null,
-                semanticStyleWarmth: null,
-                semanticStyleTone: null,
+                identity: null,
+                hdr: null,
+                autoExposure: null,
+                autoFocus: null,
+                noise: null,
+                semanticStyle: null,
+                livePhoto: null,
+                camera: null,
                 flags: [],
-                accelerationVector: null,
             ),
         );
 
@@ -202,27 +181,27 @@ final class AppleMakerNotesMergerTest extends TestCase
         $apple = $mapped->apple;
 
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
-        self::assertSame('qt-content', $apple->contentIdentifier);
-        self::assertSame('Quick Camera', $apple->cameraType);
-        self::assertSame([0.9, 1.0, 1.1], $apple->hdrGain);
-        self::assertSame(1.25, $apple->hdrHeadroom);
-        self::assertSame(9.5, $apple->snr);
-        self::assertSame(0.45, $apple->focusPosition);
-        self::assertSame(2, $apple->livePhotoIndex);
-        self::assertSame(6100, $apple->colorTemperature);
-        self::assertSame('QuickPreset', $apple->semanticStylePreset);
-        self::assertSame([0.2, 0.1, -0.3], $apple->accelerationVector);
-        self::assertSame('qt-request', $apple->imageCaptureRequestId);
-        self::assertSame('Medium', $apple->qualityHint);
-        self::assertSame('1.1', $apple->makerNoteVersion);
-        self::assertSame('HDR2', $apple->hdrImageType);
-        self::assertSame([0.5, 1.8], $apple->focusDistanceRange);
-        self::assertSame('3', $apple->oisMode);
-        self::assertSame('Night Mode', $apple->imageCaptureType);
-        self::assertSame('qt-unique', $apple->imageUniqueId);
-        self::assertSame('qt-photo', $apple->photoIdentifier);
-        self::assertSame(1.2, $apple->afMeasuredDepth);
-        self::assertSame(0.6, $apple->afConfidence);
+        self::assertSame('qt-content', $apple->identity?->contentIdentifier);
+        self::assertSame('Quick Camera', $apple->camera?->cameraType);
+        self::assertSame([0.9, 1.0, 1.1], $apple->hdr?->gain);
+        self::assertSame(1.25, $apple->hdr->headroom);
+        self::assertSame(9.5, $apple->noise?->snr);
+        self::assertSame(0.45, $apple->autoFocus?->focusPosition);
+        self::assertSame(2, $apple->livePhoto?->index);
+        self::assertSame(6100, $apple->camera->colorTemperature);
+        self::assertSame('QuickPreset', $apple->semanticStyle?->preset);
+        self::assertSame([0.2, 0.1, -0.3], $apple->livePhoto->accelerationVector);
+        self::assertSame('qt-request', $apple->identity->imageCaptureRequestId);
+        self::assertSame('Medium', $apple->camera->qualityHint);
+        self::assertSame('1.1', $apple->camera->makerNoteVersion);
+        self::assertSame('HDR2', $apple->hdr->imageType);
+        self::assertSame([0.5, 1.8], $apple->autoFocus->focusDistanceRange);
+        self::assertSame('3', $apple->camera->oisMode);
+        self::assertSame('Night Mode', $apple->camera->imageCaptureType);
+        self::assertSame('qt-unique', $apple->identity->imageUniqueId);
+        self::assertSame('qt-photo', $apple->identity->photoIdentifier);
+        self::assertSame(1.2, $apple->autoFocus->measuredDepth);
+        self::assertSame(0.6, $apple->autoFocus->confidence);
     }
 
     /**
@@ -250,9 +229,9 @@ final class AppleMakerNotesMergerTest extends TestCase
 
         $apple = $mapped->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
-        self::assertSame('qt-content', $apple->contentIdentifier);
-        self::assertSame([0.3, -0.2, 0.1], $apple->accelerationVector);
-        self::assertSame('HDR', $apple->hdrImageType);
+        self::assertSame('qt-content', $apple->identity?->contentIdentifier);
+        self::assertSame([0.3, -0.2, 0.1], $apple->livePhoto?->accelerationVector);
+        self::assertSame('HDR', $apple->hdr?->imageType);
     }
 
     /**
@@ -269,26 +248,15 @@ final class AppleMakerNotesMergerTest extends TestCase
             16,
             str_repeat('3', 40),
             new AppleMakerNotes(
-                contentIdentifier: null,
-                cameraType: null,
-                hdrHeadroom: null,
-                hdrGain: null,
-                snr: null,
-                aeStable: null,
-                aeTarget: null,
-                aeAverage: null,
-                afStable: null,
-                afPerformance: null,
-                signalToNoiseRatioType: null,
-                luminanceNoiseAmplitude: null,
-                focusPosition: null,
-                livePhotoIndex: null,
-                colorTemperature: null,
-                semanticStylePreset: null,
-                semanticStyleWarmth: null,
-                semanticStyleTone: null,
+                identity: null,
+                hdr: null,
+                autoExposure: null,
+                autoFocus: null,
+                noise: null,
+                semanticStyle: null,
+                livePhoto: null,
+                camera: null,
                 flags: ['nightMode' => true, 'hdrEnabled' => false],
-                accelerationVector: null,
             ),
         );
 
