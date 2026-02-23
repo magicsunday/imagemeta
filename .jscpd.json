@@ -19,7 +19,12 @@
         "**/GpsCoordinateConverter.php",
         "**/GpsConverter.php",
         "**/GpsTimestampConverter.php",
-        "**/DngGeometryValidator.php"
+        "**/DngGeometryValidator.php",
+        "**/TiffTagConstraintValidator.php",
+        "**/TiffJpegValidator.php",
+        "**/TiffSampleValidator.php",
+        "**/TiffColorInkValidator.php",
+        "**/TiffImageDataValidator.php"
     ],
     "exitCode": true
 }
