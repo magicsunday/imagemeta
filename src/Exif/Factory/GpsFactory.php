@@ -21,6 +21,11 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Value\Enum as GpsEnum;
 use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\GpsDestination;
+use MagicSunday\ImageMeta\Value\GpsMeasurement;
+use MagicSunday\ImageMeta\Value\GpsMovement;
+use MagicSunday\ImageMeta\Value\GpsPosition;
+use MagicSunday\ImageMeta\Value\GpsTiming;
 
 use function array_any;
 use function array_map;
@@ -404,19 +409,30 @@ final readonly class GpsFactory
             return null;
         }
 
-        return new Gps(
+        $position = new GpsPosition(
             latitude: $latitude,
             longitude: $longitude,
             latitudeRef: $this->toGpsLatLonRef($latitudeRef),
             longitudeRef: $this->toGpsLatLonRef($longitudeRef),
             altitude: $altitude,
             altitudeRef: $this->toGpsAltitudeRef($altitudeRef),
-            version: $version,
-            versionRaw: $versionRaw,
-            satellites: $satellites,
-            status: $this->toGpsStatus($status),
-            measureMode: $this->toGpsMeasureMode($measureMode),
-            dop: $dop,
+            mapDatum: $mapDatum,
+        );
+
+        $destination = new GpsDestination(
+            latitude: $destLat,
+            latitudeRef: $this->toGpsLatLonRef($destLatRef),
+            longitude: $destLon,
+            longitudeRef: $this->toGpsLatLonRef($destLonRef),
+            bearingRef: $this->toGpsDirectionRef($destBearRef),
+            bearing: $destBear,
+            distanceRef: $this->toGpsDistanceRef($destDistRef),
+            distanceMetres: $destDistMetre,
+            distanceOriginalRef: $this->toGpsDistanceRef($destDistOriginalRef),
+            distanceOriginal: $destDistOriginal,
+        );
+
+        $movement = new GpsMovement(
             speedRef: $this->toGpsSpeedRef($speedRef),
             speedMs: $speedMs,
             speedOriginalRef: $this->toGpsSpeedRef($speedOriginalRef),
@@ -425,25 +441,34 @@ final readonly class GpsFactory
             track: $track,
             imageDirectionRef: $this->toGpsDirectionRef($imgDirRef),
             imageDirection: $imgDir,
-            mapDatum: $mapDatum,
-            destinationLatitudeRef: $this->toGpsLatLonRef($destLatRef),
-            destinationLatitude: $destLat,
-            destinationLongitudeRef: $this->toGpsLatLonRef($destLonRef),
-            destinationLongitude: $destLon,
-            destinationBearingRef: $this->toGpsDirectionRef($destBearRef),
-            destinationBearing: $destBear,
-            destinationDistanceRef: $this->toGpsDistanceRef($destDistRef),
-            destinationDistanceMetres: $destDistMetre,
-            destinationDistanceOriginalRef: $this->toGpsDistanceRef($destDistOriginalRef),
-            destinationDistanceOriginal: $destDistOriginal,
-            processingMethod: $processingMethod,
-            areaInformation: $areaInformation,
+        );
+
+        $timing = new GpsTiming(
             date: $date,
             dateRaw: $dateRaw,
             time: $time,
             timestamp: $timestamp,
+        );
+
+        $measurement = new GpsMeasurement(
+            satellites: $satellites,
+            status: $this->toGpsStatus($status),
+            measureMode: $this->toGpsMeasureMode($measureMode),
+            dop: $dop,
             differential: $this->toGpsDifferential($differential),
             horizontalPositioningError: $hError,
+        );
+
+        return new Gps(
+            position: $position,
+            destination: $destination,
+            movement: $movement,
+            timing: $timing,
+            measurement: $measurement,
+            version: $version,
+            versionRaw: $versionRaw,
+            processingMethod: $processingMethod,
+            areaInformation: $areaInformation,
         );
     }
 

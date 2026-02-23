@@ -88,24 +88,38 @@ use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
+use MagicSunday\ImageMeta\Value\CaptureHardware;
+use MagicSunday\ImageMeta\Value\CaptureSettings;
 use MagicSunday\ImageMeta\Value\ColorProfile;
 use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
+use MagicSunday\ImageMeta\Value\CreatorContact;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Exposure;
+use MagicSunday\ImageMeta\Value\ExposureAdjustments;
+use MagicSunday\ImageMeta\Value\ExposureSettings;
 use MagicSunday\ImageMeta\Value\File as FileValue;
 use MagicSunday\ImageMeta\Value\FlashPix;
 use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\GpsCoordinate;
+use MagicSunday\ImageMeta\Value\GpsDestination;
+use MagicSunday\ImageMeta\Value\GpsMeasurement;
+use MagicSunday\ImageMeta\Value\GpsMovement;
+use MagicSunday\ImageMeta\Value\GpsPosition;
+use MagicSunday\ImageMeta\Value\GpsTiming;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
 use MagicSunday\ImageMeta\Value\Interop;
 use MagicSunday\ImageMeta\Value\Keywords;
 use MagicSunday\ImageMeta\Value\Lens;
+use MagicSunday\ImageMeta\Value\LocationTime;
+use MagicSunday\ImageMeta\Value\MediaContent;
 use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
+use MagicSunday\ImageMeta\Value\Provenance;
 use MagicSunday\ImageMeta\Value\RegionCollection;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
@@ -113,10 +127,15 @@ use MagicSunday\ImageMeta\Value\Scene;
 use MagicSunday\ImageMeta\Value\Sensor;
 use MagicSunday\ImageMeta\Value\Standards;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
+use MagicSunday\ImageMeta\Value\TechnicalData;
 use MagicSunday\ImageMeta\Value\Temporal;
 use MagicSunday\ImageMeta\Value\Thumbnail;
+use MagicSunday\ImageMeta\Value\TiffColorRef;
 use MagicSunday\ImageMeta\Value\TiffData;
+use MagicSunday\ImageMeta\Value\TiffLayout;
+use MagicSunday\ImageMeta\Value\TiffStructure;
 use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+use MagicSunday\ImageMeta\Value\UserComment;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
@@ -160,10 +179,13 @@ use function unlink;
 #[UsesClass(CameraLensExifReader::class)]
 #[UsesClass(CanonDecoder::class)]
 #[UsesClass(Capture::class)]
+#[UsesClass(CaptureHardware::class)]
+#[UsesClass(CaptureSettings::class)]
 #[UsesClass(ColorProfile::class)]
 #[UsesClass(ColorSpaceExifReader::class)]
 #[UsesClass(CompositeImageInfo::class)]
 #[UsesClass(Container::class)]
+#[UsesClass(CreatorContact::class)]
 #[UsesClass(Derived::class)]
 #[UsesClass(DescriptionExifReader::class)]
 #[UsesClass(Device::class)]
@@ -171,11 +193,19 @@ use function unlink;
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(ExifFlash::class)]
 #[UsesClass(Exposure::class)]
+#[UsesClass(ExposureAdjustments::class)]
+#[UsesClass(ExposureSettings::class)]
 #[UsesClass(FileValue::class)]
 #[UsesClass(FlashPix::class)]
 #[UsesClass(Focus::class)]
 #[UsesClass(FormatDetector::class)]
 #[UsesClass(Gps::class)]
+#[UsesClass(GpsCoordinate::class)]
+#[UsesClass(GpsDestination::class)]
+#[UsesClass(GpsMeasurement::class)]
+#[UsesClass(GpsMovement::class)]
+#[UsesClass(GpsPosition::class)]
+#[UsesClass(GpsTiming::class)]
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(IlocBoxParser::class)]
@@ -193,6 +223,8 @@ use function unlink;
 #[UsesClass(ItemPayloadResolver::class)]
 #[UsesClass(JpegParser::class)]
 #[UsesClass(Keywords::class)]
+#[UsesClass(LocationTime::class)]
+#[UsesClass(MediaContent::class)]
 #[UsesClass(Lens::class)]
 #[UsesClass(MakerNoteDispatcher::class)]
 #[UsesClass(MakerNotesRecord::class)]
@@ -203,6 +235,7 @@ use function unlink;
 #[UsesClass(NikonDecoder::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(ProcessingSettings::class)]
+#[UsesClass(Provenance::class)]
 #[UsesClass(QuickTimeKeyResolver::class)]
 #[UsesClass(QuickTimeLookup::class)]
 #[UsesClass(QuickTimeMeta::class)]
@@ -224,8 +257,12 @@ use function unlink;
 #[UsesClass(StructuredMetadataBuilder::class)]
 #[UsesClass(StructuredMetadataCache::class)]
 #[UsesClass(Temporal::class)]
+#[UsesClass(TechnicalData::class)]
 #[UsesClass(Thumbnail::class)]
 #[UsesClass(TiffData::class)]
+#[UsesClass(TiffColorRef::class)]
+#[UsesClass(TiffLayout::class)]
+#[UsesClass(TiffStructure::class)]
 #[UsesClass(TiffExifParser::class)]
 #[UsesClass(TiffExifTagValidator::class)]
 #[UsesClass(TiffIfdTraverser::class)]
@@ -234,6 +271,7 @@ use function unlink;
 #[UsesClass(UInt64::class)]
 #[UsesClass(Unpack::class)]
 #[UsesClass(UserCommentExifReader::class)]
+#[UsesClass(UserComment::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(ValueFactory::class)]
 #[UsesClass(Video::class)]
@@ -310,14 +348,14 @@ final class MetadataReaderTest extends TestCase
 
         /** @var array{file: callable(): FileValue, container: callable(): Container, camera: callable(): Camera, lens: callable(): Lens, derived: callable(): Derived, exposure: callable(): Exposure, thumbnail: callable(): Thumbnail, rights: callable(): Rights} $componentAccessors */
         $componentAccessors = [
-            'file'      => static fn (): FileValue => $structured->file,
-            'container' => static fn (): Container => $structured->container,
-            'camera'    => static fn (): Camera => $structured->camera,
-            'lens'      => static fn (): Lens => $structured->lens,
-            'derived'   => static fn (): Derived => $structured->derived,
-            'exposure'  => static fn (): Exposure => $structured->exposure,
-            'thumbnail' => static fn (): Thumbnail => $structured->thumbnail,
-            'rights'    => static fn (): Rights => $structured->rights,
+            'file'      => static fn (): FileValue => $structured->provenance->file,
+            'container' => static fn (): Container => $structured->provenance->container,
+            'camera'    => static fn (): Camera => $structured->hardware->camera,
+            'lens'      => static fn (): Lens => $structured->hardware->lens,
+            'derived'   => static fn (): Derived => $structured->technical->derived,
+            'exposure'  => static fn (): Exposure => $structured->settings->exposure,
+            'thumbnail' => static fn (): Thumbnail => $structured->content->thumbnail,
+            'rights'    => static fn (): Rights => $structured->provenance->rights,
         ];
 
         $expectedClasses = [
@@ -337,11 +375,11 @@ final class MetadataReaderTest extends TestCase
             self::assertInstanceOf($expectedClasses[$name], $value);
         }
 
-        self::assertSame('image/jpeg', $structured->file->mimeType);
-        self::assertSame(strlen($jpeg), $structured->file->fileSize);
-        self::assertSame('jpg', $structured->file->extension);
-        self::assertNull($structured->file->digestSha1);
-        self::assertNull($structured->file->digestMd5);
+        self::assertSame('image/jpeg', $structured->provenance->file->mimeType);
+        self::assertSame(strlen($jpeg), $structured->provenance->file->fileSize);
+        self::assertSame('jpg', $structured->provenance->file->extension);
+        self::assertNull($structured->provenance->file->digestSha1);
+        self::assertNull($structured->provenance->file->digestMd5);
     }
 
     /**
@@ -553,8 +591,8 @@ final class MetadataReaderTest extends TestCase
         self::assertSame($expectedMd5, $metadata->digestMd5);
 
         $structured = $metadata->structured();
-        self::assertSame($expectedSha1, $structured->file->digestSha1);
-        self::assertSame($expectedMd5, $structured->file->digestMd5);
+        self::assertSame($expectedSha1, $structured->provenance->file->digestSha1);
+        self::assertSame($expectedMd5, $structured->provenance->file->digestMd5);
     }
 
     /**
@@ -582,7 +620,7 @@ final class MetadataReaderTest extends TestCase
 
         self::assertSame(8, $metadata->jpegBitsPerSample);
 
-        $image = $metadata->structured()->image;
+        $image = $metadata->structured()->content->image;
 
         self::assertSame(8, $image->bitsPerSample);
         self::assertSame(448, $image->width);

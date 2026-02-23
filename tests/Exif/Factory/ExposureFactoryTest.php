@@ -53,7 +53,8 @@ final class ExposureFactoryTest extends TestCase
         $factory  = new ExposureFactory();
         $exposure = $factory->create($metadata);
 
-        self::assertSame(100, $exposure->iso);
+        self::assertNotNull($exposure->settings);
+        self::assertSame(100, $exposure->settings->iso);
         self::assertInstanceOf(FlashInfo::class, $exposure->flash);
         self::assertTrue($exposure->flash->fired);
     }
@@ -75,7 +76,8 @@ final class ExposureFactoryTest extends TestCase
         $factory  = new ExposureFactory();
         $exposure = $factory->create($metadata);
 
-        self::assertNull($exposure->iso);
+        self::assertNotNull($exposure->settings);
+        self::assertNull($exposure->settings->iso);
         self::assertInstanceOf(FlashInfo::class, $exposure->flash);
         self::assertFalse($exposure->flash->fired);
     }
@@ -100,7 +102,8 @@ final class ExposureFactoryTest extends TestCase
         $factory  = new ExposureFactory();
         $exposure = $factory->create($metadata);
 
-        self::assertNull($exposure->iso);
+        self::assertNotNull($exposure->settings);
+        self::assertNull($exposure->settings->iso);
         self::assertInstanceOf(FlashInfo::class, $exposure->flash);
         self::assertTrue($exposure->flash->fired);
     }

@@ -34,23 +34,21 @@ final readonly class Image
      * @param string|null      $title                   Human-readable title provided by the camera or metadata.
      * @param list<int>|null   $componentsConfiguration Layout of the colour components for each pixel sample.
      * @param float|null       $compressedBitsPerPixel  Average bits per pixel after compression.
-     * @param string|null      $userComment             Arbitrary user comment stored by the device.
-     * @param string|null      $userCommentEncoding     Declared encoding for the user comment payload.
+     * @param UserComment|null $comment                 User comment with encoding information.
      */
     public function __construct(
-        public ?int $width,
-        public ?int $height,
-        public ?Orientation $orientation,
-        public ?int $bitsPerSample,
-        public ?ColorSpace $colorSpace,
-        public ?string $imageUniqueId,
-        public ?string $documentName,
-        public ?string $description,
-        public ?string $title,
-        public ?array $componentsConfiguration,
-        public ?float $compressedBitsPerPixel,
-        public ?string $userComment,
-        public ?string $userCommentEncoding,
+        public ?int $width = null,
+        public ?int $height = null,
+        public ?Orientation $orientation = null,
+        public ?int $bitsPerSample = null,
+        public ?ColorSpace $colorSpace = null,
+        public ?string $imageUniqueId = null,
+        public ?string $documentName = null,
+        public ?string $description = null,
+        public ?string $title = null,
+        public ?array $componentsConfiguration = null,
+        public ?float $compressedBitsPerPixel = null,
+        public ?UserComment $comment = null,
     ) {
     }
 }

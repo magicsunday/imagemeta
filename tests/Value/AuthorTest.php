@@ -12,8 +12,10 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Value;
 
 use MagicSunday\ImageMeta\Value\Author;
+use MagicSunday\ImageMeta\Value\CreatorContact;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -22,6 +24,7 @@ use PHPUnit\Framework\TestCase;
  * The suite checks creator contact fields (email, phone, address) are preserved together.
  * This ensures author metadata remains consistent across structured outputs.
  */
+#[UsesClass(CreatorContact::class)]
 #[CoversClass(Author::class)]
 final class AuthorTest extends TestCase
 {
@@ -36,18 +39,6 @@ final class AuthorTest extends TestCase
     {
         $author = new Author(
             artist: 'John Doe',
-            ownerName: null,
-            creator: null,
-            creatorEmail: null,
-            creatorPhone: null,
-            creatorAddress: null,
-            creatorCity: null,
-            creatorRegion: null,
-            creatorPostalCode: null,
-            creatorCountry: null,
-            creatorUrl: null,
-            photographer: null,
-            imageEditor: null,
         );
 
         self::assertSame('John Doe', $author->artist);
@@ -62,18 +53,22 @@ final class AuthorTest extends TestCase
     #[Test]
     public function constructsWithAllAuthorInfo(): void
     {
+        $contact = new CreatorContact(
+            email: 'jane@example.com',
+            phone: '+49 30 555',
+            address: 'Main Street 1',
+            city: 'Berlin',
+            region: 'BE',
+            postalCode: '10115',
+            country: 'DE',
+            url: 'https://example.com',
+        );
+
         $author = new Author(
             artist: 'Jane Smith',
             ownerName: 'Camera Owner',
             creator: 'J. Smith',
-            creatorEmail: 'jane@example.com',
-            creatorPhone: '+49 30 555',
-            creatorAddress: 'Main Street 1',
-            creatorCity: 'Berlin',
-            creatorRegion: 'BE',
-            creatorPostalCode: '10115',
-            creatorCountry: 'DE',
-            creatorUrl: 'https://example.com',
+            contact: $contact,
             photographer: 'Jane Smith Photography',
             imageEditor: 'Jane Smith',
         );
@@ -81,14 +76,15 @@ final class AuthorTest extends TestCase
         self::assertSame('Jane Smith', $author->artist);
         self::assertSame('Camera Owner', $author->ownerName);
         self::assertSame('J. Smith', $author->creator);
-        self::assertSame('jane@example.com', $author->creatorEmail);
-        self::assertSame('+49 30 555', $author->creatorPhone);
-        self::assertSame('Main Street 1', $author->creatorAddress);
-        self::assertSame('Berlin', $author->creatorCity);
-        self::assertSame('BE', $author->creatorRegion);
-        self::assertSame('10115', $author->creatorPostalCode);
-        self::assertSame('DE', $author->creatorCountry);
-        self::assertSame('https://example.com', $author->creatorUrl);
+        self::assertNotNull($author->contact);
+        self::assertSame('jane@example.com', $author->contact->email);
+        self::assertSame('+49 30 555', $author->contact->phone);
+        self::assertSame('Main Street 1', $author->contact->address);
+        self::assertSame('Berlin', $author->contact->city);
+        self::assertSame('BE', $author->contact->region);
+        self::assertSame('10115', $author->contact->postalCode);
+        self::assertSame('DE', $author->contact->country);
+        self::assertSame('https://example.com', $author->contact->url);
         self::assertSame('Jane Smith Photography', $author->photographer);
         self::assertSame('Jane Smith', $author->imageEditor);
     }
@@ -102,33 +98,12 @@ final class AuthorTest extends TestCase
     #[Test]
     public function allowsNullValues(): void
     {
-        $author = new Author(
-            artist: null,
-            ownerName: null,
-            creator: null,
-            creatorEmail: null,
-            creatorPhone: null,
-            creatorAddress: null,
-            creatorCity: null,
-            creatorRegion: null,
-            creatorPostalCode: null,
-            creatorCountry: null,
-            creatorUrl: null,
-            photographer: null,
-            imageEditor: null,
-        );
+        $author = new Author();
 
         self::assertNull($author->artist);
         self::assertNull($author->ownerName);
         self::assertNull($author->creator);
-        self::assertNull($author->creatorEmail);
-        self::assertNull($author->creatorPhone);
-        self::assertNull($author->creatorAddress);
-        self::assertNull($author->creatorCity);
-        self::assertNull($author->creatorRegion);
-        self::assertNull($author->creatorPostalCode);
-        self::assertNull($author->creatorCountry);
-        self::assertNull($author->creatorUrl);
+        self::assertNull($author->contact);
         self::assertNull($author->photographer);
         self::assertNull($author->imageEditor);
     }

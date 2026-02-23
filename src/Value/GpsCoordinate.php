@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use Stringable;
 
 use function sprintf;
@@ -23,6 +24,18 @@ final readonly class GpsCoordinate implements Stringable
     public float $signed;
 
     public ?string $reference;
+
+    /**
+     * Creates a coordinate when a value is available, or returns null.
+     */
+    public static function fromNullable(?float $value, ?GpsLatLonRef $reference, bool $isLatitude): ?self
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return new self($value, $reference?->value, $isLatitude);
+    }
 
     /**
      * @param float       $value      Coordinate value.

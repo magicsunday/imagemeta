@@ -20,10 +20,17 @@ use MagicSunday\ImageMeta\Parse\Icc\IccParserInterface;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\Author;
+use MagicSunday\ImageMeta\Value\CaptureHardware;
+use MagicSunday\ImageMeta\Value\CaptureSettings;
+use MagicSunday\ImageMeta\Value\CreatorContact;
 use MagicSunday\ImageMeta\Value\DepthMap;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Iptc;
+use MagicSunday\ImageMeta\Value\LocationTime;
+use MagicSunday\ImageMeta\Value\MediaContent;
+use MagicSunday\ImageMeta\Value\Provenance;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
+use MagicSunday\ImageMeta\Value\TechnicalData;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -43,12 +50,19 @@ use function strlen;
  */
 #[CoversClass(ValueFactory::class)]
 #[UsesClass(Author::class)]
+#[UsesClass(CaptureHardware::class)]
+#[UsesClass(CaptureSettings::class)]
+#[UsesClass(CreatorContact::class)]
 #[UsesClass(StructuredMetadataBuilder::class)]
 #[UsesClass(Image::class)]
 #[UsesClass(Iptc::class)]
 #[UsesClass(IptcDocument::class)]
 #[UsesClass(IptcParser::class)]
+#[UsesClass(LocationTime::class)]
+#[UsesClass(MediaContent::class)]
+#[UsesClass(Provenance::class)]
 #[UsesClass(StructuredMetadata::class)]
+#[UsesClass(TechnicalData::class)]
 #[UsesClass(DepthMap::class)]
 final class ValueFactoryTest extends TestCase
 {
@@ -82,11 +96,11 @@ XML;
         $structured = StructuredMetadataBuilder::createDefault()->assemble($metadata);
 
         /** @phpstan-ignore staticMethod.alreadyNarrowedType */
-        self::assertInstanceOf(DepthMap::class, $structured->depthMap);
-        self::assertSame('ZGVwdGg=', $structured->depthMap->data);
-        self::assertSame('image/png', $structured->depthMap->mime);
-        self::assertSame(0.25, $structured->depthMap->near);
-        self::assertSame(10.5, $structured->depthMap->far);
+        self::assertInstanceOf(DepthMap::class, $structured->content->depthMap);
+        self::assertSame('ZGVwdGg=', $structured->content->depthMap->data);
+        self::assertSame('image/png', $structured->content->depthMap->mime);
+        self::assertSame(0.25, $structured->content->depthMap->near);
+        self::assertSame(10.5, $structured->content->depthMap->far);
     }
 
     /**
@@ -137,16 +151,17 @@ XML;
 
         $structured = StructuredMetadataBuilder::createDefault()->assemble($metadata);
 
-        self::assertSame('Sample Title', $structured->image->title);
-        self::assertSame('Sample Description', $structured->image->description);
-        self::assertSame('jane@example.com', $structured->author->creatorEmail);
-        self::assertSame('+49 30 555', $structured->author->creatorPhone);
-        self::assertSame('Main Street 1', $structured->author->creatorAddress);
-        self::assertSame('Berlin', $structured->author->creatorCity);
-        self::assertSame('BE', $structured->author->creatorRegion);
-        self::assertSame('10115', $structured->author->creatorPostalCode);
-        self::assertSame('DE', $structured->author->creatorCountry);
-        self::assertSame('https://example.com', $structured->author->creatorUrl);
+        self::assertSame('Sample Title', $structured->content->image->title);
+        self::assertSame('Sample Description', $structured->content->image->description);
+        self::assertNotNull($structured->provenance->author->contact);
+        self::assertSame('jane@example.com', $structured->provenance->author->contact->email);
+        self::assertSame('+49 30 555', $structured->provenance->author->contact->phone);
+        self::assertSame('Main Street 1', $structured->provenance->author->contact->address);
+        self::assertSame('Berlin', $structured->provenance->author->contact->city);
+        self::assertSame('BE', $structured->provenance->author->contact->region);
+        self::assertSame('10115', $structured->provenance->author->contact->postalCode);
+        self::assertSame('DE', $structured->provenance->author->contact->country);
+        self::assertSame('https://example.com', $structured->provenance->author->contact->url);
     }
 
     /**
@@ -170,7 +185,7 @@ XML;
 
         $structured = StructuredMetadataBuilder::createDefault()->assemble($metadata);
 
-        self::assertSame('Object Name', $structured->iptc->document?->first(2, 5));
+        self::assertSame('Object Name', $structured->provenance->iptc->document?->first(2, 5));
     }
 
     /**

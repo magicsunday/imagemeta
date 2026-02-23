@@ -31,6 +31,7 @@ use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\ColorProfile as ValueColorProfile;
 use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
+use MagicSunday\ImageMeta\Value\CreatorContact;
 use MagicSunday\ImageMeta\Value\DepthMap;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
@@ -57,7 +58,10 @@ use MagicSunday\ImageMeta\Value\Sensor;
 use MagicSunday\ImageMeta\Value\Standards as ValueStandards;
 use MagicSunday\ImageMeta\Value\Temporal;
 use MagicSunday\ImageMeta\Value\Thumbnail;
+use MagicSunday\ImageMeta\Value\TiffColorRef;
 use MagicSunday\ImageMeta\Value\TiffData;
+use MagicSunday\ImageMeta\Value\TiffLayout;
+use MagicSunday\ImageMeta\Value\TiffStructure;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp as ValueXmp;
@@ -238,7 +242,7 @@ final readonly class ValueFactory
         );
 
         $whiteBalanceDetails = new WhiteBalanceDetails(
-            mode: $exposure->whiteBalance,
+            mode: $exposure->adjustments?->whiteBalance,
             kelvin: $apple->colorTemperature ?? $quickTimeLookup->int('ColorTemperature'),
             rgGain: null,
             bgGain: null,
@@ -345,31 +349,43 @@ final readonly class ValueFactory
             }
         }
 
-        return new TiffData(
+        $structure = new TiffStructure(
             samplesPerPixel: $exifDocument?->samplesPerPixel(),
             bitsPerSample: $bitsPerSample,
-            rowsPerStrip: $exifDocument?->rowsPerStrip(),
-            tileWidth: $exifDocument?->tileWidth(),
-            tileLength: $exifDocument?->tileLength(),
             compression: $exifDocument?->compression(),
             photometric: $exifDocument?->photometric(),
             planar: $exifDocument?->planarConfiguration(),
-            resolutionUnit: $exifDocument?->resolutionUnit(),
-            xResolution: $exifDocument?->xResolution(),
-            yResolution: $exifDocument?->yResolution(),
+        );
+
+        $color = new TiffColorRef(
             ycbcrPos: $exifDocument?->ycbcrPositioning(),
             ycbcrSubSampling: $ycbcrSubSampling,
             ycbcrCoefficients: $exifDocument?->ycbcrCoefficients(),
             whitePoint: $exifDocument?->whitePoint(),
             primaryChromaticities: $exifDocument?->primaryChromaticities(),
+            referenceBlackWhite: $referenceBlackWhite,
+            transferFunction: $exifDocument?->transferFunction(),
+        );
+
+        $layout = new TiffLayout(
+            rowsPerStrip: $exifDocument?->rowsPerStrip(),
             stripOffsets: $exifDocument?->stripOffsets(),
             stripByteCounts: $exifDocument?->stripByteCounts(),
+            tileWidth: $exifDocument?->tileWidth(),
+            tileLength: $exifDocument?->tileLength(),
             tileOffsets: $exifDocument?->tileOffsets(),
             tileByteCounts: $exifDocument?->tileByteCounts(),
-            transferFunction: $exifDocument?->transferFunction(),
             jpegInterchangeFormat: $exifDocument?->jpegInterchangeFormat(),
             jpegInterchangeFormatLength: $exifDocument?->jpegInterchangeFormatLength(),
-            referenceBlackWhite: $referenceBlackWhite,
+        );
+
+        return new TiffData(
+            structure: $structure,
+            color: $color,
+            layout: $layout,
+            resolutionUnit: $exifDocument?->resolutionUnit(),
+            xResolution: $exifDocument?->xResolution(),
+            yResolution: $exifDocument?->yResolution(),
             copyright: $exifDocument?->copyright(),
         );
     }
@@ -435,18 +451,22 @@ final readonly class ValueFactory
         $iptcNamespace      = XmpNamespace::IPTC_CORE->value;
         $creatorContactInfo = $xmpDocument?->structured($iptcNamespace, 'CreatorContactInfo');
 
+        $contact = new CreatorContact(
+            email: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiEmailWork'),
+            phone: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiTelWork'),
+            address: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrExtadr'),
+            city: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrCity'),
+            region: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrRegion'),
+            postalCode: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrPcode'),
+            country: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrCtry'),
+            url: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiUrlWork'),
+        );
+
         return new Author(
             artist: $exifDocument?->artist(),
             ownerName: $exifDocument?->ownerName(),
             creator: $this->firstListValue($xmpDocument?->stringList(XmpNamespace::DC->value, 'creator') ?? []),
-            creatorEmail: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiEmailWork'),
-            creatorPhone: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiTelWork'),
-            creatorAddress: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrExtadr'),
-            creatorCity: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrCity'),
-            creatorRegion: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrRegion'),
-            creatorPostalCode: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrPcode'),
-            creatorCountry: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrCtry'),
-            creatorUrl: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiUrlWork'),
+            contact: $contact,
             photographer: $exifDocument?->photographer(),
             imageEditor: $exifDocument?->imageEditor(),
         );
@@ -483,13 +503,13 @@ final readonly class ValueFactory
 
         return new Derived(
             ev100: $this->converters->calcEv100(
-                $exposure->exposureTimeSec,
-                $exposure->fNumber,
-                $exposure->iso,
+                $exposure->settings?->exposureTimeSec,
+                $exposure->settings?->fNumber,
+                $exposure->settings?->iso,
             ),
             hyperfocalDistanceMetres: $this->converters->calcHyperfocalM(
                 $lens->focalLengthMm,
-                $exposure->fNumber,
+                $exposure->settings?->fNumber,
                 $circleOfConfusionMm,
             ),
             circleOfConfusionMm: $circleOfConfusionMm,

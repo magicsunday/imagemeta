@@ -14,9 +14,13 @@ namespace MagicSunday\ImageMeta\Tests\Value;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
+use MagicSunday\ImageMeta\Value\TiffColorRef;
 use MagicSunday\ImageMeta\Value\TiffData;
+use MagicSunday\ImageMeta\Value\TiffLayout;
+use MagicSunday\ImageMeta\Value\TiffStructure;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,6 +30,9 @@ use PHPUnit\Framework\TestCase;
  * This ensures TIFF-related metadata remains consistent for downstream usage.
  */
 #[CoversClass(TiffData::class)]
+#[UsesClass(TiffStructure::class)]
+#[UsesClass(TiffColorRef::class)]
+#[UsesClass(TiffLayout::class)]
 final class TiffDataTest extends TestCase
 {
     /**
@@ -37,39 +44,33 @@ final class TiffDataTest extends TestCase
     #[Test]
     public function constructsWithBasicImageStructure(): void
     {
-        $tiff = new TiffData(
+        $structure = new TiffStructure(
             samplesPerPixel: 3,
             bitsPerSample: 8,
-            rowsPerStrip: 64,
-            tileWidth: null,
-            tileLength: null,
             compression: Compression::UNCOMPRESSED,
             photometric: Photometric::RGB,
-            planar: null,
+        );
+
+        $layout = new TiffLayout(
+            rowsPerStrip: 64,
+        );
+
+        $tiff = new TiffData(
+            structure: $structure,
+            layout: $layout,
             resolutionUnit: ResolutionUnit::INCHES,
             xResolution: 300.0,
             yResolution: 300.0,
-            ycbcrPos: null,
-            ycbcrSubSampling: null,
-            ycbcrCoefficients: null,
-            whitePoint: null,
-            primaryChromaticities: null,
-            stripOffsets: null,
-            stripByteCounts: null,
-            tileOffsets: null,
-            tileByteCounts: null,
-            transferFunction: null,
-            jpegInterchangeFormat: null,
-            jpegInterchangeFormatLength: null,
-            referenceBlackWhite: null,
-            copyright: null,
         );
 
-        self::assertSame(3, $tiff->samplesPerPixel);
-        self::assertSame(8, $tiff->bitsPerSample);
-        self::assertSame(64, $tiff->rowsPerStrip);
-        self::assertSame(Compression::UNCOMPRESSED, $tiff->compression);
-        self::assertSame(Photometric::RGB, $tiff->photometric);
+        self::assertNotNull($tiff->structure);
+        self::assertNotNull($tiff->layout);
+
+        self::assertSame(3, $tiff->structure->samplesPerPixel);
+        self::assertSame(8, $tiff->structure->bitsPerSample);
+        self::assertSame(64, $tiff->layout->rowsPerStrip);
+        self::assertSame(Compression::UNCOMPRESSED, $tiff->structure->compression);
+        self::assertSame(Photometric::RGB, $tiff->structure->photometric);
         self::assertSame(ResolutionUnit::INCHES, $tiff->resolutionUnit);
         self::assertSame(300.0, $tiff->xResolution);
         self::assertSame(300.0, $tiff->yResolution);
@@ -84,39 +85,39 @@ final class TiffDataTest extends TestCase
     #[Test]
     public function constructsWithTiledImage(): void
     {
-        $tiff = new TiffData(
+        $structure = new TiffStructure(
             samplesPerPixel: 3,
             bitsPerSample: 8,
-            rowsPerStrip: null,
-            tileWidth: 256,
-            tileLength: 256,
             compression: Compression::JPEG,
             photometric: Photometric::YCBCR,
-            planar: null,
-            resolutionUnit: null,
-            xResolution: null,
-            yResolution: null,
-            ycbcrPos: null,
-            ycbcrSubSampling: [2, 2],
-            ycbcrCoefficients: null,
-            whitePoint: null,
-            primaryChromaticities: null,
-            stripOffsets: null,
-            stripByteCounts: null,
-            tileOffsets: [1024, 2048],
-            tileByteCounts: [512, 512],
-            transferFunction: null,
-            jpegInterchangeFormat: null,
-            jpegInterchangeFormatLength: null,
-            referenceBlackWhite: null,
-            copyright: null,
         );
 
-        self::assertSame(256, $tiff->tileWidth);
-        self::assertSame(256, $tiff->tileLength);
-        self::assertSame(Compression::JPEG, $tiff->compression);
-        self::assertSame([2, 2], $tiff->ycbcrSubSampling);
-        self::assertSame([1024, 2048], $tiff->tileOffsets);
+        $color = new TiffColorRef(
+            ycbcrSubSampling: [2, 2],
+        );
+
+        $layout = new TiffLayout(
+            tileWidth: 256,
+            tileLength: 256,
+            tileOffsets: [1024, 2048],
+            tileByteCounts: [512, 512],
+        );
+
+        $tiff = new TiffData(
+            structure: $structure,
+            color: $color,
+            layout: $layout,
+        );
+
+        self::assertNotNull($tiff->layout);
+        self::assertNotNull($tiff->structure);
+        self::assertNotNull($tiff->color);
+
+        self::assertSame(256, $tiff->layout->tileWidth);
+        self::assertSame(256, $tiff->layout->tileLength);
+        self::assertSame(Compression::JPEG, $tiff->structure->compression);
+        self::assertSame([2, 2], $tiff->color->ycbcrSubSampling);
+        self::assertSame([1024, 2048], $tiff->layout->tileOffsets);
     }
 
     /**
@@ -128,36 +129,10 @@ final class TiffDataTest extends TestCase
     #[Test]
     public function allowsNullValues(): void
     {
-        $tiff = new TiffData(
-            samplesPerPixel: null,
-            bitsPerSample: null,
-            rowsPerStrip: null,
-            tileWidth: null,
-            tileLength: null,
-            compression: null,
-            photometric: null,
-            planar: null,
-            resolutionUnit: null,
-            xResolution: null,
-            yResolution: null,
-            ycbcrPos: null,
-            ycbcrSubSampling: null,
-            ycbcrCoefficients: null,
-            whitePoint: null,
-            primaryChromaticities: null,
-            stripOffsets: null,
-            stripByteCounts: null,
-            tileOffsets: null,
-            tileByteCounts: null,
-            transferFunction: null,
-            jpegInterchangeFormat: null,
-            jpegInterchangeFormatLength: null,
-            referenceBlackWhite: null,
-            copyright: null,
-        );
+        $tiff = new TiffData();
 
-        self::assertNull($tiff->samplesPerPixel);
-        self::assertNull($tiff->compression);
-        self::assertNull($tiff->photometric);
+        self::assertNull($tiff->structure);
+        self::assertNull($tiff->color);
+        self::assertNull($tiff->layout);
     }
 }

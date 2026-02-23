@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Image;
+use MagicSunday\ImageMeta\Value\UserComment;
 
 use function is_string;
 use function strtoupper;
@@ -59,8 +60,10 @@ final readonly class ImageFactory
             title: $xmpTitle ?? $xmpHeadline ?? $exifDocument?->imageTitle(),
             componentsConfiguration: $exifDocument?->componentsConfiguration(),
             compressedBitsPerPixel: $exifDocument?->compressedBitsPerPixel(),
-            userComment: $exifDocument?->userComment(),
-            userCommentEncoding: $exifDocument?->userCommentEncodingBestEffort(),
+            comment: new UserComment(
+                value: $exifDocument?->userComment(),
+                encoding: $exifDocument?->userCommentEncodingBestEffort(),
+            ),
         );
     }
 

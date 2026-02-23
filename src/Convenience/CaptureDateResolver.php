@@ -37,9 +37,9 @@ final readonly class CaptureDateResolver
     {
         $structured = $metadata->structured();
 
-        $capture  = $structured->capture;
-        $temporal = $structured->temporal;
-        $gps      = $structured->gps;
+        $capture  = $structured->locationTime->capture;
+        $temporal = $structured->locationTime->temporal;
+        $gps      = $structured->locationTime->gps;
 
         $candidate = $this->captureDate($capture)
             ?? $this->temporalFallback($temporal)
@@ -111,7 +111,7 @@ final readonly class CaptureDateResolver
      */
     private function gpsFallback(Gps $gps): ?DateTimeImmutable
     {
-        return $gps->timestamp;
+        return $gps->timing?->timestamp;
     }
 
     /**

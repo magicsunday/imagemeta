@@ -23,6 +23,8 @@ use MagicSunday\ImageMeta\Value\Enum\Saturation;
 use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Exposure;
+use MagicSunday\ImageMeta\Value\ExposureAdjustments;
+use MagicSunday\ImageMeta\Value\ExposureSettings;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -38,6 +40,8 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[UsesClass(FlashInfo::class)]
+#[UsesClass(ExposureSettings::class)]
+#[UsesClass(ExposureAdjustments::class)]
 #[CoversClass(Exposure::class)]
 final class ExposureTest extends TestCase
 {
@@ -52,50 +56,61 @@ final class ExposureTest extends TestCase
     {
         $flashInfo = new FlashInfo(true, FlashMode::AUTO, FlashReturn::RETURN_NOT_DETECTED, FlashFunction::PRESENT, true);
 
-        $exposure = new Exposure(
+        $settings = new ExposureSettings(
             iso: 200,
+            exposureIndex: 160.0,
+            isoLatitudeYyy: 180,
+            isoLatitudeZzz: 220,
             exposureTimeSec: 0.01,
+            shutterSpeedEv: 7.0,
             fNumber: 4.0,
+            apertureEv: 4.0,
             exposureBiasEv: -0.3,
-            program: ExposureProgram::MANUAL,
-            meteringMode: MeteringMode::SPOT,
-            flash: $flashInfo,
-            whiteBalance: WhiteBalance::MANUAL,
             brightnessEv: 6.5,
-            exposureMode: ExposureMode::MANUAL,
-            gainControl: GainControl::HIGH_GAIN_UP,
+        );
+
+        $adjustments = new ExposureAdjustments(
+            whiteBalance: WhiteBalance::MANUAL,
             contrast: Contrast::HARD,
             saturation: Saturation::HIGH,
             sharpness: Sharpness::HARD,
             digitalZoomRatio: 1.5,
-            shutterSpeedEv: 7.0,
-            apertureEv: 4.0,
-            isoLatitudeYyy: 180,
-            isoLatitudeZzz: 220,
-            exposureIndex: 160.0,
+            gainControl: GainControl::HIGH_GAIN_UP,
+        );
+
+        $exposure = new Exposure(
+            settings: $settings,
+            adjustments: $adjustments,
+            program: ExposureProgram::MANUAL,
+            exposureMode: ExposureMode::MANUAL,
+            meteringMode: MeteringMode::SPOT,
+            flash: $flashInfo,
             flashEnergy: 1.2,
         );
 
-        self::assertSame(200, $exposure->iso);
-        self::assertSame(0.01, $exposure->exposureTimeSec);
-        self::assertSame(4.0, $exposure->fNumber);
-        self::assertSame(-0.3, $exposure->exposureBiasEv);
+        self::assertNotNull($exposure->settings);
+        self::assertNotNull($exposure->adjustments);
+
+        self::assertSame(200, $exposure->settings->iso);
+        self::assertSame(0.01, $exposure->settings->exposureTimeSec);
+        self::assertSame(4.0, $exposure->settings->fNumber);
+        self::assertSame(-0.3, $exposure->settings->exposureBiasEv);
         self::assertSame(ExposureProgram::MANUAL, $exposure->program);
         self::assertSame(MeteringMode::SPOT, $exposure->meteringMode);
         self::assertSame($flashInfo, $exposure->flash);
-        self::assertSame(WhiteBalance::MANUAL, $exposure->whiteBalance);
-        self::assertSame(6.5, $exposure->brightnessEv);
+        self::assertSame(WhiteBalance::MANUAL, $exposure->adjustments->whiteBalance);
+        self::assertSame(6.5, $exposure->settings->brightnessEv);
         self::assertSame(ExposureMode::MANUAL, $exposure->exposureMode);
-        self::assertSame(GainControl::HIGH_GAIN_UP, $exposure->gainControl);
-        self::assertSame(Contrast::HARD, $exposure->contrast);
-        self::assertSame(Saturation::HIGH, $exposure->saturation);
-        self::assertSame(Sharpness::HARD, $exposure->sharpness);
-        self::assertSame(1.5, $exposure->digitalZoomRatio);
-        self::assertSame(7.0, $exposure->shutterSpeedEv);
-        self::assertSame(4.0, $exposure->apertureEv);
-        self::assertSame(180, $exposure->isoLatitudeYyy);
-        self::assertSame(220, $exposure->isoLatitudeZzz);
-        self::assertSame(160.0, $exposure->exposureIndex);
+        self::assertSame(GainControl::HIGH_GAIN_UP, $exposure->adjustments->gainControl);
+        self::assertSame(Contrast::HARD, $exposure->adjustments->contrast);
+        self::assertSame(Saturation::HIGH, $exposure->adjustments->saturation);
+        self::assertSame(Sharpness::HARD, $exposure->adjustments->sharpness);
+        self::assertSame(1.5, $exposure->adjustments->digitalZoomRatio);
+        self::assertSame(7.0, $exposure->settings->shutterSpeedEv);
+        self::assertSame(4.0, $exposure->settings->apertureEv);
+        self::assertSame(180, $exposure->settings->isoLatitudeYyy);
+        self::assertSame(220, $exposure->settings->isoLatitudeZzz);
+        self::assertSame(160.0, $exposure->settings->exposureIndex);
         self::assertSame(1.2, $exposure->flashEnergy);
     }
 }

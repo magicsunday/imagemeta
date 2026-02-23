@@ -20,8 +20,10 @@ use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Exposure;
+use MagicSunday\ImageMeta\Value\ExposureSettings;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\GpsCoordinate;
+use MagicSunday\ImageMeta\Value\GpsPosition;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Lens;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -40,8 +42,10 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Capture::class)]
 #[UsesClass(Derived::class)]
 #[UsesClass(Exposure::class)]
+#[UsesClass(ExposureSettings::class)]
 #[UsesClass(Gps::class)]
 #[UsesClass(GpsCoordinate::class)]
+#[UsesClass(GpsPosition::class)]
 #[UsesClass(Image::class)]
 #[UsesClass(Lens::class)]
 final class ExifConvenienceTest extends TestCase
@@ -56,27 +60,11 @@ final class ExifConvenienceTest extends TestCase
     public function exposureSummaryFormatsValues(): void
     {
         $exposure = new Exposure(
-            iso             : 200,
-            exposureTimeSec : 0.5,
-            fNumber         : 1.8,
-            exposureBiasEv  : null,
-            program         : null,
-            meteringMode    : null,
-            flash           : null,
-            whiteBalance    : null,
-            brightnessEv    : null,
-            exposureMode    : null,
-            gainControl     : null,
-            contrast        : null,
-            saturation      : null,
-            sharpness       : null,
-            digitalZoomRatio: null,
-            shutterSpeedEv  : null,
-            apertureEv      : null,
-            isoLatitudeYyy  : null,
-            isoLatitudeZzz  : null,
-            exposureIndex   : null,
-            flashEnergy     : null,
+            settings: new ExposureSettings(
+                iso: 200,
+                exposureTimeSec: 0.5,
+                fNumber: 1.8,
+            ),
         );
 
         $lens = new Lens(
@@ -108,29 +96,7 @@ final class ExifConvenienceTest extends TestCase
     #[Test]
     public function exposureSummaryIncludes35MmEquivalent(): void
     {
-        $exposure = new Exposure(
-            iso             : null,
-            exposureTimeSec : null,
-            fNumber         : null,
-            exposureBiasEv  : null,
-            program         : null,
-            meteringMode    : null,
-            flash           : null,
-            whiteBalance    : null,
-            brightnessEv    : null,
-            exposureMode    : null,
-            gainControl     : null,
-            contrast        : null,
-            saturation      : null,
-            sharpness       : null,
-            digitalZoomRatio: null,
-            shutterSpeedEv  : null,
-            apertureEv      : null,
-            isoLatitudeYyy  : null,
-            isoLatitudeZzz  : null,
-            exposureIndex   : null,
-            flashEnergy     : null,
-        );
+        $exposure = new Exposure();
 
         $derived = new Derived(
             ev100                   : null,
@@ -162,29 +128,7 @@ final class ExifConvenienceTest extends TestCase
     #[Test]
     public function exposureSummaryReturnsNullWhenNoValues(): void
     {
-        $exposure = new Exposure(
-            iso             : null,
-            exposureTimeSec : null,
-            fNumber         : null,
-            exposureBiasEv  : null,
-            program         : null,
-            meteringMode    : null,
-            flash           : null,
-            whiteBalance    : null,
-            brightnessEv    : null,
-            exposureMode    : null,
-            gainControl     : null,
-            contrast        : null,
-            saturation      : null,
-            sharpness       : null,
-            digitalZoomRatio: null,
-            shutterSpeedEv  : null,
-            apertureEv      : null,
-            isoLatitudeYyy  : null,
-            isoLatitudeZzz  : null,
-            exposureIndex   : null,
-            flashEnergy     : null,
-        );
+        $exposure = new Exposure();
 
         self::assertNull((new ExifConvenience())->exposureSummary($exposure));
     }
@@ -199,12 +143,14 @@ final class ExifConvenienceTest extends TestCase
     public function gpsStringFormatsCoordinates(): void
     {
         $gps = new Gps(
-            latitude    : 51.5,
-            longitude   : 0.125,
-            latitudeRef : GpsLatLonRef::NORTH,
-            longitudeRef: GpsLatLonRef::EAST,
-            altitude    : 45.0,
-            altitudeRef : GpsAltitudeRef::ABOVE_SEA_LEVEL,
+            position: new GpsPosition(
+                latitude: 51.5,
+                longitude: 0.125,
+                latitudeRef: GpsLatLonRef::NORTH,
+                longitudeRef: GpsLatLonRef::EAST,
+                altitude: 45.0,
+                altitudeRef: GpsAltitudeRef::ABOVE_SEA_LEVEL,
+            ),
         );
 
         $formatted = (new ExifConvenience())->gpsString(
@@ -243,19 +189,9 @@ final class ExifConvenienceTest extends TestCase
     public function imageDimensionsFormatsString(): void
     {
         $image = new Image(
-            6000,
-            4000,
-            Orientation::TOP_LEFT,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
+            width: 6000,
+            height: 4000,
+            orientation: Orientation::TOP_LEFT,
         );
 
         self::assertSame(
@@ -274,19 +210,8 @@ final class ExifConvenienceTest extends TestCase
     public function imageDimensionsReturnsNullWhenIncomplete(): void
     {
         $image = new Image(
-            null,
-            4000,
-            Orientation::TOP_LEFT,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
+            height: 4000,
+            orientation: Orientation::TOP_LEFT,
         );
 
         self::assertNull((new ExifConvenience())->imageDimensions($image));
@@ -378,19 +303,9 @@ final class ExifConvenienceTest extends TestCase
             null
         );
         $image = new Image(
-            6000,
-            4000,
-            Orientation::TOP_LEFT,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
+            width: 6000,
+            height: 4000,
+            orientation: Orientation::TOP_LEFT,
         );
         $capture = new Capture(
             new DateTimeImmutable('2024-05-01T12:34:56+02:00'),
@@ -402,35 +317,21 @@ final class ExifConvenienceTest extends TestCase
             null,
         );
         $exposure = new Exposure(
-            iso             : 200,
-            exposureTimeSec : 0.5,
-            fNumber         : 1.8,
-            exposureBiasEv  : null,
-            program         : null,
-            meteringMode    : null,
-            flash           : null,
-            whiteBalance    : null,
-            brightnessEv    : null,
-            exposureMode    : null,
-            gainControl     : null,
-            contrast        : null,
-            saturation      : null,
-            sharpness       : null,
-            digitalZoomRatio: null,
-            shutterSpeedEv  : null,
-            apertureEv      : null,
-            isoLatitudeYyy  : null,
-            isoLatitudeZzz  : null,
-            exposureIndex   : null,
-            flashEnergy     : null,
+            settings: new ExposureSettings(
+                iso: 200,
+                exposureTimeSec: 0.5,
+                fNumber: 1.8,
+            ),
         );
         $gps = new Gps(
-            51.5,
-            0.125,
-            GpsLatLonRef::NORTH,
-            GpsLatLonRef::EAST,
-            45.0,
-            GpsAltitudeRef::ABOVE_SEA_LEVEL,
+            position: new GpsPosition(
+                latitude: 51.5,
+                longitude: 0.125,
+                latitudeRef: GpsLatLonRef::NORTH,
+                longitudeRef: GpsLatLonRef::EAST,
+                altitude: 45.0,
+                altitudeRef: GpsAltitudeRef::ABOVE_SEA_LEVEL,
+            ),
         );
 
         $expected = [

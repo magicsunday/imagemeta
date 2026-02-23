@@ -13,7 +13,13 @@ namespace MagicSunday\ImageMeta\Factory;
 
 use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Value\CaptureHardware;
+use MagicSunday\ImageMeta\Value\CaptureSettings;
+use MagicSunday\ImageMeta\Value\LocationTime;
+use MagicSunday\ImageMeta\Value\MediaContent;
+use MagicSunday\ImageMeta\Value\Provenance;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
+use MagicSunday\ImageMeta\Value\TechnicalData;
 
 /**
  * Assembles structured metadata aggregates from normalised value objects.
@@ -44,44 +50,68 @@ final readonly class StructuredMetadataBuilder
             metadata: $metadata,
         );
 
-        return new StructuredMetadata(
+        $hardware = new CaptureHardware(
+            camera: $components['camera'],
+            lens: $components['lens'],
+            sensor: $components['sensor'],
+            device: $components['device'],
+            focus: $components['focus'],
+        );
+
+        $content = new MediaContent(
+            image: $components['image'],
             audio: $components['audio'],
             embeddedAudio: $components['embeddedAudio'],
-            author: $components['author'],
-            camera: $components['camera'],
-            capture: $components['capture'],
-            colorProfile: $components['colorProfile'],
-            composite: $components['composite'],
-            container: $components['container'],
-            derived: $components['derived'],
+            video: $components['video'],
+            thumbnail: $components['thumbnail'],
             depthMap: $components['depthMap'],
-            device: $components['device'],
+            multiPicture: $components['multiPicture'],
+            regions: $components['regions'],
+        );
+
+        $settings = new CaptureSettings(
             exposure: $components['exposure'],
-            file: $components['file'],
-            flashPix: $components['flashPix'],
-            focus: $components['focus'],
-            gps: $components['gps'],
-            image: $components['image'],
-            integrity: $components['integrity'],
-            interop: $components['interop'],
+            whiteBalance: $components['whiteBalance'],
+            scene: $components['scene'],
+            motion: $components['motion'],
+            processing: $components['processing'],
+        );
+
+        $provenance = new Provenance(
+            author: $components['author'],
+            rights: $components['rights'],
             iptc: $components['iptc'],
             keywords: $components['keywords'],
-            lens: $components['lens'],
-            motion: $components['motion'],
-            multiPicture: $components['multiPicture'],
-            processing: $components['processing'],
-            regions: $components['regions'],
-            related: $components['related'],
-            rights: $components['rights'],
-            scene: $components['scene'],
-            sensor: $components['sensor'],
+            file: $components['file'],
+            container: $components['container'],
             standards: $components['standards'],
+            related: $components['related'],
+        );
+
+        $locationTime = new LocationTime(
+            gps: $components['gps'],
             temporal: $components['temporal'],
-            thumbnail: $components['thumbnail'],
+            capture: $components['capture'],
+        );
+
+        $technical = new TechnicalData(
+            derived: $components['derived'],
+            colorProfile: $components['colorProfile'],
+            composite: $components['composite'],
+            interop: $components['interop'],
+            integrity: $components['integrity'],
             tiff: $components['tiff'],
-            video: $components['video'],
-            whiteBalance: $components['whiteBalance'],
             xmp: $components['xmp'],
+            flashPix: $components['flashPix'],
+        );
+
+        return new StructuredMetadata(
+            hardware: $hardware,
+            content: $content,
+            settings: $settings,
+            provenance: $provenance,
+            locationTime: $locationTime,
+            technical: $technical,
             makerNotesApple: $components['makerNotesApple'],
         );
     }

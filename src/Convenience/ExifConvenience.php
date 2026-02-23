@@ -103,17 +103,17 @@ final readonly class ExifConvenience
     {
         $parts = [];
 
-        $seconds = $exposure->exposureTimeSec;
+        $seconds = $exposure->settings?->exposureTimeSec;
         if ($seconds !== null) {
             $parts[] = $this->formatExposureTime($seconds);
         }
 
-        $fNumber = $exposure->fNumber;
+        $fNumber = $exposure->settings?->fNumber;
         if ($fNumber !== null) {
             $parts[] = $this->formatFNumber($fNumber);
         }
 
-        $iso = $exposure->iso;
+        $iso = $exposure->settings?->iso;
         if ($iso !== null) {
             $parts[] = $this->formatIso($iso);
         }
@@ -155,8 +155,8 @@ final readonly class ExifConvenience
      */
     public function gpsString(Gps $gps, int $precision = 6, bool $includeAltitude = false): ?string
     {
-        $latitude  = $gps->latitude;
-        $longitude = $gps->longitude;
+        $latitude  = $gps->position?->latitude;
+        $longitude = $gps->position?->longitude;
 
         if ($latitude === null || $longitude === null) {
             return null;
@@ -214,12 +214,12 @@ final readonly class ExifConvenience
             'lens'        => $this->normalise($lens->lensModel),
             'orientation' => $image->orientation?->value,
             'captured_at' => $capturedAt?->format(DATE_ATOM),
-            'exposure_s'  => $exposure->exposureTimeSec,
-            'fnumber'     => $exposure->fNumber,
+            'exposure_s'  => $exposure->settings?->exposureTimeSec,
+            'fnumber'     => $exposure->settings?->fNumber,
             'focal_mm'    => $lens->focalLengthMm,
-            'iso'         => $exposure->iso,
-            'gps_lat'     => $gps->latitude,
-            'gps_lon'     => $gps->longitude,
+            'iso'         => $exposure->settings?->iso,
+            'gps_lat'     => $gps->position?->latitude,
+            'gps_lon'     => $gps->position?->longitude,
             'gps_alt'     => $this->resolveAltitude($gps),
         ];
     }
@@ -388,7 +388,7 @@ final readonly class ExifConvenience
      */
     private function resolveLatitudeRef(Gps $gps, float $latitude): string
     {
-        $ref = $gps->latitudeRef;
+        $ref = $gps->position?->latitudeRef;
 
         if ($ref instanceof GpsLatLonRef) {
             return $ref->value;
@@ -407,7 +407,7 @@ final readonly class ExifConvenience
      */
     private function resolveLongitudeRef(Gps $gps, float $longitude): string
     {
-        $ref = $gps->longitudeRef;
+        $ref = $gps->position?->longitudeRef;
 
         if ($ref instanceof GpsLatLonRef) {
             return $ref->value;
@@ -425,12 +425,12 @@ final readonly class ExifConvenience
      */
     private function resolveAltitude(Gps $gps): ?float
     {
-        $altitude = $gps->altitude;
+        $altitude = $gps->position?->altitude;
         if ($altitude === null) {
             return null;
         }
 
-        $reference = $gps->altitudeRef;
+        $reference = $gps->position?->altitudeRef;
 
         if ($reference instanceof GpsAltitudeRef && $reference->isBelow()) {
             return -$altitude;

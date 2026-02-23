@@ -86,8 +86,9 @@ final class ImageFactoryTest extends TestCase
         self::assertSame('Title', $image->title);
         self::assertSame([1, 2, 3, 0], $image->componentsConfiguration);
         self::assertSame(4.0, $image->compressedBitsPerPixel);
-        self::assertSame('Test comment', $image->userComment);
-        self::assertSame(CharacterEncoding::ASCII->value, $image->userCommentEncoding);
+        self::assertNotNull($image->comment);
+        self::assertSame('Test comment', $image->comment->value);
+        self::assertSame(CharacterEncoding::ASCII->value, $image->comment->encoding);
     }
 
     /**

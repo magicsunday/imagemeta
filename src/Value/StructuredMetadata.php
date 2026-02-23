@@ -19,83 +19,21 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 final readonly class StructuredMetadata
 {
     /**
-     * @param Audio                $audio
-     * @param AudioClips           $embeddedAudio
-     * @param Author               $author
-     * @param Camera               $camera
-     * @param Capture              $capture
-     * @param ColorProfile         $colorProfile
-     * @param CompositeImageInfo   $composite
-     * @param Container            $container
-     * @param Derived              $derived
-     * @param DepthMap             $depthMap
-     * @param Device               $device
-     * @param Exposure             $exposure
-     * @param File                 $file
-     * @param FlashPix             $flashPix
-     * @param Focus                $focus
-     * @param Gps                  $gps
-     * @param Image                $image
-     * @param Integrity            $integrity
-     * @param Interop              $interop
-     * @param Iptc                 $iptc
-     * @param Keywords             $keywords
-     * @param Lens                 $lens
-     * @param Motion               $motion
-     * @param MultiPicture         $multiPicture
-     * @param ProcessingSettings   $processing
-     * @param RegionCollection     $regions
-     * @param RelatedAssets        $related
-     * @param Rights               $rights
-     * @param Scene                $scene
-     * @param Sensor               $sensor
-     * @param Standards            $standards
-     * @param Temporal             $temporal
-     * @param Thumbnail            $thumbnail
-     * @param TiffData             $tiff
-     * @param Video                $video
-     * @param WhiteBalanceDetails  $whiteBalance
-     * @param Xmp                  $xmp
-     * @param AppleMakerNotes|null $makerNotesApple
+     * @param CaptureHardware      $hardware        Camera body, lens, sensor, device, and focus.
+     * @param MediaContent         $content         Image, audio, video, thumbnail, depth map, multi-picture, and regions.
+     * @param CaptureSettings      $settings        Exposure, white balance, scene, motion, and processing.
+     * @param Provenance           $provenance      Author, rights, IPTC, keywords, file, container, standards, and related.
+     * @param LocationTime         $locationTime    GPS, temporal timestamps, and capture context.
+     * @param TechnicalData        $technical       Derived data, colour profiles, composites, interop, integrity, TIFF, XMP, and FlashPix.
+     * @param AppleMakerNotes|null $makerNotesApple Apple maker notes when available.
      */
     public function __construct(
-        public Audio $audio,
-        public AudioClips $embeddedAudio,
-        public Author $author,
-        public Camera $camera,
-        public Capture $capture,
-        public ColorProfile $colorProfile,
-        public CompositeImageInfo $composite,
-        public Container $container,
-        public Derived $derived,
-        public DepthMap $depthMap,
-        public Device $device,
-        public Exposure $exposure,
-        public File $file,
-        public FlashPix $flashPix,
-        public Focus $focus,
-        public Gps $gps,
-        public Image $image,
-        public Integrity $integrity,
-        public Interop $interop,
-        public Iptc $iptc,
-        public Keywords $keywords,
-        public Lens $lens,
-        public Motion $motion,
-        public MultiPicture $multiPicture,
-        public ProcessingSettings $processing,
-        public RegionCollection $regions,
-        public RelatedAssets $related,
-        public Rights $rights,
-        public Scene $scene,
-        public Sensor $sensor,
-        public Standards $standards,
-        public Temporal $temporal,
-        public Thumbnail $thumbnail,
-        public TiffData $tiff,
-        public Video $video,
-        public WhiteBalanceDetails $whiteBalance,
-        public Xmp $xmp,
+        public CaptureHardware $hardware,
+        public MediaContent $content,
+        public CaptureSettings $settings,
+        public Provenance $provenance,
+        public LocationTime $locationTime,
+        public TechnicalData $technical,
         public ?AppleMakerNotes $makerNotesApple,
     ) {
     }

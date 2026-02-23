@@ -14,6 +14,8 @@ namespace MagicSunday\ImageMeta\Exif\Factory;
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Value\Exposure;
+use MagicSunday\ImageMeta\Value\ExposureAdjustments;
+use MagicSunday\ImageMeta\Value\ExposureSettings;
 
 /**
  * Factory for creating Exposure value objects from EXIF metadata.
@@ -36,27 +38,35 @@ final readonly class ExposureFactory
         $whiteBalance    = $exifDocument?->whiteBalance();
         $flashInfo       = $exifDocument?->flashInfo() ?? ExifFlash::fromExifValue(0);
 
-        return new Exposure(
+        $settings = new ExposureSettings(
             iso: $exifDocument?->isoBestEffort(),
+            exposureIndex: $exifDocument?->exposureIndex(),
+            isoLatitudeYyy: $exifDocument?->isoLatitudeYyy(),
+            isoLatitudeZzz: $exifDocument?->isoLatitudeZzz(),
             exposureTimeSec: $exifDocument?->exposureTime(),
+            shutterSpeedEv: $exifDocument?->shutterSpeedEv(),
             fNumber: $exifDocument?->fNumber(),
+            apertureEv: $exifDocument?->apertureEv(),
             exposureBiasEv: $exifDocument?->exposureBias(),
-            program: $exposureProgram,
-            meteringMode: $meteringMode,
-            flash: $flashInfo,
-            whiteBalance: $whiteBalance,
             brightnessEv: $exifDocument?->brightnessValue(),
-            exposureMode: $exifDocument?->exposureMode(),
-            gainControl: $exifDocument?->gainControl(),
+        );
+
+        $adjustments = new ExposureAdjustments(
+            whiteBalance: $whiteBalance,
             contrast: $exifDocument?->contrast(),
             saturation: $exifDocument?->saturation(),
             sharpness: $exifDocument?->sharpness(),
             digitalZoomRatio: $exifDocument?->digitalZoomRatio(),
-            shutterSpeedEv: $exifDocument?->shutterSpeedEv(),
-            apertureEv: $exifDocument?->apertureEv(),
-            isoLatitudeYyy: $exifDocument?->isoLatitudeYyy(),
-            isoLatitudeZzz: $exifDocument?->isoLatitudeZzz(),
-            exposureIndex: $exifDocument?->exposureIndex(),
+            gainControl: $exifDocument?->gainControl(),
+        );
+
+        return new Exposure(
+            settings: $settings,
+            adjustments: $adjustments,
+            program: $exposureProgram,
+            exposureMode: $exifDocument?->exposureMode(),
+            meteringMode: $meteringMode,
+            flash: $flashInfo,
             flashEnergy: $exifDocument?->flashEnergy(),
         );
     }
