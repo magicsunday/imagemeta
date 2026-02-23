@@ -11,8 +11,6 @@
 
 <h1 align="center">ImageMeta: Metadata Parser for PHP</h1>
 
----
-
 <p align="center">
   Read-only metadata extraction for JPEG, ISO BMFF, and TIFF-based files in PHP.
 </p>
