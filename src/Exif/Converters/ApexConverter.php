@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 
 use function fmod;
 use function round;
@@ -29,11 +30,6 @@ use function sprintf;
  */
 final readonly class ApexConverter
 {
-    /**
-     * EXIF unknown denominator sentinel used by BrightnessValue in certain payloads.
-     */
-    private const int EXIF_UNKNOWN_DENOMINATOR = 0xFFFFFFFF;
-
     /**
      * Creates the converter with its rational dependency.
      *
@@ -217,7 +213,7 @@ final readonly class ApexConverter
             return true;
         }
 
-        return $denominator === self::EXIF_UNKNOWN_DENOMINATOR;
+        return $denominator === TiffConst::EXIF_UNKNOWN_DENOMINATOR;
     }
 
     /**

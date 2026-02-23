@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 
 use function array_map;
@@ -40,11 +41,6 @@ final readonly class DeviceExifReader
      * EXIF Acceleration is specified in mGal (10^-5 m/s²).
      */
     private const float ACCELERATION_MGAL_TO_MS2 = 1.0e-5;
-
-    /**
-     * EXIF 3.0 §4.6.6.8 uses denominator 0xFFFFFFFF as unknown sentinel.
-     */
-    private const int EXIF_UNKNOWN_DENOMINATOR = 0xFFFFFFFF;
 
     /**
      * EXIF tags that define unknown rational denominators in EXIF 3.0 §4.6.6.8.
@@ -328,7 +324,7 @@ final readonly class DeviceExifReader
             return true;
         }
 
-        return $denominator === self::EXIF_UNKNOWN_DENOMINATOR;
+        return $denominator === TiffConst::EXIF_UNKNOWN_DENOMINATOR;
     }
 
     private function parseDeviceSettingDescription(): ?DeviceSettingDescription

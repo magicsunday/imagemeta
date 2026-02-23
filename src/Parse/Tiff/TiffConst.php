@@ -148,6 +148,11 @@ final class TiffConst
     public const int TYPE_IFD8 = 18;
 
     /**
+     * EXIF 3.0 §4.6.6.8 — sentinel denominator value indicating an unknown measurement.
+     */
+    public const int EXIF_UNKNOWN_DENOMINATOR = 0xFFFFFFFF;
+
+    /**
      * Prevents instantiation of the constants-only utility class.
      */
     private function __construct()
