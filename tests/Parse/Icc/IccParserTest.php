@@ -13,14 +13,16 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Icc;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Icc\IccTag;
+use MagicSunday\ImageMeta\Parse\Icc\IccBinaryReader;
+use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
+use MagicSunday\ImageMeta\Parse\Icc\IccTagDecoder;
 use MagicSunday\ImageMeta\Tests\Fixtures\Icc\IccFixtures;
 use MagicSunday\ImageMeta\Value\Enum\IccRenderingIntent;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
-use ReflectionMethod;
 
 use function chr;
 use function intdiv;
@@ -38,6 +40,9 @@ use function substr_replace;
  */
 #[UsesClass(ParseError::class)]
 #[UsesClass(IccRenderingIntent::class)]
+#[UsesClass(IccBinaryReader::class)]
+#[UsesClass(IccHeaderDecoder::class)]
+#[UsesClass(IccTagDecoder::class)]
 #[CoversClass(IccParser::class)]
 final class IccParserTest extends TestCase
 {
@@ -131,13 +136,10 @@ final class IccParserTest extends TestCase
     #[Test]
     public function uIntHelpersDecodeValidFixedWidthValues(): void
     {
-        $decoder = new IccParser();
+        $reader = new IccBinaryReader();
 
-        $uInt32Method = new ReflectionMethod(IccParser::class, 'uInt32Be');
-        $uInt16Method = new ReflectionMethod(IccParser::class, 'uInt16Be');
-
-        self::assertSame(0x01020304, $uInt32Method->invoke($decoder, "\x01\x02\x03\x04"));
-        self::assertSame(0x0102, $uInt16Method->invoke($decoder, "\x01\x02"));
+        self::assertSame(0x01020304, $reader->uInt32Be("\x01\x02\x03\x04"));
+        self::assertSame(0x0102, $reader->uInt16Be("\x01\x02"));
     }
 
     /**
@@ -148,14 +150,12 @@ final class IccParserTest extends TestCase
     #[Test]
     public function uInt32HelperRejectsTruncatedFields(): void
     {
-        $decoder = new IccParser();
-
-        $uInt32Method = new ReflectionMethod(IccParser::class, 'uInt32Be');
+        $reader = new IccBinaryReader();
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('ICC uInt32 field truncated: expected 4 bytes, got 3');
 
-        $uInt32Method->invoke($decoder, "\x01\x02\x03");
+        $reader->uInt32Be("\x01\x02\x03");
     }
 
     /**
@@ -166,14 +166,12 @@ final class IccParserTest extends TestCase
     #[Test]
     public function uInt16HelperRejectsTruncatedFields(): void
     {
-        $decoder = new IccParser();
-
-        $uInt16Method = new ReflectionMethod(IccParser::class, 'uInt16Be');
+        $reader = new IccBinaryReader();
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('ICC uInt16 field truncated: expected 2 bytes, got 1');
 
-        $uInt16Method->invoke($decoder, "\x01");
+        $reader->uInt16Be("\x01");
     }
 
     /**

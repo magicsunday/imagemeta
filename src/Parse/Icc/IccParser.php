@@ -11,42 +11,28 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Icc;
 
-use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Icc\IccTag;
-use MagicSunday\ImageMeta\Value\Enum\IccRenderingIntent;
 
 use function array_key_exists;
 use function bin2hex;
-use function checkdate;
-use function function_exists;
-use function iconv;
 use function in_array;
-use function is_array;
-use function is_int;
-use function mb_convert_encoding;
-use function md5;
-use function min;
 use function ord;
-use function round;
-use function rtrim;
 use function sprintf;
-use function str_repeat;
 use function str_starts_with;
 use function strlen;
 use function strtoupper;
 use function substr;
-use function substr_replace;
-use function unpack;
 
 /**
  * Decodes ICC profiles to expose header information and human readable tags.
+ *
+ * Orchestrates segment assembly, header decoding, and tag extraction by delegating
+ * to focused sub-classes: IccBinaryReader, IccHeaderDecoder, and IccTagDecoder.
  */
-final class IccParser implements IccParserInterface
+final readonly class IccParser implements IccParserInterface
 {
     private const int HEADER_LENGTH = 128;
-
-    private const int TAG_RECORD_LENGTH = 12;
 
     private const string ICC_SIGNATURE = 'ICC_PROFILE\0';
 
@@ -103,6 +89,19 @@ final class IccParser implements IccParserInterface
         'SGI ', // Silicon Graphics, Inc.
         'SUNW', // Sun Microsystems, Inc.
     ];
+
+    private IccBinaryReader $binaryReader;
+
+    private IccHeaderDecoder $headerDecoder;
+
+    private IccTagDecoder $tagDecoder;
+
+    public function __construct()
+    {
+        $this->binaryReader  = new IccBinaryReader();
+        $this->headerDecoder = new IccHeaderDecoder($this->binaryReader);
+        $this->tagDecoder    = new IccTagDecoder($this->binaryReader);
+    }
 
     /**
      * Decodes the ICC profile payload by extracting header fields and well known tags.
@@ -162,7 +161,7 @@ final class IccParser implements IccParserInterface
             );
         }
 
-        $profileSize = $this->uInt32Be(substr($data, IccTag::PROFILE_SIZE, 4));
+        $profileSize = $this->binaryReader->uInt32Be(substr($data, IccTag::PROFILE_SIZE, 4));
         $length      = strlen($data);
 
         // ICC.1:2022 §7.2.2: Profile size must be at least the 128-byte header.
@@ -211,14 +210,14 @@ final class IccParser implements IccParserInterface
         // harmless for data extraction.  Skip the layout check.  (GH-1539)
 
         // ICC.1:2022 §7.2.4: Validate version field including reserved bytes
-        $version = $this->extractVersion($data);
+        $version = $this->headerDecoder->extractVersion($data);
         if ($version === null) {
             throw new ParseError('ICC version field is invalid or has non-zero reserved bytes', 1449);
         }
 
-        $profileClass = $this->extractSignature(substr($data, IccTag::PROFILE_CLASS, 4));
-        $colorSpace   = $this->extractSignature(substr($data, IccTag::COLOR_SPACE, 4));
-        $pcs          = $this->extractSignature(substr($data, IccTag::PCS, 4));
+        $profileClass = $this->headerDecoder->extractSignature(substr($data, IccTag::PROFILE_CLASS, 4));
+        $colorSpace   = $this->headerDecoder->extractSignature(substr($data, IccTag::COLOR_SPACE, 4));
+        $pcs          = $this->headerDecoder->extractSignature(substr($data, IccTag::PCS, 4));
 
         // Validate constrained header signatures
         if ($profileClass !== null && !in_array($profileClass, self::ALLOWED_PROFILE_CLASSES, true)) {
@@ -242,22 +241,22 @@ final class IccParser implements IccParserInterface
             );
         }
 
-        $renderingIntent    = $this->extractRenderingIntent($data);
-        $profileId          = $this->extractProfileId($data);
+        $renderingIntent    = $this->headerDecoder->extractRenderingIntent($data);
+        $profileId          = $this->headerDecoder->extractProfileId($data);
         $majorVersion       = ord($data[8]);
-        $description        = $this->extractTag($data, $profileSize, 'desc', $majorVersion);
-        $copyright          = $this->extractTag($data, $profileSize, 'cprt', $majorVersion);
-        $whitePoint         = $this->extractWhitePoint($data, $profileSize);
-        $cmmType            = $this->extractSignature(substr($data, IccTag::CMM_TYPE, 4));
-        $profileDateTime    = $this->extractProfileDateTime($data);
+        $description        = $this->tagDecoder->extractTag($data, $profileSize, 'desc', $majorVersion);
+        $copyright          = $this->tagDecoder->extractTag($data, $profileSize, 'cprt', $majorVersion);
+        $whitePoint         = $this->tagDecoder->extractWhitePoint($data, $profileSize);
+        $cmmType            = $this->headerDecoder->extractSignature(substr($data, IccTag::CMM_TYPE, 4));
+        $profileDateTime    = $this->headerDecoder->extractProfileDateTime($data);
         $profileDateTimeUtc = $profileDateTime !== null ? ($profileDateTime . 'Z') : null;
-        $profileSignature   = $this->extractSignature(substr($data, IccTag::PROFILE_SIGNATURE, 4));
-        $profileFlags       = $this->extractHexField($data, IccTag::PROFILE_FLAGS, 4, true);
-        $primaryPlatform    = $this->extractSignature(substr($data, IccTag::PRIMARY_PLATFORM, 4));
-        $deviceManufacturer = $this->extractSignature(substr($data, IccTag::DEVICE_MANUFACTURER, 4));
-        $deviceModel        = $this->extractSignature(substr($data, IccTag::DEVICE_MODEL, 4));
-        $deviceAttributes   = $this->extractHexField($data, IccTag::DEVICE_ATTRIBUTES, 8, true);
-        $profileCreator     = $this->extractSignature(substr($data, IccTag::PROFILE_CREATOR, 4));
+        $profileSignature   = $this->headerDecoder->extractSignature(substr($data, IccTag::PROFILE_SIGNATURE, 4));
+        $profileFlags       = $this->headerDecoder->extractHexField($data, IccTag::PROFILE_FLAGS, 4, true);
+        $primaryPlatform    = $this->headerDecoder->extractSignature(substr($data, IccTag::PRIMARY_PLATFORM, 4));
+        $deviceManufacturer = $this->headerDecoder->extractSignature(substr($data, IccTag::DEVICE_MANUFACTURER, 4));
+        $deviceModel        = $this->headerDecoder->extractSignature(substr($data, IccTag::DEVICE_MODEL, 4));
+        $deviceAttributes   = $this->headerDecoder->extractHexField($data, IccTag::DEVICE_ATTRIBUTES, 8, true);
+        $profileCreator     = $this->headerDecoder->extractSignature(substr($data, IccTag::PROFILE_CREATOR, 4));
 
         // Validate primary platform against ICC.1:2022 Table 20
         if ($primaryPlatform !== null && !in_array($primaryPlatform, self::ALLOWED_PLATFORMS, true)) {
@@ -268,7 +267,7 @@ final class IccParser implements IccParserInterface
         }
 
         // Validate profile creator as printable ASCII signature
-        if ($profileCreator !== null && !$this->isPrintableAsciiSignature($profileCreator)) {
+        if ($profileCreator !== null && !$this->headerDecoder->isPrintableAsciiSignature($profileCreator)) {
             throw new ParseError(
                 sprintf(
                     'ICC profile creator signature contains non-printable bytes: %s',
@@ -279,7 +278,7 @@ final class IccParser implements IccParserInterface
         }
 
         // Validate CMM type as printable ASCII signature
-        if ($cmmType !== null && !$this->isPrintableAsciiSignature($cmmType)) {
+        if ($cmmType !== null && !$this->headerDecoder->isPrintableAsciiSignature($cmmType)) {
             throw new ParseError(
                 sprintf(
                     'ICC CMM type signature contains non-printable bytes: %s',
@@ -290,7 +289,7 @@ final class IccParser implements IccParserInterface
         }
 
         // Validate device manufacturer as printable ASCII signature
-        if ($deviceManufacturer !== null && !$this->isPrintableAsciiSignature($deviceManufacturer)) {
+        if ($deviceManufacturer !== null && !$this->headerDecoder->isPrintableAsciiSignature($deviceManufacturer)) {
             throw new ParseError(
                 sprintf(
                     'ICC device manufacturer signature contains non-printable bytes: %s',
@@ -301,7 +300,7 @@ final class IccParser implements IccParserInterface
         }
 
         // Validate device model as printable ASCII signature
-        if ($deviceModel !== null && !$this->isPrintableAsciiSignature($deviceModel)) {
+        if ($deviceModel !== null && !$this->headerDecoder->isPrintableAsciiSignature($deviceModel)) {
             throw new ParseError(
                 sprintf(
                     'ICC device model signature contains non-printable bytes: %s',
@@ -312,11 +311,12 @@ final class IccParser implements IccParserInterface
         }
 
         // Validate profileFlags per ICC.1:2022 §7.2.11 / Table 21
-        $this->validateProfileFlags($data);
+        $this->headerDecoder->validateProfileFlags($data);
 
         // Validate deviceAttributes per ICC.1:2022 §7.2.14 / Table 22
-        $this->validateDeviceAttributes($data);
-        $illuminant = $this->extractIlluminant($data);
+        $this->headerDecoder->validateDeviceAttributes($data);
+
+        $illuminant = $this->headerDecoder->extractIlluminant($data);
 
         return [
             'description'        => $description,
@@ -431,805 +431,5 @@ final class IccParser implements IccParserInterface
         }
 
         return $iccData;
-    }
-
-    /**
-     * Extracts the ICC specification version string from the profile header.
-     *
-     * ICC.1:2022 §7.2.4: Version field structure:
-     * - byte 8: major version (full byte)
-     * - byte 9 high nibble: minor version
-     * - byte 9 low nibble: bugfix version
-     * - bytes 10-11: reserved, must be 0x00
-     *
-     * @param string $data Raw ICC profile payload.
-     *
-     * @return string|null Human readable version or null when unavailable or invalid.
-     */
-    private function extractVersion(string $data): ?string
-    {
-        // ICC.1:2022 §7.2.4: bytes 10-11 (reserved) must be zero
-        if (ord($data[10]) !== 0 || ord($data[11]) !== 0) {
-            return null;
-        }
-
-        $major         = ord($data[8]);
-        $minorBugfix   = ord($data[9]);
-        $minor         = $minorBugfix >> 4;
-        $bugfixVersion = $minorBugfix & BitMask::LOW_NIBBLE;
-
-        if ($major === 0 && $minor === 0 && $bugfixVersion === 0) {
-            return null;
-        }
-
-        return $bugfixVersion > 0
-            ? sprintf('%d.%d.%d', $major, $minor, $bugfixVersion)
-            : sprintf('%d.%d', $major, $minor);
-    }
-
-    /**
-     * Returns a 4-byte signature preserving canonical case.
-     *
-     * ICC.1:2022 signatures are binary identifiers with defined case. Zero-filled
-     * signatures are normalised to null for fields that allow "not used".
-     *
-     * @param string $signature Raw 4-byte signature string.
-     *
-     * @return string|null Canonical signature or null when empty/zero.
-     */
-    private function extractSignature(string $signature): ?string
-    {
-        if ($signature === '' || strlen($signature) < 4) {
-            return null;
-        }
-
-        if ($signature === "\0\0\0\0") {
-            return null;
-        }
-
-        return $signature;
-    }
-
-    /**
-     * Validates that a 4-byte signature consists of printable ASCII characters (0x20..0x7E).
-     *
-     * @param string $signature Raw 4-byte signature bytes.
-     */
-    private function isPrintableAsciiSignature(string $signature): bool
-    {
-        for ($i = 0; $i < 4; ++$i) {
-            $byte = ord($signature[$i]);
-            if ($byte < 0x20 || $byte > 0x7E) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Maps the rendering intent field from the profile header to a descriptive label.
-     *
-     * ICC.1:2022 §7.2.15: The field is a uInt32Number where the most significant 16 bits
-     * must be zero and the least significant 16 bits encode an intent value 0..3.
-     *
-     * @param string $data Raw ICC profile payload.
-     *
-     * @return string Rendering intent description.
-     */
-    private function extractRenderingIntent(string $data): string
-    {
-        $raw = $this->uInt32Be(substr($data, IccTag::RENDERING_INTENT, 4));
-
-        // Upper 16 bits must be zero
-        $upper = ($raw >> 16) & 0xFFFF;
-        if ($upper !== 0) {
-            throw new ParseError(
-                sprintf('ICC rendering intent upper 16 bits are non-zero: 0x%04X', $upper),
-                1130,
-            );
-        }
-
-        $lower  = $raw & 0xFFFF;
-        $intent = IccRenderingIntent::fromProfileHeaderValue($lower);
-
-        if (!$intent instanceof IccRenderingIntent) {
-            throw new ParseError(
-                sprintf('ICC rendering intent value %d is outside the defined domain 0..3', $lower),
-                1131,
-            );
-        }
-
-        return $intent->label();
-    }
-
-    /**
-     * Extracts and validates the profile ID digest when present.
-     *
-     * ICC.1:2022 §7.2.18: When non-zero the field shall contain the MD5 fingerprint
-     * computed over profile_size bytes with bytes 44..47 (flags), 64..67 (rendering intent)
-     * and 84..99 (profile ID) temporarily zeroed.
-     *
-     * @param string $data Raw ICC profile payload.
-     *
-     * @return string|null Uppercased hexadecimal profile identifier or null when unset.
-     */
-    private function extractProfileId(string $data): ?string
-    {
-        $profileId = substr($data, IccTag::PROFILE_ID, 16);
-        if ($profileId === str_repeat("\0", 16)) {
-            return null;
-        }
-
-        // Compute expected MD5 per §7.2.18
-        $zeroed = $data;
-        // Zero profile flags (bytes 44..47)
-        $zeroed = substr_replace($zeroed, "\0\0\0\0", 44, 4);
-        // Zero rendering intent (bytes 64..67)
-        $zeroed = substr_replace($zeroed, "\0\0\0\0", 64, 4);
-        // Zero profile ID (bytes 84..99)
-        $zeroed = substr_replace($zeroed, str_repeat("\0", 16), 84, 16);
-
-        $computed = md5($zeroed, true);
-
-        if ($computed !== $profileId) {
-            throw new ParseError(
-                sprintf(
-                    'ICC Profile ID mismatch: stored %s, computed %s',
-                    strtoupper(bin2hex($profileId)),
-                    strtoupper(bin2hex($computed)),
-                ),
-                1132,
-            );
-        }
-
-        return strtoupper(bin2hex($profileId));
-    }
-
-    /**
-     * Extracts the profile creation timestamp from the header.
-     *
-     * ICC.1:2022 §4.2 defines dateTimeNumber as six uInt16Number fields in UTC.
-     * ICC.1:2022 §7.2.6 applies that structure to the profile header field.
-     *
-     * @param string $data Raw ICC profile payload.
-     *
-     * @return string|null Formatted UTC timestamp without suffix or null when unavailable/invalid.
-     */
-    private function extractProfileDateTime(string $data): ?string
-    {
-        if (strlen($data) < (IccTag::PROFILE_DATE_TIME + 12)) {
-            return null;
-        }
-
-        $base   = IccTag::PROFILE_DATE_TIME;
-        $year   = $this->uInt16Be(substr($data, $base, 2));
-        $month  = $this->uInt16Be(substr($data, $base + 2, 2));
-        $day    = $this->uInt16Be(substr($data, $base + 4, 2));
-        $hour   = $this->uInt16Be(substr($data, $base + 6, 2));
-        $minute = $this->uInt16Be(substr($data, $base + 8, 2));
-        $second = $this->uInt16Be(substr($data, $base + 10, 2));
-
-        if ($year === 0) {
-            return null;
-        }
-
-        // ICC.1:2022 §4.2 and §7.2.6: validate calendar/time field ranges.
-        // Invalid header fields are treated as absent metadata and therefore return null.
-        if (
-            !checkdate($month, $day, $year)
-            || ($hour > 23)
-            || ($minute > 59)
-            || ($second > 59)
-        ) {
-            return null;
-        }
-
-        return sprintf('%04d:%02d:%02d %02d:%02d:%02d', $year, $month, $day, $hour, $minute, $second);
-    }
-
-    /**
-     * Extracts and validates the profile connection space illuminant as XYZ values.
-     *
-     * ICC.1:2022 §7.2.16: The PCS illuminant shall be D50 with values (rounded to
-     * four decimals): X = 0.9642, Y = 1.0000, Z = 0.8249.
-     *
-     * @param string $data Raw ICC profile payload.
-     *
-     * @return array{x: float, y: float, z: float}|null
-     */
-    private function extractIlluminant(string $data): ?array
-    {
-        if (strlen($data) < (IccTag::CONNECTION_SPACE_ILLUMINANT + 12)) {
-            return null;
-        }
-
-        $base = IccTag::CONNECTION_SPACE_ILLUMINANT;
-        $x    = $this->s15Fixed16($data, $base);
-        $y    = $this->s15Fixed16($data, $base + 4);
-        $z    = $this->s15Fixed16($data, $base + 8);
-
-        // Validate D50 requirement at 4-decimal rounding
-        if (
-            round($x, 4) !== 0.9642
-            || round($y, 4) !== 1.0
-            || round($z, 4) !== 0.8249
-        ) {
-            throw new ParseError(
-                sprintf(
-                    'ICC PCS illuminant is not D50: X=%.4f, Y=%.4f, Z=%.4f',
-                    $x,
-                    $y,
-                    $z,
-                ),
-                1133,
-            );
-        }
-
-        return [
-            'x' => $x,
-            'y' => $y,
-            'z' => $z,
-        ];
-    }
-
-    /**
-     * Validates profile flags per ICC.1:2022 §7.2.11 / Table 21.
-     *
-     * Bits 0-2 are defined (embedded profile, profile cannot be used independently,
-     * MCS). Bits 3-15 (ICC-reserved) must be zero.
-     *
-     * @param string $data Raw ICC profile payload.
-     */
-    private function validateProfileFlags(string $data): void
-    {
-        $flagsRaw = $this->uInt32Be(substr($data, IccTag::PROFILE_FLAGS, 4));
-
-        // Bits 3..15 must be zero per ICC.1:2022 Table 21
-        $reservedMask = 0xFFF8;
-        if (($flagsRaw & $reservedMask) !== 0) {
-            throw new ParseError(
-                sprintf(
-                    'ICC profileFlags reserved bits 3..15 are non-zero: 0x%08X',
-                    $flagsRaw,
-                ),
-                1148,
-            );
-        }
-    }
-
-    /**
-     * Validates device attributes per ICC.1:2022 §7.2.14 / Table 22.
-     *
-     * Bits 0-3 are defined (reflective/transparency, glossy/matte, positive/negative,
-     * colour/B&W). Bits 4-31 must be zero. Upper 32 bits are vendor-specific and not
-     * validated.
-     *
-     * @param string $data Raw ICC profile payload.
-     */
-    private function validateDeviceAttributes(string $data): void
-    {
-        // Read the lower 32 bits (bytes 60..63 in big-endian layout)
-        $lower32 = $this->uInt32Be(substr($data, IccTag::DEVICE_ATTRIBUTES + 4, 4));
-
-        // Bits 4..31 of the lower 32-bit word must be zero per ICC.1:2022 Table 22
-        $reservedMask = 0xFFFFFFF0;
-        if (($lower32 & $reservedMask) !== 0) {
-            throw new ParseError(
-                sprintf(
-                    'ICC deviceAttributes reserved bits 4..31 are non-zero: 0x%08X',
-                    $lower32,
-                ),
-                1149,
-            );
-        }
-    }
-
-    /**
-     * Extracts a header field and formats it as an uppercase hex string.
-     *
-     * @param string $data   Raw ICC profile payload.
-     * @param int    $offset Byte offset within the header.
-     * @param int    $length Length in bytes.
-     *
-     * @return string|null Hex-encoded value or null when empty.
-     */
-    private function extractHexField(string $data, int $offset, int $length, bool $allowZero): ?string
-    {
-        if (strlen($data) < ($offset + $length)) {
-            return null;
-        }
-
-        $bytes = substr($data, $offset, $length);
-        if (!$allowZero && $bytes === str_repeat("\0", $length)) {
-            return null;
-        }
-
-        return strtoupper(bin2hex($bytes));
-    }
-
-    /**
-     * Extracts a text tag (desc, cprt) from the tag table.
-     *
-     * ICC.1:2022 §9.2.22 (copyrightTag) and §9.2.43 (profileDescriptionTag):
-     * the permitted type for both tags is multiLocalizedUnicodeType (mluc).
-     * Legacy profiles (major version < 4) may use descType or textType as
-     * fallback per ICC.1:2001 §6.5.17 and §6.5.22.
-     *
-     * @param string $data         Raw ICC profile payload.
-     * @param int    $profileSize  Declared profile size limiting the accessible range.
-     * @param string $tagSignature Tag signature to search for ('desc' or 'cprt').
-     * @param int    $majorVersion Profile major version for tag-type conformance gating.
-     *
-     * @return string|null Tag text or null when not available.
-     */
-    private function extractTag(string $data, int $profileSize, string $tagSignature, int $majorVersion): ?string
-    {
-        $tagData = $this->findTagData($data, $profileSize, $tagSignature);
-        if ($tagData === null) {
-            return null;
-        }
-
-        $type = substr($tagData, 0, 4);
-
-        if ($type === 'mluc') {
-            return $this->parseMlucTag($tagData);
-        }
-
-        // ICC v4+: only multiLocalizedUnicodeType is conforming for cprt/desc
-        if ($majorVersion >= 4) {
-            return null;
-        }
-
-        // Legacy fallbacks for ICC v2/v3 profiles
-        if ($type === 'desc') {
-            return $this->parseDescTag($tagData);
-        }
-
-        // ICC.1:2001 §6.5.18 textType
-        if ($type === 'text') {
-            return $this->parseTextTag($tagData);
-        }
-
-        return null;
-    }
-
-    /**
-     * Extracts the media white point (wtpt) from the tag table.
-     *
-     * ICC.1:2022 §9.2.34 (mediaWhitePointTag) uses XYZType (§10.31).
-     *
-     * @param string $data        Raw ICC profile payload.
-     * @param int    $profileSize Declared profile size limiting the accessible range.
-     *
-     * @return array{x: float, y: float, z: float}|null XYZ tristimulus values or null when not available.
-     */
-    private function extractWhitePoint(string $data, int $profileSize): ?array
-    {
-        $tagData = $this->findTagData($data, $profileSize, 'wtpt');
-        if ($tagData === null || strlen($tagData) < 20) {
-            return null;
-        }
-
-        $type = substr($tagData, 0, 4);
-        if ($type !== 'XYZ ') {
-            return null;
-        }
-
-        // ICC.1:2022 §10.31 reserved bytes 4..7 must be zero
-        $reserved = substr($tagData, 4, 4);
-        if ($reserved !== "\0\0\0\0") {
-            throw new ParseError('ICC wtpt XYZType reserved bytes 4..7 are non-zero', 1141);
-        }
-
-        // Wtpt must contain exactly one XYZNumber (20 bytes total)
-        if (strlen($tagData) !== 20) {
-            throw new ParseError(
-                sprintf('ICC wtpt XYZType payload must be exactly 20 bytes, got %d', strlen($tagData)),
-                1142,
-            );
-        }
-
-        // ICC.1:2022 §10.31: XYZType contains XYZNumber at offset 8
-        // XYZNumber is 3 x s15Fixed16Number (each 4 bytes)
-        return [
-            'x' => $this->s15Fixed16($tagData, 8),
-            'y' => $this->s15Fixed16($tagData, 12),
-            'z' => $this->s15Fixed16($tagData, 16),
-        ];
-    }
-
-    /**
-     * Finds tag data by signature in the tag table.
-     *
-     * @param string $data         Raw ICC profile payload.
-     * @param int    $profileSize  Declared profile size limiting the accessible range.
-     * @param string $tagSignature 4-byte tag signature to search for.
-     *
-     * @return string|null Raw tag data or null when not found.
-     */
-    private function findTagData(string $data, int $profileSize, string $tagSignature): ?string
-    {
-        if ($profileSize < self::HEADER_LENGTH + 4) {
-            return null;
-        }
-
-        $length         = min(strlen($data), $profileSize);
-        $tagCountOffset = self::HEADER_LENGTH;
-        if ($tagCountOffset + 4 > $length) {
-            return null;
-        }
-
-        $tagCount = $this->uInt32Be(substr($data, $tagCountOffset, 4));
-        $cursor   = $tagCountOffset + 4;
-        $tableEnd = $tagCountOffset + 4 + ($tagCount * self::TAG_RECORD_LENGTH);
-        if ($tableEnd > $length) {
-            return null;
-        }
-
-        for ($i = 0; $i < $tagCount; ++$i) {
-            if ($cursor + self::TAG_RECORD_LENGTH > $length) {
-                break;
-            }
-
-            $signature = substr($data, $cursor, 4);
-            $offset    = $this->uInt32Be(substr($data, $cursor + 4, 4));
-            $size      = $this->uInt32Be(substr($data, $cursor + 8, 4));
-            $cursor += self::TAG_RECORD_LENGTH;
-
-            if ($signature !== $tagSignature) {
-                continue;
-            }
-
-            if (($offset % 4) !== 0) {
-                continue;
-            }
-
-            if (($size % 4) !== 0) {
-                continue;
-            }
-
-            if ($offset < $tableEnd) {
-                continue;
-            }
-
-            if ($size === 0) {
-                continue;
-            }
-
-            if (($offset + $size) > $length) {
-                continue;
-            }
-
-            return substr($data, $offset, $size);
-        }
-
-        return null;
-    }
-
-    /**
-     * Parses an ICC 'text' tag (textType) to retrieve its ASCII text.
-     *
-     * ICC.1:2022 §10.1: all tag types begin with signature (4) + reserved bytes (4, must be zero).
-     * ICC.1:2022 §10.24: textType payload stores 7-bit ASCII text after that header.
-     * Text must be 7-bit ASCII (all bytes <= 0x7F) and terminated with a NUL byte.
-     *
-     * @param string $data Raw tag payload beginning with the type signature.
-     *
-     * @return string|null Extracted text or null when invalid.
-     */
-    private function parseTextTag(string $data): ?string
-    {
-        if (strlen($data) <= 8) {
-            return null;
-        }
-
-        // ICC.1:2022 §10.1 + §10.24 reserved bytes 4..7 must be zero.
-        $reserved = substr($data, 4, 4);
-        if ($reserved !== "\0\0\0\0") {
-            return null;
-        }
-
-        $text = substr($data, 8);
-
-        // ICC.1:2022 §10.24: textType must end with a NUL byte
-        if ($text === '' || $text[-1] !== "\0") {
-            return null;
-        }
-
-        // ICC.1:2022 §10.24: textType must contain only 7-bit ASCII (bytes <= 0x7F)
-        // Validate all non-NUL bytes are 7-bit ASCII
-        for ($i = 0, $len = strlen($text) - 1; $i < $len; ++$i) {
-            if (ord($text[$i]) > 0x7F) {
-                return null;
-            }
-        }
-
-        return rtrim($text, "\0");
-    }
-
-    /**
-     * Parses an ICC 'desc' tag to retrieve its ASCII description.
-     *
-     * ICC.1:2022 §10.1: all tag types begin with signature (4) + reserved bytes (4, must be zero).
-     * ICC.1:2001 §6.5.17 describes the legacy descType payload layout:
-     * - bytes 0-3: 'desc' signature
-     * - bytes 4-7: reserved (0)
-     * - bytes 8-11: ASCII description length (including NUL) as uint32 BE
-     * - bytes 12..12+len-1: ASCII description string (NUL-terminated)
-     *
-     * @param string $data Raw tag payload beginning with the type signature.
-     *
-     * @return string|null Extracted description or null when invalid.
-     */
-    private function parseDescTag(string $data): ?string
-    {
-        if (strlen($data) < 12) {
-            return null;
-        }
-
-        // ICC.1:2022 §10.1 reserved bytes 4..7 must be zero.
-        $reserved = substr($data, 4, 4);
-        if ($reserved !== "\0\0\0\0") {
-            return null;
-        }
-
-        $asciiLength = $this->uInt32Be(substr($data, 8, 4));
-        if ($asciiLength === 0) {
-            return null;
-        }
-
-        $available = strlen($data) - 12;
-        if ($asciiLength > $available) {
-            return null;
-        }
-
-        $text = substr($data, 12, $asciiLength);
-
-        // ICC spec: desc ASCII string must be NUL-terminated
-        if ($text === '' || $text[-1] !== "\0") {
-            return null;
-        }
-
-        // ICC spec: desc ASCII string must contain only 7-bit ASCII (bytes <= 0x7F)
-        // Validate all non-NUL bytes are 7-bit ASCII
-        for ($i = 0, $len = strlen($text) - 1; $i < $len; ++$i) {
-            if (ord($text[$i]) > 0x7F) {
-                return null;
-            }
-        }
-
-        return rtrim($text, "\0");
-    }
-
-    /**
-     * Parses an ICC 'mluc' tag with deterministic language-aware record selection.
-     *
-     * ICC.1:2022 §10.13: multiLocalizedUnicodeType stores locale-qualified
-     * strings. Selection policy:
-     * 1. Prefer 'enUS' record when present.
-     * 2. Fall back to any 'en' language record.
-     * 3. Otherwise use the first non-empty record.
-     *
-     * @param string $data Raw tag payload beginning with the type signature.
-     *
-     * @return string|null Extracted description string or null when no valid record exists.
-     */
-    private function parseMlucTag(string $data): ?string
-    {
-        $length = strlen($data);
-        if ($length < 16) {
-            return null;
-        }
-
-        // ICC.1:2022 §10.1 + Table 54 reserved bytes 4..7 must be zero.
-        $reserved = substr($data, 4, 4);
-        if ($reserved !== "\0\0\0\0") {
-            throw new ParseError('ICC mluc reserved bytes 4..7 are non-zero', 1137);
-        }
-
-        $recordCount = $this->uInt32Be(substr($data, 8, 4));
-        $recordSize  = $this->uInt32Be(substr($data, 12, 4));
-
-        if ($recordCount === 0) {
-            return null;
-        }
-
-        // RecordSize must be exactly 12
-        if ($recordSize !== 12) {
-            throw new ParseError(
-                sprintf('ICC mluc recordSize must be 12, got %d', $recordSize),
-                1138,
-            );
-        }
-
-        // Record table must fit within payload
-        $tableEnd = 16 + ($recordCount * $recordSize);
-        if ($tableEnd > $length) {
-            throw new ParseError('ICC mluc record table exceeds payload bounds', 1139);
-        }
-
-        // Decode all records with their locale tags for deterministic selection
-        $firstNonEmpty = null;
-        $enAny         = null;
-        $enUs          = null;
-
-        $cursor = 16;
-        for ($i = 0; $i < $recordCount; ++$i) {
-            $lang         = substr($data, $cursor, 2);
-            $country      = substr($data, $cursor + 2, 2);
-            $stringLength = $this->uInt32Be(substr($data, $cursor + 4, 4));
-            $stringOffset = $this->uInt32Be(substr($data, $cursor + 8, 4));
-            $cursor += $recordSize;
-
-            if ($stringLength === 0) {
-                continue;
-            }
-
-            // Each record's string must be fully bounded within payload
-            if ($stringOffset + $stringLength > $length) {
-                throw new ParseError(
-                    sprintf(
-                        'ICC mluc record %d string range [%d..%d) exceeds payload length %d',
-                        $i,
-                        $stringOffset,
-                        $stringOffset + $stringLength,
-                        $length,
-                    ),
-                    1140,
-                );
-            }
-
-            $raw = substr($data, $stringOffset, $stringLength);
-            $utf = $this->decodeUtf16Be($raw);
-            if ($utf === null) {
-                continue;
-            }
-
-            if ($utf === '') {
-                continue;
-            }
-
-            $firstNonEmpty ??= $utf;
-
-            if ($lang === 'en') {
-                $enAny ??= $utf;
-
-                if ($country === 'US' || $country === "\0\0") {
-                    $enUs ??= $utf;
-                }
-            }
-        }
-
-        return $enUs ?? $enAny ?? $firstNonEmpty;
-    }
-
-    /**
-     * Converts a UTF-16BE encoded string to UTF-8 when possible.
-     *
-     * @param string $data Raw UTF-16BE encoded bytes.
-     *
-     * @return string|null Converted UTF-8 string or null when conversion fails.
-     */
-    private function decodeUtf16Be(string $data): ?string
-    {
-        if ($data === '') {
-            return null;
-        }
-
-        // ICC.1:2022 §10.13: UTF-16BE must consist of complete code units.
-        if ((strlen($data) % 2) !== 0) {
-            throw new ParseError('Odd-length UTF-16BE payload in ICC mluc record', 1123);
-        }
-
-        if (function_exists('mb_convert_encoding')) {
-            return mb_convert_encoding($data, 'UTF-8', 'UTF-16BE');
-        }
-
-        if (function_exists('iconv')) {
-            // Strict conversion without //IGNORE to reject malformed sequences.
-            $converted = iconv('UTF-16BE', 'UTF-8', $data);
-
-            return $converted === false ? null : $converted;
-        }
-
-        // No Imagick fallback; return null when no pure-PHP conversion is available
-        return null;
-    }
-
-    /**
-     * Converts exactly four bytes into an unsigned big-endian integer.
-     *
-     * @param string $bytes Raw bytes to interpret as a big-endian integer.
-     *
-     * @return int Parsed unsigned integer value.
-     */
-    private function uInt32Be(string $bytes): int
-    {
-        if (strlen($bytes) !== 4) {
-            throw new ParseError(
-                sprintf('ICC uInt32 field truncated: expected 4 bytes, got %d', strlen($bytes)),
-                1124,
-            );
-        }
-
-        $unpacked = unpack('Nvalue', $bytes);
-        if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
-            throw new ParseError('Unexpected integer value while decoding ICC profile.', 1124);
-        }
-
-        $value = $unpacked['value'];
-        if (!is_int($value)) {
-            throw new ParseError('Unexpected integer value while decoding ICC profile.', 1124);
-        }
-
-        return $value;
-    }
-
-    /**
-     * Converts exactly two bytes into an unsigned big-endian integer.
-     *
-     * @param string $bytes Raw bytes to interpret as a big-endian integer.
-     *
-     * @return int Parsed unsigned integer value.
-     */
-    private function uInt16Be(string $bytes): int
-    {
-        if (strlen($bytes) !== 2) {
-            throw new ParseError(
-                sprintf('ICC uInt16 field truncated: expected 2 bytes, got %d', strlen($bytes)),
-                1125,
-            );
-        }
-
-        $unpacked = unpack('nvalue', $bytes);
-        if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
-            throw new ParseError('Unexpected integer value while decoding ICC profile.', 1125);
-        }
-
-        $value = $unpacked['value'];
-        if (!is_int($value)) {
-            throw new ParseError('Unexpected integer value while decoding ICC profile.', 1125);
-        }
-
-        return $value;
-    }
-
-    /**
-     * Parses an s15Fixed16Number from tag data at the given offset.
-     *
-     * ICC.1:2022 §4.6: s15Fixed16Number is a signed 32-bit fixed-point number
-     * with 16 fractional bits. The value is calculated as: raw_value / 65536.0
-     *
-     * @param string $data   Raw tag data.
-     * @param int    $offset Byte offset within the data.
-     *
-     * @return float Parsed fixed-point value as a float.
-     */
-    private function s15Fixed16(string $data, int $offset): float
-    {
-        $bytes = substr($data, $offset, 4);
-        if (strlen($bytes) < 4) {
-            return 0.0;
-        }
-
-        // Unpack as unsigned 32-bit big-endian
-        $unpacked = @unpack('Nvalue', $bytes);
-        if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
-            return 0.0;
-        }
-
-        $unsigned = $unpacked['value'];
-        if (!is_int($unsigned)) {
-            return 0.0;
-        }
-
-        // Convert to signed if necessary (two's complement)
-        $signed = $unsigned >= 0x80000000
-            ? $unsigned - 0x100000000
-            : $unsigned;
-
-        // Convert fixed-point to float (16 fractional bits)
-        return $signed / 65536.0;
     }
 }
