@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use Closure;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function array_key_exists;
 use function array_keys;
@@ -26,7 +27,6 @@ use function strlen;
 use function strpos;
 use function substr;
 use function trim;
-use function unpack;
 
 /**
  * Reassembles APP11 JUMBF transport streams and extracts XMP packets.
@@ -170,16 +170,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
 
         $identifier = substr($payload, 0, 4);
 
-        $instanceUnpack = @unpack('ninstance', substr($payload, 4, 2));
-        if (($instanceUnpack === false) || !isset($instanceUnpack['instance'])) {
-            throw new ParseError(
-                sprintf('APP11 segment at offset %d has invalid instance number', $offset),
-                1335,
-            );
-        }
-
-        /** @var array{instance:int} $instanceUnpack */
-        $instanceNumber = $instanceUnpack['instance'];
+        $instanceNumber = Unpack::int('n', substr($payload, 4, 2), 'APP11 instance number');
         if ($instanceNumber === 0) {
             throw new ParseError(
                 sprintf('APP11 segment at offset %d has out-of-range instance number %d', $offset, $instanceNumber),
@@ -187,16 +178,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
             );
         }
 
-        $sequenceUnpack = @unpack('Nsequence', substr($payload, 6, 4));
-        if (($sequenceUnpack === false) || !isset($sequenceUnpack['sequence'])) {
-            throw new ParseError(
-                sprintf('APP11 segment at offset %d has invalid sequence number', $offset),
-                1336,
-            );
-        }
-
-        /** @var array{sequence:int} $sequenceUnpack */
-        $sequenceNumber = $sequenceUnpack['sequence'];
+        $sequenceNumber = Unpack::int('N', substr($payload, 6, 4), 'APP11 sequence number');
         if (
             ($sequenceNumber === 0)
             || ($sequenceNumber > self::MAX_SEQUENCE_NUMBER)
@@ -235,13 +217,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
                 continue;
             }
 
-            $sizeUnpack = @unpack('Nsize', substr($payload, $position, 4));
-            if (($sizeUnpack === false) || !isset($sizeUnpack['size'])) {
-                throw new ParseError(sprintf('APP11 segment at offset %d has invalid JUMBF size field', $offset), 1332);
-            }
-
-            /** @var array{size:int} $sizeUnpack */
-            $boxLength = $sizeUnpack['size'];
+            $boxLength = Unpack::int('N', substr($payload, $position, 4), 'JUMBF superbox size');
             if ($boxLength < 8) {
                 throw new ParseError(
                     sprintf('APP11 segment at offset %d has invalid JUMBF box length %d', $offset, $boxLength),
@@ -271,13 +247,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
         $position = 0;
 
         while ($position + 8 <= $length) {
-            $sizeUnpack = @unpack('Nsize', substr($boxStream, $position, 4));
-            if (($sizeUnpack === false) || !isset($sizeUnpack['size'])) {
-                throw new ParseError(sprintf('APP11 segment at offset %d has invalid JUMBF child size field', $offset), 1332);
-            }
-
-            /** @var array{size:int} $sizeUnpack */
-            $boxLength = $sizeUnpack['size'];
+            $boxLength = Unpack::int('N', substr($boxStream, $position, 4), 'JUMBF child box size');
             if ($boxLength < 8) {
                 throw new ParseError(
                     sprintf('APP11 segment at offset %d has invalid JUMBF child box length %d', $offset, $boxLength),

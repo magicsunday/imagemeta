@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
@@ -22,8 +23,6 @@ use function array_filter;
 use function array_values;
 use function count;
 use function in_array;
-use function is_array;
-use function is_int;
 use function is_string;
 use function rtrim;
 use function sprintf;
@@ -31,7 +30,6 @@ use function strcasecmp;
 use function strlen;
 use function strtolower;
 use function substr;
-use function unpack;
 
 /**
  * Resolves item payloads described by iloc extent structures.
@@ -355,12 +353,7 @@ final readonly class ItemPayloadResolver
         }
 
         // ISO 14496-12: Exif items start with a 4-byte big-endian offset to the TIFF header
-        $unpacked = @unpack('Noffset', substr($blob, 0, 4));
-        if (!is_array($unpacked) || !isset($unpacked['offset']) || !is_int($unpacked['offset'])) {
-            throw new ParseError('Exif item TIFF-header offset unreadable', 1395);
-        }
-
-        $offset = $unpacked['offset'];
+        $offset = Unpack::int('N', substr($blob, 0, 4), 'Exif item TIFF-header offset');
 
         // Validate the offset does not exceed the payload bounds
         if ($offset < 0 || (4 + $offset + 2) > strlen($blob)) {

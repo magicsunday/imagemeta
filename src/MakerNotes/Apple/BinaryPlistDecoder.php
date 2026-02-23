@@ -15,13 +15,13 @@ use DateTimeImmutable;
 use DateTimeZone;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function array_any;
 use function array_key_exists;
 use function chr;
 use function iconv;
 use function intdiv;
-use function is_float;
 use function is_int;
 use function is_string;
 use function ltrim;
@@ -399,17 +399,7 @@ final class BinaryPlistDecoder
                 throw new ParseError('Incomplete real payload.', 1059);
             }
 
-            $value = @unpack('Gfloat', $bytes);
-            if ($value === false || !array_key_exists('float', $value)) {
-                throw new ParseError('Failed to decode floating point value.', 1060);
-            }
-
-            $float = $value['float'];
-            if (!is_float($float) && !is_int($float)) {
-                throw new ParseError('Failed to decode floating point value.', 1061);
-            }
-
-            return (float) $float;
+            return Unpack::float('G', $bytes, 'plist float32');
         }
 
         if ($size === 8) {
@@ -418,17 +408,7 @@ final class BinaryPlistDecoder
                 throw new ParseError('Incomplete double payload.', 1062);
             }
 
-            $value = @unpack('Efloat', $bytes);
-            if ($value === false || !array_key_exists('float', $value)) {
-                throw new ParseError('Failed to decode floating point value.', 1063);
-            }
-
-            $float = $value['float'];
-            if (!is_float($float) && !is_int($float)) {
-                throw new ParseError('Failed to decode floating point value.', 1064);
-            }
-
-            return (float) $float;
+            return Unpack::float('E', $bytes, 'plist float64');
         }
 
         throw new ParseError('Unsupported floating point width.', 1065);
@@ -456,18 +436,10 @@ final class BinaryPlistDecoder
             throw new ParseError('Incomplete date payload.', 1067);
         }
 
-        $value = @unpack('Eseconds', $payload);
-        if ($value === false || !array_key_exists('seconds', $value)) {
-            throw new ParseError('Failed to decode date payload.', 1068);
-        }
-
-        $seconds = $value['seconds'];
-        if (!is_float($seconds) && !is_int($seconds)) {
-            throw new ParseError('Failed to decode date payload.', 1069);
-        }
+        $seconds = Unpack::float('E', $payload, 'plist date');
 
         // Seconds since 2001-01-01T00:00:00Z
-        $totalSeconds = 978307200 + (float) $seconds;
+        $totalSeconds = 978307200 + $seconds;
 
         $timestamp = DateTimeImmutable::createFromFormat(
             'U.u',

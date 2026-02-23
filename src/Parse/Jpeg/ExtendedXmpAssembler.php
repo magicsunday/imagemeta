@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use Closure;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function array_key_exists;
 use function array_keys;
@@ -22,7 +23,6 @@ use function str_contains;
 use function strlen;
 use function strtoupper;
 use function substr;
-use function unpack;
 use function usort;
 
 /**
@@ -100,26 +100,9 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
         $guid = strtoupper($guidRaw);
 
         $lengthOffset  = $signatureLength + $guidLength;
-        $lengthUnpack  = @unpack('Nlength', substr($payload, $lengthOffset, 4));
-        $offsetUnpack  = @unpack('Noffset', substr($payload, $lengthOffset + 4, 4));
+        $totalLength   = Unpack::int('N', substr($payload, $lengthOffset, 4), 'ExtendedXMP full length');
+        $chunkOffset   = Unpack::int('N', substr($payload, $lengthOffset + 4, 4), 'ExtendedXMP chunk offset');
         $extendedChunk = substr($payload, $lengthOffset + self::HEADER_LENGTH);
-
-        if (($lengthUnpack === false) || !isset($lengthUnpack['length'])) {
-            throw new ParseError(
-                sprintf('ExtendedXMP APP1 segment at offset %d has invalid full-length field', $offset),
-                1472,
-            );
-        }
-
-        if (($offsetUnpack === false) || !isset($offsetUnpack['offset'])) {
-            throw new ParseError(
-                sprintf('ExtendedXMP APP1 segment at offset %d has invalid chunk-offset field', $offset),
-                1473,
-            );
-        }
-
-        /** @var array{length:int} $lengthUnpack */
-        $totalLength = $lengthUnpack['length'];
 
         if ($totalLength <= 0) {
             throw new ParseError(
@@ -128,8 +111,6 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
             );
         }
 
-        /** @var array{offset:int} $offsetUnpack */
-        $chunkOffset = $offsetUnpack['offset'];
         $chunkLength = strlen($extendedChunk);
 
         if ($chunkLength === 0) {

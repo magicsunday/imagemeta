@@ -13,16 +13,15 @@ namespace MagicSunday\ImageMeta\Parse\Iptc;
 
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 
 use function array_key_exists;
-use function is_array;
 use function ord;
 use function sprintf;
 use function str_starts_with;
 use function strlen;
 use function substr;
-use function unpack;
 
 /**
  * Parses IPTC IIM datasets embedded in Photoshop APP13 resource blocks.
@@ -84,7 +83,7 @@ final class IptcParser implements IptcParserInterface
                 throw new BoundsError('APP13 resource ID exceeds payload length.', 1128);
             }
 
-            $resourceId = $this->readUnsignedShort($payload, $offset);
+            $resourceId = Unpack::int('n', substr($payload, $offset, 2), 'IPTC resource ID');
             $offset += 2;
 
             if (($length - $offset) < 1) {
@@ -121,7 +120,7 @@ final class IptcParser implements IptcParserInterface
                 throw new BoundsError('APP13 resource size exceeds payload length.', 1132);
             }
 
-            $resourceSize = $this->readUnsignedLong($payload, $offset);
+            $resourceSize = Unpack::int('N', substr($payload, $offset, 4), 'IPTC resource size');
             $offset += 4;
 
             if (($length - $offset) < $resourceSize) {
@@ -177,7 +176,7 @@ final class IptcParser implements IptcParserInterface
 
             $recordNumber  = ord($data[$offset + 1]);
             $datasetNumber = ord($data[$offset + 2]);
-            $lengthField   = $this->readUnsignedShort($data, $offset + 3);
+            $lengthField   = Unpack::int('n', substr($data, $offset + 3, 2), 'IPTC record size');
             $offset += 5;
 
             $valueLength = $lengthField;
@@ -225,43 +224,5 @@ final class IptcParser implements IptcParserInterface
 
             $datasets[$key][] = $value;
         }
-    }
-
-    /**
-     * Reads a big-endian unsigned 16-bit integer from the payload.
-     *
-     * @param string $data   Raw IPTC payload.
-     * @param int    $offset Offset within the payload.
-     *
-     * @return int Unsigned 16-bit integer value.
-     */
-    private function readUnsignedShort(string $data, int $offset): int
-    {
-        $unpacked = @unpack('nvalue', substr($data, $offset, 2));
-
-        if (!is_array($unpacked) || !isset($unpacked['value']) || !is_int($unpacked['value'])) {
-            throw new ParseError('Unable to read IPTC short value.', 1138);
-        }
-
-        return $unpacked['value'];
-    }
-
-    /**
-     * Reads a big-endian unsigned 32-bit integer from the payload.
-     *
-     * @param string $data   Raw IPTC payload.
-     * @param int    $offset Offset within the payload.
-     *
-     * @return int Unsigned 32-bit integer value.
-     */
-    private function readUnsignedLong(string $data, int $offset): int
-    {
-        $unpacked = @unpack('Nvalue', substr($data, $offset, 4));
-
-        if (!is_array($unpacked) || !isset($unpacked['value']) || !is_int($unpacked['value'])) {
-            throw new ParseError('Unable to read IPTC long value.', 1139);
-        }
-
-        return $unpacked['value'];
     }
 }

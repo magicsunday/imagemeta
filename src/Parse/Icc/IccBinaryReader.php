@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Icc;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function array_key_exists;
 use function function_exists;
@@ -47,17 +48,7 @@ final class IccBinaryReader
             );
         }
 
-        $unpacked = unpack('Nvalue', $bytes);
-        if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
-            throw new ParseError('Unexpected integer value while decoding ICC profile.', 1124);
-        }
-
-        $value = $unpacked['value'];
-        if (!is_int($value)) {
-            throw new ParseError('Unexpected integer value while decoding ICC profile.', 1124);
-        }
-
-        return $value;
+        return Unpack::int('N', $bytes, 'ICC profile uInt32');
     }
 
     /**
@@ -76,17 +67,7 @@ final class IccBinaryReader
             );
         }
 
-        $unpacked = unpack('nvalue', $bytes);
-        if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
-            throw new ParseError('Unexpected integer value while decoding ICC profile.', 1125);
-        }
-
-        $value = $unpacked['value'];
-        if (!is_int($value)) {
-            throw new ParseError('Unexpected integer value while decoding ICC profile.', 1125);
-        }
-
-        return $value;
+        return Unpack::int('n', $bytes, 'ICC profile uInt16');
     }
 
     /**

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function array_key_exists;
 use function sha1;
@@ -19,7 +20,6 @@ use function sprintf;
 use function str_starts_with;
 use function strlen;
 use function substr;
-use function unpack;
 
 /**
  * Routes APP1 payloads to Exif blob storage, standard XMP deduplication,
@@ -191,15 +191,10 @@ final class JpegApp1Handler
             throw new ParseError('APP1 Exif TIFF header has invalid byte order', 1401);
         }
 
-        $format   = $byteOrder === 'II' ? 'v' : 'n';
-        $unpacked = @unpack($format, substr($tiffData, 2, 2));
+        $format = $byteOrder === 'II' ? 'v' : 'n';
+        $magic  = Unpack::int($format, substr($tiffData, 2, 2), 'APP1 Exif TIFF magic number');
 
-        if (($unpacked === false) || !isset($unpacked[1])) {
-            throw new ParseError('APP1 Exif TIFF header has invalid magic number', 1402);
-        }
-
-        /** @var array{1:int} $unpacked */
-        if ($unpacked[1] !== 0x002A && $unpacked[1] !== 0x002B) {
+        if ($magic !== 0x002A && $magic !== 0x002B) {
             throw new ParseError('APP1 Exif TIFF header has invalid magic number', 1402);
         }
     }

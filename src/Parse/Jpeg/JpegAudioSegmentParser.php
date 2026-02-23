@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 
 use function in_array;
@@ -19,7 +20,6 @@ use function ord;
 use function sprintf;
 use function strlen;
 use function substr;
-use function unpack;
 
 /**
  * Parses Exif audio APP2 segments and validates their headers.
@@ -73,26 +73,10 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
         $format   = ord($payload[$signatureLength + 2]);
         $channels = ord($payload[$signatureLength + 3]);
 
-        $sampleRateData   = substr($payload, $signatureLength + 4, 4);
-        $sampleRateUnpack = @unpack('Nrate', $sampleRateData);
-
-        if (($sampleRateUnpack === false) || !isset($sampleRateUnpack['rate'])) {
-            throw new ParseError(sprintf('Audio segment at offset %d has invalid sample rate field', $offset), 1270);
-        }
-
-        /** @var array{rate:int} $sampleRateUnpack */
-        $sampleRate = $sampleRateUnpack['rate'];
+        $sampleRate = Unpack::int('N', substr($payload, $signatureLength + 4, 4), 'audio sample rate');
         $bitDepth   = ord($payload[$signatureLength + 8]);
 
-        $sampleCountData   = substr($payload, $signatureLength + 9, 4);
-        $sampleCountUnpack = @unpack('Ncount', $sampleCountData);
-
-        if (($sampleCountUnpack === false) || !isset($sampleCountUnpack['count'])) {
-            throw new ParseError(sprintf('Audio segment at offset %d has invalid sample count field', $offset), 1271);
-        }
-
-        /** @var array{count:int} $sampleCountUnpack */
-        $sampleCount = $sampleCountUnpack['count'];
+        $sampleCount = Unpack::int('N', substr($payload, $signatureLength + 9, 4), 'audio sample count');
         $data        = substr($payload, self::AUDIO_HEADER_LENGTH);
 
         if ($channels === 0 || $channels > 2) {
