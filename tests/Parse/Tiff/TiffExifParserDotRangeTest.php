@@ -15,10 +15,15 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifTagValidator;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffIfdTraverser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function count;
@@ -30,6 +35,10 @@ use function strlen;
  * Verifies TIFF DotRange semantic validation.
  */
 #[CoversClass(TiffExifParser::class)]
+#[UsesClass(MakerNoteDispatcher::class)]
+#[UsesClass(TiffExifTagValidator::class)]
+#[UsesClass(TiffIfdTraverser::class)]
+#[UsesClass(TiffValueDecoder::class)]
 final class TiffExifParserDotRangeTest extends TestCase
 {
     /**

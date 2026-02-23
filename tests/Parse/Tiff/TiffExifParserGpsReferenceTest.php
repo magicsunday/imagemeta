@@ -16,8 +16,12 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifTagValidator;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffIfdTraverser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -33,8 +37,12 @@ use function strlen;
  * This keeps GPS parsing aligned with EXIF reference tag semantics across versions.
  */
 #[CoversClass(TiffExifParser::class)]
+#[UsesClass(MakerNoteDispatcher::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(TiffConst::class)]
+#[UsesClass(TiffExifTagValidator::class)]
+#[UsesClass(TiffIfdTraverser::class)]
+#[UsesClass(TiffValueDecoder::class)]
 final class TiffExifParserGpsReferenceTest extends TestCase
 {
     /**

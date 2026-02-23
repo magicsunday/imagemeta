@@ -15,8 +15,12 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifTagValidator;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffIfdTraverser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -30,8 +34,12 @@ use PHPUnit\Framework\TestCase;
  * This ensures the parser matches the published reference structures from the spec.
  */
 #[CoversClass(TiffExifParser::class)]
+#[UsesClass(MakerNoteDispatcher::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(TiffConst::class)]
+#[UsesClass(TiffExifTagValidator::class)]
+#[UsesClass(TiffIfdTraverser::class)]
+#[UsesClass(TiffValueDecoder::class)]
 final class TiffExifParserExamplesTest extends TestCase
 {
     /**

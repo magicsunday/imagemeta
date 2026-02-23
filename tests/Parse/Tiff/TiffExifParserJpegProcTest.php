@@ -15,11 +15,16 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifTagValidator;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffIfdTraverser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function count;
@@ -30,6 +35,10 @@ use function str_pad;
  * Verifies TIFF JPEGProc semantics and Compression coupling.
  */
 #[CoversClass(TiffExifParser::class)]
+#[UsesClass(MakerNoteDispatcher::class)]
+#[UsesClass(TiffExifTagValidator::class)]
+#[UsesClass(TiffIfdTraverser::class)]
+#[UsesClass(TiffValueDecoder::class)]
 final class TiffExifParserJpegProcTest extends TestCase
 {
     /**

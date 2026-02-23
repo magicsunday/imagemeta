@@ -15,8 +15,12 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifTagValidator;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffIfdTraverser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -29,11 +33,15 @@ use function strlen;
  * Verifies that TIFF UNDEFINED values remain byte-exact at parser level.
  */
 #[CoversClass(TiffExifParser::class)]
+#[UsesClass(ExifTag::class)]
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
+#[UsesClass(MakerNoteDispatcher::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(TiffConst::class)]
-#[UsesClass(ExifTag::class)]
+#[UsesClass(TiffExifTagValidator::class)]
+#[UsesClass(TiffIfdTraverser::class)]
+#[UsesClass(TiffValueDecoder::class)]
 final class TiffExifParserUndefinedTypeTest extends TestCase
 {
     /**

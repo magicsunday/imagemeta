@@ -20,8 +20,12 @@ use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifTagValidator;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffIfdTraverser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -38,14 +42,18 @@ use function unpack;
  * Verifies parsing and exposure of baseline DNG tags from TIFF/EXIF payloads.
  */
 #[CoversClass(TiffExifParser::class)]
-#[UsesClass(Ifd::class)]
-#[UsesClass(IfdEntry::class)]
-#[UsesClass(ParsedExif::class)]
-#[UsesClass(TiffConst::class)]
 #[UsesClass(DngTag::class)]
 #[UsesClass(ExifTag::class)]
-#[UsesClass(TiffTag::class)]
+#[UsesClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
+#[UsesClass(MakerNoteDispatcher::class)]
 #[UsesClass(MakerNotesRecord::class)]
+#[UsesClass(ParsedExif::class)]
+#[UsesClass(TiffConst::class)]
+#[UsesClass(TiffExifTagValidator::class)]
+#[UsesClass(TiffIfdTraverser::class)]
+#[UsesClass(TiffTag::class)]
+#[UsesClass(TiffValueDecoder::class)]
 final class TiffExifParserDngTagTest extends TestCase
 {
     /**

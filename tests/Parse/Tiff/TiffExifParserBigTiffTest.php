@@ -23,8 +23,12 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifTagValidator;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffIfdTraverser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -39,18 +43,22 @@ use function pack;
  * This ensures BigTIFF handling remains strict and safe for large-file metadata.
  */
 #[CoversClass(TiffExifParser::class)]
-#[UsesClass(MemoryBuffer::class)]
 #[UsesClass(BitMask::class)]
-#[UsesClass(Endian::class)]
-#[UsesClass(UInt64::class)]
-#[UsesClass(Unpack::class)]
 #[UsesClass(BoundsError::class)]
-#[UsesClass(ParseError::class)]
+#[UsesClass(Endian::class)]
 #[UsesClass(ExifNumericList::class)]
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
+#[UsesClass(MakerNoteDispatcher::class)]
+#[UsesClass(MemoryBuffer::class)]
+#[UsesClass(ParseError::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(TiffConst::class)]
+#[UsesClass(TiffExifTagValidator::class)]
+#[UsesClass(TiffIfdTraverser::class)]
+#[UsesClass(TiffValueDecoder::class)]
+#[UsesClass(UInt64::class)]
+#[UsesClass(Unpack::class)]
 final class TiffExifParserBigTiffTest extends TestCase
 {
     /**
