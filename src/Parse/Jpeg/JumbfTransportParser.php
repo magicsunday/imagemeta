@@ -35,7 +35,7 @@ use function unpack;
  * superboxes carrying annotation metadata. Supported XML/XMP payloads
  * are surfaced through a caller-supplied packet collector.
  */
-final class JumbfTransportParser
+final class JumbfTransportParser implements SegmentAssemblerInterface
 {
     private const int TRANSPORT_HEADER_LENGTH = 10;
 

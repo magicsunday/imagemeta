@@ -27,7 +27,7 @@ use function unpack;
  * EXIF 3.0 §4.7.3 defines the APP2 audio stream format, including the
  * four-byte sample rate and two-byte version fields honoured here.
  */
-final class JpegAudioSegmentParser
+final class JpegAudioSegmentParser implements SegmentAssemblerInterface
 {
     /**
      * Header prefix for Exif audio APP2 payloads (EXIF 3.0 §4.7.3).
@@ -170,6 +170,13 @@ final class JpegAudioSegmentParser
     public function getStreams(): array
     {
         return $this->streams;
+    }
+
+    /**
+     * No-op: audio segments are self-contained and require no deferred assembly.
+     */
+    public function finalise(): void
+    {
     }
 
     /**

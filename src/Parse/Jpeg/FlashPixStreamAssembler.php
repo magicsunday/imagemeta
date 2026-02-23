@@ -30,7 +30,7 @@ use function usort;
  * EXIF 3.0 §4.7.3.1 requires APP2 ordering as Contents List first, then Stream Data.
  * EXIF 3.0 §4.7.3.4 and §4.7.3.5 define field-level structures for both segment bodies.
  */
-final class FlashPixStreamAssembler
+final class FlashPixStreamAssembler implements SegmentAssemblerInterface
 {
     private const int FLASHPIX_STORAGE_ENTITY_SIZE = 0xFFFFFFFF;
 

@@ -31,7 +31,7 @@ use function substr;
  * ICC.1:2022 §B.4 defines the JPEG APP2 embedding mechanism: the profile is split into
  * numbered chunks prefixed by "ICC_PROFILE\0" followed by sequence/count bytes.
  */
-final class IccProfileAssembler
+final class IccProfileAssembler implements SegmentAssemblerInterface
 {
     /**
      * Signature identifying ICC profile payloads inside APP2 markers.

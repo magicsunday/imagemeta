@@ -31,7 +31,7 @@ use function usort;
  * Adobe XMP Storage in Files defines the JPEG APP1 extension container as:
  * signature + GUID + full-length + chunk-offset + chunk bytes.
  */
-final class ExtendedXmpAssembler
+final class ExtendedXmpAssembler implements SegmentAssemblerInterface
 {
     /**
      * Signature identifying ExtendedXMP APP1 segments.
