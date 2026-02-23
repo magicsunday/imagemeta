@@ -14,6 +14,10 @@ namespace MagicSunday\ImageMeta\Tests\Exif\Converters;
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsCoordinateConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsDirectionConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsTimestampConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsUnitConverter;
 use MagicSunday\ImageMeta\Exif\Converters\NumericConverter;
 use MagicSunday\ImageMeta\Exif\Converters\RationalConverter;
 use MagicSunday\ImageMeta\Exif\Converters\StringConverter;
@@ -37,6 +41,10 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(GpsConverter::class)]
+#[UsesClass(GpsCoordinateConverter::class)]
+#[UsesClass(GpsDirectionConverter::class)]
+#[UsesClass(GpsTimestampConverter::class)]
+#[UsesClass(GpsUnitConverter::class)]
 #[UsesClass(RationalConverter::class)]
 #[UsesClass(StringConverter::class)]
 #[UsesClass(NumericConverter::class)]
@@ -47,16 +55,26 @@ final class GpsConverterTest extends TestCase
 {
     private GpsConverter $converter;
 
+    private GpsUnitConverter $unitConverter;
+
     protected function setUp(): void
     {
         $numericConverter  = new NumericConverter();
         $rationalConverter = new RationalConverter($numericConverter);
         $stringConverter   = new StringConverter();
 
+        $coordinateConverter = new GpsCoordinateConverter($rationalConverter, $numericConverter);
+        $this->unitConverter = new GpsUnitConverter($rationalConverter);
+        $directionConverter  = new GpsDirectionConverter($rationalConverter);
+        $timestampConverter  = new GpsTimestampConverter($rationalConverter, $stringConverter);
+
         $this->converter = new GpsConverter(
+            $coordinateConverter,
+            $this->unitConverter,
+            $directionConverter,
+            $timestampConverter,
             $rationalConverter,
             $stringConverter,
-            $numericConverter,
         );
     }
 
@@ -909,7 +927,7 @@ final class GpsConverterTest extends TestCase
     #[DataProvider('provideValidAltitudeRefValues')]
     public function acceptsValidAltitudeReferenceValues(int|string $value, int $expected): void
     {
-        self::assertSame($expected, $this->converter->normaliseAltitudeRef($value));
+        self::assertSame($expected, $this->unitConverter->normaliseAltitudeRef($value));
     }
 
     /**
@@ -923,7 +941,7 @@ final class GpsConverterTest extends TestCase
     #[DataProvider('provideFractionalAltitudeRefValues')]
     public function rejectsFractionalAltitudeReferenceValues(float|string|ExifRational $value): void
     {
-        self::assertNull($this->converter->normaliseAltitudeRef($value));
+        self::assertNull($this->unitConverter->normaliseAltitudeRef($value));
     }
 
     /**
@@ -934,7 +952,7 @@ final class GpsConverterTest extends TestCase
     #[Test]
     public function rejectsNonNumericAltitudeReferenceValue(): void
     {
-        self::assertNull($this->converter->normaliseAltitudeRef('invalid'));
+        self::assertNull($this->unitConverter->normaliseAltitudeRef('invalid'));
     }
 
     /**
@@ -948,7 +966,7 @@ final class GpsConverterTest extends TestCase
     #[DataProvider('provideOutOfDomainAltitudeRefValues')]
     public function rejectsOutOfDomainAltitudeReferenceValues(int|string $value): void
     {
-        self::assertNull($this->converter->normaliseAltitudeRef($value));
+        self::assertNull($this->unitConverter->normaliseAltitudeRef($value));
     }
 
     /**

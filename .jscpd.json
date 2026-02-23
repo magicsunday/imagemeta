@@ -15,7 +15,10 @@
         "**/MetadataBuilder.php",
         "**/IfdValueReader.php",
         "**/ExposureParameterReader.php",
-        "**/SceneModeReader.php"
+        "**/SceneModeReader.php",
+        "**/GpsCoordinateConverter.php",
+        "**/GpsConverter.php",
+        "**/GpsTimestampConverter.php"
     ],
     "exitCode": true
 }

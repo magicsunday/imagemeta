@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
 use DateTimeImmutable;
-use DateTimeZone;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
@@ -21,29 +20,16 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
-use MagicSunday\ImageMeta\Exif\Text\JisTextDecoder;
-use MagicSunday\ImageMeta\Exif\Text\UndefinedTextMarker;
-use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
 
-use function abs;
-use function checkdate;
-use function count;
-use function floor;
-use function iconv;
+use function array_replace;
 use function implode;
 use function in_array;
-use function is_callable;
 use function is_float;
 use function is_int;
-use function is_numeric;
 use function is_string;
-use function preg_match;
-use function round;
 use function sprintf;
 use function str_replace;
-use function strlen;
 use function strtoupper;
-use function substr;
 use function trim;
 
 /**
@@ -101,20 +87,6 @@ final readonly class GpsConverter
     private const string DEFAULT_GPS_VERSION = '2.4.0.0';
 
     /**
-     * EXIF 3.0 §4.6.7.1.2 GPSLatitudeRef: 'N' (north) or 'S' (south).
-     *
-     * @var list<string>
-     */
-    private const array GPS_LATITUDE_REF_VALUES = ['N', 'S'];
-
-    /**
-     * EXIF 3.0 §4.6.7.1.4 GPSLongitudeRef: 'E' (east) or 'W' (west).
-     *
-     * @var list<string>
-     */
-    private const array GPS_LONGITUDE_REF_VALUES = ['E', 'W'];
-
-    /**
      * EXIF 3.0 §4.6.7.1.10 GPSStatus: 'A' (measurement in progress) or 'V' (measurement interrupted).
      *
      * @var list<string>
@@ -129,38 +101,20 @@ final readonly class GpsConverter
     private const array GPS_MEASURE_MODE_VALUES = ['2', '3'];
 
     /**
-     * EXIF 3.0 §4.6.7.1.13 GPSSpeedRef: 'K' (km/h), 'M' (mph) or 'N' (knots).
-     *
-     * @var list<string>
-     */
-    private const array GPS_SPEED_REF_VALUES = ['K', 'M', 'N'];
-
-    /**
-     * EXIF 3.0 §4.6.7.1.15 GPSTrackRef, §4.6.7.1.17 GPSImgDirectionRef, §4.6.7.1.24 GPSDestBearingRef:
-     * 'T' (true direction) or 'M' (magnetic direction).
-     *
-     * @var list<string>
-     */
-    private const array GPS_BEARING_REF_VALUES = ['T', 'M'];
-
-    /**
-     * EXIF 3.0 §4.6.7.1.26 GPSDestDistanceRef: 'K' (km), 'M' (miles) or 'N' (nautical miles).
-     *
-     * @var list<string>
-     */
-    private const array GPS_DISTANCE_REF_VALUES = ['K', 'M', 'N'];
-
-    /**
-     * Creates the converter with its numeric, string, and rational dependencies.
-     *
-     * @param RationalConverter $rationalConverter Dependency for rational conversions.
-     * @param StringConverter   $stringConverter   Dependency for string conversions.
-     * @param NumericConverter  $numericConverter  Dependency for numeric conversions.
+     * @param GpsCoordinateConverter $coordinateConverter Coordinate DMS-to-decimal converter.
+     * @param GpsUnitConverter       $unitConverter       Speed/distance/altitude converter.
+     * @param GpsDirectionConverter  $directionConverter  Bearing normalisation converter.
+     * @param GpsTimestampConverter  $timestampConverter  Date/time assembly converter.
+     * @param RationalConverter      $rationalConverter   Dependency for rational conversions.
+     * @param StringConverter        $stringConverter     Dependency for string sanitisation.
      */
     public function __construct(
+        private GpsCoordinateConverter $coordinateConverter,
+        private GpsUnitConverter $unitConverter,
+        private GpsDirectionConverter $directionConverter,
+        private GpsTimestampConverter $timestampConverter,
         private RationalConverter $rationalConverter,
         private StringConverter $stringConverter,
-        private NumericConverter $numericConverter,
     ) {
     }
 
@@ -228,103 +182,22 @@ final readonly class GpsConverter
     {
         $result = $this->emptyGpsResult();
 
-        $latRefEntry = $gps->get(ExifTag::GPS_LATITUDE_REF);
-        $latValEntry = $gps->get(ExifTag::GPS_LATITUDE);
-        $lonRefEntry = $gps->get(ExifTag::GPS_LONGITUDE_REF);
-        $lonValEntry = $gps->get(ExifTag::GPS_LONGITUDE);
+        // Delegate domain extractions
+        $result = array_replace($result, $this->coordinateConverter->extractFromIfd($gps));
+        $result = array_replace($result, $this->unitConverter->extractFromIfd($gps));
+        $result = array_replace($result, $this->directionConverter->extractFromIfd($gps));
+        $result = array_replace($result, $this->timestampConverter->extractFromIfd($gps));
 
-        $this->validateCoordinatePairConsistency($latRefEntry, $latValEntry, 'GPSLatitudeRef', 'GPSLatitude');
-        $this->validateCoordinatePairConsistency($lonRefEntry, $lonValEntry, 'GPSLongitudeRef', 'GPSLongitude');
-
-        $latRef = $latRefEntry?->value;
-        $latVal = $latValEntry?->value;
-        $lonRef = $lonRefEntry?->value;
-        $lonVal = $lonValEntry?->value;
-
-        // EXIF 3.0 §4.6.7.1.2 GPSLatitudeRef: 'N' or 'S'
-        $result['lat_ref'] = $this->validateGpsRef(
-            is_string($latRef) ? strtoupper(trim($latRef)) : null,
-            self::GPS_LATITUDE_REF_VALUES,
-        );
-        // EXIF 3.0 §4.6.7.1.4 GPSLongitudeRef: 'E' or 'W'
-        $result['lon_ref'] = $this->validateGpsRef(
-            is_string($lonRef) ? strtoupper(trim($lonRef)) : null,
-            self::GPS_LONGITUDE_REF_VALUES,
-        );
-
-        $latPairs = $this->resolveCoordinatePairs($latVal);
-        $lonPairs = $this->resolveCoordinatePairs($lonVal);
-
-        $result['lat'] = $this->dmsToFloat($result['lat_ref'], $latPairs);
-        $result['lon'] = $this->dmsToFloat($result['lon_ref'], $lonPairs);
-
-        $altRefEntry = $gps->get(ExifTag::GPS_ALTITUDE_REF);
-        $altRefValue = $altRefEntry?->value;
-        $altRef      = $this->normaliseAltitudeRef($altRefValue);
-        if ($altRef !== null) {
-            $result['alt_ref'] = $altRef;
-        }
-
-        $altEntry = $gps->get(ExifTag::GPS_ALTITUDE);
-        if ($altEntry instanceof IfdEntry) {
-            // EXIF 3.0 §4.6.7.1.6: default GPSAltitudeRef is 0 when tag is missing
-            if ($result['alt_ref'] === null) {
-                $result['alt_ref'] = 0;
-            }
-
-            $alt = $this->rationalConverter->toFloat($altEntry->value);
-
-            if ($alt !== null && $alt < 0.0) {
-                throw new ParseError(
-                    'GPSAltitude must be a non-negative magnitude per EXIF 3.0 §4.6.7.1.7; sign is derived from GPSAltitudeRef.',
-                    1471,
-                );
-            }
-
-            // EXIF 3.0 §4.6.7.1.6: Values 1 (below ellipsoidal) and 3 (below sea level) indicate negative altitude
-            if ($alt !== null && ($result['alt_ref'] === 1 || $result['alt_ref'] === 3)) {
-                $alt = -$alt;
-            }
-
-            if ($alt !== null) {
-                $result['alt'] = $alt;
-            }
-        }
-
+        // Remaining simple fields handled by the orchestrator
         $versionEntry    = $gps->get(ExifTag::GPS_VERSION_ID);
         $satellitesEntry = $gps->get(ExifTag::GPS_SATELLITES);
         $statusEntry     = $gps->get(ExifTag::GPS_STATUS);
         $measureEntry    = $gps->get(ExifTag::GPS_MEASURE_MODE);
         $dopEntry        = $gps->get(ExifTag::GPS_DOP);
-        $speedRefEntry   = $gps->get(ExifTag::GPS_SPEED_REF);
-        $speedEntry      = $gps->get(ExifTag::GPS_SPEED);
-        $trackRefEntry   = $gps->get(ExifTag::GPS_TRACK_REF);
-        $trackEntry      = $gps->get(ExifTag::GPS_TRACK);
-        $imgDirRefEntry  = $gps->get(ExifTag::GPS_IMG_DIRECTION_REF);
-        $imgDirEntry     = $gps->get(ExifTag::GPS_IMG_DIRECTION);
         $mapDatumEntry   = $gps->get(ExifTag::GPS_MAP_DATUM);
-        $destLatRefEntry = $gps->get(ExifTag::GPS_DEST_LATITUDE_REF);
-        $destLatEntry    = $gps->get(ExifTag::GPS_DEST_LATITUDE);
-        $destLonRefEntry = $gps->get(ExifTag::GPS_DEST_LONGITUDE_REF);
-        $destLonEntry    = $gps->get(ExifTag::GPS_DEST_LONGITUDE);
 
-        $this->validateCoordinatePairConsistency($destLatRefEntry, $destLatEntry, 'GPSDestLatitudeRef', 'GPSDestLatitude');
-        $this->validateCoordinatePairConsistency($destLonRefEntry, $destLonEntry, 'GPSDestLongitudeRef', 'GPSDestLongitude');
-
-        $destBearRefEntry = $gps->get(ExifTag::GPS_DEST_BEARING_REF);
-        $destBearEntry    = $gps->get(ExifTag::GPS_DEST_BEARING);
-        $destDistRefEntry = $gps->get(ExifTag::GPS_DEST_DISTANCE_REF);
-        $destDistEntry    = $gps->get(ExifTag::GPS_DEST_DISTANCE);
-        $processEntry     = $gps->get(ExifTag::GPS_PROCESSING_METHOD);
-        $areaEntry        = $gps->get(ExifTag::GPS_AREA_INFORMATION);
-        $dateEntry        = $gps->get(ExifTag::GPS_DATE_STAMP);
-        $timeEntry        = $gps->get(ExifTag::GPS_TIME_STAMP);
-
-        // EXIF 3.0 §4.6.7.1.1 defines 2.4.0.0 as current; earlier versions
-        // (2.2.0.0, 2.3.0.0) are common in pre-3.0 cameras and fully compatible.
-        $versionParts      = $this->formatVersion($versionEntry?->value);
-        $result['version'] = $versionParts['normalized'];
-
+        $versionParts          = $this->formatVersion($versionEntry?->value);
+        $result['version']     = $versionParts['normalized'];
         $result['version_raw'] = $versionParts['raw'];
         $result['satellites']  = $this->stringConverter->sanitize($satellitesEntry?->value);
 
@@ -341,6 +214,7 @@ final readonly class GpsConverter
             is_string($measureSanitized) ? strtoupper(trim($measureSanitized)) : null,
             self::GPS_MEASURE_MODE_VALUES,
         );
+
         $dopValue = $this->rationalConverter->toFloat($dopEntry?->value);
         if ($dopEntry instanceof IfdEntry && $dopValue !== null && $dopValue < 0.0) {
             throw new ParseError(sprintf(
@@ -349,134 +223,10 @@ final readonly class GpsConverter
             ), 1469);
         }
 
-        $result['dop'] = $dopValue;
-
-        // EXIF 3.0 §4.6.7.1.13 GPSSpeedRef: 'K', 'M' or 'N'; default 'K'
-        $speedRefValue    = $speedRefEntry?->value;
-        $speedOriginalRef = $this->validateGpsRef(
-            is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null,
-            self::GPS_SPEED_REF_VALUES,
-        );
-        $speedRef = $this->validateGpsRef(
-            is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null,
-            self::GPS_SPEED_REF_VALUES,
-        );
-        if ($speedRef === null && !$speedRefEntry instanceof IfdEntry && $speedEntry instanceof IfdEntry) {
-            $speedRef = 'K';
-        }
-
-        $result['speed_ref']          = $speedRef;
-        $result['speed_ms']           = $this->speedToMs($speedRef, $speedEntry?->value);
-        $result['speed_original_ref'] = $speedOriginalRef;
-        $result['speed_original']     = $this->rationalConverter->toFloat($speedEntry?->value);
-
-        // EXIF 3.0 §4.6.7.1.15 GPSTrackRef: 'T' or 'M'; default 'T'
-        $trackRefValue       = $trackRefEntry?->value;
-        $trackRefNormalized  = is_string($trackRefValue) ? strtoupper(trim($trackRefValue)) : null;
-        $result['track_ref'] = $this->validateGpsRef($trackRefNormalized, self::GPS_BEARING_REF_VALUES);
-        $trackRefInvalid     = ($trackRefNormalized !== null) && ($result['track_ref'] === null);
-        if ($result['track_ref'] === null && !$trackRefEntry instanceof IfdEntry && $trackEntry instanceof IfdEntry) {
-            $result['track_ref'] = 'T';
-        }
-
-        $trackValue      = $this->rationalConverter->toFloat($trackEntry?->value);
-        $result['track'] = $trackRefInvalid ? null : $this->normalizeBearing($trackValue);
-
-        // EXIF 3.0 §4.6.7.1.17 GPSImgDirectionRef: 'T' or 'M'; default 'T'
-        $imgDirRefValue              = $imgDirRefEntry?->value;
-        $imgDirRefNormalized         = is_string($imgDirRefValue) ? strtoupper(trim($imgDirRefValue)) : null;
-        $result['img_direction_ref'] = $this->validateGpsRef($imgDirRefNormalized, self::GPS_BEARING_REF_VALUES);
-        $imgDirRefInvalid            = ($imgDirRefNormalized !== null) && ($result['img_direction_ref'] === null);
-        if ($result['img_direction_ref'] === null && !$imgDirRefEntry instanceof IfdEntry && $imgDirEntry instanceof IfdEntry) {
-            $result['img_direction_ref'] = 'T';
-        }
-
-        $imgDirectionValue       = $this->rationalConverter->toFloat($imgDirEntry?->value);
-        $result['img_direction'] = $imgDirRefInvalid ? null : $this->normalizeBearing($imgDirectionValue);
-
+        $result['dop']       = $dopValue;
         $result['map_datum'] = $this->stringConverter->sanitize($mapDatumEntry?->value);
 
-        // EXIF 3.0 §4.6.7.1.20 GPSDestLatitudeRef: 'N' or 'S'
-        $destLatRefValue        = $destLatRefEntry?->value;
-        $destLatVal             = $destLatEntry?->value;
-        $destLatPairs           = $destLatVal instanceof ExifRationalList ? $destLatVal : null;
-        $result['dest_lat_ref'] = $this->validateGpsRef(
-            is_string($destLatRefValue) ? strtoupper(trim($destLatRefValue)) : null,
-            self::GPS_LATITUDE_REF_VALUES,
-        );
-        $result['dest_lat'] = $this->dmsToFloat($result['dest_lat_ref'], $destLatPairs);
-
-        // EXIF 3.0 §4.6.7.1.22 GPSDestLongitudeRef: 'E' or 'W'
-        $destLonRefValue        = $destLonRefEntry?->value;
-        $destLonVal             = $destLonEntry?->value;
-        $destLonPairs           = $destLonVal instanceof ExifRationalList ? $destLonVal : null;
-        $result['dest_lon_ref'] = $this->validateGpsRef(
-            is_string($destLonRefValue) ? strtoupper(trim($destLonRefValue)) : null,
-            self::GPS_LONGITUDE_REF_VALUES,
-        );
-        $result['dest_lon'] = $this->dmsToFloat($result['dest_lon_ref'], $destLonPairs);
-
-        // EXIF 3.0 §4.6.7.1.24 GPSDestBearingRef: 'T' or 'M'; default 'T'
-        $destBearingRefValue        = $destBearRefEntry?->value;
-        $destBearingRefNormalized   = is_string($destBearingRefValue) ? strtoupper(trim($destBearingRefValue)) : null;
-        $result['dest_bearing_ref'] = $this->validateGpsRef($destBearingRefNormalized, self::GPS_BEARING_REF_VALUES);
-        $destBearingRefInvalid      = ($destBearingRefNormalized !== null) && ($result['dest_bearing_ref'] === null);
-        if ($result['dest_bearing_ref'] === null && !$destBearRefEntry instanceof IfdEntry && $destBearEntry instanceof IfdEntry) {
-            $result['dest_bearing_ref'] = 'T';
-        }
-
-        $destBearingValue       = $this->rationalConverter->toFloat($destBearEntry?->value);
-        $result['dest_bearing'] = $destBearingRefInvalid ? null : $this->normalizeBearing($destBearingValue);
-
-        // EXIF 3.0 §4.6.7.1.26 GPSDestDistanceRef: 'K', 'M' or 'N'; default 'K'
-        $destDistanceRefValue    = $destDistRefEntry?->value;
-        $destDistanceOriginalRef = $this->validateGpsRef(
-            is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null,
-            self::GPS_DISTANCE_REF_VALUES,
-        );
-        $result['dest_distance_ref'] = $this->validateGpsRef(
-            is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null,
-            self::GPS_DISTANCE_REF_VALUES,
-        );
-        if ($result['dest_distance_ref'] === null && !$destDistRefEntry instanceof IfdEntry && $destDistEntry instanceof IfdEntry) {
-            $result['dest_distance_ref'] = 'K';
-        }
-
-        $result['dest_distance_original_ref'] = $destDistanceOriginalRef;
-        $result['dest_distance_original']     = $this->rationalConverter->toFloat($destDistEntry?->value);
-        $result['dest_distance_m']            = $this->distanceToMetres($result['dest_distance_ref'], $destDistEntry?->value);
-
-        $result['processing_method'] = $this->decodeUndefinedString($processEntry?->value);
-        $result['area_information']  = $this->decodeUndefinedString($areaEntry?->value);
-
-        $dateParts = $this->normalizeDate($dateEntry?->value);
-        if (($dateEntry instanceof IfdEntry) && ($dateParts['normalized'] === null)) {
-            throw new ParseError(
-                sprintf(
-                    'GPSDateStamp "%s" is not a valid UTC calendar date per EXIF 3.0 §4.6.7.1.30.',
-                    $dateParts['raw'] ?? '',
-                ),
-                1465,
-            );
-        }
-
-        $result['date']     = $dateParts['normalized'];
-        $result['date_raw'] = $dateParts['raw'];
-
-        $timeParts = $timeEntry instanceof IfdEntry && $timeEntry->value instanceof ExifRationalList
-            ? $this->parseTime($timeEntry->value)
-            : null;
-
-        if (($timeEntry instanceof IfdEntry) && ($timeParts === null)) {
-            throw new ParseError(
-                'GPSTimeStamp is outside valid UTC ranges (hour 0..23, minute 0..59, second >=0 and <60) per EXIF 3.0 §4.6.7.1.8.',
-                1466,
-            );
-        }
-
-        $result['time']      = $this->formatTime($timeParts);
-        $result['timestamp'] = $this->combineDateTime($result['date'], $timeParts);
-
+        // Differential
         $diffEntry = $gps->get(ExifTag::GPS_DIFFERENTIAL);
         $diffValue = $diffEntry?->value;
         if ($diffValue instanceof ExifNumericList) {
@@ -487,6 +237,7 @@ final readonly class GpsConverter
             $result['differential'] = $diffValue;
         }
 
+        // Horizontal positioning error
         $hPositionEntry         = $gps->get(ExifTag::GPS_H_POSITIONING_ERROR);
         $hPositioningErrorValue = $this->rationalConverter->toFloat($hPositionEntry?->value);
 
@@ -504,373 +255,6 @@ final readonly class GpsConverter
         $result['h_positioning_error'] = $hPositioningErrorValue;
 
         return $result;
-    }
-
-    /**
-     * Converts a GPS speed measurement into metres per second.
-     *
-     * EXIF 3.0 §4.6.8 (GPSSpeedRef/GPSSpeed) defines the unit codes K, M and N.
-     *
-     * @param string|null                                                                $ref   Speed reference (K, M or N).
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The measured value.
-     */
-    public function speedToMs(
-        ?string $ref,
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
-    ): ?float {
-        return $this->convertReferencedValue($ref, $value, [
-            'K' => static fn (float $numeric): float => $numeric / 3.6,
-            'M' => static fn (float $numeric): float => $numeric * 0.44704,
-            'N' => static fn (float $numeric): float => $numeric * 0.5144444444444444,
-        ]);
-    }
-
-    /**
-     * Converts a GPS destination distance to metres based on the reference unit.
-     *
-     * EXIF 3.0 §4.6.8 (GPSDestDistanceRef/GPSDestDistance): nautical miles, statute miles and
-     * kilometres resolve to metres here.
-     *
-     * @param string|null                                                                $ref   Distance reference (K, M or N).
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The measured value.
-     */
-    public function distanceToMetres(
-        ?string $ref,
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
-    ): ?float {
-        return $this->convertReferencedValue($ref, $value, [
-            'K' => static fn (float $numeric): float => $numeric * 1000.0,
-            'M' => static fn (float $numeric): float => $numeric * 1609.344,
-            'N' => static fn (float $numeric): float => $numeric * 1852.0,
-        ]);
-    }
-
-    /**
-     * Validates a compass bearing is within the strict [0, 360) range.
-     *
-     * EXIF 3.0 §4.6.7.1.16/§4.6.7.1.18/§4.6.7.1.25: bearings must be 0.00–359.99.
-     */
-    public function normalizeBearing(int|float|null $value): ?float
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $bearing = (float) $value;
-        if ($bearing < 0.0 || $bearing >= 360.0) {
-            throw new ParseError(sprintf(
-                'GPS bearing value %s is outside the valid range 0.00–359.99 per EXIF 3.0.',
-                $bearing,
-            ), 1460);
-        }
-
-        return $bearing;
-    }
-
-    /**
-     * Validates a GPS reference value against a list of allowed spec values.
-     *
-     * EXIF 3.0 §4.6.7 defines enumerated values for each GPS reference/status tag;
-     * any value not in the allowed set is treated as reserved and rejected.
-     *
-     * @param string|null  $value   Normalised (uppercase, trimmed) reference value.
-     * @param list<string> $allowed Permitted values from the EXIF 3.0 specification.
-     *
-     * @return string|null The value if valid, null otherwise.
-     */
-    private function validateGpsRef(?string $value, array $allowed): ?string
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        return in_array($value, $allowed, true) ? $value : null;
-    }
-
-    /**
-     * Validates that GPS coordinate ref and value tags are either both present or both absent.
-     */
-    private function validateCoordinatePairConsistency(
-        ?IfdEntry $refEntry,
-        ?IfdEntry $valueEntry,
-        string $refName,
-        string $valueName,
-    ): void {
-        $hasRef   = $refEntry instanceof IfdEntry;
-        $hasValue = $valueEntry instanceof IfdEntry;
-
-        if ($hasRef === $hasValue) {
-            return;
-        }
-
-        if ($hasValue) {
-            throw new ParseError(sprintf(
-                '%s present without matching %s per EXIF 3.0.',
-                $valueName,
-                $refName,
-            ), 1472);
-        }
-
-        throw new ParseError(sprintf(
-            '%s present without matching %s per EXIF 3.0.',
-            $refName,
-            $valueName,
-        ), 1472);
-    }
-
-    /**
-     * Normalises a numeric GPS value and its reference string.
-     *
-     * @param string|null                                                                $ref   Reference string.
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw numeric value.
-     *
-     * @return array{ref:string, value:float}|null Normalised reference/value pair or null.
-     */
-    private function resolveNumericReference(
-        ?string $ref,
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
-    ): ?array {
-        if (!is_string($ref)) {
-            return null;
-        }
-
-        $numeric = $this->rationalConverter->toFloat($value);
-        if ($numeric === null) {
-            return null;
-        }
-
-        $normalizedRef = strtoupper(trim($ref));
-        if ($normalizedRef === '') {
-            return null;
-        }
-
-        return [
-            'ref'   => $normalizedRef,
-            'value' => $numeric,
-        ];
-    }
-
-    /**
-     * Converts a referenced numeric value using a unit conversion map.
-     *
-     * @param string|null                                                                $ref         Reference unit.
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value       Raw value.
-     * @param array<string, callable(float): float>                                      $conversions Unit conversion callbacks.
-     *
-     * @return float|null Converted value or null when conversion fails.
-     */
-    private function convertReferencedValue(
-        ?string $ref,
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
-        array $conversions,
-    ): ?float {
-        $resolved = $this->resolveNumericReference($ref, $value);
-        if ($resolved === null) {
-            return null;
-        }
-
-        $conversion = $conversions[$resolved['ref']] ?? null;
-        if (!is_callable($conversion)) {
-            return null;
-        }
-
-        return $conversion($resolved['value']);
-    }
-
-    /**
-     * Converts degrees/minutes/seconds to a decimal float.
-     *
-     * EXIF 3.0 §4.6.8 states that GPSLatitude/GPSLongitude are SRATIONAL triplets ordered as
-     * degrees, minutes and seconds.
-     *
-     * @param string|null                           $ref Reference direction (N, S, E, W).
-     * @param ExifRationalList|ExifNumericList|null $val Coordinate values as DMS.
-     */
-    public function dmsToFloat(?string $ref, ExifRationalList|ExifNumericList|null $val): ?float
-    {
-        if (!is_string($ref) || $val === null) {
-            return null;
-        }
-
-        $isLatitudeRef  = ($ref === 'N') || ($ref === 'S');
-        $isLongitudeRef = ($ref === 'E') || ($ref === 'W');
-        if (!$isLatitudeRef && !$isLongitudeRef) {
-            return null;
-        }
-
-        $components = [];
-
-        // EXIF 3.0 §4.6.8: GPSLatitude/GPSLongitude require exactly 3 RATIONAL
-        // components (degrees, minutes, seconds). Non-conformant counts are rejected.
-        if ($val instanceof ExifRationalList) {
-            if (count($val->values) !== 3) {
-                return null;
-            }
-
-            foreach ($val->values as $index => $component) {
-                $numeric = $this->rationalConverter->toFloat($component);
-                if ($numeric === null) {
-                    return null;
-                }
-
-                if ($numeric < 0.0) {
-                    $part = match ($index) {
-                        0       => 'degrees',
-                        1       => 'minutes',
-                        default => 'seconds',
-                    };
-
-                    throw new ParseError(
-                        sprintf(
-                            'GPS %s component must be non-negative; hemisphere direction is defined by GPS reference tags per EXIF 3.0 §4.6.7.1.2-§4.6.7.1.5.',
-                            $part,
-                        ),
-                        1467,
-                    );
-                }
-
-                $components[] = $numeric;
-            }
-        } else {
-            if (count($val->values) !== 3) {
-                return null;
-            }
-
-            foreach ($val->values as $index => $component) {
-                $numeric = $this->numericConverter->normaliseComponent($component);
-                if ($numeric === null) {
-                    return null;
-                }
-
-                if ($numeric < 0.0) {
-                    $part = match ($index) {
-                        0       => 'degrees',
-                        1       => 'minutes',
-                        default => 'seconds',
-                    };
-
-                    throw new ParseError(
-                        sprintf(
-                            'GPS %s component must be non-negative; hemisphere direction is defined by GPS reference tags per EXIF 3.0 §4.6.7.1.2-§4.6.7.1.5.',
-                            $part,
-                        ),
-                        1467,
-                    );
-                }
-
-                $components[] = $numeric;
-            }
-        }
-
-        $deg = $components[0];
-        $min = $components[1];
-        $sec = $components[2];
-
-        if ($min >= 60.0) {
-            throw new ParseError(
-                'GPS minutes component must be in range [0, 60) per DMS semantics.',
-                1470,
-            );
-        }
-
-        if ($sec >= 60.0) {
-            throw new ParseError(
-                'GPS seconds component must be in range [0, 60) per DMS semantics.',
-                1470,
-            );
-        }
-
-        $sign  = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
-        $value = $sign * ($deg + $min / 60.0 + $sec / 3600.0);
-
-        if ($isLatitudeRef && (($value < -90.0) || ($value > 90.0))) {
-            throw new ParseError(sprintf(
-                'GPS coordinate %s is outside the valid latitude range [-90, 90] per EXIF 3.0 §4.6.7.1.3.',
-                $value,
-            ), 1463);
-        }
-
-        if ($isLongitudeRef && (($value < -180.0) || ($value > 180.0))) {
-            throw new ParseError(sprintf(
-                'GPS coordinate %s is outside the valid longitude range [-180, 180] per EXIF 3.0 §4.6.7.1.5.',
-                $value,
-            ), 1464);
-        }
-
-        return $value;
-    }
-
-    /**
-     * Normalises the GPS altitude reference into a valid EXIF 3.0 §4.6.7.1.6 value.
-     *
-     * @return int|null 0-3 per EXIF 3.0 specification, null when unknown.
-     */
-    public function normaliseAltitudeRef(
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
-    ): ?int {
-        if ($value instanceof ExifNumericList) {
-            $component = $value->values[0] ?? null;
-
-            return $this->normaliseAltitudeRef($component);
-        }
-
-        if ($value instanceof ExifRationalList) {
-            $component = $value->values[0] ?? null;
-
-            return $component instanceof ExifRational
-                ? $this->normaliseAltitudeRef($component)
-                : null;
-        }
-
-        if ($value instanceof ExifRational) {
-            $numeric = $this->rationalConverter->toFloat($value);
-            if (($numeric === null) || !$this->isWholeNumber($numeric)) {
-                return null;
-            }
-
-            return $this->normaliseAltitudeRef((int) $numeric);
-        }
-
-        if (is_string($value)) {
-            $clean = trim($value);
-            if ($clean === '' || !is_numeric($clean)) {
-                return null;
-            }
-
-            if (preg_match('/^[+-]?\d+$/', $clean) !== 1) {
-                return null;
-            }
-
-            return $this->normaliseAltitudeRef((int) $clean);
-        }
-
-        if (is_int($value)) {
-            $normalized = $value;
-
-            // EXIF 3.0 §4.6.7.1.6: Valid values are 0-3
-            if ($normalized < 0 || $normalized > 3) {
-                return null;
-            }
-
-            return $normalized;
-        }
-
-        if (is_float($value)) {
-            if (!$this->isWholeNumber($value)) {
-                return null;
-            }
-
-            $normalized = (int) $value;
-
-            // EXIF 3.0 §4.6.7.1.6: Valid values are 0-3
-            if ($normalized < 0 || $normalized > 3) {
-                return null;
-            }
-
-            return $normalized;
-        }
-
-        return null;
     }
 
     /**
@@ -948,322 +332,14 @@ final readonly class GpsConverter
     }
 
     /**
-     * Normalises a GPS date stamp into an ISO 8601 calendar date.
-     *
-     * EXIF 3.0 §4.6.8 (GPSDateStamp): the value is a "YYYY:MM:DD" ASCII string in UTC.
-     *
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw value.
-     *
-     * @return array{normalized: ?string, raw: ?string}
+     * @param list<string> $allowed
      */
-    public function normalizeDate(
-        string|int|float|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
-    ): array {
-        $raw = is_string($value) ? $value : null;
-        if (!is_string($value)) {
-            return [
-                'normalized' => null,
-                'raw'        => $raw,
-            ];
-        }
-
-        $clean = trim(str_replace("\0", '', $value));
-        if ($clean === '') {
-            return [
-                'normalized' => null,
-                'raw'        => $raw,
-            ];
-        }
-
-        if (preg_match('/^\d{4}:\d{2}:\d{2}$/', $clean) !== 1) {
-            return [
-                'normalized' => null,
-                'raw'        => $raw,
-            ];
-        }
-
-        $year  = (int) substr($clean, 0, 4);
-        $month = (int) substr($clean, 5, 2);
-        $day   = (int) substr($clean, 8, 2);
-        if (!checkdate($month, $day, $year)) {
-            return [
-                'normalized' => null,
-                'raw'        => $raw,
-            ];
-        }
-
-        return [
-            'normalized' => str_replace(':', '-', $clean),
-            'raw'        => $raw,
-        ];
-    }
-
-    /**
-     * Extracts hour, minute and second components from a GPS time stamp list.
-     *
-     * EXIF 3.0 §4.6.8 (GPSTimeStamp): a three-element rational list representing UTC hours,
-     * minutes and seconds.
-     *
-     * @return array{hours:int, minutes:int, seconds:float}|null
-     */
-    public function parseTime(ExifRationalList $value): ?array
+    private function validateGpsRef(?string $value, array $allowed): ?string
     {
-        if (count($value->values) !== 3) {
+        if ($value === null || $value === '') {
             return null;
         }
 
-        $hours   = $this->rationalConverter->toFloat($value->values[0]);
-        $minutes = $this->rationalConverter->toFloat($value->values[1]);
-        $seconds = $this->rationalConverter->toFloat($value->values[2]);
-
-        if ($hours === null || $minutes === null || $seconds === null) {
-            return null;
-        }
-
-        if (!$this->isWholeNumber($hours) || !$this->isWholeNumber($minutes)) {
-            return null;
-        }
-
-        $hoursInt   = (int) $hours;
-        $minutesInt = (int) $minutes;
-
-        if (($hoursInt < 0) || ($hoursInt > 23)) {
-            return null;
-        }
-
-        if (($minutesInt < 0) || ($minutesInt > 59)) {
-            return null;
-        }
-
-        // Leap seconds are not accepted; EXIF GPS timestamps are restricted to [0, 60).
-        if (($seconds < 0.0) || ($seconds >= 60.0)) {
-            return null;
-        }
-
-        return [
-            'hours'   => $hoursInt,
-            'minutes' => $minutesInt,
-            'seconds' => $seconds,
-        ];
-    }
-
-    /**
-     * Formats GPS time components into a human readable HH:MM:SS(.ffffff) string.
-     *
-     * @param array{hours:int, minutes:int, seconds:float}|null $timeParts
-     */
-    public function formatTime(?array $timeParts): ?string
-    {
-        if ($timeParts === null) {
-            return null;
-        }
-
-        $secondsFloat = $timeParts['seconds'];
-        $secondsInt   = (int) floor($secondsFloat);
-        $fraction     = $secondsFloat - $secondsInt;
-        $microseconds = (int) round($fraction * 1_000_000);
-
-        if ($microseconds >= 1_000_000) {
-            ++$secondsInt;
-            $microseconds -= 1_000_000;
-        }
-
-        $time = sprintf('%02d:%02d:%02d', $timeParts['hours'], $timeParts['minutes'], $secondsInt);
-
-        if ($microseconds > 0) {
-            $micro = rtrim(sprintf('%06d', $microseconds), '0');
-            if ($micro === '') {
-                $micro = '0';
-            }
-
-            $time .= '.' . $micro;
-        }
-
-        return $time;
-    }
-
-    /**
-     * Combines a GPS date and time into a UTC timestamp.
-     *
-     * @param string|null                                       $date
-     * @param array{hours:int, minutes:int, seconds:float}|null $timeParts
-     */
-    public function combineDateTime(?string $date, ?array $timeParts): ?DateTimeImmutable
-    {
-        if ($date === null || $timeParts === null) {
-            return null;
-        }
-
-        $secondsFloat = $timeParts['seconds'];
-        $secondsInt   = (int) floor($secondsFloat);
-        $fraction     = $secondsFloat - $secondsInt;
-        $microseconds = (int) round($fraction * 1_000_000);
-
-        if ($microseconds >= 1_000_000) {
-            ++$secondsInt;
-            $microseconds -= 1_000_000;
-        }
-
-        $timeString = sprintf('%02d:%02d:%02d', $timeParts['hours'], $timeParts['minutes'], $secondsInt);
-        $format     = 'Y-m-d H:i:s';
-
-        if ($microseconds > 0) {
-            $timeString .= sprintf('.%06d', $microseconds);
-            $format .= '.u';
-        }
-
-        $dateTime = DateTimeImmutable::createFromFormat(
-            $format,
-            $date . ' ' . $timeString,
-            new DateTimeZone('UTC'),
-        );
-
-        if ($dateTime === false) {
-            return null;
-        }
-
-        return $dateTime;
-    }
-
-    private function isWholeNumber(float $value): bool
-    {
-        return abs($value - floor($value)) < 1.0e-9;
-    }
-
-    /**
-     * Resolves EXIF GPS degrees/minutes/seconds into a numeric list.
-     *
-     * @param int|float|string|UInt64|ExifRational|ExifRationalList|ExifNumericList|null $value
-     *
-     * @return ExifRationalList|ExifNumericList|null
-     */
-    private function resolveCoordinatePairs(
-        int|float|string|UInt64|ExifRational|ExifRationalList|ExifNumericList|null $value,
-    ): ExifRationalList|ExifNumericList|null {
-        if ($value instanceof ExifRationalList) {
-            return $value;
-        }
-
-        if ($value instanceof ExifNumericList) {
-            return $value;
-        }
-
-        return null;
-    }
-
-    /**
-     * Decodes undefined GPS ASCII strings with optional encoding prefixes.
-     *
-     * EXIF 3.0 §4.6.8 (GPSProcessingMethod/GPSAreaInformation) defines encoding prefixes.
-     *
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw value.
-     */
-    /**
-     * EXIF 3.0 §4.6.4 requires UNDEFINED text fields to include an 8-byte
-     * character code area. Payloads shorter than 8 bytes or with an
-     * unrecognised prefix are rejected.
-     */
-    private function decodeUndefinedString(
-        string|int|float|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
-    ): ?string {
-        if (!is_string($value) || strlen($value) < 8) {
-            return null;
-        }
-
-        $prefixBytes = substr($value, 0, 8);
-        $payload     = substr($value, 8);
-        $marker      = UndefinedTextMarker::canonicalMarkerFromPrefix($prefixBytes);
-        if ($marker === '') {
-            return null;
-        }
-
-        $encoding = UndefinedTextMarker::encodingForMarker($marker);
-        if (!$encoding instanceof CharacterEncoding) {
-            return null;
-        }
-
-        return match ($encoding) {
-            CharacterEncoding::UTF8 => $this->decodeUndefinedUtf8($payload),
-            CharacterEncoding::JIS  => $this->decodeUndefinedJis($payload),
-            CharacterEncoding::ASCII,
-            CharacterEncoding::UNDEFINED => $this->stringConverter->sanitize($payload),
-            default                      => null,
-        };
-    }
-
-    /**
-     * Decodes EXIF 3.0 UNICODE-marker payloads as UTF-8.
-     *
-     * For compatibility with older EXIF 2.x ecosystem payloads that used UTF-16
-     * under the same marker, BOM-tagged UTF-16 payloads are accepted as fallback.
-     */
-    private function decodeUndefinedUtf8(string $payload): ?string
-    {
-        if ($payload === '') {
-            return null;
-        }
-
-        if (preg_match('//u', $payload) === 1) {
-            return $this->decodeUndefinedWithEncoding($payload, CharacterEncoding::UTF8);
-        }
-
-        return $this->decodeUndefinedUnicode($payload);
-    }
-
-    /**
-     * Decodes a UTF-16 encoded undefined GPS string into UTF-8.
-     */
-    private function decodeUndefinedUnicode(string $payload): ?string
-    {
-        if (strlen($payload) < 2) {
-            return null;
-        }
-
-        $byteOrderMark = substr($payload, 0, 2);
-        $content       = substr($payload, 2);
-
-        $encoding = match ($byteOrderMark) {
-            "\xFF\xFE" => CharacterEncoding::UTF16LE,
-            "\xFE\xFF" => CharacterEncoding::UTF16BE,
-            default    => null,
-        };
-
-        // No TIFF byte order context is available in this converter path.
-        // Without an explicit BOM, decoding is rejected to avoid byte-order ambiguity.
-        if (($encoding === null) || ($content === '') || (strlen($content) % 2 !== 0)) {
-            return null;
-        }
-
-        return $this->decodeUndefinedWithEncoding($content, $encoding);
-    }
-
-    /**
-     * Decodes a Shift-JIS encoded undefined GPS string into UTF-8.
-     */
-    private function decodeUndefinedJis(string $payload): ?string
-    {
-        return $this->decodeUndefinedWithEncoding($payload, CharacterEncoding::JIS);
-    }
-
-    /**
-     * Decodes a GPS undefined payload with the selected source encoding.
-     */
-    private function decodeUndefinedWithEncoding(string $payload, CharacterEncoding $sourceEncoding): ?string
-    {
-        if ($payload === '') {
-            return null;
-        }
-
-        $decoded = match ($sourceEncoding) {
-            CharacterEncoding::JIS  => JisTextDecoder::decode($payload),
-            CharacterEncoding::UTF8 => $payload,
-            default                 => @iconv($sourceEncoding->value, CharacterEncoding::UTF8->value, $payload),
-        };
-
-        if (!is_string($decoded) || $decoded === '') {
-            return null;
-        }
-
-        return $this->stringConverter->sanitize($decoded);
+        return in_array($value, $allowed, true) ? $value : null;
     }
 }

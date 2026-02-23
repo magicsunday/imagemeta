@@ -41,6 +41,14 @@ final readonly class ConverterFactory
 
     private ComponentsConverter $componentsConverter;
 
+    private GpsCoordinateConverter $gpsCoordinateConverter;
+
+    private GpsUnitConverter $gpsUnitConverter;
+
+    private GpsDirectionConverter $gpsDirectionConverter;
+
+    private GpsTimestampConverter $gpsTimestampConverter;
+
     private GpsConverter $gpsConverter;
 
     /**
@@ -75,11 +83,20 @@ final readonly class ConverterFactory
         // Create ComponentsConverter (depends on NumericConverter)
         $this->componentsConverter = new ComponentsConverter($this->numericConverter);
 
-        // Create GpsConverter (depends on multiple converters)
+        // Create GPS sub-converters
+        $this->gpsCoordinateConverter = new GpsCoordinateConverter($this->rationalConverter, $this->numericConverter);
+        $this->gpsUnitConverter       = new GpsUnitConverter($this->rationalConverter);
+        $this->gpsDirectionConverter  = new GpsDirectionConverter($this->rationalConverter);
+        $this->gpsTimestampConverter  = new GpsTimestampConverter($this->rationalConverter, $this->stringConverter);
+
+        // Create GpsConverter orchestrator (depends on sub-converters)
         $this->gpsConverter = new GpsConverter(
+            $this->gpsCoordinateConverter,
+            $this->gpsUnitConverter,
+            $this->gpsDirectionConverter,
+            $this->gpsTimestampConverter,
             $this->rationalConverter,
             $this->stringConverter,
-            $this->numericConverter,
         );
     }
 
@@ -191,6 +208,26 @@ final readonly class ConverterFactory
     public function componentsConverter(): ComponentsConverter
     {
         return $this->componentsConverter;
+    }
+
+    /**
+     * Returns the GPS unit converter instance.
+     *
+     * @return GpsUnitConverter
+     */
+    public function gpsUnitConverter(): GpsUnitConverter
+    {
+        return $this->gpsUnitConverter;
+    }
+
+    /**
+     * Returns the GPS direction converter instance.
+     *
+     * @return GpsDirectionConverter
+     */
+    public function gpsDirectionConverter(): GpsDirectionConverter
+    {
+        return $this->gpsDirectionConverter;
     }
 
     /**

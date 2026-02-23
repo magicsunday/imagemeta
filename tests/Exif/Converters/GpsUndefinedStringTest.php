@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Exif\Converters;
 
 use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsTimestampConverter;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
@@ -34,6 +35,7 @@ use function strlen;
  * @internal
  */
 #[CoversClass(GpsConverter::class)]
+#[CoversClass(GpsTimestampConverter::class)]
 #[UsesClass(ValueConverters::class)]
 final class GpsUndefinedStringTest extends TestCase
 {
@@ -117,7 +119,7 @@ final class GpsUndefinedStringTest extends TestCase
     #[Test]
     public function exposesGenericUndefinedDecoderMethodContract(): void
     {
-        $class  = new ReflectionClass(GpsConverter::class);
+        $class  = new ReflectionClass(GpsTimestampConverter::class);
         $method = $class->getMethod('decodeUndefinedWithEncoding');
 
         self::assertTrue($method->isPrivate());

@@ -362,7 +362,7 @@ final readonly class ValueConverters
         ?string $ref,
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
-        return $this->factory->gpsConverter()->speedToMs($ref, $value);
+        return $this->factory->gpsUnitConverter()->speedToMs($ref, $value);
     }
 
     /**
@@ -375,7 +375,7 @@ final readonly class ValueConverters
         ?string $ref,
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
-        return $this->factory->gpsConverter()->distanceToMetres($ref, $value);
+        return $this->factory->gpsUnitConverter()->distanceToMetres($ref, $value);
     }
 
     /**
@@ -383,7 +383,7 @@ final readonly class ValueConverters
      */
     public function normalizeBearing(int|float|null $value): ?float
     {
-        return $this->factory->gpsConverter()->normalizeBearing($value);
+        return $this->factory->gpsDirectionConverter()->normalizeBearing($value);
     }
 
     /**
