@@ -24,13 +24,17 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 
 /**
- * Helper methods that translate EXIF/TIFF values into PHP friendly scalars.
+ * Facade that provides a single-dependency entry point for EXIF value conversion.
  *
  * EXIF 3.0 §4.6 and Annex C define the semantic interpretation of the tag
  * payloads normalised by these converters.
  *
- * This class delegates to the specific converter classes in
- * MagicSunday\ImageMeta\Exif\Converters namespace.
+ * Each public method delegates to a specific converter from the
+ * MagicSunday\ImageMeta\Exif\Converters namespace. This indirection is a
+ * deliberate design tradeoff: 14 consumer classes inject one ValueConverters
+ * instance instead of depending on 10+ individual converter classes, keeping
+ * constructor signatures small and shielding consumers from converter
+ * refactorings. (GH-1583)
  *
  * @phpstan-type RationalComponent = array<int, int|float|string>
  * @phpstan-type RationalLike = array<int, RationalComponent|ExifRational|int|float|string>
