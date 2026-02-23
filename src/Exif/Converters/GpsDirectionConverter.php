@@ -16,7 +16,6 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 
-use function in_array;
 use function is_string;
 use function sprintf;
 use function strtoupper;
@@ -30,6 +29,8 @@ use function trim;
  */
 final readonly class GpsDirectionConverter
 {
+    use ValidatesGpsRef;
+
     /**
      * EXIF 3.0 §4.6.7.1.15 GPSTrackRef, §4.6.7.1.17 GPSImgDirectionRef, §4.6.7.1.24 GPSDestBearingRef:
      * 'T' (true direction) or 'M' (magnetic direction).
@@ -134,17 +135,5 @@ final readonly class GpsDirectionConverter
         }
 
         return $bearing;
-    }
-
-    /**
-     * @param list<string> $allowed
-     */
-    private function validateGpsRef(?string $value, array $allowed): ?string
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        return in_array($value, $allowed, true) ? $value : null;
     }
 }

@@ -22,7 +22,6 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 
 use function abs;
 use function floor;
-use function in_array;
 use function is_callable;
 use function is_float;
 use function is_int;
@@ -40,6 +39,8 @@ use function trim;
  */
 final readonly class GpsUnitConverter
 {
+    use ValidatesGpsRef;
+
     /**
      * EXIF 3.0 §4.6.7.1.13 GPSSpeedRef: 'K' (km/h), 'M' (mph) or 'N' (knots).
      *
@@ -347,17 +348,5 @@ final readonly class GpsUnitConverter
     private function isWholeNumber(float $value): bool
     {
         return abs($value - floor($value)) < 1.0e-9;
-    }
-
-    /**
-     * @param list<string> $allowed
-     */
-    private function validateGpsRef(?string $value, array $allowed): ?string
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        return in_array($value, $allowed, true) ? $value : null;
     }
 }

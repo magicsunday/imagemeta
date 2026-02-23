@@ -23,7 +23,6 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 
 use function array_replace;
 use function implode;
-use function in_array;
 use function is_float;
 use function is_int;
 use function is_string;
@@ -81,6 +80,8 @@ use function trim;
  */
 final readonly class GpsConverter
 {
+    use ValidatesGpsRef;
+
     /**
      * EXIF 3.0 §4.6.7.1.1 (GPSVersionID) default value when the field is blank.
      */
@@ -329,17 +330,5 @@ final readonly class GpsConverter
             'normalized' => self::DEFAULT_GPS_VERSION,
             'raw'        => $raw,
         ];
-    }
-
-    /**
-     * @param list<string> $allowed
-     */
-    private function validateGpsRef(?string $value, array $allowed): ?string
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        return in_array($value, $allowed, true) ? $value : null;
     }
 }

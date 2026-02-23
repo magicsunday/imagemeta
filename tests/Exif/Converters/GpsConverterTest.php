@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Exif\Converters\GpsUnitConverter;
 use MagicSunday\ImageMeta\Exif\Converters\NumericConverter;
 use MagicSunday\ImageMeta\Exif\Converters\RationalConverter;
 use MagicSunday\ImageMeta\Exif\Converters\StringConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ValidatesGpsRef;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
@@ -30,6 +31,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -51,6 +53,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(ExifRationalList::class)]
+#[UsesTrait(ValidatesGpsRef::class)]
 final class GpsConverterTest extends TestCase
 {
     private GpsConverter $converter;

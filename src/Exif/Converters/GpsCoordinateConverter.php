@@ -22,7 +22,6 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 
 use function array_map;
 use function count;
-use function in_array;
 use function is_string;
 use function sprintf;
 use function strtoupper;
@@ -36,6 +35,8 @@ use function trim;
  */
 final readonly class GpsCoordinateConverter
 {
+    use ValidatesGpsRef;
+
     /**
      * EXIF 3.0 §4.6.7.1.2 GPSLatitudeRef: 'N' (north) or 'S' (south).
      *
@@ -305,17 +306,5 @@ final readonly class GpsCoordinateConverter
             $refName,
             $valueName,
         ), 1472);
-    }
-
-    /**
-     * @param list<string> $allowed
-     */
-    private function validateGpsRef(?string $value, array $allowed): ?string
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        return in_array($value, $allowed, true) ? $value : null;
     }
 }

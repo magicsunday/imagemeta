@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Exif\Converters;
 
 use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
 use MagicSunday\ImageMeta\Exif\Converters\GpsTimestampConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ValidatesGpsRef;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
@@ -21,6 +22,7 @@ use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -37,6 +39,7 @@ use function strlen;
 #[CoversClass(GpsConverter::class)]
 #[CoversClass(GpsTimestampConverter::class)]
 #[UsesClass(ValueConverters::class)]
+#[UsesTrait(ValidatesGpsRef::class)]
 final class GpsUndefinedStringTest extends TestCase
 {
     private ValueConverters $converters;
