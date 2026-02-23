@@ -11,14 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleDictionaryValueExtractor;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleFlagExtractor;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
-use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
-use ReflectionMethod;
 
 /**
  * Exercises AppleDecoder handling of SemanticStyle maker note payloads.
@@ -28,7 +29,9 @@ use ReflectionMethod;
  *
  * @internal
  */
-#[CoversClass(AppleDecoder::class)]
+#[CoversClass(AppleMakerNotesBuilder::class)]
+#[UsesClass(AppleDictionaryValueExtractor::class)]
+#[UsesClass(AppleFlagExtractor::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(SemanticStyle::class)]
 final class AppleDecoderSemanticStyleTest extends TestCase
@@ -42,8 +45,7 @@ final class AppleDecoderSemanticStyleTest extends TestCase
     #[Test]
     public function buildAppleMakerNotesExtractsSemanticStyleDictionary(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
         $dictionary = [
             'SemanticStyle' => [
@@ -54,7 +56,7 @@ final class AppleDecoderSemanticStyleTest extends TestCase
         ];
 
         /** @var AppleMakerNotes|null $makerNotes */
-        $makerNotes = $method->invoke($decoder, $dictionary);
+        $makerNotes = $builder->build($dictionary);
 
         self::assertInstanceOf(AppleMakerNotes::class, $makerNotes);
         self::assertSame('RichWarm', $makerNotes->semanticStylePreset);

@@ -11,12 +11,18 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleDictionaryValueExtractor;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleFlagExtractor;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
+use MagicSunday\ImageMeta\MakerNotes\Apple\PlistTextCursor;
+use MagicSunday\ImageMeta\MakerNotes\Apple\PlistTextParser;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
@@ -26,7 +32,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
-use ReflectionMethod;
 
 use function hex2bin;
 use function sha1;
@@ -41,6 +46,7 @@ use function strlen;
  * This ensures Apple maker notes are decoded into structured records reliably.
  */
 #[CoversClass(AppleDecoder::class)]
+#[CoversClass(AppleMakerNotesBuilder::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(ApplePlistArray::class)]
 #[UsesClass(ApplePlistDictionary::class)]
@@ -50,6 +56,11 @@ use function strlen;
 #[UsesClass(SemanticStyle::class)]
 #[UsesClass(MakerNotesRecord::class)]
 #[UsesClass(RunTime::class)]
+#[UsesClass(AppleDictionaryValueExtractor::class)]
+#[UsesClass(AppleFlagExtractor::class)]
+#[UsesClass(KeyedArchiveResolver::class)]
+#[UsesClass(PlistTextCursor::class)]
+#[UsesClass(PlistTextParser::class)]
 final class AppleDecoderTest extends TestCase
 {
     /**
@@ -285,11 +296,10 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function buildAppleMakerNotesExtractsAdditionalFields(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $method->invoke($decoder, [
+        $notes = $builder->build([
             'ContentIdentifier'  => 'extended',
             'MakerNoteVersion'   => '2.1',
             'HDRImageType'       => 1,
@@ -328,11 +338,10 @@ final class AppleDecoderTest extends TestCase
     #[DataProvider('makerNoteVersionProvider')]
     public function buildAppleMakerNotesNormalisesMakerNoteVersionFromIntegers(array|int $makerNoteVersion, string $expected): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $method->invoke($decoder, [
+        $notes = $builder->build([
             'ContentIdentifier' => 'normalised-version',
             'MakerNoteVersion'  => $makerNoteVersion,
         ]);
@@ -360,11 +369,10 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function buildAppleMakerNotesCombinesFocusDistanceNearAndFar(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $method->invoke($decoder, [
+        $notes = $builder->build([
             'ContentIdentifier'      => 'focus-range',
             'FocusDistanceRangeNear' => 0.3,
             'FocusDistanceRangeFar'  => 2.8,
@@ -387,11 +395,10 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function buildAppleMakerNotesHandlesFocusDistanceNearOnly(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $method->invoke($decoder, [
+        $notes = $builder->build([
             'ContentIdentifier'      => 'near-only',
             'FocusDistanceRangeNear' => 0.42,
         ]);
@@ -409,11 +416,10 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function buildAppleMakerNotesHandlesFocusDistanceFarOnly(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $method->invoke($decoder, [
+        $notes = $builder->build([
             'ContentIdentifier'     => 'far-only',
             'FocusDistanceRangeFar' => '1.75',
         ]);
@@ -431,11 +437,10 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function buildAppleMakerNotesKeepsUnknownEnumerations(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $method->invoke($decoder, [
+        $notes = $builder->build([
             'ContentIdentifier' => 'unknown',
             'HDRImageType'      => 99,
             'ImageCaptureType'  => 42,
@@ -456,11 +461,10 @@ final class AppleDecoderTest extends TestCase
     #[DataProvider('hdrImageTypeProvider')]
     public function buildAppleMakerNotesMapsHdrImageTypeCodes(int $code, string $label): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $method->invoke($decoder, [
+        $notes = $builder->build([
             'ContentIdentifier' => 'hdr-' . $code,
             'HDRImageType'      => $code,
         ]);
@@ -491,11 +495,10 @@ final class AppleDecoderTest extends TestCase
     #[DataProvider('imageCaptureTypeProvider')]
     public function buildAppleMakerNotesMapsImageCaptureTypeCodes(int $code, string $label): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $method->invoke($decoder, [
+        $notes = $builder->build([
             'ContentIdentifier' => 'mapped-' . $code,
             'ImageCaptureType'  => $code,
         ]);
@@ -562,15 +565,14 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function buildAppleMakerNotesHandlesCameraTypeCodes(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
-        $mapped = $method->invoke($decoder, [
+        $mapped = $builder->build([
             'ContentIdentifier' => 'mapped-camera',
             'CameraType'        => 0,
         ]);
 
-        $unknown = $method->invoke($decoder, [
+        $unknown = $builder->build([
             'ContentIdentifier' => 'unknown-camera',
             'CameraType'        => 42,
         ]);
@@ -590,10 +592,9 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function buildAppleMakerNotesFallsBackToSemanticStyleDictionary(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
-        $notes = $method->invoke($decoder, [
+        $notes = $builder->build([
             'ContentIdentifier' => 'dictionary-style',
             'SemanticStyle'     => [
                 'values' => [
@@ -619,8 +620,7 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function buildAppleMakerNotesParsesRunTime(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
         $dictionary = [
             'RunTime' => [
@@ -633,7 +633,7 @@ final class AppleDecoderTest extends TestCase
         ];
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $method->invoke($decoder, $dictionary);
+        $notes = $builder->build($dictionary);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
         self::assertSame(1200, $notes->livePhotoIndex);
@@ -655,11 +655,10 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function buildAppleMakerNotesExtractsExtendedTags(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $method->invoke($decoder, [
+        $notes = $builder->build([
             'ContentIdentifier'       => 'extended',
             'AEStable'                => '1',
             'AETarget'                => ['numerator' => 37, 'denominator' => 10],
@@ -696,11 +695,10 @@ final class AppleDecoderTest extends TestCase
     #[DataProvider('stabilityFlagProvider')]
     public function buildAppleMakerNotesParsesStabilityFlags(string $makerKey, string|int $value, string $expectedFlag, bool $expected): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $method->invoke($decoder, [
+        $notes = $builder->build([
             'ContentIdentifier' => 'stability',
             $makerKey           => $value,
         ]);
@@ -757,10 +755,9 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function flagMasksMirrorScalarInputs(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
-        $scalarNotes = $method->invoke($decoder, [
+        $scalarNotes = $builder->build([
             'ContentIdentifier'     => 'scalar',
             'LivePhotoAuto'         => true,
             'LivePhotoEnabled'      => true,
@@ -777,7 +774,7 @@ final class AppleDecoderTest extends TestCase
             'AFStable'              => '0',
         ]);
 
-        $maskNotes = $method->invoke($decoder, [
+        $maskNotes = $builder->build([
             'ContentIdentifier'     => 'mask',
             'SceneFlags'            => (1 << 0) | (1 << 1),
             'ImageProcessingFlags'  => (1 << 0) | (1 << 1),
@@ -827,10 +824,9 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function explicitFlagValuesOverrideMasks(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
-        $notes = $method->invoke($decoder, [
+        $notes = $builder->build([
             'ContentIdentifier'     => 'override',
             'LivePhotoLongExposure' => false,
             'NightMode'             => false,
@@ -864,10 +860,9 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function flagMasksAcceptBitPositionLists(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $builder = new AppleMakerNotesBuilder();
 
-        $notes = $method->invoke($decoder, [
+        $notes = $builder->build([
             'ContentIdentifier'     => 'positions',
             'SceneFlags'            => [0, 1],
             'ImageProcessingFlags'  => ['values' => [0, 1]],

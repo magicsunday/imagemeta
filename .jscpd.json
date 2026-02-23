@@ -24,7 +24,8 @@
         "**/TiffJpegValidator.php",
         "**/TiffSampleValidator.php",
         "**/TiffColorInkValidator.php",
-        "**/TiffImageDataValidator.php"
+        "**/TiffImageDataValidator.php",
+        "**/AppleDictionaryValueExtractor.php"
     ],
     "exitCode": true
 }

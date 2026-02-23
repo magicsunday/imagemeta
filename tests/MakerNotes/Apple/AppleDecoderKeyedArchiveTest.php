@@ -12,12 +12,18 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
 use LogicException;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleDictionaryValueExtractor;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleFlagExtractor;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
+use MagicSunday\ImageMeta\MakerNotes\Apple\PlistTextCursor;
+use MagicSunday\ImageMeta\MakerNotes\Apple\PlistTextParser;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
@@ -26,7 +32,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
-use ReflectionMethod;
 
 use function array_is_list;
 use function chr;
@@ -52,12 +57,18 @@ use function strlen;
  * @phpstan-type NativePlistDictionary array<string, mixed>
  */
 #[CoversClass(AppleDecoder::class)]
+#[CoversClass(KeyedArchiveResolver::class)]
+#[UsesClass(AppleDictionaryValueExtractor::class)]
+#[UsesClass(AppleFlagExtractor::class)]
 #[UsesClass(AppleMakerNotes::class)]
+#[UsesClass(AppleMakerNotesBuilder::class)]
 #[UsesClass(ApplePlistArray::class)]
 #[UsesClass(ApplePlistDictionary::class)]
 #[UsesClass(ApplePlistScalar::class)]
 #[UsesClass(BinaryPlistDecoder::class)]
 #[UsesClass(KeyedArchiveUnarchiver::class)]
+#[UsesClass(PlistTextCursor::class)]
+#[UsesClass(PlistTextParser::class)]
 #[UsesClass(SemanticStyle::class)]
 #[UsesClass(MakerNotesRecord::class)]
 #[UsesClass(RunTime::class)]
@@ -108,11 +119,9 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
         $blob = $this->createKeyedArchiveBlob();
         $raw  = "\x00\xFF" . $blob;
 
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'decodeBinaryPropertyList');
+        $resolver = new KeyedArchiveResolver();
 
-        /** @var NativePlistValue $result */
-        $result = $method->invoke($decoder, $raw);
+        $result = $resolver->decodeBinaryPropertyList($raw);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('archiver', $result);
@@ -127,8 +136,7 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
     #[Test]
     public function resolveKeyedArchiveDictionaryUnwrapsNestedArchive(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'resolveKeyedArchiveDictionary');
+        $resolver = new KeyedArchiveResolver();
 
         $archive = [
             'archiver' => 'NSKeyedArchiver',
@@ -155,8 +163,7 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
             'PayloadVersion' => 1,
         ];
 
-        /** @var NativePlistDictionary|null $result */
-        $result = $method->invoke($decoder, $wrapper);
+        $result = $resolver->resolveKeyedArchiveDictionary($wrapper);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('ContentIdentifier', $result);

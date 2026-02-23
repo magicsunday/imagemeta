@@ -11,11 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
-use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleDictionaryValueExtractor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ReflectionMethod;
 
 /**
  * Exercises AppleDecoder numeric normalization helpers for maker note fields.
@@ -25,7 +24,7 @@ use ReflectionMethod;
  *
  * @internal
  */
-#[CoversClass(AppleDecoder::class)]
+#[CoversClass(AppleDictionaryValueExtractor::class)]
 final class AppleDecoderNumericValueTest extends TestCase
 {
     /**
@@ -37,14 +36,13 @@ final class AppleDecoderNumericValueTest extends TestCase
     #[Test]
     public function rationalFloatValueNormalisesWhitespaceSeparatedPairs(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'rationalFloatValue');
+        $extractor = new AppleDictionaryValueExtractor();
 
         $dictionary = [
             'AFPerformance' => '44 1610612736',
         ];
 
-        $result = $method->invoke($decoder, $dictionary, 'AFPerformance');
+        $result = $extractor->rationalFloatValue($dictionary, 'AFPerformance');
 
         self::assertNotNull($result);
         self::assertEqualsWithDelta(44 / 1610612736, $result, 1e-12);
@@ -59,10 +57,9 @@ final class AppleDecoderNumericValueTest extends TestCase
     #[Test]
     public function numericScalarValueParsesWhitespaceSeparatedPairs(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'numericScalarValue');
+        $extractor = new AppleDictionaryValueExtractor();
 
-        $result = $method->invoke($decoder, '44 1610612736');
+        $result = $extractor->numericScalarValue('44 1610612736');
 
         self::assertNotNull($result);
         self::assertEqualsWithDelta(44 / 1610612736, $result, 1e-12);

@@ -11,11 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
-use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleFlagExtractor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ReflectionMethod;
 
 /**
  * Exercises AppleDecoder flag extraction from bitmasks and flag lists.
@@ -25,7 +24,7 @@ use ReflectionMethod;
  *
  * @internal
  */
-#[CoversClass(AppleDecoder::class)]
+#[CoversClass(AppleFlagExtractor::class)]
 final class AppleDecoderFlagMaskTest extends TestCase
 {
     /**
@@ -37,8 +36,7 @@ final class AppleDecoderFlagMaskTest extends TestCase
     #[Test]
     public function extractFlagsDerivesNormalizedFlagsFromBitMasks(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'extractFlags');
+        $extractor = new AppleFlagExtractor();
 
         $dictionary = [
             'SceneFlags'            => 0b11,
@@ -48,8 +46,7 @@ final class AppleDecoderFlagMaskTest extends TestCase
             ],
         ];
 
-        $result = $method->invoke($decoder, $dictionary);
-        self::assertIsArray($result);
+        $result = $extractor->extractFlags($dictionary);
         ksort($result);
 
         $expected = [
@@ -74,8 +71,7 @@ final class AppleDecoderFlagMaskTest extends TestCase
     #[Test]
     public function extractFlagsAssignsFalseDefaultsWhenNoMappedBitsEnabled(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'extractFlags');
+        $extractor = new AppleFlagExtractor();
 
         $dictionary = [
             'SceneFlags'            => 0b100000,
@@ -85,8 +81,7 @@ final class AppleDecoderFlagMaskTest extends TestCase
             'ImageProcessingFlags' => 0,
         ];
 
-        $result = $method->invoke($decoder, $dictionary);
-        self::assertIsArray($result);
+        $result = $extractor->extractFlags($dictionary);
         ksort($result);
 
         $expected = [

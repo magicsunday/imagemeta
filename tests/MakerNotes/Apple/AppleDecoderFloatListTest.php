@@ -11,11 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
-use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleDictionaryValueExtractor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ReflectionMethod;
 
 /**
  * Exercises AppleDecoder float list normalization for maker note values.
@@ -25,7 +24,7 @@ use ReflectionMethod;
  *
  * @internal
  */
-#[CoversClass(AppleDecoder::class)]
+#[CoversClass(AppleDictionaryValueExtractor::class)]
 final class AppleDecoderFloatListTest extends TestCase
 {
     /**
@@ -37,10 +36,9 @@ final class AppleDecoderFloatListTest extends TestCase
     #[Test]
     public function floatListReturnsScalarValuesAsLists(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'floatList');
+        $extractor = new AppleDictionaryValueExtractor();
 
-        $result = $method->invoke($decoder, ['HdrGain' => 1.25], 'HdrGain');
+        $result = $extractor->floatList(['HdrGain' => 1.25], 'HdrGain');
 
         self::assertSame([1.25], $result);
     }
@@ -54,8 +52,7 @@ final class AppleDecoderFloatListTest extends TestCase
     #[Test]
     public function floatListNormalisesArrayPayloads(): void
     {
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'floatList');
+        $extractor = new AppleDictionaryValueExtractor();
 
         $dictionary = [
             'HdrGain' => [
@@ -63,7 +60,7 @@ final class AppleDecoderFloatListTest extends TestCase
             ],
         ];
 
-        $result = $method->invoke($decoder, $dictionary, 'HdrGain');
+        $result = $extractor->floatList($dictionary, 'HdrGain');
 
         self::assertSame([1.0, 2.5, 3.75], $result);
     }
