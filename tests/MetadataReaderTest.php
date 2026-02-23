@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\Factory\TiffDataFactory;
 use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -259,6 +260,7 @@ use function unlink;
 #[UsesClass(StructuredMetadataCache::class)]
 #[UsesClass(Temporal::class)]
 #[UsesClass(TechnicalData::class)]
+#[UsesClass(TiffDataFactory::class)]
 #[UsesClass(Thumbnail::class)]
 #[UsesClass(TiffData::class)]
 #[UsesClass(TiffColorRef::class)]

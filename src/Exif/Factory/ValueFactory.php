@@ -58,15 +58,10 @@ use MagicSunday\ImageMeta\Value\Sensor;
 use MagicSunday\ImageMeta\Value\Standards as ValueStandards;
 use MagicSunday\ImageMeta\Value\Temporal;
 use MagicSunday\ImageMeta\Value\Thumbnail;
-use MagicSunday\ImageMeta\Value\TiffColorRef;
 use MagicSunday\ImageMeta\Value\TiffData;
-use MagicSunday\ImageMeta\Value\TiffLayout;
-use MagicSunday\ImageMeta\Value\TiffStructure;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp as ValueXmp;
-
-use function count;
 
 /**
  * Builds the structured metadata aggregate by orchestrating value-object creation from
@@ -149,7 +144,7 @@ final readonly class ValueFactory
         $scene        = $this->sceneFactory->create($metadata, $this->countFaceRegions($regions));
 
         // Cohesive private methods for complex value-object creation
-        $tiff         = $this->createTiffData($exifDocument, $metadata);
+        $tiff         = (new TiffDataFactory())->create($metadata);
         $thumbnail    = $this->createThumbnail($exifDocument);
         $colorProfile = $this->createColorProfile($metadata, $exifDocument);
         $author       = $this->createAuthor($exifDocument, $xmpDocument);
@@ -191,6 +186,85 @@ final readonly class ValueFactory
             $metadata->digestMd5,
         );
 
+        $media = $this->createContainerMedia($quickTimeLookup, $metadata);
+
+        $processing = new ValueProcessingSettings(
+            sharpness: $exifDocument?->sharpness(),
+            contrast: $exifDocument?->contrast(),
+            saturation: $exifDocument?->saturation(),
+            pictureStyle: null,
+            clarity: null,
+            customRendered: $exifDocument?->customRendered()?->value,
+            deviceSettingDescription: $exifDocument?->deviceSettingDescription(),
+        );
+
+        $whiteBalanceDetails = new WhiteBalanceDetails(
+            mode: $exposure->adjustments?->whiteBalance,
+            kelvin: $apple->camera->colorTemperature ?? $quickTimeLookup->int('ColorTemperature'),
+            rgGain: null,
+            bgGain: null,
+        );
+
+        $focus = new Focus(
+            subjectDistanceM: $exifDocument?->subjectDistance(),
+            subjectArea: $exifDocument?->subjectArea(),
+            afMode: null,
+        );
+
+        $xmpValues = $this->createXmpValues($xmpDocument, $exifDocument, $quickTimeLookup, $metadata);
+
+        return [
+            'audio'           => $media['audio'],
+            'author'          => $author,
+            'camera'          => $camera,
+            'capture'         => $capture,
+            'colorProfile'    => $colorProfile,
+            'composite'       => $composite,
+            'container'       => $media['container'],
+            'derived'         => $derived,
+            'depthMap'        => $xmpValues['depthMap'],
+            'device'          => $device,
+            'embeddedAudio'   => $media['embeddedAudio'],
+            'exposure'        => $exposure,
+            'file'            => $file,
+            'flashPix'        => $media['flashPix'],
+            'focus'           => $focus,
+            'gps'             => $gps,
+            'image'           => $image,
+            'integrity'       => $integrity,
+            'interop'         => $interop,
+            'iptc'            => new ValueIptc($iptcDocument),
+            'keywords'        => $xmpValues['keywords'],
+            'lens'            => $lens,
+            'motion'          => $motion,
+            'multiPicture'    => $multiPicture,
+            'processing'      => $processing,
+            'regions'         => $regions,
+            'related'         => $xmpValues['related'],
+            'rights'          => $rights,
+            'scene'           => $scene,
+            'sensor'          => $sensor,
+            'standards'       => $standards,
+            'temporal'        => $temporal,
+            'thumbnail'       => $thumbnail,
+            'tiff'            => $tiff,
+            'video'           => $media['video'],
+            'whiteBalance'    => $whiteBalanceDetails,
+            'xmp'             => new ValueXmp($xmpDocument),
+            'makerNotesApple' => $apple,
+        ];
+    }
+
+    /**
+     * Creates container, video, audio and embedded media value objects from QuickTime metadata.
+     *
+     * @param QuickTimeLookup $quickTimeLookup QuickTime metadata lookup.
+     * @param Metadata        $metadata        Source metadata container.
+     *
+     * @return array{container: Container, video: Video, audio: ValueAudio, embeddedAudio: AudioClips, flashPix: FlashPix}
+     */
+    private function createContainerMedia(QuickTimeLookup $quickTimeLookup, Metadata $metadata): array
+    {
         $container = new Container(
             format: $quickTimeLookup->string(QuickTimeMeta::MAJOR_BRAND_KEY),
             encoder: $quickTimeLookup->string('com.apple.quicktime.encoder',
@@ -231,29 +305,31 @@ final readonly class ValueFactory
         $embeddedAudio = AudioClips::fromJpegAudioStreams($metadata->jpegAudioStreams);
         $flashPix      = new FlashPix($metadata->flashPixStreams);
 
-        $processing = new ValueProcessingSettings(
-            sharpness: $exifDocument?->sharpness(),
-            contrast: $exifDocument?->contrast(),
-            saturation: $exifDocument?->saturation(),
-            pictureStyle: null,
-            clarity: null,
-            customRendered: $exifDocument?->customRendered()?->value,
-            deviceSettingDescription: $exifDocument?->deviceSettingDescription(),
-        );
+        return [
+            'container'     => $container,
+            'video'         => $video,
+            'audio'         => $audio,
+            'embeddedAudio' => $embeddedAudio,
+            'flashPix'      => $flashPix,
+        ];
+    }
 
-        $whiteBalanceDetails = new WhiteBalanceDetails(
-            mode: $exposure->adjustments?->whiteBalance,
-            kelvin: $apple->camera->colorTemperature ?? $quickTimeLookup->int('ColorTemperature'),
-            rgGain: null,
-            bgGain: null,
-        );
-
-        $focus = new Focus(
-            subjectDistanceM: $exifDocument?->subjectDistance(),
-            subjectArea: $exifDocument?->subjectArea(),
-            afMode: null,
-        );
-
+    /**
+     * Creates XMP-derived keyword, relationship and depth metadata.
+     *
+     * @param XmpDocument|null $xmpDocument     Parsed XMP document.
+     * @param ParsedExif|null  $exifDocument    Parsed EXIF document.
+     * @param QuickTimeLookup  $quickTimeLookup QuickTime metadata lookup.
+     * @param Metadata         $metadata        Source metadata container.
+     *
+     * @return array{keywords: Keywords, related: RelatedAssets, depthMap: DepthMap}
+     */
+    private function createXmpValues(
+        ?XmpDocument $xmpDocument,
+        ?ParsedExif $exifDocument,
+        QuickTimeLookup $quickTimeLookup,
+        Metadata $metadata,
+    ): array {
         $flatKeywords         = $xmpDocument?->stringList(XmpNamespace::DC->value, 'subject') ?? [];
         $hierarchicalKeywords = $xmpDocument?->stringList(XmpNamespace::LIGHTROOM->value, 'hierarchicalSubject') ?? [];
 
@@ -280,114 +356,10 @@ final readonly class ValueFactory
         );
 
         return [
-            'audio'           => $audio,
-            'author'          => $author,
-            'camera'          => $camera,
-            'capture'         => $capture,
-            'colorProfile'    => $colorProfile,
-            'composite'       => $composite,
-            'container'       => $container,
-            'derived'         => $derived,
-            'depthMap'        => $depthMap,
-            'device'          => $device,
-            'embeddedAudio'   => $embeddedAudio,
-            'exposure'        => $exposure,
-            'file'            => $file,
-            'flashPix'        => $flashPix,
-            'focus'           => $focus,
-            'gps'             => $gps,
-            'image'           => $image,
-            'integrity'       => $integrity,
-            'interop'         => $interop,
-            'iptc'            => new ValueIptc($iptcDocument),
-            'keywords'        => $keywords,
-            'lens'            => $lens,
-            'motion'          => $motion,
-            'multiPicture'    => $multiPicture,
-            'processing'      => $processing,
-            'regions'         => $regions,
-            'related'         => $related,
-            'rights'          => $rights,
-            'scene'           => $scene,
-            'sensor'          => $sensor,
-            'standards'       => $standards,
-            'temporal'        => $temporal,
-            'thumbnail'       => $thumbnail,
-            'tiff'            => $tiff,
-            'video'           => $video,
-            'whiteBalance'    => $whiteBalanceDetails,
-            'xmp'             => new ValueXmp($xmpDocument),
-            'makerNotesApple' => $apple,
+            'keywords' => $keywords,
+            'related'  => $related,
+            'depthMap' => $depthMap,
         ];
-    }
-
-    /**
-     * Creates TIFF-level metadata from EXIF document and JPEG frame data.
-     *
-     * @param ParsedExif|null $exifDocument Parsed EXIF document.
-     * @param Metadata        $metadata     Source metadata container.
-     */
-    private function createTiffData(?ParsedExif $exifDocument, Metadata $metadata): TiffData
-    {
-        $bitsPerSample    = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
-        $ycbcrSubSampling = $exifDocument?->ycbcrSubSampling() ?? $metadata->jpegYCbCrSubSampling;
-
-        $referenceBlackWhite = $exifDocument?->referenceBlackWhite();
-        if ($referenceBlackWhite !== null) {
-            if (count($referenceBlackWhite) === 6) {
-                /** @var array{0: float, 1: float, 2: float, 3: float, 4: float, 5: float} $referenceBlackWhite */
-                $referenceBlackWhite = [
-                    0 => $referenceBlackWhite[0],
-                    1 => $referenceBlackWhite[1],
-                    2 => $referenceBlackWhite[2],
-                    3 => $referenceBlackWhite[3],
-                    4 => $referenceBlackWhite[4],
-                    5 => $referenceBlackWhite[5],
-                ];
-            } else {
-                $referenceBlackWhite = null;
-            }
-        }
-
-        $structure = new TiffStructure(
-            samplesPerPixel: $exifDocument?->samplesPerPixel(),
-            bitsPerSample: $bitsPerSample,
-            compression: $exifDocument?->compression(),
-            photometric: $exifDocument?->photometric(),
-            planar: $exifDocument?->planarConfiguration(),
-        );
-
-        $color = new TiffColorRef(
-            ycbcrPos: $exifDocument?->ycbcrPositioning(),
-            ycbcrSubSampling: $ycbcrSubSampling,
-            ycbcrCoefficients: $exifDocument?->ycbcrCoefficients(),
-            whitePoint: $exifDocument?->whitePoint(),
-            primaryChromaticities: $exifDocument?->primaryChromaticities(),
-            referenceBlackWhite: $referenceBlackWhite,
-            transferFunction: $exifDocument?->transferFunction(),
-        );
-
-        $layout = new TiffLayout(
-            rowsPerStrip: $exifDocument?->rowsPerStrip(),
-            stripOffsets: $exifDocument?->stripOffsets(),
-            stripByteCounts: $exifDocument?->stripByteCounts(),
-            tileWidth: $exifDocument?->tileWidth(),
-            tileLength: $exifDocument?->tileLength(),
-            tileOffsets: $exifDocument?->tileOffsets(),
-            tileByteCounts: $exifDocument?->tileByteCounts(),
-            jpegInterchangeFormat: $exifDocument?->jpegInterchangeFormat(),
-            jpegInterchangeFormatLength: $exifDocument?->jpegInterchangeFormatLength(),
-        );
-
-        return new TiffData(
-            structure: $structure,
-            color: $color,
-            layout: $layout,
-            resolutionUnit: $exifDocument?->resolutionUnit(),
-            xResolution: $exifDocument?->xResolution(),
-            yResolution: $exifDocument?->yResolution(),
-            copyright: $exifDocument?->copyright(),
-        );
     }
 
     /**

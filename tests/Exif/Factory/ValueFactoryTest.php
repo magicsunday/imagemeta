@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Exif\Factory;
 
 use Closure;
+use MagicSunday\ImageMeta\Exif\Factory\TiffDataFactory;
 use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
@@ -50,6 +51,7 @@ use function strlen;
  */
 #[CoversClass(ValueFactory::class)]
 #[UsesClass(Author::class)]
+#[UsesClass(TiffDataFactory::class)]
 #[UsesClass(CaptureHardware::class)]
 #[UsesClass(CaptureSettings::class)]
 #[UsesClass(CreatorContact::class)]
