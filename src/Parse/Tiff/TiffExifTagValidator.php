@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
-use MagicSunday\ImageMeta\Core\BoundsError;
-use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -25,9 +23,7 @@ use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 use function in_array;
 use function is_int;
 use function sprintf;
-use function str_ends_with;
 use function str_starts_with;
-use function strlen;
 
 /**
  * Validates tag layouts, value domains, and cross-IFD semantic constraints.
@@ -321,14 +317,6 @@ final readonly class TiffExifTagValidator
         [ExifTag::IMAGE_EDITING_SOFTWARE, 'ImageEditingSoftware', '§4.6.6.9.13'],
         [ExifTag::METADATA_EDITING_SOFTWARE, 'MetadataEditingSoftware', '§4.6.6.9.14'],
     ];
-
-    /**
-     * @param MemoryBuffer $buffer Seekable binary buffer for thumbnail stream validation.
-     */
-    public function __construct(
-        private MemoryBuffer $buffer,
-    ) {
-    }
 
     /**
      * Validates tag layouts with fixed byte counts mandated by EXIF.
@@ -696,107 +684,6 @@ final readonly class TiffExifTagValidator
                 1419,
             );
         }
-    }
-
-    /**
-     * Validates strict JPEG thumbnail stream conformance for IFD1 Compression=6.
-     *
-     * EXIF 3.0 §4.6.5.1.6 defines JPEGInterchangeFormat/JPEGInterchangeFormatLength as
-     * an SOI..EOI JPEG stream, and EXIF 3.0 §4.7 marker guidance excludes APPn/COM markers
-     * in this embedded thumbnail stream representation.
-     *
-     * @param Ifd|null $ifd1 Thumbnail IFD.
-     */
-    public function validateJpegThumbnailStream(?Ifd $ifd1): void
-    {
-        if (!$ifd1 instanceof Ifd) {
-            return;
-        }
-
-        $compression = $ifd1->get(ExifTag::COMPRESSION);
-        if (!($compression instanceof IfdEntry) || !is_int($compression->value) || ($compression->value !== 6)) {
-            return;
-        }
-
-        $offsetEntry = $ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT);
-        $lengthEntry = $ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
-        if (!($offsetEntry instanceof IfdEntry) || !($lengthEntry instanceof IfdEntry)) {
-            return;
-        }
-
-        if (!is_int($offsetEntry->value) || !is_int($lengthEntry->value)) {
-            return;
-        }
-
-        $thumbnailOffset = $offsetEntry->value;
-        $thumbnailLength = $lengthEntry->value;
-        if ($thumbnailLength <= 0) {
-            return;
-        }
-
-        $blobSize = $this->buffer->size();
-        if (
-            ($thumbnailOffset < 0)
-            || ($thumbnailOffset > $blobSize)
-            || ($thumbnailLength > $blobSize)
-            || ($thumbnailOffset > ($blobSize - $thumbnailLength))
-        ) {
-            throw new ParseError(
-                sprintf(
-                    'JPEG thumbnail stream at offset %d with length %d exceeds TIFF data bounds',
-                    $thumbnailOffset,
-                    $thumbnailLength,
-                ),
-                1410,
-            );
-        }
-
-        $cursor = $this->buffer->tell();
-
-        try {
-            $this->buffer->seek($thumbnailOffset);
-            $thumbnailBytes = $this->buffer->read($thumbnailLength);
-        } catch (BoundsError $exception) {
-            throw new ParseError(
-                sprintf(
-                    'JPEG thumbnail stream at offset %d with length %d is truncated',
-                    $thumbnailOffset,
-                    $thumbnailLength,
-                ),
-                1411,
-                $exception,
-            );
-        } finally {
-            $this->buffer->seek($cursor);
-        }
-
-        if (strlen($thumbnailBytes) < 4 || !str_starts_with($thumbnailBytes, "\xFF\xD8")) {
-            throw new ParseError(
-                sprintf('JPEG thumbnail stream at offset %d is missing SOI marker', $thumbnailOffset),
-                1412,
-            );
-        }
-
-        if (!str_ends_with($thumbnailBytes, "\xFF\xD9")) {
-            throw new ParseError(
-                sprintf('JPEG thumbnail stream at offset %d is missing EOI marker', $thumbnailOffset),
-                1413,
-            );
-        }
-
-        $this->validateJpegThumbnailDisallowedMarkers();
-    }
-
-    /**
-     * Validates JPEG thumbnail marker compliance.
-     *
-     * EXIF 3.0 §4.8 restricts certain markers, but virtually all cameras
-     * and editors embed APP0, APP14, restart markers, and COM markers in
-     * thumbnail streams.  This method is intentionally a no-op to follow
-     * Postel's Law and accept these common deviations.
-     */
-    private function validateJpegThumbnailDisallowedMarkers(): void
-    {
     }
 
     /**

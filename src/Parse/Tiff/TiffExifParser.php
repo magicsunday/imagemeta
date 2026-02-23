@@ -67,6 +67,8 @@ final class TiffExifParser implements TiffExifParserInterface
 
     private TiffExifTagValidator $tagValidator;
 
+    private TiffJpegThumbnailValidator $thumbnailValidator;
+
     private TiffIfdTraverser $traverser;
 
     /**
@@ -121,7 +123,8 @@ final class TiffExifParser implements TiffExifParserInterface
             $this->bigTiffOffsetSize,
             $this->blobSize,
         );
-        $this->tagValidator = new TiffExifTagValidator($this->buffer);
+        $this->tagValidator       = new TiffExifTagValidator();
+        $this->thumbnailValidator = new TiffJpegThumbnailValidator($this->buffer);
 
         $magic = $this->decoder->readU16();
         // EXIF 3.0 §4.5.1 recognises 0x002A (classic TIFF) and 0x002B (BigTIFF)
@@ -369,7 +372,8 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->tagValidator->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
         $this->tagValidator->validateCameraControlEnumDomains($ifd0, $exifIfd, $ifd1, ...$additionalIfds);
         $this->tagValidator->validateFlashBitfield($exifIfd);
-        $this->tagValidator->validateJpegThumbnailStream($ifd1);
+
+        $this->thumbnailValidator->validateJpegThumbnailStream($ifd1);
 
         // JPEG and ISO BMFF containers provide image dimensions/layout
         // externally (SOF header / ispe box), so TIFF-level structural tags

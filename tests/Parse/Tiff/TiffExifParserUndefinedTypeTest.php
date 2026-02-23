@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifTagValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffIfdTraverser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffJpegThumbnailValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -40,6 +41,7 @@ use function strlen;
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(TiffConst::class)]
 #[UsesClass(TiffExifTagValidator::class)]
+#[UsesClass(TiffJpegThumbnailValidator::class)]
 #[UsesClass(TiffIfdTraverser::class)]
 #[UsesClass(TiffValueDecoder::class)]
 final class TiffExifParserUndefinedTypeTest extends TestCase

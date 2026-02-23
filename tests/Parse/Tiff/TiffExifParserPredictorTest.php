@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifTagValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffIfdTraverser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffJpegThumbnailValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -32,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(TiffExifParser::class)]
 #[UsesClass(MakerNoteDispatcher::class)]
 #[UsesClass(TiffExifTagValidator::class)]
+#[UsesClass(TiffJpegThumbnailValidator::class)]
 #[UsesClass(TiffIfdTraverser::class)]
 #[UsesClass(TiffValueDecoder::class)]
 final class TiffExifParserPredictorTest extends TestCase
