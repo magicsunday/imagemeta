@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Xmp;
 
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
+use MagicSunday\ImageMeta\Parse\Xmp\XmpParseState;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -26,6 +27,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(XmpParser::class)]
 #[UsesClass(XmpDocument::class)]
+#[UsesClass(XmpParseState::class)]
 final class XmpParserCompleteExtractionTest extends TestCase
 {
     private const string EXIF_NS = 'http://ns.adobe.com/exif/1.0/';

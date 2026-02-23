@@ -31,6 +31,7 @@ use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
+use MagicSunday\ImageMeta\Parse\Xmp\XmpParseState;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
@@ -90,6 +91,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(IsoBmffItemReferenceMap::class)]
 #[UsesClass(XmpDocument::class)]
 #[UsesClass(IptcParser::class)]
+#[UsesClass(XmpParseState::class)]
 #[UsesClass(XmpParser::class)]
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(ValueConverters::class)]

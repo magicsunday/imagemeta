@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
+use MagicSunday\ImageMeta\Parse\Xmp\XmpParseState;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -35,6 +36,7 @@ use ReflectionMethod;
 #[UsesClass(XmpContainer::class)]
 #[UsesClass(XmpDocument::class)]
 #[UsesClass(XmpLanguageAlternative::class)]
+#[UsesClass(XmpParseState::class)]
 #[UsesClass(XmpStructuredValue::class)]
 final class XmpParserTest extends TestCase
 {
@@ -1272,11 +1274,14 @@ XML;
     #[Test]
     public function findParentListBufferReturnsNearestListContext(): void
     {
+        $state              = new XmpParseState();
+        $state->listBuffers = [1 => ['root'], 3 => ['child']];
+        $state->listKinds   = [1 => 'Bag', 3 => 'Alt'];
+
         $method = new ReflectionMethod(XmpParser::class, 'findParentListBuffer');
         $result = $method->invoke(
             new XmpParser(),
-            [1 => ['root'], 3 => ['child']],
-            [1 => 'Bag', 3 => 'Alt'],
+            $state,
             5,
             'en-US',
         );
@@ -1298,11 +1303,12 @@ XML;
     #[Test]
     public function findParentListBufferReturnsNullWithoutParentList(): void
     {
+        $state = new XmpParseState();
+
         $method = new ReflectionMethod(XmpParser::class, 'findParentListBuffer');
         $result = $method->invoke(
             new XmpParser(),
-            [],
-            [],
+            $state,
             3,
             '',
         );

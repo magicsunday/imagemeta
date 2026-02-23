@@ -62,6 +62,7 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParserInterface;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParserInterface;
+use MagicSunday\ImageMeta\Parse\Xmp\XmpParseState;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
@@ -164,6 +165,7 @@ use function unlink;
 #[UsesClass(IsoBmffParser::class)]
 #[UsesClass(JpegParser::class)]
 #[UsesClass(TiffExifParser::class)]
+#[UsesClass(XmpParseState::class)]
 #[UsesClass(XmpParser::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 #[UsesClass(Audio::class)]
