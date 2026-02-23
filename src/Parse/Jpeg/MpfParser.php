@@ -47,22 +47,6 @@ final class MpfParser
 {
     private const int TIFF_MAGIC = TiffConst::MAGIC_CLASSIC;
 
-    private const int TYPE_BYTE = 1;
-
-    private const int TYPE_ASCII = 2;
-
-    private const int TYPE_SHORT = 3;
-
-    private const int TYPE_LONG = 4;
-
-    private const int TYPE_RATIONAL = 5;
-
-    private const int TYPE_UNDEFINED = 7;
-
-    private const int TYPE_SLONG = 9;
-
-    private const int TYPE_SRATIONAL = 10;
-
     private const int TAG_MPF_VERSION = 0xB000;
 
     private const int TAG_NUMBER_OF_IMAGES = 0xB001;
@@ -115,15 +99,15 @@ final class MpfParser
         // MP Index IFD tag type/count constraints per EXIF 3.0 §4.6.2
         $indexConstraints = [
             self::TAG_MPF_VERSION => [
-                'type'    => self::TYPE_ASCII,
+                'type'    => TiffConst::TYPE_ASCII,
                 'countFn' => static fn (int $c): bool => $c === 4,
             ],
             self::TAG_NUMBER_OF_IMAGES => [
-                'type'    => self::TYPE_LONG,
+                'type'    => TiffConst::TYPE_LONG,
                 'countFn' => static fn (int $c): bool => $c === 1,
             ],
             self::TAG_MP_ENTRY => [
-                'type'    => self::TYPE_UNDEFINED,
+                'type'    => TiffConst::TYPE_UNDEFINED,
                 'countFn' => static fn (int $c): bool => $c >= 16 && ($c % 16) === 0,
             ],
         ];
@@ -162,23 +146,23 @@ final class MpfParser
             // MP Attribute IFD tag type/count constraints per EXIF 3.0 §4.6.4
             $attributeConstraints = [
                 self::TAG_IMAGE_UID_LIST => [
-                    'type'    => self::TYPE_UNDEFINED,
+                    'type'    => TiffConst::TYPE_UNDEFINED,
                     'countFn' => static fn (int $c): bool => $c >= 33 && ($c % 33) === 0,
                 ],
                 self::TAG_TOTAL_FRAMES => [
-                    'type'    => self::TYPE_LONG,
+                    'type'    => TiffConst::TYPE_LONG,
                     'countFn' => static fn (int $c): bool => $c === 1,
                 ],
                 self::TAG_INDIVIDUAL_IMAGE_NUMBER => [
-                    'type'    => self::TYPE_LONG,
+                    'type'    => TiffConst::TYPE_LONG,
                     'countFn' => static fn (int $c): bool => $c === 1,
                 ],
                 self::TAG_PANORAMA_ANGLE => [
-                    'type'    => self::TYPE_RATIONAL,
+                    'type'    => TiffConst::TYPE_RATIONAL,
                     'countFn' => static fn (int $c): bool => $c === 1,
                 ],
                 self::TAG_PANORAMA_AXIS => [
-                    'type'    => self::TYPE_RATIONAL,
+                    'type'    => TiffConst::TYPE_RATIONAL,
                     'countFn' => static fn (int $c): bool => $c === 3,
                 ],
             ];
@@ -349,32 +333,32 @@ final class MpfParser
         $buffer = new MemoryBuffer($data);
 
         switch ($type) {
-            case self::TYPE_BYTE:
+            case TiffConst::TYPE_BYTE:
                 for ($i = 0; $i < $componentCount; ++$i) {
                     $values[] = $buffer->readU8();
                 }
 
                 break;
 
-            case self::TYPE_ASCII:
-            case self::TYPE_UNDEFINED:
+            case TiffConst::TYPE_ASCII:
+            case TiffConst::TYPE_UNDEFINED:
                 return $data;
 
-            case self::TYPE_SHORT:
+            case TiffConst::TYPE_SHORT:
                 for ($i = 0; $i < $componentCount; ++$i) {
                     $values[] = $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
                 }
 
                 break;
 
-            case self::TYPE_LONG:
+            case TiffConst::TYPE_LONG:
                 for ($i = 0; $i < $componentCount; ++$i) {
                     $values[] = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
                 }
 
                 break;
 
-            case self::TYPE_SLONG:
+            case TiffConst::TYPE_SLONG:
                 for ($i = 0; $i < $componentCount; ++$i) {
                     $unsigned = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
                     $values[] = $this->toSigned32($unsigned);
@@ -382,12 +366,12 @@ final class MpfParser
 
                 break;
 
-            case self::TYPE_RATIONAL:
-            case self::TYPE_SRATIONAL:
+            case TiffConst::TYPE_RATIONAL:
+            case TiffConst::TYPE_SRATIONAL:
                 for ($i = 0; $i < $componentCount; ++$i) {
                     $numerator   = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
                     $denominator = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
-                    if ($type === self::TYPE_SRATIONAL) {
+                    if ($type === TiffConst::TYPE_SRATIONAL) {
                         $numerator   = $this->toSigned32($numerator);
                         $denominator = $this->toSigned32($denominator);
                     }
@@ -656,10 +640,10 @@ final class MpfParser
     private function typeSize(int $type): ?int
     {
         return match ($type) {
-            self::TYPE_BYTE, self::TYPE_ASCII, self::TYPE_UNDEFINED => 1,
-            self::TYPE_SHORT => 2,
-            self::TYPE_LONG, self::TYPE_SLONG => 4,
-            self::TYPE_RATIONAL, self::TYPE_SRATIONAL => 8,
+            TiffConst::TYPE_BYTE, TiffConst::TYPE_ASCII, TiffConst::TYPE_UNDEFINED => 1,
+            TiffConst::TYPE_SHORT => 2,
+            TiffConst::TYPE_LONG, TiffConst::TYPE_SLONG => 4,
+            TiffConst::TYPE_RATIONAL, TiffConst::TYPE_SRATIONAL => 8,
             default => null,
         };
     }
