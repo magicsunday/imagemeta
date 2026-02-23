@@ -22,6 +22,11 @@ use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
+use MagicSunday\ImageMeta\Parse\Jpeg\IccProfileAssembler;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegApp1Handler;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegAudioSegmentParser;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegFrameValidator;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegMarkerScanner;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserConfig;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfParser;
@@ -71,6 +76,11 @@ use function unlink;
 #[UsesClass(MpfEntry::class)]
 #[UsesClass(MpfParser::class)]
 #[UsesClass(JpegParserConfig::class)]
+#[UsesClass(JpegMarkerScanner::class)]
+#[UsesClass(JpegFrameValidator::class)]
+#[UsesClass(IccProfileAssembler::class)]
+#[UsesClass(JpegAudioSegmentParser::class)]
+#[UsesClass(JpegApp1Handler::class)]
 final class JpegParserTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";
