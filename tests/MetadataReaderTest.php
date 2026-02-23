@@ -26,6 +26,12 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Reader\CameraLensExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ColorSpaceExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\DescriptionExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\DngMetadataExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ImageStructureExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\UserCommentExifReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
@@ -145,19 +151,23 @@ use function unlink;
 #[UsesClass(AppleMakerNotesMerger::class)]
 #[UsesClass(Audio::class)]
 #[UsesClass(AudioClips::class)]
-#[UsesClass(Author::class)]
 #[UsesClass(AudioSampleEntryParser::class)]
+#[UsesClass(Author::class)]
 #[UsesClass(BoxDescriptor::class)]
 #[UsesClass(BoxNavigator::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Camera::class)]
+#[UsesClass(CameraLensExifReader::class)]
 #[UsesClass(CanonDecoder::class)]
 #[UsesClass(Capture::class)]
 #[UsesClass(ColorProfile::class)]
+#[UsesClass(ColorSpaceExifReader::class)]
 #[UsesClass(CompositeImageInfo::class)]
 #[UsesClass(Container::class)]
 #[UsesClass(Derived::class)]
+#[UsesClass(DescriptionExifReader::class)]
 #[UsesClass(Device::class)]
+#[UsesClass(DngMetadataExifReader::class)]
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(ExifFlash::class)]
 #[UsesClass(Exposure::class)]
@@ -168,11 +178,12 @@ use function unlink;
 #[UsesClass(Gps::class)]
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
+#[UsesClass(IlocBoxParser::class)]
 #[UsesClass(Image::class)]
+#[UsesClass(ImageStructureExifReader::class)]
 #[UsesClass(Integrity::class)]
 #[UsesClass(Interop::class)]
 #[UsesClass(IsoBmffDataReference::class)]
-#[UsesClass(IlocBoxParser::class)]
 #[UsesClass(IsoBmffDataReferenceMap::class)]
 #[UsesClass(IsoBmffItemReference::class)]
 #[UsesClass(IsoBmffItemReferenceMap::class)]
@@ -192,8 +203,8 @@ use function unlink;
 #[UsesClass(NikonDecoder::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(ProcessingSettings::class)]
-#[UsesClass(QuickTimeLookup::class)]
 #[UsesClass(QuickTimeKeyResolver::class)]
+#[UsesClass(QuickTimeLookup::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(QuickTimeMetadataDecoder::class)]
 #[UsesClass(QuickTimeValueDecoder::class)]
@@ -215,13 +226,14 @@ use function unlink;
 #[UsesClass(Temporal::class)]
 #[UsesClass(Thumbnail::class)]
 #[UsesClass(TiffData::class)]
-#[UsesClass(TrackMediaParser::class)]
 #[UsesClass(TiffExifParser::class)]
 #[UsesClass(TiffExifTagValidator::class)]
 #[UsesClass(TiffIfdTraverser::class)]
 #[UsesClass(TiffValueDecoder::class)]
+#[UsesClass(TrackMediaParser::class)]
 #[UsesClass(UInt64::class)]
 #[UsesClass(Unpack::class)]
+#[UsesClass(UserCommentExifReader::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(ValueFactory::class)]
 #[UsesClass(Video::class)]

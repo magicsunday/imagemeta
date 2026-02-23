@@ -16,9 +16,16 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Reader\CameraLensExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ColorSpaceExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\DescriptionExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\DngMetadataExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ImageStructureExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\UserCommentExifReader;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function strlen;
@@ -32,6 +39,12 @@ use function strlen;
  * @internal
  */
 #[CoversClass(ParsedExif::class)]
+#[UsesClass(CameraLensExifReader::class)]
+#[UsesClass(ColorSpaceExifReader::class)]
+#[UsesClass(DescriptionExifReader::class)]
+#[UsesClass(DngMetadataExifReader::class)]
+#[UsesClass(ImageStructureExifReader::class)]
+#[UsesClass(UserCommentExifReader::class)]
 final class ParsedExifOffsetTimeTest extends TestCase
 {
     /**

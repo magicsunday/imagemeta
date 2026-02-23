@@ -15,6 +15,12 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Reader\CameraLensExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ColorSpaceExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\DescriptionExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\DngMetadataExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ImageStructureExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\UserCommentExifReader;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
@@ -27,6 +33,7 @@ use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -38,6 +45,12 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(ParsedExif::class)]
+#[UsesClass(CameraLensExifReader::class)]
+#[UsesClass(ColorSpaceExifReader::class)]
+#[UsesClass(DescriptionExifReader::class)]
+#[UsesClass(DngMetadataExifReader::class)]
+#[UsesClass(ImageStructureExifReader::class)]
+#[UsesClass(UserCommentExifReader::class)]
 final class ParsedExifShootingConditionsTest extends TestCase
 {
     /**

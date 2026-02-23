@@ -16,10 +16,17 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Reader\CameraLensExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ColorSpaceExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\DescriptionExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\DngMetadataExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ImageStructureExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\UserCommentExifReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function count;
@@ -35,6 +42,12 @@ use function substr;
  * @phpstan-type RationalPair = array{0:int,1:int}
  */
 #[CoversClass(ParsedExif::class)]
+#[UsesClass(CameraLensExifReader::class)]
+#[UsesClass(ColorSpaceExifReader::class)]
+#[UsesClass(DescriptionExifReader::class)]
+#[UsesClass(DngMetadataExifReader::class)]
+#[UsesClass(ImageStructureExifReader::class)]
+#[UsesClass(UserCommentExifReader::class)]
 final class SourceExposureTimesOfCompositeImageTest extends TestCase
 {
     /**

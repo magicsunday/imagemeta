@@ -15,17 +15,22 @@ use DateTimeImmutable;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\Reader\CameraLensExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ColorSpaceExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\DescriptionExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\DeviceExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\DngMetadataExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\ExposureParameterReader;
 use MagicSunday\ImageMeta\Exif\Reader\FocalReader;
 use MagicSunday\ImageMeta\Exif\Reader\GpsExifReader;
-use MagicSunday\ImageMeta\Exif\Reader\ImageExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ImageStructureExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\IsoSensitivityReader;
 use MagicSunday\ImageMeta\Exif\Reader\SceneModeReader;
 use MagicSunday\ImageMeta\Exif\Reader\SensorDataReader;
 use MagicSunday\ImageMeta\Exif\Reader\TemporalExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\ThumbnailExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\TiffBaselineExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\UserCommentExifReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
@@ -97,7 +102,17 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
 
     private ?SensorDataReader $cachedSensorDataReader = null;
 
-    private ?ImageExifReader $cachedImageReader = null;
+    private ?CameraLensExifReader $cachedCameraLensReader = null;
+
+    private ?ImageStructureExifReader $cachedImageStructureReader = null;
+
+    private ?ColorSpaceExifReader $cachedColorSpaceReader = null;
+
+    private ?DngMetadataExifReader $cachedDngMetadataReader = null;
+
+    private ?UserCommentExifReader $cachedUserCommentReader = null;
+
+    private ?DescriptionExifReader $cachedDescriptionReader = null;
 
     private ?DeviceExifReader $cachedDeviceReader = null;
 
@@ -172,41 +187,41 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
         return $this->reader()->int($this->exifIfd, ExifTag::INTEROPERABILITY_IFD_POINTER);
     }
 
-    // ── Image domain ────────────────────────────────────────────
+    // ── Camera / lens domain ──────────────────────────────────
 
     public function cameraMake(): ?string
     {
-        return $this->imageReader()->cameraMake();
+        return $this->cameraLensReader()->cameraMake();
     }
 
     public function cameraModel(): ?string
     {
-        return $this->imageReader()->cameraModel();
+        return $this->cameraLensReader()->cameraModel();
     }
 
     public function lensModel(): ?string
     {
-        return $this->imageReader()->lensModel();
+        return $this->cameraLensReader()->lensModel();
     }
 
     public function lensMake(): ?string
     {
-        return $this->imageReader()->lensMake();
+        return $this->cameraLensReader()->lensMake();
     }
 
     public function ownerName(): ?string
     {
-        return $this->imageReader()->ownerName();
+        return $this->cameraLensReader()->ownerName();
     }
 
     public function bodySerialNumber(): ?string
     {
-        return $this->imageReader()->bodySerialNumber();
+        return $this->cameraLensReader()->bodySerialNumber();
     }
 
     public function lensSerialNumber(): ?string
     {
-        return $this->imageReader()->lensSerialNumber();
+        return $this->cameraLensReader()->lensSerialNumber();
     }
 
     /**
@@ -214,102 +229,250 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
      */
     public function lensSpecification(): ?array
     {
-        return $this->imageReader()->lensSpecification();
-    }
-
-    public function orientation(): Orientation
-    {
-        return $this->imageReader()->orientation();
-    }
-
-    public function orientationDescription(): string
-    {
-        return $this->imageReader()->orientationDescription();
-    }
-
-    public function imageWidth(): ?int
-    {
-        return $this->imageReader()->imageWidth();
-    }
-
-    public function imageHeight(): ?int
-    {
-        return $this->imageReader()->imageHeight();
-    }
-
-    public function imageLength(): ?int
-    {
-        return $this->imageReader()->imageLength();
-    }
-
-    public function pixelXDimension(): ?int
-    {
-        return $this->imageReader()->pixelXDimension();
-    }
-
-    public function pixelYDimension(): ?int
-    {
-        return $this->imageReader()->pixelYDimension();
-    }
-
-    public function colorSpace(): ?ColorSpace
-    {
-        return $this->imageReader()->colorSpace();
-    }
-
-    public function imageUniqueId(): ?string
-    {
-        return $this->imageReader()->imageUniqueId();
-    }
-
-    public function exifVersion(): ?string
-    {
-        return $this->imageReader()->exifVersion();
-    }
-
-    public function flashpixVersion(): ?string
-    {
-        return $this->imageReader()->flashpixVersion();
-    }
-
-    public function dngVersion(): ?string
-    {
-        return $this->imageReader()->dngVersion();
-    }
-
-    public function dngBackwardVersion(): ?string
-    {
-        return $this->imageReader()->dngBackwardVersion();
+        return $this->cameraLensReader()->lensSpecification();
     }
 
     public function uniqueCameraModel(): ?string
     {
-        return $this->imageReader()->uniqueCameraModel();
+        return $this->cameraLensReader()->uniqueCameraModel();
     }
 
     public function localizedCameraModel(): ?string
     {
-        return $this->imageReader()->localizedCameraModel();
+        return $this->cameraLensReader()->localizedCameraModel();
+    }
+
+    // ── Image structure domain ─────────────────────────────────
+
+    public function orientation(): Orientation
+    {
+        return $this->imageStructureReader()->orientation();
+    }
+
+    public function orientationDescription(): string
+    {
+        return $this->imageStructureReader()->orientationDescription();
+    }
+
+    public function imageWidth(): ?int
+    {
+        return $this->imageStructureReader()->imageWidth();
+    }
+
+    public function imageHeight(): ?int
+    {
+        return $this->imageStructureReader()->imageHeight();
+    }
+
+    public function imageLength(): ?int
+    {
+        return $this->imageStructureReader()->imageLength();
+    }
+
+    public function pixelXDimension(): ?int
+    {
+        return $this->imageStructureReader()->pixelXDimension();
+    }
+
+    public function pixelYDimension(): ?int
+    {
+        return $this->imageStructureReader()->pixelYDimension();
+    }
+
+    public function compression(): ?Compression
+    {
+        return $this->imageStructureReader()->compression();
+    }
+
+    public function compressedBitsPerPixel(): ?float
+    {
+        return $this->imageStructureReader()->compressedBitsPerPixel();
+    }
+
+    public function resolutionUnit(): ResolutionUnit
+    {
+        return $this->imageStructureReader()->resolutionUnit();
+    }
+
+    public function xResolution(): ?float
+    {
+        return $this->imageStructureReader()->xResolution();
+    }
+
+    public function yResolution(): ?float
+    {
+        return $this->imageStructureReader()->yResolution();
+    }
+
+    public function rowsPerStrip(): ?int
+    {
+        return $this->imageStructureReader()->rowsPerStrip();
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function stripOffsets(): ?array
+    {
+        return $this->imageStructureReader()->stripOffsets();
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function stripByteCounts(): ?array
+    {
+        return $this->imageStructureReader()->stripByteCounts();
+    }
+
+    public function jpegInterchangeFormat(): ?int
+    {
+        return $this->imageStructureReader()->jpegInterchangeFormat();
+    }
+
+    public function jpegInterchangeFormatLength(): ?int
+    {
+        return $this->imageStructureReader()->jpegInterchangeFormatLength();
+    }
+
+    // ── Colour space domain ────────────────────────────────────
+
+    public function colorSpace(): ?ColorSpace
+    {
+        return $this->colorSpaceReader()->colorSpace();
     }
 
     public function exifProfile(): string
     {
-        return $this->imageReader()->exifProfile();
+        return $this->colorSpaceReader()->exifProfile();
     }
+
+    public function photometric(): ?Photometric
+    {
+        return $this->colorSpaceReader()->photometric();
+    }
+
+    public function planarConfiguration(): ?PlanarConfiguration
+    {
+        return $this->colorSpaceReader()->planarConfiguration();
+    }
+
+    public function samplesPerPixel(): int
+    {
+        return $this->colorSpaceReader()->samplesPerPixel();
+    }
+
+    public function bitsPerSample(): ?int
+    {
+        return $this->colorSpaceReader()->bitsPerSample();
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function bitsPerSampleList(): ?array
+    {
+        return $this->colorSpaceReader()->bitsPerSampleList();
+    }
+
+    public function ycbcrPositioning(): ?YCbCrPositioning
+    {
+        return $this->colorSpaceReader()->ycbcrPositioning();
+    }
+
+    /**
+     * @return array{0:int,1:int}|null
+     */
+    public function ycbcrSubSampling(): ?array
+    {
+        return $this->colorSpaceReader()->ycbcrSubSampling();
+    }
+
+    /**
+     * @return array{0:float,1:float,2:float}|null
+     */
+    public function ycbcrCoefficients(): ?array
+    {
+        return $this->colorSpaceReader()->ycbcrCoefficients();
+    }
+
+    /**
+     * @return list<float>|null
+     */
+    public function referenceBlackWhite(): ?array
+    {
+        return $this->colorSpaceReader()->referenceBlackWhite();
+    }
+
+    /**
+     * @return array{0:float,1:float}|null
+     */
+    public function whitePoint(): ?array
+    {
+        return $this->colorSpaceReader()->whitePoint();
+    }
+
+    /**
+     * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
+     */
+    public function primaryChromaticities(): ?array
+    {
+        return $this->colorSpaceReader()->primaryChromaticities();
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function componentsConfiguration(): ?array
+    {
+        return $this->colorSpaceReader()->componentsConfiguration();
+    }
+
+    /**
+     * @return list<string>|null
+     */
+    public function componentsConfigurationLabels(): ?array
+    {
+        return $this->colorSpaceReader()->componentsConfigurationLabels();
+    }
+
+    public function componentsConfigurationDescription(): ?string
+    {
+        return $this->colorSpaceReader()->componentsConfigurationDescription();
+    }
+
+    public function gamma(): ?float
+    {
+        return $this->colorSpaceReader()->gamma();
+    }
+
+    // ── DNG metadata domain ────────────────────────────────────
+
+    public function dngVersion(): ?string
+    {
+        return $this->dngMetadataReader()->dngVersion();
+    }
+
+    public function dngBackwardVersion(): ?string
+    {
+        return $this->dngMetadataReader()->dngBackwardVersion();
+    }
+
+    // ── Description domain ─────────────────────────────────────
 
     public function imageTitle(): ?string
     {
-        return $this->imageReader()->imageTitle();
+        return $this->descriptionReader()->imageTitle();
     }
 
     public function documentName(): ?string
     {
-        return $this->imageReader()->documentName();
+        return $this->descriptionReader()->documentName();
     }
 
     public function imageDescription(): ?string
     {
-        return $this->imageReader()->imageDescription();
+        return $this->descriptionReader()->imageDescription();
     }
 
     public function hostComputer(): ?string
@@ -319,197 +482,59 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
 
     public function software(): ?string
     {
-        return $this->imageReader()->software();
+        return $this->descriptionReader()->software();
     }
 
     public function photographer(): ?string
     {
-        return $this->imageReader()->photographer();
+        return $this->descriptionReader()->photographer();
     }
 
     public function imageEditor(): ?string
     {
-        return $this->imageReader()->imageEditor();
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function stripOffsets(): ?array
-    {
-        return $this->imageReader()->stripOffsets();
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function stripByteCounts(): ?array
-    {
-        return $this->imageReader()->stripByteCounts();
-    }
-
-    /**
-     * @return list<float>|null
-     */
-    public function referenceBlackWhite(): ?array
-    {
-        return $this->imageReader()->referenceBlackWhite();
+        return $this->descriptionReader()->imageEditor();
     }
 
     public function copyright(): ?string
     {
-        return $this->imageReader()->copyright();
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function componentsConfiguration(): ?array
-    {
-        return $this->imageReader()->componentsConfiguration();
-    }
-
-    /**
-     * @return list<string>|null
-     */
-    public function componentsConfigurationLabels(): ?array
-    {
-        return $this->imageReader()->componentsConfigurationLabels();
-    }
-
-    public function componentsConfigurationDescription(): ?string
-    {
-        return $this->imageReader()->componentsConfigurationDescription();
-    }
-
-    public function compressedBitsPerPixel(): ?float
-    {
-        return $this->imageReader()->compressedBitsPerPixel();
-    }
-
-    public function userComment(): ?string
-    {
-        return $this->imageReader()->userComment();
-    }
-
-    public function userCommentEncoding(): ?string
-    {
-        return $this->imageReader()->userCommentEncoding();
-    }
-
-    public function userCommentEncodingBestEffort(): ?string
-    {
-        return $this->imageReader()->userCommentEncodingBestEffort();
-    }
-
-    public function bitsPerSample(): ?int
-    {
-        return $this->imageReader()->bitsPerSample();
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function bitsPerSampleList(): ?array
-    {
-        return $this->imageReader()->bitsPerSampleList();
-    }
-
-    public function samplesPerPixel(): int
-    {
-        return $this->imageReader()->samplesPerPixel();
-    }
-
-    public function rowsPerStrip(): ?int
-    {
-        return $this->imageReader()->rowsPerStrip();
-    }
-
-    public function compression(): ?Compression
-    {
-        return $this->imageReader()->compression();
-    }
-
-    public function photometric(): ?Photometric
-    {
-        return $this->imageReader()->photometric();
-    }
-
-    public function planarConfiguration(): ?PlanarConfiguration
-    {
-        return $this->imageReader()->planarConfiguration();
-    }
-
-    public function resolutionUnit(): ResolutionUnit
-    {
-        return $this->imageReader()->resolutionUnit();
-    }
-
-    public function xResolution(): ?float
-    {
-        return $this->imageReader()->xResolution();
-    }
-
-    public function yResolution(): ?float
-    {
-        return $this->imageReader()->yResolution();
-    }
-
-    public function ycbcrPositioning(): ?YCbCrPositioning
-    {
-        return $this->imageReader()->ycbcrPositioning();
-    }
-
-    /**
-     * @return array{0:int,1:int}|null
-     */
-    public function ycbcrSubSampling(): ?array
-    {
-        return $this->imageReader()->ycbcrSubSampling();
-    }
-
-    /**
-     * @return array{0:float,1:float,2:float}|null
-     */
-    public function ycbcrCoefficients(): ?array
-    {
-        return $this->imageReader()->ycbcrCoefficients();
-    }
-
-    /**
-     * @return array{0:float,1:float}|null
-     */
-    public function whitePoint(): ?array
-    {
-        return $this->imageReader()->whitePoint();
-    }
-
-    /**
-     * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
-     */
-    public function primaryChromaticities(): ?array
-    {
-        return $this->imageReader()->primaryChromaticities();
-    }
-
-    public function jpegInterchangeFormat(): ?int
-    {
-        return $this->imageReader()->jpegInterchangeFormat();
-    }
-
-    public function jpegInterchangeFormatLength(): ?int
-    {
-        return $this->imageReader()->jpegInterchangeFormatLength();
+        return $this->descriptionReader()->copyright();
     }
 
     public function artist(): ?string
     {
-        return $this->imageReader()->artist();
+        return $this->descriptionReader()->artist();
     }
 
-    public function gamma(): ?float
+    public function imageUniqueId(): ?string
     {
-        return $this->imageReader()->gamma();
+        return $this->descriptionReader()->imageUniqueId();
+    }
+
+    public function exifVersion(): ?string
+    {
+        return $this->descriptionReader()->exifVersion();
+    }
+
+    public function flashpixVersion(): ?string
+    {
+        return $this->descriptionReader()->flashpixVersion();
+    }
+
+    // ── User comment domain ────────────────────────────────────
+
+    public function userComment(): ?string
+    {
+        return $this->userCommentReader()->userComment();
+    }
+
+    public function userCommentEncoding(): ?string
+    {
+        return $this->userCommentReader()->userCommentEncoding();
+    }
+
+    public function userCommentEncodingBestEffort(): ?string
+    {
+        return $this->userCommentReader()->userCommentEncodingBestEffort();
     }
 
     // ── Thumbnail domain ────────────────────────────────────────
@@ -1452,15 +1477,59 @@ final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, Ex
         );
     }
 
-    private function imageReader(): ImageExifReader
+    private function cameraLensReader(): CameraLensExifReader
     {
-        return $this->cachedImageReader ??= new ImageExifReader(
+        return $this->cachedCameraLensReader ??= new CameraLensExifReader(
+            $this->reader(),
+            $this->ifd0,
+            $this->exifIfd,
+        );
+    }
+
+    private function imageStructureReader(): ImageStructureExifReader
+    {
+        return $this->cachedImageStructureReader ??= new ImageStructureExifReader(
+            $this->reader(),
+            $this->ifd0,
+            $this->exifIfd,
+        );
+    }
+
+    private function colorSpaceReader(): ColorSpaceExifReader
+    {
+        return $this->cachedColorSpaceReader ??= new ColorSpaceExifReader(
             $this->reader(),
             $this->converters,
             $this->ifd0,
             $this->exifIfd,
             $this->exifProfile,
+        );
+    }
+
+    private function dngMetadataReader(): DngMetadataExifReader
+    {
+        return $this->cachedDngMetadataReader ??= new DngMetadataExifReader(
+            $this->reader(),
+            $this->ifd0,
+        );
+    }
+
+    private function userCommentReader(): UserCommentExifReader
+    {
+        return $this->cachedUserCommentReader ??= new UserCommentExifReader(
+            $this->reader(),
+            $this->exifIfd,
             $this->fallbackIfdSet(),
+        );
+    }
+
+    private function descriptionReader(): DescriptionExifReader
+    {
+        return $this->cachedDescriptionReader ??= new DescriptionExifReader(
+            $this->reader(),
+            $this->converters,
+            $this->ifd0,
+            $this->exifIfd,
         );
     }
 
