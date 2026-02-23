@@ -18,7 +18,8 @@
         "**/SceneModeReader.php",
         "**/GpsCoordinateConverter.php",
         "**/GpsConverter.php",
-        "**/GpsTimestampConverter.php"
+        "**/GpsTimestampConverter.php",
+        "**/DngGeometryValidator.php"
     ],
     "exitCode": true
 }
