@@ -11,12 +11,14 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Factory;
 
+use MagicSunday\ImageMeta\Exif\Factory\RegionCoordinateNormaliser;
 use MagicSunday\ImageMeta\Exif\Factory\RegionsFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\RegionType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,6 +30,7 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(RegionsFactory::class)]
+#[UsesClass(RegionCoordinateNormaliser::class)]
 final class RegionsFactoryTest extends TestCase
 {
     /**

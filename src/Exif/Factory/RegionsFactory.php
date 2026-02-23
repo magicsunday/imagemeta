@@ -22,12 +22,10 @@ use function abs;
 use function array_map;
 use function array_shift;
 use function array_values;
-use function ceil;
 use function count;
 use function is_array;
 use function is_string;
 use function ksort;
-use function log10;
 use function max;
 use function trim;
 
@@ -37,6 +35,13 @@ use function trim;
 final readonly class RegionsFactory
 {
     private const float MATCH_THRESHOLD = 0.12;
+
+    private RegionCoordinateNormaliser $normaliser;
+
+    public function __construct()
+    {
+        $this->normaliser = new RegionCoordinateNormaliser();
+    }
 
     /**
      * Creates a RegionCollection value object from XMP metadata.
@@ -131,7 +136,7 @@ final readonly class RegionsFactory
                 continue;
             }
 
-            $normalised = $this->normalisedBox($centerX, $centerY, $width, $height, $dimensions);
+            $normalised = $this->normaliser->normalisedBox($centerX, $centerY, $width, $height, $dimensions);
             if ($normalised === null) {
                 continue;
             }
@@ -197,7 +202,7 @@ final readonly class RegionsFactory
         $rolls            = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Roll');
         $yaws             = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Yaw');
 
-        $confidenceScale = $this->confidenceScale($confidenceLevels, $confidences);
+        $confidenceScale = $this->normaliser->confidenceScale($confidenceLevels, $confidences);
 
         $names = $this->stringValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Name');
         if ($names === []) {
@@ -231,12 +236,12 @@ final readonly class RegionsFactory
 
             $geometry = null;
             if ($centerX !== null && $centerY !== null && $width !== null && $height !== null) {
-                $geometry = $this->normalisedBox($centerX, $centerY, $width, $height, $dimensions);
+                $geometry = $this->normaliser->normalisedBox($centerX, $centerY, $width, $height, $dimensions);
             }
 
-            $confidence = $this->normalisedConfidence($confidenceLevels[$index] ?? null, $confidenceScale);
+            $confidence = $this->normaliser->normalisedConfidence($confidenceLevels[$index] ?? null, $confidenceScale);
             if ($confidence === null) {
-                $confidence = $this->normalisedConfidence($confidences[$index] ?? null, $confidenceScale);
+                $confidence = $this->normaliser->normalisedConfidence($confidences[$index] ?? null, $confidenceScale);
             }
 
             $rotation = $angleInfoRolls[$index] ?? $rolls[$index] ?? $yaws[$index] ?? null;
@@ -486,14 +491,14 @@ final readonly class RegionsFactory
 
         $bestIndex             = null;
         $bestScore             = null;
-        [$targetCx, $targetCy] = $this->regionCenter($candidate);
+        [$targetCx, $targetCy] = $this->normaliser->regionCenter($candidate);
 
         foreach ($regions as $index => $region) {
             if ($region->type !== RegionType::FACE) {
                 continue;
             }
 
-            [$cx, $cy] = $this->regionCenter($region);
+            [$cx, $cy] = $this->normaliser->regionCenter($region);
             $distance  = abs($cx - $targetCx) + abs($cy - $targetCy);
             if ($distance > self::MATCH_THRESHOLD) {
                 continue;
@@ -546,21 +551,6 @@ final readonly class RegionsFactory
     }
 
     /**
-     * Calculates the center point of a region.
-     *
-     * @param Region $region Region to calculate center for.
-     *
-     * @return array{0: float, 1: float} Center coordinates [x, y].
-     */
-    private function regionCenter(Region $region): array
-    {
-        return [
-            $region->x + ($region->w / 2.0),
-            $region->y + ($region->h / 2.0),
-        ];
-    }
-
-    /**
      * Retrieves a string value at a specific index from a list.
      *
      * @param list<string> $values List of string values.
@@ -578,142 +568,6 @@ final readonly class RegionsFactory
         $trimmed = trim($value);
 
         return $trimmed === '' ? null : $trimmed;
-    }
-
-    /**
-     * Normalises Apple-specific confidence values to the unit interval.
-     */
-    private function normalisedConfidence(?float $confidence, float $scale): ?float
-    {
-        if ($confidence === null) {
-            return null;
-        }
-
-        if ($scale <= 1.0 || abs($confidence) <= 1.0) {
-            return $confidence;
-        }
-
-        $normalised = $confidence / $scale;
-
-        if ($normalised > 1.0) {
-            return 1.0;
-        }
-
-        if ($normalised < -1.0) {
-            return -1.0;
-        }
-
-        return $normalised;
-    }
-
-    /**
-     * Calculates a normalized confidence scale from confidence levels.
-     *
-     * @param list<float|null> $confidenceLevels Raw confidence level values.
-     * @param list<float|null> $confidences      Confidence percentage values.
-     *
-     * @return float Normalized confidence scale value.
-     */
-    private function confidenceScale(array $confidenceLevels, array $confidences): float
-    {
-        $maxConfidence = 0.0;
-
-        foreach ([$confidenceLevels, $confidences] as $values) {
-            foreach ($values as $value) {
-                if ($value === null) {
-                    continue;
-                }
-
-                $absolute = abs($value);
-                if ($absolute > $maxConfidence) {
-                    $maxConfidence = $absolute;
-                }
-            }
-        }
-
-        if ($maxConfidence <= 1.0) {
-            return 1.0;
-        }
-
-        $scale = 10.0 ** ceil(log10($maxConfidence));
-
-        if ($scale <= 0.0) {
-            return 1.0;
-        }
-
-        return $scale;
-    }
-
-    /**
-     * Creates a normalized bounding box from center and dimensions.
-     *
-     * @param float                          $centerX    Center X coordinate.
-     * @param float                          $centerY    Center Y coordinate.
-     * @param float                          $width      Box width.
-     * @param float                          $height     Box height.
-     * @param array{w: float, h: float}|null $dimensions Image dimensions for normalization.
-     *
-     * @return array{x: float, y: float, w: float, h: float}|null Normalized bounding box or null if invalid.
-     */
-    private function normalisedBox(float $centerX, float $centerY, float $width, float $height, ?array $dimensions): ?array
-    {
-        if ($width <= 0.0 || $height <= 0.0) {
-            return null;
-        }
-
-        $scaledCenterX = $centerX;
-        $scaledCenterY = $centerY;
-        $scaledWidth   = $width;
-        $scaledHeight  = $height;
-
-        if ($dimensions !== null) {
-            if ($scaledCenterX > 1.0 || $scaledWidth > 1.0) {
-                $scaledCenterX /= $dimensions['w'];
-                $scaledWidth /= $dimensions['w'];
-            }
-
-            if ($scaledCenterY > 1.0 || $scaledHeight > 1.0) {
-                $scaledCenterY /= $dimensions['h'];
-                $scaledHeight /= $dimensions['h'];
-            }
-        }
-
-        if (($scaledCenterX > 1.0 || $scaledCenterY > 1.0 || $scaledWidth > 1.0 || $scaledHeight > 1.0) && ($scaledCenterX <= 100.0 && $scaledCenterY <= 100.0 && $scaledWidth <= 100.0 && $scaledHeight <= 100.0)) {
-            $scaledCenterX /= 100.0;
-            $scaledCenterY /= 100.0;
-            $scaledWidth /= 100.0;
-            $scaledHeight /= 100.0;
-        }
-
-        $halfWidth  = $scaledWidth / 2.0;
-        $halfHeight = $scaledHeight / 2.0;
-
-        return [
-            'x' => $this->clamp($scaledCenterX - $halfWidth),
-            'y' => $this->clamp($scaledCenterY - $halfHeight),
-            'w' => $this->clamp($scaledWidth),
-            'h' => $this->clamp($scaledHeight),
-        ];
-    }
-
-    /**
-     * Constrains a normalised coordinate to the unit interval.
-     *
-     * @param float $value Coordinate or dimension value to clamp.
-     *
-     * @return float Value restricted to the range [0.0, 1.0].
-     */
-    private function clamp(float $value): float
-    {
-        if ($value < 0.0) {
-            return 0.0;
-        }
-
-        if ($value > 1.0) {
-            return 1.0;
-        }
-
-        return $value;
     }
 
     /**
