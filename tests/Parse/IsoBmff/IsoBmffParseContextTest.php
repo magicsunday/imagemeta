@@ -11,9 +11,18 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
 
+use MagicSunday\ImageMeta\Parse\IsoBmff\AudioSampleEntryParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParseContext;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\ItemLocationResolver;
+use MagicSunday\ImageMeta\Parse\IsoBmff\ItemPayloadResolver;
+use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeKeyResolver;
+use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeMetadataDecoder;
+use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeValueDecoder;
 use MagicSunday\ImageMeta\Parse\IsoBmff\TrackMediaParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -28,8 +37,17 @@ use ReflectionClass;
  * @internal
  */
 #[CoversClass(IsoBmffParseContext::class)]
+#[UsesClass(AudioSampleEntryParser::class)]
+#[UsesClass(BoxNavigator::class)]
+#[UsesClass(IlocBoxParser::class)]
 #[UsesClass(IsoBmffParser::class)]
+#[UsesClass(ItemLocationResolver::class)]
+#[UsesClass(ItemPayloadResolver::class)]
+#[UsesClass(QuickTimeKeyResolver::class)]
+#[UsesClass(QuickTimeMetadataDecoder::class)]
+#[UsesClass(QuickTimeValueDecoder::class)]
 #[UsesClass(TrackMediaParser::class)]
+#[UsesClass(VideoSampleEntryParser::class)]
 final class IsoBmffParseContextTest extends TestCase
 {
     /**

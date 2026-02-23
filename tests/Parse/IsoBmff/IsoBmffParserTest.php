@@ -23,8 +23,18 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Parse\IsoBmff\AudioSampleEntryParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
+use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\ItemLocationResolver;
+use MagicSunday\ImageMeta\Parse\IsoBmff\ItemPayloadResolver;
+use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeKeyResolver;
+use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeMetadataDecoder;
+use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeValueDecoder;
+use MagicSunday\ImageMeta\Parse\IsoBmff\TrackMediaParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,6 +42,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
+use ReflectionProperty;
 
 use function chr;
 use function fopen;
@@ -52,6 +63,8 @@ use function substr;
  * Error cases ensure malformed boxes and invalid sizes raise ParseError without crashes.
  */
 #[CoversClass(IsoBmffParser::class)]
+#[UsesClass(AudioSampleEntryParser::class)]
+#[UsesClass(BoxNavigator::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Stream::class)]
 #[UsesClass(StreamWindow::class)]
@@ -64,6 +77,14 @@ use function substr;
 #[UsesClass(QuickTimeDataAtom::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(ConstructionMethod::class)]
+#[UsesClass(IlocBoxParser::class)]
+#[UsesClass(ItemLocationResolver::class)]
+#[UsesClass(ItemPayloadResolver::class)]
+#[UsesClass(QuickTimeKeyResolver::class)]
+#[UsesClass(QuickTimeMetadataDecoder::class)]
+#[UsesClass(QuickTimeValueDecoder::class)]
+#[UsesClass(TrackMediaParser::class)]
+#[UsesClass(VideoSampleEntryParser::class)]
 final class IsoBmffParserTest extends TestCase
 {
     /**
@@ -7648,9 +7669,11 @@ final class IsoBmffParserTest extends TestCase
 
         $parser = $this->createExtractor($meta);
 
-        $readBoxAt = new ReflectionMethod(IsoBmffParser::class, 'readBoxAt');
+        $navProp = new ReflectionProperty(IsoBmffParser::class, 'boxNavigator');
+        /** @var BoxNavigator $boxNavigator */
+        $boxNavigator = $navProp->getValue($parser);
 
-        $metaBox = $readBoxAt->invoke($parser, 0, strlen($meta), true);
+        $metaBox = $boxNavigator->readBoxAt(0, strlen($meta), true);
 
         $detect = new ReflectionMethod(IsoBmffParser::class, 'detectMetaChildOffset');
 

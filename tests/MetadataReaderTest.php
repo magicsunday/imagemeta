@@ -51,10 +51,20 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParserInterface;
+use MagicSunday\ImageMeta\Parse\IsoBmff\AudioSampleEntryParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
+use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserInterface;
+use MagicSunday\ImageMeta\Parse\IsoBmff\ItemLocationResolver;
+use MagicSunday\ImageMeta\Parse\IsoBmff\ItemPayloadResolver;
+use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeKeyResolver;
+use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeMetadataDecoder;
+use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeValueDecoder;
+use MagicSunday\ImageMeta\Parse\IsoBmff\TrackMediaParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserInterface;
@@ -136,7 +146,9 @@ use function unlink;
 #[UsesClass(Audio::class)]
 #[UsesClass(AudioClips::class)]
 #[UsesClass(Author::class)]
+#[UsesClass(AudioSampleEntryParser::class)]
 #[UsesClass(BoxDescriptor::class)]
+#[UsesClass(BoxNavigator::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Camera::class)]
 #[UsesClass(CanonDecoder::class)]
@@ -160,11 +172,14 @@ use function unlink;
 #[UsesClass(Integrity::class)]
 #[UsesClass(Interop::class)]
 #[UsesClass(IsoBmffDataReference::class)]
+#[UsesClass(IlocBoxParser::class)]
 #[UsesClass(IsoBmffDataReferenceMap::class)]
 #[UsesClass(IsoBmffItemReference::class)]
 #[UsesClass(IsoBmffItemReferenceMap::class)]
 #[UsesClass(IsoBmffParser::class)]
 #[UsesClass(IsoBmffUnresolvedItem::class)]
+#[UsesClass(ItemLocationResolver::class)]
+#[UsesClass(ItemPayloadResolver::class)]
 #[UsesClass(JpegParser::class)]
 #[UsesClass(Keywords::class)]
 #[UsesClass(Lens::class)]
@@ -178,7 +193,10 @@ use function unlink;
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(ProcessingSettings::class)]
 #[UsesClass(QuickTimeLookup::class)]
+#[UsesClass(QuickTimeKeyResolver::class)]
 #[UsesClass(QuickTimeMeta::class)]
+#[UsesClass(QuickTimeMetadataDecoder::class)]
+#[UsesClass(QuickTimeValueDecoder::class)]
 #[UsesClass(RegionCollection::class)]
 #[UsesClass(Registry::class)]
 #[UsesClass(RegistryFactory::class)]
@@ -197,6 +215,7 @@ use function unlink;
 #[UsesClass(Temporal::class)]
 #[UsesClass(Thumbnail::class)]
 #[UsesClass(TiffData::class)]
+#[UsesClass(TrackMediaParser::class)]
 #[UsesClass(TiffExifParser::class)]
 #[UsesClass(TiffExifTagValidator::class)]
 #[UsesClass(TiffIfdTraverser::class)]
@@ -206,6 +225,7 @@ use function unlink;
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(ValueFactory::class)]
 #[UsesClass(Video::class)]
+#[UsesClass(VideoSampleEntryParser::class)]
 #[UsesClass(WhiteBalanceDetails::class)]
 #[UsesClass(Xmp::class)]
 #[UsesClass(XmpDocument::class)]
