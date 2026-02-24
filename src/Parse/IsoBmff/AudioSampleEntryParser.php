@@ -33,6 +33,24 @@ use function substr;
 final readonly class AudioSampleEntryParser
 {
     /**
+     * Maximum 16.16 fixed-point value for version-0 sample rate validation.
+     * QuickTime File Format 2012, "Sound Sample Description (Version 0)".
+     */
+    private const int VERSION_0_SAMPLE_RATE_MAX_16_16 = 0xFFFF0000;
+
+    /**
+     * Version-2 constant field: "alwaysMinus2" stored as unsigned 16-bit (two's complement of −2).
+     * QuickTime File Format 2012, "Sound Sample Description (Version 2)".
+     */
+    private const int VERSION_2_ALWAYS_MINUS_2 = 0xFFFE;
+
+    /**
+     * Version-2 constant field "always7F000000".
+     * QuickTime File Format 2012, "Sound Sample Description (Version 2)".
+     */
+    private const int VERSION_2_ALWAYS_7F000000 = 0x7F000000;
+
+    /**
      * LPCM flag: payload stores IEEE floating-point samples.
      */
     private const int LPCM_FLAG_IS_FLOAT = 1 << 0;
@@ -153,7 +171,7 @@ final readonly class AudioSampleEntryParser
         }
 
         $sampleRateRaw = $win->readU32BE();
-        if ($version === 0 && $sampleRateRaw > 0xFFFF0000) {
+        if ($version === 0 && $sampleRateRaw > self::VERSION_0_SAMPLE_RATE_MAX_16_16) {
             throw new ParseError('audio sample entry version 0 sampleRate must be <= 65535', 1508);
         }
 
@@ -234,10 +252,10 @@ final readonly class AudioSampleEntryParser
         if (
             $always3 !== 3
             || $always16 !== 16
-            || $alwaysMinus2 !== 0xFFFE
+            || $alwaysMinus2 !== self::VERSION_2_ALWAYS_MINUS_2
             || $always0 !== 0
             || $always65536 !== 65536
-            || $always7F000000 !== 0x7F000000
+            || $always7F000000 !== self::VERSION_2_ALWAYS_7F000000
         ) {
             throw new ParseError('audio sample entry version 2 constants are invalid', 1460);
         }

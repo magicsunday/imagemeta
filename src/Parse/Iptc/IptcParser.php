@@ -35,6 +35,17 @@ final class IptcParser implements IptcParserInterface
 
     private const int IPTC_RESOURCE_ID = 0x0404;
 
+    /**
+     * IIM extended-length indicator bit (ISO 7160).
+     * When set in the length field, the remaining bits encode the byte-count of the actual length.
+     */
+    private const int IIM_EXTENDED_LENGTH_FLAG = 0x8000;
+
+    /**
+     * Mask to extract the extended-length byte-count from the length field (ISO 7160).
+     */
+    private const int IIM_EXTENDED_LENGTH_BYTE_COUNT_MASK = 0x7FFF;
+
     private const int IIM_EXTENDED_LENGTH_MAX_BYTES = 4;
 
     /**
@@ -181,8 +192,8 @@ final class IptcParser implements IptcParserInterface
             $offset += 5;
 
             $valueLength = $lengthField;
-            if (($lengthField & 0x8000) !== 0) {
-                $lengthBytes = $lengthField & 0x7FFF;
+            if (($lengthField & self::IIM_EXTENDED_LENGTH_FLAG) !== 0) {
+                $lengthBytes = $lengthField & self::IIM_EXTENDED_LENGTH_BYTE_COUNT_MASK;
 
                 if ($lengthBytes === 0) {
                     throw new ParseError('IPTC IIM extended length-byte-count must be greater than zero.', 1869);

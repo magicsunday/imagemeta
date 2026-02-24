@@ -167,6 +167,10 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
     {
         PayloadGuard::ensureMinimumLength($payload, self::TRANSPORT_HEADER_LENGTH, sprintf('APP11 segment at offset %d', $offset), 1331);
 
+        // EXIF 3.0 §4.7.5.3 APP11 transport header layout:
+        // Bytes 0–3: CI (Common Identifier, 4 bytes)
+        // Bytes 4–5: En (Instance Number, uint16)
+        // Bytes 6–9: Z  (Sequence Number, uint32)
         $identifier = substr($payload, 0, 4);
 
         $instanceNumber = Unpack::int('n', substr($payload, 4, 2), 'APP11 instance number');

@@ -717,6 +717,15 @@ final readonly class DngProfileValidator
         PayloadGuard::ensureMinimumLength($payload, 80, 'ProfileGainTableMap2 payload', 1516);
         $length = strlen($payload);
 
+        // DNG 1.7.1.0 ProfileGainTableMap2 80-byte header layout:
+        // Bytes  0– 3: MapPointsV (uint32)
+        // Bytes  4– 7: MapPointsH (uint32)
+        // Bytes  8–39: MapSpacing[V,H] (8 doubles)
+        // Bytes 40–43: MapPointsN (uint32)
+        // Bytes 44–63: MapGamma/reserved (5 floats)
+        // Bytes 64–67: DataType (uint32, 0=float32/1=float16/2=uint8/3=uint16)
+        // Bytes 68–71: Gamma (float32, 0.25–4.0)
+        // Bytes 72–79: reserved
         $mapPointsV = $this->support->unpackU32(substr($payload, 0, 4));
         $mapPointsH = $this->support->unpackU32(substr($payload, 4, 4));
         $mapPointsN = $this->support->unpackU32(substr($payload, 40, 4));
@@ -786,21 +795,34 @@ final readonly class DngProfileValidator
         PayloadGuard::ensureMinimumLength($payload, 64, 'ProfileGainTableMap payload', 1686);
         $length = strlen($payload);
 
+        // DNG 1.7.1.0 ProfileGainTableMap (legacy) 64-byte header layout:
+        // Bytes  0– 3: MapPointsV (uint32)
+        // Bytes  4– 7: MapPointsH (uint32)
+        // Bytes  8–15: MapSpacingV (double)
+        // Bytes 16–23: MapSpacingH (double)
+        // Bytes 24–31: MapOriginV (double)
+        // Bytes 32–39: MapOriginH (double)
+        // Bytes 40–43: MapPointsN (uint32)
+        // Bytes 44–47: MapGamma (float32)
+        // Bytes 48–51: reserved float32
+        // Bytes 52–55: reserved float32
+        // Bytes 56–59: reserved float32
+        // Bytes 60–63: reserved float32
         $mapPointsV = $this->support->unpackU32(substr($payload, 0, 4));
         $mapPointsH = $this->support->unpackU32(substr($payload, 4, 4));
         $mapPointsN = $this->support->unpackU32(substr($payload, 40, 4));
 
         // Decode and validate fixed header scalar fields to enforce binary layout.
         $headerScalars = [
-            $this->support->unpackDouble(substr($payload, 8, 8)),
-            $this->support->unpackDouble(substr($payload, 16, 8)),
-            $this->support->unpackDouble(substr($payload, 24, 8)),
-            $this->support->unpackDouble(substr($payload, 32, 8)),
-            $this->support->unpackFloat(substr($payload, 44, 4)),
-            $this->support->unpackFloat(substr($payload, 48, 4)),
-            $this->support->unpackFloat(substr($payload, 52, 4)),
-            $this->support->unpackFloat(substr($payload, 56, 4)),
-            $this->support->unpackFloat(substr($payload, 60, 4)),
+            $this->support->unpackDouble(substr($payload, 8, 8)),   // MapSpacingV
+            $this->support->unpackDouble(substr($payload, 16, 8)),  // MapSpacingH
+            $this->support->unpackDouble(substr($payload, 24, 8)),  // MapOriginV
+            $this->support->unpackDouble(substr($payload, 32, 8)),  // MapOriginH
+            $this->support->unpackFloat(substr($payload, 44, 4)),   // MapGamma
+            $this->support->unpackFloat(substr($payload, 48, 4)),   // reserved
+            $this->support->unpackFloat(substr($payload, 52, 4)),   // reserved
+            $this->support->unpackFloat(substr($payload, 56, 4)),   // reserved
+            $this->support->unpackFloat(substr($payload, 60, 4)),   // reserved
         ];
 
         foreach ($headerScalars as $scalar) {
