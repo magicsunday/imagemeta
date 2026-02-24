@@ -104,10 +104,11 @@ final class JpegParser implements JpegParserInterface
         $this->frameValidator    = new JpegFrameValidator($this->scanner);
         $this->iccAssembler      = new IccProfileAssembler();
         $this->audioParser       = new JpegAudioSegmentParser();
-        $this->app1Handler       = new JpegApp1Handler($config->extendedXmpGuidLength);
+        $this->app1Handler       = new JpegApp1Handler($config->extendedXmpGuidLength, $config->maxExtendedXmpSize);
         $this->flashPixAssembler = new FlashPixStreamAssembler(
             $config->flashPixMaxContentEntries,
             $config->flashPixMaxStreamSize,
+            $config->maxFlashPixTotalSize,
         );
         $this->jumbfParser = new JumbfTransportParser($this->app1Handler->appendXmpPacket(...));
 
@@ -308,6 +309,7 @@ final class JpegParser implements JpegParserInterface
         $this->flashPixAssembler = new FlashPixStreamAssembler(
             $this->config->flashPixMaxContentEntries,
             $this->config->flashPixMaxStreamSize,
+            $this->config->maxFlashPixTotalSize,
         );
         $this->flashPixStreams             = [];
         $this->mpfSegments                 = [];

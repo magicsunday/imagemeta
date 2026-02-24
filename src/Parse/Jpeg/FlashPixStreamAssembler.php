@@ -60,13 +60,17 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
     /** @var array<int, string> */
     private array $streams = [];
 
+    private int $cumulativeStreamSize = 0;
+
     /**
-     * @param int $maxContentEntries Maximum allowed FlashPix contents-list entries.
-     * @param int $maxStreamSize     Maximum allowed FlashPix stream size per entry in bytes.
+     * @param int $maxContentEntries    Maximum allowed FlashPix contents-list entries.
+     * @param int $maxStreamSize        Maximum allowed FlashPix stream size per entry in bytes.
+     * @param int $maxFlashPixTotalSize Maximum cumulative FlashPix stream size in bytes across all entries.
      */
     public function __construct(
         private readonly int $maxContentEntries,
         private readonly int $maxStreamSize,
+        private readonly int $maxFlashPixTotalSize = 8_388_608,
     ) {
     }
 
@@ -512,6 +516,22 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
         if ($chunkLength === 0) {
             return;
         }
+
+        $newCumulativeSize = $this->cumulativeStreamSize + $chunkLength;
+
+        if ($newCumulativeSize > $this->maxFlashPixTotalSize) {
+            throw new ParseError(
+                sprintf(
+                    'FlashPix cumulative stream size %d exceeds limit %d at offset %d',
+                    $newCumulativeSize,
+                    $this->maxFlashPixTotalSize,
+                    $offset,
+                ),
+                1948,
+            );
+        }
+
+        $this->cumulativeStreamSize = $newCumulativeSize;
 
         $start = $streamOffset;
         $end   = $streamOffset + $chunkLength;

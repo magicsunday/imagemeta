@@ -53,13 +53,16 @@ final class JpegApp1Handler
 
     /**
      * @param int $extendedXmpGuidLength ExtendedXMP GUID length from config.
+     * @param int $maxExtendedXmpSize    Maximum cumulative ExtendedXMP payload size in bytes.
      */
     public function __construct(
         private readonly int $extendedXmpGuidLength,
+        private readonly int $maxExtendedXmpSize = 10_485_760,
     ) {
         $this->extendedXmpAssembler = new ExtendedXmpAssembler(
             $extendedXmpGuidLength,
             $this->appendXmpPacket(...),
+            $this->maxExtendedXmpSize,
         );
     }
 
@@ -169,6 +172,7 @@ final class JpegApp1Handler
         $this->extendedXmpAssembler = new ExtendedXmpAssembler(
             $this->extendedXmpGuidLength,
             $this->appendXmpPacket(...),
+            $this->maxExtendedXmpSize,
         );
     }
 

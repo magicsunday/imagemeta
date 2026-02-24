@@ -56,13 +56,18 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
     /** @var array<string, int> */
     private array $firstOffset = [];
 
+    /** @var array<string, int> */
+    private array $cumulativeChunkSize = [];
+
     /**
-     * @param int                   $guidLength      ExtendedXMP GUID byte length.
-     * @param Closure(string): void $appendXmpPacket Callback for appending resolved XMP packets.
+     * @param int                   $guidLength         ExtendedXMP GUID byte length.
+     * @param Closure(string): void $appendXmpPacket    Callback for appending resolved XMP packets.
+     * @param int                   $maxExtendedXmpSize Maximum cumulative ExtendedXMP payload size in bytes.
      */
     public function __construct(
         private readonly int $guidLength,
         private readonly Closure $appendXmpPacket,
+        private readonly int $maxExtendedXmpSize = 10_485_760,
     ) {
     }
 
@@ -107,6 +112,18 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
             );
         }
 
+        if ($totalLength > $this->maxExtendedXmpSize) {
+            throw new ParseError(
+                sprintf(
+                    'ExtendedXMP APP1 segment at offset %d declares full length %d exceeding limit %d',
+                    $offset,
+                    $totalLength,
+                    $this->maxExtendedXmpSize,
+                ),
+                1946,
+            );
+        }
+
         $chunkLength = strlen($extendedChunk);
 
         if ($chunkLength === 0) {
@@ -142,9 +159,10 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
         }
 
         if (!array_key_exists($guid, $this->totalLength)) {
-            $this->totalLength[$guid] = $totalLength;
-            $this->firstOffset[$guid] = $offset;
-            $this->chunks[$guid]      = [];
+            $this->totalLength[$guid]         = $totalLength;
+            $this->firstOffset[$guid]         = $offset;
+            $this->chunks[$guid]              = [];
+            $this->cumulativeChunkSize[$guid] = 0;
         } elseif ($this->totalLength[$guid] !== $totalLength) {
             $firstOffset = $this->firstOffset[$guid] ?? $offset;
 
@@ -160,6 +178,23 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
                 1474,
             );
         }
+
+        $newCumulativeSize = $this->cumulativeChunkSize[$guid] + $chunkLength;
+
+        if ($newCumulativeSize > $this->maxExtendedXmpSize) {
+            throw new ParseError(
+                sprintf(
+                    'ExtendedXMP GUID %s cumulative chunk size %d exceeds limit %d at offset %d',
+                    $guid,
+                    $newCumulativeSize,
+                    $this->maxExtendedXmpSize,
+                    $offset,
+                ),
+                1947,
+            );
+        }
+
+        $this->cumulativeChunkSize[$guid] = $newCumulativeSize;
 
         $this->chunks[$guid][] = [
             'offset'        => $chunkOffset,

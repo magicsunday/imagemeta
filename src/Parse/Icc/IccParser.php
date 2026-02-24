@@ -98,8 +98,12 @@ final readonly class IccParser implements IccParserInterface
 
     private IccTagDecoder $tagDecoder;
 
-    public function __construct()
-    {
+    /**
+     * @param int $maxIccProfileSize Maximum combined ICC profile size in bytes.
+     */
+    public function __construct(
+        private int $maxIccProfileSize = 4_194_304,
+    ) {
         $this->binaryReader  = new IccBinaryReader();
         $this->headerDecoder = new IccHeaderDecoder($this->binaryReader);
         $this->tagDecoder    = new IccTagDecoder($this->binaryReader);
@@ -406,7 +410,9 @@ final readonly class IccParser implements IccParserInterface
             return null;
         }
 
-        $iccData = '';
+        $iccData        = '';
+        $cumulativeSize = 0;
+
         for ($i = 1; $i <= $expectedCount; ++$i) {
             // Missing chunk in assembled sequence is an error, not absence
             if (!array_key_exists($i, $sequence)) {
@@ -417,6 +423,19 @@ final readonly class IccParser implements IccParserInterface
                         $expectedCount,
                     ),
                     1441,
+                );
+            }
+
+            $cumulativeSize += strlen($sequence[$i]);
+
+            if ($cumulativeSize > $this->maxIccProfileSize) {
+                throw new ParseError(
+                    sprintf(
+                        'ICC chunk assembly: combined profile size %d exceeds limit %d',
+                        $cumulativeSize,
+                        $this->maxIccProfileSize,
+                    ),
+                    1949,
                 );
             }
 

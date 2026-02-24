@@ -1254,4 +1254,26 @@ final class IccParserTest extends TestCase
     {
         return 'ICC_PROFILE\0' . chr($sequence) . chr($count) . $payload;
     }
+
+    /**
+     * Rejects combined ICC segments whose cumulative size exceeds the configured limit.
+     */
+    #[Test]
+    public function rejectsCombinedSegmentsExceedingMaxIccProfileSize(): void
+    {
+        $chunkA = str_repeat('A', 60);
+        $chunkB = str_repeat('B', 60);
+
+        $segments = [
+            $this->createSegment(1, 2, $chunkA),
+            $this->createSegment(2, 2, $chunkB),
+        ];
+
+        $decoder = new IccParser(maxIccProfileSize: 100);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1949);
+
+        $decoder->decode(null, $segments);
+    }
 }
