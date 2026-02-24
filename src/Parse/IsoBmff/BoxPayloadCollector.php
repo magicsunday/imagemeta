@@ -202,10 +202,20 @@ final readonly class BoxPayloadCollector
                     break;
                 case BoxType::CTRY->value:
                     $requiresHdlr = true;
+
+                    if ($countryLists !== []) {
+                        throw new ParseError('meta must contain at most one ctry atom', 1959);
+                    }
+
                     $countryLists = $this->quickTimeDecoder->parseLocaleListAtom($child, 'ctry');
                     break;
                 case BoxType::LANG->value:
-                    $requiresHdlr  = true;
+                    $requiresHdlr = true;
+
+                    if ($languageLists !== []) {
+                        throw new ParseError('meta must contain at most one lang atom', 1960);
+                    }
+
                     $languageLists = $this->quickTimeDecoder->parseLocaleListAtom($child, 'lang');
                     break;
             }
