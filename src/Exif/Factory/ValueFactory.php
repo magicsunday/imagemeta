@@ -194,7 +194,7 @@ final readonly class ValueFactory
             saturation: $exifDocument?->saturation(),
             pictureStyle: null,
             clarity: null,
-            customRendered: $exifDocument?->customRendered()?->value,
+            customRendered: $exifDocument?->customRendered(),
             deviceSettingDescription: $exifDocument?->deviceSettingDescription(),
         );
 

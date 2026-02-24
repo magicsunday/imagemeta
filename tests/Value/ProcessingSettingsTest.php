@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Value;
 
 use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
+use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\Saturation;
 use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
@@ -74,7 +75,7 @@ final class ProcessingSettingsTest extends TestCase
             saturation: Saturation::High,
             pictureStyle: 'Vivid',
             clarity: 25,
-            customRendered: 1,
+            customRendered: CustomRendered::CustomProcess,
             deviceSettingDescription: $deviceDesc,
         );
 
@@ -83,7 +84,7 @@ final class ProcessingSettingsTest extends TestCase
         self::assertSame(Saturation::High, $settings->saturation);
         self::assertSame('Vivid', $settings->pictureStyle);
         self::assertSame(25, $settings->clarity);
-        self::assertSame(1, $settings->customRendered);
+        self::assertSame(CustomRendered::CustomProcess, $settings->customRendered);
         self::assertSame($deviceDesc, $settings->deviceSettingDescription);
     }
 

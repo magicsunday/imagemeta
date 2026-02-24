@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Value;
 
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
+use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\Saturation;
 use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 
@@ -28,7 +29,7 @@ final readonly class ProcessingSettings
      * @param Saturation|null               $saturation               Saturation adjustment level.
      * @param string|null                   $pictureStyle             Vendor specific picture style identifier.
      * @param int|null                      $clarity                  Clarity adjustment level.
-     * @param int|null                      $customRendered           Indicates whether a custom rendering was applied in-camera.
+     * @param CustomRendered|null           $customRendered           Indicates whether a custom rendering was applied in-camera.
      * @param DeviceSettingDescription|null $deviceSettingDescription Structured device setting description.
      */
     public function __construct(
@@ -37,7 +38,7 @@ final readonly class ProcessingSettings
         public ?Saturation $saturation,
         public ?string $pictureStyle,
         public ?int $clarity,
-        public ?int $customRendered,
+        public ?CustomRendered $customRendered,
         public ?DeviceSettingDescription $deviceSettingDescription,
     ) {
     }
