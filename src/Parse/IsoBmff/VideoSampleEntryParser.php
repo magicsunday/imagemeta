@@ -23,6 +23,8 @@ use function substr;
  * Parses video codec sample-entry descriptions from ISO BMFF sample
  * description boxes (stsd), extracting resolution, compressor, and
  * depth metadata per ISO/IEC 14496-12 §8.5.2.
+ *
+ * @phpstan-type VideoSampleEntryMap = array<string, int|float|string>
  */
 final readonly class VideoSampleEntryParser
 {
@@ -56,7 +58,7 @@ final readonly class VideoSampleEntryParser
      * @param int          $entryEnd         Absolute offset where this sample entry ends.
      * @param string       $normalizedFormat Pre-normalized fourcc format string.
      *
-     * @return array<string, int|float|string>
+     * @return VideoSampleEntryMap
      */
     public function parseVideoSampleEntry(StreamWindow $win, int $entryEnd, string $normalizedFormat): array
     {

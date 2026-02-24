@@ -31,6 +31,10 @@ use function substr;
  *
  * Handles parsing of iloc, iinf, pitm, iref, and dinf/dref boxes within
  * ISO BMFF containers as defined by ISO/IEC 14496-12 §8.11.
+ *
+ * @phpstan-type IlocExtent   = array{offset: int, length: int, index: ?int}
+ * @phpstan-type IlocLocation = array{dataReferenceIndex: int, constructionMethod: ConstructionMethod, baseOffset: int, fileOffsetOrigin: int, extents: list<IlocExtent>}
+ * @phpstan-type InfeItem     = array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string, itemUriType?: string, hidden: bool}
  */
 final readonly class IlocBoxParser
 {
@@ -51,7 +55,7 @@ final readonly class IlocBoxParser
      * @param BoxDescriptor $iloc             Box descriptor representing the `iloc` payload.
      * @param int           $fileOffsetOrigin Absolute data origin for file-offset construction method.
      *
-     * @return array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}>
+     * @return array<int, IlocLocation>
      */
     public function parseIloc(BoxDescriptor $iloc, int $fileOffsetOrigin = 0): array
     {
@@ -179,7 +183,7 @@ final readonly class IlocBoxParser
      *
      * @param BoxDescriptor $iinf Box descriptor containing the item information payload.
      *
-     * @return list<array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string, itemUriType?: string, hidden: bool}>
+     * @return list<InfeItem>
      */
     public function parseIinf(BoxDescriptor $iinf): array
     {

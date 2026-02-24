@@ -26,6 +26,8 @@ use function substr;
 
 /**
  * Parses IPTC IIM datasets embedded in Photoshop APP13 resource blocks.
+ *
+ * @phpstan-type IptcDatasetMap = array<string, list<string>>
  */
 final class IptcParser implements IptcParserInterface
 {
@@ -70,12 +72,12 @@ final class IptcParser implements IptcParserInterface
      * @param string $payload Raw APP13 payload including the Photoshop signature.
      * @param int    $offset  Start offset for resource block parsing.
      *
-     * @return array<string, list<string>>
+     * @return IptcDatasetMap
      */
     private function parseResourceBlocks(string $payload, int $offset): array
     {
         $length = strlen($payload);
-        /** @var array<string, list<string>> $datasets */
+        /** @var IptcDatasetMap $datasets */
         $datasets = [];
 
         while ($offset < $length) {
@@ -172,8 +174,8 @@ final class IptcParser implements IptcParserInterface
      * By-ref accumulator: the method appends discovered datasets in a loop; returning the
      * array on each iteration would degrade readability without functional benefit.
      *
-     * @param string                      $data     Raw IPTC IIM data.
-     * @param array<string, list<string>> $datasets Map to accumulate into.
+     * @param string         $data     Raw IPTC IIM data.
+     * @param IptcDatasetMap $datasets Map to accumulate into.
      */
     private function parseIimData(string $data, array &$datasets): void
     {

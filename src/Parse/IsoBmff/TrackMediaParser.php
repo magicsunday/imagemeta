@@ -31,7 +31,8 @@ use function substr;
  *
  * ISO/IEC 14496-12 §8.4 defines the track structure and §8.5 the media boxes.
  *
- * @phpstan-type QuickTimeKeyMap = array<string, string|int|float|bool>
+ * @phpstan-type QuickTimeKeyMap    = array<string, string|int|float|bool>
+ * @phpstan-type SampleEntryMap     = array<string, int|float|string|bool>
  */
 final readonly class TrackMediaParser
 {
@@ -499,7 +500,7 @@ final readonly class TrackMediaParser
      * @param BoxDescriptor       $mdia    Media box descriptor.
      * @param IsoBmffParseContext $context Shared parse-state context.
      *
-     * @return array{0: ?string, 1: ?string, 2: array<string, int|float|string|bool>}
+     * @return array{0: ?string, 1: ?string, 2: SampleEntryMap}
      */
     private function parseMdia(BoxDescriptor $mdia, IsoBmffParseContext $context): array
     {
@@ -578,7 +579,7 @@ final readonly class TrackMediaParser
      * @param string|null   $handlerType   Declared handler type for the media.
      * @param int|null      $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
      *
-     * @return array<string, int|float|string|bool>
+     * @return SampleEntryMap
      */
     private function parseMinf(BoxDescriptor $minf, ?string $handlerType, ?int $mdhdTimescale): array
     {
@@ -652,7 +653,7 @@ final readonly class TrackMediaParser
      * @param string        $handlerType   Media handler type.
      * @param int|null      $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
      *
-     * @return array<string, int|float|string|bool>
+     * @return SampleEntryMap
      */
     private function parseStbl(BoxDescriptor $stbl, string $handlerType, ?int $mdhdTimescale): array
     {
@@ -730,7 +731,7 @@ final readonly class TrackMediaParser
      * @param string        $handlerType   Handler type describing the media kind.
      * @param int|null      $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
      *
-     * @return array<string, int|float|string|bool>
+     * @return SampleEntryMap
      */
     private function parseStsd(BoxDescriptor $stsd, string $handlerType, ?int $mdhdTimescale): array
     {
