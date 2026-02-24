@@ -357,7 +357,14 @@ final readonly class TiffExifTagValidator
             $gpsTypeTolerance = ($rule[self::RULE_TYPE] === TiffConst::TYPE_RATIONAL || $rule[self::RULE_TYPE] === TiffConst::TYPE_UNDEFINED)
                 && str_starts_with((string) $rule[self::RULE_SPEC], 'EXIF 3.0 §4.6.7');
 
-            if (!$asciiUndefinedSwap && !$rationalSrationalSwap && !$gpsTypeTolerance) {
+            // Postel's Law: accept compatible integer types per GH-1643
+            // Real-world cameras (Sony, Nikon, Apple) often write SLONG instead of
+            // SHORT, or SHORT instead of BYTE, for single-value integer tags.
+            $integerFamilyTolerance = $rule[self::RULE_COUNT] === 1
+                && $this->isIntegerType($type)
+                && $this->isIntegerType($rule[self::RULE_TYPE]);
+
+            if (!$asciiUndefinedSwap && !$rationalSrationalSwap && !$gpsTypeTolerance && !$integerFamilyTolerance) {
                 throw new ParseError(sprintf(
                     '%s must use TIFF type %s per %s.',
                     $rule[self::RULE_NAME],
@@ -950,6 +957,23 @@ final readonly class TiffExifTagValidator
             TiffConst::TYPE_IFD8      => 'IFD8',
             default                   => sprintf('TYPE_%d', $type),
         };
+    }
+
+    /**
+     * Tests whether a TIFF field type belongs to the integer family.
+     *
+     * @param int $type TIFF field type code.
+     */
+    private function isIntegerType(int $type): bool
+    {
+        return in_array($type, [
+            TiffConst::TYPE_BYTE,
+            TiffConst::TYPE_SHORT,
+            TiffConst::TYPE_LONG,
+            TiffConst::TYPE_SBYTE,
+            TiffConst::TYPE_SSHORT,
+            TiffConst::TYPE_SLONG,
+        ], true);
     }
 
     private function assertMakerNoteSafetyDomain(int $value): void

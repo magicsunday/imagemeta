@@ -118,7 +118,7 @@ final class TiffExifParserJpegProcTest extends TestCase
                 ExifTag::COMPRESSION => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 TiffTag::JPEG_PROC   => $this->numericEntry(
                     TiffTag::JPEG_PROC,
-                    TiffConst::TYPE_LONG,
+                    TiffConst::TYPE_RATIONAL,
                     1,
                     [1],
                 ),
@@ -209,7 +209,7 @@ final class TiffExifParserJpegProcTest extends TestCase
                 TiffTag::JPEG_PROC             => $this->shortEntry(TiffTag::JPEG_PROC, 1),
                 TiffTag::JPEG_RESTART_INTERVAL => $this->numericEntry(
                     TiffTag::JPEG_RESTART_INTERVAL,
-                    TiffConst::TYPE_LONG,
+                    TiffConst::TYPE_RATIONAL,
                     1,
                     [16],
                 ),

@@ -115,7 +115,7 @@ final class TiffExifParserJpegInterchangePairTest extends TestCase
             $this->buildBlobWithIfd1JpegInterchange(
                 offsetValue: -1,
                 lengthValue: -1,
-                offsetType: TiffConst::TYPE_SHORT,
+                offsetType: TiffConst::TYPE_ASCII,
             ),
         );
     }

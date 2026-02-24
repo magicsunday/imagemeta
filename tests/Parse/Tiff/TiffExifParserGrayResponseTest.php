@@ -119,7 +119,7 @@ final class TiffExifParserGrayResponseTest extends TestCase
             $this->buildGrayResponseTiff(
                 photometric: 1,
                 bitsPerSample: 8,
-                grayResponseUnitType: TiffConst::TYPE_LONG,
+                grayResponseUnitType: TiffConst::TYPE_RATIONAL,
                 grayResponseUnitValues: [2],
             ),
         );

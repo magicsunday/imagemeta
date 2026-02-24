@@ -117,7 +117,7 @@ final class TiffExifParserFillOrderTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildFillOrderTiff(
-                fillOrderType: TiffConst::TYPE_BYTE,
+                fillOrderType: TiffConst::TYPE_ASCII,
                 fillOrderCount: 1,
                 fillOrderValues: [2],
                 bitsPerSample: 1,

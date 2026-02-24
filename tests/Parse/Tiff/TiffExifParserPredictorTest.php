@@ -88,7 +88,7 @@ final class TiffExifParserPredictorTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSingleIfdBlob(
-                predictorType: TiffConst::TYPE_LONG,
+                predictorType: TiffConst::TYPE_RATIONAL,
                 predictorCount: 1,
                 predictorValues: [1],
             ),
