@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\GpsPosition;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Lens;
 
@@ -425,12 +426,17 @@ final readonly class ExifConvenience
      */
     private function resolveAltitude(Gps $gps): ?float
     {
-        $altitude = $gps->position?->altitude;
+        $position = $gps->position;
+        if (!$position instanceof GpsPosition) {
+            return null;
+        }
+
+        $altitude = $position->altitude;
         if ($altitude === null) {
             return null;
         }
 
-        $reference = $gps->position?->altitudeRef;
+        $reference = $position->altitudeRef;
 
         if ($reference instanceof GpsAltitudeRef && $reference->isBelow()) {
             return -$altitude;
