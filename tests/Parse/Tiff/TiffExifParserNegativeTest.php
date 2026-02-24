@@ -415,19 +415,16 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Creates a GPSInfoIFDPointer entry with type ASCII instead of LONG.
-     * Ensures the parser rejects bad GPS pointer type per EXIF 3.0 §4.6.3.2.1.
+     * Postel's Law: the parser tolerates wrong field types per GH-1644.
      */
     #[Test]
-    public function rejectsGpsIfdPointerWithBadType(): void
+    public function toleratesGpsIfdPointerWithBadType(): void
     {
         $blob = $this->buildTiffWithIfd0Pointer(ExifTag::GPS_IFD_POINTER, TiffConst::TYPE_ASCII, 1);
 
-        $reader = new TiffExifParser();
+        $parsed = (new TiffExifParser())->parseFromBlob($blob);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('IFD pointer tag 0x8825 must use a LONG/IFD field type per EXIF 3.0 §4.6.3.2.1.');
-
-        $reader->parseFromBlob($blob);
+        self::assertNull($parsed->gpsIfd);
     }
 
     /**

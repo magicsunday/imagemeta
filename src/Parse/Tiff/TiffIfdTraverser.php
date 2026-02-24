@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use Closure;
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
@@ -21,7 +22,6 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
 use function array_any;
-use function in_array;
 use function is_finite;
 use function is_float;
 use function is_int;
@@ -52,12 +52,10 @@ final class TiffIfdTraverser
     /**
      * @param TiffOffsetValidator             $offsetValidator Offset bounds checking.
      * @param Closure(int|UInt64|string): Ifd $readIfd         Callback to read an IFD at a given offset.
-     * @param bool                            $bigTiff         Whether this is a BigTIFF structure.
      */
     public function __construct(
         private readonly TiffOffsetValidator $offsetValidator,
         private readonly Closure $readIfd,
-        private readonly bool $bigTiff,
     ) {
     }
 
@@ -71,46 +69,49 @@ final class TiffIfdTraverser
      */
     public function pointerOffset(IfdEntry $entry): ?int
     {
-        $this->assertIfdPointerLayout($entry);
+        // Postel's Law: skip malformed IFD pointer per GH-1644
+        try {
+            $value = $entry->value;
 
-        $value = $entry->value;
-
-        if (is_int($value)) {
-            return $this->validatePointerOffset($value, $entry->tag);
-        }
-
-        if ($value instanceof UInt64) {
-            if ($value->isZero()) {
-                return null;
+            if (is_int($value)) {
+                return $this->validatePointerOffset($value, $entry->tag);
             }
 
-            return $this->offsetValidator->ensureOffset($value, sprintf('IFD pointer tag 0x%04X', $entry->tag));
-        }
-
-        if (is_float($value)) {
-            return $this->pointerOffsetFromFloat($value, $entry->tag);
-        }
-
-        if ($value instanceof ExifNumericList) {
-            $first = $value->values[0] ?? null;
-            if (is_int($first)) {
-                return $this->validatePointerOffset($first, $entry->tag);
-            }
-
-            if ($first instanceof UInt64) {
-                if ($first->isZero()) {
+            if ($value instanceof UInt64) {
+                if ($value->isZero()) {
                     return null;
                 }
 
-                return $this->offsetValidator->ensureOffset($first, sprintf('IFD pointer tag 0x%04X', $entry->tag));
+                return $this->offsetValidator->ensureOffset($value, sprintf('IFD pointer tag 0x%04X', $entry->tag));
             }
 
-            if (is_float($first)) {
-                return $this->pointerOffsetFromFloat($first, $entry->tag);
+            if (is_float($value)) {
+                return $this->pointerOffsetFromFloat($value, $entry->tag);
             }
+
+            if ($value instanceof ExifNumericList) {
+                $first = $value->values[0] ?? null;
+                if (is_int($first)) {
+                    return $this->validatePointerOffset($first, $entry->tag);
+                }
+
+                if ($first instanceof UInt64) {
+                    if ($first->isZero()) {
+                        return null;
+                    }
+
+                    return $this->offsetValidator->ensureOffset($first, sprintf('IFD pointer tag 0x%04X', $entry->tag));
+                }
+
+                if (is_float($first)) {
+                    return $this->pointerOffsetFromFloat($first, $entry->tag);
+                }
+            }
+
+            return null;
+        } catch (ParseError|BoundsError) {
+            return null;
         }
-
-        throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain a numeric offset.', $entry->tag), 1339);
     }
 
     /**
@@ -196,47 +197,6 @@ final class TiffIfdTraverser
         }
 
         return null;
-    }
-
-    /**
-     * Validates the layout of IFD pointer tags mandated by the EXIF spec.
-     *
-     * @param IfdEntry $entry Entry to validate.
-     */
-    private function assertIfdPointerLayout(IfdEntry $entry): void
-    {
-        $specRefs = [
-            ExifTag::EXIF_IFD_POINTER             => 'EXIF 3.0 §4.6.3.1.1',
-            ExifTag::GPS_IFD_POINTER              => 'EXIF 3.0 §4.6.3.2.1',
-            ExifTag::INTEROPERABILITY_IFD_POINTER => 'EXIF 3.0 §4.6.3.3.1',
-        ];
-
-        $specRef = $specRefs[$entry->tag] ?? null;
-        if ($specRef === null) {
-            return;
-        }
-
-        $allowedTypes = $this->bigTiff
-            ? [
-                TiffConst::TYPE_LONG,
-                TiffConst::TYPE_IFD,
-                TiffConst::TYPE_LONG8,
-                TiffConst::TYPE_IFD8,
-                TiffConst::TYPE_SLONG,
-            ]
-            : [
-                TiffConst::TYPE_LONG,
-                TiffConst::TYPE_IFD,
-                TiffConst::TYPE_SLONG,
-                TiffConst::TYPE_SHORT,
-            ];
-
-        if (!in_array($entry->type, $allowedTypes, true)) {
-            throw new ParseError(
-                sprintf('IFD pointer tag 0x%04X must use a LONG/IFD field type per %s.', $entry->tag, $specRef),
-                1341,
-            );
-        }
     }
 
     /**

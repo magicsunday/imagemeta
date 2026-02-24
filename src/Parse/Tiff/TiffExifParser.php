@@ -146,7 +146,6 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->traverser = new TiffIfdTraverser(
             $this->offsetValidator,
             fn (int|UInt64|string $offset): Ifd => $this->readIfd($offset),
-            $this->bigTiff,
         );
 
         // follow pointers

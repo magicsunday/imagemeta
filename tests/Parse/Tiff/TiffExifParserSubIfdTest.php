@@ -96,6 +96,48 @@ final class TiffExifParserSubIfdTest extends TestCase
     }
 
     /**
+     * ExifIFD pointer with wrong field type is skipped gracefully.
+     */
+    #[Test]
+    public function itSkipsExifIfdWithWrongPointerType(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithBadPointer(ExifTag::EXIF_IFD_POINTER),
+        );
+
+        self::assertNull($parsed->exifIfd);
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * GPSIFD pointer with non-numeric offset is skipped gracefully.
+     */
+    #[Test]
+    public function itSkipsGpsIfdWithNonNumericOffset(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithBadPointer(ExifTag::GPS_IFD_POINTER),
+        );
+
+        self::assertNull($parsed->gpsIfd);
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * InteropIFD pointer with out-of-bounds offset is skipped gracefully.
+     */
+    #[Test]
+    public function itSkipsInteropIfdWithOutOfBoundsOffset(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithOutOfBoundsInteropPointer(),
+        );
+
+        self::assertNull($parsed->interopIfd);
+        self::assertNotNull($parsed->exifIfd);
+    }
+
+    /**
      * Builds a minimal valid TIFF blob with the given number of SubIFDs.
      */
     private function buildTiffWithSubIfds(int $subIfdCount): string
@@ -280,5 +322,110 @@ final class TiffExifParserSubIfdTest extends TestCase
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
             . $ifd0;
+    }
+
+    /**
+     * Builds a TIFF where the given pointer tag uses TYPE_ASCII (non-numeric value).
+     */
+    private function buildTiffWithBadPointer(int $pointerTag): string
+    {
+        $entries = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 64) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 64) . pack('v', 0),
+            ExifTag::COMPRESSION => pack('v', ExifTag::COMPRESSION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 1) . pack('v', 0),
+            $pointerTag => pack('v', $pointerTag)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', 4)
+                . 'abcd',
+        ];
+
+        ksort($entries);
+
+        $ifd0 = pack('v', count($entries));
+        foreach ($entries as $entry) {
+            $ifd0 .= $entry;
+        }
+
+        $ifd0 .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8)
+            . $ifd0;
+    }
+
+    /**
+     * Builds a TIFF with IFD0 → valid ExifIFD → out-of-bounds InteropIFD pointer.
+     */
+    private function buildTiffWithOutOfBoundsInteropPointer(): string
+    {
+        $ifd0Offset = 8;
+
+        // IFD0: IMAGE_WIDTH, IMAGE_LENGTH, COMPRESSION, EXIF_IFD_POINTER
+        $ifd0EntryCount = 4;
+        $ifd0Size       = 2 + (12 * $ifd0EntryCount) + 4;
+        $exifIfdOffset  = $ifd0Offset + $ifd0Size;
+
+        $ifd0Entries = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 64) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 64) . pack('v', 0),
+            ExifTag::COMPRESSION => pack('v', ExifTag::COMPRESSION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 1) . pack('v', 0),
+            ExifTag::EXIF_IFD_POINTER => pack('v', ExifTag::EXIF_IFD_POINTER)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', 1)
+                . pack('V', $exifIfdOffset),
+        ];
+
+        $exifEntries = [
+            ExifTag::COLOR_SPACE => pack('v', ExifTag::COLOR_SPACE)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 1) . pack('v', 0),
+            ExifTag::INTEROPERABILITY_IFD_POINTER => pack('v', ExifTag::INTEROPERABILITY_IFD_POINTER)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', 1)
+                . pack('V', 99999),
+        ];
+
+        ksort($ifd0Entries);
+        ksort($exifEntries);
+
+        $ifd0Block = pack('v', count($ifd0Entries));
+        foreach ($ifd0Entries as $entry) {
+            $ifd0Block .= $entry;
+        }
+
+        $ifd0Block .= pack('V', 0);
+
+        $exifBlock = pack('v', count($exifEntries));
+        foreach ($exifEntries as $entry) {
+            $exifBlock .= $entry;
+        }
+
+        $exifBlock .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifd0Offset)
+            . $ifd0Block
+            . $exifBlock;
     }
 }
