@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffQueuedResolveResult;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
@@ -103,43 +104,41 @@ final readonly class ItemLocationResolver
      * @param (callable(string):string)|null                                                                                                                                                $transform         Optional transform function.
      * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences    Parsed data references for the current meta box.
      * @param string|null                                                                                                                                                                   $idatPayload       Cached idat payload for construction_method=1 extents.
-     * @param list<IsoBmffUnresolvedItem>                                                                                                                                                   $unresolvedItems   Accumulator for unresolved item payloads.
      * @param int                                                                                                                                                                           $metaContextOffset Absolute file offset of the owning meta box.
-     *
-     * @return list<string> List of resolved item payloads.
      */
-    public function resolveQueuedItems(array $itemIds, array $locations, array $itemReferences, ?callable $transform, array $dataReferences, ?string $idatPayload, array &$unresolvedItems, int $metaContextOffset): array
+    public function resolveQueuedItems(array $itemIds, array $locations, array $itemReferences, ?callable $transform, array $dataReferences, ?string $idatPayload, int $metaContextOffset): IsoBmffQueuedResolveResult
     {
         /** @var list<string> $resolved */
         $resolved = [];
 
+        /** @var list<IsoBmffUnresolvedItem> $unresolvedItems */
+        $unresolvedItems = [];
+
         // Pull data for each referenced item and optionally transform the payload.
         foreach ($itemIds as $itemId) {
-            $data = $this->payloadResolver->resolveItemData($itemId, $locations, $itemReferences, $dataReferences, $idatPayload, $unresolvedItems, $metaContextOffset);
-            if ($data !== null) {
-                $resolved[] = $transform !== null ? $transform($data) : $data;
+            $result          = $this->payloadResolver->resolveItemData($itemId, $locations, $itemReferences, $dataReferences, $idatPayload, $metaContextOffset);
+            $unresolvedItems = [...$unresolvedItems, ...$result->unresolvedItems];
+
+            if ($result->data !== null) {
+                $resolved[] = $transform !== null ? $transform($result->data) : $result->data;
             }
         }
 
-        return $resolved;
+        return new IsoBmffQueuedResolveResult($resolved, $unresolvedItems);
     }
 
     /**
-     * Adds an XMP blob if it was not previously encountered.
+     * Returns the SHA-1 hash of the blob when it has not been seen before, or null if duplicate.
      *
-     * @param list<string>        $xmpBlobs
-     * @param array<string, bool> $xmpHashes
+     * The caller is responsible for tracking the hash and accumulating the blob.
+     *
+     * @param array<string, bool> $xmpHashes Previously seen hashes.
      */
-    public function appendUniqueXmp(array &$xmpBlobs, array &$xmpHashes, string $blob): void
+    public function uniqueXmpHash(array $xmpHashes, string $blob): ?string
     {
         $hash = sha1($blob);
 
-        if (array_key_exists($hash, $xmpHashes)) {
-            return;
-        }
-
-        $xmpHashes[$hash] = true;
-        $xmpBlobs[]       = $blob;
+        return array_key_exists($hash, $xmpHashes) ? null : $hash;
     }
 
     /**

@@ -80,7 +80,7 @@ final readonly class XmpDocument
 
         foreach ($documents as $document) {
             foreach ($document->data as $key => $value) {
-                self::accumulateValue($data, $key, $value);
+                $data = self::accumulateValue($data, $key, $value);
             }
 
             foreach ($document->namespacePrefixes as $uri => $prefix) {
@@ -111,14 +111,13 @@ final readonly class XmpDocument
      * Accumulates a value into the aggregate data map using the same semantics as the parser.
      *
      * @param array<string, string|array<int, string>|XmpLanguageAlternative> $data
+     * @param array<int, string>|string|XmpLanguageAlternative                $value
      *
-     * @param-out array<string, string|array<int, string>|XmpLanguageAlternative> $data
-     *
-     * @param array<int, string>|string|XmpLanguageAlternative $value
+     * @return array<string, string|array<int, string>|XmpLanguageAlternative>
      */
-    private static function accumulateValue(array &$data, string $key, array|string|XmpLanguageAlternative $value): void
+    private static function accumulateValue(array $data, string $key, array|string|XmpLanguageAlternative $value): array
     {
-        XmpValueAccumulator::merge($data, $key, $value);
+        return XmpValueAccumulator::merge($data, $key, $value);
     }
 
     /**

@@ -169,6 +169,9 @@ final class IptcParser implements IptcParserInterface
     /**
      * Parses IPTC IIM data sets into the dataset map.
      *
+     * By-ref accumulator: the method appends discovered datasets in a loop; returning the
+     * array on each iteration would degrade readability without functional benefit.
+     *
      * @param string                      $data     Raw IPTC IIM data.
      * @param array<string, list<string>> $datasets Map to accumulate into.
      */

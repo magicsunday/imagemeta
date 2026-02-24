@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemResolveResult;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
@@ -53,33 +54,28 @@ final readonly class ItemPayloadResolver
     /**
      * Resolves metadata item references described by an `iloc` box.
      *
-     * @param int                                                                                                                                                                           $itemId          Identifier of the item to resolve.
+     * @param int                                                                                                                                                                           $itemId         Identifier of the item to resolve.
      * @param array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
      * @param array<int, list<IsoBmffItemReference>>                                                                                                                                        $itemReferences
      * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                                                                                                                                                   $unresolvedItems
      * @param list<int>                                                                                                                                                                     $visitedItemIds
      */
-    public function resolveItemData(int $itemId, array $locations, array $itemReferences, array $dataReferences, ?string $idatPayload, array &$unresolvedItems, int $metaContextOffset, array $visitedItemIds = []): ?string
+    public function resolveItemData(int $itemId, array $locations, array $itemReferences, array $dataReferences, ?string $idatPayload, int $metaContextOffset, array $visitedItemIds = []): IsoBmffItemResolveResult
     {
         if (!isset($locations[$itemId])) {
-            return null;
+            return new IsoBmffItemResolveResult(null, []);
         }
 
         $location = $locations[$itemId];
         if (in_array($itemId, $visitedItemIds, true)) {
-            $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
-
-            return null;
+            return new IsoBmffItemResolveResult(null, [$this->createUnresolvedItem($itemId, $location, $dataReferences, $metaContextOffset)]);
         }
 
         if ($location['constructionMethod'] === ConstructionMethod::FileOffset) {
             // data_reference_index gating applies only to file_offset (method 0).
             // ISO/IEC 14496-12 §8.11.3.2: methods 1 and 2 do not use data_reference_index.
             if ($location['dataReferenceIndex'] !== 0) {
-                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
-
-                return null;
+                return new IsoBmffItemResolveResult(null, [$this->createUnresolvedItem($itemId, $location, $dataReferences, $metaContextOffset)]);
             }
 
             $blob        = '';
@@ -153,14 +149,12 @@ final readonly class ItemPayloadResolver
                 $blob .= $this->boxNavigator->readAll($this->stream->window($offset, $length));
             }
 
-            return $blob === '' ? null : $blob;
+            return new IsoBmffItemResolveResult($blob === '' ? null : $blob, []);
         }
 
         if ($location['constructionMethod'] === ConstructionMethod::IdatOffset) {
             if ($idatPayload === null) {
-                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
-
-                return null;
+                return new IsoBmffItemResolveResult(null, [$this->createUnresolvedItem($itemId, $location, $dataReferences, $metaContextOffset)]);
             }
 
             // ISO/IEC 14496-12 §8.11.3.2 defines construction_method=1 offsets as idat-relative.
@@ -223,7 +217,7 @@ final readonly class ItemPayloadResolver
                 $blob .= substr($idatPayload, $offset, $length);
             }
 
-            return $blob === '' ? null : $blob;
+            return new IsoBmffItemResolveResult($blob === '' ? null : $blob, []);
         }
 
         // ConstructionMethod::ItemOffset
@@ -236,15 +230,14 @@ final readonly class ItemPayloadResolver
         ));
 
         if ($references === []) {
-            $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
-
-            return null;
+            return new IsoBmffItemResolveResult(null, [$this->createUnresolvedItem($itemId, $location, $dataReferences, $metaContextOffset)]);
         }
 
         // ISO/IEC 14496-12 §8.11.3.2 ties construction_method=2 extents to item references.
-        $blob        = '';
-        $total       = 0;
-        $extentCount = count($location['extents']);
+        $blob            = '';
+        $total           = 0;
+        $unresolvedItems = [];
+        $extentCount     = count($location['extents']);
         foreach ($location['extents'] as $extent) {
             $length = $extent['length'];
 
@@ -273,18 +266,21 @@ final readonly class ItemPayloadResolver
             $nextVisited     = $visitedItemIds;
             $nextVisited[]   = $itemId;
             if (in_array($referenceItemId, $nextVisited, true)) {
-                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
+                $unresolvedItems[] = $this->createUnresolvedItem($itemId, $location, $dataReferences, $metaContextOffset);
 
-                return null;
+                return new IsoBmffItemResolveResult(null, $unresolvedItems);
             }
 
-            $referenceData = $this->resolveItemData($referenceItemId, $locations, $itemReferences, $dataReferences, $idatPayload, $unresolvedItems, $metaContextOffset, $nextVisited);
-            if ($referenceData === null) {
-                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
+            $result          = $this->resolveItemData($referenceItemId, $locations, $itemReferences, $dataReferences, $idatPayload, $metaContextOffset, $nextVisited);
+            $unresolvedItems = [...$unresolvedItems, ...$result->unresolvedItems];
 
-                return null;
+            if ($result->data === null) {
+                $unresolvedItems[] = $this->createUnresolvedItem($itemId, $location, $dataReferences, $metaContextOffset);
+
+                return new IsoBmffItemResolveResult(null, $unresolvedItems);
             }
 
+            $referenceData = $result->data;
             $referenceSize = strlen($referenceData);
             $baseOffset    = $location['baseOffset'];
             $extentOffset  = $extent['offset'];
@@ -323,7 +319,7 @@ final readonly class ItemPayloadResolver
             $total += $length;
         }
 
-        return $blob === '' ? null : $blob;
+        return new IsoBmffItemResolveResult($blob === '' ? null : $blob, $unresolvedItems);
     }
 
     /**
@@ -411,13 +407,12 @@ final readonly class ItemPayloadResolver
     }
 
     /**
-     * Records an unresolved item payload for external references.
+     * Creates an unresolved item descriptor for external references.
      *
      * @param array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>} $location
      * @param array<int, IsoBmffDataReference>                                                                                                                                  $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                                                                                                                                       $unresolvedItems
      */
-    private function registerUnresolvedItem(int $itemId, array $location, array $dataReferences, array &$unresolvedItems, int $metaContextOffset): void
+    private function createUnresolvedItem(int $itemId, array $location, array $dataReferences, int $metaContextOffset): IsoBmffUnresolvedItem
     {
         $dataReference      = null;
         $dataReferenceIndex = $location['dataReferenceIndex'];
@@ -429,7 +424,7 @@ final readonly class ItemPayloadResolver
             $dataReference = $dataReferences[$dataReferenceIndex];
         }
 
-        $unresolvedItems[] = new IsoBmffUnresolvedItem(
+        return new IsoBmffUnresolvedItem(
             $itemId,
             $dataReferenceIndex,
             $location['constructionMethod'],

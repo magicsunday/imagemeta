@@ -34,7 +34,7 @@ final class XmpValueAccumulatorTest extends TestCase
             '{ns}List' => ['a', 'b'],
         ];
 
-        XmpValueAccumulator::merge($data, '{ns}List', ['b', 'a']);
+        $data = XmpValueAccumulator::merge($data, '{ns}List', ['b', 'a']);
 
         self::assertSame(['a', 'b', 'b', 'a'], $data['{ns}List']);
     }
@@ -49,7 +49,7 @@ final class XmpValueAccumulatorTest extends TestCase
             '{exif}LensSpecification' => ['24/1', '70/1', '28/10', '28/10'],
         ];
 
-        XmpValueAccumulator::merge(
+        $data = XmpValueAccumulator::merge(
             $data,
             '{exif}LensSpecification',
             ['24/1', '70/1', '28/10', '28/10'],
@@ -71,7 +71,7 @@ final class XmpValueAccumulatorTest extends TestCase
             '{ns}Value' => ['a'],
         ];
 
-        XmpValueAccumulator::merge($data, '{ns}Value', 'a');
+        $data = XmpValueAccumulator::merge($data, '{ns}Value', 'a');
 
         self::assertSame(['a', 'a'], $data['{ns}Value']);
     }
@@ -86,7 +86,7 @@ final class XmpValueAccumulatorTest extends TestCase
             '{ns}Value' => 'a',
         ];
 
-        XmpValueAccumulator::merge($data, '{ns}Value', ['a', 'b']);
+        $data = XmpValueAccumulator::merge($data, '{ns}Value', ['a', 'b']);
 
         self::assertSame(['a', 'a', 'b'], $data['{ns}Value']);
     }
@@ -101,7 +101,7 @@ final class XmpValueAccumulatorTest extends TestCase
             '{ns}Value' => 'a',
         ];
 
-        XmpValueAccumulator::merge($data, '{ns}Value', 'a');
+        $data = XmpValueAccumulator::merge($data, '{ns}Value', 'a');
 
         self::assertSame(['a', 'a'], $data['{ns}Value']);
     }

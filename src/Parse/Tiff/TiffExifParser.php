@@ -426,8 +426,7 @@ final class TiffExifParser implements TiffExifParserInterface
 
         // EXIF 3.0 §4.5.2 and TIFF 6.0 §8 prescribe 12-byte (classic) and 20-byte
         // (BigTIFF) directory entries and the unsigned entry count preceding them.
-        $entries   = [];
-        $lastTagId = null;
+        $entries = [];
         for ($i = 0; $i < $entryCount; ++$i) {
             try {
                 $entry = $this->readDirEntry();
@@ -439,7 +438,8 @@ final class TiffExifParser implements TiffExifParserInterface
                 continue;
             }
 
-            $this->ifdParser?->addEntry($entries, $lastTagId, $entry);
+            $validated                = $this->ifdParser?->validateEntry($entries, $entry) ?? $entry;
+            $entries[$validated->tag] = $validated;
         }
 
         if ($this->bigTiff) {

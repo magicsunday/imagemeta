@@ -714,6 +714,9 @@ final readonly class IlocBoxParser
     /**
      * Reads a NUL-terminated string from a payload at the given cursor position.
      *
+     * By-ref cursor advancement: standard stream-cursor pattern where the read position
+     * must advance past consumed bytes for subsequent reads.
+     *
      * @param string $payload Binary payload to read from.
      * @param int    &$cursor Current read position; advanced past the NUL terminator.
      */

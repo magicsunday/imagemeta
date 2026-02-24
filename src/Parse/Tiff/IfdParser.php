@@ -20,7 +20,7 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 final readonly class IfdParser
 {
     /**
-     * Adds an entry while enforcing the no-duplicates constraint.
+     * Validates that the entry's tag is not a duplicate, then returns it for caller accumulation.
      *
      * TIFF 6.0 §2 requires writers to sort IFD entries in ascending tag order,
      * but this is a writer-side constraint for binary-search efficiency.  Many
@@ -28,17 +28,14 @@ final readonly class IfdParser
      * are stored in an associative array keyed by tag ID, so lookup is O(1)
      * regardless of input order.
      *
-     * @param array<int, IfdEntry> $entries
-     *
-     * @param-out int              $lastTagId
+     * @param array<int, IfdEntry> $entries Existing entries for duplicate detection.
      */
-    public function addEntry(array &$entries, ?int &$lastTagId, IfdEntry $entry): void
+    public function validateEntry(array $entries, IfdEntry $entry): IfdEntry
     {
         if (isset($entries[$entry->tag])) {
             throw new ParseError('Duplicate tag ID ' . $entry->tag . ' in IFD per TIFF 6.0 §2.', 1357);
         }
 
-        $lastTagId            = $entry->tag;
-        $entries[$entry->tag] = $entry;
+        return $entry;
     }
 }

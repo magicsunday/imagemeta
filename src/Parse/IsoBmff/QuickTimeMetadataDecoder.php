@@ -432,6 +432,9 @@ final readonly class QuickTimeMetadataDecoder
      * is a full atom with version 0 and flags 0. The payload is a UTF-8 string.
      * No two metadata items may share the same name.
      *
+     * By-ref accumulator: tracks seen names across multiple calls to detect duplicates
+     * without returning auxiliary state alongside the validated name.
+     *
      * @param BoxDescriptor       $name      Box descriptor for the name atom.
      * @param array<string, true> $seenNames Previously encountered names for uniqueness check.
      *
@@ -486,6 +489,8 @@ final readonly class QuickTimeMetadataDecoder
      * QuickTime File Format 2012, "Metadata Item Atom / Item Information Atom":
      * the itif atom is a full atom with version 0 and flags 0, containing an
      * unsigned 32-bit Item_ID that must be unique within the metadata atom.
+     *
+     * By-ref accumulator: tracks seen Item_IDs across multiple calls to detect duplicates.
      *
      * @param BoxDescriptor    $itif        Box descriptor for the itif atom.
      * @param array<int, true> $seenItemIds Previously encountered Item_IDs for uniqueness check.

@@ -418,7 +418,7 @@ final class XmpParser implements XmpParserInterface
 
         $temporary = ['value' => $existing];
 
-        XmpValueAccumulator::merge($temporary, 'value', $value);
+        $temporary = XmpValueAccumulator::merge($temporary, 'value', $value);
 
         $state->structuredBuffers[$parentDepth][$key] = $temporary['value'];
     }
@@ -521,7 +521,7 @@ final class XmpParser implements XmpParserInterface
      */
     private function storeValue(XmpParseState $state, string $key, array|string|XmpLanguageAlternative $value): void
     {
-        XmpValueAccumulator::merge($state->data, $key, $value);
+        $state->data = XmpValueAccumulator::merge($state->data, $key, $value);
     }
 
     /**

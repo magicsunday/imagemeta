@@ -151,7 +151,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         foreach ($context->queuedUuidXmp as $blob) {
-            $this->itemLocationResolver->appendUniqueXmp($context->xmpBlobs, $context->xmpHashes, $blob);
+            $this->appendUniqueXmpToContext($context, $blob);
         }
 
         /** @var array<string, list<QuickTimeDataAtom>> $dataAtomVOs */
@@ -423,6 +423,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     /**
      * Merges track-derived keys without overwriting already established metadata values.
      *
+     * By-ref accumulator: the target map is mutated in-place as a lightweight merge
+     * without copying the entire map on each call.
+     *
      * @param QuickTimeKeyMap $target
      * @param QuickTimeKeyMap $trackKeys
      */
@@ -462,7 +465,13 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         // Resolve EXIF item payloads and normalize leading headers.
         // EXIF 3.0 §4.8 notes that item payloads omit the APP1 signature; some
         // encoders still include it, so we normalize accordingly.
-        foreach ($this->itemLocationResolver->resolveQueuedItems($exifItemIds, $payloads['locations'], $payloads['itemReferences'], $this->itemPayloadResolver->normalizeExifBlob(...), $payloads['dataReferences'], $idatPayload, $context->unresolvedItems, $meta->offset) as $blob) {
+        $exifResult = $this->itemLocationResolver->resolveQueuedItems($exifItemIds, $payloads['locations'], $payloads['itemReferences'], $this->itemPayloadResolver->normalizeExifBlob(...), $payloads['dataReferences'], $idatPayload, $meta->offset);
+
+        foreach ($exifResult->unresolvedItems as $unresolvedItem) {
+            $context->unresolvedItems[] = $unresolvedItem;
+        }
+
+        foreach ($exifResult->resolved as $blob) {
             $context->exifBlobs[] = $blob;
         }
 
@@ -474,16 +483,22 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         // Resolve referenced XMP payloads in declared priority order.
-        foreach ($this->itemLocationResolver->resolveQueuedItems($xmpItemIds, $payloads['locations'], $payloads['itemReferences'], null, $payloads['dataReferences'], $idatPayload, $context->unresolvedItems, $meta->offset) as $blob) {
-            $this->itemLocationResolver->appendUniqueXmp($context->xmpBlobs, $context->xmpHashes, $blob);
+        $xmpResult = $this->itemLocationResolver->resolveQueuedItems($xmpItemIds, $payloads['locations'], $payloads['itemReferences'], null, $payloads['dataReferences'], $idatPayload, $meta->offset);
+
+        foreach ($xmpResult->unresolvedItems as $unresolvedItem) {
+            $context->unresolvedItems[] = $unresolvedItem;
+        }
+
+        foreach ($xmpResult->resolved as $blob) {
+            $this->appendUniqueXmpToContext($context, $blob);
         }
 
         foreach ($payloads['directXmp'] as $blob) {
-            $this->itemLocationResolver->appendUniqueXmp($context->xmpBlobs, $context->xmpHashes, $blob);
+            $this->appendUniqueXmpToContext($context, $blob);
         }
 
         foreach ($payloads['uuidXmp'] as $blob) {
-            $this->itemLocationResolver->appendUniqueXmp($context->xmpBlobs, $context->xmpHashes, $blob);
+            $this->appendUniqueXmpToContext($context, $blob);
         }
 
         [$mergedQtKeys, $mergedQtDataAtoms] = $this->quickTimeDecoder->mergeQuickTimeKeys(
@@ -576,5 +591,18 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             'keys'  => $context->qtKeys,
             'atoms' => $context->qtDataAtoms,
         ];
+    }
+
+    /**
+     * Appends an XMP blob to the context if it has not been seen before.
+     */
+    private function appendUniqueXmpToContext(IsoBmffParseContext $context, string $blob): void
+    {
+        $hash = $this->itemLocationResolver->uniqueXmpHash($context->xmpHashes, $blob);
+
+        if ($hash !== null) {
+            $context->xmpHashes[$hash] = true;
+            $context->xmpBlobs[]       = $blob;
+        }
     }
 }
