@@ -21,12 +21,25 @@ use MagicSunday\ImageMeta\Parse\Jpeg\IptcSegmentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfDocumentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\XmpSegmentHandler;
 use MagicSunday\ImageMeta\Tests\Core\CreatesTempStream;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Verifies marker-signature gating for concrete JPEG segment handlers.
  */
+#[CoversClass(ExifSegmentHandler::class)]
+#[CoversClass(XmpSegmentHandler::class)]
+#[CoversClass(IccProfileHandler::class)]
+#[CoversClass(AudioStreamHandler::class)]
+#[CoversClass(MpfDocumentHandler::class)]
+#[CoversClass(FlashPixHandler::class)]
+#[CoversClass(IptcSegmentHandler::class)]
+#[UsesClass(Stream::class)]
+#[UsesClass(Marker::class)]
+#[UsesTrait(CreatesTempStream::class)]
 final class SegmentHandlersTest extends TestCase
 {
     use CreatesTempStream;
