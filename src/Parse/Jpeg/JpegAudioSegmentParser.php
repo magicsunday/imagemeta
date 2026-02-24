@@ -51,6 +51,8 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
      *
      * @param string $payload Raw segment payload including signature.
      * @param int    $offset  Offset in the stream where the marker begins.
+     *
+     * @throws ParseError When the audio segment header is invalid.
      */
     public function handleSegment(string $payload, int $offset): void
     {

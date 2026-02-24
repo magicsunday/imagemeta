@@ -69,6 +69,8 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
      *
      * @param string $payload Raw APP11 payload.
      * @param int    $offset  Offset in the stream where the marker begins.
+     *
+     * @throws ParseError When the transport header is invalid or instance metadata is inconsistent.
      */
     public function handleSegment(string $payload, int $offset): void
     {
@@ -120,6 +122,8 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
      *
      * EXIF 3.0 §4.7.5.1 and §4.7.5.3 define APP11 sequence metadata for
      * marker-segment merging when logically identical JUMBF data is split.
+     *
+     * @throws ParseError When sequence numbers are missing or JUMBF boxes are malformed.
      */
     public function finalise(): void
     {

@@ -54,6 +54,8 @@ final class IccProfileAssembler implements SegmentAssemblerInterface
      *
      * @param string $payload Raw segment payload including signature.
      * @param int    $offset  Offset in the stream where the marker begins.
+     *
+     * @throws ParseError When the ICC segment header is invalid or inconsistent.
      */
     public function handleSegment(string $payload, int $offset): void
     {

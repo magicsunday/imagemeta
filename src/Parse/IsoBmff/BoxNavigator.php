@@ -52,6 +52,8 @@ final readonly class BoxNavigator
      *                                               optionally end with a 32-bit integer set to 0.
      *
      * @return iterable<BoxDescriptor>
+     *
+     * @throws ParseError When child boxes do not align with the parent container.
      */
     public function walkChildren(BoxDescriptor $parent, int $offset = 0, bool $allowTrailingTerminator = false): iterable
     {
@@ -89,6 +91,8 @@ final readonly class BoxNavigator
      * @param int  $offset            Absolute byte offset of the box within the stream.
      * @param int  $limit             Limit offset that bounds the container.
      * @param bool $allowImplicitSize When true, allows size==0 boxes (implicit size to end of container).
+     *
+     * @throws ParseError When the box header is invalid or the box exceeds the container.
      */
     public function readBoxAt(int $offset, int $limit, bool $allowImplicitSize = false): BoxDescriptor
     {

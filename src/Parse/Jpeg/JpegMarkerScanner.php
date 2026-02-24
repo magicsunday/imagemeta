@@ -50,6 +50,9 @@ final readonly class JpegMarkerScanner
      * @param bool $allowInterveningBytes Whether non-marker bytes may appear before the next marker introducer.
      *
      * @return array{0: int, 1: int}
+     *
+     * @throws ParseError  When a non-marker or marker-stuffing byte is encountered and not allowed.
+     * @throws BoundsError When the stream ends before a complete marker is found.
      */
     public function nextMarkerWithOffset(bool $allowInterveningBytes = true): array
     {
@@ -102,6 +105,9 @@ final readonly class JpegMarkerScanner
      * @param int  $marker     Marker code currently being processed.
      * @param int  $offset     Offset in the stream where the marker begins.
      * @param bool $enforceMax Whether to enforce the APP segment size guard.
+     *
+     * @throws ParseError  When the segment length is invalid or exceeds the configured limit.
+     * @throws BoundsError When the stream ends before the length field is read.
      */
     public function readSegmentLength(int $marker, int $offset, bool $enforceMax): int
     {
@@ -140,6 +146,8 @@ final readonly class JpegMarkerScanner
      * @param int $marker Marker code currently being processed.
      * @param int $offset Offset in the stream where the marker begins.
      * @param int $length Number of bytes to read for the payload.
+     *
+     * @throws ParseError When the segment payload is truncated.
      */
     public function readSegmentPayload(int $marker, int $offset, int $length): string
     {

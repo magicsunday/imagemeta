@@ -69,6 +69,8 @@ final class MpfParser
      * The MP Index IFD is a TIFF IFD located at the offset stored after the
      * TIFF magic in the MPF header (EXIF 3.0 §4.6.2) and uses the standard
      * TIFF byte-order indicators (EXIF 3.0 §4.6.1).
+     *
+     * @throws ParseError When the MPF payload is malformed or contains invalid structures.
      */
     public function parse(string $payload): MpfDocument
     {
