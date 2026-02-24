@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
 use Closure;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\ParserLimits;
 
@@ -51,9 +52,9 @@ final readonly class TrackMediaParser
     private AudioSampleEntryParser $audioParser;
 
     /**
-     * @param BoxNavigator $boxNavigator   Shared box navigation infrastructure.
-     * @param Closure      $processUdtaBox Callback for processing udta boxes (delegates to IsoBmffParser::parseUdtaBox).
-     * @param Closure      $validateDinf   Callback for validating dinf boxes (delegates to ItemLocationResolver::parseDinf).
+     * @param BoxNavigator                                             $boxNavigator   Shared box navigation infrastructure.
+     * @param Closure(BoxDescriptor, IsoBmffParseContext): void        $processUdtaBox Callback for processing udta boxes.
+     * @param Closure(BoxDescriptor): array<int, IsoBmffDataReference> $validateDinf   Callback for validating dinf boxes.
      */
     public function __construct(
         private BoxNavigator $boxNavigator,
