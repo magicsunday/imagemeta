@@ -52,14 +52,14 @@ final readonly class ItemPayloadResolver
     /**
      * Resolves metadata item references described by an `iloc` box.
      *
-     * @param int                                                                                                                                                            $itemId            Identifier of the item to resolve.
-     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
-     * @param array<int, list<IsoBmffItemReference>>                                                                                                                         $itemReferences
-     * @param array<int, IsoBmffDataReference>                                                                                                                               $dataReferences
-     * @param string|null                                                                                                                                                    $idatPayload
-     * @param list<IsoBmffUnresolvedItem>                                                                                                                                    $unresolvedItems
-     * @param int                                                                                                                                                            $metaContextOffset
-     * @param list<int>                                                                                                                                                      $visitedItemIds
+     * @param int                                                                                                                                                                           $itemId            Identifier of the item to resolve.
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
+     * @param array<int, list<IsoBmffItemReference>>                                                                                                                                        $itemReferences
+     * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences
+     * @param string|null                                                                                                                                                                   $idatPayload
+     * @param list<IsoBmffUnresolvedItem>                                                                                                                                                   $unresolvedItems
+     * @param int                                                                                                                                                                           $metaContextOffset
+     * @param list<int>                                                                                                                                                                     $visitedItemIds
      *
      * @return string|null
      */
@@ -76,7 +76,7 @@ final readonly class ItemPayloadResolver
             return null;
         }
 
-        if ($location['constructionMethod'] === ConstructionMethod::FileOffset->value) {
+        if ($location['constructionMethod'] === ConstructionMethod::FileOffset) {
             // data_reference_index gating applies only to file_offset (method 0).
             // ISO/IEC 14496-12 §8.11.3.2: methods 1 and 2 do not use data_reference_index.
             if ($location['dataReferenceIndex'] !== 0) {
@@ -159,7 +159,7 @@ final readonly class ItemPayloadResolver
             return $blob === '' ? null : $blob;
         }
 
-        if ($location['constructionMethod'] === ConstructionMethod::IdatOffset->value) {
+        if ($location['constructionMethod'] === ConstructionMethod::IdatOffset) {
             if ($idatPayload === null) {
                 $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
 
@@ -229,109 +229,104 @@ final readonly class ItemPayloadResolver
             return $blob === '' ? null : $blob;
         }
 
-        if ($location['constructionMethod'] === ConstructionMethod::ItemOffset->value) {
-            // ISO/IEC 14496-12 §8.11.3.2 — only 'iloc' references are
-            // valid lookup targets for item-offset construction.
-            $allRefs    = $itemReferences[$itemId] ?? [];
-            $references = array_values(array_filter(
-                $allRefs,
-                static fn (IsoBmffItemReference $ref): bool => $ref->relation === 'iloc',
-            ));
+        // ConstructionMethod::ItemOffset
+        // ISO/IEC 14496-12 §8.11.3.2 — only 'iloc' references are
+        // valid lookup targets for item-offset construction.
+        $allRefs    = $itemReferences[$itemId] ?? [];
+        $references = array_values(array_filter(
+            $allRefs,
+            static fn (IsoBmffItemReference $ref): bool => $ref->relation === 'iloc',
+        ));
 
-            if ($references === []) {
+        if ($references === []) {
+            $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
+
+            return null;
+        }
+
+        // ISO/IEC 14496-12 §8.11.3.2 ties construction_method=2 extents to item references.
+        $blob        = '';
+        $total       = 0;
+        $extentCount = count($location['extents']);
+        foreach ($location['extents'] as $extent) {
+            $length = $extent['length'];
+
+            if ($length > IsoBmffParser::MAX_ITEM_PAYLOAD_SIZE - $total) {
+                throw new ParseError('iloc item payload exceeds configured limit', 1188);
+            }
+
+            $extentIndex = $extent['index'];
+            if ($extentIndex === null) {
+                // ISO/IEC 14496-12 §8.11.3.2: when index_size==0, extent_index=1 is implied.
+                $referencePosition = 0;
+            } else {
+                // ISO/IEC 14496-12 §8.11.3.2: extent_index is 1-based.
+                $referencePosition = $extentIndex - 1;
+            }
+
+            if (!isset($references[$referencePosition])) {
+                throw new ParseError(sprintf(
+                    'iloc extent_index %d out of range for %d references',
+                    $extentIndex ?? 1,
+                    count($references),
+                ), 1607);
+            }
+
+            $referenceItemId = $references[$referencePosition]->toItemId;
+            $nextVisited     = $visitedItemIds;
+            $nextVisited[]   = $itemId;
+            if (in_array($referenceItemId, $nextVisited, true)) {
                 $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
 
                 return null;
             }
 
-            // ISO/IEC 14496-12 §8.11.3.2 ties construction_method=2 extents to item references.
-            $blob        = '';
-            $total       = 0;
-            $extentCount = count($location['extents']);
-            foreach ($location['extents'] as $extent) {
-                $length = $extent['length'];
+            $referenceData = $this->resolveItemData($referenceItemId, $locations, $itemReferences, $dataReferences, $idatPayload, $unresolvedItems, $metaContextOffset, $nextVisited);
+            if ($referenceData === null) {
+                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
+
+                return null;
+            }
+
+            $referenceSize = strlen($referenceData);
+            $baseOffset    = $location['baseOffset'];
+            $extentOffset  = $extent['offset'];
+            if ($baseOffset < 0 || $extentOffset < 0) {
+                throw new ParseError('iloc negative offset', 1189);
+            }
+
+            if ($baseOffset > PHP_INT_MAX - $extentOffset) {
+                throw new ParseError('iloc offset overflow', 1190);
+            }
+
+            $offset = $baseOffset + $extentOffset;
+
+            // Implied extent_length semantics for single-extent items
+            if ($length === 0) {
+                if ($extentCount !== 1) {
+                    continue;
+                }
+
+                if ($offset > $referenceSize) {
+                    throw new ParseError('iloc extent outside referenced item', 1191);
+                }
+
+                $length = $referenceSize - $offset;
 
                 if ($length > IsoBmffParser::MAX_ITEM_PAYLOAD_SIZE - $total) {
                     throw new ParseError('iloc item payload exceeds configured limit', 1188);
                 }
-
-                $extentIndex = $extent['index'];
-                if ($extentIndex === null) {
-                    // ISO/IEC 14496-12 §8.11.3.2: when index_size==0, extent_index=1 is implied.
-                    $referencePosition = 0;
-                } else {
-                    // ISO/IEC 14496-12 §8.11.3.2: extent_index is 1-based.
-                    $referencePosition = $extentIndex - 1;
-                }
-
-                if (!isset($references[$referencePosition])) {
-                    throw new ParseError(sprintf(
-                        'iloc extent_index %d out of range for %d references',
-                        $extentIndex ?? 1,
-                        count($references),
-                    ), 1607);
-                }
-
-                $referenceItemId = $references[$referencePosition]->toItemId;
-                $nextVisited     = $visitedItemIds;
-                $nextVisited[]   = $itemId;
-                if (in_array($referenceItemId, $nextVisited, true)) {
-                    $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
-
-                    return null;
-                }
-
-                $referenceData = $this->resolveItemData($referenceItemId, $locations, $itemReferences, $dataReferences, $idatPayload, $unresolvedItems, $metaContextOffset, $nextVisited);
-                if ($referenceData === null) {
-                    $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
-
-                    return null;
-                }
-
-                $referenceSize = strlen($referenceData);
-                $baseOffset    = $location['baseOffset'];
-                $extentOffset  = $extent['offset'];
-                if ($baseOffset < 0 || $extentOffset < 0) {
-                    throw new ParseError('iloc negative offset', 1189);
-                }
-
-                if ($baseOffset > PHP_INT_MAX - $extentOffset) {
-                    throw new ParseError('iloc offset overflow', 1190);
-                }
-
-                $offset = $baseOffset + $extentOffset;
-
-                // Implied extent_length semantics for single-extent items
-                if ($length === 0) {
-                    if ($extentCount !== 1) {
-                        continue;
-                    }
-
-                    if ($offset > $referenceSize) {
-                        throw new ParseError('iloc extent outside referenced item', 1191);
-                    }
-
-                    $length = $referenceSize - $offset;
-
-                    if ($length > IsoBmffParser::MAX_ITEM_PAYLOAD_SIZE - $total) {
-                        throw new ParseError('iloc item payload exceeds configured limit', 1188);
-                    }
-                }
-
-                if (($length > $referenceSize) || ($offset > ($referenceSize - $length))) {
-                    throw new ParseError('iloc extent outside referenced item', 1191);
-                }
-
-                $blob .= substr($referenceData, $offset, $length);
-                $total += $length;
             }
 
-            return $blob === '' ? null : $blob;
+            if (($length > $referenceSize) || ($offset > ($referenceSize - $length))) {
+                throw new ParseError('iloc extent outside referenced item', 1191);
+            }
+
+            $blob .= substr($referenceData, $offset, $length);
+            $total += $length;
         }
 
-        $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
-
-        return null;
+        return $blob === '' ? null : $blob;
     }
 
     /**
@@ -423,11 +418,11 @@ final readonly class ItemPayloadResolver
     /**
      * Records an unresolved item payload for external references.
      *
-     * @param int                                                                                                                                                $itemId
-     * @param array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>} $location
-     * @param array<int, IsoBmffDataReference>                                                                                                                   $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                                                                                                                        $unresolvedItems
-     * @param int                                                                                                                                                $metaContextOffset
+     * @param int                                                                                                                                                               $itemId
+     * @param array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>} $location
+     * @param array<int, IsoBmffDataReference>                                                                                                                                  $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                                                                                                                                       $unresolvedItems
+     * @param int                                                                                                                                                               $metaContextOffset
      */
     private function registerUnresolvedItem(int $itemId, array $location, array $dataReferences, array &$unresolvedItems, int $metaContextOffset): void
     {
@@ -441,12 +436,10 @@ final readonly class ItemPayloadResolver
             $dataReference = $dataReferences[$dataReferenceIndex];
         }
 
-        $constructionMethod = ConstructionMethod::tryFrom($location['constructionMethod']);
-
         $unresolvedItems[] = new IsoBmffUnresolvedItem(
             $itemId,
             $dataReferenceIndex,
-            $constructionMethod,
+            $location['constructionMethod'],
             $dataReference,
             $metaContextOffset,
         );

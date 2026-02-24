@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
+use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
 use function array_key_exists;
 use function array_unique;
@@ -96,14 +97,14 @@ final readonly class ItemLocationResolver
     /**
      * Resolves queued item IDs to their payload data.
      *
-     * @param list<int>                                                                                                                                                      $itemIds           Item IDs to resolve.
-     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations         Item location metadata.
-     * @param array<int, list<IsoBmffItemReference>>                                                                                                                         $itemReferences    Parsed item references for construction_method=2 extents.
-     * @param (callable(string):string)|null                                                                                                                                 $transform         Optional transform function.
-     * @param array<int, IsoBmffDataReference>                                                                                                                               $dataReferences    Parsed data references for the current meta box.
-     * @param string|null                                                                                                                                                    $idatPayload       Cached idat payload for construction_method=1 extents.
-     * @param list<IsoBmffUnresolvedItem>                                                                                                                                    $unresolvedItems   Accumulator for unresolved item payloads.
-     * @param int                                                                                                                                                            $metaContextOffset Absolute file offset of the owning meta box.
+     * @param list<int>                                                                                                                                                                     $itemIds           Item IDs to resolve.
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations         Item location metadata.
+     * @param array<int, list<IsoBmffItemReference>>                                                                                                                                        $itemReferences    Parsed item references for construction_method=2 extents.
+     * @param (callable(string):string)|null                                                                                                                                                $transform         Optional transform function.
+     * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences    Parsed data references for the current meta box.
+     * @param string|null                                                                                                                                                                   $idatPayload       Cached idat payload for construction_method=1 extents.
+     * @param list<IsoBmffUnresolvedItem>                                                                                                                                                   $unresolvedItems   Accumulator for unresolved item payloads.
+     * @param int                                                                                                                                                                           $metaContextOffset Absolute file offset of the owning meta box.
      *
      * @return list<string> List of resolved item payloads.
      */

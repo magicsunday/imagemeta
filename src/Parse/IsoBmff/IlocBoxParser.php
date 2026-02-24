@@ -51,7 +51,7 @@ final readonly class IlocBoxParser
      * @param BoxDescriptor $iloc             Box descriptor representing the `iloc` payload.
      * @param int           $fileOffsetOrigin Absolute data origin for file-offset construction method.
      *
-     * @return array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}>
+     * @return array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}>
      */
     public function parseIloc(BoxDescriptor $iloc, int $fileOffsetOrigin = 0): array
     {
@@ -101,7 +101,7 @@ final readonly class IlocBoxParser
             // Note: flags bit 0 indicates hidden_item and does not affect item_ID width.
             $itemId = $version < 2 ? $win->readU16BE() : $win->readU32BE();
 
-            $constructionMethod = 0;
+            $constructionMethod = ConstructionMethod::FileOffset;
             if ($version === 1 || $version === 2) {
                 // ISO/IEC 14496-12 §8.11.3: 12-bit reserved (must be 0) followed by 4-bit construction_method
                 $tmp = $win->readU16BE();
@@ -110,11 +110,13 @@ final readonly class IlocBoxParser
                     throw new ParseError('iloc construction_method reserved bits must be zero', 1206);
                 }
 
-                $constructionMethod = $tmp & BitMask::LOW_NIBBLE;
+                $method = ConstructionMethod::tryFrom($tmp & BitMask::LOW_NIBBLE);
 
-                if (ConstructionMethod::tryFrom($constructionMethod) === null) {
+                if ($method === null) {
                     throw new ParseError('iloc construction_method value out of range', 1207);
                 }
+
+                $constructionMethod = $method;
             }
 
             $dataReferenceIndex = $win->readU16BE();
@@ -136,7 +138,7 @@ final readonly class IlocBoxParser
 
                     // ISO/IEC 14496-12 §8.11.3.2: extent_index is 1-based and 0 is
                     // reserved. This only applies to construction_method=2 (item_offset).
-                    if ($constructionMethod === ConstructionMethod::ItemOffset->value && $extentIndex === 0) {
+                    if ($constructionMethod === ConstructionMethod::ItemOffset && $extentIndex === 0) {
                         throw new ParseError('iloc extent_index 0 is reserved', 1208);
                     }
                 }

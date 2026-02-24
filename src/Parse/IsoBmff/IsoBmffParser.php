@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
 use function array_key_exists;
 use function fopen;
@@ -499,7 +500,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     /**
      * @return array{
      *     itemInfos: array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>,
-     *     locations: array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}>,
+     *     locations: array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}>,
      *     itemReferences: array<int, list<IsoBmffItemReference>>,
      *     dataReferences: array<int, IsoBmffDataReference>,
      *     primaryItemId: ?int,
@@ -519,7 +520,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     {
         /** @var array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos */
         $itemInfos = [];
-        /** @var array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations */
+        /** @var array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations */
         $locations = [];
         /** @var array<int, list<IsoBmffItemReference>> $itemReferences */
         $itemReferences = [];
