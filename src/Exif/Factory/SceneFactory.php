@@ -116,7 +116,7 @@ final readonly class SceneFactory
      * Determines whether the supplied label denotes an HDR scene mode.
      *
      * Apple devices record the HDR scene state as free-form strings such as
-     * "HDR" or "HDR+". The check therefore normalises the label to uppercase
+     * "HDR" or "HDR+". The check therefore normalizes the label to uppercase
      * and considers every value that starts with "HDR" as an affirmative
      * indicator.
      */
@@ -130,7 +130,7 @@ final readonly class SceneFactory
     /**
      * Extracts a boolean flag from the Apple maker note flag map.
      *
-     * @param array<string, bool> $flags Normalised Apple maker note flag map.
+     * @param array<string, bool> $flags Normalized Apple maker note flag map.
      * @param string              $key   Name of the flag to resolve.
      *
      * @return bool|null Resolved boolean flag or null when the flag is absent.

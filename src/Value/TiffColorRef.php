@@ -22,7 +22,7 @@ final readonly class TiffColorRef
      * @param YCbCrPositioning|null                                       $ycbcrPos              Chroma positioning relative to luma samples.
      * @param array{0:int,1:int}|null                                     $ycbcrSubSampling      Horizontal/vertical chroma subsampling factors.
      * @param array{0:float,1:float,2:float}|null                         $ycbcrCoefficients     Luma coefficients for YCbCr conversions.
-     * @param array{0:float,1:float}|null                                 $whitePoint            Normalised white point (x, y).
+     * @param array{0:float,1:float}|null                                 $whitePoint            Normalized white point (x, y).
      * @param array{0:float,1:float,2:float,3:float,4:float,5:float}|null $primaryChromaticities Primary chromaticities ordered as R,G,B.
      * @param array{0:float,1:float,2:float,3:float,4:float,5:float}|null $referenceBlackWhite   Reference black and white point values.
      * @param list<int>|null                                              $transferFunction      Transfer function lookup table.

@@ -38,7 +38,7 @@ final readonly class ExifReader
      *
      * @param string $path Absolute or relative path to the media file that should be parsed.
      *
-     * @return StructuredMetadata Immutable aggregate exposing the normalised metadata slices.
+     * @return StructuredMetadata Immutable aggregate exposing the normalized metadata slices.
      */
     public function read(string $path): StructuredMetadata
     {

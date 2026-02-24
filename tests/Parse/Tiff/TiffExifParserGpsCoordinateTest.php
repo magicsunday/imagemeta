@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
-use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormaliser;
+use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
@@ -40,7 +40,7 @@ use function substr;
  * Tags: GPSLatitude (0x0002), GPSLongitude (0x0004), GPSDestLatitude (0x0014), GPSDestLongitude (0x0016).
  */
 #[CoversClass(TiffExifParser::class)]
-#[UsesClass(DngValueNormaliser::class)]
+#[UsesClass(DngValueNormalizer::class)]
 #[UsesClass(MakerNoteDispatcher::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(TiffBinaryReader::class)]

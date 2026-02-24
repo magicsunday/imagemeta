@@ -226,7 +226,7 @@ final readonly class TiffValueDecoder
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value,
     ): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 {
         if ($value instanceof UInt64) {
-            return $this->normaliseScalarUInt64($tag, $value);
+            return $this->normalizeScalarUInt64($tag, $value);
         }
 
         if ($value instanceof ExifNumericList) {
@@ -234,7 +234,7 @@ final readonly class TiffValueDecoder
             $needsConversion = false;
             foreach ($value->values as $component) {
                 if ($component instanceof UInt64) {
-                    $converted[]     = $this->normaliseScalarUInt64($tag, $component);
+                    $converted[]     = $this->normalizeScalarUInt64($tag, $component);
                     $needsConversion = true;
 
                     continue;
@@ -301,12 +301,12 @@ final readonly class TiffValueDecoder
     }
 
     /**
-     * Normalises a UInt64 scalar into an integer when possible, preserving oversized pointer values.
+     * Normalizes a UInt64 scalar into an integer when possible, preserving oversized pointer values.
      *
      * @param int    $tag   Tag identifier.
-     * @param UInt64 $value UInt64 value to normalise.
+     * @param UInt64 $value UInt64 value to normalize.
      */
-    private function normaliseScalarUInt64(int $tag, UInt64 $value): int|UInt64
+    private function normalizeScalarUInt64(int $tag, UInt64 $value): int|UInt64
     {
         if ($this->isPointerTag($tag)) {
             if ($value->fitsSignedInt()) {

@@ -27,7 +27,7 @@ use function str_repeat;
 use function trim;
 
 /**
- * Normalises Apple maker notes by enriching them with QuickTime metadata fallbacks.
+ * Normalizes Apple maker notes by enriching them with QuickTime metadata fallbacks.
  */
 final class AppleMakerNotesMerger
 {

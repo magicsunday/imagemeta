@@ -320,7 +320,7 @@ final readonly class TrackMediaParser
         // non-zero values here.  Tolerate silently — the fields are unused for
         // metadata extraction.  (GH-1534)
 
-        $handlerType = $this->boxNavigator->normaliseFourcc($handler);
+        $handlerType = $this->boxNavigator->normalizeFourcc($handler);
         $remaining   = $hdlr->contentSize - $win->tell();
         $name        = null;
 
@@ -804,10 +804,10 @@ final readonly class TrackMediaParser
             // Use first entry only; skip parsing subsequent entries to
             // avoid implicit 'last entry wins' when entry_count > 1
             if ($result === [] && $handlerType === 'vide') {
-                $normalizedFormat = $this->boxNavigator->normaliseFourcc($format);
+                $normalizedFormat = $this->boxNavigator->normalizeFourcc($format);
                 $result           = $this->videoParser->parseVideoSampleEntry($win, $entryEnd, $normalizedFormat);
             } elseif ($result === [] && $handlerType === 'soun') {
-                $normalizedFormat = $this->boxNavigator->normaliseFourcc($format);
+                $normalizedFormat = $this->boxNavigator->normalizeFourcc($format);
                 $result           = $this->audioParser->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $normalizedFormat, $version, $mdhdTimescale);
             }
 

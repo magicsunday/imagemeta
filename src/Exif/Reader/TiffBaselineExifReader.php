@@ -205,7 +205,7 @@ final readonly class TiffBaselineExifReader
      */
     public function minSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::MIN_SAMPLE_VALUE) ?? 0;
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::MIN_SAMPLE_VALUE) ?? 0;
     }
 
     /**
@@ -214,7 +214,7 @@ final readonly class TiffBaselineExifReader
      */
     public function maxSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::MAX_SAMPLE_VALUE)
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::MAX_SAMPLE_VALUE)
             ?? ((1 << ($this->bitsPerSample() ?? 8)) - 1);
     }
 
@@ -233,7 +233,7 @@ final readonly class TiffBaselineExifReader
      */
     public function xPosition(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::X_POSITION);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::X_POSITION);
     }
 
     /**
@@ -242,7 +242,7 @@ final readonly class TiffBaselineExifReader
      */
     public function yPosition(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::Y_POSITION);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::Y_POSITION);
     }
 
     /**
@@ -251,7 +251,7 @@ final readonly class TiffBaselineExifReader
      */
     public function freeOffsets(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::FREE_OFFSETS);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::FREE_OFFSETS);
     }
 
     /**
@@ -260,7 +260,7 @@ final readonly class TiffBaselineExifReader
      */
     public function freeByteCounts(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::FREE_BYTE_COUNTS);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::FREE_BYTE_COUNTS);
     }
 
     /**
@@ -279,7 +279,7 @@ final readonly class TiffBaselineExifReader
      */
     public function grayResponseCurve(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::GRAY_RESPONSE_CURVE);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::GRAY_RESPONSE_CURVE);
     }
 
     /**
@@ -308,7 +308,7 @@ final readonly class TiffBaselineExifReader
      */
     public function pageNumber(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::PAGE_NUMBER);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::PAGE_NUMBER);
     }
 
     /**
@@ -317,7 +317,7 @@ final readonly class TiffBaselineExifReader
      */
     public function colorMap(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::COLOR_MAP);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::COLOR_MAP);
     }
 
     /**
@@ -326,7 +326,7 @@ final readonly class TiffBaselineExifReader
      */
     public function halftoneHints(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::HALFTONE_HINTS);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::HALFTONE_HINTS);
     }
 
     /**
@@ -364,7 +364,7 @@ final readonly class TiffBaselineExifReader
      */
     public function dotRange(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::DOT_RANGE);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::DOT_RANGE);
     }
 
     /**
@@ -382,7 +382,7 @@ final readonly class TiffBaselineExifReader
      */
     public function extraSamples(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::EXTRA_SAMPLES);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::EXTRA_SAMPLES);
     }
 
     /**
@@ -401,7 +401,7 @@ final readonly class TiffBaselineExifReader
      */
     public function sMinSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::S_MIN_SAMPLE_VALUE);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::S_MIN_SAMPLE_VALUE);
     }
 
     /**
@@ -410,7 +410,7 @@ final readonly class TiffBaselineExifReader
      */
     public function sMaxSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::S_MAX_SAMPLE_VALUE);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::S_MAX_SAMPLE_VALUE);
     }
 
     /**
@@ -419,7 +419,7 @@ final readonly class TiffBaselineExifReader
      */
     public function transferRange(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        $value = $this->reader->normalisedValue($this->ifd0, TiffTag::TRANSFER_RANGE);
+        $value = $this->reader->normalizedValue($this->ifd0, TiffTag::TRANSFER_RANGE);
 
         if ($value !== null) {
             return $value;
@@ -460,7 +460,7 @@ final readonly class TiffBaselineExifReader
      */
     public function jpegLosslessPredictors(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::JPEG_LOSSLESS_PREDICTORS);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::JPEG_LOSSLESS_PREDICTORS);
     }
 
     /**
@@ -469,7 +469,7 @@ final readonly class TiffBaselineExifReader
      */
     public function jpegPointTransforms(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::JPEG_POINT_TRANSFORMS);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::JPEG_POINT_TRANSFORMS);
     }
 
     /**
@@ -478,7 +478,7 @@ final readonly class TiffBaselineExifReader
      */
     public function jpegQTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::JPEG_Q_TABLES);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::JPEG_Q_TABLES);
     }
 
     /**
@@ -487,7 +487,7 @@ final readonly class TiffBaselineExifReader
      */
     public function jpegDCTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::JPEG_DC_TABLES);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::JPEG_DC_TABLES);
     }
 
     /**
@@ -496,7 +496,7 @@ final readonly class TiffBaselineExifReader
      */
     public function jpegACTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        return $this->reader->normalisedValue($this->ifd0, TiffTag::JPEG_AC_TABLES);
+        return $this->reader->normalizedValue($this->ifd0, TiffTag::JPEG_AC_TABLES);
     }
 
     // ========================================================================

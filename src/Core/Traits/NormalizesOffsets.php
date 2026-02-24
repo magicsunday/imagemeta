@@ -17,7 +17,7 @@ use MagicSunday\ImageMeta\Core\Util\UInt64;
 /**
  * Reusable bounds checks for absolute and relative offset calculations.
  */
-trait NormalisesOffsets
+trait NormalizesOffsets
 {
     /**
      * Returns the maximum allowed absolute offset for the current data source.
@@ -27,7 +27,7 @@ trait NormalisesOffsets
     abstract protected function offsetLimit(): int;
 
     /**
-     * Normalises an absolute offset and validates it against the upper bound.
+     * Normalizes an absolute offset and validates it against the upper bound.
      *
      * @param int|UInt64 $offset  Offset to validate.
      * @param string     $message Error context for bounds violations.
@@ -36,7 +36,7 @@ trait NormalisesOffsets
      *
      * @throws BoundsError When the offset exceeds bounds.
      */
-    private function normaliseAbsoluteOffset(int|UInt64 $offset, string $message): int
+    private function normalizeAbsoluteOffset(int|UInt64 $offset, string $message): int
     {
         $limit = $this->offsetLimit();
 
@@ -56,7 +56,7 @@ trait NormalisesOffsets
     }
 
     /**
-     * Normalises a relative offset against a base position and validates bounds.
+     * Normalizes a relative offset against a base position and validates bounds.
      *
      * @param int|UInt64 $offset  Relative offset to apply.
      * @param int        $base    Base position to offset from.
@@ -66,7 +66,7 @@ trait NormalisesOffsets
      *
      * @throws BoundsError When the resolved offset exceeds bounds.
      */
-    private function normaliseRelativeOffset(int|UInt64 $offset, int $base, string $message): int
+    private function normalizeRelativeOffset(int|UInt64 $offset, int $base, string $message): int
     {
         $limit  = $this->offsetLimit();
         $delta  = $this->resolveOffsetValue($offset, $message);
@@ -97,7 +97,7 @@ trait NormalisesOffsets
     }
 
     /**
-     * Normalises a read length and enforces positive bounds.
+     * Normalizes a read length and enforces positive bounds.
      *
      * @param int|UInt64 $length  Requested length.
      * @param string     $context Error context for bounds violations.
@@ -106,7 +106,7 @@ trait NormalisesOffsets
      *
      * @throws BoundsError When the length is zero, negative, or out of range.
      */
-    private function normaliseReadLength(int|UInt64 $length, string $context): int
+    private function normalizeReadLength(int|UInt64 $length, string $context): int
     {
         if ($length instanceof UInt64) {
             if ($length->isZero()) {

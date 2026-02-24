@@ -105,7 +105,7 @@ final readonly class ValueFactory
     }
 
     /**
-     * Produces normalised value objects derived from the supplied metadata container.
+     * Produces normalized value objects derived from the supplied metadata container.
      *
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *

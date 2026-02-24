@@ -700,10 +700,10 @@ final class GpsFactoryTest extends TestCase
     }
 
     /**
-     * XMP GPS date in EXIF colon format is normalised.
+     * XMP GPS date in EXIF colon format is normalized.
      */
     #[Test]
-    public function xmpConformantDateIsNormalised(): void
+    public function xmpConformantDateIsNormalized(): void
     {
         $xmpDoc = new XmpDocument([
             sprintf('{%s}GPSDateStamp', self::NS_EXIF) => '2023:06:15',

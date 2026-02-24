@@ -264,7 +264,7 @@ final class ExifConvenienceTest extends TestCase
      * This verifies the output keys are normalized and values are formatted consistently.
      */
     #[Test]
-    public function toArrayReturnsNormalisedShape(): void
+    public function toArrayReturnsNormalizedShape(): void
     {
         $camera = new Camera(
             'Canon',

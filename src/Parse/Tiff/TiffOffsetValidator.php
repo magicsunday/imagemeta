@@ -62,12 +62,12 @@ final readonly class TiffOffsetValidator
     }
 
     /**
-     * Normalises an optional offset that may be zero.
+     * Normalizes an optional offset that may be zero.
      *
      * @param UInt64 $offset  Candidate offset.
      * @param string $context Description for error messages.
      */
-    public function normaliseOptionalOffset(UInt64 $offset, string $context): int
+    public function normalizeOptionalOffset(UInt64 $offset, string $context): int
     {
         if ($offset->isZero()) {
             return 0;
@@ -77,15 +77,15 @@ final readonly class TiffOffsetValidator
     }
 
     /**
-     * Normalises a BigTIFF optional offset according to the configured field width.
+     * Normalizes a BigTIFF optional offset according to the configured field width.
      *
      * @param int|UInt64|string $offset  Candidate offset.
      * @param string            $context Description for error messages.
      */
-    public function normaliseBigTiffOptionalOffset(int|UInt64|string $offset, string $context): int
+    public function normalizeBigTiffOptionalOffset(int|UInt64|string $offset, string $context): int
     {
         if ($offset instanceof UInt64) {
-            return $this->normaliseOptionalOffset($offset, $context);
+            return $this->normalizeOptionalOffset($offset, $context);
         }
 
         if (is_int($offset)) {
@@ -156,10 +156,10 @@ final readonly class TiffOffsetValidator
      */
     private function ensureDecimalOffset(string $offset, string $context, int $length): int
     {
-        $normalised = $this->normaliseDecimalString($offset);
+        $normalized = $this->normalizeDecimalString($offset);
         $size       = $this->buffer->size();
 
-        if ($this->compareDecimalStringToInt($normalised, $size) > 0) {
+        if ($this->compareDecimalStringToInt($normalized, $size) > 0) {
             throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context), 1344);
         }
 
@@ -169,20 +169,20 @@ final readonly class TiffOffsetValidator
 
         if ($length > 0) {
             $limit = $size - $length;
-            if ($this->compareDecimalStringToInt($normalised, $limit) > 0) {
+            if ($this->compareDecimalStringToInt($normalized, $limit) > 0) {
                 throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context), 1346);
             }
         }
 
-        return (int) $normalised;
+        return (int) $normalized;
     }
 
     /**
-     * Normalises a decimal string by validating its characters and removing leading zeros.
+     * Normalizes a decimal string by validating its characters and removing leading zeros.
      *
-     * @param string $value Decimal string to normalise.
+     * @param string $value Decimal string to normalize.
      */
-    private function normaliseDecimalString(string $value): string
+    private function normalizeDecimalString(string $value): string
     {
         if ($value === '') {
             throw new ParseError('Decimal offset must not be empty.', 1348);
@@ -200,7 +200,7 @@ final readonly class TiffOffsetValidator
     /**
      * Compares a decimal string against a non-negative integer.
      *
-     * @param string $decimal Normalised decimal string.
+     * @param string $decimal Normalized decimal string.
      * @param int    $int     Non-negative integer.
      */
     private function compareDecimalStringToInt(string $decimal, int $int): int

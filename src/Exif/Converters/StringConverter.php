@@ -33,7 +33,7 @@ use function trim;
 final readonly class StringConverter
 {
     /**
-     * Normalises ASCII-like EXIF strings by trimming whitespace and null padding.
+     * Normalizes ASCII-like EXIF strings by trimming whitespace and null padding.
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw value.
      */
@@ -50,7 +50,7 @@ final readonly class StringConverter
     }
 
     /**
-     * Normalises a raw EXIF version byte string into a dotted decimal representation.
+     * Normalizes a raw EXIF version byte string into a dotted decimal representation.
      *
      * EXIF 3.0 §4.6.6.1.1 (ExifVersion) requires the field to contain exactly four ASCII digits
      * without a terminating null byte.

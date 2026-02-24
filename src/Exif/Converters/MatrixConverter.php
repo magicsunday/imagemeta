@@ -70,7 +70,7 @@ final readonly class MatrixConverter
      */
     public function toWhitePoint(ExifRationalList|ExifNumericList|array|null $rational): ?array
     {
-        $values = $this->normaliseRationalValues($rational);
+        $values = $this->normalizeRationalValues($rational);
 
         if ($values === null || count($values) !== 2) {
             return null;
@@ -98,7 +98,7 @@ final readonly class MatrixConverter
      */
     public function toPrimaryChromaticities(ExifRationalList|ExifNumericList|array|null $rational): ?array
     {
-        $values = $this->normaliseRationalValues($rational);
+        $values = $this->normalizeRationalValues($rational);
 
         if ($values === null || count($values) !== 6) {
             return null;
@@ -119,13 +119,13 @@ final readonly class MatrixConverter
     }
 
     /**
-     * Normalises a rational payload into a value list for conversion.
+     * Normalizes a rational payload into a value list for conversion.
      *
      * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $rational
      *
      * @return list<array<int, int|float|string>|int|float|ExifRational|UInt64>|null
      */
-    private function normaliseRationalValues(ExifRationalList|ExifNumericList|array|null $rational): ?array
+    private function normalizeRationalValues(ExifRationalList|ExifNumericList|array|null $rational): ?array
     {
         if ($rational === null) {
             return null;

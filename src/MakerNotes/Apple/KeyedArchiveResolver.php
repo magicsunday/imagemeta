@@ -234,15 +234,15 @@ final readonly class KeyedArchiveResolver
     private function unarchiveKeyedArchive(array $dictionary): ?array
     {
         if ($this->isKeyedArchive($dictionary)) {
-            return $this->unarchiveNormalisedKeyedArchive($dictionary);
+            return $this->unarchiveNormalizedKeyedArchive($dictionary);
         }
 
-        $normalised = $this->normaliseKeyedArchive($dictionary);
-        if ($normalised === null) {
+        $normalized = $this->normalizeKeyedArchive($dictionary);
+        if ($normalized === null) {
             return null;
         }
 
-        return $this->unarchiveNormalisedKeyedArchive($normalised);
+        return $this->unarchiveNormalizedKeyedArchive($normalized);
     }
 
     /**
@@ -254,7 +254,7 @@ final readonly class KeyedArchiveResolver
      *
      * @phpstan-return NativePlistDictionary|null
      */
-    private function unarchiveNormalisedKeyedArchive(array $dictionary): ?array
+    private function unarchiveNormalizedKeyedArchive(array $dictionary): ?array
     {
         try {
             /** @phpstan-ignore-next-line */
@@ -329,7 +329,7 @@ final readonly class KeyedArchiveResolver
      *
      * @phpstan-return NativePlistDictionary|null
      */
-    private function normaliseKeyedArchive(array $dictionary): ?array
+    private function normalizeKeyedArchive(array $dictionary): ?array
     {
         $objectsKey = $this->firstExistingKey($dictionary, '$objects', 'objects');
         if ($objectsKey === null) {
@@ -352,26 +352,26 @@ final readonly class KeyedArchiveResolver
             return null;
         }
 
-        $normalised             = $dictionary;
-        $normalised['$objects'] = $objects;
-        $normalised['$top']     = $top;
+        $normalized             = $dictionary;
+        $normalized['$objects'] = $objects;
+        $normalized['$top']     = $top;
 
-        if (!array_key_exists('$archiver', $normalised)) {
+        if (!array_key_exists('$archiver', $normalized)) {
             $archiverKey = $this->firstExistingKey($dictionary, '$archiver', 'archiver');
             if ($archiverKey !== null) {
-                $normalised['$archiver'] = $dictionary[$archiverKey];
+                $normalized['$archiver'] = $dictionary[$archiverKey];
             }
         }
 
-        if (!array_key_exists('$version', $normalised)) {
+        if (!array_key_exists('$version', $normalized)) {
             $versionKey = $this->firstExistingKey($dictionary, '$version', 'version');
             if ($versionKey !== null) {
-                $normalised['$version'] = $dictionary[$versionKey];
+                $normalized['$version'] = $dictionary[$versionKey];
             }
         }
 
         /** @phpstan-ignore-next-line */
-        return $normalised;
+        return $normalized;
     }
 
     /**

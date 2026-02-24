@@ -17,7 +17,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
-use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormaliser;
+use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
@@ -39,7 +39,7 @@ use function strlen;
  * Validates CFAPattern (0xA302) structured payload parsing per EXIF 3.0 §4.6.6.7.34.
  */
 #[CoversClass(TiffExifParser::class)]
-#[UsesClass(DngValueNormaliser::class)]
+#[UsesClass(DngValueNormalizer::class)]
 #[UsesClass(ExifNumericList::class)]
 #[UsesClass(ExifTag::class)]
 #[UsesClass(Ifd::class)]

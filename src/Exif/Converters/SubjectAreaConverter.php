@@ -24,7 +24,7 @@ use function array_values;
 final readonly class SubjectAreaConverter
 {
     /**
-     * Normalises EXIF subject area representations into a rectangle map.
+     * Normalizes EXIF subject area representations into a rectangle map.
      *
      * EXIF 3.0 §4.6.6.7.22 (SubjectArea) defines Count = 2 (point), Count = 3 (circle),
      * and Count = 4 (rectangle) using unsigned SHORT components prior to rotation processing.

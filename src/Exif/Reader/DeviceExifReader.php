@@ -276,9 +276,9 @@ final readonly class DeviceExifReader
      */
     private function valueFromGpsOrExif(int $tag): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        $value = $this->reader->normalisedValue($this->gpsIfd, $tag);
+        $value = $this->reader->normalizedValue($this->gpsIfd, $tag);
 
-        return $value ?? $this->reader->normalisedValue(
+        return $value ?? $this->reader->normalizedValue(
             $this->exifIfd,
             $tag
         );

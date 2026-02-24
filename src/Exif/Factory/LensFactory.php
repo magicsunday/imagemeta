@@ -31,7 +31,7 @@ final readonly class LensFactory
      *
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
-     * @return Lens Normalised lens metadata aggregate.
+     * @return Lens Normalized lens metadata aggregate.
      */
     public function create(Metadata $metadata): Lens
     {

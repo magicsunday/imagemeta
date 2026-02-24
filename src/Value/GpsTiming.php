@@ -33,13 +33,13 @@ final readonly class GpsTiming
         public ?string $time = null,
         ?DateTimeImmutable $timestamp = null,
     ) {
-        $this->timestamp = $this->normaliseTimestamp($timestamp);
+        $this->timestamp = $this->normalizeTimestamp($timestamp);
     }
 
     /**
-     * Normalises the GPS timestamp to UTC when present.
+     * Normalizes the GPS timestamp to UTC when present.
      */
-    private function normaliseTimestamp(?DateTimeImmutable $timestamp): ?DateTimeImmutable
+    private function normalizeTimestamp(?DateTimeImmutable $timestamp): ?DateTimeImmutable
     {
         if (!$timestamp instanceof DateTimeImmutable) {
             return null;

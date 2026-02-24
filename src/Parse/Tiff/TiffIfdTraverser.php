@@ -252,9 +252,9 @@ final class TiffIfdTraverser
     }
 
     /**
-     * Normalises a floating-point offset representation to a validated integer.
+     * Normalizes a floating-point offset representation to a validated integer.
      *
-     * @param float $value Floating-point representation to normalise.
+     * @param float $value Floating-point representation to normalize.
      * @param int   $tag   Tag identifier emitting the offset.
      */
     private function pointerOffsetFromFloat(float $value, int $tag): ?int

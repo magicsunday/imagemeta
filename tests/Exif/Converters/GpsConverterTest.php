@@ -849,7 +849,7 @@ final class GpsConverterTest extends TestCase
     #[DataProvider('provideValidAltitudeRefValues')]
     public function acceptsValidAltitudeReferenceValues(int|string $value, int $expected): void
     {
-        self::assertSame($expected, $this->unitConverter->normaliseAltitudeRef($value));
+        self::assertSame($expected, $this->unitConverter->normalizeAltitudeRef($value));
     }
 
     /**
@@ -859,7 +859,7 @@ final class GpsConverterTest extends TestCase
     #[DataProvider('provideFractionalAltitudeRefValues')]
     public function rejectsFractionalAltitudeReferenceValues(float|string|ExifRational $value): void
     {
-        self::assertNull($this->unitConverter->normaliseAltitudeRef($value));
+        self::assertNull($this->unitConverter->normalizeAltitudeRef($value));
     }
 
     /**
@@ -868,7 +868,7 @@ final class GpsConverterTest extends TestCase
     #[Test]
     public function rejectsNonNumericAltitudeReferenceValue(): void
     {
-        self::assertNull($this->unitConverter->normaliseAltitudeRef('invalid'));
+        self::assertNull($this->unitConverter->normalizeAltitudeRef('invalid'));
     }
 
     /**
@@ -878,7 +878,7 @@ final class GpsConverterTest extends TestCase
     #[DataProvider('provideOutOfDomainAltitudeRefValues')]
     public function rejectsOutOfDomainAltitudeReferenceValues(int|string $value): void
     {
-        self::assertNull($this->unitConverter->normaliseAltitudeRef($value));
+        self::assertNull($this->unitConverter->normalizeAltitudeRef($value));
     }
 
     /**

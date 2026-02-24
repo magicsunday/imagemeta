@@ -18,9 +18,9 @@ use function ceil;
 use function log10;
 
 /**
- * Normalises region geometry and confidence values to the unit interval.
+ * Normalizes region geometry and confidence values to the unit interval.
  */
-final readonly class RegionCoordinateNormaliser
+final readonly class RegionCoordinateNormalizer
 {
     /**
      * Creates a normalized bounding box from center and dimensions.
@@ -33,7 +33,7 @@ final readonly class RegionCoordinateNormaliser
      *
      * @return array{x: float, y: float, w: float, h: float}|null Normalized bounding box or null if invalid.
      */
-    public function normalisedBox(float $centerX, float $centerY, float $width, float $height, ?array $dimensions): ?array
+    public function normalizedBox(float $centerX, float $centerY, float $width, float $height, ?array $dimensions): ?array
     {
         if ($width <= 0.0 || $height <= 0.0) {
             return null;
@@ -75,7 +75,7 @@ final readonly class RegionCoordinateNormaliser
     }
 
     /**
-     * Constrains a normalised coordinate to the unit interval.
+     * Constrains a normalized coordinate to the unit interval.
      *
      * @param float $value Coordinate or dimension value to clamp.
      *
@@ -110,9 +110,9 @@ final readonly class RegionCoordinateNormaliser
     }
 
     /**
-     * Normalises Apple-specific confidence values to the unit interval.
+     * Normalizes Apple-specific confidence values to the unit interval.
      */
-    public function normalisedConfidence(?float $confidence, float $scale): ?float
+    public function normalizedConfidence(?float $confidence, float $scale): ?float
     {
         if ($confidence === null) {
             return null;
@@ -122,17 +122,17 @@ final readonly class RegionCoordinateNormaliser
             return $confidence;
         }
 
-        $normalised = $confidence / $scale;
+        $normalized = $confidence / $scale;
 
-        if ($normalised > 1.0) {
+        if ($normalized > 1.0) {
             return 1.0;
         }
 
-        if ($normalised < -1.0) {
+        if ($normalized < -1.0) {
             return -1.0;
         }
 
-        return $normalised;
+        return $normalized;
     }
 
     /**

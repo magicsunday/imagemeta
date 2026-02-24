@@ -25,7 +25,7 @@ final readonly class SensorFactory
      *
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
-     * @return Sensor Normalised sensor metadata aggregate.
+     * @return Sensor Normalized sensor metadata aggregate.
      */
     public function create(Metadata $metadata): Sensor
     {

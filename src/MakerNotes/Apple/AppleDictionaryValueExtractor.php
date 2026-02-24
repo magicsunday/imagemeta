@@ -38,12 +38,12 @@ final readonly class AppleDictionaryValueExtractor
 {
     private AppleFlagExtractor $flagExtractor;
 
-    private AppleRationalNormaliser $rationalNormaliser;
+    private AppleRationalNormalizer $rationalNormalizer;
 
     public function __construct()
     {
         $this->flagExtractor      = new AppleFlagExtractor();
-        $this->rationalNormaliser = new AppleRationalNormaliser();
+        $this->rationalNormalizer = new AppleRationalNormalizer();
     }
 
     /**
@@ -126,7 +126,7 @@ final readonly class AppleDictionaryValueExtractor
 
             /** @var NativePlistValue $candidate */
             $candidate = $dictionary[$key];
-            $float     = $this->rationalNormaliser->normaliseRationalFloat($candidate);
+            $float     = $this->rationalNormalizer->normalizeRationalFloat($candidate);
             if ($float !== null) {
                 return $float;
             }

@@ -38,7 +38,7 @@ final class AppleMaps
     ];
 
     /**
-     * Maps Apple bitfield sources (indexed by zero-based bit position) to normalised flags.
+     * Maps Apple bitfield sources (indexed by zero-based bit position) to normalized flags.
      *
      * @var array<string, array<int, string>>
      */
@@ -58,7 +58,7 @@ final class AppleMaps
     ];
 
     /**
-     * Maps maker note keys to normalised flag identifiers.
+     * Maps maker note keys to normalized flag identifiers.
      *
      * @var array<string, string>
      */

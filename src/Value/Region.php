@@ -20,10 +20,10 @@ final readonly class Region
 {
     /**
      * @param RegionType|null $type        Semantic classification of the region (e.g. face, focus).
-     * @param float           $x           Normalised X coordinate of the top left corner.
-     * @param float           $y           Normalised Y coordinate of the top left corner.
-     * @param float           $w           Normalised width of the region.
-     * @param float           $h           Normalised height of the region.
+     * @param float           $x           Normalized X coordinate of the top left corner.
+     * @param float           $y           Normalized Y coordinate of the top left corner.
+     * @param float           $w           Normalized width of the region.
+     * @param float           $h           Normalized height of the region.
      * @param string|null     $personName  Associated person name when the region marks a face.
      * @param float|null      $confidence  Detection confidence value if provided.
      * @param float|null      $rotationDeg Rotation angle in degrees, positive values rotate clockwise.

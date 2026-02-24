@@ -70,7 +70,7 @@ final class TiffExifParser implements TiffExifParserInterface
 
     private TiffValueDecoder $decoder;
 
-    private DngValueNormaliser $dngNormaliser;
+    private DngValueNormalizer $dngNormalizer;
 
     private TiffExifTagValidator $tagValidator;
 
@@ -132,7 +132,7 @@ final class TiffExifParser implements TiffExifParserInterface
             $this->offsetValidator,
             $tagDecoder,
         );
-        $this->dngNormaliser = new DngValueNormaliser(
+        $this->dngNormalizer = new DngValueNormalizer(
             $this->binaryReader,
             $this->offsetValidator,
             $this->decoder,
@@ -433,7 +433,7 @@ final class TiffExifParser implements TiffExifParserInterface
                 $this->offsetValidator,
                 $tagDecoder,
             );
-            $this->dngNormaliser = new DngValueNormaliser(
+            $this->dngNormalizer = new DngValueNormalizer(
                 $this->binaryReader,
                 $this->offsetValidator,
                 $this->decoder,
@@ -566,7 +566,7 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         if ($this->bigTiff) {
-            $next = $this->offsetValidator->normaliseBigTiffOptionalOffset(
+            $next = $this->offsetValidator->normalizeBigTiffOptionalOffset(
                 $this->binaryReader->readU64(),
                 'IFD next offset',
             );
@@ -618,10 +618,10 @@ final class TiffExifParser implements TiffExifParserInterface
         $value      = $this->decoder->decodeBytes($tag, $type, $cnt, $rawBytes);
         $value      = $this->decoder->convertUInt64Values($tag, $value);
 
-        $value = $this->dngNormaliser->normaliseDngStringValue($tag, $type, $rawBytes, $value);
+        $value = $this->dngNormalizer->normalizeDngStringValue($tag, $type, $rawBytes, $value);
 
         if ($tag === ExifTag::CFA_PATTERN && is_string($value)) {
-            $value = $this->dngNormaliser->decodeCfaPatternPayload($rawBytes);
+            $value = $this->dngNormalizer->decodeCfaPatternPayload($rawBytes);
         }
 
         if ($tag === ExifTag::MAKER_NOTE) {
@@ -633,8 +633,8 @@ final class TiffExifParser implements TiffExifParserInterface
 
         $this->tagValidator->validateTagValueDomain($tag, $value);
 
-        if ($this->dngNormaliser->isCountedImageDataTag($tag)) {
-            $value = $this->dngNormaliser->normaliseCountedImageDataField($tag, $type, $cnt, $rawBytes);
+        if ($this->dngNormalizer->isCountedImageDataTag($tag)) {
+            $value = $this->dngNormalizer->normalizeCountedImageDataField($tag, $type, $cnt, $rawBytes);
         }
 
         return new IfdEntry($tag, $type, $cnt, $value);

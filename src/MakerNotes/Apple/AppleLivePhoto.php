@@ -20,7 +20,7 @@ final readonly class AppleLivePhoto
 {
     /**
      * @param int|null         $index              Index of the representative frame in a Live Photo sequence.
-     * @param float|null       $time               Normalised Live Photo timestamp in seconds.
+     * @param float|null       $time               Normalized Live Photo timestamp in seconds.
      * @param RunTime|null     $runTime            Capture runtime metadata describing the CMTime payload.
      * @param list<float>|null $accelerationVector Acceleration vector recorded during capture.
      */

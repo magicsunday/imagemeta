@@ -47,7 +47,7 @@ final readonly class GpsCoordinate implements Stringable
         ?string $reference,
         public bool $isLatitude,
     ) {
-        $this->reference = $this->normaliseReference($reference);
+        $this->reference = $this->normalizeReference($reference);
         $this->signed    = $this->calculateSigned($this->value, $this->reference, $this->isLatitude);
     }
 
@@ -68,13 +68,13 @@ final readonly class GpsCoordinate implements Stringable
     }
 
     /**
-     * Normalises the hemisphere reference to a single uppercase character.
+     * Normalizes the hemisphere reference to a single uppercase character.
      *
      * @param string|null $reference Raw reference value.
      *
-     * @return string|null Normalised reference or null.
+     * @return string|null Normalized reference or null.
      */
-    private function normaliseReference(?string $reference): ?string
+    private function normalizeReference(?string $reference): ?string
     {
         if ($reference === null || $reference === '') {
             return null;

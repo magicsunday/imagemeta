@@ -23,7 +23,7 @@ use MagicSunday\ImageMeta\Value\StructuredMetadata;
 use MagicSunday\ImageMeta\Value\TechnicalData;
 
 /**
- * Assembles structured metadata aggregates from normalised value objects.
+ * Assembles structured metadata aggregates from normalized value objects.
  */
 final readonly class StructuredMetadataBuilder
 {

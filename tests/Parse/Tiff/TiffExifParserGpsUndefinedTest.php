@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
-use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormaliser;
+use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
@@ -38,7 +38,7 @@ use function substr;
  * Verifies GPSProcessingMethod and GPSAreaInformation enforce UNDEFINED type per EXIF 3.0.
  */
 #[CoversClass(TiffExifParser::class)]
-#[UsesClass(DngValueNormaliser::class)]
+#[UsesClass(DngValueNormalizer::class)]
 #[UsesClass(MakerNoteDispatcher::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(TiffBinaryReader::class)]

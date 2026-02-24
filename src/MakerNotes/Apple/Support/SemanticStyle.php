@@ -26,7 +26,7 @@ use function is_string;
 use function trim;
 
 /**
- * Normalises Apple semantic style payloads into preset, warmth and tone tuples.
+ * Normalizes Apple semantic style payloads into preset, warmth and tone tuples.
  *
  * @phpstan-type SemanticStyleScalar bool|float|int|string|null
  * @phpstan-type SemanticStyleLayer0 array<int|string, SemanticStyleScalar|object>
@@ -91,7 +91,7 @@ final class SemanticStyle
     }
 
     /**
-     * Normalises the supplied semantic style collection when possible.
+     * Normalizes the supplied semantic style collection when possible.
      *
      * @param SemanticStyleValue $value
      *
@@ -105,7 +105,7 @@ final class SemanticStyle
             return null;
         }
 
-        $entries = self::normaliseEntries($value);
+        $entries = self::normalizeEntries($value);
         if ($entries === null) {
             return null;
         }
@@ -139,7 +139,7 @@ final class SemanticStyle
      * @return SemanticStyleEntries|null Normalized entries or null if invalid.
      * @return SemanticStyleEntries|null
      */
-    private static function normaliseEntries(array $semantic): ?array
+    private static function normalizeEntries(array $semantic): ?array
     {
         if (!array_is_list($semantic)) {
             $nestedKey = array_find(
@@ -151,7 +151,7 @@ final class SemanticStyle
                 $nested = $semantic[$nestedKey];
 
                 if (is_array($nested)) {
-                    return self::normaliseEntries($nested);
+                    return self::normalizeEntries($nested);
                 }
 
                 return null;

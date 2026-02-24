@@ -169,7 +169,7 @@ final readonly class GpsCoordinateConverter
                 $val->values,
             )
             : array_map(
-                $this->numericConverter->normaliseComponent(...),
+                $this->numericConverter->normalizeComponent(...),
                 $val->values,
             );
 

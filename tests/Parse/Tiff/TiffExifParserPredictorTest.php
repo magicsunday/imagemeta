@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
-use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormaliser;
+use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
@@ -34,7 +34,7 @@ use PHPUnit\Framework\TestCase;
  * Verifies TIFF Predictor semantics and Compression coupling.
  */
 #[CoversClass(TiffExifParser::class)]
-#[UsesClass(DngValueNormaliser::class)]
+#[UsesClass(DngValueNormalizer::class)]
 #[UsesClass(MakerNoteDispatcher::class)]
 #[UsesClass(TiffBinaryReader::class)]
 #[UsesClass(TiffExifTagValidator::class)]

@@ -46,7 +46,7 @@ final class AppleDecoderFloatListTest extends TestCase
      * Confirms floatList normalizes the payload into a list of floats.
      */
     #[Test]
-    public function floatListNormalisesArrayPayloads(): void
+    public function floatListNormalizesArrayPayloads(): void
     {
         $extractor = new AppleDictionaryValueExtractor();
 

@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
-use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
+use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
@@ -25,7 +25,7 @@ use const SEEK_SET;
 final class StreamWindow implements BinaryReadAccessInterface
 {
     use ReadsBinaryPrimitives;
-    use NormalisesOffsets;
+    use NormalizesOffsets;
 
     private int $cursor = 0;
 
@@ -86,7 +86,7 @@ final class StreamWindow implements BinaryReadAccessInterface
             return '';
         }
 
-        $len = $this->normaliseReadLength($length, 'window read length out of range');
+        $len = $this->normalizeReadLength($length, 'window read length out of range');
 
         if (($this->cursor + $len) > $this->length) {
             throw new BoundsError('window read out of range', 1016);
@@ -126,9 +126,9 @@ final class StreamWindow implements BinaryReadAccessInterface
     private function seekInternal(int|UInt64 $offset, int $whence): void
     {
         $target = match ($whence) {
-            SEEK_SET => $this->normaliseAbsoluteOffset($offset, 'window seek out of range'),
-            SEEK_CUR => $this->normaliseRelativeOffset($offset, $this->cursor, 'window seek out of range'),
-            SEEK_END => $this->normaliseRelativeOffset($offset, $this->length, 'window seek out of range'),
+            SEEK_SET => $this->normalizeAbsoluteOffset($offset, 'window seek out of range'),
+            SEEK_CUR => $this->normalizeRelativeOffset($offset, $this->cursor, 'window seek out of range'),
+            SEEK_END => $this->normalizeRelativeOffset($offset, $this->length, 'window seek out of range'),
             default  => throw new ParseError('window invalid seek whence: ' . $whence, 1017),
         };
 

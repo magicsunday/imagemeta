@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Detect;
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
-use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
+use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -41,7 +41,7 @@ use function strlen;
 #[CoversClass(FormatDetector::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Stream::class)]
-#[UsesTrait(NormalisesOffsets::class)]
+#[UsesTrait(NormalizesOffsets::class)]
 final class FormatDetectorTest extends TestCase
 {
     /**

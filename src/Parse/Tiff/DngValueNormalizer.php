@@ -33,9 +33,9 @@ use function substr;
  * DNG-specific value normalisation for string tags, counted image data, and CFA patterns.
  *
  * DNG 1.7.1.0 defines the string tag encoding rules and CFA pattern layout
- * normalised by this class. EXIF 3.0 §4.6.6.7.34 specifies the CFA pattern structure.
+ * normalized by this class. EXIF 3.0 §4.6.6.7.34 specifies the CFA pattern structure.
  */
-final readonly class DngValueNormaliser
+final readonly class DngValueNormalizer
 {
     /**
      * Tag identifiers that store counted image data such as strips or tiles.
@@ -89,7 +89,7 @@ final readonly class DngValueNormaliser
     }
 
     /**
-     * Normalises DNG string tag values that may use BYTE type.
+     * Normalizes DNG string tag values that may use BYTE type.
      *
      * DNG 1.7.1.0: LocalizedCameraModel, ProfileGroupName, and certain UTF-8 string
      * tags may be stored as BYTE instead of ASCII.
@@ -99,7 +99,7 @@ final readonly class DngValueNormaliser
      * @param string                                                                $rawBytes Raw value bytes.
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value    Previously decoded value.
      */
-    public function normaliseDngStringValue(
+    public function normalizeDngStringValue(
         int $tag,
         int $type,
         string $rawBytes,
@@ -167,14 +167,14 @@ final readonly class DngValueNormaliser
     }
 
     /**
-     * Normalises numeric list fields that describe strip or tile data.
+     * Normalizes numeric list fields that describe strip or tile data.
      *
      * @param int    $tag      TIFF tag identifier.
      * @param int    $type     TIFF field type code.
      * @param int    $count    Number of values represented.
      * @param string $rawBytes Raw value bytes read for the entry.
      */
-    public function normaliseCountedImageDataField(
+    public function normalizeCountedImageDataField(
         int $tag,
         int $type,
         int $count,

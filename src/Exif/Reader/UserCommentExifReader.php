@@ -176,7 +176,7 @@ final readonly class UserCommentExifReader
     }
 
     /**
-     * Normalises known EXIF user comment markers to their canonical identifiers.
+     * Normalizes known EXIF user comment markers to their canonical identifiers.
      */
     private function canonicalUserCommentMarker(string $prefix): string
     {

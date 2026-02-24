@@ -24,7 +24,7 @@ use function trim;
 final class ExifCapabilities
 {
     /**
-     * Normalises vendor provided EXIF version identifiers to known capability profile codes.
+     * Normalizes vendor provided EXIF version identifiers to known capability profile codes.
      * Trims whitespace and maps digit-only fallbacks so unusual encodings still yield the canonical profile.
      *
      * @param ?string $exifVersion Raw EXIF version string as read from metadata, possibly null or padded.

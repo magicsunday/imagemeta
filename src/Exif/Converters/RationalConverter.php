@@ -103,8 +103,8 @@ final readonly class RationalConverter
                     return null;
                 }
 
-                $numVal = $this->numericConverter->normaliseComponent($num);
-                $denVal = $this->numericConverter->normaliseComponent($den);
+                $numVal = $this->numericConverter->normalizeComponent($num);
+                $denVal = $this->numericConverter->normalizeComponent($den);
 
                 if (($numVal === null) || ($denVal === null) || ($denVal === 0.0)) {
                     return null;
@@ -120,8 +120,8 @@ final readonly class RationalConverter
 
                 // Only handle scalar types for direct rational pairs
                 if ((is_int($numComponent) || is_float($numComponent) || is_string($numComponent)) && (is_int($denComponent) || is_float($denComponent) || is_string($denComponent))) {
-                    $numVal = $this->numericConverter->normaliseComponent($numComponent);
-                    $denVal = $this->numericConverter->normaliseComponent($denComponent);
+                    $numVal = $this->numericConverter->normalizeComponent($numComponent);
+                    $denVal = $this->numericConverter->normalizeComponent($denComponent);
                     if (($numVal === null) || ($denVal === null) || ($denVal === 0.0)) {
                         return null;
                     }

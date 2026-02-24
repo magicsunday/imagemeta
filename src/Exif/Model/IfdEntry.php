@@ -22,7 +22,7 @@ use function is_int;
 /**
  * Represents a single entry within an image file directory (IFD).
  *
- * EXIF 3.0 §4.5.2 formalises the tag identifier, field type, count and value
+ * EXIF 3.0 §4.5.2 formalizes the tag identifier, field type, count and value
  * representation stored in each IFD entry, aligning with TIFF 6.0 §2.2.
  *
  * @phpstan-type ExifScalarValue int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
@@ -33,7 +33,7 @@ final readonly class IfdEntry
     public int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value;
 
     /**
-     * Normalises raw decoded values so callers may provide convenient array representations.
+     * Normalizes raw decoded values so callers may provide convenient array representations.
      *
      * @param int            $tag   The numeric identifier of the entry.
      * @param int            $type  The TIFF field type code.
@@ -46,7 +46,7 @@ final readonly class IfdEntry
         public int $count,
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|array $value,
     ) {
-        $this->value = $this->normaliseValue($this->type, $this->count, $value);
+        $this->value = $this->normalizeValue($this->type, $this->count, $value);
     }
 
     /**
@@ -58,7 +58,7 @@ final readonly class IfdEntry
      *
      * @return ExifScalarValue
      */
-    private function normaliseValue(
+    private function normalizeValue(
         int $type,
         int $count,
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|array $value,
@@ -71,7 +71,7 @@ final readonly class IfdEntry
         $arrayValue = array_values($value);
 
         if ($type === 5 || $type === 10) {
-            $rationals = $this->normaliseRationalList($arrayValue);
+            $rationals = $this->normalizeRationalList($arrayValue);
 
             if (count($rationals) === 1) {
                 return $rationals[0];
@@ -80,7 +80,7 @@ final readonly class IfdEntry
             return new ExifRationalList($rationals);
         }
 
-        $numericValues = $this->normaliseNumericList($arrayValue);
+        $numericValues = $this->normalizeNumericList($arrayValue);
 
         if ($count === 1 && count($numericValues) === 1) {
             return $numericValues[0];
@@ -96,7 +96,7 @@ final readonly class IfdEntry
      *
      * @return list<ExifRational>
      */
-    private function normaliseRationalList(array $value): array
+    private function normalizeRationalList(array $value): array
     {
         $pair = $this->extractRationalPair($value);
 
@@ -125,7 +125,7 @@ final readonly class IfdEntry
      *
      * @return list<int|float>
      */
-    private function normaliseNumericList(array $value): array
+    private function normalizeNumericList(array $value): array
     {
         $numericValues = [];
         foreach ($value as $component) {

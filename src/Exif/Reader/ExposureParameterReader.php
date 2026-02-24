@@ -105,7 +105,7 @@ final readonly class ExposureParameterReader
      */
     public function shutterSpeedSeconds(): ?float
     {
-        $raw = $this->reader->normalisedValue($this->exifIfd, ExifTag::SHUTTER_SPEED_VALUE);
+        $raw = $this->reader->normalizedValue($this->exifIfd, ExifTag::SHUTTER_SPEED_VALUE);
 
         if ($raw === null) {
             return null;
@@ -122,7 +122,7 @@ final readonly class ExposureParameterReader
      */
     public function shutterSpeedFormatted(): ?string
     {
-        $raw = $this->reader->normalisedValue($this->exifIfd, ExifTag::SHUTTER_SPEED_VALUE);
+        $raw = $this->reader->normalizedValue($this->exifIfd, ExifTag::SHUTTER_SPEED_VALUE);
 
         if ($raw === null) {
             return null;
@@ -149,7 +149,7 @@ final readonly class ExposureParameterReader
      */
     public function apertureValueFormatted(): ?string
     {
-        $raw = $this->reader->normalisedValue($this->exifIfd, ExifTag::APERTURE_VALUE);
+        $raw = $this->reader->normalizedValue($this->exifIfd, ExifTag::APERTURE_VALUE);
 
         if ($raw === null) {
             return null;
@@ -165,7 +165,7 @@ final readonly class ExposureParameterReader
      */
     public function brightnessValue(): ?float
     {
-        $value = $this->reader->normalisedValue($this->exifIfd, ExifTag::BRIGHTNESS_VALUE);
+        $value = $this->reader->normalizedValue($this->exifIfd, ExifTag::BRIGHTNESS_VALUE);
 
         if ($this->isUnknownBrightness($value)) {
             return null;
@@ -182,7 +182,7 @@ final readonly class ExposureParameterReader
      */
     public function brightnessValueFormatted(): ?string
     {
-        $value = $this->reader->normalisedValue($this->exifIfd, ExifTag::BRIGHTNESS_VALUE);
+        $value = $this->reader->normalizedValue($this->exifIfd, ExifTag::BRIGHTNESS_VALUE);
 
         if ($this->isUnknownBrightness($value)) {
             return null;

@@ -77,7 +77,7 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserInterface;
-use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormaliser;
+use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
@@ -196,7 +196,7 @@ use function unlink;
 #[UsesClass(DescriptionExifReader::class)]
 #[UsesClass(Device::class)]
 #[UsesClass(DngMetadataExifReader::class)]
-#[UsesClass(DngValueNormaliser::class)]
+#[UsesClass(DngValueNormalizer::class)]
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(ExifFlash::class)]
 #[UsesClass(Exposure::class)]

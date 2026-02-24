@@ -334,7 +334,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('ftyp major_brand must be a printable 4CC', 1476);
         }
 
-        $majorBrand = $this->boxNavigator->normaliseFourcc($majorBrandRaw);
+        $majorBrand = $this->boxNavigator->normalizeFourcc($majorBrandRaw);
         $minor      = $win->readU32BE();
 
         if (($ftyp->contentSize - 8) % 4 !== 0) {
@@ -348,7 +348,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 throw new ParseError('ftyp compatible_brand must be a printable 4CC', 1477);
             }
 
-            $brands[] = $this->boxNavigator->normaliseFourcc($brandRaw);
+            $brands[] = $this->boxNavigator->normalizeFourcc($brandRaw);
         }
 
         if (($majorBrand === self::BRAND_QUICKTIME) || in_array(self::BRAND_QUICKTIME, $brands, true)) {
@@ -461,7 +461,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
         // Resolve EXIF item payloads and normalize leading headers.
         // EXIF 3.0 §4.8 notes that item payloads omit the APP1 signature; some
-        // encoders still include it, so we normalise accordingly.
+        // encoders still include it, so we normalize accordingly.
         foreach ($this->itemLocationResolver->resolveQueuedItems($exifItemIds, $payloads['locations'], $payloads['itemReferences'], $this->itemPayloadResolver->normalizeExifBlob(...), $payloads['dataReferences'], $idatPayload, $context->unresolvedItems, $meta->offset) as $blob) {
             $context->exifBlobs[] = $blob;
         }

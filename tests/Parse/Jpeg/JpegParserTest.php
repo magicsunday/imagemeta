@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
-use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
+use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
@@ -67,7 +67,7 @@ use function unlink;
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Unpack::class)]
 #[UsesClass(ParseError::class)]
-#[UsesTrait(NormalisesOffsets::class)]
+#[UsesTrait(NormalizesOffsets::class)]
 #[UsesTrait(ReadsBinaryPrimitives::class)]
 #[CoversClass(JpegParser::class)]
 #[UsesClass(JpegAudioStream::class)]

@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
-use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
+use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
@@ -32,7 +32,7 @@ use const SEEK_SET;
 final class Stream implements BinaryReadAccessInterface
 {
     use ReadsBinaryPrimitives;
-    use NormalisesOffsets;
+    use NormalizesOffsets;
 
     private int $pos = 0;
 
@@ -117,7 +117,7 @@ final class Stream implements BinaryReadAccessInterface
             return '';
         }
 
-        $len = $this->normaliseReadLength($length, 'stream read length out of range');
+        $len = $this->normalizeReadLength($length, 'stream read length out of range');
 
         if (($this->pos + $len) > $this->size) {
             throw new BoundsError('read beyond EOF: ' . $this->pos . '+' . $len . ' > ' . $this->size, 1012);
@@ -172,9 +172,9 @@ final class Stream implements BinaryReadAccessInterface
     private function seekInternal(int|UInt64 $offset, int $whence): void
     {
         $target = match ($whence) {
-            SEEK_SET => $this->normaliseAbsoluteOffset($offset, 'seek out of range'),
-            SEEK_CUR => $this->normaliseRelativeOffset($offset, $this->pos, 'seek out of range'),
-            SEEK_END => $this->normaliseRelativeOffset($offset, $this->size, 'seek out of range'),
+            SEEK_SET => $this->normalizeAbsoluteOffset($offset, 'seek out of range'),
+            SEEK_CUR => $this->normalizeRelativeOffset($offset, $this->pos, 'seek out of range'),
+            SEEK_END => $this->normalizeRelativeOffset($offset, $this->size, 'seek out of range'),
             default  => throw new ParseError('invalid seek whence: ' . $whence, 1015),
         };
 

@@ -27,7 +27,7 @@ use MagicSunday\ImageMeta\Value\FlashInfo;
  * Facade that provides a single-dependency entry point for EXIF value conversion.
  *
  * EXIF 3.0 §4.6 and Annex C define the semantic interpretation of the tag
- * payloads normalised by these converters.
+ * payloads normalized by these converters.
  *
  * Each public method delegates to a specific converter from the
  * MagicSunday\ImageMeta\Exif\Converters namespace. This indirection is a
@@ -72,7 +72,7 @@ final readonly class ValueConverters
     }
 
     /**
-     * Normalises EXIF subject area representations into a rectangle map.
+     * Normalizes EXIF subject area representations into a rectangle map.
      *
      * @param array<int, int|float|string> $values Subject area values as extracted from metadata.
      *
@@ -128,7 +128,7 @@ final readonly class ValueConverters
     }
 
     /**
-     * Normalises a raw EXIF version byte string into a dotted decimal representation.
+     * Normalizes a raw EXIF version byte string into a dotted decimal representation.
      */
     public function toExifVersion(?string $bytes): ?string
     {
@@ -236,7 +236,7 @@ final readonly class ValueConverters
     }
 
     /**
-     * Calculates the exposure value normalised to ISO 100.
+     * Calculates the exposure value normalized to ISO 100.
      */
     public function calcEv100(?float $exposureTimeSec, ?float $fNumber, ?int $iso): ?float
     {
@@ -317,7 +317,7 @@ final readonly class ValueConverters
     }
 
     /**
-     * Normalises the components configuration tag into a list of component identifiers.
+     * Normalizes the components configuration tag into a list of component identifiers.
      *
      * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value representation.
      *
@@ -380,7 +380,7 @@ final readonly class ValueConverters
     }
 
     /**
-     * Normalises a compass bearing to the [0, 360) interval.
+     * Normalizes a compass bearing to the [0, 360) interval.
      */
     public function normalizeBearing(int|float|null $value): ?float
     {
@@ -399,7 +399,7 @@ final readonly class ValueConverters
     }
 
     /**
-     * Normalises EXIF offset time values to a canonical "+HH:MM" representation.
+     * Normalizes EXIF offset time values to a canonical "+HH:MM" representation.
      *
      * @param int|float|string|ExifRational|ExifRationalList|null $value The raw offset value.
      */

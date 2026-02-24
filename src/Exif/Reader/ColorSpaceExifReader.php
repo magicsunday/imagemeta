@@ -223,7 +223,7 @@ final readonly class ColorSpaceExifReader
      */
     public function ycbcrCoefficients(): ?array
     {
-        $value = $this->reader->normalisedValue($this->ifd0, ExifTag::YCBCR_COEFFICIENTS);
+        $value = $this->reader->normalizedValue($this->ifd0, ExifTag::YCBCR_COEFFICIENTS);
 
         if ($value instanceof ExifNumericList) {
             $coeffs = [];
@@ -319,7 +319,7 @@ final readonly class ColorSpaceExifReader
                 : null;
         }
 
-        $value = $this->reader->normaliseEnumScalar($rawValue);
+        $value = $this->reader->normalizeEnumScalar($rawValue);
 
         return YCbCrPositioning::fromExifValue($value);
     }
@@ -336,7 +336,7 @@ final readonly class ColorSpaceExifReader
         $values = $this->reader->rationalList($this->ifd0, ExifTag::REFERENCE_BLACK_WHITE);
 
         if ($values !== null) {
-            return $this->normaliseReferenceBlackWhite($values);
+            return $this->normalizeReferenceBlackWhite($values);
         }
 
         return $this->defaultReferenceBlackWhite();
@@ -498,7 +498,7 @@ final readonly class ColorSpaceExifReader
     }
 
     /**
-     * Normalises a reference black and white array to six components.
+     * Normalizes a reference black and white array to six components.
      *
      * EXIF 3.0 §4.6.5.3.5 requires six rational values representing the
      * black and white points for each channel.
@@ -507,7 +507,7 @@ final readonly class ColorSpaceExifReader
      *
      * @return array{0: float, 1: float, 2: float, 3: float, 4: float, 5: float}|null
      */
-    private function normaliseReferenceBlackWhite(array $values): ?array
+    private function normalizeReferenceBlackWhite(array $values): ?array
     {
         if (count($values) !== 6) {
             return null;

@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
-use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
+use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
@@ -31,7 +31,7 @@ use const SEEK_SET;
 final class MemoryBuffer implements BinaryReadAccessInterface
 {
     use ReadsBinaryPrimitives;
-    use NormalisesOffsets;
+    use NormalizesOffsets;
 
     private readonly ByteReader $byteReader;
 
@@ -107,7 +107,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
             return '';
         }
 
-        $len = $this->normaliseLength($length);
+        $len = $this->normalizeLength($length);
         $end = $this->pos + $len;
 
         if ($end > $this->size()) {
@@ -182,9 +182,9 @@ final class MemoryBuffer implements BinaryReadAccessInterface
     private function seekInternal(int|UInt64 $offset, int $whence): void
     {
         $target = match ($whence) {
-            SEEK_SET => $this->normaliseOffset($offset, 0, 'MemoryBuffer seek out of range'),
-            SEEK_CUR => $this->normaliseRelativeOffset($offset, $this->pos, 'MemoryBuffer seek out of range'),
-            SEEK_END => $this->normaliseRelativeOffset($offset, $this->size(), 'MemoryBuffer seek out of range'),
+            SEEK_SET => $this->normalizeOffset($offset, 0, 'MemoryBuffer seek out of range'),
+            SEEK_CUR => $this->normalizeRelativeOffset($offset, $this->pos, 'MemoryBuffer seek out of range'),
+            SEEK_END => $this->normalizeRelativeOffset($offset, $this->size(), 'MemoryBuffer seek out of range'),
             default  => throw new ParseError('MemoryBuffer invalid seek whence: ' . $whence, 1002),
         };
 
@@ -192,7 +192,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
     }
 
     /**
-     * Normalises an absolute offset and validates it against the buffer size.
+     * Normalizes an absolute offset and validates it against the buffer size.
      *
      * @param int|UInt64 $offset  Offset to validate.
      * @param int        $length  Required byte count from the offset.
@@ -202,10 +202,10 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      *
      * @throws BoundsError When the offset would exceed buffer bounds.
      */
-    private function normaliseOffset(int|UInt64 $offset, int $length, string $message): int
+    private function normalizeOffset(int|UInt64 $offset, int $length, string $message): int
     {
         if ($offset instanceof UInt64) {
-            return $this->normaliseUInt64($offset, $length, $message);
+            return $this->normalizeUInt64($offset, $length, $message);
         }
 
         if ($offset < 0) {
@@ -228,14 +228,14 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      *
      * @throws BoundsError If the length is zero, negative, or exceeds bounds.
      */
-    private function normaliseLength(int|UInt64 $length): int
+    private function normalizeLength(int|UInt64 $length): int
     {
         if ($length instanceof UInt64) {
             if ($length->isZero()) {
                 throw new BoundsError('MemoryBuffer read length out of range: ' . $length->toHex(), 1005);
             }
 
-            $intValue = $this->normaliseUInt64($length, 0, 'MemoryBuffer read length out of range');
+            $intValue = $this->normalizeUInt64($length, 0, 'MemoryBuffer read length out of range');
             if ($intValue <= 0) {
                 throw new BoundsError('MemoryBuffer read length out of range: ' . $length->toHex(), 1006);
             }
@@ -261,7 +261,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      *
      * @throws BoundsError When the offset would exceed buffer bounds.
      */
-    private function normaliseUInt64(UInt64 $value, int $padding, string $message): int
+    private function normalizeUInt64(UInt64 $value, int $padding, string $message): int
     {
         if ($value->compareInt($this->size()) > 0) {
             throw new BoundsError($message . ': ' . $value->toHex(), 1008);

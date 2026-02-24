@@ -102,7 +102,7 @@ final readonly class AppleFlagExtractor
     }
 
     /**
-     * Normalises Apple bitfield metadata to a list of enabled bit positions.
+     * Normalizes Apple bitfield metadata to a list of enabled bit positions.
      *
      * Apple encodes bitfields either as integral masks (decimal/hex strings included) or
      * as ordered collections enumerating the zero-based bit positions that are enabled.

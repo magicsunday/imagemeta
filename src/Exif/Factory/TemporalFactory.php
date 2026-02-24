@@ -51,7 +51,7 @@ final readonly class TemporalFactory
      *
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
-     * @return Temporal Normalised temporal metadata aggregate.
+     * @return Temporal Normalized temporal metadata aggregate.
      */
     public function create(Metadata $metadata): Temporal
     {
@@ -69,7 +69,7 @@ final readonly class TemporalFactory
      * @param QuickTimeMeta|null $quickTime    QuickTime metadata used for time fallbacks.
      * @param XmpDocument|null   $xmpDocument  XMP document providing timestamp fields.
      *
-     * @return Temporal Normalised temporal metadata aggregate.
+     * @return Temporal Normalized temporal metadata aggregate.
      */
     private function buildTemporal(?ParsedExif $exifDocument, ?QuickTimeMeta $quickTime, ?XmpDocument $xmpDocument): Temporal
     {
@@ -158,7 +158,7 @@ final readonly class TemporalFactory
             $offset = $document->offsetTime();
         }
 
-        $offsetString = $this->normaliseOffsetValue($offset);
+        $offsetString = $this->normalizeOffsetValue($offset);
         $timezone     = $this->converters->parseOffset($offsetString);
 
         if ($timezone instanceof DateTimeZone && $original instanceof DateTimeImmutable) {
@@ -183,9 +183,9 @@ final readonly class TemporalFactory
     }
 
     /**
-     * Normalises textual or numeric offsets to a canonical ±HH:MM representation.
+     * Normalizes textual or numeric offsets to a canonical ±HH:MM representation.
      */
-    private function normaliseOffsetValue(int|string|null $offset): ?string
+    private function normalizeOffsetValue(int|string|null $offset): ?string
     {
         if ($offset === null) {
             return null;
@@ -216,7 +216,7 @@ final readonly class TemporalFactory
     }
 
     /**
-     * Normalises EXIF fractional second strings.
+     * Normalizes EXIF fractional second strings.
      *
      * @param string|null $value Raw fractional second string as stored in EXIF tags.
      *

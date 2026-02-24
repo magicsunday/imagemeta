@@ -98,7 +98,7 @@ final readonly class GpsUnitConverter
         // Altitude
         $altRefEntry = $gps->get(ExifTag::GPS_ALTITUDE_REF);
         $altRefValue = $altRefEntry?->value;
-        $altRef      = $this->normaliseAltitudeRef($altRefValue);
+        $altRef      = $this->normalizeAltitudeRef($altRefValue);
         if ($altRef !== null) {
             $result['alt_ref'] = $altRef;
         }
@@ -215,24 +215,24 @@ final readonly class GpsUnitConverter
     }
 
     /**
-     * Normalises the GPS altitude reference into a valid EXIF 3.0 §4.6.7.1.6 value.
+     * Normalizes the GPS altitude reference into a valid EXIF 3.0 §4.6.7.1.6 value.
      *
      * @return int|null 0-3 per EXIF 3.0 specification, null when unknown.
      */
-    public function normaliseAltitudeRef(
+    public function normalizeAltitudeRef(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?int {
         if ($value instanceof ExifNumericList) {
             $component = $value->values[0] ?? null;
 
-            return $this->normaliseAltitudeRef($component);
+            return $this->normalizeAltitudeRef($component);
         }
 
         if ($value instanceof ExifRationalList) {
             $component = $value->values[0] ?? null;
 
             return $component instanceof ExifRational
-                ? $this->normaliseAltitudeRef($component)
+                ? $this->normalizeAltitudeRef($component)
                 : null;
         }
 
@@ -242,7 +242,7 @@ final readonly class GpsUnitConverter
                 return null;
             }
 
-            return $this->normaliseAltitudeRef((int) $numeric);
+            return $this->normalizeAltitudeRef((int) $numeric);
         }
 
         if (is_string($value)) {
@@ -255,7 +255,7 @@ final readonly class GpsUnitConverter
                 return null;
             }
 
-            return $this->normaliseAltitudeRef((int) $clean);
+            return $this->normalizeAltitudeRef((int) $clean);
         }
 
         if (is_int($value)) {
@@ -288,12 +288,12 @@ final readonly class GpsUnitConverter
     }
 
     /**
-     * Normalises a numeric GPS value and its reference string.
+     * Normalizes a numeric GPS value and its reference string.
      *
      * @param string|null                                                                $ref   Reference string.
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw numeric value.
      *
-     * @return array{ref:string, value:float}|null Normalised reference/value pair or null.
+     * @return array{ref:string, value:float}|null Normalized reference/value pair or null.
      */
     private function resolveNumericReference(
         ?string $ref,

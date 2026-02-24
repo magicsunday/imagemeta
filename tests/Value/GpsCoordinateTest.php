@@ -46,7 +46,7 @@ final class GpsCoordinateTest extends TestCase
      * It validates the transformation using representative inputs.
      */
     #[Test]
-    public function normalisesReferenceAndFormats(): void
+    public function normalizesReferenceAndFormats(): void
     {
         $coordinate = new GpsCoordinate(42.0, 'west', false);
 

@@ -36,11 +36,11 @@ final readonly class RegionsFactory
 {
     private const float MATCH_THRESHOLD = 0.12;
 
-    private RegionCoordinateNormaliser $normaliser;
+    private RegionCoordinateNormalizer $normalizer;
 
     public function __construct()
     {
-        $this->normaliser = new RegionCoordinateNormaliser();
+        $this->normalizer = new RegionCoordinateNormalizer();
     }
 
     /**
@@ -88,10 +88,10 @@ final readonly class RegionsFactory
 
         $mwgRegions = $this->applyAppleSupplementalMetadata($mwgRegions, $supplement);
 
-        /** @var list<Region> $normalisedRegions */
-        $normalisedRegions = array_values($mwgRegions);
+        /** @var list<Region> $normalizedRegions */
+        $normalizedRegions = array_values($mwgRegions);
 
-        return new RegionCollection($normalisedRegions);
+        return new RegionCollection($normalizedRegions);
     }
 
     /**
@@ -136,8 +136,8 @@ final readonly class RegionsFactory
                 continue;
             }
 
-            $normalised = $this->normaliser->normalisedBox($centerX, $centerY, $width, $height, $dimensions);
-            if ($normalised === null) {
+            $normalized = $this->normalizer->normalizedBox($centerX, $centerY, $width, $height, $dimensions);
+            if ($normalized === null) {
                 continue;
             }
 
@@ -151,10 +151,10 @@ final readonly class RegionsFactory
 
             $resolved[] = new Region(
                 $type,
-                $normalised['x'],
-                $normalised['y'],
-                $normalised['w'],
-                $normalised['h'],
+                $normalized['x'],
+                $normalized['y'],
+                $normalized['w'],
+                $normalized['h'],
                 $person,
                 $confidences[$index] ?? null,
                 $rotations[$index] ?? null,
@@ -202,7 +202,7 @@ final readonly class RegionsFactory
         $rolls            = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Roll');
         $yaws             = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Yaw');
 
-        $confidenceScale = $this->normaliser->confidenceScale($confidenceLevels, $confidences);
+        $confidenceScale = $this->normalizer->confidenceScale($confidenceLevels, $confidences);
 
         $names = $this->stringValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Name');
         if ($names === []) {
@@ -236,12 +236,12 @@ final readonly class RegionsFactory
 
             $geometry = null;
             if ($centerX !== null && $centerY !== null && $width !== null && $height !== null) {
-                $geometry = $this->normaliser->normalisedBox($centerX, $centerY, $width, $height, $dimensions);
+                $geometry = $this->normalizer->normalizedBox($centerX, $centerY, $width, $height, $dimensions);
             }
 
-            $confidence = $this->normaliser->normalisedConfidence($confidenceLevels[$index] ?? null, $confidenceScale);
+            $confidence = $this->normalizer->normalizedConfidence($confidenceLevels[$index] ?? null, $confidenceScale);
             if ($confidence === null) {
-                $confidence = $this->normaliser->normalisedConfidence($confidences[$index] ?? null, $confidenceScale);
+                $confidence = $this->normalizer->normalizedConfidence($confidences[$index] ?? null, $confidenceScale);
             }
 
             $rotation = $angleInfoRolls[$index] ?? $rolls[$index] ?? $yaws[$index] ?? null;
@@ -491,14 +491,14 @@ final readonly class RegionsFactory
 
         $bestIndex             = null;
         $bestScore             = null;
-        [$targetCx, $targetCy] = $this->normaliser->regionCenter($candidate);
+        [$targetCx, $targetCy] = $this->normalizer->regionCenter($candidate);
 
         foreach ($regions as $index => $region) {
             if ($region->type !== RegionType::Face) {
                 continue;
             }
 
-            [$cx, $cy] = $this->normaliser->regionCenter($region);
+            [$cx, $cy] = $this->normalizer->regionCenter($region);
             $distance  = abs($cx - $targetCx) + abs($cy - $targetCy);
             if ($distance > self::MATCH_THRESHOLD) {
                 continue;

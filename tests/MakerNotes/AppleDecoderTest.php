@@ -336,13 +336,13 @@ final class AppleDecoderTest extends TestCase
      */
     #[Test]
     #[DataProvider('makerNoteVersionProvider')]
-    public function buildAppleMakerNotesNormalisesMakerNoteVersionFromIntegers(array|int $makerNoteVersion, string $expected): void
+    public function buildAppleMakerNotesNormalizesMakerNoteVersionFromIntegers(array|int $makerNoteVersion, string $expected): void
     {
         $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
         $notes = $builder->build([
-            'ContentIdentifier' => 'normalised-version',
+            'ContentIdentifier' => 'normalized-version',
             'MakerNoteVersion'  => $makerNoteVersion,
         ]);
 

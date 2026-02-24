@@ -250,7 +250,7 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * Parses an ASCII-encoded value and normalises it.
+     * Parses an ASCII-encoded value and normalizes it.
      */
     private function parseAscii(string $valueBytes): ?string
     {

@@ -507,7 +507,7 @@ final readonly class IlocBoxParser
 
         return new IsoBmffDataReference(
             $index,
-            $this->boxNavigator->normaliseFourcc($entry->type),
+            $this->boxNavigator->normalizeFourcc($entry->type),
             $uri,
             $selfContained,
             $urlLocation,
@@ -678,7 +678,7 @@ final readonly class IlocBoxParser
             throw new ParseError('iref entry truncated', 1219);
         }
 
-        $relation   = $this->boxNavigator->normaliseFourcc($entry->type);
+        $relation   = $this->boxNavigator->normalizeFourcc($entry->type);
         $references = [];
         for ($i = 0; $i < $referenceCount; ++$i) {
             $toItemId     = $idSize === 2 ? $win->readU16BE() : $win->readU32BE();

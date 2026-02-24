@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Stream;
-use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
+use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -34,7 +34,7 @@ use function strlen;
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Stream::class)]
 #[UsesClass(MemoryBuffer::class)]
-#[UsesTrait(NormalisesOffsets::class)]
+#[UsesTrait(NormalizesOffsets::class)]
 final class BoundsErrorTest extends TestCase
 {
     use CreatesTempStream;

@@ -321,7 +321,7 @@ final readonly class TemporalExifReader
     }
 
     /**
-     * Normalises EXIF timestamp strings and optional offsets into immutable datetime instances.
+     * Normalizes EXIF timestamp strings and optional offsets into immutable datetime instances.
      *
      * @param string|null $rawDateTime Raw EXIF datetime formatted as "YYYY:MM:DD HH:MM:SS".
      * @param string|null $rawOffset   Optional timezone offset such as "+01:00".
@@ -447,7 +447,7 @@ final readonly class TemporalExifReader
     }
 
     /**
-     * Normalises textual and numeric offset encodings to a canonical string representation.
+     * Normalizes textual and numeric offset encodings to a canonical string representation.
      */
     private function normalizedOffset(?Ifd $ifd, int $tag): ?string
     {

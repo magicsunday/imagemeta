@@ -24,7 +24,7 @@ final readonly class CameraFactory
      *
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
-     * @return Camera Normalised camera metadata aggregate.
+     * @return Camera Normalized camera metadata aggregate.
      */
     public function create(Metadata $metadata): Camera
     {

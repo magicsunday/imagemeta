@@ -22,7 +22,7 @@ use function strtoupper;
 use function trim;
 
 /**
- * Normalises GPS bearing and direction values to the [0, 360) interval.
+ * Normalizes GPS bearing and direction values to the [0, 360) interval.
  *
  * EXIF 3.0 §4.6.7.1.15–§4.6.7.1.18 (track/image direction) and
  * §4.6.7.1.24–§4.6.7.1.25 (destination bearing) define the tags decoded here.

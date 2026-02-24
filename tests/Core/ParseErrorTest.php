@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Core;
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
-use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
+use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -36,7 +36,7 @@ use function uniqid;
 #[CoversClass(ParseError::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Stream::class)]
-#[UsesTrait(NormalisesOffsets::class)]
+#[UsesTrait(NormalizesOffsets::class)]
 final class ParseErrorTest extends TestCase
 {
     use CreatesTempStream;

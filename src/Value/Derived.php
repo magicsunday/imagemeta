@@ -19,7 +19,7 @@ final readonly class Derived
     /**
      * Creates a derived metrics value object.
      *
-     * @param float|null $ev100                    Exposure value normalised to ISO 100.
+     * @param float|null $ev100                    Exposure value normalized to ISO 100.
      * @param float|null $hyperfocalDistanceMetres Hyperfocal distance in metres.
      * @param float|null $circleOfConfusionMm      Circle of confusion in millimetres used for depth calculations.
      * @param float|null $fieldOfViewDiagonalDeg   Diagonal field of view in degrees.

@@ -30,7 +30,7 @@ use function trim;
 final readonly class DateTimeConverter
 {
     /**
-     * Normalises EXIF offset time values to a canonical "+HH:MM" representation.
+     * Normalizes EXIF offset time values to a canonical "+HH:MM" representation.
      *
      * EXIF 3.0 §4.6.3 (OffsetTime tags).
      *

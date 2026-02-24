@@ -68,8 +68,8 @@ final readonly class ExifConvenience
      */
     public function cameraDescription(Camera $camera, ?Lens $lens = null): ?string
     {
-        $make  = $this->normalise($camera->make);
-        $model = $this->normalise($camera->model);
+        $make  = $this->normalize($camera->make);
+        $model = $this->normalize($camera->model);
 
         $cameraLabel = null;
 
@@ -79,7 +79,7 @@ final readonly class ExifConvenience
             $cameraLabel = $make ?? $model;
         }
 
-        $lensLabel = $this->normalise($lens?->lensModel);
+        $lensLabel = $this->normalize($lens?->lensModel);
 
         $parts = [];
         if ($cameraLabel !== null) {
@@ -210,9 +210,9 @@ final readonly class ExifConvenience
         $capturedAt = $capture->dateTime;
 
         return [
-            'make'        => $this->normalise($camera->make),
-            'model'       => $this->normalise($camera->model),
-            'lens'        => $this->normalise($lens->lensModel),
+            'make'        => $this->normalize($camera->make),
+            'model'       => $this->normalize($camera->model),
+            'lens'        => $this->normalize($lens->lensModel),
             'orientation' => $image->orientation?->value,
             'captured_at' => $capturedAt?->format(DATE_ATOM),
             'exposure_s'  => $exposure->settings?->exposureTimeSec,
@@ -344,21 +344,21 @@ final readonly class ExifConvenience
     }
 
     /**
-     * Normalises a string value by trimming whitespace and collapsing empties to null.
+     * Normalizes a string value by trimming whitespace and collapsing empties to null.
      *
      * @param string|null $value Raw string value.
      *
-     * @return string|null Normalised string or null when empty.
+     * @return string|null Normalized string or null when empty.
      */
-    private function normalise(?string $value): ?string
+    private function normalize(?string $value): ?string
     {
         if ($value === null) {
             return null;
         }
 
-        $normalised = trim($value);
+        $normalized = trim($value);
 
-        return $normalised === '' ? null : $normalised;
+        return $normalized === '' ? null : $normalized;
     }
 
     /**

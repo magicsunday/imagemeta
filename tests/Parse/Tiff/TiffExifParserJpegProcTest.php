@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
-use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormaliser;
+use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
@@ -39,7 +39,7 @@ use function str_pad;
  * Verifies TIFF JPEGProc semantics and Compression coupling.
  */
 #[CoversClass(TiffExifParser::class)]
-#[UsesClass(DngValueNormaliser::class)]
+#[UsesClass(DngValueNormalizer::class)]
 #[UsesClass(MakerNoteDispatcher::class)]
 #[UsesClass(TiffBinaryReader::class)]
 #[UsesClass(TiffExifTagValidator::class)]

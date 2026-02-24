@@ -18,7 +18,7 @@ use MagicSunday\ImageMeta\MakerNotes\Samsung\SamsungMakerNotes;
 use function preg_match;
 
 /**
- * Immutable value object that describes a normalised maker note payload.
+ * Immutable value object that describes a normalized maker note payload.
  */
 final readonly class MakerNotesRecord
 {

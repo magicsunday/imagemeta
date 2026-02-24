@@ -19,7 +19,7 @@ final readonly class AppleCameraCapture
     /**
      * @param string|int|null  $cameraType            Describes the hardware camera (e.g. "Wide", "Tele").
      * @param string|null      $imageCaptureType      Capture type enumeration label.
-     * @param string|null      $makerNoteVersion      Normalised maker note version string reported by the device.
+     * @param string|null      $makerNoteVersion      Normalized maker note version string reported by the device.
      * @param string|null      $qualityHint           Quality hint reported by the processing pipeline.
      * @param string|null      $oisMode               Optical image stabilisation mode.
      * @param int|null         $colorTemperature      White balance colour temperature in Kelvin.

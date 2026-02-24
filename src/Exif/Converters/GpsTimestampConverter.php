@@ -107,7 +107,7 @@ final readonly class GpsTimestampConverter
     }
 
     /**
-     * Normalises a GPS date stamp into an ISO 8601 calendar date.
+     * Normalizes a GPS date stamp into an ISO 8601 calendar date.
      *
      * EXIF 3.0 §4.6.8 (GPSDateStamp): the value is a "YYYY:MM:DD" ASCII string in UTC.
      *

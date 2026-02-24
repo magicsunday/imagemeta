@@ -70,7 +70,7 @@ final class SemanticStyleTest extends TestCase
      * Ensures fromValue normalizes nesting, trims strings, and returns the ordered tuple.
      */
     #[Test]
-    public function fromValueNormalisesDeeplyNestedStructure(): void
+    public function fromValueNormalizesDeeplyNestedStructure(): void
     {
         $payload = $this->nestedSemanticStylePayload();
 

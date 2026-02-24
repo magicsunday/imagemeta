@@ -25,12 +25,12 @@ use function str_contains;
 use function trim;
 
 /**
- * Stateless helper that normalises rational and numeric values from Apple maker note dictionaries.
+ * Stateless helper that normalizes rational and numeric values from Apple maker note dictionaries.
  *
  * @phpstan-type NativePlistScalar bool|float|int|string|null
  * @phpstan-type NativePlistValue NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar>>>>>>>
  */
-final readonly class AppleRationalNormaliser
+final readonly class AppleRationalNormalizer
 {
     /**
      * Normalizes a rational value to float representation.
@@ -39,7 +39,7 @@ final readonly class AppleRationalNormaliser
      *
      * @return float|null Normalized float value or null if invalid.
      */
-    public function normaliseRationalFloat(string|int|float|bool|array|null $value): ?float
+    public function normalizeRationalFloat(string|int|float|bool|array|null $value): ?float
     {
         if (is_float($value)) {
             return $value;
@@ -100,7 +100,7 @@ final readonly class AppleRationalNormaliser
         foreach (['value', 'Value', 'data', 'Data', 'ratio', 'Ratio'] as $key) {
             if (array_key_exists($key, $value)) {
                 $candidate = $value[$key];
-                $nested    = $this->normaliseRationalFloat($candidate);
+                $nested    = $this->normalizeRationalFloat($candidate);
                 if ($nested !== null) {
                     return $nested;
                 }
@@ -109,7 +109,7 @@ final readonly class AppleRationalNormaliser
 
         if (array_key_exists('values', $value) && is_array($value['values'])) {
             $candidate = $value['values'];
-            $nested    = $this->normaliseRationalFloat($candidate);
+            $nested    = $this->normalizeRationalFloat($candidate);
             if ($nested !== null) {
                 return $nested;
             }
@@ -146,7 +146,7 @@ final readonly class AppleRationalNormaliser
         foreach ($value as $entry) {
             /** @var NativePlistValue $entryValue */
             $entryValue = $entry;
-            $float      = $this->normaliseRationalFloat($entryValue);
+            $float      = $this->normalizeRationalFloat($entryValue);
             if ($float !== null) {
                 return $float;
             }
@@ -210,11 +210,11 @@ final readonly class AppleRationalNormaliser
                 return (float) $normalized;
             }
 
-            return $this->normaliseRationalFloat($normalized);
+            return $this->normalizeRationalFloat($normalized);
         }
 
         if (is_array($value)) {
-            return $this->normaliseRationalFloat($value);
+            return $this->normalizeRationalFloat($value);
         }
 
         return null;

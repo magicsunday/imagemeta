@@ -205,11 +205,11 @@ final readonly class BoxNavigator
     }
 
     /**
-     * Normalises a four-character code into a printable identifier.
+     * Normalizes a four-character code into a printable identifier.
      *
      * @param string $fourcc Raw four-character code bytes.
      */
-    public function normaliseFourcc(string $fourcc): string
+    public function normalizeFourcc(string $fourcc): string
     {
         if ($this->isPrintableFourcc($fourcc)) {
             return $fourcc;

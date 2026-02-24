@@ -245,7 +245,7 @@ final readonly class SceneModeReader
      */
     public function subjectDistance(): ?float
     {
-        $value = $this->reader->normalisedValue($this->exifIfd, ExifTag::SUBJECT_DISTANCE);
+        $value = $this->reader->normalizedValue($this->exifIfd, ExifTag::SUBJECT_DISTANCE);
 
         if ($value === null) {
             return null;
@@ -285,7 +285,7 @@ final readonly class SceneModeReader
      */
     public function subjectArea(): ?SubjectArea
     {
-        $value = $this->reader->normalisedValue($this->exifIfd, ExifTag::SUBJECT_AREA);
+        $value = $this->reader->normalizedValue($this->exifIfd, ExifTag::SUBJECT_AREA);
 
         if ($value instanceof ExifNumericList) {
             /** @var list<int> $components */

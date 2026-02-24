@@ -33,7 +33,7 @@ final readonly class ImageFactory
      * @param Metadata         $metadata    Metadata container with decoded EXIF, XMP and QuickTime data.
      * @param XmpDocument|null $xmpDocument Parsed XMP document for title/description overrides.
      *
-     * @return Image Normalised image metadata aggregate.
+     * @return Image Normalized image metadata aggregate.
      */
     public function create(Metadata $metadata, ?XmpDocument $xmpDocument = null): Image
     {
@@ -68,11 +68,11 @@ final readonly class ImageFactory
     }
 
     /**
-     * Normalises the colour space based on interoperability metadata hints.
+     * Normalizes the colour space based on interoperability metadata hints.
      *
      * @param ParsedExif|null $exifDocument EXIF document exposing colour space and interoperability tags.
      *
-     * @return ColorSpace|null Normalised colour space enumeration or null when undefined.
+     * @return ColorSpace|null Normalized colour space enumeration or null when undefined.
      */
     private function normalizedColorSpace(?ParsedExif $exifDocument): ?ColorSpace
     {

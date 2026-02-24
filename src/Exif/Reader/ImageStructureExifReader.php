@@ -137,7 +137,7 @@ final readonly class ImageStructureExifReader
     {
         $rawOrientation = $this->reader->enumValue($this->ifd0, ExifTag::ORIENTATION);
 
-        // Normalises numeric-string encodings emitted by some cameras.
+        // Normalizes numeric-string encodings emitted by some cameras.
         $orientation = Orientation::fromExifValue($rawOrientation);
 
         // TIFF 6.0 §8: Default is 1 (top-left) when tag is not present

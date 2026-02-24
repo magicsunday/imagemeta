@@ -22,12 +22,12 @@ use function is_numeric;
  *
  * EXIF 3.0 §4.6.6 encodes many enumerations as numeric values; EXIF 2.x
  * revisions frequently serialise them as numeric strings. This helper
- * normalises both into the appropriate backed enum case.
+ * normalizes both into the appropriate backed enum case.
  */
 trait EnumFromIntStringNullable
 {
     /**
-     * Normalises EXIF backed-enum values for both int-backed and string-backed enums.
+     * Normalizes EXIF backed-enum values for both int-backed and string-backed enums.
      *
      * Strategy:
      *  1. Try to resolve integer-backed cases first (including numeric strings).
@@ -38,7 +38,7 @@ trait EnumFromIntStringNullable
      *
      * @param int|string|null $value Raw EXIF value as delivered by the decoder.
      *
-     * @return self|null Normalised enum value or null when the payload is invalid.
+     * @return self|null Normalized enum value or null when the payload is invalid.
      */
     public static function fromExifValue(int|string|null $value): ?self
     {

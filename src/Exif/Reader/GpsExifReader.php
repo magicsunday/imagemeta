@@ -114,7 +114,7 @@ final readonly class GpsExifReader
     }
 
     /**
-     * Returns the normalised course over ground in degrees within [0, 360).
+     * Returns the normalized course over ground in degrees within [0, 360).
      */
     public function gpsTrack(): ?float
     {
@@ -134,7 +134,7 @@ final readonly class GpsExifReader
     }
 
     /**
-     * Returns the normalised image direction in degrees within [0, 360).
+     * Returns the normalized image direction in degrees within [0, 360).
      */
     public function gpsImgDirection(): ?float
     {
@@ -154,7 +154,7 @@ final readonly class GpsExifReader
     }
 
     /**
-     * Returns the normalised destination bearing in degrees within [0, 360).
+     * Returns the normalized destination bearing in degrees within [0, 360).
      */
     public function gpsDestinationBearing(): ?float
     {

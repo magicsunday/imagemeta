@@ -23,7 +23,7 @@ interface MakerNotesDecoderInterface
      * @param string      $make  Camera make identifier associated with the payload.
      * @param string|null $model Optional camera model identifier when available.
      *
-     * @return MakerNotesRecord Normalised metadata describing the payload.
+     * @return MakerNotesRecord Normalized metadata describing the payload.
      */
     public function decode(string $raw, string $make, ?string $model): MakerNotesRecord;
 }

@@ -217,7 +217,7 @@ final readonly class DescriptionExifReader
     // ========================================================================
 
     /**
-     * Returns the normalised EXIF version string when present.
+     * Returns the normalized EXIF version string when present.
      *
      * EXIF 3.0 §4.6.6.1.1 (ExifVersion) treats a missing tag as non-conformance.
      */
@@ -229,7 +229,7 @@ final readonly class DescriptionExifReader
     }
 
     /**
-     * Returns the normalised FlashPix version string when present.
+     * Returns the normalized FlashPix version string when present.
      *
      * EXIF 3.0 §4.6.6.1.2 (FlashpixVersion) limits this field to four ASCII digits.
      */

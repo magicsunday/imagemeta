@@ -19,7 +19,7 @@ final readonly class Standards
     /**
      * Creates a metadata standards version value object.
      *
-     * @param string|null $exifVersion     Normalised EXIF specification version (e.g. "3.00").
+     * @param string|null $exifVersion     Normalized EXIF specification version (e.g. "3.00").
      * @param string|null $profile         Derived EXIF capability profile (e.g. "3.0").
      * @param string|null $flashpixVersion FlashPix specification version string.
      */

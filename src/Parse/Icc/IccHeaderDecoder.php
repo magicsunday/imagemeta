@@ -83,7 +83,7 @@ final readonly class IccHeaderDecoder
      * Returns a 4-byte signature preserving canonical case.
      *
      * ICC.1:2022 signatures are binary identifiers with defined case. Zero-filled
-     * signatures are normalised to null for fields that allow "not used".
+     * signatures are normalized to null for fields that allow "not used".
      *
      * @param string $signature Raw 4-byte signature string.
      *

@@ -27,7 +27,7 @@ final readonly class ExposureFactory
      *
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
-     * @return Exposure Normalised exposure metadata aggregate.
+     * @return Exposure Normalized exposure metadata aggregate.
      */
     public function create(Metadata $metadata): Exposure
     {

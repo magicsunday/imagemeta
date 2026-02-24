@@ -1057,7 +1057,7 @@ final readonly class DngProfileValidator
     }
 
     /**
-     * Normalises ExtraCameraProfiles offset values into an integer list.
+     * Normalizes ExtraCameraProfiles offset values into an integer list.
      *
      * @return list<int>
      */

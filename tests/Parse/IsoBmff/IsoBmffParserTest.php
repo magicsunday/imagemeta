@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
-use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
+use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
@@ -71,7 +71,7 @@ use function substr;
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Stream::class)]
 #[UsesClass(StreamWindow::class)]
-#[UsesTrait(NormalisesOffsets::class)]
+#[UsesTrait(NormalizesOffsets::class)]
 #[UsesTrait(IsoBmffBoxTrait::class)]
 #[UsesTrait(ReadsBinaryPrimitives::class)]
 #[UsesClass(Unpack::class)]

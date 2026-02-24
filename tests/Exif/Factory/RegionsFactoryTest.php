@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Factory;
 
-use MagicSunday\ImageMeta\Exif\Factory\RegionCoordinateNormaliser;
+use MagicSunday\ImageMeta\Exif\Factory\RegionCoordinateNormalizer;
 use MagicSunday\ImageMeta\Exif\Factory\RegionsFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -30,7 +30,7 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(RegionsFactory::class)]
-#[UsesClass(RegionCoordinateNormaliser::class)]
+#[UsesClass(RegionCoordinateNormalizer::class)]
 final class RegionsFactoryTest extends TestCase
 {
     /**

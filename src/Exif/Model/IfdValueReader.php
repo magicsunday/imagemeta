@@ -64,30 +64,30 @@ final readonly class IfdValueReader
     }
 
     /**
-     * Reads and normalises a scalar tag value from an IFD.
+     * Reads and normalizes a scalar tag value from an IFD.
      *
      * @param Ifd|null $ifd IFD to inspect.
      * @param int      $tag Tag identifier.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null Normalised value.
+     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null Normalized value.
      */
-    public function normalisedValue(
+    public function normalizedValue(
         ?Ifd $ifd,
         int $tag,
     ): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null {
         $value = $this->value($ifd, $tag);
 
-        return $this->normaliseScalarValue($value);
+        return $this->normalizeScalarValue($value);
     }
 
     /**
-     * Normalises scalar EXIF values, converting UInt64 when possible.
+     * Normalizes scalar EXIF values, converting UInt64 when possible.
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw value.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null Normalised value.
+     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null Normalized value.
      */
-    public function normaliseScalarValue(
+    public function normalizeScalarValue(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null {
         if ($value instanceof UInt64) {
@@ -100,7 +100,7 @@ final readonly class IfdValueReader
         }
 
         if ($value instanceof ExifNumericList) {
-            $normalised = [];
+            $normalized = [];
             $changed    = false;
 
             foreach ($value->values as $component) {
@@ -110,17 +110,17 @@ final readonly class IfdValueReader
                         return null;
                     }
 
-                    $normalised[] = $component->toInt('EXIF numeric list normalisation');
+                    $normalized[] = $component->toInt('EXIF numeric list normalisation');
                     $changed      = true;
 
                     continue;
                 }
 
-                $normalised[] = $component;
+                $normalized[] = $component;
             }
 
             if ($changed) {
-                return new ExifNumericList($normalised);
+                return new ExifNumericList($normalized);
             }
 
             return $value;
@@ -130,16 +130,16 @@ final readonly class IfdValueReader
     }
 
     /**
-     * Returns a normalised string value, trimming null bytes and spaces.
+     * Returns a normalized string value, trimming null bytes and spaces.
      *
      * @param Ifd|null $ifd IFD to inspect.
      * @param int      $tag Tag identifier.
      *
-     * @return string|null Normalised string or null.
+     * @return string|null Normalized string or null.
      */
     public function str(?Ifd $ifd, int $tag): ?string
     {
-        $value = $this->normalisedValue($ifd, $tag);
+        $value = $this->normalizedValue($ifd, $tag);
 
         if (!is_string($value)) {
             return null;
@@ -159,7 +159,7 @@ final readonly class IfdValueReader
      */
     public function int(?Ifd $ifd, int $tag): ?int
     {
-        $value = $this->normalisedValue($ifd, $tag);
+        $value = $this->normalizedValue($ifd, $tag);
 
         return $this->coerceIntValue($value);
     }
@@ -169,7 +169,7 @@ final readonly class IfdValueReader
      */
     public function rational(?Ifd $ifd, int $tag): ?float
     {
-        $value = $this->normalisedValue($ifd, $tag);
+        $value = $this->normalizedValue($ifd, $tag);
 
         if ($value === null) {
             return null;
@@ -194,44 +194,44 @@ final readonly class IfdValueReader
      * @param Ifd|null $ifd IFD to inspect.
      * @param int      $tag Tag identifier.
      *
-     * @return int|string|null Normalised enum scalar.
+     * @return int|string|null Normalized enum scalar.
      */
     public function enumValue(?Ifd $ifd, int $tag): int|string|null
     {
         $value = $this->value($ifd, $tag);
 
-        return $this->normaliseEnumScalar($value);
+        return $this->normalizeEnumScalar($value);
     }
 
     /**
-     * Normalises a mixed EXIF value to an enum-compatible scalar.
+     * Normalizes a mixed EXIF value to an enum-compatible scalar.
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw value.
      *
      * @return int|string|null Enum-compatible scalar value.
      */
-    public function normaliseEnumScalar(
+    public function normalizeEnumScalar(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): int|string|null {
         if ($value instanceof ExifNumericList) {
             // Only the first entry is relevant for enum conversion.
             $first = $value->values[0] ?? null;
 
-            return $this->normaliseEnumScalar($first);
+            return $this->normalizeEnumScalar($first);
         }
 
         if ($value instanceof ExifRationalList) {
             // Only the first entry is relevant for enum conversion.
             $first = $value->values[0] ?? null;
 
-            return $this->normaliseEnumScalar($first);
+            return $this->normalizeEnumScalar($first);
         }
 
         if ($value instanceof ExifRational) {
             // Reduce rationals to a rounded integer for enum lookups.
             $float = $this->converters->rationalToFloat($value);
 
-            return $float === null ? null : $this->normaliseEnumScalar($float);
+            return $float === null ? null : $this->normalizeEnumScalar($float);
         }
 
         if ($value instanceof UInt64) {

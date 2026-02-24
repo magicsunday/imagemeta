@@ -166,7 +166,7 @@ final readonly class GpsFactory
         $processingMethod = $this->stringValue($gpsData['processing_method']);
         $areaInformation  = $this->stringValue($gpsData['area_information']);
 
-        $date    = $this->normaliseDate($this->stringValue($gpsData['date']));
+        $date    = $this->normalizeDate($this->stringValue($gpsData['date']));
         $dateRaw = $gpsData['date_raw'];
         if (!is_string($dateRaw)) {
             $dateRaw = null;
@@ -180,7 +180,7 @@ final readonly class GpsFactory
         }
 
         if ($date === null) {
-            $date = $this->normaliseDate($exifDocument?->gpsDateStamp());
+            $date = $this->normalizeDate($exifDocument?->gpsDateStamp());
         }
 
         if ($time === null) {
@@ -348,7 +348,7 @@ final readonly class GpsFactory
         }
 
         if ($date === null) {
-            $date = $this->normaliseDate($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDateStamp'));
+            $date = $this->normalizeDate($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDateStamp'));
         }
 
         if ($time === null) {
@@ -568,7 +568,7 @@ final readonly class GpsFactory
     }
 
     /**
-     * Normalises a textual value to uppercase when present.
+     * Normalizes a textual value to uppercase when present.
      */
     private function uppercase(?string $value): ?string
     {
@@ -633,7 +633,7 @@ final readonly class GpsFactory
     /**
      * Converts a textual GPS date into ISO format.
      */
-    private function normaliseDate(?string $value): ?string
+    private function normalizeDate(?string $value): ?string
     {
         if ($value === null) {
             return null;

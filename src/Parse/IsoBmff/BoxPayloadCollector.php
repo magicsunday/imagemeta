@@ -114,7 +114,7 @@ final readonly class BoxPayloadCollector
                         throw new ParseError('direct Exif box payload exceeds maximum allowed size', 1396);
                     }
 
-                    // The EXIF 3.0 §4.8 Exif box must expose the TIFF header directly; normalise deviations.
+                    // The EXIF 3.0 §4.8 Exif box must expose the TIFF header directly; normalize deviations.
                     $blob         = $this->boxNavigator->readAll($child->window);
                     $directExif[] = $this->itemPayloadResolver->normalizeExifBlob($blob);
                     break;

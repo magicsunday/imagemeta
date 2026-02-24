@@ -47,9 +47,9 @@ final readonly class NumericConverter
     }
 
     /**
-     * Normalises a numeric component from a rational pair.
+     * Normalizes a numeric component from a rational pair.
      */
-    public function normaliseComponent(int|float|string|UInt64 $component): ?float
+    public function normalizeComponent(int|float|string|UInt64 $component): ?float
     {
         if ($component instanceof UInt64) {
             if (!$component->fitsSignedInt()) {
@@ -85,7 +85,7 @@ final readonly class NumericConverter
     }
 
     /**
-     * Normalises numeric EXIF representations into a list of integers.
+     * Normalizes numeric EXIF representations into a list of integers.
      *
      * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value.
      *

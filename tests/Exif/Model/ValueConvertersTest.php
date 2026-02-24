@@ -209,7 +209,7 @@ final class ValueConvertersTest extends TestCase
      * It validates the transformation using representative inputs.
      */
     #[Test]
-    public function normalisesComponentsConfigurationPayloads(): void
+    public function normalizesComponentsConfigurationPayloads(): void
     {
         $values = new ExifNumericList([1, 2, 3, 0]);
 
@@ -332,7 +332,7 @@ final class ValueConvertersTest extends TestCase
      */
     #[Test]
     #[DataProvider('provideOffsetStrings')]
-    public function normalisesOffsetStrings(int|float|string|ExifRational|ExifRationalList|null $value, ?string $expected): void
+    public function normalizesOffsetStrings(int|float|string|ExifRational|ExifRationalList|null $value, ?string $expected): void
     {
         self::assertSame($expected, $this->converters->parseOffsetString($value));
     }
@@ -342,7 +342,7 @@ final class ValueConvertersTest extends TestCase
      */
     public static function provideOffsetStrings(): iterable
     {
-        yield 'already normalised' => ['+01:30', '+01:30'];
+        yield 'already normalized' => ['+01:30', '+01:30'];
         yield 'missing sign with colon' => ['05:45', null];
         yield 'compact digits' => ['0530', null];
         yield 'decimal hours' => ['-5.5', null];
@@ -1047,7 +1047,7 @@ final class ValueConvertersTest extends TestCase
      * It validates the transformation using representative inputs.
      */
     #[Test]
-    public function normalisesExifVersionAndFlash(): void
+    public function normalizesExifVersionAndFlash(): void
     {
         self::assertSame('1.00', $this->converters->toExifVersion('0100'));
         self::assertSame('2.00', $this->converters->toExifVersion('0200'));
@@ -1071,7 +1071,7 @@ final class ValueConvertersTest extends TestCase
      * It validates the transformation using representative inputs.
      */
     #[Test]
-    public function normalisesOffsetsAndSubjectAreas(): void
+    public function normalizesOffsetsAndSubjectAreas(): void
     {
         self::assertSame('+01:00', $this->converters->parseOffset('+01:00')?->getName());
         self::assertSame('-05:30', $this->converters->parseOffset('-05:30')?->getName());

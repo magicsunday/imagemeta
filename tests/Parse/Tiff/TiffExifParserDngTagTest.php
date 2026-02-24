@@ -20,7 +20,7 @@ use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
-use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormaliser;
+use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
@@ -47,7 +47,7 @@ use function unpack;
  */
 #[CoversClass(TiffExifParser::class)]
 #[UsesClass(DngTag::class)]
-#[UsesClass(DngValueNormaliser::class)]
+#[UsesClass(DngValueNormalizer::class)]
 #[UsesClass(ExifTag::class)]
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
