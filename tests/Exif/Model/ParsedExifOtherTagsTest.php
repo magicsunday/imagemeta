@@ -46,8 +46,6 @@ final class ParsedExifOtherTagsTest extends TestCase
     /**
      * Supplies the ImageUniqueID tag as a 32-character hex string.
      * Confirms imageUniqueId() returns the same identifier without modification.
-     *
-     * @return void
      */
     #[Test]
     public function imageUniqueIdReturnsHexUuidString(): void
@@ -69,8 +67,6 @@ final class ParsedExifOtherTagsTest extends TestCase
     /**
      * Provides an ImageUniqueID value that is too short (only 16 hex characters).
      * Verifies that non-conformant lengths are rejected per EXIF 3.0 §4.6.6.9.1.
-     *
-     * @return void
      */
     #[Test]
     public function imageUniqueIdRejectsShortHexString(): void
@@ -92,8 +88,6 @@ final class ParsedExifOtherTagsTest extends TestCase
     /**
      * Provides an ImageUniqueID value with non-hex characters.
      * Verifies that invalid hex content is rejected per EXIF 3.0 §4.6.6.9.1.
-     *
-     * @return void
      */
     #[Test]
     public function imageUniqueIdRejectsNonHexCharacters(): void
@@ -115,8 +109,6 @@ final class ParsedExifOtherTagsTest extends TestCase
     /**
      * Populates the camera owner, serial, and lens attribution tags.
      * Verifies each getter returns the corresponding EXIF string.
-     *
-     * @return void
      */
     #[Test]
     public function hardwareAttributionTagsReturnExifStrings(): void
@@ -141,8 +133,6 @@ final class ParsedExifOtherTagsTest extends TestCase
     /**
      * Uses a LensSpecification tag with four rational values.
      * Ensures the parser converts them to floats in the expected order.
-     *
-     * @return void
      */
     #[Test]
     public function lensSpecificationParsesFourRationals(): void
@@ -169,8 +159,6 @@ final class ParsedExifOtherTagsTest extends TestCase
     /**
      * Provides firmware and software pipeline tags with human-readable strings.
      * Confirms ParsedExif surfaces each software field as an EXIF string.
-     *
-     * @return void
      */
     #[Test]
     public function softwarePipelineTagsReturnExifStrings(): void

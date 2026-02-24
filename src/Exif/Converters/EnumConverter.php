@@ -46,7 +46,6 @@ final readonly class EnumConverter
      * @template T of BackedEnum
      *
      * @param class-string<T> $enumClass
-     * @param int|string|null $raw
      *
      * @return T|null
      */

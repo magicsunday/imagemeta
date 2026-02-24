@@ -144,8 +144,6 @@ final class MetadataTest extends TestCase
     /**
      * Stores provided metadata components and exposes them via accessors.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function storesProvidedMetadataComponents(): void
@@ -232,8 +230,6 @@ final class MetadataTest extends TestCase
     /**
      * Defaults optional metadata fields to null or empty collections.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function appliesNullAndEmptyDefaults(): void
@@ -261,8 +257,6 @@ final class MetadataTest extends TestCase
     /**
      * Exposes aggregated metadata values across stored components.
      * It confirms optional fields are accepted without errors.
-     *
-     * @return void
      */
     #[Test]
     public function allowsConsumingAggregatedMetadata(): void
@@ -307,8 +301,6 @@ final class MetadataTest extends TestCase
     /**
      * Builds a selective XMP document from available blobs when missing.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function exposesSelectiveXmpDocumentWhenUnavailable(): void
@@ -344,8 +336,6 @@ XML;
     /**
      * Merges multiple XMP blobs into a single selective document.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function mergesAllXmpBlobsWhenSelectingDocument(): void
@@ -382,8 +372,6 @@ XML;
     /**
      * Reuses an existing XMP document when present.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function reusesExistingXmpDocument(): void
@@ -398,8 +386,6 @@ XML;
     /**
      * Builds a selective IPTC document from Photoshop resource blocks.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function exposesSelectiveIptcDocumentWhenUnavailable(): void
@@ -433,8 +419,6 @@ XML;
     /**
      * Caches the structured metadata aggregate.
      * It ensures cached results are reused on subsequent access.
-     *
-     * @return void
      */
     #[Test]
     public function cachesStructuredAggregate(): void

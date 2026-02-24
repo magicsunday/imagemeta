@@ -42,8 +42,6 @@ final class BoundsErrorTest extends TestCase
     /**
      * Attempts to read past EOF after consuming the entire stream.
      * It verifies the BoundsError message includes the read range and stream size.
-     *
-     * @return void
      */
     #[Test]
     public function streamReadBeyondEndReportsContextInBoundsError(): void
@@ -63,8 +61,6 @@ final class BoundsErrorTest extends TestCase
     /**
      * Attempts to seek beyond the buffer length.
      * It verifies the BoundsError message reports the attempted offset.
-     *
-     * @return void
      */
     #[Test]
     public function memoryBufferSeekOutsideRangeReportsAttemptedOffset(): void

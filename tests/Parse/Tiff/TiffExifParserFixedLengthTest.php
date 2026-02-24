@@ -76,8 +76,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
     /**
      * Uses fixed-length EXIF/GPS tags with valid component counts from the data provider.
      * Verifies the parser accepts these entries without raising a ParseError.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('validFixedLengthTagProvider')]
@@ -417,8 +415,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects BaselineExposureOffset with wrong type (LONG instead of RATIONAL).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsBaselineExposureOffsetWrongType(): void
@@ -438,8 +434,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects BaselineExposureOffset with wrong count (2 instead of 1).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsBaselineExposureOffsetWrongCount(): void
@@ -459,8 +453,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects RawToPreviewGain with wrong type (RATIONAL instead of DOUBLE).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsRawToPreviewGainWrongType(): void
@@ -480,8 +472,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects RawDataUniqueID with wrong count (15 instead of 16).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsRawDataUniqueIdWrongCount(): void
@@ -501,8 +491,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects RawDataUniqueID with wrong type (UNDEFINED instead of BYTE).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsRawDataUniqueIdWrongType(): void
@@ -522,8 +510,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects RawToPreviewGain with wrong count (2 instead of 1).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsRawToPreviewGainWrongCount(): void
@@ -543,8 +529,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Accepts GPSHPositioningError regardless of TIFF type (Postel's Law).
-     *
-     * @return void
      */
     #[Test]
     public function acceptsGpsHPositioningErrorWithNonRationalType(): void
@@ -569,8 +553,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects GPSSpeedRef with wrong type (BYTE instead of ASCII).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsGpsSpeedRefWrongType(): void
@@ -590,8 +572,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects GPSSpeedRef with wrong count (1 instead of 2).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsGpsSpeedRefWrongCount(): void
@@ -611,8 +591,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Accepts GPSSpeed regardless of TIFF type (Postel's Law).
-     *
-     * @return void
      */
     #[Test]
     public function acceptsGpsSpeedWithNonRationalType(): void
@@ -637,8 +615,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Accepts GPSDOP regardless of TIFF type (Postel's Law).
-     *
-     * @return void
      */
     #[Test]
     public function acceptsGpsDopWithNonRationalType(): void
@@ -663,8 +639,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects GPSStatus/GPSMeasureMode tags when encoded with non-ASCII TIFF type.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideGpsStatusAndMeasureModeTags')]
@@ -685,8 +659,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects GPSStatus/GPSMeasureMode tags when encoded with wrong component count.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideGpsStatusAndMeasureModeTags')]
@@ -716,8 +688,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects GPSDestDistanceRef with wrong type (BYTE instead of ASCII).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsGpsDestDistanceRefWrongType(): void
@@ -737,8 +707,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects GPSDestDistanceRef with wrong count (1 instead of 2).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsGpsDestDistanceRefWrongCount(): void
@@ -758,8 +726,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Accepts GPSDestDistance regardless of TIFF type (Postel's Law).
-     *
-     * @return void
      */
     #[Test]
     public function acceptsGpsDestDistanceWithNonRationalType(): void
@@ -784,12 +750,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects GPSMapDatum when encoded with non-ASCII TIFF type.
-     *
-     * @param int    $type
-     * @param int    $count
-     * @param string $valueBytes
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideInvalidGpsMapDatumTypes')]
@@ -823,12 +783,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects GPSSatellites when encoded with non-ASCII TIFF type.
-     *
-     * @param int    $type
-     * @param int    $count
-     * @param string $valueBytes
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideInvalidGpsSatellitesTypes')]
@@ -862,8 +816,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects GPS bearing reference tags when encoded with non-ASCII TIFF type.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideGpsBearingRefTags')]
@@ -884,8 +836,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Rejects GPS bearing reference tags when encoded with wrong component count.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideGpsBearingRefTags')]
@@ -916,8 +866,6 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     /**
      * Accepts GPS bearing value tags regardless of TIFF type (Postel's Law).
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideGpsBearingValueTags')]

@@ -47,8 +47,6 @@ final class ParsedExifApexExamplesTest extends TestCase
     /**
      * Provides the MAX_APERTURE_VALUE rational from the EXIF APEX example.
      * Verifies the parsed maxApertureApex matches the expected 2.97 value.
-     *
-     * @return void
      */
     #[Test]
     public function returnsMaxApertureApexFromSpecExample(): void
@@ -70,8 +68,6 @@ final class ParsedExifApexExamplesTest extends TestCase
     /**
      * Supplies an ExposureBiasValue of -1 EV to mirror the EXIF example.
      * Ensures exposureBias returns the signed float without additional conversion.
-     *
-     * @return void
      */
     #[Test]
     public function returnsExposureBiasFromSpecExample(): void
@@ -93,8 +89,6 @@ final class ParsedExifApexExamplesTest extends TestCase
     /**
      * Uses a ShutterSpeedValue APEX of -2, which corresponds to 4 seconds.
      * Confirms shutterSpeedSeconds converts the APEX value into the expected duration.
-     *
-     * @return void
      */
     #[Test]
     public function returnsShutterSpeedSecondsFromSpecExample(): void
@@ -116,8 +110,6 @@ final class ParsedExifApexExamplesTest extends TestCase
     /**
      * Sets BrightnessValue to 76.00 to exercise the normal numeric range.
      * Verifies brightnessValue returns the rational as a float with the expected precision.
-     *
-     * @return void
      */
     #[Test]
     public function returnsBrightnessValueFromSpecRange(): void
@@ -139,8 +131,6 @@ final class ParsedExifApexExamplesTest extends TestCase
     /**
      * Supplies a BrightnessValue of -1, which indicates "unknown" per EXIF.
      * Ensures brightnessValue returns null when the sentinel value is present.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullWhenBrightnessValueIsUnknown(): void
@@ -162,8 +152,6 @@ final class ParsedExifApexExamplesTest extends TestCase
     /**
      * Supplies an ApertureValue of 5 to match the EXIF example.
      * Confirms apertureValue returns the expected float value.
-     *
-     * @return void
      */
     #[Test]
     public function returnsApertureFromSpecExample(): void
@@ -185,8 +173,6 @@ final class ParsedExifApexExamplesTest extends TestCase
     /**
      * Supplies an FNumber of 2.8 encoded as a rational.
      * Verifies fNumber returns the expected floating-point value.
-     *
-     * @return void
      */
     #[Test]
     public function returnsFNumberFromSpecExample(): void
@@ -208,8 +194,6 @@ final class ParsedExifApexExamplesTest extends TestCase
     /**
      * Uses an ExposureTime rational of 1/400 to represent a fast shutter.
      * Ensures exposureTime returns the correct seconds value with high precision.
-     *
-     * @return void
      */
     #[Test]
     public function returnsExposureTimeFromSpecExample(): void

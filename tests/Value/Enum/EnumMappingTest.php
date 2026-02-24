@@ -69,8 +69,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Maps common numeric EXIF codes to their corresponding enum values.
      * Ensures valid codes return enums while unsupported codes yield null when specified.
-     *
-     * @return void
      */
     #[Test]
     public function mapsCommonEnumValues(): void
@@ -105,8 +103,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Supplies numeric values as strings for multiple enum types.
      * Confirms string inputs are normalized and mapped to the expected enums.
-     *
-     * @return void
      */
     #[Test]
     public function normalizesStringInputs(): void
@@ -120,8 +116,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Uses string payloads for orientation, metering mode, and scene capture codes.
      * Verifies these string codes resolve to the correct enum variants.
-     *
-     * @return void
      */
     #[Test]
     public function mapsSceneAndMeteringEnumsFromStringPayloads(): void
@@ -136,8 +130,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Checks shooting-condition enums with a mix of valid and invalid values.
      * Ensures supported codes map to enums while invalid codes return null.
-     *
-     * @return void
      */
     #[Test]
     public function mapsShootingConditionEnums(): void
@@ -158,8 +150,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Passes empty and non-numeric strings into enum mapping helpers.
      * Confirms these inputs are rejected and return null.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForEmptyOrNonNumericStrings(): void
@@ -171,8 +161,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Uses a vendor-specific FileSource code outside the EXIF-defined range.
      * Ensures the mapping ignores vendor-specific codes and returns null.
-     *
-     * @return void
      */
     #[Test]
     public function ignoresVendorSpecificFileSource(): void
@@ -183,8 +171,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Supplies an out-of-range orientation code.
      * Verifies the mapping returns null for unsupported orientation values.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForOutOfRangeOrientationCodes(): void
@@ -195,8 +181,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Uses reserved SubjectDistanceRange codes that should not be mapped.
      * Confirms the mapping returns null for reserved values.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForReservedSubjectDistanceRanges(): void
@@ -208,8 +192,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Uses reserved CompositeImage codes outside the defined range.
      * Ensures the mapping rejects them by returning null.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForReservedCompositeImageCodes(): void
@@ -221,8 +203,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Supplies photometric codes outside the TIFF/DNG defined set.
      * Verifies the mapping returns null for these unsupported values.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForUndefinedPhotometricCodes(): void
@@ -235,8 +215,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Maps GPS reference and status codes expressed as strings to enum values.
      * Ensures each EXIF Table 27 code resolves to the correct enum.
-     *
-     * @return void
      */
     #[Test]
     public function mapsGpsStringBackedEnums(): void
@@ -273,8 +251,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Provides invalid GPS reference/status codes.
      * Confirms the mapping returns null for unsupported GPS string values.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForInvalidGpsStrings(): void
@@ -290,8 +266,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Checks rotationDescription strings for all orientation enum values.
      * Ensures each description matches the expected rotation/mirroring semantics.
-     *
-     * @return void
      */
     #[Test]
     public function mapsOrientationToRotationDescription(): void
@@ -310,8 +284,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Verifies rotationDegrees for each orientation enum value.
      * Confirms the degrees align with the expected rotation direction.
-     *
-     * @return void
      */
     #[Test]
     public function mapsOrientationToRotationDegrees(): void
@@ -330,8 +302,6 @@ final class EnumMappingTest extends TestCase
     /**
      * Evaluates isMirrored across all orientation enum values.
      * Ensures the mirror flag matches the expected orientation semantics.
-     *
-     * @return void
      */
     #[Test]
     public function mapsOrientationToMirroredFlag(): void

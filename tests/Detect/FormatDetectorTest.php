@@ -47,8 +47,6 @@ final class FormatDetectorTest extends TestCase
     /**
      * Uses the JPEG SOI marker and APP0 prefix to identify JPEG containers.
      * This ensures the detector recognizes the canonical JPEG signature bytes.
-     *
-     * @return void
      */
     #[Test]
     public function detectRecognisesJpegSignature(): void
@@ -63,8 +61,6 @@ final class FormatDetectorTest extends TestCase
     /**
      * Reads the ftyp box header and identifies ISO BMFF containers.
      * This confirms brand-based detection for ISO BMFF signatures.
-     *
-     * @return void
      */
     #[Test]
     public function detectRecognisesIsoBmffBrand(): void
@@ -79,8 +75,6 @@ final class FormatDetectorTest extends TestCase
     /**
      * Rejects an ftyp box when its declared size exceeds remaining stream bytes.
      * This prevents false-positive ISO BMFF detection on truncated signatures.
-     *
-     * @return void
      */
     #[Test]
     public function detectRejectsIsoBmffWhenFtypDeclaredSizeExceedsStreamBounds(): void
@@ -96,8 +90,6 @@ final class FormatDetectorTest extends TestCase
     /**
      * Rejects an extended-size ftyp box when largesize exceeds remaining stream bytes.
      * This hardens signature scanning against out-of-bounds 64-bit size declarations.
-     *
-     * @return void
      */
     #[Test]
     public function detectRejectsIsoBmffWhenFtypLargeSizeExceedsStreamBounds(): void
@@ -113,8 +105,6 @@ final class FormatDetectorTest extends TestCase
     /**
      * Skips a QuickTime wide box and continues detection.
      * This verifies that early padding boxes do not hide ISO BMFF detection.
-     *
-     * @return void
      */
     #[Test]
     public function detectRecognisesQuickTimeWideBox(): void
@@ -129,8 +119,6 @@ final class FormatDetectorTest extends TestCase
     /**
      * Skips a free box and then detects the subsequent ftyp brand.
      * This ensures the detector handles leading padding boxes correctly.
-     *
-     * @return void
      */
     #[Test]
     public function detectRecognisesIsoBmffAfterFreePadding(): void
@@ -144,8 +132,6 @@ final class FormatDetectorTest extends TestCase
 
     /**
      * Leading uuid alone is not sufficient evidence for ISO-BMFF detection.
-     *
-     * @return void
      */
     #[Test]
     public function detectRejectsUuidOnlyTopLevelSignature(): void
@@ -161,8 +147,6 @@ final class FormatDetectorTest extends TestCase
 
     /**
      * Leading uuid followed by a valid structural signature must still detect ISO-BMFF.
-     *
-     * @return void
      */
     #[Test]
     public function detectRecognisesIsoBmffAfterLeadingUuid(): void
@@ -448,8 +432,6 @@ final class FormatDetectorTest extends TestCase
     /**
      * Supplies a stream with an unsupported signature.
      * This confirms a ParseError is thrown for unknown container bytes.
-     *
-     * @return void
      */
     #[Test]
     public function detectThrowsForUnsupportedSignature(): void
@@ -466,8 +448,6 @@ final class FormatDetectorTest extends TestCase
      * This asserts a ParseError with a specific message when reads are insufficient.
      *
      * @param string $bytes byte sequence to test
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('tooShortStreamProvider')]

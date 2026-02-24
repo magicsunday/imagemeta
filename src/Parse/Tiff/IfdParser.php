@@ -29,13 +29,8 @@ final readonly class IfdParser
      * regardless of input order.
      *
      * @param array<int, IfdEntry> $entries
-     * @param int|null             $lastTagId
      *
      * @param-out int              $lastTagId
-     *
-     * @param IfdEntry $entry
-     *
-     * @return void
      */
     public function addEntry(array &$entries, ?int &$lastTagId, IfdEntry $entry): void
     {

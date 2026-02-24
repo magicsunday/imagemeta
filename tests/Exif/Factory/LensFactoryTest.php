@@ -37,8 +37,6 @@ final class LensFactoryTest extends TestCase
     /**
      * Builds a ParsedExif instance with lens-related tags and numeric values.
      * Verifies LensFactory maps EXIF values into the lens data object fields.
-     *
-     * @return void
      */
     #[Test]
     public function createsFromExifMetadata(): void
@@ -74,8 +72,6 @@ final class LensFactoryTest extends TestCase
     /**
      * Creates metadata without any EXIF document attached.
      * Ensures LensFactory returns a lens object with all fields left null.
-     *
-     * @return void
      */
     #[Test]
     public function createsWithNullExifDoc(): void
@@ -100,8 +96,6 @@ final class LensFactoryTest extends TestCase
     /**
      * Provides a maxApertureApex value without an explicit lens specification.
      * Confirms the factory converts the APEX value into an f-number.
-     *
-     * @return void
      */
     #[Test]
     public function calculatesMaxApertureFromApex(): void
@@ -132,8 +126,6 @@ final class LensFactoryTest extends TestCase
     /**
      * Supplies lens identification fields but omits maxApertureApex.
      * Ensures the factory leaves maxApertureFNumber null while preserving other fields.
-     *
-     * @return void
      */
     #[Test]
     public function handlesNullMaxApertureApex(): void

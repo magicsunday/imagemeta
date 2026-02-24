@@ -102,8 +102,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the numeric converter instance.
-     *
-     * @return NumericConverter
      */
     public function numericConverter(): NumericConverter
     {
@@ -112,8 +110,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the rational converter instance.
-     *
-     * @return RationalConverter
      */
     public function rationalConverter(): RationalConverter
     {
@@ -122,8 +118,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the string converter instance.
-     *
-     * @return StringConverter
      */
     public function stringConverter(): StringConverter
     {
@@ -132,8 +126,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the date/time converter instance.
-     *
-     * @return DateTimeConverter
      */
     public function dateTimeConverter(): DateTimeConverter
     {
@@ -142,8 +134,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the photo calculator helper.
-     *
-     * @return PhotoCalculator
      */
     public function photoCalculator(): PhotoCalculator
     {
@@ -152,8 +142,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the subject area converter instance.
-     *
-     * @return SubjectAreaConverter
      */
     public function subjectAreaConverter(): SubjectAreaConverter
     {
@@ -162,8 +150,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the APEX converter instance.
-     *
-     * @return ApexConverter
      */
     public function apexConverter(): ApexConverter
     {
@@ -172,8 +158,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the flash converter instance.
-     *
-     * @return FlashConverter
      */
     public function flashConverter(): FlashConverter
     {
@@ -182,8 +166,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the enum converter instance.
-     *
-     * @return EnumConverter
      */
     public function enumConverter(): EnumConverter
     {
@@ -192,8 +174,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the matrix converter instance.
-     *
-     * @return MatrixConverter
      */
     public function matrixConverter(): MatrixConverter
     {
@@ -202,8 +182,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the components converter instance.
-     *
-     * @return ComponentsConverter
      */
     public function componentsConverter(): ComponentsConverter
     {
@@ -212,8 +190,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the GPS unit converter instance.
-     *
-     * @return GpsUnitConverter
      */
     public function gpsUnitConverter(): GpsUnitConverter
     {
@@ -222,8 +198,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the GPS direction converter instance.
-     *
-     * @return GpsDirectionConverter
      */
     public function gpsDirectionConverter(): GpsDirectionConverter
     {
@@ -232,8 +206,6 @@ final readonly class ConverterFactory
 
     /**
      * Returns the GPS converter instance.
-     *
-     * @return GpsConverter
      */
     public function gpsConverter(): GpsConverter
     {

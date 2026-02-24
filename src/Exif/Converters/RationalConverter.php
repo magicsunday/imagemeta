@@ -51,8 +51,6 @@ final readonly class RationalConverter
      * and are intentionally not handled by this generic converter.
      *
      * @param int|float|string|array<int, int|float|string|array<int, int|float|string>|UInt64|ExifRational>|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The value to convert.
-     *
-     * @return float|null
      */
     public function toFloat(
         int|float|string|array|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,

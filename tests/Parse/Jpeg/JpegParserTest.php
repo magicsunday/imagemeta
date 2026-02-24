@@ -128,8 +128,6 @@ final class JpegParserTest extends TestCase
      * @param list<string> $segments
      * @param list<string> $expectedExif
      * @param list<string> $expectedXmp
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideApp1Variants')]
@@ -145,8 +143,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts a single EXIF APP1 block and returns its TIFF payload.
-     *
-     * @return void
      */
     #[Test]
     public function singleExifApp1BlockParsesSuccessfully(): void
@@ -160,8 +156,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Keeps EXIF + XMP APP1 combination parsing intact.
-     *
-     * @return void
      */
     #[Test]
     public function exifAndXmpApp1CombinationParsesSuccessfully(): void
@@ -215,8 +209,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects duplicate EXIF APP1 metadata blocks in strict EXIF JPEG conformance mode.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsDuplicateExifApp1Blocks(): void
@@ -241,8 +233,6 @@ final class JpegParserTest extends TestCase
     /**
      * Repeats identical XMP segments alongside unique ones.
      * This verifies deduplication keeps only distinct XMP packets.
-     *
-     * @return void
      */
     #[Test]
     public function duplicateXmpSegmentsAreDeduplicated(): void
@@ -268,8 +258,6 @@ final class JpegParserTest extends TestCase
     /**
      * Reassembles ExtendedXMP APP1 chunks referenced by xmpNote:HasExtendedXMP.
      * This verifies chunk ordering, concatenation, and merged packet emission.
-     *
-     * @return void
      */
     #[Test]
     public function reassemblesExtendedXmpChunksReferencedByBasePacket(): void
@@ -291,8 +279,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects ExtendedXMP assemblies that contain missing byte ranges.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsExtendedXmpWithMissingChunkRanges(): void
@@ -317,8 +303,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects ExtendedXMP assemblies that contain overlapping chunk ranges.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsExtendedXmpWithOverlappingChunkRanges(): void
@@ -343,8 +327,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects mismatched GUID combinations between base and extension packets.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsExtendedXmpGuidMismatchBetweenBaseAndExtensions(): void
@@ -369,8 +351,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Keeps regular APP1 XMP extraction unchanged when no base reference exists.
-     *
-     * @return void
      */
     #[Test]
     public function ignoresOrphanExtendedXmpChunksWithoutBaseReference(): void
@@ -392,8 +372,6 @@ final class JpegParserTest extends TestCase
     /**
      * Interleaves unknown APP markers with EXIF and XMP segments.
      * This confirms unknown segments are skipped without affecting known payload extraction.
-     *
-     * @return void
      */
     #[Test]
     public function skipsUnknownAppMarkersWhileExtractingKnownMetadata(): void
@@ -420,8 +398,6 @@ final class JpegParserTest extends TestCase
     /**
      * Places EXIF APP2 before APP1 Exif.
      * This verifies APP2 ordering constraints relative to APP1 Exif.
-     *
-     * @return void
      */
     #[Test]
     public function exifApp2BeforeApp1ThrowsParseError(): void
@@ -445,8 +421,6 @@ final class JpegParserTest extends TestCase
     /**
      * Non-Exif APPn markers (JFIF APP0, vendor APP3, etc.) before Exif APP1
      * are tolerated per EXIF 3.0 §4.7 — readers must skip unknown APPn/COM.
-     *
-     * @return void
      */
     #[Test]
     public function exifApp1AfterNonExifMarkerIsAccepted(): void
@@ -467,8 +441,6 @@ final class JpegParserTest extends TestCase
     /**
      * Uses compliant EXIF marker ordering for APP1 and APP2.
      * This protects regression behaviour for valid APP marker order.
-     *
-     * @return void
      */
     #[Test]
     public function compliantExifAppMarkerOrderParses(): void
@@ -502,8 +474,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts APP, DQT, DHT, SOF and SOS in EXIF-conformant order.
-     *
-     * @return void
      */
     #[Test]
     public function exifConformanceAppDqtDhtSofSosOrderParses(): void
@@ -531,8 +501,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects EXIF streams that reach SOS without a preceding DQT marker.
-     *
-     * @return void
      */
     #[Test]
     public function missingDqtBeforeSosThrowsParseErrorForExif(): void
@@ -561,8 +529,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects EXIF streams that reach SOS without a preceding DHT marker.
-     *
-     * @return void
      */
     #[Test]
     public function missingDhtBeforeSosThrowsParseErrorForExif(): void
@@ -591,8 +557,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects EXIF streams that reach SOS without any preceding SOF marker.
-     *
-     * @return void
      */
     #[Test]
     public function missingSofBeforeSosThrowsParseErrorForExif(): void
@@ -617,8 +581,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects EXIF streams that end at EOI without any SOS marker.
-     *
-     * @return void
      */
     #[Test]
     public function missingSosThrowsParseErrorForExif(): void
@@ -643,8 +605,6 @@ final class JpegParserTest extends TestCase
     /**
      * Non-Exif APP markers after structural markers (DQT/DHT) are tolerated
      * per ITU-T T.81 §B.2.2 (miscellaneous marker interleaving).
-     *
-     * @return void
      */
     #[Test]
     public function nonExifAppMarkerAfterStructuralMarkersIsAccepted(): void
@@ -666,8 +626,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * ITU-T T.81 §B.2.4.1: multiple DQT segments are valid.
-     *
-     * @return void
      */
     #[Test]
     public function multipleDqtSegmentsAreAccepted(): void
@@ -688,8 +646,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * ITU-T T.81 §B.2.4.1: multiple DHT segments are valid.
-     *
-     * @return void
      */
     #[Test]
     public function multipleDhtSegmentsAreAccepted(): void
@@ -710,8 +666,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * ITU-T T.81 §B.2.4.1: multiple DRI segments are valid.
-     *
-     * @return void
      */
     #[Test]
     public function multipleDriSegmentsAreAccepted(): void
@@ -737,8 +691,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts APP11 after APP1/APP2 and before structural markers.
-     *
-     * @return void
      */
     #[Test]
     public function app11AfterApp1AndApp2BeforeStructuralMarkersParses(): void
@@ -770,8 +722,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects APP11 when it appears before APP1/APP2 metadata markers.
-     *
-     * @return void
      */
     #[Test]
     public function app11BeforeApp1App2RegionThrowsParseError(): void
@@ -796,8 +746,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects APP11 when it appears after structural image markers.
-     *
-     * @return void
      */
     #[Test]
     public function app11AfterDqtThrowsParseError(): void
@@ -824,8 +772,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Keeps APP1/APP2 parsing behavior unchanged when APP11 is absent.
-     *
-     * @return void
      */
     #[Test]
     public function app1App2ParsingWithoutApp11StillParses(): void
@@ -845,8 +791,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Detects and surfaces XML/XMP metadata carried inside APP11 JUMBF payloads.
-     *
-     * @return void
      */
     #[Test]
     public function app11JumbfXmlPayloadIsSurfacedAsXmpPacket(): void
@@ -870,8 +814,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Reassembles multi-segment APP11 transport payloads by sequence order.
-     *
-     * @return void
      */
     #[Test]
     public function app11TransportReassemblyMergesOrderedFragments(): void
@@ -901,8 +843,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects APP11 transport payloads with missing sequence fragments.
-     *
-     * @return void
      */
     #[Test]
     public function app11TransportMissingSequenceThrowsParseError(): void
@@ -931,8 +871,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects APP11 transport payloads with duplicate sequence numbers.
-     *
-     * @return void
      */
     #[Test]
     public function app11TransportDuplicateSequenceThrowsParseError(): void
@@ -958,8 +896,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects APP11 transport payloads when instance metadata is inconsistent.
-     *
-     * @return void
      */
     #[Test]
     public function app11TransportInconsistentInstanceMetadataThrowsParseError(): void
@@ -985,8 +921,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Preserves APP1/APP2 metadata extraction when APP11 JUMBF metadata is present.
-     *
-     * @return void
      */
     #[Test]
     public function mixedApp1App2App11PreservesSupportedMetadataOutputs(): void
@@ -1016,8 +950,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects malformed APP11 payloads with truncated JUMBF box data.
-     *
-     * @return void
      */
     #[Test]
     public function malformedTruncatedApp11JumbfPayloadThrowsParseError(): void
@@ -1041,8 +973,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Skips unknown APP11 JUMBF content boxes without failing extraction.
-     *
-     * @return void
      */
     #[Test]
     public function unknownApp11JumbfContentBoxIsSkippedSafely(): void
@@ -1067,8 +997,6 @@ final class JpegParserTest extends TestCase
     /**
      * Provides ICC profile split across multiple APP2 segments.
      * This verifies segment buffering and reassembly of the full ICC profile.
-     *
-     * @return void
      */
     #[Test]
     public function iccProfileSegmentsAreMerged(): void
@@ -1089,8 +1017,6 @@ final class JpegParserTest extends TestCase
     /**
      * Supplies a Contents List segment followed by ordered Stream Data segments.
      * This confirms stream assembly via content-list index and absolute stream offsets.
-     *
-     * @return void
      */
     #[Test]
     public function flashPixSegmentsAreMerged(): void
@@ -1118,8 +1044,6 @@ final class JpegParserTest extends TestCase
     /**
      * Uses two contents-list entries and multiple stream-data segments.
      * This verifies each stream is reconstructed independently by list index.
-     *
-     * @return void
      */
     #[Test]
     public function flashPixMultipleStreamsAreHandled(): void
@@ -1150,8 +1074,6 @@ final class JpegParserTest extends TestCase
     /**
      * Adds both MU_LAW and PCM audio payloads in APP2 segments.
      * This verifies audio stream parsing and metadata decoding for each format.
-     *
-     * @return void
      */
     #[Test]
     public function audioSegmentsAreCollected(): void
@@ -1187,8 +1109,6 @@ final class JpegParserTest extends TestCase
     /**
      * Uses a PCM audio segment with an unsupported sample rate.
      * This asserts a ParseError is thrown for unsupported audio configurations.
-     *
-     * @return void
      */
     #[Test]
     public function audioSegmentWithUnsupportedSampleRateThrows(): void
@@ -1206,8 +1126,6 @@ final class JpegParserTest extends TestCase
     /**
      * Uses a MU_LAW audio segment with a non-8kHz sample rate.
      * This verifies the MU_LAW constraints are enforced with a ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function muLawAudioSegmentWithNonEightKilohertzSampleRateThrows(): void
@@ -1225,8 +1143,6 @@ final class JpegParserTest extends TestCase
     /**
      * Uses a PCM APP2 audio segment with 24-bit samples.
      * This verifies EXIF 3.0-compliant 24-bit PCM streams are accepted.
-     *
-     * @return void
      */
     #[Test]
     public function pcmTwentyFourBitAudioSegmentIsCollected(): void
@@ -1247,8 +1163,6 @@ final class JpegParserTest extends TestCase
     /**
      * Uses a PCM APP2 audio segment with a non-conformant bit depth.
      * This asserts a ParseError for bit depths outside EXIF 3.0 §5.4.2.
-     *
-     * @return void
      */
     #[Test]
     public function pcmAudioSegmentWithUnsupportedBitDepthThrows(): void
@@ -1266,8 +1180,6 @@ final class JpegParserTest extends TestCase
     /**
      * Uses a 24-bit PCM APP2 segment with payload length inconsistent to sample metadata.
      * This verifies malformed sample-length combinations still throw ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function pcmTwentyFourBitAudioSegmentWithInconsistentDataLengthThrows(): void
@@ -1285,8 +1197,6 @@ final class JpegParserTest extends TestCase
     /**
      * Uses a PCM APP2 audio segment with dwSampleLength=0 and non-empty payload.
      * This verifies malformed zero sample counts are rejected for PCM data.
-     *
-     * @return void
      */
     #[Test]
     public function pcmAudioSegmentWithZeroSampleCountAndNonEmptyPayloadThrows(): void
@@ -1304,8 +1214,6 @@ final class JpegParserTest extends TestCase
     /**
      * Uses a μ-law APP2 audio segment with dwSampleLength=0 and non-empty payload.
      * This verifies malformed zero sample counts are rejected for μ-law data.
-     *
-     * @return void
      */
     #[Test]
     public function muLawAudioSegmentWithZeroSampleCountAndNonEmptyPayloadThrows(): void
@@ -1322,8 +1230,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects IMA-ADPCM APP2 audio with non-empty payload and dwSampleLength=0.
-     *
-     * @return void
      */
     #[Test]
     public function imaAdpcmAudioSegmentWithZeroSampleCountAndNonEmptyPayloadThrows(): void
@@ -1341,8 +1247,6 @@ final class JpegParserTest extends TestCase
     /**
      * Splits an MPF payload across two APP2 segments.
      * This confirms the MPF parser receives a reassembled payload with expected entries.
-     *
-     * @return void
      */
     #[Test]
     public function mpfSegmentsAreBufferedAndParsed(): void
@@ -1406,8 +1310,6 @@ final class JpegParserTest extends TestCase
     /**
      * Emits stream data before a contents list segment.
      * This verifies APP2 FPXR ordering constraints are enforced.
-     *
-     * @return void
      */
     #[Test]
     public function flashPixStreamDataBeforeContentsListThrowsParseError(): void
@@ -1426,8 +1328,6 @@ final class JpegParserTest extends TestCase
     /**
      * References a contents-list index that does not exist.
      * This verifies stream-data index bounds are validated.
-     *
-     * @return void
      */
     #[Test]
     public function flashPixInvalidContentsListIndexThrowsParseError(): void
@@ -1452,8 +1352,6 @@ final class JpegParserTest extends TestCase
     /**
      * Uses overlapping stream offsets for the same contents-list entry.
      * This verifies overlap detection for FPXR stream assembly.
-     *
-     * @return void
      */
     #[Test]
     public function flashPixOverlappingOffsetsThrowParseError(): void
@@ -1479,8 +1377,6 @@ final class JpegParserTest extends TestCase
     /**
      * Provides one stream with two ordered stream-data segments.
      * This preserves regression behaviour for simple single-stream payloads.
-     *
-     * @return void
      */
     #[Test]
     public function flashPixSimpleRepresentablePayloadStillParses(): void
@@ -1507,11 +1403,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects invalid sequence metadata in FlashPix stream-data transport headers.
-     *
-     * @param int $sequenceNumber
-     * @param int $sequenceCount
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideInvalidFlashPixSequenceRanges')]
@@ -1550,8 +1441,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects stream segments that advertise conflicting sequence counts.
-     *
-     * @return void
      */
     #[Test]
     public function flashPixConflictingSequenceCountThrowsParseError(): void
@@ -1577,8 +1466,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects incomplete stream assemblies when declared sequence slots are missing.
-     *
-     * @return void
      */
     #[Test]
     public function flashPixMissingSequenceThrowsParseError(): void
@@ -1604,8 +1491,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Keeps non-FPXR metadata extraction unchanged after strict FPXR sequence validation.
-     *
-     * @return void
      */
     #[Test]
     public function nonFlashPixJpegParsingRemainsUnchanged(): void
@@ -1629,8 +1514,6 @@ final class JpegParserTest extends TestCase
      * Rejects malformed FPXR ID headers before segment body parsing.
      *
      * @param string $payload FPXR APP2 payload including malformed ID header.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideInvalidFlashPixIdHeaders')]
@@ -1667,8 +1550,6 @@ final class JpegParserTest extends TestCase
     /**
      * Embeds two IPTC APP13 payloads with different values.
      * This verifies IPTC payloads are collected as raw blobs.
-     *
-     * @return void
      */
     #[Test]
     public function iptcIsCollectedRaw(): void
@@ -1688,8 +1569,6 @@ final class JpegParserTest extends TestCase
     /**
      * Writes a JPEG to disk and parses it via Stream::fromPath.
      * This ensures file-backed streams behave the same as in-memory buffers.
-     *
-     * @return void
      */
     #[Test]
     public function extractsAppSegmentsFromFilesystemStream(): void
@@ -1725,10 +1604,6 @@ final class JpegParserTest extends TestCase
     /**
      * Builds a SOF frame payload with explicit component sampling factors.
      * Verifies the parser extracts precision, dimensions, and derived YCbCr subsampling.
-     *
-     * @param int $marker
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideSofMarkers')]
@@ -1758,8 +1633,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts SOF payloads with unique component identifiers.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsSofWithUniqueComponentIdentifiers(): void
@@ -1784,8 +1657,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects SOF payloads that declare duplicate component identifiers.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsSofWithDuplicateComponentIdentifiers(): void
@@ -1808,8 +1679,6 @@ final class JpegParserTest extends TestCase
     /**
      * Uses sampling factors that yield illegal and reserved subsampling ratios.
      * Ensures the derived YCbCr subsampling is rejected and returns null.
-     *
-     * @return void
      */
     #[Test]
     public function derivedYCbCrSubSamplingRejectsIllegalValues(): void
@@ -1874,8 +1743,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts progressive SOF2 markers in EXIF mode (Postel's Law).
-     *
-     * @return void
      */
     #[Test]
     public function acceptsProgressiveSof2InExifMode(): void
@@ -1899,8 +1766,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects EXIF SOF payloads that do not use 8-bit sample precision.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsExifSofWithNonEightBitPrecision(): void
@@ -1928,8 +1793,6 @@ final class JpegParserTest extends TestCase
     /**
      * Accepts EXIF SOF payloads with non-3-component frames (Postel's Law).
      * Grayscale JPEGs have 1 component.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsExifSofWithGrayscaleComponentCount(): void
@@ -1958,8 +1821,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts EXIF SOF payloads with non-YCbCr component identifiers (Postel's Law).
-     *
-     * @return void
      */
     #[Test]
     public function acceptsExifSofWithNonYcbcrComponentIdentifiers(): void
@@ -2015,8 +1876,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts EXIF SOF payloads with non-standard subsampling factors (Postel's Law).
-     *
-     * @return void
      */
     #[Test]
     public function acceptsExifSofWithNonStandardYcbcrSubSampling(): void
@@ -2040,8 +1899,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Keeps non-EXIF JPEG SOF parsing permissive for non-conformant EXIF profile values.
-     *
-     * @return void
      */
     #[Test]
     public function nonExifSofDoesNotApplyStrictExifProfileRules(): void
@@ -2064,8 +1921,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts SOS headers when selectors and component count match the declared SOF frame.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsSosHeaderThatMatchesSofComponents(): void
@@ -2087,8 +1942,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects truncated SOS payloads before scan-data parsing starts.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsTruncatedSosPayload(): void
@@ -2112,8 +1965,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects restart markers that appear before SOS in pre-scan marker parsing.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsRestartMarkerBeforeSos(): void
@@ -2141,8 +1992,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects TEM markers that appear before SOS in pre-scan marker parsing.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsTemMarkerBeforeSos(): void
@@ -2170,8 +2019,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts a valid stream when no restart marker appears in the pre-scan marker area.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsStreamWithoutPreSosRestartMarkers(): void
@@ -2194,8 +2041,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts a valid stream when no TEM marker appears in the pre-scan marker area.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsStreamWithoutPreSosTemMarkers(): void
@@ -2218,8 +2063,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts a conformant EXIF JPEG stream with exactly one SOF marker before SOS.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsSingleSofBeforeSos(): void
@@ -2242,8 +2085,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects streams that contain more than one SOF marker before SOS.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMultipleSofMarkersBeforeSos(): void
@@ -2270,8 +2111,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Keeps baseline EXIF-JPEG frame extraction behavior unchanged for valid streams.
-     *
-     * @return void
      */
     #[Test]
     public function keepsValidBaselineExifFrameParsingUnchanged(): void
@@ -2296,8 +2135,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts a marker-contiguous EXIF stream without any pre-SOS gap bytes.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsMarkerContiguousStreamBeforeSos(): void
@@ -2320,8 +2157,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects non-marker garbage bytes inserted between markers in the pre-SOS area.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsNonMarkerGarbageBeforeSos(): void
@@ -2348,8 +2183,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts legal marker fill bytes (0xFF) before the actual marker code.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsMarkerFillBytesBeforeSosMarkers(): void
@@ -2372,8 +2205,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects SOS headers that reference a component selector missing from SOF.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsSosHeaderWithUnknownComponentSelector(): void
@@ -2404,8 +2235,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects SOS headers containing duplicate component selectors.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsSosHeaderWithDuplicateComponentSelectors(): void
@@ -2436,8 +2265,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects SOS headers whose component count does not match the SOF declaration.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsSosHeaderWithComponentCountMismatchToSof(): void
@@ -2488,8 +2315,6 @@ final class JpegParserTest extends TestCase
      *
      * @param string $jpeg           Binary JPEG fixture provided by the data set.
      * @param string $messagePattern Regular expression expected in the error message.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideInvalidSegments')]
@@ -2506,8 +2331,6 @@ final class JpegParserTest extends TestCase
     /**
      * Accepts scan data with DRI when at least one restart marker appears before EOI.
      * This verifies stream-level DRI/RST conformance without changing metadata extraction.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsDriWhenScanDataContainsRestartMarker(): void
@@ -2536,8 +2359,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects JPEG scan data without restart markers when DRI is declared.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsDriWhenScanDataContainsNoRestartMarkers(): void
@@ -2566,8 +2387,6 @@ final class JpegParserTest extends TestCase
     /**
      * Accepts scan data when SOS is followed by a valid EOI marker.
      * This verifies metadata extraction remains unchanged for conformant streams.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsSosStreamWhenEoiMarkerIsPresent(): void
@@ -2590,8 +2409,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects scan data streams that end without an EOI marker after SOS.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsSosStreamWithoutEoiMarker(): void
@@ -2618,8 +2435,6 @@ final class JpegParserTest extends TestCase
     /**
      * Tolerates APP markers that appear in the scan-data region after SOS.
      * The pre-SOS metadata is still extracted successfully.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsAppMarkerInScanDataRegionAfterSos(): void
@@ -2650,8 +2465,6 @@ final class JpegParserTest extends TestCase
     /**
      * Tolerates a second SOS marker encountered after scan-data parsing has started.
      * The pre-SOS metadata is still extracted successfully.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsSecondSosMarkerInScanDataRegion(): void
@@ -2677,8 +2490,6 @@ final class JpegParserTest extends TestCase
     /**
      * Places valid APP segments before EOI and additional segments after EOI.
      * This verifies segments after EOI are ignored while earlier metadata is preserved.
-     *
-     * @return void
      */
     #[Test]
     public function ignoresSegmentsAfterEoi(): void
@@ -2712,8 +2523,6 @@ final class JpegParserTest extends TestCase
     /**
      * Adds malformed trailing bytes after EOI with an oversized length field.
      * This confirms the parser ignores post-EOI garbage without raising errors.
-     *
-     * @return void
      */
     #[Test]
     public function skipsMalformedTrailingDataAfterEoi(): void
@@ -2742,10 +2551,6 @@ final class JpegParserTest extends TestCase
     /**
      * Builds a JPEG binary by wrapping payload segments with SOI/EOI markers.
      * This helper keeps fixture construction concise across tests.
-     *
-     * @param string ...$segments
-     *
-     * @return string
      */
     private function jpeg(string ...$segments): string
     {
@@ -2826,11 +2631,6 @@ final class JpegParserTest extends TestCase
     /**
      * Wraps a payload with a JPEG marker and two-byte length field.
      * This helper standardizes APP segment construction for tests.
-     *
-     * @param int    $marker
-     * @param string $payload
-     *
-     * @return string
      */
     private static function segment(int $marker, string $payload): string
     {
@@ -2844,8 +2644,6 @@ final class JpegParserTest extends TestCase
      * @param int    $fullLength Total logical ExtendedXMP payload length.
      * @param int    $offset     Byte offset of this chunk inside the logical payload.
      * @param string $chunk      Chunk bytes for this segment.
-     *
-     * @return string
      */
     private function extendedXmpPayload(string $guid, int $fullLength, int $offset, string $chunk): string
     {
@@ -3091,8 +2889,6 @@ final class JpegParserTest extends TestCase
      *
      * EXIF 3.0 §4.5.4: SOI shall appear once at the beginning of the JPEG
      * stream; any subsequent SOI in the marker flow is non-conformant.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsDuplicateSoiBeforeSos(): void
@@ -3120,8 +2916,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * A valid JPEG with a single initial SOI still parses correctly.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidJpegWithSingleSoi(): void
@@ -3138,8 +2932,6 @@ final class JpegParserTest extends TestCase
      *
      * JPEG byte-stuffing (0xFF00) is only valid within entropy-coded scan
      * data after SOS; encountering it before SOS indicates a malformed stream.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsByteStuffingBeforeSos(): void
@@ -3167,8 +2959,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Valid pre-SOS marker sequence without byte-stuffing parses correctly.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidPreSosMarkersWithoutByteStuffing(): void
@@ -3182,8 +2972,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Accepts APP payloads at the JPEG structural upper bound (65533 bytes).
-     *
-     * @return void
      */
     #[Test]
     public function acceptsAppPayloadAtJpegStructuralUpperBound(): void
@@ -3197,8 +2985,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Rejects APP segments whose 16-bit length field is smaller than two bytes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAppSegmentLengthFieldBelowTwo(): void
@@ -3217,8 +3003,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Uses the JPEG 16-bit segment semantics as default APP payload limit.
-     *
-     * @return void
      */
     #[Test]
     public function defaultAppPayloadLimitMatchesJpegSegmentSemantics(): void
@@ -3228,8 +3012,6 @@ final class JpegParserTest extends TestCase
 
     /**
      * Regression: normal APP1/APP2 metadata extraction remains unchanged.
-     *
-     * @return void
      */
     #[Test]
     public function normalApp1App2MetadataExtractionRemainsUnchanged(): void
@@ -3251,8 +3033,6 @@ final class JpegParserTest extends TestCase
     /**
      * Applies a custom APP payload limit through parser configuration.
      * Confirms oversized APP segments are rejected against configured bounds.
-     *
-     * @return void
      */
     #[Test]
     public function customConfigLimitsMaximumAppSegmentPayload(): void
@@ -3270,10 +3050,6 @@ final class JpegParserTest extends TestCase
     /**
      * Creates a stream-backed extractor for an in-memory JPEG binary.
      * This helper keeps parser instantiation consistent across tests.
-     *
-     * @param string $jpeg
-     *
-     * @return JpegParser
      */
     private function createExtractor(string $jpeg, ?JpegParserConfig $config = null): JpegParser
     {

@@ -701,8 +701,6 @@ final readonly class IlocBoxParser
      * ISO/IEC 14496-12 §8.11.3.3 limits size nibbles to 0, 4, or 8 bytes.
      *
      * @param int $nibble Raw nibble extracted from the length-size field.
-     *
-     * @return int
      */
     private function validateSizeNibble(int $nibble): int
     {

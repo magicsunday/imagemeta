@@ -383,8 +383,6 @@ final readonly class QuickTimeMeta
      * @param string    $key                    QuickTime metadata key or alias.
      * @param list<int> $acceptedLocales        Accepted locale indicators; empty means any.
      * @param list<int> $acceptedTypeIndicators Accepted type indicators; empty means any.
-     *
-     * @return string|int|float|bool|null
      */
     public function firstAcceptableValue(string $key, array $acceptedLocales = [], array $acceptedTypeIndicators = []): string|int|float|bool|null
     {
@@ -395,10 +393,6 @@ final readonly class QuickTimeMeta
 
     /**
      * Resolves the first available value for the given metadata key or its aliases.
-     *
-     * @param string $key
-     *
-     * @return string|int|float|bool|null
      */
     private function lookupValue(string $key): string|int|float|bool|null
     {
@@ -414,8 +408,6 @@ final readonly class QuickTimeMeta
 
     /**
      * Returns the QuickTime content identifier value when available.
-     *
-     * @return string|null
      */
     public function contentIdentifier(): ?string
     {

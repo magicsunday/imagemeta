@@ -108,7 +108,6 @@ final readonly class ColorSpaceExifReader
     // ========================================================================
     // Planar configuration
     // ========================================================================
-
     /**
      * Returns the planar configuration enum.
      *
@@ -116,8 +115,6 @@ final readonly class ColorSpaceExifReader
      * EXIF 3.0 §4.6.5.1.10 states JPEG compressed data shall not record
      * this tag because the JPEG marker carries the equivalent information.
      * Returns null when the tag is absent in JPEG context (no Compression tag).
-     *
-     * @return PlanarConfiguration|null
      */
     public function planarConfiguration(): ?PlanarConfiguration
     {
@@ -139,7 +136,6 @@ final readonly class ColorSpaceExifReader
     // ========================================================================
     // Samples / bits per sample
     // ========================================================================
-
     /**
      * Returns the number of samples per pixel.
      *
@@ -147,8 +143,6 @@ final readonly class ColorSpaceExifReader
      * RGB, YCbCr, CIELab -> 3; grayscale/palette/mask -> 1.
      * JPEG context (no Compression tag) defaults to 3 per EXIF 3.0 §4.6.5.1.7;
      * TIFF context defaults to 1 per TIFF 6.0 §8.
-     *
-     * @return int
      */
     public function samplesPerPixel(): int
     {
@@ -179,8 +173,6 @@ final readonly class ColorSpaceExifReader
      * tag; precision comes from the JPEG SOF marker instead. Returns null in
      * JPEG context (no Compression tag) so callers can fall back to SOF.
      * TIFF 6.0 §8 default is 1 per component; EXIF profile uses 8 for RGB.
-     *
-     * @return int|null
      */
     public function bitsPerSample(): ?int
     {

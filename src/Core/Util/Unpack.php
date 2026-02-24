@@ -28,8 +28,6 @@ final class Unpack
      * @param string $format  Format accepted by {@see unpack}.
      * @param string $bytes   Bytes to unpack the value from.
      * @param string $context Human-readable description used in error messages.
-     *
-     * @return int
      */
     public static function int(string $format, string $bytes, string $context): int
     {
@@ -42,8 +40,6 @@ final class Unpack
      * @param string $format  Format accepted by {@see unpack}.
      * @param string $bytes   Bytes to unpack the value from.
      * @param string $context Human-readable description used in error messages.
-     *
-     * @return float
      */
     public static function float(string $format, string $bytes, string $context): float
     {
@@ -55,8 +51,6 @@ final class Unpack
      *
      * @param int $hi High-order 32 bits.
      * @param int $lo Low-order 32 bits.
-     *
-     * @return UInt64
      */
     public static function combineUint32(int $hi, int $lo): UInt64
     {
@@ -69,8 +63,6 @@ final class Unpack
      * @param string $bytes        Raw bytes to unpack.
      * @param bool   $littleEndian Whether the bytes use little-endian order.
      * @param string $context      Human-readable description used in error messages.
-     *
-     * @return UInt64
      */
     public static function uint64(string $bytes, bool $littleEndian, string $context): UInt64
     {
@@ -105,8 +97,6 @@ final class Unpack
      * @param string $format  Format accepted by {@see unpack}.
      * @param string $bytes   Bytes to unpack the value from.
      * @param string $context Human-readable description used in error messages.
-     *
-     * @return int|float
      */
     private static function numeric(string $format, string $bytes, string $context): int|float
     {

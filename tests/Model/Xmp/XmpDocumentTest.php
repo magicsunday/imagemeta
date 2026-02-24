@@ -33,8 +33,6 @@ final class XmpDocumentTest extends TestCase
     /**
      * Merges duplicate keys into arrays and combines namespace prefixes.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function mergeAggregatesValuesAndPrefixes(): void
@@ -85,8 +83,6 @@ final class XmpDocumentTest extends TestCase
     /**
      * Returns an empty document when merging no inputs.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function mergeWithNoDocumentsReturnsEmptyDocument(): void
@@ -100,8 +96,6 @@ final class XmpDocumentTest extends TestCase
 
     /**
      * Merges structured parseType Resource properties under their parent key.
-     *
-     * @return void
      */
     #[Test]
     public function mergeAggregatesStructuredValues(): void
@@ -138,8 +132,6 @@ final class XmpDocumentTest extends TestCase
 
     /**
      * Returns structured values through get()/find() when keyed by the parent property.
-     *
-     * @return void
      */
     #[Test]
     public function getReturnsStructuredValues(): void
@@ -164,8 +156,6 @@ final class XmpDocumentTest extends TestCase
     /**
      * Returns a single list item for scalar text values.
      * Ensures commas inside text are not treated as separators.
-     *
-     * @return void
      */
     #[Test]
     public function stringListPreservesScalarTextWithCommas(): void
@@ -184,8 +174,6 @@ final class XmpDocumentTest extends TestCase
     /**
      * Returns list items when the property is already represented as an array.
      * It keeps the existing trimming behavior for container values.
-     *
-     * @return void
      */
     #[Test]
     public function stringListReturnsArrayValues(): void
@@ -203,8 +191,6 @@ final class XmpDocumentTest extends TestCase
 
     /**
      * Returns an empty list for empty scalar values.
-     *
-     * @return void
      */
     #[Test]
     public function stringListSkipsEmptyScalar(): void
@@ -251,8 +237,6 @@ final class XmpDocumentTest extends TestCase
     /**
      * Parses canonical XMP boolean strings.
      * Ensures strict True/False values are interpreted correctly.
-     *
-     * @return void
      */
     #[Test]
     public function boolParsesCanonicalValues(): void
@@ -282,8 +266,6 @@ final class XmpDocumentTest extends TestCase
      * It keeps the accessor aligned with the XMP lexical space.
      *
      * @param string $value Boolean candidate to validate.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('nonCanonicalBooleanProvider')]
@@ -304,8 +286,6 @@ final class XmpDocumentTest extends TestCase
     /**
      * Parses a basic rational value into a float.
      * It keeps the numeric parsing rules stable for valid inputs.
-     *
-     * @return void
      */
     #[Test]
     public function parseNumericValueParsesValidRational(): void
@@ -318,8 +298,6 @@ final class XmpDocumentTest extends TestCase
      * It prevents division by zero across multiple textual forms.
      *
      * @param string $denominator Denominator string to test.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('zeroEquivalentDenominatorProvider')]
@@ -333,8 +311,6 @@ final class XmpDocumentTest extends TestCase
     /**
      * Rejects malformed rational strings without numeric content.
      * It ensures invalid numerator/denominator pairs return null.
-     *
-     * @return void
      */
     #[Test]
     public function parseNumericValueRejectsMalformedRational(): void

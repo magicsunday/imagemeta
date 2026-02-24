@@ -21,8 +21,6 @@ abstract class AbstractSimpleDecoder implements MakerNotesDecoderInterface
 {
     /**
      * Returns the vendor name assigned to decoded maker note records.
-     *
-     * @return string
      */
     abstract protected function getVendorName(): string;
 
@@ -32,8 +30,6 @@ abstract class AbstractSimpleDecoder implements MakerNotesDecoderInterface
      * @param string      $raw   Raw maker note data stream captured from the image file.
      * @param string      $make  Reported camera make string.
      * @param string|null $model Optional camera model identifier for the payload.
-     *
-     * @return MakerNotesRecord
      */
     public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
     {

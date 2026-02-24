@@ -244,7 +244,6 @@ final readonly class GpsTimestampConverter
     /**
      * Combines a GPS date and time into a UTC timestamp.
      *
-     * @param string|null                                       $date
      * @param array{hours:int, minutes:int, seconds:float}|null $timeParts
      */
     private function combineDateTime(?string $date, ?array $timeParts): ?DateTimeImmutable

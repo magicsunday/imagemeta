@@ -84,8 +84,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides valid GPSLatitudeRef values ('N'/'S') with coordinate data.
      * Verifies that valid latitude references produce non-null latitude values.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidLatitudeRef(): void
@@ -101,8 +99,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Supplies an invalid GPSLatitudeRef value ('X') with coordinate data.
      * Verifies that invalid latitude references are nulled per EXIF 3.0 §4.6.7.1.2.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidLatitudeRef(): void
@@ -118,8 +114,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides valid GPSLongitudeRef values ('E'/'W') with coordinate data.
      * Verifies that valid longitude references produce non-null longitude values.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidLongitudeRef(): void
@@ -135,8 +129,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Supplies an invalid GPSLongitudeRef value ('Z') with coordinate data.
      * Verifies that invalid longitude references are nulled per EXIF 3.0 §4.6.7.1.4.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidLongitudeRef(): void
@@ -152,8 +144,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides a valid GPSStatus value ('A').
      * Verifies the status is accepted per EXIF 3.0 §4.6.7.1.10.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidGpsStatus(): void
@@ -170,8 +160,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Supplies an invalid GPSStatus value ('X').
      * Verifies the status is nulled per EXIF 3.0 §4.6.7.1.10.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidGpsStatus(): void
@@ -188,8 +176,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides a valid GPSMeasureMode value ('3').
      * Verifies the measure mode is accepted per EXIF 3.0 §4.6.7.1.11.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidGpsMeasureMode(): void
@@ -206,8 +192,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Supplies an invalid GPSMeasureMode value ('1').
      * Verifies the measure mode is nulled per EXIF 3.0 §4.6.7.1.11.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidGpsMeasureMode(): void
@@ -224,8 +208,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides a valid GPSSpeedRef value ('K') with a speed value.
      * Verifies the speed ref is accepted and speed_ms is computed per EXIF 3.0 §4.6.7.1.13.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidGpsSpeedRef(): void
@@ -244,8 +226,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Supplies an invalid GPSSpeedRef value ('X') with a speed value.
      * Verifies the speed ref and derived speed_ms are nulled per EXIF 3.0 §4.6.7.1.13.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidGpsSpeedRef(): void
@@ -264,8 +244,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Supplies a multi-character GPSSpeedRef value ('KM') with a speed value.
      * Verifies reserved codes do not leak into normalized or original reference fields.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMultiCharacterGpsSpeedRef(): void
@@ -285,8 +263,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides a valid GPSTrackRef value ('T') with a track bearing.
      * Verifies the track ref is accepted and bearing is computed per EXIF 3.0 §4.6.7.1.15.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidGpsTrackRef(): void
@@ -305,8 +281,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Supplies an invalid GPSTrackRef value ('X') with a track bearing.
      * Verifies the track ref and derived track bearing are nulled per EXIF 3.0 §4.6.7.1.15.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidGpsTrackRef(): void
@@ -325,8 +299,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides a valid GPSImgDirectionRef value ('M') with a direction angle.
      * Verifies the ref is accepted and direction is computed per EXIF 3.0 §4.6.7.1.17.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidGpsImgDirectionRef(): void
@@ -345,8 +317,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Supplies an invalid GPSImgDirectionRef value ('X') with a direction angle.
      * Verifies the ref and derived direction are nulled per EXIF 3.0 §4.6.7.1.17.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidGpsImgDirectionRef(): void
@@ -365,8 +335,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides a valid GPSDestBearingRef value ('T') with a bearing angle.
      * Verifies the ref is accepted and bearing is computed per EXIF 3.0 §4.6.7.1.24.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidGpsDestBearingRef(): void
@@ -385,8 +353,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Supplies an invalid GPSDestBearingRef value ('X') with a bearing angle.
      * Verifies the ref and derived bearing are nulled per EXIF 3.0 §4.6.7.1.24.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidGpsDestBearingRef(): void
@@ -404,8 +370,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Rejects out-of-range GPS bearing values for track/image/destination bearings.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideOutOfRangeBearingValues')]
@@ -453,8 +417,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides a valid GPSDestDistanceRef value ('K') with a distance value.
      * Verifies the ref is accepted and distance_m is computed per EXIF 3.0 §4.6.7.1.26.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidGpsDestDistanceRef(): void
@@ -473,8 +435,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Supplies an invalid GPSDestDistanceRef value ('X') with a distance value.
      * Verifies the ref and derived distance are nulled per EXIF 3.0 §4.6.7.1.26.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidGpsDestDistanceRef(): void
@@ -493,8 +453,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Supplies a multi-character GPSDestDistanceRef value ('NM') with a distance value.
      * Verifies reserved codes do not leak into normalized or original reference fields.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMultiCharacterGpsDestDistanceRef(): void
@@ -514,8 +472,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Supplies lowercase ref values and verifies they are uppercased and accepted.
      * EXIF 3.0 §4.6.7 ref values are case-insensitive in practice but stored uppercase.
-     *
-     * @return void
      */
     #[Test]
     public function normalizesLowercaseRefValues(): void
@@ -534,8 +490,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides a GPSLatitude with only 2 components instead of the required 3.
      * Verifies that non-conformant DMS counts are rejected per EXIF 3.0 §4.6.8.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsLatitudeWithTwoComponents(): void
@@ -556,8 +510,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides a GPSLongitude with 4 components instead of the required 3.
      * Verifies that excess DMS components are rejected per EXIF 3.0 §4.6.8.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsLongitudeWithFourComponents(): void
@@ -580,8 +532,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides a GPSLatitude with only 1 component instead of the required 3.
      * Verifies that a single-component DMS value is rejected per EXIF 3.0 §4.6.8.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsLatitudeWithOneComponent(): void
@@ -600,8 +550,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Accepts edge values for capture and destination coordinates.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsCoordinateRangeEdges(): void
@@ -628,12 +576,7 @@ final class GpsConverterTest extends TestCase
     /**
      * Rejects negative DMS components for capture coordinates.
      *
-     * @param int                      $refTag
-     * @param int                      $valueTag
-     * @param string                   $ref
      * @param list<array{0:int,1:int}> $dms
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideNegativeCaptureDmsComponents')]
@@ -680,8 +623,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Rejects negative DMS components for destination coordinates.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsNegativeDestinationDmsComponents(): void
@@ -703,12 +644,7 @@ final class GpsConverterTest extends TestCase
     /**
      * Rejects DMS minutes >= 60 for capture coordinates.
      *
-     * @param int                      $refTag
-     * @param int                      $valueTag
-     * @param string                   $ref
      * @param list<array{0:int,1:int}> $dms
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideOutOfRangeDmsComponents')]
@@ -776,8 +712,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Rejects capture latitude values above +90°.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsLatitudeAboveNinetyDegrees(): void
@@ -796,8 +730,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Rejects capture longitude values below -180°.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsLongitudeBelowMinusOneHundredEightyDegrees(): void
@@ -816,8 +748,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Rejects destination latitude values below -90°.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsDestinationLatitudeBelowMinusNinetyDegrees(): void
@@ -836,8 +766,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Combines valid GPSDateStamp and GPSTimeStamp values into a UTC timestamp.
-     *
-     * @return void
      */
     #[Test]
     public function combinesValidGpsDateAndTimeStamp(): void
@@ -853,8 +781,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Rejects invalid calendar dates in GPSDateStamp.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidGpsCalendarDate(): void
@@ -888,8 +814,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Accepts fractional seconds in valid range for GPSTimeStamp.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsGpsTimeStampWithFractionalSeconds(): void
@@ -920,11 +844,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Accepts integral GPSAltitudeRef values in the EXIF-defined enum domain.
-     *
-     * @param int|string $value
-     * @param int        $expected
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideValidAltitudeRefValues')]
@@ -935,10 +854,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Rejects fractional GPSAltitudeRef values instead of coercing them into enum codes.
-     *
-     * @param float|string|ExifRational $value
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideFractionalAltitudeRefValues')]
@@ -949,8 +864,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Rejects non-numeric GPSAltitudeRef text values.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsNonNumericAltitudeReferenceValue(): void
@@ -960,10 +873,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Rejects out-of-domain GPSAltitudeRef values outside EXIF's 0..3 range.
-     *
-     * @param int|string $value
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideOutOfDomainAltitudeRefValues')]
@@ -1092,11 +1001,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Rejects GPS coordinate value present without matching ref tag.
-     *
-     * @param int $refTag
-     * @param int $valueTag
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideCoordinatePairs')]
@@ -1115,12 +1019,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Rejects GPS coordinate ref present without matching value tag.
-     *
-     * @param int    $refTag
-     * @param int    $valueTag
-     * @param string $refValue
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideCoordinatePairsWithRefs')]
@@ -1185,8 +1083,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides a valid GPSDifferential value (0).
      * Verifies no-correction is accepted per EXIF 3.0 §4.6.7.1.31.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidGpsDifferentialZero(): void
@@ -1203,8 +1099,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Provides a valid GPSDifferential value (1).
      * Verifies differential-corrected is accepted per EXIF 3.0 §4.6.7.1.31.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidGpsDifferentialOne(): void
@@ -1221,8 +1115,6 @@ final class GpsConverterTest extends TestCase
     /**
      * Supplies an invalid GPSDifferential value (2).
      * Verifies out-of-range values are nulled per EXIF 3.0 §4.6.7.1.31.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidGpsDifferential(): void
@@ -1238,8 +1130,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Rejects negative GPSDOP values.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsNegativeGpsDop(): void
@@ -1262,8 +1152,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Accepts non-negative GPSHPositioningError values.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsNonNegativeGpsHPositioningError(): void
@@ -1284,8 +1172,6 @@ final class GpsConverterTest extends TestCase
 
     /**
      * Rejects negative GPSHPositioningError values.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsNegativeGpsHPositioningError(): void

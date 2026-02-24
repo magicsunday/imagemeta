@@ -29,8 +29,6 @@ final class UInt64Test extends TestCase
     /**
      * Constructs a UInt64 from explicit high/low parts.
      * It verifies the accessors return the exact values provided.
-     *
-     * @return void
      */
     #[Test]
     public function constructsFromHighAndLowParts(): void
@@ -44,8 +42,6 @@ final class UInt64Test extends TestCase
     /**
      * Builds a UInt64 from two unsigned 32-bit words.
      * It ensures the high and low words are preserved as-is.
-     *
-     * @return void
      */
     #[Test]
     public function createsFromTwoUnsigned32BitParts(): void
@@ -59,8 +55,6 @@ final class UInt64Test extends TestCase
     /**
      * Converts a non-negative integer larger than 32 bits into high/low parts.
      * It confirms the high word captures the overflow beyond the low word.
-     *
-     * @return void
      */
     #[Test]
     public function createsFromNonNegativeInteger(): void
@@ -74,8 +68,6 @@ final class UInt64Test extends TestCase
     /**
      * Rejects negative input when constructing from an integer.
      * It asserts a ParseError is thrown for invalid signed values.
-     *
-     * @return void
      */
     #[Test]
     public function throwsExceptionForNegativeInteger(): void
@@ -89,8 +81,6 @@ final class UInt64Test extends TestCase
     /**
      * Converts a small UInt64 back to a native integer.
      * It verifies the conversion succeeds within the supported range.
-     *
-     * @return void
      */
     #[Test]
     public function convertsSmallValueToInt(): void
@@ -103,8 +93,6 @@ final class UInt64Test extends TestCase
     /**
      * Detects zero-valued UInt64 instances.
      * It confirms non-zero values are not treated as zero.
-     *
-     * @return void
      */
     #[Test]
     public function detectsZeroValue(): void
@@ -119,8 +107,6 @@ final class UInt64Test extends TestCase
     /**
      * Rejects conversion when the value exceeds the supported integer range.
      * It asserts a ParseError is thrown to prevent truncation.
-     *
-     * @return void
      */
     #[Test]
     public function throwsParseErrorWhenConvertingLargeValueToInt(): void
@@ -136,8 +122,6 @@ final class UInt64Test extends TestCase
     /**
      * Converts the value to a string representation for small values.
      * It confirms the decimal formatting matches the low word.
-     *
-     * @return void
      */
     #[Test]
     public function convertsToString(): void
@@ -150,8 +134,6 @@ final class UInt64Test extends TestCase
     /**
      * Adds a small integer without overflowing the low word.
      * It verifies that the high word remains unchanged.
-     *
-     * @return void
      */
     #[Test]
     public function addsUnsignedInteger(): void
@@ -166,8 +148,6 @@ final class UInt64Test extends TestCase
     /**
      * Adds a small integer that overflows the low word.
      * It verifies the carry increments the high word and wraps the low word.
-     *
-     * @return void
      */
     #[Test]
     public function handlesOverflowInAddition(): void
@@ -182,8 +162,6 @@ final class UInt64Test extends TestCase
     /**
      * Compares values with identical high words and differing low words.
      * It verifies comparison results for less-than, greater-than, and equality.
-     *
-     * @return void
      */
     #[Test]
     public function comparesWithOtherUInt64(): void
@@ -203,8 +181,6 @@ final class UInt64Test extends TestCase
     /**
      * Compares values with different high words.
      * It confirms the high word dominates ordering before the low word.
-     *
-     * @return void
      */
     #[Test]
     public function comparesHighPartFirst(): void

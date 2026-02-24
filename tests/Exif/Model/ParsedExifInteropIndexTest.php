@@ -46,8 +46,6 @@ final class ParsedExifInteropIndexTest extends TestCase
 {
     /**
      * Returns the interop index when the entry is valid ASCII[4].
-     *
-     * @return void
      */
     #[Test]
     public function returnsValidInteropIndex(): void
@@ -68,8 +66,6 @@ final class ParsedExifInteropIndexTest extends TestCase
 
     /**
      * Rejects an interop index entry with wrong count (3 instead of 4).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInteropIndexWithWrongCount(): void
@@ -90,8 +86,6 @@ final class ParsedExifInteropIndexTest extends TestCase
 
     /**
      * Rejects an interop index entry with wrong type (UNDEFINED instead of ASCII).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInteropIndexWithWrongType(): void

@@ -29,8 +29,6 @@ final class ExifCapabilitiesTest extends TestCase
     /**
      * Maps raw EXIF version strings to capability profiles.
      * The data provider covers nulls, decimal formats, and raw four-digit codes.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('exifVersionProvider')]

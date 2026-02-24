@@ -43,8 +43,6 @@ final class IptcParserTest extends TestCase
     /**
      * Parses IPTC datasets embedded in a Photoshop APP13 resource block.
      * This confirms multiple values for the same dataset are preserved in order.
-     *
-     * @return void
      */
     #[Test]
     public function parsesIimDatasetsFromApp13Payload(): void
@@ -64,8 +62,6 @@ final class IptcParserTest extends TestCase
     /**
      * Uses IPTC extended-length encoding for dataset values.
      * This verifies that larger payloads are decoded correctly.
-     *
-     * @return void
      */
     #[Test]
     public function parsesExtendedLengthDatasets(): void
@@ -81,8 +77,6 @@ final class IptcParserTest extends TestCase
 
     /**
      * Rejects extended-length datasets when length-byte-count is zero.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsExtendedLengthWithZeroLengthByteCount(): void
@@ -98,8 +92,6 @@ final class IptcParserTest extends TestCase
 
     /**
      * Rejects extended-length datasets with excessive length-byte-count values.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsExtendedLengthWithExcessiveLengthByteCount(): void
@@ -115,8 +107,6 @@ final class IptcParserTest extends TestCase
 
     /**
      * Accepts odd-sized resource data when mandatory alignment padding is present.
-     *
-     * @return void
      */
     #[Test]
     public function parsesOddSizedResourceDataWithTrailingPadByte(): void
@@ -131,8 +121,6 @@ final class IptcParserTest extends TestCase
 
     /**
      * Accepts odd-length name/data fields when required alignment padding bytes are zero.
-     *
-     * @return void
      */
     #[Test]
     public function parsesOddSizedNameAndDataWithZeroAlignmentPadding(): void
@@ -148,8 +136,6 @@ final class IptcParserTest extends TestCase
 
     /**
      * Rejects odd-length name fields when the alignment pad byte is non-zero.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsOddSizedNameWithNonZeroAlignmentPadding(): void
@@ -166,8 +152,6 @@ final class IptcParserTest extends TestCase
 
     /**
      * Rejects odd-length resource data when the alignment pad byte is non-zero.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsOddSizedDataWithNonZeroAlignmentPadding(): void
@@ -184,8 +168,6 @@ final class IptcParserTest extends TestCase
 
     /**
      * Keeps even-length APP13 resource blocks unaffected by alignment padding checks.
-     *
-     * @return void
      */
     #[Test]
     public function parsesEvenSizedBlocksWithoutAlignmentPadding(): void
@@ -201,8 +183,6 @@ final class IptcParserTest extends TestCase
 
     /**
      * Rejects odd-sized resource data when trailing alignment padding is missing.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsOddSizedResourceDataWithoutTrailingPadByte(): void
@@ -219,8 +199,6 @@ final class IptcParserTest extends TestCase
 
     /**
      * Keeps even-sized resource data parsing unchanged without requiring padding.
-     *
-     * @return void
      */
     #[Test]
     public function parsesEvenSizedResourceDataWithoutPaddingRequirement(): void
@@ -236,8 +214,6 @@ final class IptcParserTest extends TestCase
     /**
      * Truncates the Photoshop resource block to simulate corruption.
      * This asserts a BoundsError is thrown when the block length is inconsistent.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsTruncatedResourceBlocks(): void

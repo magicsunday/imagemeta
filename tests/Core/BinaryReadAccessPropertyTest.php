@@ -49,8 +49,6 @@ final class BinaryReadAccessPropertyTest extends TestCase
     /**
      * Compares MemoryBuffer and Stream by executing the same read/seek sequence on random payloads.
      * This guards against divergence in cursor movement, bounds handling, or integer decoding.
-     *
-     * @return void
      */
     #[Test]
     public function memoryBufferAndStreamBehaveIdenticallyForRandomPayloads(): void
@@ -72,8 +70,6 @@ final class BinaryReadAccessPropertyTest extends TestCase
     /**
      * Compares StreamWindow reads to a buffer slice for random offsets and window sizes.
      * This validates that windowed access preserves offsets and bounds behavior.
-     *
-     * @return void
      */
     #[Test]
     public function streamWindowMatchesBufferViewForRandomSlices(): void

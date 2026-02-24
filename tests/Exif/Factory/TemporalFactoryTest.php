@@ -45,8 +45,6 @@ final class TemporalFactoryTest extends TestCase
     /**
      * Supplies EXIF date/time tags with offsets and sub-second components.
      * Verifies TemporalFactory produces DateTime values and preserves sub-second strings.
-     *
-     * @return void
      */
     #[Test]
     public function createsFromExifMetadata(): void
@@ -84,8 +82,6 @@ final class TemporalFactoryTest extends TestCase
     /**
      * Omits EXIF timestamps while providing XMP CreateDate and ModifyDate.
      * Ensures the factory falls back to XMP timestamps when EXIF is missing.
-     *
-     * @return void
      */
     #[Test]
     public function fallsBackToXmpTimestamps(): void
@@ -114,8 +110,6 @@ final class TemporalFactoryTest extends TestCase
     /**
      * Omits EXIF timestamps while providing QuickTime CreationDate and ModifyDate.
      * Confirms QuickTime metadata is used as the fallback source.
-     *
-     * @return void
      */
     #[Test]
     public function fallsBackToQuickTimeTimestamps(): void
@@ -143,8 +137,6 @@ final class TemporalFactoryTest extends TestCase
     /**
      * Provides sub-second strings of varying length in EXIF tags.
      * Verifies the factory normalizes each value to three digits.
-     *
-     * @return void
      */
     #[Test]
     public function sanitizesSubSeconds(): void
@@ -172,8 +164,6 @@ final class TemporalFactoryTest extends TestCase
     /**
      * Creates Metadata without EXIF, XMP, or QuickTime timestamps.
      * Ensures all temporal fields remain null when no sources are available.
-     *
-     * @return void
      */
     #[Test]
     public function createsWithNullMetadata(): void

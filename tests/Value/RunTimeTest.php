@@ -28,8 +28,6 @@ final class RunTimeTest extends TestCase
     /**
      * Stores CoreMedia time values and flags.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithTimescaleAndValue(): void
@@ -50,8 +48,6 @@ final class RunTimeTest extends TestCase
     /**
      * Accepts null runtime values.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void
@@ -72,8 +68,6 @@ final class RunTimeTest extends TestCase
     /**
      * Stores runtime values across different timescales.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function handlesVariousTimescales(): void

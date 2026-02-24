@@ -38,8 +38,6 @@ final class TiffDataTest extends TestCase
     /**
      * Constructs a TiffData instance using strip-based image fields and resolution values.
      * Verifies the value object preserves the supplied image structure properties.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithBasicImageStructure(): void
@@ -79,8 +77,6 @@ final class TiffDataTest extends TestCase
     /**
      * Constructs a TiffData instance using tile-based fields and JPEG compression.
      * Ensures tile dimensions, offsets, and subsampling are stored as provided.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithTiledImage(): void
@@ -123,8 +119,6 @@ final class TiffDataTest extends TestCase
     /**
      * Builds a TiffData instance with all nullable fields set to null.
      * Confirms the value object preserves nulls without coercion.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

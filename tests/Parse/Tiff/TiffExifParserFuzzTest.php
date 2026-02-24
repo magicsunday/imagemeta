@@ -72,8 +72,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Passes an empty blob to the parser with no header bytes at all.
      * Ensures a BoundsError is raised for the missing TIFF header.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsEmptyBlob(): void
@@ -88,8 +86,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Provides only the byte-order marker to simulate a truncated header.
      * Verifies the parser throws BoundsError when mandatory fields are missing.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsTooShortBlob(): void
@@ -106,8 +102,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Feeds random 0xFF bytes to simulate garbage input.
      * Confirms a ParseError is thrown for an invalid TIFF header/magic.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsRandomGarbage(): void
@@ -124,8 +118,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Uses a blob of null bytes to simulate a zeroed file.
      * Ensures the parser rejects the invalid header with a ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsNullBytes(): void
@@ -142,8 +134,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Includes byte order and magic but omits the first IFD offset.
      * Verifies a BoundsError is raised for the truncated header.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsHeaderOnlyBlob(): void
@@ -162,8 +152,6 @@ final class TiffExifParserFuzzTest extends TestCase
      * Declares a BYTE entry with an INT_MAX count to overflow expected data size.
      * The entry triggers a BoundsError internally which is caught — the entry
      * is silently skipped and parsing succeeds (Postel's Law, GH-1549).
-     *
-     * @return void
      */
     #[Test]
     public function skipsEntryWithOverflowCount(): void
@@ -191,8 +179,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Creates two ASCII entries that point to the same data offset.
      * Confirms overlapping data is tolerated and does not crash the parser.
-     *
-     * @return void
      */
     #[Test]
     public function handlesOverlappingEntryData(): void
@@ -243,8 +229,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Uses a RATIONAL value with both numerator and denominator set to zero.
      * Ensures the parser handles the degenerate fraction without throwing.
-     *
-     * @return void
      */
     #[Test]
     public function handlesRationalBothZero(): void
@@ -260,8 +244,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Uses a RATIONAL value at the maximum unsigned 32-bit range.
      * Verifies the parser handles extreme values without error.
-     *
-     * @return void
      */
     #[Test]
     public function handlesRationalMaxValues(): void
@@ -277,8 +259,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Uses an SRATIONAL value with a negative numerator and positive denominator.
      * Ensures signed numerator handling does not break parsing.
-     *
-     * @return void
      */
     #[Test]
     public function handlesSrationalNegativeNumerator(): void
@@ -294,8 +274,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Uses an SRATIONAL value with a negative denominator.
      * Confirms the parser accepts signed denominators without crashing.
-     *
-     * @return void
      */
     #[Test]
     public function handlesSrationalNegativeDenominator(): void
@@ -311,8 +289,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Uses an SRATIONAL value where both numerator and denominator are negative.
      * Verifies the parser tolerates fully negative signed fractions.
-     *
-     * @return void
      */
     #[Test]
     public function handlesSrationalBothNegative(): void
@@ -328,8 +304,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Builds a chain of five empty IFDs to stress pointer traversal.
      * Ensures the parser follows the chain and records subsequent IFDs.
-     *
-     * @return void
      */
     #[Test]
     public function handlesDeepIfdChain(): void
@@ -375,8 +349,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Embeds null bytes inside an ASCII tag value.
      * Confirms the parser accepts embedded nulls without failing.
-     *
-     * @return void
      */
     #[Test]
     public function handlesAsciiWithEmbeddedNulls(): void
@@ -422,8 +394,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Creates an entry with a component count of zero.
      * Ensures the parser tolerates zero-length entries without errors.
-     *
-     * @return void
      */
     #[Test]
     public function handlesEntryWithZeroCount(): void
@@ -463,8 +433,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Supplies a little-endian header with values that could be misread as big-endian.
      * Verifies the parser honors the declared endianness for value decoding.
-     *
-     * @return void
      */
     #[Test]
     public function parsesMixedEndianness(): void
@@ -536,8 +504,6 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Uses an UNDEFINED tag payload filled with arbitrary bytes.
      * Confirms the parser accepts opaque data without attempting interpretation.
-     *
-     * @return void
      */
     #[Test]
     public function handlesUndefinedTypeWithRandomBytes(): void

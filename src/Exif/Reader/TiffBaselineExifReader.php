@@ -142,12 +142,9 @@ final readonly class TiffBaselineExifReader
     // ========================================================================
     // TIFF 6.0 rarely-used baseline tags
     // ========================================================================
-
     /**
      * Returns NewSubfileType tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x00FE.
-     *
-     * @return int
      */
     public function newSubfileType(): int
     {
@@ -158,8 +155,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns SubfileType tag value (deprecated).
      * TIFF 5.0 (deprecated in TIFF 6.0) — Tag 0x00FF.
-     *
-     * @return int|null
      */
     public function subfileType(): ?int
     {
@@ -169,8 +164,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns Threshholding tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0107.
-     *
-     * @return int
      */
     public function threshholding(): int
     {
@@ -181,8 +174,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns CellWidth tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0108.
-     *
-     * @return int|null
      */
     public function cellWidth(): ?int
     {
@@ -192,8 +183,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns CellLength tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0109.
-     *
-     * @return int|null
      */
     public function cellLength(): ?int
     {
@@ -203,8 +192,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns FillOrder tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x010A.
-     *
-     * @return int
      */
     public function fillOrder(): int
     {
@@ -215,8 +202,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns MinSampleValue tag value.
      * TIFF 6.0 §8: default is 0 when tag is absent.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList
      */
     public function minSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
@@ -226,8 +211,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns MaxSampleValue tag value.
      * TIFF 6.0 §8: default is (2^BitsPerSample)-1 when tag is absent.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList
      */
     public function maxSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
@@ -238,8 +221,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns PageName tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011D.
-     *
-     * @return string|null
      */
     public function pageName(): ?string
     {
@@ -249,8 +230,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns XPosition tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011E.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function xPosition(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -260,8 +239,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns YPosition tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011F.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function yPosition(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -271,8 +248,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns FreeOffsets tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0120.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function freeOffsets(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -282,8 +257,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns FreeByteCounts tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0121.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function freeByteCounts(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -293,8 +266,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns GrayResponseUnit tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0122.
-     *
-     * @return int
      */
     public function grayResponseUnit(): int
     {
@@ -305,8 +276,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns GrayResponseCurve tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0123.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function grayResponseCurve(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -316,8 +285,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns T4Options tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0124.
-     *
-     * @return int
      */
     public function t4Options(): int
     {
@@ -328,8 +295,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns T6Options tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0125.
-     *
-     * @return int
      */
     public function t6Options(): int
     {
@@ -340,8 +305,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns PageNumber tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0129.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function pageNumber(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -351,8 +314,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns ColorMap tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0140.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function colorMap(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -362,8 +323,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns HalftoneHints tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0141.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function halftoneHints(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -373,8 +332,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns InkSet tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014C.
-     *
-     * @return int
      */
     public function inkSet(): int
     {
@@ -385,8 +342,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns InkNames tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014D.
-     *
-     * @return string|null
      */
     public function inkNames(): ?string
     {
@@ -396,8 +351,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns NumberOfInks tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014E.
-     *
-     * @return int
      */
     public function numberOfInks(): int
     {
@@ -408,8 +361,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns DotRange tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0150.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function dotRange(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -419,8 +370,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns TargetPrinter tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0151.
-     *
-     * @return string|null
      */
     public function targetPrinter(): ?string
     {
@@ -430,8 +379,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns ExtraSamples tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0152.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function extraSamples(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -441,8 +388,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns SampleFormat tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0153.
-     *
-     * @return int
      */
     public function sampleFormat(): int
     {
@@ -453,8 +398,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns SMinSampleValue tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0154.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function sMinSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -464,8 +407,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns SMaxSampleValue tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0155.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function sMaxSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -475,8 +416,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns TransferRange tag value.
      * TIFF 6.0 §8: default is [0, NV, 0, NV, 0, NV] where NV = (2^BitsPerSample)-1.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function transferRange(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -500,8 +439,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGProc tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0200.
-     *
-     * @return int|null
      */
     public function jpegProc(): ?int
     {
@@ -511,8 +448,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGRestartInterval tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0203.
-     *
-     * @return int|null
      */
     public function jpegRestartInterval(): ?int
     {
@@ -522,8 +457,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGLosslessPredictors tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0205.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function jpegLosslessPredictors(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -533,8 +466,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGPointTransforms tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0206.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function jpegPointTransforms(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -544,8 +475,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGQTables tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0207.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function jpegQTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -555,8 +484,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGDCTables tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0208.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function jpegDCTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -566,8 +493,6 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGACTables tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0209.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     public function jpegACTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {

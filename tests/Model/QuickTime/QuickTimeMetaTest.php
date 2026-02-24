@@ -31,8 +31,6 @@ final class QuickTimeMetaTest extends TestCase
     /**
      * Exposes the stored content identifier when present.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function returnsStoredContentIdentifier(): void
@@ -51,8 +49,6 @@ final class QuickTimeMetaTest extends TestCase
     /**
      * Returns null when the content identifier is missing.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullWhenContentIdentifierIsMissing(): void
@@ -67,8 +63,6 @@ final class QuickTimeMetaTest extends TestCase
     /**
      * Resolves typed accessors and aliases for QuickTime metadata keys.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function typedAccessorsResolveAliases(): void
@@ -91,8 +85,6 @@ final class QuickTimeMetaTest extends TestCase
     /**
      * Returns null for missing keys across typed accessors.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function typedAccessorsReturnNullForMissingKeys(): void
@@ -108,8 +100,6 @@ final class QuickTimeMetaTest extends TestCase
     /**
      * Returns all data atoms for a key via allValues().
      * It confirms multi-value data atoms are accessible in order.
-     *
-     * @return void
      */
     #[Test]
     public function allValuesReturnsDataAtomsForKey(): void
@@ -133,8 +123,6 @@ final class QuickTimeMetaTest extends TestCase
     /**
      * Returns an empty list when no data atoms are present.
      * It ensures the default empty array is used when dataAtoms is omitted.
-     *
-     * @return void
      */
     #[Test]
     public function allValuesReturnsEmptyForDefaultDataAtoms(): void
@@ -147,8 +135,6 @@ final class QuickTimeMetaTest extends TestCase
     /**
      * Returns an empty list when requesting a key not in dataAtoms.
      * It verifies missing keys in the atom map yield no results.
-     *
-     * @return void
      */
     #[Test]
     public function allValuesReturnsEmptyForMissingKey(): void
@@ -164,8 +150,6 @@ final class QuickTimeMetaTest extends TestCase
 
     /**
      * Selects the first acceptable atom in encounter order for deterministic fallback.
-     *
-     * @return void
      */
     #[Test]
     public function firstAcceptableValueUsesEncounterOrder(): void
@@ -189,8 +173,6 @@ final class QuickTimeMetaTest extends TestCase
 
     /**
      * Returns null when no data atom matches accepted locale/type values.
-     *
-     * @return void
      */
     #[Test]
     public function firstAcceptableValueReturnsNullWhenNoAtomMatches(): void

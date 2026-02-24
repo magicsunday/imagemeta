@@ -198,8 +198,6 @@ final readonly class DescriptionExifReader
      * EXIF 3.0 §4.6.6.9.1 records a 128-bit UUID in
      * hexadecimal ASCII with a fixed count of 33 (including the terminator).
      * Version 4 UUIDs are recommended and the value should remain immutable.
-     *
-     * @return string|null
      */
     public function imageUniqueId(): ?string
     {

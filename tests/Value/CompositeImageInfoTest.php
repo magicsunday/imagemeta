@@ -30,8 +30,6 @@ final class CompositeImageInfoTest extends TestCase
     /**
      * Stores composite image type values.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithCompositeType(): void
@@ -48,8 +46,6 @@ final class CompositeImageInfoTest extends TestCase
     /**
      * Stores composite source count pairs.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithSourceCounts(): void
@@ -66,8 +62,6 @@ final class CompositeImageInfoTest extends TestCase
     /**
      * Stores composite exposure time details.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithExposureTimes(): void
@@ -97,8 +91,6 @@ final class CompositeImageInfoTest extends TestCase
     /**
      * Accepts null composite image fields.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

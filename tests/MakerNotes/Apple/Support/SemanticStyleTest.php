@@ -32,8 +32,6 @@ final class SemanticStyleTest extends TestCase
     /**
      * Uses the modern QuickTime SemanticStyle structure with _0/_2/_3 keys.
      * Ensures fromQuickTime returns the normalized preset, warmth, and tone values.
-     *
-     * @return void
      */
     #[Test]
     public function fromQuickTimeParsesModernStructure(): void
@@ -50,8 +48,6 @@ final class SemanticStyleTest extends TestCase
     /**
      * Supplies a legacy dictionary payload containing a SemanticStyle values array.
      * Verifies fromDictionary extracts the expected preset, warmth, and tone entries.
-     *
-     * @return void
      */
     #[Test]
     public function fromDictionaryParsesLegacyStructure(): void
@@ -72,8 +68,6 @@ final class SemanticStyleTest extends TestCase
     /**
      * Uses a deeply nested payload with mixed string and numeric values.
      * Ensures fromValue normalizes nesting, trims strings, and returns the ordered tuple.
-     *
-     * @return void
      */
     #[Test]
     public function fromValueNormalisesDeeplyNestedStructure(): void
@@ -86,8 +80,6 @@ final class SemanticStyleTest extends TestCase
     /**
      * Supplies a payload with an empty values list.
      * Confirms fromValue returns null when no semantic components are present.
-     *
-     * @return void
      */
     #[Test]
     public function fromValueReturnsNullWhenNoComponents(): void

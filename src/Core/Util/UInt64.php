@@ -199,8 +199,6 @@ final readonly class UInt64
      * Ensures that the given value is within the unsigned 32-bit range.
      *
      * @param int $value Value to validate.
-     *
-     * @return void
      */
     private function assertUint32(int $value): void
     {

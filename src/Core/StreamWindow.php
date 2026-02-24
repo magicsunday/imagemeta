@@ -122,8 +122,6 @@ final class StreamWindow implements BinaryReadAccessInterface
      *
      * @param int|UInt64 $offset Offset to seek to.
      * @param int        $whence Seek origin constant.
-     *
-     * @return void
      */
     private function seekInternal(int|UInt64 $offset, int $whence): void
     {

@@ -50,8 +50,6 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     /**
      * Supplies a UserComment shorter than the 8-byte character code area.
      * Confirms that payloads below the minimum length are rejected.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsUserCommentShorterThanEightBytes(): void
@@ -65,8 +63,6 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     /**
      * Supplies a UserComment with an unrecognised 8-byte prefix.
      * Confirms that an unknown encoding identifier is rejected.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsUserCommentWithUnknownPrefix(): void
@@ -82,8 +78,6 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     /**
      * Supplies a non-spec UTF8 marker prefix.
      * Confirms EXIF marker normalization rejects the prefix as invalid.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsUserCommentWithUtf8MarkerPrefix(): void
@@ -99,8 +93,6 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     /**
      * Supplies a UserComment with only 8 null bytes and no content.
      * Confirms that an empty UNDEFINED-prefix comment returns null.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForUndefinedPrefixWithoutContent(): void
@@ -115,8 +107,6 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     /**
      * Supplies a valid ASCII-prefixed UserComment.
      * Confirms the comment text is extracted correctly.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidAsciiPrefixedComment(): void
@@ -132,8 +122,6 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     /**
      * Supplies a valid UNDEFINED (all-NULL) prefix with text content.
      * Confirms the comment text is extracted via the UNDEFINED path.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsUndefinedPrefixWithContent(): void
@@ -149,8 +137,6 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     /**
      * Supplies a UNICODE-prefixed UTF-8 UserComment payload.
      * Confirms EXIF 3.0 UTF-8 semantics are applied for the UNICODE marker.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsUnicodePrefixWithUtf8Content(): void
@@ -166,8 +152,6 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     /**
      * Supplies a malformed UTF-8 payload with UNICODE marker.
      * Confirms invalid UTF-8 is rejected under EXIF 3.0 semantics.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsUnicodePrefixWithMalformedUtf8Content(): void
@@ -183,8 +167,6 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     /**
      * Supplies a legacy UTF-16BE-with-BOM payload under UNICODE marker.
      * Confirms compatibility fallback keeps existing EXIF 2.x ecosystem behavior.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsUnicodePrefixWithLegacyUtf16BomContent(): void
@@ -200,8 +182,6 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     /**
      * Supplies a JIS-prefixed comment encoded as ISO-2022-JP.
      * Confirms JIS-marker decoding follows EXIF-aligned JIS strategy.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsJisPrefixWithIso2022JpContent(): void
@@ -220,8 +200,6 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     /**
      * Supplies Shift-JIS bytes under a JIS marker.
      * Confirms non-JIS payloads are rejected without silent Shift-JIS fallback.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsJisPrefixWithShiftJisContent(): void

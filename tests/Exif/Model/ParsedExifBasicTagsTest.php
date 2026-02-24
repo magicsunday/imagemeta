@@ -47,8 +47,6 @@ final class ParsedExifBasicTagsTest extends TestCase
     /**
      * Provides an ASCII ImageDescription that includes null padding.
      * Verifies imageDescription trims trailing nulls to return the clean text.
-     *
-     * @return void
      */
     #[Test]
     public function imageDescriptionTrimsNullPadding(): void
@@ -70,8 +68,6 @@ final class ParsedExifBasicTagsTest extends TestCase
     /**
      * Supplies MAKE and MODEL strings with trailing null bytes.
      * Ensures cameraMake() and cameraModel() return trimmed human-readable values.
-     *
-     * @return void
      */
     #[Test]
     public function cameraMakeAndModelReturnStrings(): void
@@ -90,8 +86,6 @@ final class ParsedExifBasicTagsTest extends TestCase
     /**
      * Uses a SOFTWARE tag that contains only a null terminator.
      * Confirms software() returns null rather than an empty string.
-     *
-     * @return void
      */
     #[Test]
     public function softwareReturnsNullForEmptyString(): void

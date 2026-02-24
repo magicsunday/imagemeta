@@ -43,8 +43,6 @@ final class ParsedExifIfdPointerTagsTest extends TestCase
     /**
      * Provides all EXIF pointer tags with valid scalar offsets.
      * Verifies each pointer accessor returns the configured offset.
-     *
-     * @return void
      */
     #[Test]
     public function pointerAccessorsReturnConfiguredOffsets(): void
@@ -68,8 +66,6 @@ final class ParsedExifIfdPointerTagsTest extends TestCase
     /**
      * Uses EXIF data without pointer tags.
      * Verifies pointer accessors return null when tags are absent.
-     *
-     * @return void
      */
     #[Test]
     public function pointerAccessorsReturnNullWhenTagsAreAbsent(): void

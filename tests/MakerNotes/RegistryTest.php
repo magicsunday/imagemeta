@@ -53,8 +53,6 @@ final class RegistryTest extends TestCase
      * Confirms the registry resolves the same decoder for matching prefixes and casing.
      *
      * @param string $make The make string used during lookup.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('matchingMakeProvider')]
@@ -86,8 +84,6 @@ final class RegistryTest extends TestCase
     /**
      * Registers a Canon decoder but searches with a Nikon make string.
      * Ensures the registry returns null when no registered prefix matches.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullWhenNoPrefixMatches(): void
@@ -116,8 +112,6 @@ final class RegistryTest extends TestCase
     /**
      * Builds the default registry via RegistryFactory::createDefault().
      * Verifies that built-in decoders are registered for common camera makers.
-     *
-     * @return void
      */
     #[Test]
     public function factoryRegistersBuiltInDecoders(): void

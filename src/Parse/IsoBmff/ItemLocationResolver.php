@@ -129,7 +129,6 @@ final readonly class ItemLocationResolver
      *
      * @param list<string>        $xmpBlobs
      * @param array<string, bool> $xmpHashes
-     * @param string              $blob
      */
     public function appendUniqueXmp(array &$xmpBlobs, array &$xmpHashes, string $blob): void
     {
@@ -151,7 +150,6 @@ final readonly class ItemLocationResolver
      * be merged into one global bucket.
      *
      * @param array<int, array<int, list<IsoBmffItemReference>>> $existing
-     * @param int                                                $contextOffset
      * @param array<int, list<IsoBmffItemReference>>             $incoming
      *
      * @return array<int, array<int, list<IsoBmffItemReference>>>
@@ -188,7 +186,6 @@ final readonly class ItemLocationResolver
      * must remain separate.
      *
      * @param array<int, array<int, IsoBmffDataReference>> $existing
-     * @param int                                          $contextOffset
      * @param array<int, IsoBmffDataReference>             $incoming
      *
      * @return array<int, array<int, IsoBmffDataReference>>

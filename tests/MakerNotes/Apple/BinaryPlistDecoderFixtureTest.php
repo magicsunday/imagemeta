@@ -50,8 +50,6 @@ final class BinaryPlistDecoderFixtureTest extends TestCase
     /**
      * Decodes a fixture binary plist and validates the expected keys, types, and values.
      * Ensures the decoder produces correct ApplePlist objects for scalars, arrays, and dictionaries.
-     *
-     * @return void
      */
     #[Test]
     public function itDecodesFixtureAndMatchesExpectedValues(): void

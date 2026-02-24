@@ -44,8 +44,6 @@ final readonly class CameraLensExifReader
      *
      * EXIF 3.0 §4.6.5.4.2 (Make) stores the free-form manufacturer identifier
      * as ASCII or UTF-8 including the terminating NUL.
-     *
-     * @return string|null
      */
     public function cameraMake(): ?string
     {
@@ -57,8 +55,6 @@ final readonly class CameraLensExifReader
      *
      * EXIF 3.0 §4.6.5.4.3 (Model) defines the model name or number as an ASCII
      * or UTF-8 string with the NUL terminator counted in the tag length.
-     *
-     * @return string|null
      */
     public function cameraModel(): ?string
     {
@@ -69,8 +65,6 @@ final readonly class CameraLensExifReader
      * Returns the lens model string if present.
      *
      * EXIF 3.0 §4.6.6.9.6 stores the lens model as an ASCII or UTF-8 string.
-     *
-     * @return string|null
      */
     public function lensModel(): ?string
     {
@@ -82,8 +76,6 @@ final readonly class CameraLensExifReader
      *
      * EXIF 3.0 §4.6.6.9.5 records LensMake as an ASCII or UTF-8 identifier and
      * expects it to remain stable once captured.
-     *
-     * @return string|null
      */
     public function lensMake(): ?string
     {
@@ -95,8 +87,6 @@ final readonly class CameraLensExifReader
      *
      * EXIF 3.0 §4.6.6.9.2 allows ASCII or UTF-8 text for CameraOwnerName and
      * expects Artist to be populated alongside it.
-     *
-     * @return string|null
      */
     public function ownerName(): ?string
     {
@@ -107,8 +97,6 @@ final readonly class CameraLensExifReader
      * Returns the camera body serial number if present.
      *
      * EXIF 3.0 §4.6.6.9.3 stores the camera body serial as an ASCII string.
-     *
-     * @return string|null
      */
     public function bodySerialNumber(): ?string
     {
@@ -120,8 +108,6 @@ final readonly class CameraLensExifReader
      *
      * EXIF 3.0 §4.6.6.9.7 defines LensSerialNumber as a free-form ASCII value
      * that should remain stable across edits.
-     *
-     * @return string|null
      */
     public function lensSerialNumber(): ?string
     {

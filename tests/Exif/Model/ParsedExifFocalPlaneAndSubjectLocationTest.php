@@ -47,8 +47,6 @@ final class ParsedExifFocalPlaneAndSubjectLocationTest extends TestCase
     /**
      * Provides focal plane X/Y resolution rationals and a resolution unit.
      * Confirms the rational values are converted to floats and the unit is exposed.
-     *
-     * @return void
      */
     #[Test]
     public function focalPlaneResolutionConvertsRationals(): void
@@ -84,8 +82,6 @@ final class ParsedExifFocalPlaneAndSubjectLocationTest extends TestCase
     /**
      * Provides a valid two-coordinate subject location and an invalid one-value entry.
      * Ensures the parser returns coordinates only when both values are present.
-     *
-     * @return void
      */
     #[Test]
     public function subjectLocationRequiresTwoCoordinates(): void

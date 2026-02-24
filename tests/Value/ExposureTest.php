@@ -48,8 +48,6 @@ final class ExposureTest extends TestCase
     /**
      * Stores exposure measurements and enum metadata.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function storesMeasurementAndEnumValues(): void

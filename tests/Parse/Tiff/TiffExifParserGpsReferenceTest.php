@@ -50,8 +50,6 @@ final class TiffExifParserGpsReferenceTest extends TestCase
     /**
      * Parses a classic TIFF GPS example with S/W references and altitude below sea level.
      * Verifies the parser applies negative signs to latitude, longitude, and altitude.
-     *
-     * @return void
      */
     #[Test]
     public function parsesSouthAndWestCoordinatesFromClassicTiff(): void
@@ -64,8 +62,6 @@ final class TiffExifParserGpsReferenceTest extends TestCase
 
     /**
      * Parses valid edge coordinates (90/180 degrees) from a classic TIFF GPS IFD.
-     *
-     * @return void
      */
     #[Test]
     public function parsesCoordinateEdgeValuesFromClassicTiff(): void
@@ -83,8 +79,6 @@ final class TiffExifParserGpsReferenceTest extends TestCase
 
     /**
      * Accepts GPS reference tags encoded as ASCII[2] in the GPS IFD.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideGpsReferenceTags')]
@@ -99,8 +93,6 @@ final class TiffExifParserGpsReferenceTest extends TestCase
 
     /**
      * Rejects GPS reference tags encoded with non-ASCII TIFF type.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideGpsReferenceTags')]
@@ -117,8 +109,6 @@ final class TiffExifParserGpsReferenceTest extends TestCase
 
     /**
      * Rejects GPS reference tags encoded with wrong count.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideGpsReferenceTags')]
@@ -146,8 +136,6 @@ final class TiffExifParserGpsReferenceTest extends TestCase
 
     /**
      * Rejects latitude values above +90 degrees from a classic TIFF GPS IFD.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsLatitudeAboveNinetyFromClassicTiff(): void
@@ -164,8 +152,6 @@ final class TiffExifParserGpsReferenceTest extends TestCase
 
     /**
      * Rejects longitude values above +180 degrees from a classic TIFF GPS IFD.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsLongitudeAboveOneHundredEightyFromClassicTiff(): void
@@ -182,8 +168,6 @@ final class TiffExifParserGpsReferenceTest extends TestCase
 
     /**
      * Parses valid GPS date/time values and keeps fractional seconds in UTC output.
-     *
-     * @return void
      */
     #[Test]
     public function parsesValidGpsUtcDateTimeFromClassicTiff(): void
@@ -203,8 +187,6 @@ final class TiffExifParserGpsReferenceTest extends TestCase
 
     /**
      * Rejects invalid GPSDateStamp calendar values from classic TIFF payloads.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidGpsDateStampFromClassicTiff(): void
@@ -223,8 +205,6 @@ final class TiffExifParserGpsReferenceTest extends TestCase
 
     /**
      * Rejects out-of-range GPSTimeStamp values from classic TIFF payloads.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsOutOfRangeGpsTimeStampFromClassicTiff(): void
@@ -244,8 +224,6 @@ final class TiffExifParserGpsReferenceTest extends TestCase
     /**
      * Parses a BigTIFF GPS example that uses S/W references and a negative altitude.
      * Confirms BigTIFF parsing applies the same sign handling as classic TIFF.
-     *
-     * @return void
      */
     #[Test]
     public function parsesSouthAndWestCoordinatesFromBigTiff(): void

@@ -48,8 +48,6 @@ final readonly class ExposureParameterReader
      * Returns the exposure time in seconds if available.
      *
      * EXIF 3.0 §4.6.6.7.1 (ExposureTime)
-     *
-     * @return float|null
      */
     public function exposureTime(): ?float
     {
@@ -73,8 +71,6 @@ final readonly class ExposureParameterReader
      * Returns the aperture (f-number) if available.
      *
      * EXIF 3.0 §4.6.6.7.2 (FNumber)
-     *
-     * @return float|null
      */
     public function fNumber(): ?float
     {
@@ -166,8 +162,6 @@ final readonly class ExposureParameterReader
      * Returns the scene brightness value (APEX) if present.
      *
      * EXIF 3.0 §4.6.6.7.15 (BrightnessValue)
-     *
-     * @return float|null
      */
     public function brightnessValue(): ?float
     {
@@ -201,8 +195,6 @@ final readonly class ExposureParameterReader
      * Returns the exposure bias value in EV if present.
      *
      * EXIF 3.0 §4.6.6.7.16 (ExposureBiasValue)
-     *
-     * @return float|null
      */
     public function exposureBias(): ?float
     {
@@ -214,8 +206,6 @@ final readonly class ExposureParameterReader
      *
      * EXIF 3.0 §4.6.6.7.17 (MaxApertureValue) encodes a single RATIONAL representing
      * the lens's smallest F number expressed as an APEX value.
-     *
-     * @return float|null
      */
     public function maxApertureApex(): ?float
     {

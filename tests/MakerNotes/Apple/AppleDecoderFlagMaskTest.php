@@ -30,8 +30,6 @@ final class AppleDecoderFlagMaskTest extends TestCase
     /**
      * Invokes extractFlags with bitmask inputs and a values list that map to known flags.
      * Confirms the resulting normalized flags are set to true for each mapped feature.
-     *
-     * @return void
      */
     #[Test]
     public function extractFlagsDerivesNormalizedFlagsFromBitMasks(): void
@@ -65,8 +63,6 @@ final class AppleDecoderFlagMaskTest extends TestCase
     /**
      * Supplies bitmask inputs that do not enable any known flags.
      * Ensures the normalized flags default to false when no bits are matched.
-     *
-     * @return void
      */
     #[Test]
     public function extractFlagsAssignsFalseDefaultsWhenNoMappedBitsEnabled(): void

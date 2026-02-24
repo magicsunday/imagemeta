@@ -65,8 +65,6 @@ final class TiffExifParserBigTiffTest extends TestCase
 {
     /**
      * Rejects BigTIFF header with offset-size=16 (only 8 is valid per spec).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsBigTiffWithOffsetSize16(): void
@@ -82,8 +80,6 @@ final class TiffExifParserBigTiffTest extends TestCase
     /**
      * Uses an unsupported BigTIFF offset size (12 bytes).
      * Ensures the parser rejects the header with a ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsBigTiffWithOffsetSize12(): void
@@ -101,8 +97,6 @@ final class TiffExifParserBigTiffTest extends TestCase
     /**
      * Sets the first IFD offset to zero in the BigTIFF header.
      * EXIF 3.0 §4.5.1 requires a valid 0th IFD offset; zero is rejected.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsZeroFirstIfdOffsetInBigTiff(): void
@@ -119,8 +113,6 @@ final class TiffExifParserBigTiffTest extends TestCase
     /**
      * Creates a BigTIFF file with a 64-bit entry count and two ASCII entries.
      * Confirms the parser can iterate a 64-bit count and parse inline values.
-     *
-     * @return void
      */
     #[Test]
     public function parsesBigTiffWithLargeEntryCount(): void
@@ -171,8 +163,6 @@ final class TiffExifParserBigTiffTest extends TestCase
     /**
      * Builds an IFD entry using the LONG8 type with an inline 64-bit value.
      * Ensures the parser accepts LONG8 and produces an entry for ImageWidth.
-     *
-     * @return void
      */
     #[Test]
     public function parsesBigTiffWithLong8Type(): void
@@ -210,8 +200,6 @@ final class TiffExifParserBigTiffTest extends TestCase
     /**
      * Builds an entry using the SLONG8 type with a negative value.
      * Confirms signed 64-bit values are accepted and captured in the IFD.
-     *
-     * @return void
      */
     #[Test]
     public function parsesBigTiffWithSlong8Type(): void
@@ -253,8 +241,6 @@ final class TiffExifParserBigTiffTest extends TestCase
     /**
      * Adds an IFD8 pointer entry that references a zero offset.
      * Verifies the parser accepts the pointer type without attempting a sub-IFD.
-     *
-     * @return void
      */
     #[Test]
     public function parsesBigTiffWithIfd8PointerType(): void
@@ -296,8 +282,6 @@ final class TiffExifParserBigTiffTest extends TestCase
     /**
      * Uses a huge first-IFD offset that points beyond the blob size.
      * Ensures bounds checking raises a BoundsError for the invalid offset.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsBigTiffOffsetBeyondBlob(): void
@@ -319,8 +303,6 @@ final class TiffExifParserBigTiffTest extends TestCase
     /**
      * Provides an entry whose value offset is beyond 4 GiB.
      * The parser skips such entries gracefully (GH-1549).
-     *
-     * @return void
      */
     #[Test]
     public function skipsBigTiffValueOffsetBeyond4GB(): void
@@ -351,8 +333,6 @@ final class TiffExifParserBigTiffTest extends TestCase
     /**
      * Truncates the entry data so required fields are missing.
      * Ensures the parser throws a BoundsError when the entry is incomplete.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsBigTiffTruncatedEntry(): void
@@ -377,8 +357,6 @@ final class TiffExifParserBigTiffTest extends TestCase
     /**
      * Declares an absurdly large 64-bit entry count in the IFD header.
      * Verifies the parser rejects the file to prevent unrealistic allocations.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsBigTiffWithHugeEntryCount(): void

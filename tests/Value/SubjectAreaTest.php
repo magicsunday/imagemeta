@@ -29,8 +29,6 @@ final class SubjectAreaTest extends TestCase
     /**
      * Builds subject area points from two-component input.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function createPoint(): void
@@ -50,8 +48,6 @@ final class SubjectAreaTest extends TestCase
     /**
      * Builds subject area circles from three-component input.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function createCircle(): void
@@ -71,8 +67,6 @@ final class SubjectAreaTest extends TestCase
     /**
      * Builds subject area rectangles from four-component input.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function createRectangle(): void
@@ -92,8 +86,6 @@ final class SubjectAreaTest extends TestCase
     /**
      * Returns null for invalid subject area component counts.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function invalidComponentCountReturnsNull(): void
@@ -106,8 +98,6 @@ final class SubjectAreaTest extends TestCase
     /**
      * Returns null when subject area input is missing.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function nullInputReturnsNull(): void
@@ -118,8 +108,6 @@ final class SubjectAreaTest extends TestCase
     /**
      * Rejects negative or non-numeric subject area components.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsNegativeOrNonNumericValues(): void

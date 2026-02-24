@@ -30,8 +30,6 @@ final readonly class ExifTagDecoder
      * @param int       $count    Declared value count.
      * @param string    $bytes    Raw payload bytes.
      * @param list<int> $utf8Tags EXIF 3.0 tags that allow UTF-8 text.
-     *
-     * @return string
      */
     public function decodeAscii(int $tag, int $count, string $bytes, array $utf8Tags): string
     {

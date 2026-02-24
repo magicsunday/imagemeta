@@ -49,8 +49,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Passes an empty payload to the binary plist decoder.
      * Ensures a ParseError is raised for the missing header.
-     *
-     * @return void
      */
     #[Test]
     public function decodeThrowsOnEmptyPayload(): void
@@ -64,8 +62,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Supplies a non-bplist string as input.
      * Verifies the decoder rejects unsupported formats with ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function decodeThrowsOnUnsupportedFormat(): void
@@ -79,8 +75,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Corrupts the trailer so the offset table is reported before the header.
      * Ensures the decoder rejects the invalid offset table position.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsOffsetTableBeforeHeader(): void
@@ -101,8 +95,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Manipulates the trailer so the offset table overlaps the plist trailer.
      * Verifies the decoder detects the bounds violation and throws ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsOffsetTableOverlappingTrailer(): void
@@ -128,8 +120,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Corrupts the offset table entry to point beyond the object table range.
      * Ensures the decoder reports the invalid object offset with ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsObjectOffsetOutsideTableRange(): void
@@ -152,8 +142,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Sets the top object index to a value that exceeds the object count.
      * Confirms the decoder rejects the out-of-range top-level index.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsTopObjectIndexOutOfRange(): void
@@ -179,8 +167,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Encodes a short ASCII string as a single object plist.
      * Ensures the decoder returns an ApplePlistScalar with the string value.
-     *
-     * @return void
      */
     #[Test]
     public function decodeAsciiString(): void
@@ -199,8 +185,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Encodes a 1-byte integer object in a minimal plist.
      * Verifies the decoder returns an ApplePlistScalar with the integer value.
-     *
-     * @return void
      */
     #[Test]
     public function decodeInteger(): void
@@ -219,8 +203,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Encodes a date value with zero seconds since the 2001-01-01 epoch.
      * Confirms the decoder returns the correct ISO-8601 timestamp.
-     *
-     * @return void
      */
     #[Test]
     public function decodeDateEpoch(): void
@@ -240,8 +222,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Encodes a date value with +60 seconds relative to the 2001-01-01 epoch.
      * Ensures the decoded timestamp reflects the expected minute offset.
-     *
-     * @return void
      */
     #[Test]
     public function decodeDateNonZeroSeconds(): void
@@ -260,8 +240,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Encodes a date value with -60 seconds relative to the 2001-01-01 epoch.
      * Verifies the decoder returns a timestamp before the epoch.
-     *
-     * @return void
      */
     #[Test]
     public function decodeDateNegativeSeconds(): void
@@ -280,8 +258,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Encodes a date value with sub-second precision after the epoch.
      * Confirms the decoder preserves microseconds in the output string.
-     *
-     * @return void
      */
     #[Test]
     public function decodeDateSubSecondAfterEpoch(): void
@@ -300,8 +276,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Encodes a date value with sub-second precision before the epoch.
      * Ensures the decoder returns a timestamp with preserved microseconds.
-     *
-     * @return void
      */
     #[Test]
     public function decodeDateSubSecondBeforeEpoch(): void
@@ -320,8 +294,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Encodes a UTF-16BE string payload in a binary plist.
      * Confirms the decoder converts it to a Unicode PHP string.
-     *
-     * @return void
      */
     #[Test]
     public function decodeUnicodeString(): void
@@ -341,8 +313,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Encodes a UID value larger than the native PHP integer range.
      * Ensures the decoder returns the UID as a string representation.
-     *
-     * @return void
      */
     #[Test]
     public function decodeUidLargerThanPhpIntSize(): void
@@ -364,8 +334,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Builds an array object referencing an integer and an ASCII string.
      * Verifies the decoder returns an ApplePlistArray with ordered elements.
-     *
-     * @return void
      */
     #[Test]
     public function decodeArrayOfValues(): void
@@ -400,8 +368,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Builds a dictionary object with two string keys and integer values.
      * Ensures the decoder returns an ApplePlistDictionary with the expected entries.
-     *
-     * @return void
      */
     #[Test]
     public function decodeDictionaryWithTwoEntries(): void
@@ -448,7 +414,6 @@ final class BinaryPlistDecoderTest extends TestCase
     // -------------------------
     // Helpers to build test plists
     // -------------------------
-
     /**
      * Build a minimal valid binary plist with exactly one object as top-level.
      * The single offset table entry points to the object right after the header.
@@ -460,8 +425,6 @@ final class BinaryPlistDecoderTest extends TestCase
      *   [tail]   32-byte trailer
      *
      * @param string $objectBytes The serialized object bytes.
-     *
-     * @return string
      */
     private function buildPlistWithSingleObject(string $objectBytes): string
     {
@@ -493,8 +456,6 @@ final class BinaryPlistDecoderTest extends TestCase
      *
      * @param array<int,string> $objects  Object bytes in object-index order.
      * @param int               $topIndex Index of the top-level object.
-     *
-     * @return string
      */
     private function buildPlistWithObjects(array $objects, int $topIndex): string
     {
@@ -535,8 +496,6 @@ final class BinaryPlistDecoderTest extends TestCase
      * This checks the behavior for the specific inputs used in the test.
      *
      * @param list<int> $refIndices Object indices referenced by the array.
-     *
-     * @return string
      */
     private function buildArrayObject(array $refIndices): string
     {
@@ -557,8 +516,6 @@ final class BinaryPlistDecoderTest extends TestCase
      *
      * @param list<int> $keyRefIndices
      * @param list<int> $valueRefIndices
-     *
-     * @return string
      */
     private function buildDictionaryObject(array $keyRefIndices, array $valueRefIndices): string
     {
@@ -580,10 +537,6 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Pack an unsigned 64-bit integer (big-endian) using portable formats.
      * This checks the behavior for the specific inputs used in the test.
-     *
-     * @param int $value
-     *
-     * @return string
      */
     private function packUint64BE(int $value): string
     {

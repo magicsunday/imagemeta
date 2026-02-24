@@ -40,8 +40,6 @@ final class BoxDescriptorTest extends TestCase
     /**
      * Builds a descriptor with a window and explicit offsets/sizes.
      * This verifies the constructor stores all fields verbatim.
-     *
-     * @return void
      */
     #[Test]
     public function constructorAssignsValuesVerbatim(): void
@@ -70,8 +68,6 @@ final class BoxDescriptorTest extends TestCase
     /**
      * Creates two descriptors with different windows and metadata.
      * This confirms instances do not share mutable state accidentally.
-     *
-     * @return void
      */
     #[Test]
     public function descriptorsDoNotShareStateAccidentally(): void

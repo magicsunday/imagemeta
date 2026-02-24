@@ -55,8 +55,6 @@ final class XmpParserTest extends TestCase
     /**
      * Uses rdf:Description attributes for TIFF and XMP properties.
      * Confirms the parser captures attribute-based values across namespaces.
-     *
-     * @return void
      */
     #[Test]
     public function parseExtractsAttributeProperties(): void
@@ -87,8 +85,6 @@ XML;
     /**
      * Declares a custom namespace and provides a custom attribute property.
      * Ensures namespace declarations themselves are ignored as properties.
-     *
-     * @return void
      */
     #[Test]
     public function parseIgnoresNamespaceDeclarations(): void
@@ -114,8 +110,6 @@ XML;
     /**
      * Includes rdf:about alongside a dc:title attribute in the same description.
      * Verifies rdf:about is ignored while dc:title is captured.
-     *
-     * @return void
      */
     #[Test]
     public function parseIgnoresRdfStructuralAttributes(): void
@@ -139,8 +133,6 @@ XML;
 
     /**
      * Treats xml:* attributes as qualifiers and does not expose them as standalone properties.
-     *
-     * @return void
      */
     #[Test]
     public function parseIgnoresXmlNamespaceAttributesAsStandaloneProperties(): void
@@ -161,8 +153,6 @@ XML;
 
     /**
      * Preserves rdf:Alt language qualifiers and default ordering.
-     *
-     * @return void
      */
     #[Test]
     public function parsePreservesLanguageAlternatives(): void
@@ -195,8 +185,6 @@ XML;
 
     /**
      * Preserves rdf:Bag container semantics in the parsed document model.
-     *
-     * @return void
      */
     #[Test]
     public function parsePreservesBagContainerKind(): void
@@ -222,8 +210,6 @@ XML;
 
     /**
      * Preserves rdf:Seq container semantics in the parsed document model.
-     *
-     * @return void
      */
     #[Test]
     public function parsePreservesSeqContainerKind(): void
@@ -249,8 +235,6 @@ XML;
 
     /**
      * Preserves rdf:Alt container semantics in the parsed document model.
-     *
-     * @return void
      */
     #[Test]
     public function parsePreservesAltContainerKind(): void
@@ -276,8 +260,6 @@ XML;
 
     /**
      * Keeps simple text-property extraction unchanged with no container kind assigned.
-     *
-     * @return void
      */
     #[Test]
     public function parseSimpleTextPropertyHasNoContainerKind(): void
@@ -299,8 +281,6 @@ XML;
 
     /**
      * Preserves value text when xml:lang is used as qualifier on a simple property.
-     *
-     * @return void
      */
     #[Test]
     public function parsePreservesSimpleValueWithXmlLangQualifier(): void
@@ -322,8 +302,6 @@ XML;
 
     /**
      * Preserves explicit empty scalar text values.
-     *
-     * @return void
      */
     #[Test]
     public function parsePreservesEmptyScalarText(): void
@@ -345,8 +323,6 @@ XML;
 
     /**
      * Preserves empty element text with separate open and close tags.
-     *
-     * @return void
      */
     #[Test]
     public function parsePreservesEmptyElementText(): void
@@ -368,8 +344,6 @@ XML;
 
     /**
      * Preserves empty attribute property values.
-     *
-     * @return void
      */
     #[Test]
     public function parsePreservesEmptyAttributeValues(): void
@@ -389,8 +363,6 @@ XML;
 
     /**
      * Verifies that empty values do not interfere with non-empty values or structural filtering.
-     *
-     * @return void
      */
     #[Test]
     public function parseHandlesEmptyAndNonEmptyValuesMixed(): void
@@ -423,8 +395,6 @@ XML;
 
     /**
      * Preserves explicit empty list items in RDF containers.
-     *
-     * @return void
      */
     #[Test]
     public function parsePreservesEmptyListItems(): void
@@ -452,8 +422,6 @@ XML;
     /**
      * Provides multiple attributes in a custom drone-dji namespace.
      * Confirms the parser captures each custom attribute with its namespace URI.
-     *
-     * @return void
      */
     #[Test]
     public function parseExtractsCustomNamespaceAttributes(): void
@@ -484,8 +452,6 @@ XML;
     /**
      * Mixes attribute-based values with element content inside the same RDF description.
      * Ensures the parser extracts both the attribute and element values.
-     *
-     * @return void
      */
     #[Test]
     public function parseExtractsMixedAttributesAndElements(): void
@@ -515,8 +481,6 @@ XML;
     /**
      * Uses rdf:value elements and an rdf:Bag list within resource nodes.
      * Verifies the parser resolves rdf:value and collects list items into arrays.
-     *
-     * @return void
      */
     #[Test]
     public function parseExtractsValuesFromRdfValueElements(): void
@@ -555,8 +519,6 @@ XML;
 
     /**
      * Preserves parseType Resource child fields under their parent property as a structured value.
-     *
-     * @return void
      */
     #[Test]
     public function parseExtractsParseTypeResourceAsStructuredProperty(): void
@@ -586,8 +548,6 @@ XML;
 
     /**
      * Keeps nested parseType Resource nodes as nested structured values.
-     *
-     * @return void
      */
     #[Test]
     public function parseExtractsNestedParseTypeResourceStructure(): void
@@ -621,8 +581,6 @@ XML;
 
     /**
      * Keeps simple text and RDF container extraction unchanged when parseType Resource is present.
-     *
-     * @return void
      */
     #[Test]
     public function parseKeepsSimpleAndContainerPropertiesWhenParseTypeResourceExists(): void
@@ -660,8 +618,6 @@ XML;
     /**
      * Parses a full EXIF/TIFF XMP sample with many tags across two descriptions.
      * Confirms all expected properties and namespace prefixes are captured.
-     *
-     * @return void
      */
     #[Test]
     public function parseExtractsCompleteExifAndTiffSample(): void
@@ -756,8 +712,6 @@ XML;
     /**
      * Includes scalar values alongside a dc:subject rdf:Bag list.
      * Ensures scalar properties are strings and bag entries are returned as arrays.
-     *
-     * @return void
      */
     #[Test]
     public function parseExtractsScalarAndBagValues(): void
@@ -804,8 +758,6 @@ XML;
     /**
      * Feeds malformed XML fragments via the data provider.
      * Verifies the parser returns an empty document instead of throwing.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideInvalidXmpFragments')]
@@ -831,8 +783,6 @@ XML;
     /**
      * Uses a default namespace with an unprefixed element.
      * Confirms the parser stores the value under the namespace URI.
-     *
-     * @return void
      */
     #[Test]
     public function parseCapturesValuesFromGenericNamespaces(): void
@@ -848,8 +798,6 @@ XML;
 
     /**
      * Records prefixed namespace declarations as URI-to-prefix mappings.
-     *
-     * @return void
      */
     #[Test]
     public function extractsPrefixedNamespaceMapping(): void
@@ -864,8 +812,6 @@ XML;
 
     /**
      * Records default xmlns declarations with an empty prefix marker, not "xmlns".
-     *
-     * @return void
      */
     #[Test]
     public function extractsDefaultNamespaceMappingWithEmptyPrefix(): void
@@ -880,8 +826,6 @@ XML;
 
     /**
      * Keeps prefixed mappings unchanged when default and prefixed declarations coexist.
-     *
-     * @return void
      */
     #[Test]
     public function keepsPrefixedMappingsWhenDefaultNamespaceExists(): void
@@ -901,8 +845,6 @@ XML;
     /**
      * Mixes text nodes with a CDATA section inside a single element.
      * Ensures the parser concatenates mixed content into one string.
-     *
-     * @return void
      */
     #[Test]
     public function parsePreservesMixedTextAndCdata(): void
@@ -924,8 +866,6 @@ XML;
     /**
      * Parses metadata with many custom namespaces and attribute values.
      * Verifies values are captured and namespace prefixes are recorded for each URI.
-     *
-     * @return void
      */
     #[Test]
     public function parseExtractsMultipleCustomNamespaces(): void
@@ -1013,8 +953,6 @@ XML;
     /**
      * Uses the Google depthmap namespace with depth-related attributes.
      * Ensures the parser extracts data, mime, and near/far distances.
-     *
-     * @return void
      */
     #[Test]
     public function parseExtractsDepthMapProperties(): void
@@ -1044,8 +982,6 @@ XML;
 
     /**
      * Trims XML structural whitespace from simple text values while preserving inner content.
-     *
-     * @return void
      */
     #[Test]
     public function parseTrimXmlWhitespaceFromTextValues(): void
@@ -1067,8 +1003,6 @@ XML;
 
     /**
      * Filters rdf:resource and rdf:datatype as structural attributes.
-     *
-     * @return void
      */
     #[Test]
     public function parseFiltersRdfResourceAndDatatypeAttributes(): void
@@ -1095,8 +1029,6 @@ XML;
 
     /**
      * Preserves empty rdf:li items within RDF Bag containers.
-     *
-     * @return void
      */
     #[Test]
     public function parsePreservesEmptyRdfLiItems(): void
@@ -1124,8 +1056,6 @@ XML;
 
     /**
      * Rejects rdf:Alt with duplicate xml:lang values per XMP spec.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsDuplicateXmlLangInAlt(): void
@@ -1155,8 +1085,6 @@ XML;
 
     /**
      * Rejects rdf:li in rdf:Alt without xml:lang qualifier.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMissingXmlLangInAlt(): void
@@ -1188,8 +1116,6 @@ XML;
      *
      * ISO 16684-1: XMP metadata is expressed within an rdf:RDF graph.
      * Non-RDF XML payloads must not produce false-positive property extraction.
-     *
-     * @return void
      */
     #[Test]
     public function returnsEmptyDocumentWithoutRdfGraph(): void
@@ -1212,8 +1138,6 @@ XML;
      *
      * Only properties within the rdf:RDF graph are extracted; elements
      * in wrapper nodes like x:xmpmeta are not treated as XMP properties.
-     *
-     * @return void
      */
     #[Test]
     public function ignoresPropertiesOutsideRdfGraph(): void
@@ -1239,8 +1163,6 @@ XML;
 
     /**
      * Valid packet with x:xmpmeta + rdf:RDF still parses correctly (regression).
-     *
-     * @return void
      */
     #[Test]
     public function parsesValidXmpPacketWithXmpmeta(): void
@@ -1268,8 +1190,6 @@ XML;
 
     /**
      * Returns nearest list container metadata for the given element depth.
-     *
-     * @return void
      */
     #[Test]
     public function findParentListBufferReturnsNearestListContext(): void
@@ -1297,8 +1217,6 @@ XML;
 
     /**
      * Returns null when no parent list container exists.
-     *
-     * @return void
      */
     #[Test]
     public function findParentListBufferReturnsNullWithoutParentList(): void
@@ -1370,8 +1288,6 @@ XML;
 
     /**
      * Rejects rdf:Alt list entries without xml:lang in helper validation.
-     *
-     * @return void
      */
     #[Test]
     public function validateAltContainerLangRejectsMissingLanguageQualifier(): void

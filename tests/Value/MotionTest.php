@@ -28,8 +28,6 @@ final class MotionTest extends TestCase
     /**
      * Stores acceleration values for all axes.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithAcceleration(): void
@@ -48,8 +46,6 @@ final class MotionTest extends TestCase
     /**
      * Accepts null acceleration values.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void
@@ -68,8 +64,6 @@ final class MotionTest extends TestCase
     /**
      * Stores gravity-aligned acceleration vectors.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithGravityVector(): void
@@ -89,8 +83,6 @@ final class MotionTest extends TestCase
     /**
      * Stores negative acceleration values.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithNegativeAcceleration(): void
@@ -109,8 +101,6 @@ final class MotionTest extends TestCase
     /**
      * Stores large acceleration magnitudes.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithLargeAcceleration(): void
@@ -130,8 +120,6 @@ final class MotionTest extends TestCase
     /**
      * Stores small acceleration magnitudes.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithSmallAcceleration(): void
@@ -150,8 +138,6 @@ final class MotionTest extends TestCase
     /**
      * Stores mixed-sign acceleration vectors.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithMixedSignAcceleration(): void
@@ -170,8 +156,6 @@ final class MotionTest extends TestCase
     /**
      * Stores partial acceleration vectors with nullable axes.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithPartialNullValues(): void

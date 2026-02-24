@@ -47,8 +47,6 @@ final class ParsedExifSubjectDistanceTest extends TestCase
     /**
      * Converts subject distance rationals to meters.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function returnsSubjectDistanceFromSpecExample(): void
@@ -70,8 +68,6 @@ final class ParsedExifSubjectDistanceTest extends TestCase
     /**
      * Returns infinity when the EXIF sentinel represents an infinite distance.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function returnsInfinityWhenSubjectDistanceRecordsInfinity(): void
@@ -93,8 +89,6 @@ final class ParsedExifSubjectDistanceTest extends TestCase
     /**
      * Treats zero distance values as unknown.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullWhenSubjectDistanceIsUnknown(): void

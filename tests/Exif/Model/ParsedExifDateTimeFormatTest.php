@@ -48,8 +48,6 @@ final class ParsedExifDateTimeFormatTest extends TestCase
     /**
      * Supplies a valid "YYYY:MM:DD HH:MM:SS" DateTimeOriginal without OffsetTimeOriginal.
      * Confirms no absolute timestamp is emitted when offset certainty is missing.
-     *
-     * @return void
      */
     #[Test]
     public function doesNotAssumeUtcWhenOffsetMissing(): void
@@ -65,8 +63,6 @@ final class ParsedExifDateTimeFormatTest extends TestCase
     /**
      * Supplies a DateTime with dashes instead of colons in the date.
      * Confirms the parser rejects non-conformant date separators.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsDashSeparatedDate(): void
@@ -82,8 +78,6 @@ final class ParsedExifDateTimeFormatTest extends TestCase
     /**
      * Supplies a DateTime using ISO 8601 T-separator instead of space.
      * Confirms the parser rejects non-conformant separators.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsIso8601TSeparator(): void
@@ -99,8 +93,6 @@ final class ParsedExifDateTimeFormatTest extends TestCase
     /**
      * Supplies a DateTime that is too short (missing seconds).
      * Confirms the parser rejects truncated datetime strings.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsTruncatedDateTime(): void
@@ -116,8 +108,6 @@ final class ParsedExifDateTimeFormatTest extends TestCase
     /**
      * Supplies a DateTime with alphabetic characters in the time.
      * Confirms the parser rejects non-numeric components.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAlphabeticComponents(): void

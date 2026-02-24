@@ -68,8 +68,6 @@ final class ValueConvertersTest extends TestCase
      *
      * @param ExifRational|ExifRationalList $value    The rational value to convert.
      * @param float                         $expected The expected float representation.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideValidRationals')]
@@ -100,8 +98,6 @@ final class ValueConvertersTest extends TestCase
      *
      * @param int|float $value    The scalar input value.
      * @param float     $expected The expected float representation.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideScalarInputs')]
@@ -124,8 +120,6 @@ final class ValueConvertersTest extends TestCase
      * It verifies the error path and guardrail handling.
      *
      * @param ExifRational|ExifNumericList|string|null $value The invalid rational input to convert.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideInvalidInputs')]
@@ -166,8 +160,6 @@ final class ValueConvertersTest extends TestCase
      *
      * @param ExifRational|string $value    The APEX encoded value.
      * @param float|null          $expected The expected f-number.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideApexValues')]
@@ -188,8 +180,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Converts APEX shutter speed values to seconds and rejects invalid rationals.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function convertsApexShutterSpeedToSeconds(): void
@@ -203,8 +193,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Formats components configuration values into labels and descriptions.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function formatsComponentsConfiguration(): void
@@ -219,8 +207,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Normalizes components configuration payloads and rejects empty inputs.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function normalisesComponentsConfigurationPayloads(): void
@@ -236,8 +222,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Returns null when components configuration contains reserved identifiers.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForReservedComponentIdentifiers(): void
@@ -251,8 +235,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Normalizes maker note safety flags to booleans.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function convertsMakerNoteSafetyFlags(): void
@@ -282,8 +264,6 @@ final class ValueConvertersTest extends TestCase
      * @param string|null         $ref      The speed reference.
      * @param ExifRational|string $value    The raw speed value.
      * @param float|null          $expected The expected metres per second.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideGpsSpeedValues')]
@@ -318,8 +298,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Parses flash bitfields into a FlashInfo value object.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function convertsFlashShortToValueObject(): void
@@ -337,8 +315,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Returns null when flash inputs are invalid or unsupported.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForInvalidFlashValue(): void
@@ -353,8 +329,6 @@ final class ValueConvertersTest extends TestCase
      *
      * @param int|float|string|ExifRational|ExifRationalList|null $value    The raw offset representation.
      * @param string|null                                         $expected The expected canonical offset string.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideOffsetStrings')]
@@ -390,8 +364,6 @@ final class ValueConvertersTest extends TestCase
      *
      * @param int|float|string|ExifRational|ExifRationalList|null $value    The raw offset value.
      * @param int|null                                            $expected Expected minutes from UTC.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideOffsetMinutes')]
@@ -427,8 +399,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Extracts GPS coordinates with positive altitude.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function extractsGpsCoordinatesWithPositiveAltitude(): void
@@ -475,8 +445,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Applies hemisphere and altitude sign rules for GPS coordinates.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function extractsGpsCoordinatesWithNegativeHemisphereAndAltitude(): void
@@ -523,8 +491,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Extracts GPS coordinates when altitude is missing.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function extractsGpsCoordinatesWithoutAltitude(): void
@@ -564,8 +530,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Accepts numeric list components for GPS coordinate conversion.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function handlesGpsCoordinatesWithNumericListComponents(): void
@@ -604,8 +568,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Accepts string altitude references and applies sign accordingly.
      * It confirms optional fields are accepted without errors.
-     *
-     * @return void
      */
     #[Test]
     public function altitudeReferenceAcceptsStringFlag(): void
@@ -653,8 +615,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Returns null latitude when GPS seconds contain invalid rationals.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForGpsCoordinateWithInvalidSeconds(): void
@@ -693,8 +653,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Extracts extended GPS metadata, including timestamps and distances.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function extractsExtendedGpsMetadata(): void
@@ -827,8 +785,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Decodes GPS undefined strings using UNICODE and JIS prefixes.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function decodesGpsUndefinedStringsWithEncodings(): void
@@ -862,8 +818,6 @@ final class ValueConvertersTest extends TestCase
 
     /**
      * Rejects Shift-JIS payloads when the EXIF marker declares JIS semantics.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsGpsUndefinedJisPayloadEncodedAsShiftJis(): void
@@ -886,8 +840,6 @@ final class ValueConvertersTest extends TestCase
 
     /**
      * Rejects malformed JIS payloads for GPS undefined strings.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMalformedGpsUndefinedJisPayload(): void
@@ -910,8 +862,6 @@ final class ValueConvertersTest extends TestCase
 
     /**
      * Decodes UTF-16BE GPS undefined strings when the payload carries a BE BOM.
-     *
-     * @return void
      */
     #[Test]
     public function decodesGpsUndefinedUnicodeBigEndianWithBom(): void
@@ -934,8 +884,6 @@ final class ValueConvertersTest extends TestCase
 
     /**
      * Rejects malformed UTF-16 GPS undefined payloads without lossy salvage.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMalformedGpsUndefinedUnicodePayload(): void
@@ -959,8 +907,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Returns null when decoded GPS undefined strings are empty.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullWhenGpsUndefinedStringEmptyAfterDecoding(): void
@@ -984,8 +930,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Formats GPS version values from numeric lists.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function formatsGpsVersionFromNumericList(): void
@@ -1003,8 +947,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Defaults the GPS version when the tag is missing.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function defaultsGpsVersionWhenEntryMissing(): void
@@ -1020,8 +962,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Defaults the GPS version when the payload is empty.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function defaultsGpsVersionWhenStringPayloadEmpty(): void
@@ -1039,8 +979,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Decodes spatial frequency response labels.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function decodeSpatialFrequencyResponseReturnsLabels(): void
@@ -1060,8 +998,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Decodes spatial frequency response tables and values.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function decodeSpatialFrequencyResponseParsesTable(): void
@@ -1086,8 +1022,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Rejects truncated spatial frequency response payloads.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function decodeSpatialFrequencyResponseRejectsInvalidPayload(): void
@@ -1100,8 +1034,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Supports array rationals and numeric APEX values.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function convertsRationalsAndApexValues(): void
@@ -1113,8 +1045,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Normalizes EXIF version strings and parses flash bitfields.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function normalisesExifVersionAndFlash(): void
@@ -1139,8 +1069,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Normalizes offsets and converts subject area arrays to rectangles.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function normalisesOffsetsAndSubjectAreas(): void
@@ -1180,8 +1108,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Parses YCbCr subsampling pairs and chromaticities.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function parsesSamplingAndChromaticities(): void
@@ -1203,8 +1129,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Accepts legal YCbCr subsampling values with multiple delimiters.
      * It confirms optional fields are accepted without errors.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsLegalYCbCrSubSamplingValues(): void
@@ -1221,8 +1145,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Rejects illegal YCbCr subsampling values and malformed inputs.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsIllegalYCbCrSubSamplingValues(): void
@@ -1261,8 +1183,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Serialises DNG matrices into string form.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function serialisesMatrices(): void
@@ -1279,8 +1199,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Converts white point values and maps enums from scalar inputs.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function convertsWhitePointAndEnums(): void
@@ -1302,8 +1220,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Rejects invalid white point and chromaticity lengths.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidWhitePointAndChromaticityLengths(): void
@@ -1329,8 +1245,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Calculates crop factor, circle of confusion, and field-of-view metrics.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function calculatesFieldOfViewAndHyperfocalMetrics(): void
@@ -1355,8 +1269,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Calculates optical metrics across multiple sensor formats.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('opticalDatasetProvider')]
@@ -1490,8 +1402,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Converts signed rational triplets to float vectors.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function convertsSrationalTripletToFloatVector(): void
@@ -1513,8 +1423,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Converts triplets with zero components to float vectors.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function convertsSrationalTripletWithZeroComponents(): void
@@ -1535,8 +1443,6 @@ final class ValueConvertersTest extends TestCase
 
     /**
      * Converts triplets that include denominator 0xFFFFFFFF numerically in generic context.
-     *
-     * @return void
      */
     #[Test]
     public function convertsSrationalTripletWithUnsignedSentinelDenominator(): void
@@ -1558,8 +1464,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Rejects srational triplets with invalid component counts.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsSrationalListWithWrongComponentCount(): void
@@ -1584,8 +1488,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Returns null when any triplet component has a zero denominator.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsSrationalTripletWithZeroDenominator(): void
@@ -1604,8 +1506,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Converts triplets with large magnitude values to floats.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function convertsSrationalTripletWithLargeValues(): void
@@ -1628,8 +1528,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Converts triplets with all negative values to floats.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function convertsSrationalTripletWithAllNegativeValues(): void
@@ -1651,8 +1549,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Formats exposure times into human-readable strings.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideExposureTimeValues')]
@@ -1683,8 +1579,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Formats shutter speed strings from APEX values.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function formatsShutterSpeedFromApex(): void
@@ -1705,8 +1599,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Formats f-numbers into camera-style strings.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideFNumberValues')]
@@ -1738,8 +1630,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Formats aperture strings from APEX values.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function formatsApertureFromApex(): void
@@ -1760,8 +1650,6 @@ final class ValueConvertersTest extends TestCase
     /**
      * Formats brightness values into display strings.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideBrightnessValues')]
@@ -1772,8 +1660,6 @@ final class ValueConvertersTest extends TestCase
 
     /**
      * Keeps EXIF unknown brightness sentinels mapped to null in the tag-specific formatter.
-     *
-     * @return void
      */
     #[Test]
     public function treatsUnknownBrightnessDenominatorsAsNull(): void

@@ -59,8 +59,6 @@ final class BitMaskTest extends TestCase
     /**
      * Confirms bitmask constants match their expected hex values.
      * This ensures the constants remain correct when refactoring bit operations.
-     *
-     * @return void
      */
     #[DataProvider('bitMaskValueProvider')]
     #[Test]
@@ -104,8 +102,6 @@ final class BitMaskTest extends TestCase
      * This verifies that composed masks equal their named constants.
      *
      * @param array<int, string> $bits
-     *
-     * @return void
      */
     #[DataProvider('bitCombinationProvider')]
     #[Test]
@@ -131,8 +127,6 @@ final class BitMaskTest extends TestCase
     /**
      * Matches shifted masks to their corresponding constants.
      * This confirms that bit shifting preserves the expected bit positions.
-     *
-     * @return void
      */
     #[DataProvider('shiftedMaskProvider')]
     #[Test]
@@ -161,8 +155,6 @@ final class BitMaskTest extends TestCase
     /**
      * Confirms incremented masks equal the expected base constants.
      * This guards against off-by-one mistakes in base and max constants.
-     *
-     * @return void
      */
     #[DataProvider('incrementedMaskProvider')]
     #[Test]
@@ -191,8 +183,6 @@ final class BitMaskTest extends TestCase
     /**
      * Confirms halved masks equal the expected sign-bit constants.
      * This verifies sign-bit constants align with their base values.
-     *
-     * @return void
      */
     #[DataProvider('halvedMaskProvider')]
     #[Test]
@@ -206,8 +196,6 @@ final class BitMaskTest extends TestCase
     /**
      * Defines INT31_MAX as one less than the 32-bit sign bit.
      * This asserts the signed 31-bit maximum boundary is derived correctly.
-     *
-     * @return void
      */
     #[Test]
     public function int31MaxIsSignBit32MinusOne(): void

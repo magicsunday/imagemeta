@@ -28,8 +28,6 @@ final class IntegrityTest extends TestCase
     /**
      * Stores original file name metadata.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithOriginalFileName(): void
@@ -47,8 +45,6 @@ final class IntegrityTest extends TestCase
     /**
      * Stores editing history and integrity fields together.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithEditingHistory(): void
@@ -69,8 +65,6 @@ final class IntegrityTest extends TestCase
     /**
      * Accepts null integrity fields.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

@@ -31,8 +31,6 @@ final class SensorTest extends TestCase
     /**
      * Stores basic sensor metadata values.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithBasicSensorInfo(): void
@@ -51,8 +49,6 @@ final class SensorTest extends TestCase
     /**
      * Stores CFA pattern data on the sensor value object.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithCFAPattern(): void
@@ -84,8 +80,6 @@ final class SensorTest extends TestCase
     /**
      * Stores focal plane resolutions and units.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithFocalPlaneResolution(): void
@@ -111,8 +105,6 @@ final class SensorTest extends TestCase
     /**
      * Accepts null sensor metadata values.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

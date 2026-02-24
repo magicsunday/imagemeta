@@ -48,8 +48,6 @@ final class ParsedExifSensitivityTest extends TestCase
     /**
      * Provides the SENSITIVITY_TYPE tag as a numeric string value.
      * Ensures the parser coerces it and returns the matching SensitivityType enum.
-     *
-     * @return void
      */
     #[Test]
     public function sensitivityTypeReturnsEnumForNumericStrings(): void
@@ -66,8 +64,6 @@ final class ParsedExifSensitivityTest extends TestCase
     /**
      * Supplies a STANDARD_OUTPUT_SENSITIVITY tag with a concrete value.
      * Confirms standardOutputSensitivity() returns that integer unchanged.
-     *
-     * @return void
      */
     #[Test]
     public function standardOutputSensitivityReturnsValue(): void
@@ -84,8 +80,6 @@ final class ParsedExifSensitivityTest extends TestCase
     /**
      * Supplies a RECOMMENDED_EXPOSURE_INDEX tag with a numeric value.
      * Ensures recommendedExposureIndex() returns the provided value.
-     *
-     * @return void
      */
     #[Test]
     public function recommendedExposureIndexReturnsValue(): void
@@ -102,8 +96,6 @@ final class ParsedExifSensitivityTest extends TestCase
     /**
      * Provides an ISO_SPEED tag representing the base ISO value.
      * Confirms isoSpeedValue() returns the integer as stored.
-     *
-     * @return void
      */
     #[Test]
     public function isoSpeedValueReturnsValue(): void
@@ -120,8 +112,6 @@ final class ParsedExifSensitivityTest extends TestCase
     /**
      * Supplies ISO speed latitude tags without the required ISO_SPEED entry.
      * Ensures isoSpeedLatitudeYyy() returns null until ISO_SPEED is present.
-     *
-     * @return void
      */
     #[Test]
     public function isoSpeedLatitudeYyyRequiresRelatedTags(): void
@@ -151,8 +141,6 @@ final class ParsedExifSensitivityTest extends TestCase
      * Verifies iso() selects the correct source based on the sensitivity type rules.
      *
      * @param array<int, int> $tagValues
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('isoSensitivityPriorityProvider')]
@@ -179,8 +167,6 @@ final class ParsedExifSensitivityTest extends TestCase
     /**
      * Sets SENSITIVITY_TYPE to an unknown value alongside ISO_SPEED.
      * Confirms iso() falls back to ISO_SPEED when the type is not recognized.
-     *
-     * @return void
      */
     #[Test]
     public function isoFallsBackWhenSensitivityTypeValueIsUnknown(): void
@@ -198,8 +184,6 @@ final class ParsedExifSensitivityTest extends TestCase
     /**
      * Provides ISO_SPEED together with both ISO speed latitude tags.
      * Ensures isoSpeedLatitude* and isoLatitude* accessors return the stored values.
-     *
-     * @return void
      */
     #[Test]
     public function returnsIsoLatitudeValues(): void

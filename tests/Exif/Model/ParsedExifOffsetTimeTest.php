@@ -50,8 +50,6 @@ final class ParsedExifOffsetTimeTest extends TestCase
     /**
      * Supplies a valid "+09:00" OffsetTime tag.
      * Confirms offsetTime() returns the canonical "±HH:MM" string.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidPositiveOffset(): void
@@ -67,8 +65,6 @@ final class ParsedExifOffsetTimeTest extends TestCase
     /**
      * Supplies a valid "-05:30" OffsetTimeOriginal tag.
      * Confirms offsetTimeOriginal() returns the canonical "±HH:MM" string.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidNegativeOffsetOriginal(): void
@@ -84,8 +80,6 @@ final class ParsedExifOffsetTimeTest extends TestCase
     /**
      * Supplies a valid "+00:00" OffsetTimeDigitized tag for UTC.
      * Confirms offsetTimeDigitized() returns "+00:00".
-     *
-     * @return void
      */
     #[Test]
     public function acceptsUtcOffsetDigitized(): void
@@ -101,8 +95,6 @@ final class ParsedExifOffsetTimeTest extends TestCase
     /**
      * Supplies "Z" as an OffsetTime value, which is not the spec format.
      * Verifies that non-conformant single-character encodings are rejected.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsZuluShorthand(): void
@@ -118,8 +110,6 @@ final class ParsedExifOffsetTimeTest extends TestCase
     /**
      * Supplies "UTC-4" as an OffsetTime value.
      * Verifies that named timezone abbreviations are rejected.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsNamedTimezoneAbbreviation(): void
@@ -135,8 +125,6 @@ final class ParsedExifOffsetTimeTest extends TestCase
     /**
      * Supplies "GMT+9" as an OffsetTime value.
      * Verifies that GMT-prefixed offsets are rejected.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsGmtPrefixedOffset(): void
@@ -152,8 +140,6 @@ final class ParsedExifOffsetTimeTest extends TestCase
     /**
      * Supplies "+9:00" with a single-digit hour, which violates the "±HH:MM" format.
      * Verifies that incomplete hour encoding is rejected.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsSingleDigitHour(): void
@@ -169,8 +155,6 @@ final class ParsedExifOffsetTimeTest extends TestCase
     /**
      * Supplies an empty string as an OffsetTime value.
      * Verifies that blank offsets are rejected.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsEmptyString(): void
@@ -186,8 +170,6 @@ final class ParsedExifOffsetTimeTest extends TestCase
     /**
      * Supplies DateTimeOriginal with a canonical OffsetTimeOriginal.
      * Confirms datetime parsing keeps the EXIF offset when it is spec-conformant.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsCanonicalOffsetForDateTimeParsing(): void
@@ -200,8 +182,6 @@ final class ParsedExifOffsetTimeTest extends TestCase
     /**
      * Supplies DateTimeOriginal with a timezone identifier in OffsetTimeOriginal.
      * Verifies identifier-based offsets are rejected in the datetime parsing path.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsTimezoneIdentifierForDateTimeParsing(): void
@@ -214,8 +194,6 @@ final class ParsedExifOffsetTimeTest extends TestCase
     /**
      * Supplies DateTimeOriginal with malformed OffsetTimeOriginal syntax.
      * Verifies malformed offsets do not bypass EXIF datetime offset validation.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMalformedOffsetForDateTimeParsing(): void
@@ -228,8 +206,6 @@ final class ParsedExifOffsetTimeTest extends TestCase
     /**
      * Supplies a boundary-valid DateTimeOriginal with canonical offset.
      * Confirms semantic boundary values are parsed without normalization.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsBoundaryDateTimeWithOffset(): void
@@ -242,8 +218,6 @@ final class ParsedExifOffsetTimeTest extends TestCase
     /**
      * Supplies calendar/time-overflow values with canonical offset.
      * Verifies invalid datetime combinations are rejected rather than normalized.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideInvalidDateTimeOriginalValues')]

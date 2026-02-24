@@ -29,8 +29,6 @@ final class WhiteBalanceDetailsTest extends TestCase
     /**
      * Constructs WhiteBalanceDetails with only the mode provided.
      * Ensures the mode is stored and the optional numeric fields remain null.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithMode(): void
@@ -48,8 +46,6 @@ final class WhiteBalanceDetailsTest extends TestCase
     /**
      * Constructs WhiteBalanceDetails with a manual mode, kelvin, and gain values.
      * Verifies the value object preserves the supplied temperature and gain fields.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithColorTemperature(): void
@@ -70,8 +66,6 @@ final class WhiteBalanceDetailsTest extends TestCase
     /**
      * Creates WhiteBalanceDetails with all fields set to null.
      * Confirms the object preserves nulls for optional white balance details.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

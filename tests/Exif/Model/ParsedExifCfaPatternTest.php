@@ -49,8 +49,6 @@ final class ParsedExifCfaPatternTest extends TestCase
     /**
      * Provides a CFA pattern list with 2x2 repeat units and four color values.
      * Verifies ParsedExif returns a CfaPattern with correct repeat units and grid ordering.
-     *
-     * @return void
      */
     #[Test]
     public function parsesCfaPatternWithRepeatUnits(): void
@@ -79,8 +77,6 @@ final class ParsedExifCfaPatternTest extends TestCase
     /**
      * Supplies a CFA pattern list that lacks enough entries to fill the grid.
      * Ensures the parser returns null when the pattern data is incomplete.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullWhenPatternIsIncomplete(): void

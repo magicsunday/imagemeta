@@ -54,8 +54,6 @@ final readonly class TiffByteOrderHandler
      *
      * @param int|UInt64 $value Integer value to convert.
      * @param int        $bytes Target byte length.
-     *
-     * @return string
      */
     public function uintToBytes(int|UInt64 $value, int $bytes, Endian $endianness): string
     {

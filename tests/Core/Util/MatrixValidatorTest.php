@@ -32,8 +32,6 @@ final class MatrixValidatorTest extends TestCase
     /**
      * Validates matrices that include required row and column labels.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function validateMatrixWithRequiredRowLabels(): void
@@ -70,8 +68,6 @@ final class MatrixValidatorTest extends TestCase
     /**
      * Allows missing row labels when not required.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function validateMatrixAllowsMissingRowLabelsWhenOptional(): void
@@ -98,8 +94,6 @@ final class MatrixValidatorTest extends TestCase
     /**
      * Rejects null matrix values when nulls are not allowed.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function validateMatrixRejectsNullValuesWhenNotAllowed(): void
@@ -121,8 +115,6 @@ final class MatrixValidatorTest extends TestCase
     /**
      * Allows null matrix values when configured.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function validateMatrixAllowsNullValuesWhenConfigured(): void
@@ -148,8 +140,6 @@ final class MatrixValidatorTest extends TestCase
     /**
      * Rejects matrices missing required row labels.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function validateMatrixRequiresRowLabelsWhenConfigured(): void

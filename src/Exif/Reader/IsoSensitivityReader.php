@@ -92,8 +92,6 @@ final readonly class IsoSensitivityReader
      * PhotographicSensitivity tag to ISO 12232 parameters and combinations.
      * When declared, the photographic sensitivity value must be prioritised for
      * the selected parameter(s) before falling back to legacy individual tags.
-     *
-     * @return int|null
      */
     public function iso(): ?int
     {

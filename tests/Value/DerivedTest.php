@@ -28,8 +28,6 @@ final class DerivedTest extends TestCase
     /**
      * Stores exposure value metrics.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithExposureValue(): void
@@ -51,8 +49,6 @@ final class DerivedTest extends TestCase
     /**
      * Stores all derived metrics when provided.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithAllDerivedMetrics(): void
@@ -81,8 +77,6 @@ final class DerivedTest extends TestCase
     /**
      * Accepts null derived metrics.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void
@@ -109,8 +103,6 @@ final class DerivedTest extends TestCase
     /**
      * Stores full-frame equivalents and crop factors.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function handlesFullFrameEquivalent(): void

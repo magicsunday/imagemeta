@@ -31,8 +31,6 @@ final class ThumbnailTest extends TestCase
     /**
      * Sets the expected boolean state for $thumbnail->hasThumbnail.
      * This checks the flag or predicate logic.
-     *
-     * @return void
      */
     #[Test]
     public function exposesThumbnailDetails(): void

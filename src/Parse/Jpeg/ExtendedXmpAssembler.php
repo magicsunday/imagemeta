@@ -279,8 +279,6 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
      *
      * @param string $guid       ExtendedXMP GUID.
      * @param int    $baseOffset Base APP1 offset for diagnostics.
-     *
-     * @return string
      */
     private function assemblePayload(string $guid, int $baseOffset): string
     {

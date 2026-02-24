@@ -34,8 +34,6 @@ final class UnpackTest extends TestCase
     /**
      * Unpacks a two-byte integer using a big-endian format.
      * It confirms Unpack::int returns the expected scalar value.
-     *
-     * @return void
      */
     #[Test]
     public function unpacksIntegerValue(): void
@@ -50,8 +48,6 @@ final class UnpackTest extends TestCase
     /**
      * Unpacks a float value from the packed byte sequence.
      * It validates floating-point extraction within a tolerance.
-     *
-     * @return void
      */
     #[Test]
     public function unpacksFloatValue(): void
@@ -66,8 +62,6 @@ final class UnpackTest extends TestCase
     /**
      * Passes an invalid unpack format to force a failure.
      * It asserts a ParseError is raised with the expected message.
-     *
-     * @return void
      */
     #[Test]
     public function throwsParseErrorOnInvalidFormat(): void
@@ -81,8 +75,6 @@ final class UnpackTest extends TestCase
     /**
      * Combines two 32-bit words into a UInt64 instance.
      * It confirms the high and low parts are preserved correctly.
-     *
-     * @return void
      */
     #[Test]
     public function combinesTwoUint32Values(): void
@@ -96,8 +88,6 @@ final class UnpackTest extends TestCase
     /**
      * Unpacks a 64-bit unsigned integer in big-endian order.
      * It verifies the high/low words match the original packed values.
-     *
-     * @return void
      */
     #[Test]
     public function unpacksUint64BigEndian(): void
@@ -113,8 +103,6 @@ final class UnpackTest extends TestCase
     /**
      * Unpacks a 64-bit unsigned integer in little-endian order.
      * It confirms the word order is reversed as expected.
-     *
-     * @return void
      */
     #[Test]
     public function unpacksUint64LittleEndian(): void
@@ -130,8 +118,6 @@ final class UnpackTest extends TestCase
     /**
      * Supplies too few bytes to decode a 64-bit value.
      * It asserts a ParseError is thrown for truncated input.
-     *
-     * @return void
      */
     #[Test]
     public function throwsParseErrorOnInvalidUint64Bytes(): void

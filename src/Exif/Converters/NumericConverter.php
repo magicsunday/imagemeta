@@ -48,8 +48,6 @@ final readonly class NumericConverter
 
     /**
      * Normalises a numeric component from a rational pair.
-     *
-     * @param int|float|string|UInt64 $component
      */
     public function normaliseComponent(int|float|string|UInt64 $component): ?float
     {

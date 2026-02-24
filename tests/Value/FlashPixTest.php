@@ -28,8 +28,6 @@ final class FlashPixTest extends TestCase
     /**
      * Stores FlashPix streams when provided.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithStreams(): void
@@ -47,8 +45,6 @@ final class FlashPixTest extends TestCase
     /**
      * Allows empty FlashPix stream maps.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithEmptyStreams(): void
@@ -61,8 +57,6 @@ final class FlashPixTest extends TestCase
     /**
      * Preserves stream keys alongside payloads.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function preservesStreamKeys(): void

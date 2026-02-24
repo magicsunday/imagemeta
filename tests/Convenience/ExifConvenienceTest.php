@@ -53,8 +53,6 @@ final class ExifConvenienceTest extends TestCase
     /**
      * Formats shutter speed, aperture, ISO, and focal length into a summary string.
      * This verifies that exposure and lens values are combined in the expected order.
-     *
-     * @return void
      */
     #[Test]
     public function exposureSummaryFormatsValues(): void
@@ -90,8 +88,6 @@ final class ExifConvenienceTest extends TestCase
     /**
      * Uses the 35mm equivalent value from Derived when lens data is missing.
      * This ensures the summary falls back to equivalent focal length when available.
-     *
-     * @return void
      */
     #[Test]
     public function exposureSummaryIncludes35MmEquivalent(): void
@@ -122,8 +118,6 @@ final class ExifConvenienceTest extends TestCase
     /**
      * Provides an Exposure object with no usable values.
      * This confirms the summary returns null instead of an empty or misleading string.
-     *
-     * @return void
      */
     #[Test]
     public function exposureSummaryReturnsNullWhenNoValues(): void
@@ -136,8 +130,6 @@ final class ExifConvenienceTest extends TestCase
     /**
      * Formats latitude/longitude with hemisphere letters and altitude.
      * This confirms rounding and altitude suffix formatting for GPS strings.
-     *
-     * @return void
      */
     #[Test]
     public function gpsStringFormatsCoordinates(): void
@@ -168,8 +160,6 @@ final class ExifConvenienceTest extends TestCase
     /**
      * Supplies a GPS object without coordinates.
      * This verifies gpsString returns null when required data is missing.
-     *
-     * @return void
      */
     #[Test]
     public function gpsStringReturnsNullWithoutCoordinates(): void
@@ -182,8 +172,6 @@ final class ExifConvenienceTest extends TestCase
     /**
      * Formats width and height into a pixel dimension string.
      * This confirms orientation does not affect the dimensions output.
-     *
-     * @return void
      */
     #[Test]
     public function imageDimensionsFormatsString(): void
@@ -203,8 +191,6 @@ final class ExifConvenienceTest extends TestCase
     /**
      * Supplies an Image with a missing width.
      * This verifies imageDimensions returns null when either dimension is absent.
-     *
-     * @return void
      */
     #[Test]
     public function imageDimensionsReturnsNullWhenIncomplete(): void
@@ -220,8 +206,6 @@ final class ExifConvenienceTest extends TestCase
     /**
      * Formats the capture DateTime into an ISO 8601 string.
      * This verifies that the time zone offset is preserved in the output.
-     *
-     * @return void
      */
     #[Test]
     public function captureDateTimeStringFormatsTimestamp(): void
@@ -245,8 +229,6 @@ final class ExifConvenienceTest extends TestCase
     /**
      * Uses the camera model without repeating the make prefix.
      * This confirms the description avoids duplicating the brand when the model already includes it.
-     *
-     * @return void
      */
     #[Test]
     public function cameraDescriptionAvoidsDuplicateMake(): void
@@ -280,8 +262,6 @@ final class ExifConvenienceTest extends TestCase
     /**
      * Aggregates camera, lens, image, capture, exposure, and GPS data into a flat array.
      * This verifies the output keys are normalized and values are formatted consistently.
-     *
-     * @return void
      */
     #[Test]
     public function toArrayReturnsNormalisedShape(): void

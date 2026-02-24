@@ -60,8 +60,6 @@ final class TiffExifParserDngTagTest extends TestCase
 {
     /**
      * Parses DNG core tags from IFD0 and exposes them through ParsedExif accessors.
-     *
-     * @return void
      */
     #[Test]
     public function parsesCoreDngTagsFromIfd0(): void
@@ -76,8 +74,6 @@ final class TiffExifParserDngTagTest extends TestCase
 
     /**
      * Returns null for DNG accessors when corresponding tags are not present.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullWhenCoreDngTagsAreMissing(): void
@@ -109,8 +105,6 @@ final class TiffExifParserDngTagTest extends TestCase
      * DNG 1.7.1.0: LocalizedCameraModel may use BYTE type instead of ASCII.
      * When stored as BYTE, the parser decodes the raw bytes as a NUL-terminated
      * UTF-8 string rather than a numeric list.
-     *
-     * @return void
      */
     #[Test]
     public function decodesLocalizedCameraModelByteAsUtf8String(): void

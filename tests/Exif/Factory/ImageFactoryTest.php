@@ -43,8 +43,6 @@ final class ImageFactoryTest extends TestCase
     /**
      * Supplies EXIF image tags for dimensions, orientation, color space, and comments.
      * Verifies ImageFactory maps these values into the Image value object.
-     *
-     * @return void
      */
     #[Test]
     public function createsFromExifMetadata(): void
@@ -94,8 +92,6 @@ final class ImageFactoryTest extends TestCase
     /**
      * Provides JPEG frame dimensions and precision without an EXIF document.
      * Ensures the factory falls back to JPEG dimensions and bits per sample.
-     *
-     * @return void
      */
     #[Test]
     public function fallsBackToJpegDimensions(): void
@@ -128,8 +124,6 @@ final class ImageFactoryTest extends TestCase
     /**
      * Uses an uncalibrated ColorSpace with interop index R98.
      * Confirms the factory normalizes the color space to sRGB for R98.
-     *
-     * @return void
      */
     #[Test]
     public function normalizesColorSpaceFromInterop(): void
@@ -166,8 +160,6 @@ final class ImageFactoryTest extends TestCase
     /**
      * Uses an uncalibrated ColorSpace with an interop index that does not signal sRGB.
      * Ensures the factory keeps the uncalibrated color space.
-     *
-     * @return void
      */
     #[Test]
     public function keepsUncalibratedWhenInteropHintsNonSrgb(): void
@@ -204,8 +196,6 @@ final class ImageFactoryTest extends TestCase
     /**
      * Creates Metadata without EXIF or JPEG dimensions.
      * Confirms all image fields remain null when no sources are available.
-     *
-     * @return void
      */
     #[Test]
     public function createsWithNullExifDoc(): void

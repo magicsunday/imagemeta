@@ -52,16 +52,12 @@ final readonly class ItemPayloadResolver
     /**
      * Resolves metadata item references described by an `iloc` box.
      *
-     * @param int                                                                                                                                                                           $itemId            Identifier of the item to resolve.
+     * @param int                                                                                                                                                                           $itemId          Identifier of the item to resolve.
      * @param array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
      * @param array<int, list<IsoBmffItemReference>>                                                                                                                                        $itemReferences
      * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences
-     * @param string|null                                                                                                                                                                   $idatPayload
      * @param list<IsoBmffUnresolvedItem>                                                                                                                                                   $unresolvedItems
-     * @param int                                                                                                                                                                           $metaContextOffset
      * @param list<int>                                                                                                                                                                     $visitedItemIds
-     *
-     * @return string|null
      */
     public function resolveItemData(int $itemId, array $locations, array $itemReferences, array $dataReferences, ?string $idatPayload, array &$unresolvedItems, int $metaContextOffset, array $visitedItemIds = []): ?string
     {
@@ -418,11 +414,9 @@ final readonly class ItemPayloadResolver
     /**
      * Records an unresolved item payload for external references.
      *
-     * @param int                                                                                                                                                               $itemId
      * @param array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>} $location
      * @param array<int, IsoBmffDataReference>                                                                                                                                  $dataReferences
      * @param list<IsoBmffUnresolvedItem>                                                                                                                                       $unresolvedItems
-     * @param int                                                                                                                                                               $metaContextOffset
      */
     private function registerUnresolvedItem(int $itemId, array $location, array $dataReferences, array &$unresolvedItems, int $metaContextOffset): void
     {

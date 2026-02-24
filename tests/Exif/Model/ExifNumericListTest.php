@@ -34,8 +34,6 @@ final class ExifNumericListTest extends TestCase
     /**
      * Creates a list containing an int, float, and UInt64 value.
      * Confirms the list accepts mixed numeric types and preserves them in order.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsListOfNumericValues(): void
@@ -54,8 +52,6 @@ final class ExifNumericListTest extends TestCase
     /**
      * Supplies an associative array instead of a numeric list.
      * Ensures the constructor rejects non-list input and throws the expected exception.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsNonListInput(): void
@@ -73,8 +69,6 @@ final class ExifNumericListTest extends TestCase
     /**
      * Includes a string alongside numeric values to violate type constraints.
      * Verifies the constructor enforces allowed numeric component types and fails fast.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsUnsupportedComponents(): void

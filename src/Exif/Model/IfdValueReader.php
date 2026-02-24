@@ -53,8 +53,6 @@ final readonly class IfdValueReader
      *
      * @param Ifd|null $ifd IFD to inspect.
      * @param int      $tag Tag identifier.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null
      */
     public function value(?Ifd $ifd, int $tag): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null
     {
@@ -158,11 +156,6 @@ final readonly class IfdValueReader
 
     /**
      * Returns an integer value from the given IFD if present.
-     *
-     * @param Ifd|null $ifd
-     * @param int      $tag
-     *
-     * @return int|null
      */
     public function int(?Ifd $ifd, int $tag): ?int
     {
@@ -173,11 +166,6 @@ final readonly class IfdValueReader
 
     /**
      * Returns a rational or numeric value converted to float if present in the given IFD.
-     *
-     * @param Ifd|null $ifd
-     * @param int      $tag
-     *
-     * @return float|null
      */
     public function rational(?Ifd $ifd, int $tag): ?float
     {

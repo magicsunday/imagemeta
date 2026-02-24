@@ -47,8 +47,6 @@ final class ParsedExifJpegStripSuppressionTest extends TestCase
     /**
      * Sets JPEG compression on the primary image and populates strip/JPEG offset tags.
      * Verifies the parser suppresses strip-related fields for JPEG-compressed primaries.
-     *
-     * @return void
      */
     #[Test]
     public function suppressesStripTagsForJpegPrimaryImage(): void
@@ -79,8 +77,6 @@ final class ParsedExifJpegStripSuppressionTest extends TestCase
     /**
      * Uses JPEG compression on the thumbnail IFD while providing strip offsets/counts.
      * Ensures thumbnail strip metadata is suppressed for JPEG thumbnails.
-     *
-     * @return void
      */
     #[Test]
     public function suppressesStripTagsForJpegThumbnail(): void

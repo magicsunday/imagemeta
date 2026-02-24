@@ -41,8 +41,6 @@ final class SensorFactoryTest extends TestCase
     /**
      * Supplies EXIF sensor tags including CFA pattern and focal plane resolutions.
      * Verifies SensorFactory builds a CfaPattern and maps sensor-related fields correctly.
-     *
-     * @return void
      */
     #[Test]
     public function createsFromExifMetadata(): void
@@ -81,8 +79,6 @@ final class SensorFactoryTest extends TestCase
     /**
      * Creates Metadata without an EXIF document.
      * Ensures the sensor value object contains null fields and disables ibis.
-     *
-     * @return void
      */
     #[Test]
     public function createsWithNullExifDoc(): void
@@ -110,8 +106,6 @@ final class SensorFactoryTest extends TestCase
     /**
      * Supplies an invalid focal plane resolution unit code alongside valid resolutions.
      * Confirms the unit is rejected while numeric resolution values are retained.
-     *
-     * @return void
      */
     #[Test]
     public function handlesInvalidResolutionUnit(): void
@@ -142,8 +136,6 @@ final class SensorFactoryTest extends TestCase
     /**
      * Provides a valid focal plane resolution unit of centimeters.
      * Ensures the factory maps the unit code to the correct enum.
-     *
-     * @return void
      */
     #[Test]
     public function convertsResolutionUnitCmToEnum(): void

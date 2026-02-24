@@ -26,8 +26,6 @@ final class XmpValueAccumulatorTest extends TestCase
 {
     /**
      * Keeps duplicate values and order when merging arrays.
-     *
-     * @return void
      */
     #[Test]
     public function mergePreservesDuplicatesForArrays(): void
@@ -43,8 +41,6 @@ final class XmpValueAccumulatorTest extends TestCase
 
     /**
      * Keeps fixed-count EXIF array payloads cardinality-stable after merge.
-     *
-     * @return void
      */
     #[Test]
     public function mergeKeepsFixedCountExifArrayCardinalityStable(): void
@@ -67,8 +63,6 @@ final class XmpValueAccumulatorTest extends TestCase
 
     /**
      * Appends scalar values even when they duplicate existing entries.
-     *
-     * @return void
      */
     #[Test]
     public function mergeAppendsScalarToArrayEvenWhenDuplicate(): void
@@ -84,8 +78,6 @@ final class XmpValueAccumulatorTest extends TestCase
 
     /**
      * Preserves the existing scalar and then appends array entries.
-     *
-     * @return void
      */
     #[Test]
     public function mergeAppendsArrayToScalarInOrder(): void
@@ -101,8 +93,6 @@ final class XmpValueAccumulatorTest extends TestCase
 
     /**
      * Stores both scalar values, even when they are identical.
-     *
-     * @return void
      */
     #[Test]
     public function mergePreservesDuplicateScalars(): void

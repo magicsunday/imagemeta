@@ -91,8 +91,6 @@ final readonly class MetadataReader
      * @param string $path        Path to the image or media file being inspected.
      * @param bool   $withDigests When true the SHA-1 and MD5 digests are calculated as part of the
      *                            returned metadata aggregate.
-     *
-     * @return Metadata
      */
     public function read(string $path, bool $withDigests = false): Metadata
     {
@@ -126,8 +124,6 @@ final readonly class MetadataReader
      * @param ?string $extension  File extension detected from the path or stream.
      * @param ?string $digestSha1 Pre-computed SHA-1 digest for the stream contents.
      * @param ?string $digestMd5  Pre-computed MD5 digest for the stream contents.
-     *
-     * @return Metadata
      */
     private function fromJpeg(
         Stream $stream,
@@ -197,8 +193,6 @@ final readonly class MetadataReader
      * @param ?string $extension  File extension detected from the path or stream.
      * @param ?string $digestSha1 Pre-computed SHA-1 digest for the stream contents.
      * @param ?string $digestMd5  Pre-computed MD5 digest for the stream contents.
-     *
-     * @return Metadata
      */
     private function fromIsoBmff(
         Stream $stream,
@@ -245,8 +239,6 @@ final readonly class MetadataReader
      * @param ?string $extension  File extension detected from the path or stream.
      * @param ?string $digestSha1 Pre-computed SHA-1 digest for the stream contents.
      * @param ?string $digestMd5  Pre-computed MD5 digest for the stream contents.
-     *
-     * @return Metadata
      */
     private function fromTiff(
         Stream $stream,
@@ -275,8 +267,6 @@ final readonly class MetadataReader
      * Parses XMP blobs and merges them into a single document.
      *
      * @param list<string> $xmpBlobs Raw XMP packet strings.
-     *
-     * @return XmpDocument|null
      */
     private function parseXmpBlobs(array $xmpBlobs): ?XmpDocument
     {

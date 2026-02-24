@@ -28,8 +28,6 @@ final class ContainerTest extends TestCase
     /**
      * Stores the container format when provided.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithFormat(): void
@@ -48,8 +46,6 @@ final class ContainerTest extends TestCase
     /**
      * Stores video container metadata fields together.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithVideoMetadata(): void
@@ -72,8 +68,6 @@ final class ContainerTest extends TestCase
     /**
      * Accepts null container metadata values.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

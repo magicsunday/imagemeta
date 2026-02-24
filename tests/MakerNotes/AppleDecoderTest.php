@@ -84,8 +84,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Decodes a keyed-archive payload that includes camera type information.
      * Ensures AppleDecoder maps the camera type code and extracts the content identifier.
-     *
-     * @return void
      */
     #[Test]
     public function decodeMapsCameraTypeCodeFromKeyedArchive(): void
@@ -116,8 +114,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Decodes a keyed archive containing HDR, semantic style, acceleration, and flags.
      * Verifies AppleMakerNotes fields are populated from the archived structure.
-     *
-     * @return void
      */
     #[Test]
     public function decodeUnarchivesKeyedArchivePayload(): void
@@ -175,8 +171,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Parses a synthetic maker note property list blob.
      * Ensures the metadata record and AppleMakerNotes fields are populated, including flags.
-     *
-     * @return void
      */
     #[Test]
     public function decodeParsesAppleMakerNotes(): void
@@ -212,8 +206,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Decodes a dictionary-style maker note payload with trailing null padding.
      * Confirms padding is ignored and key fields are parsed successfully.
-     *
-     * @return void
      */
     #[Test]
     public function decodeAcceptsPaddedDictionaryPayload(): void
@@ -233,8 +225,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Decodes flag bitmasks where all bits are zero.
      * Ensures all known flags are present and default to false.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRecordsDisabledFlagsFromZeroBitMasks(): void
@@ -267,8 +257,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Decodes a maker note payload that uses the LivePhotoMovieIndex key.
      * Verifies the decoder exposes the live photo index as an integer.
-     *
-     * @return void
      */
     #[Test]
     public function decodeResolvesLivePhotoMovieIndex(): void
@@ -286,8 +274,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Parses a compact semantic style array from a binary plist payload.
      * Ensures semantic style preset, warmth, and tone are extracted correctly.
-     *
-     * @return void
      */
     #[Test]
     public function decodeMapsSemanticStyleFromCompactArray(): void
@@ -308,8 +294,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Builds AppleMakerNotes from a dictionary that includes extended maker note fields.
      * Confirms HDR, burst, focus range, OIS, and AF fields are mapped and normalized.
-     *
-     * @return void
      */
     #[Test]
     public function buildAppleMakerNotesExtractsAdditionalFields(): void
@@ -349,8 +333,6 @@ final class AppleDecoderTest extends TestCase
      * Ensures buildAppleMakerNotes emits a dot-separated version string for each input form.
      *
      * @param array<int, int>|array{values: list<int>}|int $makerNoteVersion
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('makerNoteVersionProvider')]
@@ -381,8 +363,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Combines FocusDistanceRangeNear and FocusDistanceRangeFar into a single range.
      * Verifies the range is preserved while related fields remain mapped.
-     *
-     * @return void
      */
     #[Test]
     public function buildAppleMakerNotesCombinesFocusDistanceNearAndFar(): void
@@ -407,8 +387,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Provides only FocusDistanceRangeNear in the maker note dictionary.
      * Ensures the builder returns a single-element focus distance range.
-     *
-     * @return void
      */
     #[Test]
     public function buildAppleMakerNotesHandlesFocusDistanceNearOnly(): void
@@ -428,8 +406,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Provides only FocusDistanceRangeFar as a numeric string.
      * Confirms the builder parses it into a single-element focus distance range.
-     *
-     * @return void
      */
     #[Test]
     public function buildAppleMakerNotesHandlesFocusDistanceFarOnly(): void
@@ -449,8 +425,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Supplies HDRImageType and ImageCaptureType codes outside the known mappings.
      * Ensures unknown values are preserved as strings without conversion.
-     *
-     * @return void
      */
     #[Test]
     public function buildAppleMakerNotesKeepsUnknownEnumerations(): void
@@ -472,8 +446,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Maps HDR image type codes provided via the data provider.
      * Verifies each code resolves to the expected label.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('hdrImageTypeProvider')]
@@ -506,8 +478,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Maps image capture type codes using the data provider.
      * Ensures each code is translated into the correct capture type label.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('imageCaptureTypeProvider')]
@@ -545,8 +515,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Decodes a textual maker note payload containing additional tagged fields.
      * Confirms version, HDR type, burst info, focus range, and AF metrics are parsed.
-     *
-     * @return void
      */
     #[Test]
     public function decodeParsesAdditionalMakerNoteFields(): void
@@ -577,8 +545,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Supplies known and unknown camera type codes in the maker note dictionary.
      * Ensures known codes map to labels while unknown codes remain numeric.
-     *
-     * @return void
      */
     #[Test]
     public function buildAppleMakerNotesHandlesCameraTypeCodes(): void
@@ -604,8 +570,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Provides a SemanticStyle dictionary using a values wrapper structure.
      * Verifies the builder falls back to dictionary parsing for semantic style fields.
-     *
-     * @return void
      */
     #[Test]
     public function buildAppleMakerNotesFallsBackToSemanticStyleDictionary(): void
@@ -632,8 +596,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Supplies a RunTime dictionary alongside LivePhotoVideoIndex.
      * Ensures run-time data is converted to a RunTime object and livePhotoTime is computed.
-     *
-     * @return void
      */
     #[Test]
     public function buildAppleMakerNotesParsesRunTime(): void
@@ -667,8 +629,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Provides extended AE/AF and quality fields in multiple numeric representations.
      * Confirms the builder normalizes these values and trims string fields.
-     *
-     * @return void
      */
     #[Test]
     public function buildAppleMakerNotesExtractsExtendedTags(): void
@@ -706,8 +666,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Uses the data provider to supply AE/AF stability flags in different formats.
      * Ensures the corresponding boolean flags are set as expected.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('stabilityFlagProvider')]
@@ -752,8 +710,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Provides a non-plist string payload that should not be decoded.
      * Ensures the decoder returns metadata without Apple maker notes.
-     *
-     * @return void
      */
     #[Test]
     public function decodeIgnoresUnsupportedPropertyListFormat(): void
@@ -767,8 +723,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Compares scalar flag inputs against equivalent bitmask-derived flags.
      * Verifies both approaches yield matching normalized flag values.
-     *
-     * @return void
      */
     #[Test]
     public function flagMasksMirrorScalarInputs(): void
@@ -836,8 +790,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Combines explicit boolean flags with bitmask-derived flags.
      * Ensures explicit values override mask-derived defaults.
-     *
-     * @return void
      */
     #[Test]
     public function explicitFlagValuesOverrideMasks(): void
@@ -872,8 +824,6 @@ final class AppleDecoderTest extends TestCase
     /**
      * Supplies bit position lists for the flag masks.
      * Confirms the decoder accepts list-based masks and maps them to booleans.
-     *
-     * @return void
      */
     #[Test]
     public function flagMasksAcceptBitPositionLists(): void

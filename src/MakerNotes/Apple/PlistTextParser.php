@@ -270,8 +270,6 @@ final readonly class PlistTextParser
      *
      * @param PlistTextCursor $cursor The text cursor.
      *
-     * @return string
-     *
      * @throws ParseError
      */
     private function parseQuotedString(PlistTextCursor $cursor): string
@@ -319,8 +317,6 @@ final readonly class PlistTextParser
      * Parses an unquoted word token until a delimiter or whitespace is reached.
      *
      * @param PlistTextCursor $cursor The text cursor.
-     *
-     * @return string
      */
     private function parseWord(PlistTextCursor $cursor): string
     {
@@ -343,8 +339,6 @@ final readonly class PlistTextParser
      * Parses a dictionary key (quoted or unquoted).
      *
      * @param PlistTextCursor $cursor The text cursor.
-     *
-     * @return string
      *
      * @throws ParseError
      */

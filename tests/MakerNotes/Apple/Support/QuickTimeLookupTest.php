@@ -33,8 +33,6 @@ final class QuickTimeLookupTest extends TestCase
     /**
      * Provides a primary empty string and a secondary string with surrounding whitespace.
      * Ensures string() trims values and returns the first non-empty candidate.
-     *
-     * @return void
      */
     #[Test]
     public function stringReturnsFirstNonEmptyCandidate(): void
@@ -52,8 +50,6 @@ final class QuickTimeLookupTest extends TestCase
     /**
      * Uses only empty or whitespace-only string candidates.
      * Confirms string() returns null when no usable value is found.
-     *
-     * @return void
      */
     #[Test]
     public function stringReturnsNullWhenCandidatesAreEmpty(): void
@@ -71,8 +67,6 @@ final class QuickTimeLookupTest extends TestCase
     /**
      * Supplies a non-numeric first value and a numeric string fallback.
      * Ensures float() skips invalid candidates and parses a numeric string.
-     *
-     * @return void
      */
     #[Test]
     public function floatFallsBackToNumericString(): void
@@ -90,8 +84,6 @@ final class QuickTimeLookupTest extends TestCase
     /**
      * Uses a QuickTimeLookup with no metadata attached.
      * Verifies int() returns null when the key cannot be resolved.
-     *
-     * @return void
      */
     #[Test]
     public function intReturnsNullWhenMissing(): void
@@ -104,8 +96,6 @@ final class QuickTimeLookupTest extends TestCase
     /**
      * Uses a string "false" primary and a boolean true secondary value.
      * Ensures bool() resolves the first candidate and can fall back to a secondary key.
-     *
-     * @return void
      */
     #[Test]
     public function boolReturnsFirstResolvableValue(): void

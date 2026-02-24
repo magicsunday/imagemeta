@@ -30,8 +30,6 @@ final class LensTest extends TestCase
     /**
      * Exposes lens metadata and specification values.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function exposesSpecificationAndHelpers(): void

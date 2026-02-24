@@ -53,8 +53,6 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
     /**
      * Decodes composite exposure payloads into summary fields and sequences.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function decodesCompositeExposureMetadata(): void
@@ -104,8 +102,6 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
     /**
      * Parses big-endian composite exposure payloads correctly.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function honoursBigEndianPayloads(): void
@@ -147,8 +143,6 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
     /**
      * Returns null when the composite exposure payload is truncated.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForTruncatedPayload(): void
@@ -170,8 +164,6 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
 
     /**
      * Returns null when a sequence RATIONAL is truncated in the payload tail.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForTruncatedSequencePayload(): void
@@ -206,8 +198,6 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
 
     /**
      * Returns null when trailing bytes remain after decoding all declared fields.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForPayloadWithTrailingBytes(): void

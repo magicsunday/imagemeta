@@ -158,8 +158,6 @@ final readonly class QuickTimeKeyResolver
      * Parses a free-form metadata key (----) into a dotted namespace string.
      *
      * @param BoxDescriptor $entry Box descriptor representing the free-form entry.
-     *
-     * @return string|null
      */
     public function parseFreeformKey(BoxDescriptor $entry): ?string
     {

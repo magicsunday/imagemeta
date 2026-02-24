@@ -35,8 +35,6 @@ final class MultiPictureFactoryTest extends TestCase
     /**
      * Builds an MPF document with multiple entries and attributes.
      * Verifies MultiPictureFactory maps version, counts, and entry data into the value object.
-     *
-     * @return void
      */
     #[Test]
     public function createsFromMpfDocument(): void
@@ -95,8 +93,6 @@ final class MultiPictureFactoryTest extends TestCase
     /**
      * Creates Metadata without an MPF document.
      * Ensures the multi-picture value object uses null/empty defaults.
-     *
-     * @return void
      */
     #[Test]
     public function createsWithNullMpfDocument(): void

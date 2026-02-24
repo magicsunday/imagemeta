@@ -333,8 +333,6 @@ final readonly class AudioSampleEntryParser
      * @param StreamWindow $win                  Reader positioned at the start of trailing child bytes.
      * @param int          $entryEnd             Absolute offset where this sample entry ends.
      * @param bool         $allowSamplingRateBox Whether a `srat` box is allowed in this entry version.
-     *
-     * @return int|null
      */
     private function parseAudioSampleEntrySamplingRateBox(StreamWindow $win, int $entryEnd, bool $allowSamplingRateBox): ?int
     {
@@ -381,8 +379,6 @@ final readonly class AudioSampleEntryParser
      *
      * @param int|float $sampleRate    Parsed audio sample rate in Hz.
      * @param int|null  $mdhdTimescale Parsed mdhd timescale.
-     *
-     * @return void
      */
     private function validateAudioSampleRateTimescaleRelation(int|float $sampleRate, ?int $mdhdTimescale): void
     {
@@ -403,8 +399,6 @@ final readonly class AudioSampleEntryParser
      * Decodes an AudioSampleEntry 16.16 fixed-point sample rate.
      *
      * @param int $sampleRateRaw Raw 16.16 fixed-point value from the sample entry.
-     *
-     * @return int|float
      */
     private function decodeAudioSampleRate16_16(int $sampleRateRaw): int|float
     {

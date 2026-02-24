@@ -43,8 +43,6 @@ final class StreamWindowTest extends TestCase
     /**
      * Creates a window with a fixed offset and length.
      * It confirms size reporting and that the cursor starts at zero within the window.
-     *
-     * @return void
      */
     #[Test]
     public function sizeReportsConfiguredLengthAndCursorStartsAtZero(): void
@@ -58,8 +56,6 @@ final class StreamWindowTest extends TestCase
     /**
      * Seeks to valid positions within the window.
      * It confirms tell reports window-relative offsets.
-     *
-     * @return void
      */
     #[Test]
     public function seekMovesCursorWithinWindowBounds(): void
@@ -76,8 +72,6 @@ final class StreamWindowTest extends TestCase
     /**
      * Attempts to seek beyond the window length.
      * It asserts a BoundsError is raised for out-of-range seeks.
-     *
-     * @return void
      */
     #[Test]
     public function seekThrowsBoundsErrorOutsideWindow(): void
@@ -91,8 +85,6 @@ final class StreamWindowTest extends TestCase
     /**
      * Reads the entire window and advances the cursor to the end.
      * It confirms reads are window-relative, not stream-relative.
-     *
-     * @return void
      */
     #[Test]
     public function readReturnsRequestedBytesAndAdvancesCursor(): void
@@ -106,8 +98,6 @@ final class StreamWindowTest extends TestCase
     /**
      * Requests more bytes than remain in the window.
      * It asserts a BoundsError is raised for window over-reads.
-     *
-     * @return void
      */
     #[Test]
     public function readThrowsBoundsErrorWhenRequestCrossesEnd(): void
@@ -121,8 +111,6 @@ final class StreamWindowTest extends TestCase
     /**
      * Reads multiple unsigned integer types from a single window payload.
      * It confirms helper methods honor endianness and advance to the window end.
-     *
-     * @return void
      */
     #[Test]
     public function unsignedIntegerHelpersReadSequentially(): void
@@ -144,8 +132,6 @@ final class StreamWindowTest extends TestCase
     /**
      * Consumes part of the payload and then attempts a 64-bit read.
      * It confirms helper methods enforce bounds when insufficient bytes remain.
-     *
-     * @return void
      */
     #[Test]
     public function unsignedIntegerHelpersThrowBoundsErrorOnShortData(): void

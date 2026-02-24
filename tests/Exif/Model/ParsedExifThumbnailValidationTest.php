@@ -47,8 +47,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     /**
      * Provides a valid JPEG thumbnail with Compression=6 and both required tags.
      * Verifies hasThumbnail() returns true for a properly configured IFD1.
-     *
-     * @return void
      */
     #[Test]
     public function hasThumbnailReturnsTrueForValidJpegThumbnail(): void
@@ -73,8 +71,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     /**
      * Sets Compression=6 but omits JPEGInterchangeFormat (tag 513).
      * Ensures hasThumbnail() returns false when the offset tag is missing.
-     *
-     * @return void
      */
     #[Test]
     public function hasThumbnailReturnsFalseWhenJpegInterchangeFormatIsMissing(): void
@@ -98,8 +94,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     /**
      * Sets Compression=6 but omits JPEGInterchangeFormatLength (tag 514).
      * Verifies hasThumbnail() returns false when the length tag is missing.
-     *
-     * @return void
      */
     #[Test]
     public function hasThumbnailReturnsFalseWhenJpegInterchangeFormatLengthIsMissing(): void
@@ -118,8 +112,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     /**
      * Provides both JPEGInterchangeFormat tags but sets Compression to UNCOMPRESSED (value 1).
      * Confirms hasThumbnail() returns false when compression is not JPEG.
-     *
-     * @return void
      */
     #[Test]
     public function hasThumbnailReturnsFalseWhenCompressionIsNotJpeg(): void
@@ -149,8 +141,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     /**
      * Sets up a valid JPEG thumbnail configuration but with zero length.
      * Verifies hasThumbnail() returns false for zero-length thumbnails.
-     *
-     * @return void
      */
     #[Test]
     public function hasThumbnailReturnsFalseWhenLengthIsZero(): void
@@ -175,8 +165,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     /**
      * Omits the Compression tag entirely while providing both JPEG interchange tags.
      * Ensures hasThumbnail() returns false when compression is not specified.
-     *
-     * @return void
      */
     #[Test]
     public function hasThumbnailReturnsFalseWhenCompressionTagIsMissing(): void
@@ -200,8 +188,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     /**
      * Uses LZW compression (value 5) instead of JPEG with both interchange tags present.
      * Verifies hasThumbnail() rejects non-JPEG compression schemes.
-     *
-     * @return void
      */
     #[Test]
     public function hasThumbnailReturnsFalseForLzwCompression(): void
@@ -226,8 +212,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     /**
      * Provides an empty IFD1 with no tags.
      * Confirms hasThumbnail() returns false for empty thumbnail metadata.
-     *
-     * @return void
      */
     #[Test]
     public function hasThumbnailReturnsFalseForEmptyIfd1(): void
@@ -242,8 +226,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     /**
      * Sets Compression=6 with valid offset but negative length.
      * Ensures hasThumbnail() returns false for invalid length values.
-     *
-     * @return void
      */
     #[Test]
     public function hasThumbnailReturnsFalseWhenLengthIsNegative(): void

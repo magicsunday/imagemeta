@@ -25,8 +25,6 @@ final class QuickTimeDataAtomTest extends TestCase
 {
     /**
      * Constructs a data atom and verifies stored properties.
-     *
-     * @return void
      */
     #[Test]
     public function constructionPreservesProperties(): void
@@ -40,8 +38,6 @@ final class QuickTimeDataAtomTest extends TestCase
 
     /**
      * Decomposes locale into country and language indicators.
-     *
-     * @return void
      */
     #[Test]
     public function localeDecomposition(): void
@@ -55,8 +51,6 @@ final class QuickTimeDataAtomTest extends TestCase
 
     /**
      * Returns zero for both indicators when locale is zero.
-     *
-     * @return void
      */
     #[Test]
     public function zeroLocaleReturnsZeroIndicators(): void

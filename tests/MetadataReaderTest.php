@@ -297,8 +297,6 @@ final class MetadataReaderTest extends TestCase
     /**
      * Builds a JPEG containing EXIF and XMP APP1 segments plus a Nikon maker note.
      * Verifies MetadataReader populates blobs, documents, maker notes, and structured values.
-     *
-     * @return void
      */
     #[Test]
     public function readJpegPopulatesMetadata(): void
@@ -388,8 +386,6 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Uses injected parser dependencies when reading JPEG metadata.
-     *
-     * @return void
      */
     #[Test]
     public function readUsesInjectedParserDependencies(): void
@@ -561,8 +557,6 @@ final class MetadataReaderTest extends TestCase
     /**
      * Reads a JPEG while requesting digest computation.
      * Ensures both SHA-1 and MD5 checksums are calculated and propagated to structured file metadata.
-     *
-     * @return void
      */
     #[Test]
     public function readJpegWithDigestsPopulatesChecksums(): void
@@ -602,8 +596,6 @@ final class MetadataReaderTest extends TestCase
     /**
      * Creates a JPEG with a baseline SOF but no EXIF BitsPerSample tag.
      * Confirms the structured image falls back to SOF precision for bits per sample and dimensions.
-     *
-     * @return void
      */
     #[Test]
     public function structuredImageBitsPerSampleFallbacksToFramePrecision(): void
@@ -634,8 +626,6 @@ final class MetadataReaderTest extends TestCase
     /**
      * Builds an ISO BMFF payload with Exif/XMP boxes and QuickTime metadata.
      * Verifies the reader extracts blobs, maker notes, QuickTime identifiers, and item references.
-     *
-     * @return void
      */
     #[Test]
     public function readIsoBmffPopulatesMetadata(): void
@@ -689,8 +679,6 @@ final class MetadataReaderTest extends TestCase
     /**
      * Inserts duplicate XMP packets into a JPEG APP1 sequence.
      * Ensures MetadataReader de-duplicates XMP blobs based on content hash.
-     *
-     * @return void
      */
     #[Test]
     public function deduplicatesXmpPacketsByHash(): void

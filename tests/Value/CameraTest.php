@@ -32,8 +32,6 @@ final class CameraTest extends TestCase
     /**
      * Exposes camera metadata provided via the constructor.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function exposesConstructorState(): void

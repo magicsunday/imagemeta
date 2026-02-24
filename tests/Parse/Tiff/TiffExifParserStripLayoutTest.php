@@ -56,8 +56,6 @@ final class TiffExifParserStripLayoutTest extends TestCase
 {
     /**
      * Accepts a valid strip layout for PlanarConfiguration=1 (chunky).
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidStripLayoutWithChunkyPlanarConfiguration(): void
@@ -81,8 +79,6 @@ final class TiffExifParserStripLayoutTest extends TestCase
 
     /**
      * Accepts a valid strip layout for PlanarConfiguration=2 (separate planes).
-     *
-     * @return void
      */
     #[Test]
     public function acceptsValidStripLayoutWithSeparatePlanarConfiguration(): void
@@ -106,8 +102,6 @@ final class TiffExifParserStripLayoutTest extends TestCase
 
     /**
      * Rejects StripOffsets entries that use floating-point TIFF types.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('floatingPointStripOffsetTypeProvider')]
@@ -140,8 +134,6 @@ final class TiffExifParserStripLayoutTest extends TestCase
 
     /**
      * Rejects StripOffsets count mismatches against expected strip count.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMismatchedStripOffsetsCount(): void
@@ -163,8 +155,6 @@ final class TiffExifParserStripLayoutTest extends TestCase
 
     /**
      * Rejects StripByteCounts count mismatches against expected strip count.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMismatchedStripByteCountsCount(): void
@@ -186,8 +176,6 @@ final class TiffExifParserStripLayoutTest extends TestCase
 
     /**
      * Rejects strip storage entries whose offset+byteCount range exceeds TIFF blob bounds.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsStripStorageRangeExceedingBlobBounds(): void
@@ -210,8 +198,6 @@ final class TiffExifParserStripLayoutTest extends TestCase
 
     /**
      * Rejects zero RowsPerStrip when strip tags are present.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsZeroRowsPerStripWithStripTags(): void

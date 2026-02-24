@@ -50,8 +50,6 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     /**
      * Checks that deviceSettingDescription() returns null when the EXIF IFD lacks the tag.
      * Confirms no DeviceSettingDescription is synthesized without tag data.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullWhenTagMissing(): void
@@ -65,8 +63,6 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     /**
      * Supplies only two bytes so the header is incomplete and should not be parsed.
      * Ensures the parser enforces the minimum 4-byte columns/rows requirement.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullWhenDataTooShort(): void
@@ -89,8 +85,6 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     /**
      * Provides little-endian columns and rows with no UTF-16 settings payload.
      * Verifies the description contains the dimensions and an empty settings list.
-     *
-     * @return void
      */
     #[Test]
     public function parsesLittleEndianWithoutSettings(): void
@@ -118,8 +112,6 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     /**
      * Provides big-endian columns and rows with no UTF-16 settings payload.
      * Verifies the description decodes dimensions using the TIFF byte order.
-     *
-     * @return void
      */
     #[Test]
     public function parsesBigEndianWithoutSettings(): void
@@ -147,8 +139,6 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     /**
      * Encodes a BOM-framed UTF-16LE "Test" payload after the dimension header.
      * Verifies the decoded settings entry matches the text and dimensions remain intact.
-     *
-     * @return void
      */
     #[Test]
     public function parsesWithUtf16LESettings(): void
@@ -177,8 +167,6 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     /**
      * Encodes a BOM-framed UTF-16BE payload after the dimension header.
      * Ensures the settings text is decoded correctly and dimensions are preserved.
-     *
-     * @return void
      */
     #[Test]
     public function parsesWithUtf16BESettings(): void
@@ -207,8 +195,6 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     /**
      * Uses a BOM-framed UTF-16LE settings string with separators and spaces.
      * Confirms the full text is preserved in the settings list with expected dimensions.
-     *
-     * @return void
      */
     #[Test]
     public function parsesComplexSettings(): void
@@ -239,8 +225,6 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     /**
      * Settings without BOM signature are rejected per EXIF 3.0 §4.6.6.7.45.
      * Returns dimensions with empty settings list.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsSettingsWithoutBom(): void
@@ -269,8 +253,6 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     /**
      * Uses only a null terminator after the dimension header to represent an empty payload.
      * Ensures the parser returns an empty settings list without failing.
-     *
-     * @return void
      */
     #[Test]
     public function handlesEmptySettingsGracefully(): void
@@ -299,8 +281,6 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     /**
      * Provides two BOM-framed UTF-16LE settings strings separated by null terminators.
      * Verifies the parser splits them into separate entries and keeps the dimensions.
-     *
-     * @return void
      */
     #[Test]
     public function parsesMultipleSettingsStrings(): void

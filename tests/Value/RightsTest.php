@@ -28,8 +28,6 @@ final class RightsTest extends TestCase
     /**
      * Stores copyright values.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithCopyright(): void
@@ -47,8 +45,6 @@ final class RightsTest extends TestCase
     /**
      * Stores full rights metadata fields.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithAllRightsInfo(): void
@@ -69,8 +65,6 @@ final class RightsTest extends TestCase
     /**
      * Accepts null rights metadata values.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

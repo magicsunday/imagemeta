@@ -30,8 +30,6 @@ final class AppleDecoderFloatListTest extends TestCase
     /**
      * Calls floatList with a scalar value for the requested key.
      * Ensures the scalar is wrapped into a single-element float array.
-     *
-     * @return void
      */
     #[Test]
     public function floatListReturnsScalarValuesAsLists(): void
@@ -46,8 +44,6 @@ final class AppleDecoderFloatListTest extends TestCase
     /**
      * Provides a values list containing integers, numeric strings, and floats.
      * Confirms floatList normalizes the payload into a list of floats.
-     *
-     * @return void
      */
     #[Test]
     public function floatListNormalisesArrayPayloads(): void

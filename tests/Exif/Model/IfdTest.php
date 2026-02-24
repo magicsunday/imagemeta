@@ -31,8 +31,6 @@ final class IfdTest extends TestCase
     /**
      * Creates an IFD with entries and an explicit next-IFD offset.
      * Confirms both the entry map and the offset are stored as provided.
-     *
-     * @return void
      */
     #[Test]
     public function constructorStoresEntriesAndNextOffset(): void
@@ -47,8 +45,6 @@ final class IfdTest extends TestCase
     /**
      * Creates an IFD without specifying a next-IFD offset.
      * Verifies the offset defaults to null while the entries remain intact.
-     *
-     * @return void
      */
     #[Test]
     public function constructorDefaultsNextOffsetToNull(): void
@@ -63,8 +59,6 @@ final class IfdTest extends TestCase
     /**
      * Builds an IFD with multiple entries keyed by tag.
      * Ensures get() returns the matching entry for a known tag ID.
-     *
-     * @return void
      */
     #[Test]
     public function getReturnsEntryForKnownTag(): void
@@ -83,8 +77,6 @@ final class IfdTest extends TestCase
     /**
      * Uses an IFD containing a single entry.
      * Confirms get() returns null when a tag ID is not present.
-     *
-     * @return void
      */
     #[Test]
     public function getReturnsNullForUnknownTag(): void

@@ -28,8 +28,6 @@ final class DeviceTest extends TestCase
     /**
      * Stores device software fields when provided.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithSoftwareVersion(): void
@@ -47,8 +45,6 @@ final class DeviceTest extends TestCase
     /**
      * Stores raw and editing software metadata together.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithAllDeviceInfo(): void
@@ -69,8 +65,6 @@ final class DeviceTest extends TestCase
     /**
      * Accepts null software metadata values.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

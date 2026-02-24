@@ -28,8 +28,6 @@ final class OecfTest extends TestCase
     /**
      * Builds OECF values from decoded matrix data.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function createOecfFromDecodedMatrix(): void
@@ -68,8 +66,6 @@ final class OecfTest extends TestCase
     /**
      * Accepts null entries within OECF matrices.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function createOecfWithNullValues(): void
@@ -95,8 +91,6 @@ final class OecfTest extends TestCase
     /**
      * Returns null for empty or missing OECF matrix inputs.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function invalidMatrixReturnsNull(): void
@@ -109,8 +103,6 @@ final class OecfTest extends TestCase
     /**
      * Returns null when required OECF fields are missing.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function missingRequiredFieldsReturnsNull(): void
@@ -126,8 +118,6 @@ final class OecfTest extends TestCase
     /**
      * Rejects OECF matrices with invalid dimension declarations.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function invalidDimensionsReturnsNull(): void
@@ -151,8 +141,6 @@ final class OecfTest extends TestCase
     /**
      * Rejects OECF matrices when row counts do not match.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function mismatchingValueRowCountReturnsNull(): void
@@ -175,8 +163,6 @@ final class OecfTest extends TestCase
     /**
      * Rejects OECF matrices when column counts do not match.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function mismatchingValueColumnsReturnNull(): void

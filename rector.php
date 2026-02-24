@@ -13,8 +13,6 @@ use Rector\CodeQuality\Rector\FunctionLike\SimplifyUselessVariableRector;
 use Rector\CodingStyle\Rector\Catch_\CatchExceptionNameMatchingTypeRector;
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\Assign\RemoveUnusedVariableAssignRector;
-use Rector\DeadCode\Rector\ClassMethod\RemoveUselessParamTagRector;
-use Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnTagRector;
 use Rector\DeadCode\Rector\Plus\RemoveDeadZeroAndOneOperationRector;
 use Rector\DeadCode\Rector\Stmt\RemoveUnreachableStatementRector;
 use Rector\Php84\Rector\MethodCall\NewMethodCallWithoutParenthesesRector;
@@ -76,10 +74,11 @@ return static function (RectorConfig $rectorConfig): void {
     // Skip some rules
     $rectorConfig->skip([
         CatchExceptionNameMatchingTypeRector::class,
+        // Explicit (new Foo())->method() parentheses kept for readability
         NewMethodCallWithoutParenthesesRector::class,
+        // Intentional: $x * 1.0 casts int to float
         RemoveDeadZeroAndOneOperationRector::class,
+        // Intentional: defensive guard clauses after exhaustive matches
         RemoveUnreachableStatementRector::class,
-        RemoveUselessParamTagRector::class,
-        RemoveUselessReturnTagRector::class,
     ]);
 };

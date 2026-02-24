@@ -216,8 +216,6 @@ final readonly class VideoSampleEntryParser
      *
      * @param int    $resolutionRaw Raw unsigned 16.16 fixed-point value.
      * @param string $axis          Resolution axis (`horizontal` or `vertical`) for diagnostics.
-     *
-     * @return int|float
      */
     private function decodeVideoResolution16_16(int $resolutionRaw, string $axis): int|float
     {

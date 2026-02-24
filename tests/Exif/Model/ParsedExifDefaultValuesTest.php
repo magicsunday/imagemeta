@@ -55,8 +55,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Omits BitsPerSample in TIFF context (Compression tag present).
      * Scalar accessor returns 8 (first component of default vector).
-     *
-     * @return void
      */
     #[Test]
     public function bitsPerSampleReturnsDefaultInTiffContext(): void
@@ -72,8 +70,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Omits BitsPerSample in JPEG context (no Compression tag).
      * Returns null so SOF precision fallback can apply.
-     *
-     * @return void
      */
     #[Test]
     public function bitsPerSampleReturnsNullInJpegContext(): void
@@ -87,8 +83,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * BitsPerSampleList returns per-component vector in TIFF context.
      * Defaults to [8] per SamplesPerPixel when tag is absent.
-     *
-     * @return void
      */
     #[Test]
     public function bitsPerSampleListReturnsDefaultVector(): void
@@ -104,8 +98,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
 
     /**
      * BitsPerSampleList preserves multi-component values.
-     *
-     * @return void
      */
     #[Test]
     public function bitsPerSampleListPreservesMultipleComponents(): void
@@ -121,8 +113,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
 
     /**
      * BitsPerSampleList returns null in JPEG context.
-     *
-     * @return void
      */
     #[Test]
     public function bitsPerSampleListReturnsNullInJpegContext(): void
@@ -136,8 +126,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Leaves SamplesPerPixel unset in JPEG context (no Compression tag).
      * Confirms the method returns 3 per EXIF 3.0 §4.6.5.1.7.
-     *
-     * @return void
      */
     #[Test]
     public function samplesPerPixelReturnsThreeInJpegContext(): void
@@ -151,8 +139,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Leaves SamplesPerPixel unset for a TIFF grayscale image.
      * Confirms the method returns 1 instead of the EXIF default 3.
-     *
-     * @return void
      */
     #[Test]
     public function samplesPerPixelReturnsOneForGrayscale(): void
@@ -173,8 +159,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Leaves SamplesPerPixel unset for an RGB photometric image.
      * Confirms the method returns 3 when photometric is RGB.
-     *
-     * @return void
      */
     #[Test]
     public function samplesPerPixelReturnsThreeForRgb(): void
@@ -195,8 +179,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Leaves SamplesPerPixel unset in TIFF context without photometric.
      * Confirms the TIFF 6.0 default of 1 is returned.
-     *
-     * @return void
      */
     #[Test]
     public function samplesPerPixelReturnsOneInTiffContextWithoutPhotometric(): void
@@ -214,8 +196,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
      * Ensures ParsedExif returns UNCOMPRESSED when the Compression tag is absent.
      *
      * @see TIFF 6.0 §8: Compression default is 1 (no compression)
-     *
-     * @return void
      */
     #[Test]
     public function compressionReturnsUncompressedWhenMissing(): void
@@ -265,8 +245,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
      *
      * @see TIFF 6.0 §8: Orientation default is 1 (top-left)
      * @see EXIF 3.0 §4.6.5.1.6: Orientation default is 1
-     *
-     * @return void
      */
     #[Test]
     public function orientationReturnsDefaultWhenMissing(): void
@@ -282,8 +260,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
      * Ensures the returned enum is CHUNKY for interleaved samples.
      *
      * @see TIFF 6.0 §8: PlanarConfiguration default is 1 (chunky format)
-     *
-     * @return void
      */
     #[Test]
     public function planarConfigurationReturnsChunkyInTiffContext(): void
@@ -301,8 +277,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
      * Returns null because JPEG markers carry the equivalent information.
      *
      * @see EXIF 3.0 §4.6.5.1.10
-     *
-     * @return void
      */
     #[Test]
     public function planarConfigurationReturnsNullInJpegContext(): void
@@ -319,8 +293,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
      *
      * @see TIFF 6.0 §8: ResolutionUnit default is 2 (inches)
      * @see EXIF 3.0 §4.6.5.1.11: ResolutionUnit default is 2
-     *
-     * @return void
      */
     #[Test]
     public function resolutionUnitReturnsDefaultWhenMissing(): void
@@ -334,8 +306,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Omits XResolution/YResolution in JPEG context (no Compression tag).
      * Confirms 72.0 dpi fallback per EXIF 3.0 §4.6.5.1.8-9.
-     *
-     * @return void
      */
     #[Test]
     public function resolutionDefaultsTo72InJpegContext(): void
@@ -350,8 +320,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Omits XResolution/YResolution in TIFF context (Compression tag present).
      * TIFF 6.0 defines no default, so null is returned.
-     *
-     * @return void
      */
     #[Test]
     public function resolutionReturnsNullInTiffContext(): void
@@ -370,8 +338,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
      * Verifies the default is CENTERED when the tag is missing.
      *
      * @see EXIF 3.0 §4.6.5.1.13: Default value is 1 (centered) if missing
-     *
-     * @return void
      */
     #[Test]
     public function ycbcrPositioningDefaultsToCenteredForYcbcr(): void
@@ -392,8 +358,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Omits YCbCrPositioning when photometric is RGB.
      * Returns null because positioning is only applicable to YCbCr images.
-     *
-     * @return void
      */
     #[Test]
     public function ycbcrPositioningReturnsNullForNonYcbcr(): void
@@ -414,8 +378,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Omits YCbCrSubSampling in TIFF YCbCr context.
      * TIFF 6.0 §21 defines default [2,2] for YCbCr images.
-     *
-     * @return void
      */
     #[Test]
     public function ycbcrSubSamplingDefaultsInTiffYcbcrContext(): void
@@ -437,8 +399,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Omits YCbCrSubSampling in JPEG context (no Compression tag).
      * Returns null so SOF-derived subsampling can take precedence.
-     *
-     * @return void
      */
     #[Test]
     public function ycbcrSubSamplingReturnsNullInJpegContext(): void
@@ -452,8 +412,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Omits YCbCrSubSampling in TIFF RGB context.
      * Returns null because the default only applies to YCbCr images.
-     *
-     * @return void
      */
     #[Test]
     public function ycbcrSubSamplingReturnsNullForNonYcbcr(): void
@@ -475,8 +433,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Sets PhotometricInterpretation to RGB with an sRGB color space.
      * Confirms referenceBlackWhite defaults to the RGB black/white levels.
-     *
-     * @return void
      */
     #[Test]
     public function referenceBlackWhiteDefaultsForRgb(): void
@@ -505,8 +461,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Sets PhotometricInterpretation to YCbCr with an sRGB color space.
      * Ensures the YCbCr reference black/white defaults are applied.
-     *
-     * @return void
      */
     #[Test]
     public function referenceBlackWhiteDefaultsForYCbCr(): void
@@ -535,8 +489,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Uses RGB photometric interpretation but marks the color space as uncalibrated.
      * Verifies referenceBlackWhite is suppressed and returns null in that case.
-     *
-     * @return void
      */
     #[Test]
     public function referenceBlackWhiteDefaultsAreSuppressedForUncalibratedColorSpace(): void
@@ -562,8 +514,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Feeds an incomplete transfer function LUT to ensure it is rejected.
      * Confirms a full 3×256 entry table is accepted and returned intact.
-     *
-     * @return void
      */
     #[Test]
     public function transferFunctionRequiresCompleteLut(): void
@@ -590,8 +540,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Omits TransferFunction tag in TIFF context.
      * Materializes the NTSC gamma 2.2 default table (768 entries for 8-bit).
-     *
-     * @return void
      */
     #[Test]
     public function transferFunctionDefaultsToGamma22InTiffContext(): void
@@ -614,8 +562,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Omits TransferFunction tag in JPEG context.
      * Returns null so no synthetic table is emitted.
-     *
-     * @return void
      */
     #[Test]
     public function transferFunctionReturnsNullInJpegContext(): void
@@ -628,8 +574,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
 
     /**
      * Omits MinSampleValue — defaults to 0 per TIFF 6.0 §8.
-     *
-     * @return void
      */
     #[Test]
     public function minSampleValueDefaultsToZero(): void
@@ -642,8 +586,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
 
     /**
      * Omits MaxSampleValue in TIFF 8-bit context — defaults to 255.
-     *
-     * @return void
      */
     #[Test]
     public function maxSampleValueDefaultsTo255For8Bit(): void
@@ -659,8 +601,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * Omits TransferRange in TIFF 8-bit context.
      * Defaults to [0, 255, 0, 255, 0, 255] per TIFF 6.0 §8.
-     *
-     * @return void
      */
     #[Test]
     public function transferRangeDefaultsInTiffContext(): void
@@ -678,8 +618,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
 
     /**
      * Omits TransferRange in JPEG context — returns null.
-     *
-     * @return void
      */
     #[Test]
     public function transferRangeReturnsNullInJpegContext(): void
@@ -693,8 +631,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
     /**
      * When YCbCr coefficients are missing, expects Annex D defaults for YCbCr photos.
      * Verifies the method returns null for RGB photometric interpretation.
-     *
-     * @return void
      */
     #[Test]
     public function ycbcrCoefficientsDefaultToAnnexDWhenMissing(): void

@@ -27,8 +27,6 @@ final class XmpStructuredValueTest extends TestCase
 {
     /**
      * Returns nested values by namespace/local-name pair.
-     *
-     * @return void
      */
     #[Test]
     public function getReturnsNestedValue(): void
@@ -43,8 +41,6 @@ final class XmpStructuredValueTest extends TestCase
 
     /**
      * Resolves string values from string, list, and language-alternative child properties.
-     *
-     * @return void
      */
     #[Test]
     public function stringResolvesSupportedChildValueForms(): void
@@ -65,8 +61,6 @@ final class XmpStructuredValueTest extends TestCase
 
     /**
      * Merges nested structured values recursively by child key.
-     *
-     * @return void
      */
     #[Test]
     public function mergeCombinesNestedStructuredValues(): void

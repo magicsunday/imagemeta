@@ -53,13 +53,10 @@ final readonly class FocalReader
     // ========================================================================
     // Focal length / focal plane
     // ========================================================================
-
     /**
      * Returns the focal length in millimetres if available.
      *
      * EXIF 3.0 §4.6.6.7.23 (FocalLength)
-     *
-     * @return float|null
      */
     public function focalLengthMm(): ?float
     {
@@ -68,8 +65,6 @@ final readonly class FocalReader
 
     /**
      * Returns the focal length in 35mm equivalent if available.
-     *
-     * @return int|null
      */
     public function focalLength35Mm(): ?int
     {

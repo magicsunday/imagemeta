@@ -68,8 +68,6 @@ final readonly class TemporalExifReader
      * EXIF 3.0 §4.6.6.6.1 describes DateTimeOriginal as a 20-byte ASCII
      * timestamp (including the terminating NULL) formatted as
      * "YYYY:MM:DD HH:MM:SS".
-     *
-     * @return string|null
      */
     public function dateTimeOriginalRaw(): ?string
     {
@@ -144,8 +142,6 @@ final readonly class TemporalExifReader
      * EXIF 3.0 §4.6.6.6.2 documents DateTimeDigitized as a 20-byte ASCII
      * timestamp (including the terminating NULL) formatted as
      * "YYYY:MM:DD HH:MM:SS".
-     *
-     * @return string|null
      */
     public function dateTimeDigitizedRaw(): ?string
     {
@@ -174,8 +170,6 @@ final readonly class TemporalExifReader
 
     /**
      * Returns the raw ModifyDate (legacy DateTime) tag value from IFD0.
-     *
-     * @return string|null
      */
     public function dateTimeRaw(): ?string
     {
@@ -264,8 +258,6 @@ final readonly class TemporalExifReader
      *
      * EXIF DateTime* values without OffsetTime* remain local/offset-unknown and
      * are therefore not converted into an absolute instant here.
-     *
-     * @return DateTimeImmutable|null
      */
     public function captureDateTime(): ?DateTimeImmutable
     {
@@ -303,8 +295,6 @@ final readonly class TemporalExifReader
 
     /**
      * Returns the digitised timestamp combining the raw value and offset tags.
-     *
-     * @return DateTimeImmutable|null
      */
     public function dateTimeDigitized(): ?DateTimeImmutable
     {
@@ -320,8 +310,6 @@ final readonly class TemporalExifReader
      *
      * EXIF 3.0 §4.6.5.4.5 defines DateTime as "YYYY:MM:DD HH:MM:SS" with
      * blank-filled placeholders treated as unknown values.
-     *
-     * @return DateTimeImmutable|null
      */
     public function dateTime(): ?DateTimeImmutable
     {

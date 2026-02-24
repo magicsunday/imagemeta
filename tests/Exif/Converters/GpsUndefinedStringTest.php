@@ -52,8 +52,6 @@ final class GpsUndefinedStringTest extends TestCase
     /**
      * Supplies a GPSProcessingMethod shorter than 8 bytes without a prefix.
      * Confirms that payloads missing the character code area are rejected.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsProcessingMethodShorterThanEightBytes(): void
@@ -66,8 +64,6 @@ final class GpsUndefinedStringTest extends TestCase
     /**
      * Supplies a GPSProcessingMethod with an unrecognised 8-byte prefix.
      * Confirms that an unknown encoding identifier is rejected.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsProcessingMethodWithUnknownPrefix(): void
@@ -80,8 +76,6 @@ final class GpsUndefinedStringTest extends TestCase
     /**
      * Supplies a GPSProcessingMethod with a valid ASCII prefix.
      * Confirms the text content is extracted correctly.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsProcessingMethodWithAsciiPrefix(): void
@@ -94,8 +88,6 @@ final class GpsUndefinedStringTest extends TestCase
     /**
      * Supplies a GPSAreaInformation shorter than 8 bytes without a prefix.
      * Confirms that payloads missing the character code area are rejected.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAreaInformationShorterThanEightBytes(): void
@@ -116,8 +108,6 @@ final class GpsUndefinedStringTest extends TestCase
 
     /**
      * Verifies the generic undefined-string decoder contract exists for encoding-specific dispatch.
-     *
-     * @return void
      */
     #[Test]
     public function exposesGenericUndefinedDecoderMethodContract(): void

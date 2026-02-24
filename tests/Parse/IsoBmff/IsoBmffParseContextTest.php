@@ -53,8 +53,6 @@ final class IsoBmffParseContextTest extends TestCase
     /**
      * Creates a new parse context.
      * Verifies all shared parse state containers start empty.
-     *
-     * @return void
      */
     #[Test]
     public function contextInitializesAllCollectionsAsEmptyArrays(): void
@@ -77,8 +75,6 @@ final class IsoBmffParseContextTest extends TestCase
     /**
      * Inspects parser private method signatures after context refactor.
      * Confirms methods now accept an IsoBmffParseContext parameter instead of repeated refs.
-     *
-     * @return void
      */
     #[Test]
     public function parserPrivateParseMethodsAcceptSharedContextParameter(): void

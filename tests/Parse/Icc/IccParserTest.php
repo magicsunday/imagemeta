@@ -49,8 +49,6 @@ final class IccParserTest extends TestCase
     /**
      * Decodes a full ICC profile and extracts key header fields.
      * This verifies version parsing, PCS detection, rendering intent, and profile ID formatting.
-     *
-     * @return void
      */
     #[Test]
     public function decodeExtractsHeaderFields(): void
@@ -71,8 +69,6 @@ final class IccParserTest extends TestCase
     /**
      * Splits the ICC profile into segments and reassembles them.
      * This confirms segment concatenation yields the same decoded header fields.
-     *
-     * @return void
      */
     #[Test]
     public function decodeReassemblesSegments(): void
@@ -99,8 +95,6 @@ final class IccParserTest extends TestCase
     /**
      * Supplies truncated payloads and incomplete segment lists.
      * This verifies the decoder returns null when required data is missing.
-     *
-     * @return void
      */
     #[Test]
     public function decodeReturnsNullForTruncatedData(): void
@@ -114,8 +108,6 @@ final class IccParserTest extends TestCase
     /**
      * Distinguishes missing ICC payloads from malformed ICC payloads.
      * Missing data returns null, while malformed present data must throw ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function decodeDistinguishesMissingProfileFromMalformedProfile(): void
@@ -130,8 +122,6 @@ final class IccParserTest extends TestCase
 
     /**
      * Verifies that valid fixed-width unsigned big-endian fields decode deterministically.
-     *
-     * @return void
      */
     #[Test]
     public function uIntHelpersDecodeValidFixedWidthValues(): void
@@ -144,8 +134,6 @@ final class IccParserTest extends TestCase
 
     /**
      * Rejects truncated uInt32Number fields instead of applying implicit zero-padding.
-     *
-     * @return void
      */
     #[Test]
     public function uInt32HelperRejectsTruncatedFields(): void
@@ -160,8 +148,6 @@ final class IccParserTest extends TestCase
 
     /**
      * Rejects truncated uInt16Number fields instead of applying implicit zero-padding.
-     *
-     * @return void
      */
     #[Test]
     public function uInt16HelperRejectsTruncatedFields(): void
@@ -177,8 +163,6 @@ final class IccParserTest extends TestCase
     /**
      * Feeds out-of-order ICC segments to the decoder.
      * This confirms the decoder sorts fragments before reconstruction.
-     *
-     * @return void
      */
     #[Test]
     public function decodeHandlesOutOfOrderSegments(): void
@@ -202,8 +186,6 @@ final class IccParserTest extends TestCase
     /**
      * Drops the middle segment from a multi-part profile.
      * This ensures the decoder rejects incomplete segment sequences.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsIncompleteSegmentSequences(): void
@@ -224,8 +206,6 @@ final class IccParserTest extends TestCase
 
     /**
      * Rejects profiles whose declared size is not 4-byte aligned.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsMisalignedProfileSize(): void
@@ -241,8 +221,6 @@ final class IccParserTest extends TestCase
 
     /**
      * Rejects profiles where the declared size is below the 128-byte header minimum.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsProfileSizeBelowMinimum(): void
@@ -259,8 +237,6 @@ final class IccParserTest extends TestCase
 
     /**
      * Rejects profiles where the declared size does not match the actual payload length.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsProfileSizeMismatch(): void
@@ -277,8 +253,6 @@ final class IccParserTest extends TestCase
 
     /**
      * Rejects truncated profiles where the declared size exceeds available data.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsTruncatedProfile(): void
@@ -297,8 +271,6 @@ final class IccParserTest extends TestCase
      * Accepts a valid tag table with contiguous non-overlapping data ranges.
      *
      * ICC.1:2022 §7.3 allows distinct tags when ranges are disjoint and contiguous.
-     *
-     * @return void
      */
     #[Test]
     public function decodeAcceptsContiguousNonOverlappingTagTableRanges(): void
@@ -321,8 +293,6 @@ final class IccParserTest extends TestCase
      * Accepts shared tag data when offset and size are identical.
      *
      * ICC.1:2022 §7.3 allows aliasing only for exactly matching data elements.
-     *
-     * @return void
      */
     #[Test]
     public function decodeAcceptsSharedOffsetWithMatchingSize(): void
@@ -345,8 +315,6 @@ final class IccParserTest extends TestCase
      * Parses an ICC profile with version 2.1.3 encoding.
      * This verifies version parsing uses the correct byte layout:
      * byte 8 = major, byte 9 high nibble = minor, low nibble = bugfix.
-     *
-     * @return void
      */
     #[Test]
     public function decodeExtractsVersionEncoding(): void
@@ -365,8 +333,6 @@ final class IccParserTest extends TestCase
     /**
      * Parses a profile with a valid ICC dateTimeNumber.
      * ICC.1:2022 §7.2.6 requires valid calendar/time ranges.
-     *
-     * @return void
      */
     #[Test]
     public function parsesValidDateTimeNumber(): void
@@ -386,8 +352,6 @@ final class IccParserTest extends TestCase
     /**
      * Rejects year zero in ICC dateTimeNumber.
      * ICC.1:2022 §4.2 and §7.2.6 define a valid date/time value.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsYearZeroInDateTimeNumber(): void
@@ -407,8 +371,6 @@ final class IccParserTest extends TestCase
     /**
      * Accepts lower-boundary values in ICC dateTimeNumber.
      * ICC.1:2022 §4.2 and §7.2.6: month=1, day=1, hour=0, minute=0, second=0.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsLowerBoundaryDateTimeNumber(): void
@@ -428,8 +390,6 @@ final class IccParserTest extends TestCase
     /**
      * Accepts upper-boundary values in ICC dateTimeNumber.
      * ICC.1:2022 §4.2 and §7.2.6: month=12, day=31, hour=23, minute=59, second=59.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsUpperBoundaryDateTimeNumber(): void
@@ -449,8 +409,6 @@ final class IccParserTest extends TestCase
     /**
      * Rejects month zero in ICC dateTimeNumber.
      * ICC.1:2022 §7.2.6 requires month in range 1..12.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMonthZeroInDateTimeNumber(): void
@@ -470,8 +428,6 @@ final class IccParserTest extends TestCase
     /**
      * Rejects month thirteen in ICC dateTimeNumber.
      * ICC.1:2022 §7.2.6 requires month in range 1..12.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMonthThirteenInDateTimeNumber(): void
@@ -491,8 +447,6 @@ final class IccParserTest extends TestCase
     /**
      * Rejects day zero in ICC dateTimeNumber.
      * ICC.1:2022 §7.2.6 requires day in range 1..31.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsDayZeroInDateTimeNumber(): void
@@ -512,8 +466,6 @@ final class IccParserTest extends TestCase
     /**
      * Rejects day 32 in ICC dateTimeNumber.
      * ICC.1:2022 §7.2.6 requires day in range 1..31.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsDayThirtyTwoInDateTimeNumber(): void
@@ -533,8 +485,6 @@ final class IccParserTest extends TestCase
     /**
      * Rejects hour 24 in ICC dateTimeNumber.
      * ICC.1:2022 §7.2.6 requires hour in range 0..23.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsHourTwentyFourInDateTimeNumber(): void
@@ -554,8 +504,6 @@ final class IccParserTest extends TestCase
     /**
      * Rejects minute 60 in ICC dateTimeNumber.
      * ICC.1:2022 §7.2.6 requires minute in range 0..59.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMinuteSixtyInDateTimeNumber(): void
@@ -575,8 +523,6 @@ final class IccParserTest extends TestCase
     /**
      * Rejects second 60 in ICC dateTimeNumber.
      * ICC.1:2022 §7.2.6 requires second in range 0..59.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsSecondSixtyInDateTimeNumber(): void
@@ -596,8 +542,6 @@ final class IccParserTest extends TestCase
     /**
      * Accepts Feb 29 on a leap year in ICC dateTimeNumber.
      * ICC.1:2022 §7.2.6: 2024 is a leap year, so Feb 29 is valid.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsLeapDayOnLeapYear(): void
@@ -617,8 +561,6 @@ final class IccParserTest extends TestCase
     /**
      * Rejects odd-length UTF-16BE payload in ICC mluc record.
      * ICC.1:2022 §10.13: UTF-16BE must consist of complete code units.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsOddLengthUtf16InMluc(): void
@@ -636,8 +578,6 @@ final class IccParserTest extends TestCase
     /**
      * Parses a valid UTF-16BE mluc description.
      * ICC.1:2022 §10.13: mluc record with even-length UTF-16BE string.
-     *
-     * @return void
      */
     #[Test]
     public function parsesValidMlucDescription(): void
@@ -657,8 +597,6 @@ final class IccParserTest extends TestCase
     /**
      * Rejects mluc payloads with non-zero reserved bytes in the type header.
      * ICC.1:2022 §10.1 and Table 54: bytes 4..7 must be zero.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMlucTagWithNonZeroTypeReservedBytes(): void
@@ -679,8 +617,6 @@ final class IccParserTest extends TestCase
     /**
      * Rejects mluc payloads when recordSize is not exactly 12.
      * ICC.1:2022 Table 54 defines a fixed 12-byte record structure.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMlucTagWithInvalidRecordSize(): void
@@ -701,8 +637,6 @@ final class IccParserTest extends TestCase
     /**
      * Rejects mluc payloads with truncated record table data.
      * ICC.1:2022 Table 54: 16 + recordCount * recordSize must fit in the tag payload.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMlucTagWithTruncatedRecordTable(): void
@@ -723,8 +657,6 @@ final class IccParserTest extends TestCase
     /**
      * Rejects mluc payloads with out-of-bounds string ranges.
      * ICC.1:2022 Table 54: each string offset/length must stay within the tag payload.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMlucTagWithOutOfBoundsStringRange(): void
@@ -746,8 +678,6 @@ final class IccParserTest extends TestCase
      * Multi-record mluc with reordered records yields same selected output.
      *
      * The parser must select deterministically by locale, not by record order.
-     *
-     * @return void
      */
     #[Test]
     public function mlucMultiRecordSelectsDeterministicallyRegardlessOfOrder(): void
@@ -775,8 +705,6 @@ final class IccParserTest extends TestCase
 
     /**
      * Multi-record mluc with enUS locale present selects enUS.
-     *
-     * @return void
      */
     #[Test]
     public function mlucSelectsEnUsWhenPresent(): void
@@ -795,8 +723,6 @@ final class IccParserTest extends TestCase
 
     /**
      * Multi-record mluc without enUS falls back to first non-empty record deterministically.
-     *
-     * @return void
      */
     #[Test]
     public function mlucFallsBackToFirstRecordWithoutEnUs(): void
@@ -934,8 +860,6 @@ final class IccParserTest extends TestCase
     /**
      * GH-824: Rejects profiles with non-zero reserved bytes in version field.
      * ICC.1:2022 §7.2.4: bytes 10-11 must be 0x00.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsNonZeroVersionReservedBytes(): void
@@ -953,8 +877,6 @@ final class IccParserTest extends TestCase
     /**
      * GH-824: Rejects profiles with non-zero reserved byte 11 in version field.
      * ICC.1:2022 §7.2.4: bytes 10-11 must be 0x00.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsNonZeroVersionReservedByte11(): void
@@ -972,8 +894,6 @@ final class IccParserTest extends TestCase
     /**
      * GH-1116: Rejects profiles with both non-zero reserved bytes in version field.
      * ICC.1:2022 §7.2.4: bytes 10-11 must be 0x00.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsBothNonZeroVersionReservedBytes(): void
@@ -990,8 +910,6 @@ final class IccParserTest extends TestCase
     /**
      * GH-825: Rejects textType tags without trailing NUL byte.
      * ICC.1:2022 §10.24: textType must be NUL-terminated.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsTextTypeWithoutTrailingNul(): void
@@ -1010,8 +928,6 @@ final class IccParserTest extends TestCase
     /**
      * GH-1118: Rejects textType tags without any payload bytes after the type header.
      * ICC.1:2022 §10.24 requires a NUL-terminated 7-bit ASCII text payload.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsTextTypeWithoutPayload(): void
@@ -1029,8 +945,6 @@ final class IccParserTest extends TestCase
     /**
      * GH-825: Rejects textType tags with non-ASCII bytes.
      * ICC.1:2022 §10.24: textType must contain only 7-bit ASCII (bytes <= 0x7F).
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsTextTypeWithNonAsciiBytes(): void
@@ -1049,8 +963,6 @@ final class IccParserTest extends TestCase
     /**
      * GH-825: Accepts valid textType tags with 7-bit ASCII and NUL termination.
      * ICC.1:2022 §10.24: textType with valid 7-bit ASCII.
-     *
-     * @return void
      */
     #[Test]
     public function decodeAcceptsValidTextType(): void
@@ -1068,8 +980,6 @@ final class IccParserTest extends TestCase
     /**
      * GH-1115: Rejects textType tags with non-zero reserved bytes in the type header.
      * ICC.1:2022 §10.1 and §10.24: bytes 4..7 must be zero.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsTextTypeWithNonZeroReservedBytes(): void
@@ -1137,8 +1047,6 @@ final class IccParserTest extends TestCase
     /**
      * GH-834: Accepts valid desc tag with NUL-terminated 7-bit ASCII.
      * ICC spec: desc ASCII string must be NUL-terminated and 7-bit ASCII.
-     *
-     * @return void
      */
     #[Test]
     public function decodeAcceptsValidDescTag(): void
@@ -1156,8 +1064,6 @@ final class IccParserTest extends TestCase
     /**
      * GH-834: Rejects desc tags with non-ASCII bytes.
      * ICC spec: desc ASCII string must contain only 7-bit ASCII (bytes <= 0x7F).
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsDescTagWithNonAsciiBytes(): void
@@ -1176,8 +1082,6 @@ final class IccParserTest extends TestCase
     /**
      * GH-834: Rejects desc tags without trailing NUL byte.
      * ICC spec: desc ASCII string must be NUL-terminated.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsDescTagWithoutTrailingNul(): void
@@ -1196,8 +1100,6 @@ final class IccParserTest extends TestCase
     /**
      * GH-834: Rejects desc tags with length exceeding available data.
      * ICC spec: asciiLength must not exceed available payload.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsDescTagWithExcessiveLength(): void
@@ -1215,8 +1117,6 @@ final class IccParserTest extends TestCase
     /**
      * GH-1115: Rejects desc tags with non-zero reserved bytes in the type header.
      * ICC.1:2022 §10.1: bytes 4..7 must be zero.
-     *
-     * @return void
      */
     #[Test]
     public function decodeRejectsDescTagWithNonZeroReservedBytes(): void
@@ -1237,8 +1137,6 @@ final class IccParserTest extends TestCase
      * ICC v4+: textType is not a permitted payload for cprt (only mluc is conforming).
      *
      * ICC.1:2022 §9.2.22: copyrightTag permitted type is multiLocalizedUnicodeType.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsTextTypeForCprtInModernProfile(): void
@@ -1256,8 +1154,6 @@ final class IccParserTest extends TestCase
      * ICC v4+: descType is not a permitted payload for desc tag (only mluc is conforming).
      *
      * ICC.1:2022 §9.2.43: profileDescriptionTag permitted type is multiLocalizedUnicodeType.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsDescTypeForDescInModernProfile(): void
@@ -1332,7 +1228,6 @@ final class IccParserTest extends TestCase
      * Builds a minimal profile with a caller-specified tag table and payload bytes.
      *
      * @param list<array{signature: string, offset: int, size: int}> $records
-     * @param string                                                 $payload
      */
     private function buildProfileWithCustomTagTable(array $records, string $payload): string
     {

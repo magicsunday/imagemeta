@@ -28,8 +28,6 @@ final class KeywordsTest extends TestCase
     /**
      * Stores flat keyword lists.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithFlatKeywords(): void
@@ -46,8 +44,6 @@ final class KeywordsTest extends TestCase
     /**
      * Stores flat and hierarchical keyword lists together.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithHierarchicalKeywords(): void
@@ -64,8 +60,6 @@ final class KeywordsTest extends TestCase
     /**
      * Accepts empty keyword lists.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function handlesEmptyKeywordList(): void

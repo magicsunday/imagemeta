@@ -29,9 +29,6 @@ interface JpegParserInterface
      */
     public function extractXmpPackets(): array;
 
-    /**
-     * @return string|null
-     */
     public function getIccProfile(): ?string;
 
     /**
@@ -54,24 +51,12 @@ interface JpegParserInterface
      */
     public function getAudioStreams(): array;
 
-    /**
-     * @return MpfDocument|null
-     */
     public function getMpfDocument(): ?MpfDocument;
 
-    /**
-     * @return int|null
-     */
     public function getFrameSamplePrecision(): ?int;
 
-    /**
-     * @return int|null
-     */
     public function getFrameHeight(): ?int;
 
-    /**
-     * @return int|null
-     */
     public function getFrameWidth(): ?int;
 
     /**

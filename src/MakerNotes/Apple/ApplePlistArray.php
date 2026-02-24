@@ -65,8 +65,6 @@ final class ApplePlistArray implements ApplePlistValueInterface
 
     /**
      * Resolves array entries using keyed-archive dispatch logic.
-     *
-     * @return ApplePlistArray
      */
     public function resolveValue(KeyedArchiveUnarchiver $unarchiver): ApplePlistArray
     {

@@ -212,8 +212,6 @@ final readonly class QuickTimeValueDecoder
      * @param int    $type        Well-known type code (24-bit).
      * @param string $payload     Raw payload bytes.
      * @param int    $payloadSize Length of the payload in bytes.
-     *
-     * @return string|int|float
      */
     public function decodeDataPayload(int $type, string $payload, int $payloadSize): string|int|float
     {
@@ -332,7 +330,6 @@ final readonly class QuickTimeValueDecoder
     /**
      * Coerces QuickTime metadata values into expected value types when possible.
      *
-     * @param string         $key
      * @param QuickTimeValue $value
      *
      * @return QuickTimeValue
@@ -357,8 +354,6 @@ final readonly class QuickTimeValueDecoder
      * Converts a four-character code into its integer representation.
      *
      * @param string $fourcc Four-character code to convert.
-     *
-     * @return int|null
      */
     public function fourccToIndex(string $fourcc): ?int
     {
@@ -485,8 +480,6 @@ final readonly class QuickTimeValueDecoder
      * Converts QuickTime metadata values into integers when possible.
      *
      * @param QuickTimeValue $value
-     *
-     * @return int|null
      */
     private function parseQuickTimeInt(string|int|float|bool $value): ?int
     {
@@ -515,8 +508,6 @@ final readonly class QuickTimeValueDecoder
      * Converts QuickTime metadata values into floats when possible.
      *
      * @param QuickTimeValue $value
-     *
-     * @return float|null
      */
     private function parseQuickTimeFloat(string|int|float|bool $value): ?float
     {
@@ -539,8 +530,6 @@ final readonly class QuickTimeValueDecoder
      * Converts QuickTime metadata values into booleans when possible.
      *
      * @param QuickTimeValue $value
-     *
-     * @return bool|null
      */
     private function parseQuickTimeBool(string|int|float|bool $value): ?bool
     {

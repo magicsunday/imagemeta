@@ -63,8 +63,6 @@ final class ByteReaderTest extends TestCase
     /**
      * Reads an unsigned 8-bit integer from a one-byte stream.
      * This confirms the reader does not apply endianness to single-byte values.
-     *
-     * @return void
      */
     #[Test]
     public function readsUnsigned8BitInteger(): void
@@ -77,8 +75,6 @@ final class ByteReaderTest extends TestCase
     /**
      * Reads an unsigned 16-bit integer in big-endian order.
      * This validates that byte order is interpreted correctly for multi-byte reads.
-     *
-     * @return void
      */
     #[Test]
     public function readsUnsigned16BitBigEndianInteger(): void
@@ -91,8 +87,6 @@ final class ByteReaderTest extends TestCase
     /**
      * Reads an unsigned 16-bit integer in little-endian order.
      * This verifies that the reader swaps byte order appropriately.
-     *
-     * @return void
      */
     #[Test]
     public function readsUnsigned16BitLittleEndianInteger(): void
@@ -105,8 +99,6 @@ final class ByteReaderTest extends TestCase
     /**
      * Reads an unsigned 32-bit integer in big-endian order.
      * This ensures four-byte values are assembled in the correct order.
-     *
-     * @return void
      */
     #[Test]
     public function readsUnsigned32BitBigEndianInteger(): void
@@ -119,8 +111,6 @@ final class ByteReaderTest extends TestCase
     /**
      * Reads an unsigned 32-bit integer in little-endian order.
      * This confirms the reader handles low-to-high byte ordering correctly.
-     *
-     * @return void
      */
     #[Test]
     public function readsUnsigned32BitLittleEndianInteger(): void
@@ -133,8 +123,6 @@ final class ByteReaderTest extends TestCase
     /**
      * Reads an unsigned 64-bit integer in big-endian order.
      * This validates high/low word assembly for 64-bit values.
-     *
-     * @return void
      */
     #[Test]
     public function readsUnsigned64BitBigEndianInteger(): void
@@ -152,8 +140,6 @@ final class ByteReaderTest extends TestCase
     /**
      * Reads an unsigned 64-bit integer in little-endian order.
      * This ensures the reader flips word order correctly for 64-bit values.
-     *
-     * @return void
      */
     #[Test]
     public function readsUnsigned64BitLittleEndianInteger(): void
@@ -171,8 +157,6 @@ final class ByteReaderTest extends TestCase
     /**
      * Reports the current position after sequential reads.
      * This confirms that read methods advance the cursor by their byte length.
-     *
-     * @return void
      */
     #[Test]
     public function tellReportsCurrentPosition(): void
@@ -189,8 +173,6 @@ final class ByteReaderTest extends TestCase
     /**
      * Seeks to absolute offsets and reads the expected byte.
      * This verifies that seeking resets the cursor before subsequent reads.
-     *
-     * @return void
      */
     #[Test]
     public function seekChangesPosition(): void

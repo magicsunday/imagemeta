@@ -132,8 +132,6 @@ final class BinaryPlistDecoder
      *
      * @param string $data Raw payload that contains a 'bplist00' block (possibly with preamble).
      *
-     * @return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
-     *
      * @throws ParseError If the payload is empty, malformed, or inconsistent.
      */
     public function decode(string $data): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
@@ -277,8 +275,6 @@ final class BinaryPlistDecoder
      *
      * @param int $index The object index from the offset table.
      *
-     * @return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
-     *
      * @throws ParseError
      */
     private function parseObject(int $index): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
@@ -321,8 +317,6 @@ final class BinaryPlistDecoder
      * Wrap a scalar value in the ApplePlistScalar container.
      *
      * @param BinaryPlistScalar $value Scalar value to wrap.
-     *
-     * @return ApplePlistScalar
      */
     private function wrapScalar(bool|float|int|string|null $value): ApplePlistScalar
     {
@@ -333,8 +327,6 @@ final class BinaryPlistDecoder
      * Parse "simple" markers (null/boolean/URL/UUID/fill).
      *
      * @param int $info Marker info nibble.
-     *
-     * @return ApplePlistScalar
      *
      * @throws ParseError
      */
@@ -362,8 +354,6 @@ final class BinaryPlistDecoder
      * @param int $offset Byte offset in payload.
      * @param int $info   Info nibble encoding the size exponent.
      *
-     * @return int
-     *
      * @throws ParseError
      */
     private function parseInteger(int $offset, int $info): int
@@ -381,8 +371,6 @@ final class BinaryPlistDecoder
      *
      * @param int $offset Byte offset in payload.
      * @param int $info   Info nibble encoding the size exponent (4 or 8 bytes).
-     *
-     * @return float
      *
      * @throws ParseError
      */
@@ -464,8 +452,6 @@ final class BinaryPlistDecoder
      *
      * @param int $offset Byte offset in payload.
      * @param int $info   Info nibble (count or extended length marker).
-     *
-     * @return ApplePlistArray
      */
     private function parseSet(int $offset, int $info): ApplePlistArray
     {
@@ -500,8 +486,6 @@ final class BinaryPlistDecoder
      * @param int $offset Byte offset in payload.
      * @param int $info   Info nibble (length or extended length marker).
      *
-     * @return string
-     *
      * @throws ParseError
      */
     private function parseAscii(int $offset, int $info): string
@@ -521,8 +505,6 @@ final class BinaryPlistDecoder
      *
      * @param int $offset Byte offset in payload.
      * @param int $info   Info nibble (character count or extended length marker).
-     *
-     * @return string
      *
      * @throws ParseError
      */
@@ -550,8 +532,6 @@ final class BinaryPlistDecoder
      * @param int $offset Byte offset in payload.
      * @param int $info   Info nibble (length or extended length marker).
      *
-     * @return string
-     *
      * @throws ParseError
      */
     private function parseUtf8(int $offset, int $info): string
@@ -577,8 +557,6 @@ final class BinaryPlistDecoder
      *
      * @param int $offset Byte offset in payload.
      * @param int $info   Info nibble (length or extended length marker).
-     *
-     * @return int|string
      *
      * @throws ParseError
      */
@@ -628,8 +606,6 @@ final class BinaryPlistDecoder
      * @param int $offset Byte offset in payload.
      * @param int $info   Info nibble (count or extended length marker).
      *
-     * @return ApplePlistArray
-     *
      * @throws ParseError
      */
     private function parseArray(int $offset, int $info): ApplePlistArray
@@ -660,8 +636,6 @@ final class BinaryPlistDecoder
      *
      * @param int $offset Byte offset in payload.
      * @param int $info   Info nibble (count or extended length marker).
-     *
-     * @return ApplePlistDictionary
      *
      * @throws ParseError
      */

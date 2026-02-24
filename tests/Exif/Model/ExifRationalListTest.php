@@ -34,8 +34,6 @@ final class ExifRationalListTest extends TestCase
     /**
      * Builds a list of ExifRational objects and verifies round-tripping via toArray().
      * Confirms the list preserves object identity and order.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsListOfExifRationalValues(): void
@@ -53,8 +51,6 @@ final class ExifRationalListTest extends TestCase
     /**
      * Supplies an associative array instead of a numeric list of rationals.
      * Ensures the constructor rejects non-list input and raises an InvalidArgumentException.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsNonListInput(): void
@@ -73,8 +69,6 @@ final class ExifRationalListTest extends TestCase
     /**
      * Mixes an ExifRational with a scalar to violate element type requirements.
      * Verifies the constructor validates element types and reports the misuse.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsNonExifRationalElements(): void

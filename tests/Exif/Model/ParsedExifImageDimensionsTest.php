@@ -47,8 +47,6 @@ final class ParsedExifImageDimensionsTest extends TestCase
     /**
      * Provides JPEG compression and both IFD0 and PixelX/Y dimensions.
      * Confirms the compressed pixel dimensions take precedence for image size.
-     *
-     * @return void
      */
     #[Test]
     public function prefersCompressedPixelDimensionsWhenAvailable(): void
@@ -73,8 +71,6 @@ final class ParsedExifImageDimensionsTest extends TestCase
     /**
      * Uses UNCOMPRESSED compression alongside PixelX/Y dimensions.
      * Verifies the parser ignores compressed dimensions and uses IFD0 width/length.
-     *
-     * @return void
      */
     #[Test]
     public function ignoresCompressedDimensionsForUncompressedImages(): void
@@ -99,8 +95,6 @@ final class ParsedExifImageDimensionsTest extends TestCase
     /**
      * Omits the Compression tag (valid for JPEG primary images per EXIF 3.0 §4.6.5.1.4).
      * Verifies that PixelX/YDimension are still used despite the defaulted UNCOMPRESSED value.
-     *
-     * @return void
      */
     #[Test]
     public function prefersPixelDimensionsWhenCompressionTagIsAbsent(): void

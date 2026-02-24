@@ -44,8 +44,6 @@ final class ParseErrorTest extends TestCase
     /**
      * Declares a stream length larger than the payload to force a short read.
      * It asserts that the short-read ParseError is raised with the expected message.
-     *
-     * @return void
      */
     #[Test]
     public function streamReadThrowsParseErrorOnShortRead(): void
@@ -61,8 +59,6 @@ final class ParseErrorTest extends TestCase
     /**
      * Attempts to open a missing file path to trigger an open failure.
      * It asserts the ParseError message includes the missing path.
-     *
-     * @return void
      */
     #[Test]
     public function streamFromPathThrowsParseErrorWhenFileMissing(): void

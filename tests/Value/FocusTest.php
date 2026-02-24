@@ -30,8 +30,6 @@ final class FocusTest extends TestCase
     /**
      * Stores subject distance values.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithFocusDistance(): void
@@ -48,8 +46,6 @@ final class FocusTest extends TestCase
     /**
      * Stores subject area rectangles when provided.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithSubjectArea(): void
@@ -78,8 +74,6 @@ final class FocusTest extends TestCase
     /**
      * Stores autofocus mode values.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithAFMode(): void
@@ -96,8 +90,6 @@ final class FocusTest extends TestCase
     /**
      * Accepts null focus fields.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

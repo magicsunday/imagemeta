@@ -32,8 +32,6 @@ final class IsoBmffItemReferenceMapTest extends TestCase
     /**
      * Exposes reference sources and lookups by item id.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function mapProvidesReferencesBySourceId(): void
@@ -51,8 +49,6 @@ final class IsoBmffItemReferenceMapTest extends TestCase
 
     /**
      * Keeps overlapping source item identifiers separate across metadata contexts.
-     *
-     * @return void
      */
     #[Test]
     public function mapKeepsOverlappingSourceIdsScopedByContext(): void
@@ -75,8 +71,6 @@ final class IsoBmffItemReferenceMapTest extends TestCase
     /**
      * Reports empty reference maps correctly.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function emptyMapReportsNoReferences(): void

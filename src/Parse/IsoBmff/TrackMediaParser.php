@@ -445,8 +445,6 @@ final readonly class TrackMediaParser
      * timestamps) or 1 (64-bit timestamps). The timescale field must be non-zero.
      *
      * @param BoxDescriptor $mdhd Media header box descriptor.
-     *
-     * @return int
      */
     private function parseMdhd(BoxDescriptor $mdhd): int
     {

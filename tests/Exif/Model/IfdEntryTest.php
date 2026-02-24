@@ -33,8 +33,6 @@ final class IfdEntryTest extends TestCase
     /**
      * Creates an IFD entry with scalar tag metadata and a string value.
      * Verifies the tag, type, count, and value are stored exactly as supplied.
-     *
-     * @return void
      */
     #[Test]
     public function constructorAssignsScalarValues(): void
@@ -50,8 +48,6 @@ final class IfdEntryTest extends TestCase
     /**
      * Uses an ExifNumericList as the entry value with a matching element count.
      * Confirms the entry preserves the object instance and metadata fields.
-     *
-     * @return void
      */
     #[Test]
     public function constructorPreservesArrayValues(): void

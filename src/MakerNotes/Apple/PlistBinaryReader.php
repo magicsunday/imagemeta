@@ -50,8 +50,6 @@ final class PlistBinaryReader
      * Load a raw data payload into the reader.
      *
      * @param string $data Raw binary data.
-     *
-     * @return void
      */
     public function load(string $data): void
     {
@@ -61,8 +59,6 @@ final class PlistBinaryReader
 
     /**
      * Return the raw data payload.
-     *
-     * @return string
      */
     public function data(): string
     {
@@ -71,8 +67,6 @@ final class PlistBinaryReader
 
     /**
      * Return the length of the raw data payload in bytes.
-     *
-     * @return int
      */
     public function length(): int
     {
@@ -84,8 +78,6 @@ final class PlistBinaryReader
      *
      * @param int $offset Start offset.
      * @param int $length Number of bytes to read.
-     *
-     * @return int
      *
      * @throws ParseError
      */
@@ -112,8 +104,6 @@ final class PlistBinaryReader
      *
      * @param string $data   32-byte trailer slice.
      * @param int    $offset Offset in $data.
-     *
-     * @return int
      *
      * @throws ParseError
      */

@@ -62,8 +62,6 @@ final readonly class SceneModeReader
 
     /**
      * Returns the flash status flags if present.
-     *
-     * @return int|null
      */
     public function flash(): ?int
     {
@@ -85,8 +83,6 @@ final readonly class SceneModeReader
      * Returns the flash energy in beam candle power seconds when available.
      *
      * EXIF 3.0 §4.6.6.7.24 (FlashEnergy)
-     *
-     * @return float|null
      */
     public function flashEnergy(): ?float
     {
@@ -97,8 +93,6 @@ final readonly class SceneModeReader
      * Returns the metering mode enumeration if present.
      *
      * EXIF 3.0 §4.6.6.7.19 (MeteringMode) catalogue of camera metering algorithms.
-     *
-     * @return MeteringMode|null
      */
     public function meteringMode(): ?MeteringMode
     {
@@ -112,8 +106,6 @@ final readonly class SceneModeReader
      * Returns the scene capture type enum when recorded.
      *
      * EXIF 3.0 §4.6.6.7.40 (SceneCaptureType)
-     *
-     * @return SceneCaptureType|null
      */
     public function sceneCaptureType(): ?SceneCaptureType
     {
@@ -235,8 +227,6 @@ final readonly class SceneModeReader
      *
      * EXIF 3.0 §4.6.6.7.20 (LightSource) mapping of coded illuminants and
      * default value 0 for unknown light sources.
-     *
-     * @return LightSource|null
      */
     public function lightSource(): ?LightSource
     {

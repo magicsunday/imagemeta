@@ -28,8 +28,6 @@ final class StandardsTest extends TestCase
     /**
      * Stores EXIF version identifiers.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithExifVersion(): void
@@ -46,8 +44,6 @@ final class StandardsTest extends TestCase
     /**
      * Stores EXIF profile and FlashPix version identifiers.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithAllFields(): void
@@ -66,8 +62,6 @@ final class StandardsTest extends TestCase
     /**
      * Accepts null standards metadata values.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

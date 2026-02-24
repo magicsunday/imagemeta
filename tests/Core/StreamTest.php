@@ -41,8 +41,6 @@ final class StreamTest extends TestCase
     /**
      * Reads 16/32/64-bit integers sequentially from a packed payload.
      * It verifies cursor offsets after each read and correct 64-bit assembly.
-     *
-     * @return void
      */
     #[Test]
     public function readsUnsignedIntegersSequentially(): void
@@ -65,8 +63,6 @@ final class StreamTest extends TestCase
     /**
      * Reads string chunks and uses seek to read from a new position.
      * This confirms read returns exact bytes and seek resets the cursor.
-     *
-     * @return void
      */
     #[Test]
     public function readReturnsRequestedBytesAndAdvancesCursor(): void
@@ -88,8 +84,6 @@ final class StreamTest extends TestCase
     /**
      * Reads to the end and then requests one more byte.
      * It asserts a BoundsError is thrown to prevent out-of-range reads.
-     *
-     * @return void
      */
     #[Test]
     public function readThrowsBoundsErrorWhenRequestCrossesEnd(): void
@@ -107,8 +101,6 @@ final class StreamTest extends TestCase
     /**
      * Seeks past the stream length to trigger a bounds violation.
      * It asserts a BoundsError is raised for invalid offsets.
-     *
-     * @return void
      */
     #[Test]
     public function seekThrowsBoundsErrorWhenOffsetIsOutsideStream(): void

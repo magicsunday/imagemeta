@@ -36,8 +36,6 @@ final class RegionsFactoryTest extends TestCase
     /**
      * Creates Metadata without an XMP document.
      * Ensures RegionsFactory returns an empty region list.
-     *
-     * @return void
      */
     #[Test]
     public function createsEmptyRegionsWithNullXmpDoc(): void
@@ -56,8 +54,6 @@ final class RegionsFactoryTest extends TestCase
     /**
      * Supplies MWG region tags with geometry and confidence values in XMP.
      * Verifies the factory emits a face region with the expected coordinates and metadata.
-     *
-     * @return void
      */
     #[Test]
     public function extractsMwgRegions(): void
@@ -106,8 +102,6 @@ final class RegionsFactoryTest extends TestCase
     /**
      * Supplies Apple faceinfo tags with center, size, and identity information.
      * Confirms the factory creates a face region with the expected geometry and name.
-     *
-     * @return void
      */
     #[Test]
     public function extractsAppleFaceRegions(): void
@@ -157,8 +151,6 @@ final class RegionsFactoryTest extends TestCase
     /**
      * Provides overlapping MWG and Apple faceinfo regions for the same face.
      * Ensures the factory merges them into a single region using richer metadata.
-     *
-     * @return void
      */
     #[Test]
     public function mergesOverlappingRegions(): void

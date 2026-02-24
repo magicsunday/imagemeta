@@ -52,8 +52,6 @@ final readonly class ValueConverters
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
      *
      * @param int|float|string|array<int, int|float|string|UInt64>|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The value to convert.
-     *
-     * @return float|null
      */
     public function rationalToFloat(
         int|float|string|array|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -143,7 +141,6 @@ final readonly class ValueConverters
      * @template T of BackedEnum
      *
      * @param class-string<T> $enumClass
-     * @param int|string|null $raw
      *
      * @return T|null
      */

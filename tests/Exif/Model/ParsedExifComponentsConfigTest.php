@@ -48,8 +48,6 @@ final class ParsedExifComponentsConfigTest extends TestCase
     /**
      * Supplies the standard YCbCr configuration [1,2,3,0].
      * Confirms componentsConfiguration() returns the valid component codes.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsStandardYcbcrConfiguration(): void
@@ -62,8 +60,6 @@ final class ParsedExifComponentsConfigTest extends TestCase
     /**
      * Supplies the RGB configuration [4,5,6,0].
      * Confirms componentsConfiguration() returns the valid component codes.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsRgbConfiguration(): void
@@ -76,8 +72,6 @@ final class ParsedExifComponentsConfigTest extends TestCase
     /**
      * Supplies a configuration with code 7, which is outside the defined range.
      * Confirms componentsConfiguration() rejects the non-conformant value.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsCodeAboveSix(): void
@@ -90,8 +84,6 @@ final class ParsedExifComponentsConfigTest extends TestCase
     /**
      * Supplies a configuration with a negative code.
      * Confirms componentsConfiguration() rejects the non-conformant value.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsNegativeCode(): void

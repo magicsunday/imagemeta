@@ -36,8 +36,6 @@ final class ExposureFactoryTest extends TestCase
     /**
      * Builds ParsedExif data with ISO and flash tags and passes it through ExposureFactory.
      * Verifies ISO is set and FlashInfo indicates the flash fired.
-     *
-     * @return void
      */
     #[Test]
     public function createsFromExifMetadata(): void
@@ -62,8 +60,6 @@ final class ExposureFactoryTest extends TestCase
     /**
      * Creates Metadata without an EXIF document attached.
      * Ensures ISO is null while FlashInfo is still instantiated with defaults.
-     *
-     * @return void
      */
     #[Test]
     public function createsWithNullExifDoc(): void
@@ -85,8 +81,6 @@ final class ExposureFactoryTest extends TestCase
     /**
      * Supplies only flash information without ISO data in the EXIF IFD.
      * Confirms flash details are parsed even when ISO is missing.
-     *
-     * @return void
      */
     #[Test]
     public function parsesFlashInformation(): void

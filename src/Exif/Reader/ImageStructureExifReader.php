@@ -44,7 +44,6 @@ final readonly class ImageStructureExifReader
     // ========================================================================
     // Image dimensions
     // ========================================================================
-
     /**
      * Returns the image width, preferring the compressed-specific EXIF tag when applicable.
      *
@@ -56,8 +55,6 @@ final readonly class ImageStructureExifReader
      * JPEG primary images per EXIF 3.0 §4.6.5.1.4), PixelXDimension
      * takes priority so the defaulted UNCOMPRESSED value does not
      * suppress dimension tags that are actually present.
-     *
-     * @return int|null
      */
     public function imageWidth(): ?int
     {
@@ -79,8 +76,6 @@ final readonly class ImageStructureExifReader
      *
      * Prefers PixelYDimension from the Exif IFD when present (EXIF 3.0
      * §4.6.6.3.2), falling back to ImageLength from IFD0 (TIFF 6.0 §8).
-     *
-     * @return int|null
      */
     public function imageHeight(): ?int
     {
@@ -133,13 +128,10 @@ final readonly class ImageStructureExifReader
     // ========================================================================
     // Orientation
     // ========================================================================
-
     /**
      * Returns the EXIF orientation enumeration.
      *
      * TIFF 6.0 §8 and EXIF 3.0 §4.6.5.1.6 specify default value 1 (top-left) when not present.
-     *
-     * @return Orientation
      */
     public function orientation(): Orientation
     {
@@ -167,7 +159,6 @@ final readonly class ImageStructureExifReader
     // ========================================================================
     // Compression (primary image)
     // ========================================================================
-
     /**
      * Returns the compression method enum for the primary image.
      *
@@ -178,8 +169,6 @@ final readonly class ImageStructureExifReader
      * Returns UNCOMPRESSED when the tag is absent (TIFF default), the resolved
      * enum case when the tag value is recognised, or null when the tag is
      * present but carries an unsupported code.
-     *
-     * @return Compression|null
      */
     public function compression(): ?Compression
     {
@@ -247,8 +236,6 @@ final readonly class ImageStructureExifReader
      *
      * EXIF 3.0 §4.6.5.1.11 and TIFF 6.0 §8 specify default value 2 (inches) when
      * not present.
-     *
-     * @return ResolutionUnit
      */
     public function resolutionUnit(): ResolutionUnit
     {

@@ -79,8 +79,6 @@ final class MpfParserTest extends TestCase
     /**
      * Parses a full MPF payload including image entries and attribute tags.
      * This verifies version, entry list, and derived attributes are populated correctly.
-     *
-     * @return void
      */
     #[Test]
     public function parsesCompleteMpfPayloadWithAttributes(): void
@@ -146,8 +144,6 @@ final class MpfParserTest extends TestCase
     /**
      * Omits the NumberOfImages tag while keeping MP Entry data.
      * This confirms the parser derives imageCount from the entry list length.
-     *
-     * @return void
      */
     #[Test]
     public function defaultsImageCountWhenTagMissing(): void
@@ -172,8 +168,6 @@ final class MpfParserTest extends TestCase
     /**
      * Uses an invalid MP Entry payload length.
      * This asserts the parser rejects malformed entry data with a ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMpEntryDataWithInvalidLength(): void

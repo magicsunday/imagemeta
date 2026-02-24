@@ -28,8 +28,6 @@ final class InteropTest extends TestCase
     /**
      * Stores the interoperability index value.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithInteropIndex(): void
@@ -44,8 +42,6 @@ final class InteropTest extends TestCase
     /**
      * Accepts a null interoperability index.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

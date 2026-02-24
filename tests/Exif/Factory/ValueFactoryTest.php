@@ -71,8 +71,6 @@ final class ValueFactoryTest extends TestCase
     /**
      * Parses an XMP depth map packet and assembles structured metadata.
      * Verifies the DepthMap value object is created with expected fields.
-     *
-     * @return void
      */
     #[Test]
     public function assemblesDepthMapFromXmpPacket(): void
@@ -108,8 +106,6 @@ XML;
     /**
      * Supplies XMP title/description along with creator contact information fields.
      * Confirms the assembler maps these fields into image and author metadata.
-     *
-     * @return void
      */
     #[Test]
     public function mapsXmpCreatorContactInfoAndTitles(): void
@@ -169,8 +165,6 @@ XML;
     /**
      * Wraps an IPTC IIM dataset in a Photoshop resource block.
      * Ensures the assembled metadata exposes the parsed IPTC dataset value.
-     *
-     * @return void
      */
     #[Test]
     public function exposesParsedIptcDatasets(): void
@@ -192,8 +186,6 @@ XML;
 
     /**
      * Uses an injected ICC parser to populate color profile values.
-     *
-     * @return void
      */
     #[Test]
     public function usesInjectedIccParserDependency(): void

@@ -136,8 +136,6 @@ final class KeyedArchiveUnarchiver
 
     /**
      * Resolves array values using keyed-archive list semantics.
-     *
-     * @return ApplePlistArray
      */
     public function resolveArrayValue(ApplePlistArray $value): ApplePlistArray
     {
@@ -152,8 +150,6 @@ final class KeyedArchiveUnarchiver
 
     /**
      * Resolves scalar values.
-     *
-     * @return ApplePlistScalar
      */
     public function resolveScalarValue(ApplePlistScalar $value): ApplePlistScalar
     {

@@ -36,8 +36,6 @@ final class ExifFlashTest extends TestCase
     /**
      * Builds flash info from EXIF bitfields.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function createsInstanceFromExifBitField(): void
@@ -55,8 +53,6 @@ final class ExifFlashTest extends TestCase
     /**
      * Preserves reserved return-detection values in flash info.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function exposesReservedReturnDetection(): void
@@ -74,8 +70,6 @@ final class ExifFlashTest extends TestCase
     /**
      * Returns null when ExifFlash::fromExifValue(null) is unavailable or invalid.
      * This ensures optional metadata paths fail safely.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullWhenNoValueIsProvided(): void

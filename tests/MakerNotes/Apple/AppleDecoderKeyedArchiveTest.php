@@ -91,8 +91,6 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
     /**
      * Decodes a synthetic NSKeyedArchive payload that models Apple maker note metadata.
      * Verifies the decoder populates AppleMakerNotes fields and the nested RunTime value object.
-     *
-     * @return void
      */
     #[Test]
     public function decodeResolvesNsKeyedArchivePayload(): void
@@ -124,8 +122,6 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
     /**
      * Prepends padding bytes to a binary plist before decoding.
      * Ensures the internal decoder skips padding and still reads the archive dictionary.
-     *
-     * @return void
      */
     #[Test]
     public function decodeBinaryPropertyListSkipsLeadingPadding(): void
@@ -144,8 +140,6 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
     /**
      * Wraps a keyed archive dictionary inside a MakerNote container.
      * Confirms the resolver unwraps the archive and returns its decoded content.
-     *
-     * @return void
      */
     #[Test]
     public function resolveKeyedArchiveDictionaryUnwrapsNestedArchive(): void
@@ -691,7 +685,6 @@ final class BinaryPlistNode
 {
     /**
      * @param 'null'|'bool'|'int'|'float'|'string'|'array'|'dict' $type
-     * @param array|bool|float|int|string|null                    $value
      *
      * @phpstan-param 'null'|'bool'|'int'|'float'|'string'|'array'|'dict' $type
      * @phpstan-param bool|float|int|string|null|list<int>|array{keys: list<int>, values: list<int>} $value

@@ -28,8 +28,6 @@ final class FileTest extends TestCase
     /**
      * Stores basic file metadata fields.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithBasicFileInformation(): void
@@ -50,8 +48,6 @@ final class FileTest extends TestCase
     /**
      * Accepts null file metadata values.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithNullValues(): void
@@ -72,8 +68,6 @@ final class FileTest extends TestCase
     /**
      * Stores HEIC mime types and extensions.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithHeicMimeType(): void

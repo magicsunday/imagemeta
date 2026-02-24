@@ -31,8 +31,6 @@ final class AuthorTest extends TestCase
     /**
      * Stores the provided artist name.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithArtistName(): void
@@ -47,8 +45,6 @@ final class AuthorTest extends TestCase
     /**
      * Stores all author metadata fields when provided.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithAllAuthorInfo(): void
@@ -92,8 +88,6 @@ final class AuthorTest extends TestCase
     /**
      * Accepts null author fields without errors.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

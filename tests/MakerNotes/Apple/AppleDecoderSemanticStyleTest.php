@@ -41,8 +41,6 @@ final class AppleDecoderSemanticStyleTest extends TestCase
     /**
      * Invokes buildAppleMakerNotes with a SemanticStyle dictionary payload.
      * Ensures semantic style preset, warmth, and tone fields are extracted.
-     *
-     * @return void
      */
     #[Test]
     public function buildAppleMakerNotesExtractsSemanticStyleDictionary(): void

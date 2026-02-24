@@ -29,8 +29,6 @@ final class CaptureTest extends TestCase
     /**
      * Stores the capture timestamp when provided.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithDateTime(): void
@@ -53,8 +51,6 @@ final class CaptureTest extends TestCase
     /**
      * Stores environmental capture data values.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithEnvironmentalData(): void
@@ -80,8 +76,6 @@ final class CaptureTest extends TestCase
     /**
      * Allows capture fields to be omitted.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void
@@ -108,8 +102,6 @@ final class CaptureTest extends TestCase
     /**
      * Stores large water depth values.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithDeepWaterDepth(): void
@@ -130,8 +122,6 @@ final class CaptureTest extends TestCase
     /**
      * Stores zero water depth values.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithZeroWaterDepth(): void
@@ -152,8 +142,6 @@ final class CaptureTest extends TestCase
     /**
      * Stores a range of acceleration magnitudes.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithVariousAccelerationMagnitudes(): void
@@ -201,8 +189,6 @@ final class CaptureTest extends TestCase
     /**
      * Stores camera elevation angles across expected ranges.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithVariousCameraElevationAngles(): void
@@ -263,8 +249,6 @@ final class CaptureTest extends TestCase
     /**
      * Stores EXIF 3.0 environmental tags together in the value object.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithAllExif30EnvironmentalTags(): void

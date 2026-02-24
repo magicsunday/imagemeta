@@ -41,8 +41,6 @@ final class MotionFactoryTest extends TestCase
     /**
      * Supplies an Apple maker notes acceleration vector.
      * Verifies MotionFactory maps the vector components into accelX/Y/Z.
-     *
-     * @return void
      */
     #[Test]
     public function createsFromAppleMakerNotes(): void
@@ -83,8 +81,6 @@ final class MotionFactoryTest extends TestCase
     /**
      * Provides EXIF acceleration data without any Apple maker notes vector.
      * Ensures the factory falls back to EXIF when Apple data is missing.
-     *
-     * @return void
      */
     #[Test]
     public function fallsBackToExifDataWhenAppleVectorMissing(): void
@@ -108,8 +104,6 @@ final class MotionFactoryTest extends TestCase
     /**
      * Supplies both Apple and EXIF acceleration vectors.
      * Confirms the Apple maker notes vector takes precedence over EXIF data.
-     *
-     * @return void
      */
     #[Test]
     public function prefersAppleOverExifAccelerationVector(): void
@@ -153,8 +147,6 @@ final class MotionFactoryTest extends TestCase
     /**
      * Creates Metadata without EXIF or maker notes motion data.
      * Ensures the factory returns null acceleration components.
-     *
-     * @return void
      */
     #[Test]
     public function createsWithNullMetadata(): void
@@ -175,8 +167,6 @@ final class MotionFactoryTest extends TestCase
     /**
      * Uses an Apple acceleration vector with only two components.
      * Verifies accelX and accelY are set while accelZ remains null.
-     *
-     * @return void
      */
     #[Test]
     public function handlesPartialAccelerationVectorFromApple(): void

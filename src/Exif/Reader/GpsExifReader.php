@@ -205,10 +205,6 @@ final readonly class GpsExifReader
 
     /**
      * Returns a single value from the cached GPS metadata map.
-     *
-     * @param string $key
-     *
-     * @return string|int|float|DateTimeImmutable|null
      */
     private function gpsValue(string $key): string|int|float|DateTimeImmutable|null
     {

@@ -95,8 +95,6 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         /**
          * Seeks to an in-bounds offset and reads a byte range.
          * This confirms the cursor moves correctly across seek/read operations.
-         *
-         * @return void
          */
         #[Test]
         public function seekMovesCursorWithinBounds(): void
@@ -112,8 +110,6 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         /**
          * Seeks past the buffer length to trigger a bounds violation.
          * This verifies that MemoryBuffer enforces strict seek limits.
-         *
-         * @return void
          */
         #[Test]
         public function seekThrowsBoundsErrorOutsideBuffer(): void
@@ -127,8 +123,6 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         /**
          * Reads sequential chunks and validates cursor advancement.
          * This confirms reads return exact bytes and update the position.
-         *
-         * @return void
          */
         #[Test]
         public function readReturnsRequestedBytes(): void
@@ -144,8 +138,6 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         /**
          * Reads to the end and then attempts to read past it.
          * This ensures the bounds guard triggers on over-read.
-         *
-         * @return void
          */
         #[Test]
         public function readThrowsBoundsErrorWhenLengthTooLarge(): void
@@ -161,8 +153,6 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         /**
          * Forces a short read via the substr hook to trigger ParseError.
          * This validates the error path when the read returns fewer bytes than requested.
-         *
-         * @return void
          */
         #[Test]
         public function readThrowsParseErrorOnShortRead(): void
@@ -178,8 +168,6 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         /**
          * Reads mixed-endian integer values from a single payload.
          * This confirms endianness handling for 8/16/32/64-bit reads and cursor position at EOF.
-         *
-         * @return void
          */
         #[Test]
         public function readUnsignedIntegersRespectEndianness(): void

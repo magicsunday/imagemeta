@@ -30,8 +30,6 @@ final class MakerNotesRecordTest extends TestCase
     /**
      * Constructs a MakerNotesRecord with valid vendor, length, and SHA-1 values.
      * Verifies the fields are stored and optional vendor-specific records remain null.
-     *
-     * @return void
      */
     #[Test]
     public function constructorAcceptsValidArguments(): void
@@ -67,8 +65,6 @@ final class MakerNotesRecordTest extends TestCase
      * @param string $vendor Vendor name provided to the constructor.
      * @param int    $length Payload length provided to the constructor.
      * @param string $sha1   SHA-1 digest provided to the constructor.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('invalidConstructorArguments')]

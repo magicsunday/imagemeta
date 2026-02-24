@@ -56,8 +56,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Maps the EXIF exposure program value to the shutter-priority enum.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function returnsExposureProgramEnumFromExifValue(): void
@@ -74,8 +72,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Returns the custom-rendered enum when the tag is present.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function returnsCustomRenderedValue(): void
@@ -92,8 +88,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Treats a zero digital zoom ratio as missing and normalizes non-zero ratios.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function normalizesDigitalZoomRatioAndTreatsZeroAsMissing(): void
@@ -118,8 +112,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Maps white balance and exposure mode values while ignoring reserved scene capture types.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function returnsWhiteBalanceAndExposureModeEnums(): void
@@ -140,8 +132,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Exposes raw and typed flash information from the EXIF Flash bit field.
      * It verifies representative bit decoding for fired state, return detection, and mode flags.
-     *
-     * @return void
      */
     #[Test]
     public function returnsRawAndTypedFlashInformation(): void
@@ -165,8 +155,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Returns no flash metadata when the optional Flash tag is absent.
      * It ensures both raw and typed accessors stay nullable.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForMissingFlashTag(): void
@@ -180,8 +168,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Ignores reserved exposure program values.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullForReservedExposureProgramValue(): void
@@ -198,8 +184,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Trims NUL padding from spectral sensitivity strings.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function returnsSpectralSensitivityString(): void
@@ -217,8 +201,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Exposes the photographic sensitivity alias value.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function returnsPhotographicSensitivityViaAlias(): void
@@ -235,8 +217,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Converts exposure index rationals to floating-point values.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function returnsExposureIndexFromRational(): void
@@ -253,8 +233,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Maps sensing method codes to the corresponding enum.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function returnsSensingMethodEnum(): void
@@ -271,8 +249,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Ignores reserved sensing method codes.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function ignoresReservedSensingMethodCodes(): void
@@ -289,8 +265,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Parses file source values stored as undefined bytes.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function returnsFileSourceFromUndefinedByte(): void
@@ -307,8 +281,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     /**
      * Parses scene type values stored as undefined bytes.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function returnsSceneTypeFromUndefinedByte(): void

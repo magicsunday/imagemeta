@@ -45,8 +45,6 @@ final class ParsedExifCompositeImageTest extends TestCase
     /**
      * Provides composite image counts that meet the EXIF constraints.
      * Verifies the parser returns the two-element array when values are valid.
-     *
-     * @return void
      */
     #[Test]
     public function returnsCountsWhenValuesMeetSpecRequirements(): void
@@ -69,8 +67,6 @@ final class ParsedExifCompositeImageTest extends TestCase
     /**
      * Uses counts that fall below the minimum required totals.
      * Ensures the parser returns null when the composite counts are invalid.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullWhenCountsAreBelowMinimum(): void
@@ -93,8 +89,6 @@ final class ParsedExifCompositeImageTest extends TestCase
     /**
      * Sets the used count higher than the captured total.
      * Confirms the parser rejects inconsistent composite image counts by returning null.
-     *
-     * @return void
      */
     #[Test]
     public function returnsNullWhenUsedCountExceedsCapturedTotal(): void

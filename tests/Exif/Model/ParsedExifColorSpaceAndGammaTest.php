@@ -47,8 +47,6 @@ final class ParsedExifColorSpaceAndGammaTest extends TestCase
     /**
      * Uses a reserved ColorSpace value to indicate "uncalibrated".
      * Confirms colorSpace() returns null when the value is not a known enum.
-     *
-     * @return void
      */
     #[Test]
     public function colorSpaceIsNullForReservedValues(): void
@@ -65,8 +63,6 @@ final class ParsedExifColorSpaceAndGammaTest extends TestCase
     /**
      * Omits ColorSpace tag when ExifIFD is present.
      * Defaults to sRGB per EXIF 3.0 §4.6.6.2.1 required-tag fallback.
-     *
-     * @return void
      */
     #[Test]
     public function colorSpaceDefaultsToSrgbWhenAbsentInExifIfd(): void
@@ -79,8 +75,6 @@ final class ParsedExifColorSpaceAndGammaTest extends TestCase
     /**
      * Omits ExifIFD entirely.
      * Returns null because there is no ExifIFD to carry ColorSpace.
-     *
-     * @return void
      */
     #[Test]
     public function colorSpaceReturnsNullWithoutExifIfd(): void
@@ -93,8 +87,6 @@ final class ParsedExifColorSpaceAndGammaTest extends TestCase
     /**
      * Provides a GAMMA tag encoded as a rational pair.
      * Verifies gamma() converts the rational into a floating-point value.
-     *
-     * @return void
      */
     #[Test]
     public function gammaReturnsRationalValue(): void
@@ -111,8 +103,6 @@ final class ParsedExifColorSpaceAndGammaTest extends TestCase
     /**
      * Omits the GAMMA tag from the EXIF IFD.
      * Ensures gamma() returns null when the tag is missing.
-     *
-     * @return void
      */
     #[Test]
     public function gammaReturnsNullWhenMissing(): void

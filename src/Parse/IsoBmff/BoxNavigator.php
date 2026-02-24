@@ -86,8 +86,6 @@ final readonly class BoxNavigator
      * @param int  $offset            Absolute byte offset of the box within the stream.
      * @param int  $limit             Limit offset that bounds the container.
      * @param bool $allowImplicitSize When true, allows size==0 boxes (implicit size to end of container).
-     *
-     * @return BoxDescriptor
      */
     public function readBoxAt(int $offset, int $limit, bool $allowImplicitSize = false): BoxDescriptor
     {
@@ -161,8 +159,6 @@ final readonly class BoxNavigator
      *
      * @param StreamWindow $window Window to read from.
      * @param int          $bytes  Number of bytes representing the integer.
-     *
-     * @return int
      */
     public function readUInt(StreamWindow $window, int $bytes): int
     {
@@ -181,8 +177,6 @@ final readonly class BoxNavigator
      * Reads an unsigned 24-bit integer from the provided window.
      *
      * @param StreamWindow $window Window to read from.
-     *
-     * @return int
      */
     public function readUInt24(StreamWindow $window): int
     {
@@ -193,8 +187,6 @@ final readonly class BoxNavigator
      * Checks whether a four-character code contains printable ASCII.
      *
      * @param string $fourcc Four-character code to test.
-     *
-     * @return bool
      */
     public function isPrintableFourcc(string $fourcc): bool
     {
@@ -227,8 +219,6 @@ final readonly class BoxNavigator
      * Reads the entire payload of a stream window.
      *
      * @param StreamWindow $window Window to consume.
-     *
-     * @return string
      */
     public function readAll(StreamWindow $window): string
     {

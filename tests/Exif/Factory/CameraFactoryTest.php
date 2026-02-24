@@ -37,8 +37,6 @@ final class CameraFactoryTest extends TestCase
     /**
      * Builds ParsedExif data with camera-related tags and feeds it into CameraFactory.
      * Verifies the resulting Camera value object contains the expected fields.
-     *
-     * @return void
      */
     #[Test]
     public function createsFromExifMetadata(): void
@@ -72,8 +70,6 @@ final class CameraFactoryTest extends TestCase
     /**
      * Creates Metadata without an EXIF document.
      * Ensures CameraFactory returns a camera object with all fields set to null.
-     *
-     * @return void
      */
     #[Test]
     public function createsWithNullExifDoc(): void
@@ -97,8 +93,6 @@ final class CameraFactoryTest extends TestCase
     /**
      * Supplies ParsedExif data with only the make tag populated.
      * Confirms the factory preserves the make and leaves other fields unset.
-     *
-     * @return void
      */
     #[Test]
     public function createsWithPartialExifData(): void

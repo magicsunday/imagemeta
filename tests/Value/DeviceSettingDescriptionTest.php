@@ -28,8 +28,6 @@ final class DeviceSettingDescriptionTest extends TestCase
     /**
      * Stores basic device setting dimensions and settings lists.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithBasicInfo(): void
@@ -48,8 +46,6 @@ final class DeviceSettingDescriptionTest extends TestCase
     /**
      * Stores full device setting descriptions with rows and settings.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithFullInfo(): void
@@ -68,8 +64,6 @@ final class DeviceSettingDescriptionTest extends TestCase
     /**
      * Handles empty settings lists while preserving dimensions.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function handlesNullSettings(): void

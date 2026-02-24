@@ -81,8 +81,6 @@ final class TiffExifParser implements TiffExifParserInterface
      * @param Registry|null $registry        Optional registry used to decode manufacturer-specific maker notes.
      * @param bool          $jpegContext     Whether the TIFF is embedded in a JPEG context.
      * @param bool          $embeddedContext Whether the TIFF is embedded in an ISO BMFF context.
-     *
-     * @return ParsedExif
      */
     public function parseFromBlob(string $tiffBlob, ?Registry $registry = null, bool $jpegContext = false, bool $embeddedContext = false): ParsedExif
     {
@@ -453,8 +451,6 @@ final class TiffExifParser implements TiffExifParserInterface
      * including entry counts, entry sizes, and next-pointer chaining.
      *
      * @param int|UInt64|string $offset Zero-based byte offset to the IFD structure.
-     *
-     * @return Ifd
      */
     private function readIfd(int|UInt64|string $offset): Ifd
     {
@@ -544,8 +540,6 @@ final class TiffExifParser implements TiffExifParserInterface
      *
      * EXIF 3.0 §4.5.2 defines the tag, type, count, and value/offset fields mirrored
      * by this reader, aligning with the TIFF 6.0 §8 directory entry layout.
-     *
-     * @return IfdEntry
      */
     private function readDirEntry(): IfdEntry
     {

@@ -82,8 +82,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Uses a bogus byte-order marker instead of II/MM.
      * Confirms the parser raises ParseError for an invalid byte order value.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidByteOrderMarker(): void
@@ -101,8 +99,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Supplies a TIFF header with an unknown magic number.
      * Ensures the parser rejects the header with a ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidMagicNumber(): void
@@ -120,8 +116,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Points the first IFD offset beyond the available blob size.
      * Verifies a BoundsError is thrown for the out-of-range offset.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsIfdOffsetBeyondBlobSize(): void
@@ -139,8 +133,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Sets the first IFD offset but provides no data at that location.
      * Ensures the parser rejects the truncated IFD header with BoundsError.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsTruncatedIfdHeader(): void
@@ -158,8 +150,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Builds a BigTIFF header with an invalid offset size of 4 bytes.
      * Confirms the parser throws ParseError for unsupported offset sizes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsBigTiffWithInvalidOffsetSize(): void
@@ -182,8 +172,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Sets the BigTIFF reserved field to a non-zero value.
      * Ensures the parser flags the header as invalid with ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsBigTiffWithNonZeroReserved(): void
@@ -206,8 +194,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Uses a RATIONAL value whose denominator is zero.
      * Confirms the parser tolerates the degenerate fraction without throwing.
-     *
-     * @return void
      */
     #[Test]
     public function handlesRationalWithZeroDenominator(): void
@@ -224,8 +210,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Uses SRATIONAL values at the signed 32-bit extremes.
      * Ensures the parser accepts extreme signed values without errors.
-     *
-     * @return void
      */
     #[Test]
     public function handlesSrationalWithExtremeValues(): void
@@ -242,8 +226,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Declares an IFD entry count that would overflow a classic TIFF.
      * Verifies the parser rejects the header with a ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsIfdWithHugeEntryCount(): void
@@ -264,8 +246,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Creates an IFD chain where the next pointer loops back to the same IFD.
      * Confirms the parser detects the cycle and rejects it with ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function detectsCyclicIfdChain(): void
@@ -290,8 +270,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Builds a TIFF entry using an invalid field type code.
      * Ensures the parser rejects unsupported TIFF types with ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsUnsupportedTiffType(): void
@@ -309,8 +287,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Truncates the IFD entry so mandatory fields are missing.
      * Verifies a BoundsError is thrown for the incomplete entry data.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsTruncatedIfdEntry(): void
@@ -333,8 +309,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Accepts ASCII entry whose declared payload omits the trailing NUL (Postel's Law).
      * Many legacy cameras omit the NUL terminator in ASCII values.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsAsciiValueWithoutNullTerminator(): void
@@ -396,8 +370,6 @@ final class TiffExifParserNegativeTest extends TestCase
      * Accepts ExifIFDPointer with count=2 (Postel's Law — uses first offset).
      * The synthetic blob triggers a BoundsError downstream, but no longer
      * the count-validation ParseError — confirming the tolerance works.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsExifIfdPointerWithNonSingleCount(): void
@@ -418,8 +390,6 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Accepts GPSInfoIFDPointer with count=3 (Postel's Law — uses first offset).
-     *
-     * @return void
      */
     #[Test]
     public function acceptsGpsIfdPointerWithNonSingleCount(): void
@@ -440,8 +410,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Creates a GPSInfoIFDPointer entry with type ASCII instead of LONG.
      * Ensures the parser rejects bad GPS pointer type per EXIF 3.0 §4.6.3.2.1.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsGpsIfdPointerWithBadType(): void
@@ -459,8 +427,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Feeds fixed-length tags with invalid counts via a data provider.
      * Confirms the parser rejects each case with the expected ParseError message.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('invalidFixedLengthTagProvider')]
@@ -484,8 +450,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Builds a classic TIFF with a LONG8 field type in IFD0.
      * Confirms the parser rejects BigTIFF-only types in classic TIFF.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsLong8InClassicTiff(): void
@@ -502,8 +466,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Builds a classic TIFF with an SLONG8 field type in IFD0.
      * Confirms the parser rejects BigTIFF-only types in classic TIFF.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsSlong8InClassicTiff(): void
@@ -520,8 +482,6 @@ final class TiffExifParserNegativeTest extends TestCase
     /**
      * Builds a classic TIFF with an IFD8 field type in IFD0.
      * Confirms the parser rejects BigTIFF-only types in classic TIFF.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsIfd8InClassicTiff(): void
@@ -1657,9 +1617,6 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Rejects thumbnail streams with missing SOI or missing EOI.
-     *
-     * @param string $thumbnailStream
-     * @param string $expectedMessage
      */
     #[Test]
     #[DataProvider('provideInvalidThumbnailBoundaryStreams')]
@@ -1743,9 +1700,6 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Accepts valid EXIF camera-control enum values from closed domains.
-     *
-     * @param int $tag
-     * @param int $value
      */
     #[Test]
     #[DataProvider('provideValidCameraControlEnumValues')]
@@ -1760,9 +1714,6 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Rejects reserved/out-of-domain EXIF camera-control enum values.
-     *
-     * @param int $tag
-     * @param int $value
      */
     #[Test]
     #[DataProvider('provideInvalidCameraControlEnumValues')]

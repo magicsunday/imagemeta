@@ -72,9 +72,6 @@ final readonly class DeviceExifReader
     ) {
     }
 
-    /**
-     * @return DeviceSettingDescription|null
-     */
     public function deviceSettingDescription(): ?DeviceSettingDescription
     {
         return $this->parseDeviceSettingDescription();
@@ -276,8 +273,6 @@ final readonly class DeviceExifReader
 
     /**
      * Retrieves a raw entry value preferring the GPS IFD before falling back to the EXIF IFD.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     private function valueFromGpsOrExif(int $tag): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -294,8 +289,6 @@ final readonly class DeviceExifReader
      *
      * EXIF 3.0 §4.6.6.8 defines 0xFFFFFFFF (or signed -1) as unknown for selected
      * shooting-situation tags.
-     *
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value
      */
     private function containsExifUnknownDenominator(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,

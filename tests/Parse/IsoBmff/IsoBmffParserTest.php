@@ -90,8 +90,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Extracts EXIF data from a dedicated Exif box inside a full meta box.
      * This verifies the extractor returns the EXIF payload and leaves XMP/QuickTime empty.
-     *
-     * @return void
      */
     #[Test]
     public function extractExifFromExifBox(): void
@@ -112,8 +110,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Parses EXIF from a non-full meta box in a QuickTime-branded file.
      * This confirms EXIF extraction works for QuickTime-style meta boxes.
-     *
-     * @return void
      */
     #[Test]
     public function extractExifFromNonFullMetaBox(): void
@@ -134,8 +130,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Rejects a headerless meta box for non-QuickTime BMFF brands.
      * ISO/IEC 14496-12:2015 defines meta as FullBox(version=0, flags=0).
-     *
-     * @return void
      */
     #[Test]
     public function rejectNonFullMetaBoxInIsoBmff(): void
@@ -153,8 +147,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects meta probes where a size==1 child candidate is truncated before largesize.
-     *
-     * @return void
      */
     #[Test]
     public function detectMetaChildOffsetRejectsTruncatedExtendedChildCandidate(): void
@@ -167,8 +159,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects meta probes where an extended-size child candidate reports largesize < header length.
-     *
-     * @return void
      */
     #[Test]
     public function detectMetaChildOffsetRejectsInvalidExtendedChildLargeSize(): void
@@ -181,8 +171,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts a valid extended-size child candidate at offset 0 (QuickTime-style meta without FullBox).
-     *
-     * @return void
      */
     #[Test]
     public function detectMetaChildOffsetAcceptsValidExtendedChildAtOffsetZero(): void
@@ -196,8 +184,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts a valid extended-size child candidate at offset 4 (ISO FullBox meta).
-     *
-     * @return void
      */
     #[Test]
     public function detectMetaChildOffsetAcceptsValidExtendedChildAtOffsetFour(): void
@@ -212,8 +198,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Decodes a 1-byte unsigned integer data box payload.
      * QuickTime File Format 2012, Table 3-5: type 22 supports 1-4 byte payloads.
-     *
-     * @return void
      */
     #[Test]
     public function decodeOneBytUnsignedIntPayload(): void
@@ -231,8 +215,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Type 22 with 1-byte payload decodes the maximum unsigned 8-bit value.
-     *
-     * @return void
      */
     #[Test]
     public function decodeOneByteUnsignedIntMaxPayload(): void
@@ -252,8 +234,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Decodes a 1-byte signed integer data box payload.
      * QuickTime File Format 2012, Table 3-5: type 21 supports 1-4 byte payloads.
-     *
-     * @return void
      */
     #[Test]
     public function decodeOneByteSignedIntPayload(): void
@@ -272,8 +252,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Resolves iloc items that are split across multiple extents.
      * This verifies the extractor concatenates extents to reassemble the EXIF blob.
-     *
-     * @return void
      */
     #[Test]
     public function resolveIlocMultiExtent(): void
@@ -323,8 +301,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds a version 1 iloc box with 16-bit item IDs and resolves the EXIF item.
      * This confirms iloc v1 parsing and item reconstruction produce the expected EXIF payload.
-     *
-     * @return void
      */
     #[Test]
     public function resolveIlocVersion1(): void
@@ -376,8 +352,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds a version 2 iloc box and resolves the EXIF item using 32-bit item IDs.
      * This ensures iloc v2 does not depend on flags to determine item_ID width.
-     *
-     * @return void
      */
     #[Test]
     public function resolveIlocVersion2Uses32BitItemId(): void
@@ -425,8 +399,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Rejects an iloc v2 payload that encodes item_ID as legacy 16-bit.
      * ISO/IEC 14496-12:2015 §8.11.3.2 requires 32-bit item_ID for version 2.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIlocVersion2Legacy16BitItemIdLayout(): void
@@ -456,8 +428,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Parses direct XMP metadata from a moof-embedded meta box.
      * ISO/IEC 14496-12 §8.8.17 allows metadata containers in movie fragments.
-     *
-     * @return void
      */
     #[Test]
     public function parsesDirectXmpFromMoofMetaBox(): void
@@ -476,8 +446,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Resolves file-offset iloc items in moof metadata using moof-relative origin.
      * ISO/IEC 14496-12 §8.11.3 defines moof-origin resolution for fragmented metadata.
-     *
-     * @return void
      */
     #[Test]
     public function resolveIlocFileOffsetInMoofMetaUsesMoofOrigin(): void
@@ -522,8 +490,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects malformed moof-embedded metadata with the existing safety rules.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMalformedMetaInsideMoof(): void
@@ -540,8 +506,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Rejects iloc boxes that use a non-conformant offset_size nibble.
      * This ensures size nibbles are limited to 0, 4, or 8 bytes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIlocOffsetSizeNibbleOfOne(): void
@@ -567,8 +531,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Rejects iloc boxes that use a non-conformant index_size nibble.
      * This ensures size nibbles are limited to 0, 4, or 8 bytes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIlocIndexSizeNibbleOfTwo(): void
@@ -594,8 +556,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an iloc v0 box where the low nibble of the base_offset/index byte is non-zero.
      * This confirms the reserved nibble is validated per ISO/IEC 14496-12 §8.11.3.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIlocVersion0NonZeroReservedNibble(): void
@@ -621,8 +581,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an iloc v1 box with non-zero reserved bits in the construction_method field.
      * This validates that the upper 12 bits of the 16-bit field are zero per ISO/IEC 14496-12 §8.11.3.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIlocNonZeroConstructionMethodReservedBits(): void
@@ -652,8 +610,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an iloc v2 box with non-zero reserved bits in the construction_method field.
      * This validates the same reserved-bit rule for version 2 item entries.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIlocVersion2NonZeroConstructionMethodReservedBits(): void
@@ -683,8 +639,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an iloc v1 box with construction_method = 4, which is outside the defined range 0–2.
      * This verifies that invalid construction method values are rejected per ISO/IEC 14496-12 §8.11.3.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIlocInvalidConstructionMethodValue(): void
@@ -713,8 +667,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Decodes iloc v2 construction_method from the low nibble and preserves method=1 semantics.
-     *
-     * @return void
      */
     #[Test]
     public function decodeIlocVersion2ConstructionMethodFromLowNibble(): void
@@ -728,8 +680,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Keeps construction_method=0 mapped to file_offset semantics.
-     *
-     * @return void
      */
     #[Test]
     public function mapIlocConstructionMethodZeroToFileOffset(): void
@@ -743,8 +693,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Keeps construction_method=1 mapped to idat_offset semantics.
-     *
-     * @return void
      */
     #[Test]
     public function mapIlocConstructionMethodOneToIdatOffset(): void
@@ -758,8 +706,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Keeps construction_method=2 mapped to item_offset semantics.
-     *
-     * @return void
      */
     #[Test]
     public function mapIlocConstructionMethodTwoToItemOffset(): void
@@ -774,8 +720,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Rejects iloc boxes with duplicate item_ID entries.
      * ISO/IEC 14496-12 §8.11.3: item_ID values must be unique within one iloc box.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIlocDuplicateItemId(): void
@@ -810,8 +754,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Extracts XMP from three sources: uuid box, item-based XMP, and direct XMP box.
      * This verifies all XMP sources are collected and returned in the expected order.
-     *
-     * @return void
      */
     #[Test]
     public function extractXmpFromUuidAndItem(): void
@@ -863,8 +805,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Ensures pitm does not classify non-XMP primary items as XMP candidates.
-     *
-     * @return void
      */
     #[Test]
     public function doesNotQueuePrimaryItemAsXmpWhenDescriptorIsNotXmp(): void
@@ -888,8 +828,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Prioritizes the primary item only when that item is explicitly descriptor-typed as XMP.
-     *
-     * @return void
      */
     #[Test]
     public function prioritizesPrimaryItemWhenPrimaryDescriptorIsXmp(): void
@@ -913,8 +851,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Keeps descriptor-discovered XMP extraction order stable when no primary item is declared.
-     *
-     * @return void
      */
     #[Test]
     public function keepsDescriptorDiscoveredXmpOrderStableWithoutPrimaryItem(): void
@@ -938,8 +874,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Prioritizes EXIF item resolution by pitm when multiple EXIF item candidates exist.
-     *
-     * @return void
      */
     #[Test]
     public function prioritizesPrimaryExifItemWhenPitmPointsToExifCandidate(): void
@@ -965,8 +899,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Applies deterministic precedence between item-based EXIF and direct Exif box payloads.
-     *
-     * @return void
      */
     #[Test]
     public function prefersItemBasedExifBeforeDirectExifBoxPayload(): void
@@ -985,8 +917,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Keeps EXIF selection deterministic without pitm by preserving descriptor order.
-     *
-     * @return void
      */
     #[Test]
     public function keepsDeterministicExifFallbackOrderWithoutPitm(): void
@@ -1013,8 +943,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Reads content identifiers from both QuickTime keys and mdta free-form boxes.
      * This confirms either metadata path can populate QuickTimeMeta::contentIdentifier().
-     *
-     * @return void
      */
     #[Test]
     public function readContentIdentifierFromKeysOrMdta(): void
@@ -1039,8 +967,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Free-form keys with short name payloads keep all bytes of the name atom value.
-     *
-     * @return void
      */
     #[Test]
     public function parseMdtaFreeformShortNamePayload(): void
@@ -1065,8 +991,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Uses a free-form name atom with non-zero FullAtom version.
      * Verifies the parser rejects malformed name atom headers.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMdtaFreeformNameAtomWithNonZeroVersion(): void
@@ -1090,8 +1014,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Uses a free-form name atom with non-zero FullAtom flags.
      * Verifies the parser rejects malformed name atom headers.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMdtaFreeformNameAtomWithNonZeroFlags(): void
@@ -1115,8 +1037,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Uses a free-form name atom payload with malformed UTF-8.
      * Verifies invalid key-name encoding is rejected.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMdtaFreeformNameAtomWithInvalidUtf8(): void
@@ -1140,8 +1060,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Encodes a UTF-16BE data box and decodes it back to UTF-8.
      * This verifies Unicode content identifiers are normalized correctly.
-     *
-     * @return void
      */
     #[Test]
     public function decodeUtf16DataBoxToUtf8(): void
@@ -1161,8 +1079,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Uses a MacRoman data payload to represent accented text.
      * This confirms legacy encodings are converted to UTF-8 strings.
-     *
-     * @return void
      */
     #[Test]
     public function decodeMacRomanDataBoxToUtf8(): void
@@ -1179,8 +1095,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Decodes QuickTime data type 3 (S/JIS) payloads to UTF-8 strings.
-     *
-     * @return void
      */
     #[Test]
     public function decodeShiftJisDataBoxTypeToUtf8(): void
@@ -1198,8 +1112,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Decodes QuickTime data type 4 (UTF-8 sort) payloads as UTF-8 text.
-     *
-     * @return void
      */
     #[Test]
     public function decodeUtf8SortDataBoxTypeToUtf8(): void
@@ -1215,8 +1127,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Decodes QuickTime data type 5 (UTF-16 sort) payloads as UTF-16BE text.
-     *
-     * @return void
      */
     #[Test]
     public function decodeUtf16SortDataBoxTypeToUtf8(): void
@@ -1234,8 +1144,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects malformed QuickTime data type 3 (S/JIS) payloads.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMalformedShiftJisDataBoxPayload(): void
@@ -1249,8 +1157,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects malformed QuickTime data type 4 (UTF-8 sort) payloads.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMalformedUtf8SortDataBoxPayload(): void
@@ -1264,8 +1170,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects malformed QuickTime data type 5 (UTF-16 sort) payloads.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMalformedUtf16SortDataBoxPayload(): void
@@ -1279,8 +1183,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Regression: existing text data types 1/2/7 remain unchanged.
-     *
-     * @return void
      */
     #[Test]
     public function parsesExistingQuickTimeTextDataTypesUnchanged(): void
@@ -1306,8 +1208,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Reads a legacy four-character code key from an ilst entry.
      * This verifies that non-mdta keys are still captured in QuickTime metadata.
-     *
-     * @return void
      */
     #[Test]
     public function readLegacyFourCcTag(): void
@@ -1332,8 +1232,6 @@ final class IsoBmffParserTest extends TestCase
      * Creates a udta box whose child list ends with the optional 4-byte zero terminator.
      * Per QuickTime File Format 2012 §2 "User Data Atoms", readers must tolerate this
      * trailing terminator without raising an alignment error.
-     *
-     * @return void
      */
     #[Test]
     public function toleratesUdtaTrailingZeroTerminator(): void
@@ -1368,8 +1266,6 @@ final class IsoBmffParserTest extends TestCase
      * Per QuickTime File Format 2012, "Metadata Atom", keys/ilst structures
      * must only be interpreted when the handler is 'mdta'. A non-mdta handler
      * causes the parser to discard collected keys/ilst entries.
-     *
-     * @return void
      */
     #[Test]
     public function ignoresKeysIlstWhenHdlrIsNotMdta(): void
@@ -1403,8 +1299,6 @@ final class IsoBmffParserTest extends TestCase
      * QuickTime File Format 2012, "Metadata Structure": an mdta meta box
      * must contain a keys subatom. When keys is missing, the parser rejects
      * the meta box.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMdtaMetaMissingKeys(): void
@@ -1429,8 +1323,6 @@ final class IsoBmffParserTest extends TestCase
      * QuickTime File Format 2012, "Metadata Structure": an mdta meta box
      * must contain an ilst subatom. When ilst is missing, the parser rejects
      * the meta box.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMdtaMetaMissingIlst(): void
@@ -1455,8 +1347,6 @@ final class IsoBmffParserTest extends TestCase
      * Builds a keys atom with entries from different namespaces (mdta and a custom one).
      * Verifies the parser preserves the namespace: mdta keys are stored directly while
      * non-mdta keys are prefixed with the 4-byte namespace per QuickTime File Format 2012.
-     *
-     * @return void
      */
     #[Test]
     public function preservesKeyNamespaceForNonMdtaKeys(): void
@@ -1498,8 +1388,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Uses an mdta key entry with a NUL-terminated UTF-8 key name.
      * Verifies the parser strips the terminator before exposing the key.
-     *
-     * @return void
      */
     #[Test]
     public function mdtaKeyNameWithNullTerminatorIsNormalized(): void
@@ -1529,8 +1417,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Uses an mdta key entry without the required trailing NUL terminator.
      * Verifies the parser rejects malformed QuickTime key declarations.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMdtaKeyNameWithoutNullTerminator(): void
@@ -1550,8 +1436,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Uses an mdta key entry containing malformed UTF-8 before the NUL terminator.
      * Verifies invalid key-name encoding is rejected with ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMdtaKeyNameWithInvalidUtf8(): void
@@ -1571,8 +1455,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Uses a data box with integer type and 32-bit payload.
      * This confirms numeric QuickTime values are decoded to integers.
-     *
-     * @return void
      */
     #[Test]
     public function decodeInt32DataBoxPayload(): void
@@ -1590,8 +1472,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Decodes an unsigned 32-bit integer data box payload.
      * QuickTime File Format 2012, Table 3-5, type code 22.
-     *
-     * @return void
      */
     #[Test]
     public function decodeUnsignedIntDataBoxPayload(): void
@@ -1608,8 +1488,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Type 21 with 2-byte payload decodes to expected signed integer.
-     *
-     * @return void
      */
     #[Test]
     public function decodeTwoByteSignedIntPayload(): void
@@ -1626,8 +1504,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Type 21 with 1-byte payload decodes negative values via sign extension.
-     *
-     * @return void
      */
     #[Test]
     public function decodeOneByteSignedIntNegativePayload(): void
@@ -1646,8 +1522,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Type 21 with 2-byte payload decodes the minimum signed 16-bit value.
-     *
-     * @return void
      */
     #[Test]
     public function decodeTwoByteSignedIntMinimumPayload(): void
@@ -1666,8 +1540,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Type 21 with 3-byte payload decodes to expected signed integer.
-     *
-     * @return void
      */
     #[Test]
     public function decodeThreeByteSignedIntPayload(): void
@@ -1684,8 +1556,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Type 21 with 3-byte payload decodes negative values with proper sign extension.
-     *
-     * @return void
      */
     #[Test]
     public function decodeThreeByteSignedIntNegativePayload(): void
@@ -1704,8 +1574,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Type 22 with 2-byte payload decodes to expected unsigned integer.
-     *
-     * @return void
      */
     #[Test]
     public function decodeTwoByteUnsignedIntPayload(): void
@@ -1722,8 +1590,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Type 22 with 2-byte payload decodes the maximum unsigned 16-bit value.
-     *
-     * @return void
      */
     #[Test]
     public function decodeTwoByteUnsignedIntMaxPayload(): void
@@ -1742,8 +1608,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Type 22 with 3-byte payload decodes the maximum unsigned 24-bit value.
-     *
-     * @return void
      */
     #[Test]
     public function decodeThreeByteUnsignedIntMaxPayload(): void
@@ -1762,8 +1626,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Type 22 with empty payload (0 bytes) raises ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsEmptyUnsignedIntPayload(): void
@@ -1779,8 +1641,6 @@ final class IsoBmffParserTest extends TestCase
      * Type 21 with empty payload (0 bytes) raises ParseError.
      *
      * QuickTime File Format 2012, Table 3-5: type 21 requires 1–4 bytes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsEmptySignedIntPayload(): void
@@ -1796,8 +1656,6 @@ final class IsoBmffParserTest extends TestCase
      * Type 21 with 5-byte payload (>4 bytes) raises ParseError.
      *
      * QuickTime File Format 2012, Table 3-5: type 21 requires 1–4 bytes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsOversizedSignedIntPayload(): void
@@ -1813,8 +1671,6 @@ final class IsoBmffParserTest extends TestCase
      * Type 22 with 5-byte payload (>4 bytes) raises ParseError.
      *
      * QuickTime File Format 2012, Table 3-5: type 22 requires 1–4 bytes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsOversizedUnsignedIntPayload(): void
@@ -1829,8 +1685,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Decodes a float32 data box payload.
      * QuickTime File Format 2012, Table 3-5, type code 23.
-     *
-     * @return void
      */
     #[Test]
     public function decodeFloat32DataBoxPayload(): void
@@ -1848,8 +1702,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Decodes a float64 data box payload.
      * QuickTime File Format 2012, Table 3-5, type code 24.
-     *
-     * @return void
      */
     #[Test]
     public function decodeFloat64DataBoxPayload(): void
@@ -1866,8 +1718,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects a float32 data box payload with extra trailing bytes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsOversizedFloat32DataBoxPayload(): void
@@ -1883,8 +1733,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects a float64 data box payload with extra trailing bytes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsOversizedFloat64DataBoxPayload(): void
@@ -1900,8 +1748,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects a truncated float32 payload.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsTruncatedFloat32DataBoxPayload(): void
@@ -1917,8 +1763,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects a truncated float64 payload.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsTruncatedFloat64DataBoxPayload(): void
@@ -1935,8 +1779,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Provides a numeric string value for a QuickTime key.
      * This ensures numeric strings are coerced to integer values.
-     *
-     * @return void
      */
     #[Test]
     public function coerceQuickTimeStringValuesToInt(): void
@@ -1954,8 +1796,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Provides a decimal string value for a QuickTime key.
      * This confirms numeric strings are coerced to floats when appropriate.
-     *
-     * @return void
      */
     #[Test]
     public function coerceQuickTimeStringValuesToFloat(): void
@@ -1973,8 +1813,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Provides a boolean-like string for a QuickTime key.
      * This verifies string values are coerced to booleans when applicable.
-     *
-     * @return void
      */
     #[Test]
     public function coerceQuickTimeStringValuesToBool(): void
@@ -1993,8 +1831,6 @@ final class IsoBmffParserTest extends TestCase
      * Provides a data box whose type indicator byte (bits 24–31) is non-zero.
      * Per QuickTime File Format 2012, "Type Indicator" (p. 139), the indicator
      * byte must be 0; a non-zero value must trigger a ParseError.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsNonZeroDataBoxTypeIndicatorByte(): void
@@ -2016,8 +1852,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Uses a non-zero data_reference_index to create an unresolved iloc item.
      * This confirms external data references are recorded but not resolved.
-     *
-     * @return void
      */
     #[Test]
     public function collectsUnresolvedExternalItemReferences(): void
@@ -2070,8 +1904,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an iloc extent with an invalid large offset to trigger validation.
      * This asserts a ParseError is thrown when box sizes are inconsistent.
-     *
-     * @return void
      */
     #[Test]
     public function invalidBoxSizesThrowParseError(): void
@@ -2105,8 +1937,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Parses an iref box with dimg relationships for a single item.
      * This verifies the item reference map captures multiple outgoing references.
-     *
-     * @return void
      */
     #[Test]
     public function parseIrefRelationships(): void
@@ -2134,8 +1964,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Parses an iref box with version 1 and 32-bit item identifiers.
      * This verifies flags=0 remains accepted and IDs are decoded with v1 width.
-     *
-     * @return void
      */
     #[Test]
     public function parseIrefVersion1Relationships(): void
@@ -2166,8 +1994,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Resolves iloc items stored in the idat box using construction method 1.
      * This confirms idat-based extents are read and produce EXIF output.
-     *
-     * @return void
      */
     #[Test]
     public function resolveIlocIdatConstructionMethod(): void
@@ -2205,8 +2031,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Sets iloc extent length larger than the idat payload.
      * This asserts a ParseError is thrown when idat extents exceed bounds.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIlocIdatExtentOutsidePayload(): void
@@ -2262,8 +2086,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds iloc entries with index_size to reference another item.
      * This verifies extent offsets are resolved relative to referenced items.
-     *
-     * @return void
      */
     #[Test]
     public function resolveIlocItemOffsetWithExtentIndex(): void
@@ -2320,8 +2142,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Resolves extent_index=1 to the first iloc item reference target.
-     *
-     * @return void
      */
     #[Test]
     public function resolveIlocItemOffsetExtentIndexOneUsesFirstReference(): void
@@ -2334,8 +2154,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Resolves extent_index=2 to the second iloc item reference target.
-     *
-     * @return void
      */
     #[Test]
     public function resolveIlocItemOffsetExtentIndexTwoUsesSecondReference(): void
@@ -2348,8 +2166,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Uses the first reference target when index_size==0 implies extent_index=1.
-     *
-     * @return void
      */
     #[Test]
     public function resolveIlocItemOffsetWithZeroIndexSizeUsesFirstReference(): void
@@ -2362,8 +2178,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects out-of-range extent_index values for item_offset reference lists.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIlocItemOffsetExtentIndexOutOfRange(): void
@@ -2376,8 +2190,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects reserved extent_index=0 for construction_method=2 entries.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIlocItemOffsetExtentIndexZeroReserved(): void
@@ -2391,8 +2203,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Uses an extent that exceeds the referenced item length.
      * This asserts a ParseError is thrown for invalid item offset extents.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIlocItemOffsetExtentOutsideReference(): void
@@ -2451,8 +2261,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Sets a non-zero data reference index to point at an external URL.
      * This confirms external references are tracked while EXIF remains unresolved.
-     *
-     * @return void
      */
     #[Test]
     public function trackExternalDataReferenceWithoutResolving(): void
@@ -2503,8 +2311,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects iloc data_reference_index values that point outside available dref entries.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIlocOutOfRangeDataReferenceIndex(): void
@@ -2616,8 +2422,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Creates an iref entry with a reference count above the configured maximum.
      * This ensures a ParseError is raised to prevent pathological allocations.
-     *
-     * @return void
      */
     #[Test]
     public function rejectExcessiveIrefReferenceCount(): void
@@ -2640,8 +2444,6 @@ final class IsoBmffParserTest extends TestCase
      * Builds an ilst entry with ordered data boxes for one key.
      * This confirms the parser preserves order and allows deterministic fallback
      * selection by accepted locale/type values.
-     *
-     * @return void
      */
     #[Test]
     public function preservesMultipleDataAtomsPerQuickTimeKey(): void
@@ -2696,8 +2498,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Applies type coercion to the first selected data atom when multiple values exist.
-     *
-     * @return void
      */
     #[Test]
     public function selectedFirstDataAtomKeepsTypeCoercion(): void
@@ -2733,8 +2533,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects metadata data atoms that are not ordered from specific to generic.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsInvalidDataOrderingInIlstEntry(): void
@@ -2844,8 +2642,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Creates an iloc box with more items than the configured maximum.
      * This asserts the parser rejects excessive item counts early.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsExcessiveIlocItemCount(): void
@@ -2871,8 +2667,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Creates an iinf box with an entry count above the configured maximum.
      * This ensures the parser aborts before allocating oversized tables.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsExcessiveIinfEntryCount(): void
@@ -2893,8 +2687,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Creates a keys box with too many entries for the configured limit.
      * This verifies that metadata key parsing enforces size caps.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsExcessiveKeysEntryCount(): void
@@ -2916,8 +2708,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Creates a keys box with non-zero version to trigger validation.
      * QuickTime File Format 2012, "Metadata item keys atom": version/flags must be 0.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsKeysBoxWithNonZeroVersion(): void
@@ -2938,8 +2728,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Creates a keys box with non-zero flags to trigger validation.
      * QuickTime File Format 2012, "Metadata item keys atom": version/flags must be 0.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsKeysBoxWithNonZeroFlags(): void
@@ -2960,8 +2748,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Creates a keys box with non-zero version and flags.
      * Confirms the parser rejects combined FullBox header violations.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsKeysBoxWithNonZeroVersionAndFlags(): void
@@ -2982,8 +2768,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Creates an stsd box with an entry count above the configured maximum.
      * This confirms the parser rejects malformed track tables.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsExcessiveStsdEntryCount(): void
@@ -3016,8 +2800,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects an stsd box with entry_count=0.
-     *
-     * @return void
      */
     #[Test]
     public function rejectStsdWithZeroEntryCount(): void
@@ -3046,8 +2828,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects an stsd box with non-zero version.
-     *
-     * @return void
      */
     #[Test]
     public function rejectStsdUnsupportedVersion(): void
@@ -3075,8 +2855,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects stsd version 1 in non-audio context.
-     *
-     * @return void
      */
     #[Test]
     public function rejectStsdVersion1InNonAudioContext(): void
@@ -3104,8 +2882,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects an stsd box with non-zero flags.
-     *
-     * @return void
      */
     #[Test]
     public function rejectStsdUnsupportedFlags(): void
@@ -3133,8 +2909,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts conforming QuickTime video sample-entry core quality/data-size fields.
-     *
-     * @return void
      */
     #[Test]
     public function parsesVideoStsdEntryWithConformingQualityAndDataSize(): void
@@ -3162,8 +2936,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts frame_count=1 and keeps existing width/height/codec extraction behavior.
-     *
-     * @return void
      */
     #[Test]
     public function parsesVideoStsdEntryWithFrameCountOne(): void
@@ -3189,8 +2961,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects frame_count=0 in QuickTime video sample entries.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoStsdEntryWithZeroFrameCount(): void
@@ -3212,8 +2982,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Preserves non-default positive frame_count values in QuickTime metadata.
-     *
-     * @return void
      */
     #[Test]
     public function parsesVideoStsdEntryWithNonDefaultFrameCount(): void
@@ -3239,8 +3007,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Decodes and exposes QuickTime horizontal/vertical resolution from 16.16 fields.
-     *
-     * @return void
      */
     #[Test]
     public function parsesVideoStsdEntryWithValidResolution1616Values(): void
@@ -3268,8 +3034,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects video sample entries where resolution fields are truncated.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoStsdEntryWithTruncatedResolutionFields(): void
@@ -3293,8 +3057,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects invalid video sample-entry resolution encodings (zero and overflow-like).
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoStsdEntryWithInvalidResolutionDomainValues(): void
@@ -3339,8 +3101,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Uses the first stsd sample entry when multiple video sample entries exist.
-     *
-     * @return void
      */
     #[Test]
     public function parsesVideoStsdResolutionDeterministicallyWithMultipleEntries(): void
@@ -3393,8 +3153,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects video sample entries with width 0.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoStsdEntryWithZeroWidth(): void
@@ -3415,8 +3173,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects video sample entries with height 0.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoStsdEntryWithZeroHeight(): void
@@ -3437,8 +3193,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects non-zero revision level in video sample entries.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoStsdEntryWithNonZeroRevisionLevel(): void
@@ -3460,8 +3214,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects non-zero data-size values in video sample entries.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoStsdEntryWithNonZeroDataSize(): void
@@ -3483,8 +3235,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects temporal quality values outside the QuickTime domain.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoStsdEntryWithTemporalQualityOutOfRange(): void
@@ -3506,8 +3256,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects spatial quality values outside the QuickTime domain.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoStsdEntryWithSpatialQualityOutOfRange(): void
@@ -3529,8 +3277,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts valid QuickTime video depth/color-table combinations in stsd entries.
-     *
-     * @return void
      */
     #[Test]
     public function parsesVideoStsdEntryWithExplicitColorTableAtom(): void
@@ -3555,8 +3301,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts video sample entries with coherent trailing extension boxes.
-     *
-     * @return void
      */
     #[Test]
     public function parsesVideoStsdEntryWithGenericExtensionBox(): void
@@ -3581,8 +3325,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts the documented optional 4-byte zero terminator after video extensions.
-     *
-     * @return void
      */
     #[Test]
     public function parsesVideoStsdEntryWithFourByteZeroTerminator(): void
@@ -3606,8 +3348,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects pseudo-terminators shorter than the documented 4-byte zero suffix.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoStsdEntryWithPartialZeroTerminator(): void
@@ -3635,8 +3375,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects trailing non-box garbage in video sample entry tails.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoStsdEntryWithTrailingNonBoxGarbage(): void
@@ -3658,8 +3396,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects unsupported QuickTime visual sample-entry depth values.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoStsdEntryWithInvalidDepthValue(): void
@@ -3680,8 +3416,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects explicit color-table usage for direct-color depths.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoDepth24WithExplicitColorTable(): void
@@ -3704,8 +3438,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects colorTableId=0 when no valid trailing ctab atom is present.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsVideoColorTableIdZeroWithoutValidColorTableAtom(): void
@@ -3726,8 +3458,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Parses an audio stsd entry with sound sample description version 0.
-     *
-     * @return void
      */
     #[Test]
     public function parsesAudioStsdVersion0Entry(): void
@@ -3751,8 +3481,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects version 0 audio sample entries with non-zero revision level.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdVersion0EntryWithNonZeroRevisionLevel(): void
@@ -3773,8 +3501,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects version 0 audio sample entries with non-zero vendor.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdVersion0EntryWithNonZeroVendor(): void
@@ -3795,8 +3521,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects version 0 audio sample entries with unsupported channel counts.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdVersion0EntryWithInvalidChannelCount(): void
@@ -3816,8 +3540,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects version 0 audio sample entries with unsupported sample sizes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdVersion0EntryWithInvalidSampleSize(): void
@@ -3837,8 +3559,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects version 0 audio sample entries with non-zero compression IDs.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdVersion0EntryWithNonZeroCompressionId(): void
@@ -3859,8 +3579,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects version 0 audio sample entries with non-zero packet sizes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdVersion0EntryWithNonZeroPacketSize(): void
@@ -3881,8 +3599,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects version 0 audio sample entries with non-legacy format codes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdVersion0EntryWithNonLegacyFormat(): void
@@ -3902,8 +3618,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Parses an audio stsd entry with sound sample description version 1.
-     *
-     * @return void
      */
     #[Test]
     public function parsesAudioStsdVersion1Entry(): void
@@ -3931,8 +3645,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects version 1 audio sample entries when stsd FullBox version is 0.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdVersion1EntryInStsdVersion0(): void
@@ -3956,8 +3668,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Parses a version 1 audio sample entry using Sampling Rate box override.
-     *
-     * @return void
      */
     #[Test]
     public function parsesAudioStsdVersion1SamplingRateBoxOverride(): void
@@ -3983,8 +3693,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects Sampling Rate box usage in non-version-1 audio sample entries.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdVersion0SamplingRateBox(): void
@@ -4005,8 +3713,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Parses audio when mdhd timescale equals stsd sample rate.
-     *
-     * @return void
      */
     #[Test]
     public function parsesAudioStsdSampleRateMatchingMdhdTimescale(): void
@@ -4027,8 +3733,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Parses audio when mdhd timescale is an integer multiple of stsd sample rate.
-     *
-     * @return void
      */
     #[Test]
     public function parsesAudioStsdSampleRateWithIntegerTimescaleRelation(): void
@@ -4049,8 +3753,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Preserves fractional 16.16 sample-rate payloads in legacy audio entries.
-     *
-     * @return void
      */
     #[Test]
     public function preservesAudioStsdFractionalLegacySampleRatePayload(): void
@@ -4073,8 +3775,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Decodes legacy-like fractional 16.16 payloads deterministically.
-     *
-     * @return void
      */
     #[Test]
     public function parsesAudioStsdLegacyLikeFractionalSampleRateDeterministically(): void
@@ -4096,8 +3796,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects zero sample-rate payloads in legacy audio entries.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdZeroLegacySampleRatePayload(): void
@@ -4118,8 +3816,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects version 0 audio sample entries above the documented 16.16 ceiling.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdVersion0EntryWithSampleRateAboveDocumentedLimit(): void
@@ -4140,8 +3836,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects audio entries whose sample rate is inconsistent with mdhd timescale.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdSampleRateInconsistentWithMdhdTimescale(): void
@@ -4161,8 +3855,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Parses an audio stsd entry when the stsd FullBox itself uses version 1.
-     *
-     * @return void
      */
     #[Test]
     public function parsesAudioStsdVersion1FullBox(): void
@@ -4188,8 +3880,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Parses an audio stsd entry with sound sample description version 2.
-     *
-     * @return void
      */
     #[Test]
     public function parsesAudioStsdVersion2Entry(): void
@@ -4213,8 +3903,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Parses LPCM-specific version 2 fields and exposes decoded flag semantics.
-     *
-     * @return void
      */
     #[Test]
     public function parsesAudioStsdVersion2LpcmFlagSemantics(): void
@@ -4248,8 +3936,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects contradictory LPCM numeric format flags in version 2 entries.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdVersion2LpcmContradictingNumericFlags(): void
@@ -4272,8 +3958,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Parses non-LPCM version 2 entries without exposing LPCM-specific metadata keys.
-     *
-     * @return void
      */
     #[Test]
     public function parsesAudioStsdVersion2NonLpcmWithoutLpcmAssumptions(): void
@@ -4299,8 +3983,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects a version 2 sound sample entry with invalid mandatory constants.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdVersion2InvalidConstants(): void
@@ -4321,8 +4003,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects a truncated version 2 sound sample entry payload.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsAudioStsdVersion2TruncatedPayload(): void
@@ -4344,8 +4024,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an infe box with version 4, which is not defined by ISO/IEC 14496-12.
      * Confirms the parser rejects unsupported infe versions.
-     *
-     * @return void
      */
     #[Test]
     public function rejectInfeUnsupportedVersion(): void
@@ -4366,8 +4044,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an infe box with only 4 bytes (needs 8 minimum for v0/v1).
      * Confirms the parser rejects truncated infe payloads.
-     *
-     * @return void
      */
     #[Test]
     public function rejectInfeTruncated(): void
@@ -4387,8 +4063,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an infe v2 box with only 10 bytes (needs 12: 4 header + 2 ID + 2 prot + 4 type).
      * Confirms the parser rejects truncated v2 infe payloads.
-     *
-     * @return void
      */
     #[Test]
     public function rejectInfeTruncatedVersion2(): void
@@ -4410,8 +4084,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Parses an infe v3 entry and resolves the referenced EXIF item.
      * Confirms version 3 (32-bit item_ID) remains supported.
-     *
-     * @return void
      */
     #[Test]
     public function parsesInfeVersion3(): void
@@ -4448,8 +4120,6 @@ final class IsoBmffParserTest extends TestCase
      * Builds an infe v2 box with content_encoding and verifies item identification
      * still works. This confirms parseInfe correctly parses the optional third
      * NUL-terminated string without breaking content_type matching.
-     *
-     * @return void
      */
     #[Test]
     public function parsesInfeWithContentEncoding(): void
@@ -4491,8 +4161,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an infe v2 box with item_type='mime' and extension_type.
      * Confirms the parser handles the optional extension_type field without error.
-     *
-     * @return void
      */
     #[Test]
     public function parsesInfeWithExtensionType(): void
@@ -4531,8 +4199,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an iinf box claiming 2 entries but containing only 1 infe child.
      * Confirms the parser rejects entry_count mismatches.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIinfEntryCountMismatch(): void
@@ -4553,8 +4219,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an iinf box claiming 1 entry but containing 2 infe children.
      * Confirms the parser rejects additional entries beyond declared entry_count.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIinfEntriesBeyondDeclaredEntryCount(): void
@@ -4577,8 +4241,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an iinf box with version 2, which is not defined by ISO/IEC 14496-12.
      * Confirms the parser rejects unsupported iinf versions.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIinfUnsupportedVersion(): void
@@ -4597,8 +4259,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an iinf box with only 3 bytes of content (needs 6 minimum).
      * Confirms the parser rejects truncated iinf payloads.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIinfTruncated(): void
@@ -4617,8 +4277,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds an iinf v1 box with only 6 bytes (needs 8: 4 header + 4 entry_count).
      * Confirms the parser rejects truncated v1 iinf payloads.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIinfTruncatedVersion1(): void
@@ -4637,8 +4295,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds a pitm box with version 1 and a valid 32-bit primary item id.
      * Confirms the parser accepts v1 layout and resolves the referenced EXIF item.
-     *
-     * @return void
      */
     #[Test]
     public function acceptPitmVersion1WithValidPrimaryItemId(): void
@@ -4682,8 +4338,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds a pitm v0 box with only 3 bytes of payload (needs 6: 4 header + 2 item_ID).
      * Confirms the parser rejects truncated pitm payloads.
-     *
-     * @return void
      */
     #[Test]
     public function rejectPitmTruncatedVersion0(): void
@@ -4703,8 +4357,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds a pitm v1 box with only 6 bytes of payload (needs 8: 4 header + 4 item_ID).
      * Confirms the parser rejects truncated v1 pitm payloads.
-     *
-     * @return void
      */
     #[Test]
     public function rejectPitmTruncatedVersion1(): void
@@ -4724,8 +4376,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds a dref box with version 1, which violates the ISO/IEC 14496-12 spec.
      * Confirms the parser rejects non-zero dref versions.
-     *
-     * @return void
      */
     #[Test]
     public function rejectDrefUnsupportedVersion(): void
@@ -4745,8 +4395,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds a dref box with non-zero flags, which violates the ISO/IEC 14496-12 spec.
      * Confirms the parser rejects non-zero dref flags.
-     *
-     * @return void
      */
     #[Test]
     public function rejectDrefNonZeroFlags(): void
@@ -4765,8 +4413,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts dref payloads when entry_count exactly matches the number of children.
-     *
-     * @return void
      */
     #[Test]
     public function parseDrefWithExactDeclaredEntryCount(): void
@@ -4793,8 +4439,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts dref payloads containing only urn data-entry boxes.
-     *
-     * @return void
      */
     #[Test]
     public function parseDrefWithUrnEntryOnly(): void
@@ -4820,8 +4464,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts urn entries that only contain the required name field.
-     *
-     * @return void
      */
     #[Test]
     public function parseDrefWithUrnNameOnly(): void
@@ -4847,8 +4489,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects urn entries without the required name field.
-     *
-     * @return void
      */
     #[Test]
     public function rejectDrefUrnEntryWithoutName(): void
@@ -4862,8 +4502,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects dref boxes with fewer children than declared by entry_count.
-     *
-     * @return void
      */
     #[Test]
     public function rejectDrefWhenDeclaredEntryCountExceedsActualChildren(): void
@@ -4877,8 +4515,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects dref boxes with trailing children beyond declared entry_count.
-     *
-     * @return void
      */
     #[Test]
     public function rejectDrefWhenActualChildrenExceedDeclaredEntryCount(): void
@@ -4894,8 +4530,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects dref boxes that declare zero data-entry children.
-     *
-     * @return void
      */
     #[Test]
     public function rejectDrefWithZeroDeclaredEntries(): void
@@ -4908,8 +4542,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects dref entries that are neither url nor urn data entry boxes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectDrefWithoutUrlOrUrnEntries(): void
@@ -4924,8 +4556,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds a meta box with FullBox version=1 instead of 0.
      * Confirms the parser rejects unsupported meta versions.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMetaUnsupportedVersion(): void
@@ -4944,8 +4574,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Builds a meta box with FullBox flags=1 instead of 0.
      * Confirms the parser rejects unsupported meta flags.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMetaUnsupportedFlags(): void
@@ -4963,8 +4591,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects an iinf box with non-zero flags.
-     *
-     * @return void
      */
     #[Test]
     public function rejectIinfUnsupportedFlags(): void
@@ -4982,8 +4608,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts the hidden_item flag (bit 0) in infe box flags.
-     *
-     * @return void
      */
     #[Test]
     public function acceptInfeHiddenItemFlag(): void
@@ -5002,8 +4626,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects an infe box with reserved flag bits (bits 1-23).
-     *
-     * @return void
      */
     #[Test]
     public function rejectInfeReservedFlags(): void
@@ -5023,8 +4645,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects an infe box with hidden + reserved flags combined.
-     *
-     * @return void
      */
     #[Test]
     public function rejectInfeHiddenPlusReservedFlags(): void
@@ -5045,8 +4665,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Rejects pitm referencing a non-existent item.
      * ISO/IEC 14496-12 §8.11.4: the primary item must reference an existing item.
-     *
-     * @return void
      */
     #[Test]
     public function rejectPitmReferencingNonExistentItem(): void
@@ -5065,8 +4683,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects a dref url entry with non-zero version.
-     *
-     * @return void
      */
     #[Test]
     public function rejectDrefEntryUnsupportedVersion(): void
@@ -5086,8 +4702,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects an ftyp box whose compatible_brands length is not a multiple of 4.
-     *
-     * @return void
      */
     #[Test]
     public function rejectFtypMisalignedCompatibleBrands(): void
@@ -5104,8 +4718,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Parses an ftyp box with printable major and compatible brand codes.
-     *
-     * @return void
      */
     #[Test]
     public function parseFtypWithPrintableBrands(): void
@@ -5123,8 +4735,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects an ftyp box with a non-printable major_brand code.
-     *
-     * @return void
      */
     #[Test]
     public function rejectFtypNonPrintableMajorBrand(): void
@@ -5140,8 +4750,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects an ftyp box with a non-printable compatible_brand code.
-     *
-     * @return void
      */
     #[Test]
     public function rejectFtypNonPrintableCompatibleBrand(): void
@@ -5157,8 +4765,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects a tkhd box with unsupported version (2).
-     *
-     * @return void
      */
     #[Test]
     public function rejectTkhdUnsupportedVersion(): void
@@ -5180,8 +4786,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Accepts a tkhd box with version 1 layout.
      * ISO/IEC 14496-12 defines version 1 with 64-bit time fields.
-     *
-     * @return void
      */
     #[Test]
     public function parseTkhdVersion1(): void
@@ -5214,8 +4818,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects an hdlr box with non-zero version.
-     *
-     * @return void
      */
     #[Test]
     public function rejectHdlrUnsupportedVersion(): void
@@ -5237,8 +4839,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects an hdlr box with non-zero flags.
-     *
-     * @return void
      */
     #[Test]
     public function rejectHdlrUnsupportedFlags(): void
@@ -5260,8 +4860,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts an hdlr box with version 0 and flags 0.
-     *
-     * @return void
      */
     #[Test]
     public function parseHdlrVersionZeroFlagsZero(): void
@@ -5284,8 +4882,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Accepts an hdlr box with non-zero pre_defined field (Postel's Law).
      * MOV files commonly write 'mhlr' or 'dhlr' in this field.
-     *
-     * @return void
      */
     #[Test]
     public function acceptHdlrNonZeroPreDefined(): void
@@ -5306,8 +4902,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects a meta box without a required hdlr child.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMetaMissingHdlr(): void
@@ -5336,8 +4930,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects a meta box with duplicate hdlr children.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMetaDuplicateHdlr(): void
@@ -5355,8 +4947,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects duplicate meta boxes inside a moov container.
-     *
-     * @return void
      */
     #[Test]
     public function rejectDuplicateMetaInMoov(): void
@@ -5374,8 +4964,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects duplicate meta boxes inside a udta container.
-     *
-     * @return void
      */
     #[Test]
     public function rejectDuplicateMetaInUdta(): void
@@ -5438,8 +5026,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Parses a direct textual user-data atom from movie-level udta.
-     *
-     * @return void
      */
     #[Test]
     public function parsesMovieLevelDirectUdtaTextAtom(): void
@@ -5457,8 +5043,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Keeps direct udta text atoms and nested meta metadata together.
-     *
-     * @return void
      */
     #[Test]
     public function keepsMovieLevelDirectUdtaAtomAndMetaMetadata(): void
@@ -5487,8 +5071,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Ignores unknown direct udta atoms without failing metadata extraction.
-     *
-     * @return void
      */
     #[Test]
     public function ignoresUnknownMovieLevelDirectUdtaAtom(): void
@@ -5544,8 +5126,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts a single immediate udta child in moov.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsSingleImmediateUdtaInMoov(): void
@@ -5563,8 +5143,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects duplicate immediate udta children in moov.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsDuplicateImmediateUdtaInMoov(): void
@@ -5582,8 +5160,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects duplicate immediate udta children in trak.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsDuplicateImmediateUdtaInTrak(): void
@@ -5605,8 +5181,6 @@ final class IsoBmffParserTest extends TestCase
      *
      * QuickTime File Format (2012), "User Data Atoms": udta may appear as a
      * child of mdia in addition to moov and trak.
-     *
-     * @return void
      */
     #[Test]
     public function parsesMediaLevelUdtaTextAtom(): void
@@ -5631,8 +5205,6 @@ final class IsoBmffParserTest extends TestCase
      *
      * Movie-level metadata is parsed first; track/media-level metadata
      * overwrites it when keys collide (last-wins semantics).
-     *
-     * @return void
      */
     #[Test]
     public function mergesMoovAndMdiaUdtaMetadataDeterministically(): void
@@ -5661,8 +5233,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Unknown atoms in media-level udta are silently ignored.
-     *
-     * @return void
      */
     #[Test]
     public function ignoresUnknownMdiaUdtaAtom(): void
@@ -5685,8 +5255,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects duplicate immediate udta children in mdia.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsDuplicateImmediateUdtaInMdia(): void
@@ -5707,8 +5275,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Parses mdia with required singleton children (mdhd/hdlr/minf).
-     *
-     * @return void
      */
     #[Test]
     public function parseMdiaWithRequiredSingletonChildren(): void
@@ -5727,8 +5293,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects mdia without the mandatory hdlr child.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMdiaMissingHdlr(): void
@@ -5748,8 +5312,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects mdia without the mandatory minf child.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMdiaMissingMinf(): void
@@ -5770,8 +5332,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects mdia with duplicate mandatory hdlr children.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMdiaDuplicateHdlr(): void
@@ -5792,8 +5352,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects mdia without the mandatory mdhd child.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsMdiaMissingMdhd(): void
@@ -5814,8 +5372,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Uses two video tracks with different dimensions and codecs.
      * This verifies track-derived video keys are selected deterministically.
-     *
-     * @return void
      */
     #[Test]
     public function multiTrackVideoUsesFirstTrackDeterministically(): void
@@ -5842,8 +5398,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Prefers an enabled in-movie track over a disabled track.
-     *
-     * @return void
      */
     #[Test]
     public function multiTrackVideoPrefersEnabledInMovieTrackOverDisabledTrack(): void
@@ -5872,8 +5426,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Prefers tracks marked as in-movie over tracks that are only enabled.
-     *
-     * @return void
      */
     #[Test]
     public function multiTrackVideoPrefersTrackMarkedInMovie(): void
@@ -5902,8 +5454,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Keeps existing behavior for single-track QuickTime files.
-     *
-     * @return void
      */
     #[Test]
     public function singleTrackVideoKeepsCurrentBehaviorWhenFlagsAreUnset(): void
@@ -5926,8 +5476,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Uses the first eligible track when multiple in-movie tracks exist.
-     *
-     * @return void
      */
     #[Test]
     public function multiTrackVideoUsesFirstEligibleTrackDeterministically(): void
@@ -5957,8 +5505,6 @@ final class IsoBmffParserTest extends TestCase
     /**
      * Uses two audio tracks with different formats and sample properties.
      * This verifies track-derived audio keys are selected deterministically.
-     *
-     * @return void
      */
     #[Test]
     public function multiTrackAudioUsesFirstTrackDeterministically(): void
@@ -6518,8 +6064,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts type-13 payloads that start with JPEG/JFIF-compatible magic bytes.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsType13JpegWrapperPayload(): void
@@ -6536,8 +6080,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts type-14 payloads that start with the PNG magic signature.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsType14PngWrapperPayload(): void
@@ -6555,8 +6097,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Accepts type-27 payloads that start with the BMP magic signature.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsType27BmpWrapperPayload(): void
@@ -6573,8 +6113,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects type-13 payloads when JPEG/JFIF wrapper magic bytes do not match.
-     *
-     * @return void
      */
     #[Test]
     public function rejectType13PayloadWithWrongMagicBytes(): void
@@ -6588,8 +6126,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects type-14 payloads when PNG wrapper magic bytes do not match.
-     *
-     * @return void
      */
     #[Test]
     public function rejectType14PayloadWithWrongMagicBytes(): void
@@ -6602,8 +6138,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects type-27 payloads when BMP wrapper magic bytes do not match.
-     *
-     * @return void
      */
     #[Test]
     public function rejectType27PayloadWithWrongMagicBytes(): void
@@ -6616,8 +6150,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Regression: unknown binary data types remain unchanged.
-     *
-     * @return void
      */
     #[Test]
     public function unknownBinaryDataTypeRemainsUnchanged(): void
@@ -6634,8 +6166,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Parses QuickTime data type 28 payloads as nested metadata atom structures.
-     *
-     * @return void
      */
     #[Test]
     public function parsesNestedMetadataDataBoxType28Payload(): void
@@ -6659,8 +6189,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Merges nested mdta keys from type-28 payloads into deterministic flattened output keys.
-     *
-     * @return void
      */
     #[Test]
     public function mergesNestedMdtaKeysDeterministicallyFromType28Payload(): void
@@ -6681,8 +6209,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Rejects malformed nested metadata atom payloads in type-28 data boxes.
-     *
-     * @return void
      */
     #[Test]
     public function rejectMalformedNestedMetadataType28Payload(): void
@@ -6695,8 +6221,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Enforces recursion guard for nested type-28 metadata payloads.
-     *
-     * @return void
      */
     #[Test]
     public function enforceNestedMetadataType28RecursionGuard(): void
@@ -6720,8 +6244,6 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Regression: existing scalar data atom types remain unchanged.
-     *
-     * @return void
      */
     #[Test]
     public function scalarDataTypesRemainUnchangedAfterType28Support(): void
@@ -7397,8 +6919,6 @@ final class IsoBmffParserTest extends TestCase
      *
      * @param list<array{id:int,name:string,contentType:string,payload:string}> $items         Metadata items in descriptor order.
      * @param int|null                                                          $primaryItemId Optional primary item id declared via pitm.
-     *
-     * @return string
      */
     private function createItemBasedMetaFile(array $items, ?int $primaryItemId): string
     {
@@ -7505,8 +7025,6 @@ final class IsoBmffParserTest extends TestCase
      * @param string   $itemExif      TIFF payload resolved from iloc metadata item.
      * @param string   $directExif    TIFF payload embedded in a direct Exif box.
      * @param int|null $primaryItemId Optional primary item id declared via pitm.
-     *
-     * @return string
      */
     private function createMetaFileWithDirectAndItemExif(string $itemExif, string $directExif, ?int $primaryItemId): string
     {

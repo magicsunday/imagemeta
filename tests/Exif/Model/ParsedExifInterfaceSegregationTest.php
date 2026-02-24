@@ -46,8 +46,6 @@ final class ParsedExifInterfaceSegregationTest extends TestCase
     /**
      * Creates a ParsedExif instance with minimal IFD data.
      * Verifies all EXIF area interfaces are implemented for BC-safe consumption.
-     *
-     * @return void
      */
     #[Test]
     public function parsedExifImplementsAllSegmentInterfaces(): void

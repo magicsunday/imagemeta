@@ -37,8 +37,6 @@ final class XmpParserCompleteExtractionTest extends TestCase
     /**
      * Parses an XMP document with separate rdf:Description blocks for EXIF and TIFF namespaces.
      * Verifies the parser extracts all properties across descriptions and records namespace prefixes.
-     *
-     * @return void
      */
     #[Test]
     public function parseExtractsAllPropertiesFromMultipleDescriptions(): void
@@ -109,8 +107,6 @@ XML;
     /**
      * Attributes on x:xmpmeta wrapper are outside the rdf:RDF graph and
      * must not be extracted as XMP properties (ISO 16684-1).
-     *
-     * @return void
      */
     #[Test]
     public function ignoresXmpMetaWrapperAttributes(): void
@@ -138,8 +134,6 @@ XML;
     /**
      * Provides decimal-valued TIFF properties inside an RDF description.
      * Confirms the parser preserves decimal strings without normalization.
-     *
-     * @return void
      */
     #[Test]
     public function parseExtractsDecimalValues(): void

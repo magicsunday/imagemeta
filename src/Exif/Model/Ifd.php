@@ -37,8 +37,6 @@ final readonly class Ifd
      * Returns the entry for the provided tag identifier if it exists.
      *
      * @param int $tag The EXIF tag identifier to look up.
-     *
-     * @return IfdEntry|null
      */
     public function get(int $tag): ?IfdEntry
     {

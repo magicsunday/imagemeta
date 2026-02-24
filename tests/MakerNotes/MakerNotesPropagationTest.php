@@ -47,8 +47,6 @@ final class MakerNotesPropagationTest extends TestCase
     /**
      * Builds a ParsedExif document that includes a MakerNotesRecord.
      * Confirms makerNotes() returns the same maker notes instance.
-     *
-     * @return void
      */
     #[Test]
     public function exifDocumentReturnsMakerNotes(): void
@@ -62,8 +60,6 @@ final class MakerNotesPropagationTest extends TestCase
     /**
      * Creates a Metadata aggregate with a MakerNotesRecord attached.
      * Ensures the aggregate retains and exposes the same maker notes instance.
-     *
-     * @return void
      */
     #[Test]
     public function metadataAggregateCarriesMakerNotes(): void

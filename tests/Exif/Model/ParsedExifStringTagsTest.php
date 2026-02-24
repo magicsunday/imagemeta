@@ -46,8 +46,6 @@ final class ParsedExifStringTagsTest extends TestCase
     /**
      * Treats the all-blank DateTime placeholder as missing metadata.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function dateTimeTreatsBlankPlaceholderAsUnknown(): void
@@ -69,8 +67,6 @@ final class ParsedExifStringTagsTest extends TestCase
     /**
      * Falls back to camera owner tags when the artist tag is absent.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function artistFallsBackToRelatedAttributionTags(): void
@@ -107,8 +103,6 @@ final class ParsedExifStringTagsTest extends TestCase
     /**
      * Treats a blank-filled copyright string as missing.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function copyrightTreatsBlankFilledFieldAsUnknown(): void

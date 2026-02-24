@@ -36,8 +36,6 @@ final class AbstractSimpleDecoderTest extends TestCase
 {
     /**
      * Verifies the shared decode implementation hashes payload bytes consistently.
-     *
-     * @return void
      */
     #[Test]
     public function decodeComputesRecordFromPayloadUsingVendorName(): void
@@ -63,8 +61,6 @@ final class AbstractSimpleDecoderTest extends TestCase
      *
      * @param string                     $vendor  Expected vendor name in the decoded record.
      * @param MakerNotesDecoderInterface $decoder Decoder under test.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('provideSimpleDecoders')]

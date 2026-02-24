@@ -33,8 +33,6 @@ final class ProcessingSettingsTest extends TestCase
     /**
      * Stores basic processing settings enums.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithBasicSettings(): void
@@ -57,8 +55,6 @@ final class ProcessingSettingsTest extends TestCase
     /**
      * Stores full processing settings including device descriptions.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithAllProcessingInfo(): void
@@ -91,8 +87,6 @@ final class ProcessingSettingsTest extends TestCase
     /**
      * Accepts null processing settings values.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

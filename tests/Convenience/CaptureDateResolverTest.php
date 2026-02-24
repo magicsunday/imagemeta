@@ -143,8 +143,6 @@ final class CaptureDateResolverTest extends TestCase
     /**
      * Uses XMP CreateDate when EXIF capture timestamps are absent.
      * This verifies that XMP is considered a fallback source for capture time.
-     *
-     * @return void
      */
     #[Test]
     public function returnsXmpCreateDateWhenExifIsMissing(): void
@@ -168,8 +166,6 @@ final class CaptureDateResolverTest extends TestCase
     /**
      * Supplies a non-ISO CreateDate string in XMP.
      * This ensures invalid date strings are ignored rather than parsed loosely.
-     *
-     * @return void
      */
     #[Test]
     public function ignoresNonIsoCreateDateValues(): void
@@ -190,8 +186,6 @@ final class CaptureDateResolverTest extends TestCase
     /**
      * Provides an array-valued XMP CreateDate with multiple entries.
      * This confirms the resolver picks the first ISO-formatted value.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsFirstArrayElementWhenIsoString(): void
@@ -218,8 +212,6 @@ final class CaptureDateResolverTest extends TestCase
     /**
      * Provides EXIF DateTimeDigitized with a matching offset tag.
      * This confirms EXIF capture time takes precedence over XMP when present.
-     *
-     * @return void
      */
     #[Test]
     public function prefersExifCaptureDateWhenAvailable(): void
@@ -261,8 +253,6 @@ final class CaptureDateResolverTest extends TestCase
     /**
      * Supplies GPS date and time tags without EXIF or XMP capture dates.
      * This validates GPS timestamps are used as the last-resort source.
-     *
-     * @return void
      */
     #[Test]
     public function usesGpsTimestampWhenCaptureDateMissing(): void

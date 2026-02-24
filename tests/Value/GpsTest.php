@@ -49,8 +49,6 @@ final class GpsTest extends TestCase
     /**
      * Exposes GPS fields and enum references from the constructor.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function exposesGpsProperties(): void
@@ -112,8 +110,6 @@ final class GpsTest extends TestCase
     /**
      * Calculates signed coordinates and derived coordinate wrappers.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function calculatesSignedCoordinates(): void
@@ -150,8 +146,6 @@ final class GpsTest extends TestCase
     /**
      * Normalizes timestamps to UTC.
      * It exercises the scenario described by the test name.
-     *
-     * @return void
      */
     #[Test]
     public function returnsUtcTimestamp(): void

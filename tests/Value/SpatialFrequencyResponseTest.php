@@ -28,8 +28,6 @@ final class SpatialFrequencyResponseTest extends TestCase
     /**
      * Builds spatial frequency responses from decoded matrix data.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function createSfrFromDecodedMatrix(): void
@@ -64,8 +62,6 @@ final class SpatialFrequencyResponseTest extends TestCase
     /**
      * Returns null for empty or missing SFR matrices.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function invalidMatrixReturnsNull(): void
@@ -78,8 +74,6 @@ final class SpatialFrequencyResponseTest extends TestCase
     /**
      * Returns null when required SFR fields are missing.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function missingRequiredFieldsReturnsNull(): void
@@ -95,8 +89,6 @@ final class SpatialFrequencyResponseTest extends TestCase
     /**
      * Rejects SFR matrices with invalid dimension declarations.
      * It verifies the error path and guardrail handling.
-     *
-     * @return void
      */
     #[Test]
     public function invalidDimensionsReturnsNull(): void

@@ -265,8 +265,6 @@ final readonly class TiffValueDecoder
      * @param int    $type  TIFF field type code.
      * @param int    $count Number of values represented.
      * @param string $bytes Raw value bytes read from the blob.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
      */
     public function decodeBytes(int $tag, int $type, int $count, string $bytes): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
     {
@@ -410,8 +408,6 @@ final readonly class TiffValueDecoder
      * @param int    $type     TIFF field type code.
      * @param int    $count    Number of values represented.
      * @param string $rawBytes Raw value bytes read for the entry.
-     *
-     * @return int|ExifNumericList
      */
     public function normaliseCountedImageDataField(
         int $tag,
@@ -444,8 +440,6 @@ final readonly class TiffValueDecoder
      * @param int                                                                   $type     TIFF field type code.
      * @param string                                                                $rawBytes Raw value bytes.
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value    Previously decoded value.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
      */
     public function normaliseDngStringValue(
         int $tag,
@@ -519,8 +513,6 @@ final readonly class TiffValueDecoder
      *
      * @param int                                                                   $tag   Tag identifier.
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value Decoded value.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
      */
     public function convertUInt64Values(
         int $tag,

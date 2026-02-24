@@ -46,8 +46,6 @@ final class ParsedExifYcbcrSubSamplingTest extends TestCase
     /**
      * Supplies [2,1] representing YCbCr 4:2:2.
      * Confirms ycbcrSubSampling() returns the valid pair.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsFourTwoTwo(): void
@@ -60,8 +58,6 @@ final class ParsedExifYcbcrSubSamplingTest extends TestCase
     /**
      * Supplies [2,2] representing YCbCr 4:2:0.
      * Confirms ycbcrSubSampling() returns the valid pair.
-     *
-     * @return void
      */
     #[Test]
     public function acceptsFourTwoZero(): void
@@ -74,8 +70,6 @@ final class ParsedExifYcbcrSubSamplingTest extends TestCase
     /**
      * Supplies [1,1] which is not defined in EXIF 3.0 §4.6.5.1.12.
      * Confirms ycbcrSubSampling() rejects the non-conformant pair.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsOneOne(): void
@@ -88,8 +82,6 @@ final class ParsedExifYcbcrSubSamplingTest extends TestCase
     /**
      * Supplies [4,4] which is not defined in EXIF 3.0 §4.6.5.1.12.
      * Confirms ycbcrSubSampling() rejects the non-conformant pair.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsFourFour(): void
@@ -102,8 +94,6 @@ final class ParsedExifYcbcrSubSamplingTest extends TestCase
     /**
      * Supplies [2,4] which has a valid horizontal factor but invalid vertical.
      * Confirms ycbcrSubSampling() rejects the non-conformant pair.
-     *
-     * @return void
      */
     #[Test]
     public function rejectsTwoFour(): void

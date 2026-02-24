@@ -19,12 +19,7 @@ final readonly class MultiPicture
     /**
      * Creates a multi-picture format metadata value object.
      *
-     * @param string|null                                      $version
-     * @param int                                              $imageCount
      * @param list<MultiPictureEntry>                          $entries
-     * @param int|null                                         $totalFrames
-     * @param int|null                                         $individualImageNumber
-     * @param string|null                                      $imageUidList
      * @param list<array{numerator:int, denominator:int}>|null $panoramaAngle
      * @param list<array{numerator:int, denominator:int}>|null $panoramaAxis
      */

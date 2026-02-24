@@ -475,8 +475,6 @@ final readonly class DngGeometryValidator
      * Validates BaselineNoise and BaselineSharpness scalar tags per DNG 1.7.1.0.
      *
      * Both tags must be RATIONAL[1] with strictly positive finite values.
-     *
-     * @return void
      */
     public function validateDngBaselineScalars(Ifd $ifd): void
     {

@@ -47,8 +47,6 @@ final class TiffExifParserExamplesTest extends TestCase
     /**
      * Parses the EXIF 3.0 classic TIFF example encoded in little-endian order.
      * Confirms common EXIF values and GPS fields are extracted correctly.
-     *
-     * @return void
      */
     #[Test]
     public function parsesClassicLittleEndianExample(): void
@@ -63,8 +61,6 @@ final class TiffExifParserExamplesTest extends TestCase
     /**
      * Parses the EXIF 3.0 classic TIFF example encoded in big-endian order.
      * Verifies the parser handles big-endian offsets and returns expected EXIF/GPS data.
-     *
-     * @return void
      */
     #[Test]
     public function parsesClassicBigEndianExample(): void
@@ -79,8 +75,6 @@ final class TiffExifParserExamplesTest extends TestCase
     /**
      * Parses a BigTIFF example encoded in little-endian order with 64-bit offsets.
      * Ensures common EXIF and GPS values match the expected sample values.
-     *
-     * @return void
      */
     #[Test]
     public function parsesBigTiffLittleEndianExample(): void
@@ -95,8 +89,6 @@ final class TiffExifParserExamplesTest extends TestCase
     /**
      * Parses a BigTIFF example encoded in big-endian order.
      * Confirms the parser supports BigTIFF byte order and extracts expected fields.
-     *
-     * @return void
      */
     #[Test]
     public function parsesBigTiffBigEndianExample(): void
@@ -111,8 +103,6 @@ final class TiffExifParserExamplesTest extends TestCase
     /**
      * Builds a classic TIFF sample that includes Interop IFD and thumbnail data.
      * Verifies interop index, thumbnail JPEG info, and tile metadata are parsed.
-     *
-     * @return void
      */
     #[Test]
     public function parsesClassicInteropAndThumbnailExample(): void

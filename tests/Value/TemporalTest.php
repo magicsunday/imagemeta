@@ -30,8 +30,6 @@ final class TemporalTest extends TestCase
     /**
      * Stores the original capture timestamp.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithOriginalDateTime(): void
@@ -58,8 +56,6 @@ final class TemporalTest extends TestCase
     /**
      * Stores all temporal metadata fields and offsets.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithAllDateTimeFields(): void
@@ -95,8 +91,6 @@ final class TemporalTest extends TestCase
     /**
      * Accepts null temporal metadata values.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void

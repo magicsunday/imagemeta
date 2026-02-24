@@ -59,8 +59,6 @@ final class AppleMakerNotesMergerTest extends TestCase
     /**
      * Provides maker notes with populated fields alongside conflicting QuickTime values.
      * Ensures merge keeps maker note values for populated properties and preserves record metadata.
-     *
-     * @return void
      */
     #[Test]
     public function mergePrefersMakerNotesValues(): void
@@ -122,8 +120,6 @@ final class AppleMakerNotesMergerTest extends TestCase
     /**
      * Supplies a maker notes record with null fields and a QuickTime payload with values.
      * Verifies merge fills missing fields from QuickTime and performs value conversions.
-     *
-     * @return void
      */
     #[Test]
     public function mergeFillsMissingValuesFromQuickTime(): void
@@ -207,8 +203,6 @@ final class AppleMakerNotesMergerTest extends TestCase
     /**
      * Merges when no existing maker notes record is provided.
      * Confirms a new record is created with defaults and populated from QuickTime metadata.
-     *
-     * @return void
      */
     #[Test]
     public function mergeCreatesMetadataFromQuickTimeWhenAbsent(): void
@@ -237,8 +231,6 @@ final class AppleMakerNotesMergerTest extends TestCase
     /**
      * Combines flags from maker notes with flags derived from QuickTime metadata.
      * Ensures existing flags are preserved while additional QuickTime flags are added.
-     *
-     * @return void
      */
     #[Test]
     public function mergeMergesQuickTimeFlags(): void

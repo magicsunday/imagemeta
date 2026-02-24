@@ -38,8 +38,6 @@ final class ApplePlistValuePolymorphismTest extends TestCase
     /**
      * Resolves a scalar plist value through the interface contract.
      * Confirms scalar values can dispatch via resolveValue() without instanceof checks.
-     *
-     * @return void
      */
     #[Test]
     public function scalarResolvesThroughPolymorphicContract(): void

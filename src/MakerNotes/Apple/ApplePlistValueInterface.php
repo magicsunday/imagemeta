@@ -18,8 +18,6 @@ interface ApplePlistValueInterface
 {
     /**
      * Resolves the plist value in keyed-archive context through polymorphic dispatch.
-     *
-     * @return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
      */
     public function resolveValue(KeyedArchiveUnarchiver $unarchiver): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar;
 }

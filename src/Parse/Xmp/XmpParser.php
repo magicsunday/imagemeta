@@ -427,8 +427,6 @@ final class XmpParser implements XmpParserInterface
      *
      * @param list<string>                             $items
      * @param list<array{lang: string, value: string}> $altItems
-     * @param string                                   $listKind
-     * @param string                                   $text
      *
      * @return list<string>|string|XmpLanguageAlternative
      */

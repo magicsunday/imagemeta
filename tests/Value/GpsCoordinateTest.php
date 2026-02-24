@@ -30,8 +30,6 @@ final class GpsCoordinateTest extends TestCase
     /**
      * Uses raw GPS values when no hemisphere reference is supplied.
      * It ensures missing or invalid inputs yield no value.
-     *
-     * @return void
      */
     #[Test]
     public function keepsRawValueWhenReferenceMissing(): void
@@ -46,8 +44,6 @@ final class GpsCoordinateTest extends TestCase
     /**
      * Normalizes hemisphere references and formats coordinate strings.
      * It validates the transformation using representative inputs.
-     *
-     * @return void
      */
     #[Test]
     public function normalisesReferenceAndFormats(): void

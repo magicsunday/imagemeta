@@ -60,8 +60,6 @@ final class TiffConstTest extends TestCase
     /**
      * Compares each constant against its expected numeric value.
      * This guards against accidental changes to TIFF type identifiers.
-     *
-     * @return void
      */
     #[Test]
     #[DataProvider('constantProvider')]

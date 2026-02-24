@@ -43,8 +43,6 @@ final class SceneFactoryTest extends TestCase
     /**
      * Supplies EXIF scene tags and a face count to SceneFactory.
      * Verifies the scene value object maps capture type, scene type, light, and distance range.
-     *
-     * @return void
      */
     #[Test]
     public function createsFromExifMetadata(): void
@@ -75,8 +73,6 @@ final class SceneFactoryTest extends TestCase
     /**
      * Uses Apple maker notes with a positive HDR headroom value.
      * Ensures SceneFactory flags the scene as HDR based on headroom.
-     *
-     * @return void
      */
     #[Test]
     public function detectsHdrSceneFromAppleHeadroom(): void
@@ -115,8 +111,6 @@ final class SceneFactoryTest extends TestCase
     /**
      * Supplies QuickTime metadata with the NightMode flag enabled.
      * Confirms the scene value object reports night mode as true.
-     *
-     * @return void
      */
     #[Test]
     public function detectsNightModeFromQuickTime(): void
@@ -139,8 +133,6 @@ final class SceneFactoryTest extends TestCase
     /**
      * Uses Apple maker note flags to indicate HDR capture.
      * Verifies hdrScene is enabled even without HDR headroom data.
-     *
-     * @return void
      */
     #[Test]
     public function detectsHdrFromAppleFlags(): void
@@ -179,8 +171,6 @@ final class SceneFactoryTest extends TestCase
     /**
      * Creates Metadata without EXIF, QuickTime, or maker notes scene data.
      * Ensures all scene fields remain null when no inputs are available.
-     *
-     * @return void
      */
     #[Test]
     public function createsWithNullMetadata(): void

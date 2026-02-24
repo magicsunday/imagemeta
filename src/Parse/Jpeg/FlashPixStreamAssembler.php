@@ -187,8 +187,6 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      *
      * @param string $payload Raw APP2 payload with FPXR prefix.
      * @param int    $offset  Marker offset used for diagnostics.
-     *
-     * @return string
      */
     private function extractBody(string $payload, int $offset): string
     {

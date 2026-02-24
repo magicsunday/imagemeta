@@ -33,8 +33,6 @@ final class AppleDecoderNumericValueTest extends TestCase
     /**
      * Provides a whitespace-separated numerator/denominator value for AFPerformance.
      * Confirms rationalFloatValue converts the pair into a floating-point ratio.
-     *
-     * @return void
      */
     #[Test]
     public function rationalFloatValueNormalisesWhitespaceSeparatedPairs(): void
@@ -54,8 +52,6 @@ final class AppleDecoderNumericValueTest extends TestCase
     /**
      * Calls numericScalarValue with a whitespace-separated numeric pair.
      * Ensures the helper parses the pair into a float ratio.
-     *
-     * @return void
      */
     #[Test]
     public function numericScalarValueParsesWhitespaceSeparatedPairs(): void

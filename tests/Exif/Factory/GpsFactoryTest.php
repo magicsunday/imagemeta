@@ -50,8 +50,6 @@ final class GpsFactoryTest extends TestCase
     /**
      * Supplies ParsedExif GPS tags covering coordinates, altitude, speed, and timestamp.
      * Verifies GpsFactory maps fields correctly and computes derived values like speed in m/s.
-     *
-     * @return void
      */
     #[Test]
     public function createsFromExifMetadata(): void
@@ -121,8 +119,6 @@ final class GpsFactoryTest extends TestCase
     /**
      * Builds Metadata without an EXIF document.
      * Ensures the GPS value object contains null coordinates when no data is available.
-     *
-     * @return void
      */
     #[Test]
     public function createsEmptyGpsWithNullExifDoc(): void
@@ -141,8 +137,6 @@ final class GpsFactoryTest extends TestCase
     /**
      * Provides a GPS speed in kilometers per hour.
      * Confirms the factory converts the speed to metres per second.
-     *
-     * @return void
      */
     #[Test]
     public function convertsSpeedToMetresPerSecond(): void
@@ -189,8 +183,6 @@ final class GpsFactoryTest extends TestCase
     /**
      * Uses the EXIF GPS date format with colon separators.
      * Ensures the factory normalizes the date to ISO-style YYYY-MM-DD.
-     *
-     * @return void
      */
     #[Test]
     public function normalizesDateFormat(): void

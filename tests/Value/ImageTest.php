@@ -35,8 +35,6 @@ final class ImageTest extends TestCase
     /**
      * Exposes image dimensions and related metadata fields.
      * It confirms the object preserves the supplied metadata.
-     *
-     * @return void
      */
     #[Test]
     public function providesDimensionAndMetadataValues(): void

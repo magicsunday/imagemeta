@@ -28,8 +28,6 @@ final class ExifRationalTest extends TestCase
     /**
      * Instantiates ExifRational with a numerator and denominator.
      * Confirms the public properties expose the same values that were supplied.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithNumeratorAndDenominator(): void
@@ -43,8 +41,6 @@ final class ExifRationalTest extends TestCase
     /**
      * Creates a rational with a zero numerator to represent a zero value.
      * Ensures the numerator stays zero and the denominator remains unchanged.
-     *
-     * @return void
      */
     #[Test]
     public function handlesZeroNumerator(): void
@@ -58,8 +54,6 @@ final class ExifRationalTest extends TestCase
     /**
      * Creates a rational with a negative numerator to represent a negative value.
      * Confirms the sign is preserved and the denominator is stored as provided.
-     *
-     * @return void
      */
     #[Test]
     public function handlesNegativeValues(): void
@@ -73,8 +67,6 @@ final class ExifRationalTest extends TestCase
     /**
      * Uses a denominator of one to represent a whole number value.
      * Verifies the value object stores the exact numerator and denominator.
-     *
-     * @return void
      */
     #[Test]
     public function handlesWholeNumbers(): void
@@ -88,8 +80,6 @@ final class ExifRationalTest extends TestCase
     /**
      * Creates a rational with a larger denominator to represent a fine-grained fraction.
      * Confirms the value object does not normalize and keeps the supplied values.
-     *
-     * @return void
      */
     #[Test]
     public function handlesLargeDenominator(): void

@@ -28,8 +28,6 @@ final class VideoTest extends TestCase
     /**
      * Constructs a Video object with basic timing and dimension fields.
      * Verifies the value object preserves the supplied core properties.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithBasicVideoInfo(): void
@@ -52,8 +50,6 @@ final class VideoTest extends TestCase
     /**
      * Constructs a Video object with HDR-related metadata and codec details.
      * Ensures HDR flags and color metadata are stored as provided.
-     *
-     * @return void
      */
     #[Test]
     public function constructsWithHDRInfo(): void
@@ -78,8 +74,6 @@ final class VideoTest extends TestCase
     /**
      * Creates a Video object with optional fields set to null.
      * Confirms nulls are preserved while the HDR flag remains false.
-     *
-     * @return void
      */
     #[Test]
     public function allowsNullValues(): void
