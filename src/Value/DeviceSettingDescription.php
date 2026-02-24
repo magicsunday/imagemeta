@@ -25,6 +25,9 @@ namespace MagicSunday\ImageMeta\Value;
  */
 final readonly class DeviceSettingDescription
 {
+    /** @var list<string> Camera settings strings decoded to UTF-8. */
+    public array $settings;
+
     /**
      * Creates a device setting description value object.
      *
@@ -35,7 +38,8 @@ final readonly class DeviceSettingDescription
     public function __construct(
         public int $columns,
         public int $rows,
-        public array $settings,
+        array $settings,
     ) {
+        $this->settings = [...$settings];
     }
 }

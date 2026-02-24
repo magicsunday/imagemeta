@@ -20,12 +20,16 @@ use function sprintf;
  */
 final readonly class XmpStructuredValue
 {
+    /** @var array<string, array<int, string>|string|XmpLanguageAlternative|self> Structured child values keyed by Clark notation. */
+    public array $fields;
+
     /**
      * @param array<string, array<int, string>|string|XmpLanguageAlternative|self> $fields Structured child values keyed by Clark notation.
      */
     public function __construct(
-        public array $fields,
+        array $fields,
     ) {
+        $this->fields = [...$fields];
     }
 
     /**

@@ -18,13 +18,17 @@ use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
  */
 final readonly class AudioClips
 {
+    /** @var list<AudioClip> */
+    public array $clips;
+
     /**
      * Creates an audio clips collection value object.
      *
      * @param list<AudioClip> $clips
      */
-    public function __construct(public array $clips)
+    public function __construct(array $clips)
     {
+        $this->clips = [...$clips];
     }
 
     /**

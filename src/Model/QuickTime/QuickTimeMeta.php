@@ -247,6 +247,12 @@ final readonly class QuickTimeMeta
         'TrackName'                            => ['TrackName', self::TRACK_NAME_KEY],
     ];
 
+    /** @var array<string, string|int|float|bool> Map of QuickTime metadata keys and their values (first value per key). */
+    public array $keys;
+
+    /** @var array<string, list<QuickTimeDataAtom>> All data value atoms per key, preserving type, locale, and order. */
+    public array $dataAtoms;
+
     /**
      * Creates a new instance of QuickTime metadata information.
      *
@@ -254,9 +260,11 @@ final readonly class QuickTimeMeta
      * @param array<string, list<QuickTimeDataAtom>> $dataAtoms All data value atoms per key, preserving type, locale, and order.
      */
     public function __construct(
-        public array $keys,
-        public array $dataAtoms = [],
+        array $keys,
+        array $dataAtoms = [],
     ) {
+        $this->keys      = [...$keys];
+        $this->dataAtoms = [...$dataAtoms];
     }
 
     /**

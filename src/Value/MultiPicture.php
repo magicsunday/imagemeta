@@ -16,6 +16,15 @@ namespace MagicSunday\ImageMeta\Value;
  */
 final readonly class MultiPicture
 {
+    /** @var list<MultiPictureEntry> */
+    public array $entries;
+
+    /** @var list<array{numerator:int, denominator:int}>|null */
+    public ?array $panoramaAngle;
+
+    /** @var list<array{numerator:int, denominator:int}>|null */
+    public ?array $panoramaAxis;
+
     /**
      * Creates a multi-picture format metadata value object.
      *
@@ -26,12 +35,15 @@ final readonly class MultiPicture
     public function __construct(
         public ?string $version,
         public int $imageCount,
-        public array $entries,
+        array $entries,
         public ?int $totalFrames,
         public ?int $individualImageNumber,
         public ?string $imageUidList,
-        public ?array $panoramaAngle,
-        public ?array $panoramaAxis,
+        ?array $panoramaAngle,
+        ?array $panoramaAxis,
     ) {
+        $this->entries       = [...$entries];
+        $this->panoramaAngle = $panoramaAngle !== null ? [...$panoramaAngle] : null;
+        $this->panoramaAxis  = $panoramaAxis !== null ? [...$panoramaAxis] : null;
     }
 }

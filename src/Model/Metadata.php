@@ -36,8 +36,26 @@ final readonly class Metadata
      */
     private StructuredMetadataCache $structuredCache;
 
+    /** @var list<string> TIFF-EXIF blobs (first is primary). */
+    public array $exifBlobs;
+
+    /** @var list<string> XMP packets (RDF/XML), first is primary. */
+    public array $xmpBlobs;
+
+    /** @var list<string> Raw ICC APP2 segments in encounter order. */
+    public array $iccSegments;
+
+    /** @var list<JpegAudioStream> EXIF audio streams embedded in JPEG APP2 markers. */
+    public array $jpegAudioStreams;
+
+    /** @var list<IsoBmffUnresolvedItem> ISO BMFF item payloads that could not be resolved. */
+    public array $isoBmffUnresolvedItems;
+
+    /** @var list<string> IPTC payloads captured from JPEG APP13 segments. */
+    public array $iptcBlobs;
+
     /**
-     * @param list<string>                                         $exifBlobs                TIFF‑EXIF blobs (first is primary)
+     * @param list<string>                                         $exifBlobs                TIFF-EXIF blobs (first is primary)
      * @param QuickTimeMeta|null                                   $quickTime                QuickTime metadata extracted from ISO BMFF containers.
      * @param ParsedExif|null                                      $exifDoc                  Parsed representation of the primary EXIF document.
      * @param list<string>                                         $xmpBlobs                 XMP packets (RDF/XML), first is primary
@@ -67,17 +85,17 @@ final readonly class Metadata
      * @param IptcParserInterface|null                             $iptcParser               Injected IPTC parser for selective document creation.
      */
     public function __construct(
-        public array $exifBlobs,
+        array $exifBlobs,
         public ?QuickTimeMeta $quickTime,
         public ?ParsedExif $exifDoc = null,
-        public array $xmpBlobs = [],
+        array $xmpBlobs = [],
         public ?XmpDocument $xmpDoc = null,
         public ?MakerNotesRecord $makerNotes = null,
         public ?string $iccProfile = null,
-        public array $iccSegments = [],
+        array $iccSegments = [],
         public array $flashPixStreams = [],
         public ?MpfDocument $mpfDocument = null,
-        public array $jpegAudioStreams = [],
+        array $jpegAudioStreams = [],
         public ?int $jpegBitsPerSample = null,
         public ?array $jpegFrameSamplingFactors = null,
         public ?array $jpegYCbCrSubSampling = null,
@@ -90,13 +108,19 @@ final readonly class Metadata
         public ?int $jpegFrameHeight = null,
         public ?IsoBmffItemReferenceMap $isoBmffItemReferences = null,
         public ?IsoBmffDataReferenceMap $isoBmffDataReferences = null,
-        public array $isoBmffUnresolvedItems = [],
-        public array $iptcBlobs = [],
+        array $isoBmffUnresolvedItems = [],
+        array $iptcBlobs = [],
         public ?IptcDocument $iptcDoc = null,
         private ?XmpParserInterface $xmpParser = null,
         private ?IptcParserInterface $iptcParser = null,
     ) {
-        $this->structuredCache = StructuredMetadataCache::createDefault();
+        $this->exifBlobs              = [...$exifBlobs];
+        $this->xmpBlobs               = [...$xmpBlobs];
+        $this->iccSegments            = [...$iccSegments];
+        $this->jpegAudioStreams       = [...$jpegAudioStreams];
+        $this->isoBmffUnresolvedItems = [...$isoBmffUnresolvedItems];
+        $this->iptcBlobs              = [...$iptcBlobs];
+        $this->structuredCache        = StructuredMetadataCache::createDefault();
     }
 
     /**

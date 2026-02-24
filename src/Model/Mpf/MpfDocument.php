@@ -16,14 +16,18 @@ namespace MagicSunday\ImageMeta\Model\Mpf;
  */
 final readonly class MpfDocument
 {
+    /** @var list<MpfEntry> Ordered list of MP entries describing the constituent images. */
+    public array $entries;
+
     /**
      * @param list<MpfEntry> $entries Ordered list of MP entries describing the constituent images.
      */
     public function __construct(
         public ?string $version,
         public int $imageCount,
-        public array $entries,
+        array $entries,
         public ?MpfAttributes $attributes,
     ) {
+        $this->entries = [...$entries];
     }
 }

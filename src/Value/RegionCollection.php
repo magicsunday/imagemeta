@@ -16,12 +16,16 @@ namespace MagicSunday\ImageMeta\Value;
  */
 final readonly class RegionCollection
 {
+    /** @var list<Region> List of annotated regions. */
+    public array $items;
+
     /**
      * Creates a region collection value object.
      *
      * @param list<Region> $items List of annotated regions.
      */
-    public function __construct(public array $items)
+    public function __construct(array $items)
     {
+        $this->items = [...$items];
     }
 }

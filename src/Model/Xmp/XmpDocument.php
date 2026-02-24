@@ -32,6 +32,18 @@ use function trim;
  */
 final readonly class XmpDocument
 {
+    /** @var array<string, string|array<int, string>|XmpLanguageAlternative> */
+    public array $data;
+
+    /** @var array<string, string> Map of namespace URI to prefix (e.g., "http://ns.adobe.com/xap/1.0/" => "xmp") */
+    public array $namespacePrefixes;
+
+    /** @var array<string, XmpStructuredValue> Map of Clark notation => structured value. */
+    public array $structuredData;
+
+    /** @var array<string, XmpContainer> Map of Clark notation => RDF container kind. */
+    public array $containerKinds;
+
     /**
      * @param array<string, string|array<int, string>|XmpLanguageAlternative> $data              Map of Clark notation => scalar/container value.
      * @param array<string, string>                                           $namespacePrefixes Map of namespace URI => prefix.
@@ -39,23 +51,15 @@ final readonly class XmpDocument
      * @param array<string, XmpContainer>                                     $containerKinds    Map of Clark notation => RDF container kind.
      */
     public function __construct(
-        /**
-         * @var array<string, string|array<int, string>|XmpLanguageAlternative>
-         */
-        public array $data,
-        /**
-         * @var array<string, string> Map of namespace URI to prefix (e.g., "http://ns.adobe.com/xap/1.0/" => "xmp")
-         */
-        public array $namespacePrefixes = [],
-        /**
-         * @var array<string, XmpStructuredValue> Map of Clark notation => structured value.
-         */
-        public array $structuredData = [],
-        /**
-         * @var array<string, XmpContainer> Map of Clark notation => RDF container kind.
-         */
-        public array $containerKinds = [],
+        array $data,
+        array $namespacePrefixes = [],
+        array $structuredData = [],
+        array $containerKinds = [],
     ) {
+        $this->data              = [...$data];
+        $this->namespacePrefixes = [...$namespacePrefixes];
+        $this->structuredData    = [...$structuredData];
+        $this->containerKinds    = [...$containerKinds];
     }
 
     /**

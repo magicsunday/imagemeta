@@ -21,6 +21,9 @@ namespace MagicSunday\ImageMeta\Value;
  */
 final readonly class SourceExposureTimes
 {
+    /** @var list<list<float>> Exposure times grouped by capture sequence (seconds). */
+    public array $sequences;
+
     /**
      * @param float|null        $totalExposurePeriod        Duration from the first exposure start to the last exposure end (seconds).
      * @param float|null        $usedExposureTimeSum        Sum of exposure times for the source images included in the composite (seconds).
@@ -41,7 +44,8 @@ final readonly class SourceExposureTimes
         public ?float $minUsedExposureTime,
         public ?float $longestSourceExposureTime,
         public ?float $shortestSourceExposureTime,
-        public array $sequences,
+        array $sequences,
     ) {
+        $this->sequences = [...$sequences];
     }
 }

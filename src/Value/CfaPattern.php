@@ -24,6 +24,9 @@ use function count;
  */
 final readonly class CfaPattern
 {
+    /** @var list<CfaPatternColor> Flattened colour list (row-major, vertical × horizontal). */
+    public array $colors;
+
     /**
      * @param positive-int          $horizontalRepeatPixelUnit Number of lateral pixels before the pattern repeats.
      * @param positive-int          $verticalRepeatPixelUnit   Number of vertical pixels before the pattern repeats.
@@ -32,8 +35,9 @@ final readonly class CfaPattern
     private function __construct(
         public int $horizontalRepeatPixelUnit,
         public int $verticalRepeatPixelUnit,
-        public array $colors,
+        array $colors,
     ) {
+        $this->colors = [...$colors];
     }
 
     /**

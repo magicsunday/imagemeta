@@ -29,6 +29,12 @@ use MagicSunday\ImageMeta\Core\Util\MatrixValidator;
  */
 final readonly class SpatialFrequencyResponse
 {
+    /** @var list<string> Column item names (spatial frequencies). */
+    public array $spatialFrequencies;
+
+    /** @var list<list<float>> SFR values matrix [row][column]. */
+    public array $values;
+
     /**
      * @param int               $columns            Number of frequency columns (n).
      * @param int               $rows               Number of SFR rows (m).
@@ -38,9 +44,11 @@ final readonly class SpatialFrequencyResponse
     public function __construct(
         public int $columns,
         public int $rows,
-        public array $spatialFrequencies,
-        public array $values,
+        array $spatialFrequencies,
+        array $values,
     ) {
+        $this->spatialFrequencies = [...$spatialFrequencies];
+        $this->values             = [...$values];
     }
 
     /**

@@ -16,6 +16,12 @@ namespace MagicSunday\ImageMeta\Value;
  */
 final readonly class Keywords
 {
+    /** @var list<string> Flat keyword list. */
+    public array $flat;
+
+    /** @var list<string>|null Optional hierarchical keywords. */
+    public ?array $hierarchical;
+
     /**
      * Creates a keywords metadata value object.
      *
@@ -23,8 +29,10 @@ final readonly class Keywords
      * @param list<string>|null $hierarchical Optional hierarchical keywords.
      */
     public function __construct(
-        public array $flat,
-        public ?array $hierarchical,
+        array $flat,
+        ?array $hierarchical,
     ) {
+        $this->flat         = [...$flat];
+        $this->hierarchical = $hierarchical !== null ? [...$hierarchical] : null;
     }
 }

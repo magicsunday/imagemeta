@@ -18,11 +18,15 @@ use function array_key_exists;
  */
 final readonly class IptcDocument
 {
+    /** @var array<string, list<string>> Map of "record:dataset" => list of values. */
+    public array $datasets;
+
     /**
      * @param array<string, list<string>> $datasets Map of "record:dataset" => list of values.
      */
-    public function __construct(public array $datasets)
+    public function __construct(array $datasets)
     {
+        $this->datasets = [...$datasets];
     }
 
     /**

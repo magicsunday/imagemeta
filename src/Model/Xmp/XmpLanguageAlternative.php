@@ -35,7 +35,7 @@ final readonly class XmpLanguageAlternative
      */
     public function __construct(array $entries)
     {
-        $this->entries = $this->normalizeEntries($entries);
+        $this->entries = $this->normalizeEntries([...$entries]);
     }
 
     /**

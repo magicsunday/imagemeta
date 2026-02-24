@@ -28,6 +28,15 @@ use MagicSunday\ImageMeta\Core\Util\MatrixValidator;
  */
 final readonly class Oecf
 {
+    /** @var list<string> Labels for each column (input values). */
+    public array $columnLabels;
+
+    /** @var list<string> Labels for each row (output values). */
+    public array $rowLabels;
+
+    /** @var list<list<float|null>> Matrix of SRATIONAL conversion values. */
+    public array $values;
+
     /**
      * Creates an OECF value object.
      *
@@ -40,10 +49,13 @@ final readonly class Oecf
     public function __construct(
         public int $columns,
         public int $rows,
-        public array $columnLabels,
-        public array $rowLabels,
-        public array $values,
+        array $columnLabels,
+        array $rowLabels,
+        array $values,
     ) {
+        $this->columnLabels = [...$columnLabels];
+        $this->rowLabels    = [...$rowLabels];
+        $this->values       = [...$values];
     }
 
     /**
