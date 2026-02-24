@@ -36,6 +36,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 use function array_values;
 use function chr;
@@ -3045,6 +3046,29 @@ final class JpegParserTest extends TestCase
         $this->expectExceptionCode(1266);
 
         $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Confirms parseIfNeeded delegates marker processing to processMarkerSegment.
+     */
+    #[Test]
+    public function parseIfNeededDelegatesToProcessMarkerSegment(): void
+    {
+        $method = new ReflectionMethod(JpegParser::class, 'processMarkerSegment');
+
+        self::assertTrue($method->isPrivate());
+        self::assertSame(2, $method->getNumberOfParameters());
+    }
+
+    /**
+     * Confirms SOF frame parsing is extracted into its own method.
+     */
+    #[Test]
+    public function sofFrameParsingIsExtractedIntoOwnMethod(): void
+    {
+        $method = new ReflectionMethod(JpegParser::class, 'processStartOfFrame');
+
+        self::assertTrue($method->isPrivate());
     }
 
     /**

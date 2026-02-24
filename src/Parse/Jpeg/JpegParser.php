@@ -72,6 +72,26 @@ final class JpegParser implements JpegParserInterface
 
     private JumbfTransportParser $jumbfParser;
 
+    private bool $seenExifApp1 = false;
+
+    private ?int $firstApp2BeforeExifOffset = null;
+
+    private bool $seenApp1OrApp2 = false;
+
+    private bool $seenApp11 = false;
+
+    private ?int $firstStructuralMarker = null;
+
+    private ?int $firstStructuralMarkerOffset = null;
+
+    private ?int $firstDqtOffset = null;
+
+    private ?int $firstDhtOffset = null;
+
+    private ?int $firstDriOffset = null;
+
+    private ?int $firstSofOffset = null;
+
     /**
      * Initialises the extractor with a seekable stream.
      *
@@ -261,6 +281,25 @@ final class JpegParser implements JpegParserInterface
             throw new ParseError('Not a JPEG (missing SOI marker)', 1263);
         }
 
+        $this->resetParseState();
+
+        while (true) {
+            [$marker, $offset] = $this->scanner->nextMarkerWithOffset(false);
+
+            if ($this->processMarkerSegment($marker, $offset)) {
+                break;
+            }
+        }
+
+        $this->finaliseParseResults();
+        $this->parsed = true;
+    }
+
+    /**
+     * Resets all mutable parse state for a fresh scan.
+     */
+    private function resetParseState(): void
+    {
         $this->app1Handler->reset();
         $this->iccAssembler->reset();
         $this->audioParser->reset();
@@ -270,219 +309,242 @@ final class JpegParser implements JpegParserInterface
             $this->config->flashPixMaxContentEntries,
             $this->config->flashPixMaxStreamSize,
         );
-        $this->flashPixStreams = [];
-        $this->mpfSegments     = [];
-        $this->mpfDocument     = null;
-        $this->iptcPayloads    = [];
+        $this->flashPixStreams             = [];
+        $this->mpfSegments                 = [];
+        $this->mpfDocument                 = null;
+        $this->iptcPayloads                = [];
+        $this->seenExifApp1                = false;
+        $this->firstApp2BeforeExifOffset   = null;
+        $this->seenApp1OrApp2              = false;
+        $this->seenApp11                   = false;
+        $this->firstStructuralMarker       = null;
+        $this->firstStructuralMarkerOffset = null;
+        $this->firstDqtOffset              = null;
+        $this->firstDhtOffset              = null;
+        $this->firstDriOffset              = null;
+        $this->firstSofOffset              = null;
+    }
 
-        $seenExifApp1                = false;
-        $firstApp2BeforeExifOffset   = null;
-        $seenApp1OrApp2              = false;
-        $seenApp11                   = false;
-        $firstStructuralMarker       = null;
-        $firstStructuralMarkerOffset = null;
-        $firstDqtOffset              = null;
-        $firstDhtOffset              = null;
-        $firstDriOffset              = null;
-        $firstSofOffset              = null;
-
-        while (true) {
-            [$marker, $offset] = $this->scanner->nextMarkerWithOffset(false);
-
-            if ($marker === Marker::EOI) {
-                if ($seenExifApp1) {
-                    throw new ParseError(
-                        sprintf(
-                            'EXIF APP1 marker requires SOS before EOI; EOI marker found at offset %d without SOS marker',
-                            $offset,
-                        ),
-                        1487,
-                    );
-                }
-
-                break;
-            }
-
-            if ($marker === Marker::SOS) {
-                if ($seenExifApp1) {
-                    $this->frameValidator->validateMandatoryExifPreScanMarkers(
-                        $firstDqtOffset,
-                        $firstDhtOffset,
-                        $firstSofOffset,
-                        $offset,
-                    );
-                }
-
-                $this->frameValidator->requireEoiAfterSos($offset, $firstDriOffset);
-                break; // EXIF 3.0 §4.7.1 restricts metadata APP markers to precede the first SOS.
-            }
-
-            if ($marker === Marker::TEM) {
+    /**
+     * Processes a single marker encountered during the JPEG scan loop.
+     *
+     * @return bool True when the scan loop should terminate (EOI or SOS reached).
+     */
+    private function processMarkerSegment(int $marker, int $offset): bool
+    {
+        if ($marker === Marker::EOI) {
+            if ($this->seenExifApp1) {
                 throw new ParseError(
                     sprintf(
-                        'TEM marker at offset %d is not allowed before SOS marker in strict EXIF JPEG mode',
+                        'EXIF APP1 marker requires SOS before EOI; EOI marker found at offset %d without SOS marker',
                         $offset,
                     ),
-                    1502,
+                    1487,
                 );
             }
 
-            if (($marker >= Marker::RST_FIRST) && ($marker <= Marker::RST_LAST)) {
-                throw new ParseError(
-                    sprintf(
-                        'Restart marker 0x%02X at offset %d is not allowed before SOS marker',
-                        $marker,
-                        $offset,
-                    ),
-                    1499,
+            return true;
+        }
+
+        if ($marker === Marker::SOS) {
+            if ($this->seenExifApp1) {
+                $this->frameValidator->validateMandatoryExifPreScanMarkers(
+                    $this->firstDqtOffset,
+                    $this->firstDhtOffset,
+                    $this->firstSofOffset,
+                    $offset,
                 );
             }
 
-            // EXIF 3.0 §4.5.4: SOI is a stand-alone marker that shall appear
-            // exactly once at the beginning of the JPEG stream.
-            if ($marker === Marker::SOI) {
-                throw new ParseError(
-                    sprintf('duplicate SOI marker at offset %d', $offset),
-                    1507,
-                );
-            }
+            $this->frameValidator->requireEoiAfterSos($offset, $this->firstDriOffset);
 
-            $isAppSegment  = $marker >= Marker::APP_FIRST && $marker <= Marker::APP_LAST;
-            $segmentLength = $this->scanner->readSegmentLength($marker, $offset, $isAppSegment);
-            $payloadLength = $segmentLength - 2;
-            $payload       = $this->scanner->readSegmentPayload($marker, $offset, $payloadLength);
+            return true; // EXIF 3.0 §4.7.1 restricts metadata APP markers to precede the first SOS.
+        }
 
-            // ITU-T T.81 §B.2.2: APP markers are "miscellaneous" markers that may
-            // appear alongside DQT/DHT/DRI in any order before SOS.  EXIF 3.0 §4.7
-            // only constrains APP11 ordering relative to structural markers; non-Exif
-            // APP markers (APP0/JFIF, APP13/IPTC, APP14/Adobe) are tolerated here.
-            // The APP11-after-structural check is enforced separately below.
+        if ($marker === Marker::TEM) {
+            throw new ParseError(
+                sprintf(
+                    'TEM marker at offset %d is not allowed before SOS marker in strict EXIF JPEG mode',
+                    $offset,
+                ),
+                1502,
+            );
+        }
 
-            // ITU-T T.81 §B.2.4.1: DQT, DHT, and DRI are "tables/miscellaneous"
-            // markers with zero-or-more repetitions.  Multiple segments are valid
-            // (e.g. one DQT per quantization table).  Record first occurrence for
-            // validateMandatoryExifPreScanMarkers() but accept duplicates.
-            if ($marker === Marker::DQT) {
-                $firstDqtOffset ??= $offset;
-            }
+        if (($marker >= Marker::RST_FIRST) && ($marker <= Marker::RST_LAST)) {
+            throw new ParseError(
+                sprintf(
+                    'Restart marker 0x%02X at offset %d is not allowed before SOS marker',
+                    $marker,
+                    $offset,
+                ),
+                1499,
+            );
+        }
 
-            if ($marker === Marker::DHT) {
-                $firstDhtOffset ??= $offset;
-            }
+        // EXIF 3.0 §4.5.4: SOI is a stand-alone marker that shall appear
+        // exactly once at the beginning of the JPEG stream.
+        if ($marker === Marker::SOI) {
+            throw new ParseError(
+                sprintf('duplicate SOI marker at offset %d', $offset),
+                1507,
+            );
+        }
 
-            if ($marker === Marker::DRI) {
-                $firstDriOffset ??= $offset;
-            }
+        $isAppSegment  = $marker >= Marker::APP_FIRST && $marker <= Marker::APP_LAST;
+        $segmentLength = $this->scanner->readSegmentLength($marker, $offset, $isAppSegment);
+        $payloadLength = $segmentLength - 2;
+        $payload       = $this->scanner->readSegmentPayload($marker, $offset, $payloadLength);
 
-            if (!$seenExifApp1) {
-                $isExifApp1 = ($marker === Marker::APP1) && str_starts_with($payload, self::EXIF_SIGNATURE);
+        // ITU-T T.81 §B.2.2: APP markers are "miscellaneous" markers that may
+        // appear alongside DQT/DHT/DRI in any order before SOS.  EXIF 3.0 §4.7
+        // only constrains APP11 ordering relative to structural markers; non-Exif
+        // APP markers (APP0/JFIF, APP13/IPTC, APP14/Adobe) are tolerated here.
+        // The APP11-after-structural check is enforced separately below.
 
-                if ($isExifApp1) {
-                    if ($firstApp2BeforeExifOffset !== null) {
-                        throw new ParseError(
-                            sprintf(
-                                'EXIF APP2 marker at offset %d appears before APP1 Exif marker',
-                                $firstApp2BeforeExifOffset,
-                            ),
-                            1326,
-                        );
-                    }
+        // ITU-T T.81 §B.2.4.1: DQT, DHT, and DRI are "tables/miscellaneous"
+        // markers with zero-or-more repetitions.  Multiple segments are valid
+        // (e.g. one DQT per quantization table).  Record first occurrence for
+        // validateMandatoryExifPreScanMarkers() but accept duplicates.
+        if ($marker === Marker::DQT) {
+            $this->firstDqtOffset ??= $offset;
+        }
 
-                    $seenExifApp1 = true;
-                } elseif (
-                    ($marker === Marker::APP2)
-                    && $this->isExifApp2ExtensionPayload($payload)
-                ) {
-                    // EXIF 3.0 §4.7.3: APP2 Exif extension must follow APP1 Exif.
-                    // Non-Exif APPn/COM markers are not governed by Exif and are
-                    // tolerated before APP1 (JFIF APP0, IPTC APP13, Adobe APP14, etc.).
-                    $firstApp2BeforeExifOffset ??= $offset;
-                }
-            }
+        if ($marker === Marker::DHT) {
+            $this->firstDhtOffset ??= $offset;
+        }
 
-            if ($seenApp11 && ($marker === Marker::APP1 || $marker === Marker::APP2)) {
-                throw new ParseError(
-                    sprintf(
-                        'APP1/APP2 marker at offset %d appears after APP11 marker',
-                        $offset,
-                    ),
-                    1330,
-                );
-            }
+        if ($marker === Marker::DRI) {
+            $this->firstDriOffset ??= $offset;
+        }
 
-            if ($marker === Marker::APP11) {
-                if (!$seenApp1OrApp2) {
+        if (!$this->seenExifApp1) {
+            $isExifApp1 = ($marker === Marker::APP1) && str_starts_with($payload, self::EXIF_SIGNATURE);
+
+            if ($isExifApp1) {
+                if ($this->firstApp2BeforeExifOffset !== null) {
                     throw new ParseError(
                         sprintf(
-                            'APP11 marker at offset %d appears before APP1/APP2 metadata region',
-                            $offset,
+                            'EXIF APP2 marker at offset %d appears before APP1 Exif marker',
+                            $this->firstApp2BeforeExifOffset,
                         ),
-                        1328,
+                        1326,
                     );
                 }
 
-                if (($firstStructuralMarker !== null) && ($firstStructuralMarkerOffset !== null)) {
-                    throw new ParseError(
-                        sprintf(
-                            'APP11 marker at offset %d appears after structural marker 0x%02X at offset %d',
-                            $offset,
-                            $firstStructuralMarker,
-                            $firstStructuralMarkerOffset,
-                        ),
-                        1329,
-                    );
-                }
-
-                $seenApp11 = true;
-            }
-
-            if ($marker === Marker::APP1 || $marker === Marker::APP2) {
-                $seenApp1OrApp2 = true;
-            }
-
-            if (($firstStructuralMarkerOffset === null) && $this->frameValidator->isStructuralMarkerBeforeScan($marker)) {
-                $firstStructuralMarker       = $marker;
-                $firstStructuralMarkerOffset = $offset;
-            }
-
-            if ($this->markerHandlerRegistry->supports($marker)) {
-                $this->markerHandlerRegistry->dispatch($marker, $this->stream, $payload, $offset);
-
-                continue;
-            }
-
-            if ($marker === Marker::APP11) {
-                $this->jumbfParser->handleSegment($payload, $offset);
-
-                continue;
-            }
-
-            if ($marker === Marker::SOF0 || $marker === Marker::SOF2) {
-                // EXIF 3.0 §4.7 Table 2 defines one frame-header declaration in the
-                // marker flow before SOS; additional SOF markers are non-conformant.
-                if ($firstSofOffset !== null) {
-                    throw new ParseError(
-                        sprintf(
-                            'SOF marker at offset %d duplicates SOF marker at offset %d before SOS',
-                            $offset,
-                            $firstSofOffset,
-                        ),
-                        1504,
-                    );
-                }
-
-                $firstSofOffset = $offset;
-                $this->frameValidator->handleStartOfFrame($marker, $payload, $offset, $seenExifApp1);
+                $this->seenExifApp1 = true;
+            } elseif (
+                ($marker === Marker::APP2)
+                && $this->isExifApp2ExtensionPayload($payload)
+            ) {
+                // EXIF 3.0 §4.7.3: APP2 Exif extension must follow APP1 Exif.
+                // Non-Exif APPn/COM markers are not governed by Exif and are
+                // tolerated before APP1 (JFIF APP0, IPTC APP13, Adobe APP14, etc.).
+                $this->firstApp2BeforeExifOffset ??= $offset;
             }
         }
 
+        if ($this->seenApp11 && ($marker === Marker::APP1 || $marker === Marker::APP2)) {
+            throw new ParseError(
+                sprintf(
+                    'APP1/APP2 marker at offset %d appears after APP11 marker',
+                    $offset,
+                ),
+                1330,
+            );
+        }
+
+        if ($marker === Marker::APP11) {
+            if (!$this->seenApp1OrApp2) {
+                throw new ParseError(
+                    sprintf(
+                        'APP11 marker at offset %d appears before APP1/APP2 metadata region',
+                        $offset,
+                    ),
+                    1328,
+                );
+            }
+
+            if (($this->firstStructuralMarker !== null) && ($this->firstStructuralMarkerOffset !== null)) {
+                throw new ParseError(
+                    sprintf(
+                        'APP11 marker at offset %d appears after structural marker 0x%02X at offset %d',
+                        $offset,
+                        $this->firstStructuralMarker,
+                        $this->firstStructuralMarkerOffset,
+                    ),
+                    1329,
+                );
+            }
+
+            $this->seenApp11 = true;
+        }
+
+        if ($marker === Marker::APP1 || $marker === Marker::APP2) {
+            $this->seenApp1OrApp2 = true;
+        }
+
+        if (($this->firstStructuralMarkerOffset === null) && $this->frameValidator->isStructuralMarkerBeforeScan($marker)) {
+            $this->firstStructuralMarker       = $marker;
+            $this->firstStructuralMarkerOffset = $offset;
+        }
+
+        if ($this->markerHandlerRegistry->supports($marker)) {
+            $this->markerHandlerRegistry->dispatch($marker, $this->stream, $payload, $offset);
+
+            return false;
+        }
+
+        if ($marker === Marker::APP11) {
+            $this->jumbfParser->handleSegment($payload, $offset);
+
+            return false;
+        }
+
+        $this->processStartOfFrame($marker, $payload, $offset);
+
+        return false;
+    }
+
+    /**
+     * Handles SOF marker segments by validating uniqueness and delegating frame parsing.
+     *
+     * EXIF 3.0 §4.7 Table 2 defines one frame-header declaration in the
+     * marker flow before SOS; additional SOF markers are non-conformant.
+     */
+    private function processStartOfFrame(int $marker, string $payload, int $offset): void
+    {
+        if ($marker !== Marker::SOF0 && $marker !== Marker::SOF2) {
+            return;
+        }
+
+        if ($this->firstSofOffset !== null) {
+            throw new ParseError(
+                sprintf(
+                    'SOF marker at offset %d duplicates SOF marker at offset %d before SOS',
+                    $offset,
+                    $this->firstSofOffset,
+                ),
+                1504,
+            );
+        }
+
+        $this->firstSofOffset = $offset;
+        $this->frameValidator->handleStartOfFrame($marker, $payload, $offset, $this->seenExifApp1);
+    }
+
+    /**
+     * Finalises all assemblers and resolves deferred parse results.
+     */
+    private function finaliseParseResults(): void
+    {
         $this->iccAssembler->finalise();
         $this->app1Handler->finalise();
         $this->jumbfParser->finalise();
         $this->flashPixAssembler->finalise();
         $this->flashPixStreams = $this->flashPixAssembler->getStreams();
 
-        if ($this->mpfSegments !== []) { // @phpstan-ignore notIdentical.alwaysFalse (populated via closure dispatch)
+        if ($this->mpfSegments !== []) {
             $payload = implode('', $this->mpfSegments);
 
             try {
@@ -494,8 +556,6 @@ final class JpegParser implements JpegParserInterface
                 $this->mpfDocument = null;
             }
         }
-
-        $this->parsed = true;
     }
 
     /**
