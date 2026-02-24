@@ -1814,6 +1814,19 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * Flash value 0x02 (reserved return-status bits) is tolerated per GH-1646.
+     */
+    #[Test]
+    public function itToleratesReservedFlashReturnStatusBits(): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithExifShortTag(ExifTag::FLASH, 0x02),
+        );
+
+        self::assertSame(0x02, $result->flash());
+    }
+
+    /**
      * @return iterable<string, array{0:int, 1:bool, 2:FlashReturn|null, 3:FlashMode|null, 4:FlashFunction|null, 5:bool}>
      */
     public static function provideValidFlashBitfields(): iterable
@@ -1829,7 +1842,6 @@ final class TiffExifParserNegativeTest extends TestCase
      */
     public static function provideInvalidFlashBitfields(): iterable
     {
-        yield 'reserved return-status combination' => [0x02, 1418];
         yield 'return-not-detected without fired bit' => [0x04, 1419];
         yield 'return-detected without fired bit' => [0x06, 1419];
     }

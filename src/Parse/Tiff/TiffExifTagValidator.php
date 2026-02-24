@@ -675,15 +675,9 @@ final readonly class TiffExifTagValidator
         // Mask to bits 0–6; ignore reserved high-order bits (Postel's Law).
         $flashBits = $entry->value & 0x7F;
 
+        // Postel's Law: accept reserved return-status bits per GH-1646
         $fired      = ($flashBits & 0x01) !== 0;
         $returnBits = ($flashBits >> 1) & 0x03;
-
-        if ($returnBits === 1) {
-            throw new ParseError(
-                sprintf('Flash value %d contains reserved return-status bits per EXIF 3.0 §4.6.6.7.21', $flashBits),
-                1418,
-            );
-        }
 
         if ((($returnBits === 2) || ($returnBits === 3)) && !$fired) {
             throw new ParseError(
