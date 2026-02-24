@@ -734,7 +734,7 @@ final readonly class GpsFactory
         return match ($speedRef) {
             'K'     => $speed / 3.6,
             'M'     => $speed * 0.44704,
-            'N'     => $speed * 0.514444,
+            'N'     => $speed * 0.5144444444444444,
             default => null,
         };
     }
