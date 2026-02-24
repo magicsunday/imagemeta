@@ -139,64 +139,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->tagValidator       = new TiffExifTagValidator();
         $this->thumbnailValidator = new TiffJpegThumbnailValidator($this->buffer);
 
-        $magic = $this->binaryReader->readU16();
-        // EXIF 3.0 §4.5.1 recognises 0x002A (classic TIFF) and 0x002B (BigTIFF)
-        // magic identifiers.
-        if ($magic === TiffConst::MAGIC_BIG) {
-            $this->bigTiff = true;
-            $this->parseBigTiffHeader();
-
-            // Re-create binary reader with updated bigTiff + bigTiffOffsetSize.
-            $this->binaryReader = new TiffBinaryReader(
-                $this->buffer,
-                $this->bo,
-                $byteOrderHandler,
-                $this->bigTiff,
-                $this->bigTiffOffsetSize,
-            );
-            $this->decoder = new TiffValueDecoder(
-                $this->binaryReader,
-                $this->offsetValidator,
-                $tagDecoder,
-            );
-            $this->dngNormaliser = new DngValueNormaliser(
-                $this->binaryReader,
-                $this->offsetValidator,
-                $this->decoder,
-            );
-
-            $firstIfd = $this->binaryReader->readU64();
-
-            // EXIF 3.0 §4.5.1: the 0th IFD offset must point past the header.
-            if ($firstIfd->isZero()) {
-                throw new ParseError('missing 0th IFD offset', 1302);
-            }
-
-            $ifd0 = $this->readIfd($firstIfd);
-        } elseif ($magic === TiffConst::MAGIC_CLASSIC) {
-            $this->bigTiff = false;
-            // Classic TIFF header layout per EXIF 3.0 §4.5.1 and TIFF 6.0 §8
-            // stores the first IFD offset as a 32-bit pointer immediately
-            // after the byte-order and magic fields.
-            $firstIfd = $this->binaryReader->readU32();
-
-            // EXIF 3.0 §4.5.1: the 0th IFD offset must be non-zero and point
-            // past the classic TIFF header.
-            if ($firstIfd < TiffConst::HEADER_SIZE_CLASSIC) {
-                throw new ParseError('missing 0th IFD offset', 1303);
-            }
-
-            $ifd0 = $this->readIfd($firstIfd);
-        } else {
-            throw new ParseError(
-                sprintf(
-                    'Unknown TIFF magic (expected 0x%04X or 0x%04X)',
-                    TiffConst::MAGIC_CLASSIC,
-                    TiffConst::MAGIC_BIG,
-                ),
-                1304,
-            );
-        }
+        $ifd0 = $this->readFirstIfd($byteOrderHandler, $tagDecoder);
 
         $this->traverser = new TiffIfdTraverser(
             $this->offsetValidator,
@@ -253,6 +196,50 @@ final class TiffExifParser implements TiffExifParserInterface
             $nextOffset = $nextIfd->nextIfdOffset;
         }
 
+        $this->validateParsedIfds($ifd0, $ifd1, $exifIfd, $jpegContext, $embeddedContext, $additionalIfds);
+
+        if (!($interopIfd instanceof Ifd) && ($additionalIfds !== [])) {
+            $interopIfd = $this->traverser->locateInteropIfd(...$additionalIfds);
+        }
+
+        $makerNoteDispatcher = new MakerNoteDispatcher();
+        $makerNotes          = $makerNoteDispatcher->resolve($this->makerNoteRaw, $registry, $ifd0, $exifIfd);
+
+        $parsedExif = new ParsedExif(
+            $ifd0,
+            $exifIfd,
+            $gpsIfd,
+            $interopIfd,
+            $ifd1,
+            $makerNotes,
+            $additionalIfds,
+            $subIfds,
+        );
+
+        $this->tagValidator->validateCompositeImageDependencies($exifIfd, $parsedExif);
+        $this->tagValidator->validateSourceExposureTimesPayload($exifIfd, $parsedExif);
+
+        return $parsedExif;
+    }
+
+    /**
+     * Runs all DNG, structural, tag, and thumbnail validators on the parsed IFD set.
+     *
+     * @param Ifd       $ifd0            Primary image file directory.
+     * @param Ifd|null  $ifd1            Secondary IFD (thumbnail), if present.
+     * @param Ifd|null  $exifIfd         Exif IFD, if present.
+     * @param bool      $jpegContext     Whether the TIFF is embedded in a JPEG.
+     * @param bool      $embeddedContext Whether the TIFF is embedded in an ISO BMFF container.
+     * @param list<Ifd> $additionalIfds  All chained IFDs beyond IFD0.
+     */
+    private function validateParsedIfds(
+        Ifd $ifd0,
+        ?Ifd $ifd1,
+        ?Ifd $exifIfd,
+        bool $jpegContext,
+        bool $embeddedContext,
+        array $additionalIfds,
+    ): void {
         $isDngContainer = ($ifd0->get(DngTag::DNG_VERSION) instanceof IfdEntry)
             || ($ifd0->get(DngTag::DNG_BACKWARD_VERSION) instanceof IfdEntry)
             || ($ifd0->get(DngTag::UNIQUE_CAMERA_MODEL) instanceof IfdEntry);
@@ -416,29 +403,66 @@ final class TiffExifParser implements TiffExifParserInterface
             $this->tagValidator->validateCompanionSoftware($ifd0, $exifIfd);
             $this->tagValidator->validateSensitivityCombinations($exifIfd);
         }
+    }
 
-        if (!($interopIfd instanceof Ifd) && ($additionalIfds !== [])) {
-            $interopIfd = $this->traverser->locateInteropIfd(...$additionalIfds);
+    /**
+     * Reads and validates the TIFF magic, handles BigTIFF upgrade, and returns IFD0.
+     *
+     * @param TiffByteOrderHandler $byteOrderHandler Endian-aware primitive I/O.
+     * @param ExifTagDecoder       $tagDecoder       Tag classification for decoding.
+     */
+    private function readFirstIfd(TiffByteOrderHandler $byteOrderHandler, ExifTagDecoder $tagDecoder): Ifd
+    {
+        $magic = $this->binaryReader->readU16();
+
+        if ($magic === TiffConst::MAGIC_BIG) {
+            $this->bigTiff = true;
+            $this->parseBigTiffHeader();
+
+            // Re-create collaborators with updated BigTIFF settings.
+            $this->binaryReader = new TiffBinaryReader(
+                $this->buffer,
+                $this->bo,
+                $byteOrderHandler,
+                $this->bigTiff,
+                $this->bigTiffOffsetSize,
+            );
+            $this->decoder = new TiffValueDecoder(
+                $this->binaryReader,
+                $this->offsetValidator,
+                $tagDecoder,
+            );
+            $this->dngNormaliser = new DngValueNormaliser(
+                $this->binaryReader,
+                $this->offsetValidator,
+                $this->decoder,
+            );
+
+            $firstIfd = $this->binaryReader->readU64();
+
+            if ($firstIfd->isZero()) {
+                throw new ParseError('missing 0th IFD offset', 1302);
+            }
+
+            return $this->readIfd($firstIfd);
         }
 
-        $makerNoteDispatcher = new MakerNoteDispatcher();
-        $makerNotes          = $makerNoteDispatcher->resolve($this->makerNoteRaw, $registry, $ifd0, $exifIfd);
+        if ($magic === TiffConst::MAGIC_CLASSIC) {
+            $this->bigTiff = false;
 
-        $parsedExif = new ParsedExif(
-            $ifd0,
-            $exifIfd,
-            $gpsIfd,
-            $interopIfd,
-            $ifd1,
-            $makerNotes,
-            $additionalIfds,
-            $subIfds,
+            $firstIfd = $this->binaryReader->readU32();
+
+            if ($firstIfd < TiffConst::HEADER_SIZE_CLASSIC) {
+                throw new ParseError('missing 0th IFD offset', 1303);
+            }
+
+            return $this->readIfd($firstIfd);
+        }
+
+        throw new ParseError(
+            sprintf('Unknown TIFF magic 0x%04X', $magic),
+            1304,
         );
-
-        $this->tagValidator->validateCompositeImageDependencies($exifIfd, $parsedExif);
-        $this->tagValidator->validateSourceExposureTimesPayload($exifIfd, $parsedExif);
-
-        return $parsedExif;
     }
 
     /**
