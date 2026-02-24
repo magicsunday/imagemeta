@@ -266,7 +266,7 @@ final readonly class TiffExifTagValidator
     private const array CAMERA_CONTROL_ENUM_DOMAINS = [
         ExifTag::EXPOSURE_PROGRAM       => ['name' => 'ExposureProgram', 'allowed' => [0, 1, 2, 3, 4, 5, 6, 7, 8], 'spec' => 'EXIF 3.0 §4.6.6.7.3'],
         ExifTag::METERING_MODE          => ['name' => 'MeteringMode', 'allowed' => [0, 1, 2, 3, 4, 5, 6, 255], 'spec' => 'EXIF 3.0 §4.6.6.7.19'],
-        ExifTag::LIGHT_SOURCE           => ['name' => 'LightSource', 'allowed' => [0, 1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 255], 'spec' => 'EXIF 3.0 §4.6.6.7.20'],
+        ExifTag::LIGHT_SOURCE           => ['name' => 'LightSource', 'allowed' => [0, 1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 255], 'spec' => 'EXIF 3.0 §4.6.6.7.20'],
         ExifTag::SENSING_METHOD         => ['name' => 'SensingMethod', 'allowed' => [1, 2, 3, 4, 5, 7, 8], 'spec' => 'EXIF 3.0 §4.6.6.7.31'],
         ExifTag::EXPOSURE_MODE          => ['name' => 'ExposureMode', 'allowed' => [0, 1, 2], 'spec' => 'EXIF 3.0 §4.6.6.7.36'],
         ExifTag::WHITE_BALANCE          => ['name' => 'WhiteBalance', 'allowed' => [0, 1], 'spec' => 'EXIF 3.0 §4.6.6.7.37'],

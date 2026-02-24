@@ -34,9 +34,6 @@ enum LightSource: int
     case CoolWhiteFluorescent = 14;
     case WhiteFluorescent     = 15;
 
-    /**
-     * Warm white fluorescent light source.
-     */
     case WarmWhiteFluorescent = 16;
     case StandardLightA       = 17;
     case StandardLightB       = 18;
