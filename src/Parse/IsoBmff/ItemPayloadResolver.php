@@ -76,7 +76,7 @@ final readonly class ItemPayloadResolver
             return null;
         }
 
-        if ($location['constructionMethod'] === ConstructionMethod::FileOffset->value) {
+        if ($location['constructionMethod'] === ConstructionMethod::FILE_OFFSET->value) {
             // data_reference_index gating applies only to file_offset (method 0).
             // ISO/IEC 14496-12 §8.11.3.2: methods 1 and 2 do not use data_reference_index.
             if ($location['dataReferenceIndex'] !== 0) {
@@ -159,7 +159,7 @@ final readonly class ItemPayloadResolver
             return $blob === '' ? null : $blob;
         }
 
-        if ($location['constructionMethod'] === ConstructionMethod::IdatOffset->value) {
+        if ($location['constructionMethod'] === ConstructionMethod::IDAT_OFFSET->value) {
             if ($idatPayload === null) {
                 $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems, $metaContextOffset);
 
@@ -229,7 +229,7 @@ final readonly class ItemPayloadResolver
             return $blob === '' ? null : $blob;
         }
 
-        if ($location['constructionMethod'] === ConstructionMethod::ItemOffset->value) {
+        if ($location['constructionMethod'] === ConstructionMethod::ITEM_OFFSET->value) {
             // ISO/IEC 14496-12 §8.11.3.2 — only 'iloc' references are
             // valid lookup targets for item-offset construction.
             $allRefs    = $itemReferences[$itemId] ?? [];

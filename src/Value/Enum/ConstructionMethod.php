@@ -32,7 +32,7 @@ enum ConstructionMethod: int
      *
      * Used for self-contained items (no external data references).
      */
-    case FileOffset = 0;
+    case FILE_OFFSET = 0;
 
     /**
      * idat offset construction (method 1).
@@ -43,7 +43,7 @@ enum ConstructionMethod: int
      *
      * Commonly used in HEIF images for compact metadata storage.
      */
-    case IdatOffset = 1;
+    case IDAT_OFFSET = 1;
 
     /**
      * Item offset construction (method 2).
@@ -51,5 +51,5 @@ enum ConstructionMethod: int
      * ISO/IEC 14496-12 §8.11.3.2 describes construction_method=2 as item-relative
      * addressing. Reserved for future use or vendor extensions in most implementations.
      */
-    case ItemOffset = 2;
+    case ITEM_OFFSET = 2;
 }

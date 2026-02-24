@@ -136,7 +136,7 @@ final readonly class IlocBoxParser
 
                     // ISO/IEC 14496-12 §8.11.3.2: extent_index is 1-based and 0 is
                     // reserved. This only applies to construction_method=2 (item_offset).
-                    if ($constructionMethod === ConstructionMethod::ItemOffset->value && $extentIndex === 0) {
+                    if ($constructionMethod === ConstructionMethod::ITEM_OFFSET->value && $extentIndex === 0) {
                         throw new ParseError('iloc extent_index 0 is reserved', 1208);
                     }
                 }
