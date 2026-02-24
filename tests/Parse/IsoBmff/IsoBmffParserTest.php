@@ -35,6 +35,7 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeMetadataDecoder;
 use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeValueDecoder;
 use MagicSunday\ImageMeta\Parse\IsoBmff\TrackMediaParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
+use MagicSunday\ImageMeta\Tests\Helpers\IsoBmffBoxTrait;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -69,6 +70,7 @@ use function substr;
 #[UsesClass(Stream::class)]
 #[UsesClass(StreamWindow::class)]
 #[UsesTrait(NormalisesOffsets::class)]
+#[UsesTrait(IsoBmffBoxTrait::class)]
 #[UsesTrait(ReadsBinaryPrimitives::class)]
 #[UsesClass(Unpack::class)]
 #[UsesClass(BoxDescriptor::class)]
@@ -87,6 +89,8 @@ use function substr;
 #[UsesClass(VideoSampleEntryParser::class)]
 final class IsoBmffParserTest extends TestCase
 {
+    use IsoBmffBoxTrait;
+
     /**
      * Extracts EXIF data from a dedicated Exif box inside a full meta box.
      * This verifies the extractor returns the EXIF payload and leaves XMP/QuickTime empty.
@@ -7222,40 +7226,6 @@ final class IsoBmffParserTest extends TestCase
         $low  = $value % 0x100000000;
 
         return pack('N2', $high, $low);
-    }
-
-    /**
-     * Creates a standard ISO BMFF box header around a payload.
-     * This helper computes the size field and prefixes the box type.
-     *
-     * @param string $type    Four-character box type.
-     * @param string $payload Raw box payload.
-     *
-     * @return string Serialized box bytes containing the header and payload.
-     */
-    private function box(string $type, string $payload): string
-    {
-        $size = 8 + strlen($payload);
-
-        return pack('N', $size) . $type . $payload;
-    }
-
-    /**
-     * Creates a full box including version and flags fields.
-     * This helper is used to build full boxes like meta, iinf, and iloc.
-     *
-     * @param string $type    Four-character box type.
-     * @param string $payload Raw box payload excluding version/flags.
-     * @param int    $version Box version field.
-     * @param int    $flags   Box flags field.
-     *
-     * @return string Serialized full box bytes with version and flags header.
-     */
-    private function fullBox(string $type, string $payload, int $version = 0, int $flags = 0): string
-    {
-        $header = chr($version) . chr(($flags >> 16) & 0xFF) . chr(($flags >> 8) & 0xFF) . chr($flags & 0xFF);
-
-        return $this->box($type, $header . $payload);
     }
 
     /**

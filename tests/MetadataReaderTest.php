@@ -85,6 +85,7 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParserInterface;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParseState;
+use MagicSunday\ImageMeta\Tests\Helpers\IsoBmffBoxTrait;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
@@ -286,8 +287,11 @@ use function unlink;
 #[UsesClass(XmpParseState::class)]
 #[UsesClass(XmpParser::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
+#[UsesTrait(IsoBmffBoxTrait::class)]
 final class MetadataReaderTest extends TestCase
 {
+    use IsoBmffBoxTrait;
+
     private const string EXIF_SIGNATURE = "Exif\0\0";
 
     private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
@@ -846,43 +850,6 @@ final class MetadataReaderTest extends TestCase
     private function segment(int $marker, string $payload): string
     {
         return "\xFF" . chr($marker) . pack('n', strlen($payload) + 2) . $payload;
-    }
-
-    /**
-     * Constructs a standard ISO BMFF box header around the provided payload.
-     * This checks the behavior for the specific inputs used in the test.
-     *
-     * @param string $type    Four-character box type.
-     * @param string $payload Box payload data.
-     *
-     * @return string Serialized box bytes.
-     */
-    private function box(string $type, string $payload): string
-    {
-        $size = 8 + strlen($payload);
-
-        return pack('N', $size) . $type . $payload;
-    }
-
-    /**
-     * Constructs a full box (including version and flags) around a payload.
-     * This checks the behavior for the specific inputs used in the test.
-     *
-     * @param string $type    Four-character box type.
-     * @param string $payload Box payload data.
-     * @param int    $version Version byte to prepend to the payload.
-     * @param int    $flags   Three-byte flag field to prepend to the payload.
-     *
-     * @return string Serialized full box bytes.
-     */
-    private function fullBox(string $type, string $payload, int $version = 0, int $flags = 0): string
-    {
-        $header = chr($version)
-            . chr(($flags >> 16) & 0xFF)
-            . chr(($flags >> 8) & 0xFF)
-            . chr($flags & 0xFF);
-
-        return $this->box($type, $header . $payload);
     }
 
     /**
