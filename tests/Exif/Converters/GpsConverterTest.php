@@ -82,470 +82,282 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
-     * Provides valid GPSLatitudeRef values ('N'/'S') with coordinate data.
-     * Verifies that valid latitude references produce non-null latitude values.
+     * Verifies that valid GPS reference values are accepted and produce correct results.
+     *
+     * @param array<int, IfdEntry> $entries     IFD entries to parse.
+     * @param array<string, mixed> $sameChecks  Keys to assert with assertSame.
+     * @param list<string>         $notNullKeys Keys to assert with assertNotNull.
      */
     #[Test]
-    public function acceptsValidLatitudeRef(): void
+    #[DataProvider('provideValidRefValues')]
+    public function acceptsValidRefValues(array $entries, array $sameChecks, array $notNullKeys = []): void
     {
-        $ifd = $this->buildIfdWithRef(ExifTag::GPS_LATITUDE_REF, 'N', ExifTag::GPS_LATITUDE);
-
-        $result = $this->converter->fromIfd($ifd);
-
-        self::assertSame('N', $result['lat_ref']);
-        self::assertNotNull($result['lat']);
-    }
-
-    /**
-     * Supplies an invalid GPSLatitudeRef value ('X') with coordinate data.
-     * Verifies that invalid latitude references are nulled per EXIF 3.0 §4.6.7.1.2.
-     */
-    #[Test]
-    public function rejectsInvalidLatitudeRef(): void
-    {
-        $ifd = $this->buildIfdWithRef(ExifTag::GPS_LATITUDE_REF, 'X', ExifTag::GPS_LATITUDE);
-
-        $result = $this->converter->fromIfd($ifd);
-
-        self::assertNull($result['lat_ref']);
-        self::assertNull($result['lat']);
-    }
-
-    /**
-     * Provides valid GPSLongitudeRef values ('E'/'W') with coordinate data.
-     * Verifies that valid longitude references produce non-null longitude values.
-     */
-    #[Test]
-    public function acceptsValidLongitudeRef(): void
-    {
-        $ifd = $this->buildIfdWithRef(ExifTag::GPS_LONGITUDE_REF, 'W', ExifTag::GPS_LONGITUDE);
-
-        $result = $this->converter->fromIfd($ifd);
-
-        self::assertSame('W', $result['lon_ref']);
-        self::assertNotNull($result['lon']);
-    }
-
-    /**
-     * Supplies an invalid GPSLongitudeRef value ('Z') with coordinate data.
-     * Verifies that invalid longitude references are nulled per EXIF 3.0 §4.6.7.1.4.
-     */
-    #[Test]
-    public function rejectsInvalidLongitudeRef(): void
-    {
-        $ifd = $this->buildIfdWithRef(ExifTag::GPS_LONGITUDE_REF, 'Z', ExifTag::GPS_LONGITUDE);
-
-        $result = $this->converter->fromIfd($ifd);
-
-        self::assertNull($result['lon_ref']);
-        self::assertNull($result['lon']);
-    }
-
-    /**
-     * Provides a valid GPSStatus value ('A').
-     * Verifies the status is accepted per EXIF 3.0 §4.6.7.1.10.
-     */
-    #[Test]
-    public function acceptsValidGpsStatus(): void
-    {
-        $entries = [
-            ExifTag::GPS_STATUS => new IfdEntry(ExifTag::GPS_STATUS, 2, 2, 'A'),
-        ];
-
         $result = $this->converter->fromIfd(new Ifd($entries));
 
-        self::assertSame('A', $result['status']);
+        foreach ($sameChecks as $key => $expected) {
+            self::assertSame($expected, $result[$key], 'Key: ' . $key);
+        }
+
+        foreach ($notNullKeys as $key) {
+            self::assertNotNull($result[$key], 'Key: ' . $key);
+        }
     }
 
     /**
-     * Supplies an invalid GPSStatus value ('X').
-     * Verifies the status is nulled per EXIF 3.0 §4.6.7.1.10.
+     * @return iterable<string, array{0: array<int, IfdEntry>, 1: array<string, mixed>, 2?: list<string>}>
      */
-    #[Test]
-    public function rejectsInvalidGpsStatus(): void
+    public static function provideValidRefValues(): iterable
     {
-        $entries = [
-            ExifTag::GPS_STATUS => new IfdEntry(ExifTag::GPS_STATUS, 2, 2, 'X'),
+        yield 'latitude ref N' => [
+            [
+                ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
+                ExifTag::GPS_LATITUDE     => new IfdEntry(ExifTag::GPS_LATITUDE, 10, 3, [[52, 1], [31, 1], [12000, 1000]]),
+            ],
+            ['lat_ref' => 'N'],
+            ['lat'],
         ];
 
+        yield 'longitude ref W' => [
+            [
+                ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'W'),
+                ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 10, 3, [[52, 1], [31, 1], [12000, 1000]]),
+            ],
+            ['lon_ref' => 'W'],
+            ['lon'],
+        ];
+
+        yield 'status A' => [
+            [ExifTag::GPS_STATUS => new IfdEntry(ExifTag::GPS_STATUS, 2, 2, 'A')],
+            ['status' => 'A'],
+        ];
+
+        yield 'measure mode 3' => [
+            [ExifTag::GPS_MEASURE_MODE => new IfdEntry(ExifTag::GPS_MEASURE_MODE, 2, 2, '3')],
+            ['measure_mode' => '3'],
+        ];
+
+        yield 'speed ref K' => [
+            [
+                ExifTag::GPS_SPEED_REF => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 2, 'K'),
+                ExifTag::GPS_SPEED     => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, 36.0),
+            ],
+            ['speed_ref' => 'K', 'speed_ms' => 36.0 / 3.6],
+        ];
+
+        yield 'track ref T' => [
+            [
+                ExifTag::GPS_TRACK_REF => new IfdEntry(ExifTag::GPS_TRACK_REF, 2, 2, 'T'),
+                ExifTag::GPS_TRACK     => new IfdEntry(ExifTag::GPS_TRACK, 5, 1, 90.0),
+            ],
+            ['track_ref' => 'T', 'track' => 90.0],
+        ];
+
+        yield 'img direction ref M' => [
+            [
+                ExifTag::GPS_IMG_DIRECTION_REF => new IfdEntry(ExifTag::GPS_IMG_DIRECTION_REF, 2, 2, 'M'),
+                ExifTag::GPS_IMG_DIRECTION     => new IfdEntry(ExifTag::GPS_IMG_DIRECTION, 5, 1, 180.0),
+            ],
+            ['img_direction_ref' => 'M', 'img_direction' => 180.0],
+        ];
+
+        yield 'dest bearing ref T' => [
+            [
+                ExifTag::GPS_DEST_BEARING_REF => new IfdEntry(ExifTag::GPS_DEST_BEARING_REF, 2, 2, 'T'),
+                ExifTag::GPS_DEST_BEARING     => new IfdEntry(ExifTag::GPS_DEST_BEARING, 5, 1, 45.0),
+            ],
+            ['dest_bearing_ref' => 'T', 'dest_bearing' => 45.0],
+        ];
+
+        yield 'dest distance ref K' => [
+            [
+                ExifTag::GPS_DEST_DISTANCE_REF => new IfdEntry(ExifTag::GPS_DEST_DISTANCE_REF, 2, 2, 'K'),
+                ExifTag::GPS_DEST_DISTANCE     => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, 10.0),
+            ],
+            ['dest_distance_ref' => 'K', 'dest_distance_m' => 10_000.0],
+        ];
+
+        yield 'lowercase status a normalized to A' => [
+            [ExifTag::GPS_STATUS => new IfdEntry(ExifTag::GPS_STATUS, 2, 2, 'a')],
+            ['status' => 'A'],
+        ];
+
+        yield 'measure mode 2' => [
+            [ExifTag::GPS_MEASURE_MODE => new IfdEntry(ExifTag::GPS_MEASURE_MODE, 2, 2, '2')],
+            ['measure_mode' => '2'],
+        ];
+    }
+
+    /**
+     * Verifies that invalid GPS reference values are nulled per EXIF 3.0 §4.6.7.
+     *
+     * @param array<int, IfdEntry> $entries  IFD entries to parse.
+     * @param list<string>         $nullKeys Result keys that must be null.
+     */
+    #[Test]
+    #[DataProvider('provideInvalidRefValues')]
+    public function rejectsInvalidRefValues(array $entries, array $nullKeys): void
+    {
         $result = $this->converter->fromIfd(new Ifd($entries));
 
-        self::assertNull($result['status']);
+        foreach ($nullKeys as $key) {
+            self::assertNull($result[$key], sprintf('Expected %s to be null', $key));
+        }
     }
 
     /**
-     * Provides a valid GPSMeasureMode value ('3').
-     * Verifies the measure mode is accepted per EXIF 3.0 §4.6.7.1.11.
+     * @return iterable<string, array{0: array<int, IfdEntry>, 1: list<string>}>
      */
-    #[Test]
-    public function acceptsValidGpsMeasureMode(): void
+    public static function provideInvalidRefValues(): iterable
     {
-        $entries = [
-            ExifTag::GPS_MEASURE_MODE => new IfdEntry(ExifTag::GPS_MEASURE_MODE, 2, 2, '3'),
+        yield 'invalid latitude ref X' => [
+            [
+                ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'X'),
+                ExifTag::GPS_LATITUDE     => new IfdEntry(ExifTag::GPS_LATITUDE, 10, 3, [[52, 1], [31, 1], [12000, 1000]]),
+            ],
+            ['lat_ref', 'lat'],
         ];
 
+        yield 'invalid longitude ref Z' => [
+            [
+                ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'Z'),
+                ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 10, 3, [[52, 1], [31, 1], [12000, 1000]]),
+            ],
+            ['lon_ref', 'lon'],
+        ];
+
+        yield 'invalid status X' => [
+            [ExifTag::GPS_STATUS => new IfdEntry(ExifTag::GPS_STATUS, 2, 2, 'X')],
+            ['status'],
+        ];
+
+        yield 'invalid measure mode 1' => [
+            [ExifTag::GPS_MEASURE_MODE => new IfdEntry(ExifTag::GPS_MEASURE_MODE, 2, 2, '1')],
+            ['measure_mode'],
+        ];
+
+        yield 'invalid speed ref X' => [
+            [
+                ExifTag::GPS_SPEED_REF => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 2, 'X'),
+                ExifTag::GPS_SPEED     => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, 36.0),
+            ],
+            ['speed_ref', 'speed_ms'],
+        ];
+
+        yield 'invalid track ref X' => [
+            [
+                ExifTag::GPS_TRACK_REF => new IfdEntry(ExifTag::GPS_TRACK_REF, 2, 2, 'X'),
+                ExifTag::GPS_TRACK     => new IfdEntry(ExifTag::GPS_TRACK, 5, 1, 90.0),
+            ],
+            ['track_ref', 'track'],
+        ];
+
+        yield 'invalid img direction ref X' => [
+            [
+                ExifTag::GPS_IMG_DIRECTION_REF => new IfdEntry(ExifTag::GPS_IMG_DIRECTION_REF, 2, 2, 'X'),
+                ExifTag::GPS_IMG_DIRECTION     => new IfdEntry(ExifTag::GPS_IMG_DIRECTION, 5, 1, 180.0),
+            ],
+            ['img_direction_ref', 'img_direction'],
+        ];
+
+        yield 'invalid dest bearing ref X' => [
+            [
+                ExifTag::GPS_DEST_BEARING_REF => new IfdEntry(ExifTag::GPS_DEST_BEARING_REF, 2, 2, 'X'),
+                ExifTag::GPS_DEST_BEARING     => new IfdEntry(ExifTag::GPS_DEST_BEARING, 5, 1, 45.0),
+            ],
+            ['dest_bearing_ref', 'dest_bearing'],
+        ];
+
+        yield 'invalid dest distance ref X' => [
+            [
+                ExifTag::GPS_DEST_DISTANCE_REF => new IfdEntry(ExifTag::GPS_DEST_DISTANCE_REF, 2, 2, 'X'),
+                ExifTag::GPS_DEST_DISTANCE     => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, 10.0),
+            ],
+            ['dest_distance_ref', 'dest_distance_m'],
+        ];
+    }
+
+    /**
+     * Verifies that multi-character ref values do not leak into any reference fields.
+     *
+     * @param array<int, IfdEntry> $entries  IFD entries to parse.
+     * @param list<string>         $nullKeys Result keys that must be null.
+     */
+    #[Test]
+    #[DataProvider('provideMultiCharacterRefValues')]
+    public function rejectsMultiCharacterRefValues(array $entries, array $nullKeys): void
+    {
         $result = $this->converter->fromIfd(new Ifd($entries));
 
-        self::assertSame('3', $result['measure_mode']);
+        foreach ($nullKeys as $key) {
+            self::assertNull($result[$key], sprintf('Expected %s to be null', $key));
+        }
     }
 
     /**
-     * Supplies an invalid GPSMeasureMode value ('1').
-     * Verifies the measure mode is nulled per EXIF 3.0 §4.6.7.1.11.
+     * @return iterable<string, array{0: array<int, IfdEntry>, 1: list<string>}>
      */
-    #[Test]
-    public function rejectsInvalidGpsMeasureMode(): void
+    public static function provideMultiCharacterRefValues(): iterable
     {
-        $entries = [
-            ExifTag::GPS_MEASURE_MODE => new IfdEntry(ExifTag::GPS_MEASURE_MODE, 2, 2, '1'),
+        yield 'multi-char speed ref KM' => [
+            [
+                ExifTag::GPS_SPEED_REF => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 3, 'KM'),
+                ExifTag::GPS_SPEED     => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, 36.0),
+            ],
+            ['speed_ref', 'speed_ms', 'speed_original_ref'],
         ];
 
+        yield 'multi-char dest distance ref NM' => [
+            [
+                ExifTag::GPS_DEST_DISTANCE_REF => new IfdEntry(ExifTag::GPS_DEST_DISTANCE_REF, 2, 3, 'NM'),
+                ExifTag::GPS_DEST_DISTANCE     => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, 10.0),
+            ],
+            ['dest_distance_ref', 'dest_distance_m', 'dest_distance_original_ref'],
+        ];
+    }
+
+    /**
+     * Verifies that non-standard DMS component counts produce null coordinates.
+     *
+     * @param array<int, IfdEntry> $entries IFD entries to parse.
+     * @param string               $nullKey Result key that must be null.
+     */
+    #[Test]
+    #[DataProvider('provideWrongDmsComponentCounts')]
+    public function rejectsWrongDmsComponentCount(array $entries, string $nullKey): void
+    {
         $result = $this->converter->fromIfd(new Ifd($entries));
 
-        self::assertNull($result['measure_mode']);
+        self::assertNull($result[$nullKey]);
     }
 
     /**
-     * Provides a valid GPSSpeedRef value ('K') with a speed value.
-     * Verifies the speed ref is accepted and speed_ms is computed per EXIF 3.0 §4.6.7.1.13.
+     * @return iterable<string, array{0: array<int, IfdEntry>, 1: string}>
      */
-    #[Test]
-    public function acceptsValidGpsSpeedRef(): void
+    public static function provideWrongDmsComponentCounts(): iterable
     {
-        $entries = [
-            ExifTag::GPS_SPEED_REF => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 2, 'K'),
-            ExifTag::GPS_SPEED     => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, 36.0),
+        yield 'latitude with 2 components' => [
+            [
+                ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
+                ExifTag::GPS_LATITUDE     => new IfdEntry(ExifTag::GPS_LATITUDE, 10, 2, [[52, 1], [31, 1]]),
+            ],
+            'lat',
         ];
 
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertSame('K', $result['speed_ref']);
-        self::assertSame(36.0 / 3.6, $result['speed_ms']);
-    }
-
-    /**
-     * Supplies an invalid GPSSpeedRef value ('X') with a speed value.
-     * Verifies the speed ref and derived speed_ms are nulled per EXIF 3.0 §4.6.7.1.13.
-     */
-    #[Test]
-    public function rejectsInvalidGpsSpeedRef(): void
-    {
-        $entries = [
-            ExifTag::GPS_SPEED_REF => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 2, 'X'),
-            ExifTag::GPS_SPEED     => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, 36.0),
+        yield 'longitude with 4 components' => [
+            [
+                ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'E'),
+                ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 10, 4, [[13, 1], [24, 1], [17820, 1000], [0, 1]]),
+            ],
+            'lon',
         ];
 
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertNull($result['speed_ref']);
-        self::assertNull($result['speed_ms']);
-    }
-
-    /**
-     * Supplies a multi-character GPSSpeedRef value ('KM') with a speed value.
-     * Verifies reserved codes do not leak into normalized or original reference fields.
-     */
-    #[Test]
-    public function rejectsMultiCharacterGpsSpeedRef(): void
-    {
-        $entries = [
-            ExifTag::GPS_SPEED_REF => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 3, 'KM'),
-            ExifTag::GPS_SPEED     => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, 36.0),
+        yield 'latitude with 1 component' => [
+            [
+                ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'S'),
+                ExifTag::GPS_LATITUDE     => new IfdEntry(ExifTag::GPS_LATITUDE, 10, 1, [[33, 1]]),
+            ],
+            'lat',
         ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertNull($result['speed_ref']);
-        self::assertNull($result['speed_ms']);
-        self::assertNull($result['speed_original_ref']);
-    }
-
-    /**
-     * Provides a valid GPSTrackRef value ('T') with a track bearing.
-     * Verifies the track ref is accepted and bearing is computed per EXIF 3.0 §4.6.7.1.15.
-     */
-    #[Test]
-    public function acceptsValidGpsTrackRef(): void
-    {
-        $entries = [
-            ExifTag::GPS_TRACK_REF => new IfdEntry(ExifTag::GPS_TRACK_REF, 2, 2, 'T'),
-            ExifTag::GPS_TRACK     => new IfdEntry(ExifTag::GPS_TRACK, 5, 1, 90.0),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertSame('T', $result['track_ref']);
-        self::assertSame(90.0, $result['track']);
-    }
-
-    /**
-     * Supplies an invalid GPSTrackRef value ('X') with a track bearing.
-     * Verifies the track ref and derived track bearing are nulled per EXIF 3.0 §4.6.7.1.15.
-     */
-    #[Test]
-    public function rejectsInvalidGpsTrackRef(): void
-    {
-        $entries = [
-            ExifTag::GPS_TRACK_REF => new IfdEntry(ExifTag::GPS_TRACK_REF, 2, 2, 'X'),
-            ExifTag::GPS_TRACK     => new IfdEntry(ExifTag::GPS_TRACK, 5, 1, 90.0),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertNull($result['track_ref']);
-        self::assertNull($result['track']);
-    }
-
-    /**
-     * Provides a valid GPSImgDirectionRef value ('M') with a direction angle.
-     * Verifies the ref is accepted and direction is computed per EXIF 3.0 §4.6.7.1.17.
-     */
-    #[Test]
-    public function acceptsValidGpsImgDirectionRef(): void
-    {
-        $entries = [
-            ExifTag::GPS_IMG_DIRECTION_REF => new IfdEntry(ExifTag::GPS_IMG_DIRECTION_REF, 2, 2, 'M'),
-            ExifTag::GPS_IMG_DIRECTION     => new IfdEntry(ExifTag::GPS_IMG_DIRECTION, 5, 1, 180.0),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertSame('M', $result['img_direction_ref']);
-        self::assertSame(180.0, $result['img_direction']);
-    }
-
-    /**
-     * Supplies an invalid GPSImgDirectionRef value ('X') with a direction angle.
-     * Verifies the ref and derived direction are nulled per EXIF 3.0 §4.6.7.1.17.
-     */
-    #[Test]
-    public function rejectsInvalidGpsImgDirectionRef(): void
-    {
-        $entries = [
-            ExifTag::GPS_IMG_DIRECTION_REF => new IfdEntry(ExifTag::GPS_IMG_DIRECTION_REF, 2, 2, 'X'),
-            ExifTag::GPS_IMG_DIRECTION     => new IfdEntry(ExifTag::GPS_IMG_DIRECTION, 5, 1, 180.0),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertNull($result['img_direction_ref']);
-        self::assertNull($result['img_direction']);
-    }
-
-    /**
-     * Provides a valid GPSDestBearingRef value ('T') with a bearing angle.
-     * Verifies the ref is accepted and bearing is computed per EXIF 3.0 §4.6.7.1.24.
-     */
-    #[Test]
-    public function acceptsValidGpsDestBearingRef(): void
-    {
-        $entries = [
-            ExifTag::GPS_DEST_BEARING_REF => new IfdEntry(ExifTag::GPS_DEST_BEARING_REF, 2, 2, 'T'),
-            ExifTag::GPS_DEST_BEARING     => new IfdEntry(ExifTag::GPS_DEST_BEARING, 5, 1, 45.0),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertSame('T', $result['dest_bearing_ref']);
-        self::assertSame(45.0, $result['dest_bearing']);
-    }
-
-    /**
-     * Supplies an invalid GPSDestBearingRef value ('X') with a bearing angle.
-     * Verifies the ref and derived bearing are nulled per EXIF 3.0 §4.6.7.1.24.
-     */
-    #[Test]
-    public function rejectsInvalidGpsDestBearingRef(): void
-    {
-        $entries = [
-            ExifTag::GPS_DEST_BEARING_REF => new IfdEntry(ExifTag::GPS_DEST_BEARING_REF, 2, 2, 'X'),
-            ExifTag::GPS_DEST_BEARING     => new IfdEntry(ExifTag::GPS_DEST_BEARING, 5, 1, 45.0),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertNull($result['dest_bearing_ref']);
-        self::assertNull($result['dest_bearing']);
-    }
-
-    /**
-     * Rejects out-of-range GPS bearing values for track/image/destination bearings.
-     */
-    #[Test]
-    #[DataProvider('provideOutOfRangeBearingValues')]
-    public function rejectsOutOfRangeGpsBearingValues(int $refTag, int $valueTag, string $ref, float $value): void
-    {
-        $entries = [
-            $refTag   => new IfdEntry($refTag, 2, 2, $ref),
-            $valueTag => new IfdEntry($valueTag, 5, 1, $value),
-        ];
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1460);
-        $this->expectExceptionMessage('outside the valid range');
-
-        $this->converter->fromIfd(new Ifd($entries));
-    }
-
-    /**
-     * @return iterable<string, array{0:int,1:int,2:string,3:float}>
-     */
-    public static function provideOutOfRangeBearingValues(): iterable
-    {
-        yield 'track negative' => [
-            ExifTag::GPS_TRACK_REF,
-            ExifTag::GPS_TRACK,
-            'T',
-            -1.0,
-        ];
-
-        yield 'image direction >= 360' => [
-            ExifTag::GPS_IMG_DIRECTION_REF,
-            ExifTag::GPS_IMG_DIRECTION,
-            'M',
-            360.0,
-        ];
-
-        yield 'destination bearing far above range' => [
-            ExifTag::GPS_DEST_BEARING_REF,
-            ExifTag::GPS_DEST_BEARING,
-            'T',
-            720.0,
-        ];
-    }
-
-    /**
-     * Provides a valid GPSDestDistanceRef value ('K') with a distance value.
-     * Verifies the ref is accepted and distance_m is computed per EXIF 3.0 §4.6.7.1.26.
-     */
-    #[Test]
-    public function acceptsValidGpsDestDistanceRef(): void
-    {
-        $entries = [
-            ExifTag::GPS_DEST_DISTANCE_REF => new IfdEntry(ExifTag::GPS_DEST_DISTANCE_REF, 2, 2, 'K'),
-            ExifTag::GPS_DEST_DISTANCE     => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, 10.0),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertSame('K', $result['dest_distance_ref']);
-        self::assertSame(10_000.0, $result['dest_distance_m']);
-    }
-
-    /**
-     * Supplies an invalid GPSDestDistanceRef value ('X') with a distance value.
-     * Verifies the ref and derived distance are nulled per EXIF 3.0 §4.6.7.1.26.
-     */
-    #[Test]
-    public function rejectsInvalidGpsDestDistanceRef(): void
-    {
-        $entries = [
-            ExifTag::GPS_DEST_DISTANCE_REF => new IfdEntry(ExifTag::GPS_DEST_DISTANCE_REF, 2, 2, 'X'),
-            ExifTag::GPS_DEST_DISTANCE     => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, 10.0),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertNull($result['dest_distance_ref']);
-        self::assertNull($result['dest_distance_m']);
-    }
-
-    /**
-     * Supplies a multi-character GPSDestDistanceRef value ('NM') with a distance value.
-     * Verifies reserved codes do not leak into normalized or original reference fields.
-     */
-    #[Test]
-    public function rejectsMultiCharacterGpsDestDistanceRef(): void
-    {
-        $entries = [
-            ExifTag::GPS_DEST_DISTANCE_REF => new IfdEntry(ExifTag::GPS_DEST_DISTANCE_REF, 2, 3, 'NM'),
-            ExifTag::GPS_DEST_DISTANCE     => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, 10.0),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertNull($result['dest_distance_ref']);
-        self::assertNull($result['dest_distance_m']);
-        self::assertNull($result['dest_distance_original_ref']);
-    }
-
-    /**
-     * Supplies lowercase ref values and verifies they are uppercased and accepted.
-     * EXIF 3.0 §4.6.7 ref values are case-insensitive in practice but stored uppercase.
-     */
-    #[Test]
-    public function normalizesLowercaseRefValues(): void
-    {
-        $entries = [
-            ExifTag::GPS_STATUS       => new IfdEntry(ExifTag::GPS_STATUS, 2, 2, 'a'),
-            ExifTag::GPS_MEASURE_MODE => new IfdEntry(ExifTag::GPS_MEASURE_MODE, 2, 2, '2'),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertSame('A', $result['status']);
-        self::assertSame('2', $result['measure_mode']);
-    }
-
-    /**
-     * Provides a GPSLatitude with only 2 components instead of the required 3.
-     * Verifies that non-conformant DMS counts are rejected per EXIF 3.0 §4.6.8.
-     */
-    #[Test]
-    public function rejectsLatitudeWithTwoComponents(): void
-    {
-        $entries = [
-            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
-            ExifTag::GPS_LATITUDE     => new IfdEntry(ExifTag::GPS_LATITUDE, 10, 2, [
-                [52, 1],
-                [31, 1],
-            ]),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertNull($result['lat']);
-    }
-
-    /**
-     * Provides a GPSLongitude with 4 components instead of the required 3.
-     * Verifies that excess DMS components are rejected per EXIF 3.0 §4.6.8.
-     */
-    #[Test]
-    public function rejectsLongitudeWithFourComponents(): void
-    {
-        $entries = [
-            ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'E'),
-            ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 10, 4, [
-                [13, 1],
-                [24, 1],
-                [17820, 1000],
-                [0, 1],
-            ]),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertNull($result['lon']);
-    }
-
-    /**
-     * Provides a GPSLatitude with only 1 component instead of the required 3.
-     * Verifies that a single-component DMS value is rejected per EXIF 3.0 §4.6.8.
-     */
-    #[Test]
-    public function rejectsLatitudeWithOneComponent(): void
-    {
-        $entries = [
-            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'S'),
-            ExifTag::GPS_LATITUDE     => new IfdEntry(ExifTag::GPS_LATITUDE, 10, 1, [
-                [33, 1],
-            ]),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertNull($result['lat']);
     }
 
     /**
@@ -574,13 +386,13 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
-     * Rejects negative DMS components for capture coordinates.
+     * Rejects negative DMS components for capture and destination coordinates.
      *
      * @param list<array{0:int,1:int}> $dms
      */
     #[Test]
-    #[DataProvider('provideNegativeCaptureDmsComponents')]
-    public function rejectsNegativeCaptureDmsComponents(int $refTag, int $valueTag, string $ref, array $dms): void
+    #[DataProvider('provideNegativeDmsComponents')]
+    public function rejectsNegativeDmsComponents(int $refTag, int $valueTag, string $ref, array $dms): void
     {
         $entries = [
             $refTag   => new IfdEntry($refTag, 2, 2, $ref),
@@ -597,7 +409,7 @@ final class GpsConverterTest extends TestCase
     /**
      * @return iterable<string, array{0:int, 1:int, 2:string, 3:list<array{0:int,1:int}>}>
      */
-    public static function provideNegativeCaptureDmsComponents(): iterable
+    public static function provideNegativeDmsComponents(): iterable
     {
         yield 'latitude-negative-degrees' => [
             ExifTag::GPS_LATITUDE_REF,
@@ -619,30 +431,24 @@ final class GpsConverterTest extends TestCase
             'W',
             [[12, 1], [34, 1], [-56, 1]],
         ];
-    }
 
-    /**
-     * Rejects negative DMS components for destination coordinates.
-     */
-    #[Test]
-    public function rejectsNegativeDestinationDmsComponents(): void
-    {
-        $entries = [
-            ExifTag::GPS_DEST_LATITUDE_REF  => new IfdEntry(ExifTag::GPS_DEST_LATITUDE_REF, 2, 2, 'S'),
-            ExifTag::GPS_DEST_LATITUDE      => new IfdEntry(ExifTag::GPS_DEST_LATITUDE, 10, 3, [[12, 1], [-1, 1], [0, 1]]),
-            ExifTag::GPS_DEST_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_DEST_LONGITUDE_REF, 2, 2, 'E'),
-            ExifTag::GPS_DEST_LONGITUDE     => new IfdEntry(ExifTag::GPS_DEST_LONGITUDE, 10, 3, [[12, 1], [0, 1], [-1, 1]]),
+        yield 'dest-latitude-negative-minutes' => [
+            ExifTag::GPS_DEST_LATITUDE_REF,
+            ExifTag::GPS_DEST_LATITUDE,
+            'S',
+            [[12, 1], [-1, 1], [0, 1]],
         ];
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1467);
-        $this->expectExceptionMessage('non-negative');
-
-        $this->converter->fromIfd(new Ifd($entries));
+        yield 'dest-longitude-negative-seconds' => [
+            ExifTag::GPS_DEST_LONGITUDE_REF,
+            ExifTag::GPS_DEST_LONGITUDE,
+            'E',
+            [[12, 1], [0, 1], [-1, 1]],
+        ];
     }
 
     /**
-     * Rejects DMS minutes >= 60 for capture coordinates.
+     * Rejects DMS minutes or seconds >= 60 for capture and destination coordinates.
      *
      * @param list<array{0:int,1:int}> $dms
      */
@@ -668,100 +474,113 @@ final class GpsConverterTest extends TestCase
     public static function provideOutOfRangeDmsComponents(): iterable
     {
         yield 'latitude-minutes-60' => [
-            ExifTag::GPS_LATITUDE_REF,
-            ExifTag::GPS_LATITUDE,
-            'N',
+            ExifTag::GPS_LATITUDE_REF, ExifTag::GPS_LATITUDE, 'N',
             [[12, 1], [60, 1], [0, 1]],
         ];
 
         yield 'latitude-seconds-60' => [
-            ExifTag::GPS_LATITUDE_REF,
-            ExifTag::GPS_LATITUDE,
-            'S',
+            ExifTag::GPS_LATITUDE_REF, ExifTag::GPS_LATITUDE, 'S',
             [[12, 1], [30, 1], [60, 1]],
         ];
 
         yield 'longitude-minutes-61' => [
-            ExifTag::GPS_LONGITUDE_REF,
-            ExifTag::GPS_LONGITUDE,
-            'E',
+            ExifTag::GPS_LONGITUDE_REF, ExifTag::GPS_LONGITUDE, 'E',
             [[13, 1], [61, 1], [0, 1]],
         ];
 
         yield 'longitude-seconds-70' => [
-            ExifTag::GPS_LONGITUDE_REF,
-            ExifTag::GPS_LONGITUDE,
-            'W',
+            ExifTag::GPS_LONGITUDE_REF, ExifTag::GPS_LONGITUDE, 'W',
             [[13, 1], [30, 1], [70, 1]],
         ];
 
         yield 'dest-latitude-minutes-60' => [
-            ExifTag::GPS_DEST_LATITUDE_REF,
-            ExifTag::GPS_DEST_LATITUDE,
-            'N',
+            ExifTag::GPS_DEST_LATITUDE_REF, ExifTag::GPS_DEST_LATITUDE, 'N',
             [[45, 1], [60, 1], [0, 1]],
         ];
 
         yield 'dest-longitude-seconds-60' => [
-            ExifTag::GPS_DEST_LONGITUDE_REF,
-            ExifTag::GPS_DEST_LONGITUDE,
-            'E',
+            ExifTag::GPS_DEST_LONGITUDE_REF, ExifTag::GPS_DEST_LONGITUDE, 'E',
             [[90, 1], [0, 1], [60, 1]],
         ];
     }
 
     /**
-     * Rejects capture latitude values above +90°.
+     * Rejects coordinate values that exceed their geographic range.
+     *
+     * @param list<array{0:int,1:int}> $dms
      */
     #[Test]
-    public function rejectsLatitudeAboveNinetyDegrees(): void
+    #[DataProvider('provideOutOfRangeCoordinateValues')]
+    public function rejectsOutOfRangeCoordinateValues(int $refTag, int $valueTag, string $ref, array $dms, int $errorCode, string $messageFragment): void
     {
         $entries = [
-            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
-            ExifTag::GPS_LATITUDE     => new IfdEntry(ExifTag::GPS_LATITUDE, 10, 3, [[91, 1], [0, 1], [0, 1]]),
+            $refTag   => new IfdEntry($refTag, 2, 2, $ref),
+            $valueTag => new IfdEntry($valueTag, 10, 3, $dms),
         ];
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1463);
-        $this->expectExceptionMessage('outside the valid latitude range');
+        $this->expectExceptionCode($errorCode);
+        $this->expectExceptionMessage($messageFragment);
 
         $this->converter->fromIfd(new Ifd($entries));
     }
 
     /**
-     * Rejects capture longitude values below -180°.
+     * @return iterable<string, array{0:int, 1:int, 2:string, 3:list<array{0:int,1:int}>, 4:int, 5:string}>
+     */
+    public static function provideOutOfRangeCoordinateValues(): iterable
+    {
+        yield 'latitude above 90 N' => [
+            ExifTag::GPS_LATITUDE_REF, ExifTag::GPS_LATITUDE, 'N',
+            [[91, 1], [0, 1], [0, 1]], 1463, 'outside the valid latitude range',
+        ];
+
+        yield 'longitude above 180 W' => [
+            ExifTag::GPS_LONGITUDE_REF, ExifTag::GPS_LONGITUDE, 'W',
+            [[181, 1], [0, 1], [0, 1]], 1464, 'outside the valid longitude range',
+        ];
+
+        yield 'dest latitude above 90 S' => [
+            ExifTag::GPS_DEST_LATITUDE_REF, ExifTag::GPS_DEST_LATITUDE, 'S',
+            [[91, 1], [0, 1], [0, 1]], 1463, 'outside the valid latitude range',
+        ];
+    }
+
+    /**
+     * Rejects out-of-range GPS bearing values for track/image/destination bearings.
      */
     #[Test]
-    public function rejectsLongitudeBelowMinusOneHundredEightyDegrees(): void
+    #[DataProvider('provideOutOfRangeBearingValues')]
+    public function rejectsOutOfRangeGpsBearingValues(int $refTag, int $valueTag, string $ref, float $value): void
     {
         $entries = [
-            ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'W'),
-            ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 10, 3, [[181, 1], [0, 1], [0, 1]]),
+            $refTag   => new IfdEntry($refTag, 2, 2, $ref),
+            $valueTag => new IfdEntry($valueTag, 5, 1, $value),
         ];
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1464);
-        $this->expectExceptionMessage('outside the valid longitude range');
+        $this->expectExceptionCode(1460);
+        $this->expectExceptionMessage('outside the valid range');
 
         $this->converter->fromIfd(new Ifd($entries));
     }
 
     /**
-     * Rejects destination latitude values below -90°.
+     * @return iterable<string, array{0:int,1:int,2:string,3:float}>
      */
-    #[Test]
-    public function rejectsDestinationLatitudeBelowMinusNinetyDegrees(): void
+    public static function provideOutOfRangeBearingValues(): iterable
     {
-        $entries = [
-            ExifTag::GPS_DEST_LATITUDE_REF => new IfdEntry(ExifTag::GPS_DEST_LATITUDE_REF, 2, 2, 'S'),
-            ExifTag::GPS_DEST_LATITUDE     => new IfdEntry(ExifTag::GPS_DEST_LATITUDE, 10, 3, [[91, 1], [0, 1], [0, 1]]),
+        yield 'track negative' => [
+            ExifTag::GPS_TRACK_REF, ExifTag::GPS_TRACK, 'T', -1.0,
         ];
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1463);
-        $this->expectExceptionMessage('outside the valid latitude range');
+        yield 'image direction >= 360' => [
+            ExifTag::GPS_IMG_DIRECTION_REF, ExifTag::GPS_IMG_DIRECTION, 'M', 360.0,
+        ];
 
-        $this->converter->fromIfd(new Ifd($entries));
+        yield 'destination bearing far above range' => [
+            ExifTag::GPS_DEST_BEARING_REF, ExifTag::GPS_DEST_BEARING, 'T', 720.0,
+        ];
     }
 
     /**
@@ -777,39 +596,6 @@ final class GpsConverterTest extends TestCase
         self::assertSame('2025-02-28', $result['date']);
         self::assertSame('23:59:15', $result['time']);
         self::assertSame('2025-02-28T23:59:15+00:00', $result['timestamp']?->format('c'));
-    }
-
-    /**
-     * Rejects invalid calendar dates in GPSDateStamp.
-     */
-    #[Test]
-    public function rejectsInvalidGpsCalendarDate(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1465);
-        $this->expectExceptionMessage('GPSDateStamp');
-
-        $this->converter->fromIfd(
-            $this->buildIfdWithDateAndTime('2025:02:30', [[12, 1], [34, 1], [56, 1]]),
-        );
-    }
-
-    /**
-     * Rejects GPSTimeStamp components outside UTC ranges.
-     *
-     * @param list<array{0:int,1:int}> $timeRationals
-     */
-    #[Test]
-    #[DataProvider('provideInvalidGpsTimeStampRanges')]
-    public function rejectsOutOfRangeGpsTimeStampComponents(array $timeRationals): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1466);
-        $this->expectExceptionMessage('GPSTimeStamp');
-
-        $this->converter->fromIfd(
-            $this->buildIfdWithDateAndTime('2025:03:01', $timeRationals),
-        );
     }
 
     /**
@@ -830,16 +616,35 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{0:list<array{0:int,1:int}>}>
+     * Rejects invalid GPS timestamp inputs (bad dates and out-of-range time components).
+     *
+     * @param list<array{0:int,1:int}> $timeRationals
      */
-    public static function provideInvalidGpsTimeStampRanges(): iterable
+    #[Test]
+    #[DataProvider('provideInvalidGpsTimestampInputs')]
+    public function rejectsInvalidGpsTimestampInputs(string $date, array $timeRationals, int $errorCode, string $messageFragment): void
     {
-        yield 'hour above 23' => [[[24, 1], [0, 1], [0, 1]]];
-        yield 'minute above 59' => [[[23, 1], [60, 1], [0, 1]]];
-        yield 'second equal 60' => [[[23, 1], [59, 1], [60, 1]]];
-        yield 'second below 0' => [[[23, 1], [59, 1], [-1, 1]]];
-        yield 'fractional hour component' => [[[109, 10], [20, 1], [0, 1]]];
-        yield 'fractional minute component' => [[[10, 1], [205, 10], [0, 1]]];
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode($errorCode);
+        $this->expectExceptionMessage($messageFragment);
+
+        $this->converter->fromIfd(
+            $this->buildIfdWithDateAndTime($date, $timeRationals),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{0:string, 1:list<array{0:int,1:int}>, 2:int, 3:string}>
+     */
+    public static function provideInvalidGpsTimestampInputs(): iterable
+    {
+        yield 'invalid calendar date' => ['2025:02:30', [[12, 1], [34, 1], [56, 1]], 1465, 'GPSDateStamp'];
+        yield 'hour above 23' => ['2025:03:01', [[24, 1], [0, 1], [0, 1]], 1466, 'GPSTimeStamp'];
+        yield 'minute above 59' => ['2025:03:01', [[23, 1], [60, 1], [0, 1]], 1466, 'GPSTimeStamp'];
+        yield 'second equal 60' => ['2025:03:01', [[23, 1], [59, 1], [60, 1]], 1466, 'GPSTimeStamp'];
+        yield 'second below 0' => ['2025:03:01', [[23, 1], [59, 1], [-1, 1]], 1466, 'GPSTimeStamp'];
+        yield 'fractional hour component' => ['2025:03:01', [[109, 10], [20, 1], [0, 1]], 1466, 'GPSTimeStamp'];
+        yield 'fractional minute component' => ['2025:03:01', [[10, 1], [205, 10], [0, 1]], 1466, 'GPSTimeStamp'];
     }
 
     /**
@@ -850,35 +655,6 @@ final class GpsConverterTest extends TestCase
     public function acceptsValidAltitudeReferenceValues(int|string $value, int $expected): void
     {
         self::assertSame($expected, $this->unitConverter->normalizeAltitudeRef($value));
-    }
-
-    /**
-     * Rejects fractional GPSAltitudeRef values instead of coercing them into enum codes.
-     */
-    #[Test]
-    #[DataProvider('provideFractionalAltitudeRefValues')]
-    public function rejectsFractionalAltitudeReferenceValues(float|string|ExifRational $value): void
-    {
-        self::assertNull($this->unitConverter->normalizeAltitudeRef($value));
-    }
-
-    /**
-     * Rejects non-numeric GPSAltitudeRef text values.
-     */
-    #[Test]
-    public function rejectsNonNumericAltitudeReferenceValue(): void
-    {
-        self::assertNull($this->unitConverter->normalizeAltitudeRef('invalid'));
-    }
-
-    /**
-     * Rejects out-of-domain GPSAltitudeRef values outside EXIF's 0..3 range.
-     */
-    #[Test]
-    #[DataProvider('provideOutOfDomainAltitudeRefValues')]
-    public function rejectsOutOfDomainAltitudeReferenceValues(int|string $value): void
-    {
-        self::assertNull($this->unitConverter->normalizeAltitudeRef($value));
     }
 
     /**
@@ -894,32 +670,36 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{0:float|string|ExifRational}>
+     * Rejects non-integer, fractional, non-numeric, and out-of-domain GPSAltitudeRef values.
      */
-    public static function provideFractionalAltitudeRefValues(): iterable
+    #[Test]
+    #[DataProvider('provideInvalidAltitudeRefValues')]
+    public function rejectsInvalidAltitudeReferenceValues(int|float|string|ExifRational $value): void
+    {
+        self::assertNull($this->unitConverter->normalizeAltitudeRef($value));
+    }
+
+    /**
+     * @return iterable<string, array{0:int|float|string|ExifRational}>
+     */
+    public static function provideInvalidAltitudeRefValues(): iterable
     {
         yield 'float below one' => [0.4];
         yield 'float midpoint' => [1.5];
-        yield 'numeric string' => ['2.1'];
+        yield 'numeric string 2.1' => ['2.1'];
         yield 'rational value' => [new ExifRational(3, 2)];
-    }
-
-    /**
-     * @return iterable<string, array{0:int|string}>
-     */
-    public static function provideOutOfDomainAltitudeRefValues(): iterable
-    {
         yield 'negative integer' => [-1];
         yield 'above range integer' => [4];
         yield 'above range string' => ['5'];
+        yield 'non-numeric string' => ['invalid'];
     }
 
     /**
-     * Positive raw GPSAltitude with ref 0/2 yields positive result.
+     * Verifies that GPSAltitudeRef sign is correctly applied to the altitude value.
      */
     #[Test]
-    #[DataProvider('providePositiveAltitudeRefs')]
-    public function acceptsPositiveAltitudeWithAboveSeaLevelRef(int $ref): void
+    #[DataProvider('provideAltitudeRefSigns')]
+    public function appliesAltitudeRefSign(int $ref, float $expectedAlt): void
     {
         $entries = [
             ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, $ref),
@@ -934,48 +714,18 @@ final class GpsConverterTest extends TestCase
         $result = $this->converter->fromIfd(new Ifd($entries));
 
         self::assertSame($ref, $result['alt_ref']);
-        self::assertEqualsWithDelta(500.0, $result['alt'], 0.000001);
+        self::assertEqualsWithDelta($expectedAlt, $result['alt'], 0.000001);
     }
 
     /**
-     * @return iterable<string, array{0: int}>
+     * @return iterable<string, array{0: int, 1: float}>
      */
-    public static function providePositiveAltitudeRefs(): iterable
+    public static function provideAltitudeRefSigns(): iterable
     {
-        yield 'ref 0 (above sea level)' => [0];
-        yield 'ref 2 (above ellipsoid)' => [2];
-    }
-
-    /**
-     * Positive raw GPSAltitude with ref 1/3 yields negative result.
-     */
-    #[Test]
-    #[DataProvider('provideNegativeAltitudeRefs')]
-    public function acceptsPositiveAltitudeWithBelowSeaLevelRef(int $ref): void
-    {
-        $entries = [
-            ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, $ref),
-            ExifTag::GPS_ALTITUDE     => new IfdEntry(
-                ExifTag::GPS_ALTITUDE,
-                5,
-                1,
-                new ExifRational(500, 1),
-            ),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertSame($ref, $result['alt_ref']);
-        self::assertEqualsWithDelta(-500.0, $result['alt'], 0.000001);
-    }
-
-    /**
-     * @return iterable<string, array{0: int}>
-     */
-    public static function provideNegativeAltitudeRefs(): iterable
-    {
-        yield 'ref 1 (below sea level)' => [1];
-        yield 'ref 3 (below ellipsoid)' => [3];
+        yield 'ref 0 (above sea level)' => [0, 500.0];
+        yield 'ref 1 (below sea level)' => [1, -500.0];
+        yield 'ref 2 (above ellipsoid)' => [2, 500.0];
+        yield 'ref 3 (below ellipsoid)' => [3, -500.0];
     }
 
     /**
@@ -1000,16 +750,40 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
-     * Rejects GPS coordinate value present without matching ref tag.
+     * Validates GPSDifferential values: 0 and 1 are accepted, others are nulled.
      */
     #[Test]
-    #[DataProvider('provideCoordinatePairs')]
-    public function rejectsCoordinateValueWithoutRef(int $refTag, int $valueTag): void
+    #[DataProvider('provideGpsDifferentialValues')]
+    public function validatesGpsDifferential(int $input, ?int $expected): void
     {
         $entries = [
-            $valueTag => new IfdEntry($valueTag, 10, 3, [[45, 1], [30, 1], [0, 1]]),
+            ExifTag::GPS_DIFFERENTIAL => new IfdEntry(ExifTag::GPS_DIFFERENTIAL, 3, 1, $input),
         ];
 
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertSame($expected, $result['differential']);
+    }
+
+    /**
+     * @return iterable<string, array{0: int, 1: ?int}>
+     */
+    public static function provideGpsDifferentialValues(): iterable
+    {
+        yield 'valid zero (no correction)' => [0, 0];
+        yield 'valid one (differential corrected)' => [1, 1];
+        yield 'invalid two (out of range)' => [2, null];
+    }
+
+    /**
+     * Rejects GPS coordinate ref/value pairs that appear without their counterpart.
+     *
+     * @param array<int, IfdEntry> $entries IFD entries to parse.
+     */
+    #[Test]
+    #[DataProvider('provideCoordinateRefValueMismatches')]
+    public function rejectsCoordinateRefValueMismatch(array $entries): void
+    {
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1472);
         $this->expectExceptionMessage('without matching');
@@ -1018,136 +792,83 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
-     * Rejects GPS coordinate ref present without matching value tag.
+     * @return iterable<string, array{0: array<int, IfdEntry>}>
      */
-    #[Test]
-    #[DataProvider('provideCoordinatePairsWithRefs')]
-    public function rejectsCoordinateRefWithoutValue(int $refTag, int $valueTag, string $refValue): void
+    public static function provideCoordinateRefValueMismatches(): iterable
     {
-        $entries = [
-            $refTag => new IfdEntry($refTag, 2, 2, $refValue),
+        yield 'latitude value without ref' => [
+            [ExifTag::GPS_LATITUDE => new IfdEntry(ExifTag::GPS_LATITUDE, 10, 3, [[45, 1], [30, 1], [0, 1]])],
         ];
 
+        yield 'longitude value without ref' => [
+            [ExifTag::GPS_LONGITUDE => new IfdEntry(ExifTag::GPS_LONGITUDE, 10, 3, [[45, 1], [30, 1], [0, 1]])],
+        ];
+
+        yield 'dest latitude value without ref' => [
+            [ExifTag::GPS_DEST_LATITUDE => new IfdEntry(ExifTag::GPS_DEST_LATITUDE, 10, 3, [[45, 1], [30, 1], [0, 1]])],
+        ];
+
+        yield 'dest longitude value without ref' => [
+            [ExifTag::GPS_DEST_LONGITUDE => new IfdEntry(ExifTag::GPS_DEST_LONGITUDE, 10, 3, [[45, 1], [30, 1], [0, 1]])],
+        ];
+
+        yield 'latitude ref without value' => [
+            [ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N')],
+        ];
+
+        yield 'longitude ref without value' => [
+            [ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'E')],
+        ];
+
+        yield 'dest latitude ref without value' => [
+            [ExifTag::GPS_DEST_LATITUDE_REF => new IfdEntry(ExifTag::GPS_DEST_LATITUDE_REF, 2, 2, 'S')],
+        ];
+
+        yield 'dest longitude ref without value' => [
+            [ExifTag::GPS_DEST_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_DEST_LONGITUDE_REF, 2, 2, 'W')],
+        ];
+    }
+
+    /**
+     * Rejects negative rational magnitudes for GPS scalar fields.
+     *
+     * @param array<int, IfdEntry> $entries         IFD entries to parse.
+     * @param int                  $errorCode       Expected ParseError code.
+     * @param string               $messageFragment Expected message substring.
+     */
+    #[Test]
+    #[DataProvider('provideNegativeRationalValues')]
+    public function rejectsNegativeRationalMagnitude(array $entries, int $errorCode, string $messageFragment): void
+    {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1472);
-        $this->expectExceptionMessage('without matching');
+        $this->expectExceptionCode($errorCode);
+        $this->expectExceptionMessage($messageFragment);
 
         $this->converter->fromIfd(new Ifd($entries));
     }
 
     /**
-     * @return iterable<string, array{0: int, 1: int}>
+     * @return iterable<string, array{0: array<int, IfdEntry>, 1: int, 2: string}>
      */
-    public static function provideCoordinatePairs(): iterable
+    public static function provideNegativeRationalValues(): iterable
     {
-        yield 'latitude' => [ExifTag::GPS_LATITUDE_REF, ExifTag::GPS_LATITUDE];
-        yield 'longitude' => [ExifTag::GPS_LONGITUDE_REF, ExifTag::GPS_LONGITUDE];
-        yield 'dest latitude' => [ExifTag::GPS_DEST_LATITUDE_REF, ExifTag::GPS_DEST_LATITUDE];
-        yield 'dest longitude' => [ExifTag::GPS_DEST_LONGITUDE_REF, ExifTag::GPS_DEST_LONGITUDE];
-    }
-
-    /**
-     * @return iterable<string, array{0: int, 1: int, 2: string}>
-     */
-    public static function provideCoordinatePairsWithRefs(): iterable
-    {
-        yield 'latitude' => [ExifTag::GPS_LATITUDE_REF, ExifTag::GPS_LATITUDE, 'N'];
-        yield 'longitude' => [ExifTag::GPS_LONGITUDE_REF, ExifTag::GPS_LONGITUDE, 'E'];
-        yield 'dest latitude' => [ExifTag::GPS_DEST_LATITUDE_REF, ExifTag::GPS_DEST_LATITUDE, 'S'];
-        yield 'dest longitude' => [ExifTag::GPS_DEST_LONGITUDE_REF, ExifTag::GPS_DEST_LONGITUDE, 'W'];
-    }
-
-    /**
-     * Rejects negative raw GPSAltitude magnitude.
-     */
-    #[Test]
-    public function rejectsNegativeRawAltitudeMagnitude(): void
-    {
-        $entries = [
-            ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
-            ExifTag::GPS_ALTITUDE     => new IfdEntry(
-                ExifTag::GPS_ALTITUDE,
-                5,
-                1,
-                new ExifRational(-100, 1),
-            ),
+        yield 'negative DOP' => [
+            [ExifTag::GPS_DOP => new IfdEntry(ExifTag::GPS_DOP, 5, 1, new ExifRational(-1, 1))],
+            1469, 'GPSDOP',
         ];
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1471);
-        $this->expectExceptionMessage('GPSAltitude');
-
-        $this->converter->fromIfd(new Ifd($entries));
-    }
-
-    /**
-     * Provides a valid GPSDifferential value (0).
-     * Verifies no-correction is accepted per EXIF 3.0 §4.6.7.1.31.
-     */
-    #[Test]
-    public function acceptsValidGpsDifferentialZero(): void
-    {
-        $entries = [
-            ExifTag::GPS_DIFFERENTIAL => new IfdEntry(ExifTag::GPS_DIFFERENTIAL, 3, 1, 0),
+        yield 'negative HPositioningError' => [
+            [ExifTag::GPS_H_POSITIONING_ERROR => new IfdEntry(ExifTag::GPS_H_POSITIONING_ERROR, 5, 1, new ExifRational(-1, 1))],
+            1468, 'GPSHPositioningError',
         ];
 
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertSame(0, $result['differential']);
-    }
-
-    /**
-     * Provides a valid GPSDifferential value (1).
-     * Verifies differential-corrected is accepted per EXIF 3.0 §4.6.7.1.31.
-     */
-    #[Test]
-    public function acceptsValidGpsDifferentialOne(): void
-    {
-        $entries = [
-            ExifTag::GPS_DIFFERENTIAL => new IfdEntry(ExifTag::GPS_DIFFERENTIAL, 3, 1, 1),
+        yield 'negative altitude' => [
+            [
+                ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
+                ExifTag::GPS_ALTITUDE     => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, new ExifRational(-100, 1)),
+            ],
+            1471, 'GPSAltitude',
         ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertSame(1, $result['differential']);
-    }
-
-    /**
-     * Supplies an invalid GPSDifferential value (2).
-     * Verifies out-of-range values are nulled per EXIF 3.0 §4.6.7.1.31.
-     */
-    #[Test]
-    public function rejectsInvalidGpsDifferential(): void
-    {
-        $entries = [
-            ExifTag::GPS_DIFFERENTIAL => new IfdEntry(ExifTag::GPS_DIFFERENTIAL, 3, 1, 2),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertNull($result['differential']);
-    }
-
-    /**
-     * Rejects negative GPSDOP values.
-     */
-    #[Test]
-    public function rejectsNegativeGpsDop(): void
-    {
-        $entries = [
-            ExifTag::GPS_DOP => new IfdEntry(
-                ExifTag::GPS_DOP,
-                5,
-                1,
-                new ExifRational(-1, 1),
-            ),
-        ];
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1469);
-        $this->expectExceptionMessage('GPSDOP');
-
-        $this->converter->fromIfd(new Ifd($entries));
     }
 
     /**
@@ -1168,49 +889,6 @@ final class GpsConverterTest extends TestCase
         $result = $this->converter->fromIfd(new Ifd($entries));
 
         self::assertEqualsWithDelta(1.5, $result['h_positioning_error'], 0.000001);
-    }
-
-    /**
-     * Rejects negative GPSHPositioningError values.
-     */
-    #[Test]
-    public function rejectsNegativeGpsHPositioningError(): void
-    {
-        $entries = [
-            ExifTag::GPS_H_POSITIONING_ERROR => new IfdEntry(
-                ExifTag::GPS_H_POSITIONING_ERROR,
-                5,
-                1,
-                new ExifRational(-1, 1),
-            ),
-        ];
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1468);
-        $this->expectExceptionMessage('GPSHPositioningError');
-
-        $this->converter->fromIfd(new Ifd($entries));
-    }
-
-    /**
-     * Builds an IFD containing a GPS reference tag and matching coordinate data.
-     *
-     * @param int    $refTag   The GPS reference tag constant (e.g. ExifTag::GPS_LATITUDE_REF).
-     * @param string $refValue The reference value (e.g. 'N', 'E', 'X').
-     * @param int    $coordTag The GPS coordinate tag constant (e.g. ExifTag::GPS_LATITUDE).
-     */
-    private function buildIfdWithRef(int $refTag, string $refValue, int $coordTag): Ifd
-    {
-        $entries = [
-            $refTag   => new IfdEntry($refTag, 2, 2, $refValue),
-            $coordTag => new IfdEntry($coordTag, 10, 3, [
-                [52, 1],
-                [31, 1],
-                [12000, 1000],
-            ]),
-        ];
-
-        return new Ifd($entries);
     }
 
     /**
