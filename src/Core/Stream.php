@@ -15,11 +15,13 @@ use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
+use function fclose;
 use function fopen;
 use function fread;
 use function fseek;
 use function fstat;
 use function is_array;
+use function is_resource;
 use function strlen;
 
 use const SEEK_CUR;
@@ -78,6 +80,13 @@ final class Stream implements BinaryReadAccessInterface
             },
             context: 'stream',
         );
+    }
+
+    public function __destruct()
+    {
+        if (is_resource($this->fh)) {
+            fclose($this->fh);
+        }
     }
 
     /**
