@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Parse\Tiff;
+namespace MagicSunday\ImageMeta\Contract;
 
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\Registry;

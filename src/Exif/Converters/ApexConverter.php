@@ -12,10 +12,10 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
 use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Exif\ExifConst;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
-use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 
 use function fmod;
 use function round;
@@ -213,7 +213,7 @@ final readonly class ApexConverter
             return true;
         }
 
-        return $denominator === TiffConst::EXIF_UNKNOWN_DENOMINATOR;
+        return $denominator === ExifConst::EXIF_UNKNOWN_DENOMINATOR;
     }
 
     /**

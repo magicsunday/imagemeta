@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Parse\Iptc;
+namespace MagicSunday\ImageMeta\Contract;
 
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 

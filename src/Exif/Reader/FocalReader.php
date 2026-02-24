@@ -11,12 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
+use MagicSunday\ImageMeta\Exif\ExifConst;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
-use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Value\CfaPattern;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
@@ -197,7 +197,7 @@ final readonly class FocalReader
             return null;
         }
 
-        if ($entry->type !== TiffConst::TYPE_ASCII || $entry->count !== 4) {
+        if ($entry->type !== ExifConst::TYPE_ASCII || $entry->count !== 4) {
             return null;
         }
 

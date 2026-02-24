@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model;
 
+use MagicSunday\ImageMeta\Contract\IptcParserInterface;
+use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
@@ -21,10 +23,6 @@ use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
-use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
-use MagicSunday\ImageMeta\Parse\Iptc\IptcParserInterface;
-use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
-use MagicSunday\ImageMeta\Parse\Xmp\XmpParserInterface;
 
 /**
  * Fluent builder for assembling {@see Metadata} aggregates from domain-specific groups.
@@ -292,8 +290,8 @@ final class MetadataBuilder
             isoBmffUnresolvedItems: $this->isoBmffUnresolvedItems,
             iptcBlobs: $this->iptcBlobs,
             iptcDoc: $this->iptcDoc,
-            xmpParser: $this->xmpParser ?? new XmpParser(),
-            iptcParser: $this->iptcParser ?? new IptcParser(),
+            xmpParser: $this->xmpParser,
+            iptcParser: $this->iptcParser,
         );
     }
 }

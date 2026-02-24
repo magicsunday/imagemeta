@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Factory;
 
+use MagicSunday\ImageMeta\Contract\IccParserInterface;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
@@ -21,8 +22,6 @@ use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
-use MagicSunday\ImageMeta\Parse\Icc\IccParser;
-use MagicSunday\ImageMeta\Parse\Icc\IccParserInterface;
 use MagicSunday\ImageMeta\Value\Audio as ValueAudio;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
@@ -103,14 +102,6 @@ final readonly class ValueFactory
         private MultiPictureFactory $multiPictureFactory = new MultiPictureFactory(),
         private ValueConverters $converters = new ValueConverters(),
     ) {
-    }
-
-    /**
-     * Creates a ValueFactory with default concrete parser and sub-factory dependencies.
-     */
-    public static function createDefault(): self
-    {
-        return new self(new IccParser());
     }
 
     /**

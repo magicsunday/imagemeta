@@ -11,9 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Convenience;
 
+use MagicSunday\ImageMeta\Contract\TiffExifParserInterface;
 use MagicSunday\ImageMeta\MetadataReader;
-use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
-use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParserInterface;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
 
 /**
@@ -31,14 +30,6 @@ final readonly class ExifReader
     public function __construct(private TiffExifParserInterface $tiffReader)
     {
         $this->metadataReader = MetadataReader::createDefault($this->tiffReader);
-    }
-
-    /**
-     * Creates an EXIF reader with default parser dependencies.
-     */
-    public static function createDefault(): self
-    {
-        return new self(new TiffExifParser());
     }
 
     /**

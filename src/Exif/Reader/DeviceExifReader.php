@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
 use MagicSunday\ImageMeta\Core\Endian;
+use MagicSunday\ImageMeta\Exif\ExifConst;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
@@ -19,7 +20,6 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
-use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 
 use function array_map;
@@ -317,7 +317,7 @@ final readonly class DeviceExifReader
             return true;
         }
 
-        return $denominator === TiffConst::EXIF_UNKNOWN_DENOMINATOR;
+        return $denominator === ExifConst::EXIF_UNKNOWN_DENOMINATOR;
     }
 
     private function parseDeviceSettingDescription(): ?DeviceSettingDescription

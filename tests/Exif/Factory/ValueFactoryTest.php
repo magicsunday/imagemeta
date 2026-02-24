@@ -12,12 +12,12 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Exif\Factory;
 
 use Closure;
+use MagicSunday\ImageMeta\Contract\IccParserInterface;
 use MagicSunday\ImageMeta\Exif\Factory\TiffDataFactory;
 use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Parse\Icc\IccParserInterface;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\Author;

@@ -12,6 +12,9 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta;
 
 use finfo;
+use MagicSunday\ImageMeta\Contract\IptcParserInterface;
+use MagicSunday\ImageMeta\Contract\TiffExifParserInterface;
+use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
@@ -24,15 +27,12 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
-use MagicSunday\ImageMeta\Parse\Iptc\IptcParserInterface;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactory;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
-use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParserInterface;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
-use MagicSunday\ImageMeta\Parse\Xmp\XmpParserInterface;
 
 use function class_exists;
 use function filesize;

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Xmp;
 
+use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Xmp\XmpContainer;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;

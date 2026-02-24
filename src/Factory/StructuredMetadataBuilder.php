@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Factory;
 
 use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Parse\Icc\IccParser;
 use MagicSunday\ImageMeta\Value\CaptureHardware;
 use MagicSunday\ImageMeta\Value\CaptureSettings;
 use MagicSunday\ImageMeta\Value\LocationTime;
@@ -38,7 +39,7 @@ final readonly class StructuredMetadataBuilder
      */
     public static function createDefault(): self
     {
-        return new self(ValueFactory::createDefault());
+        return new self(new ValueFactory(new IccParser()));
     }
 
     /**

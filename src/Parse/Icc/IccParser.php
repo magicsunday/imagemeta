@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Icc;
 
+use MagicSunday\ImageMeta\Contract\IccParserInterface;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Icc\IccTag;
 

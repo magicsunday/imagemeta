@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Parse\Xmp;
+namespace MagicSunday\ImageMeta\Contract;
 
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 

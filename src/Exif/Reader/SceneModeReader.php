@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
 use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Exif\ExifConst;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
@@ -19,7 +20,6 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
-use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
@@ -257,7 +257,7 @@ final readonly class SceneModeReader
             return null;
         }
 
-        if ($numerator === TiffConst::EXIF_UNKNOWN_DENOMINATOR || $numerator === -1) {
+        if ($numerator === ExifConst::EXIF_UNKNOWN_DENOMINATOR || $numerator === -1) {
             return INF;
         }
 

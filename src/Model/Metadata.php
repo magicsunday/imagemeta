@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model;
 
+use MagicSunday\ImageMeta\Contract\IptcParserInterface;
+use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
@@ -22,8 +24,6 @@ use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
-use MagicSunday\ImageMeta\Parse\Iptc\IptcParserInterface;
-use MagicSunday\ImageMeta\Parse\Xmp\XmpParserInterface;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
 
 /**

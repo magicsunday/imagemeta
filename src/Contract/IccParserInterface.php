@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Parse\Icc;
+namespace MagicSunday\ImageMeta\Contract;
 
 /**
  * Defines the contract for decoding embedded ICC profile payloads.
