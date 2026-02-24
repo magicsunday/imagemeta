@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Parse\IsoBmff\AudioSampleEntryParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
+use MagicSunday\ImageMeta\Parse\IsoBmff\BoxPayloadCollector;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParseContext;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
@@ -39,6 +40,7 @@ use ReflectionClass;
 #[CoversClass(IsoBmffParseContext::class)]
 #[UsesClass(AudioSampleEntryParser::class)]
 #[UsesClass(BoxNavigator::class)]
+#[UsesClass(BoxPayloadCollector::class)]
 #[UsesClass(IlocBoxParser::class)]
 #[UsesClass(IsoBmffParser::class)]
 #[UsesClass(ItemLocationResolver::class)]

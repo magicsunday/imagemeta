@@ -26,6 +26,7 @@ use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\IsoBmff\AudioSampleEntryParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
+use MagicSunday\ImageMeta\Parse\IsoBmff\BoxPayloadCollector;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemLocationResolver;
@@ -66,6 +67,7 @@ use function substr;
 #[CoversClass(IsoBmffParser::class)]
 #[UsesClass(AudioSampleEntryParser::class)]
 #[UsesClass(BoxNavigator::class)]
+#[UsesClass(BoxPayloadCollector::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Stream::class)]
 #[UsesClass(StreamWindow::class)]
@@ -197,6 +199,29 @@ final class IsoBmffParserTest extends TestCase
         $offset = $this->detectMetaChildOffsetForPayload($payload, false);
 
         self::assertSame(4, $offset);
+    }
+
+    /**
+     * Confirms IsoBmffParser delegates payload collection to BoxPayloadCollector.
+     */
+    #[Test]
+    public function parserDelegatesToBoxPayloadCollector(): void
+    {
+        $exifPayload = pack('N', 0) . "MM\x00\x2Adelegation-test";
+        $meta        = $this->fullBox('meta', $this->box('Exif', $exifPayload));
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+        $data        = $ftyp . $meta;
+
+        $parser = $this->createExtractor($data);
+
+        $collectorProp = new ReflectionProperty(IsoBmffParser::class, 'boxPayloadCollector');
+        $collector     = $collectorProp->getValue($parser);
+
+        self::assertNotNull($collector);
+
+        [$exifs, $xmps, $qt] = $parser->extract();
+
+        self::assertSame(["MM\x00\x2Adelegation-test"], $exifs);
     }
 
     /**
@@ -7183,7 +7208,7 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Invokes meta child-offset detection for a synthetic meta payload via private parser methods.
+     * Invokes meta child-offset detection for a synthetic meta payload via the BoxPayloadCollector.
      */
     private function detectMetaChildOffsetForPayload(string $metaPayload, bool $allowQuickTimeMetaWithoutFullBox): int
     {
@@ -7191,15 +7216,19 @@ final class IsoBmffParserTest extends TestCase
 
         $parser = $this->createExtractor($meta);
 
+        $collectorProp = new ReflectionProperty(IsoBmffParser::class, 'boxPayloadCollector');
+        /** @var BoxPayloadCollector $collector */
+        $collector = $collectorProp->getValue($parser);
+
         $navProp = new ReflectionProperty(IsoBmffParser::class, 'boxNavigator');
         /** @var BoxNavigator $boxNavigator */
         $boxNavigator = $navProp->getValue($parser);
 
         $metaBox = $boxNavigator->readBoxAt(0, strlen($meta), true);
 
-        $detect = new ReflectionMethod(IsoBmffParser::class, 'detectMetaChildOffset');
+        $detect = new ReflectionMethod(BoxPayloadCollector::class, 'detectMetaChildOffset');
 
-        $detectedOffset = $detect->invoke($parser, $metaBox, $allowQuickTimeMetaWithoutFullBox);
+        $detectedOffset = $detect->invoke($collector, $metaBox, $allowQuickTimeMetaWithoutFullBox);
         if (!is_int($detectedOffset)) {
             throw new ParseError('detectMetaChildOffset() must return int.', 1453);
         }
