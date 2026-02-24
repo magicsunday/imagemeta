@@ -18,7 +18,7 @@ use DateTimeImmutable;
  *
  * EXIF 3.0 §4.6.7 defines GPS tags.
  */
-interface ExifGpsData
+interface ExifGpsDataInterface
 {
     public function gpsIfdPointer(): ?int;
 

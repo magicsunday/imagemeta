@@ -21,7 +21,7 @@ use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
  *
  * EXIF 3.0 §4.6.6 defines Exif-specific tags stored in the SubIFD.
  */
-interface ExifSubIfdData
+interface ExifSubIfdDataInterface
 {
     public function exifVersion(): ?string;
 

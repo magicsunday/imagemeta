@@ -76,7 +76,7 @@ use MagicSunday\ImageMeta\Value\SubjectArea;
  *
  * @phpstan-import-type GpsFieldMap from GpsConverter
  */
-final class ParsedExif implements ExifIfd0Data, ExifIfd1Data, ExifSubIfdData, ExifGpsData, ExifInteropData
+final class ParsedExif implements ExifIfd0DataInterface, ExifIfd1DataInterface, ExifSubIfdDataInterface, ExifGpsDataInterface, ExifInteropDataInterface
 {
     private readonly ?string $exifVersion;
 

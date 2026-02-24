@@ -11,11 +11,11 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Model;
 
-use MagicSunday\ImageMeta\Exif\Model\ExifGpsData;
-use MagicSunday\ImageMeta\Exif\Model\ExifIfd0Data;
-use MagicSunday\ImageMeta\Exif\Model\ExifIfd1Data;
-use MagicSunday\ImageMeta\Exif\Model\ExifInteropData;
-use MagicSunday\ImageMeta\Exif\Model\ExifSubIfdData;
+use MagicSunday\ImageMeta\Exif\Model\ExifGpsDataInterface;
+use MagicSunday\ImageMeta\Exif\Model\ExifIfd0DataInterface;
+use MagicSunday\ImageMeta\Exif\Model\ExifIfd1DataInterface;
+use MagicSunday\ImageMeta\Exif\Model\ExifInteropDataInterface;
+use MagicSunday\ImageMeta\Exif\Model\ExifSubIfdDataInterface;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\Reader\CameraLensExifReader;
@@ -53,10 +53,10 @@ final class ParsedExifInterfaceSegregationTest extends TestCase
         $parsedExif = new ParsedExif(new Ifd([]), null, null, null, null);
         $interfaces = class_implements($parsedExif);
 
-        self::assertContains(ExifIfd0Data::class, $interfaces);
-        self::assertContains(ExifIfd1Data::class, $interfaces);
-        self::assertContains(ExifSubIfdData::class, $interfaces);
-        self::assertContains(ExifGpsData::class, $interfaces);
-        self::assertContains(ExifInteropData::class, $interfaces);
+        self::assertContains(ExifIfd0DataInterface::class, $interfaces);
+        self::assertContains(ExifIfd1DataInterface::class, $interfaces);
+        self::assertContains(ExifSubIfdDataInterface::class, $interfaces);
+        self::assertContains(ExifGpsDataInterface::class, $interfaces);
+        self::assertContains(ExifInteropDataInterface::class, $interfaces);
     }
 }

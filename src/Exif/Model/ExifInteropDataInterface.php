@@ -16,7 +16,7 @@ namespace MagicSunday\ImageMeta\Exif\Model;
  *
  * EXIF 3.0 §4.6.8 defines Interoperability IFD semantics.
  */
-interface ExifInteropData
+interface ExifInteropDataInterface
 {
     public function interoperabilityIfdPointer(): ?int;
 

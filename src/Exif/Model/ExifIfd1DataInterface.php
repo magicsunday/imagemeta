@@ -18,7 +18,7 @@ use MagicSunday\ImageMeta\Value\Enum\Compression;
  *
  * EXIF 3.0 §4.5.5 and TIFF 6.0 §8 cover thumbnail-oriented tags in IFD1.
  */
-interface ExifIfd1Data
+interface ExifIfd1DataInterface
 {
     public function hasThumbnail(): bool;
 

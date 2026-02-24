@@ -18,7 +18,7 @@ use MagicSunday\ImageMeta\Value\Enum\Orientation;
  *
  * EXIF 3.0 §4.6.3 defines baseline image tags in IFD0.
  */
-interface ExifIfd0Data
+interface ExifIfd0DataInterface
 {
     public function cameraMake(): ?string;
 
