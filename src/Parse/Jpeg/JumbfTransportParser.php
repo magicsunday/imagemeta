@@ -128,8 +128,8 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
                 continue;
             }
 
-            $offset      = $this->firstOffset[$instanceNumber] ?? 0;
-            $maxSequence = max(array_keys($sequenceChunks));
+            $segmentOffset = $this->firstOffset[$instanceNumber] ?? 0;
+            $maxSequence   = max(array_keys($sequenceChunks));
 
             for ($expectedSequence = 1; $expectedSequence <= $maxSequence; ++$expectedSequence) {
                 if (!array_key_exists($expectedSequence, $sequenceChunks)) {
@@ -138,7 +138,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
                             'APP11 segment sequence is missing sequence number %d for instance %d (at offset %d)',
                             $expectedSequence,
                             $instanceNumber,
-                            $offset,
+                            $segmentOffset,
                         ),
                         1339,
                     );
@@ -147,8 +147,8 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
 
             ksort($sequenceChunks);
             $transportPayload = implode('', $sequenceChunks);
-            $jumbfSuperbox    = $this->extractJumbfSuperbox($transportPayload, $offset);
-            $this->collectXmlPacketsFromBoxes($jumbfSuperbox, $offset);
+            $jumbfSuperbox    = $this->extractJumbfSuperbox($transportPayload, $segmentOffset);
+            $this->collectXmlPacketsFromBoxes($jumbfSuperbox, $segmentOffset);
         }
     }
 
@@ -158,14 +158,14 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
      * EXIF 3.0 §4.7.5.3 defines the APP11 transport wrapper as identifier, box
      * instance number, packet sequence number, and payload bytes.
      *
-     * @param string $payload Raw APP11 payload bytes.
-     * @param int    $offset  APP11 marker offset for diagnostics.
+     * @param string $payload       Raw APP11 payload bytes.
+     * @param int    $segmentOffset APP11 marker offset for diagnostics.
      *
      * @return array{identifier:string, instance:int, sequence:int, data:string}
      */
-    private function parseTransportHeader(string $payload, int $offset): array
+    private function parseTransportHeader(string $payload, int $segmentOffset): array
     {
-        PayloadGuard::ensureMinimumLength($payload, self::TRANSPORT_HEADER_LENGTH, sprintf('APP11 segment at offset %d', $offset), 1331);
+        PayloadGuard::ensureMinimumLength($payload, self::TRANSPORT_HEADER_LENGTH, sprintf('APP11 segment at offset %d', $segmentOffset), 1331);
 
         // EXIF 3.0 §4.7.5.3 APP11 transport header layout:
         // Bytes 0–3: CI (Common Identifier, 4 bytes)
@@ -176,7 +176,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
         $instanceNumber = Unpack::int('n', substr($payload, 4, 2), 'APP11 instance number');
         if ($instanceNumber === 0) {
             throw new ParseError(
-                sprintf('APP11 segment at offset %d has out-of-range instance number %d', $offset, $instanceNumber),
+                sprintf('APP11 segment at offset %d has out-of-range instance number %d', $segmentOffset, $instanceNumber),
                 1335,
             );
         }
@@ -187,7 +187,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
             || ($sequenceNumber > self::MAX_SEQUENCE_NUMBER)
         ) {
             throw new ParseError(
-                sprintf('APP11 segment at offset %d has out-of-range sequence number %d', $offset, $sequenceNumber),
+                sprintf('APP11 segment at offset %d has out-of-range sequence number %d', $segmentOffset, $sequenceNumber),
                 1336,
             );
         }
@@ -203,68 +203,68 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
     /**
      * Extracts the first valid JUMBF superbox from APP11 transport payload data.
      *
-     * @param string $payload Reassembled APP11 transport payload bytes.
-     * @param int    $offset  APP11 marker offset for diagnostics.
+     * @param string $payload       Reassembled APP11 transport payload bytes.
+     * @param int    $segmentOffset APP11 marker offset for diagnostics.
      *
      * @return string Raw bytes of the JUMBF superbox.
      */
-    private function extractJumbfSuperbox(string $payload, int $offset): string
+    private function extractJumbfSuperbox(string $payload, int $segmentOffset): string
     {
-        PayloadGuard::ensureMinimumLength($payload, 12, sprintf('APP11 segment at offset %d', $offset), 1885);
+        PayloadGuard::ensureMinimumLength($payload, 12, sprintf('APP11 segment at offset %d', $segmentOffset), 1885);
         $length = strlen($payload);
 
-        for ($position = 0; $position + 8 <= $length; ++$position) {
-            if (substr($payload, $position + 4, 4) !== 'jumb') {
+        for ($offset = 0; $offset + 8 <= $length; ++$offset) {
+            if (substr($payload, $offset + 4, 4) !== 'jumb') {
                 continue;
             }
 
-            $boxLength = Unpack::int('N', substr($payload, $position, 4), 'JUMBF superbox size');
+            $boxLength = Unpack::int('N', substr($payload, $offset, 4), 'JUMBF superbox size');
             if ($boxLength < 8) {
                 throw new ParseError(
-                    sprintf('APP11 segment at offset %d has invalid JUMBF box length %d', $offset, $boxLength),
+                    sprintf('APP11 segment at offset %d has invalid JUMBF box length %d', $segmentOffset, $boxLength),
                     1332,
                 );
             }
 
-            if ($position + $boxLength > $length) {
-                throw new ParseError(sprintf('APP11 segment at offset %d has truncated JUMBF box', $offset), 1334);
+            if ($offset + $boxLength > $length) {
+                throw new ParseError(sprintf('APP11 segment at offset %d has truncated JUMBF box', $segmentOffset), 1334);
             }
 
-            return substr($payload, $position, $boxLength);
+            return substr($payload, $offset, $boxLength);
         }
 
-        throw new ParseError(sprintf('APP11 segment at offset %d does not contain a JUMBF superbox', $offset), 1333);
+        throw new ParseError(sprintf('APP11 segment at offset %d does not contain a JUMBF superbox', $segmentOffset), 1333);
     }
 
     /**
      * Traverses JUMBF boxes and collects XML/XMP payloads.
      *
-     * @param string $boxStream Box stream beginning with one or more ISO-BMFF-style boxes.
-     * @param int    $offset    APP11 marker offset for diagnostics.
+     * @param string $boxStream     Box stream beginning with one or more ISO-BMFF-style boxes.
+     * @param int    $segmentOffset APP11 marker offset for diagnostics.
      */
-    private function collectXmlPacketsFromBoxes(string $boxStream, int $offset): void
+    private function collectXmlPacketsFromBoxes(string $boxStream, int $segmentOffset): void
     {
-        $length   = strlen($boxStream);
-        $position = 0;
+        $length = strlen($boxStream);
+        $offset = 0;
 
-        while ($position + 8 <= $length) {
-            $boxLength = Unpack::int('N', substr($boxStream, $position, 4), 'JUMBF child box size');
+        while ($offset + 8 <= $length) {
+            $boxLength = Unpack::int('N', substr($boxStream, $offset, 4), 'JUMBF child box size');
             if ($boxLength < 8) {
                 throw new ParseError(
-                    sprintf('APP11 segment at offset %d has invalid JUMBF child box length %d', $offset, $boxLength),
+                    sprintf('APP11 segment at offset %d has invalid JUMBF child box length %d', $segmentOffset, $boxLength),
                     1332,
                 );
             }
 
-            if ($position + $boxLength > $length) {
-                throw new ParseError(sprintf('APP11 segment at offset %d has truncated JUMBF child box', $offset), 1887);
+            if ($offset + $boxLength > $length) {
+                throw new ParseError(sprintf('APP11 segment at offset %d has truncated JUMBF child box', $segmentOffset), 1887);
             }
 
-            $boxType    = substr($boxStream, $position + 4, 4);
-            $boxPayload = substr($boxStream, $position + 8, $boxLength - 8);
+            $boxType    = substr($boxStream, $offset + 4, 4);
+            $boxPayload = substr($boxStream, $offset + 8, $boxLength - 8);
 
             if ($boxType === 'jumb') {
-                $this->collectXmlPacketsFromBoxes($boxPayload, $offset);
+                $this->collectXmlPacketsFromBoxes($boxPayload, $segmentOffset);
             } elseif ($boxType === 'xml ' || $boxType === 'bidb') {
                 $candidate = $this->extractXmlPacketCandidate($boxPayload);
                 if ($candidate !== null) {
@@ -272,11 +272,11 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
                 }
             }
 
-            $position += $boxLength;
+            $offset += $boxLength;
         }
 
-        if ($position !== $length) {
-            throw new ParseError(sprintf('APP11 segment at offset %d has trailing JUMBF bytes', $offset), 1888);
+        if ($offset !== $length) {
+            throw new ParseError(sprintf('APP11 segment at offset %d has trailing JUMBF bytes', $segmentOffset), 1888);
         }
     }
 

@@ -590,15 +590,15 @@ final readonly class IlocBoxParser
         $payload   = $remaining > 0 ? $win->read($remaining) : '';
 
         // ISO 14496-12: remaining payload is item_name\0content_type\0[content_encoding\0]
-        $cursor          = 0;
-        $name            = $this->readNulString($payload, $cursor);
-        $contentType     = $this->readNulString($payload, $cursor);
-        $contentEncoding = $this->readNulString($payload, $cursor);
+        $offset          = 0;
+        $name            = $this->readNulString($payload, $offset);
+        $contentType     = $this->readNulString($payload, $offset);
+        $contentEncoding = $this->readNulString($payload, $offset);
 
         // ISO 14496-12 §8.11.6: if item_type == 'uri ', the post-name
         // payload is a single NUL-terminated item_uri_type (no content_type/content_encoding)
         if ($itemType === 'uri ') {
-            $itemUriType = $this->readNulString($payload, $cursor);
+            $itemUriType = $this->readNulString($payload, $offset);
 
             if ($itemUriType === null || $itemUriType === '') {
                 throw new ParseError('infe uri item_uri_type must be non-empty', 1392);
@@ -625,8 +625,8 @@ final readonly class IlocBoxParser
         // ISO 14496-12: if item_type == 'mime' and 4+ bytes remain after the
         // NUL-terminated strings, a 4-byte extension_type follows
         $extensionType = null;
-        if ($itemType === 'mime' && (strlen($payload) - $cursor) >= 4) {
-            $extensionType = substr($payload, $cursor, 4);
+        if ($itemType === 'mime' && (strlen($payload) - $offset) >= 4) {
+            $extensionType = substr($payload, $offset, 4);
         }
 
         return [
@@ -712,30 +712,30 @@ final readonly class IlocBoxParser
     }
 
     /**
-     * Reads a NUL-terminated string from a payload at the given cursor position.
+     * Reads a NUL-terminated string from a payload at the given read offset.
      *
-     * By-ref cursor advancement: standard stream-cursor pattern where the read position
+     * By-ref offset advancement: standard stream-cursor pattern where the read position
      * must advance past consumed bytes for subsequent reads.
      *
      * @param string $payload Binary payload to read from.
-     * @param int    &$cursor Current read position; advanced past the NUL terminator.
+     * @param int    &$offset Current read position; advanced past the NUL terminator.
      */
-    private function readNulString(string $payload, int &$cursor): ?string
+    private function readNulString(string $payload, int &$offset): ?string
     {
-        if ($cursor >= strlen($payload)) {
+        if ($offset >= strlen($payload)) {
             return null;
         }
 
-        $nul = strpos($payload, "\0", $cursor);
+        $nul = strpos($payload, "\0", $offset);
         if ($nul === false) {
-            $value  = substr($payload, $cursor);
-            $cursor = strlen($payload);
+            $value  = substr($payload, $offset);
+            $offset = strlen($payload);
 
             return $value !== '' ? $value : null;
         }
 
-        $value  = substr($payload, $cursor, $nul - $cursor);
-        $cursor = $nul + 1;
+        $value  = substr($payload, $offset, $nul - $offset);
+        $offset = $nul + 1;
 
         return $value !== '' ? $value : null;
     }
