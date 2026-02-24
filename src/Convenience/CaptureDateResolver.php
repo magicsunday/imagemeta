@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Temporal;
 
+use function array_find;
 use function is_array;
 use function is_string;
 use function preg_match;

@@ -14,7 +14,10 @@ namespace MagicSunday\ImageMeta\Value;
 use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use Stringable;
 
+use function abs;
+use function rtrim;
 use function sprintf;
+use function strtoupper;
 
 /**
  * Represents a geographic coordinate with optional hemisphere reference.

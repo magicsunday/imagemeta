@@ -13,6 +13,8 @@ namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\Stream;
 
+use function array_any;
+
 /**
  * Coordinates marker-handler strategies for JPEG APP segment processing.
  */

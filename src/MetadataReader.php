@@ -37,8 +37,10 @@ use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use function class_exists;
 use function filesize;
 use function hash_file;
+use function is_dir;
 use function is_string;
 use function pathinfo;
+use function sprintf;
 use function strtolower;
 
 use const FILEINFO_MIME_TYPE;

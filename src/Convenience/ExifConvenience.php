@@ -24,6 +24,7 @@ use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Lens;
 
 use function abs;
+use function array_any;
 use function implode;
 use function round;
 use function rtrim;

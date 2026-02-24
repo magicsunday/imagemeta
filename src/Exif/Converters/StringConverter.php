@@ -17,7 +17,9 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 
 use function ctype_digit;
+use function in_array;
 use function is_string;
+use function sprintf;
 use function str_contains;
 use function str_replace;
 use function strlen;
