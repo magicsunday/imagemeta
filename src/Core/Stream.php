@@ -50,13 +50,13 @@ final class Stream implements BinaryReadAccessInterface
         $fh = @fopen($path, 'rb');
 
         if ($fh === false) {
-            throw new ParseError('Cannot open: ' . $path, 1010);
+            throw new ParseError('Cannot open the provided file path.', 1010);
         }
 
         $stat = fstat($fh);
 
         if (!is_array($stat)) {
-            throw new ParseError('Cannot determine size of: ' . $path, 1011);
+            throw new ParseError('Cannot determine file size of the provided path.', 1011);
         }
 
         $size = $stat['size'];

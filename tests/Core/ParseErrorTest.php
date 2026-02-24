@@ -58,7 +58,7 @@ final class ParseErrorTest extends TestCase
 
     /**
      * Attempts to open a missing file path to trigger an open failure.
-     * It asserts the ParseError message includes the missing path.
+     * It asserts the ParseError is thrown with a generic message.
      */
     #[Test]
     public function streamFromPathThrowsParseErrorWhenFileMissing(): void
@@ -66,7 +66,7 @@ final class ParseErrorTest extends TestCase
         $path = sys_get_temp_dir() . '/imagemeta-missing-' . uniqid('', true);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Cannot open: ' . $path);
+        $this->expectExceptionMessage('Cannot open the provided file path.');
 
         $previousHandler = set_error_handler(static function (int $errno, string $errstr) use ($path, &$previousHandler): bool {
             if (str_contains($errstr, $path)) {
