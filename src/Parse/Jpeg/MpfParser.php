@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
+use MagicSunday\ImageMeta\Parse\ParserLimits;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 
 use function array_any;
@@ -201,7 +202,7 @@ final class MpfParser
         $buffer->seek($offset);
 
         $entryCount = $this->readU16($buffer, $endian);
-        if ($entryCount < 0 || $entryCount > 512) {
+        if ($entryCount < 0 || $entryCount > ParserLimits::MAX_MPF_IFD_ENTRIES) {
             throw new ParseError('MPF IFD entry count outside supported range', 1295);
         }
 
@@ -226,7 +227,7 @@ final class MpfParser
 
             $previousTag = $tag;
 
-            if ($componentCount < 0 || $componentCount > 1_048_576) {
+            if ($componentCount < 0 || $componentCount > ParserLimits::MAX_MPF_COMPONENT_COUNT) {
                 throw new ParseError('MPF entry reports unreasonable component count', 1296);
             }
 

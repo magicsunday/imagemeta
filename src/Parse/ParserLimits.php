@@ -75,6 +75,16 @@ final class ParserLimits
      */
     public const int MAX_IFD_ENTRIES = 10_000;
 
+    /**
+     * Maximum IFD entries in an MPF (Multi-Picture Format) directory.
+     */
+    public const int MAX_MPF_IFD_ENTRIES = 512;
+
+    /**
+     * Maximum component count for a single MPF IFD entry value.
+     */
+    public const int MAX_MPF_COMPONENT_COUNT = 1_048_576;
+
     private function __construct()
     {
     }

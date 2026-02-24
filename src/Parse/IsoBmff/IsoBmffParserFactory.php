@@ -16,13 +16,18 @@ use MagicSunday\ImageMeta\Core\Stream;
 /**
  * Default ISO BMFF parser factory creating the built-in parser implementation.
  */
-final class IsoBmffParserFactory implements IsoBmffParserFactoryInterface
+final readonly class IsoBmffParserFactory implements IsoBmffParserFactoryInterface
 {
+    public function __construct(
+        private IsoBmffParserConfig $config = new IsoBmffParserConfig(),
+    ) {
+    }
+
     /**
      * Creates the built-in ISO BMFF parser for the supplied stream.
      */
     public function create(Stream $stream): IsoBmffParserInterface
     {
-        return new IsoBmffParser($stream);
+        return new IsoBmffParser($stream, $this->config);
     }
 }

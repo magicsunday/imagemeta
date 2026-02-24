@@ -53,16 +53,6 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      */
     private const string BRAND_QUICKTIME = 'qt  ';
 
-    /**
-     * Maximum supported nesting depth for data-type 28 metadata payloads.
-     */
-    private const int MAX_NESTED_METADATA_DEPTH = 1;
-
-    /**
-     * Maximum cumulative payload size allowed when assembling item extents.
-     */
-    public const int MAX_ITEM_PAYLOAD_SIZE = 8 * 1024 * 1024;
-
     private BoxNavigator $boxNavigator;
 
     private IlocBoxParser $ilocBoxParser;
@@ -82,17 +72,22 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     /**
      * Initialises the extractor with the source stream that contains the ISO BMFF structure.
      *
-     * @param Stream $stream Stream positioned at the beginning of the media file to parse.
+     * @param Stream              $stream              Stream positioned at the beginning of the media file to parse.
+     * @param IsoBmffParserConfig $config              Guard limits for ISO BMFF parsing.
+     * @param int                 $nestedMetadataDepth Current nesting depth for type-28 metadata payloads.
      */
-    public function __construct(private Stream $stream, private int $nestedMetadataDepth = 0)
-    {
+    public function __construct(
+        private Stream $stream,
+        private IsoBmffParserConfig $config = new IsoBmffParserConfig(),
+        private int $nestedMetadataDepth = 0,
+    ) {
         $boxNavigator = new BoxNavigator($stream);
 
         $this->boxNavigator = $boxNavigator;
 
         $this->quickTimeKeyResolver = new QuickTimeKeyResolver($boxNavigator);
         $this->ilocBoxParser        = new IlocBoxParser($boxNavigator);
-        $this->itemPayloadResolver  = new ItemPayloadResolver($stream, $boxNavigator);
+        $this->itemPayloadResolver  = new ItemPayloadResolver($stream, $boxNavigator, $this->config->maxItemPayloadSize);
         $this->itemLocationResolver = new ItemLocationResolver($this->itemPayloadResolver);
 
         $this->quickTimeDecoder = new QuickTimeMetadataDecoder(
@@ -114,6 +109,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $this->quickTimeDecoder,
             $this->quickTimeKeyResolver,
             $this->itemPayloadResolver,
+            $this->config->maxItemPayloadSize,
         );
     }
 
@@ -142,7 +138,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             } elseif ($box->type === BoxType::MOOF->value) {
                 $this->parseMoofBox($box, $context);
             } elseif ($box->type === BoxType::UUID->value && $box->userType === BoxPayloadCollector::XMP_UUID) {
-                if ($box->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
+                if ($box->contentSize > $this->config->maxItemPayloadSize) {
                     throw new ParseError('uuid XMP payload exceeds maximum allowed size', 1368);
                 }
 
@@ -554,11 +550,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      */
     private function parseNestedMetadataPayload(string $payload): array
     {
-        if ($this->nestedMetadataDepth >= self::MAX_NESTED_METADATA_DEPTH) {
+        if ($this->nestedMetadataDepth >= $this->config->maxNestedMetadataDepth) {
             throw new ParseError('data box nested metadata depth exceeds maximum allowed.', 1458);
         }
 
-        if (strlen($payload) > self::MAX_ITEM_PAYLOAD_SIZE) {
+        if (strlen($payload) > $this->config->maxItemPayloadSize) {
             throw new ParseError('data box nested metadata payload exceeds maximum allowed size.', 1459);
         }
 
@@ -577,7 +573,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         rewind($handle);
 
         $nestedStream = new Stream($handle, $metaSize);
-        $nestedParser = new self($nestedStream, $this->nestedMetadataDepth + 1);
+        $nestedParser = new self($nestedStream, $this->config, $this->nestedMetadataDepth + 1);
         $context      = new IsoBmffParseContext();
 
         $meta = $nestedParser->boxNavigator->readBoxAt(0, $metaSize);

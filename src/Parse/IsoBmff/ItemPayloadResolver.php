@@ -42,12 +42,14 @@ use function substr;
 final readonly class ItemPayloadResolver
 {
     /**
-     * @param Stream       $stream       Stream positioned at the beginning of the media file to parse.
-     * @param BoxNavigator $boxNavigator Shared box navigation infrastructure.
+     * @param Stream       $stream             Stream positioned at the beginning of the media file to parse.
+     * @param BoxNavigator $boxNavigator       Shared box navigation infrastructure.
+     * @param int          $maxItemPayloadSize Maximum cumulative payload size in bytes.
      */
     public function __construct(
         private Stream $stream,
         private BoxNavigator $boxNavigator,
+        private int $maxItemPayloadSize,
     ) {
     }
 
@@ -115,7 +117,7 @@ final readonly class ItemPayloadResolver
                     $length = $fileSize - $effectiveOffset;
                 }
 
-                if ($length > IsoBmffParser::MAX_ITEM_PAYLOAD_SIZE - $total) {
+                if ($length > $this->maxItemPayloadSize - $total) {
                     throw new ParseError('iloc item payload exceeds configured limit', 1178);
                 }
 
@@ -189,7 +191,7 @@ final readonly class ItemPayloadResolver
                     $length = $idatSize - $effectiveOffset;
                 }
 
-                if ($length > IsoBmffParser::MAX_ITEM_PAYLOAD_SIZE - $total) {
+                if ($length > $this->maxItemPayloadSize - $total) {
                     throw new ParseError('iloc item payload exceeds configured limit', 1183);
                 }
 
@@ -241,7 +243,7 @@ final readonly class ItemPayloadResolver
         foreach ($location['extents'] as $extent) {
             $length = $extent['length'];
 
-            if ($length > IsoBmffParser::MAX_ITEM_PAYLOAD_SIZE - $total) {
+            if ($length > $this->maxItemPayloadSize - $total) {
                 throw new ParseError('iloc item payload exceeds configured limit', 1188);
             }
 
@@ -306,7 +308,7 @@ final readonly class ItemPayloadResolver
 
                 $length = $referenceSize - $offset;
 
-                if ($length > IsoBmffParser::MAX_ITEM_PAYLOAD_SIZE - $total) {
+                if ($length > $this->maxItemPayloadSize - $total) {
                     throw new ParseError('iloc item payload exceeds configured limit', 1881);
                 }
             }

@@ -37,6 +37,9 @@ final readonly class BoxPayloadCollector
      */
     public const string XMP_UUID = "\xBE\x7A\xCF\xCB\x97\xA9\x42\xE8\x9C\x71\x99\x94\x91\xE3\xAF\xAC";
 
+    /**
+     * @param int $maxItemPayloadSize Maximum cumulative payload size in bytes.
+     */
     public function __construct(
         private BoxNavigator $boxNavigator,
         private TrackMediaParser $trackMediaParser,
@@ -45,6 +48,7 @@ final readonly class BoxPayloadCollector
         private QuickTimeMetadataDecoder $quickTimeDecoder,
         private QuickTimeKeyResolver $quickTimeKeyResolver,
         private ItemPayloadResolver $itemPayloadResolver,
+        private int $maxItemPayloadSize,
     ) {
     }
 
@@ -110,7 +114,7 @@ final readonly class BoxPayloadCollector
                     break;
                 case BoxType::EXIF->value:
                     // Enforce payload cap before reading direct Exif box
-                    if ($child->contentSize > IsoBmffParser::MAX_ITEM_PAYLOAD_SIZE) {
+                    if ($child->contentSize > $this->maxItemPayloadSize) {
                         throw new ParseError('direct Exif box payload exceeds maximum allowed size', 1396);
                     }
 
@@ -140,7 +144,7 @@ final readonly class BoxPayloadCollector
                         throw new ParseError('meta context must contain at most one idat box', 1414);
                     }
 
-                    if ($child->contentSize > IsoBmffParser::MAX_ITEM_PAYLOAD_SIZE) {
+                    if ($child->contentSize > $this->maxItemPayloadSize) {
                         throw new ParseError('idat payload exceeds configured limit', 1164);
                     }
 
@@ -158,7 +162,7 @@ final readonly class BoxPayloadCollector
                     break;
                 case BoxType::XMP->value:
                     // Enforce payload cap before reading direct XMP box
-                    if ($child->contentSize > IsoBmffParser::MAX_ITEM_PAYLOAD_SIZE) {
+                    if ($child->contentSize > $this->maxItemPayloadSize) {
                         throw new ParseError('direct XMP box payload exceeds maximum allowed size', 1397);
                     }
 
@@ -167,7 +171,7 @@ final readonly class BoxPayloadCollector
                 case BoxType::UUID->value:
                     if ($child->userType === self::XMP_UUID) {
                         // Enforce payload cap before reading uuid XMP box
-                        if ($child->contentSize > IsoBmffParser::MAX_ITEM_PAYLOAD_SIZE) {
+                        if ($child->contentSize > $this->maxItemPayloadSize) {
                             throw new ParseError('uuid XMP box payload exceeds maximum allowed size', 1900);
                         }
 
