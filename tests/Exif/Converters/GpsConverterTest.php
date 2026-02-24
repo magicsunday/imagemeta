@@ -616,6 +616,35 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Verifies that seconds very close to 60 carry into minutes after microsecond rounding.
+     */
+    #[Test]
+    public function carriesSecondsNear60IntoMinutes(): void
+    {
+        // 599999999/10000000 = 59.9999999 — passes < 60.0 check, rounds to seconds=60
+        $result = $this->converter->fromIfd(
+            $this->buildIfdWithDateAndTime('2025:03:01', [[10, 1], [20, 1], [599999999, 10000000]]),
+        );
+
+        self::assertSame('10:21:00', $result['time']);
+        self::assertSame('2025-03-01T10:21:00+00:00', $result['timestamp']?->format('c'));
+    }
+
+    /**
+     * Verifies that seconds carry cascades through minutes into hours at 23:59.
+     */
+    #[Test]
+    public function carriesSecondsNear60AtEndOfHour(): void
+    {
+        // 23:59:59.9999999 — should become 00:00:00 but clamps to 23:59:59.999999
+        $result = $this->converter->fromIfd(
+            $this->buildIfdWithDateAndTime('2025:03:01', [[23, 1], [59, 1], [599999999, 10000000]]),
+        );
+
+        self::assertSame('23:59:59.999999', $result['time']);
+    }
+
+    /**
      * Rejects invalid GPS timestamp inputs (bad dates and out-of-range time components).
      *
      * @param list<array{0:int,1:int}> $timeRationals

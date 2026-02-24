@@ -217,17 +217,9 @@ final readonly class GpsTimestampConverter
             return null;
         }
 
-        $secondsFloat = $timeParts['seconds'];
-        $secondsInt   = (int) floor($secondsFloat);
-        $fraction     = $secondsFloat - $secondsInt;
-        $microseconds = (int) round($fraction * 1_000_000);
+        [$hours, $minutes, $secondsInt, $microseconds] = $this->decomposeTime($timeParts);
 
-        if ($microseconds >= 1_000_000) {
-            ++$secondsInt;
-            $microseconds -= 1_000_000;
-        }
-
-        $time = sprintf('%02d:%02d:%02d', $timeParts['hours'], $timeParts['minutes'], $secondsInt);
+        $time = sprintf('%02d:%02d:%02d', $hours, $minutes, $secondsInt);
 
         if ($microseconds > 0) {
             $micro = rtrim(sprintf('%06d', $microseconds), '0');
@@ -252,17 +244,9 @@ final readonly class GpsTimestampConverter
             return null;
         }
 
-        $secondsFloat = $timeParts['seconds'];
-        $secondsInt   = (int) floor($secondsFloat);
-        $fraction     = $secondsFloat - $secondsInt;
-        $microseconds = (int) round($fraction * 1_000_000);
+        [$hours, $minutes, $secondsInt, $microseconds] = $this->decomposeTime($timeParts);
 
-        if ($microseconds >= 1_000_000) {
-            ++$secondsInt;
-            $microseconds -= 1_000_000;
-        }
-
-        $timeString = sprintf('%02d:%02d:%02d', $timeParts['hours'], $timeParts['minutes'], $secondsInt);
+        $timeString = sprintf('%02d:%02d:%02d', $hours, $minutes, $secondsInt);
         $format     = 'Y-m-d H:i:s';
 
         if ($microseconds > 0) {
@@ -281,6 +265,51 @@ final readonly class GpsTimestampConverter
         }
 
         return $dateTime;
+    }
+
+    /**
+     * Decomposes float seconds into integer seconds and microseconds with carry propagation.
+     *
+     * Rounding the fractional part to microseconds can push seconds to 60, minutes to 60
+     * or hours past 23. This method cascades carries so the result is always valid.
+     *
+     * @param array{hours:int, minutes:int, seconds:float} $timeParts
+     *
+     * @return array{0:int, 1:int, 2:int, 3:int} [hours, minutes, seconds, microseconds]
+     */
+    private function decomposeTime(array $timeParts): array
+    {
+        $hours   = $timeParts['hours'];
+        $minutes = $timeParts['minutes'];
+
+        $secondsFloat = $timeParts['seconds'];
+        $secondsInt   = (int) floor($secondsFloat);
+        $fraction     = $secondsFloat - $secondsInt;
+        $microseconds = (int) round($fraction * 1_000_000);
+
+        if ($microseconds >= 1_000_000) {
+            ++$secondsInt;
+            $microseconds -= 1_000_000;
+        }
+
+        if ($secondsInt >= 60) {
+            $secondsInt -= 60;
+            ++$minutes;
+        }
+
+        if ($minutes >= 60) {
+            $minutes -= 60;
+            ++$hours;
+        }
+
+        if ($hours > 23) {
+            $hours        = 23;
+            $minutes      = 59;
+            $secondsInt   = 59;
+            $microseconds = 999_999;
+        }
+
+        return [$hours, $minutes, $secondsInt, $microseconds];
     }
 
     private function isWholeNumber(float $value): bool
