@@ -59,4 +59,27 @@ final class ThumbnailTest extends TestCase
         self::assertSame([512], $thumbnail->thumbnailTileOffsets);
         self::assertSame([1024], $thumbnail->thumbnailTileByteCounts);
     }
+
+    /**
+     * Accepts null for all optional properties when no thumbnail exists.
+     * It ensures missing or invalid inputs yield no value.
+     */
+    #[Test]
+    public function allowsNullValues(): void
+    {
+        $thumbnail = new Thumbnail(
+            hasThumbnail: false,
+        );
+
+        self::assertFalse($thumbnail->hasThumbnail);
+        self::assertNull($thumbnail->thumbnailOffset);
+        self::assertNull($thumbnail->thumbnailLength);
+        self::assertNull($thumbnail->thumbnailCompression);
+        self::assertNull($thumbnail->thumbnailTileWidth);
+        self::assertNull($thumbnail->thumbnailTileLength);
+        self::assertNull($thumbnail->thumbnailTileOffsets);
+        self::assertNull($thumbnail->thumbnailTileByteCounts);
+        self::assertNull($thumbnail->thumbnailStripOffsets);
+        self::assertNull($thumbnail->thumbnailStripByteCounts);
+    }
 }

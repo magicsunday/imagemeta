@@ -54,4 +54,29 @@ final class LensTest extends TestCase
         self::assertSame(2.0, $lens->maxApertureFNumber);
         self::assertSame($specification, $lens->lensSpecification);
     }
+
+    /**
+     * Accepts null for all optional properties.
+     * It ensures missing or invalid inputs yield no value.
+     */
+    #[Test]
+    public function allowsNullValues(): void
+    {
+        $lens = new Lens(
+            lensMake: null,
+            lensModel: null,
+            lensSerialNumber: null,
+            focalLengthMm: null,
+            focalLengthIn35mm: null,
+            maxApertureFNumber: null,
+        );
+
+        self::assertNull($lens->lensMake);
+        self::assertNull($lens->lensModel);
+        self::assertNull($lens->lensSerialNumber);
+        self::assertNull($lens->focalLengthMm);
+        self::assertNull($lens->focalLengthIn35mm);
+        self::assertNull($lens->maxApertureFNumber);
+        self::assertNull($lens->lensSpecification);
+    }
 }

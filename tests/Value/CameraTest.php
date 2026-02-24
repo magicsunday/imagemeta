@@ -52,4 +52,28 @@ final class CameraTest extends TestCase
         self::assertSame(FileSource::DigitalCamera, $camera->fileSource);
         self::assertSame(SensingMethod::OneChipColorArea, $camera->sensingMethod);
     }
+
+    /**
+     * Accepts null for all optional properties.
+     * It ensures missing or invalid inputs yield no value.
+     */
+    #[Test]
+    public function allowsNullValues(): void
+    {
+        $camera = new Camera(
+            make: null,
+            model: null,
+            ownerName: null,
+            firmware: null,
+            fileSource: null,
+            sensingMethod: null,
+        );
+
+        self::assertNull($camera->make);
+        self::assertNull($camera->model);
+        self::assertNull($camera->ownerName);
+        self::assertNull($camera->firmware);
+        self::assertNull($camera->fileSource);
+        self::assertNull($camera->sensingMethod);
+    }
 }
