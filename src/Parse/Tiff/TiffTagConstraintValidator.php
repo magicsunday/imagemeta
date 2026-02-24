@@ -133,6 +133,8 @@ final readonly class TiffTagConstraintValidator
             && is_int($thumbEntry->value)
             && $thumbEntry->value !== 1
             && $thumbEntry->value !== 6
+            // Postel's Law: accept Compression=7 (JPEG new-style TN2) per GH-1645
+            && $thumbEntry->value !== 7
         ) {
             throw new ParseError(sprintf(
                 'Compression value %d in IFD1 is invalid; only 1 or 6 is allowed.',

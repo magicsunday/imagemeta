@@ -1477,6 +1477,22 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * IFD1 Compression=7 (JPEG new-style TN2) is tolerated per GH-1645.
+     */
+    #[Test]
+    public function itToleratesCompression7InIfd1(): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTwoIfds(
+                [[ExifTag::IMAGE_WIDTH, 100], [ExifTag::IMAGE_LENGTH, 100]],
+                [[ExifTag::COMPRESSION, 7]],
+            ),
+        );
+
+        self::assertSame(7, $result->ifd1?->get(ExifTag::COMPRESSION)?->value);
+    }
+
+    /**
      * IFD1 Compression=1 is allowed when IFD0 is uncompressed RGB.
      */
     #[Test]
