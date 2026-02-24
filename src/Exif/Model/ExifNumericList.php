@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Model;
 
-use InvalidArgumentException;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
 use function array_is_list;
@@ -59,7 +59,7 @@ final readonly class ExifNumericList
             return;
         }
 
-        throw new InvalidArgumentException('Numeric EXIF values must form a list.');
+        throw new ParseError('Numeric EXIF values must form a list.', 1865);
     }
 
     /**
@@ -71,7 +71,7 @@ final readonly class ExifNumericList
     {
         foreach ($values as $value) {
             if (!is_int($value) && !is_float($value) && !$value instanceof UInt64) {
-                throw new InvalidArgumentException('Numeric EXIF lists may only contain integers, floats, or UInt64 values.');
+                throw new ParseError('Numeric EXIF lists may only contain integers, floats, or UInt64 values.', 1866);
             }
         }
     }

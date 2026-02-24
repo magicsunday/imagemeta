@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
-use InvalidArgumentException;
+use MagicSunday\ImageMeta\Core\ParseError;
 
 /**
  * Immutable configuration values for JPEG parser guard limits.
@@ -31,19 +31,19 @@ final readonly class JpegParserConfig
         public int $flashPixMaxStreamSize = 16_777_216,
     ) {
         if ($this->maxAppSegmentSize < 1) {
-            throw new InvalidArgumentException('maxAppSegmentSize must be greater than zero.');
+            throw new ParseError('maxAppSegmentSize must be greater than zero.', 1854);
         }
 
         if ($this->extendedXmpGuidLength < 1) {
-            throw new InvalidArgumentException('extendedXmpGuidLength must be greater than zero.');
+            throw new ParseError('extendedXmpGuidLength must be greater than zero.', 1855);
         }
 
         if ($this->flashPixMaxContentEntries < 1) {
-            throw new InvalidArgumentException('flashPixMaxContentEntries must be greater than zero.');
+            throw new ParseError('flashPixMaxContentEntries must be greater than zero.', 1856);
         }
 
         if ($this->flashPixMaxStreamSize < 1) {
-            throw new InvalidArgumentException('flashPixMaxStreamSize must be greater than zero.');
+            throw new ParseError('flashPixMaxStreamSize must be greater than zero.', 1857);
         }
     }
 }

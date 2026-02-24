@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Model;
 
-use InvalidArgumentException;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -60,7 +60,7 @@ final class ExifNumericListTest extends TestCase
             'first' => 1,
         ];
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Numeric EXIF values must form a list.');
 
         new ExifNumericList($values);
@@ -78,7 +78,7 @@ final class ExifNumericListTest extends TestCase
             'two',
         ];
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Numeric EXIF lists may only contain integers, floats, or UInt64 values.');
 
         new ExifNumericList($values);

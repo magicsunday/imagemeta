@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
-use InvalidArgumentException;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -70,7 +70,7 @@ final class MakerNotesRecordTest extends TestCase
     #[DataProvider('invalidConstructorArguments')]
     public function constructorRejectsInvalidArguments(string $vendor, int $length, string $sha1): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(ParseError::class);
 
         new MakerNotesRecord($vendor, $length, $sha1);
     }

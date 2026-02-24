@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Model;
 
-use InvalidArgumentException;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -50,7 +50,7 @@ final class ExifRationalListTest extends TestCase
 
     /**
      * Supplies an associative array instead of a numeric list of rationals.
-     * Ensures the constructor rejects non-list input and raises an InvalidArgumentException.
+     * Ensures the constructor rejects non-list input and raises a ParseError.
      */
     #[Test]
     public function rejectsNonListInput(): void
@@ -59,7 +59,7 @@ final class ExifRationalListTest extends TestCase
             'first' => new ExifRational(1, 2),
         ];
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Rational EXIF values must form a list.');
 
         // @phpstan-ignore-next-line: associative array passed intentionally to assert runtime validation.
@@ -78,7 +78,7 @@ final class ExifRationalListTest extends TestCase
             42,
         ];
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Rational EXIF lists may only contain ExifRational instances.');
 
         // @phpstan-ignore-next-line: scalar element passed intentionally to assert runtime validation.

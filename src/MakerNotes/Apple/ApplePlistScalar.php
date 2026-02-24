@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
-use LogicException;
+use MagicSunday\ImageMeta\Core\ParseError;
 
 use function is_bool;
 use function is_float;
@@ -81,12 +81,12 @@ final readonly class ApplePlistScalar implements ApplePlistValueInterface
     /**
      * Returns the value as a string.
      *
-     * @throws LogicException When the value is not a string.
+     * @throws ParseError When the value is not a string.
      */
     public function asString(): string
     {
         if (!is_string($this->value)) {
-            throw new LogicException('The property list value is not a string.');
+            throw new ParseError('The property list value is not a string.', 1861);
         }
 
         return $this->value;
@@ -95,12 +95,12 @@ final readonly class ApplePlistScalar implements ApplePlistValueInterface
     /**
      * Returns the value as an integer.
      *
-     * @throws LogicException When the value is not an integer.
+     * @throws ParseError When the value is not an integer.
      */
     public function asInt(): int
     {
         if (!is_int($this->value)) {
-            throw new LogicException('The property list value is not an integer.');
+            throw new ParseError('The property list value is not an integer.', 1862);
         }
 
         return $this->value;
@@ -109,7 +109,7 @@ final readonly class ApplePlistScalar implements ApplePlistValueInterface
     /**
      * Returns the value as a float, promoting integers when needed.
      *
-     * @throws LogicException When the value is not numeric.
+     * @throws ParseError When the value is not numeric.
      */
     public function asFloat(): float
     {
@@ -121,18 +121,18 @@ final readonly class ApplePlistScalar implements ApplePlistValueInterface
             return (float) $this->value;
         }
 
-        throw new LogicException('The property list value is not a floating point number.');
+        throw new ParseError('The property list value is not a floating point number.', 1863);
     }
 
     /**
      * Returns the value as a boolean.
      *
-     * @throws LogicException When the value is not a boolean.
+     * @throws ParseError When the value is not a boolean.
      */
     public function asBool(): bool
     {
         if (!is_bool($this->value)) {
-            throw new LogicException('The property list value is not a boolean.');
+            throw new ParseError('The property list value is not a boolean.', 1864);
         }
 
         return $this->value;

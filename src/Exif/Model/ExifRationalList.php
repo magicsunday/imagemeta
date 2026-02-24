@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Model;
 
-use InvalidArgumentException;
+use MagicSunday\ImageMeta\Core\ParseError;
 use TypeError;
 
 use function array_is_list;
@@ -34,12 +34,12 @@ final readonly class ExifRationalList
      *
      * @psalm-param list<ExifRational> $values
      *
-     * @throws InvalidArgumentException If the provided values are not a sequential list of ExifRational objects.
+     * @throws ParseError If the provided values are not a sequential list of ExifRational objects.
      */
     public function __construct(array $values)
     {
         if (!array_is_list($values)) {
-            throw new InvalidArgumentException('Rational EXIF values must form a list.');
+            throw new ParseError('Rational EXIF values must form a list.', 1867);
         }
 
         try {
@@ -48,7 +48,7 @@ final readonly class ExifRationalList
                 $values
             );
         } catch (TypeError $exception) {
-            throw new InvalidArgumentException('Rational EXIF lists may only contain ExifRational instances.', 0, $exception);
+            throw new ParseError('Rational EXIF lists may only contain ExifRational instances.', 1868, $exception);
         }
 
         /** @var list<ExifRational> $values */

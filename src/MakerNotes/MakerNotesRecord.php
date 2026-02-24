@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes;
 
-use InvalidArgumentException;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Samsung\SamsungMakerNotes;
 
@@ -39,15 +39,15 @@ final readonly class MakerNotesRecord
         public ?bool $safe = null,
     ) {
         if ($this->vendor === '') {
-            throw new InvalidArgumentException('The vendor must not be empty.');
+            throw new ParseError('The vendor must not be empty.', 1858);
         }
 
         if ($this->length < 0) {
-            throw new InvalidArgumentException('The payload length must be zero or positive.');
+            throw new ParseError('The payload length must be zero or positive.', 1859);
         }
 
         if (preg_match('/^[0-9a-f]{40}$/', $this->sha1) !== 1) {
-            throw new InvalidArgumentException('The payload hash must be a 40 character lowercase hexadecimal string.');
+            throw new ParseError('The payload hash must be a 40 character lowercase hexadecimal string.', 1860);
         }
     }
 }
