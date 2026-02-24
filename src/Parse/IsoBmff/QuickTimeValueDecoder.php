@@ -279,13 +279,13 @@ final readonly class QuickTimeValueDecoder
         $trimmed = trim($payload, "\0");
 
         if ($type === self::DATA_TYPE_MAC_ROMAN) {
-            $converted = iconv('macintosh', 'UTF-8//IGNORE', $trimmed);
+            $converted = iconv('macintosh', 'UTF-8', $trimmed);
 
-            if ($converted !== false) {
-                return trim($converted, "\0");
+            if ($converted === false) {
+                throw new ParseError('MacRoman payload contains invalid byte sequence.', 1963);
             }
 
-            return $trimmed;
+            return trim($converted, "\0");
         }
 
         // QuickTime File Format 2012 Table 3-5: type 21/22 encode integers
