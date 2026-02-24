@@ -245,138 +245,17 @@ final class TiffExifParser implements TiffExifParserInterface
             || ($ifd0->get(DngTag::DNG_BACKWARD_VERSION) instanceof IfdEntry)
             || ($ifd0->get(DngTag::UNIQUE_CAMERA_MODEL) instanceof IfdEntry);
 
-        $this->dngValidator->validateDngRequiredVersion($ifd0);
-        $this->dngValidator->validateDngRequiredUniqueCameraModel($ifd0);
+        $this->dngValidator->validatePreLoop($ifd0);
 
         $this->structuralValidator->validateEnhancedIfd($ifd0);
         foreach ($additionalIfds as $additionalIfd) {
             $this->structuralValidator->validateEnhancedIfd($additionalIfd);
-            $this->structuralValidator->validateSubfileAndPageTags($additionalIfd, !$isDngContainer);
-            $this->structuralValidator->validatePositionTags($additionalIfd);
-            $this->structuralValidator->validateThreshholdingAndCellTags($additionalIfd);
-            $this->structuralValidator->validateFreeSpaceTags($additionalIfd);
-            $this->structuralValidator->validateFillOrderTag($additionalIfd);
-            $this->structuralValidator->validatePredictorTag($additionalIfd);
-            $this->structuralValidator->validateJpegProcTag($additionalIfd);
-            $this->structuralValidator->validateJpegRestartIntervalTag($additionalIfd);
-            $this->structuralValidator->validateJpegLosslessTags($additionalIfd);
-            $this->structuralValidator->validateJpegTableTags($additionalIfd);
-            $this->structuralValidator->validateJpegInterchangePairTags($additionalIfd);
-            $this->structuralValidator->validateMinMaxSampleValueTags($additionalIfd);
-            $this->structuralValidator->validateSampleDomainTags($additionalIfd);
-            $this->structuralValidator->validateExtraSamplesTag($additionalIfd);
-            $this->structuralValidator->validateGrayResponseTags($additionalIfd);
-            $this->structuralValidator->validateHalftoneHintsTag($additionalIfd);
-            $this->structuralValidator->validateFaxOptionTags($additionalIfd);
-            $this->structuralValidator->validateSeparatedImageInkTags($additionalIfd);
-            $this->structuralValidator->validateSeparatedImageDotRange($additionalIfd);
-            $this->structuralValidator->validateTransferFamilyTags($additionalIfd);
-            $this->structuralValidator->validatePaletteColorMapTag($additionalIfd);
-            $this->dngValidator->validateDngRolePhotometric($additionalIfd);
-            $this->dngValidator->validateDngIfd0OnlyTags($additionalIfd);
-            $this->dngValidator->validateDngJxlTags($additionalIfd);
-            $this->dngValidator->validateDngCfaPhotometric($additionalIfd);
-            $this->dngValidator->validateDngLinearizationTable($additionalIfd);
-            $this->dngValidator->validateDngBayerGreenSplit($additionalIfd);
-            $this->dngValidator->validateDngProfileGainTableMapLegacy($additionalIfd);
-            $this->dngValidator->validateDngSemanticMaskIdentity($additionalIfd);
-            $this->dngValidator->validateDngMaskSubArea($additionalIfd);
+            $this->structuralValidator->validatePerIfd($additionalIfd, !$isDngContainer);
+            $this->dngValidator->validatePerIfd($additionalIfd);
         }
 
-        $this->dngValidator->validateDngMatrixTags($ifd0);
-        $this->dngValidator->validateDngCalibrationIlluminantDomain($ifd0);
-        $this->dngValidator->validateDngIlluminantDependencies($ifd0);
-        $this->dngValidator->validateDngThirdIlluminantVersionFloor($ifd0);
-        $this->dngValidator->validateDngTripleIlluminant($ifd0);
-        $this->dngValidator->validateDngWhiteBalanceExclusivity($ifd0);
-        $this->dngValidator->validateDngWhiteBalanceLayout($ifd0);
-        $this->dngValidator->validateDngAnalogBalance($ifd0);
-        $this->dngValidator->validateDngIccProfilePairs($ifd0);
-        $this->dngValidator->validateDngCalibrationIlluminantPairZero($ifd0);
-        $this->dngValidator->validateDngProfileToneCurve($ifd0);
-        $this->dngValidator->validateDngInterleaveVersionFloors($ifd0);
-        $this->dngValidator->validateDngVersionValidity($ifd0);
-        $this->dngValidator->validateDngBackwardVersionGate($ifd0);
-        $this->dngValidator->validateDngBackwardVersionConsistency($ifd0);
-        $this->dngValidator->validateDngColorimetricReference($ifd0);
-        $this->dngValidator->validateDngMultiProfileName($ifd0, $additionalIfds);
-        $this->dngValidator->validateDngExtraCameraProfiles($ifd0);
-        $this->dngValidator->validateDngNoiseProfile($ifd0);
-        $this->dngValidator->validateDngHueSatMapDims($ifd0);
-        $this->dngValidator->validateDngHueSatMapData($ifd0);
-        $this->dngValidator->validateDngProfileLookTableDims($ifd0);
-        $this->dngValidator->validateDngProfileLookTableData($ifd0);
-        $this->dngValidator->validateDngEncodingTag(
-            $ifd0,
-            DngTag::PROFILE_HUE_SAT_MAP_ENCODING,
-            DngTag::PROFILE_HUE_SAT_MAP_DIMS,
-            'ProfileHueSatMapEncoding',
-        );
-        $this->dngValidator->validateDngEncodingTag(
-            $ifd0,
-            DngTag::PROFILE_LOOK_TABLE_ENCODING,
-            DngTag::PROFILE_LOOK_TABLE_DIMS,
-            'ProfileLookTableEncoding',
-        );
-        $this->dngValidator->validateDngDigestTags($ifd0);
-        $this->dngValidator->validateDngPreviewDateTime($ifd0);
-        $this->dngValidator->validateDngPreviewColorSpace($ifd0);
-        $this->dngValidator->validateDngDefaultBlackRender($ifd0);
-        $this->dngValidator->validateDngIlluminantData($ifd0);
-        $this->dngValidator->validateDngProfileDynamicRange($ifd0);
-        $this->dngValidator->validateDngProfileGainTableMap2($ifd0);
-        $this->dngValidator->validateDngGainMapPlacement($ifd0);
-        $this->dngValidator->validateDngProfileGainTableMapLegacy($ifd0);
-        $this->dngValidator->validateDngImageStats($ifd0);
-        $this->dngValidator->validateDngImageSequenceInfo($ifd0);
-        $this->dngValidator->validateDngRgbTables($ifd0);
-        $this->dngValidator->validateDngOpcodeLists($ifd0);
-        $this->dngValidator->validateDngOriginalRawFileData($ifd0);
-        $this->dngValidator->validateDngActiveAndMaskedAreas($ifd0);
-        $this->dngValidator->validateDngBlackWhiteLevelFamily($ifd0);
-        $this->dngValidator->validateDngDefaultCropScaleGeometry($ifd0);
-        $this->dngValidator->validateDngLinearResponseLimit($ifd0);
-        $this->dngValidator->validateDngLinearizationTable($ifd0);
-        $this->dngValidator->validateDngBayerGreenSplit($ifd0);
-        $this->dngValidator->validateDngRenderScalars($ifd0);
-        $this->dngValidator->validateDngBaselineExposure($ifd0);
-        $this->dngValidator->validateDngBaselineScalars($ifd0);
-        $this->dngValidator->validateDngLensInfo($ifd0);
-        $this->dngValidator->validateDngBestQualityScale($ifd0);
-        $this->dngValidator->validateDngOriginalProxySizes($ifd0);
-        $this->dngValidator->validateDngDefaultUserCrop($ifd0);
-        $this->dngValidator->validateDngDepthEnums($ifd0);
-        $this->dngValidator->validateDngNoiseReductionApplied($ifd0);
-        $this->dngValidator->validateDngCfaLayoutDomain($ifd0);
-        $this->dngValidator->validateDngProfileEmbedPolicy($ifd0);
-        $this->dngValidator->validateDngEnhanceParams($ifd0);
-        $this->dngValidator->validateDngSubTileBlockSize($ifd0);
-        $this->dngValidator->validateDngRowInterleaveFactor($ifd0);
-        $this->dngValidator->validateDngRequiredOrientation($ifd0);
-
-        $this->structuralValidator->validateResolutionEquality($ifd0);
-        $this->structuralValidator->validateCompressionDomain($ifd0, $ifd1, $jpegContext);
-        $this->structuralValidator->validateSubfileAndPageTags($ifd0, !$isDngContainer);
-        $this->structuralValidator->validatePositionTags($ifd0);
-        $this->structuralValidator->validateThreshholdingAndCellTags($ifd0);
-        $this->structuralValidator->validateFreeSpaceTags($ifd0);
-        $this->structuralValidator->validateFillOrderTag($ifd0);
-        $this->structuralValidator->validatePredictorTag($ifd0);
-        $this->structuralValidator->validateJpegProcTag($ifd0);
-        $this->structuralValidator->validateJpegRestartIntervalTag($ifd0);
-        $this->structuralValidator->validateJpegLosslessTags($ifd0);
-        $this->structuralValidator->validateJpegTableTags($ifd0);
-        $this->structuralValidator->validateJpegInterchangePairTags($ifd0);
-        $this->structuralValidator->validateMinMaxSampleValueTags($ifd0);
-        $this->structuralValidator->validateSampleDomainTags($ifd0);
-        $this->structuralValidator->validateExtraSamplesTag($ifd0);
-        $this->structuralValidator->validateGrayResponseTags($ifd0);
-        $this->structuralValidator->validateHalftoneHintsTag($ifd0);
-        $this->structuralValidator->validateFaxOptionTags($ifd0);
-        $this->structuralValidator->validateSeparatedImageInkTags($ifd0);
-        $this->structuralValidator->validateSeparatedImageDotRange($ifd0);
-        $this->structuralValidator->validateTransferFamilyTags($ifd0);
-        $this->structuralValidator->validatePaletteColorMapTag($ifd0);
+        $this->dngValidator->validateIfd0($ifd0, $additionalIfds);
+        $this->structuralValidator->validateIfd0($ifd0, $ifd1, $jpegContext, !$isDngContainer);
 
         $this->tagValidator->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
         $this->tagValidator->validateCameraControlEnumDomains($ifd0, $exifIfd, $ifd1, ...$additionalIfds);
@@ -388,9 +267,7 @@ final class TiffExifParser implements TiffExifParserInterface
         // externally (SOF header / ispe box), so TIFF-level structural tags
         // are not required.
         if (!$jpegContext && !$embeddedContext) {
-            $this->structuralValidator->validateImageDimensions($ifd0);
-            $this->structuralValidator->validateStripLayoutConsistency($ifd0);
-            $this->structuralValidator->validateTileLayoutConsistency($ifd0);
+            $this->structuralValidator->validateImageData($ifd0);
         }
 
         if ($jpegContext) {
