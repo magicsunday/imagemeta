@@ -153,47 +153,45 @@ final class TiffIfdTraverser
      */
     public function locateInteropIfd(?Ifd ...$ifds): ?Ifd
     {
-        $deferred = [];
+        /** @var list<Ifd|null> $queue */
+        $queue = [...$ifds];
 
-        foreach ($ifds as $ifd) {
-            if (!$ifd instanceof Ifd) {
-                continue;
-            }
+        while ($queue !== []) {
+            $next  = $queue;
+            $queue = [];
 
-            if ($this->ifdLooksLikeInterop($ifd)) {
-                return $ifd;
-            }
+            foreach ($next as $ifd) {
+                if (!$ifd instanceof Ifd) {
+                    continue;
+                }
 
-            $entry = $ifd->get(ExifTag::INTEROPERABILITY_IFD_POINTER);
-            if (!$entry instanceof IfdEntry) {
-                continue;
-            }
+                if ($this->ifdLooksLikeInterop($ifd)) {
+                    return $ifd;
+                }
 
-            $offset = $this->pointerOffset($entry);
-            if ($offset === null) {
-                continue;
-            }
+                $entry = $ifd->get(ExifTag::INTEROPERABILITY_IFD_POINTER);
+                if (!$entry instanceof IfdEntry) {
+                    continue;
+                }
 
-            if (isset($this->interopVisitedOffsets[$offset])) {
-                continue;
-            }
+                $offset = $this->pointerOffset($entry);
+                if ($offset === null) {
+                    continue;
+                }
 
-            $this->interopVisitedOffsets[$offset] = true;
+                if (isset($this->interopVisitedOffsets[$offset])) {
+                    continue;
+                }
 
-            $candidate = ($this->readIfd)($offset);
+                $this->interopVisitedOffsets[$offset] = true;
 
-            if ($this->ifdLooksLikeInterop($candidate)) {
-                return $candidate;
-            }
+                $candidate = ($this->readIfd)($offset);
 
-            $deferred[] = $candidate;
-        }
+                if ($this->ifdLooksLikeInterop($candidate)) {
+                    return $candidate;
+                }
 
-        if ($deferred !== []) {
-            $resolved = $this->locateInteropIfd(...$deferred);
-
-            if ($resolved instanceof Ifd) {
-                return $resolved;
+                $queue[] = $candidate;
             }
         }
 
