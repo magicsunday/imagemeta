@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests;
+namespace MagicSunday\ImageMeta\Tests\Integration;
 
 use Closure;
 use MagicSunday\ImageMeta\Contract\IptcParserInterface;

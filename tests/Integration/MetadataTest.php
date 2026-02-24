@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Model;
+namespace MagicSunday\ImageMeta\Tests\Integration;
 
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;

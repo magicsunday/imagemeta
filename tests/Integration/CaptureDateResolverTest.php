@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Convenience;
+namespace MagicSunday\ImageMeta\Tests\Integration;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Convenience\CaptureDateResolver;
