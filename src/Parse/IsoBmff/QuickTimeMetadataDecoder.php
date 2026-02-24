@@ -25,6 +25,7 @@ use function sprintf;
  *
  * Delegates key resolution to {@see QuickTimeKeyResolver}, value decoding to
  * {@see QuickTimeValueDecoder}, and box navigation to {@see BoxNavigator}.
+ * Implements the metadata atom model defined in QuickTime File Format 2012 §9.
  *
  * @phpstan-type QuickTimeValue = string|int|float|bool
  * @phpstan-type QuickTimeKeyMap = array<string, QuickTimeValue>

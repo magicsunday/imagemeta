@@ -20,6 +20,8 @@ use function rtrim;
 
 /**
  * Decodes tag payload primitives that can be handled independently of parser state.
+ *
+ * EXIF 3.0 §4.6.2 specifies the IFD entry format and tag value types decoded here.
  */
 final readonly class ExifTagDecoder
 {

@@ -30,7 +30,7 @@ use function substr;
  * Parses ISO BMFF box structures related to item location and reference metadata.
  *
  * Handles parsing of iloc, iinf, pitm, iref, and dinf/dref boxes within
- * ISO BMFF containers.
+ * ISO BMFF containers as defined by ISO/IEC 14496-12 §8.11.
  */
 final readonly class IlocBoxParser
 {

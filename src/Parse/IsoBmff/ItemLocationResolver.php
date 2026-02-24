@@ -27,7 +27,7 @@ use function sha1;
  *
  * Delegates box parsing to {@see IlocBoxParser} and payload resolution to
  * {@see ItemPayloadResolver}, providing merge and gather operations that
- * combine results from multiple metadata contexts.
+ * combine results from multiple metadata contexts as specified by ISO/IEC 14496-12 §8.11.
  */
 final readonly class ItemLocationResolver
 {

@@ -28,7 +28,7 @@ use function substr;
 /**
  * Parses audio codec sample-entry descriptions from ISO BMFF sample
  * description boxes (stsd), extracting channel count, sample rate,
- * bit depth, and LPCM format metadata.
+ * bit depth, and LPCM format metadata per ISO/IEC 14496-12 §8.5.2.
  */
 final readonly class AudioSampleEntryParser
 {

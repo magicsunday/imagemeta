@@ -35,7 +35,7 @@ use function substr;
  * Resolves item payloads described by iloc extent structures.
  *
  * Handles reading extent data from the raw stream, idat payloads,
- * and item-offset construction methods.
+ * and item-offset construction methods per ISO/IEC 14496-12 §8.11.3.
  */
 final readonly class ItemPayloadResolver
 {

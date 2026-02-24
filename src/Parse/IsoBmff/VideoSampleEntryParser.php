@@ -22,7 +22,7 @@ use function substr;
 /**
  * Parses video codec sample-entry descriptions from ISO BMFF sample
  * description boxes (stsd), extracting resolution, compressor, and
- * depth metadata.
+ * depth metadata per ISO/IEC 14496-12 §8.5.2.
  */
 final readonly class VideoSampleEntryParser
 {

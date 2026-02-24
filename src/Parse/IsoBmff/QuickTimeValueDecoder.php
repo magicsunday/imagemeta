@@ -33,7 +33,7 @@ use function trim;
 
 /**
  * Decodes type-specific QuickTime metadata values, performs coercion,
- * and validates locale indicators and data ordering.
+ * and validates locale indicators and data ordering per QuickTime File Format 2012 §9.
  *
  * @phpstan-type QuickTimeValue = string|int|float|bool
  * @phpstan-type QuickTimeKeyMap = array<string, QuickTimeValue>

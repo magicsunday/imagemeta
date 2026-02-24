@@ -21,7 +21,8 @@ use function str_ends_with;
 use function substr;
 
 /**
- * Resolves QuickTime metadata key namespaces and free-form key structures.
+ * Resolves QuickTime metadata key namespaces and free-form key structures
+ * as described in QuickTime File Format 2012 §4.
  *
  * @phpstan-type QuickTimeKeyEntry = array{namespace: string, name: string}
  */

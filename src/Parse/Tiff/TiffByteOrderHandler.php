@@ -22,6 +22,8 @@ use function pack;
 
 /**
  * Centralises TIFF byte-order dependent primitive reads and integer byte conversion.
+ *
+ * TIFF 6.0 §2 defines the byte-order markers and header structure this handler interprets.
  */
 final readonly class TiffByteOrderHandler
 {

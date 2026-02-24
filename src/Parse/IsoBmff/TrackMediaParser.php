@@ -29,6 +29,8 @@ use function substr;
  * Parses track and media boxes within ISO BMFF containers, extracting
  * codec, resolution, and audio/video metadata from sample descriptions.
  *
+ * ISO/IEC 14496-12 §8.4 defines the track structure and §8.5 the media boxes.
+ *
  * @phpstan-type QuickTimeKeyMap = array<string, string|int|float|bool>
  */
 final readonly class TrackMediaParser

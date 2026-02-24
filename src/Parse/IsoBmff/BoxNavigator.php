@@ -27,6 +27,9 @@ use function strtoupper;
  *
  * Provides box header reading, child iteration, and utility methods
  * used by all ISO BMFF parsing classes.
+ *
+ * ISO/IEC 14496-12 §4 defines the basic object structure and §8 the box hierarchy
+ * that this navigator traverses.
  */
 final readonly class BoxNavigator
 {
