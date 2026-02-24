@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -451,14 +452,8 @@ final readonly class DngStructureValidator
         }
 
         $payload = $entry->value;
-        $length  = strlen($payload);
-
-        if ($length < 8) {
-            throw new ParseError(
-                sprintf('RGBTables payload must be at least 8 bytes, got %d.', $length),
-                1527,
-            );
-        }
+        PayloadGuard::ensureMinimumLength($payload, 8, 'RGBTables payload', 1527);
+        $length = strlen($payload);
 
         $numTables       = $this->support->unpackU32(substr($payload, 0, 4));
         $compositeMethod = $this->support->unpackU32(substr($payload, 4, 4));
@@ -657,14 +652,8 @@ final readonly class DngStructureValidator
         }
 
         $payload = $entry->value;
-        $length  = strlen($payload);
-
-        if ($length < 4) {
-            throw new ParseError(
-                sprintf('ImageStats payload too short for child count (%d bytes).', $length),
-                1543,
-            );
-        }
+        PayloadGuard::ensureMinimumLength($payload, 4, 'ImageStats payload', 1543);
+        $length = strlen($payload);
 
         // ImageStats is always big-endian
         $childCount = Unpack::int('N', substr($payload, 0, 4), 'ImageStats child count');
@@ -983,14 +972,8 @@ final readonly class DngStructureValidator
      */
     private function validateDngOpcodeListPayload(string $tagName, string $payload): void
     {
+        PayloadGuard::ensureMinimumLength($payload, 4, sprintf('%s payload', $tagName), 1635);
         $length = strlen($payload);
-
-        if ($length < 4) {
-            throw new ParseError(
-                sprintf('%s payload is truncated before opcode count.', $tagName),
-                1635,
-            );
-        }
 
         $opcodeCount = Unpack::int('N', substr($payload, 0, 4), sprintf('%s opcode count', $tagName));
         $offset      = 4;

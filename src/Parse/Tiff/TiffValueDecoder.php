@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -101,34 +102,14 @@ final readonly class TiffValueDecoder
         $inlineThreshold = 4;
 
         if ($inlineBytes !== null) {
-            if (strlen($inlineBytes) < $dataSize) {
-                throw new ParseError(
-                    sprintf(
-                        'Inline value for TIFF type %d truncated (expected %d bytes, got %d)',
-                        $type,
-                        $dataSize,
-                        strlen($inlineBytes),
-                    ),
-                    1336,
-                );
-            }
+            PayloadGuard::ensureMinimumLength($inlineBytes, $dataSize, sprintf('Inline value for TIFF type %d', $type), 1336);
 
             return [substr($inlineBytes, 0, $dataSize), null];
         }
 
         if ($dataSize <= $inlineThreshold) {
             if (is_string($valueOrOffset)) {
-                if (strlen($valueOrOffset) < $dataSize) {
-                    throw new ParseError(
-                        sprintf(
-                            'Inline value for TIFF type %d truncated (expected %d bytes, got %d)',
-                            $type,
-                            $dataSize,
-                            strlen($valueOrOffset),
-                        ),
-                        1337,
-                    );
-                }
+                PayloadGuard::ensureMinimumLength($valueOrOffset, $dataSize, sprintf('Inline value for TIFF type %d', $type), 1337);
 
                 return [substr($valueOrOffset, 0, $dataSize), null];
             }

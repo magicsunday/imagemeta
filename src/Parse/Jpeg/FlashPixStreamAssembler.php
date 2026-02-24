@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 
 use function array_key_exists;
 use function chr;
@@ -229,9 +230,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      */
     private function parseContentsList(string $body, int $offset): void
     {
-        if (strlen($body) < 2) {
-            throw new ParseError(sprintf('FlashPix contents list at offset %d is too short', $offset), 1282);
-        }
+        PayloadGuard::ensureMinimumLength($body, 2, sprintf('FlashPix contents list at offset %d', $offset), 1282);
 
         $entryCount = (ord($body[0]) << 8) | ord($body[1]);
 
@@ -402,9 +401,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             throw new ParseError(sprintf('FlashPix stream data at offset %d appears before contents list', $offset), 1316);
         }
 
-        if (strlen($body) < 10) {
-            throw new ParseError(sprintf('FlashPix stream data at offset %d is too short', $offset), 1317);
-        }
+        PayloadGuard::ensureMinimumLength($body, 10, sprintf('FlashPix stream data at offset %d', $offset), 1317);
 
         $index          = (ord($body[0]) << 8) | ord($body[1]);
         $sequenceNumber = (ord($body[2]) << 8) | ord($body[3]);

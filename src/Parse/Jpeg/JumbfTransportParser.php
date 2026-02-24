@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use Closure;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function array_key_exists;
@@ -164,9 +165,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
      */
     private function parseTransportHeader(string $payload, int $offset): array
     {
-        if (strlen($payload) < self::TRANSPORT_HEADER_LENGTH) {
-            throw new ParseError(sprintf('APP11 segment at offset %d is too short', $offset), 1331);
-        }
+        PayloadGuard::ensureMinimumLength($payload, self::TRANSPORT_HEADER_LENGTH, sprintf('APP11 segment at offset %d', $offset), 1331);
 
         $identifier = substr($payload, 0, 4);
 
@@ -207,10 +206,8 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
      */
     private function extractJumbfSuperbox(string $payload, int $offset): string
     {
+        PayloadGuard::ensureMinimumLength($payload, 12, sprintf('APP11 segment at offset %d', $offset), 1885);
         $length = strlen($payload);
-        if ($length < 12) {
-            throw new ParseError(sprintf('APP11 segment at offset %d is too short', $offset), 1885);
-        }
 
         for ($position = 0; $position + 8 <= $length; ++$position) {
             if (substr($payload, $position + 4, 4) !== 'jumb') {

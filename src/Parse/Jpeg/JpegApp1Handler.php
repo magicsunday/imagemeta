@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function array_key_exists;
@@ -182,9 +183,7 @@ final class JpegApp1Handler
     private function validateApp1TiffHeader(string $tiffData): void
     {
         // Minimum TIFF header is 4 bytes: 2 byte-order + 2 magic
-        if (strlen($tiffData) < 4) {
-            throw new ParseError('APP1 Exif payload too short for TIFF header', 1400);
-        }
+        PayloadGuard::ensureMinimumLength($tiffData, 4, 'APP1 Exif payload', 1400);
 
         $byteOrder = substr($tiffData, 0, 2);
         if ($byteOrder !== 'II' && $byteOrder !== 'MM') {

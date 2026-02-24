@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -205,12 +206,7 @@ final readonly class DngValueNormalizer
      */
     public function decodeCfaPatternPayload(string $bytes): ExifNumericList
     {
-        if (strlen($bytes) < 4) {
-            throw new ParseError(
-                sprintf('CFAPattern payload too short (%d bytes, minimum 4)', strlen($bytes)),
-                1505,
-            );
-        }
+        PayloadGuard::ensureMinimumLength($bytes, 4, 'CFAPattern payload', 1505);
 
         $horizontalRepeatPixelUnit = $this->binaryReader->unpackU16(substr($bytes, 0, 2));
         $verticalRepeatPixelUnit   = $this->binaryReader->unpackU16(substr($bytes, 2, 2));

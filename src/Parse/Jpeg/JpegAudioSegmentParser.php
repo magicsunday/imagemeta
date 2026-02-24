@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 
@@ -53,10 +54,7 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
      */
     public function handleSegment(string $payload, int $offset): void
     {
-        $length = strlen($payload);
-        if ($length < self::AUDIO_HEADER_LENGTH) {
-            throw new ParseError(sprintf('Audio segment at offset %d is too short', $offset), 1269);
-        }
+        PayloadGuard::ensureMinimumLength($payload, self::AUDIO_HEADER_LENGTH, sprintf('Audio segment at offset %d', $offset), 1269);
 
         $signatureLength = strlen(self::AUDIO_SIGNATURE);
         $major           = ord($payload[$signatureLength]);

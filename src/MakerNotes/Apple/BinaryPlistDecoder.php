@@ -15,6 +15,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function array_any;
@@ -149,10 +150,8 @@ final class BinaryPlistDecoder
         // so we normalize by cutting to the signature position.
         $data = substr($data, $signatureOffset);
 
-        if (strlen($data) < 40) {
-            // 8 bytes header + minimal object + 1 entry offset table + 32 bytes trailer
-            throw new ParseError('The property list payload is too small.', 1036);
-        }
+        // 8 bytes header + minimal object + 1 entry offset table + 32 bytes trailer
+        PayloadGuard::ensureMinimumLength($data, 40, 'Property list payload', 1036);
 
         $this->reader->load($data);
         $this->offsetTable   = [];

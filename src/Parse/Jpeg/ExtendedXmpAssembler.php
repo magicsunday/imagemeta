@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use Closure;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function array_key_exists;
@@ -80,12 +81,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
         $guidLength      = $this->guidLength;
         $minimumLength   = $signatureLength + $guidLength + self::HEADER_LENGTH;
 
-        if (strlen($payload) < $minimumLength) {
-            throw new ParseError(
-                sprintf('ExtendedXMP APP1 segment at offset %d is too short', $offset),
-                1470,
-            );
-        }
+        PayloadGuard::ensureMinimumLength($payload, $minimumLength, sprintf('ExtendedXMP APP1 segment at offset %d', $offset), 1470);
 
         $guidRaw     = substr($payload, $signatureLength, $guidLength);
         $guidPattern = '/^[0-9A-Fa-f]{' . $guidLength . '}$/';

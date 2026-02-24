@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
@@ -339,9 +340,7 @@ final readonly class ItemPayloadResolver
     public function normalizeExifBlob(string $blob): string
     {
         // Strict 4-byte TIFF-header offset validation
-        if (strlen($blob) < 4) {
-            throw new ParseError('Exif item payload too short for TIFF-header offset prefix', 1394);
-        }
+        PayloadGuard::ensureMinimumLength($blob, 4, 'Exif item payload', 1394);
 
         // ISO 14496-12: Exif items start with a 4-byte big-endian offset to the TIFF header
         $offset = Unpack::int('N', substr($blob, 0, 4), 'Exif item TIFF-header offset');

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 
 use function array_key_exists;
 use function array_keys;
@@ -57,9 +58,7 @@ final class IccProfileAssembler implements SegmentAssemblerInterface
     public function handleSegment(string $payload, int $offset): void
     {
         $signatureLength = strlen(self::ICC_SIGNATURE);
-        if (strlen($payload) < $signatureLength + 2) {
-            throw new ParseError(sprintf('ICC segment at offset %d is too short', $offset), 1268);
-        }
+        PayloadGuard::ensureMinimumLength($payload, $signatureLength + 2, sprintf('ICC segment at offset %d', $offset), 1268);
 
         $sequenceNumber = ord($payload[$signatureLength]);
         $sequenceCount  = ord($payload[$signatureLength + 1]);

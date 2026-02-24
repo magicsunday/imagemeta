@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -343,12 +344,7 @@ final readonly class DngProfileValidator
                 );
             }
 
-            if (strlen($payload) < 6) {
-                throw new ParseError(
-                    sprintf('IlluminantData 0x%04X spectral payload too short for NumLambda field.', $tag),
-                    1503,
-                );
-            }
+            PayloadGuard::ensureMinimumLength($payload, 6, sprintf('IlluminantData 0x%04X spectral payload', $tag), 1503);
 
             $numLambda = $this->support->unpackU32(substr($payload, 2, 4));
 
@@ -718,14 +714,8 @@ final readonly class DngProfileValidator
         }
 
         $payload = $entry->value;
-        $length  = strlen($payload);
-
-        if ($length < 80) {
-            throw new ParseError(
-                sprintf('ProfileGainTableMap2 payload must be at least 80 bytes, got %d.', $length),
-                1516,
-            );
-        }
+        PayloadGuard::ensureMinimumLength($payload, 80, 'ProfileGainTableMap2 payload', 1516);
+        $length = strlen($payload);
 
         $mapPointsV = $this->support->unpackU32(substr($payload, 0, 4));
         $mapPointsH = $this->support->unpackU32(substr($payload, 4, 4));
@@ -793,14 +783,8 @@ final readonly class DngProfileValidator
         }
 
         $payload = $entry->value;
-        $length  = strlen($payload);
-
-        if ($length < 64) {
-            throw new ParseError(
-                sprintf('ProfileGainTableMap payload must be at least 64 bytes, got %d.', $length),
-                1686,
-            );
-        }
+        PayloadGuard::ensureMinimumLength($payload, 64, 'ProfileGainTableMap payload', 1686);
+        $length = strlen($payload);
 
         $mapPointsV = $this->support->unpackU32(substr($payload, 0, 4));
         $mapPointsH = $this->support->unpackU32(substr($payload, 4, 4));

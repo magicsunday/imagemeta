@@ -78,7 +78,7 @@ final class TiffExifParserCfaPatternTest extends TestCase
     public function rejectsCfaPatternPayloadTooShort(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('CFAPattern payload too short');
+        $this->expectExceptionMessage('CFAPattern payload is too short');
 
         $this->parseWithCfaPattern("\x02\x00");
     }

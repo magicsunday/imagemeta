@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Parse\Jpeg;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Model\Jpeg\Marker;
 
 use function array_any;
@@ -116,10 +117,7 @@ final class JpegFrameValidator
             return;
         }
 
-        $length = strlen($payload);
-        if ($length < 6) {
-            throw new ParseError(sprintf('SOF marker 0x%02X at offset %d is too short', $marker, $offset), 1283);
-        }
+        PayloadGuard::ensureMinimumLength($payload, 6, sprintf('SOF marker 0x%02X at offset %d', $marker, $offset), 1283);
 
         $componentCount = ord($payload[5]);
         if ($componentCount === 0) {
@@ -127,9 +125,7 @@ final class JpegFrameValidator
         }
 
         $expectedLength = 6 + ($componentCount * 3);
-        if ($length < $expectedLength) {
-            throw new ParseError(sprintf('SOF marker 0x%02X at offset %d is truncated', $marker, $offset), 1285);
-        }
+        PayloadGuard::ensureMinimumLength($payload, $expectedLength, sprintf('SOF marker 0x%02X at offset %d', $marker, $offset), 1285);
 
         $components = [];
         $index      = 6;

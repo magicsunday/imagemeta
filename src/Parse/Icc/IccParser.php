@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Icc;
 
 use MagicSunday\ImageMeta\Contract\IccParserInterface;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Model\Icc\IccTag;
 
 use function array_key_exists;
@@ -151,16 +152,7 @@ final readonly class IccParser implements IccParserInterface
         }
 
         // ICC data present but too short — malformed
-        if (strlen($data) < self::HEADER_LENGTH) {
-            throw new ParseError(
-                sprintf(
-                    'ICC profile data too short: need at least %d header bytes, got %d',
-                    self::HEADER_LENGTH,
-                    strlen($data),
-                ),
-                1442,
-            );
-        }
+        PayloadGuard::ensureMinimumLength($data, self::HEADER_LENGTH, 'ICC profile data', 1442);
 
         $profileSize = $this->binaryReader->uInt32Be(substr($data, IccTag::PROFILE_SIZE, 4));
         $length      = strlen($data);
