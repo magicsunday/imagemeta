@@ -178,7 +178,10 @@ final class Stream implements BinaryReadAccessInterface
             default  => throw new ParseError('invalid seek whence: ' . $whence, 1015),
         };
 
-        fseek($this->fh, $target);
+        if (fseek($this->fh, $target) !== 0) {
+            throw new ParseError('fseek failed at offset ' . $target, 1952);
+        }
+
         $this->pos = $target;
     }
 }
