@@ -492,6 +492,47 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
+     * Detects circular reference: array at object 0 that references itself.
+     */
+    #[Test]
+    public function rejectsCircularReference(): void
+    {
+        // Object 0 is an array referencing object 0 (itself)
+        $array = $this->buildArrayObject([0]);
+        $plist = $this->buildPlistWithObjects([$array], 0);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1953);
+        $this->expectExceptionMessage('Circular reference');
+
+        (new BinaryPlistDecoder())->decode($plist);
+    }
+
+    /**
+     * Detects recursion depth exceeding the limit of 64.
+     */
+    #[Test]
+    public function rejectsDeepNesting(): void
+    {
+        // Build 65 array objects: each references the next, the last references a scalar
+        $objects = [];
+        for ($i = 0; $i < 65; ++$i) {
+            $objects[] = $this->buildArrayObject([$i + 1]);
+        }
+
+        // Object 65 is a simple integer (value 42)
+        $objects[] = "\x10\x2A";
+
+        $plist = $this->buildPlistWithObjects($objects, 0);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1954);
+        $this->expectExceptionMessage('Recursion depth');
+
+        (new BinaryPlistDecoder())->decode($plist);
+    }
+
+    /**
      * Build an Array object with inline count (<= 15) and 1-byte references.
      * This checks the behavior for the specific inputs used in the test.
      *

@@ -123,6 +123,13 @@ final class BinaryPlistDecoder
     /** @var int Total number of objects inside the payload */
     private int $objectCount = 0;
 
+    private const int MAX_RECURSION_DEPTH = 64;
+
+    private int $recursionDepth = 0;
+
+    /** @var array<int, bool> */
+    private array $visiting = [];
+
     public function __construct()
     {
         $this->reader = new PlistBinaryReader();
@@ -154,9 +161,11 @@ final class BinaryPlistDecoder
         PayloadGuard::ensureMinimumLength($data, 40, 'Property list payload', 1036);
 
         $this->reader->load($data);
-        $this->offsetTable   = [];
-        $this->objectRefSize = 0;
-        $this->objectCount   = 0;
+        $this->offsetTable    = [];
+        $this->objectRefSize  = 0;
+        $this->objectCount    = 0;
+        $this->visiting       = [];
+        $this->recursionDepth = 0;
         $this->decodeTrailer();
 
         if ($this->offsetTable === []) {
@@ -286,6 +295,14 @@ final class BinaryPlistDecoder
             throw new ParseError('The property list object reference is invalid.', 1054);
         }
 
+        if (array_key_exists($index, $this->visiting)) {
+            throw new ParseError(sprintf('Circular reference detected at object index %d.', $index), 1953);
+        }
+
+        if ($this->recursionDepth >= self::MAX_RECURSION_DEPTH) {
+            throw new ParseError(sprintf('Recursion depth exceeds limit of %d.', self::MAX_RECURSION_DEPTH), 1954);
+        }
+
         $offset = $this->offsetTable[$index];
         if ($offset >= $this->reader->length()) {
             throw new ParseError('The property list object offset is invalid.', 1055);
@@ -295,21 +312,29 @@ final class BinaryPlistDecoder
         $type   = $marker >> 4;
         $info   = $marker & self::MARKER_INFO_MASK;
 
-        return match ($type) {
-            self::MARKER_TYPE_SIMPLE     => $this->parseSimple($info),
-            self::MARKER_TYPE_INTEGER    => $this->wrapScalar($this->parseInteger($offset, $info)),
-            self::MARKER_TYPE_REAL       => $this->wrapScalar($this->parseReal($offset, $info)),
-            self::MARKER_TYPE_DATE       => $this->wrapScalar($this->parseDate($offset, $info)),
-            self::MARKER_TYPE_DATA       => $this->wrapScalar($this->parseData($offset, $info)),
-            self::MARKER_TYPE_ASCII      => $this->wrapScalar($this->parseAscii($offset, $info)),
-            self::MARKER_TYPE_UNICODE    => $this->wrapScalar($this->parseUnicode($offset, $info)),
-            self::MARKER_TYPE_UTF8       => $this->wrapScalar($this->parseUtf8($offset, $info)),
-            self::MARKER_TYPE_UID        => $this->wrapScalar($this->parseUid($offset, $info)),
-            self::MARKER_TYPE_ARRAY      => $this->parseArray($offset, $info),
-            self::MARKER_TYPE_SET        => $this->parseSet($offset, $info),
-            self::MARKER_TYPE_DICTIONARY => $this->parseDictionary($offset, $info),
-            default                      => throw new ParseError('Unsupported property list object type.', 1056),
-        };
+        $this->visiting[$index] = true;
+        ++$this->recursionDepth;
+
+        try {
+            return match ($type) {
+                self::MARKER_TYPE_SIMPLE     => $this->parseSimple($info),
+                self::MARKER_TYPE_INTEGER    => $this->wrapScalar($this->parseInteger($offset, $info)),
+                self::MARKER_TYPE_REAL       => $this->wrapScalar($this->parseReal($offset, $info)),
+                self::MARKER_TYPE_DATE       => $this->wrapScalar($this->parseDate($offset, $info)),
+                self::MARKER_TYPE_DATA       => $this->wrapScalar($this->parseData($offset, $info)),
+                self::MARKER_TYPE_ASCII      => $this->wrapScalar($this->parseAscii($offset, $info)),
+                self::MARKER_TYPE_UNICODE    => $this->wrapScalar($this->parseUnicode($offset, $info)),
+                self::MARKER_TYPE_UTF8       => $this->wrapScalar($this->parseUtf8($offset, $info)),
+                self::MARKER_TYPE_UID        => $this->wrapScalar($this->parseUid($offset, $info)),
+                self::MARKER_TYPE_ARRAY      => $this->parseArray($offset, $info),
+                self::MARKER_TYPE_SET        => $this->parseSet($offset, $info),
+                self::MARKER_TYPE_DICTIONARY => $this->parseDictionary($offset, $info),
+                default                      => throw new ParseError('Unsupported property list object type.', 1056),
+            };
+        } finally {
+            unset($this->visiting[$index]);
+            --$this->recursionDepth;
+        }
     }
 
     /**
