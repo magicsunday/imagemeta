@@ -64,7 +64,7 @@ final readonly class TiffTagConstraintValidator
         }
 
         if (rtrim($enhance->value, "\0") === '') {
-            throw new ParseError('EnhanceParams must not be empty for an Enhanced IFD per DNG 1.5.', 1324);
+            throw new ParseError('EnhanceParams must not be empty for an Enhanced IFD per DNG 1.5.', 1884);
         }
     }
 

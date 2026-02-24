@@ -131,7 +131,7 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
 
         // Non-empty IMA-ADPCM payload with dwSampleLength=0 is semantically inconsistent
         if ($format === self::AUDIO_FORMAT_IMA_ADPCM && $sampleCount === 0 && $data !== '') {
-            throw new ParseError(sprintf('Audio segment at offset %d has non-empty IMA-ADPCM payload with zero sample count', $offset), 1280);
+            throw new ParseError(sprintf('Audio segment at offset %d has non-empty IMA-ADPCM payload with zero sample count', $offset), 1883);
         }
 
         $version = sprintf('%d.%02d', $major, $minor);

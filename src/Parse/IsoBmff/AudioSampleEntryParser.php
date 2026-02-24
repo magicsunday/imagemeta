@@ -94,11 +94,11 @@ final readonly class AudioSampleEntryParser
         $vendor        = $win->readU32BE();
 
         if ($revisionLevel !== 0) {
-            throw new ParseError('audio sample entry revision level must be 0', 1455);
+            throw new ParseError('audio sample entry revision level must be 0', 1920);
         }
 
         if ($vendor !== 0) {
-            throw new ParseError('audio sample entry vendor must be 0', 1456);
+            throw new ParseError('audio sample entry vendor must be 0', 1921);
         }
 
         if ($version === 1 && $stsdVersion !== 1) {
@@ -117,11 +117,11 @@ final readonly class AudioSampleEntryParser
         }
 
         if ($version !== 0 && $version !== 1) {
-            throw new ParseError(sprintf('unsupported audio sample entry version %d', $version), 1457);
+            throw new ParseError(sprintf('unsupported audio sample entry version %d', $version), 1922);
         }
 
         if ($win->tell() + 12 > $entryEnd) {
-            throw new ParseError('audio sample entry truncated', 1160);
+            throw new ParseError('audio sample entry truncated', 1871);
         }
 
         $channels      = $win->readU16BE();
@@ -131,11 +131,11 @@ final readonly class AudioSampleEntryParser
 
         if ($version === 0) {
             if ($channels !== 1 && $channels !== 2) {
-                throw new ParseError('audio sample entry version 0 channels must be 1 or 2', 1503);
+                throw new ParseError('audio sample entry version 0 channels must be 1 or 2', 1935);
             }
 
             if ($sampleSize !== 8 && $sampleSize !== 16) {
-                throw new ParseError('audio sample entry version 0 sample size must be 8 or 16 bits', 1504);
+                throw new ParseError('audio sample entry version 0 sample size must be 8 or 16 bits', 1936);
             }
 
             if ($compressionId !== 0) {
@@ -161,7 +161,7 @@ final readonly class AudioSampleEntryParser
 
         if ($version === 1) {
             if ($win->tell() + 16 > $entryEnd) {
-                throw new ParseError('audio sample entry version 1 extension truncated', 1458);
+                throw new ParseError('audio sample entry version 1 extension truncated', 1923);
             }
 
             // QuickTime File Format 2012, "Sound Sample Description (Version 1)":
@@ -214,7 +214,7 @@ final readonly class AudioSampleEntryParser
     private function parseSoundSampleEntryVersion2(StreamWindow $win, int $entryStart, int $entryEnd, int $entrySize, string $normalizedFormat): array
     {
         if ($win->tell() + 48 > $entryEnd) {
-            throw new ParseError('audio sample entry version 2 truncated', 1459);
+            throw new ParseError('audio sample entry version 2 truncated', 1924);
         }
 
         $always3                       = $win->readU16BE();
@@ -262,7 +262,7 @@ final readonly class AudioSampleEntryParser
 
         $sampleRate = (int) round($audioSampleRate);
         if ($sampleRate <= 0) {
-            throw new ParseError('audio sample entry version 2 sample rate must be positive', 1487);
+            throw new ParseError('audio sample entry version 2 sample rate must be positive', 1930);
         }
 
         $result = [
@@ -403,12 +403,12 @@ final readonly class AudioSampleEntryParser
     private function decodeAudioSampleRate16_16(int $sampleRateRaw): int|float
     {
         if ($sampleRateRaw <= 0) {
-            throw new ParseError('audio sample rate must be positive', 1485);
+            throw new ParseError('audio sample rate must be positive', 1928);
         }
 
         $integerPart = $sampleRateRaw >> 16;
         if ($integerPart <= 0) {
-            throw new ParseError('audio sample rate must be positive', 1485);
+            throw new ParseError('audio sample rate must be positive', 1929);
         }
 
         $fractionalPart = $sampleRateRaw & 0xFFFF;

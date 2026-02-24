@@ -107,7 +107,7 @@ final readonly class ItemPayloadResolver
 
                     $effectiveOffset = $baseOffset + $extentOffset;
                     if ($originOffset > PHP_INT_MAX - $effectiveOffset) {
-                        throw new ParseError('iloc offset overflow', 1181);
+                        throw new ParseError('iloc offset overflow', 1874);
                     }
 
                     $effectiveOffset += $originOffset;
@@ -132,21 +132,21 @@ final readonly class ItemPayloadResolver
                 $extentOffset = $extent['offset'];
                 $originOffset = $location['fileOffsetOrigin'];
                 if ($baseOffset < 0 || $extentOffset < 0 || $originOffset < 0) {
-                    throw new ParseError('iloc negative offset', 1180);
+                    throw new ParseError('iloc negative offset', 1873);
                 }
 
                 if ($baseOffset > PHP_INT_MAX - $extentOffset) {
-                    throw new ParseError('iloc offset overflow', 1181);
+                    throw new ParseError('iloc offset overflow', 1875);
                 }
 
                 $offset = $baseOffset + $extentOffset;
                 if ($originOffset > PHP_INT_MAX - $offset) {
-                    throw new ParseError('iloc offset overflow', 1181);
+                    throw new ParseError('iloc offset overflow', 1876);
                 }
 
                 $offset += $originOffset;
                 if (($length > $fileSize) || ($offset > ($fileSize - $length))) {
-                    throw new ParseError('iloc extent outside file', 1182);
+                    throw new ParseError('iloc extent outside file', 1877);
                 }
 
                 $blob .= $this->boxNavigator->readAll($this->stream->window($offset, $length));
@@ -207,16 +207,16 @@ final readonly class ItemPayloadResolver
                 $baseOffset   = $location['baseOffset'];
                 $extentOffset = $extent['offset'];
                 if ($baseOffset < 0 || $extentOffset < 0) {
-                    throw new ParseError('iloc negative offset', 1185);
+                    throw new ParseError('iloc negative offset', 1878);
                 }
 
                 if ($baseOffset > PHP_INT_MAX - $extentOffset) {
-                    throw new ParseError('iloc offset overflow', 1186);
+                    throw new ParseError('iloc offset overflow', 1879);
                 }
 
                 $offset = $baseOffset + $extentOffset;
                 if (($length > $idatSize) || ($offset > ($idatSize - $length))) {
-                    throw new ParseError('iloc extent outside idat payload', 1187);
+                    throw new ParseError('iloc extent outside idat payload', 1880);
                 }
 
                 $blob .= substr($idatPayload, $offset, $length);
@@ -310,12 +310,12 @@ final readonly class ItemPayloadResolver
                 $length = $referenceSize - $offset;
 
                 if ($length > IsoBmffParser::MAX_ITEM_PAYLOAD_SIZE - $total) {
-                    throw new ParseError('iloc item payload exceeds configured limit', 1188);
+                    throw new ParseError('iloc item payload exceeds configured limit', 1881);
                 }
             }
 
             if (($length > $referenceSize) || ($offset > ($referenceSize - $length))) {
-                throw new ParseError('iloc extent outside referenced item', 1191);
+                throw new ParseError('iloc extent outside referenced item', 1882);
             }
 
             $blob .= substr($referenceData, $offset, $length);
@@ -354,7 +354,7 @@ final readonly class ItemPayloadResolver
         // Validate the data at the pointed offset starts with a valid TIFF header (II or MM)
         $tiffSig = substr($blob, 4 + $offset, 2);
         if ($tiffSig !== 'II' && $tiffSig !== 'MM') {
-            throw new ParseError('Exif item TIFF-header offset does not point to valid TIFF signature', 1395);
+            throw new ParseError('Exif item TIFF-header offset does not point to valid TIFF signature', 1899);
         }
 
         return substr($blob, 4 + $offset);

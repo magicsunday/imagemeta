@@ -161,7 +161,7 @@ final readonly class VideoSampleEntryParser
             $colorTableType = $win->read(4);
 
             if ($colorTableType !== 'ctab') {
-                throw new ParseError('video sample entry colorTableId=0 requires trailing ctab atom', 1496);
+                throw new ParseError('video sample entry colorTableId=0 requires trailing ctab atom', 1931);
             }
 
             if ($colorTableSize < 8 || $colorTableSize > $remaining) {
@@ -190,21 +190,21 @@ final readonly class VideoSampleEntryParser
             if ($remaining === 4) {
                 $win->seek($offset);
                 if ($win->read(4) !== pack('N', 0)) {
-                    throw new ParseError('video sample entry trailing payload is malformed', 1497);
+                    throw new ParseError('video sample entry trailing payload is malformed', 1932);
                 }
 
                 return;
             }
 
             if ($remaining < 8) {
-                throw new ParseError('video sample entry trailing payload is malformed', 1497);
+                throw new ParseError('video sample entry trailing payload is malformed', 1933);
             }
 
             $win->seek($offset);
             $boxSize = $win->readU32BE();
 
             if ($boxSize < 8 || $boxSize > $remaining) {
-                throw new ParseError('video sample entry trailing payload is malformed', 1497);
+                throw new ParseError('video sample entry trailing payload is malformed', 1934);
             }
 
             $offset += $boxSize;
@@ -229,7 +229,7 @@ final readonly class VideoSampleEntryParser
 
         $integerPart = $resolutionRaw >> 16;
         if ($integerPart <= 0) {
-            throw new ParseError(sprintf('video sample entry %s resolution must be > 0', $axis), 1604);
+            throw new ParseError(sprintf('video sample entry %s resolution must be > 0', $axis), 1938);
         }
 
         $fractionalPart = $resolutionRaw & 0xFFFF;

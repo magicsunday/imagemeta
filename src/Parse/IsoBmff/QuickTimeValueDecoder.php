@@ -232,7 +232,7 @@ final readonly class QuickTimeValueDecoder
 
             $converted = iconv('SJIS', 'UTF-8', $payload);
             if ($converted === false) {
-                throw new ParseError('data box Shift-JIS payload contains malformed sequence.', 1450);
+                throw new ParseError('data box Shift-JIS payload contains malformed sequence.', 1919);
             }
 
             return rtrim($converted, "\0");
@@ -305,7 +305,7 @@ final readonly class QuickTimeValueDecoder
             }
 
             if ($payloadSize > 4) {
-                throw new ParseError('data box float32 payload must be exactly 4 bytes', 1418);
+                throw new ParseError('data box float32 payload must be exactly 4 bytes', 1911);
             }
 
             return Unpack::float('G', substr($payload, 0, 4), 'QuickTime float32 payload');
@@ -318,7 +318,7 @@ final readonly class QuickTimeValueDecoder
             }
 
             if ($payloadSize > 8) {
-                throw new ParseError('data box float64 payload must be exactly 8 bytes', 1419);
+                throw new ParseError('data box float64 payload must be exactly 8 bytes', 1913);
             }
 
             return Unpack::float('E', substr($payload, 0, 8), 'QuickTime float64 payload');

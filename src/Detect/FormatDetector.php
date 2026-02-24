@@ -129,7 +129,7 @@ final readonly class FormatDetector
 
         $code = ord($markerCode);
         if ($code === 0x00 || $code === 0xFF) {
-            throw new ParseError('JPEG stream has no valid marker after SOI', 1440);
+            throw new ParseError('JPEG stream has no valid marker after SOI', 1918);
         }
 
         return ContainerType::JPEG;

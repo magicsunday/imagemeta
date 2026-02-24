@@ -184,7 +184,7 @@ final class IptcParser implements IptcParserInterface
                 $lengthBytes = $lengthField & 0x7FFF;
 
                 if ($lengthBytes === 0) {
-                    throw new ParseError('IPTC IIM extended length-byte-count must be greater than zero.', 1140);
+                    throw new ParseError('IPTC IIM extended length-byte-count must be greater than zero.', 1869);
                 }
 
                 if ($lengthBytes > self::IIM_EXTENDED_LENGTH_MAX_BYTES) {

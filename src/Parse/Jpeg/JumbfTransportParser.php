@@ -209,7 +209,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
     {
         $length = strlen($payload);
         if ($length < 12) {
-            throw new ParseError(sprintf('APP11 segment at offset %d is too short', $offset), 1331);
+            throw new ParseError(sprintf('APP11 segment at offset %d is too short', $offset), 1885);
         }
 
         for ($position = 0; $position + 8 <= $length; ++$position) {
@@ -256,7 +256,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
             }
 
             if ($position + $boxLength > $length) {
-                throw new ParseError(sprintf('APP11 segment at offset %d has truncated JUMBF child box', $offset), 1334);
+                throw new ParseError(sprintf('APP11 segment at offset %d has truncated JUMBF child box', $offset), 1887);
             }
 
             $boxType    = substr($boxStream, $position + 4, 4);
@@ -275,7 +275,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
         }
 
         if ($position !== $length) {
-            throw new ParseError(sprintf('APP11 segment at offset %d has trailing JUMBF bytes', $offset), 1334);
+            throw new ParseError(sprintf('APP11 segment at offset %d has trailing JUMBF bytes', $offset), 1888);
         }
     }
 

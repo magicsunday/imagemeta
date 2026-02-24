@@ -103,7 +103,7 @@ final readonly class TrackMediaParser
             } elseif ($child->type === BoxType::UDTA->value) {
                 ++$udtaCount;
                 if ($udtaCount > 1) {
-                    throw new ParseError('duplicate udta box in trak', 1418);
+                    throw new ParseError('duplicate udta box in trak', 1912);
                 }
 
                 ($this->processUdtaBox)($child, $context);
@@ -111,11 +111,11 @@ final readonly class TrackMediaParser
         }
 
         if ($tkhdCount === 0) {
-            throw new ParseError('trak must contain exactly one tkhd box', 1376);
+            throw new ParseError('trak must contain exactly one tkhd box', 1891);
         }
 
         if ($mdiaCount === 0) {
-            throw new ParseError('trak must contain exactly one mdia box', 1377);
+            throw new ParseError('trak must contain exactly one mdia box', 1892);
         }
 
         if ($handler === null) {
@@ -229,14 +229,14 @@ final readonly class TrackMediaParser
         $win->seek(0);
 
         if ($mvhd->contentSize < 4) {
-            throw new ParseError('mvhd box truncated', 1405);
+            throw new ParseError('mvhd box truncated', 1906);
         }
 
         $version = $win->readU8();
         $flags   = $this->boxNavigator->readUInt24($win);
 
         if ($version !== 0 && $version !== 1) {
-            throw new ParseError('unsupported mvhd box version', 1406);
+            throw new ParseError('unsupported mvhd box version', 1908);
         }
 
         if ($flags !== 0) {
@@ -247,7 +247,7 @@ final readonly class TrackMediaParser
         // version 1: 8+8+4+8 + 76 = 108 after FullBox header
         $minPayload = $version === 1 ? 112 : 100;
         if ($mvhd->contentSize < $minPayload) {
-            throw new ParseError('mvhd box truncated', 1405);
+            throw new ParseError('mvhd box truncated', 1907);
         }
 
         if ($version === 1) {
@@ -454,24 +454,24 @@ final readonly class TrackMediaParser
         $win->seek(0);
 
         if ($mdhd->contentSize < 4) {
-            throw new ParseError('mdhd box truncated', 1400);
+            throw new ParseError('mdhd box truncated', 1901);
         }
 
         $version = $win->readU8();
         $flags   = $this->boxNavigator->readUInt24($win);
 
         if ($version !== 0 && $version !== 1) {
-            throw new ParseError('unsupported mdhd box version', 1401);
+            throw new ParseError('unsupported mdhd box version', 1903);
         }
 
         if ($flags !== 0) {
-            throw new ParseError('unsupported mdhd box flags', 1402);
+            throw new ParseError('unsupported mdhd box flags', 1904);
         }
 
         // version 0: 4+4+4+4+2+2 = 20 bytes after header; version 1: 8+8+4+8+2+2 = 32 bytes
         $minPayload = $version === 1 ? 36 : 24;
         if ($mdhd->contentSize < $minPayload) {
-            throw new ParseError('mdhd box truncated', 1400);
+            throw new ParseError('mdhd box truncated', 1902);
         }
 
         if ($version === 1) {
@@ -483,7 +483,7 @@ final readonly class TrackMediaParser
         $timescale = $win->readU32BE();
 
         if ($timescale === 0) {
-            throw new ParseError('mdhd timescale must not be zero', 1403);
+            throw new ParseError('mdhd timescale must not be zero', 1905);
         }
 
         return $timescale;
@@ -552,15 +552,15 @@ final readonly class TrackMediaParser
         }
 
         if ($hdlrCount === 0) {
-            throw new ParseError('mdia must contain exactly one hdlr box', 1378);
+            throw new ParseError('mdia must contain exactly one hdlr box', 1893);
         }
 
         if ($minfCount === 0) {
-            throw new ParseError('mdia must contain exactly one minf box', 1379);
+            throw new ParseError('mdia must contain exactly one minf box', 1894);
         }
 
         if ($mdhdCount === 0) {
-            throw new ParseError('mdia must contain exactly one mdhd box', 1380);
+            throw new ParseError('mdia must contain exactly one mdhd box', 1895);
         }
 
         // Parse minf after hdlr so handler type is always available
@@ -626,11 +626,11 @@ final readonly class TrackMediaParser
         }
 
         if ($stblCount === 0) {
-            throw new ParseError('minf must contain exactly one stbl box', 1381);
+            throw new ParseError('minf must contain exactly one stbl box', 1896);
         }
 
         if ($dinfCount === 0) {
-            throw new ParseError('minf must contain exactly one dinf box', 1382);
+            throw new ParseError('minf must contain exactly one dinf box', 1897);
         }
 
         // Validate media header presence and handler match
@@ -700,24 +700,24 @@ final readonly class TrackMediaParser
         }
 
         if ($stsdCount === 0) {
-            throw new ParseError('stbl must contain exactly one stsd box', 1383);
+            throw new ParseError('stbl must contain exactly one stsd box', 1898);
         }
 
         // Enforce mandatory core sample-table boxes
         if ($sttsCount === 0) {
-            throw new ParseError('stbl must contain exactly one stts box', 1424);
+            throw new ParseError('stbl must contain exactly one stts box', 1914);
         }
 
         if ($stscCount === 0) {
-            throw new ParseError('stbl must contain exactly one stsc box', 1425);
+            throw new ParseError('stbl must contain exactly one stsc box', 1915);
         }
 
         if ($stszCount === 0) {
-            throw new ParseError('stbl must contain exactly one stsz or stz2 box', 1426);
+            throw new ParseError('stbl must contain exactly one stsz or stz2 box', 1916);
         }
 
         if ($stcoCount === 0) {
-            throw new ParseError('stbl must contain exactly one stco or co64 box', 1427);
+            throw new ParseError('stbl must contain exactly one stco or co64 box', 1917);
         }
 
         return $result;
@@ -756,14 +756,14 @@ final readonly class TrackMediaParser
         }
 
         if (($version === 1) && ($handlerType !== 'soun')) {
-            throw new ParseError('stsd version 1 requires audio handler context', 1465);
+            throw new ParseError('stsd version 1 requires audio handler context', 1925);
         }
 
         $entryCount = $win->readU32BE();
 
         // ISO/IEC 14496-12 §8.5.2: Sample Description Box must contain at least one entry.
         if ($entryCount === 0) {
-            throw new ParseError('stsd entry count must be at least 1', 1466);
+            throw new ParseError('stsd entry count must be at least 1', 1926);
         }
 
         if ($entryCount > ParserLimits::MAX_STSD_ENTRIES) {

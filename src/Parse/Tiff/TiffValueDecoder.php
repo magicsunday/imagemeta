@@ -321,7 +321,7 @@ final readonly class TiffValueDecoder
                 TiffConst::TYPE_SLONG8 => $this->unpackS64(substr($bytes, $cursor, 8)),
                 TiffConst::TYPE_FLOAT  => $this->unpackFloat(substr($bytes, $cursor, 4)),
                 TiffConst::TYPE_DOUBLE => $this->unpackDouble(substr($bytes, $cursor, 8)),
-                default                => throw new ParseError('Unsupported type in decodeBytes: ' . $type, 1331),
+                default                => throw new ParseError('Unsupported type in decodeBytes: ' . $type, 1886),
             };
             $cursor += $componentSize;
         }

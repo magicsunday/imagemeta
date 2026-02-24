@@ -365,7 +365,7 @@ final readonly class IlocBoxParser
         }
 
         if ($drefCount === 0) {
-            throw new ParseError('dinf must contain exactly one dref box', 1366);
+            throw new ParseError('dinf must contain exactly one dref box', 1889);
         }
 
         return $references;
@@ -502,7 +502,7 @@ final readonly class IlocBoxParser
         }
 
         if ((!$selfContained) && ($entry->type === BoxType::URN->value) && ($urnName === null)) {
-            throw new ParseError('dref urn entry requires non-empty name field', 1603);
+            throw new ParseError('dref urn entry requires non-empty name field', 1937);
         }
 
         return new IsoBmffDataReference(

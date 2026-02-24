@@ -77,6 +77,6 @@ final readonly class TiffByteOrderHandler
             return $endianness === Endian::Little ? pack('V2', $lo, $hi) : pack('N2', $hi, $lo);
         }
 
-        throw new ParseError('unsupported integer width for byte conversion', 1627);
+        throw new ParseError('unsupported integer width for byte conversion', 1939);
     }
 }

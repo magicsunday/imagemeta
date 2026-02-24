@@ -212,7 +212,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 // QuickTime File Format 2012, "Metadata Structure": only one
                 // metadata atom is allowed per container location.
                 if ($metaSeen) {
-                    throw new ParseError('duplicate meta box in moov', 1141);
+                    throw new ParseError('duplicate meta box in moov', 1870);
                 }
 
                 $metaSeen = true;
@@ -273,7 +273,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         if ($mvhdCount === 0) {
-            throw new ParseError('moov must contain exactly one mvhd box', 1374);
+            throw new ParseError('moov must contain exactly one mvhd box', 1890);
         }
 
         if ($trakCount === 0) {
@@ -615,7 +615,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     if ($child->userType === self::XMP_UUID) {
                         // Enforce payload cap before reading uuid XMP box
                         if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
-                            throw new ParseError('uuid XMP box payload exceeds maximum allowed size', 1397);
+                            throw new ParseError('uuid XMP box payload exceeds maximum allowed size', 1900);
                         }
 
                         $uuidXmp[] = $this->boxNavigator->readAll($child->window);
@@ -655,7 +655,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         if (($hdlrCount !== 1) && $requiresHdlr) {
-            throw new ParseError('meta must contain exactly one hdlr box', 1478);
+            throw new ParseError('meta must contain exactly one hdlr box', 1927);
         }
 
         // QuickTime File Format 2012, "Metadata Atom": a reader should confirm the
@@ -802,7 +802,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     private function readU64FromBytes(string $bytes, int $offset, string $context): int
     {
         if ($offset < 0 || ($offset + 8) > strlen($bytes)) {
-            throw new ParseError('Insufficient bytes for ' . $context . '.', 1170);
+            throw new ParseError('Insufficient bytes for ' . $context . '.', 1872);
         }
 
         return Unpack::uint64(substr($bytes, $offset, 8), false, $context)->toInt($context);

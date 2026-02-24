@@ -94,7 +94,7 @@ final readonly class TiffColorInkValidator
         }
 
         if ($inkNamesEntry->type !== TiffConst::TYPE_ASCII) {
-            throw new ParseError('InkNames must use ASCII field type.', 1714);
+            throw new ParseError('InkNames must use ASCII field type.', 1940);
         }
 
         $names = explode("\0", $inkNamesEntry->value);
@@ -400,7 +400,7 @@ final readonly class TiffColorInkValidator
                 $dotRangeValues[] = $component;
             }
         } else {
-            throw new ParseError('DotRange values must decode to integers.', 1720);
+            throw new ParseError('DotRange values must decode to integers.', 1941);
         }
 
         if (count($dotRangeValues) !== $dotRangeEntry->count) {
@@ -445,7 +445,7 @@ final readonly class TiffColorInkValidator
                 $bitDepths[] = $component;
             }
         } else {
-            throw new ParseError('BitsPerSample must decode to integer components.', 1723);
+            throw new ParseError('BitsPerSample must decode to integer components.', 1942);
         }
 
         if (count($bitDepths) === 1) {

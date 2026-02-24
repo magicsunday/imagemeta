@@ -109,12 +109,12 @@ final readonly class QuickTimeKeyResolver
 
             // Validate key_namespace as proper 4CC code (printable ASCII)
             if (preg_match('/^[\x20-\x7E]{4}$/', $namespace) !== 1) {
-                throw new ParseError('keys entry key_namespace is not a valid 4CC code', 1416);
+                throw new ParseError('keys entry key_namespace is not a valid 4CC code', 1909);
             }
 
             // Reject empty key_value entries (size <= 8 means no actual key data)
             if ($size <= 8) {
-                throw new ParseError('keys entry has empty key_value', 1417);
+                throw new ParseError('keys entry has empty key_value', 1910);
             }
 
             $name = $win->read($size - 8);
