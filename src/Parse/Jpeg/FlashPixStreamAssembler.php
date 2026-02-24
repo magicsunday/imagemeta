@@ -128,6 +128,8 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             }
         }
 
+        $aggregateSize = 0;
+
         foreach ($this->contents as $index => $entry) {
             if ($entry['isStorage']) {
                 continue;
@@ -140,6 +142,20 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             $chunks = $this->chunks[$index];
             if ($chunks === []) {
                 continue;
+            }
+
+            $assembledSize = $entry['size'];
+            $aggregateSize += $assembledSize;
+
+            if ($aggregateSize > $this->maxFlashPixTotalSize) {
+                throw new ParseError(
+                    sprintf(
+                        'FlashPix aggregate assembled stream size %d exceeds limit %d',
+                        $aggregateSize,
+                        $this->maxFlashPixTotalSize,
+                    ),
+                    1962,
+                );
             }
 
             usort(
