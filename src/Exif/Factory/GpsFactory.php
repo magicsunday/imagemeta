@@ -226,7 +226,7 @@ final readonly class GpsFactory
                 $altRefXmp = $this->intValue($xmpDocument->int(XmpNamespace::EXIF->value, 'GPSAltitudeRef'));
                 $altRef    = $altitudeRef ?? $altRefXmp;
 
-                if ($altRef === 1 || $altRef === 3) {
+                if (GpsEnum\GpsAltitudeRef::tryFrom($altRef ?? 0)?->isBelow() === true) {
                     $altitudeXmp = -$altitudeXmp;
                 }
 

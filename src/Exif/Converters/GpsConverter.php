@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
 
 use function array_replace;
 use function implode;
@@ -234,7 +235,7 @@ final readonly class GpsConverter
             $diffValue = $diffValue->values[0] ?? null;
         }
 
-        if (is_int($diffValue) && ($diffValue === 0 || $diffValue === 1)) {
+        if (is_int($diffValue) && GpsDifferential::tryFrom($diffValue) !== null) {
             $result['differential'] = $diffValue;
         }
 

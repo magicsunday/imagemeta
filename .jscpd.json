@@ -18,6 +18,7 @@
         "**/SceneModeReader.php",
         "**/GpsCoordinateConverter.php",
         "**/GpsConverter.php",
+        "**/GpsUnitConverter.php",
         "**/GpsTimestampConverter.php",
         "**/DngGeometryValidator.php",
         "**/TiffTagConstraintValidator.php",

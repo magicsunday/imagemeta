@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
 
 use function abs;
 use function floor;
@@ -119,7 +120,7 @@ final readonly class GpsUnitConverter
             }
 
             // EXIF 3.0 §4.6.7.1.6: Values 1 (below ellipsoidal) and 3 (below sea level) indicate negative altitude
-            if ($alt !== null && ($result['alt_ref'] === 1 || $result['alt_ref'] === 3)) {
+            if ($alt !== null && GpsAltitudeRef::tryFrom($result['alt_ref'])?->isBelow() === true) {
                 $alt = -$alt;
             }
 
