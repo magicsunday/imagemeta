@@ -164,6 +164,31 @@ Always enforce:
     * `BoundsError`
 * No warnings/notices as control flow
 
+### 4.1 ParseError Code Ranges
+
+Every `new ParseError(…, CODE)` must use a **unique** numeric code.
+Codes are assigned per module in these ranges:
+
+| Range | Module | Location |
+|-------|--------|----------|
+| 1001–1030 | Core / Stream | `src/Core/` |
+| 1031–1033 | Format Detection | `src/Detect/` |
+| 1034–1119 | MakerNotes | `src/MakerNotes/` |
+| 1120 | MetadataReader | `src/MetadataReader.php` |
+| 1123–1141 | ICC | `src/Parse/Icc/` |
+| 1127–1135 | IPTC | `src/Parse/Iptc/` |
+| 1140–1606 | ISO BMFF / QuickTime | `src/Parse/IsoBmff/` |
+| 1263–1334 | JPEG | `src/Parse/Jpeg/` |
+| 1301–1853 | TIFF / EXIF / DNG | `src/Parse/Tiff/` |
+| 1854–1857 | JPEG config | `src/Parse/Jpeg/JpegParserConfig.php` |
+| 1858–1868 | Value-object validation | `src/MakerNotes/`, `src/Exif/Model/` |
+| 1869–1942 | Disambiguated duplicates | various (added by GH-1609) |
+
+**Rules:**
+* New codes: use `max + 1` (currently **1942**).
+* Each code must be globally unique across all `src/` files.
+* Overlapping ranges are historical; do not extend them further.
+
 ---
 
 ## 5. Architecture & Design Rules (Operational)
