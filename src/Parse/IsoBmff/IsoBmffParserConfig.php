@@ -27,11 +27,11 @@ final readonly class IsoBmffParserConfig
         public int $maxNestedMetadataDepth = 1,
     ) {
         if ($this->maxItemPayloadSize < 1) {
-            throw new ParseError('maxItemPayloadSize must be greater than zero.', 1858);
+            throw new ParseError('maxItemPayloadSize must be greater than zero.', 1950);
         }
 
         if ($this->maxNestedMetadataDepth < 0) {
-            throw new ParseError('maxNestedMetadataDepth must not be negative.', 1859);
+            throw new ParseError('maxNestedMetadataDepth must not be negative.', 1951);
         }
     }
 }

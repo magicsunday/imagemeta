@@ -183,9 +183,10 @@ Codes are assigned per module in these ranges:
 | 1854–1857 | JPEG config | `src/Parse/Jpeg/JpegParserConfig.php` |
 | 1858–1868 | Value-object validation | `src/MakerNotes/`, `src/Exif/Model/` |
 | 1869–1942 | Disambiguated duplicates | various (added by GH-1609) |
+| 1943–1951 | Assembler limits & config validation | various (added by GH-1621, GH-1626) |
 
 **Rules:**
-* New codes: use `max + 1` (currently **1942**).
+* New codes: use `max + 1` (currently **1951**).
 * Each code must be globally unique across all `src/` files.
 * Overlapping ranges are historical; do not extend them further.
 
