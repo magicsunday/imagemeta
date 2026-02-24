@@ -1,0 +1,1397 @@
+<?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
+
+use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Core\StreamWindow;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Parse\IsoBmff\AudioSampleEntryParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
+use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParseContext;
+use MagicSunday\ImageMeta\Parse\IsoBmff\TrackMediaParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
+use MagicSunday\ImageMeta\Tests\Helpers\IsoBmffBoxTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\TestCase;
+
+use function chr;
+use function fopen;
+use function fwrite;
+use function pack;
+use function rewind;
+use function str_repeat;
+use function strlen;
+
+/**
+ * Tests for the TrackMediaParser, covering parseMvhd, parseHdlr, and parseTrak
+ * including all ParseError paths through the nested parsing hierarchy.
+ */
+#[CoversClass(TrackMediaParser::class)]
+#[UsesClass(ParseError::class)]
+#[UsesClass(Stream::class)]
+#[UsesClass(StreamWindow::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(Unpack::class)]
+#[UsesClass(BoxNavigator::class)]
+#[UsesClass(BoxDescriptor::class)]
+#[UsesClass(IsoBmffParseContext::class)]
+#[UsesClass(VideoSampleEntryParser::class)]
+#[UsesClass(AudioSampleEntryParser::class)]
+final class TrackMediaParserTest extends TestCase
+{
+    use IsoBmffBoxTrait;
+
+    // =========================================================================
+    // Helper methods
+    // =========================================================================
+
+    /**
+     * Creates a Stream from raw binary data and returns the parser + BoxDescriptor.
+     *
+     * @return array{0: TrackMediaParser, 1: BoxDescriptor}
+     */
+    private function createParserWithDescriptor(string $type, string $content): array
+    {
+        $handle = fopen('php://temp', 'wb+');
+        if ($handle === false) {
+            self::fail('Unable to create temporary stream handle.');
+        }
+
+        $bytesWritten = fwrite($handle, $content);
+        if ($bytesWritten !== strlen($content)) {
+            self::fail('Unable to populate temporary stream data.');
+        }
+
+        if (rewind($handle) === false) {
+            self::fail('Unable to rewind temporary stream handle.');
+        }
+
+        $stream    = new Stream($handle, strlen($content));
+        $navigator = new BoxNavigator($stream);
+
+        $parser = new TrackMediaParser(
+            $navigator,
+            static function (BoxDescriptor $box, IsoBmffParseContext $ctx): void {},
+            static fn (BoxDescriptor $box): array => [],
+        );
+
+        $window = $stream->window(0, strlen($content));
+
+        $descriptor = new BoxDescriptor(
+            type: $type,
+            size: 8 + strlen($content),
+            offset: 0,
+            contentOffset: 0,
+            contentSize: strlen($content),
+            window: $window,
+            userType: null,
+        );
+
+        return [$parser, $descriptor];
+    }
+
+    /**
+     * Creates a parser for parseTrak tests with the given trak content.
+     *
+     * @return array{0: TrackMediaParser, 1: BoxDescriptor, 2: IsoBmffParseContext}
+     */
+    private function createParseTrakSetup(string $trakContent): array
+    {
+        [$parser, $descriptor] = $this->createParserWithDescriptor('trak', $trakContent);
+
+        return [$parser, $descriptor, new IsoBmffParseContext()];
+    }
+
+    // =========================================================================
+    // Valid box payload builders
+    // =========================================================================
+
+    /**
+     * Builds valid v0 mvhd content (100 bytes: version/flags + payload).
+     */
+    private function validMvhdContent(): string
+    {
+        return "\x00\x00\x00\x00"           // version(1)=0 + flags(3)=0
+            . str_repeat("\x00", 8)         // creation_time(4) + modification_time(4)
+            . pack('N', 1000)               // timescale
+            . pack('N', 5000)               // duration
+            . str_repeat("\x00", 76)        // rate(4)+volume(2)+reserved(10)+matrix(36)+pre_defined(24)
+            . pack('N', 1);                 // next_track_ID
+    }
+
+    /**
+     * Builds valid v1 mvhd content (112 bytes).
+     */
+    private function validMvhdV1Content(): string
+    {
+        return "\x01\x00\x00\x00"           // version(1)=1 + flags(3)=0
+            . str_repeat("\x00", 16)        // creation_time(8) + modification_time(8)
+            . pack('N', 1000)               // timescale
+            . str_repeat("\x00", 8)         // duration(8)
+            . str_repeat("\x00", 76)        // rate(4)+volume(2)+reserved(10)+matrix(36)+pre_defined(24)
+            . pack('N', 1);                 // next_track_ID
+    }
+
+    /**
+     * Builds valid v0 tkhd box (enabled + in_movie).
+     */
+    private function validTkhdBox(): string
+    {
+        $payload = str_repeat("\x00", 8)    // creation(4) + modification(4)
+            . pack('N', 1)                  // track_ID
+            . str_repeat("\x00", 4)         // reserved32
+            . pack('N', 1000)               // duration
+            . str_repeat("\x00", 8)         // reserved64
+            . str_repeat("\x00", 2)         // layer
+            . str_repeat("\x00", 2)         // alt_group
+            . str_repeat("\x00", 2)         // volume
+            . str_repeat("\x00", 2)         // reserved16
+            . str_repeat("\x00", 36)        // matrix
+            . pack('N', 1920 << 16)         // width (16.16)
+            . pack('N', 1080 << 16);        // height (16.16)
+
+        return $this->fullBox('tkhd', $payload, 0, 3);
+    }
+
+    /**
+     * Builds valid v0 hdlr box with the given handler type.
+     */
+    private function validHdlrBox(string $handler = 'vide'): string
+    {
+        $payload = str_repeat("\x00", 4)    // pre_defined
+            . $handler                      // handler_type
+            . str_repeat("\x00", 12);       // reserved
+
+        return $this->fullBox('hdlr', $payload, 0, 0);
+    }
+
+    /**
+     * Builds valid v0 mdhd box with timescale=1000.
+     */
+    private function validMdhdBox(): string
+    {
+        $payload = str_repeat("\x00", 8)    // creation(4) + modification(4)
+            . pack('N', 1000)               // timescale
+            . pack('N', 1000)               // duration
+            . str_repeat("\x00", 4);        // language(2) + pre_defined(2)
+
+        return $this->fullBox('mdhd', $payload, 0, 0);
+    }
+
+    /**
+     * Builds a minimal vmhd box.
+     */
+    private function validVmhdBox(): string
+    {
+        return $this->fullBox('vmhd', str_repeat("\x00", 8), 0, 1);
+    }
+
+    /**
+     * Builds a minimal smhd box.
+     */
+    private function validSmhdBox(): string
+    {
+        return $this->fullBox('smhd', str_repeat("\x00", 4), 0, 0);
+    }
+
+    /**
+     * Builds a minimal nmhd box.
+     */
+    private function validNmhdBox(): string
+    {
+        return $this->fullBox('nmhd', '', 0, 0);
+    }
+
+    /**
+     * Builds a minimal dinf box.
+     */
+    private function validDinfBox(): string
+    {
+        return $this->box('dinf', str_repeat("\x00", 8));
+    }
+
+    /**
+     * Builds valid 70-byte video sample entry data.
+     */
+    private function validVideoSampleEntryData(): string
+    {
+        return pack('n', 0)                 // version
+            . pack('n', 0)                  // revisionLevel
+            . pack('N', 0)                  // vendor
+            . pack('N', 0)                  // temporalQuality
+            . pack('N', 0)                  // spatialQuality
+            . pack('n', 1920)               // width
+            . pack('n', 1080)               // height
+            . pack('N', 0x00480000)         // hRes (72.0)
+            . pack('N', 0x00480000)         // vRes (72.0)
+            . pack('N', 0)                  // dataSize
+            . pack('n', 1)                  // frameCount
+            . "\x00" . str_repeat("\x00", 31) // compressorName
+            . pack('n', 24)                 // depth
+            . pack('n', 0xFFFF);            // colorTableId (-1)
+    }
+
+    /**
+     * Builds a valid stsd box for the given handler type.
+     */
+    private function validStsdBox(string $handler = 'vide'): string
+    {
+        if ($handler === 'vide') {
+            $entry = pack('N', 86) . 'avc1'
+                . str_repeat("\x00", 6)
+                . pack('n', 1)
+                . $this->validVideoSampleEntryData();
+        } else {
+            // Generic entry for non-video handlers (16-byte minimum entry)
+            $entry = pack('N', 16) . 'genr'
+                . str_repeat("\x00", 6)
+                . pack('n', 1);
+        }
+
+        $payload = pack('N', 1) . $entry;
+
+        return $this->fullBox('stsd', $payload, 0, 0);
+    }
+
+    /**
+     * Builds a minimal stts box.
+     */
+    private function validSttsBox(): string
+    {
+        return $this->fullBox('stts', pack('N', 0), 0, 0);
+    }
+
+    /**
+     * Builds a minimal stsc box.
+     */
+    private function validStscBox(): string
+    {
+        return $this->fullBox('stsc', pack('N', 0), 0, 0);
+    }
+
+    /**
+     * Builds a minimal stsz box.
+     */
+    private function validStszBox(): string
+    {
+        return $this->fullBox('stsz', pack('N', 0) . pack('N', 0), 0, 0);
+    }
+
+    /**
+     * Builds a minimal stco box.
+     */
+    private function validStcoBox(): string
+    {
+        return $this->fullBox('stco', pack('N', 0), 0, 0);
+    }
+
+    /**
+     * Builds valid stbl content for the given handler.
+     */
+    private function validStblContent(string $handler = 'vide'): string
+    {
+        return $this->validStsdBox($handler)
+            . $this->validSttsBox()
+            . $this->validStscBox()
+            . $this->validStszBox()
+            . $this->validStcoBox();
+    }
+
+    /**
+     * Builds a valid minf box for the given handler.
+     */
+    private function validMinfBox(string $handler = 'vide'): string
+    {
+        $mediaHeader = match ($handler) {
+            'vide'  => $this->validVmhdBox(),
+            'soun'  => $this->validSmhdBox(),
+            default => $this->validNmhdBox(),
+        };
+
+        return $this->box('minf', $this->validDinfBox() . $mediaHeader . $this->box('stbl', $this->validStblContent($handler)));
+    }
+
+    /**
+     * Builds a valid mdia box for the given handler.
+     */
+    private function validMdiaBox(string $handler = 'vide'): string
+    {
+        return $this->box('mdia', $this->validHdlrBox($handler) . $this->validMdhdBox() . $this->validMinfBox($handler));
+    }
+
+    /**
+     * Builds valid trak content (tkhd + mdia).
+     */
+    private function validTrakContent(): string
+    {
+        return $this->validTkhdBox() . $this->validMdiaBox();
+    }
+
+    // =========================================================================
+    // parseMvhd tests
+    // =========================================================================
+
+    /**
+     * Accepts valid version 0 mvhd box.
+     */
+    #[Test]
+    public function parseMvhdAcceptsValidV0(): void
+    {
+        [$parser, $descriptor] = $this->createParserWithDescriptor('mvhd', $this->validMvhdContent());
+
+        $parser->parseMvhd($descriptor);
+
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * Accepts valid version 1 mvhd box.
+     */
+    #[Test]
+    public function parseMvhdAcceptsValidV1(): void
+    {
+        [$parser, $descriptor] = $this->createParserWithDescriptor('mvhd', $this->validMvhdV1Content());
+
+        $parser->parseMvhd($descriptor);
+
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * Provides mvhd error test cases.
+     *
+     * @return array<string, array{string, int}>
+     */
+    public static function mvhdErrorProvider(): array
+    {
+        return [
+            'truncated under 4 bytes (1906)' => [
+                str_repeat("\x00", 3),
+                1906,
+            ],
+            'unsupported version 2 (1908)' => [
+                "\x02\x00\x00\x00" . str_repeat("\x00", 108),
+                1908,
+            ],
+            'non-zero flags (1407)' => [
+                "\x00\x00\x00\x01" . str_repeat("\x00", 96),
+                1407,
+            ],
+            'v0 truncated payload (1907)' => [
+                "\x00\x00\x00\x00" . str_repeat("\x00", 50),
+                1907,
+            ],
+            'v1 truncated payload (1907)' => [
+                "\x01\x00\x00\x00" . str_repeat("\x00", 50),
+                1907,
+            ],
+            'zero timescale (1408)' => [
+                "\x00\x00\x00\x00"
+                . str_repeat("\x00", 8)
+                . pack('N', 0)
+                . str_repeat("\x00", 84),
+                1408,
+            ],
+            'zero next_track_ID (1409)' => [
+                "\x00\x00\x00\x00"
+                . str_repeat("\x00", 8)
+                . pack('N', 1)
+                . str_repeat("\x00", 80)
+                . pack('N', 0),
+                1409,
+            ],
+        ];
+    }
+
+    /**
+     * Rejects invalid mvhd payloads.
+     */
+    #[Test]
+    #[DataProvider('mvhdErrorProvider')]
+    public function parseMvhdRejectsInvalidPayload(string $content, int $expectedCode): void
+    {
+        [$parser, $descriptor] = $this->createParserWithDescriptor('mvhd', $content);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode($expectedCode);
+
+        $parser->parseMvhd($descriptor);
+    }
+
+    // =========================================================================
+    // parseHdlr tests
+    // =========================================================================
+
+    /**
+     * Parses a hdlr box with a QuickTime counted-string handler name.
+     */
+    #[Test]
+    public function parseHdlrParsesCountedStringName(): void
+    {
+        $payload = str_repeat("\x00", 4)    // pre_defined
+            . 'vide'                        // handler_type
+            . str_repeat("\x00", 12)        // reserved
+            . "\x05Hello";                  // counted string: length=5, "Hello"
+
+        [$parser, $descriptor] = $this->createParserWithDescriptor('hdlr', "\x00\x00\x00\x00" . $payload);
+
+        $result = $parser->parseHdlr($descriptor);
+
+        self::assertSame('vide', $result[0]);
+        self::assertSame('Hello', $result[1]);
+    }
+
+    /**
+     * Parses a hdlr box with an ISO NUL-terminated handler name.
+     */
+    #[Test]
+    public function parseHdlrParsesNulTerminatedName(): void
+    {
+        // countedLen = ord('V') = 86, which exceeds remaining-1, triggering NUL path
+        $payload = str_repeat("\x00", 4)    // pre_defined
+            . 'vide'                        // handler_type
+            . str_repeat("\x00", 12)        // reserved
+            . "VideoHandler\x00";           // NUL-terminated
+
+        [$parser, $descriptor] = $this->createParserWithDescriptor('hdlr', "\x00\x00\x00\x00" . $payload);
+
+        $result = $parser->parseHdlr($descriptor);
+
+        self::assertSame('vide', $result[0]);
+        self::assertSame('VideoHandler', $result[1]);
+    }
+
+    /**
+     * Parses a minimal hdlr box without a handler name.
+     */
+    #[Test]
+    public function parseHdlrParsesMinimalBoxWithoutName(): void
+    {
+        $payload = str_repeat("\x00", 4)    // pre_defined
+            . 'vide'                        // handler_type
+            . str_repeat("\x00", 12);       // reserved
+
+        [$parser, $descriptor] = $this->createParserWithDescriptor('hdlr', "\x00\x00\x00\x00" . $payload);
+
+        $result = $parser->parseHdlr($descriptor);
+
+        self::assertSame('vide', $result[0]);
+        self::assertNull($result[1]);
+    }
+
+    /**
+     * Provides hdlr error test cases.
+     *
+     * @return array<string, array{string, int}>
+     */
+    public static function hdlrErrorProvider(): array
+    {
+        return [
+            'truncated under 24 bytes (1147)' => [
+                str_repeat("\x00", 23),
+                1147,
+            ],
+            'unsupported version (1148)' => [
+                "\x01\x00\x00\x00" . str_repeat("\x00", 20),
+                1148,
+            ],
+            'non-zero flags (1149)' => [
+                "\x00\x00\x00\x01" . str_repeat("\x00", 20),
+                1149,
+            ],
+            'invalid UTF-8 name (1384)' => [
+                "\x00\x00\x00\x00"
+                . str_repeat("\x00", 4)
+                . 'vide'
+                . str_repeat("\x00", 12)
+                . "\xFE\x00",
+                1384,
+            ],
+            'missing NUL terminator (1152)' => [
+                "\x00\x00\x00\x00"
+                . str_repeat("\x00", 4)
+                . 'vide'
+                . str_repeat("\x00", 12)
+                . "\xC0\x41",
+                1152,
+            ],
+        ];
+    }
+
+    /**
+     * Rejects invalid hdlr payloads.
+     */
+    #[Test]
+    #[DataProvider('hdlrErrorProvider')]
+    public function parseHdlrRejectsInvalidPayload(string $content, int $expectedCode): void
+    {
+        [$parser, $descriptor] = $this->createParserWithDescriptor('hdlr', $content);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode($expectedCode);
+
+        $parser->parseHdlr($descriptor);
+    }
+
+    // =========================================================================
+    // parseTrak tests — structural (tkhd/mdia/udta)
+    // =========================================================================
+
+    /**
+     * Parses a valid video track and returns expected metadata.
+     */
+    #[Test]
+    public function parseTrakParsesValidVideoTrack(): void
+    {
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup($this->validTrakContent());
+
+        $result = $parser->parseTrak($descriptor, $context);
+
+        self::assertSame('vide', $result['handler']);
+        self::assertTrue($result['isEnabledInMovie']);
+    }
+
+    /**
+     * Rejects trak without a tkhd box (code 1891).
+     */
+    #[Test]
+    public function parseTrakRejectsMissingTkhd(): void
+    {
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validMdiaBox(),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1891);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects trak without an mdia box (code 1892).
+     */
+    #[Test]
+    public function parseTrakRejectsMissingMdia(): void
+    {
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox(),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1892);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects trak with duplicate tkhd boxes (code 1376).
+     */
+    #[Test]
+    public function parseTrakRejectsDuplicateTkhd(): void
+    {
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $this->validTkhdBox() . $this->validMdiaBox(),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1376);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects trak with duplicate mdia boxes (code 1377).
+     */
+    #[Test]
+    public function parseTrakRejectsDuplicateMdia(): void
+    {
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $this->validMdiaBox() . $this->validMdiaBox(),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1377);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects trak with duplicate udta boxes (code 1912).
+     */
+    #[Test]
+    public function parseTrakRejectsDuplicateUdta(): void
+    {
+        $udta = $this->box('udta', str_repeat("\x00", 8));
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $this->validMdiaBox() . $udta . $udta,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1912);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    // =========================================================================
+    // parseTkhd tests (via parseTrak)
+    // =========================================================================
+
+    /**
+     * Provides tkhd error test cases. Each provides a tkhd fullBox payload and expected code.
+     *
+     * @return array<string, array{string, int}>
+     */
+    public static function tkhdErrorProvider(): array
+    {
+        return [
+            'truncated under 84 bytes (1144)' => [
+                chr(0) . "\x00\x00\x03" . str_repeat("\x00", 50),
+                1144,
+            ],
+            'unsupported version 2 (1145)' => [
+                chr(2) . "\x00\x00\x03" . str_repeat("\x00", 88),
+                1145,
+            ],
+            'v1 truncated under 96 bytes (1146)' => [
+                chr(1) . "\x00\x00\x03" . str_repeat("\x00", 84),
+                1146,
+            ],
+            'zero track_ID (1369)' => [
+                chr(0) . "\x00\x00\x03"
+                . str_repeat("\x00", 8)
+                . pack('N', 0)
+                . str_repeat("\x00", 68),
+                1369,
+            ],
+            'non-zero reserved32 (1370)' => [
+                chr(0) . "\x00\x00\x03"
+                . str_repeat("\x00", 8)
+                . pack('N', 1)
+                . "\x00\x00\x00\x01"
+                . str_repeat("\x00", 64),
+                1370,
+            ],
+            'non-zero reserved64 (1371)' => [
+                chr(0) . "\x00\x00\x03"
+                . str_repeat("\x00", 8)
+                . pack('N', 1)
+                . str_repeat("\x00", 4)
+                . pack('N', 1000)
+                . "\x00\x00\x00\x00\x00\x00\x00\x01"
+                . str_repeat("\x00", 52),
+                1371,
+            ],
+            'non-zero reserved16 (1372)' => [
+                chr(0) . "\x00\x00\x03"
+                . str_repeat("\x00", 8)
+                . pack('N', 1)
+                . str_repeat("\x00", 4)
+                . pack('N', 1000)
+                . str_repeat("\x00", 8)
+                . str_repeat("\x00", 4)
+                . "\x00\x00"
+                . "\x00\x01"
+                . str_repeat("\x00", 44),
+                1372,
+            ],
+        ];
+    }
+
+    /**
+     * Rejects invalid tkhd payloads detected through parseTrak.
+     */
+    #[Test]
+    #[DataProvider('tkhdErrorProvider')]
+    public function parseTrakRejectsInvalidTkhd(string $tkhdContent, int $expectedCode): void
+    {
+        $tkhd = $this->box('tkhd', $tkhdContent);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $tkhd . $this->validMdiaBox(),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode($expectedCode);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    // =========================================================================
+    // parseMdia tests (via parseTrak) — structural errors
+    // =========================================================================
+
+    /**
+     * Rejects mdia without a hdlr box (code 1893).
+     */
+    #[Test]
+    public function parseTrakRejectsMdiaMissingHdlr(): void
+    {
+        $mdia = $this->box('mdia', $this->validMdhdBox() . $this->validMinfBox());
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1893);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects mdia without a minf box (code 1894).
+     */
+    #[Test]
+    public function parseTrakRejectsMdiaMissingMinf(): void
+    {
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox());
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1894);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects mdia without a mdhd box (code 1895).
+     */
+    #[Test]
+    public function parseTrakRejectsMdiaMissingMdhd(): void
+    {
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMinfBox());
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1895);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects mdia with duplicate hdlr boxes (code 1378).
+     */
+    #[Test]
+    public function parseTrakRejectsMdiaDuplicateHdlr(): void
+    {
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validHdlrBox() . $this->validMdhdBox() . $this->validMinfBox());
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1378);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects mdia with duplicate minf boxes (code 1379).
+     */
+    #[Test]
+    public function parseTrakRejectsMdiaDuplicateMinf(): void
+    {
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $this->validMinfBox() . $this->validMinfBox());
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1379);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects mdia with duplicate mdhd boxes (code 1380).
+     */
+    #[Test]
+    public function parseTrakRejectsMdiaDuplicateMdhd(): void
+    {
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $this->validMdhdBox() . $this->validMinfBox());
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1380);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects mdia with duplicate udta boxes (code 1463).
+     */
+    #[Test]
+    public function parseTrakRejectsMdiaDuplicateUdta(): void
+    {
+        $udta = $this->box('udta', str_repeat("\x00", 8));
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $this->validMinfBox() . $udta . $udta);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1463);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    // =========================================================================
+    // parseMdhd tests (via parseTrak)
+    // =========================================================================
+
+    /**
+     * Provides mdhd error test cases (content includes version/flags).
+     *
+     * @return array<string, array{string, int}>
+     */
+    public static function mdhdErrorProvider(): array
+    {
+        return [
+            'truncated under 4 bytes (1901)' => [
+                str_repeat("\x00", 3),
+                1901,
+            ],
+            'unsupported version 2 (1903)' => [
+                "\x02\x00\x00\x00" . str_repeat("\x00", 32),
+                1903,
+            ],
+            'non-zero flags (1904)' => [
+                "\x00\x00\x00\x01" . str_repeat("\x00", 20),
+                1904,
+            ],
+            'v0 truncated payload (1902)' => [
+                "\x00\x00\x00\x00" . str_repeat("\x00", 16),
+                1902,
+            ],
+            'v1 truncated payload (1902)' => [
+                "\x01\x00\x00\x00" . str_repeat("\x00", 16),
+                1902,
+            ],
+            'zero timescale (1905)' => [
+                "\x00\x00\x00\x00"
+                . str_repeat("\x00", 8)
+                . pack('N', 0)
+                . str_repeat("\x00", 8),
+                1905,
+            ],
+        ];
+    }
+
+    /**
+     * Rejects invalid mdhd payloads detected through parseTrak.
+     */
+    #[Test]
+    #[DataProvider('mdhdErrorProvider')]
+    public function parseTrakRejectsInvalidMdhd(string $mdhdContent, int $expectedCode): void
+    {
+        $mdhd = $this->box('mdhd', $mdhdContent);
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $mdhd . $this->validMinfBox());
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode($expectedCode);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    // =========================================================================
+    // parseMinf tests (via parseTrak)
+    // =========================================================================
+
+    /**
+     * Rejects minf without stbl (code 1896).
+     */
+    #[Test]
+    public function parseTrakRejectsMinfMissingStbl(): void
+    {
+        $minf = $this->box('minf', $this->validDinfBox() . $this->validVmhdBox());
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1896);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects minf without dinf (code 1897).
+     */
+    #[Test]
+    public function parseTrakRejectsMinfMissingDinf(): void
+    {
+        $minf = $this->box('minf', $this->validVmhdBox() . $this->box('stbl', $this->validStblContent()));
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1897);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects minf with duplicate stbl (code 1381).
+     */
+    #[Test]
+    public function parseTrakRejectsMinfDuplicateStbl(): void
+    {
+        $stbl = $this->box('stbl', $this->validStblContent());
+        $minf = $this->box('minf', $this->validDinfBox() . $this->validVmhdBox() . $stbl . $stbl);
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1381);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects minf with duplicate dinf (code 1382).
+     */
+    #[Test]
+    public function parseTrakRejectsMinfDuplicateDinf(): void
+    {
+        $minf = $this->box('minf', $this->validDinfBox() . $this->validDinfBox() . $this->validVmhdBox() . $this->box('stbl', $this->validStblContent()));
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1382);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects minf with duplicate media header boxes (code 1421).
+     */
+    #[Test]
+    public function parseTrakRejectsMinfDuplicateMediaHeader(): void
+    {
+        $minf = $this->box('minf', $this->validDinfBox() . $this->validVmhdBox() . $this->validVmhdBox() . $this->box('stbl', $this->validStblContent()));
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1421);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects minf missing required media header (code 1422).
+     */
+    #[Test]
+    public function parseTrakRejectsMinfMissingMediaHeader(): void
+    {
+        $minf = $this->box('minf', $this->validDinfBox() . $this->box('stbl', $this->validStblContent()));
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1422);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects minf with mismatched media header for handler (code 1423).
+     */
+    #[Test]
+    public function parseTrakRejectsMinfMismatchedMediaHeader(): void
+    {
+        // Handler is 'vide' but media header is 'smhd' (expected 'vmhd')
+        $minf = $this->box('minf', $this->validDinfBox() . $this->validSmhdBox() . $this->box('stbl', $this->validStblContent()));
+        $mdia = $this->box('mdia', $this->validHdlrBox('vide') . $this->validMdhdBox() . $minf);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1423);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    // =========================================================================
+    // parseStbl tests (via parseTrak)
+    // =========================================================================
+
+    /**
+     * Helper to build a trak hierarchy with a custom stbl content and given handler.
+     */
+    private function buildTrakWithStbl(string $stblContent, string $handler = 'meta'): string
+    {
+        $mediaHeader = match ($handler) {
+            'vide'  => $this->validVmhdBox(),
+            'soun'  => $this->validSmhdBox(),
+            default => $this->validNmhdBox(),
+        };
+
+        $minf = $this->box('minf', $this->validDinfBox() . $mediaHeader . $this->box('stbl', $stblContent));
+        $mdia = $this->box('mdia', $this->validHdlrBox($handler) . $this->validMdhdBox() . $minf);
+
+        return $this->validTkhdBox() . $mdia;
+    }
+
+    /**
+     * Provides stbl "duplicate box" error test cases.
+     *
+     * @return array<string, array{string, int}>
+     */
+    public static function stblDuplicateErrorProvider(): array
+    {
+        return [
+            'duplicate stsd (1383)' => ['stsd', 1383],
+            'duplicate stts (1424)' => ['stts', 1424],
+            'duplicate stsc (1425)' => ['stsc', 1425],
+            'duplicate stsz (1426)' => ['stsz', 1426],
+            'duplicate stco (1427)' => ['stco', 1427],
+        ];
+    }
+
+    /**
+     * Rejects stbl with duplicate mandatory boxes.
+     */
+    #[Test]
+    #[DataProvider('stblDuplicateErrorProvider')]
+    public function parseTrakRejectsStblDuplicateBox(string $boxType, int $expectedCode): void
+    {
+        $extra = match ($boxType) {
+            'stsd'  => $this->validStsdBox('meta'),
+            'stts'  => $this->validSttsBox(),
+            'stsc'  => $this->validStscBox(),
+            'stsz'  => $this->validStszBox(),
+            default => $this->validStcoBox(),
+        };
+
+        $stblContent = $this->validStblContent('meta') . $extra;
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildTrakWithStbl($stblContent),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode($expectedCode);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Provides stbl "missing box" error test cases.
+     *
+     * @return array<string, array{string, int}>
+     */
+    public static function stblMissingErrorProvider(): array
+    {
+        return [
+            'missing stsd (1898)' => ['stsd', 1898],
+            'missing stts (1914)' => ['stts', 1914],
+            'missing stsc (1915)' => ['stsc', 1915],
+            'missing stsz (1916)' => ['stsz', 1916],
+            'missing stco (1917)' => ['stco', 1917],
+        ];
+    }
+
+    /**
+     * Rejects stbl with missing mandatory boxes.
+     */
+    #[Test]
+    #[DataProvider('stblMissingErrorProvider')]
+    public function parseTrakRejectsStblMissingBox(string $missingType, int $expectedCode): void
+    {
+        $boxes = [
+            'stsd' => $this->validStsdBox('meta'),
+            'stts' => $this->validSttsBox(),
+            'stsc' => $this->validStscBox(),
+            'stsz' => $this->validStszBox(),
+            'stco' => $this->validStcoBox(),
+        ];
+
+        unset($boxes[$missingType]);
+
+        $stblContent = implode('', $boxes);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildTrakWithStbl($stblContent),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode($expectedCode);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    // =========================================================================
+    // parseStsd tests (via parseTrak)
+    // =========================================================================
+
+    /**
+     * Helper to build a trak hierarchy with a custom stsd box.
+     */
+    private function buildTrakWithStsd(string $stsdBox, string $handler = 'meta'): string
+    {
+        $stblContent = $stsdBox
+            . $this->validSttsBox()
+            . $this->validStscBox()
+            . $this->validStszBox()
+            . $this->validStcoBox();
+
+        return $this->buildTrakWithStbl($stblContent, $handler);
+    }
+
+    /**
+     * Rejects stsd truncated under 8 bytes (code 1153).
+     */
+    #[Test]
+    public function parseTrakRejectsStsdTruncated(): void
+    {
+        $stsd = $this->box('stsd', str_repeat("\x00", 3));
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildTrakWithStsd($stsd),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1153);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stsd with unsupported version (code 1154).
+     */
+    #[Test]
+    public function parseTrakRejectsStsdUnsupportedVersion(): void
+    {
+        $stsd = $this->fullBox('stsd', pack('N', 1) . pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 1), 2, 0);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildTrakWithStsd($stsd),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1154);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stsd with non-zero flags (code 1155).
+     */
+    #[Test]
+    public function parseTrakRejectsStsdNonZeroFlags(): void
+    {
+        $stsd = $this->fullBox('stsd', pack('N', 1) . pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 1), 0, 1);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildTrakWithStsd($stsd),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1155);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stsd version 1 with non-audio handler (code 1925).
+     */
+    #[Test]
+    public function parseTrakRejectsStsdV1NonAudioHandler(): void
+    {
+        $stsd = $this->fullBox('stsd', pack('N', 1) . pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 1), 1, 0);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildTrakWithStsd($stsd, 'vide'),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1925);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stsd with zero entry count (code 1926).
+     */
+    #[Test]
+    public function parseTrakRejectsStsdZeroEntryCount(): void
+    {
+        $stsd = $this->fullBox('stsd', pack('N', 0), 0, 0);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildTrakWithStsd($stsd),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1926);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stsd with entry count exceeding limit (code 1156).
+     */
+    #[Test]
+    public function parseTrakRejectsStsdExcessiveEntryCount(): void
+    {
+        $stsd = $this->fullBox('stsd', pack('N', 101) . str_repeat("\x00", 16), 0, 0);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildTrakWithStsd($stsd),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1156);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stsd with truncated entry header (code 1157).
+     */
+    #[Test]
+    public function parseTrakRejectsStsdTruncatedEntry(): void
+    {
+        // entry count = 1 but only 4 bytes of entry (need 8 for size+type)
+        $stsd = $this->fullBox('stsd', pack('N', 1) . str_repeat("\x00", 4), 0, 0);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildTrakWithStsd($stsd),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1157);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stsd with invalid entry size (code 1158).
+     */
+    #[Test]
+    public function parseTrakRejectsStsdInvalidEntrySize(): void
+    {
+        // entry size = 8 (< 16 minimum)
+        $stsd = $this->fullBox('stsd', pack('N', 1) . pack('N', 8) . 'genr', 0, 0);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildTrakWithStsd($stsd),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1158);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stsd entry with non-zero reserved field (code 1398).
+     */
+    #[Test]
+    public function parseTrakRejectsStsdNonZeroReserved(): void
+    {
+        $entry = pack('N', 16) . 'genr' . "\x00\x00\x00\x00\x00\x01" . pack('n', 1);
+        $stsd  = $this->fullBox('stsd', pack('N', 1) . $entry, 0, 0);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildTrakWithStsd($stsd),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1398);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stsd entry with zero data_reference_index (code 1399).
+     */
+    #[Test]
+    public function parseTrakRejectsStsdZeroDataRefIndex(): void
+    {
+        $entry = pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 0);
+        $stsd  = $this->fullBox('stsd', pack('N', 1) . $entry, 0, 0);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildTrakWithStsd($stsd),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1399);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stsd whose entries do not fill the container (code 1161).
+     */
+    #[Test]
+    public function parseTrakRejectsStsdEntriesNotFillingContainer(): void
+    {
+        $entry   = pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 1);
+        $payload = pack('N', 1) . $entry . str_repeat("\x00", 4);
+        $stsd    = $this->fullBox('stsd', $payload, 0, 0);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildTrakWithStsd($stsd),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1161);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+}
