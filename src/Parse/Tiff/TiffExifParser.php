@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Parse\ParserLimits;
 
+use function count;
 use function in_array;
 use function is_string;
 use function sprintf;
@@ -183,6 +184,13 @@ final class TiffExifParser implements TiffExifParserInterface
         while ($nextOffset !== null && $nextOffset > 0) {
             if (isset($visitedOffsets[$nextOffset])) {
                 throw new ParseError('Cyclic IFD chain detected at offset ' . $nextOffset . '.', 1359);
+            }
+
+            if (count($visitedOffsets) >= ParserLimits::MAX_IFD_CHAIN_LENGTH) {
+                throw new ParseError(
+                    sprintf('IFD chain length exceeds maximum allowed %d.', ParserLimits::MAX_IFD_CHAIN_LENGTH),
+                    1964,
+                );
             }
 
             $visitedOffsets[$nextOffset] = true;

@@ -71,6 +71,14 @@ final class ParserLimits
     public const int MAX_KEYS_ENTRIES = 1_000;
 
     /**
+     * Maximum number of chained IFDs in a TIFF/EXIF structure.
+     *
+     * Standard TIFF files contain at most 2–3 IFDs (IFD0, IFD1, thumbnail).
+     * A generous ceiling of 100 prevents runaway traversal.
+     */
+    public const int MAX_IFD_CHAIN_LENGTH = 100;
+
+    /**
      * Maximum IFD entries in a TIFF/EXIF directory (TIFF 6.0 §2).
      */
     public const int MAX_IFD_ENTRIES = 10_000;
