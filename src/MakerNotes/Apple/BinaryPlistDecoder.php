@@ -387,6 +387,10 @@ final class BinaryPlistDecoder
             throw new ParseError('Integer object without payload.', 1058);
         }
 
+        if ($size > PHP_INT_SIZE) {
+            throw new ParseError(sprintf('Integer object size %d exceeds platform int size.', $size), 1955);
+        }
+
         return $this->reader->readUint($offset + 1, $size);
     }
 
@@ -536,6 +540,10 @@ final class BinaryPlistDecoder
     {
         [$size, $header] = $this->reader->readLength($offset, $info);
 
+        if ($size > intdiv(PHP_INT_MAX, 2)) {
+            throw new ParseError('Unicode string character count would overflow byte length.', 1956);
+        }
+
         $byteLength = $size * 2;
         $payload    = substr($this->reader->data(), $offset + $header, $byteLength);
         if (strlen($payload) !== $byteLength) {
@@ -639,6 +647,10 @@ final class BinaryPlistDecoder
             return new ApplePlistArray([]);
         }
 
+        if ($count > intdiv(PHP_INT_MAX, $this->objectRefSize)) {
+            throw new ParseError('Array element count would overflow reference byte length.', 1957);
+        }
+
         $refsOffset = $offset + $header;
         $bytes      = $count * $this->objectRefSize;
         if (($refsOffset + $bytes) > $this->reader->length()) {
@@ -668,6 +680,10 @@ final class BinaryPlistDecoder
         [$count, $header] = $this->reader->readLength($offset, $info);
         if ($count === 0) {
             return new ApplePlistDictionary([]);
+        }
+
+        if ($count > intdiv(PHP_INT_MAX, $this->objectRefSize * 2)) {
+            throw new ParseError('Dictionary element count would overflow reference byte length.', 1958);
         }
 
         $refsOffset = $offset + $header;
