@@ -616,6 +616,7 @@ final readonly class TrackMediaParser
                     throw new ParseError('minf must contain exactly one dinf box', 1382);
                 }
 
+                // Return value intentionally discarded: dinf validation only in track context
                 ($this->validateDinf)($child);
             } elseif (in_array($child->type, [BoxType::VMHD->value, BoxType::SMHD->value, BoxType::NMHD->value], true)) {
                 // Enforce exactly one handler-matching media header
