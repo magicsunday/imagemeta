@@ -21,6 +21,6 @@ enum FlashFunction: int
 {
     use EnumFromIntStringNullable;
 
-    case PRESENT = 0;
-    case ABSENT  = 1;
+    case Present = 0;
+    case Absent  = 1;
 }

@@ -21,6 +21,6 @@ enum WhiteBalance: int
 {
     use EnumFromIntStringNullable;
 
-    case AUTO   = 0;
-    case MANUAL = 1;
+    case Auto   = 0;
+    case Manual = 1;
 }

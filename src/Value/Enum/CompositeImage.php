@@ -25,8 +25,8 @@ enum CompositeImage: int
 {
     use EnumFromIntStringNullable;
 
-    case UNKNOWN                 = 0;
-    case NOT_COMPOSITE           = 1;
-    case GENERAL_COMPOSITE       = 2;
-    case CAPTURED_WHILE_SHOOTING = 3;
+    case Unknown               = 0;
+    case NotComposite          = 1;
+    case GeneralComposite      = 2;
+    case CapturedWhileShooting = 3;
 }

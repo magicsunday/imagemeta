@@ -286,44 +286,44 @@ final readonly class IsoSensitivityReader
     private function sensitivityTagPriority(SensitivityType $type): array
     {
         return match ($type) {
-            SensitivityType::STANDARD_OUTPUT_SENSITIVITY => [
+            SensitivityType::StandardOutputSensitivity => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY,
             ],
-            SensitivityType::RECOMMENDED_EXPOSURE_INDEX => [
+            SensitivityType::RecommendedExposureIndex => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
             ],
-            SensitivityType::ISO_SPEED => [
+            SensitivityType::IsoSpeed => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::ISO_SPEED,
             ],
-            SensitivityType::SOS_AND_REI => [
+            SensitivityType::SosAndRei => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
             ],
-            SensitivityType::SOS_AND_ISO => [
+            SensitivityType::SosAndIso => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY,
                 ExifTag::ISO_SPEED,
             ],
-            SensitivityType::REI_AND_ISO => [
+            SensitivityType::ReiAndIso => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
                 ExifTag::ISO_SPEED,
             ],
-            SensitivityType::SOS_AND_REI_AND_ISO => [
+            SensitivityType::SosAndReiAndIso => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
                 ExifTag::ISO_SPEED,
             ],
-            SensitivityType::UNKNOWN => [],
+            SensitivityType::Unknown => [],
         };
     }
 }

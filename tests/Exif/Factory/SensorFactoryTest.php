@@ -52,7 +52,7 @@ final class SensorFactoryTest extends TestCase
             spectralSensitivity: 'ISO 12232',
             focalPlaneXResolution: 3000.0,
             focalPlaneYResolution: 3000.0,
-            focalPlaneResolutionUnit: ResolutionUnit::INCHES,
+            focalPlaneResolutionUnit: ResolutionUnit::Inches,
         );
 
         $metadata = new Metadata(
@@ -66,13 +66,13 @@ final class SensorFactoryTest extends TestCase
 
         self::assertInstanceOf(CfaPattern::class, $sensor->cfaPattern);
         self::assertSame([
-            [CfaPatternColor::RED, CfaPatternColor::GREEN],
-            [CfaPatternColor::GREEN, CfaPatternColor::BLUE],
+            [CfaPatternColor::Red, CfaPatternColor::Green],
+            [CfaPatternColor::Green, CfaPatternColor::Blue],
         ], $sensor->cfaPattern->grid());
         self::assertSame('ISO 12232', $sensor->spectralSensitivity);
         self::assertSame(3000.0, $sensor->focalPlaneXResolution);
         self::assertSame(3000.0, $sensor->focalPlaneYResolution);
-        self::assertSame(ResolutionUnit::INCHES, $sensor->focalPlaneResolutionUnit);
+        self::assertSame(ResolutionUnit::Inches, $sensor->focalPlaneResolutionUnit);
         self::assertNull($sensor->pixelPitchUm);
         self::assertNull($sensor->sensorType);
         self::assertFalse($sensor->ibis);
@@ -153,7 +153,7 @@ final class SensorFactoryTest extends TestCase
             spectralSensitivity: null,
             focalPlaneXResolution: 1200.0,
             focalPlaneYResolution: 1200.0,
-            focalPlaneResolutionUnit: ResolutionUnit::CENTIMETER,
+            focalPlaneResolutionUnit: ResolutionUnit::Centimeter,
         );
 
         $metadata = new Metadata(
@@ -165,7 +165,7 @@ final class SensorFactoryTest extends TestCase
         $factory = new SensorFactory();
         $sensor  = $factory->create($metadata);
 
-        self::assertSame(ResolutionUnit::CENTIMETER, $sensor->focalPlaneResolutionUnit);
+        self::assertSame(ResolutionUnit::Centimeter, $sensor->focalPlaneResolutionUnit);
     }
 
     /**

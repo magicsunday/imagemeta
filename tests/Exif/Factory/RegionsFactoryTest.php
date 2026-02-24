@@ -94,7 +94,7 @@ final class RegionsFactoryTest extends TestCase
 
         $region = $regions->items[0];
 
-        self::assertSame(RegionType::FACE, $region->type);
+        self::assertSame(RegionType::Face, $region->type);
         self::assertSame('John Doe', $region->personName);
         self::assertEqualsWithDelta(0.4, $region->x, 1e-6);
         self::assertEqualsWithDelta(0.4, $region->y, 1e-6);
@@ -147,7 +147,7 @@ final class RegionsFactoryTest extends TestCase
 
         $region = $regions->items[0];
 
-        self::assertSame(RegionType::FACE, $region->type);
+        self::assertSame(RegionType::Face, $region->type);
         self::assertSame('Jane Doe', $region->personName);
         self::assertSame('ABC123', $region->faceId);
         self::assertEqualsWithDelta(0.5 - 0.1, $region->x, 1e-6);

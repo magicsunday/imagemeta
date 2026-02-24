@@ -500,7 +500,7 @@ final readonly class TiffTagConstraintValidator
         }
 
         $compression = $ifd->get(ExifTag::COMPRESSION);
-        if (($compression instanceof IfdEntry) && is_int($compression->value) && ($compression->value === Compression::LZW->value)) {
+        if (($compression instanceof IfdEntry) && is_int($compression->value) && ($compression->value === Compression::Lzw->value)) {
             return;
         }
 

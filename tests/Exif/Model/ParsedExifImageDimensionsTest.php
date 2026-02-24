@@ -54,7 +54,7 @@ final class ParsedExifImageDimensionsTest extends TestCase
     public function prefersCompressedPixelDimensionsWhenAvailable(): void
     {
         $ifd0 = new Ifd([
-            ExifTag::COMPRESSION  => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::COMPRESSION  => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 640),
             ExifTag::IMAGE_LENGTH => new IfdEntry(ExifTag::IMAGE_LENGTH, 4, 1, 480),
         ]);
@@ -80,7 +80,7 @@ final class ParsedExifImageDimensionsTest extends TestCase
     public function ignoresCompressedDimensionsForUncompressedImages(): void
     {
         $ifd0 = new Ifd([
-            ExifTag::COMPRESSION  => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::UNCOMPRESSED->value),
+            ExifTag::COMPRESSION  => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
             ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 1024),
             ExifTag::IMAGE_LENGTH => new IfdEntry(ExifTag::IMAGE_LENGTH, 4, 1, 768),
         ]);

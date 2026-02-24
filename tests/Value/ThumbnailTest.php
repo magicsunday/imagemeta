@@ -41,7 +41,7 @@ final class ThumbnailTest extends TestCase
             hasThumbnail: true,
             thumbnailOffset: 512,
             thumbnailLength: 1024,
-            thumbnailCompression: Compression::JPEG,
+            thumbnailCompression: Compression::Jpeg,
             thumbnailTileWidth: 256,
             thumbnailTileLength: 256,
             thumbnailTileOffsets: [512],
@@ -53,7 +53,7 @@ final class ThumbnailTest extends TestCase
         self::assertTrue($thumbnail->hasThumbnail);
         self::assertSame(512, $thumbnail->thumbnailOffset);
         self::assertSame(1024, $thumbnail->thumbnailLength);
-        self::assertSame(Compression::JPEG, $thumbnail->thumbnailCompression);
+        self::assertSame(Compression::Jpeg, $thumbnail->thumbnailCompression);
         self::assertSame(256, $thumbnail->thumbnailTileWidth);
         self::assertSame(256, $thumbnail->thumbnailTileLength);
         self::assertSame([512], $thumbnail->thumbnailStripOffsets);

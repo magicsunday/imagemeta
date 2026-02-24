@@ -24,6 +24,6 @@ enum PlanarConfiguration: int
 {
     use EnumFromIntStringNullable;
 
-    case CHUNKY = 1;
-    case PLANAR = 2;
+    case Chunky = 1;
+    case Planar = 2;
 }

@@ -723,7 +723,7 @@ final class IsoBmffParserTest extends TestCase
         [, , , , , $unresolvedItems] = $extractor->extract();
 
         self::assertCount(1, $unresolvedItems);
-        self::assertSame(ConstructionMethod::IDAT_OFFSET, $unresolvedItems[0]->constructionMethod);
+        self::assertSame(ConstructionMethod::IdatOffset, $unresolvedItems[0]->constructionMethod);
     }
 
     /**
@@ -738,7 +738,7 @@ final class IsoBmffParserTest extends TestCase
         [, , , , , $unresolvedItems] = $extractor->extract();
 
         self::assertCount(1, $unresolvedItems);
-        self::assertSame(ConstructionMethod::FILE_OFFSET, $unresolvedItems[0]->constructionMethod);
+        self::assertSame(ConstructionMethod::FileOffset, $unresolvedItems[0]->constructionMethod);
     }
 
     /**
@@ -753,7 +753,7 @@ final class IsoBmffParserTest extends TestCase
         [, , , , , $unresolvedItems] = $extractor->extract();
 
         self::assertCount(1, $unresolvedItems);
-        self::assertSame(ConstructionMethod::IDAT_OFFSET, $unresolvedItems[0]->constructionMethod);
+        self::assertSame(ConstructionMethod::IdatOffset, $unresolvedItems[0]->constructionMethod);
     }
 
     /**
@@ -768,7 +768,7 @@ final class IsoBmffParserTest extends TestCase
         [, , , , , $unresolvedItems] = $extractor->extract();
 
         self::assertCount(1, $unresolvedItems);
-        self::assertSame(ConstructionMethod::ITEM_OFFSET, $unresolvedItems[0]->constructionMethod);
+        self::assertSame(ConstructionMethod::ItemOffset, $unresolvedItems[0]->constructionMethod);
     }
 
     /**
@@ -2063,7 +2063,7 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame(1, $unresolved->itemId);
         self::assertGreaterThanOrEqual(0, $unresolved->metaContextOffset);
         self::assertSame(1, $unresolved->dataReferenceIndex);
-        self::assertSame(ConstructionMethod::FILE_OFFSET, $unresolved->constructionMethod);
+        self::assertSame(ConstructionMethod::FileOffset, $unresolved->constructionMethod);
         self::assertSame($reference, $unresolved->dataReference);
     }
 
@@ -2497,7 +2497,7 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame(1, $unresolved->itemId);
         self::assertGreaterThanOrEqual(0, $unresolved->metaContextOffset);
         self::assertSame(1, $unresolved->dataReferenceIndex);
-        self::assertSame(ConstructionMethod::FILE_OFFSET, $unresolved->constructionMethod);
+        self::assertSame(ConstructionMethod::FileOffset, $unresolved->constructionMethod);
         self::assertSame($reference, $unresolved->dataReference);
     }
 
@@ -2570,7 +2570,7 @@ final class IsoBmffParserTest extends TestCase
             self::assertSame(1, $unresolvedItem->itemId);
             self::assertGreaterThanOrEqual(0, $unresolvedItem->metaContextOffset);
             self::assertSame(1, $unresolvedItem->dataReferenceIndex);
-            self::assertSame(ConstructionMethod::FILE_OFFSET, $unresolvedItem->constructionMethod);
+            self::assertSame(ConstructionMethod::FileOffset, $unresolvedItem->constructionMethod);
             self::assertNotNull($unresolvedItem->dataReference);
             $uris[]                                             = $unresolvedItem->dataReference->uri;
             $contextOffsets[$unresolvedItem->metaContextOffset] = true;
@@ -4787,7 +4787,7 @@ final class IsoBmffParserTest extends TestCase
         self::assertNull($reference->urnLocation);
 
         self::assertCount(1, $unresolvedItems);
-        self::assertSame(ConstructionMethod::FILE_OFFSET, $unresolvedItems[0]->constructionMethod);
+        self::assertSame(ConstructionMethod::FileOffset, $unresolvedItems[0]->constructionMethod);
         self::assertSame(1, $unresolvedItems[0]->dataReferenceIndex);
     }
 

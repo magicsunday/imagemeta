@@ -68,7 +68,7 @@ final class ParsedExifShootingConditionsTest extends TestCase
 
         $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
-        self::assertSame(ExposureProgram::SHUTTER_PRIORITY, $parsedExif->exposureProgram());
+        self::assertSame(ExposureProgram::ShutterPriority, $parsedExif->exposureProgram());
     }
 
     /**
@@ -86,7 +86,7 @@ final class ParsedExifShootingConditionsTest extends TestCase
 
         $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
-        self::assertSame(CustomRendered::CUSTOM_PROCESS, $parsedExif->customRendered());
+        self::assertSame(CustomRendered::CustomProcess, $parsedExif->customRendered());
     }
 
     /**
@@ -132,8 +132,8 @@ final class ParsedExifShootingConditionsTest extends TestCase
 
         $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
-        self::assertSame(WhiteBalance::MANUAL, $parsedExif->whiteBalance());
-        self::assertSame(ExposureMode::AUTO, $parsedExif->exposureMode());
+        self::assertSame(WhiteBalance::Manual, $parsedExif->whiteBalance());
+        self::assertSame(ExposureMode::Auto, $parsedExif->exposureMode());
         self::assertNull($parsedExif->sceneCaptureType());
     }
 
@@ -156,9 +156,9 @@ final class ParsedExifShootingConditionsTest extends TestCase
         self::assertSame(0x7D, $parsedExif->flash());
         self::assertNotNull($flashInfo);
         self::assertTrue($flashInfo->fired);
-        self::assertSame(FlashMode::AUTO, $flashInfo->mode);
-        self::assertSame(FlashReturn::RETURN_NOT_DETECTED, $flashInfo->returnDetection);
-        self::assertSame(FlashFunction::ABSENT, $flashInfo->functionPresence);
+        self::assertSame(FlashMode::Auto, $flashInfo->mode);
+        self::assertSame(FlashReturn::ReturnNotDetected, $flashInfo->returnDetection);
+        self::assertSame(FlashFunction::Absent, $flashInfo->functionPresence);
         self::assertTrue($flashInfo->redEyeReduction);
     }
 
@@ -260,12 +260,12 @@ final class ParsedExifShootingConditionsTest extends TestCase
     public function returnsSensingMethodEnum(): void
     {
         $exifIfd = new Ifd([
-            ExifTag::SENSING_METHOD => new IfdEntry(ExifTag::SENSING_METHOD, 3, 1, SensingMethod::ONE_CHIP_COLOR_AREA->value),
+            ExifTag::SENSING_METHOD => new IfdEntry(ExifTag::SENSING_METHOD, 3, 1, SensingMethod::OneChipColorArea->value),
         ]);
 
         $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
-        self::assertSame(SensingMethod::ONE_CHIP_COLOR_AREA, $parsedExif->sensingMethod());
+        self::assertSame(SensingMethod::OneChipColorArea, $parsedExif->sensingMethod());
     }
 
     /**
@@ -301,7 +301,7 @@ final class ParsedExifShootingConditionsTest extends TestCase
 
         $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
-        self::assertSame(FileSource::DIGITAL_CAMERA, $parsedExif->fileSource());
+        self::assertSame(FileSource::DigitalCamera, $parsedExif->fileSource());
     }
 
     /**
@@ -319,6 +319,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
 
         $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
-        self::assertSame(SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE, $parsedExif->sceneType());
+        self::assertSame(SceneType::DirectlyPhotographedImage, $parsedExif->sceneType());
     }
 }

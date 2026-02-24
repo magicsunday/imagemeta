@@ -80,7 +80,7 @@ final readonly class ColorSpaceExifReader
 
         // EXIF 3.0 §4.6.6.2.1: ColorSpace is required when ExifIFD exists.
         // Default to sRGB for non-conformant files that omit the tag.
-        return $this->exifIfd instanceof Ifd ? ColorSpace::SRGB : null;
+        return $this->exifIfd instanceof Ifd ? ColorSpace::Srgb : null;
     }
 
     /**
@@ -132,7 +132,7 @@ final readonly class ColorSpaceExifReader
         // When Compression is absent (JPEG primary image), do not emit a
         // synthetic TIFF-layout value.
         return $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry
-            ? PlanarConfiguration::CHUNKY
+            ? PlanarConfiguration::Chunky
             : null;
     }
 
@@ -162,7 +162,7 @@ final readonly class ColorSpaceExifReader
 
         if ($photometric instanceof Photometric) {
             return match ($photometric) {
-                Photometric::RGB, Photometric::YCBCR, Photometric::CIELAB => 3,
+                Photometric::Rgb, Photometric::Ycbcr, Photometric::Cielab => 3,
                 default => 1,
             };
         }
@@ -302,7 +302,7 @@ final readonly class ColorSpaceExifReader
         // In JPEG context, let SOF-derived subsampling take precedence.
         if (
             $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry
-            && $this->photometric() === Photometric::YCBCR
+            && $this->photometric() === Photometric::Ycbcr
         ) {
             return [2, 2];
         }
@@ -322,8 +322,8 @@ final readonly class ColorSpaceExifReader
         $rawValue = $this->reader->value($this->ifd0, ExifTag::YCBCR_POSITIONING);
 
         if ($rawValue === null) {
-            return $this->photometric() === Photometric::YCBCR
-                ? YCbCrPositioning::CENTERED
+            return $this->photometric() === Photometric::Ycbcr
+                ? YCbCrPositioning::Centered
                 : null;
         }
 
@@ -474,7 +474,7 @@ final readonly class ColorSpaceExifReader
      */
     private function defaultYCbCrCoefficients(): ?array
     {
-        if ($this->photometric() !== Photometric::YCBCR) {
+        if ($this->photometric() !== Photometric::Ycbcr) {
             return null;
         }
 
@@ -494,13 +494,13 @@ final readonly class ColorSpaceExifReader
         $photometric = $this->photometric();
         $colorSpace  = $this->colorSpace();
 
-        if ((!$photometric instanceof Photometric) || (!$colorSpace instanceof ColorSpace) || ($colorSpace === ColorSpace::UNCALIBRATED)) {
+        if ((!$photometric instanceof Photometric) || (!$colorSpace instanceof ColorSpace) || ($colorSpace === ColorSpace::Uncalibrated)) {
             return null;
         }
 
         return match ($photometric) {
-            Photometric::RGB   => [0.0, 255.0, 0.0, 255.0, 0.0, 255.0],
-            Photometric::YCBCR => [0.0, 255.0, 128.0, 128.0, 128.0, 128.0],
+            Photometric::Rgb   => [0.0, 255.0, 0.0, 255.0, 0.0, 255.0],
+            Photometric::Ycbcr => [0.0, 255.0, 128.0, 128.0, 128.0, 128.0],
             default            => null,
         };
     }

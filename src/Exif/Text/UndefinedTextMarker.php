@@ -76,10 +76,10 @@ final class UndefinedTextMarker
     public static function encodingForMarker(string $marker): ?CharacterEncoding
     {
         return match ($marker) {
-            self::MARKER_ASCII     => CharacterEncoding::ASCII,
-            self::MARKER_UNICODE   => CharacterEncoding::UTF8,
-            self::MARKER_JIS       => CharacterEncoding::JIS,
-            self::MARKER_UNDEFINED => CharacterEncoding::UNDEFINED,
+            self::MARKER_ASCII     => CharacterEncoding::Ascii,
+            self::MARKER_UNICODE   => CharacterEncoding::Utf8,
+            self::MARKER_JIS       => CharacterEncoding::Jis,
+            self::MARKER_UNDEFINED => CharacterEncoding::Undefined,
             default                => null,
         };
     }

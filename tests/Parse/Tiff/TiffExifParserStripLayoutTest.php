@@ -99,7 +99,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
 
         $parsed = (new TiffExifParser())->parseFromBlob($blob);
 
-        self::assertSame(PlanarConfiguration::PLANAR, $parsed->planarConfiguration());
+        self::assertSame(PlanarConfiguration::Planar, $parsed->planarConfiguration());
         self::assertCount(9, $parsed->stripOffsets() ?? []);
         self::assertCount(9, $parsed->stripByteCounts() ?? []);
     }

@@ -57,18 +57,18 @@ final class GpsFactoryTest extends TestCase
     public function createsFromExifMetadata(): void
     {
         $parsedExif = $this->parsedExif(
-            latRef: GpsLatLonRef::NORTH,
+            latRef: GpsLatLonRef::North,
             lat: 52.520008,
-            lonRef: GpsLatLonRef::EAST,
+            lonRef: GpsLatLonRef::East,
             lon: 13.404954,
-            altitudeRef: GpsAltitudeRef::ABOVE_SEA_LEVEL,
+            altitudeRef: GpsAltitudeRef::AboveSeaLevel,
             altitude: 35.0,
             version: '2.4.0.0',
             satellites: '10',
-            status: GpsStatus::MEASUREMENT_IN_PROGRESS,
-            measureMode: GpsMeasureMode::THREE_DIMENSIONAL,
+            status: GpsStatus::MeasurementInProgress,
+            measureMode: GpsMeasureMode::ThreeDimensional,
             dop: 1.5,
-            speedRef: GpsSpeedRef::KILOMETERS_PER_HOUR,
+            speedRef: GpsSpeedRef::KilometersPerHour,
             speedMs: 5.0,
             track: 90.0,
             mapDatum: 'WGS-84',
@@ -96,16 +96,16 @@ final class GpsFactoryTest extends TestCase
 
         self::assertSame(52.520008, $gps->position->latitude);
         self::assertSame(13.404954, $gps->position->longitude);
-        self::assertSame(GpsLatLonRef::NORTH, $gps->position->latitudeRef);
-        self::assertSame(GpsLatLonRef::EAST, $gps->position->longitudeRef);
+        self::assertSame(GpsLatLonRef::North, $gps->position->latitudeRef);
+        self::assertSame(GpsLatLonRef::East, $gps->position->longitudeRef);
         self::assertSame(35.0, $gps->position->altitude);
-        self::assertSame(GpsAltitudeRef::ABOVE_SEA_LEVEL, $gps->position->altitudeRef);
+        self::assertSame(GpsAltitudeRef::AboveSeaLevel, $gps->position->altitudeRef);
         self::assertSame('2.4.0.0', $gps->version);
         self::assertSame('10', $gps->measurement->satellites);
-        self::assertSame(GpsStatus::MEASUREMENT_IN_PROGRESS, $gps->measurement->status);
-        self::assertSame(GpsMeasureMode::THREE_DIMENSIONAL, $gps->measurement->measureMode);
+        self::assertSame(GpsStatus::MeasurementInProgress, $gps->measurement->status);
+        self::assertSame(GpsMeasureMode::ThreeDimensional, $gps->measurement->measureMode);
         self::assertSame(1.5, $gps->measurement->dop);
-        self::assertSame(GpsSpeedRef::KILOMETERS_PER_HOUR, $gps->movement->speedRef);
+        self::assertSame(GpsSpeedRef::KilometersPerHour, $gps->movement->speedRef);
         self::assertSame(5.0 / 3.6, $gps->movement->speedMs);
         self::assertSame(90.0, $gps->movement->track);
         self::assertSame('WGS-84', $gps->position->mapDatum);
@@ -114,7 +114,7 @@ final class GpsFactoryTest extends TestCase
         self::assertSame('2023-06-15', $gps->timing->date);
         self::assertSame('14:30:00', $gps->timing->time);
         self::assertInstanceOf(DateTimeImmutable::class, $gps->timing->timestamp);
-        self::assertSame(GpsDifferential::NO_CORRECTION, $gps->measurement->differential);
+        self::assertSame(GpsDifferential::NoCorrection, $gps->measurement->differential);
         self::assertSame(3.0, $gps->measurement->horizontalPositioningError);
     }
 
@@ -159,7 +159,7 @@ final class GpsFactoryTest extends TestCase
             status: null,
             measureMode: null,
             dop: null,
-            speedRef: GpsSpeedRef::KILOMETERS_PER_HOUR,
+            speedRef: GpsSpeedRef::KilometersPerHour,
             speedMs: 36.0,
             track: null,
             mapDatum: null,
@@ -182,7 +182,7 @@ final class GpsFactoryTest extends TestCase
 
         self::assertNotNull($gps->movement);
 
-        self::assertSame(GpsSpeedRef::KILOMETERS_PER_HOUR, $gps->movement->speedRef);
+        self::assertSame(GpsSpeedRef::KilometersPerHour, $gps->movement->speedRef);
         self::assertSame(36.0 / 3.6, $gps->movement->speedMs);
     }
 
@@ -754,7 +754,7 @@ final class GpsFactoryTest extends TestCase
         self::assertNotNull($gps->destination);
 
         self::assertEqualsWithDelta(48.856667, $gps->destination->latitude, 0.001);
-        self::assertSame(GpsLatLonRef::NORTH, $gps->destination->latitudeRef);
+        self::assertSame(GpsLatLonRef::North, $gps->destination->latitudeRef);
     }
 
     /**
@@ -812,8 +812,8 @@ final class GpsFactoryTest extends TestCase
         self::assertNotNull($gps->movement);
         self::assertNotNull($gps->position);
 
-        self::assertSame(GpsStatus::MEASUREMENT_IN_PROGRESS, $gps->measurement->status);
-        self::assertSame(GpsMeasureMode::THREE_DIMENSIONAL, $gps->measurement->measureMode);
+        self::assertSame(GpsStatus::MeasurementInProgress, $gps->measurement->status);
+        self::assertSame(GpsMeasureMode::ThreeDimensional, $gps->measurement->measureMode);
         self::assertSame(1.5, $gps->measurement->dop);
         self::assertSame(90.0, $gps->movement->track);
         self::assertSame(180.0, $gps->movement->imageDirection);

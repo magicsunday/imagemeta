@@ -48,7 +48,7 @@ final readonly class TiffJpegValidator
 
         $isJpegCompression = ($compression instanceof IfdEntry)
             && is_int($compression->value)
-            && ($compression->value === Compression::JPEG->value);
+            && ($compression->value === Compression::Jpeg->value);
 
         if ($jpegProc instanceof IfdEntry) {
             if (($jpegProc->type !== TiffConst::TYPE_SHORT) || ($jpegProc->count !== 1) || !is_int($jpegProc->value)) {
@@ -166,7 +166,7 @@ final readonly class TiffJpegValidator
         $compressionEntry  = $ifd->get(ExifTag::COMPRESSION);
         $isJpegCompression = ($compressionEntry instanceof IfdEntry)
             && is_int($compressionEntry->value)
-            && ($compressionEntry->value === Compression::JPEG->value);
+            && ($compressionEntry->value === Compression::Jpeg->value);
 
         if (!$isJpegCompression) {
             throw new ParseError('JPEGRestartInterval is only valid when Compression=6 (JPEG).', 1852);

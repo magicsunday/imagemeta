@@ -82,7 +82,7 @@ final readonly class ImageFactory
 
         $colorSpace = $exifDocument->colorSpace();
 
-        if ($colorSpace !== ColorSpace::UNCALIBRATED) {
+        if ($colorSpace !== ColorSpace::Uncalibrated) {
             return $colorSpace;
         }
 
@@ -95,7 +95,7 @@ final readonly class ImageFactory
         $normalizedInteropIndex = strtoupper($interopIndex);
 
         if ($normalizedInteropIndex === 'R98') {
-            return ColorSpace::SRGB;
+            return ColorSpace::Srgb;
         }
 
         return $colorSpace;

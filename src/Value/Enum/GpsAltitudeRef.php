@@ -30,31 +30,31 @@ enum GpsAltitudeRef: int
      * Positive ellipsoidal height (at or above ellipsoidal surface).
      * EXIF 3.0 §4.6.7.1.6.
      */
-    case ABOVE_ELLIPSOIDAL_SURFACE = 0;
+    case AboveEllipsoidalSurface = 0;
 
     /**
      * Negative ellipsoidal height (below ellipsoidal surface).
      * EXIF 3.0 §4.6.7.1.6.
      */
-    case BELOW_ELLIPSOIDAL_SURFACE = 1;
+    case BelowEllipsoidalSurface = 1;
 
     /**
      * Positive sea level value (at or above sea level).
      * EXIF 3.0 §4.6.7.1.6.
      */
-    case ABOVE_SEA_LEVEL = 2;
+    case AboveSeaLevel = 2;
 
     /**
      * Negative sea level value (below sea level).
      * EXIF 3.0 §4.6.7.1.6.
      */
-    case BELOW_SEA_LEVEL = 3;
+    case BelowSeaLevel = 3;
 
     /**
      * Returns whether this reference indicates a negative (below) altitude.
      */
     public function isBelow(): bool
     {
-        return $this === self::BELOW_ELLIPSOIDAL_SURFACE || $this === self::BELOW_SEA_LEVEL;
+        return $this === self::BelowEllipsoidalSurface || $this === self::BelowSeaLevel;
     }
 }

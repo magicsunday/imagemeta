@@ -62,7 +62,7 @@ final readonly class ImageStructureExifReader
     public function imageWidth(): ?int
     {
         $explicitlyUncompressed = $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry
-            && $this->compression() === Compression::UNCOMPRESSED;
+            && $this->compression() === Compression::Uncompressed;
 
         if (!$explicitlyUncompressed) {
             $pixelWidth = $this->reader->int($this->exifIfd, ExifTag::PIXEL_X_DIMENSION);
@@ -85,7 +85,7 @@ final readonly class ImageStructureExifReader
     public function imageHeight(): ?int
     {
         $explicitlyUncompressed = $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry
-            && $this->compression() === Compression::UNCOMPRESSED;
+            && $this->compression() === Compression::Uncompressed;
 
         if (!$explicitlyUncompressed) {
             $pixelHeight = $this->reader->int($this->exifIfd, ExifTag::PIXEL_Y_DIMENSION);
@@ -149,7 +149,7 @@ final readonly class ImageStructureExifReader
         $orientation = Orientation::fromExifValue($rawOrientation);
 
         // TIFF 6.0 §8: Default is 1 (top-left) when tag is not present
-        return $orientation ?? Orientation::TOP_LEFT;
+        return $orientation ?? Orientation::TopLeft;
     }
 
     /**
@@ -184,7 +184,7 @@ final readonly class ImageStructureExifReader
     public function compression(): ?Compression
     {
         if (!$this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry) {
-            return Compression::UNCOMPRESSED;
+            return Compression::Uncompressed;
         }
 
         $value = $this->reader->enumValue($this->ifd0, ExifTag::COMPRESSION);
@@ -256,7 +256,7 @@ final readonly class ImageStructureExifReader
         $unit  = ResolutionUnit::fromExifValue($value);
 
         // TIFF 6.0 §8: Default is 2 (INCHES) when tag is not present
-        return $unit ?? ResolutionUnit::INCHES;
+        return $unit ?? ResolutionUnit::Inches;
     }
 
     // ========================================================================
@@ -365,10 +365,10 @@ final readonly class ImageStructureExifReader
         return in_array(
             $compression,
             [
-                Compression::JPEG,
-                Compression::JPEG_NEW_STYLE,
-                Compression::LOSSY_JPEG,
-                Compression::JPEG_2000,
+                Compression::Jpeg,
+                Compression::JpegNewStyle,
+                Compression::LossyJpeg,
+                Compression::Jpeg2000,
             ],
             true
         );

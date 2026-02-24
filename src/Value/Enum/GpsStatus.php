@@ -29,11 +29,11 @@ enum GpsStatus: string
      * Measurement in progress.
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case MEASUREMENT_IN_PROGRESS = 'A';
+    case MeasurementInProgress = 'A';
 
     /**
      * Measurement interoperability (void).
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case MEASUREMENT_VOID = 'V';
+    case MeasurementVoid = 'V';
 }

@@ -314,10 +314,10 @@ final readonly class GpsTimestampConverter
         }
 
         return match ($encoding) {
-            CharacterEncoding::UTF8 => $this->decodeUndefinedUtf8($payload),
-            CharacterEncoding::JIS  => $this->decodeUndefinedJis($payload),
-            CharacterEncoding::ASCII,
-            CharacterEncoding::UNDEFINED => $this->stringConverter->sanitize($payload),
+            CharacterEncoding::Utf8 => $this->decodeUndefinedUtf8($payload),
+            CharacterEncoding::Jis  => $this->decodeUndefinedJis($payload),
+            CharacterEncoding::Ascii,
+            CharacterEncoding::Undefined => $this->stringConverter->sanitize($payload),
             default                      => null,
         };
     }
@@ -335,7 +335,7 @@ final readonly class GpsTimestampConverter
         }
 
         if (preg_match('//u', $payload) === 1) {
-            return $this->decodeUndefinedWithEncoding($payload, CharacterEncoding::UTF8);
+            return $this->decodeUndefinedWithEncoding($payload, CharacterEncoding::Utf8);
         }
 
         return $this->decodeUndefinedUnicode($payload);
@@ -354,8 +354,8 @@ final readonly class GpsTimestampConverter
         $content       = substr($payload, 2);
 
         $encoding = match ($byteOrderMark) {
-            "\xFF\xFE" => CharacterEncoding::UTF16LE,
-            "\xFE\xFF" => CharacterEncoding::UTF16BE,
+            "\xFF\xFE" => CharacterEncoding::Utf16le,
+            "\xFE\xFF" => CharacterEncoding::Utf16be,
             default    => null,
         };
 
@@ -373,7 +373,7 @@ final readonly class GpsTimestampConverter
      */
     private function decodeUndefinedJis(string $payload): ?string
     {
-        return $this->decodeUndefinedWithEncoding($payload, CharacterEncoding::JIS);
+        return $this->decodeUndefinedWithEncoding($payload, CharacterEncoding::Jis);
     }
 
     /**
@@ -386,9 +386,9 @@ final readonly class GpsTimestampConverter
         }
 
         $decoded = match ($sourceEncoding) {
-            CharacterEncoding::JIS  => JisTextDecoder::decode($payload),
-            CharacterEncoding::UTF8 => $payload,
-            default                 => @iconv($sourceEncoding->value, CharacterEncoding::UTF8->value, $payload),
+            CharacterEncoding::Jis  => JisTextDecoder::decode($payload),
+            CharacterEncoding::Utf8 => $payload,
+            default                 => @iconv($sourceEncoding->value, CharacterEncoding::Utf8->value, $payload),
         };
 
         if (!is_string($decoded) || $decoded === '') {

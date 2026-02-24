@@ -153,7 +153,7 @@ final class TiffExifParserJpegInterchangePairTest extends TestCase
         $ifd1Entries = [
             ExifTag::IMAGE_WIDTH  => $this->shortEntry(ExifTag::IMAGE_WIDTH, 16),
             ExifTag::IMAGE_LENGTH => $this->shortEntry(ExifTag::IMAGE_LENGTH, 16),
-            ExifTag::COMPRESSION  => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+            ExifTag::COMPRESSION  => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
             TiffTag::JPEG_PROC    => $this->shortEntry(TiffTag::JPEG_PROC, 1),
         ];
 

@@ -29,11 +29,11 @@ enum GpsMeasureMode: string
      * 2-dimensional measurement.
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case TWO_DIMENSIONAL = '2';
+    case TwoDimensional = '2';
 
     /**
      * 3-dimensional measurement.
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case THREE_DIMENSIONAL = '3';
+    case ThreeDimensional = '3';
 }

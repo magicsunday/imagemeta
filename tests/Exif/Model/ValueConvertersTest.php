@@ -328,9 +328,9 @@ final class ValueConvertersTest extends TestCase
 
         self::assertInstanceOf(FlashInfo::class, $info);
         self::assertTrue($info->fired);
-        self::assertSame(FlashMode::AUTO, $info->mode);
-        self::assertSame(FlashReturn::RETURN_DETECTED, $info->returnDetection);
-        self::assertSame(FlashFunction::ABSENT, $info->functionPresence);
+        self::assertSame(FlashMode::Auto, $info->mode);
+        self::assertSame(FlashReturn::ReturnDetected, $info->returnDetection);
+        self::assertSame(FlashFunction::Absent, $info->functionPresence);
         self::assertFalse($info->redEyeReduction);
     }
 
@@ -1132,8 +1132,8 @@ final class ValueConvertersTest extends TestCase
         $flash = $this->converters->flashFromShort(0x59);
         self::assertInstanceOf(FlashInfo::class, $flash);
         self::assertTrue($flash->fired);
-        self::assertSame(FlashMode::AUTO, $flash->mode);
-        self::assertSame(FlashReturn::NO_STROBE_DETECTION, $flash->returnDetection);
+        self::assertSame(FlashMode::Auto, $flash->mode);
+        self::assertSame(FlashReturn::NoStrobeDetection, $flash->returnDetection);
     }
 
     /**
@@ -1292,8 +1292,8 @@ final class ValueConvertersTest extends TestCase
 
         self::assertSame([0.3127, 0.329], $this->converters->toWhitePoint($whitePoint));
         self::assertSame(
-            ResolutionUnit::INCHES,
-            $this->converters->toEnumOrNull(ResolutionUnit::class, (string) ResolutionUnit::INCHES->value),
+            ResolutionUnit::Inches,
+            $this->converters->toEnumOrNull(ResolutionUnit::class, (string) ResolutionUnit::Inches->value),
         );
         self::assertNull($this->converters->toEnumOrNull(ResolutionUnit::class, 99));
         self::assertNull($this->converters->toEnumOrNull(ResolutionUnit::class, null));

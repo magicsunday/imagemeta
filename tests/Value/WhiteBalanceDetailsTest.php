@@ -36,13 +36,13 @@ final class WhiteBalanceDetailsTest extends TestCase
     public function constructsWithMode(): void
     {
         $wb = new WhiteBalanceDetails(
-            mode: WhiteBalance::AUTO,
+            mode: WhiteBalance::Auto,
             kelvin: null,
             rgGain: null,
             bgGain: null,
         );
 
-        self::assertSame(WhiteBalance::AUTO, $wb->mode);
+        self::assertSame(WhiteBalance::Auto, $wb->mode);
     }
 
     /**
@@ -55,13 +55,13 @@ final class WhiteBalanceDetailsTest extends TestCase
     public function constructsWithColorTemperature(): void
     {
         $wb = new WhiteBalanceDetails(
-            mode: WhiteBalance::MANUAL,
+            mode: WhiteBalance::Manual,
             kelvin: 5500,
             rgGain: 1.2,
             bgGain: 0.8,
         );
 
-        self::assertSame(WhiteBalance::MANUAL, $wb->mode);
+        self::assertSame(WhiteBalance::Manual, $wb->mode);
         self::assertSame(5500, $wb->kelvin);
         self::assertSame(1.2, $wb->rgGain);
         self::assertSame(0.8, $wb->bgGain);

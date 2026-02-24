@@ -23,10 +23,10 @@ use function trim;
  */
 enum RegionType: string
 {
-    case FACE    = 'Face';
-    case FOCUS   = 'Focus';
-    case OBJECT  = 'Object';
-    case UNKNOWN = 'Unknown';
+    case Face    = 'Face';
+    case Focus   = 'Focus';
+    case Object  = 'Object';
+    case Unknown = 'Unknown';
 
     /**
      * Attempts to create a RegionType enum from a free-form label.
@@ -43,10 +43,10 @@ enum RegionType: string
         }
 
         return match ($normalized) {
-            'face'  => self::FACE,
-            'focus' => self::FOCUS,
-            'object', 'pet', 'subject', 'rectangle', 'rect' => self::OBJECT,
-            default => self::UNKNOWN,
+            'face'  => self::Face,
+            'focus' => self::Focus,
+            'object', 'pet', 'subject', 'rectangle', 'rect' => self::Object,
+            default => self::Unknown,
         };
     }
 }

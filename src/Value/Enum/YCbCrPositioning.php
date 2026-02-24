@@ -22,6 +22,6 @@ enum YCbCrPositioning: int
 {
     use EnumFromIntStringNullable;
 
-    case CENTERED = 1;
-    case CO_SITED = 2;
+    case Centered = 1;
+    case CoSited  = 2;
 }

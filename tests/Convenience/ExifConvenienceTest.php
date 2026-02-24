@@ -146,10 +146,10 @@ final class ExifConvenienceTest extends TestCase
             position: new GpsPosition(
                 latitude: 51.5,
                 longitude: 0.125,
-                latitudeRef: GpsLatLonRef::NORTH,
-                longitudeRef: GpsLatLonRef::EAST,
+                latitudeRef: GpsLatLonRef::North,
+                longitudeRef: GpsLatLonRef::East,
                 altitude: 45.0,
-                altitudeRef: GpsAltitudeRef::ABOVE_SEA_LEVEL,
+                altitudeRef: GpsAltitudeRef::AboveSeaLevel,
             ),
         );
 
@@ -191,7 +191,7 @@ final class ExifConvenienceTest extends TestCase
         $image = new Image(
             width: 6000,
             height: 4000,
-            orientation: Orientation::TOP_LEFT,
+            orientation: Orientation::TopLeft,
         );
 
         self::assertSame(
@@ -211,7 +211,7 @@ final class ExifConvenienceTest extends TestCase
     {
         $image = new Image(
             height: 4000,
-            orientation: Orientation::TOP_LEFT,
+            orientation: Orientation::TopLeft,
         );
 
         self::assertNull((new ExifConvenience())->imageDimensions($image));
@@ -305,7 +305,7 @@ final class ExifConvenienceTest extends TestCase
         $image = new Image(
             width: 6000,
             height: 4000,
-            orientation: Orientation::TOP_LEFT,
+            orientation: Orientation::TopLeft,
         );
         $capture = new Capture(
             new DateTimeImmutable('2024-05-01T12:34:56+02:00'),
@@ -327,10 +327,10 @@ final class ExifConvenienceTest extends TestCase
             position: new GpsPosition(
                 latitude: 51.5,
                 longitude: 0.125,
-                latitudeRef: GpsLatLonRef::NORTH,
-                longitudeRef: GpsLatLonRef::EAST,
+                latitudeRef: GpsLatLonRef::North,
+                longitudeRef: GpsLatLonRef::East,
                 altitude: 45.0,
-                altitudeRef: GpsAltitudeRef::ABOVE_SEA_LEVEL,
+                altitudeRef: GpsAltitudeRef::AboveSeaLevel,
             ),
         );
 
@@ -338,7 +338,7 @@ final class ExifConvenienceTest extends TestCase
             'make'        => 'Canon',
             'model'       => 'EOS',
             'lens'        => 'EF 50mm',
-            'orientation' => Orientation::TOP_LEFT->value,
+            'orientation' => Orientation::TopLeft->value,
             'captured_at' => '2024-05-01T12:34:56+02:00',
             'exposure_s'  => 0.5,
             'fnumber'     => 1.8,

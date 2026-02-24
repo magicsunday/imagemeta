@@ -54,7 +54,7 @@ final class ExposureTest extends TestCase
     #[Test]
     public function storesMeasurementAndEnumValues(): void
     {
-        $flashInfo = new FlashInfo(true, FlashMode::AUTO, FlashReturn::RETURN_NOT_DETECTED, FlashFunction::PRESENT, true);
+        $flashInfo = new FlashInfo(true, FlashMode::Auto, FlashReturn::ReturnNotDetected, FlashFunction::Present, true);
 
         $settings = new ExposureSettings(
             iso: 200,
@@ -70,20 +70,20 @@ final class ExposureTest extends TestCase
         );
 
         $adjustments = new ExposureAdjustments(
-            whiteBalance: WhiteBalance::MANUAL,
-            contrast: Contrast::HARD,
-            saturation: Saturation::HIGH,
-            sharpness: Sharpness::HARD,
+            whiteBalance: WhiteBalance::Manual,
+            contrast: Contrast::Hard,
+            saturation: Saturation::High,
+            sharpness: Sharpness::Hard,
             digitalZoomRatio: 1.5,
-            gainControl: GainControl::HIGH_GAIN_UP,
+            gainControl: GainControl::HighGainUp,
         );
 
         $exposure = new Exposure(
             settings: $settings,
             adjustments: $adjustments,
-            program: ExposureProgram::MANUAL,
-            exposureMode: ExposureMode::MANUAL,
-            meteringMode: MeteringMode::SPOT,
+            program: ExposureProgram::Manual,
+            exposureMode: ExposureMode::Manual,
+            meteringMode: MeteringMode::Spot,
             flash: $flashInfo,
             flashEnergy: 1.2,
         );
@@ -95,16 +95,16 @@ final class ExposureTest extends TestCase
         self::assertSame(0.01, $exposure->settings->exposureTimeSec);
         self::assertSame(4.0, $exposure->settings->fNumber);
         self::assertSame(-0.3, $exposure->settings->exposureBiasEv);
-        self::assertSame(ExposureProgram::MANUAL, $exposure->program);
-        self::assertSame(MeteringMode::SPOT, $exposure->meteringMode);
+        self::assertSame(ExposureProgram::Manual, $exposure->program);
+        self::assertSame(MeteringMode::Spot, $exposure->meteringMode);
         self::assertSame($flashInfo, $exposure->flash);
-        self::assertSame(WhiteBalance::MANUAL, $exposure->adjustments->whiteBalance);
+        self::assertSame(WhiteBalance::Manual, $exposure->adjustments->whiteBalance);
         self::assertSame(6.5, $exposure->settings->brightnessEv);
-        self::assertSame(ExposureMode::MANUAL, $exposure->exposureMode);
-        self::assertSame(GainControl::HIGH_GAIN_UP, $exposure->adjustments->gainControl);
-        self::assertSame(Contrast::HARD, $exposure->adjustments->contrast);
-        self::assertSame(Saturation::HIGH, $exposure->adjustments->saturation);
-        self::assertSame(Sharpness::HARD, $exposure->adjustments->sharpness);
+        self::assertSame(ExposureMode::Manual, $exposure->exposureMode);
+        self::assertSame(GainControl::HighGainUp, $exposure->adjustments->gainControl);
+        self::assertSame(Contrast::Hard, $exposure->adjustments->contrast);
+        self::assertSame(Saturation::High, $exposure->adjustments->saturation);
+        self::assertSame(Sharpness::Hard, $exposure->adjustments->sharpness);
         self::assertSame(1.5, $exposure->adjustments->digitalZoomRatio);
         self::assertSame(7.0, $exposure->settings->shutterSpeedEv);
         self::assertSame(4.0, $exposure->settings->apertureEv);

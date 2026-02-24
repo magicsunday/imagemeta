@@ -21,6 +21,6 @@ enum SceneType: int
 {
     use EnumFromIntStringNullable;
 
-    case NOT_DEFINED                 = 0;
-    case DIRECTLY_PHOTOGRAPHED_IMAGE = 1;
+    case NotDefined                = 0;
+    case DirectlyPhotographedImage = 1;
 }

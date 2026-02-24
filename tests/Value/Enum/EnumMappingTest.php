@@ -75,31 +75,31 @@ final class EnumMappingTest extends TestCase
     #[Test]
     public function mapsCommonEnumValues(): void
     {
-        self::assertSame(Compression::JPEG, Compression::fromExifValue(6));
-        self::assertSame(Compression::JPEG_NEW_STYLE, Compression::fromExifValue(7));
-        self::assertSame(Photometric::WHITE_IS_ZERO, Photometric::fromExifValue(0));
-        self::assertSame(Photometric::BLACK_IS_ZERO, Photometric::fromExifValue(1));
-        self::assertSame(Photometric::RGB, Photometric::fromExifValue(2));
-        self::assertSame(Photometric::PALETTE_COLOR, Photometric::fromExifValue(3));
-        self::assertSame(Photometric::TRANSPARENCY_MASK, Photometric::fromExifValue(4));
-        self::assertSame(Photometric::SEPARATED, Photometric::fromExifValue(5));
-        self::assertSame(Photometric::YCBCR, Photometric::fromExifValue(6));
-        self::assertSame(Photometric::CIELAB, Photometric::fromExifValue(8));
-        self::assertSame(Photometric::CFA, Photometric::fromExifValue(32803));
-        self::assertSame(Photometric::LINEAR_RAW, Photometric::fromExifValue(34892));
-        self::assertSame(Photometric::DEPTH, Photometric::fromExifValue(51177));
-        self::assertSame(Photometric::PHOTOMETRIC_MASK, Photometric::fromExifValue(52527));
-        self::assertSame(PlanarConfiguration::CHUNKY, PlanarConfiguration::fromExifValue(1));
-        self::assertSame(ResolutionUnit::NONE, ResolutionUnit::fromExifValue(1));
-        self::assertSame(ResolutionUnit::CENTIMETER, ResolutionUnit::fromExifValue(3));
-        self::assertSame(YCbCrPositioning::CO_SITED, YCbCrPositioning::fromExifValue(2));
-        self::assertSame(ExposureMode::AUTO_BRACKET, ExposureMode::fromExifValue(2));
-        self::assertSame(GainControl::HIGH_GAIN_UP, GainControl::fromExifValue(2));
-        self::assertSame(SubjectDistanceRange::MACRO, SubjectDistanceRange::fromExifValue(SubjectDistanceRange::MACRO->value));
-        self::assertSame(FileSource::DIGITAL_CAMERA, FileSource::fromExifValue(3));
-        self::assertSame(SensingMethod::COLOR_SEQUENTIAL_LINEAR, SensingMethod::fromExifValue(8));
-        self::assertSame(CompositeImage::CAPTURED_WHILE_SHOOTING, CompositeImage::fromExifValue(3));
-        self::assertSame(LightSource::WARM_WHITE_FLUORESCENT, LightSource::fromExifValue(16));
+        self::assertSame(Compression::Jpeg, Compression::fromExifValue(6));
+        self::assertSame(Compression::JpegNewStyle, Compression::fromExifValue(7));
+        self::assertSame(Photometric::WhiteIsZero, Photometric::fromExifValue(0));
+        self::assertSame(Photometric::BlackIsZero, Photometric::fromExifValue(1));
+        self::assertSame(Photometric::Rgb, Photometric::fromExifValue(2));
+        self::assertSame(Photometric::PaletteColor, Photometric::fromExifValue(3));
+        self::assertSame(Photometric::TransparencyMask, Photometric::fromExifValue(4));
+        self::assertSame(Photometric::Separated, Photometric::fromExifValue(5));
+        self::assertSame(Photometric::Ycbcr, Photometric::fromExifValue(6));
+        self::assertSame(Photometric::Cielab, Photometric::fromExifValue(8));
+        self::assertSame(Photometric::Cfa, Photometric::fromExifValue(32803));
+        self::assertSame(Photometric::LinearRaw, Photometric::fromExifValue(34892));
+        self::assertSame(Photometric::Depth, Photometric::fromExifValue(51177));
+        self::assertSame(Photometric::PhotometricMask, Photometric::fromExifValue(52527));
+        self::assertSame(PlanarConfiguration::Chunky, PlanarConfiguration::fromExifValue(1));
+        self::assertSame(ResolutionUnit::None, ResolutionUnit::fromExifValue(1));
+        self::assertSame(ResolutionUnit::Centimeter, ResolutionUnit::fromExifValue(3));
+        self::assertSame(YCbCrPositioning::CoSited, YCbCrPositioning::fromExifValue(2));
+        self::assertSame(ExposureMode::AutoBracket, ExposureMode::fromExifValue(2));
+        self::assertSame(GainControl::HighGainUp, GainControl::fromExifValue(2));
+        self::assertSame(SubjectDistanceRange::Macro, SubjectDistanceRange::fromExifValue(SubjectDistanceRange::Macro->value));
+        self::assertSame(FileSource::DigitalCamera, FileSource::fromExifValue(3));
+        self::assertSame(SensingMethod::ColorSequentialLinear, SensingMethod::fromExifValue(8));
+        self::assertSame(CompositeImage::CapturedWhileShooting, CompositeImage::fromExifValue(3));
+        self::assertSame(LightSource::WarmWhiteFluorescent, LightSource::fromExifValue(16));
     }
 
     /**
@@ -111,10 +111,10 @@ final class EnumMappingTest extends TestCase
     #[Test]
     public function normalizesStringInputs(): void
     {
-        self::assertSame(Compression::JPEG, Compression::fromExifValue('6'));
-        self::assertSame(Compression::JPEG_NEW_STYLE, Compression::fromExifValue('7'));
-        self::assertSame(CompositeImage::CAPTURED_WHILE_SHOOTING, CompositeImage::fromExifValue('3'));
-        self::assertSame(LightSource::UNKNOWN, LightSource::fromExifValue('0'));
+        self::assertSame(Compression::Jpeg, Compression::fromExifValue('6'));
+        self::assertSame(Compression::JpegNewStyle, Compression::fromExifValue('7'));
+        self::assertSame(CompositeImage::CapturedWhileShooting, CompositeImage::fromExifValue('3'));
+        self::assertSame(LightSource::Unknown, LightSource::fromExifValue('0'));
     }
 
     /**
@@ -126,11 +126,11 @@ final class EnumMappingTest extends TestCase
     #[Test]
     public function mapsSceneAndMeteringEnumsFromStringPayloads(): void
     {
-        self::assertSame(Orientation::RIGHT_TOP, Orientation::fromExifValue('6'));
-        self::assertSame(MeteringMode::CENTER_WEIGHTED_AVERAGE, MeteringMode::fromExifValue('2'));
+        self::assertSame(Orientation::RightTop, Orientation::fromExifValue('6'));
+        self::assertSame(MeteringMode::CenterWeightedAverage, MeteringMode::fromExifValue('2'));
 
         // Scene capture codes are frequently stored as strings in manufacturer maker notes.
-        self::assertSame(SceneCaptureType::NIGHT_SCENE, SceneCaptureType::fromExifValue('3'));
+        self::assertSame(SceneCaptureType::NightScene, SceneCaptureType::fromExifValue('3'));
     }
 
     /**
@@ -142,16 +142,16 @@ final class EnumMappingTest extends TestCase
     #[Test]
     public function mapsShootingConditionEnums(): void
     {
-        self::assertSame(CustomRendered::NORMAL_PROCESS, CustomRendered::fromExifValue(0));
-        self::assertSame(CustomRendered::CUSTOM_PROCESS, CustomRendered::fromExifValue('1'));
+        self::assertSame(CustomRendered::NormalProcess, CustomRendered::fromExifValue(0));
+        self::assertSame(CustomRendered::CustomProcess, CustomRendered::fromExifValue('1'));
         self::assertNull(CustomRendered::fromExifValue(5));
 
-        self::assertSame(WhiteBalance::AUTO, WhiteBalance::fromExifValue(0));
-        self::assertSame(WhiteBalance::MANUAL, WhiteBalance::fromExifValue('1'));
+        self::assertSame(WhiteBalance::Auto, WhiteBalance::fromExifValue(0));
+        self::assertSame(WhiteBalance::Manual, WhiteBalance::fromExifValue('1'));
         self::assertNull(WhiteBalance::fromExifValue(2));
 
-        self::assertSame(SceneCaptureType::STANDARD, SceneCaptureType::fromExifValue(0));
-        self::assertSame(SceneCaptureType::PORTRAIT, SceneCaptureType::fromExifValue(2));
+        self::assertSame(SceneCaptureType::Standard, SceneCaptureType::fromExifValue(0));
+        self::assertSame(SceneCaptureType::Portrait, SceneCaptureType::fromExifValue(2));
         self::assertNull(SceneCaptureType::fromExifValue(4));
     }
 
@@ -242,32 +242,32 @@ final class EnumMappingTest extends TestCase
     public function mapsGpsStringBackedEnums(): void
     {
         // GPS Speed Reference - EXIF 3.0 §4.6.6 Table 27
-        self::assertSame(GpsSpeedRef::KILOMETERS_PER_HOUR, GpsSpeedRef::fromExifValue('K'));
-        self::assertSame(GpsSpeedRef::MILES_PER_HOUR, GpsSpeedRef::fromExifValue('M'));
-        self::assertSame(GpsSpeedRef::KNOTS, GpsSpeedRef::fromExifValue('N'));
+        self::assertSame(GpsSpeedRef::KilometersPerHour, GpsSpeedRef::fromExifValue('K'));
+        self::assertSame(GpsSpeedRef::MilesPerHour, GpsSpeedRef::fromExifValue('M'));
+        self::assertSame(GpsSpeedRef::Knots, GpsSpeedRef::fromExifValue('N'));
 
         // GPS Direction Reference - EXIF 3.0 §4.6.6 Table 27
-        self::assertSame(GpsDirectionRef::TRUE_DIRECTION, GpsDirectionRef::fromExifValue('T'));
-        self::assertSame(GpsDirectionRef::MAGNETIC_DIRECTION, GpsDirectionRef::fromExifValue('M'));
+        self::assertSame(GpsDirectionRef::TrueDirection, GpsDirectionRef::fromExifValue('T'));
+        self::assertSame(GpsDirectionRef::MagneticDirection, GpsDirectionRef::fromExifValue('M'));
 
         // GPS Latitude/Longitude Reference - EXIF 3.0 §4.6.6 Table 27
-        self::assertSame(GpsLatLonRef::NORTH, GpsLatLonRef::fromExifValue('N'));
-        self::assertSame(GpsLatLonRef::SOUTH, GpsLatLonRef::fromExifValue('S'));
-        self::assertSame(GpsLatLonRef::EAST, GpsLatLonRef::fromExifValue('E'));
-        self::assertSame(GpsLatLonRef::WEST, GpsLatLonRef::fromExifValue('W'));
+        self::assertSame(GpsLatLonRef::North, GpsLatLonRef::fromExifValue('N'));
+        self::assertSame(GpsLatLonRef::South, GpsLatLonRef::fromExifValue('S'));
+        self::assertSame(GpsLatLonRef::East, GpsLatLonRef::fromExifValue('E'));
+        self::assertSame(GpsLatLonRef::West, GpsLatLonRef::fromExifValue('W'));
 
         // GPS Status - EXIF 3.0 §4.6.6 Table 27
-        self::assertSame(GpsStatus::MEASUREMENT_IN_PROGRESS, GpsStatus::fromExifValue('A'));
-        self::assertSame(GpsStatus::MEASUREMENT_VOID, GpsStatus::fromExifValue('V'));
+        self::assertSame(GpsStatus::MeasurementInProgress, GpsStatus::fromExifValue('A'));
+        self::assertSame(GpsStatus::MeasurementVoid, GpsStatus::fromExifValue('V'));
 
         // GPS Distance Reference - EXIF 3.0 §4.6.6 Table 27
-        self::assertSame(GpsDistanceRef::KILOMETERS, GpsDistanceRef::fromExifValue('K'));
-        self::assertSame(GpsDistanceRef::MILES, GpsDistanceRef::fromExifValue('M'));
-        self::assertSame(GpsDistanceRef::NAUTICAL_MILES, GpsDistanceRef::fromExifValue('N'));
+        self::assertSame(GpsDistanceRef::Kilometers, GpsDistanceRef::fromExifValue('K'));
+        self::assertSame(GpsDistanceRef::Miles, GpsDistanceRef::fromExifValue('M'));
+        self::assertSame(GpsDistanceRef::NauticalMiles, GpsDistanceRef::fromExifValue('N'));
 
         // GPS Measure Mode - EXIF 3.0 §4.6.6 Table 27
-        self::assertSame(GpsMeasureMode::TWO_DIMENSIONAL, GpsMeasureMode::fromExifValue('2'));
-        self::assertSame(GpsMeasureMode::THREE_DIMENSIONAL, GpsMeasureMode::fromExifValue('3'));
+        self::assertSame(GpsMeasureMode::TwoDimensional, GpsMeasureMode::fromExifValue('2'));
+        self::assertSame(GpsMeasureMode::ThreeDimensional, GpsMeasureMode::fromExifValue('3'));
     }
 
     /**
@@ -296,15 +296,15 @@ final class EnumMappingTest extends TestCase
     #[Test]
     public function mapsOrientationToRotationDescription(): void
     {
-        self::assertSame('Unknown', Orientation::UNKNOWN->rotationDescription());
-        self::assertSame('Horizontal (normal)', Orientation::TOP_LEFT->rotationDescription());
-        self::assertSame('Mirror horizontal', Orientation::TOP_RIGHT->rotationDescription());
-        self::assertSame('Rotate 180', Orientation::BOTTOM_RIGHT->rotationDescription());
-        self::assertSame('Mirror vertical', Orientation::BOTTOM_LEFT->rotationDescription());
-        self::assertSame('Mirror horizontal and rotate 270 CW', Orientation::LEFT_TOP->rotationDescription());
-        self::assertSame('Rotate 90 CW', Orientation::RIGHT_TOP->rotationDescription());
-        self::assertSame('Mirror horizontal and rotate 90 CW', Orientation::RIGHT_BOTTOM->rotationDescription());
-        self::assertSame('Rotate 270 CW', Orientation::LEFT_BOTTOM->rotationDescription());
+        self::assertSame('Unknown', Orientation::Unknown->rotationDescription());
+        self::assertSame('Horizontal (normal)', Orientation::TopLeft->rotationDescription());
+        self::assertSame('Mirror horizontal', Orientation::TopRight->rotationDescription());
+        self::assertSame('Rotate 180', Orientation::BottomRight->rotationDescription());
+        self::assertSame('Mirror vertical', Orientation::BottomLeft->rotationDescription());
+        self::assertSame('Mirror horizontal and rotate 270 CW', Orientation::LeftTop->rotationDescription());
+        self::assertSame('Rotate 90 CW', Orientation::RightTop->rotationDescription());
+        self::assertSame('Mirror horizontal and rotate 90 CW', Orientation::RightBottom->rotationDescription());
+        self::assertSame('Rotate 270 CW', Orientation::LeftBottom->rotationDescription());
     }
 
     /**
@@ -316,15 +316,15 @@ final class EnumMappingTest extends TestCase
     #[Test]
     public function mapsOrientationToRotationDegrees(): void
     {
-        self::assertSame(0, Orientation::UNKNOWN->rotationDegrees());
-        self::assertSame(0, Orientation::TOP_LEFT->rotationDegrees());
-        self::assertSame(0, Orientation::TOP_RIGHT->rotationDegrees());
-        self::assertSame(180, Orientation::BOTTOM_RIGHT->rotationDegrees());
-        self::assertSame(0, Orientation::BOTTOM_LEFT->rotationDegrees());
-        self::assertSame(180, Orientation::LEFT_TOP->rotationDegrees());
-        self::assertSame(90, Orientation::RIGHT_TOP->rotationDegrees());
-        self::assertSame(90, Orientation::RIGHT_BOTTOM->rotationDegrees());
-        self::assertSame(270, Orientation::LEFT_BOTTOM->rotationDegrees());
+        self::assertSame(0, Orientation::Unknown->rotationDegrees());
+        self::assertSame(0, Orientation::TopLeft->rotationDegrees());
+        self::assertSame(0, Orientation::TopRight->rotationDegrees());
+        self::assertSame(180, Orientation::BottomRight->rotationDegrees());
+        self::assertSame(0, Orientation::BottomLeft->rotationDegrees());
+        self::assertSame(180, Orientation::LeftTop->rotationDegrees());
+        self::assertSame(90, Orientation::RightTop->rotationDegrees());
+        self::assertSame(90, Orientation::RightBottom->rotationDegrees());
+        self::assertSame(270, Orientation::LeftBottom->rotationDegrees());
     }
 
     /**
@@ -336,14 +336,14 @@ final class EnumMappingTest extends TestCase
     #[Test]
     public function mapsOrientationToMirroredFlag(): void
     {
-        self::assertFalse(Orientation::UNKNOWN->isMirrored());
-        self::assertFalse(Orientation::TOP_LEFT->isMirrored());
-        self::assertTrue(Orientation::TOP_RIGHT->isMirrored());
-        self::assertFalse(Orientation::BOTTOM_RIGHT->isMirrored());
-        self::assertTrue(Orientation::BOTTOM_LEFT->isMirrored());
-        self::assertTrue(Orientation::LEFT_TOP->isMirrored());
-        self::assertFalse(Orientation::RIGHT_TOP->isMirrored());
-        self::assertTrue(Orientation::RIGHT_BOTTOM->isMirrored());
-        self::assertFalse(Orientation::LEFT_BOTTOM->isMirrored());
+        self::assertFalse(Orientation::Unknown->isMirrored());
+        self::assertFalse(Orientation::TopLeft->isMirrored());
+        self::assertTrue(Orientation::TopRight->isMirrored());
+        self::assertFalse(Orientation::BottomRight->isMirrored());
+        self::assertTrue(Orientation::BottomLeft->isMirrored());
+        self::assertTrue(Orientation::LeftTop->isMirrored());
+        self::assertFalse(Orientation::RightTop->isMirrored());
+        self::assertTrue(Orientation::RightBottom->isMirrored());
+        self::assertFalse(Orientation::LeftBottom->isMirrored());
     }
 }

@@ -25,17 +25,17 @@ enum Compression: int
 {
     use EnumFromIntStringNullable;
 
-    case UNCOMPRESSED               = 1;
-    case CCITT_MODIFIED_HUFFMAN_RLE = 2;
-    case CCITT_T4_GROUP3_FAX        = 3;
-    case CCITT_T6_GROUP4_FAX        = 4;
-    case LZW                        = 5;
-    case JPEG                       = 6;
-    case JPEG_NEW_STYLE             = 7;
-    case ADOBE_DEFLATE              = 8;
-    case PACKBITS                   = 32773;
-    case THUNDERSCAN                = 32809;
-    case JPEG_2000                  = 34712;
-    case LOSSY_JPEG                 = 34892;
-    case JPEG_XL                    = 52546;
+    case Uncompressed            = 1;
+    case CcittModifiedHuffmanRle = 2;
+    case CcittT4Group3Fax        = 3;
+    case CcittT6Group4Fax        = 4;
+    case Lzw                     = 5;
+    case Jpeg                    = 6;
+    case JpegNewStyle            = 7;
+    case AdobeDeflate            = 8;
+    case Packbits                = 32773;
+    case Thunderscan             = 32809;
+    case Jpeg2000                = 34712;
+    case LossyJpeg               = 34892;
+    case JpegXl                  = 52546;
 }

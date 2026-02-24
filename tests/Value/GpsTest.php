@@ -58,23 +58,23 @@ final class GpsTest extends TestCase
         $position = new GpsPosition(
             latitude: 1.23,
             longitude: 4.56,
-            latitudeRef: GpsLatLonRef::NORTH,
-            longitudeRef: GpsLatLonRef::EAST,
+            latitudeRef: GpsLatLonRef::North,
+            longitudeRef: GpsLatLonRef::East,
         );
 
         $destination = new GpsDestination(
-            latitudeRef: GpsLatLonRef::NORTH,
-            longitudeRef: GpsLatLonRef::EAST,
-            bearingRef: GpsDirectionRef::TRUE_DIRECTION,
-            distanceRef: GpsDistanceRef::KILOMETERS,
-            distanceOriginalRef: GpsDistanceRef::NAUTICAL_MILES,
+            latitudeRef: GpsLatLonRef::North,
+            longitudeRef: GpsLatLonRef::East,
+            bearingRef: GpsDirectionRef::TrueDirection,
+            distanceRef: GpsDistanceRef::Kilometers,
+            distanceOriginalRef: GpsDistanceRef::NauticalMiles,
         );
 
         $movement = new GpsMovement(
-            speedRef: GpsSpeedRef::KILOMETERS_PER_HOUR,
-            speedOriginalRef: GpsSpeedRef::MILES_PER_HOUR,
-            trackRef: GpsDirectionRef::TRUE_DIRECTION,
-            imageDirectionRef: GpsDirectionRef::MAGNETIC_DIRECTION,
+            speedRef: GpsSpeedRef::KilometersPerHour,
+            speedOriginalRef: GpsSpeedRef::MilesPerHour,
+            trackRef: GpsDirectionRef::TrueDirection,
+            imageDirectionRef: GpsDirectionRef::MagneticDirection,
         );
 
         $measurement = new GpsMeasurement(
@@ -94,19 +94,19 @@ final class GpsTest extends TestCase
         self::assertNotNull($gps->destination);
 
         self::assertSame(1.23, $gps->position->latitude);
-        self::assertSame(GpsLatLonRef::NORTH, $gps->position->latitudeRef);
+        self::assertSame(GpsLatLonRef::North, $gps->position->latitudeRef);
         self::assertSame(4.56, $gps->position->longitude);
-        self::assertSame(GpsLatLonRef::EAST, $gps->position->longitudeRef);
+        self::assertSame(GpsLatLonRef::East, $gps->position->longitudeRef);
         self::assertSame(0.8, $gps->measurement->dop);
-        self::assertSame(GpsSpeedRef::KILOMETERS_PER_HOUR, $gps->movement->speedRef);
-        self::assertSame(GpsSpeedRef::MILES_PER_HOUR, $gps->movement->speedOriginalRef);
-        self::assertSame(GpsDirectionRef::TRUE_DIRECTION, $gps->movement->trackRef);
-        self::assertSame(GpsDirectionRef::MAGNETIC_DIRECTION, $gps->movement->imageDirectionRef);
-        self::assertSame(GpsLatLonRef::NORTH, $gps->destination->latitudeRef);
-        self::assertSame(GpsLatLonRef::EAST, $gps->destination->longitudeRef);
-        self::assertSame(GpsDirectionRef::TRUE_DIRECTION, $gps->destination->bearingRef);
-        self::assertSame(GpsDistanceRef::KILOMETERS, $gps->destination->distanceRef);
-        self::assertSame(GpsDistanceRef::NAUTICAL_MILES, $gps->destination->distanceOriginalRef);
+        self::assertSame(GpsSpeedRef::KilometersPerHour, $gps->movement->speedRef);
+        self::assertSame(GpsSpeedRef::MilesPerHour, $gps->movement->speedOriginalRef);
+        self::assertSame(GpsDirectionRef::TrueDirection, $gps->movement->trackRef);
+        self::assertSame(GpsDirectionRef::MagneticDirection, $gps->movement->imageDirectionRef);
+        self::assertSame(GpsLatLonRef::North, $gps->destination->latitudeRef);
+        self::assertSame(GpsLatLonRef::East, $gps->destination->longitudeRef);
+        self::assertSame(GpsDirectionRef::TrueDirection, $gps->destination->bearingRef);
+        self::assertSame(GpsDistanceRef::Kilometers, $gps->destination->distanceRef);
+        self::assertSame(GpsDistanceRef::NauticalMiles, $gps->destination->distanceOriginalRef);
     }
 
     /**
@@ -121,8 +121,8 @@ final class GpsTest extends TestCase
         $position = new GpsPosition(
             latitude: 12.5,
             longitude: 7.5,
-            latitudeRef: GpsLatLonRef::SOUTH,
-            longitudeRef: GpsLatLonRef::WEST,
+            latitudeRef: GpsLatLonRef::South,
+            longitudeRef: GpsLatLonRef::West,
         );
 
         $gps = new Gps(

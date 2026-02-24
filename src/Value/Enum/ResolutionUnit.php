@@ -24,7 +24,7 @@ enum ResolutionUnit: int
 {
     use EnumFromIntStringNullable;
 
-    case NONE       = 1;
-    case INCHES     = 2;
-    case CENTIMETER = 3;
+    case None       = 1;
+    case Inches     = 2;
+    case Centimeter = 3;
 }

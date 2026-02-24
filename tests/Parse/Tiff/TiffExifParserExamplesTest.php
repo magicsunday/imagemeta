@@ -125,7 +125,7 @@ final class TiffExifParserExamplesTest extends TestCase
         self::assertTrue($result->hasThumbnail());
         self::assertSame($payload['jpegOffset'], $result->thumbnailJpegInterchangeFormat());
         self::assertSame($payload['jpegLength'], $result->thumbnailJpegInterchangeFormatLength());
-        self::assertSame(Compression::JPEG, $result->thumbnailCompression());
+        self::assertSame(Compression::Jpeg, $result->thumbnailCompression());
         self::assertSame(160, $result->thumbnailTileWidth());
         self::assertSame(120, $result->thumbnailTileLength());
         self::assertSame($payload['tileOffsets'], $result->thumbnailTileOffsets());
@@ -369,7 +369,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::COMPRESSION)
             . pack($packShort, TiffConst::TYPE_SHORT)
             . pack($packLong, 1)
-            . pack($packShort, Compression::JPEG->value)
+            . pack($packShort, Compression::Jpeg->value)
             . pack($packShort, 0)
             . pack($packShort, TiffTag::TILE_WIDTH)
             . pack($packShort, TiffConst::TYPE_LONG)

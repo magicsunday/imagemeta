@@ -55,7 +55,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     {
         $ifd0 = new Ifd([]);
         $ifd1 = new Ifd([
-            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 512),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(
                 ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH,
@@ -81,7 +81,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     {
         $ifd0 = new Ifd([]);
         $ifd1 = new Ifd([
-            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(
                 ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH,
                 4,
@@ -106,7 +106,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     {
         $ifd0 = new Ifd([]);
         $ifd1 = new Ifd([
-            ExifTag::COMPRESSION             => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::COMPRESSION             => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::JPEG_INTERCHANGE_FORMAT => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 512),
         ]);
 
@@ -130,7 +130,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
                 ExifTag::COMPRESSION,
                 3,
                 1,
-                Compression::UNCOMPRESSED->value,
+                Compression::Uncompressed->value,
             ),
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 512),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(
@@ -157,7 +157,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     {
         $ifd0 = new Ifd([]);
         $ifd1 = new Ifd([
-            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 512),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(
                 ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH,
@@ -208,7 +208,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     {
         $ifd0 = new Ifd([]);
         $ifd1 = new Ifd([
-            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::LZW->value),
+            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Lzw->value),
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 512),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(
                 ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH,
@@ -250,7 +250,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     {
         $ifd0 = new Ifd([]);
         $ifd1 = new Ifd([
-            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 512),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(
                 ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH,

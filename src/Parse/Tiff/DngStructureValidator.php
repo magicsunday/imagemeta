@@ -230,7 +230,7 @@ final readonly class DngStructureValidator
         if (
             !$compression instanceof IfdEntry
             || !is_int($compression->value)
-            || $compression->value !== Compression::JPEG_XL->value
+            || $compression->value !== Compression::JpegXl->value
         ) {
             throw new ParseError(
                 'JXL tags (JXLDistance, JXLEffort, JXLDecodeSpeed) require Compression = 52546 (JPEG XL).',
@@ -575,7 +575,7 @@ final readonly class DngStructureValidator
     {
         $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
 
-        if (!$photo instanceof IfdEntry || !is_int($photo->value) || $photo->value !== Photometric::PHOTOMETRIC_MASK->value) {
+        if (!$photo instanceof IfdEntry || !is_int($photo->value) || $photo->value !== Photometric::PhotometricMask->value) {
             return;
         }
 
@@ -615,7 +615,7 @@ final readonly class DngStructureValidator
     {
         $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
 
-        if (!$photo instanceof IfdEntry || !is_int($photo->value) || $photo->value !== Photometric::PHOTOMETRIC_MASK->value) {
+        if (!$photo instanceof IfdEntry || !is_int($photo->value) || $photo->value !== Photometric::PhotometricMask->value) {
             return;
         }
 

@@ -21,10 +21,10 @@ enum IccRenderingIntent: int
 {
     use EnumFromIntStringNullable;
 
-    case PERCEPTUAL                  = 0;
-    case MEDIA_RELATIVE_COLORIMETRIC = 1;
-    case SATURATION                  = 2;
-    case ICC_ABSOLUTE_COLORIMETRIC   = 3;
+    case Perceptual                = 0;
+    case MediaRelativeColorimetric = 1;
+    case Saturation                = 2;
+    case IccAbsoluteColorimetric   = 3;
 
     /**
      * Creates an enum instance from the raw ICC header field.
@@ -44,10 +44,10 @@ enum IccRenderingIntent: int
     public function label(): string
     {
         return match ($this) {
-            self::PERCEPTUAL                  => 'Perceptual',
-            self::MEDIA_RELATIVE_COLORIMETRIC => 'Media-Relative Colorimetric',
-            self::SATURATION                  => 'Saturation',
-            self::ICC_ABSOLUTE_COLORIMETRIC   => 'ICC-Absolute Colorimetric',
+            self::Perceptual                => 'Perceptual',
+            self::MediaRelativeColorimetric => 'Media-Relative Colorimetric',
+            self::Saturation                => 'Saturation',
+            self::IccAbsoluteColorimetric   => 'ICC-Absolute Colorimetric',
         };
     }
 }

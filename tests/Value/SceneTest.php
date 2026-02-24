@@ -39,7 +39,7 @@ final class SceneTest extends TestCase
     public function constructsWithSceneCaptureType(): void
     {
         $scene = new Scene(
-            type: SceneCaptureType::STANDARD,
+            type: SceneCaptureType::Standard,
             sceneType: null,
             light: null,
             faceCount: null,
@@ -48,7 +48,7 @@ final class SceneTest extends TestCase
             subjectDistanceRange: null,
         );
 
-        self::assertSame(SceneCaptureType::STANDARD, $scene->type);
+        self::assertSame(SceneCaptureType::Standard, $scene->type);
     }
 
     /**
@@ -61,22 +61,22 @@ final class SceneTest extends TestCase
     public function constructsWithAllSceneMetadata(): void
     {
         $scene = new Scene(
-            type: SceneCaptureType::NIGHT_SCENE,
-            sceneType: SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE,
-            light: LightSource::DAYLIGHT,
+            type: SceneCaptureType::NightScene,
+            sceneType: SceneType::DirectlyPhotographedImage,
+            light: LightSource::Daylight,
             faceCount: 3,
             hdrScene: true,
             nightMode: true,
-            subjectDistanceRange: SubjectDistanceRange::CLOSE,
+            subjectDistanceRange: SubjectDistanceRange::Close,
         );
 
-        self::assertSame(SceneCaptureType::NIGHT_SCENE, $scene->type);
-        self::assertSame(SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE, $scene->sceneType);
-        self::assertSame(LightSource::DAYLIGHT, $scene->light);
+        self::assertSame(SceneCaptureType::NightScene, $scene->type);
+        self::assertSame(SceneType::DirectlyPhotographedImage, $scene->sceneType);
+        self::assertSame(LightSource::Daylight, $scene->light);
         self::assertSame(3, $scene->faceCount);
         self::assertTrue($scene->hdrScene);
         self::assertTrue($scene->nightMode);
-        self::assertSame(SubjectDistanceRange::CLOSE, $scene->subjectDistanceRange);
+        self::assertSame(SubjectDistanceRange::Close, $scene->subjectDistanceRange);
     }
 
     /**

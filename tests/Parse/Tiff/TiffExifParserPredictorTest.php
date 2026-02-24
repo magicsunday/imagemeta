@@ -49,7 +49,7 @@ final class TiffExifParserPredictorTest extends TestCase
                 predictorType: TiffConst::TYPE_SHORT,
                 predictorCount: 1,
                 predictorValues: [1],
-                compression: Compression::UNCOMPRESSED->value,
+                compression: Compression::Uncompressed->value,
             ),
         );
 
@@ -68,7 +68,7 @@ final class TiffExifParserPredictorTest extends TestCase
 
         self::assertCount(2, $subsequentIfds);
         self::assertSame(2, $subsequentIfds[1]->get(TiffTag::PREDICTOR)?->value);
-        self::assertSame(Compression::LZW->value, $subsequentIfds[1]->get(ExifTag::COMPRESSION)?->value);
+        self::assertSame(Compression::Lzw->value, $subsequentIfds[1]->get(ExifTag::COMPRESSION)?->value);
     }
 
     /**
@@ -139,7 +139,7 @@ final class TiffExifParserPredictorTest extends TestCase
                 predictorType: TiffConst::TYPE_SHORT,
                 predictorCount: 1,
                 predictorValues: [2],
-                compression: Compression::UNCOMPRESSED->value,
+                compression: Compression::Uncompressed->value,
             ),
         );
     }
@@ -193,7 +193,7 @@ final class TiffExifParserPredictorTest extends TestCase
         $ifd2Entries = [
             ExifTag::IMAGE_WIDTH  => $this->shortEntry(ExifTag::IMAGE_WIDTH, 16),
             ExifTag::IMAGE_LENGTH => $this->shortEntry(ExifTag::IMAGE_LENGTH, 16),
-            ExifTag::COMPRESSION  => $this->shortEntry(ExifTag::COMPRESSION, Compression::LZW->value),
+            ExifTag::COMPRESSION  => $this->shortEntry(ExifTag::COMPRESSION, Compression::Lzw->value),
             TiffTag::PREDICTOR    => $this->numericEntry(TiffTag::PREDICTOR, TiffConst::TYPE_SHORT, 1, [2]),
         ];
 

@@ -22,13 +22,13 @@ enum ExposureProgram: int
 {
     use EnumFromIntStringNullable;
 
-    case NOT_DEFINED       = 0;
-    case MANUAL            = 1;
-    case NORMAL            = 2;
-    case APERTURE_PRIORITY = 3;
-    case SHUTTER_PRIORITY  = 4;
-    case CREATIVE_PROGRAM  = 5;
-    case ACTION_PROGRAM    = 6;
-    case PORTRAIT_MODE     = 7;
-    case LANDSCAPE_MODE    = 8;
+    case NotDefined       = 0;
+    case Manual           = 1;
+    case Normal           = 2;
+    case AperturePriority = 3;
+    case ShutterPriority  = 4;
+    case CreativeProgram  = 5;
+    case ActionProgram    = 6;
+    case PortraitMode     = 7;
+    case LandscapeMode    = 8;
 }

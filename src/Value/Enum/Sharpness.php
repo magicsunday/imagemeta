@@ -21,7 +21,7 @@ enum Sharpness: int
 {
     use EnumFromIntStringNullable;
 
-    case NORMAL = 0;
-    case SOFT   = 1;
-    case HARD   = 2;
+    case Normal = 0;
+    case Soft   = 1;
+    case Hard   = 2;
 }

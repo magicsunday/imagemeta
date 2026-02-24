@@ -21,12 +21,12 @@ enum MeteringMode: int
 {
     use EnumFromIntStringNullable;
 
-    case UNKNOWN                 = 0;
-    case AVERAGE                 = 1;
-    case CENTER_WEIGHTED_AVERAGE = 2;
-    case SPOT                    = 3;
-    case MULTI_SPOT              = 4;
-    case PATTERN                 = 5;
-    case PARTIAL                 = 6;
-    case OTHER                   = 255;
+    case Unknown               = 0;
+    case Average               = 1;
+    case CenterWeightedAverage = 2;
+    case Spot                  = 3;
+    case MultiSpot             = 4;
+    case Pattern               = 5;
+    case Partial               = 6;
+    case Other                 = 255;
 }

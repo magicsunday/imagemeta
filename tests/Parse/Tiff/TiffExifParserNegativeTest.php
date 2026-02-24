@@ -1400,7 +1400,7 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('V', $ifd1Offset);
 
         $blob .= pack('v', $ifd1EntryCount)
-            . $this->buildIfdShortEntry(ExifTag::COMPRESSION, Compression::JPEG->value)
+            . $this->buildIfdShortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value)
             . $this->buildIfdShortEntry(TiffTag::JPEG_PROC, 1)
             . $this->buildIfdLongEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, $thumbOffset)
             . $this->buildIfdLongEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, $thumbLength)
@@ -1494,7 +1494,7 @@ final class TiffExifParserNegativeTest extends TestCase
             ]),
         );
 
-        self::assertSame(Compression::UNCOMPRESSED, $result->compression());
+        self::assertSame(Compression::Uncompressed, $result->compression());
     }
 
     /**
@@ -1652,7 +1652,7 @@ final class TiffExifParserNegativeTest extends TestCase
             $this->buildTiffWithJpegThumbnailStream($thumbnailStream),
         );
 
-        self::assertSame(Compression::JPEG, $result->thumbnailCompression());
+        self::assertSame(Compression::Jpeg, $result->thumbnailCompression());
     }
 
     /**
@@ -1848,10 +1848,10 @@ final class TiffExifParserNegativeTest extends TestCase
      */
     public static function provideValidFlashBitfields(): iterable
     {
-        yield 'no flash fired' => [0x00, false, FlashReturn::NO_STROBE_DETECTION, FlashMode::UNKNOWN, FlashFunction::PRESENT, false];
-        yield 'fired, no return detection, mode auto, red-eye off' => [0x19, true, FlashReturn::NO_STROBE_DETECTION, FlashMode::AUTO, FlashFunction::PRESENT, false];
-        yield 'fired, return detected, mode unknown, function absent, red-eye on' => [0x67, true, FlashReturn::RETURN_DETECTED, FlashMode::UNKNOWN, FlashFunction::ABSENT, true];
-        yield 'fired, return not detected, mode auto, function present, red-eye on' => [0x5D, true, FlashReturn::RETURN_NOT_DETECTED, FlashMode::AUTO, FlashFunction::PRESENT, true];
+        yield 'no flash fired' => [0x00, false, FlashReturn::NoStrobeDetection, FlashMode::Unknown, FlashFunction::Present, false];
+        yield 'fired, no return detection, mode auto, red-eye off' => [0x19, true, FlashReturn::NoStrobeDetection, FlashMode::Auto, FlashFunction::Present, false];
+        yield 'fired, return detected, mode unknown, function absent, red-eye on' => [0x67, true, FlashReturn::ReturnDetected, FlashMode::Unknown, FlashFunction::Absent, true];
+        yield 'fired, return not detected, mode auto, function present, red-eye on' => [0x5D, true, FlashReturn::ReturnNotDetected, FlashMode::Auto, FlashFunction::Present, true];
     }
 
     /**

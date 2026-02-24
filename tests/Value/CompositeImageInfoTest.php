@@ -37,12 +37,12 @@ final class CompositeImageInfoTest extends TestCase
     public function constructsWithCompositeType(): void
     {
         $info = new CompositeImageInfo(
-            type: CompositeImage::GENERAL_COMPOSITE,
+            type: CompositeImage::GeneralComposite,
             counts: null,
             sourceExposureTimes: null,
         );
 
-        self::assertSame(CompositeImage::GENERAL_COMPOSITE, $info->type);
+        self::assertSame(CompositeImage::GeneralComposite, $info->type);
     }
 
     /**
@@ -55,7 +55,7 @@ final class CompositeImageInfoTest extends TestCase
     public function constructsWithSourceCounts(): void
     {
         $info = new CompositeImageInfo(
-            type: CompositeImage::CAPTURED_WHILE_SHOOTING,
+            type: CompositeImage::CapturedWhileShooting,
             counts: [5, 3],
             sourceExposureTimes: null,
         );
@@ -85,7 +85,7 @@ final class CompositeImageInfoTest extends TestCase
         );
 
         $info = new CompositeImageInfo(
-            type: CompositeImage::GENERAL_COMPOSITE,
+            type: CompositeImage::GeneralComposite,
             counts: [3, 3],
             sourceExposureTimes: $exposures,
         );

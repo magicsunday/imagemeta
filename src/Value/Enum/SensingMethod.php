@@ -23,11 +23,11 @@ enum SensingMethod: int
 {
     use EnumFromIntStringNullable;
 
-    case NOT_DEFINED             = 1;
-    case ONE_CHIP_COLOR_AREA     = 2;
-    case TWO_CHIP_COLOR_AREA     = 3;
-    case THREE_CHIP_COLOR_AREA   = 4;
-    case COLOR_SEQUENTIAL_AREA   = 5;
-    case TRILINEAR               = 7;
-    case COLOR_SEQUENTIAL_LINEAR = 8;
+    case NotDefined            = 1;
+    case OneChipColorArea      = 2;
+    case TwoChipColorArea      = 3;
+    case ThreeChipColorArea    = 4;
+    case ColorSequentialArea   = 5;
+    case Trilinear             = 7;
+    case ColorSequentialLinear = 8;
 }

@@ -49,7 +49,7 @@ final readonly class ThumbnailExifReader
         $offset      = $this->thumbnailJpegInterchangeFormat();
         $length      = $this->thumbnailJpegInterchangeFormatLength();
 
-        if ($compression !== Compression::JPEG) {
+        if ($compression !== Compression::Jpeg) {
             return false;
         }
 
@@ -183,10 +183,10 @@ final readonly class ThumbnailExifReader
         return in_array(
             $compression,
             [
-                Compression::JPEG,
-                Compression::JPEG_NEW_STYLE,
-                Compression::LOSSY_JPEG,
-                Compression::JPEG_2000,
+                Compression::Jpeg,
+                Compression::JpegNewStyle,
+                Compression::LossyJpeg,
+                Compression::Jpeg2000,
             ],
             true
         );

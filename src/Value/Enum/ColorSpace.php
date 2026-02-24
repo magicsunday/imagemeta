@@ -22,6 +22,6 @@ enum ColorSpace: int
 {
     use EnumFromIntStringNullable;
 
-    case SRGB         = 1;
-    case UNCALIBRATED = 65535;
+    case Srgb         = 1;
+    case Uncalibrated = 65535;
 }

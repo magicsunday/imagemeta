@@ -273,7 +273,7 @@ final readonly class RegionsFactory
             $geometry = $entry['geometry'];
             if ($geometry !== null) {
                 $regions[] = new Region(
-                    RegionType::FACE,
+                    RegionType::Face,
                     $geometry['x'],
                     $geometry['y'],
                     $geometry['w'],
@@ -332,7 +332,7 @@ final readonly class RegionsFactory
         // Collect indices of MWG face regions eligible for supplemental Apple metadata.
         $faceIndices = [];
         foreach ($mwgRegions as $index => $region) {
-            if ($region->type === RegionType::FACE) {
+            if ($region->type === RegionType::Face) {
                 $faceIndices[] = $index;
             }
         }
@@ -406,7 +406,7 @@ final readonly class RegionsFactory
         }
 
         $candidate = new Region(
-            RegionType::FACE,
+            RegionType::Face,
             $geometry['x'],
             $geometry['y'],
             $geometry['w'],
@@ -451,7 +451,7 @@ final readonly class RegionsFactory
     private function createSupplementalRegion(Region $baseRegion, array $entry): Region
     {
         return new Region(
-            $baseRegion->type ?? RegionType::FACE,
+            $baseRegion->type ?? RegionType::Face,
             $baseRegion->x,
             $baseRegion->y,
             $baseRegion->w,
@@ -485,7 +485,7 @@ final readonly class RegionsFactory
      */
     private function findMatchingRegionIndex(array $regions, Region $candidate): ?int
     {
-        if ($candidate->type !== RegionType::FACE) {
+        if ($candidate->type !== RegionType::Face) {
             return null;
         }
 
@@ -494,7 +494,7 @@ final readonly class RegionsFactory
         [$targetCx, $targetCy] = $this->normaliser->regionCenter($candidate);
 
         foreach ($regions as $index => $region) {
-            if ($region->type !== RegionType::FACE) {
+            if ($region->type !== RegionType::Face) {
                 continue;
             }
 

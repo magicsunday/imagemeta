@@ -52,9 +52,9 @@ final class ImageFactoryTest extends TestCase
         $parsedExif = $this->parsedExif(
             width: 6000,
             height: 4000,
-            orientation: Orientation::TOP_LEFT,
+            orientation: Orientation::TopLeft,
             bitsPerSample: 8,
-            colorSpace: ColorSpace::SRGB,
+            colorSpace: ColorSpace::Srgb,
             interopIndex: null,
             imageUniqueId: '00112233445566778899aabbccddeeff',
             documentName: 'document.tif',
@@ -63,7 +63,7 @@ final class ImageFactoryTest extends TestCase
             componentsConfiguration: [1, 2, 3, 0],
             compressedBitsPerPixel: 4.0,
             userComment: 'Test comment',
-            userCommentEncoding: CharacterEncoding::ASCII->value,
+            userCommentEncoding: CharacterEncoding::Ascii->value,
         );
 
         $metadata = new Metadata(
@@ -77,9 +77,9 @@ final class ImageFactoryTest extends TestCase
 
         self::assertSame(6000, $image->width);
         self::assertSame(4000, $image->height);
-        self::assertSame(Orientation::TOP_LEFT, $image->orientation);
+        self::assertSame(Orientation::TopLeft, $image->orientation);
         self::assertSame(8, $image->bitsPerSample);
-        self::assertSame(ColorSpace::SRGB, $image->colorSpace);
+        self::assertSame(ColorSpace::Srgb, $image->colorSpace);
         self::assertSame('00112233445566778899aabbccddeeff', $image->imageUniqueId);
         self::assertSame('document.tif', $image->documentName);
         self::assertSame('Test image', $image->description);
@@ -88,7 +88,7 @@ final class ImageFactoryTest extends TestCase
         self::assertSame(4.0, $image->compressedBitsPerPixel);
         self::assertNotNull($image->comment);
         self::assertSame('Test comment', $image->comment->value);
-        self::assertSame(CharacterEncoding::ASCII->value, $image->comment->encoding);
+        self::assertSame(CharacterEncoding::Ascii->value, $image->comment->encoding);
     }
 
     /**
@@ -139,7 +139,7 @@ final class ImageFactoryTest extends TestCase
             height: null,
             orientation: null,
             bitsPerSample: null,
-            colorSpace: ColorSpace::UNCALIBRATED,
+            colorSpace: ColorSpace::Uncalibrated,
             interopIndex: 'R98',
             imageUniqueId: null,
             documentName: null,
@@ -160,7 +160,7 @@ final class ImageFactoryTest extends TestCase
         $factory = new ImageFactory();
         $image   = $factory->create($metadata);
 
-        self::assertSame(ColorSpace::SRGB, $image->colorSpace);
+        self::assertSame(ColorSpace::Srgb, $image->colorSpace);
     }
 
     /**
@@ -177,7 +177,7 @@ final class ImageFactoryTest extends TestCase
             height: null,
             orientation: null,
             bitsPerSample: null,
-            colorSpace: ColorSpace::UNCALIBRATED,
+            colorSpace: ColorSpace::Uncalibrated,
             interopIndex: 'r03',
             imageUniqueId: null,
             documentName: null,
@@ -198,7 +198,7 @@ final class ImageFactoryTest extends TestCase
         $factory = new ImageFactory();
         $image   = $factory->create($metadata);
 
-        self::assertSame(ColorSpace::UNCALIBRATED, $image->colorSpace);
+        self::assertSame(ColorSpace::Uncalibrated, $image->colorSpace);
     }
 
     /**

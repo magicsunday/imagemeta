@@ -21,7 +21,7 @@ enum Saturation: int
 {
     use EnumFromIntStringNullable;
 
-    case NORMAL = 0;
-    case LOW    = 1;
-    case HIGH   = 2;
+    case Normal = 0;
+    case Low    = 1;
+    case High   = 2;
 }

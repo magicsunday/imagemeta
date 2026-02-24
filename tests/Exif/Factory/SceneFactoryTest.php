@@ -50,10 +50,10 @@ final class SceneFactoryTest extends TestCase
     public function createsFromExifMetadata(): void
     {
         $parsedExif = $this->parsedExif(
-            sceneCaptureType: SceneCaptureType::STANDARD,
-            sceneType: SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE->value,
-            lightSource: LightSource::DAYLIGHT,
-            subjectDistanceRange: SubjectDistanceRange::CLOSE,
+            sceneCaptureType: SceneCaptureType::Standard,
+            sceneType: SceneType::DirectlyPhotographedImage->value,
+            lightSource: LightSource::Daylight,
+            subjectDistanceRange: SubjectDistanceRange::Close,
         );
 
         $metadata = new Metadata(
@@ -65,11 +65,11 @@ final class SceneFactoryTest extends TestCase
         $factory = new SceneFactory();
         $scene   = $factory->create($metadata, 2);
 
-        self::assertSame(SceneCaptureType::STANDARD, $scene->type);
-        self::assertSame(SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE, $scene->sceneType);
-        self::assertSame(LightSource::DAYLIGHT, $scene->light);
+        self::assertSame(SceneCaptureType::Standard, $scene->type);
+        self::assertSame(SceneType::DirectlyPhotographedImage, $scene->sceneType);
+        self::assertSame(LightSource::Daylight, $scene->light);
         self::assertSame(2, $scene->faceCount);
-        self::assertSame(SubjectDistanceRange::CLOSE, $scene->subjectDistanceRange);
+        self::assertSame(SubjectDistanceRange::Close, $scene->subjectDistanceRange);
     }
 
     /**

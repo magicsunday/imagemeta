@@ -31,17 +31,17 @@ enum GpsSpeedRef: string
      * Kilometers per hour.
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case KILOMETERS_PER_HOUR = 'K';
+    case KilometersPerHour = 'K';
 
     /**
      * Miles per hour.
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case MILES_PER_HOUR = 'M';
+    case MilesPerHour = 'M';
 
     /**
      * Knots (nautical miles per hour).
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case KNOTS = 'N';
+    case Knots = 'N';
 }

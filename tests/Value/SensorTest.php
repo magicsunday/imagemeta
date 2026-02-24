@@ -61,10 +61,10 @@ final class SensorTest extends TestCase
             horizontalRepeatPixelUnit: 2,
             verticalRepeatPixelUnit: 2,
             componentIdentifiers: [
-                CfaPatternColor::RED->value,
-                CfaPatternColor::GREEN->value,
-                CfaPatternColor::GREEN->value,
-                CfaPatternColor::BLUE->value,
+                CfaPatternColor::Red->value,
+                CfaPatternColor::Green->value,
+                CfaPatternColor::Green->value,
+                CfaPatternColor::Blue->value,
             ],
         );
 
@@ -78,7 +78,7 @@ final class SensorTest extends TestCase
         );
 
         self::assertSame($cfaPattern, $sensor->cfaPattern);
-        self::assertSame(CfaPatternColor::RED, $cfaPattern->colors[0]);
+        self::assertSame(CfaPatternColor::Red, $cfaPattern->colors[0]);
     }
 
     /**
@@ -100,12 +100,12 @@ final class SensorTest extends TestCase
             spatialFrequencyResponse: null,
             focalPlaneXResolution: 3000.0,
             focalPlaneYResolution: 3000.0,
-            focalPlaneResolutionUnit: ResolutionUnit::CENTIMETER,
+            focalPlaneResolutionUnit: ResolutionUnit::Centimeter,
         );
 
         self::assertSame(3000.0, $sensor->focalPlaneXResolution);
         self::assertSame(3000.0, $sensor->focalPlaneYResolution);
-        self::assertSame(ResolutionUnit::CENTIMETER, $sensor->focalPlaneResolutionUnit);
+        self::assertSame(ResolutionUnit::Centimeter, $sensor->focalPlaneResolutionUnit);
     }
 
     /**

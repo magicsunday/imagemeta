@@ -21,6 +21,6 @@ enum CustomRendered: int
 {
     use EnumFromIntStringNullable;
 
-    case NORMAL_PROCESS = 0;
-    case CUSTOM_PROCESS = 1;
+    case NormalProcess = 0;
+    case CustomProcess = 1;
 }

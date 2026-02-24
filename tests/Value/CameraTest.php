@@ -43,15 +43,15 @@ final class CameraTest extends TestCase
             model: 'EOS R6',
             ownerName: 'Jane Doe',
             firmware: '1.2.3',
-            fileSource: FileSource::DIGITAL_CAMERA,
-            sensingMethod: SensingMethod::ONE_CHIP_COLOR_AREA,
+            fileSource: FileSource::DigitalCamera,
+            sensingMethod: SensingMethod::OneChipColorArea,
         );
 
         self::assertSame('Canon', $camera->make);
         self::assertSame('EOS R6', $camera->model);
         self::assertSame('Jane Doe', $camera->ownerName);
         self::assertSame('1.2.3', $camera->firmware);
-        self::assertSame(FileSource::DIGITAL_CAMERA, $camera->fileSource);
-        self::assertSame(SensingMethod::ONE_CHIP_COLOR_AREA, $camera->sensingMethod);
+        self::assertSame(FileSource::DigitalCamera, $camera->fileSource);
+        self::assertSame(SensingMethod::OneChipColorArea, $camera->sensingMethod);
     }
 }

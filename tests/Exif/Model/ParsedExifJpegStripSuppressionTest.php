@@ -54,7 +54,7 @@ final class ParsedExifJpegStripSuppressionTest extends TestCase
     public function suppressesStripTagsForJpegPrimaryImage(): void
     {
         $ifd0 = new Ifd([
-            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::ROWS_PER_STRIP                 => new IfdEntry(ExifTag::ROWS_PER_STRIP, 4, 1, 8),
             ExifTag::STRIP_OFFSETS                  => new IfdEntry(ExifTag::STRIP_OFFSETS, 4, 2, [100, 200]),
             ExifTag::STRIP_BYTE_COUNTS              => new IfdEntry(ExifTag::STRIP_BYTE_COUNTS, 4, 2, [50, 50]),
@@ -86,11 +86,11 @@ final class ParsedExifJpegStripSuppressionTest extends TestCase
     public function suppressesStripTagsForJpegThumbnail(): void
     {
         $ifd0 = new Ifd([
-            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::UNCOMPRESSED->value),
+            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
         ]);
 
         $ifd1 = new Ifd([
-            ExifTag::COMPRESSION       => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::COMPRESSION       => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::STRIP_OFFSETS     => new IfdEntry(ExifTag::STRIP_OFFSETS, 4, 2, [300, 400]),
             ExifTag::STRIP_BYTE_COUNTS => new IfdEntry(ExifTag::STRIP_BYTE_COUNTS, 4, 2, [75, 80]),
         ]);

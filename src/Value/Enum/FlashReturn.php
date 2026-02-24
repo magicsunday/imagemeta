@@ -21,8 +21,8 @@ enum FlashReturn: int
 {
     use EnumFromIntStringNullable;
 
-    case NO_STROBE_DETECTION = 0;
-    case RESERVED            = 1;
-    case RETURN_NOT_DETECTED = 2;
-    case RETURN_DETECTED     = 3;
+    case NoStrobeDetection = 0;
+    case Reserved          = 1;
+    case ReturnNotDetected = 2;
+    case ReturnDetected    = 3;
 }

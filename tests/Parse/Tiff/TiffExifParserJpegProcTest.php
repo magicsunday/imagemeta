@@ -51,7 +51,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 ExifTag::SAMPLES_PER_PIXEL => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_PROC         => $this->shortEntry(TiffTag::JPEG_PROC, 1),
                 TiffTag::JPEG_Q_TABLES     => $this->numericEntry(TiffTag::JPEG_Q_TABLES, TiffConst::TYPE_LONG, 1, [8]),
@@ -71,7 +71,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 14),
                 TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 1),
@@ -91,7 +91,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     {
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
             ]),
         );
 
@@ -109,7 +109,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 TiffTag::JPEG_PROC   => $this->numericEntry(
                     TiffTag::JPEG_PROC,
                     TiffConst::TYPE_LONG,
@@ -131,7 +131,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 TiffTag::JPEG_PROC   => $this->shortEntry(TiffTag::JPEG_PROC, 2),
             ]),
         );
@@ -148,7 +148,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd0([
-                ExifTag::COMPRESSION => $this->shortEntry(ExifTag::COMPRESSION, Compression::UNCOMPRESSED->value),
+                ExifTag::COMPRESSION => $this->shortEntry(ExifTag::COMPRESSION, Compression::Uncompressed->value),
                 TiffTag::JPEG_PROC   => $this->shortEntry(TiffTag::JPEG_PROC, 1),
             ]),
         );
@@ -162,7 +162,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 TiffTag::JPEG_PROC             => $this->shortEntry(TiffTag::JPEG_PROC, 1),
                 TiffTag::JPEG_RESTART_INTERVAL => $this->shortEntry(TiffTag::JPEG_RESTART_INTERVAL, 16),
             ]),
@@ -179,7 +179,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 TiffTag::JPEG_PROC             => $this->shortEntry(TiffTag::JPEG_PROC, 1),
                 TiffTag::JPEG_RESTART_INTERVAL => $this->shortEntry(TiffTag::JPEG_RESTART_INTERVAL, 0),
             ]),
@@ -199,7 +199,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 TiffTag::JPEG_PROC             => $this->shortEntry(TiffTag::JPEG_PROC, 1),
                 TiffTag::JPEG_RESTART_INTERVAL => $this->numericEntry(
                     TiffTag::JPEG_RESTART_INTERVAL,
@@ -222,7 +222,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd0([
-                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::UNCOMPRESSED->value),
+                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::Uncompressed->value),
                 TiffTag::JPEG_RESTART_INTERVAL => $this->shortEntry(TiffTag::JPEG_RESTART_INTERVAL, 16),
             ]),
         );
@@ -236,7 +236,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     {
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 TiffTag::JPEG_RESTART_INTERVAL => $this->shortEntry(TiffTag::JPEG_RESTART_INTERVAL, 16),
             ]),
         );
@@ -252,7 +252,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 14),
                 ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 4),
@@ -278,7 +278,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 TiffTag::JPEG_PROC         => $this->shortEntry(TiffTag::JPEG_PROC, 14),
                 ExifTag::SAMPLES_PER_PIXEL => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
             ]),
@@ -296,7 +296,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 14),
                 ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 8),
@@ -315,7 +315,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 14),
                 ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 2),
                 TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->numericEntry(
@@ -339,7 +339,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 1),
                 ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 4),
@@ -358,7 +358,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION           => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 TiffTag::JPEG_PROC             => $this->shortEntry(TiffTag::JPEG_PROC, 1),
                 ExifTag::SAMPLES_PER_PIXEL     => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_POINT_TRANSFORMS => $this->shortEntry(TiffTag::JPEG_POINT_TRANSFORMS, 0),
@@ -374,7 +374,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 ExifTag::SAMPLES_PER_PIXEL => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_PROC         => $this->shortEntry(TiffTag::JPEG_PROC, 1),
                 TiffTag::JPEG_Q_TABLES     => $this->numericEntry(TiffTag::JPEG_Q_TABLES, TiffConst::TYPE_LONG, 1, [8]),
@@ -398,7 +398,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 14),
                 TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 1),
@@ -420,7 +420,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 ExifTag::SAMPLES_PER_PIXEL => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_PROC         => $this->shortEntry(TiffTag::JPEG_PROC, 1),
                 TiffTag::JPEG_DC_TABLES    => $this->numericEntry(TiffTag::JPEG_DC_TABLES, TiffConst::TYPE_LONG, 1, [8]),
@@ -439,7 +439,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION              => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 ExifTag::SAMPLES_PER_PIXEL        => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_PROC                => $this->shortEntry(TiffTag::JPEG_PROC, 14),
                 TiffTag::JPEG_LOSSLESS_PREDICTORS => $this->shortEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 1),
@@ -460,7 +460,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 ExifTag::SAMPLES_PER_PIXEL => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 2),
                 TiffTag::JPEG_PROC         => $this->shortEntry(TiffTag::JPEG_PROC, 1),
                 TiffTag::JPEG_Q_TABLES     => $this->shortEntry(TiffTag::JPEG_Q_TABLES, 8),
@@ -481,7 +481,7 @@ final class TiffExifParserJpegProcTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
-                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::JPEG->value),
+                ExifTag::COMPRESSION       => $this->shortEntry(ExifTag::COMPRESSION, Compression::Jpeg->value),
                 ExifTag::SAMPLES_PER_PIXEL => $this->shortEntry(ExifTag::SAMPLES_PER_PIXEL, 1),
                 TiffTag::JPEG_PROC         => $this->shortEntry(TiffTag::JPEG_PROC, 1),
                 TiffTag::JPEG_Q_TABLES     => $this->numericEntry(TiffTag::JPEG_Q_TABLES, TiffConst::TYPE_LONG, 1, [8]),

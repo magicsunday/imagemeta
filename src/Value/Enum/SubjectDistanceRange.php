@@ -24,8 +24,8 @@ enum SubjectDistanceRange: int
 {
     use EnumFromIntStringNullable;
 
-    case UNKNOWN = 0;
-    case MACRO   = 1;
-    case CLOSE   = 2;
-    case DISTANT = 3;
+    case Unknown = 0;
+    case Macro   = 1;
+    case Close   = 2;
+    case Distant = 3;
 }

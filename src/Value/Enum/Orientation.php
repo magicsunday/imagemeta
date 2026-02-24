@@ -21,15 +21,15 @@ enum Orientation: int
 {
     use EnumFromIntStringNullable;
 
-    case UNKNOWN      = 0;
-    case TOP_LEFT     = 1;
-    case TOP_RIGHT    = 2;
-    case BOTTOM_RIGHT = 3;
-    case BOTTOM_LEFT  = 4;
-    case LEFT_TOP     = 5;
-    case RIGHT_TOP    = 6;
-    case RIGHT_BOTTOM = 7;
-    case LEFT_BOTTOM  = 8;
+    case Unknown     = 0;
+    case TopLeft     = 1;
+    case TopRight    = 2;
+    case BottomRight = 3;
+    case BottomLeft  = 4;
+    case LeftTop     = 5;
+    case RightTop    = 6;
+    case RightBottom = 7;
+    case LeftBottom  = 8;
 
     /**
      * Returns the rotation description as commonly displayed by ExifTool.
@@ -41,15 +41,15 @@ enum Orientation: int
     public function rotationDescription(): string
     {
         return match ($this) {
-            self::UNKNOWN      => 'Unknown',
-            self::TOP_LEFT     => 'Horizontal (normal)',
-            self::TOP_RIGHT    => 'Mirror horizontal',
-            self::BOTTOM_RIGHT => 'Rotate 180',
-            self::BOTTOM_LEFT  => 'Mirror vertical',
-            self::LEFT_TOP     => 'Mirror horizontal and rotate 270 CW',
-            self::RIGHT_TOP    => 'Rotate 90 CW',
-            self::RIGHT_BOTTOM => 'Mirror horizontal and rotate 90 CW',
-            self::LEFT_BOTTOM  => 'Rotate 270 CW',
+            self::Unknown     => 'Unknown',
+            self::TopLeft     => 'Horizontal (normal)',
+            self::TopRight    => 'Mirror horizontal',
+            self::BottomRight => 'Rotate 180',
+            self::BottomLeft  => 'Mirror vertical',
+            self::LeftTop     => 'Mirror horizontal and rotate 270 CW',
+            self::RightTop    => 'Rotate 90 CW',
+            self::RightBottom => 'Mirror horizontal and rotate 90 CW',
+            self::LeftBottom  => 'Rotate 270 CW',
         };
     }
 
@@ -62,10 +62,10 @@ enum Orientation: int
     public function rotationDegrees(): int
     {
         return match ($this) {
-            self::UNKNOWN, self::TOP_LEFT, self::TOP_RIGHT, self::BOTTOM_LEFT => 0,
-            self::BOTTOM_RIGHT, self::LEFT_TOP => 180,
-            self::RIGHT_TOP, self::RIGHT_BOTTOM => 90,
-            self::LEFT_BOTTOM => 270,
+            self::Unknown, self::TopLeft, self::TopRight, self::BottomLeft => 0,
+            self::BottomRight, self::LeftTop => 180,
+            self::RightTop, self::RightBottom => 90,
+            self::LeftBottom => 270,
         };
     }
 
@@ -75,7 +75,7 @@ enum Orientation: int
     public function isMirrored(): bool
     {
         return match ($this) {
-            self::TOP_RIGHT, self::BOTTOM_LEFT, self::LEFT_TOP, self::RIGHT_BOTTOM => true,
+            self::TopRight, self::BottomLeft, self::LeftTop, self::RightBottom => true,
             default => false,
         };
     }

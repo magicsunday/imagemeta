@@ -73,7 +73,7 @@ final class ParsedExifColorSpaceAndGammaTest extends TestCase
     {
         $parsedExif = new ParsedExif(new Ifd([]), new Ifd([]), null, null, null);
 
-        self::assertSame(ColorSpace::SRGB, $parsedExif->colorSpace());
+        self::assertSame(ColorSpace::Srgb, $parsedExif->colorSpace());
     }
 
     /**

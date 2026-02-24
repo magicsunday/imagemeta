@@ -706,11 +706,11 @@ final readonly class DngGeometryValidator
 
         $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
 
-        if (($photo instanceof IfdEntry) && is_int($photo->value) && ($photo->value !== Photometric::CFA->value)) {
+        if (($photo instanceof IfdEntry) && is_int($photo->value) && ($photo->value !== Photometric::Cfa->value)) {
             throw new ParseError(
                 sprintf(
                     'BayerGreenSplit requires PhotometricInterpretation=%d, got %d.',
-                    Photometric::CFA->value,
+                    Photometric::Cfa->value,
                     $photo->value,
                 ),
                 1660,

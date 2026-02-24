@@ -47,8 +47,8 @@ final readonly class GpsPosition
         public ?GpsAltitudeRef $altitudeRef = null,
         public ?string $mapDatum = null,
     ) {
-        $this->latitudeSigned      = $this->signedCoordinate($this->latitude, $this->latitudeRef, GpsLatLonRef::SOUTH, GpsLatLonRef::NORTH);
-        $this->longitudeSigned     = $this->signedCoordinate($this->longitude, $this->longitudeRef, GpsLatLonRef::WEST, GpsLatLonRef::EAST);
+        $this->latitudeSigned      = $this->signedCoordinate($this->latitude, $this->latitudeRef, GpsLatLonRef::South, GpsLatLonRef::North);
+        $this->longitudeSigned     = $this->signedCoordinate($this->longitude, $this->longitudeRef, GpsLatLonRef::West, GpsLatLonRef::East);
         $this->latitudeCoordinate  = GpsCoordinate::fromNullable($this->latitude, $this->latitudeRef, true);
         $this->longitudeCoordinate = GpsCoordinate::fromNullable($this->longitude, $this->longitudeRef, false);
     }

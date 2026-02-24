@@ -51,9 +51,9 @@ final class ImageTest extends TestCase
         $image = new Image(
             width: 6000,
             height: 4000,
-            orientation: Orientation::RIGHT_TOP,
+            orientation: Orientation::RightTop,
             bitsPerSample: 14,
-            colorSpace: ColorSpace::SRGB,
+            colorSpace: ColorSpace::Srgb,
             imageUniqueId: 'unique-id',
             documentName: 'IMG_0042',
             description: 'Sunrise',
@@ -65,9 +65,9 @@ final class ImageTest extends TestCase
 
         self::assertSame(6000, $image->width);
         self::assertSame(4000, $image->height);
-        self::assertSame(Orientation::RIGHT_TOP, $image->orientation);
+        self::assertSame(Orientation::RightTop, $image->orientation);
         self::assertSame(14, $image->bitsPerSample);
-        self::assertSame(ColorSpace::SRGB, $image->colorSpace);
+        self::assertSame(ColorSpace::Srgb, $image->colorSpace);
         self::assertSame('unique-id', $image->imageUniqueId);
         self::assertSame('IMG_0042', $image->documentName);
         self::assertSame('Sunrise', $image->description);

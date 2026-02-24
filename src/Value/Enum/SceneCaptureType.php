@@ -22,8 +22,8 @@ enum SceneCaptureType: int
 {
     use EnumFromIntStringNullable;
 
-    case STANDARD    = 0;
-    case LANDSCAPE   = 1;
-    case PORTRAIT    = 2;
-    case NIGHT_SCENE = 3;
+    case Standard   = 0;
+    case Landscape  = 1;
+    case Portrait   = 2;
+    case NightScene = 3;
 }

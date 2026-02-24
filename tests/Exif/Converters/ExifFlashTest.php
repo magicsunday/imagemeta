@@ -46,9 +46,9 @@ final class ExifFlashTest extends TestCase
 
         self::assertNotNull($info);
         self::assertTrue($info->fired);
-        self::assertSame(FlashMode::AUTO, $info->mode);
-        self::assertSame(FlashReturn::RETURN_DETECTED, $info->returnDetection);
-        self::assertSame(FlashFunction::ABSENT, $info->functionPresence);
+        self::assertSame(FlashMode::Auto, $info->mode);
+        self::assertSame(FlashReturn::ReturnDetected, $info->returnDetection);
+        self::assertSame(FlashFunction::Absent, $info->functionPresence);
         self::assertTrue($info->redEyeReduction);
     }
 
@@ -65,9 +65,9 @@ final class ExifFlashTest extends TestCase
 
         self::assertNotNull($info);
         self::assertFalse($info->fired);
-        self::assertSame(FlashMode::UNKNOWN, $info->mode);
-        self::assertSame(FlashReturn::RESERVED, $info->returnDetection);
-        self::assertSame(FlashFunction::PRESENT, $info->functionPresence);
+        self::assertSame(FlashMode::Unknown, $info->mode);
+        self::assertSame(FlashReturn::Reserved, $info->returnDetection);
+        self::assertSame(FlashFunction::Present, $info->functionPresence);
         self::assertFalse($info->redEyeReduction);
     }
 

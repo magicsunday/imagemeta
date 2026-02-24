@@ -39,18 +39,18 @@ final class ProcessingSettingsTest extends TestCase
     public function constructsWithBasicSettings(): void
     {
         $settings = new ProcessingSettings(
-            sharpness: Sharpness::NORMAL,
-            contrast: Contrast::NORMAL,
-            saturation: Saturation::NORMAL,
+            sharpness: Sharpness::Normal,
+            contrast: Contrast::Normal,
+            saturation: Saturation::Normal,
             pictureStyle: null,
             clarity: null,
             customRendered: null,
             deviceSettingDescription: null,
         );
 
-        self::assertSame(Sharpness::NORMAL, $settings->sharpness);
-        self::assertSame(Contrast::NORMAL, $settings->contrast);
-        self::assertSame(Saturation::NORMAL, $settings->saturation);
+        self::assertSame(Sharpness::Normal, $settings->sharpness);
+        self::assertSame(Contrast::Normal, $settings->contrast);
+        self::assertSame(Saturation::Normal, $settings->saturation);
     }
 
     /**
@@ -69,18 +69,18 @@ final class ProcessingSettingsTest extends TestCase
         );
 
         $settings = new ProcessingSettings(
-            sharpness: Sharpness::HARD,
-            contrast: Contrast::HARD,
-            saturation: Saturation::HIGH,
+            sharpness: Sharpness::Hard,
+            contrast: Contrast::Hard,
+            saturation: Saturation::High,
             pictureStyle: 'Vivid',
             clarity: 25,
             customRendered: 1,
             deviceSettingDescription: $deviceDesc,
         );
 
-        self::assertSame(Sharpness::HARD, $settings->sharpness);
-        self::assertSame(Contrast::HARD, $settings->contrast);
-        self::assertSame(Saturation::HIGH, $settings->saturation);
+        self::assertSame(Sharpness::Hard, $settings->sharpness);
+        self::assertSame(Contrast::Hard, $settings->contrast);
+        self::assertSame(Saturation::High, $settings->saturation);
         self::assertSame('Vivid', $settings->pictureStyle);
         self::assertSame(25, $settings->clarity);
         self::assertSame(1, $settings->customRendered);

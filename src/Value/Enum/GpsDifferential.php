@@ -29,11 +29,11 @@ enum GpsDifferential: int
      * No differential correction applied.
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case NO_CORRECTION = 0;
+    case NoCorrection = 0;
 
     /**
      * Differential correction applied.
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case DIFFERENTIAL_CORRECTED = 1;
+    case DifferentialCorrected = 1;
 }

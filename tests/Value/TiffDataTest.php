@@ -47,8 +47,8 @@ final class TiffDataTest extends TestCase
         $structure = new TiffStructure(
             samplesPerPixel: 3,
             bitsPerSample: 8,
-            compression: Compression::UNCOMPRESSED,
-            photometric: Photometric::RGB,
+            compression: Compression::Uncompressed,
+            photometric: Photometric::Rgb,
         );
 
         $layout = new TiffLayout(
@@ -58,7 +58,7 @@ final class TiffDataTest extends TestCase
         $tiff = new TiffData(
             structure: $structure,
             layout: $layout,
-            resolutionUnit: ResolutionUnit::INCHES,
+            resolutionUnit: ResolutionUnit::Inches,
             xResolution: 300.0,
             yResolution: 300.0,
         );
@@ -69,9 +69,9 @@ final class TiffDataTest extends TestCase
         self::assertSame(3, $tiff->structure->samplesPerPixel);
         self::assertSame(8, $tiff->structure->bitsPerSample);
         self::assertSame(64, $tiff->layout->rowsPerStrip);
-        self::assertSame(Compression::UNCOMPRESSED, $tiff->structure->compression);
-        self::assertSame(Photometric::RGB, $tiff->structure->photometric);
-        self::assertSame(ResolutionUnit::INCHES, $tiff->resolutionUnit);
+        self::assertSame(Compression::Uncompressed, $tiff->structure->compression);
+        self::assertSame(Photometric::Rgb, $tiff->structure->photometric);
+        self::assertSame(ResolutionUnit::Inches, $tiff->resolutionUnit);
         self::assertSame(300.0, $tiff->xResolution);
         self::assertSame(300.0, $tiff->yResolution);
     }
@@ -88,8 +88,8 @@ final class TiffDataTest extends TestCase
         $structure = new TiffStructure(
             samplesPerPixel: 3,
             bitsPerSample: 8,
-            compression: Compression::JPEG,
-            photometric: Photometric::YCBCR,
+            compression: Compression::Jpeg,
+            photometric: Photometric::Ycbcr,
         );
 
         $color = new TiffColorRef(
@@ -115,7 +115,7 @@ final class TiffDataTest extends TestCase
 
         self::assertSame(256, $tiff->layout->tileWidth);
         self::assertSame(256, $tiff->layout->tileLength);
-        self::assertSame(Compression::JPEG, $tiff->structure->compression);
+        self::assertSame(Compression::Jpeg, $tiff->structure->compression);
         self::assertSame([2, 2], $tiff->color->ycbcrSubSampling);
         self::assertSame([1024, 2048], $tiff->layout->tileOffsets);
     }

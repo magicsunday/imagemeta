@@ -48,8 +48,8 @@ final class CameraFactoryTest extends TestCase
             model: 'EOS R6',
             ownerName: 'Test Owner',
             firmware: '1.0.0',
-            fileSource: FileSource::DIGITAL_CAMERA,
-            sensingMethod: SensingMethod::ONE_CHIP_COLOR_AREA,
+            fileSource: FileSource::DigitalCamera,
+            sensingMethod: SensingMethod::OneChipColorArea,
         );
 
         $metadata = new Metadata(
@@ -65,8 +65,8 @@ final class CameraFactoryTest extends TestCase
         self::assertSame('EOS R6', $camera->model);
         self::assertSame('Test Owner', $camera->ownerName);
         self::assertSame('1.0.0', $camera->firmware);
-        self::assertSame(FileSource::DIGITAL_CAMERA, $camera->fileSource);
-        self::assertSame(SensingMethod::ONE_CHIP_COLOR_AREA, $camera->sensingMethod);
+        self::assertSame(FileSource::DigitalCamera, $camera->fileSource);
+        self::assertSame(SensingMethod::OneChipColorArea, $camera->sensingMethod);
     }
 
     /**
@@ -125,7 +125,7 @@ final class CameraFactoryTest extends TestCase
         self::assertNull($camera->model);
         self::assertNull($camera->ownerName);
         self::assertNull($camera->firmware);
-        self::assertSame(FileSource::DIGITAL_CAMERA, $camera->fileSource);
+        self::assertSame(FileSource::DigitalCamera, $camera->fileSource);
         self::assertNull($camera->sensingMethod);
     }
 

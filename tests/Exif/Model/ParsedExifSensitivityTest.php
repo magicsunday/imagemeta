@@ -60,7 +60,7 @@ final class ParsedExifSensitivityTest extends TestCase
 
         $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
-        self::assertSame(SensitivityType::SOS_AND_REI, $parsedExif->sensitivityType());
+        self::assertSame(SensitivityType::SosAndRei, $parsedExif->sensitivityType());
     }
 
     /**
@@ -224,7 +224,7 @@ final class ParsedExifSensitivityTest extends TestCase
     public static function isoSensitivityPriorityProvider(): iterable
     {
         yield 'standard output sensitivity' => [
-            'sensitivityType' => SensitivityType::STANDARD_OUTPUT_SENSITIVITY,
+            'sensitivityType' => SensitivityType::StandardOutputSensitivity,
             'tagValues'       => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY    => 640,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
@@ -235,7 +235,7 @@ final class ParsedExifSensitivityTest extends TestCase
         ];
 
         yield 'recommended exposure index' => [
-            'sensitivityType' => SensitivityType::RECOMMENDED_EXPOSURE_INDEX,
+            'sensitivityType' => SensitivityType::RecommendedExposureIndex,
             'tagValues'       => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY    => 125,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
@@ -247,7 +247,7 @@ final class ParsedExifSensitivityTest extends TestCase
         ];
 
         yield 'iso speed' => [
-            'sensitivityType' => SensitivityType::ISO_SPEED,
+            'sensitivityType' => SensitivityType::IsoSpeed,
             'tagValues'       => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY    => 320,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
@@ -258,7 +258,7 @@ final class ParsedExifSensitivityTest extends TestCase
         ];
 
         yield 'sos and rei' => [
-            'sensitivityType' => SensitivityType::SOS_AND_REI,
+            'sensitivityType' => SensitivityType::SosAndRei,
             'tagValues'       => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY    => 80,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
@@ -270,7 +270,7 @@ final class ParsedExifSensitivityTest extends TestCase
         ];
 
         yield 'sos and iso' => [
-            'sensitivityType' => SensitivityType::SOS_AND_ISO,
+            'sensitivityType' => SensitivityType::SosAndIso,
             'tagValues'       => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY    => 400,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
@@ -281,7 +281,7 @@ final class ParsedExifSensitivityTest extends TestCase
         ];
 
         yield 'rei and iso' => [
-            'sensitivityType' => SensitivityType::REI_AND_ISO,
+            'sensitivityType' => SensitivityType::ReiAndIso,
             'tagValues'       => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY    => 250,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
@@ -293,7 +293,7 @@ final class ParsedExifSensitivityTest extends TestCase
         ];
 
         yield 'sos and rei and iso' => [
-            'sensitivityType' => SensitivityType::SOS_AND_REI_AND_ISO,
+            'sensitivityType' => SensitivityType::SosAndReiAndIso,
             'tagValues'       => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY    => 160,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
@@ -305,7 +305,7 @@ final class ParsedExifSensitivityTest extends TestCase
         ];
 
         yield 'unknown sensitivity type' => [
-            'sensitivityType' => SensitivityType::UNKNOWN,
+            'sensitivityType' => SensitivityType::Unknown,
             'tagValues'       => [
                 ExifTag::ISO_SPEED                => 400,
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY => 500,

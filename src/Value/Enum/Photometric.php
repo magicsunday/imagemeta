@@ -26,16 +26,16 @@ enum Photometric: int
 {
     use EnumFromIntStringNullable;
 
-    case WHITE_IS_ZERO     = 0;
-    case BLACK_IS_ZERO     = 1;
-    case RGB               = 2;
-    case PALETTE_COLOR     = 3;
-    case TRANSPARENCY_MASK = 4;
-    case SEPARATED         = 5;
-    case YCBCR             = 6;
-    case CIELAB            = 8;
-    case CFA               = 32803;
-    case LINEAR_RAW        = 34892;
-    case DEPTH             = 51177;
-    case PHOTOMETRIC_MASK  = 52527;
+    case WhiteIsZero      = 0;
+    case BlackIsZero      = 1;
+    case Rgb              = 2;
+    case PaletteColor     = 3;
+    case TransparencyMask = 4;
+    case Separated        = 5;
+    case Ycbcr            = 6;
+    case Cielab           = 8;
+    case Cfa              = 32803;
+    case LinearRaw        = 34892;
+    case Depth            = 51177;
+    case PhotometricMask  = 52527;
 }

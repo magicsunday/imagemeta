@@ -522,7 +522,7 @@ final readonly class ValueFactory
         $count = 0;
 
         foreach ($regions->items as $region) {
-            if ($region->type === RegionType::FACE) {
+            if ($region->type === RegionType::Face) {
                 ++$count;
             }
         }

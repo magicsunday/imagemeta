@@ -21,8 +21,8 @@ enum FlashMode: int
 {
     use EnumFromIntStringNullable;
 
-    case UNKNOWN             = 0;
-    case COMPULSORY_FIRE     = 1;
-    case COMPULSORY_SUPPRESS = 2;
-    case AUTO                = 3;
+    case Unknown            = 0;
+    case CompulsoryFire     = 1;
+    case CompulsorySuppress = 2;
+    case Auto               = 3;
 }

@@ -21,12 +21,12 @@ enum CfaPatternColor: int
 {
     use EnumFromIntStringNullable;
 
-    case RED      = 0;
-    case GREEN    = 1;
-    case BLUE     = 2;
-    case CYAN     = 3;
-    case MAGENTA  = 4;
-    case YELLOW   = 5;
-    case WHITE    = 6;
-    case INFRARED = 7;
+    case Red      = 0;
+    case Green    = 1;
+    case Blue     = 2;
+    case Cyan     = 3;
+    case Magenta  = 4;
+    case Yellow   = 5;
+    case White    = 6;
+    case Infrared = 7;
 }

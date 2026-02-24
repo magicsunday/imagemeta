@@ -71,8 +71,8 @@ final class ParsedExifCfaPatternTest extends TestCase
         self::assertSame(2, $pattern->horizontalRepeatPixelUnit);
         self::assertSame(2, $pattern->verticalRepeatPixelUnit);
         self::assertSame([
-            [CfaPatternColor::RED, CfaPatternColor::GREEN],
-            [CfaPatternColor::BLUE, CfaPatternColor::GREEN],
+            [CfaPatternColor::Red, CfaPatternColor::Green],
+            [CfaPatternColor::Blue, CfaPatternColor::Green],
         ], $pattern->grid());
     }
 

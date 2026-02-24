@@ -21,9 +21,9 @@ enum GainControl: int
 {
     use EnumFromIntStringNullable;
 
-    case NONE           = 0;
-    case LOW_GAIN_UP    = 1;
-    case HIGH_GAIN_UP   = 2;
-    case LOW_GAIN_DOWN  = 3;
-    case HIGH_GAIN_DOWN = 4;
+    case None         = 0;
+    case LowGainUp    = 1;
+    case HighGainUp   = 2;
+    case LowGainDown  = 3;
+    case HighGainDown = 4;
 }

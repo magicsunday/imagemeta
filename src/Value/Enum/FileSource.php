@@ -21,8 +21,8 @@ enum FileSource: int
 {
     use EnumFromIntStringNullable;
 
-    case OTHER                = 0;
-    case TRANSPARENCY_SCANNER = 1;
-    case REFLECTION_SCANNER   = 2;
-    case DIGITAL_CAMERA       = 3;
+    case Other               = 0;
+    case TransparencyScanner = 1;
+    case ReflectionScanner   = 2;
+    case DigitalCamera       = 3;
 }
