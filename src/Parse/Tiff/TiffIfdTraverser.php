@@ -43,6 +43,13 @@ final class TiffIfdTraverser
     private array $interopVisitedOffsets = [];
 
     /**
+     * Tracks pointer offsets inspected while resolving SubIFDs.
+     *
+     * @var array<int, bool>
+     */
+    private array $subIfdVisitedOffsets = [];
+
+    /**
      * @param TiffOffsetValidator             $offsetValidator Offset bounds checking.
      * @param Closure(int|UInt64|string): Ifd $readIfd         Callback to read an IFD at a given offset.
      * @param bool                            $bigTiff         Whether this is a BigTIFF structure.
@@ -125,7 +132,12 @@ final class TiffIfdTraverser
         $result  = [];
 
         foreach ($offsets as $offset) {
-            $result[$offset] = ($this->readIfd)($offset);
+            if (isset($this->subIfdVisitedOffsets[$offset])) {
+                throw new ParseError(sprintf('Cyclic SubIFD reference detected at offset %d.', $offset), 1961);
+            }
+
+            $this->subIfdVisitedOffsets[$offset] = true;
+            $result[$offset]                     = ($this->readIfd)($offset);
         }
 
         return $result;
