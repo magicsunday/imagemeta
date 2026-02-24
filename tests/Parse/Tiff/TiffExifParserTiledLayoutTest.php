@@ -14,12 +14,15 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormaliser;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifTagValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffIfdTraverser;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffJpegThumbnailValidator;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffOffsetValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -37,10 +40,13 @@ use function strlen;
  * Verifies TIFF 6.0 tiled-layout semantic constraints.
  */
 #[CoversClass(TiffExifParser::class)]
+#[UsesClass(DngValueNormaliser::class)]
 #[UsesClass(MakerNoteDispatcher::class)]
+#[UsesClass(TiffBinaryReader::class)]
 #[UsesClass(TiffExifTagValidator::class)]
-#[UsesClass(TiffJpegThumbnailValidator::class)]
 #[UsesClass(TiffIfdTraverser::class)]
+#[UsesClass(TiffJpegThumbnailValidator::class)]
+#[UsesClass(TiffOffsetValidator::class)]
 #[UsesClass(TiffValueDecoder::class)]
 final class TiffExifParserTiledLayoutTest extends TestCase
 {

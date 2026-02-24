@@ -27,7 +27,9 @@
         "**/TiffColorInkValidator.php",
         "**/TiffImageDataValidator.php",
         "**/AppleDictionaryValueExtractor.php",
-        "**/AppleRationalNormaliser.php"
+        "**/AppleRationalNormaliser.php",
+        "**/TiffBinaryReader.php",
+        "**/DngValueNormaliser.php"
     ],
     "exitCode": true
 }

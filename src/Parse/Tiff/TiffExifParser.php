@@ -63,7 +63,13 @@ final class TiffExifParser implements TiffExifParserInterface
 
     private TiffStructuralValidator $structuralValidator;
 
+    private TiffBinaryReader $binaryReader;
+
+    private TiffOffsetValidator $offsetValidator;
+
     private TiffValueDecoder $decoder;
+
+    private DngValueNormaliser $dngNormaliser;
 
     private TiffExifTagValidator $tagValidator;
 
@@ -112,37 +118,54 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->dngValidator        = new DngValidator($this->bo, $this->buffer);
         $this->structuralValidator = new TiffStructuralValidator($this->buffer);
 
-        $this->decoder = new TiffValueDecoder(
+        $this->binaryReader = new TiffBinaryReader(
             $this->buffer,
             $this->bo,
             $byteOrderHandler,
-            $tagDecoder,
             $this->bigTiff,
             $this->bigTiffOffsetSize,
-            $this->blobSize,
+        );
+        $this->offsetValidator = new TiffOffsetValidator($this->buffer, $this->blobSize);
+        $this->decoder         = new TiffValueDecoder(
+            $this->binaryReader,
+            $this->offsetValidator,
+            $tagDecoder,
+        );
+        $this->dngNormaliser = new DngValueNormaliser(
+            $this->binaryReader,
+            $this->offsetValidator,
+            $this->decoder,
         );
         $this->tagValidator       = new TiffExifTagValidator();
         $this->thumbnailValidator = new TiffJpegThumbnailValidator($this->buffer);
 
-        $magic = $this->decoder->readU16();
+        $magic = $this->binaryReader->readU16();
         // EXIF 3.0 §4.5.1 recognises 0x002A (classic TIFF) and 0x002B (BigTIFF)
         // magic identifiers.
         if ($magic === TiffConst::MAGIC_BIG) {
             $this->bigTiff = true;
             $this->parseBigTiffHeader();
 
-            // Re-create decoder with updated bigTiff + bigTiffOffsetSize.
-            $this->decoder = new TiffValueDecoder(
+            // Re-create binary reader with updated bigTiff + bigTiffOffsetSize.
+            $this->binaryReader = new TiffBinaryReader(
                 $this->buffer,
                 $this->bo,
                 $byteOrderHandler,
-                $tagDecoder,
                 $this->bigTiff,
                 $this->bigTiffOffsetSize,
-                $this->blobSize,
+            );
+            $this->decoder = new TiffValueDecoder(
+                $this->binaryReader,
+                $this->offsetValidator,
+                $tagDecoder,
+            );
+            $this->dngNormaliser = new DngValueNormaliser(
+                $this->binaryReader,
+                $this->offsetValidator,
+                $this->decoder,
             );
 
-            $firstIfd = $this->decoder->readU64();
+            $firstIfd = $this->binaryReader->readU64();
 
             // EXIF 3.0 §4.5.1: the 0th IFD offset must point past the header.
             if ($firstIfd->isZero()) {
@@ -155,7 +178,7 @@ final class TiffExifParser implements TiffExifParserInterface
             // Classic TIFF header layout per EXIF 3.0 §4.5.1 and TIFF 6.0 §8
             // stores the first IFD offset as a 32-bit pointer immediately
             // after the byte-order and magic fields.
-            $firstIfd = $this->decoder->readU32();
+            $firstIfd = $this->binaryReader->readU32();
 
             // EXIF 3.0 §4.5.1: the 0th IFD offset must be non-zero and point
             // past the classic TIFF header.
@@ -176,7 +199,7 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         $this->traverser = new TiffIfdTraverser(
-            $this->decoder,
+            $this->offsetValidator,
             fn (int|UInt64|string $offset): Ifd => $this->readIfd($offset),
             $this->bigTiff,
         );
@@ -428,8 +451,8 @@ final class TiffExifParser implements TiffExifParserInterface
     private function parseBigTiffHeader(): void
     {
         // BigTIFF header after magic: 2 bytes offset size, 2 bytes reserved, then the first IFD offset
-        $offSize  = $this->decoder->readU16();
-        $reserved = $this->decoder->readU16();
+        $offSize  = $this->binaryReader->readU16();
+        $reserved = $this->binaryReader->readU16();
 
         // BigTIFF offset size is fixed to 8 bytes per spec.
         if ($offSize !== 8) {
@@ -461,7 +484,7 @@ final class TiffExifParser implements TiffExifParserInterface
                 return new Ifd([]);
             }
 
-            $offsetInt = $this->decoder->ensureOffset($offset, 'IFD offset');
+            $offsetInt = $this->offsetValidator->ensureOffset($offset, 'IFD offset');
         } elseif (is_int($offset)) {
             // EXIF 3.0 §4.5.2 clarifies that null or non-positive offsets mean the
             // referenced directory is omitted.
@@ -469,15 +492,15 @@ final class TiffExifParser implements TiffExifParserInterface
                 return new Ifd([]);
             }
 
-            $offsetInt = $this->decoder->ensureOffset($offset, 'IFD offset');
+            $offsetInt = $this->offsetValidator->ensureOffset($offset, 'IFD offset');
         } else {
             // BigTIFF offsets may arrive as decimal strings (§4.5.2, BigTIFF note),
             // with zero indicating that the referenced directory is absent.
-            if ($this->decoder->decimalStringIsZero($offset)) {
+            if ($this->offsetValidator->decimalStringIsZero($offset)) {
                 return new Ifd([]);
             }
 
-            $offsetInt = $this->decoder->ensureOffset($offset, 'IFD offset');
+            $offsetInt = $this->offsetValidator->ensureOffset($offset, 'IFD offset');
         }
 
         if (isset($this->ifdCache[$offsetInt])) {
@@ -485,7 +508,7 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         $this->buffer->seek($offsetInt);
-        $entryCount = $this->bigTiff ? $this->decoder->readU64()->toInt('IFD entry count') : $this->decoder->readU16();
+        $entryCount = $this->bigTiff ? $this->binaryReader->readU64()->toInt('IFD entry count') : $this->binaryReader->readU16();
 
         if ($entryCount === 0) {
             throw new ParseError('IFD must contain at least one entry per TIFF 6.0.', 1307);
@@ -518,14 +541,14 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         if ($this->bigTiff) {
-            $next = $this->decoder->normaliseBigTiffOptionalOffset(
-                $this->decoder->readU64(),
+            $next = $this->offsetValidator->normaliseBigTiffOptionalOffset(
+                $this->binaryReader->readU64(),
                 'IFD next offset',
             );
         } else {
             // TIFF 6.0 §8 retains a 32-bit pointer to the next IFD; EXIF 3.0 §4.5.2
             // notes the value is zero when the chain terminates.
-            $next = $this->decoder->readU32();
+            $next = $this->binaryReader->readU32();
         }
 
         $ifd = new Ifd($entries, $next > 0 ? $next : null);
@@ -543,8 +566,8 @@ final class TiffExifParser implements TiffExifParserInterface
      */
     private function readDirEntry(): IfdEntry
     {
-        $tag  = $this->decoder->readU16();
-        $type = $this->decoder->readU16();
+        $tag  = $this->binaryReader->readU16();
+        $type = $this->binaryReader->readU16();
 
         if (
             !$this->bigTiff
@@ -553,7 +576,7 @@ final class TiffExifParser implements TiffExifParserInterface
             throw new ParseError('BigTIFF-only field type ' . $type . ' in classic TIFF', 1309);
         }
 
-        $cnt = $this->bigTiff ? $this->decoder->readU64()->toInt('directory entry value count') : $this->decoder->readU32();
+        $cnt = $this->bigTiff ? $this->binaryReader->readU64()->toInt('directory entry value count') : $this->binaryReader->readU32();
 
         $this->tagValidator->validateFixedLengthTagLayout($tag, $type, $cnt);
         $this->tagValidator->validateTypeOnlyTagLayout($tag, $type);
@@ -561,16 +584,19 @@ final class TiffExifParser implements TiffExifParserInterface
         // Read the Value/Offset field.  For inline values (data fits within the
         // field) the raw bytes are returned directly to avoid endianness-dependent
         // reinterpretation (TIFF 6.0 §2, EXIF 3.0 §4.5.2).
-        [$valOrOff, $inlineBytes] = $this->decoder->readValueOrOffset($type, $cnt);
+        $componentSize = $this->decoder->bytesPerComponent($type);
+        $valueBytes    = $this->decoder->safeValueByteCount($componentSize, $cnt);
+
+        [$valOrOff, $inlineBytes] = $this->binaryReader->readValueOrOffset($valueBytes);
 
         [$rawBytes] = $this->decoder->valueBytes($type, $cnt, $valOrOff, $inlineBytes);
         $value      = $this->decoder->decodeBytes($tag, $type, $cnt, $rawBytes);
         $value      = $this->decoder->convertUInt64Values($tag, $value);
 
-        $value = $this->decoder->normaliseDngStringValue($tag, $type, $rawBytes, $value);
+        $value = $this->dngNormaliser->normaliseDngStringValue($tag, $type, $rawBytes, $value);
 
         if ($tag === ExifTag::CFA_PATTERN && is_string($value)) {
-            $value = $this->decoder->decodeCfaPatternPayload($rawBytes);
+            $value = $this->dngNormaliser->decodeCfaPatternPayload($rawBytes);
         }
 
         if ($tag === ExifTag::MAKER_NOTE) {
@@ -582,8 +608,8 @@ final class TiffExifParser implements TiffExifParserInterface
 
         $this->tagValidator->validateTagValueDomain($tag, $value);
 
-        if ($this->decoder->isCountedImageDataTag($tag)) {
-            $value = $this->decoder->normaliseCountedImageDataField($tag, $type, $cnt, $rawBytes);
+        if ($this->dngNormaliser->isCountedImageDataTag($tag)) {
+            $value = $this->dngNormaliser->normaliseCountedImageDataField($tag, $type, $cnt, $rawBytes);
         }
 
         return new IfdEntry($tag, $type, $cnt, $value);

@@ -16,12 +16,15 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormaliser;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifTagValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffIfdTraverser;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffJpegThumbnailValidator;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffOffsetValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -42,15 +45,18 @@ use function usort;
  * It covers chunky and planar-separate layouts and rejects inconsistent strip counts.
  */
 #[CoversClass(TiffExifParser::class)]
+#[UsesClass(DngValueNormaliser::class)]
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(MakerNoteDispatcher::class)]
-#[UsesClass(ParseError::class)]
 #[UsesClass(ParsedExif::class)]
+#[UsesClass(ParseError::class)]
+#[UsesClass(TiffBinaryReader::class)]
 #[UsesClass(TiffConst::class)]
 #[UsesClass(TiffExifTagValidator::class)]
-#[UsesClass(TiffJpegThumbnailValidator::class)]
 #[UsesClass(TiffIfdTraverser::class)]
+#[UsesClass(TiffJpegThumbnailValidator::class)]
+#[UsesClass(TiffOffsetValidator::class)]
 #[UsesClass(TiffValueDecoder::class)]
 final class TiffExifParserStripLayoutTest extends TestCase
 {

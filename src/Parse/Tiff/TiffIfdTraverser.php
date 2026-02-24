@@ -43,12 +43,12 @@ final class TiffIfdTraverser
     private array $interopVisitedOffsets = [];
 
     /**
-     * @param TiffValueDecoder                $decoder Offset validation and pointer checks.
-     * @param Closure(int|UInt64|string): Ifd $readIfd Callback to read an IFD at a given offset.
-     * @param bool                            $bigTiff Whether this is a BigTIFF structure.
+     * @param TiffOffsetValidator             $offsetValidator Offset bounds checking.
+     * @param Closure(int|UInt64|string): Ifd $readIfd         Callback to read an IFD at a given offset.
+     * @param bool                            $bigTiff         Whether this is a BigTIFF structure.
      */
     public function __construct(
-        private readonly TiffValueDecoder $decoder,
+        private readonly TiffOffsetValidator $offsetValidator,
         private readonly Closure $readIfd,
         private readonly bool $bigTiff,
     ) {
@@ -77,7 +77,7 @@ final class TiffIfdTraverser
                 return null;
             }
 
-            return $this->decoder->ensureOffset($value, sprintf('IFD pointer tag 0x%04X', $entry->tag));
+            return $this->offsetValidator->ensureOffset($value, sprintf('IFD pointer tag 0x%04X', $entry->tag));
         }
 
         if (is_float($value)) {
@@ -95,7 +95,7 @@ final class TiffIfdTraverser
                     return null;
                 }
 
-                return $this->decoder->ensureOffset($first, sprintf('IFD pointer tag 0x%04X', $entry->tag));
+                return $this->offsetValidator->ensureOffset($first, sprintf('IFD pointer tag 0x%04X', $entry->tag));
             }
 
             if (is_float($first)) {
@@ -248,7 +248,7 @@ final class TiffIfdTraverser
             );
         }
 
-        return $this->decoder->ensureOffset($offset, sprintf('IFD pointer tag 0x%04X', $tag));
+        return $this->offsetValidator->ensureOffset($offset, sprintf('IFD pointer tag 0x%04X', $tag));
     }
 
     /**
@@ -267,7 +267,7 @@ final class TiffIfdTraverser
             return null;
         }
 
-        return $this->decoder->ensureOffset((int) $value, sprintf('IFD pointer tag 0x%04X', $tag));
+        return $this->offsetValidator->ensureOffset((int) $value, sprintf('IFD pointer tag 0x%04X', $tag));
     }
 
     /**
@@ -292,7 +292,7 @@ final class TiffIfdTraverser
                 return [];
             }
 
-            return [$this->decoder->ensureOffset($value, sprintf('SubIFDs tag 0x%04X', $entry->tag))];
+            return [$this->offsetValidator->ensureOffset($value, sprintf('SubIFDs tag 0x%04X', $entry->tag))];
         }
 
         if ($value instanceof ExifNumericList) {
@@ -304,7 +304,7 @@ final class TiffIfdTraverser
                         $offsets[] = $offset;
                     }
                 } elseif ($component instanceof UInt64 && !$component->isZero()) {
-                    $offsets[] = $this->decoder->ensureOffset($component, sprintf('SubIFDs tag 0x%04X', $entry->tag));
+                    $offsets[] = $this->offsetValidator->ensureOffset($component, sprintf('SubIFDs tag 0x%04X', $entry->tag));
                 }
             }
 

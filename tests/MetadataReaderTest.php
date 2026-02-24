@@ -75,12 +75,15 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserInterface;
+use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormaliser;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParserInterface;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifTagValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffIfdTraverser;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffJpegThumbnailValidator;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffOffsetValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParserInterface;
@@ -193,6 +196,7 @@ use function unlink;
 #[UsesClass(DescriptionExifReader::class)]
 #[UsesClass(Device::class)]
 #[UsesClass(DngMetadataExifReader::class)]
+#[UsesClass(DngValueNormaliser::class)]
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(ExifFlash::class)]
 #[UsesClass(Exposure::class)]
@@ -226,11 +230,11 @@ use function unlink;
 #[UsesClass(ItemPayloadResolver::class)]
 #[UsesClass(JpegParser::class)]
 #[UsesClass(Keywords::class)]
-#[UsesClass(LocationTime::class)]
-#[UsesClass(MediaContent::class)]
 #[UsesClass(Lens::class)]
+#[UsesClass(LocationTime::class)]
 #[UsesClass(MakerNoteDispatcher::class)]
 #[UsesClass(MakerNotesRecord::class)]
+#[UsesClass(MediaContent::class)]
 #[UsesClass(MemoryBuffer::class)]
 #[UsesClass(Metadata::class)]
 #[UsesClass(Motion::class)]
@@ -259,24 +263,26 @@ use function unlink;
 #[UsesClass(StructuredMetadata::class)]
 #[UsesClass(StructuredMetadataBuilder::class)]
 #[UsesClass(StructuredMetadataCache::class)]
-#[UsesClass(Temporal::class)]
 #[UsesClass(TechnicalData::class)]
-#[UsesClass(TiffDataFactory::class)]
+#[UsesClass(Temporal::class)]
 #[UsesClass(Thumbnail::class)]
-#[UsesClass(TiffData::class)]
+#[UsesClass(TiffBinaryReader::class)]
 #[UsesClass(TiffColorRef::class)]
-#[UsesClass(TiffLayout::class)]
-#[UsesClass(TiffStructure::class)]
+#[UsesClass(TiffData::class)]
+#[UsesClass(TiffDataFactory::class)]
 #[UsesClass(TiffExifParser::class)]
 #[UsesClass(TiffExifTagValidator::class)]
-#[UsesClass(TiffJpegThumbnailValidator::class)]
 #[UsesClass(TiffIfdTraverser::class)]
+#[UsesClass(TiffJpegThumbnailValidator::class)]
+#[UsesClass(TiffLayout::class)]
+#[UsesClass(TiffOffsetValidator::class)]
+#[UsesClass(TiffStructure::class)]
 #[UsesClass(TiffValueDecoder::class)]
 #[UsesClass(TrackMediaParser::class)]
 #[UsesClass(UInt64::class)]
 #[UsesClass(Unpack::class)]
-#[UsesClass(UserCommentExifReader::class)]
 #[UsesClass(UserComment::class)]
+#[UsesClass(UserCommentExifReader::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(ValueFactory::class)]
 #[UsesClass(Video::class)]
@@ -284,8 +290,8 @@ use function unlink;
 #[UsesClass(WhiteBalanceDetails::class)]
 #[UsesClass(Xmp::class)]
 #[UsesClass(XmpDocument::class)]
-#[UsesClass(XmpParseState::class)]
 #[UsesClass(XmpParser::class)]
+#[UsesClass(XmpParseState::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 #[UsesTrait(IsoBmffBoxTrait::class)]
 final class MetadataReaderTest extends TestCase
