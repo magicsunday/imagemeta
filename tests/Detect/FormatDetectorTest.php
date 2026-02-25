@@ -178,18 +178,35 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Rejects ftyp when compatible-brands table is not aligned to 4 bytes.
+     * Accepts ftyp with a 9-byte payload (8 required + 1 trailing byte).
+     * Malformed files in the wild may produce non-aligned payloads; the ftyp
+     * type and the minimum 8-byte payload are sufficient for detection.
      */
     #[Test]
-    public function detectRejectsFtypWithMisalignedBrandsTable(): void
+    public function detectRecognisesIsoBmffWhenFtypPayloadHasOneExtraByte(): void
     {
-        // size=19 → payload=11 bytes (8 + 3 leftover), type='ftyp'
+        // size=17 → payload=9 bytes (8 + 1 extra), type='ftyp'
+        $stream = $this->createStream("\x00\x00\x00\x11ftypisom\x00\x00\x00\x00\x78");
+
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::ISOBMFF, $detected);
+    }
+
+    /**
+     * Accepts ftyp with an 11-byte payload (8 required + 3 trailing bytes).
+     * Malformed files in the wild may produce non-aligned payloads; the ftyp
+     * type and the minimum 8-byte payload are sufficient for detection.
+     */
+    #[Test]
+    public function detectRecognisesIsoBmffWhenFtypPayloadHasThreeExtraBytes(): void
+    {
+        // size=19 → payload=11 bytes (8 + 3 extra), type='ftyp'
         $stream = $this->createStream("\x00\x00\x00\x13ftypisom\x00\x00\x00\x00abc");
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported or unknown container');
+        $detected = (new FormatDetector())->detect($stream);
 
-        (new FormatDetector())->detect($stream);
+        self::assertSame(ContainerType::ISOBMFF, $detected);
     }
 
     /**
