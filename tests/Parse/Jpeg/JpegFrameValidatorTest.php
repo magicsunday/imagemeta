@@ -69,9 +69,9 @@ final class JpegFrameValidatorTest extends TestCase
             . chr(1) . chr(0x00)                  // selector=1 (Y), Td=0/Ta=0
             . chr(0) . chr(63) . chr(0);          // Ss=0, Se=63, Ah=0/Al=0
 
-        // Must not throw
+        // Must not throw — assert frame state is still intact
         $validator->validateSosHeader($sosPayload, 100);
-        self::assertTrue(true);
+        self::assertNotNull($validator->getFrameComponentSampling());
     }
 
     /**

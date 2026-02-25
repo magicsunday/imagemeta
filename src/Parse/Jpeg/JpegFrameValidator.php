@@ -36,6 +36,8 @@ use function unpack;
  */
 final class JpegFrameValidator
 {
+    private ?int $frameMarker = null;
+
     private ?int $frameBitsPerSample = null;
 
     private ?int $frameLines = null;
@@ -61,6 +63,7 @@ final class JpegFrameValidator
      */
     public function reset(): void
     {
+        $this->frameMarker            = null;
         $this->frameBitsPerSample     = null;
         $this->frameLines             = null;
         $this->frameSamplesPerLine    = null;
@@ -191,6 +194,7 @@ final class JpegFrameValidator
 
         $derivedSubSampling = $this->deriveYCbCrSubSampling($components);
 
+        $this->frameMarker            = $marker;
         $this->frameBitsPerSample     = $bitsPerSample;
         $this->frameComponentSampling = $components;
         $this->frameYCbCrSubSampling  = $derivedSubSampling;
@@ -241,14 +245,32 @@ final class JpegFrameValidator
             return;
         }
 
-        $frameComponentIds = array_keys($this->frameComponentSampling);
-        if ($componentCount !== count($frameComponentIds)) {
+        $frameComponentIds   = array_keys($this->frameComponentSampling);
+        $frameComponentCount = count($frameComponentIds);
+
+        // ITU-T T.81 §B.2.3, §G.1.2 — progressive (SOF2) scans may encode a
+        // subset of frame components; non-progressive scans require all of them.
+        $isProgressive = $this->frameMarker === Marker::SOF2;
+
+        if ($isProgressive && $componentCount > $frameComponentCount) {
+            throw new ParseError(
+                sprintf(
+                    'SOS marker at offset %d has component count %d exceeding SOF component count %d',
+                    $sosOffset,
+                    $componentCount,
+                    $frameComponentCount,
+                ),
+                1497,
+            );
+        }
+
+        if (!$isProgressive && $componentCount !== $frameComponentCount) {
             throw new ParseError(
                 sprintf(
                     'SOS marker at offset %d has component count %d but SOF declares component count %d',
                     $sosOffset,
                     $componentCount,
-                    count($frameComponentIds),
+                    $frameComponentCount,
                 ),
                 1497,
             );
