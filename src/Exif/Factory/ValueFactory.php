@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Exif\Factory;
 
 use MagicSunday\ImageMeta\Contract\IccParserInterface;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Factory\ComponentKey;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
@@ -205,44 +206,44 @@ final readonly class ValueFactory
         $xmpValues = $this->createXmpValues($xmpDocument, $exifDocument, $quickTimeLookup, $metadata);
 
         return [
-            'audio'           => $media['audio'],
-            'author'          => $author,
-            'camera'          => $camera,
-            'capture'         => $capture,
-            'colorProfile'    => $colorProfile,
-            'composite'       => $composite,
-            'container'       => $media['container'],
-            'derived'         => $derived,
-            'depthMap'        => $xmpValues['depthMap'],
-            'device'          => $device,
-            'embeddedAudio'   => $media['embeddedAudio'],
-            'exposure'        => $exposure,
-            'file'            => $file,
-            'flashPix'        => $media['flashPix'],
-            'focus'           => $focus,
-            'gps'             => $gps,
-            'image'           => $image,
-            'integrity'       => $integrity,
-            'interop'         => $interop,
-            'iptc'            => new ValueIptc($iptcDocument),
-            'keywords'        => $xmpValues['keywords'],
-            'lens'            => $lens,
-            'motion'          => $motion,
-            'multiPicture'    => $multiPicture,
-            'processing'      => $processing,
-            'regions'         => $regions,
-            'related'         => $xmpValues['related'],
-            'rights'          => $rights,
-            'scene'           => $scene,
-            'sensor'          => $sensor,
-            'standards'       => $standards,
-            'temporal'        => $temporal,
-            'thumbnail'       => $thumbnail,
-            'tiff'            => $tiff,
-            'video'           => $media['video'],
-            'whiteBalance'    => $whiteBalanceDetails,
-            'xmp'             => new ValueXmp($xmpDocument),
-            'makerNotesApple' => $apple,
+            ComponentKey::Audio->value           => $media[ComponentKey::Audio->value],
+            ComponentKey::Author->value          => $author,
+            ComponentKey::Camera->value          => $camera,
+            ComponentKey::Capture->value         => $capture,
+            ComponentKey::ColorProfile->value    => $colorProfile,
+            ComponentKey::Composite->value       => $composite,
+            ComponentKey::Container->value       => $media[ComponentKey::Container->value],
+            ComponentKey::Derived->value         => $derived,
+            ComponentKey::DepthMap->value        => $xmpValues[ComponentKey::DepthMap->value],
+            ComponentKey::Device->value          => $device,
+            ComponentKey::EmbeddedAudio->value   => $media[ComponentKey::EmbeddedAudio->value],
+            ComponentKey::Exposure->value        => $exposure,
+            ComponentKey::File->value            => $file,
+            ComponentKey::FlashPix->value        => $media[ComponentKey::FlashPix->value],
+            ComponentKey::Focus->value           => $focus,
+            ComponentKey::Gps->value             => $gps,
+            ComponentKey::Image->value           => $image,
+            ComponentKey::Integrity->value       => $integrity,
+            ComponentKey::Interop->value         => $interop,
+            ComponentKey::Iptc->value            => new ValueIptc($iptcDocument),
+            ComponentKey::Keywords->value        => $xmpValues[ComponentKey::Keywords->value],
+            ComponentKey::Lens->value            => $lens,
+            ComponentKey::Motion->value          => $motion,
+            ComponentKey::MultiPicture->value    => $multiPicture,
+            ComponentKey::Processing->value      => $processing,
+            ComponentKey::Regions->value         => $regions,
+            ComponentKey::Related->value         => $xmpValues[ComponentKey::Related->value],
+            ComponentKey::Rights->value          => $rights,
+            ComponentKey::Scene->value           => $scene,
+            ComponentKey::Sensor->value          => $sensor,
+            ComponentKey::Standards->value       => $standards,
+            ComponentKey::Temporal->value        => $temporal,
+            ComponentKey::Thumbnail->value       => $thumbnail,
+            ComponentKey::Tiff->value            => $tiff,
+            ComponentKey::Video->value           => $media[ComponentKey::Video->value],
+            ComponentKey::WhiteBalance->value    => $whiteBalanceDetails,
+            ComponentKey::Xmp->value             => new ValueXmp($xmpDocument),
+            ComponentKey::MakerNotesApple->value => $apple,
         ];
     }
 
@@ -297,11 +298,11 @@ final readonly class ValueFactory
         $flashPix      = new FlashPix($metadata->flashPixStreams);
 
         return [
-            'container'     => $container,
-            'video'         => $video,
-            'audio'         => $audio,
-            'embeddedAudio' => $embeddedAudio,
-            'flashPix'      => $flashPix,
+            ComponentKey::Container->value    => $container,
+            ComponentKey::Video->value        => $video,
+            ComponentKey::Audio->value        => $audio,
+            ComponentKey::EmbeddedAudio->value => $embeddedAudio,
+            ComponentKey::FlashPix->value     => $flashPix,
         ];
     }
 
@@ -347,9 +348,9 @@ final readonly class ValueFactory
         );
 
         return [
-            'keywords' => $keywords,
-            'related'  => $related,
-            'depthMap' => $depthMap,
+            ComponentKey::Keywords->value => $keywords,
+            ComponentKey::Related->value  => $related,
+            ComponentKey::DepthMap->value => $depthMap,
         ];
     }
 

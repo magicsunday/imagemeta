@@ -52,58 +52,58 @@ final readonly class StructuredMetadataBuilder
         );
 
         $hardware = new CaptureHardware(
-            camera: $components['camera'],
-            lens: $components['lens'],
-            sensor: $components['sensor'],
-            device: $components['device'],
-            focus: $components['focus'],
+            camera: $components[ComponentKey::Camera->value],
+            lens: $components[ComponentKey::Lens->value],
+            sensor: $components[ComponentKey::Sensor->value],
+            device: $components[ComponentKey::Device->value],
+            focus: $components[ComponentKey::Focus->value],
         );
 
         $content = new MediaContent(
-            image: $components['image'],
-            audio: $components['audio'],
-            embeddedAudio: $components['embeddedAudio'],
-            video: $components['video'],
-            thumbnail: $components['thumbnail'],
-            depthMap: $components['depthMap'],
-            multiPicture: $components['multiPicture'],
-            regions: $components['regions'],
+            image: $components[ComponentKey::Image->value],
+            audio: $components[ComponentKey::Audio->value],
+            embeddedAudio: $components[ComponentKey::EmbeddedAudio->value],
+            video: $components[ComponentKey::Video->value],
+            thumbnail: $components[ComponentKey::Thumbnail->value],
+            depthMap: $components[ComponentKey::DepthMap->value],
+            multiPicture: $components[ComponentKey::MultiPicture->value],
+            regions: $components[ComponentKey::Regions->value],
         );
 
         $settings = new CaptureSettings(
-            exposure: $components['exposure'],
-            whiteBalance: $components['whiteBalance'],
-            scene: $components['scene'],
-            motion: $components['motion'],
-            processing: $components['processing'],
+            exposure: $components[ComponentKey::Exposure->value],
+            whiteBalance: $components[ComponentKey::WhiteBalance->value],
+            scene: $components[ComponentKey::Scene->value],
+            motion: $components[ComponentKey::Motion->value],
+            processing: $components[ComponentKey::Processing->value],
         );
 
         $provenance = new Provenance(
-            author: $components['author'],
-            rights: $components['rights'],
-            iptc: $components['iptc'],
-            keywords: $components['keywords'],
-            file: $components['file'],
-            container: $components['container'],
-            standards: $components['standards'],
-            related: $components['related'],
+            author: $components[ComponentKey::Author->value],
+            rights: $components[ComponentKey::Rights->value],
+            iptc: $components[ComponentKey::Iptc->value],
+            keywords: $components[ComponentKey::Keywords->value],
+            file: $components[ComponentKey::File->value],
+            container: $components[ComponentKey::Container->value],
+            standards: $components[ComponentKey::Standards->value],
+            related: $components[ComponentKey::Related->value],
         );
 
         $locationTime = new LocationTime(
-            gps: $components['gps'],
-            temporal: $components['temporal'],
-            capture: $components['capture'],
+            gps: $components[ComponentKey::Gps->value],
+            temporal: $components[ComponentKey::Temporal->value],
+            capture: $components[ComponentKey::Capture->value],
         );
 
         $technical = new TechnicalData(
-            derived: $components['derived'],
-            colorProfile: $components['colorProfile'],
-            composite: $components['composite'],
-            interop: $components['interop'],
-            integrity: $components['integrity'],
-            tiff: $components['tiff'],
-            xmp: $components['xmp'],
-            flashPix: $components['flashPix'],
+            derived: $components[ComponentKey::Derived->value],
+            colorProfile: $components[ComponentKey::ColorProfile->value],
+            composite: $components[ComponentKey::Composite->value],
+            interop: $components[ComponentKey::Interop->value],
+            integrity: $components[ComponentKey::Integrity->value],
+            tiff: $components[ComponentKey::Tiff->value],
+            xmp: $components[ComponentKey::Xmp->value],
+            flashPix: $components[ComponentKey::FlashPix->value],
         );
 
         return new StructuredMetadata(
@@ -113,7 +113,7 @@ final readonly class StructuredMetadataBuilder
             provenance: $provenance,
             locationTime: $locationTime,
             technical: $technical,
-            makerNotesApple: $components['makerNotesApple'],
+            makerNotesApple: $components[ComponentKey::MakerNotesApple->value],
         );
     }
 }
