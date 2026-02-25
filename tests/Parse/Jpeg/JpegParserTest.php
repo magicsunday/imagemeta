@@ -118,7 +118,11 @@ final class JpegParserTest extends TestCase
 
     private const int MARKER_SOF0 = 0xC0;
 
+    private const int MARKER_SOF1 = 0xC1;
+
     private const int MARKER_SOF2 = 0xC2;
+
+    private const int MARKER_SOF3 = 0xC3;
 
     private const int MARKER_SOS = 0xDA;
 
@@ -578,6 +582,56 @@ final class JpegParserTest extends TestCase
         $this->expectExceptionMessageMatches('/requires SOF|no preceding SOF/i');
 
         $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Accepts an extended sequential (SOF1) JPEG with EXIF without false "missing SOF" error.
+     *
+     * ITU-T T.81 §B.2.2, Table B.1 — SOF1 is a valid frame header marker.
+     */
+    #[Test]
+    public function acceptsSof1WithExifWithoutMissingSofError(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'sof1-exif';
+        $sofPayload  = $this->defaultSofPayload();
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF1, $sofPayload)
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
+     * Accepts a lossless (SOF3) JPEG with EXIF without false "missing SOF" error.
+     *
+     * ITU-T T.81 §B.2.2, Table B.1 — SOF3 is a valid frame header marker.
+     */
+    #[Test]
+    public function acceptsSof3WithExifWithoutMissingSofError(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'sof3-exif';
+        $sofPayload  = $this->defaultSofPayload();
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF3, $sofPayload)
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
 
     /**
