@@ -24,6 +24,7 @@ use function is_array;
 use function is_resource;
 use function strlen;
 
+use const PHP_INT_MAX;
 use const SEEK_CUR;
 use const SEEK_END;
 use const SEEK_SET;
@@ -147,7 +148,7 @@ final class Stream implements BinaryReadAccessInterface
      */
     public function window(int $offset, int $length): StreamWindow
     {
-        if (($offset < 0) || ($length < 0) || ($length > \PHP_INT_MAX - $offset) || (($offset + $length) > $this->size)) {
+        if (($offset < 0) || ($length < 0) || ($length > PHP_INT_MAX - $offset) || (($offset + $length) > $this->size)) {
             throw new BoundsError('window out of range', 1014);
         }
 

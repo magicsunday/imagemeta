@@ -39,7 +39,7 @@ final class NormalizesOffsetsTest extends TestCase
     #[Test]
     public function normalizeRelativeOffsetThrowsBoundsErrorOnIntegerOverflow(): void
     {
-        $stub = new class () {
+        $stub = new class {
             use NormalizesOffsets;
 
             protected function offsetLimit(): int

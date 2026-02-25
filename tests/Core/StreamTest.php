@@ -24,6 +24,8 @@ use PHPUnit\Framework\TestCase;
 use function pack;
 use function strlen;
 
+use const PHP_INT_MAX;
+
 /**
  * Exercises the Stream wrapper for bounds-checked reads and seeks.
  * It covers sequential integer decoding, cursor tracking, and string reads.
@@ -122,9 +124,9 @@ final class StreamTest extends TestCase
     {
         $payload = 'X';
 
-        $stream = new Stream($this->createTempStream($payload), \PHP_INT_MAX);
+        $stream = new Stream($this->createTempStream($payload), PHP_INT_MAX);
 
         $this->expectException(BoundsError::class);
-        $stream->window(\PHP_INT_MAX, 1);
+        $stream->window(PHP_INT_MAX, 1);
     }
 }

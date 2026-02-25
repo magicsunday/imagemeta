@@ -13,9 +13,9 @@ namespace MagicSunday\ImageMeta\Exif\Factory;
 
 use MagicSunday\ImageMeta\Contract\IccParserInterface;
 use MagicSunday\ImageMeta\Core\ParseError;
-use MagicSunday\ImageMeta\Factory\ComponentKey;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Factory\ComponentKey;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -298,11 +298,11 @@ final readonly class ValueFactory
         $flashPix      = new FlashPix($metadata->flashPixStreams);
 
         return [
-            ComponentKey::Container->value    => $container,
-            ComponentKey::Video->value        => $video,
-            ComponentKey::Audio->value        => $audio,
+            ComponentKey::Container->value     => $container,
+            ComponentKey::Video->value         => $video,
+            ComponentKey::Audio->value         => $audio,
             ComponentKey::EmbeddedAudio->value => $embeddedAudio,
-            ComponentKey::FlashPix->value     => $flashPix,
+            ComponentKey::FlashPix->value      => $flashPix,
         ];
     }
 

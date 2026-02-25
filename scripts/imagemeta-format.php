@@ -577,11 +577,14 @@ final class MetadataFormatter
         }
 
         $reader   = MetadataReader::createDefault();
+        $start    = hrtime(true);
         $metadata = $reader->read($filePath, withDigests: true);
+        $parseMs  = (hrtime(true) - $start) / 1e6;
 
         // ImageMeta section
         $this->printSection('ImageMeta', [
             'ImageMeta Version Number' => self::VERSION,
+            'Parsing Time'             => sprintf('%.2f ms', $parseMs),
         ]);
 
         // System section

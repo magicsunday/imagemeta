@@ -40,8 +40,8 @@ final class PlistTextParserTest extends TestCase
     #[Test]
     public function parseSucceedsAtMaximumAllowedDepth(): void
     {
-        // 64 levels of nested dicts: {k={k={...{k=v}...}}}
-        $plist = str_repeat('{k=', 64) . '"leaf"' . str_repeat('}', 64);
+        // 64 levels of nested dicts: {k = {k = {...{k = v}...}}}
+        $plist = str_repeat('{k = ', 64) . '"leaf"' . str_repeat('; }', 64);
 
         $parser = new PlistTextParser();
         $result = $parser->parse($plist);
@@ -57,7 +57,7 @@ final class PlistTextParserTest extends TestCase
     public function parseThrowsWhenRecursionDepthIsExceeded(): void
     {
         // 65 levels of nested dicts: one more than the allowed 64
-        $plist = str_repeat('{k=', 65) . '"leaf"' . str_repeat('}', 65);
+        $plist = str_repeat('{k = ', 65) . '"leaf"' . str_repeat('; }', 65);
 
         $parser = new PlistTextParser();
 

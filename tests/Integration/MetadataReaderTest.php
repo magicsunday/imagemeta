@@ -61,6 +61,7 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\AudioSampleEntryParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
@@ -76,7 +77,6 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeMetadataDecoder;
 use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeValueDecoder;
 use MagicSunday\ImageMeta\Parse\IsoBmff\TrackMediaParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
-use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactoryInterface;
@@ -771,7 +771,7 @@ final class MetadataReaderTest extends TestCase
             );
 
             $metadata = $reader->read($path);
-            self::assertNotNull($metadata->exifBlobs);
+            self::assertNotEmpty($metadata->exifBlobs);
         } finally {
             @unlink($path);
         }
