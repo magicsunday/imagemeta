@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use function ctype_space;
 use function in_array;
 use function is_numeric;
+use function sprintf;
 use function str_contains;
 use function strtolower;
 
@@ -31,6 +32,9 @@ use function strtolower;
  */
 final readonly class PlistTextParser
 {
+    /** @var int Maximum number of nested dict/array levels before a ParseError is raised. */
+    private const int MAX_RECURSION_DEPTH = 64;
+
     /**
      * Parses a raw text property list string into a dictionary.
      *
@@ -51,8 +55,12 @@ final readonly class PlistTextParser
         }
 
         try {
-            $dictionary = $this->parseDictionary($cursor);
-        } catch (ParseError) {
+            $dictionary = $this->parseDictionary($cursor, 1);
+        } catch (ParseError $error) {
+            if ($error->getCode() === 1122) {
+                throw $error;
+            }
+
             // Malformed plist structure; yield null for graceful degradation.
             return null;
         }
@@ -70,6 +78,7 @@ final readonly class PlistTextParser
      * Parses a dictionary in `{key=value; ...}` format.
      *
      * @param PlistTextCursor $cursor The text cursor.
+     * @param int             $depth  Current recursion depth (1-based; incremented on each nested call).
      *
      * @return array<string, mixed>
      *
@@ -77,8 +86,15 @@ final readonly class PlistTextParser
      *
      * @throws ParseError
      */
-    private function parseDictionary(PlistTextCursor $cursor): array
+    private function parseDictionary(PlistTextCursor $cursor, int $depth): array
     {
+        if ($depth > self::MAX_RECURSION_DEPTH) {
+            throw new ParseError(
+                sprintf('Recursion depth exceeds limit of %d.', self::MAX_RECURSION_DEPTH),
+                1122,
+            );
+        }
+
         if ($cursor->peek() !== '{') {
             throw new ParseError('Expected dictionary opening brace.', 1104);
         }
@@ -117,7 +133,7 @@ final readonly class PlistTextParser
 
             $cursor->advance();
 
-            $value = $this->parseValue($cursor);
+            $value = $this->parseValue($cursor, $depth);
 
             $dictionary[$key] = $value;
 
@@ -146,6 +162,7 @@ final readonly class PlistTextParser
      * Dispatches value parsing based on the first character.
      *
      * @param PlistTextCursor $cursor The text cursor.
+     * @param int             $depth  Current recursion depth passed from the enclosing container.
      *
      * @return array<int|string, mixed>|bool|float|int|string|null
      *
@@ -153,7 +170,7 @@ final readonly class PlistTextParser
      *
      * @throws ParseError
      */
-    private function parseValue(PlistTextCursor $cursor): array|bool|float|int|string|null
+    private function parseValue(PlistTextCursor $cursor, int $depth): array|bool|float|int|string|null
     {
         $this->skipWhitespace($cursor);
 
@@ -165,12 +182,12 @@ final readonly class PlistTextParser
 
         if ($char === '{') {
             /** @phpstan-ignore-next-line */
-            return $this->parseDictionary($cursor);
+            return $this->parseDictionary($cursor, $depth + 1);
         }
 
         if ($char === '(') {
             /** @phpstan-ignore-next-line */
-            return $this->parseArray($cursor);
+            return $this->parseArray($cursor, $depth + 1);
         }
 
         if ($char === '"') {
@@ -212,6 +229,7 @@ final readonly class PlistTextParser
      * Parses an array in `(value1, value2, ...)` format.
      *
      * @param PlistTextCursor $cursor The text cursor.
+     * @param int             $depth  Current recursion depth passed from the enclosing container.
      *
      * @return array<int, mixed>
      *
@@ -219,8 +237,15 @@ final readonly class PlistTextParser
      *
      * @throws ParseError
      */
-    private function parseArray(PlistTextCursor $cursor): array
+    private function parseArray(PlistTextCursor $cursor, int $depth): array
     {
+        if ($depth > self::MAX_RECURSION_DEPTH) {
+            throw new ParseError(
+                sprintf('Recursion depth exceeds limit of %d.', self::MAX_RECURSION_DEPTH),
+                1122,
+            );
+        }
+
         if ($cursor->peek() !== '(') {
             throw new ParseError('Expected array opening parenthesis.', 1110);
         }
@@ -242,7 +267,7 @@ final readonly class PlistTextParser
                 break;
             }
 
-            $values[] = $this->parseValue($cursor);
+            $values[] = $this->parseValue($cursor, $depth);
 
             $this->skipWhitespace($cursor);
 
