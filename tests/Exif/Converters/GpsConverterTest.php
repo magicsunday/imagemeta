@@ -235,6 +235,21 @@ final class GpsConverterTest extends TestCase
             ['measure_mode'],
         ];
 
+        yield 'invalid measure mode 0' => [
+            [ExifTag::GPS_MEASURE_MODE => new IfdEntry(ExifTag::GPS_MEASURE_MODE, 2, 2, '0')],
+            ['measure_mode'],
+        ];
+
+        yield 'invalid measure mode non-digit A' => [
+            [ExifTag::GPS_MEASURE_MODE => new IfdEntry(ExifTag::GPS_MEASURE_MODE, 2, 2, 'A')],
+            ['measure_mode'],
+        ];
+
+        yield 'invalid measure mode empty string' => [
+            [ExifTag::GPS_MEASURE_MODE => new IfdEntry(ExifTag::GPS_MEASURE_MODE, 2, 2, '')],
+            ['measure_mode'],
+        ];
+
         yield 'invalid speed ref X' => [
             [
                 ExifTag::GPS_SPEED_REF => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 2, 'X'),
