@@ -401,11 +401,10 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Places EXIF APP2 before APP1 Exif.
-     * This verifies APP2 ordering constraints relative to APP1 Exif.
+     * Tolerates EXIF APP2 appearing before APP1 Exif.
      */
     #[Test]
-    public function exifApp2BeforeApp1ThrowsParseError(): void
+    public function toleratesExifApp2BeforeApp1(): void
     {
         $mpfPayload  = self::MPF_SIGNATURE . 'x';
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
@@ -417,10 +416,8 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/APP2|APP1/i');
-
-        $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
+        self::assertSame([$exifPayload], $blobs);
     }
 
     /**
@@ -761,10 +758,10 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects APP11 when it appears before APP1/APP2 metadata markers.
+     * Tolerates APP11 when it appears before APP1/APP2 metadata markers.
      */
     #[Test]
-    public function app11BeforeApp1App2RegionThrowsParseError(): void
+    public function toleratesApp11BeforeApp1App2Region(): void
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
         $app11       = $this->app11Payload(
@@ -778,17 +775,15 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/APP11.*APP1\\/APP2|APP1\\/APP2.*APP11/i');
-
-        $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
+        self::assertSame([$exifPayload], $blobs);
     }
 
     /**
-     * Rejects APP11 when it appears after structural image markers.
+     * Tolerates APP11 when it appears after structural image markers.
      */
     #[Test]
-    public function app11AfterDqtThrowsParseError(): void
+    public function toleratesApp11AfterStructuralMarker(): void
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
         $app11       = $this->app11Payload(
@@ -804,10 +799,31 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/APP11.*structural|structural.*APP11/i');
+        $blobs = $extractor->extractExifBlobs();
+        self::assertSame([$exifPayload], $blobs);
+    }
 
-        $extractor->extractExifBlobs();
+    /**
+     * Tolerates APP1/APP2 appearing after APP11.
+     */
+    #[Test]
+    public function toleratesApp1App2AfterApp11(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+        $app11       = $this->app11Payload(
+            $this->app11SuperboxWithContent('abcd', 'marker-order'),
+        );
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP11, $app11),
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, 'dummy-app2'),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $blobs = $extractor->extractExifBlobs();
+        self::assertSame([$exifPayload], $blobs);
     }
 
     /**
