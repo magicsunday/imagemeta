@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Icc;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 
+use function intdiv;
 use function min;
 use function rtrim;
 use function sprintf;
@@ -154,9 +155,31 @@ final readonly class IccTagDecoder
 
         $tagCount = $this->reader->uInt32Be(substr($data, $tagCountOffset, 4));
         $cursor   = $tagCountOffset + 4;
+
+        // Guard against integer overflow before multiplying tag count by entry size.
+        // On 32-bit PHP, large uint32 tag counts would overflow PHP_INT_MAX.
+        if ($tagCount > intdiv(PHP_INT_MAX, self::TAG_RECORD_LENGTH)) {
+            throw new ParseError(
+                sprintf(
+                    'ICC tag table count %d would overflow when multiplied by entry size %d',
+                    $tagCount,
+                    self::TAG_RECORD_LENGTH,
+                ),
+                1808,
+            );
+        }
+
         $tableEnd = $tagCountOffset + 4 + ($tagCount * self::TAG_RECORD_LENGTH);
         if ($tableEnd > $length) {
-            return null;
+            throw new ParseError(
+                sprintf(
+                    'ICC tag table count %d requires %d bytes but only %d bytes are available',
+                    $tagCount,
+                    $tableEnd - $tagCountOffset,
+                    $length - $tagCountOffset,
+                ),
+                1808,
+            );
         }
 
         for ($i = 0; $i < $tagCount; ++$i) {
