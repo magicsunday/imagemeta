@@ -108,10 +108,9 @@ final class MemoryBuffer implements BinaryReadAccessInterface
         }
 
         $len = $this->normalizeLength($length);
-        $end = $this->pos + $len;
 
-        if ($end > $this->size()) {
-            throw new BoundsError('MemoryBuffer read out of range: ' . $this->pos . '+' . $len, 1000);
+        if ($len > ($this->size() - $this->pos)) {
+            throw new BoundsError('MemoryBuffer read out of range: ' . $this->pos . '+' . $len, 1031);
         }
 
         $chunk = substr($this->data, $this->pos, $len);
@@ -120,7 +119,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
             throw new ParseError('MemoryBuffer short read', 1001);
         }
 
-        $this->pos = $end;
+        $this->pos += $len;
 
         return $chunk;
     }
