@@ -69,35 +69,6 @@ final readonly class TiffTagConstraintValidator
     }
 
     /**
-     * Validates that XResolution and YResolution carry the same value when both present.
-     *
-     * EXIF 3.0 §4.6.5.1.8/§4.6.5.1.9 require identical values in both tags.
-     */
-    public function validateResolutionEquality(Ifd $ifd): void
-    {
-        $xRes = $ifd->get(ExifTag::X_RESOLUTION);
-        $yRes = $ifd->get(ExifTag::Y_RESOLUTION);
-
-        if (!$xRes instanceof IfdEntry || !$yRes instanceof IfdEntry) {
-            return;
-        }
-
-        if (!$xRes->value instanceof ExifRational || !$yRes->value instanceof ExifRational) {
-            return;
-        }
-
-        if ($xRes->value->numerator !== $yRes->value->numerator || $xRes->value->denominator !== $yRes->value->denominator) {
-            throw new ParseError(sprintf(
-                'XResolution (%d/%d) must equal YResolution (%d/%d) per EXIF 3.0 §4.6.5.1.8.',
-                $xRes->value->numerator,
-                $xRes->value->denominator,
-                $yRes->value->numerator,
-                $yRes->value->denominator,
-            ), 1325);
-        }
-    }
-
-    /**
      * Validates Compression tag values per EXIF-specific domain rules.
      *
      * EXIF 3.0 §4.6.5.1.4: In JPEG context, IFD0 allows only 1 (uncompressed);
@@ -415,15 +386,7 @@ final readonly class TiffTagConstraintValidator
             return;
         }
 
-        $yPositionRational = $this->validatePositionRational($yPosition, 'YPosition');
-        $yPositionValue    = $yPositionRational->numerator / $yPositionRational->denominator;
-
-        if ($yPositionValue <= 0.0) {
-            throw new ParseError(
-                sprintf('YPosition must be > 0, got %.6F.', $yPositionValue),
-                1808,
-            );
-        }
+        $this->validatePositionRational($yPosition, 'YPosition');
     }
 
     /**
@@ -502,11 +465,15 @@ final readonly class TiffTagConstraintValidator
         }
 
         $compression = $ifd->get(ExifTag::COMPRESSION);
-        if (($compression instanceof IfdEntry) && is_int($compression->value) && ($compression->value === Compression::Lzw->value)) {
+        if (
+            ($compression instanceof IfdEntry)
+            && is_int($compression->value)
+            && in_array($compression->value, [Compression::Lzw->value, Compression::AdobeDeflate->value], true)
+        ) {
             return;
         }
 
-        throw new ParseError('Predictor=2 requires Compression=5 (LZW) per TIFF 6.0 Section 14.', 1825);
+        throw new ParseError('Predictor=2 requires Compression=5 (LZW) or 8 (Deflate).', 1825);
     }
 
     /**

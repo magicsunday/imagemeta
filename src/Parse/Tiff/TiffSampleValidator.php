@@ -402,10 +402,10 @@ final readonly class TiffSampleValidator
             throw new ParseError('ExtraSamples must be SHORT[1].', 1766);
         }
 
-        if ($extraSamplesEntry->value !== 1) {
+        if (!in_array($extraSamplesEntry->value, [0, 1, 2], true)) {
             throw new ParseError(
                 sprintf(
-                    'ExtraSamples value %d is invalid; strict TIFF 6.0 baseline requires value 1.',
+                    'ExtraSamples value %d is outside the valid domain {0, 1, 2}.',
                     $extraSamplesEntry->value,
                 ),
                 1767,

@@ -111,7 +111,7 @@ final class TiffExifParserExtraSamplesTest extends TestCase
             ),
         );
 
-        $entry = $parsed->ifd0->get(ExifTag::EXTRA_SAMPLES);
+        $entry = $parsed->ifd0->get(TiffTag::EXTRA_SAMPLES);
         self::assertNotNull($entry);
         self::assertSame(2, $entry->value);
     }
@@ -129,7 +129,7 @@ final class TiffExifParserExtraSamplesTest extends TestCase
             ),
         );
 
-        $entry = $parsed->ifd0->get(ExifTag::EXTRA_SAMPLES);
+        $entry = $parsed->ifd0->get(TiffTag::EXTRA_SAMPLES);
         self::assertNotNull($entry);
         self::assertSame(0, $entry->value);
     }

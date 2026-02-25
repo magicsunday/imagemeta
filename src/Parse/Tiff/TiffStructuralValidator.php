@@ -98,7 +98,6 @@ final readonly class TiffStructuralValidator
      */
     public function validateIfd0(Ifd $ifd0, ?Ifd $ifd1, bool $jpegContext, bool $strictTiffNewSubfileType): void
     {
-        $this->tag->validateResolutionEquality($ifd0);
         $this->tag->validateCompressionDomain($ifd0, $ifd1, $jpegContext);
         $this->validatePerIfd($ifd0, $strictTiffNewSubfileType);
     }
