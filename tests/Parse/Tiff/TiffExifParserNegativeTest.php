@@ -415,7 +415,7 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Creates a GPSInfoIFDPointer entry with type ASCII instead of LONG.
-     * Postel's Law: the parser tolerates wrong field types per GH-1644.
+     * Postel's Law: the parser tolerates wrong field types.
      */
     #[Test]
     public function toleratesGpsIfdPointerWithBadType(): void
@@ -1221,21 +1221,20 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * IFD with entryCount=0 is rejected per TIFF 6.0.
+     * IFD with entryCount=0 returns an empty Ifd (Postel's Law).
      */
     #[Test]
-    public function rejectEmptyIfd(): void
+    public function itReturnsEmptyIfdForZeroEntries(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('IFD must contain at least one entry per TIFF 6.0.');
-
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
             . pack('v', 0)
             . pack('V', 0);
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        $parsed = (new TiffExifParser())->parseFromBlob($blob);
+
+        self::assertSame([], $parsed->ifd0->entries);
     }
 
     private function bytesPerComponent(int $type): int
@@ -1477,7 +1476,7 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * IFD1 Compression=7 (JPEG new-style TN2) is tolerated per GH-1645.
+     * IFD1 Compression=7 (JPEG new-style TN2) is tolerated (Postel's Law).
      */
     #[Test]
     public function itToleratesCompression7InIfd1(): void
@@ -1814,7 +1813,7 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Flash value 0x02 (reserved return-status bits) is tolerated per GH-1646.
+     * Flash value 0x02 (reserved return-status bits) is tolerated (Postel's Law).
      */
     #[Test]
     public function itToleratesReservedFlashReturnStatusBits(): void

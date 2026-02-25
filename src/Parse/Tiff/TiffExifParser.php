@@ -419,8 +419,9 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->buffer->seek($offsetInt);
         $entryCount = $this->bigTiff ? $this->binaryReader->readU64()->toInt('IFD entry count') : $this->binaryReader->readU16();
 
+        // Postel's Law: treat zero-entry IFD as empty.
         if ($entryCount === 0) {
-            throw new ParseError('IFD must contain at least one entry per TIFF 6.0.', 1307);
+            return new Ifd([]);
         }
 
         // Enforce maximum IFD entry count to prevent DoS
@@ -441,7 +442,7 @@ final class TiffExifParser implements TiffExifParserInterface
                 // Postel's Law: when an individual IFD entry references data
                 // beyond the TIFF boundary (common in truncated RAW files and
                 // maker-note blobs), skip the entry and continue extracting
-                // remaining valid metadata instead of aborting.  (GH-1549)
+                // remaining valid metadata instead of aborting.
                 continue;
             }
 
