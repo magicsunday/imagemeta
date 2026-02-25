@@ -509,7 +509,8 @@ final class JpegParser implements JpegParserInterface
      */
     private function processStartOfFrame(int $marker, string $payload, int $offset): void
     {
-        if ($marker !== Marker::SOF0 && $marker !== Marker::SOF2) {
+        // ITU-T T.81 Table B.1 — all SOF markers (SOF0–SOF15) are valid frame headers
+        if (!$this->frameValidator->isStartOfFrameMarker($marker)) {
             return;
         }
 
