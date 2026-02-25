@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
-use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Parse\Tiff\IfdParser;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -84,7 +83,7 @@ final class IfdParserTest extends TestCase
         $validated2 = $parser->validateEntry($entries, $entry2);
 
         // First occurrence wins
-        self::assertSame(10, $validated2->valueOrOffset);
+        self::assertSame(10, $validated2->value);
         self::assertSame([0x0100], array_keys($entries));
     }
 }

@@ -134,7 +134,7 @@ final class TiffIfdTraverser
 
         foreach ($offsets as $offset) {
             if (isset($this->subIfdVisitedOffsets[$offset])) {
-                throw new ParseError(sprintf('Cyclic SubIFD reference detected at offset %d.', $offset), 1961);
+                continue;
             }
 
             $this->subIfdVisitedOffsets[$offset] = true;

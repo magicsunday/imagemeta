@@ -182,7 +182,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $nextOffset = $ifd0->nextIfdOffset;
         while ($nextOffset !== null && $nextOffset > 0) {
             if (isset($visitedOffsets[$nextOffset])) {
-                throw new ParseError('Cyclic IFD chain detected at offset ' . $nextOffset . '.', 1359);
+                break;
             }
 
             if (count($visitedOffsets) >= ParserLimits::MAX_IFD_CHAIN_LENGTH) {

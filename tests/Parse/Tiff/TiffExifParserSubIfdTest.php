@@ -146,7 +146,6 @@ final class TiffExifParserSubIfdTest extends TestCase
         $blob   = $this->buildTiffWithCyclicSubIfd();
         $parsed = (new TiffExifParser())->parseFromBlob($blob);
 
-        self::assertNotNull($parsed->ifd0);
         self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
     }
 

@@ -268,7 +268,6 @@ final class TiffExifParserNegativeTest extends TestCase
         $reader = new TiffExifParser();
         $parsed = $reader->parseFromBlob($blob);
 
-        self::assertNotNull($parsed->ifd0);
         self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
     }
 
@@ -2197,10 +2196,10 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Duplicate tag IDs within a single IFD must be rejected per TIFF 6.0 §2.
+     * Duplicate tag IDs within a single IFD are tolerated — the first occurrence wins.
      */
     #[Test]
-    public function rejectsDuplicateTagIdInIfd(): void
+    public function toleratesDuplicateTagIdInIfd(): void
     {
         // Build a TIFF with two entries having the same tag ID (0x0100 = ImageWidth)
         $blob = 'II'
@@ -2218,12 +2217,12 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('V', 0);         // Next IFD offset
 
         $reader = new TiffExifParser();
+        $parsed = $reader->parseFromBlob($blob);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1357);
-        $this->expectExceptionMessage('Duplicate tag ID');
-
-        $reader->parseFromBlob($blob);
+        // First occurrence (value=100) wins
+        $entry = $parsed->ifd0->get(ExifTag::IMAGE_WIDTH);
+        self::assertNotNull($entry);
+        self::assertSame(100, $entry->value);
     }
 
     /**

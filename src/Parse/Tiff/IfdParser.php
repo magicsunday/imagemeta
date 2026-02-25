@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
-use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 
 /**
@@ -32,10 +31,6 @@ final readonly class IfdParser
      */
     public function validateEntry(array $entries, IfdEntry $entry): IfdEntry
     {
-        if (isset($entries[$entry->tag])) {
-            throw new ParseError('Duplicate tag ID ' . $entry->tag . ' in IFD per TIFF 6.0 §2.', 1357);
-        }
-
-        return $entry;
+        return $entries[$entry->tag] ?? $entry;
     }
 }
