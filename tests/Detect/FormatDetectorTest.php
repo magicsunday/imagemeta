@@ -294,18 +294,33 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Rejects ftyp with size=0 (extends to EOF) as it lacks proper box boundaries.
+     * Accepts an ftyp box with size=0 (extends to EOF per ISO 14496-12 §4.2) as ISO BMFF.
+     * The presence of the ftyp type alone is sufficient when the size field is zero.
      */
     #[Test]
-    public function detectRejectsIsoBmffWhenFtypHasZeroSize(): void
+    public function detectRecognisesIsoBmffWhenFtypHasZeroSize(): void
     {
-        // size=0, type='ftyp', followed by payload
+        // size=0 means box extends to EOF; ftyp type is sufficient evidence
         $stream = $this->createStream("\x00\x00\x00\x00ftypisom\x00\x00\x00\x00");
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported or unknown container');
+        $detected = (new FormatDetector())->detect($stream);
 
-        (new FormatDetector())->detect($stream);
+        self::assertSame(ContainerType::ISOBMFF, $detected);
+    }
+
+    /**
+     * Accepts a styp box with size=0 (extends to EOF per ISO 14496-12 §4.2) as ISO BMFF.
+     * The presence of the styp type alone is sufficient when the size field is zero.
+     */
+    #[Test]
+    public function detectRecognisesIsoBmffWhenStypHasZeroSize(): void
+    {
+        // size=0 means box extends to EOF; styp type is sufficient evidence
+        $stream = $this->createStream("\x00\x00\x00\x00stypiso6\x00\x00\x00\x00");
+
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::ISOBMFF, $detected);
     }
 
     /**
