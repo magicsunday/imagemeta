@@ -505,10 +505,10 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects EXIF streams that reach SOS without a preceding DQT marker.
+     * Tolerates EXIF streams that reach SOS without a preceding DQT marker.
      */
     #[Test]
-    public function missingDqtBeforeSosThrowsParseErrorForExif(): void
+    public function toleratesMissingDqtBeforeSosForExif(): void
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
         $sofPayload  = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
@@ -525,18 +525,14 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1488);
-        $this->expectExceptionMessageMatches('/requires DQT|no preceding DQT/i');
-
-        $extractor->extractExifBlobs();
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
 
     /**
-     * Rejects EXIF streams that reach SOS without a preceding DHT marker.
+     * Tolerates EXIF streams that reach SOS without a preceding DHT marker.
      */
     #[Test]
-    public function missingDhtBeforeSosThrowsParseErrorForExif(): void
+    public function toleratesMissingDhtBeforeSosForExif(): void
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
         $sofPayload  = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
@@ -553,18 +549,14 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1489);
-        $this->expectExceptionMessageMatches('/requires DHT|no preceding DHT/i');
-
-        $extractor->extractExifBlobs();
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
 
     /**
-     * Rejects EXIF streams that reach SOS without any preceding SOF marker.
+     * Tolerates EXIF streams that reach SOS without any preceding SOF marker.
      */
     #[Test]
-    public function missingSofBeforeSosThrowsParseErrorForExif(): void
+    public function toleratesMissingSofBeforeSosForExif(): void
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
@@ -577,11 +569,7 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1490);
-        $this->expectExceptionMessageMatches('/requires SOF|no preceding SOF/i');
-
-        $extractor->extractExifBlobs();
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
 
     /**
@@ -1820,10 +1808,13 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects EXIF SOF payloads that do not use 8-bit sample precision.
+     * Tolerates EXIF SOF payloads that do not use 8-bit sample precision.
+     *
+     * ITU-T T.81 §B.2.2 allows 12-bit and 16-bit sample precisions in
+     * extended sequential and lossless JPEG modes.
      */
     #[Test]
-    public function rejectsExifSofWithNonEightBitPrecision(): void
+    public function toleratesNonEightBitPrecisionInExifSof(): void
     {
         $exifPayload  = self::TIFF_HEADER . 'strict-exif';
         $framePayload = "\x0C" . pack('n', 32) . pack('n', 64) . "\x03"
@@ -1838,11 +1829,8 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1491);
-        $this->expectExceptionMessageMatches('/8-bit|precision/i');
-
-        $extractor->extractExifBlobs();
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertSame(12, $extractor->getFrameSamplePrecision());
     }
 
     /**
