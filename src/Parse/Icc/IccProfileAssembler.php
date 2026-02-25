@@ -11,7 +11,11 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Icc;
 
+use MagicSunday\ImageMeta\Core\ParseError;
+
 use function implode;
+use function sprintf;
+use function strlen;
 
 /**
  * Assembles ordered ICC profile chunks into a single binary payload.
@@ -21,10 +25,26 @@ use function implode;
  */
 final class IccProfileAssembler
 {
+    /**
+     * Default maximum assembled ICC profile size: 16 MiB.
+     *
+     * Practical ICC profiles are well under 1 MiB; 16 MiB provides a
+     * conservative upper bound that prevents memory exhaustion from crafted inputs.
+     */
+    private const int MAX_ICC_PROFILE_SIZE = 16_777_216;
+
     /** @var list<string> */
     private array $chunks = [];
 
     private ?string $profile = null;
+
+    /**
+     * @param int $maxSize Maximum allowed assembled ICC profile size in bytes.
+     */
+    public function __construct(
+        private readonly int $maxSize = self::MAX_ICC_PROFILE_SIZE,
+    ) {
+    }
 
     /**
      * Appends one ICC data chunk in sequence order.
@@ -38,11 +58,29 @@ final class IccProfileAssembler
 
     /**
      * Concatenates all collected chunks into the assembled ICC profile.
+     *
+     * @throws ParseError When the combined chunk size exceeds the configured limit.
      */
     public function finalise(): void
     {
         if ($this->chunks === []) {
             return;
+        }
+
+        $totalSize = 0;
+
+        foreach ($this->chunks as $chunk) {
+            $totalSize += strlen($chunk);
+
+            if ($totalSize > $this->maxSize) {
+                throw new ParseError(
+                    sprintf(
+                        'Assembled ICC profile size exceeds configured limit of %d bytes',
+                        $this->maxSize,
+                    ),
+                    1966,
+                );
+            }
         }
 
         $this->profile = implode('', $this->chunks);
