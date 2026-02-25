@@ -20,7 +20,6 @@ use PHPUnit\Framework\TestCase;
 
 use function pack;
 use function str_pad;
-use function str_repeat;
 
 /**
  * Tests IccTagDecoder tag data size alignment handling.
@@ -45,7 +44,7 @@ final class IccTagDecoderTest extends TestCase
         // Build a synthetic ICC profile with a single 'cprt' tag using textType
         // with a non-4-byte-aligned size (13 bytes: 'text' + 4 reserved + 'Hi!\0' = 12,
         // but we use 13 to be non-aligned)
-        $tagPayload = "text"                    // type signature
+        $tagPayload = 'text'                    // type signature
             . "\x00\x00\x00\x00"                // reserved
             . "Hello\x00";                      // ASCII text with NUL terminator
 
@@ -66,7 +65,7 @@ final class IccTagDecoderTest extends TestCase
     #[Test]
     public function decodesTagWithAlignedSize(): void
     {
-        $tagPayload = "text"                    // type signature
+        $tagPayload = 'text'                    // type signature
             . "\x00\x00\x00\x00"                // reserved
             . "OK!\x00";                        // 4 bytes: ASCII text with NUL
 

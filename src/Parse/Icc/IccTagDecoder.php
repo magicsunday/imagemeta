@@ -173,11 +173,8 @@ final readonly class IccTagDecoder
                 continue;
             }
 
+            // ICC.1:2022 §7.3 — tag offsets must be 4-byte aligned
             if (($offset % 4) !== 0) {
-                continue;
-            }
-
-            if (($size % 4) !== 0) {
                 continue;
             }
 
