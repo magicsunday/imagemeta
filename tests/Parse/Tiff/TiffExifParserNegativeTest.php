@@ -250,11 +250,10 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Creates an IFD chain where the next pointer loops back to the same IFD.
-     * Confirms the parser detects the cycle and rejects it with ParseError.
+     * A cyclic IFD chain is silently broken — only the first visit is kept.
      */
     #[Test]
-    public function detectsCyclicIfdChain(): void
+    public function toleratesCyclicIfdChain(): void
     {
         // Create TIFF where IFD0's next pointer points back to itself
         $ifdOffset = 8;
@@ -267,10 +266,10 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('V', $ifdOffset); // Next IFD points back to offset 8 (cycle)
 
         $reader = new TiffExifParser();
+        $parsed = $reader->parseFromBlob($blob);
 
-        $this->expectException(ParseError::class);
-
-        $reader->parseFromBlob($blob);
+        self::assertNotNull($parsed->ifd0);
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
     }
 
     /**

@@ -66,12 +66,12 @@ final class IfdParserTest extends TestCase
         self::assertArrayHasKey(0x0112, $entries);
     }
 
+    /**
+     * Duplicate tags are silently skipped — the first occurrence wins.
+     */
     #[Test]
-    public function rejectsDuplicateEntryTags(): void
+    public function skipsDuplicateEntryTags(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Duplicate tag ID');
-
         $parser = new IfdParser();
         $entry1 = new IfdEntry(0x0100, 4, 1, 10);
         $entry2 = new IfdEntry(0x0100, 4, 1, 20);
@@ -81,6 +81,10 @@ final class IfdParserTest extends TestCase
         $validated                = $parser->validateEntry($entries, $entry1);
         $entries[$validated->tag] = $validated;
 
-        $parser->validateEntry($entries, $entry2);
+        $validated2 = $parser->validateEntry($entries, $entry2);
+
+        // First occurrence wins
+        self::assertSame(10, $validated2->valueOrOffset);
+        self::assertSame([0x0100], array_keys($entries));
     }
 }
