@@ -522,14 +522,6 @@ final class TrackMediaParserTest extends TestCase
                 . "\xFE\x00",
                 1384,
             ],
-            'missing NUL terminator (1152)' => [
-                "\x00\x00\x00\x00"
-                . str_repeat("\x00", 4)
-                . 'vide'
-                . str_repeat("\x00", 12)
-                . "\xC0\x41",
-                1152,
-            ],
         ];
     }
 

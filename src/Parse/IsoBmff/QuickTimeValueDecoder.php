@@ -363,7 +363,7 @@ final readonly class QuickTimeValueDecoder
 
         $value = Unpack::int('N', $fourcc, 'four-character code');
 
-        return $value > 0 ? $value : null;
+        return $value >= 0 ? $value : null;
     }
 
     /**

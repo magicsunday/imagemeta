@@ -344,11 +344,9 @@ final readonly class TrackMediaParser
 
                 $name = $trimmed !== '' ? $trimmed : null;
             } else {
-                throw new ParseError(sprintf(
-                    'hdlr handler name missing NUL terminator (counted length %d exceeds remaining %d bytes)',
-                    $countedLen,
-                    $remaining - 1,
-                ), 1152);
+                // Best-effort: strip NUL bytes from raw name when neither format matches
+                $trimmed = rtrim($nameBytes, "\0");
+                $name    = $trimmed !== '' ? $trimmed : null;
             }
         }
 

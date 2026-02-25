@@ -181,9 +181,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $offset += $box->size;
         }
 
-        if ($offset !== $fileSize) {
-            throw new ParseError('Top-level boxes do not align with file size', 1140);
-        }
+        // Tolerate trailing bytes that are too short to form a valid box header.
     }
 
     /**
@@ -341,7 +339,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         while ($win->tell() + 4 <= $ftyp->contentSize) {
             $brandRaw = $win->read(4);
             if (!$this->boxNavigator->isPrintableFourcc($brandRaw)) {
-                throw new ParseError('ftyp compatible_brand must be a printable 4CC', 1477);
+                continue;
             }
 
             $brands[] = $this->boxNavigator->normalizeFourcc($brandRaw);

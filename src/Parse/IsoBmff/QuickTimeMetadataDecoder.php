@@ -340,18 +340,8 @@ final readonly class QuickTimeMetadataDecoder
             } elseif ($entry->type === BoxType::FREEFORM->value) {
                 $keyName = $this->keyResolver->parseFreeformKey($entry);
             } elseif ($isMdta) {
-                // In mdta mode, ilst entries must reference keys by index
-                if ($index !== null) {
-                    throw new ParseError(sprintf(
-                        'mdta ilst entry key index %d out of range',
-                        $index,
-                    ), 1386);
-                }
-
-                throw new ParseError(sprintf(
-                    'mdta ilst entry type "%s" is not a valid key index',
-                    $entry->type,
-                ), 1386);
+                // Tolerate out-of-range or non-numeric key indices in mdta mode
+                continue;
             } elseif ($this->boxNavigator->isPrintableFourcc($entry->type)) {
                 $keyName = $entry->type;
             }
