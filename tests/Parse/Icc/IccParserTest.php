@@ -1296,6 +1296,49 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Tolerates a non-zero profile ID whose MD5 digest does not match the computed value.
+     *
+     * ICC.1:2022 §7.2.18 requires the MD5 to match, but real-world profiles from
+     * Adobe and Apple often have stale or incorrect profile IDs after editing.
+     */
+    #[Test]
+    public function toleratesProfileIdMd5Mismatch(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+
+        // Write a bogus non-zero profile ID at bytes 84..99
+        $profile = substr_replace($profile, str_repeat("\xAB", 16), 84, 16);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertNotNull($result['profileId']);
+    }
+
+    /**
+     * Tolerates a PCS illuminant that deviates slightly from canonical D50 values.
+     *
+     * ICC.1:2022 §7.2.16 requires exact D50 (0.9642, 1.0, 0.8249), but
+     * real-world profiles may have minor rounding differences.
+     */
+    #[Test]
+    public function toleratesD50IlluminantDeviation(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+
+        // Canonical D50 X = 0.9642 → s15Fixed16 = 0x0000F6D6
+        // Slightly off: 0x0000F6D0 ≈ 0.9641 (within ±0.005 tolerance)
+        $profile = substr_replace($profile, pack('N', 0x0000F6D0), 68, 4);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertNotNull($result['illuminant']);
+    }
+
+    /**
      * Rejects combined ICC segments whose cumulative size exceeds the configured limit.
      */
     #[Test]
