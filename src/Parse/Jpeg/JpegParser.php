@@ -84,10 +84,6 @@ final class JpegParser implements JpegParserInterface
 
     private ?int $firstStructuralMarkerOffset = null;
 
-    private ?int $firstDqtOffset = null;
-
-    private ?int $firstDhtOffset = null;
-
     private ?int $firstSofOffset = null;
 
     /**
@@ -319,8 +315,6 @@ final class JpegParser implements JpegParserInterface
         $this->seenApp11                   = false;
         $this->firstStructuralMarker       = null;
         $this->firstStructuralMarkerOffset = null;
-        $this->firstDqtOffset              = null;
-        $this->firstDhtOffset              = null;
         $this->firstSofOffset              = null;
     }
 
@@ -346,15 +340,6 @@ final class JpegParser implements JpegParserInterface
         }
 
         if ($marker === Marker::SOS) {
-            if ($this->seenExifApp1) {
-                $this->frameValidator->validateMandatoryExifPreScanMarkers(
-                    $this->firstDqtOffset,
-                    $this->firstDhtOffset,
-                    $this->firstSofOffset,
-                    $offset,
-                );
-            }
-
             $this->frameValidator->validateSosSegment($offset);
 
             return true; // EXIF 3.0 §4.7.1 restricts metadata APP markers to precede the first SOS.
@@ -400,18 +385,6 @@ final class JpegParser implements JpegParserInterface
         // only constrains APP11 ordering relative to structural markers; non-Exif
         // APP markers (APP0/JFIF, APP13/IPTC, APP14/Adobe) are tolerated here.
         // The APP11-after-structural check is enforced separately below.
-
-        // ITU-T T.81 §B.2.4.1: DQT, DHT, and DRI are "tables/miscellaneous"
-        // markers with zero-or-more repetitions.  Multiple segments are valid
-        // (e.g. one DQT per quantization table).  Record first occurrence for
-        // validateMandatoryExifPreScanMarkers() but accept duplicates.
-        if ($marker === Marker::DQT) {
-            $this->firstDqtOffset ??= $offset;
-        }
-
-        if ($marker === Marker::DHT) {
-            $this->firstDhtOffset ??= $offset;
-        }
 
         if (!$this->seenExifApp1) {
             $isExifApp1 = ($marker === Marker::APP1) && str_starts_with($payload, self::EXIF_SIGNATURE);
@@ -526,7 +499,7 @@ final class JpegParser implements JpegParserInterface
         }
 
         $this->firstSofOffset = $offset;
-        $this->frameValidator->handleStartOfFrame($marker, $payload, $offset, $this->seenExifApp1);
+        $this->frameValidator->handleStartOfFrame($marker, $payload, $offset);
     }
 
     /**

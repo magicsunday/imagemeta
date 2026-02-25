@@ -62,7 +62,7 @@ final class JpegFrameValidatorTest extends TestCase
             . chr(2) . chr(0x11) . chr(1)         // Cb: id=2, H=1 V=1, quant=1
             . chr(3) . chr(0x11) . chr(1);        // Cr: id=3, H=1 V=1, quant=1
 
-        $validator->handleStartOfFrame(Marker::SOF2, $sofPayload, 0, false);
+        $validator->handleStartOfFrame(Marker::SOF2, $sofPayload, 0);
 
         // SOS with only 1 component (Y) — valid for progressive scan
         $sosPayload = chr(1)                      // 1 component
@@ -94,7 +94,7 @@ final class JpegFrameValidatorTest extends TestCase
             . chr(2) . chr(0x11) . chr(1)
             . chr(3) . chr(0x11) . chr(1);
 
-        $validator->handleStartOfFrame(Marker::SOF0, $sofPayload, 0, false);
+        $validator->handleStartOfFrame(Marker::SOF0, $sofPayload, 0);
 
         // SOS with only 1 component — invalid for baseline
         $sosPayload = chr(1)

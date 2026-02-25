@@ -103,17 +103,13 @@ final class JpegFrameValidator
     }
 
     /**
-     * Parses baseline start of frame markers to obtain sampling information.
+     * Parses start of frame markers to obtain sampling information.
      *
-     * In strict EXIF mode (EXIF APP1 present), EXIF 3.0 §4.8.1 requires 8-bit YCbCr
-     * baseline framing with three components (Y, Cb, Cr) and legal YCbCr subsampling.
-     *
-     * @param int    $marker            Marker code (SOF0).
-     * @param string $payload           Raw SOF payload excluding the marker and length field.
-     * @param int    $offset            Offset where the SOF marker begins.
-     * @param bool   $strictExifProfile Whether strict EXIF SOF profile checks must be applied.
+     * @param int    $marker  Marker code (SOF0).
+     * @param string $payload Raw SOF payload excluding the marker and length field.
+     * @param int    $offset  Offset where the SOF marker begins.
      */
-    public function handleStartOfFrame(int $marker, string $payload, int $offset, bool $strictExifProfile): void
+    public function handleStartOfFrame(int $marker, string $payload, int $offset): void
     {
         if ($this->frameBitsPerSample !== null) {
             return;
@@ -181,16 +177,6 @@ final class JpegFrameValidator
         }
 
         $bitsPerSample = ord($payload[0]);
-        if ($strictExifProfile && ($bitsPerSample !== 8)) {
-            throw new ParseError(
-                sprintf(
-                    'SOF marker 0x%02X at offset %d must use 8-bit sample precision in strict EXIF mode',
-                    $marker,
-                    $offset,
-                ),
-                1491,
-            );
-        }
 
         $derivedSubSampling = $this->deriveYCbCrSubSampling($components);
 
@@ -324,54 +310,6 @@ final class JpegFrameValidator
         $scanHeaderLength  = $this->scanner->readSegmentLength(Marker::SOS, $sosOffset, false);
         $scanHeaderPayload = $this->scanner->readSegmentPayload(Marker::SOS, $sosOffset, $scanHeaderLength - 2);
         $this->validateSosHeader($scanHeaderPayload, $sosOffset);
-    }
-
-    /**
-     * Validates EXIF-mandated pre-scan marker groups before SOS.
-     *
-     * EXIF 3.0 §4.7 (Table 2) requires DQT, DHT, and SOF marker groups before SOS
-     * when the stream advertises Exif APP1 metadata.
-     *
-     * @param int|null $dqtOffset Offset of DQT marker when present.
-     * @param int|null $dhtOffset Offset of DHT marker when present.
-     * @param int|null $sofOffset Offset of SOF marker when present.
-     * @param int      $sosOffset Offset of SOS marker.
-     */
-    public function validateMandatoryExifPreScanMarkers(
-        ?int $dqtOffset,
-        ?int $dhtOffset,
-        ?int $sofOffset,
-        int $sosOffset,
-    ): void {
-        if ($dqtOffset === null) {
-            throw new ParseError(
-                sprintf(
-                    'EXIF APP1 marker requires DQT before SOS; SOS marker at offset %d has no preceding DQT marker',
-                    $sosOffset,
-                ),
-                1488,
-            );
-        }
-
-        if ($dhtOffset === null) {
-            throw new ParseError(
-                sprintf(
-                    'EXIF APP1 marker requires DHT before SOS; SOS marker at offset %d has no preceding DHT marker',
-                    $sosOffset,
-                ),
-                1489,
-            );
-        }
-
-        if ($sofOffset === null) {
-            throw new ParseError(
-                sprintf(
-                    'EXIF APP1 marker requires SOF before SOS; SOS marker at offset %d has no preceding SOF marker',
-                    $sosOffset,
-                ),
-                1490,
-            );
-        }
     }
 
     /**
