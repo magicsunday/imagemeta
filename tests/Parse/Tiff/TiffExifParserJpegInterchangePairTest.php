@@ -69,20 +69,38 @@ final class TiffExifParserJpegInterchangePairTest extends TestCase
     }
 
     /**
-     * Non-zero offset requires length.
+     * Non-zero offset with missing length is tolerated (Postel's Law).
      */
     #[Test]
-    public function rejectsMissingInterchangeLengthForNonZeroOffset(): void
+    public function toleratesMissingInterchangeLengthForNonZeroOffset(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Non-zero JPEGInterchangeFormat requires JPEGInterchangeFormatLength');
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1JpegInterchange(
                 offsetValue: -1,
                 lengthValue: null,
             ),
         );
+
+        self::assertNotNull($parsed->ifd1);
+        self::assertNull($parsed->ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH));
+    }
+
+    /**
+     * Non-zero offset with length=0 is tolerated (Postel's Law).
+     */
+    #[Test]
+    public function itSkipsThumbnailWhenJpegInterchangeFormatLengthIsZero(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1JpegInterchange(
+                offsetValue: -1,
+                lengthValue: 0,
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd1);
+        self::assertNotNull($parsed->ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT));
+        self::assertNotNull($parsed->ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH));
     }
 
     /**

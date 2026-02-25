@@ -293,18 +293,9 @@ final readonly class TiffJpegValidator
             return;
         }
 
-        if (!($lengthEntry instanceof IfdEntry) || !is_int($lengthEntry->value)) {
-            throw new ParseError(
-                'Non-zero JPEGInterchangeFormat requires JPEGInterchangeFormatLength.',
-                1833,
-            );
-        }
-
-        if ($lengthEntry->value <= 0) {
-            throw new ParseError(
-                'JPEGInterchangeFormatLength must be > 0 when JPEGInterchangeFormat is non-zero.',
-                1834,
-            );
+        // Postel's Law: treat zero/missing length as "no thumbnail".
+        if (!($lengthEntry instanceof IfdEntry) || !is_int($lengthEntry->value) || $lengthEntry->value <= 0) {
+            return;
         }
 
         $blobSize = $this->support->buffer()->size();
