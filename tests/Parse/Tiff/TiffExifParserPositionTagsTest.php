@@ -94,15 +94,12 @@ final class TiffExifParserPositionTagsTest extends TestCase
     }
 
     /**
-     * YPosition must be strictly positive.
+     * Zero YPosition is tolerated.
      */
     #[Test]
-    public function rejectsNonPositiveYPosition(): void
+    public function toleratesZeroYPosition(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('YPosition must be > 0');
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildPositionTiff(
                 xPositionType: TiffConst::TYPE_RATIONAL,
                 xPositionCount: 1,
@@ -114,6 +111,8 @@ final class TiffExifParserPositionTagsTest extends TestCase
                 yPositionDenominator: 1,
             ),
         );
+
+        self::assertNotNull($parsed->ifd0->get(TiffTag::Y_POSITION));
     }
 
     /**

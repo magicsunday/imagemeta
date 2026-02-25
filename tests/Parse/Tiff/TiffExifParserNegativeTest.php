@@ -1016,14 +1016,11 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Differing XResolution and YResolution values are rejected per EXIF 3.0.
+     * Differing XResolution and YResolution values are tolerated.
      */
     #[Test]
-    public function rejectDifferingXAndYResolution(): void
+    public function toleratesDifferingXAndYResolution(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('XResolution');
-
         // IFD0 with XResolution=72/1 and YResolution=96/1
         $ifdOffset = 8;
         $ifdCount  = 2;
@@ -1050,7 +1047,10 @@ final class TiffExifParserNegativeTest extends TestCase
             // YResolution value: 96/1
             . pack('V', 96) . pack('V', 1);
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        $parsed = (new TiffExifParser())->parseFromBlob($blob);
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::X_RESOLUTION));
+        self::assertNotNull($parsed->ifd0->get(ExifTag::Y_RESOLUTION));
     }
 
     /**

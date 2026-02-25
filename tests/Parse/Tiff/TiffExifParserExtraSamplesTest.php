@@ -99,20 +99,39 @@ final class TiffExifParserExtraSamplesTest extends TestCase
     }
 
     /**
-     * ExtraSamples value must be 1 in strict baseline mode.
+     * ExtraSamples value 2 (pre-multiplied alpha) is accepted.
      */
     #[Test]
-    public function rejectsInvalidExtraSamplesValue(): void
+    public function acceptsExtraSamplesValueTwo(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ExtraSamples value 2 is invalid');
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildExtraSamplesTiff(
                 extraSamplesType: TiffConst::TYPE_SHORT,
                 extraSamplesValues: [2],
             ),
         );
+
+        $entry = $parsed->ifd0->get(ExifTag::EXTRA_SAMPLES);
+        self::assertNotNull($entry);
+        self::assertSame(2, $entry->value);
+    }
+
+    /**
+     * ExtraSamples value 0 (unspecified) is accepted.
+     */
+    #[Test]
+    public function acceptsExtraSamplesValueZero(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildExtraSamplesTiff(
+                extraSamplesType: TiffConst::TYPE_SHORT,
+                extraSamplesValues: [0],
+            ),
+        );
+
+        $entry = $parsed->ifd0->get(ExifTag::EXTRA_SAMPLES);
+        self::assertNotNull($entry);
+        self::assertSame(0, $entry->value);
     }
 
     /**

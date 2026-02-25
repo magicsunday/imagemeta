@@ -78,6 +78,24 @@ final class TiffExifParserPredictorTest extends TestCase
     }
 
     /**
+     * Predictor=2 is valid when paired with AdobeDeflate compression.
+     */
+    #[Test]
+    public function acceptsPredictorTwoWithDeflateCompression(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildSingleIfdBlob(
+                predictorType: TiffConst::TYPE_SHORT,
+                predictorCount: 1,
+                predictorValues: [2],
+                compression: Compression::AdobeDeflate->value,
+            ),
+        );
+
+        self::assertSame(2, $parsed->ifd0->get(TiffTag::PREDICTOR)?->value);
+    }
+
+    /**
      * Predictor must use SHORT type.
      */
     #[Test]
