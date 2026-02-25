@@ -251,6 +251,77 @@ final class CaptureDateResolverTest extends TestCase
     }
 
     /**
+     * Provides an XMP CreateDate without a timezone suffix.
+     * This confirms dates omitting the timezone component are accepted as valid ISO 8601.
+     */
+    #[Test]
+    public function acceptsXmpCreateDateWithoutTimezone(): void
+    {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpBlobs: [],
+            xmpDoc: new XmpDocument([
+                '{' . self::XMP_NAMESPACE . '}CreateDate' => '2024-01-15T10:30:00',
+            ]),
+        );
+
+        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
+
+        self::assertInstanceOf(DateTimeImmutable::class, $result);
+        self::assertSame('2024-01-15', $result->format('Y-m-d'));
+        self::assertSame('10:30:00', $result->format('H:i:s'));
+    }
+
+    /**
+     * Provides an XMP CreateDate with fractional seconds but no timezone suffix.
+     * This confirms sub-second precision values are accepted when the timezone is absent.
+     */
+    #[Test]
+    public function acceptsXmpCreateDateWithFractionalSecondsAndNoTimezone(): void
+    {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpBlobs: [],
+            xmpDoc: new XmpDocument([
+                '{' . self::XMP_NAMESPACE . '}CreateDate' => '2024-01-15T10:30:00.123',
+            ]),
+        );
+
+        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
+
+        self::assertInstanceOf(DateTimeImmutable::class, $result);
+        self::assertSame('2024-01-15', $result->format('Y-m-d'));
+        self::assertSame('10:30:00', $result->format('H:i:s'));
+    }
+
+    /**
+     * Provides an XMP CreateDate using an hour-only timezone offset.
+     * This confirms ISO 8601 offsets without minutes are accepted as valid.
+     */
+    #[Test]
+    public function acceptsXmpCreateDateWithHourOnlyTimezoneOffset(): void
+    {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpBlobs: [],
+            xmpDoc: new XmpDocument([
+                '{' . self::XMP_NAMESPACE . '}CreateDate' => '2024-01-15T10:30:00+05',
+            ]),
+        );
+
+        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
+
+        self::assertInstanceOf(DateTimeImmutable::class, $result);
+        self::assertSame('2024-01-15T10:30:00+05:00', $result->format(DATE_ATOM));
+    }
+
+    /**
      * Supplies GPS date and time tags without EXIF or XMP capture dates.
      * This validates GPS timestamps are used as the last-resort source.
      */
