@@ -1241,7 +1241,15 @@ final class TiffExifParserNegativeTest extends TestCase
         return match ($type) {
             TiffConst::TYPE_ASCII,
             TiffConst::TYPE_BYTE,
+            TiffConst::TYPE_SBYTE,
             TiffConst::TYPE_UNDEFINED => 1,
+            TiffConst::TYPE_SHORT,
+            TiffConst::TYPE_SSHORT => 2,
+            TiffConst::TYPE_LONG,
+            TiffConst::TYPE_SLONG => 4,
+            TiffConst::TYPE_RATIONAL,
+            TiffConst::TYPE_SRATIONAL => 8,
+            TiffConst::TYPE_DOUBLE    => 8,
             default                   => 1,
         };
     }
