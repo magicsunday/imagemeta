@@ -1730,18 +1730,17 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Rejects reserved/out-of-domain EXIF camera-control enum values.
+     * Out-of-domain EXIF camera-control enum values are tolerated.
      */
     #[Test]
     #[DataProvider('provideInvalidCameraControlEnumValues')]
-    public function rejectInvalidCameraControlEnumDomains(int $tag, int $value): void
+    public function toleratesOutOfDomainCameraControlEnumValues(int $tag, int $value): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/reserved or out of domain/i');
-
-        (new TiffExifParser())->parseFromBlob(
+        $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithExifShortTag($tag, $value),
         );
+
+        self::assertSame($value, $result->exifIfd?->get($tag)?->value);
     }
 
     /**
