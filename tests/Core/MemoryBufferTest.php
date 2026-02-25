@@ -39,6 +39,8 @@ namespace MagicSunday\ImageMeta\Tests\Core {
 
     use function substr;
 
+    use const PHP_INT_MAX;
+
     /**
      * Exercises the MemoryBuffer implementation for bounds-checked reads and seeks.
      * It uses the test hook to force short reads and verify ParseError handling.
@@ -148,6 +150,23 @@ namespace MagicSunday\ImageMeta\Tests\Core {
 
             $this->expectException(BoundsError::class);
             $buffer->read(1);
+        }
+
+        /**
+         * Requests PHP_INT_MAX bytes from a buffer positioned at offset 1.
+         * On 32-bit PHP the naive pos+len addition wraps to a negative value and the
+         * bounds check silently passes; the guard must use subtraction to stay
+         * overflow-safe on every platform.
+         */
+        #[Test]
+        public function readThrowsBoundsErrorOnOverflowingLength(): void
+        {
+            $buffer = new MemoryBuffer('abcde');
+            $buffer->read(1);
+
+            $this->expectException(BoundsError::class);
+            $this->expectExceptionCode(1031);
+            $buffer->read(PHP_INT_MAX);
         }
 
         /**
