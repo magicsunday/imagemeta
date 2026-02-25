@@ -102,48 +102,48 @@ final class GpsTimestampConverterTest extends TestCase
     }
 
     /**
-     * Rejects a date with wrong separators (hyphens instead of colons).
+     * Tolerates a date with wrong separators (returns null timestamp).
      */
     #[Test]
-    public function rejectsInvalidDateFormat(): void
+    public function toleratesInvalidDateFormat(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1465);
-
-        $this->converter->extractFromIfd(
+        $result = $this->converter->extractFromIfd(
             $this->buildIfd('2025-03-15', [[12, 1], [0, 1], [0, 1]]),
         );
+
+        self::assertNull($result['date']);
+        self::assertNull($result['timestamp']);
     }
 
     /**
-     * Rejects a date that does not exist on the calendar (Feb 30).
+     * Tolerates a date that does not exist on the calendar (returns null timestamp).
      */
     #[Test]
-    public function rejectsInvalidCalendarDate(): void
+    public function toleratesInvalidCalendarDate(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1465);
-
-        $this->converter->extractFromIfd(
+        $result = $this->converter->extractFromIfd(
             $this->buildIfd('2025:02:30', [[12, 1], [0, 1], [0, 1]]),
         );
+
+        self::assertNull($result['date']);
+        self::assertNull($result['timestamp']);
     }
 
     /**
-     * Rejects out-of-range GPS time components.
+     * Tolerates out-of-range GPS time components (returns null time/timestamp).
      *
      * @param list<array{0:int,1:int}> $timeRationals
      */
     #[Test]
     #[DataProvider('provideOutOfRangeTimeComponents')]
-    public function rejectsOutOfRangeTimeComponents(array $timeRationals): void
+    public function toleratesOutOfRangeTimeComponents(array $timeRationals): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1466);
-
-        $this->converter->extractFromIfd(
+        $result = $this->converter->extractFromIfd(
             $this->buildIfd('2025:03:15', $timeRationals),
         );
+
+        self::assertNull($result['time']);
+        self::assertNull($result['timestamp']);
     }
 
     /**

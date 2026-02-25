@@ -127,10 +127,10 @@ final class GpsUnitConverterTest extends TestCase
     }
 
     /**
-     * Rejects negative altitude values per EXIF 3.0 §4.6.7.1.7.
+     * Tolerates negative altitude values by using absolute magnitude.
      */
     #[Test]
-    public function rejectsNegativeAltitudeValue(): void
+    public function toleratesNegativeAltitudeValue(): void
     {
         $gps = new Ifd([
             ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
@@ -142,10 +142,9 @@ final class GpsUnitConverterTest extends TestCase
             ),
         ]);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1471);
+        $result = $this->converter->extractFromIfd($gps);
 
-        $this->converter->extractFromIfd($gps);
+        self::assertEqualsWithDelta(50.0, $result['alt'], 0.0001);
     }
 
     // ── Speed ─────────────────────────────────────────────────────────

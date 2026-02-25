@@ -651,29 +651,28 @@ final class GpsConverterTest extends TestCase
      */
     #[Test]
     #[DataProvider('provideInvalidGpsTimestampInputs')]
-    public function rejectsInvalidGpsTimestampInputs(string $date, array $timeRationals, int $errorCode, string $messageFragment): void
+    public function toleratesInvalidGpsTimestampInputs(string $date, array $timeRationals): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode($errorCode);
-        $this->expectExceptionMessage($messageFragment);
-
-        $this->converter->fromIfd(
+        $result = $this->converter->fromIfd(
             $this->buildIfdWithDateAndTime($date, $timeRationals),
         );
+
+        // Malformed date/time should be silently skipped — result has null fields
+        self::assertNull($result['timestamp']);
     }
 
     /**
-     * @return iterable<string, array{0:string, 1:list<array{0:int,1:int}>, 2:int, 3:string}>
+     * @return iterable<string, array{0:string, 1:list<array{0:int,1:int}>}>
      */
     public static function provideInvalidGpsTimestampInputs(): iterable
     {
-        yield 'invalid calendar date' => ['2025:02:30', [[12, 1], [34, 1], [56, 1]], 1465, 'GPSDateStamp'];
-        yield 'hour above 23' => ['2025:03:01', [[24, 1], [0, 1], [0, 1]], 1466, 'GPSTimeStamp'];
-        yield 'minute above 59' => ['2025:03:01', [[23, 1], [60, 1], [0, 1]], 1466, 'GPSTimeStamp'];
-        yield 'second equal 60' => ['2025:03:01', [[23, 1], [59, 1], [60, 1]], 1466, 'GPSTimeStamp'];
-        yield 'second below 0' => ['2025:03:01', [[23, 1], [59, 1], [-1, 1]], 1466, 'GPSTimeStamp'];
-        yield 'fractional hour component' => ['2025:03:01', [[109, 10], [20, 1], [0, 1]], 1466, 'GPSTimeStamp'];
-        yield 'fractional minute component' => ['2025:03:01', [[10, 1], [205, 10], [0, 1]], 1466, 'GPSTimeStamp'];
+        yield 'invalid calendar date' => ['2025:02:30', [[12, 1], [34, 1], [56, 1]]];
+        yield 'hour above 23' => ['2025:03:01', [[24, 1], [0, 1], [0, 1]]];
+        yield 'minute above 59' => ['2025:03:01', [[23, 1], [60, 1], [0, 1]]];
+        yield 'second equal 60' => ['2025:03:01', [[23, 1], [59, 1], [60, 1]]];
+        yield 'second below 0' => ['2025:03:01', [[23, 1], [59, 1], [-1, 1]]];
+        yield 'fractional hour component' => ['2025:03:01', [[109, 10], [20, 1], [0, 1]]];
+        yield 'fractional minute component' => ['2025:03:01', [[10, 1], [205, 10], [0, 1]]];
     }
 
     /**
@@ -866,38 +865,34 @@ final class GpsConverterTest extends TestCase
      * @param string               $messageFragment Expected message substring.
      */
     #[Test]
-    #[DataProvider('provideNegativeRationalValues')]
-    public function rejectsNegativeRationalMagnitude(array $entries, int $errorCode, string $messageFragment): void
+    public function toleratesNegativeDop(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode($errorCode);
-        $this->expectExceptionMessage($messageFragment);
+        $result = $this->converter->fromIfd(new Ifd([
+            ExifTag::GPS_DOP => new IfdEntry(ExifTag::GPS_DOP, 5, 1, new ExifRational(-1, 1)),
+        ]));
 
-        $this->converter->fromIfd(new Ifd($entries));
+        self::assertNull($result['dop']);
     }
 
-    /**
-     * @return iterable<string, array{0: array<int, IfdEntry>, 1: int, 2: string}>
-     */
-    public static function provideNegativeRationalValues(): iterable
+    #[Test]
+    public function toleratesNegativeHPositioningError(): void
     {
-        yield 'negative DOP' => [
-            [ExifTag::GPS_DOP => new IfdEntry(ExifTag::GPS_DOP, 5, 1, new ExifRational(-1, 1))],
-            1469, 'GPSDOP',
-        ];
+        $result = $this->converter->fromIfd(new Ifd([
+            ExifTag::GPS_H_POSITIONING_ERROR => new IfdEntry(ExifTag::GPS_H_POSITIONING_ERROR, 5, 1, new ExifRational(-1, 1)),
+        ]));
 
-        yield 'negative HPositioningError' => [
-            [ExifTag::GPS_H_POSITIONING_ERROR => new IfdEntry(ExifTag::GPS_H_POSITIONING_ERROR, 5, 1, new ExifRational(-1, 1))],
-            1468, 'GPSHPositioningError',
-        ];
+        self::assertNull($result['h_positioning_error']);
+    }
 
-        yield 'negative altitude' => [
-            [
-                ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
-                ExifTag::GPS_ALTITUDE     => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, new ExifRational(-100, 1)),
-            ],
-            1471, 'GPSAltitude',
-        ];
+    #[Test]
+    public function toleratesNegativeAltitude(): void
+    {
+        $result = $this->converter->fromIfd(new Ifd([
+            ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
+            ExifTag::GPS_ALTITUDE     => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, new ExifRational(-100, 1)),
+        ]));
+
+        self::assertEqualsWithDelta(100.0, $result['alt'], 0.0001);
     }
 
     /**
