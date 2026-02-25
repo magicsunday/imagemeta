@@ -205,18 +205,20 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * Rejects profiles whose declared size is not 4-byte aligned.
+     * Tolerates profiles whose declared size is not 4-byte aligned.
      */
     #[Test]
-    public function decodeRejectsMisalignedProfileSize(): void
+    public function toleratesMisalignedProfileSize(): void
     {
         $profile = IccFixtures::minimalProfile();
+        // Set profileSize to 243 (not 4-byte aligned) and pad to match
         $profile = substr_replace($profile, pack('N', 243), 0, 4);
+        $profile = substr($profile, 0, 243);
 
         $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
 
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
+        self::assertNotNull($result);
     }
 
     /**
@@ -236,19 +238,19 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * Rejects profiles where the declared size does not match the actual payload length.
+     * Tolerates profiles with trailing bytes beyond the declared size.
      */
     #[Test]
-    public function decodeRejectsProfileSizeMismatch(): void
+    public function toleratesProfileSizeTrailingBytes(): void
     {
         $profile = IccFixtures::minimalProfile();
         // Append 4 extra bytes without updating profileSize
         $profile .= str_repeat("\0", 4);
 
         $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
 
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
+        self::assertNotNull($result);
     }
 
     /**
@@ -595,11 +597,10 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * Rejects mluc payloads with non-zero reserved bytes in the type header.
-     * ICC.1:2022 §10.1 and Table 54: bytes 4..7 must be zero.
+     * Tolerates mluc payloads with non-zero reserved bytes in the type header.
      */
     #[Test]
-    public function rejectsMlucTagWithNonZeroTypeReservedBytes(): void
+    public function toleratesMlucTagWithNonZeroTypeReservedBytes(): void
     {
         $profile = $this->buildMlucProfile("\x00\x48\x00\x69");
 
@@ -607,19 +608,17 @@ final class IccParserTest extends TestCase
         $profile       = substr_replace($profile, "\0\0\0\x01", $tagDataOffset + 4, 4);
 
         $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('reserved bytes 4..7');
-
-        $decoder->decode($profile);
+        self::assertNotNull($result);
+        self::assertSame('Hi', $result['description']);
     }
 
     /**
-     * Rejects mluc payloads when recordSize is not exactly 12.
-     * ICC.1:2022 Table 54 defines a fixed 12-byte record structure.
+     * Tolerates mluc payloads with record size larger than 12.
      */
     #[Test]
-    public function rejectsMlucTagWithInvalidRecordSize(): void
+    public function toleratesMlucTagWithLargerRecordSize(): void
     {
         $profile = $this->buildMlucProfile("\x00\x48\x00\x69");
 
@@ -627,11 +626,9 @@ final class IccParserTest extends TestCase
         $profile       = substr_replace($profile, pack('N', 16), $tagDataOffset + 12, 4);
 
         $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('recordSize must be 12');
-
-        $decoder->decode($profile);
+        self::assertNotNull($result);
     }
 
     /**
@@ -858,53 +855,48 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * Rejects profiles with non-zero reserved bytes in version field.
-     * ICC.1:2022 §7.2.4: bytes 10-11 must be 0x00.
+     * Tolerates profiles with non-zero reserved bytes in version field.
      */
     #[Test]
-    public function decodeRejectsNonZeroVersionReservedBytes(): void
+    public function toleratesNonZeroVersionReservedBytes(): void
     {
         $profile = IccFixtures::minimalProfile();
-        // Set byte 10 to non-zero
         $profile = substr_replace($profile, chr(0x01), 10, 1);
 
         $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
 
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
+        self::assertNotNull($result);
     }
 
     /**
-     * Rejects profiles with non-zero reserved byte 11 in version field.
-     * ICC.1:2022 §7.2.4: bytes 10-11 must be 0x00.
+     * Tolerates profiles with non-zero reserved byte 11 in version field.
      */
     #[Test]
-    public function decodeRejectsNonZeroVersionReservedByte11(): void
+    public function toleratesNonZeroVersionReservedByte11(): void
     {
         $profile = IccFixtures::minimalProfile();
-        // Set byte 11 to non-zero
         $profile = substr_replace($profile, chr(0xFF), 11, 1);
 
         $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
 
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
+        self::assertNotNull($result);
     }
 
     /**
-     * Rejects profiles with both non-zero reserved bytes in version field.
-     * ICC.1:2022 §7.2.4: bytes 10-11 must be 0x00.
+     * Tolerates profiles with both non-zero reserved bytes in version field.
      */
     #[Test]
-    public function decodeRejectsBothNonZeroVersionReservedBytes(): void
+    public function toleratesBothNonZeroVersionReservedBytes(): void
     {
         $profile = IccFixtures::minimalProfile();
         $profile = substr_replace($profile, "\x01\xFF", 10, 2);
 
         $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
 
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
+        self::assertNotNull($result);
     }
 
     /**
@@ -1253,6 +1245,54 @@ final class IccParserTest extends TestCase
     private function createSegment(int $sequence, int $count, string $payload): string
     {
         return 'ICC_PROFILE\0' . chr($sequence) . chr($count) . $payload;
+    }
+
+    /**
+     * Tolerates non-zero upper 16 bits in rendering intent field.
+     */
+    #[Test]
+    public function toleratesRenderingIntentNonZeroUpperBits(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        // Offset 64-67: rendering intent. Set upper 16 bits to 0xFFFF, keep lower=1
+        $profile = substr_replace($profile, pack('N', 0xFFFF0001), 64, 4);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+    }
+
+    /**
+     * Tolerates non-zero reserved bits (3..15) in profile flags field.
+     */
+    #[Test]
+    public function toleratesProfileFlagsReservedBits(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        // Offset 44-47: profile flags. Set reserved bits 3..15
+        $profile = substr_replace($profile, pack('N', 0x0000FFF8), 44, 4);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+    }
+
+    /**
+     * Tolerates non-zero reserved bits (4..31) in device attributes lower word.
+     */
+    #[Test]
+    public function toleratesDeviceAttributesReservedBits(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        // Offset 56-63: device attributes (8 bytes). Lower 32-bit word at offset 60-63.
+        $profile = substr_replace($profile, pack('N', 0xFFFFFFF0), 60, 4);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
     }
 
     /**
