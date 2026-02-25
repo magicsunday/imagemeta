@@ -236,10 +236,10 @@ final readonly class FormatDetector
                     return true;
                 }
 
-                // ftyp/styp require at least 8 payload bytes and 4-byte brand alignment
+                // ftyp/styp require at least 8 payload bytes (major_brand + minor_version)
                 if ($boxType === 'ftyp' || $boxType === 'styp') {
                     $payload = $size - $headerSize;
-                    if ($payload < 8 || ($payload - 8) % 4 !== 0) {
+                    if ($payload < 8) {
                         return false;
                     }
                 }
