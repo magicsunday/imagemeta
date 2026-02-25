@@ -139,20 +139,21 @@ final class TiffExifParserJpegInterchangePairTest extends TestCase
     }
 
     /**
-     * offset+length must be in-bounds.
+     * Out-of-bounds offset+length is tolerated (Postel's Law): thumbnail skipped.
      */
     #[Test]
-    public function rejectsOutOfBoundsInterchangeRange(): void
+    public function itSkipsThumbnailWhenInterchangeFormatRangeExceedsBounds(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGInterchangeFormat range exceeds TIFF data length');
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1JpegInterchange(
                 offsetValue: -1,
                 lengthValue: 4096,
             ),
         );
+
+        self::assertNotNull($parsed->ifd1);
+        self::assertNotNull($parsed->ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT));
+        self::assertNotNull($parsed->ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH));
     }
 
     /**
