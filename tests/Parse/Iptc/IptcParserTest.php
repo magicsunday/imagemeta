@@ -226,6 +226,40 @@ final class IptcParserTest extends TestCase
     }
 
     /**
+     * Stops scanning when a dataset marker byte is missing and returns partial results.
+     * A valid dataset followed by non-IIM bytes should yield only the valid dataset.
+     */
+    #[Test]
+    public function itStopsOnMissingDatasetMarkerAndReturnsPartialResults(): void
+    {
+        $validDataset = $this->iimDataset(2, 5, 'Object Name');
+        $corruptTrail = "\xFF\x02\x19" . pack('n', 3) . 'XYZ';
+        $iimData      = $validDataset . $corruptTrail;
+        $payload      = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
+
+        $document = (new IptcParser())->parse($payload);
+
+        self::assertSame(['Object Name'], $document->values(2, 5));
+    }
+
+    /**
+     * Stops scanning when the remaining IIM bytes are too short for a dataset header.
+     * A valid dataset followed by a truncated header should yield only the valid dataset.
+     */
+    #[Test]
+    public function itStopsOnTruncatedDatasetHeaderAndReturnsPartialResults(): void
+    {
+        $validDataset   = $this->iimDataset(2, 5, 'Object Name');
+        $truncatedBytes = "\x1C\x02";
+        $iimData        = $validDataset . $truncatedBytes;
+        $payload        = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
+
+        $document = (new IptcParser())->parse($payload);
+
+        self::assertSame(['Object Name'], $document->values(2, 5));
+    }
+
+    /**
      * Truncates the Photoshop resource block to simulate corruption.
      * This asserts a BoundsError is thrown when the block length is inconsistent.
      */
