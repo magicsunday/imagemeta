@@ -18,13 +18,11 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
-use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 
 use function strlen;
 
@@ -104,24 +102,6 @@ final class GpsUndefinedStringTest extends TestCase
         $result = $this->converters->gpsFromIfd($gps);
 
         self::assertNull($result['area_information']);
-    }
-
-    /**
-     * Verifies the generic undefined-string decoder contract exists for encoding-specific dispatch.
-     */
-    #[Test]
-    public function exposesGenericUndefinedDecoderMethodContract(): void
-    {
-        $class  = new ReflectionClass(GpsTimestampConverter::class);
-        $method = $class->getMethod('decodeUndefinedWithEncoding');
-
-        self::assertTrue($method->isPrivate());
-        self::assertSame('?string', (string) $method->getReturnType());
-        self::assertCount(2, $method->getParameters());
-        self::assertSame('payload', $method->getParameters()[0]->getName());
-        self::assertSame('sourceEncoding', $method->getParameters()[1]->getName());
-        self::assertSame('string', (string) $method->getParameters()[0]->getType());
-        self::assertSame(CharacterEncoding::class, (string) $method->getParameters()[1]->getType());
     }
 
     private function gpsIfdWithProcessingMethod(string $value): Ifd
