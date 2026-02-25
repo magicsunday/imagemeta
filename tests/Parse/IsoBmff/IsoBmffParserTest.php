@@ -3621,14 +3621,11 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects version 0 audio sample entries with non-legacy format codes.
+     * Tolerates version 0 audio sample entries with non-legacy format codes.
      */
     #[Test]
-    public function rejectsAudioStsdVersion0EntryWithNonLegacyFormat(): void
+    public function toleratesAudioStsdVersion0EntryWithNonLegacyFormat(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample entry version 0 format must be "raw " or "twos"');
-
         $entry = $this->audioSampleEntryVersion0(
             format: 'mp4a',
             channels: 2,
@@ -3636,7 +3633,11 @@ final class IsoBmffParserTest extends TestCase
             sampleRate: 44100,
         );
 
-        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame('mp4a', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
     }
 
     /**
@@ -3858,14 +3859,11 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects audio entries whose sample rate is inconsistent with mdhd timescale.
+     * Tolerates audio entries whose sample rate is inconsistent with mdhd timescale.
      */
     #[Test]
-    public function rejectsAudioStsdSampleRateInconsistentWithMdhdTimescale(): void
+    public function toleratesAudioStsdSampleRateInconsistentWithMdhdTimescale(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample rate and mdhd timescale must be equal or integer multiple/division');
-
         $entry = $this->audioSampleEntryVersion0(
             format: 'raw ',
             channels: 2,
@@ -3873,7 +3871,11 @@ final class IsoBmffParserTest extends TestCase
             sampleRate: 44100,
         );
 
-        $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 0, 48000))->extract();
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 0, 48000));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame(44100, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
     }
 
     /**
@@ -6465,6 +6467,21 @@ final class IsoBmffParserTest extends TestCase
         [, , $qtMeta] = $extractor->extract();
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+    }
+
+    /**
+     * Tolerates moov box without mvhd sub-box.
+     */
+    #[Test]
+    public function toleratesMoovWithoutMvhd(): void
+    {
+        $trak = $this->minimalTrak();
+        $moov = $this->box('moov', $trak);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $this->expectNotToPerformAssertions();
+
+        $this->createExtractor($ftyp . $moov)->extract();
     }
 
     /**

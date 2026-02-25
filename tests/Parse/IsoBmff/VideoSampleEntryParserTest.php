@@ -176,49 +176,46 @@ final class VideoSampleEntryParserTest extends TestCase
     }
 
     /**
-     * Rejects non-zero revision level (code 1499).
+     * Tolerates non-zero revision level.
      */
     #[Test]
-    public function rejectsNonZeroRevisionLevel(): void
+    public function toleratesNonZeroRevisionLevel(): void
     {
         $data   = $this->buildVideoSampleData(revisionLevel: 1);
         $win    = $this->createWindow($data);
         $parser = new VideoSampleEntryParser();
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1499);
+        $this->expectNotToPerformAssertions();
 
         $parser->parseVideoSampleEntry($win, 70, 'avc1');
     }
 
     /**
-     * Rejects temporal quality exceeding 1023 (code 1500).
+     * Tolerates temporal quality exceeding 1023.
      */
     #[Test]
-    public function rejectsExcessiveTemporalQuality(): void
+    public function toleratesExcessiveTemporalQuality(): void
     {
         $data   = $this->buildVideoSampleData(temporalQuality: 1024);
         $win    = $this->createWindow($data);
         $parser = new VideoSampleEntryParser();
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1500);
+        $this->expectNotToPerformAssertions();
 
         $parser->parseVideoSampleEntry($win, 70, 'avc1');
     }
 
     /**
-     * Rejects spatial quality exceeding 1024 (code 1501).
+     * Tolerates spatial quality exceeding 1024.
      */
     #[Test]
-    public function rejectsExcessiveSpatialQuality(): void
+    public function toleratesExcessiveSpatialQuality(): void
     {
         $data   = $this->buildVideoSampleData(spatialQuality: 1025);
         $win    = $this->createWindow($data);
         $parser = new VideoSampleEntryParser();
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1501);
+        $this->expectNotToPerformAssertions();
 
         $parser->parseVideoSampleEntry($win, 70, 'avc1');
     }

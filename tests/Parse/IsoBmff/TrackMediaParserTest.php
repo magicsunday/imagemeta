@@ -1062,10 +1062,10 @@ final class TrackMediaParserTest extends TestCase
     }
 
     /**
-     * Rejects minf with mismatched media header for handler (code 1423).
+     * Tolerates minf with mismatched media header for handler.
      */
     #[Test]
-    public function parseTrakRejectsMinfMismatchedMediaHeader(): void
+    public function parseTrakToleratesMinfMismatchedMediaHeader(): void
     {
         // Handler is 'vide' but media header is 'smhd' (expected 'vmhd')
         $minf = $this->box('minf', $this->validDinfBox() . $this->validSmhdBox() . $this->box('stbl', $this->validStblContent()));
@@ -1075,8 +1075,7 @@ final class TrackMediaParserTest extends TestCase
             $this->validTkhdBox() . $mdia,
         );
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1423);
+        $this->expectNotToPerformAssertions();
 
         $parser->parseTrak($descriptor, $context);
     }
