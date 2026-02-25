@@ -623,10 +623,10 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects EXIF streams that end at EOI without any SOS marker.
+     * Tolerates EOI before SOS when EXIF data has already been collected.
      */
     #[Test]
-    public function missingSosThrowsParseErrorForExif(): void
+    public function toleratesEoiBeforeSosAndReturnsPartialExif(): void
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
@@ -638,11 +638,8 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1487);
-        $this->expectExceptionMessageMatches('/requires SOS.*without SOS|without SOS.*requires SOS/i');
-
-        $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
+        self::assertSame([$exifPayload], $blobs);
     }
 
     /**
