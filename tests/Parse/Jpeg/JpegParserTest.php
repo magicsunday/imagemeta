@@ -2945,6 +2945,25 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Tolerates a truncated stream and returns partial EXIF results.
+     */
+    #[Test]
+    public function toleratesTruncatedStreamAndReturnsPartialResults(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'truncated-stream';
+
+        // SOI + APP1(Exif) + APP2 marker bytes with no length — stream truncated
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . "\xFF\xE2";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $blobs = $extractor->extractExifBlobs();
+        self::assertSame([$exifPayload], $blobs);
+    }
+
+    /**
      * Rejects FF00 byte-stuffing sequence in pre-SOS marker area.
      *
      * JPEG byte-stuffing (0xFF00) is only valid within entropy-coded scan
