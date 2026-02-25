@@ -213,10 +213,10 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects duplicate EXIF APP1 metadata blocks in strict EXIF JPEG conformance mode.
+     * Tolerates duplicate EXIF APP1 metadata blocks, keeping only the first.
      */
     #[Test]
-    public function rejectsDuplicateExifApp1Blocks(): void
+    public function toleratesDuplicateExifApp1Blocks(): void
     {
         $firstBlob  = self::TIFF_HEADER . 'first-exif';
         $secondBlob = self::TIFF_HEADER . 'second-exif';
@@ -228,11 +228,29 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1501);
-        $this->expectExceptionMessageMatches('/duplicate.*Exif APP1|Exif APP1.*duplicate/i');
+        self::assertSame([$firstBlob], $extractor->extractExifBlobs());
+    }
 
-        $extractor->extractExifBlobs();
+    /**
+     * Ignores a second Exif APP1 marker and retains only the first Exif blob.
+     */
+    #[Test]
+    public function itIgnoresSecondExifApp1Marker(): void
+    {
+        $exifBlob  = self::TIFF_HEADER . 'primary-exif';
+        $dupeBlob  = self::TIFF_HEADER . 'duplicate-exif';
+        $xmpPacket = '<x:xmpmeta xmlns:x="adobe:ns:meta/">XMP</x:xmpmeta>';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifBlob),
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPacket),
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $dupeBlob),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifBlob], $extractor->extractExifBlobs());
+        self::assertSame([$xmpPacket], $extractor->extractXmpPackets());
     }
 
     /**
