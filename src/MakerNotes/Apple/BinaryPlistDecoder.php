@@ -235,10 +235,6 @@ final class BinaryPlistDecoder
             throw new ParseError('The offset table exceeds payload bounds.', 1047);
         }
 
-        if ($offsetTableEnd !== $trailerStart) {
-            throw new ParseError('The property list payload contains unexpected padding.', 1048);
-        }
-
         if ($objectRefSize < 8) {
             $maxReferences = 1 << ($objectRefSize * 8);
             if ($maxReferences <= $numObjects) {

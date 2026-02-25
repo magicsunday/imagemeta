@@ -385,13 +385,13 @@ final readonly class TrackMediaParser
             }
 
             $win->read(8 + 8); // creation(64), modification(64)
-            $trackId    = $win->readU32BE();
-            $reserved32 = $win->read(4);
+            $trackId = $win->readU32BE();
+            $win->read(4); // reserved
             $win->read(8); // duration(64)
         } else {
             $win->read(4 + 4); // creation(32), modification(32)
-            $trackId    = $win->readU32BE();
-            $reserved32 = $win->read(4);
+            $trackId = $win->readU32BE();
+            $win->read(4); // reserved
             $win->read(4); // duration(32)
         }
 
@@ -400,26 +400,13 @@ final readonly class TrackMediaParser
             throw new ParseError('tkhd track_ID must not be zero', 1369);
         }
 
-        // ISO/IEC 14496-12 §8.3.2: reserved field after track_ID must be zero
-        if ($reserved32 !== "\0\0\0\0") {
-            throw new ParseError('tkhd reserved field after track_ID must be zero', 1370);
-        }
-
-        $reserved64 = $win->read(8); // reserved
-
-        if ($reserved64 !== "\0\0\0\0\0\0\0\0") {
-            throw new ParseError('tkhd reserved 8-byte field must be zero', 1371);
-        }
+        $win->read(8); // reserved (64-bit)
 
         $win->read(2); // layer
         $win->read(2); // alternate group
         $win->read(2); // volume
 
-        $reserved16 = $win->read(2); // reserved
-
-        if ($reserved16 !== "\0\0") {
-            throw new ParseError('tkhd reserved 2-byte field must be zero', 1372);
-        }
+        $win->read(2); // reserved (16-bit)
 
         $win->read(36); // matrix
 
@@ -792,11 +779,8 @@ final readonly class TrackMediaParser
             $entryStart = $win->tell();
             $entryEnd   = $pos + $entrySize;
 
-            // ISO 14496-12 §8.5.2.2: the 6-byte reserved field must be all zeros
-            $reserved6 = $win->read(6);
-            if ($reserved6 !== "\0\0\0\0\0\0") {
-                throw new ParseError('stsd sample entry reserved field must be zero', 1398);
-            }
+            // ISO 14496-12 §8.5.2.2: reserved 6-byte field (ignored for tolerance)
+            $win->read(6);
 
             // ISO 14496-12 §8.5.2.2: data_reference_index is 1-based
             $dataRefIndex = $win->readU16BE();

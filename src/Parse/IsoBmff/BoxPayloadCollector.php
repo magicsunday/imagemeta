@@ -340,14 +340,9 @@ final readonly class BoxPayloadCollector
         }
 
         $version = ord($peek[0]);
-        $flags   = (ord($peek[1]) << 16) | (ord($peek[2]) << 8) | ord($peek[3]);
 
         if ($version !== 0) {
             throw new ParseError('unsupported meta box version', 1168);
-        }
-
-        if ($flags !== 0) {
-            throw new ParseError('unsupported meta box flags', 1169);
         }
     }
 

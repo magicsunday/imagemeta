@@ -598,9 +598,9 @@ final class BinaryPlistDecoderTest extends TestCase
 
         $plist = $header . $objectBytes . $offsetTable . $padding . $trailer;
 
-        $result = (new BinaryPlistDecoder())->decode($plist);
+        $this->expectNotToPerformAssertions();
 
-        self::assertNotNull($result);
+        (new BinaryPlistDecoder())->decode($plist);
     }
 
     /**

@@ -110,10 +110,6 @@ final readonly class IlocBoxParser
                 // ISO/IEC 14496-12 §8.11.3: 12-bit reserved (must be 0) followed by 4-bit construction_method
                 $tmp = $win->readU16BE();
 
-                if (($tmp >> 4) !== 0) {
-                    throw new ParseError('iloc construction_method reserved bits must be zero', 1206);
-                }
-
                 $method = ConstructionMethod::tryFrom($tmp & BitMask::LOW_NIBBLE);
 
                 if ($method === null) {
@@ -394,14 +390,10 @@ final readonly class IlocBoxParser
         }
 
         $version = $win->readU8();
-        $flags   = $this->boxNavigator->readUInt24($win);
+        $this->boxNavigator->readUInt24($win);
 
         if ($version !== 0) {
             throw new ParseError('unsupported dref box version', 1173);
-        }
-
-        if ($flags !== 0) {
-            throw new ParseError('dref FullBox flags must be 0 per ISO/IEC 14496-12', 1360);
         }
 
         $entryCount = $win->readU32BE();

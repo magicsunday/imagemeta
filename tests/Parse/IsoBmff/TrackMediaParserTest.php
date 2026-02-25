@@ -753,9 +753,8 @@ final class TrackMediaParserTest extends TestCase
             $tkhd . $this->validMdiaBox(),
         );
 
-        $result = $parser->parseTrak($descriptor, $context);
-
-        self::assertNotNull($result);
+        $this->expectNotToPerformAssertions();
+        $parser->parseTrak($descriptor, $context);
     }
 
     // =========================================================================
@@ -1376,9 +1375,9 @@ final class TrackMediaParserTest extends TestCase
             $this->buildTrakWithStsd($stsd),
         );
 
-        $result = $parser->parseTrak($descriptor, $context);
+        $this->expectNotToPerformAssertions();
 
-        self::assertNotNull($result);
+        $parser->parseTrak($descriptor, $context);
     }
 
     /**

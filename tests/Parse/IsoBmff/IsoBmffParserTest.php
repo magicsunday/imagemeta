@@ -629,8 +629,8 @@ final class IsoBmffParserTest extends TestCase
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
+        $this->expectNotToPerformAssertions();
         $extractor->extract();
-        self::assertTrue(true);
     }
 
     /**
@@ -655,8 +655,8 @@ final class IsoBmffParserTest extends TestCase
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
+        $this->expectNotToPerformAssertions();
         $extractor->extract();
-        self::assertTrue(true);
     }
 
     /**
@@ -4421,14 +4421,15 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function toleratesDrefNonZeroFlags(): void
     {
-        $dref = $this->fullBox('dref', pack('N', 0), 0, 1); // version=0, flags=1, entry_count=0
-        $dinf = $this->box('dinf', $dref);
-        $meta = $this->fullBox('meta', $dinf);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $urlEntry = $this->fullBox('url ', '', 0, 1);
+        $dref     = $this->fullBox('dref', pack('N', 1) . $urlEntry, 0, 1); // version=0, flags=1, entry_count=1
+        $dinf     = $this->box('dinf', $dref);
+        $meta     = $this->fullBox('meta', $dinf);
+        $ftyp     = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
+        $this->expectNotToPerformAssertions();
         $extractor->extract();
-        self::assertTrue(true);
     }
 
     /**
@@ -4611,8 +4612,8 @@ final class IsoBmffParserTest extends TestCase
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
+        $this->expectNotToPerformAssertions();
         $extractor->extract();
-        self::assertTrue(true);
     }
 
     /**
