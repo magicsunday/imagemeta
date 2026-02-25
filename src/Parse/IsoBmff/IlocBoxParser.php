@@ -442,8 +442,14 @@ final readonly class IlocBoxParser
      */
     private function parseDataReferenceEntry(BoxDescriptor $entry, int $index): IsoBmffDataReference
     {
+        // Postel's Law: skip unknown dref types (e.g. "alis", "rsrc").
         if ($entry->type !== BoxType::URL->value && $entry->type !== BoxType::URN->value) {
-            throw new ParseError(sprintf('unsupported dref entry type "%s"', $entry->type), 1367);
+            return new IsoBmffDataReference(
+                $index,
+                $this->boxNavigator->normalizeFourcc($entry->type),
+                null,
+                false,
+            );
         }
 
         $win = $entry->window;

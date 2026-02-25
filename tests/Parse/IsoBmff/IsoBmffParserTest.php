@@ -4570,16 +4570,25 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects dref entries that are neither url nor urn data entry boxes.
+     * Tolerates dref entries that are neither url nor urn data entry boxes (Postel's Law).
      */
     #[Test]
-    public function rejectDrefWithoutUrlOrUrnEntries(): void
+    public function itToleratesUnknownDrefEntryType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported dref entry type "free"');
+        $alisEntry                                        = $this->fullBox('alis', "\x00\x01\x02\x03");
+        $extractor                                        = $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $alisEntry));
+        [$exifs, , , , $dataReferences, $unresolvedItems] = $extractor->extract();
 
-        $invalidEntry = $this->fullBox('free', '');
-        $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $invalidEntry))->extract();
+        self::assertSame([], $exifs);
+        self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
+
+        $reference = $dataReferences->referenceForIndex(1);
+        self::assertNotNull($reference);
+        self::assertSame('alis', $reference->type);
+        self::assertFalse($reference->selfContained);
+        self::assertNull($reference->uri);
+
+        self::assertCount(1, $unresolvedItems);
     }
 
     /**
