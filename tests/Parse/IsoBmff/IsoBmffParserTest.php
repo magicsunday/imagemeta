@@ -3215,14 +3215,11 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects non-zero revision level in video sample entries.
+     * Tolerates non-zero revision level in video sample entries.
      */
     #[Test]
-    public function rejectsVideoStsdEntryWithNonZeroRevisionLevel(): void
+    public function toleratesVideoStsdEntryWithNonZeroRevisionLevel(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('video sample entry revision level must be 0');
-
         $entry = $this->videoSampleEntry(
             format: 'raw ',
             width: 320,
@@ -3231,6 +3228,8 @@ final class IsoBmffParserTest extends TestCase
             colorTableId: -1,
             videoRevisionLevel: 1,
         );
+
+        $this->expectNotToPerformAssertions();
 
         $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
     }
@@ -3257,14 +3256,11 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects temporal quality values outside the QuickTime domain.
+     * Tolerates temporal quality values outside the QuickTime domain.
      */
     #[Test]
-    public function rejectsVideoStsdEntryWithTemporalQualityOutOfRange(): void
+    public function toleratesVideoStsdEntryWithTemporalQualityOutOfRange(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('video sample entry temporal quality must be <= 1023');
-
         $entry = $this->videoSampleEntry(
             format: 'raw ',
             width: 320,
@@ -3274,18 +3270,17 @@ final class IsoBmffParserTest extends TestCase
             temporalQuality: 1024,
         );
 
+        $this->expectNotToPerformAssertions();
+
         $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
     }
 
     /**
-     * Rejects spatial quality values outside the QuickTime domain.
+     * Tolerates spatial quality values outside the QuickTime domain.
      */
     #[Test]
-    public function rejectsVideoStsdEntryWithSpatialQualityOutOfRange(): void
+    public function toleratesVideoStsdEntryWithSpatialQualityOutOfRange(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('video sample entry spatial quality must be <= 1024');
-
         $entry = $this->videoSampleEntry(
             format: 'raw ',
             width: 320,
@@ -3294,6 +3289,8 @@ final class IsoBmffParserTest extends TestCase
             colorTableId: -1,
             spatialQuality: 1025,
         );
+
+        $this->expectNotToPerformAssertions();
 
         $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
     }

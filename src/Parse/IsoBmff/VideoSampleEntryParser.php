@@ -67,22 +67,10 @@ final readonly class VideoSampleEntryParser
         }
 
         $win->readU16BE(); // version
-        $videoRevisionLevel = $win->readU16BE();
+        $win->readU16BE(); // revision level
         $win->readU32BE(); // vendor
-        $temporalQuality = $win->readU32BE();
-        $spatialQuality  = $win->readU32BE();
-
-        if ($videoRevisionLevel !== 0) {
-            throw new ParseError('video sample entry revision level must be 0', 1499);
-        }
-
-        if ($temporalQuality > 1023) {
-            throw new ParseError('video sample entry temporal quality must be <= 1023', 1500);
-        }
-
-        if ($spatialQuality > 1024) {
-            throw new ParseError('video sample entry spatial quality must be <= 1024', 1501);
-        }
+        $win->readU32BE(); // temporal quality
+        $win->readU32BE(); // spatial quality
 
         $width  = $win->readU16BE();
         $height = $win->readU16BE();

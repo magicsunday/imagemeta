@@ -490,14 +490,13 @@ final readonly class TrackMediaParser
      */
     private function parseMdia(BoxDescriptor $mdia, IsoBmffParseContext $context): array
     {
-        $handler       = null;
-        $handlerName   = null;
-        $sampleInfo    = [];
-        $hdlrCount     = 0;
-        $minfCount     = 0;
-        $mdhdCount     = 0;
-        $udtaCount     = 0;
-        $mdhdTimescale = null;
+        $handler     = null;
+        $handlerName = null;
+        $sampleInfo  = [];
+        $hdlrCount   = 0;
+        $minfCount   = 0;
+        $mdhdCount   = 0;
+        $udtaCount   = 0;
 
         // Collect children first so hdlr/minf order does not matter
         $children = [];
@@ -526,7 +525,7 @@ final readonly class TrackMediaParser
                     throw new ParseError('mdia must contain exactly one mdhd box', 1380);
                 }
 
-                $mdhdTimescale = $this->parseMdhd($child);
+                $this->parseMdhd($child);
             } elseif ($child->type === BoxType::UDTA->value) {
                 ++$udtaCount;
 
@@ -552,7 +551,7 @@ final readonly class TrackMediaParser
 
         // Parse minf after hdlr so handler type is always available
         foreach ($children as $child) {
-            $sampleInfo = $this->parseMinf($child, $handler, $mdhdTimescale);
+            $sampleInfo = $this->parseMinf($child, $handler);
         }
 
         return [$handler, $handlerName, $sampleInfo];
@@ -561,13 +560,12 @@ final readonly class TrackMediaParser
     /**
      * Parses the media information box (`minf`) to find sample table details.
      *
-     * @param BoxDescriptor $minf          Media information descriptor.
-     * @param string|null   $handlerType   Declared handler type for the media.
-     * @param int|null      $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
+     * @param BoxDescriptor $minf        Media information descriptor.
+     * @param string|null   $handlerType Declared handler type for the media.
      *
      * @return SampleEntryMap
      */
-    private function parseMinf(BoxDescriptor $minf, ?string $handlerType, ?int $mdhdTimescale): array
+    private function parseMinf(BoxDescriptor $minf, ?string $handlerType): array
     {
         if ($handlerType === null) {
             return [];
@@ -593,7 +591,7 @@ final readonly class TrackMediaParser
                     throw new ParseError('minf must contain exactly one stbl box', 1381);
                 }
 
-                $result = $this->parseStbl($child, $handlerType, $mdhdTimescale);
+                $result = $this->parseStbl($child, $handlerType);
             } elseif ($child->type === BoxType::DINF->value) {
                 ++$dinfCount;
 
@@ -626,23 +624,18 @@ final readonly class TrackMediaParser
             throw new ParseError(sprintf('minf missing required media header box %s for handler %s', $expectedMediaHdr, $handlerType), 1422);
         }
 
-        if ($mediaHdrType !== $expectedMediaHdr) {
-            throw new ParseError(sprintf('minf media header %s does not match handler %s (expected %s)', $mediaHdrType, $handlerType, $expectedMediaHdr), 1423);
-        }
-
         return $result;
     }
 
     /**
      * Parses the sample table box (`stbl`).
      *
-     * @param BoxDescriptor $stbl          Sample table descriptor.
-     * @param string        $handlerType   Media handler type.
-     * @param int|null      $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
+     * @param BoxDescriptor $stbl        Sample table descriptor.
+     * @param string        $handlerType Media handler type.
      *
      * @return SampleEntryMap
      */
-    private function parseStbl(BoxDescriptor $stbl, string $handlerType, ?int $mdhdTimescale): array
+    private function parseStbl(BoxDescriptor $stbl, string $handlerType): array
     {
         $stsdCount = 0;
         $sttsCount = 0;
@@ -659,7 +652,7 @@ final readonly class TrackMediaParser
                     throw new ParseError('stbl must contain exactly one stsd box', 1383);
                 }
 
-                $result = $this->parseStsd($child, $handlerType, $mdhdTimescale);
+                $result = $this->parseStsd($child, $handlerType);
             } elseif ($child->type === BoxType::STTS->value) {
                 ++$sttsCount;
 
@@ -714,13 +707,12 @@ final readonly class TrackMediaParser
     /**
      * Parses the sample description box (`stsd`).
      *
-     * @param BoxDescriptor $stsd          Sample description descriptor.
-     * @param string        $handlerType   Handler type describing the media kind.
-     * @param int|null      $mdhdTimescale Parsed mdhd timescale used for audio timing validation.
+     * @param BoxDescriptor $stsd        Sample description descriptor.
+     * @param string        $handlerType Handler type describing the media kind.
      *
      * @return SampleEntryMap
      */
-    private function parseStsd(BoxDescriptor $stsd, string $handlerType, ?int $mdhdTimescale): array
+    private function parseStsd(BoxDescriptor $stsd, string $handlerType): array
     {
         $win = $stsd->window;
         $win->seek(0);
@@ -793,7 +785,7 @@ final readonly class TrackMediaParser
                 $result           = $this->videoParser->parseVideoSampleEntry($win, $entryEnd, $normalizedFormat);
             } elseif ($result === [] && $handlerType === 'soun') {
                 $normalizedFormat = $this->boxNavigator->normalizeFourcc($format);
-                $result           = $this->audioParser->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $normalizedFormat, $version, $mdhdTimescale);
+                $result           = $this->audioParser->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $normalizedFormat, $version);
             }
 
             $pos += $entrySize;

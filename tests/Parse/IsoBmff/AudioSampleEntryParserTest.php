@@ -87,7 +87,6 @@ final class AudioSampleEntryParserTest extends TestCase
             strlen($payload) + 16,
             'mp4a',
             1,
-            $expectedRate,
         );
 
         self::assertSame($expectedRate, $result['sampleRate']);

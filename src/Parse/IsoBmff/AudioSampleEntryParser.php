@@ -18,9 +18,7 @@ use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 
 use function intdiv;
 use function is_finite;
-use function is_float;
 use function round;
-use function rtrim;
 use function sprintf;
 use function strlen;
 use function substr;
@@ -92,7 +90,6 @@ final readonly class AudioSampleEntryParser
      * @param int          $entrySize        Declared sample entry size (including size+type header).
      * @param string       $normalizedFormat Pre-normalized fourcc format string.
      * @param int          $stsdVersion      FullBox version of the enclosing stsd.
-     * @param int|null     $mdhdTimescale    Parsed mdhd timescale used for audio timing validation.
      *
      * @return AudioSampleEntryMap
      */
@@ -103,7 +100,6 @@ final readonly class AudioSampleEntryParser
         int $entrySize,
         string $normalizedFormat,
         int $stsdVersion,
-        ?int $mdhdTimescale,
     ): array {
         if ($win->tell() + 8 > $entryEnd) {
             throw new ParseError('audio sample entry truncated', 1160);
@@ -165,11 +161,6 @@ final readonly class AudioSampleEntryParser
             if ($packetSize !== 0) {
                 throw new ParseError('audio sample entry version 0 packet size must be 0', 1506);
             }
-
-            $legacyFormat = rtrim($normalizedFormat, ' ');
-            if ($legacyFormat !== 'raw' && $legacyFormat !== 'twos') {
-                throw new ParseError('audio sample entry version 0 format must be "raw " or "twos"', 1507);
-            }
         }
 
         $sampleRateRaw = $win->readU32BE();
@@ -200,8 +191,6 @@ final readonly class AudioSampleEntryParser
 
             $sampleRate = $samplingRateOverride;
         }
-
-        $this->validateAudioSampleRateTimescaleRelation($sampleRate, $mdhdTimescale);
 
         return [
             'format'        => $normalizedFormat,
@@ -390,29 +379,6 @@ final readonly class AudioSampleEntryParser
         }
 
         return $override;
-    }
-
-    /**
-     * Validates audio sample rate and mdhd timescale relation (equal or integer multiple/division).
-     *
-     * Fractional legacy 16.16 rates are preserved and excluded from the integer-relation check.
-     *
-     * @param int|float $sampleRate    Parsed audio sample rate in Hz.
-     * @param int|null  $mdhdTimescale Parsed mdhd timescale.
-     */
-    private function validateAudioSampleRateTimescaleRelation(int|float $sampleRate, ?int $mdhdTimescale): void
-    {
-        if ($mdhdTimescale === null || $mdhdTimescale <= 0) {
-            return;
-        }
-
-        if (is_float($sampleRate)) {
-            return;
-        }
-
-        if (($mdhdTimescale % $sampleRate) !== 0 && ($sampleRate % $mdhdTimescale) !== 0) {
-            throw new ParseError('audio sample rate and mdhd timescale must be equal or integer multiple/division', 1484);
-        }
     }
 
     /**

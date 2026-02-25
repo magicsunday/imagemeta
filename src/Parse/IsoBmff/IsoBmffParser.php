@@ -269,10 +269,6 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $this->mergeTrackKeysIfMissing($context->qtKeys, $selectedAudioTrack);
         }
 
-        if ($mvhdCount === 0) {
-            throw new ParseError('moov must contain exactly one mvhd box', 1890);
-        }
-
         if ($trakCount === 0) {
             throw new ParseError('moov must contain at least one trak box', 1375);
         }
