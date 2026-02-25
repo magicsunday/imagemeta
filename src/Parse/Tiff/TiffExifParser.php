@@ -265,7 +265,6 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->structuralValidator->validateIfd0($ifd0, $ifd1, $jpegContext, !$isDngContainer);
 
         $this->tagValidator->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
-        $this->tagValidator->validateCameraControlEnumDomains($ifd0, $exifIfd, $ifd1, ...$additionalIfds);
         $this->tagValidator->validateFlashBitfield($exifIfd);
 
         $this->thumbnailValidator->validateJpegThumbnailStream($ifd1);
@@ -282,12 +281,6 @@ final class TiffExifParser implements TiffExifParserInterface
         }
 
         $this->tagValidator->validateExifIfdPlacement($ifd0);
-
-        if ($exifIfd instanceof Ifd) {
-            $this->tagValidator->validateCompanionArtist($ifd0, $exifIfd);
-            $this->tagValidator->validateCompanionSoftware($ifd0, $exifIfd);
-            $this->tagValidator->validateSensitivityCombinations($exifIfd);
-        }
     }
 
     /**

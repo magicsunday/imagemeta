@@ -255,29 +255,6 @@ final readonly class TiffExifTagValidator
         ExifTag::GPS_ALTITUDE       => ['GPSAltitude', 1, TiffConst::TYPE_RATIONAL, 'EXIF 3.0 §4.6.7.1.7'],
     ];
 
-    /**
-     * EXIF camera-control tags with closed numeric value domains.
-     *
-     * EXIF 3.0 §4.6.6.7 defines these tags with explicit allowed values and
-     * reserves remaining codes for future use.
-     *
-     * @var array<int, array{name: string, allowed: list<int>, spec: string}>
-     */
-    private const array CAMERA_CONTROL_ENUM_DOMAINS = [
-        ExifTag::EXPOSURE_PROGRAM       => ['name' => 'ExposureProgram', 'allowed' => [0, 1, 2, 3, 4, 5, 6, 7, 8], 'spec' => 'EXIF 3.0 §4.6.6.7.3'],
-        ExifTag::METERING_MODE          => ['name' => 'MeteringMode', 'allowed' => [0, 1, 2, 3, 4, 5, 6, 255], 'spec' => 'EXIF 3.0 §4.6.6.7.19'],
-        ExifTag::LIGHT_SOURCE           => ['name' => 'LightSource', 'allowed' => [0, 1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 255], 'spec' => 'EXIF 3.0 §4.6.6.7.20'],
-        ExifTag::SENSING_METHOD         => ['name' => 'SensingMethod', 'allowed' => [1, 2, 3, 4, 5, 7, 8], 'spec' => 'EXIF 3.0 §4.6.6.7.31'],
-        ExifTag::EXPOSURE_MODE          => ['name' => 'ExposureMode', 'allowed' => [0, 1, 2], 'spec' => 'EXIF 3.0 §4.6.6.7.36'],
-        ExifTag::WHITE_BALANCE          => ['name' => 'WhiteBalance', 'allowed' => [0, 1], 'spec' => 'EXIF 3.0 §4.6.6.7.37'],
-        ExifTag::SCENE_CAPTURE_TYPE     => ['name' => 'SceneCaptureType', 'allowed' => [0, 1, 2, 3], 'spec' => 'EXIF 3.0 §4.6.6.7.40'],
-        ExifTag::GAIN_CONTROL           => ['name' => 'GainControl', 'allowed' => [0, 1, 2, 3, 4], 'spec' => 'EXIF 3.0 §4.6.6.7.41'],
-        ExifTag::CONTRAST               => ['name' => 'Contrast', 'allowed' => [0, 1, 2], 'spec' => 'EXIF 3.0 §4.6.6.7.42'],
-        ExifTag::SATURATION             => ['name' => 'Saturation', 'allowed' => [0, 1, 2], 'spec' => 'EXIF 3.0 §4.6.6.7.43'],
-        ExifTag::SHARPNESS              => ['name' => 'Sharpness', 'allowed' => [0, 1, 2], 'spec' => 'EXIF 3.0 §4.6.6.7.44'],
-        ExifTag::SUBJECT_DISTANCE_RANGE => ['name' => 'SubjectDistanceRange', 'allowed' => [0, 1, 2, 3], 'spec' => 'EXIF 3.0 §4.6.6.7.46'],
-    ];
-
     // Postel's Law: EXIF 3.0 §4.6.5.1 says several tags "shall not be recorded"
     // in IFD0 for JPEG-compressed primary images, but many cameras include them
     // anyway (e.g. BitsPerSample=8, SamplesPerPixel=3).  We only reject tags
@@ -609,47 +586,6 @@ final readonly class TiffExifTagValidator
     }
 
     /**
-     * Validates closed value domains for EXIF camera-control enum tags.
-     *
-     * EXIF 3.0 §4.6.6.7 defines these tags as fixed code lists, where values
-     * outside each list are reserved and must be rejected in strict parsing.
-     *
-     * @param Ifd|null ...$ifds Candidate directories to search.
-     */
-    public function validateCameraControlEnumDomains(?Ifd ...$ifds): void
-    {
-        foreach ($ifds as $ifd) {
-            if (!$ifd instanceof Ifd) {
-                continue;
-            }
-
-            foreach (self::CAMERA_CONTROL_ENUM_DOMAINS as $tag => $config) {
-                $entry = $ifd->get($tag);
-                if (!$entry instanceof IfdEntry) {
-                    continue;
-                }
-
-                if (!is_int($entry->value)) {
-                    continue;
-                }
-
-                if (!in_array($entry->value, $config['allowed'], true)) {
-                    throw new ParseError(
-                        sprintf(
-                            '%s value %d is reserved or out of domain for tag 0x%04X per %s',
-                            $config['name'],
-                            $entry->value,
-                            $tag,
-                            $config['spec'],
-                        ),
-                        1416,
-                    );
-                }
-            }
-        }
-    }
-
-    /**
      * Validates EXIF Flash tag bitfield semantics and reserved combinations.
      *
      * EXIF 3.0 §4.6.6.7.21 defines bit 0 (fired), bits 1-2 (return status),
@@ -707,107 +643,6 @@ final readonly class TiffExifTagValidator
             throw new ParseError(
                 'YCbCrSubSampling shall not be present in IFD0 for JPEG-compressed primary image per EXIF 3.0 §4.6.5.1.14.',
                 1354,
-            );
-        }
-    }
-
-    /**
-     * EXIF 3.0 §4.6.5.4.6: Artist shall be recorded when CameraOwnerName,
-     * Photographer or ImageEditor is present.
-     *
-     * @param Ifd $ifd0    Primary image IFD.
-     * @param Ifd $exifIfd EXIF IFD.
-     */
-    public function validateCompanionArtist(Ifd $ifd0, Ifd $exifIfd): void
-    {
-        $dependents = [
-            [ExifTag::CAMERA_OWNER_NAME, 'CameraOwnerName', '§4.6.6.9.2'],
-            [ExifTag::PHOTOGRAPHER, 'Photographer', '§4.6.6.9.9'],
-            [ExifTag::IMAGE_EDITOR, 'ImageEditor', '§4.6.6.9.10'],
-        ];
-
-        foreach ($dependents as [$tag, $name, $section]) {
-            if ($exifIfd->get($tag) instanceof IfdEntry && !$ifd0->get(ExifTag::ARTIST) instanceof IfdEntry) {
-                throw new ParseError(sprintf(
-                    '%s requires Artist in IFD0 per EXIF 3.0 %s; §4.6.5.4.6.',
-                    $name,
-                    $section,
-                ), 1454);
-            }
-        }
-    }
-
-    /**
-     * EXIF 3.0 §4.6.5.4.4: Software shall be recorded when CameraFirmware,
-     * RAWDevelopingSoftware, ImageEditingSoftware or MetadataEditingSoftware is present.
-     *
-     * @param Ifd $ifd0    Primary image IFD.
-     * @param Ifd $exifIfd EXIF IFD.
-     */
-    public function validateCompanionSoftware(Ifd $ifd0, Ifd $exifIfd): void
-    {
-        $dependents = [
-            [ExifTag::CAMERA_FIRMWARE, 'CameraFirmware', '§4.6.6.9.11'],
-            [ExifTag::RAW_DEVELOPING_SOFTWARE, 'RAWDevelopingSoftware', '§4.6.6.9.12'],
-            [ExifTag::IMAGE_EDITING_SOFTWARE, 'ImageEditingSoftware', '§4.6.6.9.13'],
-            [ExifTag::METADATA_EDITING_SOFTWARE, 'MetadataEditingSoftware', '§4.6.6.9.14'],
-        ];
-
-        foreach ($dependents as [$tag, $name, $section]) {
-            if ($exifIfd->get($tag) instanceof IfdEntry && !$ifd0->get(ExifTag::SOFTWARE) instanceof IfdEntry) {
-                throw new ParseError(sprintf(
-                    '%s requires Software in IFD0 per EXIF 3.0 %s; §4.6.5.4.4.',
-                    $name,
-                    $section,
-                ), 1455);
-            }
-        }
-    }
-
-    /**
-     * EXIF 3.0 sensitivity tags: enforce mandatory companion combinations.
-     *
-     * §4.6.6.7.8–§4.6.6.7.12: SOS/REI/ISOSpeed require PhotographicSensitivity
-     * and SensitivityType. ISOSpeedLatitudeyyy/zzz require ISOSpeed and each other.
-     *
-     * @param Ifd $exifIfd EXIF IFD.
-     */
-    public function validateSensitivityCombinations(Ifd $exifIfd): void
-    {
-        $hasSensitivity = $exifIfd->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY) instanceof IfdEntry;
-        $hasType        = $exifIfd->get(ExifTag::SENSITIVITY_TYPE) instanceof IfdEntry;
-
-        $dependents = [
-            [ExifTag::STANDARD_OUTPUT_SENSITIVITY, 'StandardOutputSensitivity', '§4.6.6.7.8'],
-            [ExifTag::RECOMMENDED_EXPOSURE_INDEX, 'RecommendedExposureIndex', '§4.6.6.7.9'],
-            [ExifTag::ISO_SPEED, 'ISOSpeed', '§4.6.6.7.10'],
-        ];
-
-        foreach ($dependents as [$tag, $name, $section]) {
-            if ($exifIfd->get($tag) instanceof IfdEntry && (!$hasSensitivity || !$hasType)) {
-                throw new ParseError(sprintf(
-                    '%s requires PhotographicSensitivity and SensitivityType per EXIF 3.0 %s.',
-                    $name,
-                    $section,
-                ), 1456);
-            }
-        }
-
-        $hasIsoSpeed = $exifIfd->get(ExifTag::ISO_SPEED) instanceof IfdEntry;
-        $hasYyy      = $exifIfd->get(ExifTag::ISO_SPEED_LATITUDE_YYY) instanceof IfdEntry;
-        $hasZzz      = $exifIfd->get(ExifTag::ISO_SPEED_LATITUDE_ZZZ) instanceof IfdEntry;
-
-        if ($hasYyy && (!$hasIsoSpeed || !$hasZzz)) {
-            throw new ParseError(
-                'ISOSpeedLatitudeyyy requires ISOSpeed and ISOSpeedLatitudezzz per EXIF 3.0 §4.6.6.7.11.',
-                1457,
-            );
-        }
-
-        if ($hasZzz && (!$hasIsoSpeed || !$hasYyy)) {
-            throw new ParseError(
-                'ISOSpeedLatitudezzz requires ISOSpeed and ISOSpeedLatitudeyyy per EXIF 3.0 §4.6.6.7.12.',
-                1458,
             );
         }
     }
