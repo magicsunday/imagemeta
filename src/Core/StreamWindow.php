@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
+use const PHP_INT_MAX;
 use const SEEK_CUR;
 use const SEEK_END;
 use const SEEK_SET;
@@ -87,6 +88,10 @@ final class StreamWindow implements BinaryReadAccessInterface
         }
 
         $len = $this->normalizeReadLength($length, 'window read length out of range');
+
+        if ($len > PHP_INT_MAX - $this->cursor) {
+            throw new BoundsError('window read offset overflow', 1031);
+        }
 
         if (($this->cursor + $len) > $this->length) {
             throw new BoundsError('window read out of range', 1016);
