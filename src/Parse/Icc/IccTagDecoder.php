@@ -311,11 +311,7 @@ final readonly class IccTagDecoder
             return null;
         }
 
-        // ICC.1:2022 §10.1 + Table 54 reserved bytes 4..7 must be zero.
-        $reserved = substr($data, 4, 4);
-        if ($reserved !== "\0\0\0\0") {
-            throw new ParseError('ICC mluc reserved bytes 4..7 are non-zero', 1137);
-        }
+        // Tolerate non-zero reserved bytes 4..7 per Postel's Law.
 
         $recordCount = $this->reader->uInt32Be(substr($data, 8, 4));
         $recordSize  = $this->reader->uInt32Be(substr($data, 12, 4));
@@ -324,12 +320,9 @@ final readonly class IccTagDecoder
             return null;
         }
 
-        // RecordSize must be exactly 12
-        if ($recordSize !== 12) {
-            throw new ParseError(
-                sprintf('ICC mluc recordSize must be 12, got %d', $recordSize),
-                1138,
-            );
+        // Tolerate record sizes >= 12 for forward compatibility.
+        if ($recordSize < 12) {
+            return null;
         }
 
         // Record table must fit within payload

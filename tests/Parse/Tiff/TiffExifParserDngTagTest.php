@@ -8763,13 +8763,11 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
-     * ICC profile payloads with malformed internal structure are rejected.
+     * ICC profile payloads with size mismatch (declared > actual) are tolerated.
      */
     #[Test]
-    public function rejectsIccProfilePairWithMalformedIccPayload(): void
+    public function toleratesIccProfilePairWithSizeMismatchIccPayload(): void
     {
-        $this->expectException(ParseError::class);
-
         $badIccPayload = $this->buildMinimalIccProfilePayload(136);
 
         (new TiffExifParser())->parseFromBlob(
@@ -8785,6 +8783,8 @@ final class TiffExifParserDngTagTest extends TestCase
                 4,
             ),
         );
+
+        $this->expectNotToPerformAssertions();
     }
 
     /**

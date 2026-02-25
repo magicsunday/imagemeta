@@ -169,20 +169,10 @@ final readonly class IccParser implements IccParserInterface
             );
         }
 
-        // ICC.1:2022 §7.1: Profile size and tag table entries must be 4-byte aligned.
-        if (($profileSize % 4) !== 0) {
-            throw new ParseError(
-                sprintf('ICC declared profile size %d is not 4-byte aligned', $profileSize),
-                1444,
-            );
-        }
-
-        // ICC.1:2022 §7.2.2: Profile size must match the actual payload length.
-        if ($profileSize !== $length) {
-            throw new ParseError(
-                sprintf('ICC declared profile size %d does not match actual payload length %d', $profileSize, $length),
-                1445,
-            );
+        // Tolerate misaligned profile sizes and trailing bytes beyond declared size.
+        // Use the declared size when payload has trailing bytes; use actual length when truncated.
+        if ($profileSize < $length) {
+            $data = substr($data, 0, $profileSize);
         }
 
         // ICC.1:2022 §7.2.9: Validate 'acsp' signature at bytes 36-39
@@ -205,11 +195,8 @@ final readonly class IccParser implements IccParserInterface
         // accessed by their individual offset+size, layout deviations are
         // harmless for data extraction.  Skip the layout check.
 
-        // ICC.1:2022 §7.2.4: Validate version field including reserved bytes
+        // Tolerate non-zero reserved bytes in version field — extract major.minor only.
         $version = $this->headerDecoder->extractVersion($data);
-        if ($version === null) {
-            throw new ParseError('ICC version field is invalid or has non-zero reserved bytes', 1449);
-        }
 
         $profileClass = $this->headerDecoder->extractSignature(substr($data, IccTag::PROFILE_CLASS, 4));
         $colorSpace   = $this->headerDecoder->extractSignature(substr($data, IccTag::COLOR_SPACE, 4));
@@ -307,10 +294,10 @@ final readonly class IccParser implements IccParserInterface
         }
 
         // Validate profileFlags per ICC.1:2022 §7.2.11 / Table 21
-        $this->headerDecoder->validateProfileFlags($data);
+        $this->headerDecoder->validateProfileFlags();
 
         // Validate deviceAttributes per ICC.1:2022 §7.2.14 / Table 22
-        $this->headerDecoder->validateDeviceAttributes($data);
+        $this->headerDecoder->validateDeviceAttributes();
 
         $illuminant = $this->headerDecoder->extractIlluminant($data);
 

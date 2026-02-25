@@ -254,19 +254,19 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * Rejects truncated profiles where the declared size exceeds available data.
+     * Tolerates truncated profiles where the declared size exceeds available data.
      */
     #[Test]
-    public function decodeRejectsTruncatedProfile(): void
+    public function toleratesTruncatedProfile(): void
     {
         $profile = IccFixtures::minimalProfile();
         // Truncate to 200 bytes while profileSize claims 244
         $profile = substr($profile, 0, 200);
 
         $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
 
-        $this->expectException(ParseError::class);
-        $decoder->decode($profile);
+        self::assertNotNull($result);
     }
 
     /**

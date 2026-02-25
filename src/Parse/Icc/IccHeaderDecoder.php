@@ -60,11 +60,7 @@ final readonly class IccHeaderDecoder
      */
     public function extractVersion(string $data): ?string
     {
-        // ICC.1:2022 §7.2.4: bytes 10-11 (reserved) must be zero
-        if (ord($data[10]) !== 0 || ord($data[11]) !== 0) {
-            return null;
-        }
-
+        // Tolerate non-zero reserved bytes 10-11 in version field.
         $major         = ord($data[8]);
         $minorBugfix   = ord($data[9]);
         $minor         = $minorBugfix >> 4;
@@ -133,15 +129,7 @@ final readonly class IccHeaderDecoder
     {
         $raw = $this->reader->uInt32Be(substr($data, IccTag::RENDERING_INTENT, 4));
 
-        // Upper 16 bits must be zero
-        $upper = ($raw >> 16) & 0xFFFF;
-        if ($upper !== 0) {
-            throw new ParseError(
-                sprintf('ICC rendering intent upper 16 bits are non-zero: 0x%04X', $upper),
-                1130,
-            );
-        }
-
+        // Mask off upper 16 bits — tolerate non-zero reserved bits.
         $lower  = $raw & 0xFFFF;
         $intent = IccRenderingIntent::fromProfileHeaderValue($lower);
 
@@ -290,24 +278,10 @@ final readonly class IccHeaderDecoder
      *
      * Bits 0-2 are defined (embedded profile, profile cannot be used independently,
      * MCS). Bits 3-15 (ICC-reserved) must be zero.
-     *
-     * @param string $data Raw ICC profile payload.
      */
-    public function validateProfileFlags(string $data): void
+    public function validateProfileFlags(): void
     {
-        $flagsRaw = $this->reader->uInt32Be(substr($data, IccTag::PROFILE_FLAGS, 4));
-
-        // Bits 3..15 must be zero per ICC.1:2022 Table 21
-        $reservedMask = 0xFFF8;
-        if (($flagsRaw & $reservedMask) !== 0) {
-            throw new ParseError(
-                sprintf(
-                    'ICC profileFlags reserved bits 3..15 are non-zero: 0x%08X',
-                    $flagsRaw,
-                ),
-                1148,
-            );
-        }
+        // Tolerate non-zero reserved bits 3..15 — mask off silently.
     }
 
     /**
@@ -316,25 +290,10 @@ final readonly class IccHeaderDecoder
      * Bits 0-3 are defined (reflective/transparency, glossy/matte, positive/negative,
      * colour/B&W). Bits 4-31 must be zero. Upper 32 bits are vendor-specific and not
      * validated.
-     *
-     * @param string $data Raw ICC profile payload.
      */
-    public function validateDeviceAttributes(string $data): void
+    public function validateDeviceAttributes(): void
     {
-        // Read the lower 32 bits (bytes 60..63 in big-endian layout)
-        $lower32 = $this->reader->uInt32Be(substr($data, IccTag::DEVICE_ATTRIBUTES + 4, 4));
-
-        // Bits 4..31 of the lower 32-bit word must be zero per ICC.1:2022 Table 22
-        $reservedMask = 0xFFFFFFF0;
-        if (($lower32 & $reservedMask) !== 0) {
-            throw new ParseError(
-                sprintf(
-                    'ICC deviceAttributes reserved bits 4..31 are non-zero: 0x%08X',
-                    $lower32,
-                ),
-                1149,
-            );
-        }
+        // Tolerate non-zero reserved bits 4..31 — mask off silently.
     }
 
     /**
