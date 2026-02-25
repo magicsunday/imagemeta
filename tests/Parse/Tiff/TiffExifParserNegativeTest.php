@@ -1908,63 +1908,65 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Rejects CompositeImage=3 when SourceImageNumberOfCompositeImage is missing.
+     * Tolerates CompositeImage=3 when SourceImageNumberOfCompositeImage tag is absent.
+     * The CompositeImage value is preserved; the missing companion is not fatal.
      */
     #[Test]
-    public function rejectCompositeImageCapturedWithoutSourceImageCountTag(): void
+    public function itToleratesCompositeImageWithoutSourceImageNumber(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1421);
-        $this->expectExceptionMessage('CompositeImage value 3 requires SourceImageNumberOfCompositeImage');
-
-        (new TiffExifParser())->parseFromBlob(
+        $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCompositeExifTags(3, null, $this->buildValidCompositeExposurePayload()),
         );
+
+        self::assertSame(3, $result->compositeImage()?->value);
+        self::assertNull($result->sourceImageNumberOfCompositeImage());
     }
 
     /**
-     * Rejects CompositeImage=3 when SourceExposureTimesOfCompositeImage is missing.
+     * Tolerates CompositeImage=3 when SourceExposureTimesOfCompositeImage tag is absent.
+     * The CompositeImage value is preserved; the missing companion is not fatal.
      */
     #[Test]
-    public function rejectCompositeImageCapturedWithoutSourceExposureTimesTag(): void
+    public function itToleratesCompositeImageWithoutSourceExposureTimesTag(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1423);
-        $this->expectExceptionMessage('CompositeImage value 3 requires SourceExposureTimesOfCompositeImage');
-
-        (new TiffExifParser())->parseFromBlob(
+        $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCompositeExifTags(3, [5, 3], null),
         );
+
+        self::assertSame(3, $result->compositeImage()?->value);
+        self::assertSame([5, 3], $result->sourceImageNumberOfCompositeImage());
+        self::assertNull($result->sourceExposureTimesOfCompositeImage());
     }
 
     /**
-     * Rejects CompositeImage=3 when SourceImageNumberOfCompositeImage payload is invalid.
+     * Tolerates CompositeImage=3 when SourceImageNumberOfCompositeImage payload is invalid.
+     * The CompositeImage value is preserved; the malformed companion is skipped.
      */
     #[Test]
-    public function rejectCompositeImageCapturedWithInvalidSourceImageCountPayload(): void
+    public function itToleratesInvalidSourceImageNumberPayload(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1422);
-        $this->expectExceptionMessage('SourceImageNumberOfCompositeImage payload is invalid');
-
-        (new TiffExifParser())->parseFromBlob(
+        $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCompositeExifTags(3, [1, 1], $this->buildValidCompositeExposurePayload()),
         );
+
+        self::assertSame(3, $result->compositeImage()?->value);
+        self::assertNull($result->sourceImageNumberOfCompositeImage());
     }
 
     /**
-     * Rejects CompositeImage=3 when SourceExposureTimesOfCompositeImage payload is invalid.
+     * Tolerates CompositeImage=3 when SourceExposureTimesOfCompositeImage payload is invalid.
+     * The CompositeImage value is preserved; the malformed companion is skipped.
      */
     #[Test]
-    public function rejectCompositeImageCapturedWithInvalidSourceExposurePayload(): void
+    public function itToleratesInvalidSourceExposurePayload(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1424);
-        $this->expectExceptionMessage('SourceExposureTimesOfCompositeImage payload is invalid');
-
-        (new TiffExifParser())->parseFromBlob(
+        $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCompositeExifTags(3, [5, 3], "\x01\x00"),
         );
+
+        self::assertSame(3, $result->compositeImage()?->value);
+        self::assertSame([5, 3], $result->sourceImageNumberOfCompositeImage());
+        self::assertNull($result->sourceExposureTimesOfCompositeImage());
     }
 
     /**
