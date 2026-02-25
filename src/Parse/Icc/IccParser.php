@@ -17,13 +17,10 @@ use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Model\Icc\IccTag;
 
 use function array_key_exists;
-use function bin2hex;
-use function in_array;
 use function ord;
 use function sprintf;
 use function str_starts_with;
 use function strlen;
-use function strtoupper;
 use function substr;
 
 /**
@@ -42,55 +39,6 @@ final readonly class IccParser implements IccParserInterface
      * ICC.1:2022 §7.2.9: Profile file signature field must contain 'acsp' (61637370h).
      */
     private const string PROFILE_SIGNATURE = 'acsp';
-
-    /**
-     * ICC.1:2022 Table 18: Allowed profile/device class signatures.
-     *
-     * @var list<string>
-     */
-    private const array ALLOWED_PROFILE_CLASSES = [
-        'scnr', // Input device profile
-        'mntr', // Display device profile
-        'prtr', // Output device profile
-        'link', // DeviceLink profile
-        'spac', // ColorSpace profile
-        'abst', // Abstract profile
-        'nmcl', // NamedColor profile
-    ];
-
-    /**
-     * ICC.1:2022 Table 19: Allowed data colour space signatures.
-     *
-     * @var list<string>
-     */
-    private const array ALLOWED_COLOR_SPACES = [
-        'XYZ ', 'Lab ', 'Luv ', 'YCbr', 'Yxy ', 'RGB ', 'GRAY',
-        'HSV ', 'HLS ', 'CMYK', 'CMY ', '2CLR', '3CLR', '4CLR',
-        '5CLR', '6CLR', '7CLR', '8CLR', '9CLR', 'ACLR', 'BCLR',
-        'CCLR', 'DCLR', 'ECLR', 'FCLR',
-    ];
-
-    /**
-     * ICC.1:2022 §7.2.7: Allowed PCS signatures.
-     *
-     * @var list<string>
-     */
-    private const array ALLOWED_PCS = [
-        'XYZ ',
-        'Lab ',
-    ];
-
-    /**
-     * ICC.1:2022 Table 20: Allowed primary platform signatures.
-     *
-     * @var list<string>
-     */
-    private const array ALLOWED_PLATFORMS = [
-        'APPL', // Apple Computer, Inc.
-        'MSFT', // Microsoft Corporation
-        'SGI ', // Silicon Graphics, Inc.
-        'SUNW', // Sun Microsystems, Inc.
-    ];
 
     private IccBinaryReader $binaryReader;
 
@@ -202,27 +150,7 @@ final readonly class IccParser implements IccParserInterface
         $colorSpace   = $this->headerDecoder->extractSignature(substr($data, IccTag::COLOR_SPACE, 4));
         $pcs          = $this->headerDecoder->extractSignature(substr($data, IccTag::PCS, 4));
 
-        // Validate constrained header signatures
-        if ($profileClass !== null && !in_array($profileClass, self::ALLOWED_PROFILE_CLASSES, true)) {
-            throw new ParseError(
-                sprintf('ICC profile class signature "%s" is not in the allowed set', $profileClass),
-                1134,
-            );
-        }
-
-        if ($colorSpace !== null && !in_array($colorSpace, self::ALLOWED_COLOR_SPACES, true)) {
-            throw new ParseError(
-                sprintf('ICC data colour space signature "%s" is not in the allowed set', $colorSpace),
-                1135,
-            );
-        }
-
-        if ($pcs !== null && !in_array($pcs, self::ALLOWED_PCS, true)) {
-            throw new ParseError(
-                sprintf('ICC PCS signature "%s" is not XYZ or Lab', $pcs),
-                1136,
-            );
-        }
+        // Tolerate unknown profile class, colour space, and PCS signatures.
 
         $renderingIntent    = $this->headerDecoder->extractRenderingIntent($data);
         $profileId          = $this->headerDecoder->extractProfileId($data);
@@ -241,63 +169,7 @@ final readonly class IccParser implements IccParserInterface
         $deviceAttributes   = $this->headerDecoder->extractHexField($data, IccTag::DEVICE_ATTRIBUTES, 8, true);
         $profileCreator     = $this->headerDecoder->extractSignature(substr($data, IccTag::PROFILE_CREATOR, 4));
 
-        // Validate primary platform against ICC.1:2022 Table 20
-        if ($primaryPlatform !== null && !in_array($primaryPlatform, self::ALLOWED_PLATFORMS, true)) {
-            throw new ParseError(
-                sprintf('ICC primary platform signature "%s" is not in the allowed set', $primaryPlatform),
-                1143,
-            );
-        }
-
-        // Validate profile creator as printable ASCII signature
-        if ($profileCreator !== null && !$this->headerDecoder->isPrintableAsciiSignature($profileCreator)) {
-            throw new ParseError(
-                sprintf(
-                    'ICC profile creator signature contains non-printable bytes: %s',
-                    strtoupper(bin2hex($profileCreator)),
-                ),
-                1144,
-            );
-        }
-
-        // Validate CMM type as printable ASCII signature
-        if ($cmmType !== null && !$this->headerDecoder->isPrintableAsciiSignature($cmmType)) {
-            throw new ParseError(
-                sprintf(
-                    'ICC CMM type signature contains non-printable bytes: %s',
-                    strtoupper(bin2hex($cmmType)),
-                ),
-                1145,
-            );
-        }
-
-        // Validate device manufacturer as printable ASCII signature
-        if ($deviceManufacturer !== null && !$this->headerDecoder->isPrintableAsciiSignature($deviceManufacturer)) {
-            throw new ParseError(
-                sprintf(
-                    'ICC device manufacturer signature contains non-printable bytes: %s',
-                    strtoupper(bin2hex($deviceManufacturer)),
-                ),
-                1146,
-            );
-        }
-
-        // Validate device model as printable ASCII signature
-        if ($deviceModel !== null && !$this->headerDecoder->isPrintableAsciiSignature($deviceModel)) {
-            throw new ParseError(
-                sprintf(
-                    'ICC device model signature contains non-printable bytes: %s',
-                    strtoupper(bin2hex($deviceModel)),
-                ),
-                1147,
-            );
-        }
-
-        // Validate profileFlags per ICC.1:2022 §7.2.11 / Table 21
-        $this->headerDecoder->validateProfileFlags();
-
-        // Validate deviceAttributes per ICC.1:2022 §7.2.14 / Table 22
-        $this->headerDecoder->validateDeviceAttributes();
+        // Tolerate unknown platform and non-printable signature bytes.
 
         $illuminant = $this->headerDecoder->extractIlluminant($data);
 
