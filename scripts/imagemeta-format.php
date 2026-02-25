@@ -1990,8 +1990,8 @@ final class MetadataFormatter
         $data       = [];
 
         // Run Time Since Power Up (from Apple maker notes)
-        if ($structured->makerNotesApple?->runTime instanceof \MagicSunday\ImageMeta\Value\RunTime) {
-            $runTime = $structured->makerNotesApple->runTime;
+        if ($structured->makerNotesApple?->livePhoto?->runTime instanceof \MagicSunday\ImageMeta\Value\RunTime) {
+            $runTime = $structured->makerNotesApple->livePhoto->runTime;
             if ($runTime->value !== null && $runTime->timescale !== null && $runTime->timescale > 0) {
                 $seconds                         = $runTime->value / $runTime->timescale;
                 $data['Run Time Since Power Up'] = $this->formatDuration($seconds);
@@ -1999,8 +1999,8 @@ final class MetadataFormatter
         }
 
         // Aperture
-        if ($structured->exposure->fNumber !== null) {
-            $data['Aperture'] = $structured->exposure->fNumber;
+        if ($structured->settings->exposure?->settings?->fNumber !== null) {
+            $data['Aperture'] = $structured->settings->exposure->settings->fNumber;
         }
 
         // Image Size
@@ -2017,116 +2017,116 @@ final class MetadataFormatter
         }
 
         // Scale Factor To 35mm Equivalent
-        if ($structured->derived->cropFactor !== null) {
-            $data['Scale Factor To 35 mm Equivalent'] = round($structured->derived->cropFactor, 1);
+        if ($structured->technical->derived?->cropFactor !== null) {
+            $data['Scale Factor To 35 mm Equivalent'] = round($structured->technical->derived->cropFactor, 1);
         }
 
         // Shutter Speed
-        if ($structured->exposure->exposureTimeSec !== null) {
-            $data['Shutter Speed'] = $this->formatShutterSpeed($structured->exposure->exposureTimeSec);
+        if ($structured->settings->exposure?->settings?->exposureTimeSec !== null) {
+            $data['Shutter Speed'] = $this->formatShutterSpeed($structured->settings->exposure->settings->exposureTimeSec);
         }
 
         // Create Date with subseconds
-        if ($structured->temporal->create instanceof DateTimeImmutable) {
-            $dateStr = $structured->temporal->create->format('Y:m:d H:i:s');
-            if ($structured->temporal->subSecTimeOriginal !== null) {
-                $dateStr .= '.' . $structured->temporal->subSecTimeOriginal;
+        if ($structured->locationTime->temporal?->create instanceof DateTimeImmutable) {
+            $dateStr = $structured->locationTime->temporal->create->format('Y:m:d H:i:s');
+            if ($structured->locationTime->temporal->subSecTimeOriginal !== null) {
+                $dateStr .= '.' . $structured->locationTime->temporal->subSecTimeOriginal;
             }
-            if ($structured->temporal->offsetTimeOriginal !== null) {
-                $dateStr .= $structured->temporal->offsetTimeOriginal;
+            if ($structured->locationTime->temporal->offsetTimeOriginal !== null) {
+                $dateStr .= $structured->locationTime->temporal->offsetTimeOriginal;
             }
             $data['Create Date'] = $dateStr;
         }
 
         // Date/Time Original
-        if ($structured->temporal->original instanceof DateTimeImmutable) {
-            $dateStr = $structured->temporal->original->format('Y:m:d H:i:s');
-            if ($structured->temporal->subSecTimeOriginal !== null) {
-                $dateStr .= '.' . $structured->temporal->subSecTimeOriginal;
+        if ($structured->locationTime->temporal?->original instanceof DateTimeImmutable) {
+            $dateStr = $structured->locationTime->temporal->original->format('Y:m:d H:i:s');
+            if ($structured->locationTime->temporal->subSecTimeOriginal !== null) {
+                $dateStr .= '.' . $structured->locationTime->temporal->subSecTimeOriginal;
             }
-            if ($structured->temporal->offsetTimeOriginal !== null) {
-                $dateStr .= $structured->temporal->offsetTimeOriginal;
+            if ($structured->locationTime->temporal->offsetTimeOriginal !== null) {
+                $dateStr .= $structured->locationTime->temporal->offsetTimeOriginal;
             }
             $data['Date/Time Original'] = $dateStr;
         }
 
         // Modify Date
-        if ($structured->temporal->modify instanceof DateTimeImmutable) {
-            $dateStr = $structured->temporal->modify->format('Y:m:d H:i:s');
-            if ($structured->temporal->offsetTime !== null) {
-                $dateStr .= $structured->temporal->offsetTime;
+        if ($structured->locationTime->temporal?->modify instanceof DateTimeImmutable) {
+            $dateStr = $structured->locationTime->temporal->modify->format('Y:m:d H:i:s');
+            if ($structured->locationTime->temporal->offsetTime !== null) {
+                $dateStr .= $structured->locationTime->temporal->offsetTime;
             }
             $data['Modify Date'] = $dateStr;
         }
 
         // GPS Altitude
-        if ($structured->gps->altitude !== null) {
-            $altRef               = $structured->gps->altitudeRef->name ?? 'Above Sea Level';
-            $data['GPS Altitude'] = sprintf('%.1f m (%s)', $structured->gps->altitude, $altRef);
+        if ($structured->locationTime->gps?->position?->altitude !== null) {
+            $altRef               = $structured->locationTime->gps->position->altitudeRef?->name ?? 'Above Sea Level';
+            $data['GPS Altitude'] = sprintf('%.1f m (%s)', $structured->locationTime->gps->position->altitude, $altRef);
         }
 
         // GPS Date/Time
-        if ($structured->gps->timestamp instanceof DateTimeImmutable) {
-            $data['GPS Date/Time'] = $structured->gps->timestamp->format('Y:m:d H:i:s') . 'Z';
+        if ($structured->locationTime->gps?->timing?->timestamp instanceof DateTimeImmutable) {
+            $data['GPS Date/Time'] = $structured->locationTime->gps->timing->timestamp->format('Y:m:d H:i:s') . 'Z';
         }
 
         // GPS Position
-        if ($structured->gps->latitude !== null && $structured->gps->longitude !== null) {
+        if ($structured->locationTime->gps?->position?->latitude !== null && $structured->locationTime->gps->position->longitude !== null) {
             $data['GPS Latitude'] = $this->formatGpsCoordinate(
-                $structured->gps->latitude,
-                $structured->gps->latitudeRef->value ?? 'N'
+                $structured->locationTime->gps->position->latitude,
+                $structured->locationTime->gps->position->latitudeRef?->value ?? 'N'
             );
             $data['GPS Longitude'] = $this->formatGpsCoordinate(
-                $structured->gps->longitude,
-                $structured->gps->longitudeRef->value ?? 'E'
+                $structured->locationTime->gps->position->longitude,
+                $structured->locationTime->gps->position->longitudeRef?->value ?? 'E'
             );
 
             // Combined GPS Position
             $data['GPS Position'] = sprintf(
                 '%s, %s',
                 $this->formatGpsCoordinate(
-                    $structured->gps->latitude,
-                    $structured->gps->latitudeRef->value ?? 'N'
+                    $structured->locationTime->gps->position->latitude,
+                    $structured->locationTime->gps->position->latitudeRef?->value ?? 'N'
                 ),
                 $this->formatGpsCoordinate(
-                    $structured->gps->longitude,
-                    $structured->gps->longitudeRef->value ?? 'E'
+                    $structured->locationTime->gps->position->longitude,
+                    $structured->locationTime->gps->position->longitudeRef?->value ?? 'E'
                 )
             );
         }
 
         // Circle Of Confusion
-        if ($structured->derived->circleOfConfusionMm !== null) {
-            $data['Circle Of Confusion'] = sprintf('%.3f mm', $structured->derived->circleOfConfusionMm);
+        if ($structured->technical->derived?->circleOfConfusionMm !== null) {
+            $data['Circle Of Confusion'] = sprintf('%.3f mm', $structured->technical->derived->circleOfConfusionMm);
         }
 
         // Field Of View
-        if ($structured->derived->fieldOfViewHorizontalDeg !== null) {
-            $data['Field Of View'] = sprintf('%.1f deg', $structured->derived->fieldOfViewHorizontalDeg);
+        if ($structured->technical->derived?->fieldOfViewHorizontalDeg !== null) {
+            $data['Field Of View'] = sprintf('%.1f deg', $structured->technical->derived->fieldOfViewHorizontalDeg);
         }
 
         // Focal Length with 35mm equivalent
-        if ($structured->lens->focalLengthMm !== null) {
-            $focalStr = sprintf('%.1f mm', $structured->lens->focalLengthMm);
-            if ($structured->lens->focalLengthIn35mm !== null) {
-                $focalStr .= sprintf(' (35 mm equivalent: %.1f mm)', $structured->lens->focalLengthIn35mm);
+        if ($structured->hardware->lens?->focalLengthMm !== null) {
+            $focalStr = sprintf('%.1f mm', $structured->hardware->lens->focalLengthMm);
+            if ($structured->hardware->lens->focalLengthIn35mm !== null) {
+                $focalStr .= sprintf(' (35 mm equivalent: %.1f mm)', $structured->hardware->lens->focalLengthIn35mm);
             }
             $data['Focal Length'] = $focalStr;
         }
 
         // Hyperfocal Distance
-        if ($structured->derived->hyperfocalDistanceMetres !== null) {
-            $data['Hyperfocal Distance'] = sprintf('%.2f m', $structured->derived->hyperfocalDistanceMetres);
+        if ($structured->technical->derived?->hyperfocalDistanceMetres !== null) {
+            $data['Hyperfocal Distance'] = sprintf('%.2f m', $structured->technical->derived->hyperfocalDistanceMetres);
         }
 
         // Light Value
-        if ($structured->derived->ev100 !== null) {
-            $data['Light Value'] = round($structured->derived->ev100, 1);
+        if ($structured->technical->derived?->ev100 !== null) {
+            $data['Light Value'] = round($structured->technical->derived->ev100, 1);
         }
 
         // Lens ID (combining lens make and model)
-        if ($structured->lens->lensModel !== null) {
-            $data['Lens ID'] = $structured->lens->lensModel;
+        if ($structured->hardware->lens?->lensModel !== null) {
+            $data['Lens ID'] = $structured->hardware->lens->lensModel;
         }
 
         if (!empty($data)) {
