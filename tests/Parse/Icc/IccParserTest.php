@@ -1339,6 +1339,104 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Tolerates a vendor-specific profile class not in the ICC.1:2022 Table 18 allowed set.
+     */
+    #[Test]
+    public function toleratesUnknownProfileClass(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+
+        // Write vendor class 'XVND' at offset 12 (PROFILE_CLASS)
+        $profile = substr_replace($profile, 'XVND', IccTag::PROFILE_CLASS, 4);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('XVND', $result['profileClass']);
+    }
+
+    /**
+     * Tolerates a non-standard data colour space not in ICC.1:2022 Table 19.
+     */
+    #[Test]
+    public function toleratesUnknownColorSpace(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+
+        // Write non-standard colour space 'UVWX' at offset 16 (COLOR_SPACE)
+        $profile = substr_replace($profile, 'UVWX', IccTag::COLOR_SPACE, 4);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('UVWX', $result['colorSpace']);
+    }
+
+    /**
+     * Tolerates a PCS signature that is neither 'XYZ ' nor 'Lab '.
+     */
+    #[Test]
+    public function toleratesUnknownPcsSignature(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+
+        // Write non-standard PCS 'Luv ' at offset 20 (PCS)
+        $profile = substr_replace($profile, 'Luv ', IccTag::PCS, 4);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('Luv ', $result['pcs']);
+    }
+
+    /**
+     * Tolerates a primary platform signature not in ICC.1:2022 Table 20.
+     */
+    #[Test]
+    public function toleratesUnknownPrimaryPlatform(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+
+        // Write vendor platform 'LNUX' at offset 40 (PRIMARY_PLATFORM)
+        $profile = substr_replace($profile, 'LNUX', IccTag::PRIMARY_PLATFORM, 4);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('LNUX', $result['primaryPlatform']);
+    }
+
+    /**
+     * Tolerates non-printable bytes in signature fields (creator, CMM, manufacturer, model).
+     */
+    #[Test]
+    public function toleratesNonPrintableSignatureBytes(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+
+        // Write non-printable bytes in profile creator at offset 80 (PROFILE_CREATOR)
+        $profile = substr_replace($profile, "\x01\x02\x03\x04", IccTag::PROFILE_CREATOR, 4);
+
+        // Write non-printable bytes in CMM type at offset 4 (CMM_TYPE)
+        $profile = substr_replace($profile, "\x80\x81\x82\x83", IccTag::CMM_TYPE, 4);
+
+        // Write non-printable bytes in device manufacturer at offset 48 (DEVICE_MANUFACTURER)
+        $profile = substr_replace($profile, "\xF0\xF1\xF2\xF3", IccTag::DEVICE_MANUFACTURER, 4);
+
+        // Write non-printable bytes in device model at offset 52 (DEVICE_MODEL)
+        $profile = substr_replace($profile, "\xFE\xFD\xFC\xFB", IccTag::DEVICE_MODEL, 4);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+    }
+
+    /**
      * Rejects combined ICC segments whose cumulative size exceeds the configured limit.
      */
     #[Test]
