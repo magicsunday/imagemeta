@@ -111,13 +111,16 @@ final readonly class FormatDetector
     /**
      * Validates JPEG marker structure beyond just SOI.
      *
+     * ITU-T T.81 §B.1.1.2 allows any number of 0xFF fill bytes to precede a
+     * marker's second byte. After the mandatory 0xFF marker prefix, all
+     * subsequent 0xFF bytes are skipped until the actual marker code is found.
+     *
      * @throws ParseError when the stream has SOI but no valid marker structure
      */
     private function detectJpeg(Stream $stream): ContainerType
     {
         try {
             $markerPrefix = $stream->read(1);
-            $markerCode   = $stream->read(1);
         } catch (BoundsError) {
             throw new ParseError('JPEG stream too short: no marker after SOI', 1439);
         }
@@ -126,8 +129,17 @@ final readonly class FormatDetector
             throw new ParseError('JPEG stream has no valid marker after SOI', 1440);
         }
 
-        $code = ord($markerCode);
-        if ($code === 0x00 || $code === 0xFF) {
+        // Skip 0xFF fill bytes (ITU-T T.81 §B.1.1.2) until a non-0xFF byte is found
+        $code = 0xFF;
+        while ($code === 0xFF) {
+            try {
+                $code = ord($stream->read(1));
+            } catch (BoundsError) {
+                throw new ParseError('JPEG stream too short: no marker after SOI', 1439);
+            }
+        }
+
+        if ($code === 0x00) {
             throw new ParseError('JPEG stream has no valid marker after SOI', 1918);
         }
 
