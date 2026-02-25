@@ -136,15 +136,18 @@ final class TemporalFactoryTest extends TestCase
 
     /**
      * Provides sub-second strings of varying length in EXIF tags.
-     * Verifies the factory normalizes each value to three digits.
+     * Verifies the factory right-pads each value to three digits.
+     *
+     * EXIF 3.0 §4.6.6.6.6 — digits are aligned with the start of the area
+     * (fractional seconds: "9" = 0.9s, "50" = 0.50s, "5000" truncated to "500" = 0.500s).
      */
     #[Test]
     public function sanitizesSubSeconds(): void
     {
         $parsedExif = $this->parsedExif(
-            subSecTime: '5',
-            subSecTimeOriginal: '50',
-            subSecTimeDigitized: '5000',
+            subSecTime: '9',
+            subSecTimeOriginal: '12',
+            subSecTimeDigitized: '123',
         );
 
         $metadata = new Metadata(
@@ -156,9 +159,36 @@ final class TemporalFactoryTest extends TestCase
         $factory  = new TemporalFactory();
         $temporal = $factory->create($metadata);
 
-        self::assertSame('005', $temporal->subSecTime);
-        self::assertSame('050', $temporal->subSecTimeOriginal);
-        self::assertSame('500', $temporal->subSecTimeDigitized);
+        // "9" = 0.9s → right-padded to "900"
+        self::assertSame('900', $temporal->subSecTime);
+        // "12" = 0.12s → right-padded to "120"
+        self::assertSame('120', $temporal->subSecTimeOriginal);
+        // "123" = 0.123s → unchanged
+        self::assertSame('123', $temporal->subSecTimeDigitized);
+    }
+
+    /**
+     * Verifies truncation of sub-second strings longer than 3 digits.
+     *
+     * EXIF 3.0 §4.6.6.6.6 — only the first three fractional digits are retained.
+     */
+    #[Test]
+    public function truncatesSubSecondsLongerThanThreeDigits(): void
+    {
+        $parsedExif = $this->parsedExif(
+            subSecTime: '5000',
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory  = new TemporalFactory();
+        $temporal = $factory->create($metadata);
+
+        self::assertSame('500', $temporal->subSecTime);
     }
 
     /**
