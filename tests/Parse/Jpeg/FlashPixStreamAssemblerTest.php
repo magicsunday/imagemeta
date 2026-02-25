@@ -82,6 +82,54 @@ final class FlashPixStreamAssemblerTest extends TestCase
     }
 
     /**
+     * Tolerates a FlashPix contents-list entry whose name does not start with '/'.
+     */
+    #[Test]
+    public function itToleratesInvalidNamePrefix(): void
+    {
+        $assembler = new FlashPixStreamAssembler(
+            maxContentEntries: 10,
+            maxStreamSize: 1_000_000,
+            maxFlashPixTotalSize: 100_000,
+        );
+
+        // Build a contents-list with a name that lacks the leading '/'
+        $contentsList = $this->buildContentsListPayloadWithName(200, 'stream0');
+        $assembler->handleSegment($contentsList, 0);
+
+        // Stream data for the entry should be accepted
+        $streamData = $this->buildStreamDataPayload(0, 1, 1, 0, str_repeat('X', 10));
+        $assembler->handleSegment($streamData, 100);
+
+        $assembler->finalise();
+        self::assertSame([0 => str_repeat('X', 10) . str_repeat("\x00", 190)], $assembler->getStreams());
+    }
+
+    /**
+     * Tolerates a FlashPix contents-list entry with an empty name.
+     */
+    #[Test]
+    public function itToleratesEmptyEntryName(): void
+    {
+        $assembler = new FlashPixStreamAssembler(
+            maxContentEntries: 10,
+            maxStreamSize: 1_000_000,
+            maxFlashPixTotalSize: 100_000,
+        );
+
+        // Build a contents-list with an empty name (just the NUL terminator)
+        $contentsList = $this->buildContentsListPayloadWithEmptyName(200);
+        $assembler->handleSegment($contentsList, 0);
+
+        // Stream data for the entry should be accepted
+        $streamData = $this->buildStreamDataPayload(0, 1, 1, 0, str_repeat('Y', 10));
+        $assembler->handleSegment($streamData, 100);
+
+        $assembler->finalise();
+        self::assertSame([0 => str_repeat('Y', 10) . str_repeat("\x00", 190)], $assembler->getStreams());
+    }
+
+    /**
      * Builds a complete FPXR contents-list payload with one stream entry.
      *
      * EXIF 3.0 §4.7.3.3–4: "FPXR" + NUL + version + entry-count(2B) + entries.
@@ -90,13 +138,42 @@ final class FlashPixStreamAssemblerTest extends TestCase
      */
     private function buildContentsListPayload(int $entitySize): string
     {
-        $nameUtf16 = iconv('UTF-8', 'UTF-16LE', '/stream0');
+        return $this->buildContentsListPayloadWithName($entitySize, '/stream0');
+    }
+
+    /**
+     * Builds a complete FPXR contents-list payload with one stream entry and a custom name.
+     *
+     * @param int    $entitySize Declared stream size for the single entry.
+     * @param string $name       UTF-8 name for the contents-list entry.
+     */
+    private function buildContentsListPayloadWithName(int $entitySize, string $name): string
+    {
+        $nameUtf16 = iconv('UTF-8', 'UTF-16LE', $name);
         assert($nameUtf16 !== false);
 
         $entry = pack('N', $entitySize)  // entity size (4 bytes BE)
             . chr(0)                     // default byte
             . $nameUtf16                 // UTF-16LE name
             . "\x00\x00";               // NUL terminator (UTF-16LE)
+
+        $body = pack('n', 1) . $entry;  // entry count = 1
+
+        return "FPXR\x00\x00" . $body;
+    }
+
+    /**
+     * Builds a complete FPXR contents-list payload with one stream entry whose name is empty.
+     *
+     * The name field contains only the UTF-16LE NUL terminator with no preceding code units.
+     *
+     * @param int $entitySize Declared stream size for the single entry.
+     */
+    private function buildContentsListPayloadWithEmptyName(int $entitySize): string
+    {
+        $entry = pack('N', $entitySize)  // entity size (4 bytes BE)
+            . chr(0)                     // default byte
+            . "\x00\x00";               // NUL terminator only (empty name)
 
         $body = pack('n', 1) . $entry;  // entry count = 1
 
