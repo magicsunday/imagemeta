@@ -57,4 +57,34 @@ final class ExifTagDecoderTest extends TestCase
         // 0xE9 = 'é' in Latin-1, not valid single-byte UTF-8
         self::assertSame('Renée', $decoder->decodeAscii(0x010F, 6, "Ren\xE9e\0", []));
     }
+
+    /**
+     * Malformed UTF-8 in a whitelisted EXIF 3.0 text tag is tolerated by
+     * replacing invalid bytes with U+FFFD instead of aborting.
+     */
+    #[Test]
+    public function toleratesMalformedUtf8InWhitelistedTag(): void
+    {
+        $decoder = new ExifTagDecoder();
+
+        // 0xE9 is a 3-byte UTF-8 lead byte but 'e' is not a continuation byte.
+        // The decoder should replace the invalid byte with U+FFFD.
+        self::assertSame("Ren\u{FFFD}e", $decoder->decodeAscii(700, 6, "Ren\xE9e\0", [700]));
+    }
+
+    /**
+     * A truncated multi-byte UTF-8 sequence in a whitelisted tag is tolerated
+     * by replacing the invalid bytes with U+FFFD.
+     */
+    #[Test]
+    public function itReplacesInvalidUtf8WithReplacementCharacter(): void
+    {
+        $decoder = new ExifTagDecoder();
+
+        // \xC3 alone is a truncated 2-byte UTF-8 sequence followed by ASCII 'X'.
+        // The decoder should replace the orphan lead byte with U+FFFD.
+        $result = $decoder->decodeAscii(700, 4, "\xC3X\0\0", [700]);
+
+        self::assertSame("\u{FFFD}X", $result);
+    }
 }
