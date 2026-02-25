@@ -457,15 +457,8 @@ final readonly class TiffExifTagValidator
         }
 
         match ($tag) {
-            DngTag::MAKER_NOTE_SAFETY            => $this->assertMakerNoteSafetyDomain($value),
-            ExifTag::ORIENTATION                 => $this->assertOrientationDomain($value),
-            ExifTag::YCBCR_POSITIONING           => $this->assertYCbCrPositioningDomain($value),
-            ExifTag::COLOR_SPACE                 => $this->assertColorSpaceDomain($value),
-            ExifTag::RESOLUTION_UNIT             => $this->assertResolutionUnitDomain($value),
-            ExifTag::FOCAL_PLANE_RESOLUTION_UNIT => $this->assertFocalPlaneResolutionUnitDomain($value),
-            ExifTag::PLANAR_CONFIGURATION        => $this->assertPlanarConfigurationDomain($value),
-            TiffTag::PREDICTOR                   => $this->assertPredictorDomain($value),
-            default                              => null,
+            DngTag::MAKER_NOTE_SAFETY => $this->assertMakerNoteSafetyDomain($value),
+            default                   => null,
         };
     }
 
@@ -757,82 +750,4 @@ final readonly class TiffExifTagValidator
         }
     }
 
-    private function assertOrientationDomain(int $value): void
-    {
-        // Orientation 0 is not defined by EXIF 3.0 §4.6.5.1.6 (domain 1..8) but
-        // is commonly written by tools like ImageMagick to mean "unspecified".
-        if ($value < 0 || $value > 8) {
-            throw new ParseError(sprintf(
-                'Orientation value %d is outside the valid domain 0..8 per EXIF 3.0 §4.6.5.1.6.',
-                $value,
-            ), 1311);
-        }
-    }
-
-    private function assertYCbCrPositioningDomain(int $value): void
-    {
-        // YCbCrPositioning 0 is not defined by EXIF 3.0 §4.6.5.1.13 (domain {1, 2})
-        // but DNG/RAW files commonly write 0 when YCbCr is not applicable.
-        if (!in_array($value, [0, 1, 2], true)) {
-            throw new ParseError(sprintf(
-                'YCbCrPositioning value %d is outside the valid domain {0, 1, 2} per EXIF 3.0 §4.6.5.1.13.',
-                $value,
-            ), 1312);
-        }
-    }
-
-    private function assertColorSpaceDomain(int $value): void
-    {
-        if ($value !== 1 && $value !== 0xFFFF) {
-            throw new ParseError(sprintf(
-                'ColorSpace value %d is outside the valid domain {1, 65535} per EXIF 3.0 §4.6.6.2.1.',
-                $value,
-            ), 1313);
-        }
-    }
-
-    private function assertResolutionUnitDomain(int $value): void
-    {
-        // Postel's Law: EXIF 3.0 §4.6.5.1.11 restricts ResolutionUnit to {2, 3}
-        // (inches, centimeters), but TIFF 6.0 §5 also defines value 1 ("No
-        // Absolute Unit of Measurement") for aspect-ratio-only resolution.  Many
-        // older scanners and image editors use value 1.  Accept the full TIFF
-        // domain {1, 2, 3} to avoid aborting on otherwise valid images.
-        if (!in_array($value, [1, 2, 3], true)) {
-            throw new ParseError(sprintf(
-                'ResolutionUnit value %d is outside the valid domain {1, 2, 3} per TIFF 6.0 §5.',
-                $value,
-            ), 1314);
-        }
-    }
-
-    private function assertFocalPlaneResolutionUnitDomain(int $value): void
-    {
-        if ($value !== 2 && $value !== 3) {
-            throw new ParseError(sprintf(
-                'FocalPlaneResolutionUnit value %d is outside the valid domain {2, 3} per EXIF 3.0 §4.6.6.7.28.',
-                $value,
-            ), 1315);
-        }
-    }
-
-    private function assertPlanarConfigurationDomain(int $value): void
-    {
-        if ($value !== 1 && $value !== 2) {
-            throw new ParseError(sprintf(
-                'PlanarConfiguration value %d is outside the valid domain {1, 2} per EXIF 3.0 §4.6.5.1.10.',
-                $value,
-            ), 1316);
-        }
-    }
-
-    private function assertPredictorDomain(int $value): void
-    {
-        if ($value !== 1 && $value !== 2) {
-            throw new ParseError(sprintf(
-                'Predictor value %d is outside the valid domain {1, 2} per TIFF 6.0 §14.',
-                $value,
-            ), 1358);
-        }
-    }
 }

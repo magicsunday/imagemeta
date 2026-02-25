@@ -245,22 +245,7 @@ final readonly class TiffSampleValidator
             );
         }
 
-        $sampleFormats = $this->support->extractIntegerTagComponents($sampleFormatEntry, 'SampleFormat');
-
-        foreach ($sampleFormats as $componentIndex => $sampleFormat) {
-            if (!in_array($sampleFormat, [1, 2, 3, 4], true)) {
-                throw new ParseError(
-                    sprintf(
-                        'SampleFormat component %d value %d is invalid; allowed values are 1,2,3,4.',
-                        $componentIndex,
-                        $sampleFormat,
-                    ),
-                    1758,
-                );
-            }
-        }
-
-        return $sampleFormats;
+        return $this->support->extractIntegerTagComponents($sampleFormatEntry, 'SampleFormat');
     }
 
     /**
