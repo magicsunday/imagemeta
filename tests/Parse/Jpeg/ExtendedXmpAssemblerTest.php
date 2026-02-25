@@ -55,6 +55,23 @@ final class ExtendedXmpAssemblerTest extends TestCase
     }
 
     /**
+     * Returns null when xmpNote:HasExtendedXMP is present but the GUID is malformed.
+     */
+    #[Test]
+    public function returnsNullWhenHasExtendedXmpGuidIsMalformed(): void
+    {
+        $assembler = new ExtendedXmpAssembler(
+            32,
+            static function (string $packet): void {},
+        );
+
+        $packet = '<x:xmpmeta><rdf:RDF xmpNote:HasExtendedXMP="NOT-A-VALID-GUID"/></rdf:RDF></x:xmpmeta>';
+
+        $result = $assembler->extractGuidFromPacket($packet, 0);
+        self::assertNull($result);
+    }
+
+    /**
      * Rejects ExtendedXMP chunks whose cumulative size exceeds the configured limit
      * even when the declared totalLength passes the initial check.
      *

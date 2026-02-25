@@ -60,6 +60,29 @@ final class FlashPixStreamAssemblerTest extends TestCase
     }
 
     /**
+     * Tolerates trailing bytes in a FlashPix contents-list payload.
+     */
+    #[Test]
+    public function toleratesTrailingBytesInContentsList(): void
+    {
+        $assembler = new FlashPixStreamAssembler(
+            maxContentEntries: 10,
+            maxStreamSize: 1_000_000,
+            maxFlashPixTotalSize: 100_000,
+        );
+
+        // Build a valid contents-list payload and append trailing bytes
+        $contentsList = $this->buildContentsListPayload(200) . "\x00\x00\x00";
+
+        $assembler->handleSegment($contentsList, 0);
+
+        // Finalise should succeed without error
+        $assembler->finalise();
+        $streams = $assembler->getStreams();
+        self::assertIsArray($streams);
+    }
+
+    /**
      * Builds a complete FPXR contents-list payload with one stream entry.
      *
      * EXIF 3.0 §4.7.3.3–4: "FPXR" + NUL + version + entry-count(2B) + entries.
