@@ -78,8 +78,7 @@ final class FlashPixStreamAssemblerTest extends TestCase
 
         // Finalise should succeed without error
         $assembler->finalise();
-        $streams = $assembler->getStreams();
-        self::assertIsArray($streams);
+        self::assertSame([], $assembler->getStreams());
     }
 
     /**

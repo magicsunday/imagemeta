@@ -1364,11 +1364,10 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Emits stream data before a contents list segment.
-     * This verifies APP2 FPXR ordering constraints are enforced.
+     * Tolerates stream data appearing before a contents list segment.
      */
     #[Test]
-    public function flashPixStreamDataBeforeContentsListThrowsParseError(): void
+    public function toleratesFlashPixStreamDataBeforeContentsList(): void
     {
         $streamData = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 1, 1, 0, 'data'));
 
@@ -1376,9 +1375,7 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-
-        $extractor->getFlashPixStreams();
+        self::assertSame([], $extractor->getFlashPixStreams());
     }
 
     /**

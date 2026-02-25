@@ -335,9 +335,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             ];
         }
 
-        if ($cursor !== $length) {
-            throw new ParseError(sprintf('FlashPix contents list at offset %d has trailing bytes', $offset), 1312);
-        }
+        // Tolerate trailing bytes per Postel's Law — the parsed entries are complete.
     }
 
     /**

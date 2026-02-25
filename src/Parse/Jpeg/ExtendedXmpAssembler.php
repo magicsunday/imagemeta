@@ -230,10 +230,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
             return strtoupper($matches[1]);
         }
 
-        throw new ParseError(
-            sprintf('XMP packet at offset %d has invalid xmpNote:HasExtendedXMP GUID', $offset),
-            1475,
-        );
+        return null;
     }
 
     /**
