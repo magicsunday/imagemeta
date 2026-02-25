@@ -363,6 +363,53 @@ final class GpsFactoryTest extends TestCase
     }
 
     /**
+     * Supplies a GPS date with no time component.
+     * Confirms the factory populates the date field but leaves time and timestamp null.
+     */
+    #[Test]
+    public function createsTimingWithDateOnlyWhenTimeIsAbsent(): void
+    {
+        $parsedExif = $this->parsedExif(
+            latRef: null,
+            lat: null,
+            lonRef: null,
+            lon: null,
+            altitudeRef: null,
+            altitude: null,
+            version: null,
+            satellites: null,
+            status: null,
+            measureMode: null,
+            dop: null,
+            speedRef: null,
+            speedMs: null,
+            track: null,
+            mapDatum: null,
+            processingMethod: null,
+            areaInformation: null,
+            date: '2023-06-15',
+            time: null,
+            differential: null,
+            hPositioningError: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->timing);
+
+        self::assertSame('2023-06-15', $gps->timing->date);
+        self::assertNull($gps->timing->time);
+        self::assertNull($gps->timing->timestamp);
+    }
+
+    /**
      * XMP altitude with ref 3 (below sea level) yields negative altitude.
      */
     #[Test]
