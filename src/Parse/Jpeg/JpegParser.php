@@ -345,34 +345,18 @@ final class JpegParser implements JpegParserInterface
             return true; // EXIF 3.0 §4.7.1 restricts metadata APP markers to precede the first SOS.
         }
 
+        // TEM, RST, and duplicate SOI are stand-alone markers with no payload.
+        // Tolerate them per Postel's Law — they carry no metadata.
         if ($marker === Marker::TEM) {
-            throw new ParseError(
-                sprintf(
-                    'TEM marker at offset %d is not allowed before SOS marker in strict EXIF JPEG mode',
-                    $offset,
-                ),
-                1502,
-            );
+            return false;
         }
 
         if (($marker >= Marker::RST_FIRST) && ($marker <= Marker::RST_LAST)) {
-            throw new ParseError(
-                sprintf(
-                    'Restart marker 0x%02X at offset %d is not allowed before SOS marker',
-                    $marker,
-                    $offset,
-                ),
-                1499,
-            );
+            return false;
         }
 
-        // EXIF 3.0 §4.5.4: SOI is a stand-alone marker that shall appear
-        // exactly once at the beginning of the JPEG stream.
         if ($marker === Marker::SOI) {
-            throw new ParseError(
-                sprintf('duplicate SOI marker at offset %d', $offset),
-                1507,
-            );
+            return false;
         }
 
         $isAppSegment  = $marker >= Marker::APP_FIRST && $marker <= Marker::APP_LAST;
