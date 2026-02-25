@@ -198,13 +198,12 @@ final readonly class IccParser implements IccParserInterface
         // but many widely deployed profiles (e.g. the ubiquitous Heidelberger
         // "Lino" sRGB profile) have non-zero reserved bytes.  Tolerate silently
         // — the reserved field has no semantic impact on tag extraction.
-        // (GH-1539)
 
         // Postel's Law: ICC.1:2022 §7.1 requires contiguous tag data with NULL
         // padding after the tag table.  Many real-world profiles have padding
         // gaps, overlapping tags, or non-zero padding bytes.  Since tags are
         // accessed by their individual offset+size, layout deviations are
-        // harmless for data extraction.  Skip the layout check.  (GH-1539)
+        // harmless for data extraction.  Skip the layout check.
 
         // ICC.1:2022 §7.2.4: Validate version field including reserved bytes
         $version = $this->headerDecoder->extractVersion($data);

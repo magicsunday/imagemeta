@@ -308,7 +308,7 @@ final class TiffExifParserBigTiffTest extends TestCase
 
     /**
      * Provides an entry whose value offset is beyond 4 GiB.
-     * The parser skips such entries gracefully (GH-1549).
+     * The parser skips such entries gracefully.
      */
     #[Test]
     public function skipsBigTiffValueOffsetBeyond4GB(): void

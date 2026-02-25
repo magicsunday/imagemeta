@@ -69,7 +69,7 @@ final class TiffIfdTraverser
      */
     public function pointerOffset(IfdEntry $entry): ?int
     {
-        // Postel's Law: skip malformed IFD pointer per GH-1644
+        // Postel's Law: skip malformed IFD pointer.
         try {
             $value = $entry->value;
 

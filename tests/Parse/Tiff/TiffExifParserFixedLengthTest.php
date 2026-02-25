@@ -906,7 +906,7 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Tolerates SLONG type for SHORT Orientation tag (Postel's Law, GH-1643).
+     * Tolerates SLONG type for SHORT Orientation tag (Postel's Law).
      */
     #[Test]
     public function toleratesSlongForShortOrientationTag(): void
@@ -924,7 +924,7 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Tolerates SHORT type for BYTE GPSAltitudeRef tag (Postel's Law, GH-1643).
+     * Tolerates SHORT type for BYTE GPSAltitudeRef tag (Postel's Law).
      */
     #[Test]
     public function toleratesShortForByteGpsAltitudeRefTag(): void

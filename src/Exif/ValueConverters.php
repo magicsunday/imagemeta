@@ -34,7 +34,7 @@ use MagicSunday\ImageMeta\Value\FlashInfo;
  * deliberate design tradeoff: 14 consumer classes inject one ValueConverters
  * instance instead of depending on 10+ individual converter classes, keeping
  * constructor signatures small and shielding consumers from converter
- * refactorings. (GH-1583)
+ * refactorings.
  *
  * @phpstan-type RationalComponent = array<int, int|float|string>
  * @phpstan-type RationalLike = array<int, RationalComponent|ExifRational|int|float|string>

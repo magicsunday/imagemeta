@@ -157,7 +157,7 @@ final class TiffExifParserFuzzTest extends TestCase
     /**
      * Declares a BYTE entry with an INT_MAX count to overflow expected data size.
      * The entry triggers a BoundsError internally which is caught — the entry
-     * is silently skipped and parsing succeeds (Postel's Law, GH-1549).
+     * is silently skipped and parsing succeeds (Postel's Law).
      */
     #[Test]
     public function skipsEntryWithOverflowCount(): void

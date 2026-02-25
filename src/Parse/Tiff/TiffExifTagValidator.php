@@ -285,7 +285,7 @@ final readonly class TiffExifTagValidator
     // JPEG interchange pointers.  Informational tags like BitsPerSample,
     // SamplesPerPixel, PhotometricInterpretation, PlanarConfiguration, and
     // Compression are tolerated because they are redundant (derivable from the
-    // JPEG SOF marker) and harmless.  (GH-1546)
+    // JPEG SOF marker) and harmless.
 
     /**
      * Tags prohibited in JPEG-compressed primary images (IFD0).
@@ -345,7 +345,7 @@ final readonly class TiffExifTagValidator
             // Postel's Law: RATIONAL (unsigned) and SRATIONAL (signed) share the
             // same 8-byte binary layout (two int32).  Many cameras swap them for
             // exposure value tags (ShutterSpeedValue, ApertureValue, BrightnessValue,
-            // ExposureBiasValue, MaxApertureValue, SubjectDistance).  (GH-1538)
+            // ExposureBiasValue, MaxApertureValue, SubjectDistance).
             $rationalSrationalSwap = ($type === TiffConst::TYPE_RATIONAL && $rule[self::RULE_TYPE] === TiffConst::TYPE_SRATIONAL)
                 || ($type === TiffConst::TYPE_SRATIONAL && $rule[self::RULE_TYPE] === TiffConst::TYPE_RATIONAL);
 
@@ -357,7 +357,7 @@ final readonly class TiffExifTagValidator
             $gpsTypeTolerance = ($rule[self::RULE_TYPE] === TiffConst::TYPE_RATIONAL || $rule[self::RULE_TYPE] === TiffConst::TYPE_UNDEFINED)
                 && str_starts_with((string) $rule[self::RULE_SPEC], 'EXIF 3.0 §4.6.7');
 
-            // Postel's Law: accept compatible integer types per GH-1643
+            // Postel's Law: accept compatible integer types.
             // Real-world cameras (Sony, Nikon, Apple) often write SLONG instead of
             // SHORT, or SHORT instead of BYTE, for single-value integer tags.
             $integerFamilyTolerance = $rule[self::RULE_COUNT] === 1
@@ -386,7 +386,6 @@ final readonly class TiffExifTagValidator
         // spec (e.g. ASCII instead of RATIONAL), so the count field has different
         // semantics (string byte-length vs. value count).  Skip the count check
         // entirely — the value will be parsed according to its actual type.
-        // (GH-1542)
         if ($gpsTypeToleranceApplied) {
             return;
         }
@@ -399,7 +398,7 @@ final readonly class TiffExifTagValidator
         // Postel's Law: many cameras write GPS coordinates with count=4 instead of
         // the spec-mandated 3, adding a fourth zero RATIONAL value.  Accept any
         // count ≥ expected for GPS RATIONAL tags — only the first N values are
-        // used.  (GH-1535)
+        // used.
         if ($count > $rule[self::RULE_COUNT]
             && $rule[self::RULE_TYPE] === TiffConst::TYPE_RATIONAL
             && str_starts_with((string) $rule[self::RULE_SPEC], 'EXIF 3.0 §4.6.7')
@@ -411,7 +410,6 @@ final readonly class TiffExifTagValidator
         // count=20 (19 printable chars + NUL), but some cameras (e.g. Kodak)
         // write count=19 omitting the NUL terminator.  The ASCII string parser
         // already handles both NUL-terminated and non-NUL-terminated strings.
-        // (GH-1541)
         if ($rule[self::RULE_TYPE] === TiffConst::TYPE_ASCII && $rule[self::RULE_COUNT] === 20 && $count === 19) {
             return;
         }
@@ -419,7 +417,7 @@ final readonly class TiffExifTagValidator
         // Postel's Law: ExifVersion/FlashpixVersion are informational 4-byte
         // version strings.  Some cameras add a NUL terminator (count=5) or use
         // other lengths.  Accept any count — the version string is non-critical
-        // for parsing.  (GH-1545)
+        // for parsing.
         if ($tag === ExifTag::EXIF_VERSION || $tag === ExifTag::FLASHPIX_VERSION) {
             return;
         }
@@ -455,7 +453,6 @@ final readonly class TiffExifTagValidator
         // 8-byte character-code prefix, but some cameras (e.g. HMD/Nokia)
         // write them as plain ASCII without the prefix.  Accept ASCII↔UNDEFINED
         // swaps for GPS tags to avoid aborting on otherwise valid metadata.
-        // (GH-1540)
         $gpsUndefinedAsciiSwap = str_starts_with($rule[self::TYPE_ONLY_SPEC], 'EXIF 3.0 §4.6.7')
             && (($type === TiffConst::TYPE_ASCII && $rule[self::TYPE_ONLY_TYPE] === TiffConst::TYPE_UNDEFINED)
                 || ($type === TiffConst::TYPE_UNDEFINED && $rule[self::TYPE_ONLY_TYPE] === TiffConst::TYPE_ASCII));
@@ -675,7 +672,7 @@ final readonly class TiffExifTagValidator
         // Mask to bits 0–6; ignore reserved high-order bits (Postel's Law).
         $flashBits = $entry->value & 0x7F;
 
-        // Postel's Law: accept reserved return-status bits per GH-1646
+        // Postel's Law: accept reserved return-status bits.
         $fired      = ($flashBits & 0x01) !== 0;
         $returnBits = ($flashBits >> 1) & 0x03;
 
@@ -1020,7 +1017,7 @@ final readonly class TiffExifTagValidator
         // (inches, centimeters), but TIFF 6.0 §5 also defines value 1 ("No
         // Absolute Unit of Measurement") for aspect-ratio-only resolution.  Many
         // older scanners and image editors use value 1.  Accept the full TIFF
-        // domain {1, 2, 3} to avoid aborting on otherwise valid images.  (GH-1537)
+        // domain {1, 2, 3} to avoid aborting on otherwise valid images.
         if (!in_array($value, [1, 2, 3], true)) {
             throw new ParseError(sprintf(
                 'ResolutionUnit value %d is outside the valid domain {1, 2, 3} per TIFF 6.0 §5.',

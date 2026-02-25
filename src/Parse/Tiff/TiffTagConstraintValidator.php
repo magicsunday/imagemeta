@@ -133,7 +133,7 @@ final readonly class TiffTagConstraintValidator
             && is_int($thumbEntry->value)
             && $thumbEntry->value !== 1
             && $thumbEntry->value !== 6
-            // Postel's Law: accept Compression=7 (JPEG new-style TN2) per GH-1645
+            // Postel's Law: accept Compression=7 (JPEG new-style TN2).
             && $thumbEntry->value !== 7
         ) {
             throw new ParseError(sprintf(
@@ -524,7 +524,7 @@ final readonly class TiffTagConstraintValidator
         // SubIFD-based layouts where IFD0 holds only metadata and a thumbnail.
         // Also, IFD0 with NewSubFileType != 0 indicates a non-primary image.
         // Skip the dimension check when tags are absent — the image dimensions
-        // are not needed for metadata extraction.  (GH-1548)
+        // are not needed for metadata extraction.
         if (!$widthEntry instanceof IfdEntry || !$lengthEntry instanceof IfdEntry) {
             return;
         }

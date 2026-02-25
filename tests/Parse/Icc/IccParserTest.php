@@ -858,7 +858,7 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * GH-824: Rejects profiles with non-zero reserved bytes in version field.
+     * Rejects profiles with non-zero reserved bytes in version field.
      * ICC.1:2022 §7.2.4: bytes 10-11 must be 0x00.
      */
     #[Test]
@@ -875,7 +875,7 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * GH-824: Rejects profiles with non-zero reserved byte 11 in version field.
+     * Rejects profiles with non-zero reserved byte 11 in version field.
      * ICC.1:2022 §7.2.4: bytes 10-11 must be 0x00.
      */
     #[Test]
@@ -892,7 +892,7 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * GH-1116: Rejects profiles with both non-zero reserved bytes in version field.
+     * Rejects profiles with both non-zero reserved bytes in version field.
      * ICC.1:2022 §7.2.4: bytes 10-11 must be 0x00.
      */
     #[Test]
@@ -908,7 +908,7 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * GH-825: Rejects textType tags without trailing NUL byte.
+     * Rejects textType tags without trailing NUL byte.
      * ICC.1:2022 §10.24: textType must be NUL-terminated.
      */
     #[Test]
@@ -926,7 +926,7 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * GH-1118: Rejects textType tags without any payload bytes after the type header.
+     * Rejects textType tags without any payload bytes after the type header.
      * ICC.1:2022 §10.24 requires a NUL-terminated 7-bit ASCII text payload.
      */
     #[Test]
@@ -943,7 +943,7 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * GH-825: Rejects textType tags with non-ASCII bytes.
+     * Rejects textType tags with non-ASCII bytes.
      * ICC.1:2022 §10.24: textType must contain only 7-bit ASCII (bytes <= 0x7F).
      */
     #[Test]
@@ -961,7 +961,7 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * GH-825: Accepts valid textType tags with 7-bit ASCII and NUL termination.
+     * Accepts valid textType tags with 7-bit ASCII and NUL termination.
      * ICC.1:2022 §10.24: textType with valid 7-bit ASCII.
      */
     #[Test]
@@ -978,7 +978,7 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * GH-1115: Rejects textType tags with non-zero reserved bytes in the type header.
+     * Rejects textType tags with non-zero reserved bytes in the type header.
      * ICC.1:2022 §10.1 and §10.24: bytes 4..7 must be zero.
      */
     #[Test]
@@ -1045,7 +1045,7 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * GH-834: Accepts valid desc tag with NUL-terminated 7-bit ASCII.
+     * Accepts valid desc tag with NUL-terminated 7-bit ASCII.
      * ICC spec: desc ASCII string must be NUL-terminated and 7-bit ASCII.
      */
     #[Test]
@@ -1062,7 +1062,7 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * GH-834: Rejects desc tags with non-ASCII bytes.
+     * Rejects desc tags with non-ASCII bytes.
      * ICC spec: desc ASCII string must contain only 7-bit ASCII (bytes <= 0x7F).
      */
     #[Test]
@@ -1080,7 +1080,7 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * GH-834: Rejects desc tags without trailing NUL byte.
+     * Rejects desc tags without trailing NUL byte.
      * ICC spec: desc ASCII string must be NUL-terminated.
      */
     #[Test]
@@ -1098,7 +1098,7 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * GH-834: Rejects desc tags with length exceeding available data.
+     * Rejects desc tags with length exceeding available data.
      * ICC spec: asciiLength must not exceed available payload.
      */
     #[Test]
@@ -1115,7 +1115,7 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * GH-1115: Rejects desc tags with non-zero reserved bytes in the type header.
+     * Rejects desc tags with non-zero reserved bytes in the type header.
      * ICC.1:2022 §10.1: bytes 4..7 must be zero.
      */
     #[Test]

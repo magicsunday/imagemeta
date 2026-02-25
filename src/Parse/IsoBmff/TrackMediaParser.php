@@ -320,7 +320,7 @@ final readonly class TrackMediaParser
         // but Apple QuickTime historically used them for component manufacturer,
         // component type, and component flags.  Many real-world MOV files have
         // non-zero values here.  Tolerate silently — the fields are unused for
-        // metadata extraction.  (GH-1534)
+        // metadata extraction.
 
         $handlerType = $this->boxNavigator->normalizeFourcc($handler);
         $remaining   = $hdlr->contentSize - $win->tell();

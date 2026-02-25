@@ -265,7 +265,7 @@ final readonly class MatrixConverter
             return null;
         }
 
-        // GH-1255: decode header using the TIFF byte order of the enclosing
+        // Decode header using the TIFF byte order of the enclosing
         // EXIF document instead of hardcoded big-endian.
         $shortFmt = $endian === Endian::Little ? 'vcolumns/vrows' : 'ncolumns/nrows';
         $header   = @unpack($shortFmt, substr($payload, 0, 4));
@@ -286,7 +286,7 @@ final readonly class MatrixConverter
             return null;
         }
 
-        // GH-1256: no spec-mandated hard cap — validate by payload-consistency
+        // No spec-mandated hard cap — validate by payload-consistency
         // and integer-overflow-safe arithmetic instead of a fixed 64×64 limit.
         if ($columns > intdiv(PHP_INT_MAX, $rows)) {
             return null;
@@ -338,7 +338,7 @@ final readonly class MatrixConverter
 
                 $offset += self::SRATIONAL_VALUE_SIZE;
 
-                // GH-1258: EXIF does not define a zero-denominator sentinel for
+                // EXIF does not define a zero-denominator sentinel for
                 // OECF/SpatialFrequencyResponse SRATIONAL cells.  Treat as
                 // malformed payload.
                 if ($denominator === 0) {
@@ -379,7 +379,7 @@ final readonly class MatrixConverter
             return null;
         }
 
-        // GH-1257: no spec-mandated per-label cap — rely on NUL-terminator
+        // No spec-mandated per-label cap — rely on NUL-terminator
         // presence within payload bounds as the only length constraint.
         $end = strpos($payload, "\0", $offset);
         if ($end === false) {
@@ -391,7 +391,7 @@ final readonly class MatrixConverter
             return null;
         }
 
-        // GH-1261: preserve label bytes faithfully; the EXIF layout defines
+        // Preserve label bytes faithfully; the EXIF layout defines
         // binary representation, not semantic trimming.
         $label  = substr($payload, $offset, $labelLength);
         $offset = $end + 1;
@@ -402,7 +402,7 @@ final readonly class MatrixConverter
     /**
      * Reads a signed 32-bit integer from the SRATIONAL matrix payload.
      *
-     * GH-1255: uses the TIFF byte order of the enclosing EXIF document.
+     * Uses the TIFF byte order of the enclosing EXIF document.
      */
     private function readSrationalInt32(string $payload, int $offset, int $length, Endian $endian = Endian::Big): ?int
     {
