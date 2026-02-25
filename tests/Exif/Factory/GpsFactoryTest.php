@@ -301,8 +301,8 @@ final class GpsFactoryTest extends TestCase
      */
     public static function provideXmpNegativeAltitudeRefs(): iterable
     {
-        yield 'ref 1 (below ellipsoidal)' => [1];
-        yield 'ref 3 (below sea level)' => [3];
+        yield 'ref 1 (below sea level)' => [1];
+        yield 'ref 3 (below ellipsoidal surface)' => [3];
     }
 
     /**
@@ -336,8 +336,8 @@ final class GpsFactoryTest extends TestCase
      */
     public static function provideXmpPositiveAltitudeRefs(): iterable
     {
-        yield 'ref 0 (above ellipsoidal)' => [0];
-        yield 'ref 2 (above sea level)' => [2];
+        yield 'ref 0 (above sea level)' => [0];
+        yield 'ref 2 (above ellipsoidal surface)' => [2];
     }
 
     /**
