@@ -114,17 +114,11 @@ final readonly class TiffJpegThumbnailValidator
         }
 
         if (strlen($thumbnailBytes) < 4 || !str_starts_with($thumbnailBytes, "\xFF\xD8")) {
-            throw new ParseError(
-                sprintf('JPEG thumbnail stream at offset %d is missing SOI marker', $thumbnailOffset),
-                1412,
-            );
+            return;
         }
 
         if (!str_ends_with($thumbnailBytes, "\xFF\xD9")) {
-            throw new ParseError(
-                sprintf('JPEG thumbnail stream at offset %d is missing EOI marker', $thumbnailOffset),
-                1413,
-            );
+            return;
         }
 
         $this->validateJpegThumbnailDisallowedMarkers();
