@@ -25,6 +25,8 @@ use PHPUnit\Framework\TestCase;
 use function pack;
 use function strlen;
 
+use const PHP_INT_MAX;
+
 /**
  * Tests StreamWindow behavior for window-relative reads, seeks, and bounds.
  * It verifies that size and cursor positions are relative to the window, not the parent stream.
@@ -217,6 +219,25 @@ final class StreamWindowTest extends TestCase
 
         $this->expectException(BoundsError::class);
         $window->read(1);
+    }
+
+    /**
+     * Positions the cursor one step below PHP_INT_MAX and requests two bytes.
+     * The addition cursor + length wraps to a float equal to PHP_INT_MAX,
+     * which silently passes the naive bounds check on both 32-bit and 64-bit PHP.
+     * It asserts that a BoundsError with the overflow guard code is raised before
+     * the arithmetic is evaluated.
+     */
+    #[Test]
+    public function readThrowsBoundsErrorWhenCursorPlusLengthOverflows(): void
+    {
+        $payload = pack('C', 0x01);
+        $window  = new StreamWindow($this->createStream($payload), 0, PHP_INT_MAX);
+        $window->seek(PHP_INT_MAX - 1);
+
+        $this->expectException(BoundsError::class);
+        $this->expectExceptionCode(1031);
+        $window->read(2);
     }
 
     /**
