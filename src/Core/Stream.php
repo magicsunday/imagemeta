@@ -147,7 +147,7 @@ final class Stream implements BinaryReadAccessInterface
      */
     public function window(int $offset, int $length): StreamWindow
     {
-        if (($offset < 0) || ($length < 0) || (($offset + $length) > $this->size)) {
+        if (($offset < 0) || ($length < 0) || ($length > \PHP_INT_MAX - $offset) || (($offset + $length) > $this->size)) {
             throw new BoundsError('window out of range', 1014);
         }
 
