@@ -4776,18 +4776,18 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects an ftyp box with a non-printable compatible_brand code.
+     * Tolerates an ftyp box with a non-printable compatible_brand (skips it).
      */
     #[Test]
-    public function rejectFtypNonPrintableCompatibleBrand(): void
+    public function toleratesFtypNonPrintableCompatibleBrand(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ftyp compatible_brand must be a printable 4CC');
-
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0) . 'mif1' . "\x00\x00\x00\x01");
 
-        $extractor = $this->createExtractor($ftyp);
-        $extractor->extract();
+        $extractor    = $this->createExtractor($ftyp);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('mif1', $qtMeta->keys[QuickTimeMeta::COMPATIBLE_BRANDS_KEY]);
     }
 
     /**
@@ -5949,20 +5949,19 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Counted-string length exceeding remaining bytes triggers ParseError.
+     * Tolerates hdlr counted-string length exceeding remaining bytes (best-effort extraction).
      */
     #[Test]
-    public function rejectHdlrCountedStringExceedsRemaining(): void
+    public function toleratesHdlrNameWithoutNulTerminator(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('hdlr handler name missing NUL terminator (counted length 20 exceeds remaining 2 bytes)');
-
-        // Length byte says 20 but only 2 bytes follow, and no NUL → not ISO fallback
+        // Length byte says 20 but only 2 bytes follow, and no NUL → best-effort rtrim
         $hdlrPayload = "\0\0\0\0\0\0\0\0vide" . str_repeat("\0", 12) . chr(20) . 'AB';
         $hdlr        = $this->box('hdlr', $hdlrPayload);
         $meta        = $this->box('meta', "\0\0\0\0" . $hdlr);
         $moov        = $this->moov($meta);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $this->expectNotToPerformAssertions();
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -6423,6 +6422,49 @@ final class IsoBmffParserTest extends TestCase
 
         $extractor = $this->createExtractor($ftyp . $moovHeader . $moovPartialPayload);
         $extractor->extract();
+    }
+
+    /**
+     * Tolerates trailing bytes after the last top-level box.
+     */
+    #[Test]
+    public function toleratesTrailingBytesAfterLastBox(): void
+    {
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        // 4 trailing bytes that don't form a valid box (< 8 bytes)
+        $data = $ftyp . "\xFF\xFF\xFF\xFF";
+
+        $extractor    = $this->createExtractor($data);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('isom', $qtMeta->keys[QuickTimeMeta::MAJOR_BRAND_KEY]);
+    }
+
+    /**
+     * Accepts a QuickTime ilst entry with FourCC value 0x00000000.
+     */
+    #[Test]
+    public function acceptsFourccValueZero(): void
+    {
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'zero-fourcc');
+        $ilstEntry = $this->box("\x00\x00\x00\x00", $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov = $this->moov($meta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
     }
 
     /**
