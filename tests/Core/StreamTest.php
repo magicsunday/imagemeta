@@ -112,4 +112,19 @@ final class StreamTest extends TestCase
         $this->expectException(BoundsError::class);
         $stream->seek(8);
     }
+
+    /**
+     * Passes offset and length that individually fit in PHP_INT_MAX but sum to overflow.
+     * It asserts a BoundsError is thrown to prevent the silent integer wrap-around.
+     */
+    #[Test]
+    public function windowThrowsBoundsErrorWhenOffsetPlusLengthOverflows(): void
+    {
+        $payload = 'X';
+
+        $stream = new Stream($this->createTempStream($payload), \PHP_INT_MAX);
+
+        $this->expectException(BoundsError::class);
+        $stream->window(\PHP_INT_MAX, 1);
+    }
 }
