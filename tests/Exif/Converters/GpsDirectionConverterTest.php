@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Converters;
 
-use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Converters\GpsDirectionConverter;
 use MagicSunday\ImageMeta\Exif\Converters\NumericConverter;
 use MagicSunday\ImageMeta\Exif\Converters\RationalConverter;
@@ -32,7 +31,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(GpsDirectionConverter::class)]
 #[UsesClass(RationalConverter::class)]
 #[UsesClass(NumericConverter::class)]
-#[UsesClass(ParseError::class)]
 #[UsesTrait(ValidatesGpsRef::class)]
 final class GpsDirectionConverterTest extends TestCase
 {

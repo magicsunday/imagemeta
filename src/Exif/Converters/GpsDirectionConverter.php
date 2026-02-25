@@ -11,13 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
-use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 
+use function fmod;
 use function is_string;
-use function sprintf;
 use function strtoupper;
 use function trim;
 
@@ -127,11 +126,13 @@ final readonly class GpsDirectionConverter
         }
 
         $bearing = (float) $value;
+
+        // Tolerate out-of-range bearings — normalize via modular arithmetic.
         if ($bearing < 0.0 || $bearing >= 360.0) {
-            throw new ParseError(sprintf(
-                'GPS bearing value %s is outside the valid range 0.00–359.99 per EXIF 3.0.',
-                $bearing,
-            ), 1460);
+            $bearing = fmod($bearing, 360.0);
+            if ($bearing < 0.0) {
+                $bearing += 360.0;
+            }
         }
 
         return $bearing;

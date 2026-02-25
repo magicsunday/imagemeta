@@ -22,6 +22,8 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 
 use function array_map;
 use function count;
+use function floor;
+use function fmod;
 use function is_string;
 use function sprintf;
 use function strtoupper;
@@ -82,25 +84,32 @@ final readonly class GpsCoordinateConverter
         $lonRefEntry = $gps->get(ExifTag::GPS_LONGITUDE_REF);
         $lonValEntry = $gps->get(ExifTag::GPS_LONGITUDE);
 
-        $this->validateCoordinatePairConsistency($latRefEntry, $latValEntry, 'GPSLatitudeRef', 'GPSLatitude');
-        $this->validateCoordinatePairConsistency($lonRefEntry, $lonValEntry, 'GPSLongitudeRef', 'GPSLongitude');
+        // Tolerate incomplete coordinate pairs — skip silently.
+        $latIncomplete = $this->isCoordinatePairIncomplete($latRefEntry, $latValEntry);
+        $lonIncomplete = $this->isCoordinatePairIncomplete($lonRefEntry, $lonValEntry);
 
-        $latRef = $latRefEntry?->value;
-        $latVal = $latValEntry?->value;
-        $lonRef = $lonRefEntry?->value;
-        $lonVal = $lonValEntry?->value;
+        $latRefNorm = null;
+        $latPairs   = null;
+        $lonRefNorm = null;
+        $lonPairs   = null;
 
-        $latRefNorm = $this->validateGpsRef(
-            is_string($latRef) ? strtoupper(trim($latRef)) : null,
-            self::GPS_LATITUDE_REF_VALUES,
-        );
-        $lonRefNorm = $this->validateGpsRef(
-            is_string($lonRef) ? strtoupper(trim($lonRef)) : null,
-            self::GPS_LONGITUDE_REF_VALUES,
-        );
+        if (!$latIncomplete) {
+            $latRef     = $latRefEntry?->value;
+            $latRefNorm = $this->validateGpsRef(
+                is_string($latRef) ? strtoupper(trim($latRef)) : null,
+                self::GPS_LATITUDE_REF_VALUES,
+            );
+            $latPairs = $this->resolveCoordinatePairs($latValEntry?->value);
+        }
 
-        $latPairs = $this->resolveCoordinatePairs($latVal);
-        $lonPairs = $this->resolveCoordinatePairs($lonVal);
+        if (!$lonIncomplete) {
+            $lonRef     = $lonRefEntry?->value;
+            $lonRefNorm = $this->validateGpsRef(
+                is_string($lonRef) ? strtoupper(trim($lonRef)) : null,
+                self::GPS_LONGITUDE_REF_VALUES,
+            );
+            $lonPairs = $this->resolveCoordinatePairs($lonValEntry?->value);
+        }
 
         // Destination coordinates
         $destLatRefEntry = $gps->get(ExifTag::GPS_DEST_LATITUDE_REF);
@@ -108,25 +117,33 @@ final readonly class GpsCoordinateConverter
         $destLonRefEntry = $gps->get(ExifTag::GPS_DEST_LONGITUDE_REF);
         $destLonEntry    = $gps->get(ExifTag::GPS_DEST_LONGITUDE);
 
-        $this->validateCoordinatePairConsistency($destLatRefEntry, $destLatEntry, 'GPSDestLatitudeRef', 'GPSDestLatitude');
-        $this->validateCoordinatePairConsistency($destLonRefEntry, $destLonEntry, 'GPSDestLongitudeRef', 'GPSDestLongitude');
+        $destLatIncomplete = $this->isCoordinatePairIncomplete($destLatRefEntry, $destLatEntry);
+        $destLonIncomplete = $this->isCoordinatePairIncomplete($destLonRefEntry, $destLonEntry);
 
-        $destLatRefValue = $destLatRefEntry?->value;
-        $destLatVal      = $destLatEntry?->value;
-        $destLonRefValue = $destLonRefEntry?->value;
+        $destLatRefNorm = null;
+        $destLatPairs   = null;
+        $destLonRefNorm = null;
+        $destLonPairs   = null;
 
-        $destLatRefNorm = $this->validateGpsRef(
-            is_string($destLatRefValue) ? strtoupper(trim($destLatRefValue)) : null,
-            self::GPS_LATITUDE_REF_VALUES,
-        );
-        $destLonRefNorm = $this->validateGpsRef(
-            is_string($destLonRefValue) ? strtoupper(trim($destLonRefValue)) : null,
-            self::GPS_LONGITUDE_REF_VALUES,
-        );
+        if (!$destLatIncomplete) {
+            $destLatRefValue = $destLatRefEntry?->value;
+            $destLatRefNorm  = $this->validateGpsRef(
+                is_string($destLatRefValue) ? strtoupper(trim($destLatRefValue)) : null,
+                self::GPS_LATITUDE_REF_VALUES,
+            );
+            $destLatVal   = $destLatEntry?->value;
+            $destLatPairs = $destLatVal instanceof ExifRationalList ? $destLatVal : null;
+        }
 
-        $destLatPairs = $destLatVal instanceof ExifRationalList ? $destLatVal : null;
-        $destLonVal   = $destLonEntry?->value;
-        $destLonPairs = $destLonVal instanceof ExifRationalList ? $destLonVal : null;
+        if (!$destLonIncomplete) {
+            $destLonRefValue = $destLonRefEntry?->value;
+            $destLonRefNorm  = $this->validateGpsRef(
+                is_string($destLonRefValue) ? strtoupper(trim($destLonRefValue)) : null,
+                self::GPS_LONGITUDE_REF_VALUES,
+            );
+            $destLonVal   = $destLonEntry?->value;
+            $destLonPairs = $destLonVal instanceof ExifRationalList ? $destLonVal : null;
+        }
 
         return [
             'lat_ref'      => $latRefNorm,
@@ -182,18 +199,15 @@ final readonly class GpsCoordinateConverter
         $min = $components[1];
         $sec = $components[2];
 
-        if ($min >= 60.0) {
-            throw new ParseError(
-                'GPS minutes component must be in range [0, 60) per DMS semantics.',
-                1470,
-            );
+        // Tolerate minutes/seconds >= 60 — carry over into the next component.
+        if ($sec >= 60.0) {
+            $min += floor($sec / 60.0);
+            $sec = fmod($sec, 60.0);
         }
 
-        if ($sec >= 60.0) {
-            throw new ParseError(
-                'GPS seconds component must be in range [0, 60) per DMS semantics.',
-                1470,
-            );
+        if ($min >= 60.0) {
+            $deg += floor($min / 60.0);
+            $min = fmod($min, 60.0);
         }
 
         $sign  = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
@@ -278,33 +292,16 @@ final readonly class GpsCoordinateConverter
     }
 
     /**
-     * Validates that GPS coordinate ref and value tags are either both present or both absent.
+     * Checks that GPS coordinate ref and value tags are either both present or both absent.
+     *
+     * Tolerates mismatches by returning true when the pair is incomplete.
+     *
+     * @return bool True when the pair is incomplete and should be skipped.
      */
-    private function validateCoordinatePairConsistency(
+    private function isCoordinatePairIncomplete(
         ?IfdEntry $refEntry,
         ?IfdEntry $valueEntry,
-        string $refName,
-        string $valueName,
-    ): void {
-        $hasRef   = $refEntry instanceof IfdEntry;
-        $hasValue = $valueEntry instanceof IfdEntry;
-
-        if ($hasRef === $hasValue) {
-            return;
-        }
-
-        if ($hasValue) {
-            throw new ParseError(sprintf(
-                '%s present without matching %s per EXIF 3.0.',
-                $valueName,
-                $refName,
-            ), 1472);
-        }
-
-        throw new ParseError(sprintf(
-            '%s present without matching %s per EXIF 3.0.',
-            $refName,
-            $valueName,
-        ), 1472);
+    ): bool {
+        return $refEntry instanceof IfdEntry !== $valueEntry instanceof IfdEntry;
     }
 }

@@ -808,9 +808,9 @@ final class GpsConverterTest extends TestCase
     /**
      * Tolerates GPS coordinate ref/value pairs that appear without their counterpart.
      *
-     * @param array<int, IfdEntry> $entries    IFD entries to parse.
-     * @param string               $coordKey   Key to check in result.
-     * @param string               $refKey     Reference key to check in result.
+     * @param array<int, IfdEntry> $entries  IFD entries to parse.
+     * @param string               $coordKey Key to check in result.
+     * @param string               $refKey   Reference key to check in result.
      */
     #[Test]
     #[DataProvider('provideCoordinateRefValueMismatches')]
