@@ -181,6 +181,51 @@ final class GpsFactoryTest extends TestCase
     }
 
     /**
+     * Verifies the parsedExif helper actually uses the $time parameter.
+     * The previous implementation hardcoded 14:30:00 regardless of $time.
+     */
+    #[Test]
+    public function parsesTimeStampFromExifParameter(): void
+    {
+        $parsedExif = $this->parsedExif(
+            latRef: null,
+            lat: null,
+            lonRef: null,
+            lon: null,
+            altitudeRef: null,
+            altitude: null,
+            version: null,
+            satellites: null,
+            status: null,
+            measureMode: null,
+            dop: null,
+            speedRef: null,
+            speedMs: null,
+            track: null,
+            mapDatum: null,
+            processingMethod: null,
+            areaInformation: null,
+            date: '2023-06-15',
+            time: '09:15:45',
+            differential: null,
+            hPositioningError: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->timing);
+
+        self::assertSame('09:15:45', $gps->timing->time);
+    }
+
+    /**
      * Uses the EXIF GPS date format with colon separators.
      * Ensures the factory normalizes the date to ISO-style YYYY-MM-DD.
      */
@@ -1029,15 +1074,16 @@ final class GpsFactoryTest extends TestCase
         }
 
         if ($time !== null) {
-            // We directly store formatted time string in a custom helper tag
+            $parts = explode(':', $time);
+
             $gpsEntries[ExifTag::GPS_TIME_STAMP] = new IfdEntry(
                 ExifTag::GPS_TIME_STAMP,
                 5,
                 3,
                 [
-                    [14, 1],
-                    [30, 1],
-                    [0, 1],
+                    [(int) $parts[0], 1],
+                    [(int) $parts[1], 1],
+                    [(int) $parts[2], 1],
                 ],
             );
         }
