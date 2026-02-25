@@ -348,6 +348,21 @@ final readonly class IccTagDecoder
                 continue;
             }
 
+            // Guard: reject offset that already reaches or exceeds the payload boundary
+            // before computing offset + length, which would risk integer overflow on
+            // narrow-integer platforms when the offset is a near-maximum uint32 value.
+            if ($stringOffset >= $length) {
+                throw new ParseError(
+                    sprintf(
+                        'ICC mluc record %d string offset %d meets or exceeds payload length %d',
+                        $i,
+                        $stringOffset,
+                        $length,
+                    ),
+                    1890,
+                );
+            }
+
             // Each record's string must be fully bounded within payload
             if ($stringOffset + $stringLength > $length) {
                 throw new ParseError(
