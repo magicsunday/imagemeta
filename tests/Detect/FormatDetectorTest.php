@@ -462,6 +462,51 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
+     * Tolerates a single 0xFF fill byte between SOI and the APP1 marker code.
+     * ITU-T T.81 §B.1.1.2 permits any number of 0xFF bytes before a marker's second byte.
+     */
+    #[Test]
+    public function detectRecognisesJpegWithOneFillByteBeforeApp1(): void
+    {
+        // FF D8 = SOI, FF FF = fill byte then marker prefix, E1 = APP1
+        $stream = $this->createStream("\xFF\xD8\xFF\xFF\xE1");
+
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::JPEG, $detected);
+    }
+
+    /**
+     * Tolerates multiple 0xFF fill bytes between SOI and a marker code.
+     * ITU-T T.81 §B.1.1.2 permits any number of 0xFF bytes before a marker's second byte.
+     */
+    #[Test]
+    public function detectRecognisesJpegWithMultipleFillBytesBeforeApp0(): void
+    {
+        // FF D8 = SOI, FF FF FF FF = three fill bytes then marker prefix, E0 = APP0
+        $stream = $this->createStream("\xFF\xD8\xFF\xFF\xFF\xFF\xE0");
+
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::JPEG, $detected);
+    }
+
+    /**
+     * Rejects a stream where fill bytes run to end of stream with no actual marker code.
+     * A sequence of only 0xFF bytes after SOI cannot resolve to a valid marker.
+     */
+    #[Test]
+    public function detectRejectsJpegWithOnlyFillBytesAndNoMarkerCode(): void
+    {
+        // FF D8 = SOI, then only 0xFF fill bytes — no actual marker code byte follows
+        $stream = $this->createStream("\xFF\xD8\xFF\xFF\xFF");
+
+        $this->expectException(ParseError::class);
+
+        (new FormatDetector())->detect($stream);
+    }
+
+    /**
      * Supplies a stream with an unsupported signature.
      * This confirms a ParseError is thrown for unknown container bytes.
      */
