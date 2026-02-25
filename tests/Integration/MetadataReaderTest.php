@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Contract\TiffExifParserInterface;
 use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
@@ -65,6 +66,7 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactory;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserInterface;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemLocationResolver;
@@ -74,7 +76,9 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeMetadataDecoder;
 use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeValueDecoder;
 use MagicSunday\ImageMeta\Parse\IsoBmff\TrackMediaParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
+use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserInterface;
 use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
@@ -225,10 +229,13 @@ use function unlink;
 #[UsesClass(IsoBmffItemReference::class)]
 #[UsesClass(IsoBmffItemReferenceMap::class)]
 #[UsesClass(IsoBmffParser::class)]
+#[UsesClass(IsoBmffParserFactory::class)]
 #[UsesClass(IsoBmffUnresolvedItem::class)]
 #[UsesClass(ItemLocationResolver::class)]
 #[UsesClass(ItemPayloadResolver::class)]
+#[UsesClass(IptcParser::class)]
 #[UsesClass(JpegParser::class)]
+#[UsesClass(JpegParserFactory::class)]
 #[UsesClass(Keywords::class)]
 #[UsesClass(Lens::class)]
 #[UsesClass(LocationTime::class)]
@@ -710,6 +717,64 @@ final class MetadataReaderTest extends TestCase
 
         self::assertCount(1, $metadata->xmpBlobs);
         self::assertSame($xmp, $metadata->xmpBlobs[0]);
+    }
+
+    /**
+     * Verifies that MetadataReader rejects a TIFF stream whose reported size exceeds the configured maximum.
+     * The reader must throw a ParseError before attempting to materialise the blob in memory.
+     */
+    #[Test]
+    public function fromTiffThrowsWhenStreamExceedsMaxSize(): void
+    {
+        $tiff = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R5', 'maker-note-data');
+        $path = $this->writeTempFile($tiff, 'tiff');
+
+        try {
+            $reader = new MetadataReader(
+                tiffReader: new TiffExifParser(),
+                appleMerger: new AppleMakerNotesMerger(),
+                xmpParser: new XmpParser(),
+                iptcParser: new IptcParser(),
+                formatDetector: new FormatDetector(),
+                jpegParserFactory: new JpegParserFactory(),
+                isoBmffParserFactory: new IsoBmffParserFactory(),
+                maxTiffSize: strlen($tiff) - 1,
+            );
+
+            $this->expectException(ParseError::class);
+            $reader->read($path);
+        } finally {
+            @unlink($path);
+        }
+    }
+
+    /**
+     * Verifies that MetadataReader accepts a TIFF stream whose size equals the configured maximum exactly.
+     * A stream at the boundary must not be rejected.
+     */
+    #[Test]
+    public function fromTiffAcceptsStreamAtExactlyMaxSize(): void
+    {
+        $tiff = $this->littleEndianTiffWithMakerNote('Nikon Corporation', 'Z 8', 'boundary-note');
+        $path = $this->writeTempFile($tiff, 'tiff');
+
+        try {
+            $reader = new MetadataReader(
+                tiffReader: new TiffExifParser(),
+                appleMerger: new AppleMakerNotesMerger(),
+                xmpParser: new XmpParser(),
+                iptcParser: new IptcParser(),
+                formatDetector: new FormatDetector(),
+                jpegParserFactory: new JpegParserFactory(),
+                isoBmffParserFactory: new IsoBmffParserFactory(),
+                maxTiffSize: strlen($tiff),
+            );
+
+            $metadata = $reader->read($path);
+            self::assertNotNull($metadata->exifBlobs);
+        } finally {
+            @unlink($path);
+        }
     }
 
     /**
