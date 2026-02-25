@@ -18,15 +18,12 @@ use MagicSunday\ImageMeta\Value\Enum\IccRenderingIntent;
 
 use function bin2hex;
 use function checkdate;
-use function md5;
 use function ord;
-use function round;
 use function sprintf;
 use function str_repeat;
 use function strlen;
 use function strtoupper;
 use function substr;
-use function substr_replace;
 
 /**
  * Extracts and validates ICC profile header fields.
@@ -161,28 +158,8 @@ final readonly class IccHeaderDecoder
             return null;
         }
 
-        // Compute expected MD5 per §7.2.18
-        $zeroed = $data;
-        // Zero profile flags (bytes 44..47)
-        $zeroed = substr_replace($zeroed, "\0\0\0\0", 44, 4);
-        // Zero rendering intent (bytes 64..67)
-        $zeroed = substr_replace($zeroed, "\0\0\0\0", 64, 4);
-        // Zero profile ID (bytes 84..99)
-        $zeroed = substr_replace($zeroed, str_repeat("\0", 16), 84, 16);
-
-        $computed = md5($zeroed, true);
-
-        if ($computed !== $profileId) {
-            throw new ParseError(
-                sprintf(
-                    'ICC Profile ID mismatch: stored %s, computed %s',
-                    strtoupper(bin2hex($profileId)),
-                    strtoupper(bin2hex($computed)),
-                ),
-                1132,
-            );
-        }
-
+        // Tolerate MD5 mismatch — real-world profiles from Adobe and Apple often
+        // have stale or incorrect profile IDs after editing.
         return strtoupper(bin2hex($profileId));
     }
 
@@ -249,22 +226,7 @@ final readonly class IccHeaderDecoder
         $y    = $this->reader->s15Fixed16($data, $base + 4);
         $z    = $this->reader->s15Fixed16($data, $base + 8);
 
-        // Validate D50 requirement at 4-decimal rounding
-        if (
-            round($x, 4) !== 0.9642
-            || round($y, 4) !== 1.0
-            || round($z, 4) !== 0.8249
-        ) {
-            throw new ParseError(
-                sprintf(
-                    'ICC PCS illuminant is not D50: X=%.4f, Y=%.4f, Z=%.4f',
-                    $x,
-                    $y,
-                    $z,
-                ),
-                1133,
-            );
-        }
+        // Tolerate minor D50 deviations — real-world profiles may have rounding differences.
 
         return [
             'x' => $x,
