@@ -146,6 +146,80 @@ final class StreamWindowTest extends TestCase
     }
 
     /**
+     * Attempts a 32-bit read when only 3 bytes remain in the window.
+     * It confirms a BoundsError is raised before any bytes are consumed.
+     */
+    #[Test]
+    public function throwsBoundsErrorOnU32WithFewerThanFourBytesRemaining(): void
+    {
+        $payload = pack('C3', 0x01, 0x02, 0x03);
+        $window  = new StreamWindow($this->createStream($payload), 0, strlen($payload));
+
+        $this->expectException(BoundsError::class);
+        $window->readU32BE();
+    }
+
+    /**
+     * Attempts a 16-bit read when only 1 byte remains in the window.
+     * It confirms a BoundsError is raised when the read would cross the window end.
+     */
+    #[Test]
+    public function throwsBoundsErrorOnU16WithOnlyOneByteRemaining(): void
+    {
+        $payload = pack('C', 0xFF);
+        $window  = new StreamWindow($this->createStream($payload), 0, strlen($payload));
+
+        $this->expectException(BoundsError::class);
+        $window->readU16BE();
+    }
+
+    /**
+     * Attempts an 8-bit read when the cursor is already at the window end.
+     * It confirms a BoundsError is raised when zero bytes remain.
+     */
+    #[Test]
+    public function throwsBoundsErrorOnU8WithZeroBytesRemaining(): void
+    {
+        $payload = pack('C', 0xAB);
+        $window  = new StreamWindow($this->createStream($payload), 0, strlen($payload));
+
+        $window->readU8();
+
+        $this->expectException(BoundsError::class);
+        $window->readU8();
+    }
+
+    /**
+     * Reads a single byte from a window whose length is exactly one.
+     * It confirms the read succeeds and the cursor advances to the window end.
+     */
+    #[Test]
+    public function readU8SucceedsAtExactWindowBoundary(): void
+    {
+        $payload = pack('C', 0x7E);
+        $window  = new StreamWindow($this->createStream($payload), 0, strlen($payload));
+
+        self::assertSame(0x7E, $window->readU8());
+        self::assertSame(1, $window->tell());
+    }
+
+    /**
+     * Advances the cursor to the window end and then requests one raw byte.
+     * It confirms a BoundsError is raised when reading one byte past the window boundary.
+     */
+    #[Test]
+    public function throwsBoundsErrorOnReadOnePastWindowEnd(): void
+    {
+        $payload = pack('C', 0x01);
+        $window  = new StreamWindow($this->createStream($payload), 0, strlen($payload));
+
+        $window->read(1);
+
+        $this->expectException(BoundsError::class);
+        $window->read(1);
+    }
+
+    /**
      * Creates a Stream instance populated with the provided payload.
      * This helper ensures stream windows are built on known content.
      *
