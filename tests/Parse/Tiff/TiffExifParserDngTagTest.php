@@ -3749,31 +3749,29 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
-     * Rejects ProfileGroupName with unsupported TIFF type.
+     * Tolerates ProfileGroupName with unsupported TIFF type.
      */
     #[Test]
-    public function rejectsProfileGroupNameInvalidType(): void
+    public function toleratesProfileGroupNameInvalidType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1509);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithProfileGroupName(TiffConst::TYPE_SHORT, pack('v', 0)),
         );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
     }
 
     /**
-     * Rejects BYTE-typed ProfileGroupName missing null terminator.
+     * Tolerates BYTE-typed ProfileGroupName missing null terminator.
      */
     #[Test]
-    public function rejectsProfileGroupNameByteNoNul(): void
+    public function toleratesProfileGroupNameByteNoNul(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1510);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithProfileGroupName(TiffConst::TYPE_BYTE, 'NoNul'),
         );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
     }
 
     /**
@@ -6670,57 +6668,54 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
-     * Rejects preview string tag with wrong type (SHORT).
+     * Tolerates preview string tag with wrong type (SHORT).
      */
     #[Test]
-    public function rejectsPreviewStringTagWrongType(): void
+    public function toleratesPreviewStringTagWrongType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1571);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewStringTag(
                 DngTag::PREVIEW_APPLICATION_NAME,
                 TiffConst::TYPE_SHORT,
                 "\x00\x01",
             ),
         );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
     }
 
     /**
-     * Rejects BYTE preview string tag missing trailing NUL.
+     * Tolerates BYTE preview string tag missing trailing NUL.
      */
     #[Test]
-    public function rejectsPreviewStringTagMissingNul(): void
+    public function toleratesPreviewStringTagMissingNul(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1572);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewStringTag(
                 DngTag::PREVIEW_APPLICATION_VERSION,
                 TiffConst::TYPE_BYTE,
                 'NoNul',
             ),
         );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
     }
 
     /**
-     * Rejects BYTE preview string tag with invalid UTF-8.
+     * Tolerates BYTE preview string tag with invalid UTF-8.
      */
     #[Test]
-    public function rejectsPreviewStringTagInvalidUtf8Byte(): void
+    public function toleratesPreviewStringTagInvalidUtf8Byte(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1573);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewStringTag(
                 DngTag::PREVIEW_SETTINGS_NAME,
                 TiffConst::TYPE_BYTE,
                 "\xC0\xAF\0",
             ),
         );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
     }
 
     /**
@@ -6907,57 +6902,54 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
-     * Rejects ProfileCopyright with wrong type.
+     * Tolerates ProfileCopyright with wrong type.
      */
     #[Test]
-    public function rejectsProfileCopyrightWrongType(): void
+    public function toleratesProfileCopyrightWrongType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1571);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewStringTag(
                 DngTag::PROFILE_COPYRIGHT,
                 TiffConst::TYPE_SHORT,
                 "\x00\x01",
             ),
         );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
     }
 
     /**
-     * Rejects BYTE ProfileCopyright missing trailing NUL.
+     * Tolerates BYTE ProfileCopyright missing trailing NUL.
      */
     #[Test]
-    public function rejectsProfileCopyrightMissingNul(): void
+    public function toleratesProfileCopyrightMissingNul(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1572);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewStringTag(
                 DngTag::PROFILE_COPYRIGHT,
                 TiffConst::TYPE_BYTE,
                 'NoNul',
             ),
         );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
     }
 
     /**
-     * Rejects BYTE ProfileCopyright with invalid UTF-8.
+     * Tolerates BYTE ProfileCopyright with invalid UTF-8.
      */
     #[Test]
-    public function rejectsProfileCopyrightInvalidUtf8(): void
+    public function toleratesProfileCopyrightInvalidUtf8(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1573);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewStringTag(
                 DngTag::PROFILE_COPYRIGHT,
                 TiffConst::TYPE_BYTE,
                 "\xC0\xAF\0",
             ),
         );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
     }
 
     /**
@@ -7012,57 +7004,54 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
-     * Rejects profile signature tag with wrong type.
+     * Tolerates profile signature tag with wrong type.
      */
     #[Test]
-    public function rejectsProfileSignatureWrongType(): void
+    public function toleratesProfileSignatureWrongType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1571);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewStringTag(
                 DngTag::CAMERA_CALIBRATION_SIGNATURE,
                 TiffConst::TYPE_SHORT,
                 "\x00\x01",
             ),
         );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
     }
 
     /**
-     * Rejects BYTE profile signature tag missing trailing NUL.
+     * Tolerates BYTE profile signature tag missing trailing NUL.
      */
     #[Test]
-    public function rejectsProfileSignatureMissingNul(): void
+    public function toleratesProfileSignatureMissingNul(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1572);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewStringTag(
                 DngTag::AS_SHOT_PROFILE_NAME,
                 TiffConst::TYPE_BYTE,
                 'NoNul',
             ),
         );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
     }
 
     /**
-     * Rejects BYTE profile signature tag with invalid UTF-8.
+     * Tolerates BYTE profile signature tag with invalid UTF-8.
      */
     #[Test]
-    public function rejectsProfileSignatureInvalidUtf8(): void
+    public function toleratesProfileSignatureInvalidUtf8(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1573);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewStringTag(
                 DngTag::PROFILE_CALIBRATION_SIGNATURE,
                 TiffConst::TYPE_BYTE,
                 "\xC0\xAF\0",
             ),
         );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
     }
 
     /**
@@ -7083,39 +7072,37 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
-     * Rejects OriginalRawFileName when BYTE payload is not NUL-terminated.
+     * Tolerates OriginalRawFileName when BYTE payload is not NUL-terminated.
      */
     #[Test]
-    public function rejectsOriginalRawFileNameMissingNul(): void
+    public function toleratesOriginalRawFileNameMissingNul(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1572);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewStringTag(
                 DngTag::ORIGINAL_RAW_FILE_NAME,
                 TiffConst::TYPE_BYTE,
                 'IMG_0001.CR2',
             ),
         );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
     }
 
     /**
-     * Rejects OriginalRawFileName when UTF-8 payload is malformed.
+     * Tolerates OriginalRawFileName when UTF-8 payload is malformed.
      */
     #[Test]
-    public function rejectsOriginalRawFileNameInvalidUtf8(): void
+    public function toleratesOriginalRawFileNameInvalidUtf8(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1573);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewStringTag(
                 DngTag::ORIGINAL_RAW_FILE_NAME,
                 TiffConst::TYPE_BYTE,
                 "\xC0\xAF\0",
             ),
         );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
     }
 
     /**

@@ -134,29 +134,31 @@ final class TiffExifParserCfaPatternTest extends TestCase
     }
 
     /**
-     * A CFA matrix byte with an undefined code (> 7) is rejected.
+     * A CFA matrix byte with an extended code (> 7) is silently accepted.
      */
     #[Test]
-    public function rejectsCfaPatternWithUndefinedCode(): void
+    public function toleratesCfaPatternWithExtendedCode(): void
     {
-        // 1x1 pattern with code 8 (undefined)
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('undefined CFA code');
+        // 1x1 pattern with code 8 (extended, beyond EXIF 3.0 Table 13)
+        $result = $this->parseWithCfaPattern(pack('v', 1) . pack('v', 1) . "\x08");
 
-        $this->parseWithCfaPattern(pack('v', 1) . pack('v', 1) . "\x08");
+        $entry = $result->exifIfd?->get(ExifTag::CFA_PATTERN);
+        self::assertNotNull($entry);
+        self::assertInstanceOf(ExifNumericList::class, $entry->value);
     }
 
     /**
-     * A CFA matrix with mixed valid and invalid codes is rejected at the first invalid byte.
+     * A CFA matrix with mixed standard and extended codes is silently accepted.
      */
     #[Test]
-    public function rejectsCfaPatternWithMixedValidAndInvalidCodes(): void
+    public function toleratesCfaPatternWithMixedExtendedCodes(): void
     {
-        // 2x2 pattern: codes 0, 1, 2, 255 — last one is invalid
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('undefined CFA code');
+        // 2x2 pattern: codes 0, 1, 2, 255 — last one is extended
+        $result = $this->parseWithCfaPattern(pack('v', 2) . pack('v', 2) . "\x00\x01\x02\xFF");
 
-        $this->parseWithCfaPattern(pack('v', 2) . pack('v', 2) . "\x00\x01\x02\xFF");
+        $entry = $result->exifIfd?->get(ExifTag::CFA_PATTERN);
+        self::assertNotNull($entry);
+        self::assertInstanceOf(ExifNumericList::class, $entry->value);
     }
 
     /**
