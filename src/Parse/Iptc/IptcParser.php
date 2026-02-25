@@ -90,7 +90,7 @@ final class IptcParser implements IptcParserInterface
             $offset += 4;
 
             if ($signature !== self::RESOURCE_SIGNATURE) {
-                throw new ParseError(sprintf('Unexpected resource signature "%s" in APP13 payload.', $signature), 1127);
+                break;
             }
 
             if (($length - $offset) < 2) {
@@ -119,14 +119,7 @@ final class IptcParser implements IptcParserInterface
                     throw new BoundsError('APP13 resource name padding exceeds payload length.', 1131);
                 }
 
-                $paddingByte = $payload[$offset];
-                if ($paddingByte !== "\0") {
-                    throw new ParseError(
-                        sprintf('APP13 resource name padding byte must be 0x00, got 0x%02X.', ord($paddingByte)),
-                        1143,
-                    );
-                }
-
+                // Tolerate non-zero name padding bytes.
                 ++$offset;
             }
 
@@ -149,14 +142,7 @@ final class IptcParser implements IptcParserInterface
                     throw new BoundsError('APP13 resource data padding exceeds payload length.', 1142);
                 }
 
-                $paddingByte = $payload[$offset];
-                if ($paddingByte !== "\0") {
-                    throw new ParseError(
-                        sprintf('APP13 resource data padding byte must be 0x00, got 0x%02X.', ord($paddingByte)),
-                        1144,
-                    );
-                }
-
+                // Tolerate non-zero data padding bytes.
                 ++$offset;
             }
 
