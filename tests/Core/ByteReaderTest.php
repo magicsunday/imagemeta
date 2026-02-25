@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Core;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -20,6 +21,8 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
+use function strlen;
+use function substr;
 
 /**
  * Covers the ByteReader helpers for integer decoding across endian modes.
@@ -28,6 +31,7 @@ use function chr;
  * This ensures deterministic reading behavior from a fixed byte stream.
  */
 #[CoversClass(ByteReader::class)]
+#[UsesClass(ParseError::class)]
 #[UsesClass(UInt64::class)]
 #[UsesClass(Unpack::class)]
 final class ByteReaderTest extends TestCase
@@ -184,5 +188,138 @@ final class ByteReaderTest extends TestCase
 
         $reader->seek(0);
         self::assertSame(0xAA, $reader->readU8());
+    }
+
+    /**
+     * Creates a ByteReader backed by a fixed byte string that throws ParseError
+     * when a read would exceed the available data.
+     */
+    private function createBoundedReader(string $data): ByteReader
+    {
+        $position = 0;
+
+        return new ByteReader(
+            read: static function (int $length) use ($data, &$position): string {
+                if ($position + $length > strlen($data)) {
+                    throw new ParseError('Read beyond end of data.', 1029);
+                }
+
+                $result    = substr($data, $position, $length);
+                $position += $length;
+
+                return $result;
+            },
+            tell: static function () use (&$position): int {
+                return $position;
+            },
+            seek: static function (int|UInt64 $offset) use (&$position): void {
+                if ($offset instanceof UInt64) {
+                    $offset = $offset->toInt('seek');
+                }
+
+                $position = $offset;
+            },
+            context: 'test',
+        );
+    }
+
+    /**
+     * Throws when readU8 is called on an empty data source.
+     * This confirms that reading a single byte with no data remaining raises a ParseError.
+     */
+    #[Test]
+    public function throwsOnReadU8WithNoDataRemaining(): void
+    {
+        $reader = $this->createBoundedReader('');
+
+        $this->expectException(ParseError::class);
+
+        $reader->readU8();
+    }
+
+    /**
+     * Throws when readU16BE is called with only one byte remaining.
+     * This confirms that a truncated two-byte read raises a ParseError.
+     */
+    #[Test]
+    public function throwsOnReadU16BEWithOnlyOneByteRemaining(): void
+    {
+        $reader = $this->createBoundedReader(chr(0x12));
+
+        $this->expectException(ParseError::class);
+
+        $reader->readU16BE();
+    }
+
+    /**
+     * Throws when readU16LE is called with only one byte remaining.
+     * This confirms that a truncated little-endian two-byte read raises a ParseError.
+     */
+    #[Test]
+    public function throwsOnReadU16LEWithOnlyOneByteRemaining(): void
+    {
+        $reader = $this->createBoundedReader(chr(0x12));
+
+        $this->expectException(ParseError::class);
+
+        $reader->readU16LE();
+    }
+
+    /**
+     * Throws when readU32BE is called with fewer than four bytes remaining.
+     * This confirms that a truncated four-byte read raises a ParseError.
+     */
+    #[Test]
+    public function throwsOnReadU32BEWithFewerThanFourBytesRemaining(): void
+    {
+        $reader = $this->createBoundedReader(chr(0x12) . chr(0x34) . chr(0x56));
+
+        $this->expectException(ParseError::class);
+
+        $reader->readU32BE();
+    }
+
+    /**
+     * Throws when readU32LE is called with fewer than four bytes remaining.
+     * This confirms that a truncated little-endian four-byte read raises a ParseError.
+     */
+    #[Test]
+    public function throwsOnReadU32LEWithFewerThanFourBytesRemaining(): void
+    {
+        $reader = $this->createBoundedReader(chr(0x78) . chr(0x56) . chr(0x34));
+
+        $this->expectException(ParseError::class);
+
+        $reader->readU32LE();
+    }
+
+    /**
+     * Throws when readU64BE is called with fewer than eight bytes remaining.
+     * This confirms that a truncated eight-byte big-endian read raises a ParseError.
+     */
+    #[Test]
+    public function throwsOnReadU64BEWithFewerThanEightBytesRemaining(): void
+    {
+        $reader = $this->createBoundedReader(chr(0x00) . chr(0x00) . chr(0x00) . chr(0x01) .
+                                             chr(0x23) . chr(0x45) . chr(0x67));
+
+        $this->expectException(ParseError::class);
+
+        $reader->readU64BE();
+    }
+
+    /**
+     * Throws when readU64LE is called with fewer than eight bytes remaining.
+     * This confirms that a truncated eight-byte little-endian read raises a ParseError.
+     */
+    #[Test]
+    public function throwsOnReadU64LEWithFewerThanEightBytesRemaining(): void
+    {
+        $reader = $this->createBoundedReader(chr(0x89) . chr(0x67) . chr(0x45) . chr(0x23) .
+                                             chr(0x01) . chr(0x00) . chr(0x00));
+
+        $this->expectException(ParseError::class);
+
+        $reader->readU64LE();
     }
 }
