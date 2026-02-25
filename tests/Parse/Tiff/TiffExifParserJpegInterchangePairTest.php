@@ -157,6 +157,42 @@ final class TiffExifParserJpegInterchangePairTest extends TestCase
     }
 
     /**
+     * Tolerates a JPEG thumbnail stream whose SOI marker is missing (Postel's Law).
+     */
+    #[Test]
+    public function itSkipsThumbnailWhenSoiMarkerIsMissing(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1JpegInterchange(
+                offsetValue: -1,
+                lengthValue: -1,
+                jpegPayload: "\x00\xD8\xFF\xD9",
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd1);
+        self::assertNotNull($parsed->ifd1->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * Tolerates a JPEG thumbnail stream whose EOI marker is missing (Postel's Law).
+     */
+    #[Test]
+    public function itSkipsThumbnailWhenEoiMarkerIsMissing(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1JpegInterchange(
+                offsetValue: -1,
+                lengthValue: -1,
+                jpegPayload: "\xFF\xD8\xFF\xDB\x00\x04\x00\x00\xFF\x00",
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd1);
+        self::assertNotNull($parsed->ifd1->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
      * Builds a TIFF with IFD1 JPEG tags and optional interchange pair entries.
      *
      * Sentinel values:

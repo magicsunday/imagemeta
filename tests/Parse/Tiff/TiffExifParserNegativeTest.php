@@ -1641,18 +1641,17 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Rejects thumbnail streams with missing SOI or missing EOI.
+     * Tolerates thumbnail streams with missing SOI or missing EOI (Postel's Law).
      */
     #[Test]
     #[DataProvider('provideInvalidThumbnailBoundaryStreams')]
-    public function rejectIfd1JpegThumbnailMissingSoiOrEoi(string $thumbnailStream, string $expectedMessage): void
+    public function tolerateIfd1JpegThumbnailMissingSoiOrEoi(string $thumbnailStream, string $expectedMessage): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches($expectedMessage);
-
-        (new TiffExifParser())->parseFromBlob(
+        $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithJpegThumbnailStream($thumbnailStream),
         );
+
+        self::assertNotNull($result->ifd1);
     }
 
     /**
