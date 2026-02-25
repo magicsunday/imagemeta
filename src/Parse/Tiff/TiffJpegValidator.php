@@ -298,13 +298,14 @@ final readonly class TiffJpegValidator
             return;
         }
 
+        // Postel's Law: treat out-of-bounds range as "no thumbnail".
         $blobSize = $this->support->buffer()->size();
         if (
             ($offsetEntry->value > $blobSize)
             || ($lengthEntry->value > $blobSize)
             || ($offsetEntry->value > ($blobSize - $lengthEntry->value))
         ) {
-            throw new ParseError('JPEGInterchangeFormat range exceeds TIFF data length.', 1835);
+            return;
         }
     }
 
