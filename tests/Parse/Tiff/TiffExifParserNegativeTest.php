@@ -293,7 +293,8 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Truncates the IFD entry so mandatory fields are missing.
-     * Verifies a BoundsError is thrown for the incomplete entry data.
+     * The parser skips the truncated entry and returns an empty IFD
+     * instead of letting BoundsError propagate.
      */
     #[Test]
     public function rejectsTruncatedIfdEntry(): void
@@ -307,10 +308,89 @@ final class TiffExifParserNegativeTest extends TestCase
         // Missing: type (2 bytes), count (4 bytes), value/offset (4 bytes), next IFD offset (4 bytes)
 
         $reader = new TiffExifParser();
+        $parsed = $reader->parseFromBlob($blob, jpegContext: true);
 
-        $this->expectException(BoundsError::class);
+        // The truncated entry is skipped — IFD0 is empty but present
+        self::assertNull($parsed->ifd0->get(0x010F));
+    }
 
-        $reader->parseFromBlob($blob);
+    /**
+     * An IFD with two entries where the second entry's value offset points
+     * beyond the buffer. The first entry is valid and must be preserved;
+     * the truncated second entry is silently skipped.
+     */
+    #[Test]
+    public function itHandlesTruncatedIfdEntryGracefully(): void
+    {
+        // IFD at offset 8 with 2 entries.
+        // Entry 1: ImageWidth SHORT inline (valid).
+        // Entry 2: Make ASCII count=20 with value offset pointing beyond blob end.
+        $ifdOffset   = 8;
+        $entryCount  = 2;
+        $ifdSize     = 2 + ($entryCount * 12) + 4; // count + entries + next-IFD
+        $valueOffset = $ifdOffset + $ifdSize;       // would be here if data existed
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            // IFD
+            . pack('v', $entryCount)
+            // Entry 1: ImageWidth = 640 (inline SHORT)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 640) . pack('v', 0)
+            // Entry 2: Make, ASCII, count 20 — offset points beyond blob
+            . pack('v', ExifTag::MAKE)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', 20)
+            . pack('V', $valueOffset + 9999)
+            // Next IFD
+            . pack('V', 0);
+
+        $parsed = (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
+
+        // The valid first entry survives
+        $widthEntry = $parsed->ifd0->get(ExifTag::IMAGE_WIDTH);
+        self::assertNotNull($widthEntry);
+        self::assertSame(640, $widthEntry->value);
+
+        // The truncated second entry is silently dropped
+        self::assertNull($parsed->ifd0->get(ExifTag::MAKE));
+    }
+
+    /**
+     * IFD0 is complete and has a valid next-IFD pointer, but the buffer
+     * is truncated before the second IFD can be read. The parser must
+     * return IFD0 data instead of propagating BoundsError.
+     */
+    #[Test]
+    public function itReturnsParsedDataWhenBufferTruncated(): void
+    {
+        // Build a valid IFD0 whose next-IFD pointer references offset
+        // beyond the buffer end.
+        $ifdOffset = 8;
+        $blob      = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            // IFD0: 1 entry
+            . pack('v', 1)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 320) . pack('v', 0)
+            // Next IFD offset points beyond the buffer
+            . pack('V', 0xFFFF);
+
+        $parsed = (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
+
+        // IFD0 data is preserved despite the broken chain
+        $widthEntry = $parsed->ifd0->get(ExifTag::IMAGE_WIDTH);
+        self::assertNotNull($widthEntry);
+        self::assertSame(320, $widthEntry->value);
+
+        // No secondary IFD was found
+        self::assertNull($parsed->ifd1);
     }
 
     /**
