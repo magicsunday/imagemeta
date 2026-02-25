@@ -23,7 +23,6 @@ use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
 use function in_array;
-use function mb_check_encoding;
 use function ord;
 use function rtrim;
 use function sprintf;
@@ -116,20 +115,10 @@ final readonly class DngValueNormalizer
         // DNG 1.7.0.0: ProfileGroupName must be ASCII or BYTE with NUL terminator.
         if ($tag === DngTag::PROFILE_GROUP_NAME) {
             if ($type !== TiffConst::TYPE_ASCII && $type !== TiffConst::TYPE_BYTE) {
-                throw new ParseError(
-                    sprintf('ProfileGroupName must use ASCII or BYTE type, got %d.', $type),
-                    1509,
-                );
+                return $value;
             }
 
             if ($type === TiffConst::TYPE_BYTE) {
-                if ($rawBytes === '' || $rawBytes[strlen($rawBytes) - 1] !== "\0") {
-                    throw new ParseError(
-                        'ProfileGroupName BYTE payload must be NUL-terminated per DNG 1.7.0.0.',
-                        1510,
-                    );
-                }
-
                 return rtrim($rawBytes, "\0");
             }
         }
@@ -137,30 +126,11 @@ final readonly class DngValueNormalizer
         // DNG 1.7.1.0: String tags that must be ASCII or BYTE, NUL-terminated UTF-8.
         if (in_array($tag, self::DNG_UTF8_STRING_TAGS, true)) {
             if ($type !== TiffConst::TYPE_ASCII && $type !== TiffConst::TYPE_BYTE) {
-                throw new ParseError(
-                    sprintf('DNG string tag 0x%04X must use ASCII or BYTE type, got %d.', $tag, $type),
-                    1571,
-                );
+                return $value;
             }
 
             if ($type === TiffConst::TYPE_BYTE) {
-                if ($rawBytes === '' || $rawBytes[strlen($rawBytes) - 1] !== "\0") {
-                    throw new ParseError(
-                        sprintf('DNG string tag 0x%04X BYTE payload must be NUL-terminated.', $tag),
-                        1572,
-                    );
-                }
-
-                $text = rtrim($rawBytes, "\0");
-
-                if (!mb_check_encoding($text, 'UTF-8')) {
-                    throw new ParseError(
-                        sprintf('DNG string tag 0x%04X contains malformed UTF-8.', $tag),
-                        1573,
-                    );
-                }
-
-                return $text;
+                return rtrim($rawBytes, "\0");
             }
         }
 
@@ -248,16 +218,7 @@ final readonly class DngValueNormalizer
 
         $components = [$horizontalRepeatPixelUnit, $verticalRepeatPixelUnit];
         for ($index = 0; $index < $expectedPatternValues; ++$index) {
-            $code = ord($bytes[4 + $index]);
-
-            if ($code > 7) {
-                throw new ParseError(
-                    sprintf('CFAPattern matrix byte %d has undefined CFA code %d (valid: 0..7 per EXIF 3.0 Table 13)', $index, $code),
-                    1508,
-                );
-            }
-
-            $components[] = $code;
+            $components[] = ord($bytes[4 + $index]);
         }
 
         return new ExifNumericList($components);
