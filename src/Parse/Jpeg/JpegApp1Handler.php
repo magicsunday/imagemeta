@@ -17,7 +17,6 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function array_key_exists;
 use function sha1;
-use function sprintf;
 use function str_starts_with;
 use function strlen;
 use function substr;
@@ -76,14 +75,7 @@ final class JpegApp1Handler
     {
         if (str_starts_with($payload, self::EXIF_SIGNATURE)) {
             if ($this->firstExifApp1Offset !== null) {
-                throw new ParseError(
-                    sprintf(
-                        'Duplicate Exif APP1 marker at offset %d; first Exif APP1 marker was at offset %d',
-                        $offset,
-                        $this->firstExifApp1Offset,
-                    ),
-                    1501,
-                );
+                return;
             }
 
             $this->firstExifApp1Offset = $offset;
