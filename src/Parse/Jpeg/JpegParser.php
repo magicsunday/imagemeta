@@ -88,8 +88,6 @@ final class JpegParser implements JpegParserInterface
 
     private ?int $firstDhtOffset = null;
 
-    private ?int $firstDriOffset = null;
-
     private ?int $firstSofOffset = null;
 
     /**
@@ -323,7 +321,6 @@ final class JpegParser implements JpegParserInterface
         $this->firstStructuralMarkerOffset = null;
         $this->firstDqtOffset              = null;
         $this->firstDhtOffset              = null;
-        $this->firstDriOffset              = null;
         $this->firstSofOffset              = null;
     }
 
@@ -358,7 +355,7 @@ final class JpegParser implements JpegParserInterface
                 );
             }
 
-            $this->frameValidator->requireEoiAfterSos($offset, $this->firstDriOffset);
+            $this->frameValidator->validateSosSegment($offset);
 
             return true; // EXIF 3.0 §4.7.1 restricts metadata APP markers to precede the first SOS.
         }
@@ -414,10 +411,6 @@ final class JpegParser implements JpegParserInterface
 
         if ($marker === Marker::DHT) {
             $this->firstDhtOffset ??= $offset;
-        }
-
-        if ($marker === Marker::DRI) {
-            $this->firstDriOffset ??= $offset;
         }
 
         if (!$this->seenExifApp1) {

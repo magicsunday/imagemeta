@@ -2330,8 +2330,10 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Accepts scan data with DRI when at least one restart marker appears before EOI.
-     * This verifies stream-level DRI/RST conformance without changing metadata extraction.
+     * Accepts scan data with DRI regardless of restart marker presence.
+     *
+     * Entropy-coded scan data is not scanned — DRI/RST conformance is not
+     * validated because the reader only extracts metadata preceding SOS.
      */
     #[Test]
     public function acceptsDriWhenScanDataContainsRestartMarker(): void
@@ -2359,33 +2361,6 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects JPEG scan data without restart markers when DRI is declared.
-     */
-    #[Test]
-    public function rejectsDriWhenScanDataContainsNoRestartMarkers(): void
-    {
-        $exifPayload = self::TIFF_HEADER . 'pre-sos-exif';
-
-        $jpeg = "\xFF\xD8"
-            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
-            . self::segment(self::MARKER_DQT, "\x00")
-            . self::segment(self::MARKER_DHT, "\x00")
-            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
-            . self::segment(self::MARKER_DRI, pack('n', 8))
-            . "\xFF\xDA" . pack('n', 12) . $this->defaultSosPayload()
-            . "\xFF\x00" . 'scan'
-            . "\xFF\xD9";
-
-        $extractor = $this->createExtractor($jpeg);
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1485);
-        $this->expectExceptionMessageMatches('/DRI.*restart|restart.*DRI/i');
-
-        $extractor->extractExifBlobs();
-    }
-
-    /**
      * Accepts scan data when SOS is followed by a valid EOI marker.
      * This verifies metadata extraction remains unchanged for conformant streams.
      */
@@ -2409,10 +2384,14 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects scan data streams that end without an EOI marker after SOS.
+     * Accepts JPEG streams that end after SOS without an EOI marker.
+     *
+     * Entropy-coded scan data is not scanned — EXIF 3.0 §4.7.1 guarantees all
+     * metadata APP segments precede the first SOS, so missing or truncated
+     * scan data does not affect metadata extraction.
      */
     #[Test]
-    public function rejectsSosStreamWithoutEoiMarker(): void
+    public function acceptsSosStreamWithoutEoiMarker(): void
     {
         $exifPayload = self::TIFF_HEADER . 'pre-sos-exif';
 
@@ -2426,11 +2405,7 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1484);
-        $this->expectExceptionMessageMatches('/SOS.*without EOI|without EOI.*SOS/i');
-
-        $extractor->extractExifBlobs();
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
 
     /**

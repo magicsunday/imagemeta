@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\BitMask;
-use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Model\Jpeg\Marker;
@@ -288,59 +287,21 @@ final class JpegFrameValidator
     }
 
     /**
-     * Validates that scan data following SOS is terminated by an EOI marker.
+     * Validates the SOS segment header for structural correctness.
      *
-     * EXIF 3.0 §4.7 (Table 2) requires EOI as the JPEG stream terminator and
-     * requires restart markers in scan data when DRI is declared.
+     * EXIF 3.0 §4.7.1 requires all metadata APP segments to appear before the
+     * first SOS marker.  Once SOS is reached, there is nothing left to extract.
+     * The entropy-coded scan data following the SOS header is intentionally not
+     * scanned — doing so would require an O(n) byte-by-byte traversal of the
+     * entire image payload with no metadata benefit.
      *
-     * @param int      $sosOffset Offset where the SOS marker starts.
-     * @param int|null $driOffset Offset of the DRI marker when present.
+     * @param int $sosOffset Offset where the SOS marker starts.
      */
-    public function requireEoiAfterSos(int $sosOffset, ?int $driOffset): void
+    public function validateSosSegment(int $sosOffset): void
     {
         $scanHeaderLength  = $this->scanner->readSegmentLength(Marker::SOS, $sosOffset, false);
         $scanHeaderPayload = $this->scanner->readSegmentPayload(Marker::SOS, $sosOffset, $scanHeaderLength - 2);
         $this->validateSosHeader($scanHeaderPayload, $sosOffset);
-        $hasRestartMarker = false;
-
-        while (true) {
-            try {
-                [$marker, $markerOffset] = $this->scanner->nextMarkerWithOffset();
-            } catch (BoundsError $exception) {
-                throw new ParseError(
-                    sprintf(
-                        'JPEG stream ended after SOS marker at offset %d without EOI marker',
-                        $sosOffset,
-                    ),
-                    1484,
-                    $exception,
-                );
-            }
-
-            if (($marker >= Marker::RST_FIRST) && ($marker <= Marker::RST_LAST)) {
-                $hasRestartMarker = true;
-                continue;
-            }
-
-            if ($marker === Marker::EOI) {
-                if (($driOffset !== null) && !$hasRestartMarker) {
-                    throw new ParseError(
-                        sprintf(
-                            'JPEG stream declares DRI marker at offset %d but scan data after SOS at offset %d contains no restart markers',
-                            $driOffset,
-                            $sosOffset,
-                        ),
-                        1485,
-                    );
-                }
-
-                return;
-            }
-
-            // Unexpected marker in scan data — treat as end-of-scan
-            // (Postel's Law: corrupted files may contain stray markers).
-            return;
-        }
     }
 
     /**
