@@ -88,21 +88,20 @@ final class TiffExifParserSampleDomainTest extends TestCase
     }
 
     /**
-     * SampleFormat values must be in enum domain {1,2,3,4}.
+     * SampleFormat value 5 is tolerated as an opaque integer (Postel's Law).
      */
     #[Test]
-    public function rejectsInvalidSampleFormatEnumValue(): void
+    public function toleratesOutOfDomainSampleFormatEnumValue(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('SampleFormat component 0 value 5 is invalid');
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildSampleDomainTiff(
                 samplesPerPixel: 1,
                 sampleFormatType: TiffConst::TYPE_SHORT,
                 sampleFormatValues: [5],
             ),
         );
+
+        self::assertNotNull($parsed->ifd0->get(TiffTag::SAMPLE_FORMAT));
     }
 
     /**

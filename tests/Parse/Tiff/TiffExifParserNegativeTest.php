@@ -1054,64 +1054,58 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * YCbCrPositioning value 3 is rejected per EXIF 3.0 §4.6.5.1.13.
+     * YCbCrPositioning value 3 is tolerated as an opaque integer (Postel's Law).
      */
     #[Test]
-    public function rejectInvalidYCbCrPositioning(): void
+    public function toleratesYCbCrPositioningValueThree(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('YCbCrPositioning value 3 is outside the valid domain {0, 1, 2}');
+        $parsed = (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::YCBCR_POSITIONING, 3));
 
-        (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::YCBCR_POSITIONING, 3));
+        self::assertSame(3, $parsed->ifd0->get(ExifTag::YCBCR_POSITIONING)?->value);
     }
 
     /**
-     * ColorSpace value 2 is rejected per EXIF 3.0 §4.6.6.2.1.
+     * ColorSpace value 2 is tolerated as an opaque integer (Postel's Law).
      */
     #[Test]
-    public function rejectInvalidColorSpace(): void
+    public function toleratesColorSpaceValueTwo(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ColorSpace value 2 is outside the valid domain {1, 65535}');
+        $parsed = (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::COLOR_SPACE, 2));
 
-        (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::COLOR_SPACE, 2));
+        self::assertSame(2, $parsed->ifd0->get(ExifTag::COLOR_SPACE)?->value);
     }
 
     /**
-     * FocalPlaneResolutionUnit value 4 is rejected per EXIF 3.0 §4.6.6.7.28.
+     * FocalPlaneResolutionUnit value 4 is tolerated as an opaque integer (Postel's Law).
      */
     #[Test]
-    public function rejectInvalidFocalPlaneResolutionUnit(): void
+    public function toleratesFocalPlaneResolutionUnitValueFour(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('FocalPlaneResolutionUnit value 4 is outside the valid domain {2, 3}');
+        $parsed = (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 4));
 
-        (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 4));
+        self::assertSame(4, $parsed->ifd0->get(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT)?->value);
     }
 
     /**
-     * PlanarConfiguration value 3 is rejected per EXIF 3.0 §4.6.5.1.10.
+     * PlanarConfiguration value 3 is tolerated as an opaque integer (Postel's Law).
      */
     #[Test]
-    public function rejectInvalidPlanarConfiguration(): void
+    public function toleratesPlanarConfigurationValueThree(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('PlanarConfiguration value 3 is outside the valid domain {1, 2}');
+        $parsed = (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::PLANAR_CONFIGURATION, 3));
 
-        (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::PLANAR_CONFIGURATION, 3));
+        self::assertSame(3, $parsed->ifd0->get(ExifTag::PLANAR_CONFIGURATION)?->value);
     }
 
     /**
-     * Predictor value 3 is rejected per TIFF 6.0 §14.
+     * Predictor value 3 is tolerated as an opaque integer (Postel's Law).
      */
     #[Test]
-    public function rejectInvalidPredictor(): void
+    public function toleratesPredictorValueThree(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1358);
-        $this->expectExceptionMessage('Predictor value 3 is outside the valid domain {1, 2} per TIFF 6.0 §14.');
+        $parsed = (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(TiffTag::PREDICTOR, 3));
 
-        (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(TiffTag::PREDICTOR, 3));
+        self::assertSame(3, $parsed->ifd0->get(TiffTag::PREDICTOR)?->value);
     }
 
     /**
@@ -1136,14 +1130,11 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Orientation value 9 is rejected per EXIF 3.0 §4.6.5.1.6.
+     * Orientation value 9 is tolerated as an opaque integer (Postel's Law).
      */
     #[Test]
-    public function rejectOrientationValueNine(): void
+    public function toleratesOrientationValueNine(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Orientation value 9 is outside the valid domain 0..8');
-
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
@@ -1154,7 +1145,53 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('v', 9) . pack('v', 0) // value=9 inline
             . pack('V', 0);
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        $parsed = (new TiffExifParser())->parseFromBlob($blob);
+
+        self::assertSame(9, $parsed->ifd0->get(ExifTag::ORIENTATION)?->value);
+    }
+
+    /**
+     * Orientation value beyond 8 is tolerated as an opaque integer (Postel's Law).
+     */
+    #[Test]
+    public function itToleratesOrientationValueBeyondEight(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::ORIENTATION, 42));
+
+        self::assertSame(42, $parsed->ifd0->get(ExifTag::ORIENTATION)?->value);
+    }
+
+    /**
+     * ResolutionUnit value 0 is tolerated as an opaque integer (Postel's Law).
+     */
+    #[Test]
+    public function itToleratesResolutionUnitValueZero(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::RESOLUTION_UNIT, 0));
+
+        self::assertSame(0, $parsed->ifd0->get(ExifTag::RESOLUTION_UNIT)?->value);
+    }
+
+    /**
+     * ColorSpace value 0 is tolerated as an opaque integer (Postel's Law).
+     */
+    #[Test]
+    public function itToleratesColorSpaceValueZero(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::COLOR_SPACE, 0));
+
+        self::assertSame(0, $parsed->ifd0->get(ExifTag::COLOR_SPACE)?->value);
+    }
+
+    /**
+     * FocalPlaneResolutionUnit value 1 is tolerated as an opaque integer (Postel's Law).
+     */
+    #[Test]
+    public function itToleratesFocalPlaneResolutionUnitValueOne(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 1));
+
+        self::assertSame(1, $parsed->ifd0->get(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT)?->value);
     }
 
     /**
@@ -1892,18 +1929,16 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Rejects reserved CompositeImage values outside 0..3.
+     * CompositeImage value 4 is tolerated as an opaque integer (Postel's Law).
      */
     #[Test]
-    public function rejectReservedCompositeImageValue(): void
+    public function toleratesReservedCompositeImageValue(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1420);
-        $this->expectExceptionMessage('CompositeImage value 4 is outside the valid domain');
-
-        (new TiffExifParser())->parseFromBlob(
+        $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCompositeExifTags(4, null, null),
         );
+
+        self::assertSame(4, $result->exifIfd?->get(ExifTag::COMPOSITE_IMAGE)?->value);
     }
 
     /**
