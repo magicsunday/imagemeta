@@ -181,6 +181,98 @@ final class GpsFactoryTest extends TestCase
     }
 
     /**
+     * Provides a GPS speed in miles per hour.
+     * Confirms the factory converts the speed to metres per second.
+     */
+    #[Test]
+    public function convertsMphSpeedToMetresPerSecond(): void
+    {
+        $parsedExif = $this->parsedExif(
+            latRef: null,
+            lat: null,
+            lonRef: null,
+            lon: null,
+            altitudeRef: null,
+            altitude: null,
+            version: null,
+            satellites: null,
+            status: null,
+            measureMode: null,
+            dop: null,
+            speedRef: GpsSpeedRef::MilesPerHour,
+            speedMs: 60.0,
+            track: null,
+            mapDatum: null,
+            processingMethod: null,
+            areaInformation: null,
+            date: null,
+            time: null,
+            differential: null,
+            hPositioningError: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->movement);
+
+        self::assertSame(GpsSpeedRef::MilesPerHour, $gps->movement->speedRef);
+        self::assertSame(60.0 * 0.44704, $gps->movement->speedMs);
+    }
+
+    /**
+     * Provides a GPS speed in knots.
+     * Confirms the factory converts the speed to metres per second.
+     */
+    #[Test]
+    public function convertsKnotsSpeedToMetresPerSecond(): void
+    {
+        $parsedExif = $this->parsedExif(
+            latRef: null,
+            lat: null,
+            lonRef: null,
+            lon: null,
+            altitudeRef: null,
+            altitude: null,
+            version: null,
+            satellites: null,
+            status: null,
+            measureMode: null,
+            dop: null,
+            speedRef: GpsSpeedRef::Knots,
+            speedMs: 20.0,
+            track: null,
+            mapDatum: null,
+            processingMethod: null,
+            areaInformation: null,
+            date: null,
+            time: null,
+            differential: null,
+            hPositioningError: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->movement);
+
+        self::assertSame(GpsSpeedRef::Knots, $gps->movement->speedRef);
+        self::assertSame(20.0 * 0.5144444444444444, $gps->movement->speedMs);
+    }
+
+    /**
      * Verifies the parsedExif helper actually uses the $time parameter.
      * The previous implementation hardcoded 14:30:00 regardless of $time.
      */
