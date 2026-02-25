@@ -379,11 +379,11 @@ final readonly class AudioSampleEntryParser
                     throw new ParseError('sampling rate box is only allowed in audio sample entry version 1', 1473);
                 }
 
-                if ($boxSize < 12) {
+                if ($boxSize < 16) {
                     throw new ParseError('sampling rate box truncated', 1474);
                 }
 
-                $override = Unpack::int('N', substr($tail, $offset + 8, 4), 'sampling rate box sample rate');
+                $override = Unpack::int('N', substr($tail, $offset + 12, 4), 'sampling rate box sample rate');
             }
 
             $offset += $boxSize;

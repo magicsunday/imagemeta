@@ -3711,7 +3711,7 @@ final class IsoBmffParserTest extends TestCase
             bytesPerFrame: 0,
             bytesPerSample: 0,
         );
-        $entry = $this->box('mp4a', substr($entry, 8) . $this->box('srat', pack('N', 96000)));
+        $entry = $this->box('mp4a', substr($entry, 8) . $this->fullBox('srat', pack('N', 96000)));
 
         $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1, 48000));
         [, , $quickTime] = $extractor->extract();
@@ -3735,7 +3735,7 @@ final class IsoBmffParserTest extends TestCase
             sampleSize: 16,
             sampleRate: 44100,
         );
-        $entry = $this->box('raw ', substr($entry, 8) . $this->box('srat', pack('N', 48000)));
+        $entry = $this->box('raw ', substr($entry, 8) . $this->fullBox('srat', pack('N', 48000)));
 
         $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
     }
