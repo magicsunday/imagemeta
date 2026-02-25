@@ -135,35 +135,49 @@ final class IptcParserTest extends TestCase
     }
 
     /**
-     * Rejects odd-length name fields when the alignment pad byte is non-zero.
+     * Tolerates odd-length name fields when the alignment pad byte is non-zero.
      */
     #[Test]
-    public function rejectsOddSizedNameWithNonZeroAlignmentPadding(): void
+    public function toleratesOddSizedNameWithNonZeroAlignmentPadding(): void
     {
         $iimData = $this->iimDataset(2, 5, 'AB');
         $block   = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, 'AB', chr(1));
         $payload = self::PHOTOSHOP_SIGNATURE . $block;
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/name padding|padding/i');
+        $document = (new IptcParser())->parse($payload);
 
-        (new IptcParser())->parse($payload);
+        self::assertSame('AB', $document->first(2, 5));
     }
 
     /**
-     * Rejects odd-length resource data when the alignment pad byte is non-zero.
+     * Tolerates odd-length resource data when the alignment pad byte is non-zero.
      */
     #[Test]
-    public function rejectsOddSizedDataWithNonZeroAlignmentPadding(): void
+    public function toleratesOddSizedDataWithNonZeroAlignmentPadding(): void
     {
         $iimData = $this->iimDataset(2, 5, 'AB');
         $block   = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, '', chr(0), chr(1));
         $payload = self::PHOTOSHOP_SIGNATURE . $block;
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/data padding|padding/i');
+        $document = (new IptcParser())->parse($payload);
 
-        (new IptcParser())->parse($payload);
+        self::assertSame('AB', $document->first(2, 5));
+    }
+
+    /**
+     * Tolerates non-8BIM trailing data after valid resource blocks.
+     */
+    #[Test]
+    public function toleratesNon8bimTrailingData(): void
+    {
+        $iimData  = $this->iimDataset(2, 5, 'Object Name');
+        $block    = $this->resourceBlock(0x0404, $iimData);
+        $trailing = 'XYZW' . str_repeat("\0", 20);
+        $payload  = self::PHOTOSHOP_SIGNATURE . $block . $trailing;
+
+        $document = (new IptcParser())->parse($payload);
+
+        self::assertSame(['Object Name'], $document->values(2, 5));
     }
 
     /**
