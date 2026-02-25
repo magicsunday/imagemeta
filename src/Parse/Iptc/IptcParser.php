@@ -170,11 +170,11 @@ final class IptcParser implements IptcParserInterface
 
         while ($offset < $length) {
             if (($length - $offset) < 5) {
-                throw new BoundsError('IPTC IIM dataset header exceeds payload length.', 1134);
+                break;
             }
 
             if (ord($data[$offset]) !== 0x1C) {
-                throw new ParseError('IPTC IIM dataset marker is missing.', 1135);
+                break;
             }
 
             $recordNumber  = ord($data[$offset + 1]);
