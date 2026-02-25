@@ -11,10 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
-use MagicSunday\ImageMeta\Core\ParseError;
-
 use function in_array;
 use function mb_check_encoding;
+use function mb_convert_encoding;
+use function mb_substitute_character;
 use function ord;
 use function rtrim;
 
@@ -51,15 +51,18 @@ final readonly class ExifTagDecoder
             $text = rtrim($bytes, "\0");
 
             // EXIF 3.0 §4.6.5.4 designates certain tags as UTF-8 text.
+            // Malformed sequences are scrubbed with U+FFFD (Postel's Law).
             if (in_array($tag, $utf8Tags, true)) {
-                if (!mb_check_encoding($text, 'UTF-8')) {
-                    throw new ParseError(
-                        'EXIF 3.0 text tag contains malformed UTF-8 per EXIF 3.0 §4.6.5.4.',
-                        1459,
-                    );
+                if (mb_check_encoding($text, 'UTF-8')) {
+                    return $text;
                 }
 
-                return $text;
+                $previous = mb_substitute_character();
+                mb_substitute_character(0xFFFD);
+                $scrubbed = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+                mb_substitute_character($previous);
+
+                return $scrubbed;
             }
 
             // TIFF 6.0 §2.2 defines ASCII as 7-bit, but real-world cameras
