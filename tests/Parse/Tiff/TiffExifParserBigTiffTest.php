@@ -338,7 +338,8 @@ final class TiffExifParserBigTiffTest extends TestCase
 
     /**
      * Truncates the entry data so required fields are missing.
-     * Ensures the parser throws a BoundsError when the entry is incomplete.
+     * The parser skips the truncated entry and returns an empty IFD
+     * instead of letting BoundsError propagate.
      */
     #[Test]
     public function rejectsBigTiffTruncatedEntry(): void
@@ -354,10 +355,10 @@ final class TiffExifParserBigTiffTest extends TestCase
         // Missing: type (2), count (8), value/offset (8), next IFD (8)
 
         $reader = new TiffExifParser();
+        $parsed = $reader->parseFromBlob($blob, jpegContext: true);
 
-        $this->expectException(BoundsError::class);
-
-        $reader->parseFromBlob($blob);
+        // The truncated entry is skipped — IFD0 is empty but present
+        self::assertNull($parsed->ifd0->get(0x010F));
     }
 
     /**

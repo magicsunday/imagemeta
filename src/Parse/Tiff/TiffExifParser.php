@@ -180,28 +180,35 @@ final class TiffExifParser implements TiffExifParserInterface
         $visitedOffsets = [];
 
         $nextOffset = $ifd0->nextIfdOffset;
-        while ($nextOffset !== null && $nextOffset > 0) {
-            if (isset($visitedOffsets[$nextOffset])) {
-                break;
+
+        try {
+            while ($nextOffset !== null && $nextOffset > 0) {
+                if (isset($visitedOffsets[$nextOffset])) {
+                    break;
+                }
+
+                if (count($visitedOffsets) >= ParserLimits::MAX_IFD_CHAIN_LENGTH) {
+                    throw new ParseError(
+                        sprintf('IFD chain length exceeds maximum allowed %d.', ParserLimits::MAX_IFD_CHAIN_LENGTH),
+                        1964,
+                    );
+                }
+
+                $visitedOffsets[$nextOffset] = true;
+
+                $nextIfd          = $this->readIfd($nextOffset);
+                $additionalIfds[] = $nextIfd;
+
+                if (!$ifd1 instanceof Ifd) {
+                    $ifd1 = $nextIfd;
+                }
+
+                $nextOffset = $nextIfd->nextIfdOffset;
             }
-
-            if (count($visitedOffsets) >= ParserLimits::MAX_IFD_CHAIN_LENGTH) {
-                throw new ParseError(
-                    sprintf('IFD chain length exceeds maximum allowed %d.', ParserLimits::MAX_IFD_CHAIN_LENGTH),
-                    1964,
-                );
-            }
-
-            $visitedOffsets[$nextOffset] = true;
-
-            $nextIfd          = $this->readIfd($nextOffset);
-            $additionalIfds[] = $nextIfd;
-
-            if (!$ifd1 instanceof Ifd) {
-                $ifd1 = $nextIfd;
-            }
-
-            $nextOffset = $nextIfd->nextIfdOffset;
+        } catch (BoundsError) {
+            // Postel's Law: when the buffer is truncated during IFD chain
+            // traversal, return whatever was successfully parsed rather
+            // than discarding all metadata.
         }
 
         $this->validateParsedIfds($ifd0, $ifd1, $exifIfd, $jpegContext, $embeddedContext, $additionalIfds);
@@ -447,15 +454,22 @@ final class TiffExifParser implements TiffExifParserInterface
             $entries[$validated->tag] = $validated;
         }
 
-        if ($this->bigTiff) {
-            $next = $this->offsetValidator->normalizeBigTiffOptionalOffset(
-                $this->binaryReader->readU64(),
-                'IFD next offset',
-            );
-        } else {
-            // TIFF 6.0 §8 retains a 32-bit pointer to the next IFD; EXIF 3.0 §4.5.2
-            // notes the value is zero when the chain terminates.
-            $next = $this->binaryReader->readU32();
+        try {
+            if ($this->bigTiff) {
+                $next = $this->offsetValidator->normalizeBigTiffOptionalOffset(
+                    $this->binaryReader->readU64(),
+                    'IFD next offset',
+                );
+            } else {
+                // TIFF 6.0 §8 retains a 32-bit pointer to the next IFD; EXIF 3.0 §4.5.2
+                // notes the value is zero when the chain terminates.
+                $next = $this->binaryReader->readU32();
+            }
+        } catch (BoundsError) {
+            // Postel's Law: when the buffer is truncated before the
+            // next-IFD pointer, return the entries parsed so far
+            // instead of discarding the entire directory.
+            $next = 0;
         }
 
         $ifd = new Ifd($entries, $next > 0 ? $next : null);
