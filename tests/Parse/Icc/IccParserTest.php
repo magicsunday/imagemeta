@@ -672,6 +672,32 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Rejects mluc payloads whose string offset alone is large enough that adding the
+     * string length would overflow on narrow integer platforms, or whose offset already
+     * exceeds the payload bounds before the sum is formed.
+     *
+     * ICC.1:2022 Table 54: each string offset/length must stay within the tag payload,
+     * and the range check must be overflow-safe.
+     */
+    #[Test]
+    public function rejectsMlucTagWithStringRangeOverflow(): void
+    {
+        $profile = $this->buildMlucProfile("\x00\x48\x00\x69");
+
+        $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
+        // Set string offset to 0xFFFFFFFF — a near-maximum uint32 value that would cause
+        // integer overflow on 32-bit platforms when added to any non-zero string length.
+        $profile = substr_replace($profile, pack('N', 0xFFFFFFFF), $tagDataOffset + 24, 4);
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1890);
+
+        $decoder->decode($profile);
+    }
+
+    /**
      * Multi-record mluc with reordered records yields same selected output.
      *
      * The parser must select deterministically by locale, not by record order.
