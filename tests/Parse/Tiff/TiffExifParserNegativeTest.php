@@ -1418,18 +1418,18 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * IFD0 Compression=6 must be rejected in JPEG context per EXIF 3.0 §4.6.5.1.4.
+     * IFD0 Compression=6 in JPEG context is tolerated as "old-style JPEG".
+     * Real-world cameras frequently embed Compression=6 in APP1 IFD0.
      */
     #[Test]
-    public function rejectIfd0CompressionJpegInJpegContext(): void
+    public function itToleratesCompression6InIfd0JpegContext(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Compression value 6 in IFD0');
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithShortTag(ExifTag::COMPRESSION, 6),
             jpegContext: true,
         );
+
+        self::assertSame(6, $parsed->ifd0->get(ExifTag::COMPRESSION)?->value);
     }
 
     /**
@@ -1987,48 +1987,45 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Rejects truncated payloads in the summary section.
+     * Tolerates truncated SourceExposureTimesOfCompositeImage summary section.
+     * The malformed payload decodes to null instead of aborting the parse.
      */
     #[Test]
-    public function rejectSourceExposureTimesPayloadWithTruncatedSummary(): void
+    public function itToleratesTruncatedSourceExposureTimesSummary(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1425);
-        $this->expectExceptionMessage('SourceExposureTimesOfCompositeImage payload is malformed or truncated');
-
-        (new TiffExifParser())->parseFromBlob(
+        $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCompositeExifTags(0, null, substr($this->buildCompositeExposureSummaryBytes(), 0, 60)),
         );
+
+        self::assertNull($result->sourceExposureTimesOfCompositeImage());
     }
 
     /**
-     * Rejects payloads truncated in sequence records.
+     * Tolerates SourceExposureTimesOfCompositeImage payload truncated in sequence records.
+     * The malformed payload decodes to null instead of aborting the parse.
      */
     #[Test]
-    public function rejectSourceExposureTimesPayloadWithTruncatedSequenceSection(): void
+    public function itToleratesTruncatedSourceExposureTimesSequenceSection(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1425);
-        $this->expectExceptionMessage('SourceExposureTimesOfCompositeImage payload is malformed or truncated');
-
-        (new TiffExifParser())->parseFromBlob(
+        $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCompositeExifTags(0, null, $this->buildCompositeExposurePayloadWithTruncatedSequenceSection()),
         );
+
+        self::assertNull($result->sourceExposureTimesOfCompositeImage());
     }
 
     /**
-     * Rejects payloads where sequence/image counts exceed available bytes.
+     * Tolerates SourceExposureTimesOfCompositeImage payload with inconsistent counts.
+     * The malformed payload decodes to null instead of aborting the parse.
      */
     #[Test]
-    public function rejectSourceExposureTimesPayloadWithInconsistentCounts(): void
+    public function itToleratesSourceExposureTimesWithInconsistentCounts(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1425);
-        $this->expectExceptionMessage('SourceExposureTimesOfCompositeImage payload is malformed or truncated');
-
-        (new TiffExifParser())->parseFromBlob(
+        $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCompositeExifTags(0, null, $this->buildCompositeExposurePayloadWithInconsistentCounts()),
         );
+
+        self::assertNull($result->sourceExposureTimesOfCompositeImage());
     }
 
     /**
@@ -2080,67 +2077,27 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * In JPEG context, StripOffsets shall not be present in IFD0.
+     * In JPEG context, StripOffsets in IFD0 is tolerated.
+     * Real-world cameras include StripOffsets even in JPEG-compressed primaries.
      */
     #[Test]
-    public function rejectStripOffsetsInJpegContext(): void
+    public function itToleratesStripOffsetsInIfd0JpegContext(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('StripOffsets shall not be present');
-
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithShortTag(ExifTag::STRIP_OFFSETS, 0),
             jpegContext: true,
         );
+
+        $this->addToAssertionCount(1);
     }
 
     /**
-     * In JPEG context, RowsPerStrip shall not be present in IFD0.
+     * In JPEG context, YCbCrSubSampling in IFD0 is tolerated.
+     * Real-world cameras include YCbCrSubSampling even in JPEG-compressed primaries.
      */
     #[Test]
-    public function rejectRowsPerStripInJpegContext(): void
+    public function itToleratesYcbcrSubSamplingInIfd0JpegContext(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('RowsPerStrip shall not be present');
-
-        // RowsPerStrip is not in FIXED_LENGTH_TAGS, need to use SHORT type directly
-        $blob = 'II'
-            . pack('v', TiffConst::MAGIC_CLASSIC)
-            . pack('V', 8)
-            . pack('v', 1)
-            . pack('v', ExifTag::ROWS_PER_STRIP)
-            . pack('v', TiffConst::TYPE_SHORT)
-            . pack('V', 1)
-            . pack('v', 100) . pack('v', 0)
-            . pack('V', 0);
-
-        (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
-    }
-
-    /**
-     * In JPEG context, StripByteCounts shall not be present in IFD0.
-     */
-    #[Test]
-    public function rejectStripByteCountsInJpegContext(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('StripByteCounts shall not be present');
-
-        (new TiffExifParser())->parseFromBlob(
-            $this->buildTiffWithShortTag(ExifTag::STRIP_BYTE_COUNTS, 0),
-            jpegContext: true,
-        );
-    }
-
-    /**
-     * In JPEG context, YCbCrSubSampling shall not be present in IFD0.
-     */
-    #[Test]
-    public function rejectYCbCrSubSamplingInJpegContext(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('YCbCrSubSampling shall not be present');
-
         // YCbCrSubSampling is SHORT[2]
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
@@ -2153,6 +2110,8 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('V', 0);
 
         (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
+
+        $this->addToAssertionCount(1);
     }
 
     /**

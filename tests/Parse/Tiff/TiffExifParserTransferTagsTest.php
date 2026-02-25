@@ -161,6 +161,64 @@ final class TiffExifParserTransferTagsTest extends TestCase
     }
 
     /**
+     * TransferFunction without BitsPerSample is tolerated.
+     * Real-world cameras (e.g. FujiFilm DS-7/DS-10) include TransferFunction
+     * without a BitsPerSample tag; the validator skips TransferFunction
+     * when its companion is absent.
+     */
+    #[Test]
+    public function itToleratesTransferFunctionWithoutBitsPerSample(): void
+    {
+        $transferValues = $this->buildShortRamp(256);
+        $payload        = $this->packNumericPayload(TiffConst::TYPE_SHORT, $transferValues);
+
+        $entries = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 64) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 64) . pack('v', 0),
+            ExifTag::PHOTOMETRIC_INTERPRETATION => pack('v', ExifTag::PHOTOMETRIC_INTERPRETATION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 2) . pack('v', 0),
+        ];
+
+        ksort($entries);
+
+        $entryCount = count($entries) + 1;
+        $ifdOffset  = 8;
+        $ifdSize    = 2 + (12 * $entryCount) + 4;
+        $dataOffset = $ifdOffset + $ifdSize;
+
+        $ifdEntries = '';
+
+        foreach ($entries as $entry) {
+            $ifdEntries .= $entry;
+        }
+
+        $ifdEntries .= pack('v', ExifTag::TRANSFER_FUNCTION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', count($transferValues))
+            . pack('V', $dataOffset);
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . $ifdEntries
+            . pack('V', 0)
+            . $payload;
+
+        (new TiffExifParser())->parseFromBlob($blob);
+
+        $this->addToAssertionCount(1);
+    }
+
+    /**
      * Builds a minimal TIFF for transfer-family tag checks.
      *
      * @param list<int>|null $transferFunctionValues
