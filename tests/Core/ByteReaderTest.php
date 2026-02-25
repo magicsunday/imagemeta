@@ -204,7 +204,7 @@ final class ByteReaderTest extends TestCase
                     throw new ParseError('Read beyond end of data.', 1029);
                 }
 
-                $result    = substr($data, $position, $length);
+                $result = substr($data, $position, $length);
                 $position += $length;
 
                 return $result;

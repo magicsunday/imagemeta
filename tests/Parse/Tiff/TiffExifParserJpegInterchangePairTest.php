@@ -89,7 +89,7 @@ final class TiffExifParserJpegInterchangePairTest extends TestCase
      * Non-zero offset with length=0 is tolerated (Postel's Law).
      */
     #[Test]
-    public function itSkipsThumbnailWhenJpegInterchangeFormatLengthIsZero(): void
+    public function skipsThumbnailWhenJpegInterchangeFormatLengthIsZero(): void
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1JpegInterchange(

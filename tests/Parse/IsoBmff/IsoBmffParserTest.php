@@ -4564,7 +4564,7 @@ final class IsoBmffParserTest extends TestCase
      * Tolerates dref entries that are neither url nor urn data entry boxes (Postel's Law).
      */
     #[Test]
-    public function itToleratesUnknownDrefEntryType(): void
+    public function toleratesUnknownDrefEntryType(): void
     {
         $alisEntry                                        = $this->fullBox('alis', "\x00\x01\x02\x03");
         $extractor                                        = $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $alisEntry));

@@ -99,7 +99,7 @@ final class TiffExifParserSubIfdTest extends TestCase
      * ExifIFD pointer with wrong field type is skipped gracefully.
      */
     #[Test]
-    public function itSkipsExifIfdWithWrongPointerType(): void
+    public function skipsExifIfdWithWrongPointerType(): void
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithBadPointer(ExifTag::EXIF_IFD_POINTER),
@@ -113,7 +113,7 @@ final class TiffExifParserSubIfdTest extends TestCase
      * GPSIFD pointer with non-numeric offset is skipped gracefully.
      */
     #[Test]
-    public function itSkipsGpsIfdWithNonNumericOffset(): void
+    public function skipsGpsIfdWithNonNumericOffset(): void
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithBadPointer(ExifTag::GPS_IFD_POINTER),
@@ -127,7 +127,7 @@ final class TiffExifParserSubIfdTest extends TestCase
      * InteropIFD pointer with out-of-bounds offset is skipped gracefully.
      */
     #[Test]
-    public function itSkipsInteropIfdWithOutOfBoundsOffset(): void
+    public function skipsInteropIfdWithOutOfBoundsOffset(): void
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithOutOfBoundsInteropPointer(),

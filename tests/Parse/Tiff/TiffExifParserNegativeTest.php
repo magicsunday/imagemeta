@@ -1223,7 +1223,7 @@ final class TiffExifParserNegativeTest extends TestCase
      * IFD with entryCount=0 returns an empty Ifd (Postel's Law).
      */
     #[Test]
-    public function itReturnsEmptyIfdForZeroEntries(): void
+    public function returnsEmptyIfdForZeroEntries(): void
     {
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
@@ -1486,7 +1486,7 @@ final class TiffExifParserNegativeTest extends TestCase
      * IFD1 Compression=7 (JPEG new-style TN2) is tolerated (Postel's Law).
      */
     #[Test]
-    public function itToleratesCompression7InIfd1(): void
+    public function toleratesCompression7InIfd1(): void
     {
         $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTwoIfds(
@@ -1822,7 +1822,7 @@ final class TiffExifParserNegativeTest extends TestCase
      * Flash value 0x02 (reserved return-status bits) is tolerated (Postel's Law).
      */
     #[Test]
-    public function itToleratesReservedFlashReturnStatusBits(): void
+    public function toleratesReservedFlashReturnStatusBits(): void
     {
         $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithExifShortTag(ExifTag::FLASH, 0x02),
