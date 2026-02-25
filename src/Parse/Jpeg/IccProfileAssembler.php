@@ -50,6 +50,14 @@ final class IccProfileAssembler implements SegmentAssemblerInterface
     private ?string $profile = null;
 
     /**
+     * @param int $maxIccProfileSize Maximum allowed assembled ICC profile size in bytes.
+     */
+    public function __construct(
+        private readonly int $maxIccProfileSize = 4_194_304,
+    ) {
+    }
+
+    /**
      * Processes one ICC profile APP2 segment.
      *
      * @param string $payload Raw segment payload including signature.
@@ -133,7 +141,20 @@ final class IccProfileAssembler implements SegmentAssemblerInterface
             sort($presentSequence);
             if ($presentSequence === $expectedSequence) {
                 ksort($this->sequence);
-                $this->profile = implode('', $this->sequence);
+                $assembled = implode('', $this->sequence);
+
+                if (strlen($assembled) > $this->maxIccProfileSize) {
+                    throw new ParseError(
+                        sprintf(
+                            'Assembled ICC profile size %d bytes exceeds configured limit of %d bytes',
+                            strlen($assembled),
+                            $this->maxIccProfileSize,
+                        ),
+                        1964,
+                    );
+                }
+
+                $this->profile = $assembled;
             }
         }
     }

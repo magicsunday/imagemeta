@@ -100,7 +100,7 @@ final class JpegParser implements JpegParserInterface
     {
         $this->scanner           = new JpegMarkerScanner($stream, $config);
         $this->frameValidator    = new JpegFrameValidator($this->scanner);
-        $this->iccAssembler      = new IccProfileAssembler();
+        $this->iccAssembler      = new IccProfileAssembler($config->maxIccProfileSize);
         $this->audioParser       = new JpegAudioSegmentParser();
         $this->app1Handler       = new JpegApp1Handler($config->extendedXmpGuidLength, $config->maxExtendedXmpSize);
         $this->flashPixAssembler = new FlashPixStreamAssembler(
