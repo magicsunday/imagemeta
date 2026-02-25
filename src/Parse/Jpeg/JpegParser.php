@@ -326,16 +326,6 @@ final class JpegParser implements JpegParserInterface
     private function processMarkerSegment(int $marker, int $offset): bool
     {
         if ($marker === Marker::EOI) {
-            if ($this->seenExifApp1) {
-                throw new ParseError(
-                    sprintf(
-                        'EXIF APP1 marker requires SOS before EOI; EOI marker found at offset %d without SOS marker',
-                        $offset,
-                    ),
-                    1487,
-                );
-            }
-
             return true;
         }
 
