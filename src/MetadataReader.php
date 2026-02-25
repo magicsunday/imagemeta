@@ -52,6 +52,11 @@ use const PATHINFO_EXTENSION;
 final readonly class MetadataReader
 {
     /**
+     * Maximum number of bytes accepted when materialising a TIFF stream into memory (256 MiB).
+     */
+    private const int MAX_TIFF_SIZE = 256 * 1024 * 1024;
+
+    /**
      * @param TiffExifParserInterface       $tiffReader           TIFF/EXIF parser instance.
      * @param AppleMakerNotesMerger         $appleMerger          Apple maker notes merger.
      * @param XmpParserInterface            $xmpParser            XMP parser instance.
@@ -59,6 +64,7 @@ final readonly class MetadataReader
      * @param FormatDetector                $formatDetector       Container format detector.
      * @param JpegParserFactoryInterface    $jpegParserFactory    Factory creating JPEG parser instances.
      * @param IsoBmffParserFactoryInterface $isoBmffParserFactory Factory creating ISO BMFF parser instances.
+     * @param int                           $maxTiffSize          Maximum stream size in bytes before TIFF materialisation is rejected.
      */
     public function __construct(
         private TiffExifParserInterface $tiffReader,
@@ -68,6 +74,7 @@ final readonly class MetadataReader
         private FormatDetector $formatDetector,
         private JpegParserFactoryInterface $jpegParserFactory,
         private IsoBmffParserFactoryInterface $isoBmffParserFactory,
+        private int $maxTiffSize = self::MAX_TIFF_SIZE,
     ) {
     }
 
@@ -250,6 +257,13 @@ final readonly class MetadataReader
         ?string $digestSha1,
         ?string $digestMd5,
     ): Metadata {
+        if ($stream->size() > $this->maxTiffSize) {
+            throw new ParseError(
+                sprintf('TIFF stream size %d exceeds the maximum allowed size of %d bytes', $stream->size(), $this->maxTiffSize),
+                1122,
+            );
+        }
+
         $stream->seek(0);
         $tiffBlob = $stream->read($stream->size());
 
