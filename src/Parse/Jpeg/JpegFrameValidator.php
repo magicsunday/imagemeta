@@ -339,17 +339,6 @@ final class JpegFrameValidator
     }
 
     /**
-     * Determines whether the marker begins structural image coding segments before scan data.
-     *
-     * EXIF 3.0 §4.7.5.2 requires APP11 to be located before DQT/DHT/DRI/SOF marker segments.
-     */
-    public function isStructuralMarkerBeforeScan(int $marker): bool
-    {
-        return in_array($marker, [Marker::DQT, Marker::DHT, Marker::DRI], true)
-            || $this->isStartOfFrameMarker($marker);
-    }
-
-    /**
      * Derives YCbCr subsampling factors from component sampling values.
      *
      * EXIF 3.0 §4.6.5.1.12 (YCbCrSubSampling) defines only [2,1] (YCbCr4:2:2) and

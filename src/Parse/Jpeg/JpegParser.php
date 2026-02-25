@@ -19,7 +19,6 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 
 use function implode;
 use function sprintf;
-use function str_starts_with;
 use function strlen;
 use function substr;
 
@@ -32,16 +31,9 @@ use function substr;
 final class JpegParser implements JpegParserInterface
 {
     /**
-     * Signature identifying Exif APP1 segments (EXIF 3.0 §4.7.2).
-     */
-    private const string EXIF_SIGNATURE = "Exif\0\0";
-
-    /**
      * Signature identifying MP Index payloads inside APP2 markers (EXIF 3.0 §4.6.4).
      */
     private const string MPF_SIGNATURE = "MPF\0";
-
-    private const string FPXR_SIGNATURE = 'FPXR';
 
     private bool $parsed = false;
 
@@ -71,18 +63,6 @@ final class JpegParser implements JpegParserInterface
     private FlashPixStreamAssembler $flashPixAssembler;
 
     private JumbfTransportParser $jumbfParser;
-
-    private bool $seenExifApp1 = false;
-
-    private ?int $firstApp2BeforeExifOffset = null;
-
-    private bool $seenApp1OrApp2 = false;
-
-    private bool $seenApp11 = false;
-
-    private ?int $firstStructuralMarker = null;
-
-    private ?int $firstStructuralMarkerOffset = null;
 
     private ?int $firstSofOffset = null;
 
@@ -305,17 +285,11 @@ final class JpegParser implements JpegParserInterface
             $this->config->flashPixMaxStreamSize,
             $this->config->maxFlashPixTotalSize,
         );
-        $this->flashPixStreams             = [];
-        $this->mpfSegments                 = [];
-        $this->mpfDocument                 = null;
-        $this->iptcPayloads                = [];
-        $this->seenExifApp1                = false;
-        $this->firstApp2BeforeExifOffset   = null;
-        $this->seenApp1OrApp2              = false;
-        $this->seenApp11                   = false;
-        $this->firstStructuralMarker       = null;
-        $this->firstStructuralMarkerOffset = null;
-        $this->firstSofOffset              = null;
+        $this->flashPixStreams = [];
+        $this->mpfSegments     = [];
+        $this->mpfDocument     = null;
+        $this->iptcPayloads    = [];
+        $this->firstSofOffset  = null;
     }
 
     /**
@@ -353,83 +327,6 @@ final class JpegParser implements JpegParserInterface
         $segmentLength = $this->scanner->readSegmentLength($marker, $offset, $isAppSegment);
         $payloadLength = $segmentLength - 2;
         $payload       = $this->scanner->readSegmentPayload($marker, $offset, $payloadLength);
-
-        // ITU-T T.81 §B.2.2: APP markers are "miscellaneous" markers that may
-        // appear alongside DQT/DHT/DRI in any order before SOS.  EXIF 3.0 §4.7
-        // only constrains APP11 ordering relative to structural markers; non-Exif
-        // APP markers (APP0/JFIF, APP13/IPTC, APP14/Adobe) are tolerated here.
-        // The APP11-after-structural check is enforced separately below.
-
-        if (!$this->seenExifApp1) {
-            $isExifApp1 = ($marker === Marker::APP1) && str_starts_with($payload, self::EXIF_SIGNATURE);
-
-            if ($isExifApp1) {
-                if ($this->firstApp2BeforeExifOffset !== null) {
-                    throw new ParseError(
-                        sprintf(
-                            'EXIF APP2 marker at offset %d appears before APP1 Exif marker',
-                            $this->firstApp2BeforeExifOffset,
-                        ),
-                        1326,
-                    );
-                }
-
-                $this->seenExifApp1 = true;
-            } elseif (
-                ($marker === Marker::APP2)
-                && $this->isExifApp2ExtensionPayload($payload)
-            ) {
-                // EXIF 3.0 §4.7.3: APP2 Exif extension must follow APP1 Exif.
-                // Non-Exif APPn/COM markers are not governed by Exif and are
-                // tolerated before APP1 (JFIF APP0, IPTC APP13, Adobe APP14, etc.).
-                $this->firstApp2BeforeExifOffset ??= $offset;
-            }
-        }
-
-        if ($this->seenApp11 && ($marker === Marker::APP1 || $marker === Marker::APP2)) {
-            throw new ParseError(
-                sprintf(
-                    'APP1/APP2 marker at offset %d appears after APP11 marker',
-                    $offset,
-                ),
-                1330,
-            );
-        }
-
-        if ($marker === Marker::APP11) {
-            if (!$this->seenApp1OrApp2) {
-                throw new ParseError(
-                    sprintf(
-                        'APP11 marker at offset %d appears before APP1/APP2 metadata region',
-                        $offset,
-                    ),
-                    1328,
-                );
-            }
-
-            if (($this->firstStructuralMarker !== null) && ($this->firstStructuralMarkerOffset !== null)) {
-                throw new ParseError(
-                    sprintf(
-                        'APP11 marker at offset %d appears after structural marker 0x%02X at offset %d',
-                        $offset,
-                        $this->firstStructuralMarker,
-                        $this->firstStructuralMarkerOffset,
-                    ),
-                    1329,
-                );
-            }
-
-            $this->seenApp11 = true;
-        }
-
-        if ($marker === Marker::APP1 || $marker === Marker::APP2) {
-            $this->seenApp1OrApp2 = true;
-        }
-
-        if (($this->firstStructuralMarkerOffset === null) && $this->frameValidator->isStructuralMarkerBeforeScan($marker)) {
-            $this->firstStructuralMarker       = $marker;
-            $this->firstStructuralMarkerOffset = $offset;
-        }
 
         if ($this->markerHandlerRegistry->supports($marker)) {
             $this->markerHandlerRegistry->dispatch($marker, $this->stream, $payload, $offset);
@@ -519,18 +416,6 @@ final class JpegParser implements JpegParserInterface
                 $this->iptcPayloads[] = $payload;
             }),
         ]);
-    }
-
-    /**
-     * Determines whether an APP2 payload contains EXIF-defined extension data.
-     *
-     * EXIF 3.0 §4.7.3 applies ordering constraints to FlashPix, MPF, and EXIF audio APP2 segments.
-     */
-    private function isExifApp2ExtensionPayload(string $payload): bool
-    {
-        return str_starts_with($payload, self::FPXR_SIGNATURE)
-            || str_starts_with($payload, self::MPF_SIGNATURE)
-            || str_starts_with($payload, JpegAudioSegmentParser::AUDIO_SIGNATURE);
     }
 
     /**
