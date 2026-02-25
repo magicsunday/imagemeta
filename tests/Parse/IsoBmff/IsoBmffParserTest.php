@@ -608,15 +608,11 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Builds an iloc v1 box with non-zero reserved bits in the construction_method field.
-     * This validates that the upper 12 bits of the 16-bit field are zero per ISO/IEC 14496-12 §8.11.3.
+     * Tolerates non-zero reserved bits in iloc v1 construction_method field.
      */
     #[Test]
-    public function rejectIlocNonZeroConstructionMethodReservedBits(): void
+    public function toleratesIlocNonZeroConstructionMethodReservedBits(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iloc construction_method reserved bits must be zero');
-
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
@@ -634,18 +630,15 @@ final class IsoBmffParserTest extends TestCase
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
+        self::assertTrue(true);
     }
 
     /**
-     * Builds an iloc v2 box with non-zero reserved bits in the construction_method field.
-     * This validates the same reserved-bit rule for version 2 item entries.
+     * Tolerates non-zero reserved bits in iloc v2 construction_method field.
      */
     #[Test]
-    public function rejectIlocVersion2NonZeroConstructionMethodReservedBits(): void
+    public function toleratesIlocVersion2NonZeroConstructionMethodReservedBits(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iloc construction_method reserved bits must be zero');
-
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
@@ -663,6 +656,7 @@ final class IsoBmffParserTest extends TestCase
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
+        self::assertTrue(true);
     }
 
     /**
@@ -4422,15 +4416,11 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Builds a dref box with non-zero flags, which violates the ISO/IEC 14496-12 spec.
-     * Confirms the parser rejects non-zero dref flags.
+     * Tolerates dref box with non-zero flags.
      */
     #[Test]
-    public function rejectDrefNonZeroFlags(): void
+    public function toleratesDrefNonZeroFlags(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('dref FullBox flags must be 0 per ISO/IEC 14496-12');
-
         $dref = $this->fullBox('dref', pack('N', 0), 0, 1); // version=0, flags=1, entry_count=0
         $dinf = $this->box('dinf', $dref);
         $meta = $this->fullBox('meta', $dinf);
@@ -4438,6 +4428,7 @@ final class IsoBmffParserTest extends TestCase
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
+        self::assertTrue(true);
     }
 
     /**
@@ -4610,21 +4601,18 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Builds a meta box with FullBox flags=1 instead of 0.
-     * Confirms the parser rejects unsupported meta flags.
+     * Tolerates meta box with non-zero FullBox flags.
      */
     #[Test]
-    public function rejectMetaUnsupportedFlags(): void
+    public function toleratesMetaUnsupportedFlags(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported meta box flags');
-
         $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
         $meta = $this->fullBox('meta', $iinf, 0, 1); // version=0, flags=1
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
+        self::assertTrue(true);
     }
 
     /**

@@ -679,37 +679,6 @@ final class TrackMediaParserTest extends TestCase
                 . str_repeat("\x00", 68),
                 1369,
             ],
-            'non-zero reserved32 (1370)' => [
-                chr(0) . "\x00\x00\x03"
-                . str_repeat("\x00", 8)
-                . pack('N', 1)
-                . "\x00\x00\x00\x01"
-                . str_repeat("\x00", 64),
-                1370,
-            ],
-            'non-zero reserved64 (1371)' => [
-                chr(0) . "\x00\x00\x03"
-                . str_repeat("\x00", 8)
-                . pack('N', 1)
-                . str_repeat("\x00", 4)
-                . pack('N', 1000)
-                . "\x00\x00\x00\x00\x00\x00\x00\x01"
-                . str_repeat("\x00", 52),
-                1371,
-            ],
-            'non-zero reserved16 (1372)' => [
-                chr(0) . "\x00\x00\x03"
-                . str_repeat("\x00", 8)
-                . pack('N', 1)
-                . str_repeat("\x00", 4)
-                . pack('N', 1000)
-                . str_repeat("\x00", 8)
-                . str_repeat("\x00", 4)
-                . "\x00\x00"
-                . "\x00\x01"
-                . str_repeat("\x00", 44),
-                1372,
-            ],
         ];
     }
 
@@ -730,6 +699,63 @@ final class TrackMediaParserTest extends TestCase
         $this->expectExceptionCode($expectedCode);
 
         $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Provides tkhd payloads with non-zero reserved fields that should be tolerated.
+     *
+     * @return array<string, array{string}>
+     */
+    public static function tkhdToleratedReservedProvider(): array
+    {
+        return [
+            'non-zero reserved32' => [
+                chr(0) . "\x00\x00\x03"
+                . str_repeat("\x00", 8)
+                . pack('N', 1)
+                . "\x00\x00\x00\x01"
+                . str_repeat("\x00", 64),
+            ],
+            'non-zero reserved64' => [
+                chr(0) . "\x00\x00\x03"
+                . str_repeat("\x00", 8)
+                . pack('N', 1)
+                . str_repeat("\x00", 4)
+                . pack('N', 1000)
+                . "\x00\x00\x00\x00\x00\x00\x00\x01"
+                . str_repeat("\x00", 52),
+            ],
+            'non-zero reserved16' => [
+                chr(0) . "\x00\x00\x03"
+                . str_repeat("\x00", 8)
+                . pack('N', 1)
+                . str_repeat("\x00", 4)
+                . pack('N', 1000)
+                . str_repeat("\x00", 8)
+                . str_repeat("\x00", 4)
+                . "\x00\x00"
+                . "\x00\x01"
+                . str_repeat("\x00", 44),
+            ],
+        ];
+    }
+
+    /**
+     * Tolerates tkhd payloads with non-zero reserved fields.
+     */
+    #[Test]
+    #[DataProvider('tkhdToleratedReservedProvider')]
+    public function parseTrakToleratesTkhdReservedFields(string $tkhdContent): void
+    {
+        $tkhd = $this->box('tkhd', $tkhdContent);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $tkhd . $this->validMdiaBox(),
+        );
+
+        $result = $parser->parseTrak($descriptor, $context);
+
+        self::assertNotNull($result);
     }
 
     // =========================================================================
@@ -1338,10 +1364,10 @@ final class TrackMediaParserTest extends TestCase
     }
 
     /**
-     * Rejects stsd entry with non-zero reserved field (code 1398).
+     * Tolerates stsd entry with non-zero reserved field.
      */
     #[Test]
-    public function parseTrakRejectsStsdNonZeroReserved(): void
+    public function parseTrakToleratesStsdNonZeroReserved(): void
     {
         $entry = pack('N', 16) . 'genr' . "\x00\x00\x00\x00\x00\x01" . pack('n', 1);
         $stsd  = $this->fullBox('stsd', pack('N', 1) . $entry, 0, 0);
@@ -1350,10 +1376,9 @@ final class TrackMediaParserTest extends TestCase
             $this->buildTrakWithStsd($stsd),
         );
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1398);
+        $result = $parser->parseTrak($descriptor, $context);
 
-        $parser->parseTrak($descriptor, $context);
+        self::assertNotNull($result);
     }
 
     /**

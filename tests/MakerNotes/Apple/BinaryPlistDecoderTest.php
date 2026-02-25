@@ -576,6 +576,34 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
+     * Tolerates padding bytes between the offset table and the trailer.
+     */
+    #[Test]
+    public function toleratesPaddingBetweenOffsetTableAndTrailer(): void
+    {
+        $header       = 'bplist00';
+        $objectBytes  = "\x08"; // boolean false
+        $objectOffset = strlen($header); // 8
+        $offsetTable  = chr($objectOffset); // 1 byte: offset to object 0
+
+        $padding = "\xFF\xFF"; // 2 bytes of padding
+
+        $offsetTableStart = $objectOffset + strlen($objectBytes); // 9
+        $trailer          = str_repeat("\x00", 6)
+            . chr(1) // offsetIntSize
+            . chr(1) // objectRefSize
+            . $this->packUint64BE(1) // numObjects
+            . $this->packUint64BE(0) // topObjectIndex
+            . $this->packUint64BE($offsetTableStart);
+
+        $plist = $header . $objectBytes . $offsetTable . $padding . $trailer;
+
+        $result = (new BinaryPlistDecoder())->decode($plist);
+
+        self::assertNotNull($result);
+    }
+
+    /**
      * Pack an unsigned 64-bit integer (big-endian) using portable formats.
      * This checks the behavior for the specific inputs used in the test.
      */
