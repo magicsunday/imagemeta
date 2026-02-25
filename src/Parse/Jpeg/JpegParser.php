@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
@@ -258,12 +259,16 @@ final class JpegParser implements JpegParserInterface
 
         $this->resetParseState();
 
-        while (true) {
-            [$marker, $offset] = $this->scanner->nextMarkerWithOffset(false);
+        try {
+            while (true) {
+                [$marker, $offset] = $this->scanner->nextMarkerWithOffset(false);
 
-            if ($this->processMarkerSegment($marker, $offset)) {
-                break;
+                if ($this->processMarkerSegment($marker, $offset)) {
+                    break;
+                }
             }
+        } catch (BoundsError) {
+            // Truncated stream — return whatever metadata was collected so far.
         }
 
         $this->finaliseParseResults();
