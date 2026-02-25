@@ -13,7 +13,6 @@ namespace MagicSunday\ImageMeta\Exif\Converters;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -75,26 +74,14 @@ final readonly class GpsTimestampConverter
         $areaEntry    = $gps->get(ExifTag::GPS_AREA_INFORMATION);
 
         $dateParts = $this->normalizeDate($dateEntry?->value);
-        if (($dateEntry instanceof IfdEntry) && ($dateParts['normalized'] === null)) {
-            throw new ParseError(
-                sprintf(
-                    'GPSDateStamp "%s" is not a valid UTC calendar date per EXIF 3.0 §4.6.7.1.30.',
-                    $dateParts['raw'] ?? '',
-                ),
-                1465,
-            );
-        }
+
+        // Tolerate malformed GPS date stamps — skip silently.
 
         $timeParts = $timeEntry instanceof IfdEntry && $timeEntry->value instanceof ExifRationalList
             ? $this->parseTime($timeEntry->value)
             : null;
 
-        if (($timeEntry instanceof IfdEntry) && ($timeParts === null)) {
-            throw new ParseError(
-                'GPSTimeStamp is outside valid UTC ranges (hour 0..23, minute 0..59, second >=0 and <60) per EXIF 3.0 §4.6.7.1.8.',
-                1466,
-            );
-        }
+        // Tolerate out-of-range GPS time stamps — skip silently.
 
         return [
             'date'              => $dateParts['normalized'],

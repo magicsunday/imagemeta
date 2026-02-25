@@ -192,39 +192,37 @@ final class TiffExifParserGpsReferenceTest extends TestCase
     }
 
     /**
-     * Rejects invalid GPSDateStamp calendar values from classic TIFF payloads.
+     * Tolerates invalid GPSDateStamp calendar values from classic TIFF payloads.
      */
     #[Test]
-    public function rejectsInvalidGpsDateStampFromClassicTiff(): void
+    public function toleratesInvalidGpsDateStampFromClassicTiff(): void
     {
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob(
             $this->buildGpsDateTimeExample("2025:02:30\0", [[12, 1], [34, 1], [56, 1]]),
         );
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1465);
-        $this->expectExceptionMessage('GPSDateStamp');
+        $gps = $result->gps();
 
-        $result->gps();
+        self::assertNull($gps['date']);
+        self::assertNull($gps['timestamp']);
     }
 
     /**
-     * Rejects out-of-range GPSTimeStamp values from classic TIFF payloads.
+     * Tolerates out-of-range GPSTimeStamp values from classic TIFF payloads.
      */
     #[Test]
-    public function rejectsOutOfRangeGpsTimeStampFromClassicTiff(): void
+    public function toleratesOutOfRangeGpsTimeStampFromClassicTiff(): void
     {
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob(
             $this->buildGpsDateTimeExample("2025:03:01\0", [[25, 1], [0, 1], [0, 1]]),
         );
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1466);
-        $this->expectExceptionMessage('GPSTimeStamp');
+        $gps = $result->gps();
 
-        $result->gps();
+        self::assertNull($gps['time']);
+        self::assertNull($gps['timestamp']);
     }
 
     /**

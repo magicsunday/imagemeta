@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
-use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -112,11 +111,9 @@ final readonly class GpsUnitConverter
 
             $alt = $this->rationalConverter->toFloat($altEntry->value);
 
+            // Tolerate negative altitude — use absolute magnitude.
             if ($alt !== null && $alt < 0.0) {
-                throw new ParseError(
-                    'GPSAltitude must be a non-negative magnitude per EXIF 3.0 §4.6.7.1.7; sign is derived from GPSAltitudeRef.',
-                    1471,
-                );
+                $alt = -$alt;
             }
 
             // EXIF 3.0 §4.6.7.1.6: Values 1 (below ellipsoidal) and 3 (below sea level) indicate negative altitude

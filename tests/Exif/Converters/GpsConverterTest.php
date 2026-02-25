@@ -858,11 +858,7 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
-     * Rejects negative rational magnitudes for GPS scalar fields.
-     *
-     * @param array<int, IfdEntry> $entries         IFD entries to parse.
-     * @param int                  $errorCode       Expected ParseError code.
-     * @param string               $messageFragment Expected message substring.
+     * Tolerates negative DOP values by setting to null.
      */
     #[Test]
     public function toleratesNegativeDop(): void

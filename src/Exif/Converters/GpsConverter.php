@@ -12,14 +12,12 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
 use DateTimeImmutable;
-use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
-use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
 
 use function array_replace;
@@ -27,7 +25,6 @@ use function implode;
 use function is_float;
 use function is_int;
 use function is_string;
-use function sprintf;
 use function str_replace;
 use function strtoupper;
 use function trim;
@@ -218,11 +215,10 @@ final readonly class GpsConverter
         );
 
         $dopValue = $this->rationalConverter->toFloat($dopEntry?->value);
-        if ($dopEntry instanceof IfdEntry && $dopValue !== null && $dopValue < 0.0) {
-            throw new ParseError(sprintf(
-                'GPSDOP %s must be non-negative per EXIF 3.0 §4.6.7.1.12.',
-                $dopValue,
-            ), 1469);
+
+        // Tolerate negative DOP — set to null.
+        if ($dopValue !== null && $dopValue < 0.0) {
+            $dopValue = null;
         }
 
         $result['dop']       = $dopValue;
@@ -243,15 +239,9 @@ final readonly class GpsConverter
         $hPositionEntry         = $gps->get(ExifTag::GPS_H_POSITIONING_ERROR);
         $hPositioningErrorValue = $this->rationalConverter->toFloat($hPositionEntry?->value);
 
-        if (
-            $hPositionEntry instanceof IfdEntry
-            && $hPositioningErrorValue !== null
-            && $hPositioningErrorValue < 0.0
-        ) {
-            throw new ParseError(sprintf(
-                'GPSHPositioningError %s must be non-negative per EXIF 3.0 §4.6.7.1.32.',
-                $hPositioningErrorValue,
-            ), 1468);
+        // Tolerate negative HPositioningError — set to null.
+        if ($hPositioningErrorValue !== null && $hPositioningErrorValue < 0.0) {
+            $hPositioningErrorValue = null;
         }
 
         $result['h_positioning_error'] = $hPositioningErrorValue;
