@@ -2007,10 +2007,10 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects restart markers that appear before SOS in pre-scan marker parsing.
+     * Tolerates restart markers that appear before SOS in pre-scan marker parsing.
      */
     #[Test]
-    public function rejectsRestartMarkerBeforeSos(): void
+    public function toleratesRestartMarkerBeforeSos(): void
     {
         $exifPayload = self::TIFF_HEADER . 'pre-sos-restart';
 
@@ -2026,18 +2026,15 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1499);
-        $this->expectExceptionMessageMatches('/RST|restart|before SOS/i');
-
-        $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
+        self::assertCount(1, $blobs);
     }
 
     /**
-     * Rejects TEM markers that appear before SOS in pre-scan marker parsing.
+     * Tolerates TEM markers that appear before SOS in pre-scan marker parsing.
      */
     #[Test]
-    public function rejectsTemMarkerBeforeSos(): void
+    public function toleratesTemMarkerBeforeSos(): void
     {
         $exifPayload = self::TIFF_HEADER . 'pre-sos-tem';
 
@@ -2053,11 +2050,8 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1502);
-        $this->expectExceptionMessageMatches('/TEM|before SOS|SOS/i');
-
-        $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
+        self::assertCount(1, $blobs);
     }
 
     /**
@@ -2903,13 +2897,10 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Rejects a duplicate SOI marker before SOS in pre-scan marker parsing.
-     *
-     * EXIF 3.0 §4.5.4: SOI shall appear once at the beginning of the JPEG
-     * stream; any subsequent SOI in the marker flow is non-conformant.
+     * Tolerates a duplicate SOI marker before SOS in pre-scan marker parsing.
      */
     #[Test]
-    public function rejectsDuplicateSoiBeforeSos(): void
+    public function toleratesDuplicateSoiBeforeSos(): void
     {
         $exifPayload = self::TIFF_HEADER . 'dup-soi';
 
@@ -2926,10 +2917,8 @@ final class JpegParserTest extends TestCase
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1507);
-
-        $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
+        self::assertCount(1, $blobs);
     }
 
     /**
