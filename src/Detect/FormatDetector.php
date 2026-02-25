@@ -105,7 +105,6 @@ final readonly class FormatDetector
             throw new ParseError('Unable to read container signature', 1032, $exception);
         }
 
-        // a few HEIC files may start with 0 size+ftyp; we already cover 'ftyp' at [4..8]
         throw new ParseError('Unsupported or unknown container', 1033);
     }
 
@@ -230,8 +229,13 @@ final readonly class FormatDetector
                 }
             }
 
-            // Signature boxes must have a well-defined size
-            if ($size !== 0 && isset(self::ISO_BMFF_SIGNATURE_BOXES[$boxType])) {
+            if (isset(self::ISO_BMFF_SIGNATURE_BOXES[$boxType])) {
+                // size=0 means box extends to EOF (ISO 14496-12 §4.2);
+                // type presence alone is sufficient evidence
+                if ($size === 0) {
+                    return true;
+                }
+
                 // ftyp/styp require at least 8 payload bytes and 4-byte brand alignment
                 if ($boxType === 'ftyp' || $boxType === 'styp') {
                     $payload = $size - $headerSize;
