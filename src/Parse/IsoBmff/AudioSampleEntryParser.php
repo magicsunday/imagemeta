@@ -155,7 +155,7 @@ final readonly class AudioSampleEntryParser
             }
 
             if ($compressionId !== 0) {
-                throw new ParseError('audio sample entry version 0 compression ID must be 0', 1505);
+                throw new ParseError('audio sample entry version 0 compression ID must be 0', 1965);
             }
 
             if ($packetSize !== 0) {

@@ -188,7 +188,7 @@ final readonly class BoxPayloadCollector
                     $requiresHdlr = true;
 
                     if ($keysMaps !== []) {
-                        throw new ParseError('meta must contain at most one keys atom', 1503);
+                        throw new ParseError('meta must contain at most one keys atom', 1964);
                     }
 
                     $keysMaps[] = $this->quickTimeKeyResolver->parseKeys($child);
