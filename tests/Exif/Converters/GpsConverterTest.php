@@ -448,59 +448,63 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
-     * Rejects DMS minutes or seconds >= 60 for capture and destination coordinates.
+     * Tolerates DMS minutes or seconds >= 60 by carrying over into the next component.
      *
      * @param list<array{0:int,1:int}> $dms
      */
     #[Test]
     #[DataProvider('provideOutOfRangeDmsComponents')]
-    public function rejectsOutOfRangeDmsComponents(int $refTag, int $valueTag, string $ref, array $dms): void
+    public function toleratesOutOfRangeDmsComponents(int $refTag, int $valueTag, string $ref, array $dms, string $coordKey, float $expected): void
     {
         $entries = [
             $refTag   => new IfdEntry($refTag, 2, 2, $ref),
             $valueTag => new IfdEntry($valueTag, 10, 3, $dms),
         ];
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1470);
-        $this->expectExceptionMessage('must be in range [0, 60)');
+        $result = $this->converter->fromIfd(new Ifd($entries));
 
-        $this->converter->fromIfd(new Ifd($entries));
+        self::assertEqualsWithDelta($expected, $result[$coordKey], 0.000001);
     }
 
     /**
-     * @return iterable<string, array{0:int, 1:int, 2:string, 3:list<array{0:int,1:int}>}>
+     * @return iterable<string, array{0:int, 1:int, 2:string, 3:list<array{0:int,1:int}>, 4:string, 5:float}>
      */
     public static function provideOutOfRangeDmsComponents(): iterable
     {
+        // 12° 60' 0" → 13° 0' 0" = 13.0
         yield 'latitude-minutes-60' => [
             ExifTag::GPS_LATITUDE_REF, ExifTag::GPS_LATITUDE, 'N',
-            [[12, 1], [60, 1], [0, 1]],
+            [[12, 1], [60, 1], [0, 1]], 'lat', 13.0,
         ];
 
+        // 12° 30' 60" → 12° 31' 0" = -(12 + 31/60) = -12.516667
         yield 'latitude-seconds-60' => [
             ExifTag::GPS_LATITUDE_REF, ExifTag::GPS_LATITUDE, 'S',
-            [[12, 1], [30, 1], [60, 1]],
+            [[12, 1], [30, 1], [60, 1]], 'lat', -12.516667,
         ];
 
+        // 13° 61' 0" → 14° 1' 0" = 14.016667
         yield 'longitude-minutes-61' => [
             ExifTag::GPS_LONGITUDE_REF, ExifTag::GPS_LONGITUDE, 'E',
-            [[13, 1], [61, 1], [0, 1]],
+            [[13, 1], [61, 1], [0, 1]], 'lon', 14.016667,
         ];
 
+        // 13° 30' 70" → 13° 31' 10" = -(13 + 31/60 + 10/3600) = -13.519444
         yield 'longitude-seconds-70' => [
             ExifTag::GPS_LONGITUDE_REF, ExifTag::GPS_LONGITUDE, 'W',
-            [[13, 1], [30, 1], [70, 1]],
+            [[13, 1], [30, 1], [70, 1]], 'lon', -13.519444,
         ];
 
+        // 45° 60' 0" → 46° 0' 0" = 46.0
         yield 'dest-latitude-minutes-60' => [
             ExifTag::GPS_DEST_LATITUDE_REF, ExifTag::GPS_DEST_LATITUDE, 'N',
-            [[45, 1], [60, 1], [0, 1]],
+            [[45, 1], [60, 1], [0, 1]], 'dest_lat', 46.0,
         ];
 
+        // 90° 0' 60" → 90° 1' 0" = 90.016667
         yield 'dest-longitude-seconds-60' => [
             ExifTag::GPS_DEST_LONGITUDE_REF, ExifTag::GPS_DEST_LONGITUDE, 'E',
-            [[90, 1], [0, 1], [60, 1]],
+            [[90, 1], [0, 1], [60, 1]], 'dest_lon', 90.016667,
         ];
     }
 
@@ -547,39 +551,37 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
-     * Rejects out-of-range GPS bearing values for track/image/destination bearings.
+     * Tolerates out-of-range GPS bearing values by normalizing via modular arithmetic.
      */
     #[Test]
     #[DataProvider('provideOutOfRangeBearingValues')]
-    public function rejectsOutOfRangeGpsBearingValues(int $refTag, int $valueTag, string $ref, float $value): void
+    public function toleratesOutOfRangeGpsBearingValues(int $refTag, int $valueTag, string $ref, float $value, string $bearingKey, float $expected): void
     {
         $entries = [
             $refTag   => new IfdEntry($refTag, 2, 2, $ref),
             $valueTag => new IfdEntry($valueTag, 5, 1, $value),
         ];
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1460);
-        $this->expectExceptionMessage('outside the valid range');
+        $result = $this->converter->fromIfd(new Ifd($entries));
 
-        $this->converter->fromIfd(new Ifd($entries));
+        self::assertEqualsWithDelta($expected, $result[$bearingKey], 0.000001);
     }
 
     /**
-     * @return iterable<string, array{0:int,1:int,2:string,3:float}>
+     * @return iterable<string, array{0:int, 1:int, 2:string, 3:float, 4:string, 5:float}>
      */
     public static function provideOutOfRangeBearingValues(): iterable
     {
         yield 'track negative' => [
-            ExifTag::GPS_TRACK_REF, ExifTag::GPS_TRACK, 'T', -1.0,
+            ExifTag::GPS_TRACK_REF, ExifTag::GPS_TRACK, 'T', -1.0, 'track', 359.0,
         ];
 
         yield 'image direction >= 360' => [
-            ExifTag::GPS_IMG_DIRECTION_REF, ExifTag::GPS_IMG_DIRECTION, 'M', 360.0,
+            ExifTag::GPS_IMG_DIRECTION_REF, ExifTag::GPS_IMG_DIRECTION, 'M', 360.0, 'img_direction', 0.0,
         ];
 
         yield 'destination bearing far above range' => [
-            ExifTag::GPS_DEST_BEARING_REF, ExifTag::GPS_DEST_BEARING, 'T', 720.0,
+            ExifTag::GPS_DEST_BEARING_REF, ExifTag::GPS_DEST_BEARING, 'T', 720.0, 'dest_bearing', 0.0,
         ];
     }
 
@@ -804,56 +806,65 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
-     * Rejects GPS coordinate ref/value pairs that appear without their counterpart.
+     * Tolerates GPS coordinate ref/value pairs that appear without their counterpart.
      *
-     * @param array<int, IfdEntry> $entries IFD entries to parse.
+     * @param array<int, IfdEntry> $entries    IFD entries to parse.
+     * @param string               $coordKey   Key to check in result.
+     * @param string               $refKey     Reference key to check in result.
      */
     #[Test]
     #[DataProvider('provideCoordinateRefValueMismatches')]
-    public function rejectsCoordinateRefValueMismatch(array $entries): void
+    public function toleratesCoordinateRefValueMismatch(array $entries, string $coordKey, string $refKey): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1472);
-        $this->expectExceptionMessage('without matching');
+        $result = $this->converter->fromIfd(new Ifd($entries));
 
-        $this->converter->fromIfd(new Ifd($entries));
+        self::assertNull($result[$coordKey]);
+        self::assertNull($result[$refKey]);
     }
 
     /**
-     * @return iterable<string, array{0: array<int, IfdEntry>}>
+     * @return iterable<string, array{0: array<int, IfdEntry>, 1: string, 2: string}>
      */
     public static function provideCoordinateRefValueMismatches(): iterable
     {
         yield 'latitude value without ref' => [
             [ExifTag::GPS_LATITUDE => new IfdEntry(ExifTag::GPS_LATITUDE, 10, 3, [[45, 1], [30, 1], [0, 1]])],
+            'lat', 'lat_ref',
         ];
 
         yield 'longitude value without ref' => [
             [ExifTag::GPS_LONGITUDE => new IfdEntry(ExifTag::GPS_LONGITUDE, 10, 3, [[45, 1], [30, 1], [0, 1]])],
+            'lon', 'lon_ref',
         ];
 
         yield 'dest latitude value without ref' => [
             [ExifTag::GPS_DEST_LATITUDE => new IfdEntry(ExifTag::GPS_DEST_LATITUDE, 10, 3, [[45, 1], [30, 1], [0, 1]])],
+            'dest_lat', 'dest_lat_ref',
         ];
 
         yield 'dest longitude value without ref' => [
             [ExifTag::GPS_DEST_LONGITUDE => new IfdEntry(ExifTag::GPS_DEST_LONGITUDE, 10, 3, [[45, 1], [30, 1], [0, 1]])],
+            'dest_lon', 'dest_lon_ref',
         ];
 
         yield 'latitude ref without value' => [
             [ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N')],
+            'lat', 'lat_ref',
         ];
 
         yield 'longitude ref without value' => [
             [ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'E')],
+            'lon', 'lon_ref',
         ];
 
         yield 'dest latitude ref without value' => [
             [ExifTag::GPS_DEST_LATITUDE_REF => new IfdEntry(ExifTag::GPS_DEST_LATITUDE_REF, 2, 2, 'S')],
+            'dest_lat', 'dest_lat_ref',
         ];
 
         yield 'dest longitude ref without value' => [
             [ExifTag::GPS_DEST_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_DEST_LONGITUDE_REF, 2, 2, 'W')],
+            'dest_lon', 'dest_lon_ref',
         ];
     }
 

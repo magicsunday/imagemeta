@@ -68,28 +68,24 @@ final class GpsDirectionConverterTest extends TestCase
     }
 
     /**
-     * Verifies that out-of-range bearings throw a ParseError with code 1460.
+     * Tolerates out-of-range bearings by normalizing via modular arithmetic.
      */
     #[Test]
-    #[DataProvider('provideInvalidBearings')]
-    public function rejectsInvalidBearings(int|float $input): void
+    #[DataProvider('provideOutOfRangeBearings')]
+    public function toleratesOutOfRangeBearings(int|float $input, float $expected): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1460);
-        $this->expectExceptionMessage('outside the valid range');
-
-        $this->converter->normalizeBearing($input);
+        self::assertEqualsWithDelta($expected, $this->converter->normalizeBearing($input), 0.000001);
     }
 
     /**
-     * @return iterable<string, array{0: int|float}>
+     * @return iterable<string, array{0: int|float, 1: float}>
      */
-    public static function provideInvalidBearings(): iterable
+    public static function provideOutOfRangeBearings(): iterable
     {
-        yield 'just below zero' => [-0.1];
-        yield 'exactly 360' => [360.0];
-        yield 'above 360' => [361.0];
-        yield 'negative integer' => [-1.0];
+        yield 'just below zero' => [-0.1, 359.9];
+        yield 'exactly 360' => [360.0, 0.0];
+        yield 'above 360' => [361.0, 1.0];
+        yield 'negative integer' => [-1.0, 359.0];
     }
 
     /**

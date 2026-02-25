@@ -130,39 +130,41 @@ final class GpsCoordinateConverterTest extends TestCase
     }
 
     /**
-     * Rejects DMS triplets where minutes are >= 60.
+     * Tolerates DMS triplets where minutes are >= 60 by carrying over into degrees.
      */
     #[Test]
-    public function rejectsMinutesAtOrAbove60(): void
+    public function toleratesMinutesAtOrAbove60(): void
     {
+        // 12° 75' 0" → carry: 13° 15' 0" = 13.25
         $val = new ExifRationalList([
             new ExifRational(12, 1),
-            new ExifRational(60, 1),
+            new ExifRational(75, 1),
             new ExifRational(0, 1),
         ]);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1470);
+        $result = $this->converter->dmsToFloat('N', $val);
 
-        $this->converter->dmsToFloat('N', $val);
+        self::assertNotNull($result);
+        self::assertEqualsWithDelta(13.25, $result, 0.000001);
     }
 
     /**
-     * Rejects DMS triplets where seconds are >= 60.
+     * Tolerates DMS triplets where seconds are >= 60 by carrying over into minutes.
      */
     #[Test]
-    public function rejectsSecondsAtOrAbove60(): void
+    public function toleratesSecondsAtOrAbove60(): void
     {
+        // 12° 30' 75" → carry: 12° 31' 15" = 12 + 31/60 + 15/3600 = 12.520833...
         $val = new ExifRationalList([
             new ExifRational(12, 1),
             new ExifRational(30, 1),
-            new ExifRational(60, 1),
+            new ExifRational(75, 1),
         ]);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1470);
+        $result = $this->converter->dmsToFloat('E', $val);
 
-        $this->converter->dmsToFloat('E', $val);
+        self::assertNotNull($result);
+        self::assertEqualsWithDelta(12.520833, $result, 0.000001);
     }
 
     /**
