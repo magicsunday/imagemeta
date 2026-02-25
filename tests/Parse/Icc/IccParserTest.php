@@ -1463,6 +1463,38 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Rejects an ICC profile whose tag table count would overflow when multiplied by entry size.
+     * A tag count of 0xFFFFFFFF (max uint32) times the 12-byte entry size wraps around on
+     * 32-bit PHP, producing a falsely small table-end offset that bypasses bounds checking.
+     */
+    #[Test]
+    public function rejectsTagCountThatOverflowsWhenMultipliedByEntrySize(): void
+    {
+        $header = str_pad(
+            pack('N', 0)               // Profile size (placeholder, patched below)
+                . str_repeat("\0", 4)  // Preferred CMM type
+                . pack('N', 0x02400000) // Version 2.4.0
+                . str_repeat("\0", 4)  // Device class
+                . 'RGB '               // Color space
+                . 'XYZ '              // PCS
+                . str_repeat("\0", 12) // Date/time
+                . 'acsp'              // Profile signature
+                . str_repeat("\0", 52), // Remaining header fields
+            128,
+            "\0",
+        );
+
+        // Inject 0xFFFFFFFF as tag count: multiplying by 12 overflows on 32-bit PHP
+        $profile = $header . pack('N', 0xFFFFFFFF);
+        $profile = pack('N', strlen($profile)) . substr($profile, 4);
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
+    }
+
+    /**
      * Rejects combined ICC segments whose cumulative size exceeds the configured limit.
      */
     #[Test]
