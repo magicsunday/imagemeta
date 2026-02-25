@@ -288,18 +288,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             $defaultByte = ord($body[$cursor + 4]);
             $cursor += 5;
 
-            [$name, $cursor] = $this->parseName($body, $cursor, $offset, $index);
-
-            if ($name[0] !== '/') {
-                throw new ParseError(
-                    sprintf(
-                        'FlashPix contents entry %d at offset %d has invalid name prefix',
-                        $index,
-                        $offset,
-                    ),
-                    1309,
-                );
-            }
+            [, $cursor] = $this->parseName($body, $cursor, $offset, $index);
 
             $isStorage = $entitySize === self::FLASHPIX_STORAGE_ENTITY_SIZE;
             if (!$isStorage && $entitySize > $this->maxStreamSize) {
@@ -376,26 +365,12 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
         }
 
         if ($nameBytes === '') {
-            throw new ParseError(
-                sprintf(
-                    'FlashPix contents entry %d at offset %d has empty name',
-                    $index,
-                    $offset,
-                ),
-                1314,
-            );
+            return ['', $cursor];
         }
 
         $decoded = iconv('UTF-16LE', 'UTF-8', $nameBytes);
         if ($decoded === false) {
-            throw new ParseError(
-                sprintf(
-                    'FlashPix contents entry %d at offset %d has invalid UTF-16LE name',
-                    $index,
-                    $offset,
-                ),
-                1315,
-            );
+            return ['', $cursor];
         }
 
         return [$decoded, $cursor];
