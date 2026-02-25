@@ -321,7 +321,9 @@ final readonly class DngValueNormalizer
      */
     private function decodeCountedComponents(int $tag, int $type, string $rawBytes, int $count): array
     {
-        $componentSize   = $this->decoder->bytesPerComponent($type);
+        $componentSize = $this->decoder->bytesPerComponent($type);
+        assert($componentSize !== null);
+
         $expectedLength  = $this->decoder->safeValueByteCount($componentSize, $count);
         $availableLength = strlen($rawBytes);
 

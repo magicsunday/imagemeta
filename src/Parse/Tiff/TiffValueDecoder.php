@@ -97,7 +97,9 @@ final readonly class TiffValueDecoder
      */
     public function valueBytes(int $type, int $count, int|UInt64|string $valueOrOffset, ?string $inlineBytes = null): array
     {
-        $unitSize        = $this->bytesPerComponent($type);
+        $unitSize = $this->bytesPerComponent($type);
+        assert($unitSize !== null);
+
         $dataSize        = $this->safeValueByteCount($unitSize, $count);
         $inlineThreshold = 4;
 
@@ -136,6 +138,8 @@ final readonly class TiffValueDecoder
     public function decodeBytes(int $tag, int $type, int $count, string $bytes): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
     {
         $componentSize = $this->bytesPerComponent($type);
+        assert($componentSize !== null);
+
         $bytesLength   = strlen($bytes);
         $expectedBytes = $this->safeValueByteCount($componentSize, $count);
 
@@ -237,7 +241,7 @@ final readonly class TiffValueDecoder
      *
      * @param int $type TIFF field type code.
      */
-    public function bytesPerComponent(int $type): int
+    public function bytesPerComponent(int $type): ?int
     {
         return match ($type) {
             TiffConst::TYPE_BYTE, TiffConst::TYPE_ASCII, TiffConst::TYPE_SBYTE, TiffConst::TYPE_UNDEFINED => 1,
@@ -245,7 +249,7 @@ final readonly class TiffValueDecoder
             TiffConst::TYPE_LONG, TiffConst::TYPE_IFD, TiffConst::TYPE_SLONG, TiffConst::TYPE_FLOAT => 4,
             TiffConst::TYPE_RATIONAL, TiffConst::TYPE_SRATIONAL, TiffConst::TYPE_DOUBLE,
             TiffConst::TYPE_LONG8, TiffConst::TYPE_SLONG8, TiffConst::TYPE_IFD8 => 8,
-            default => throw new ParseError('Unsupported TIFF type: ' . $type, 1338),
+            default => null,
         };
     }
 

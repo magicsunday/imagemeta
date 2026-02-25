@@ -446,6 +446,10 @@ final class TiffExifParser implements TiffExifParserInterface
                 continue;
             }
 
+            if (!$entry instanceof IfdEntry) {
+                continue;
+            }
+
             $validated                = $this->ifdParser?->validateEntry($entries, $entry) ?? $entry;
             $entries[$validated->tag] = $validated;
         }
@@ -474,19 +478,21 @@ final class TiffExifParser implements TiffExifParserInterface
      * EXIF 3.0 §4.5.2 defines the tag, type, count, and value/offset fields mirrored
      * by this reader, aligning with the TIFF 6.0 §8 directory entry layout.
      */
-    private function readDirEntry(): IfdEntry
+    private function readDirEntry(): ?IfdEntry
     {
         $tag  = $this->binaryReader->readU16();
         $type = $this->binaryReader->readU16();
+
+        $cnt = $this->bigTiff ? $this->binaryReader->readU64()->toInt('directory entry value count') : $this->binaryReader->readU32();
 
         if (
             !$this->bigTiff
             && in_array($type, [TiffConst::TYPE_LONG8, TiffConst::TYPE_SLONG8, TiffConst::TYPE_IFD8], true)
         ) {
-            throw new ParseError('BigTIFF-only field type ' . $type . ' in classic TIFF', 1309);
-        }
+            $this->binaryReader->readValueOrOffset(0);
 
-        $cnt = $this->bigTiff ? $this->binaryReader->readU64()->toInt('directory entry value count') : $this->binaryReader->readU32();
+            return null;
+        }
 
         $this->tagValidator->validateFixedLengthTagLayout($tag, $type, $cnt);
         $this->tagValidator->validateTypeOnlyTagLayout($tag, $type);
@@ -495,7 +501,14 @@ final class TiffExifParser implements TiffExifParserInterface
         // field) the raw bytes are returned directly to avoid endianness-dependent
         // reinterpretation (TIFF 6.0 §2, EXIF 3.0 §4.5.2).
         $componentSize = $this->decoder->bytesPerComponent($type);
-        $valueBytes    = $this->decoder->safeValueByteCount($componentSize, $cnt);
+
+        if ($componentSize === null) {
+            $this->binaryReader->readValueOrOffset(0);
+
+            return null;
+        }
+
+        $valueBytes = $this->decoder->safeValueByteCount($componentSize, $cnt);
 
         [$valOrOff, $inlineBytes] = $this->binaryReader->readValueOrOffset($valueBytes);
 
