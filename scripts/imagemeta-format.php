@@ -26,6 +26,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Icc\IccTag;
+use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
@@ -626,6 +627,12 @@ final class MetadataFormatter
         // IFD1 section (thumbnail metadata)
         if ($metadata->exifDoc instanceof ParsedExif && $metadata->exifDoc->ifd1 instanceof Ifd) {
             $this->printIfd1Section($metadata->exifDoc->ifd1);
+        }
+
+        // IPTC section
+        $iptcDoc = $metadata->iptcDoc ?? $metadata->selectiveIptcDocument();
+        if ($iptcDoc instanceof IptcDocument && $iptcDoc->datasets !== []) {
+            $this->printIptcSection($iptcDoc);
         }
 
         // XMP sections
@@ -1807,6 +1814,56 @@ final class MetadataFormatter
 
         if ($data !== []) {
             $this->printSection('IFD1', $data, showHex: true);
+        }
+    }
+
+    /**
+     * Prints the IPTC IIM section with Application Record datasets.
+     *
+     * IPTC IIM (Information Interchange Model) datasets from APP13 are displayed
+     * with human-readable labels matching the IPTC standard field names.
+     * Multi-valued datasets (e.g., Keywords) are joined with semicolons.
+     */
+    private function printIptcSection(IptcDocument $iptcDoc): void
+    {
+        /** @var array<int, array{label: string, multi: bool}> $fields */
+        $fields = [
+            5   => ['label' => 'Object Name',       'multi' => false],
+            25  => ['label' => 'Keywords',           'multi' => true],
+            55  => ['label' => 'Date Created',       'multi' => false],
+            60  => ['label' => 'Time Created',       'multi' => false],
+            80  => ['label' => 'By-line',            'multi' => false],
+            85  => ['label' => 'By-line Title',      'multi' => false],
+            90  => ['label' => 'City',               'multi' => false],
+            95  => ['label' => 'Province-State',     'multi' => false],
+            101 => ['label' => 'Country-Primary Location Name', 'multi' => false],
+            105 => ['label' => 'Headline',           'multi' => false],
+            110 => ['label' => 'Credit',             'multi' => false],
+            115 => ['label' => 'Source',             'multi' => false],
+            116 => ['label' => 'Copyright Notice',   'multi' => false],
+            120 => ['label' => 'Caption-Abstract',   'multi' => false],
+        ];
+
+        $data = [];
+
+        foreach ($fields as $dataset => $meta) {
+            if (!$iptcDoc->has(2, $dataset)) {
+                continue;
+            }
+
+            if ($meta['multi']) {
+                $values             = $iptcDoc->values(2, $dataset);
+                $data[$meta['label']] = implode('; ', $values);
+            } else {
+                $first = $iptcDoc->first(2, $dataset);
+                if ($first !== null) {
+                    $data[$meta['label']] = $first;
+                }
+            }
+        }
+
+        if ($data !== []) {
+            $this->printSection('IPTC', $data);
         }
     }
 

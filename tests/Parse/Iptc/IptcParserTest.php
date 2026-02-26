@@ -260,6 +260,48 @@ final class IptcParserTest extends TestCase
     }
 
     /**
+     * Parses all IPTC Application Record datasets used by the format script output.
+     * This confirms that record 2 datasets round-trip through the parser with correct keys.
+     */
+    #[Test]
+    public function parsesAllApplicationRecordDatasetsUsedByFormatScript(): void
+    {
+        $iimData = $this->iimDataset(2, 5, 'Test Object')
+            . $this->iimDataset(2, 25, 'keyword-a')
+            . $this->iimDataset(2, 25, 'keyword-b')
+            . $this->iimDataset(2, 55, '20240315')
+            . $this->iimDataset(2, 60, '143025+0100')
+            . $this->iimDataset(2, 80, 'John Doe')
+            . $this->iimDataset(2, 85, 'Photographer')
+            . $this->iimDataset(2, 90, 'Berlin')
+            . $this->iimDataset(2, 95, 'Brandenburg')
+            . $this->iimDataset(2, 101, 'Germany')
+            . $this->iimDataset(2, 105, 'A test headline')
+            . $this->iimDataset(2, 110, 'Photo Agency')
+            . $this->iimDataset(2, 115, 'Archive')
+            . $this->iimDataset(2, 116, '(c) 2024 John Doe')
+            . $this->iimDataset(2, 120, 'A detailed caption');
+
+        $payload  = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
+        $document = (new IptcParser())->parse($payload);
+
+        self::assertSame('Test Object', $document->first(2, 5));
+        self::assertSame(['keyword-a', 'keyword-b'], $document->values(2, 25));
+        self::assertSame('20240315', $document->first(2, 55));
+        self::assertSame('143025+0100', $document->first(2, 60));
+        self::assertSame('John Doe', $document->first(2, 80));
+        self::assertSame('Photographer', $document->first(2, 85));
+        self::assertSame('Berlin', $document->first(2, 90));
+        self::assertSame('Brandenburg', $document->first(2, 95));
+        self::assertSame('Germany', $document->first(2, 101));
+        self::assertSame('A test headline', $document->first(2, 105));
+        self::assertSame('Photo Agency', $document->first(2, 110));
+        self::assertSame('Archive', $document->first(2, 115));
+        self::assertSame('(c) 2024 John Doe', $document->first(2, 116));
+        self::assertSame('A detailed caption', $document->first(2, 120));
+    }
+
+    /**
      * Truncates the Photoshop resource block to simulate corruption.
      * This asserts a BoundsError is thrown when the block length is inconsistent.
      */
