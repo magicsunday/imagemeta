@@ -54,6 +54,9 @@ final class IptcParser implements IptcParserInterface
      * Parses the supplied APP13 payload and returns the decoded IPTC datasets.
      *
      * @param string $payload Raw APP13 payload including the Photoshop signature.
+     *
+     * @throws ParseError
+     * @throws BoundsError
      */
     public function parse(string $payload): IptcDocument
     {

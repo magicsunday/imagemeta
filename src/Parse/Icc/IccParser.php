@@ -87,6 +87,8 @@ final readonly class IccParser implements IccParserInterface
      *     profileCreator: string|null,
      *     illuminant: array{x: float, y: float, z: float}|null,
      * }|null
+     *
+     * @throws ParseError
      */
     public function decode(?string $profileData, array $segments = []): ?array
     {

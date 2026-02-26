@@ -15,6 +15,7 @@ use finfo;
 use MagicSunday\ImageMeta\Contract\IptcParserInterface;
 use MagicSunday\ImageMeta\Contract\TiffExifParserInterface;
 use MagicSunday\ImageMeta\Contract\XmpParserInterface;
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
@@ -100,6 +101,9 @@ final readonly class MetadataReader
      * @param string $path        Path to the image or media file being inspected.
      * @param bool   $withDigests When true the SHA-1 and MD5 digests are calculated as part of the
      *                            returned metadata aggregate.
+     *
+     * @throws ParseError
+     * @throws BoundsError
      */
     public function read(string $path, bool $withDigests = false): Metadata
     {

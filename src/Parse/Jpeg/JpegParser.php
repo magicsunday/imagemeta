@@ -405,6 +405,11 @@ final class JpegParser implements JpegParserInterface
 
     /**
      * Creates the default APP marker-handler strategy registry.
+     *
+     * ICC.1:2022 §B.4 defines the APP2 embedding mechanism for ICC profiles; the profile is
+     * split into sequenced chunks reassembled after the marker scan completes. Adobe Photoshop
+     * TIFF Technical Notes (March 2002) specify the APP13 "Photoshop 3.0" / 8BIM resource
+     * block format used to carry IPTC-IIM data (resource ID 0x0404).
      */
     private function createDefaultMarkerHandlerRegistry(): MarkerHandlerRegistry
     {
