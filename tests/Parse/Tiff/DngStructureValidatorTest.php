@@ -31,7 +31,6 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
-use function pack;
 use function str_repeat;
 
 /**
@@ -63,8 +62,8 @@ final class DngStructureValidatorTest extends TestCase
     public function acceptsDngWithOrientation(): void
     {
         $ifd = new Ifd([
-            DngTag::DNG_VERSION    => new IfdEntry(DngTag::DNG_VERSION, TiffConst::TYPE_BYTE, 4, new ExifNumericList([1, 7, 1, 0])),
-            ExifTag::ORIENTATION   => new IfdEntry(ExifTag::ORIENTATION, TiffConst::TYPE_SHORT, 1, 1),
+            DngTag::DNG_VERSION         => new IfdEntry(DngTag::DNG_VERSION, TiffConst::TYPE_BYTE, 4, new ExifNumericList([1, 7, 1, 0])),
+            ExifTag::ORIENTATION        => new IfdEntry(ExifTag::ORIENTATION, TiffConst::TYPE_SHORT, 1, 1),
             DngTag::UNIQUE_CAMERA_MODEL => new IfdEntry(DngTag::UNIQUE_CAMERA_MODEL, TiffConst::TYPE_ASCII, 5, 'Test'),
         ]);
 
@@ -120,8 +119,8 @@ final class DngStructureValidatorTest extends TestCase
     public function acceptsDepthMapIfdWithCorrectPhotometric(): void
     {
         $ifd = new Ifd([
-            TiffTag::NEW_SUBFILE_TYPE              => new IfdEntry(TiffTag::NEW_SUBFILE_TYPE, TiffConst::TYPE_LONG, 1, 8),
-            ExifTag::PHOTOMETRIC_INTERPRETATION    => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, TiffConst::TYPE_SHORT, 1, 51177),
+            TiffTag::NEW_SUBFILE_TYPE           => new IfdEntry(TiffTag::NEW_SUBFILE_TYPE, TiffConst::TYPE_LONG, 1, 8),
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, TiffConst::TYPE_SHORT, 1, 51177),
         ]);
 
         $this->validator->validateDngRolePhotometric($ifd);
@@ -177,8 +176,8 @@ final class DngStructureValidatorTest extends TestCase
     public function acceptsJxlTagsWithJpegXlCompression(): void
     {
         $ifd = new Ifd([
-            ExifTag::COMPRESSION  => new IfdEntry(ExifTag::COMPRESSION, TiffConst::TYPE_SHORT, 1, Compression::JpegXl->value),
-            DngTag::JXL_EFFORT    => new IfdEntry(DngTag::JXL_EFFORT, TiffConst::TYPE_LONG, 1, 7),
+            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, TiffConst::TYPE_SHORT, 1, Compression::JpegXl->value),
+            DngTag::JXL_EFFORT   => new IfdEntry(DngTag::JXL_EFFORT, TiffConst::TYPE_LONG, 1, 7),
         ]);
 
         $this->validator->validateDngJxlTags($ifd);

@@ -59,7 +59,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     {
         $ifd = new Ifd([
             TiffTag::NEW_SUBFILE_TYPE => new IfdEntry(TiffTag::NEW_SUBFILE_TYPE, TiffConst::TYPE_LONG, 1, 16),
-            DngTag::ENHANCE_PARAMS   => new IfdEntry(DngTag::ENHANCE_PARAMS, TiffConst::TYPE_ASCII, 5, 'test'),
+            DngTag::ENHANCE_PARAMS    => new IfdEntry(DngTag::ENHANCE_PARAMS, TiffConst::TYPE_ASCII, 5, 'test'),
         ]);
 
         $this->validator->validateEnhancedIfd($ifd);
@@ -88,7 +88,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
 
         $ifd = new Ifd([
             TiffTag::NEW_SUBFILE_TYPE => new IfdEntry(TiffTag::NEW_SUBFILE_TYPE, TiffConst::TYPE_LONG, 1, 16),
-            DngTag::ENHANCE_PARAMS   => new IfdEntry(DngTag::ENHANCE_PARAMS, TiffConst::TYPE_ASCII, 1, "\0"),
+            DngTag::ENHANCE_PARAMS    => new IfdEntry(DngTag::ENHANCE_PARAMS, TiffConst::TYPE_ASCII, 1, "\0"),
         ]);
 
         $this->validator->validateEnhancedIfd($ifd);

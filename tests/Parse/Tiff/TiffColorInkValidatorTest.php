@@ -72,7 +72,7 @@ final class TiffColorInkValidatorTest extends TestCase
         $ifd = new Ifd([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, TiffConst::TYPE_SHORT, 1, 5),
             TiffTag::INK_SET                    => new IfdEntry(TiffTag::INK_SET, TiffConst::TYPE_SHORT, 1, 1),
-            TiffTag::INK_NAMES                  => new IfdEntry(TiffTag::INK_NAMES, TiffConst::TYPE_ASCII, 5, "Cyan"),
+            TiffTag::INK_NAMES                  => new IfdEntry(TiffTag::INK_NAMES, TiffConst::TYPE_ASCII, 5, 'Cyan'),
         ]);
 
         $this->validator->validateSeparatedImageInkTags($ifd);

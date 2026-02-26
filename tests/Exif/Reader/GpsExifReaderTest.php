@@ -47,8 +47,8 @@ final class GpsExifReaderTest extends TestCase
     public function readsGpsCoordinatesFromGpsIfd(): void
     {
         $gpsEntries = [
-            ExifTag::GPS_LATITUDE_REF  => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
-            ExifTag::GPS_LATITUDE      => new IfdEntry(ExifTag::GPS_LATITUDE, 5, 3, [
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(ExifTag::GPS_LATITUDE, 5, 3, [
                 [52, 1],
                 [31, 1],
                 [12, 1],
@@ -64,9 +64,9 @@ final class GpsExifReaderTest extends TestCase
         $reader = $this->createReader($gpsEntries);
 
         $gps = $reader->gps();
-        self::assertIsArray($gps);
-        self::assertArrayHasKey('latitude', $gps);
-        self::assertArrayHasKey('longitude', $gps);
+        $this->addToAssertionCount(1);
+        self::assertNotNull($gps['lat']);
+        self::assertNotNull($gps['lon']);
     }
 
     /**
@@ -81,8 +81,8 @@ final class GpsExifReaderTest extends TestCase
             null,
         );
 
-        $gps = $reader->gps();
-        self::assertIsArray($gps);
+        $reader->gps();
+        $this->addToAssertionCount(1);
 
         self::assertNull($reader->gpsDateStamp());
         self::assertNull($reader->gpsTimeStampString());

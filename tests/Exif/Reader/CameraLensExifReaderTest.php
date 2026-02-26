@@ -53,9 +53,9 @@ final class CameraLensExifReaderTest extends TestCase
         ];
 
         $exifEntries = [
-            ExifTag::LENS_MODEL        => new IfdEntry(ExifTag::LENS_MODEL, 2, 1, 'RF 24-70mm F2.8L'),
-            ExifTag::LENS_MAKE         => new IfdEntry(ExifTag::LENS_MAKE, 2, 1, 'Canon'),
-            ExifTag::CAMERA_OWNER_NAME => new IfdEntry(ExifTag::CAMERA_OWNER_NAME, 2, 1, 'John Doe'),
+            ExifTag::LENS_MODEL         => new IfdEntry(ExifTag::LENS_MODEL, 2, 1, 'RF 24-70mm F2.8L'),
+            ExifTag::LENS_MAKE          => new IfdEntry(ExifTag::LENS_MAKE, 2, 1, 'Canon'),
+            ExifTag::CAMERA_OWNER_NAME  => new IfdEntry(ExifTag::CAMERA_OWNER_NAME, 2, 1, 'John Doe'),
             ExifTag::BODY_SERIAL_NUMBER => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, 'SN12345'),
             ExifTag::LENS_SERIAL_NUMBER => new IfdEntry(ExifTag::LENS_SERIAL_NUMBER, 2, 1, 'LS67890'),
             ExifTag::LENS_SPECIFICATION => new IfdEntry(ExifTag::LENS_SPECIFICATION, 5, 4, [
@@ -77,6 +77,7 @@ final class CameraLensExifReaderTest extends TestCase
         self::assertSame('LS67890', $reader->lensSerialNumber());
 
         $spec = $reader->lensSpecification();
+        self::assertNotNull($spec);
         self::assertSame(24.0, $spec[0]);
         self::assertSame(70.0, $spec[1]);
         self::assertSame(2.8, $spec[2]);

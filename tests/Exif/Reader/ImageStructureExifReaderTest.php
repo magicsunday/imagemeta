@@ -105,7 +105,7 @@ final class ImageStructureExifReaderTest extends TestCase
         $reader = $this->createReader([], []);
 
         self::assertSame(Orientation::TopLeft, $reader->orientation());
-        self::assertSame('Normal', $reader->orientationDescription());
+        self::assertSame('Horizontal (normal)', $reader->orientationDescription());
     }
 
     /**

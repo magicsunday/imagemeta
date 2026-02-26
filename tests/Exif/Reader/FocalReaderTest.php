@@ -64,8 +64,8 @@ final class FocalReaderTest extends TestCase
     public function readsFocalPlaneResolution(): void
     {
         $exifEntries = [
-            ExifTag::FOCAL_PLANE_X_RESOLUTION  => new IfdEntry(ExifTag::FOCAL_PLANE_X_RESOLUTION, 5, 1, [8000, 1]),
-            ExifTag::FOCAL_PLANE_Y_RESOLUTION  => new IfdEntry(ExifTag::FOCAL_PLANE_Y_RESOLUTION, 5, 1, [8000, 1]),
+            ExifTag::FOCAL_PLANE_X_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_X_RESOLUTION, 5, 1, [8000, 1]),
+            ExifTag::FOCAL_PLANE_Y_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_Y_RESOLUTION, 5, 1, [8000, 1]),
             ExifTag::FOCAL_PLANE_RESOLUTION_UNIT => new IfdEntry(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 3, 1, 3),
         ];
 
@@ -99,19 +99,19 @@ final class FocalReaderTest extends TestCase
     }
 
     /**
-     * Supplies a FileSource tag with integer value 1 (film scanner).
+     * Supplies a FileSource tag with integer value 1 (transparency scanner).
      * Verifies the enum is resolved correctly.
      */
     #[Test]
     public function readsFileSourceFromExifIfd(): void
     {
         $exifEntries = [
-            ExifTag::FILE_SOURCE => new IfdEntry(ExifTag::FILE_SOURCE, 7, 1, FileSource::FilmScanner->value),
+            ExifTag::FILE_SOURCE => new IfdEntry(ExifTag::FILE_SOURCE, 7, 1, FileSource::TransparencyScanner->value),
         ];
 
         $reader = $this->createReader($exifEntries, []);
 
-        self::assertSame(FileSource::FilmScanner, $reader->fileSource());
+        self::assertSame(FileSource::TransparencyScanner, $reader->fileSource());
     }
 
     /**

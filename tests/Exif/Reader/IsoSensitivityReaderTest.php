@@ -82,8 +82,8 @@ final class IsoSensitivityReaderTest extends TestCase
     public function readsIsoSpeedAndSpectralSensitivity(): void
     {
         $exifEntries = [
-            ExifTag::ISO_SPEED              => new IfdEntry(ExifTag::ISO_SPEED, 4, 1, 800),
-            ExifTag::SPECTRAL_SENSITIVITY   => new IfdEntry(ExifTag::SPECTRAL_SENSITIVITY, 2, 1, '400-700nm'),
+            ExifTag::ISO_SPEED            => new IfdEntry(ExifTag::ISO_SPEED, 4, 1, 800),
+            ExifTag::SPECTRAL_SENSITIVITY => new IfdEntry(ExifTag::SPECTRAL_SENSITIVITY, 2, 1, '400-700nm'),
         ];
 
         $reader = $this->createReader([], $exifEntries);

@@ -170,9 +170,9 @@ final class TiffJpegValidatorTest extends TestCase
     public function acceptsLosslessPredictorsWithJpegProc14(): void
     {
         $ifd = new Ifd([
-            TiffTag::JPEG_PROC                  => new IfdEntry(TiffTag::JPEG_PROC, TiffConst::TYPE_SHORT, 1, 14),
-            TiffTag::JPEG_LOSSLESS_PREDICTORS   => new IfdEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, TiffConst::TYPE_SHORT, 1, 1),
-            ExifTag::COMPRESSION                => new IfdEntry(ExifTag::COMPRESSION, TiffConst::TYPE_SHORT, 1, Compression::Jpeg->value),
+            TiffTag::JPEG_PROC                => new IfdEntry(TiffTag::JPEG_PROC, TiffConst::TYPE_SHORT, 1, 14),
+            TiffTag::JPEG_LOSSLESS_PREDICTORS => new IfdEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, TiffConst::TYPE_SHORT, 1, 1),
+            ExifTag::COMPRESSION              => new IfdEntry(ExifTag::COMPRESSION, TiffConst::TYPE_SHORT, 1, Compression::Jpeg->value),
         ]);
 
         $this->validator->validateJpegLosslessTags($ifd);

@@ -209,7 +209,7 @@ final class TiffSampleValidatorTest extends TestCase
     public function acceptsValidHalftoneHints(): void
     {
         $ifd = new Ifd([
-            TiffTag::HALFTONE_HINTS => new IfdEntry(TiffTag::HALFTONE_HINTS, TiffConst::TYPE_SHORT, 2, new ExifNumericList([10, 200])),
+            TiffTag::HALFTONE_HINTS  => new IfdEntry(TiffTag::HALFTONE_HINTS, TiffConst::TYPE_SHORT, 2, new ExifNumericList([10, 200])),
             ExifTag::BITS_PER_SAMPLE => new IfdEntry(ExifTag::BITS_PER_SAMPLE, TiffConst::TYPE_SHORT, 1, 8),
         ]);
 

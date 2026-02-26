@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
+use MagicSunday\ImageMeta\Parse\IsoBmff\AudioSampleEntryParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxPayloadCollection;
@@ -35,7 +36,6 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeMetadataDecoder;
 use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeValueDecoder;
 use MagicSunday\ImageMeta\Parse\IsoBmff\TrackMediaParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
-use MagicSunday\ImageMeta\Parse\IsoBmff\AudioSampleEntryParser;
 use MagicSunday\ImageMeta\Tests\Helpers\IsoBmffBoxTrait;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -110,8 +110,8 @@ final class BoxPayloadCollectorTest extends TestCase
         $stream    = new Stream($handle, strlen($data));
         $navigator = new BoxNavigator($stream);
 
-        $keyResolver  = new QuickTimeKeyResolver($navigator);
-        $ilocParser   = new IlocBoxParser($navigator);
+        $keyResolver     = new QuickTimeKeyResolver($navigator);
+        $ilocParser      = new IlocBoxParser($navigator);
         $payloadResolver = new ItemPayloadResolver($stream, $navigator, 1_048_576);
 
         $valueDecoder = new QuickTimeValueDecoder(
@@ -177,8 +177,8 @@ final class BoxPayloadCollectorTest extends TestCase
         $metaData    = $this->box('meta', $metaPayload);
 
         [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox    = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collection = $collector->collect($metaBox, false);
+        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
+        $collection              = $collector->collect($metaBox, false);
 
         self::assertSame(["MM\x00\x2Atest-exif"], $collection->directExif);
         self::assertSame([], $collection->directXmp);
@@ -198,8 +198,8 @@ final class BoxPayloadCollectorTest extends TestCase
         $metaData    = $this->box('meta', $metaPayload);
 
         [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox    = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collection = $collector->collect($metaBox, false);
+        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
+        $collection              = $collector->collect($metaBox, false);
 
         self::assertSame([$xmpData], $collection->directXmp);
         self::assertSame([], $collection->directExif);
@@ -219,8 +219,8 @@ final class BoxPayloadCollectorTest extends TestCase
         $metaData    = $this->box('meta', $metaPayload);
 
         [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox    = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collection = $collector->collect($metaBox, false);
+        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
+        $collection              = $collector->collect($metaBox, false);
 
         self::assertSame('binary-payload-data', $collection->idatPayload);
     }
@@ -254,8 +254,8 @@ final class BoxPayloadCollectorTest extends TestCase
         $metaData    = $this->box('meta', $metaPayload);
 
         [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox    = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collection = $collector->collect($metaBox, false);
+        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
+        $collection              = $collector->collect($metaBox, false);
 
         self::assertSame(42, $collection->primaryItemId);
     }
@@ -280,7 +280,7 @@ final class BoxPayloadCollectorTest extends TestCase
         $metaData    = $this->box('meta', $metaPayload);
 
         [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox = $navigator->readBoxAt(0, strlen($metaData), true);
+        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
         $collector->collect($metaBox, false);
     }
 
@@ -300,7 +300,7 @@ final class BoxPayloadCollectorTest extends TestCase
         $metaData    = $this->box('meta', $metaPayload);
 
         [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox = $navigator->readBoxAt(0, strlen($metaData), true);
+        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
         $collector->collect($metaBox, false);
     }
 
@@ -321,7 +321,7 @@ final class BoxPayloadCollectorTest extends TestCase
         $metaData    = $this->box('meta', $metaPayload);
 
         [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox = $navigator->readBoxAt(0, strlen($metaData), true);
+        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
         $collector->collect($metaBox, false);
     }
 
@@ -340,7 +340,7 @@ final class BoxPayloadCollectorTest extends TestCase
         $metaData = $this->box('meta', $hdlrBox);
 
         [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox = $navigator->readBoxAt(0, strlen($metaData), true);
+        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
         $collector->collect($metaBox, false);
     }
 
@@ -357,8 +357,8 @@ final class BoxPayloadCollectorTest extends TestCase
         $metaData = $this->box('meta', $exifBox);
 
         [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox    = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collection = $collector->collect($metaBox, true);
+        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
+        $collection              = $collector->collect($metaBox, true);
 
         self::assertSame(["MM\x00\x2Aqt-exif"], $collection->directExif);
     }

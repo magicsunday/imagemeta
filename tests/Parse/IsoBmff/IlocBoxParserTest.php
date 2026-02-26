@@ -220,7 +220,7 @@ final class IlocBoxParserTest extends TestCase
         ]);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($payload);
-        $locations = $parser->parseIloc($descriptor);
+        $locations             = $parser->parseIloc($descriptor);
 
         self::assertArrayHasKey(1, $locations);
         self::assertSame(0, $locations[1]['dataReferenceIndex']);
@@ -257,7 +257,7 @@ final class IlocBoxParserTest extends TestCase
         ]);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($payload);
-        $locations = $parser->parseIloc($descriptor);
+        $locations             = $parser->parseIloc($descriptor);
 
         self::assertCount(2, $locations);
         self::assertArrayHasKey(1, $locations);
@@ -287,7 +287,7 @@ final class IlocBoxParserTest extends TestCase
         ]);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($payload);
-        $locations = $parser->parseIloc($descriptor);
+        $locations             = $parser->parseIloc($descriptor);
 
         self::assertArrayHasKey(5, $locations);
         self::assertSame(ConstructionMethod::IdatOffset, $locations[5]['constructionMethod']);
@@ -314,7 +314,7 @@ final class IlocBoxParserTest extends TestCase
         ]);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($payload);
-        $locations = $parser->parseIloc($descriptor);
+        $locations             = $parser->parseIloc($descriptor);
 
         self::assertArrayHasKey(70000, $locations);
         self::assertSame(ConstructionMethod::FileOffset, $locations[70000]['constructionMethod']);
@@ -336,7 +336,7 @@ final class IlocBoxParserTest extends TestCase
             . pack('n', 0);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($data);
-        $locations = $parser->parseIloc($descriptor);
+        $locations             = $parser->parseIloc($descriptor);
 
         self::assertSame([], $locations);
     }
@@ -353,7 +353,7 @@ final class IlocBoxParserTest extends TestCase
             . pack('n', 0);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($data);
-        $locations = $parser->parseIloc($descriptor);
+        $locations             = $parser->parseIloc($descriptor);
 
         self::assertSame([], $locations);
     }
@@ -463,7 +463,7 @@ final class IlocBoxParserTest extends TestCase
         $content = chr(0) . chr(0) . chr(0) . chr(0) . pack('n', 42);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($content);
-        $descriptor = new BoxDescriptor(
+        $descriptor            = new BoxDescriptor(
             type: 'pitm',
             size: 8 + strlen($content),
             offset: 0,
@@ -486,7 +486,7 @@ final class IlocBoxParserTest extends TestCase
         $content = chr(1) . chr(0) . chr(0) . chr(0) . pack('N', 100000);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($content);
-        $descriptor = new BoxDescriptor(
+        $descriptor            = new BoxDescriptor(
             type: 'pitm',
             size: 8 + strlen($content),
             offset: 0,
@@ -509,7 +509,7 @@ final class IlocBoxParserTest extends TestCase
         $content = chr(2) . chr(0) . chr(0) . chr(0) . pack('n', 1);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($content);
-        $descriptor = new BoxDescriptor(
+        $descriptor            = new BoxDescriptor(
             type: 'pitm',
             size: 8 + strlen($content),
             offset: 0,
@@ -535,7 +535,7 @@ final class IlocBoxParserTest extends TestCase
         $content = chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($content);
-        $descriptor = new BoxDescriptor(
+        $descriptor            = new BoxDescriptor(
             type: 'pitm',
             size: 8 + strlen($content),
             offset: 0,
@@ -573,7 +573,7 @@ final class IlocBoxParserTest extends TestCase
             . $infeBox;
 
         [$parser, $_] = $this->createParserWithDescriptor($iinfPayload);
-        $descriptor = new BoxDescriptor(
+        $descriptor   = new BoxDescriptor(
             type: 'iinf',
             size: 8 + strlen($iinfPayload),
             offset: 0,
@@ -608,7 +608,7 @@ final class IlocBoxParserTest extends TestCase
         $content = chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
 
         [$parser, $_] = $this->createParserWithDescriptor($content);
-        $descriptor = new BoxDescriptor(
+        $descriptor   = new BoxDescriptor(
             type: 'iinf',
             size: 8 + strlen($content),
             offset: 0,
@@ -633,7 +633,7 @@ final class IlocBoxParserTest extends TestCase
         $content = chr(2) . chr(0) . chr(0) . chr(0) . pack('n', 0);
 
         [$parser, $_] = $this->createParserWithDescriptor($content);
-        $descriptor = new BoxDescriptor(
+        $descriptor   = new BoxDescriptor(
             type: 'iinf',
             size: 8 + strlen($content),
             offset: 0,
@@ -664,7 +664,7 @@ final class IlocBoxParserTest extends TestCase
         $irefPayload = chr(0) . chr(0) . chr(0) . chr(0) . $entryBox;
 
         [$parser, $_] = $this->createParserWithDescriptor($irefPayload);
-        $descriptor = new BoxDescriptor(
+        $descriptor   = new BoxDescriptor(
             type: 'iref',
             size: 8 + strlen($irefPayload),
             offset: 0,
@@ -699,7 +699,7 @@ final class IlocBoxParserTest extends TestCase
         $content = chr(0) . chr(0) . chr(0);
 
         [$parser, $_] = $this->createParserWithDescriptor($content);
-        $descriptor = new BoxDescriptor(
+        $descriptor   = new BoxDescriptor(
             type: 'iref',
             size: 8 + strlen($content),
             offset: 0,
@@ -722,7 +722,7 @@ final class IlocBoxParserTest extends TestCase
         $content = chr(2) . chr(0) . chr(0) . chr(0);
 
         [$parser, $_] = $this->createParserWithDescriptor($content);
-        $descriptor = new BoxDescriptor(
+        $descriptor   = new BoxDescriptor(
             type: 'iref',
             size: 8 + strlen($content),
             offset: 0,
@@ -756,7 +756,7 @@ final class IlocBoxParserTest extends TestCase
         $dinfPayload = $drefBox;
 
         [$parser, $_] = $this->createParserWithDescriptor($dinfPayload);
-        $descriptor = new BoxDescriptor(
+        $descriptor   = new BoxDescriptor(
             type: 'dinf',
             size: 8 + strlen($dinfPayload),
             offset: 0,
@@ -791,7 +791,7 @@ final class IlocBoxParserTest extends TestCase
         $dinfPayload = $fakeChild;
 
         [$parser, $_] = $this->createParserWithDescriptor($dinfPayload);
-        $descriptor = new BoxDescriptor(
+        $descriptor   = new BoxDescriptor(
             type: 'dinf',
             size: 8 + strlen($dinfPayload),
             offset: 0,

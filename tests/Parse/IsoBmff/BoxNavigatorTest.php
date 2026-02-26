@@ -236,7 +236,7 @@ final class BoxNavigatorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('child offset outside container');
 
-        $child = $this->box('test', 'X');
+        $child                   = $this->box('test', 'X');
         [$navigator, $container] = $this->createNavigatorWithContainer($child);
 
         foreach ($navigator->walkChildren($container, -1) as $_) {
@@ -253,7 +253,7 @@ final class BoxNavigatorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('child offset outside container');
 
-        $child = $this->box('test', 'X');
+        $child                   = $this->box('test', 'X');
         [$navigator, $container] = $this->createNavigatorWithContainer($child);
 
         foreach ($navigator->walkChildren($container, $container->contentSize + 1) as $_) {
@@ -310,8 +310,8 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function readBoxAtReturnsCorrectDescriptor(): void
     {
-        $payload  = 'ABCDEF';
-        $boxBytes = $this->box('test', $payload);
+        $payload   = 'ABCDEF';
+        $boxBytes  = $this->box('test', $payload);
         $navigator = $this->createNavigator($boxBytes);
 
         $box = $navigator->readBoxAt(0, strlen($boxBytes));
@@ -330,9 +330,9 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function readBoxAtHandlesExtendedSize(): void
     {
-        $payload    = 'ABCDEF';
-        $totalSize  = 16 + strlen($payload);
-        $boxBytes   = pack('N', 1) . 'extd' . pack('N2', 0, $totalSize) . $payload;
+        $payload   = 'ABCDEF';
+        $totalSize = 16 + strlen($payload);
+        $boxBytes  = pack('N', 1) . 'extd' . pack('N2', 0, $totalSize) . $payload;
 
         $navigator = $this->createNavigator($boxBytes);
         $box       = $navigator->readBoxAt(0, strlen($boxBytes));
@@ -400,7 +400,7 @@ final class BoxNavigatorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('nested box size==0 is only valid at top level');
 
-        $boxBytes = pack('N', 0) . 'test' . 'PAYLOAD';
+        $boxBytes  = pack('N', 0) . 'testPAYLOAD';
         $navigator = $this->createNavigator($boxBytes);
         $navigator->readBoxAt(0, strlen($boxBytes), false);
     }
@@ -428,7 +428,7 @@ final class BoxNavigatorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('box test exceeds container bounds');
 
-        $boxBytes  = pack('N', 100) . 'test' . 'AB';
+        $boxBytes  = pack('N', 100) . 'testAB';
         $navigator = $this->createNavigator($boxBytes);
         $navigator->readBoxAt(0, strlen($boxBytes));
     }
@@ -443,7 +443,7 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function readUIntReads16BitValue(): void
     {
-        $data = pack('n', 0x1234);
+        $data                    = pack('n', 0x1234);
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
         $container->window->seek(0);
@@ -458,7 +458,7 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function readUIntReturnsZeroForZeroBytes(): void
     {
-        $data = 'X';
+        $data                    = 'X';
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
         $value = $navigator->readUInt($container->window, 0);
@@ -475,7 +475,7 @@ final class BoxNavigatorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('unsupported integer size 5');
 
-        $data = 'ABCDE';
+        $data                    = 'ABCDE';
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
         $container->window->seek(0);
@@ -561,7 +561,7 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function readAllReturnsEntirePayload(): void
     {
-        $data = 'HELLOWORLD';
+        $data                    = 'HELLOWORLD';
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
         $result = $navigator->readAll($container->window);

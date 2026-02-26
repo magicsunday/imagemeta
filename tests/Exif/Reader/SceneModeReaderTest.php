@@ -76,15 +76,15 @@ final class SceneModeReaderTest extends TestCase
     public function readsInCameraProcessingSettings(): void
     {
         $exifEntries = [
-            ExifTag::CONTRAST    => new IfdEntry(ExifTag::CONTRAST, 3, 1, Contrast::Hard->value),
-            ExifTag::SATURATION  => new IfdEntry(ExifTag::SATURATION, 3, 1, Saturation::HighSaturation->value),
-            ExifTag::SHARPNESS   => new IfdEntry(ExifTag::SHARPNESS, 3, 1, Sharpness::Hard->value),
+            ExifTag::CONTRAST   => new IfdEntry(ExifTag::CONTRAST, 3, 1, Contrast::Hard->value),
+            ExifTag::SATURATION => new IfdEntry(ExifTag::SATURATION, 3, 1, Saturation::High->value),
+            ExifTag::SHARPNESS  => new IfdEntry(ExifTag::SHARPNESS, 3, 1, Sharpness::Hard->value),
         ];
 
         $reader = $this->createReader($exifEntries);
 
         self::assertSame(Contrast::Hard, $reader->contrast());
-        self::assertSame(Saturation::HighSaturation, $reader->saturation());
+        self::assertSame(Saturation::High, $reader->saturation());
         self::assertSame(Sharpness::Hard, $reader->sharpness());
     }
 

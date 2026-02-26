@@ -23,7 +23,6 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
-use function chr;
 use function fopen;
 use function fwrite;
 use function pack;

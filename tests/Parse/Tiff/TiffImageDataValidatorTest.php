@@ -95,10 +95,10 @@ final class TiffImageDataValidatorTest extends TestCase
         $validator = new TiffImageDataValidator($support);
 
         $ifd = new Ifd([
-            ExifTag::IMAGE_WIDTH   => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 64),
-            ExifTag::IMAGE_LENGTH  => new IfdEntry(ExifTag::IMAGE_LENGTH, TiffConst::TYPE_SHORT, 1, 64),
+            ExifTag::IMAGE_WIDTH    => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 64),
+            ExifTag::IMAGE_LENGTH   => new IfdEntry(ExifTag::IMAGE_LENGTH, TiffConst::TYPE_SHORT, 1, 64),
             ExifTag::ROWS_PER_STRIP => new IfdEntry(ExifTag::ROWS_PER_STRIP, TiffConst::TYPE_SHORT, 1, 64),
-            ExifTag::STRIP_OFFSETS => new IfdEntry(ExifTag::STRIP_OFFSETS, TiffConst::TYPE_LONG, 2, new ExifNumericList([0, 100])),
+            ExifTag::STRIP_OFFSETS  => new IfdEntry(ExifTag::STRIP_OFFSETS, TiffConst::TYPE_LONG, 2, new ExifNumericList([0, 100])),
         ]);
 
         $validator->validateStripLayoutConsistency($ifd);
@@ -115,12 +115,12 @@ final class TiffImageDataValidatorTest extends TestCase
         $validator = new TiffImageDataValidator($support);
 
         $ifd = new Ifd([
-            ExifTag::IMAGE_WIDTH       => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 64),
-            ExifTag::IMAGE_LENGTH      => new IfdEntry(ExifTag::IMAGE_LENGTH, TiffConst::TYPE_SHORT, 1, 64),
-            TiffTag::TILE_WIDTH        => new IfdEntry(TiffTag::TILE_WIDTH, TiffConst::TYPE_LONG, 1, 64),
-            TiffTag::TILE_LENGTH       => new IfdEntry(TiffTag::TILE_LENGTH, TiffConst::TYPE_LONG, 1, 64),
-            TiffTag::TILE_OFFSETS      => new IfdEntry(TiffTag::TILE_OFFSETS, TiffConst::TYPE_LONG, 1, 0),
-            TiffTag::TILE_BYTE_COUNTS  => new IfdEntry(TiffTag::TILE_BYTE_COUNTS, TiffConst::TYPE_LONG, 1, 100),
+            ExifTag::IMAGE_WIDTH      => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 64),
+            ExifTag::IMAGE_LENGTH     => new IfdEntry(ExifTag::IMAGE_LENGTH, TiffConst::TYPE_SHORT, 1, 64),
+            TiffTag::TILE_WIDTH       => new IfdEntry(TiffTag::TILE_WIDTH, TiffConst::TYPE_LONG, 1, 64),
+            TiffTag::TILE_LENGTH      => new IfdEntry(TiffTag::TILE_LENGTH, TiffConst::TYPE_LONG, 1, 64),
+            TiffTag::TILE_OFFSETS     => new IfdEntry(TiffTag::TILE_OFFSETS, TiffConst::TYPE_LONG, 1, 0),
+            TiffTag::TILE_BYTE_COUNTS => new IfdEntry(TiffTag::TILE_BYTE_COUNTS, TiffConst::TYPE_LONG, 1, 100),
         ]);
 
         $validator->validateTileLayoutConsistency($ifd);

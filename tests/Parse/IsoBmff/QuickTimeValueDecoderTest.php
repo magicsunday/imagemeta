@@ -495,7 +495,7 @@ final class QuickTimeValueDecoderTest extends TestCase
 
         // Should not throw
         $decoder->validateLocaleIndicator(0, [], []);
-        self::assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -509,7 +509,7 @@ final class QuickTimeValueDecoderTest extends TestCase
         $locale = (300 << 16) | 400;
 
         $decoder->validateLocaleIndicator($locale, [], []);
-        self::assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -574,7 +574,7 @@ final class QuickTimeValueDecoderTest extends TestCase
         ];
 
         $decoder->validateDataOrdering('test', $atoms);
-        self::assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 
     /**

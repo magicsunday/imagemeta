@@ -65,12 +65,12 @@ final class ExposureParameterReaderTest extends TestCase
     public function readsExposureProgram(): void
     {
         $exifEntries = [
-            ExifTag::EXPOSURE_PROGRAM => new IfdEntry(ExifTag::EXPOSURE_PROGRAM, 3, 1, ExposureProgram::NormalProgram->value),
+            ExifTag::EXPOSURE_PROGRAM => new IfdEntry(ExifTag::EXPOSURE_PROGRAM, 3, 1, ExposureProgram::Normal->value),
         ];
 
         $reader = $this->createReader($exifEntries);
 
-        self::assertSame(ExposureProgram::NormalProgram, $reader->exposureProgram());
+        self::assertSame(ExposureProgram::Normal, $reader->exposureProgram());
     }
 
     /**
@@ -92,12 +92,12 @@ final class ExposureParameterReaderTest extends TestCase
     public function readsExposureMode(): void
     {
         $exifEntries = [
-            ExifTag::EXPOSURE_MODE => new IfdEntry(ExifTag::EXPOSURE_MODE, 3, 1, ExposureMode::ManualExposure->value),
+            ExifTag::EXPOSURE_MODE => new IfdEntry(ExifTag::EXPOSURE_MODE, 3, 1, ExposureMode::Manual->value),
         ];
 
         $reader = $this->createReader($exifEntries);
 
-        self::assertSame(ExposureMode::ManualExposure, $reader->exposureMode());
+        self::assertSame(ExposureMode::Manual, $reader->exposureMode());
     }
 
     /**

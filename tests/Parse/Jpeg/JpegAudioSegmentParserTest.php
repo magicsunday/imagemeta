@@ -50,7 +50,6 @@ final class JpegAudioSegmentParserTest extends TestCase
         $sampleCount = 4;
         $channels    = 1;
         $bitDepth    = 16;
-        $bytesPerSample = ($bitDepth / 8) * $channels;
         $audioData   = str_repeat("\x00\x01", $sampleCount);
 
         $payload = self::AUDIO_SIGNATURE

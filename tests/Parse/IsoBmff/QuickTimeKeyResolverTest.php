@@ -105,9 +105,8 @@ final class QuickTimeKeyResolverTest extends TestCase
         // entry: size(4) + namespace(4) + key_value (NUL-terminated for mdta)
         $keyValue  = $keyName . "\0";
         $entrySize = 8 + strlen($keyValue);
-        $data .= pack('N', $entrySize) . 'mdta' . $keyValue;
 
-        return $data;
+        return $data . (pack('N', $entrySize) . 'mdta' . $keyValue);
     }
 
     /**
@@ -121,9 +120,8 @@ final class QuickTimeKeyResolverTest extends TestCase
         $data .= pack('N', 1);
         // entry: size(4) + namespace(4) + key_value
         $entrySize = 8 + strlen($keyName);
-        $data .= pack('N', $entrySize) . $namespace . $keyName;
 
-        return $data;
+        return $data . (pack('N', $entrySize) . $namespace . $keyName);
     }
 
     // =========================================================================
@@ -140,7 +138,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $payload = $this->buildKeysPayloadWithMdtaKey($keyName);
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($payload);
-        $map = $resolver->parseKeys($descriptor);
+        $map                     = $resolver->parseKeys($descriptor);
 
         self::assertArrayHasKey(1, $map);
         self::assertSame('mdta', $map[1]['namespace']);
@@ -172,7 +170,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $data .= pack('N', $entrySize) . 'mdta' . $kv2;
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($data);
-        $map = $resolver->parseKeys($descriptor);
+        $map                     = $resolver->parseKeys($descriptor);
 
         self::assertCount(2, $map);
         self::assertSame($key1, $map[1]['name']);
@@ -188,7 +186,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $payload = $this->buildKeysPayloadWithCustomNamespace('itun', 'Artist');
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($payload);
-        $map = $resolver->parseKeys($descriptor);
+        $map                     = $resolver->parseKeys($descriptor);
 
         self::assertArrayHasKey(1, $map);
         self::assertSame('itun', $map[1]['namespace']);
