@@ -371,18 +371,11 @@ final readonly class QuickTimeMeta
      */
     public function firstAcceptableAtom(string $key, array $acceptedLocales = [], array $acceptedTypeIndicators = []): ?QuickTimeDataAtom
     {
-        $atoms = $this->allValues($key);
-
-        foreach ($atoms as $atom) {
-            $localeAccepted = ($acceptedLocales === []) || in_array($atom->locale, $acceptedLocales, true);
-            $typeAccepted   = ($acceptedTypeIndicators === []) || in_array($atom->typeIndicator, $acceptedTypeIndicators, true);
-
-            if ($localeAccepted && $typeAccepted) {
-                return $atom;
-            }
-        }
-
-        return null;
+        return array_find(
+            $this->allValues($key),
+            static fn (QuickTimeDataAtom $atom): bool => (($acceptedLocales === []) || in_array($atom->locale, $acceptedLocales, true))
+                && (($acceptedTypeIndicators === []) || in_array($atom->typeIndicator, $acceptedTypeIndicators, true)),
+        );
     }
 
     /**

@@ -113,32 +113,16 @@ final readonly class ByteReader
     /**
      * Returns the current cursor position of the underlying data source.
      */
-    public function getPosition(): int
+    public function tell(): int
     {
         return ($this->tell)();
     }
 
     /**
-     * Alias for getPosition(). Returns the current cursor position.
-     */
-    public function tell(): int
-    {
-        return $this->getPosition();
-    }
-
-    /**
      * Moves the cursor of the underlying data source.
-     */
-    public function setPosition(int|UInt64 $offset, int $whence = SEEK_SET): void
-    {
-        ($this->seek)($offset, $whence);
-    }
-
-    /**
-     * Alias for setPosition(). Moves the cursor of the underlying data source.
      */
     public function seek(int|UInt64 $offset, int $whence = SEEK_SET): void
     {
-        $this->setPosition($offset, $whence);
+        ($this->seek)($offset, $whence);
     }
 }

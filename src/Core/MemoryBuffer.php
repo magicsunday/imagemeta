@@ -70,7 +70,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      */
     public function tell(): int
     {
-        return $this->byteReader->getPosition();
+        return $this->byteReader->tell();
     }
 
     /**

@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Model\Xmp;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 
+use function array_find;
 use function array_key_exists;
 use function array_merge;
 use function is_string;
@@ -69,10 +70,10 @@ final readonly class XmpLanguageAlternative
      */
     public function defaultValue(): ?string
     {
-        foreach ($this->entries as $entry) {
-            if ($entry['lang'] === 'x-default') {
-                return $entry['value'];
-            }
+        $default = array_find($this->entries, static fn (array $entry): bool => $entry['lang'] === 'x-default');
+
+        if ($default !== null) {
+            return $default['value'];
         }
 
         $first = $this->entries[0] ?? null;
@@ -85,13 +86,9 @@ final readonly class XmpLanguageAlternative
      */
     public function valueFor(string $language): ?string
     {
-        foreach ($this->entries as $entry) {
-            if ($entry['lang'] === $language) {
-                return $entry['value'];
-            }
-        }
+        $entry = array_find($this->entries, static fn (array $entry): bool => $entry['lang'] === $language);
 
-        return null;
+        return $entry['value'] ?? null;
     }
 
     /**

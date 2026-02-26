@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 
+use function array_any;
 use function array_map;
 use function in_array;
 use function is_int;
@@ -298,11 +299,10 @@ final readonly class DeviceExifReader
         }
 
         if ($value instanceof ExifRationalList) {
-            foreach ($value->values as $component) {
-                if ($this->isExifUnknownDenominator($component->denominator)) {
-                    return true;
-                }
-            }
+            return array_any(
+                $value->values,
+                fn (ExifRational $component): bool => $this->isExifUnknownDenominator($component->denominator),
+            );
         }
 
         return false;
