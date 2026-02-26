@@ -275,14 +275,9 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
 
         for ($index = 0; $index < $entryCount; ++$index) {
             if (($length - $cursor) < 5) {
-                throw new ParseError(
-                    sprintf(
-                        'FlashPix contents entry %d at offset %d is truncated',
-                        $index,
-                        $offset,
-                    ),
-                    1307,
-                );
+                // Postel's Law: tolerate truncated trailing entries and keep
+                // already parsed entries instead of aborting metadata parsing.
+                break;
             }
 
             $entitySize = (ord($body[$cursor]) << 24)
@@ -292,7 +287,14 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             $defaultByte = ord($body[$cursor + 4]);
             $cursor += 5;
 
-            [, $cursor] = $this->parseName($body, $cursor, $offset, $index);
+            $name = $this->parseName($body, $cursor);
+            if ($name === null) {
+                // Postel's Law: tolerate unterminated names and skip the
+                // malformed entry tail instead of aborting the whole file.
+                break;
+            }
+
+            [, $cursor] = $name;
 
             $isStorage    = $entitySize === self::FLASHPIX_STORAGE_ENTITY_SIZE;
             $skipAssembly = !$isStorage && $entitySize > $this->maxStreamSize;
@@ -328,26 +330,16 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      *
      * @param string $body   FPXR contents-list body.
      * @param int    $cursor Current parsing offset in $body.
-     * @param int    $offset APP2 marker offset for diagnostics.
-     * @param int    $index  Contents-list entry index.
-     *
-     * @return array{0:string, 1:int}
+     * @return array{0:string, 1:int}|null
      */
-    private function parseName(string $body, int $cursor, int $offset, int $index): array
+    private function parseName(string $body, int $cursor): ?array
     {
         $length    = strlen($body);
         $nameBytes = '';
 
         while (true) {
             if (($length - $cursor) < 2) {
-                throw new ParseError(
-                    sprintf(
-                        'FlashPix contents entry %d at offset %d has unterminated name',
-                        $index,
-                        $offset,
-                    ),
-                    1313,
-                );
+                return null;
             }
 
             $codeUnit = substr($body, $cursor, 2);
