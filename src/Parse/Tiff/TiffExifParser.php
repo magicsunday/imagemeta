@@ -520,12 +520,22 @@ final class TiffExifParser implements TiffExifParserInterface
             return new Ifd([]);
         }
 
-        // Enforce maximum IFD entry count to prevent DoS
+        // Keep the hard 10k guard to prevent pathological memory/CPU usage.
         if ($entryCount > ParserLimits::MAX_IFD_ENTRIES) {
-            throw new ParseError(
-                sprintf('IFD entry count %d exceeds maximum allowed %d', $entryCount, ParserLimits::MAX_IFD_ENTRIES),
-                1360,
-            );
+            if ($this->bigTiff) {
+                throw new ParseError(
+                    sprintf('IFD entry count %d exceeds maximum allowed %d', $entryCount, ParserLimits::MAX_IFD_ENTRIES),
+                    1360,
+                );
+            }
+
+            // Postel's Law: classic TIFF files in the wild sometimes contain
+            // corrupted IFD entry counts (e.g. 10825/25600/49152). Skip that
+            // directory and continue parsing remaining metadata sources.
+            $ifd = new Ifd([]);
+            $this->ifdCache[$offsetInt] = $ifd;
+
+            return $ifd;
         }
 
         // EXIF 3.0 §4.5.2 and TIFF 6.0 §8 prescribe 12-byte (classic) and 20-byte
