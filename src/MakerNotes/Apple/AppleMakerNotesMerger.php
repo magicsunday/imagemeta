@@ -89,127 +89,44 @@ final class AppleMakerNotesMerger
             $imageCaptureRequestId = $lookup->string('ImageCaptureRequestID');
         }
 
-        $burstUuid = $makerNotes?->identity?->burstUuid;
-        if ($burstUuid === null) {
-            $burstUuid = $lookup->string('BurstUUID');
-        }
+        $burstUuid       = $this->preferMakerString($makerNotes?->identity?->burstUuid, $lookup, 'BurstUUID');
+        $imageUniqueId   = $this->preferMakerString($makerNotes?->identity?->imageUniqueId, $lookup, 'ImageUniqueID');
+        $photoIdentifier = $this->preferMakerString($makerNotes?->identity?->photoIdentifier, $lookup, 'PhotoIdentifier');
+        $mediaGroupUuid  = $this->preferMakerString($makerNotes?->identity?->mediaGroupUuid, $lookup, 'MediaGroupUUID');
 
-        $imageUniqueId = $makerNotes?->identity?->imageUniqueId;
-        if ($imageUniqueId === null) {
-            $imageUniqueId = $lookup->string('ImageUniqueID');
-        }
+        $hdrHeadroom  = $this->preferMakerFloat($makerNotes?->hdr?->headroom, $lookup, 'HdrHeadroom', 'HDRHeadroom');
+        $hdrGain      = $this->preferMakerFloatList($makerNotes?->hdr?->gain, $lookup, 'HdrGain', 'HDRGain');
+        $hdrImageType = $this->preferMakerEnumerated($makerNotes?->hdr?->imageType, $lookup, AppleMaps::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
 
-        $photoIdentifier = $makerNotes?->identity?->photoIdentifier;
-        if ($photoIdentifier === null) {
-            $photoIdentifier = $lookup->string('PhotoIdentifier');
-        }
+        $snr = $this->preferMakerFloat($makerNotes?->noise?->snr, $lookup, 'SNRSetting', 'SNR');
 
-        $mediaGroupUuid = $makerNotes?->identity?->mediaGroupUuid;
-        if ($mediaGroupUuid === null) {
-            $mediaGroupUuid = $lookup->string('MediaGroupUUID');
-        }
-
-        $hdrHeadroom = $makerNotes?->hdr?->headroom;
-        if ($hdrHeadroom === null) {
-            $hdrHeadroom = $lookup->float('HdrHeadroom', 'HDRHeadroom');
-        }
-
-        $hdrGain = $makerNotes?->hdr?->gain;
-        if ($hdrGain === null) {
-            $hdrGain = $this->quickTimeFloatList($lookup, 'HdrGain', 'HDRGain');
-        }
-
-        $hdrImageType = $this->normalizeEnumerated($makerNotes?->hdr?->imageType, AppleMaps::HDR_IMAGE_TYPES);
-        if ($hdrImageType === null) {
-            $hdrImageType = $this->quickTimeEnumerated($lookup, AppleMaps::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
-        }
-
-        $snr = $makerNotes?->noise?->snr;
-        if ($snr === null) {
-            $snr = $lookup->float('SNRSetting', 'SNR');
-        }
-
-        $focusPosition = $makerNotes?->autoFocus?->focusPosition;
-        if ($focusPosition === null) {
-            $focusPosition = $lookup->float('FocusPosition');
-        }
+        $focusPosition = $this->preferMakerFloat($makerNotes?->autoFocus?->focusPosition, $lookup, 'FocusPosition');
 
         $focusDistanceRange = $makerNotes?->autoFocus?->focusDistanceRange;
         if ($focusDistanceRange === null) {
             $focusDistanceRange = $this->quickTimeFocusDistanceRange($lookup);
         }
 
-        $afMeasuredDepth = $makerNotes?->autoFocus?->measuredDepth;
-        if ($afMeasuredDepth === null) {
-            $afMeasuredDepth = $lookup->float('AFMeasuredDepth');
-        }
+        $afMeasuredDepth = $this->preferMakerFloat($makerNotes?->autoFocus?->measuredDepth, $lookup, 'AFMeasuredDepth');
+        $afConfidence    = $this->preferMakerFloat($makerNotes?->autoFocus?->confidence, $lookup, 'AFConfidence');
 
-        $afConfidence = $makerNotes?->autoFocus?->confidence;
-        if ($afConfidence === null) {
-            $afConfidence = $lookup->float('AFConfidence');
-        }
-
-        $livePhotoIndex = $makerNotes?->livePhoto?->index;
-        if ($livePhotoIndex === null) {
-            $livePhotoIndex = $lookup->int('LivePhotoVideoIndex', 'LivePhotoMovieIndex');
-        }
+        $livePhotoIndex = $this->preferMakerInt($makerNotes?->livePhoto?->index, $lookup, 'LivePhotoVideoIndex', 'LivePhotoMovieIndex');
 
         $livePhotoTime = $makerNotes?->livePhoto?->time;
 
-        $accelerationVector = $makerNotes?->livePhoto?->accelerationVector;
-        if ($accelerationVector === null) {
-            $accelerationVector = $this->quickTimeFloatList($lookup, 'AccelerationVector');
-        }
+        $accelerationVector = $this->preferMakerFloatList($makerNotes?->livePhoto?->accelerationVector, $lookup, 'AccelerationVector');
 
-        $cameraType = $makerNotes?->camera?->cameraType;
-        if ($cameraType === null) {
-            $cameraType = $lookup->string('CameraType');
-        }
+        $cameraType            = $this->preferMakerStringOrInt($makerNotes?->camera?->cameraType, $lookup, 'CameraType');
+        $colorTemperature      = $this->preferMakerInt($makerNotes?->camera?->colorTemperature, $lookup, 'ColorTemperature');
+        $qualityHint           = $this->preferMakerStringOrNumeric($makerNotes?->camera?->qualityHint, $lookup, 'QualityHint');
+        $colorCorrectionMatrix = $this->preferMakerFloatList($makerNotes?->camera?->colorCorrectionMatrix, $lookup, 'ColorCorrectionMatrix');
+        $makerNoteVersion      = $this->preferMakerString($makerNotes?->camera?->makerNoteVersion, $lookup, 'MakerNoteVersion');
+        $oisMode               = $this->preferMakerStringOrNumeric($makerNotes?->camera?->oisMode, $lookup, 'OISMode');
+        $imageCaptureType      = $this->preferMakerEnumerated($makerNotes?->camera?->imageCaptureType, $lookup, AppleMaps::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
 
-        $colorTemperature = $makerNotes?->camera?->colorTemperature;
-        if ($colorTemperature === null) {
-            $colorTemperature = $lookup->int('ColorTemperature');
-        }
-
-        $qualityHint = $makerNotes?->camera?->qualityHint;
-        if ($qualityHint === null) {
-            $qualityHint = $this->quickTimeStringOrNumeric($lookup, 'QualityHint');
-        }
-
-        $colorCorrectionMatrix = $makerNotes?->camera?->colorCorrectionMatrix;
-        if ($colorCorrectionMatrix === null) {
-            $colorCorrectionMatrix = $this->quickTimeFloatList($lookup, 'ColorCorrectionMatrix');
-        }
-
-        $makerNoteVersion = $makerNotes?->camera?->makerNoteVersion;
-        if ($makerNoteVersion === null) {
-            $makerNoteVersion = $lookup->string('MakerNoteVersion');
-        }
-
-        $oisMode = $makerNotes?->camera?->oisMode;
-        if ($oisMode === null) {
-            $oisMode = $this->quickTimeStringOrNumeric($lookup, 'OISMode');
-        }
-
-        $imageCaptureType = $this->normalizeEnumerated($makerNotes?->camera?->imageCaptureType, AppleMaps::IMAGE_CAPTURE_TYPES);
-        if ($imageCaptureType === null) {
-            $imageCaptureType = $this->quickTimeEnumerated($lookup, AppleMaps::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
-        }
-
-        $semanticPreset = $makerNotes?->semanticStyle?->preset;
-        if ($semanticPreset === null) {
-            $semanticPreset = $lookup->string('SemanticStylePreset');
-        }
-
-        $semanticWarmth = $makerNotes?->semanticStyle?->warmth;
-        if ($semanticWarmth === null) {
-            $semanticWarmth = $lookup->float('SemanticStyleWarmth');
-        }
-
-        $semanticTone = $makerNotes?->semanticStyle?->tone;
-        if ($semanticTone === null) {
-            $semanticTone = $lookup->float('SemanticStyleTone');
-        }
+        $semanticPreset = $this->preferMakerString($makerNotes?->semanticStyle?->preset, $lookup, 'SemanticStylePreset');
+        $semanticWarmth = $this->preferMakerFloat($makerNotes?->semanticStyle?->warmth, $lookup, 'SemanticStyleWarmth');
+        $semanticTone   = $this->preferMakerFloat($makerNotes?->semanticStyle?->tone, $lookup, 'SemanticStyleTone');
 
         $semanticStyleComposite = SemanticStyle::fromQuickTime($quickTime);
         if ($semanticStyleComposite !== null) {
@@ -228,17 +145,7 @@ final class AppleMakerNotesMerger
             }
         }
 
-        $flags = $makerNotes?->flags;
-        if ($flags === null) {
-            $flags = [];
-        }
-
-        $quickTimeFlags = $this->quickTimeFlags($quickTime);
-        foreach ($quickTimeFlags as $key => $value) {
-            if (!array_key_exists($key, $flags)) {
-                $flags[$key] = $value;
-            }
-        }
+        $flags = $this->normalizeFlags($makerNotes?->flags, $this->quickTimeFlags($quickTime));
 
         $identity = AppleCaptureIdentity::createIfPresent($contentIdentifier, $imageCaptureRequestId, $burstUuid, $imageUniqueId, $photoIdentifier, $mediaGroupUuid);
 
@@ -281,6 +188,96 @@ final class AppleMakerNotesMerger
             $camera,
             $flags,
         );
+    }
+
+    /**
+     * Keeps a maker-note string value when present, otherwise resolves QuickTime fallback keys.
+     */
+    private function preferMakerString(?string $makerValue, QuickTimeLookup $lookup, string ...$keys): ?string
+    {
+        return $makerValue ?? $lookup->string(...$keys);
+    }
+
+    /**
+     * Keeps a maker-note string/int value when present, otherwise resolves QuickTime string fallback keys.
+     */
+    private function preferMakerStringOrInt(string|int|null $makerValue, QuickTimeLookup $lookup, string ...$keys): string|int|null
+    {
+        return $makerValue ?? $lookup->string(...$keys);
+    }
+
+    /**
+     * Keeps a maker-note integer value when present, otherwise resolves QuickTime fallback keys.
+     */
+    private function preferMakerInt(?int $makerValue, QuickTimeLookup $lookup, string ...$keys): ?int
+    {
+        return $makerValue ?? $lookup->int(...$keys);
+    }
+
+    /**
+     * Keeps a maker-note float value when present, otherwise resolves QuickTime fallback keys.
+     */
+    private function preferMakerFloat(?float $makerValue, QuickTimeLookup $lookup, string ...$keys): ?float
+    {
+        return $makerValue ?? $lookup->float(...$keys);
+    }
+
+    /**
+     * Keeps a maker-note float list when present, otherwise resolves QuickTime fallback keys.
+     *
+     * @param list<float>|null $makerValue Existing maker-note value.
+     * @param string           ...$keys    Ordered QuickTime fallback keys.
+     *
+     * @return list<float>|null
+     */
+    private function preferMakerFloatList(?array $makerValue, QuickTimeLookup $lookup, string ...$keys): ?array
+    {
+        return $makerValue ?? $this->quickTimeFloatList($lookup, ...$keys);
+    }
+
+    /**
+     * Keeps a maker-note value when present, otherwise resolves QuickTime string/int/float fallback keys.
+     */
+    private function preferMakerStringOrNumeric(?string $makerValue, QuickTimeLookup $lookup, string ...$keys): ?string
+    {
+        return $makerValue ?? $this->quickTimeStringOrNumeric($lookup, ...$keys);
+    }
+
+    /**
+     * Normalizes maker-note enumerated values and falls back to QuickTime enumerations.
+     *
+     * @param string|null        $makerValue Existing maker-note value.
+     * @param array<int, string> $map        Mapping from numeric codes to labels.
+     * @param string             ...$keys    Ordered QuickTime fallback keys.
+     */
+    private function preferMakerEnumerated(?string $makerValue, QuickTimeLookup $lookup, array $map, string ...$keys): ?string
+    {
+        $normalized = $this->normalizeEnumerated($makerValue, $map);
+        if ($normalized !== null) {
+            return $normalized;
+        }
+
+        return $this->quickTimeEnumerated($lookup, $map, ...$keys);
+    }
+
+    /**
+     * Normalizes null maker-note flags to an empty array and merges missing QuickTime flags.
+     *
+     * @param array<string, bool>|null $makerFlags Existing maker-note flags.
+     * @param array<string, bool>      $quickFlags Derived QuickTime flags.
+     *
+     * @return array<string, bool>
+     */
+    private function normalizeFlags(?array $makerFlags, array $quickFlags): array
+    {
+        $flags = $makerFlags ?? [];
+        foreach ($quickFlags as $key => $value) {
+            if (!array_key_exists($key, $flags)) {
+                $flags[$key] = $value;
+            }
+        }
+
+        return $flags;
     }
 
     /**

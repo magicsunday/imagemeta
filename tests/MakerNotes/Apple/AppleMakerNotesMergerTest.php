@@ -281,7 +281,7 @@ final class AppleMakerNotesMergerTest extends TestCase
     #[Test]
     public function mergeUsesDedicatedFallbackHelpers(): void
     {
-        $reflection = new ReflectionClass(AppleMakerNotesMerger::class);
+        $reflection     = new ReflectionClass(AppleMakerNotesMerger::class);
         $privateMethods = array_map(
             static fn (ReflectionMethod $method): string => $method->getName(),
             $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
