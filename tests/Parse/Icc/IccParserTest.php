@@ -1600,6 +1600,26 @@ final class IccParserTest extends TestCase
 
         // Technology signature
         self::assertSame('CRT ', $result['technology']);
+
+        // Viewing conditions (ICC.1:2022 §9.2.51 / §10.30)
+        self::assertNotNull($result['viewingConditions']);
+        self::assertEqualsWithDelta(19.6445, $result['viewingConditions']['illuminant']['x'], 0.001);
+        self::assertEqualsWithDelta(20.0, $result['viewingConditions']['illuminant']['y'], 0.001);
+        self::assertEqualsWithDelta(16.5330, $result['viewingConditions']['illuminant']['z'], 0.001);
+        self::assertEqualsWithDelta(0.3457, $result['viewingConditions']['surround']['x'], 0.001);
+        self::assertEqualsWithDelta(0.3585, $result['viewingConditions']['surround']['y'], 0.001);
+        self::assertEqualsWithDelta(0.2958, $result['viewingConditions']['surround']['z'], 0.001);
+        self::assertSame(1, $result['viewingConditions']['illuminantType']);
+
+        // Measurement data (ICC.1:2022 §9.2.34 / §10.14)
+        self::assertNotNull($result['measurement']);
+        self::assertSame(1, $result['measurement']['observer']);
+        self::assertEqualsWithDelta(0.9642, $result['measurement']['backing']['x'], 0.001);
+        self::assertEqualsWithDelta(1.0000, $result['measurement']['backing']['y'], 0.001);
+        self::assertEqualsWithDelta(0.8249, $result['measurement']['backing']['z'], 0.001);
+        self::assertSame(1, $result['measurement']['geometry']);
+        self::assertEqualsWithDelta(0.0, $result['measurement']['flare'], 0.001);
+        self::assertSame(1, $result['measurement']['illuminant']);
     }
 
     /**
@@ -1628,18 +1648,18 @@ final class IccParserTest extends TestCase
 
         // Build tag payloads
 
+        $encodeS15 = static function (float $v): string {
+            $raw = (int) round($v * 65536.0);
+            if ($raw < 0) {
+                $raw += 0x100000000;
+            }
+
+            return pack('N', $raw);
+        };
+
         // XYZ tag helper: 'XYZ ' + reserved(4) + 3 x s15Fixed16Number
-        $buildXyz = static function (float $x, float $y, float $z): string {
-            $encode = static function (float $v): string {
-                $raw = (int) round($v * 65536.0);
-                if ($raw < 0) {
-                    $raw += 0x100000000;
-                }
-
-                return pack('N', $raw);
-            };
-
-            return "XYZ \0\0\0\0" . $encode($x) . $encode($y) . $encode($z);
+        $buildXyz = static function (float $x, float $y, float $z) use ($encodeS15): string {
+            return "XYZ \0\0\0\0" . $encodeS15($x) . $encodeS15($y) . $encodeS15($z);
         };
 
         $bkptData = $buildXyz(0.0, 0.0, 0.0);
@@ -1684,6 +1704,20 @@ final class IccParserTest extends TestCase
         // Technology signature: 'sig ' + reserved(4) + 4-byte signature
         $techData = "sig \0\0\0\0CRT ";
 
+        // Viewing conditions: 'view' + reserved + illuminant XYZ + surround XYZ + illuminantType
+        $viewData = "view\0\0\0\0"
+            . $encodeS15(19.6445) . $encodeS15(20.0) . $encodeS15(16.5330)
+            . $encodeS15(0.3457) . $encodeS15(0.3585) . $encodeS15(0.2958)
+            . pack('N', 1);
+
+        // Measurement: 'meas' + reserved + observer + backing XYZ + geometry + flare(u16Fixed16) + illuminant
+        $measData = "meas\0\0\0\0"
+            . pack('N', 1)
+            . $encodeS15(0.9642) . $encodeS15(1.0) . $encodeS15(0.8249)
+            . pack('N', 1)
+            . pack('N', 0)
+            . pack('N', 1);
+
         // Description tag (mluc)
         $descData = $buildMluc('Expanded Test Profile');
 
@@ -1701,6 +1735,8 @@ final class IccParserTest extends TestCase
             ['sig' => 'dmnd', 'data' => $dmndData],
             ['sig' => 'dmdd', 'data' => $dmddData],
             ['sig' => 'tech', 'data' => $techData],
+            ['sig' => 'view', 'data' => $viewData],
+            ['sig' => 'meas', 'data' => $measData],
         ];
 
         $tagCount  = count($tags);
