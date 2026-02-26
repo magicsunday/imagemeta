@@ -28,6 +28,12 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
+use function pack;
+use function str_pad;
+use function str_repeat;
+use function strlen;
+use function substr_replace;
+
 /**
  * Verifies exiftool-like enum label rendering in the formatter script.
  */
@@ -44,6 +50,8 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
     private ReflectionMethod $printSectionMethod;
 
+    private ReflectionMethod $printIccSectionMethod;
+
     private ReflectionMethod $formatValueMethod;
 
     protected function setUp(): void
@@ -57,6 +65,7 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $this->formatComponentsConfigurationMethod = new ReflectionMethod($this->formatter, 'formatComponentsConfiguration');
         $this->getTagNameMethod                    = new ReflectionMethod($this->formatter, 'getTagName');
         $this->printSectionMethod                  = new ReflectionMethod($this->formatter, 'printSection');
+        $this->printIccSectionMethod               = new ReflectionMethod($this->formatter, 'printIccSection');
         $this->formatValueMethod                   = new ReflectionMethod($this->formatter, 'formatValue');
     }
 
@@ -165,6 +174,22 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         self::assertStringContainsString('Make', $output);
     }
 
+    #[Test]
+    public function printsIndexedSectionsForMultipleIccProfiles(): void
+    {
+        $profileA = self::buildMinimalIccProfile('Profile One');
+        $profileB = self::buildMinimalIccProfile('Profile Two');
+
+        ob_start();
+        $this->printIccSectionMethod->invoke($this->formatter, $profileA . $profileB);
+        $output = (string) ob_get_clean();
+
+        self::assertStringContainsString('---- ICC-header ----', $output);
+        self::assertStringContainsString('---- ICC_Profile ----', $output);
+        self::assertStringContainsString('---- ICC-header2 ----', $output);
+        self::assertStringContainsString('---- ICC_Profile2 ----', $output);
+    }
+
     /**
      * @param list<string>|null $labels
      */
@@ -185,5 +210,29 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         yield 'YCbCr with implied absent fourth component' => [['Y', 'Cb', 'Cr'], 'Y, Cb, Cr, -'];
         yield 'Full RGBA-style configuration already complete' => [['R', 'G', 'B', '-'], 'R, G, B, -'];
         yield 'Null configuration stays null' => [null, null];
+    }
+
+    private static function buildMinimalIccProfile(string $description): string
+    {
+        $descriptionText = $description . "\0";
+        $descTagData     = 'desc' . pack('N', 0) . pack('N', strlen($descriptionText)) . $descriptionText;
+        $descTagData     = str_pad($descTagData, (int) (((strlen($descTagData) + 3) / 4) * 4), "\0");
+
+        $tagDataOffset = 128 + 4 + 12;
+        $profileSize   = $tagDataOffset + strlen($descTagData);
+
+        $header = str_repeat("\0", 128);
+        $header = substr_replace($header, pack('N', $profileSize), 0, 4);
+        $header = substr_replace($header, pack('N', 0x02400000), 8, 4);
+        $header = substr_replace($header, 'RGB ', 16, 4);
+        $header = substr_replace($header, 'XYZ ', 20, 4);
+        $header = substr_replace($header, 'acsp', 36, 4);
+
+        $tagTable = pack('N', 1)
+            . 'desc'
+            . pack('N', $tagDataOffset)
+            . pack('N', strlen($descTagData));
+
+        return $header . $tagTable . $descTagData;
     }
 }
