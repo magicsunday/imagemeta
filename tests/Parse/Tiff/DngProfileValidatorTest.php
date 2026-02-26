@@ -178,6 +178,54 @@ final class DngProfileValidatorTest extends TestCase
         $this->validator->validateDngHueSatMapDims($ifd);
     }
 
+    #[Test]
+    public function rejectsHueSatMapDataDimensionOverflow(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(2089);
+
+        $ifd = new Ifd([
+            DngTag::PROFILE_HUE_SAT_MAP_DIMS => new IfdEntry(
+                DngTag::PROFILE_HUE_SAT_MAP_DIMS,
+                TiffConst::TYPE_LONG,
+                3,
+                new ExifNumericList([PHP_INT_MAX, 2, 1]),
+            ),
+            DngTag::PROFILE_HUE_SAT_MAP_DATA_1 => new IfdEntry(
+                DngTag::PROFILE_HUE_SAT_MAP_DATA_1,
+                TiffConst::TYPE_FLOAT,
+                1,
+                new ExifNumericList([1.0]),
+            ),
+        ]);
+
+        $this->validator->validateDngHueSatMapData($ifd);
+    }
+
+    #[Test]
+    public function rejectsProfileLookTableDataDimensionOverflow(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(2092);
+
+        $ifd = new Ifd([
+            DngTag::PROFILE_LOOK_TABLE_DIMS => new IfdEntry(
+                DngTag::PROFILE_LOOK_TABLE_DIMS,
+                TiffConst::TYPE_LONG,
+                3,
+                new ExifNumericList([PHP_INT_MAX, 2, 1]),
+            ),
+            DngTag::PROFILE_LOOK_TABLE_DATA => new IfdEntry(
+                DngTag::PROFILE_LOOK_TABLE_DATA,
+                TiffConst::TYPE_FLOAT,
+                1,
+                new ExifNumericList([1.0]),
+            ),
+        ]);
+
+        $this->validator->validateDngProfileLookTableData($ifd);
+    }
+
     // --- BaselineExposure ---
 
     #[Test]
