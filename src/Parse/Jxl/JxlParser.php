@@ -84,7 +84,7 @@ final readonly class JxlParser implements JxlParserInterface
         /** @var list<string> $exifBlobs */
         $exifBlobs = [];
         /** @var list<string> $xmpBlobs */
-        $xmpBlobs = [];
+        $xmpBlobs           = [];
         $totalMetadataBytes = 0;
         $metadataBoxCount   = 0;
 
