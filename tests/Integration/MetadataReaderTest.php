@@ -1186,6 +1186,74 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
+     * EXIF 3.0 §4.6.5.1 marks RowsPerStrip as non-recordable for JPEG IFD0,
+     * but reader-side parsing tolerates this common real-world deviation.
+     */
+    #[Test]
+    public function itToleratesRowsPerStripInJpegIfd0(): void
+    {
+        $path     = $this->fixturePath('test-images/exiftool/UMAX/UMAX_MagicScan.jpg');
+        $metadata = MetadataReader::createDefault()->read($path);
+
+        self::assertNotSame([], $metadata->exifBlobs);
+        self::assertSame('jpg', $metadata->extension);
+    }
+
+    /**
+     * Postel handling keeps parsing when an EXIF pointer targets truncated data.
+     */
+    #[Test]
+    public function itToleratesMemoryBufferReadOutOfRange(): void
+    {
+        $path     = $this->fixturePath('test-images/exiftool/Vodafone/Vodafone715.jpg');
+        $metadata = MetadataReader::createDefault()->read($path);
+
+        self::assertNotSame([], $metadata->exifBlobs);
+        self::assertSame('jpg', $metadata->extension);
+    }
+
+    /**
+     * Truncated files can lack a readable container signature and should return empty metadata.
+     */
+    #[Test]
+    public function itToleratesMissingContainerSignature(): void
+    {
+        $path     = $this->fixturePath('test-images/exiftool/FujiFilm/FujiFilmISPro.jpg');
+        $metadata = MetadataReader::createDefault()->read($path);
+
+        self::assertSame([], $metadata->exifBlobs);
+        self::assertSame([], $metadata->xmpBlobs);
+        self::assertNull($metadata->exifDoc);
+        self::assertSame('jpg', $metadata->extension);
+    }
+
+    /**
+     * XMP readers should keep the base packet when ExtendedXMP chunks are absent.
+     */
+    #[Test]
+    public function itToleratesMissingExtendedXmpChunks(): void
+    {
+        $path     = $this->fixturePath('test-images/exiftool/SonyEricsson/SonyXQ-AS52.jpg');
+        $metadata = MetadataReader::createDefault()->read($path);
+
+        self::assertNotSame([], $metadata->xmpBlobs);
+        self::assertSame('jpg', $metadata->extension);
+    }
+
+    /**
+     * Resolves a repository fixture path and skips when unavailable.
+     */
+    private function fixturePath(string $relativePath): string
+    {
+        $path = __DIR__ . '/../../' . ltrim($relativePath, '/');
+        if (!\is_file($path)) {
+            self::markTestSkipped(sprintf('Required fixture missing: %s', $relativePath));
+        }
+
+        return $path;
+    }
+
+    /**
      * Writes the provided binary payload to a temporary file and returns its path.
      * This checks the behavior for the specific inputs used in the test.
      *
