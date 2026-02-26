@@ -32,18 +32,18 @@ namespace MagicSunday\ImageMeta\Model\Icc;
 final readonly class IccProfile
 {
     /**
-     * @param XyzTriplet|null       $whitePoint
-     * @param XyzTriplet|null       $blackPoint
-     * @param XyzTriplet|null       $redMatrixColumn
-     * @param XyzTriplet|null       $greenMatrixColumn
-     * @param XyzTriplet|null       $blueMatrixColumn
-     * @param XyzTriplet|null       $luminance
-     * @param TrcCurve|null         $redTRC
-     * @param TrcCurve|null         $greenTRC
-     * @param TrcCurve|null         $blueTRC
+     * @param XyzTriplet|null        $whitePoint
+     * @param XyzTriplet|null        $blackPoint
+     * @param XyzTriplet|null        $redMatrixColumn
+     * @param XyzTriplet|null        $greenMatrixColumn
+     * @param XyzTriplet|null        $blueMatrixColumn
+     * @param XyzTriplet|null        $luminance
+     * @param TrcCurve|null          $redTRC
+     * @param TrcCurve|null          $greenTRC
+     * @param TrcCurve|null          $blueTRC
      * @param ViewingConditions|null $viewingConditions
-     * @param Measurement|null      $measurement
-     * @param XyzTriplet|null       $illuminant
+     * @param Measurement|null       $measurement
+     * @param XyzTriplet|null        $illuminant
      */
     public function __construct(
         public ?string $description,

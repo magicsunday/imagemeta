@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Icc;
 
 use MagicSunday\ImageMeta\Core\ParseError;
-use MagicSunday\ImageMeta\Model\Icc\IccProfile;
 use MagicSunday\ImageMeta\Model\Icc\IccTag;
 use MagicSunday\ImageMeta\Parse\Icc\IccBinaryReader;
 use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
@@ -66,7 +65,6 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertInstanceOf(IccProfile::class, $result);
         self::assertSame('Test Profile', $result->description);
         self::assertSame('2.4', $result->version);
         self::assertSame('XYZ ', $result->pcs);
@@ -93,7 +91,6 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode(null, $segments);
 
         self::assertNotNull($result);
-        self::assertInstanceOf(IccProfile::class, $result);
         self::assertSame('Test Profile', $result->description);
         self::assertSame('2.4', $result->version);
         self::assertSame('XYZ ', $result->pcs);

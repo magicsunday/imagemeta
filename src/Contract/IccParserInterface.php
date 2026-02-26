@@ -23,8 +23,6 @@ interface IccParserInterface
      *
      * @param string|null        $profileData Raw ICC profile payload.
      * @param array<int, string> $segments    ICC profile chunks discovered in container metadata.
-     *
-     * @return IccProfile|null
      */
     public function decode(?string $profileData, array $segments = []): ?IccProfile;
 }

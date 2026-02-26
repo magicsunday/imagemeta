@@ -205,7 +205,7 @@ XML;
             ) {
             }
 
-            public function decode(?string $profileData, array $segments = []): ?IccProfile
+            public function decode(?string $profileData, array $segments = []): IccProfile
             {
                 ($this->onDecode)();
 
@@ -324,7 +324,7 @@ XML;
     private function stubIccParser(): IccParserInterface
     {
         return new readonly class implements IccParserInterface {
-            public function decode(?string $profileData, array $segments = []): ?IccProfile
+            public function decode(?string $profileData, array $segments = []): IccProfile
             {
                 return new IccProfile(
                     description: null,

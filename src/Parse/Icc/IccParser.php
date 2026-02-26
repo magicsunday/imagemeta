@@ -66,8 +66,6 @@ final readonly class IccParser implements IccParserInterface
      * @param string|null        $profileData Raw ICC profile data when a complete payload is available.
      * @param array<int, string> $segments    ICC segments collected from APP2 markers ordered by appearance.
      *
-     * @return IccProfile|null
-     *
      * @throws ParseError
      */
     public function decode(?string $profileData, array $segments = []): ?IccProfile
