@@ -24,9 +24,12 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function ceil;
 use function chr;
+use function count;
 use function intdiv;
 use function pack;
+use function str_pad;
 use function str_repeat;
 use function strlen;
 use function substr;
@@ -1514,5 +1517,200 @@ final class IccParserTest extends TestCase
         $this->expectExceptionCode(1949);
 
         $decoder->decode(null, $segments);
+    }
+
+    /**
+     * Parses a synthetic ICC profile containing extended tag coverage:
+     * blackPoint, matrix columns, TRC curves, device descriptions,
+     * luminance, and technology signature.
+     */
+    #[Test]
+    public function decodeExtractsExpandedTagCoverage(): void
+    {
+        $profile = $this->buildExpandedProfile();
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+
+        // XYZ tags
+        self::assertNotNull($result['blackPoint']);
+        self::assertEqualsWithDelta(0.0, $result['blackPoint']['x'], 0.001);
+        self::assertEqualsWithDelta(0.0, $result['blackPoint']['y'], 0.001);
+        self::assertEqualsWithDelta(0.0, $result['blackPoint']['z'], 0.001);
+
+        self::assertNotNull($result['redMatrixColumn']);
+        self::assertEqualsWithDelta(0.4361, $result['redMatrixColumn']['x'], 0.001);
+        self::assertEqualsWithDelta(0.2225, $result['redMatrixColumn']['y'], 0.001);
+        self::assertEqualsWithDelta(0.0139, $result['redMatrixColumn']['z'], 0.001);
+
+        self::assertNotNull($result['greenMatrixColumn']);
+        self::assertEqualsWithDelta(0.3851, $result['greenMatrixColumn']['x'], 0.001);
+        self::assertEqualsWithDelta(0.7169, $result['greenMatrixColumn']['y'], 0.001);
+        self::assertEqualsWithDelta(0.0971, $result['greenMatrixColumn']['z'], 0.001);
+
+        self::assertNotNull($result['blueMatrixColumn']);
+        self::assertEqualsWithDelta(0.1431, $result['blueMatrixColumn']['x'], 0.001);
+        self::assertEqualsWithDelta(0.0606, $result['blueMatrixColumn']['y'], 0.001);
+        self::assertEqualsWithDelta(0.7141, $result['blueMatrixColumn']['z'], 0.001);
+
+        self::assertNotNull($result['luminance']);
+        self::assertEqualsWithDelta(76.0365, $result['luminance']['x'], 0.01);
+        self::assertEqualsWithDelta(80.0, $result['luminance']['y'], 0.01);
+        self::assertEqualsWithDelta(87.1246, $result['luminance']['z'], 0.01);
+
+        // TRC tags (parametric curve type 0: Y = X^gamma)
+        self::assertNotNull($result['redTRC']);
+        self::assertEqualsWithDelta(2.2, $result['redTRC']['gamma'], 0.01);
+
+        self::assertNotNull($result['greenTRC']);
+        self::assertEqualsWithDelta(2.2, $result['greenTRC']['gamma'], 0.01);
+
+        self::assertNotNull($result['blueTRC']);
+        self::assertEqualsWithDelta(2.2, $result['blueTRC']['gamma'], 0.01);
+
+        // Text tags
+        self::assertSame('Test Manufacturer', $result['deviceMfgDesc']);
+        self::assertSame('Test Model', $result['deviceModelDesc']);
+
+        // Technology signature
+        self::assertSame('CRT ', $result['technology']);
+    }
+
+    /**
+     * Builds a synthetic ICC v4 profile with expanded tag coverage for testing.
+     */
+    private function buildExpandedProfile(): string
+    {
+        $header = pack('N', 0)
+            . str_repeat("\0", 4)
+            . pack('N', 0x04200000)      // Version 4.2.0
+            . str_repeat("\0", 4)
+            . 'RGB '
+            . 'XYZ '
+            . str_repeat("\0", 12)
+            . 'acsp'
+            . str_repeat("\0", 24)
+            . pack('N', 0)
+            . pack('N', 0x0000F6D6)
+            . pack('N', 0x00010000)
+            . pack('N', 0x0000D32D)
+            . str_repeat("\0", 4)
+            . str_repeat("\0", 16)
+            . str_repeat("\0", 28);
+
+        $header = str_pad($header, 128, "\0");
+
+        // Build tag payloads
+
+        // XYZ tag helper: 'XYZ ' + reserved(4) + 3 x s15Fixed16Number
+        $buildXyz = static function (float $x, float $y, float $z): string {
+            $encode = static function (float $v): string {
+                $raw = (int) round($v * 65536.0);
+                if ($raw < 0) {
+                    $raw += 0x100000000;
+                }
+
+                return pack('N', $raw);
+            };
+
+            return 'XYZ ' . "\0\0\0\0" . $encode($x) . $encode($y) . $encode($z);
+        };
+
+        $bkptData = $buildXyz(0.0, 0.0, 0.0);
+        $rXyzData = $buildXyz(0.4361, 0.2225, 0.0139);
+        $gXyzData = $buildXyz(0.3851, 0.7169, 0.0971);
+        $bXyzData = $buildXyz(0.1431, 0.0606, 0.7141);
+        $lumiData = $buildXyz(76.0365, 80.0, 87.1246);
+
+        // Parametric curve type 0: Y = X^gamma
+        // 'para' + reserved(4) + functionType(2) + reserved(2) + gamma s15Fixed16
+        $gamma22   = (int) round(2.2 * 65536.0);
+        $paraData  = 'para' . "\0\0\0\0" . pack('n', 0) . "\0\0" . pack('N', $gamma22);
+        $rTrcData  = $paraData;
+        $gTrcData  = $paraData;
+        $bTrcData  = $paraData;
+
+        // mluc text helper for dmnd/dmdd
+        $buildMluc = static function (string $text): string {
+            $utf16       = '';
+            for ($i = 0; $i < strlen($text); ++$i) {
+                $utf16 .= "\x00" . $text[$i];
+            }
+
+            $stringOffset = 16 + 12;
+            $mluc         = 'mluc'
+                . pack('N', 0)
+                . pack('N', 1)
+                . pack('N', 12)
+                . 'enUS'
+                . pack('N', strlen($utf16))
+                . pack('N', $stringOffset)
+                . $utf16;
+
+            $padded = (int) (ceil(strlen($mluc) / 4) * 4);
+
+            return str_pad($mluc, $padded, "\0");
+        };
+
+        $dmndData = $buildMluc('Test Manufacturer');
+        $dmddData = $buildMluc('Test Model');
+
+        // Technology signature: 'sig ' + reserved(4) + 4-byte signature
+        $techData = 'sig ' . "\0\0\0\0" . 'CRT ';
+
+        // Description tag (mluc)
+        $descData = $buildMluc('Expanded Test Profile');
+
+        // Collect all tags
+        $tags = [
+            ['sig' => 'desc', 'data' => $descData],
+            ['sig' => 'bkpt', 'data' => $bkptData],
+            ['sig' => 'rXYZ', 'data' => $rXyzData],
+            ['sig' => 'gXYZ', 'data' => $gXyzData],
+            ['sig' => 'bXYZ', 'data' => $bXyzData],
+            ['sig' => 'lumi', 'data' => $lumiData],
+            ['sig' => 'rTRC', 'data' => $rTrcData],
+            ['sig' => 'gTRC', 'data' => $gTrcData],
+            ['sig' => 'bTRC', 'data' => $bTrcData],
+            ['sig' => 'dmnd', 'data' => $dmndData],
+            ['sig' => 'dmdd', 'data' => $dmddData],
+            ['sig' => 'tech', 'data' => $techData],
+        ];
+
+        $tagCount  = count($tags);
+        $tableSize = 4 + ($tagCount * 12);
+
+        // Tag data starts right after header + tag table
+        $dataOffset = 128 + $tableSize;
+
+        // Ensure data offset is 4-byte aligned
+        if (($dataOffset % 4) !== 0) {
+            $dataOffset = (int) (ceil($dataOffset / 4) * 4);
+        }
+
+        // Build tag table and concatenate data
+        $tagTable = pack('N', $tagCount);
+        $tagData  = '';
+        $cursor   = $dataOffset;
+
+        foreach ($tags as $tag) {
+            $paddedSize = (int) (ceil(strlen($tag['data']) / 4) * 4);
+            $padded     = str_pad($tag['data'], $paddedSize, "\0");
+
+            $tagTable .= $tag['sig']
+                . pack('N', $cursor)
+                . pack('N', $paddedSize);
+
+            $tagData .= $padded;
+            $cursor += $paddedSize;
+        }
+
+        // Pad between header+tagTable and tag data if needed
+        $padding = $dataOffset - (128 + $tableSize);
+        $profile = $header . $tagTable . str_repeat("\0", $padding) . $tagData;
+
+        return pack('N', strlen($profile)) . substr($profile, 4);
     }
 }
