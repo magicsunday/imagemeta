@@ -211,13 +211,12 @@ final readonly class GpsCoordinateConverter
         }
 
         $sign  = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
-        $value = $sign * ($deg + $min / 60.0 + $sec / 3600.0);
 
         // EXIF 3.0 §4.6.7.1.3 and §4.6.7.1.5 define nominal latitude/longitude
         // ranges, but reader-side Postel handling keeps out-of-range camera data
         // as-is so downstream consumers can decide how to interpret it.
 
-        return $value;
+        return $sign * ($deg + $min / 60.0 + $sec / 3600.0);
     }
 
     /**
