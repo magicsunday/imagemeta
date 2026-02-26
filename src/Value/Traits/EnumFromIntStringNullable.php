@@ -46,14 +46,12 @@ trait EnumFromIntStringNullable
             return null;
         }
 
-        $reflection = new ReflectionEnum(self::class);
-        $backing    = $reflection->getBackingType();
-
-        if (!$backing instanceof ReflectionNamedType) {
+        $backingTypeName = self::exifBackingTypeName();
+        if ($backingTypeName === '') {
             return null;
         }
 
-        if ($backing->getName() === 'int') {
+        if ($backingTypeName === 'int') {
             if (!is_numeric($value)) {
                 return null;
             }
@@ -62,5 +60,28 @@ trait EnumFromIntStringNullable
         }
 
         return self::tryFrom((string) $value);
+    }
+
+    /**
+     * Resolves and caches the enum backing type name per enum class.
+     *
+     * @return 'int'|'string'|''
+     */
+    private static function exifBackingTypeName(): string
+    {
+        /** @var array<class-string, string> $backingTypeCache */
+        static $backingTypeCache = [];
+
+        $class = self::class;
+        if (!isset($backingTypeCache[$class])) {
+            $reflection = new ReflectionEnum($class);
+            $backing    = $reflection->getBackingType();
+
+            $backingTypeCache[$class] = $backing instanceof ReflectionNamedType
+                ? $backing->getName()
+                : '';
+        }
+
+        return $backingTypeCache[$class];
     }
 }
