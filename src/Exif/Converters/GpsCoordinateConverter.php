@@ -210,7 +210,7 @@ final readonly class GpsCoordinateConverter
             $min = fmod($min, 60.0);
         }
 
-        $sign  = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
+        $sign = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
 
         // EXIF 3.0 §4.6.7.1.3 and §4.6.7.1.5 define nominal latitude/longitude
         // ranges, but reader-side Postel handling keeps out-of-range camera data
