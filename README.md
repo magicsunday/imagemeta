@@ -37,7 +37,7 @@
 ---
 
 ## 📌 Overview
-ImageMeta is a PHP library for read-only metadata extraction from image and media containers. It parses metadata from JPEG, ISO BMFF (for example HEIC, AVIF, MOV, MP4), and TIFF-based files. The library exposes both low-level parsed documents and a typed structured aggregate for application-level usage. Parsing is defensive by design, with explicit bounds checks and strict validation.
+ImageMeta is a PHP library for read-only metadata extraction from image and media containers. It parses metadata from JPEG, ISO BMFF (for example HEIC, AVIF, MOV, MP4), TIFF-based files, and JPEG XL containers. The library exposes both low-level parsed documents and a typed structured aggregate for application-level usage. Parsing is defensive by design, with explicit bounds checks and strict validation.
 
 | Key      | Value                                                   |
 |----------|---------------------------------------------------------|
@@ -66,15 +66,15 @@ Many PHP applications need one consistent metadata API across modern container f
 - Writing, editing, or re-serializing metadata.
 - Pixel/media decoding, rendering, or transcoding.
 - Network-based metadata resolution.
-- JPEG XL metadata parsing (JXL is detected, then rejected as unsupported for parsing).
+- JPEG XL codestream/pixel decoding or rendering.
 - Guaranteed support for every proprietary maker-note dialect.
 
 ## 🧩 Supported formats / features
 
 | Area                               | Status                                                                  |
 |------------------------------------|-------------------------------------------------------------------------|
-| Containers                         | `JPEG`, `ISO BMFF`, `TIFF`                                              |
-| JXL                                | Detection only; parsing not implemented                                 |
+| Containers                         | `JPEG`, `ISO BMFF`, `TIFF`, `JXL`                                       |
+| JXL                                | Container parsing: EXIF (`Exif` box) + XMP (`xml ` box) extraction      |
 | EXIF versions (capability mapping) | `1.0`, `1.1`, `2.0`, `2.1`, `2.2`, `2.21`, `2.3`, `2.31`, `2.32`, `3.0` |
 | XMP                                | RDF/XML parsing via `XMLReader`                                         |
 | IPTC                               | IIM extraction from JPEG APP13                                          |
@@ -86,6 +86,7 @@ Notes:
 
 - Container support is signature-based; there is no static extension whitelist.
 - File-level support depends on whether the input actually contains parseable metadata blocks.
+- For JXL, the current scope is metadata-box extraction (EXIF/XMP); no pixel/codestream decode and no IPTC/QuickTime extraction path.
 
 ## 🚀 Usage
 
@@ -111,6 +112,22 @@ $latitude = $structured->gps->latitudeCoordinate?->signed;
 $exif = $metadata->exifDoc;
 $xmp = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
 $quickTime = $metadata->quickTime;
+```
+
+JPEG XL example:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use MagicSunday\ImageMeta\MetadataReader;
+
+$metadata = MetadataReader::createDefault()->read('/path/to/image.jxl');
+
+// JXL currently exposes metadata carried in Exif/xml boxes.
+$exif = $metadata->exifDoc;
+$xmp = $metadata->xmpDoc;
 ```
 
 ## 🛡️ Error handling & guarantees
