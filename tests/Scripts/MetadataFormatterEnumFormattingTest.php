@@ -40,6 +40,8 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
     private ReflectionMethod $formatComponentsConfigurationMethod;
 
+    private ReflectionMethod $getTagNameMethod;
+
     private ReflectionMethod $formatValueMethod;
 
     protected function setUp(): void
@@ -51,6 +53,7 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
         $this->formatEnumNameMethod                = new ReflectionMethod($this->formatter, 'formatEnumName');
         $this->formatComponentsConfigurationMethod = new ReflectionMethod($this->formatter, 'formatComponentsConfiguration');
+        $this->getTagNameMethod                    = new ReflectionMethod($this->formatter, 'getTagName');
         $this->formatValueMethod                   = new ReflectionMethod($this->formatter, 'formatValue');
     }
 
@@ -126,6 +129,14 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         );
 
         self::assertSame('2.2.0.0', $actual);
+    }
+
+    #[Test]
+    public function resolvesInteroperabilityVersionTagNameInInteropIfd(): void
+    {
+        $actual = $this->getTagNameMethod->invoke($this->formatter, 0x0002, 'InteropIFD');
+
+        self::assertSame('Interoperability Version', $actual);
     }
 
     /**
