@@ -39,6 +39,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 /**
  * Exercises enum conversion helpers for EXIF-backed numeric values.
@@ -261,6 +262,17 @@ final class EnumMappingTest extends TestCase
         self::assertNull(GpsStatus::fromExifValue('B'));
         self::assertNull(GpsDistanceRef::fromExifValue('Y'));
         self::assertNull(GpsMeasureMode::fromExifValue('5'));
+    }
+
+    #[Test]
+    public function resolvesExifBackingTypeNameForIntBackedEnums(): void
+    {
+        $method = new ReflectionMethod(Orientation::class, 'exifBackingTypeName');
+        $first  = $method->invoke(null);
+        $second = $method->invoke(null);
+
+        self::assertSame('int', $first);
+        self::assertSame('int', $second);
     }
 
     /**
