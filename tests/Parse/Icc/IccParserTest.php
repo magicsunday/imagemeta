@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Icc;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Model\Icc\IccProfile;
 use MagicSunday\ImageMeta\Model\Icc\IccTag;
 use MagicSunday\ImageMeta\Parse\Icc\IccBinaryReader;
 use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
@@ -65,11 +66,12 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('Test Profile', $result['description']);
-        self::assertSame('2.4', $result['version']);
-        self::assertSame('XYZ ', $result['pcs']);
-        self::assertSame('Media-Relative Colorimetric', $result['renderingIntent']);
-        self::assertNull($result['profileId']);
+        self::assertInstanceOf(IccProfile::class, $result);
+        self::assertSame('Test Profile', $result->description);
+        self::assertSame('2.4', $result->version);
+        self::assertSame('XYZ ', $result->pcs);
+        self::assertSame('Media-Relative Colorimetric', $result->renderingIntent);
+        self::assertNull($result->profileId);
     }
 
     /**
@@ -91,11 +93,12 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode(null, $segments);
 
         self::assertNotNull($result);
-        self::assertSame('Test Profile', $result['description']);
-        self::assertSame('2.4', $result['version']);
-        self::assertSame('XYZ ', $result['pcs']);
-        self::assertSame('Media-Relative Colorimetric', $result['renderingIntent']);
-        self::assertNull($result['profileId']);
+        self::assertInstanceOf(IccProfile::class, $result);
+        self::assertSame('Test Profile', $result->description);
+        self::assertSame('2.4', $result->version);
+        self::assertSame('XYZ ', $result->pcs);
+        self::assertSame('Media-Relative Colorimetric', $result->renderingIntent);
+        self::assertNull($result->profileId);
     }
 
     /**
@@ -218,8 +221,8 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode(null, $segments);
 
         self::assertNotNull($result);
-        self::assertSame('Test Profile', $result['description']);
-        self::assertSame('2.4', $result['version']);
+        self::assertSame('Test Profile', $result->description);
+        self::assertSame('2.4', $result->version);
     }
 
     /**
@@ -368,7 +371,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('2.1.3', $result['version']);
+        self::assertSame('2.1.3', $result->version);
     }
 
     /**
@@ -386,8 +389,8 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('2024:06:15 12:30:45', $result['profileDateTime']);
-        self::assertSame('2024:06:15 12:30:45Z', $result['profileDateTimeUtc']);
+        self::assertSame('2024:06:15 12:30:45', $result->profileDateTime);
+        self::assertSame('2024:06:15 12:30:45Z', $result->profileDateTimeUtc);
     }
 
     /**
@@ -405,8 +408,8 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['profileDateTime']);
-        self::assertNull($result['profileDateTimeUtc']);
+        self::assertNull($result->profileDateTime);
+        self::assertNull($result->profileDateTimeUtc);
     }
 
     /**
@@ -424,8 +427,8 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('2024:01:01 00:00:00', $result['profileDateTime']);
-        self::assertSame('2024:01:01 00:00:00Z', $result['profileDateTimeUtc']);
+        self::assertSame('2024:01:01 00:00:00', $result->profileDateTime);
+        self::assertSame('2024:01:01 00:00:00Z', $result->profileDateTimeUtc);
     }
 
     /**
@@ -443,8 +446,8 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('2024:12:31 23:59:59', $result['profileDateTime']);
-        self::assertSame('2024:12:31 23:59:59Z', $result['profileDateTimeUtc']);
+        self::assertSame('2024:12:31 23:59:59', $result->profileDateTime);
+        self::assertSame('2024:12:31 23:59:59Z', $result->profileDateTimeUtc);
     }
 
     /**
@@ -462,8 +465,8 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['profileDateTime']);
-        self::assertNull($result['profileDateTimeUtc']);
+        self::assertNull($result->profileDateTime);
+        self::assertNull($result->profileDateTimeUtc);
     }
 
     /**
@@ -481,8 +484,8 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['profileDateTime']);
-        self::assertNull($result['profileDateTimeUtc']);
+        self::assertNull($result->profileDateTime);
+        self::assertNull($result->profileDateTimeUtc);
     }
 
     /**
@@ -500,8 +503,8 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['profileDateTime']);
-        self::assertNull($result['profileDateTimeUtc']);
+        self::assertNull($result->profileDateTime);
+        self::assertNull($result->profileDateTimeUtc);
     }
 
     /**
@@ -519,8 +522,8 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['profileDateTime']);
-        self::assertNull($result['profileDateTimeUtc']);
+        self::assertNull($result->profileDateTime);
+        self::assertNull($result->profileDateTimeUtc);
     }
 
     /**
@@ -538,8 +541,8 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['profileDateTime']);
-        self::assertNull($result['profileDateTimeUtc']);
+        self::assertNull($result->profileDateTime);
+        self::assertNull($result->profileDateTimeUtc);
     }
 
     /**
@@ -557,8 +560,8 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['profileDateTime']);
-        self::assertNull($result['profileDateTimeUtc']);
+        self::assertNull($result->profileDateTime);
+        self::assertNull($result->profileDateTimeUtc);
     }
 
     /**
@@ -576,8 +579,8 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['profileDateTime']);
-        self::assertNull($result['profileDateTimeUtc']);
+        self::assertNull($result->profileDateTime);
+        self::assertNull($result->profileDateTimeUtc);
     }
 
     /**
@@ -595,8 +598,8 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('2024:02:29 10:00:00', $result['profileDateTime']);
-        self::assertSame('2024:02:29 10:00:00Z', $result['profileDateTimeUtc']);
+        self::assertSame('2024:02:29 10:00:00', $result->profileDateTime);
+        self::assertSame('2024:02:29 10:00:00Z', $result->profileDateTimeUtc);
     }
 
     /**
@@ -632,7 +635,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('Hi', $result['description']);
+        self::assertSame('Hi', $result->description);
     }
 
     /**
@@ -650,7 +653,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('Hi', $result['description']);
+        self::assertSame('Hi', $result->description);
     }
 
     /**
@@ -761,8 +764,8 @@ final class IccParserTest extends TestCase
 
         self::assertNotNull($resultA);
         self::assertNotNull($resultB);
-        self::assertSame($resultA['description'], $resultB['description']);
-        self::assertSame('Hello', $resultA['description']);
+        self::assertSame($resultA->description, $resultB->description);
+        self::assertSame('Hello', $resultA->description);
     }
 
     /**
@@ -780,7 +783,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('Hello', $result['description']);
+        self::assertSame('Hello', $result->description);
     }
 
     /**
@@ -798,7 +801,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('Hallo', $result['description']);
+        self::assertSame('Hallo', $result->description);
     }
 
     /**
@@ -979,7 +982,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['copyright']); // text tag is invalid
+        self::assertNull($result->copyright); // text tag is invalid
     }
 
     /**
@@ -996,7 +999,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['copyright']);
+        self::assertNull($result->copyright);
     }
 
     /**
@@ -1014,7 +1017,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['copyright']); // text tag is invalid
+        self::assertNull($result->copyright); // text tag is invalid
     }
 
     /**
@@ -1031,7 +1034,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('Valid ASCII Text', $result['copyright']);
+        self::assertSame('Valid ASCII Text', $result->copyright);
     }
 
     /**
@@ -1050,7 +1053,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['copyright']);
+        self::assertNull($result->copyright);
     }
 
     /**
@@ -1115,7 +1118,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('Valid ASCII', $result['description']);
+        self::assertSame('Valid ASCII', $result->description);
     }
 
     /**
@@ -1133,7 +1136,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['description']); // desc tag is invalid
+        self::assertNull($result->description); // desc tag is invalid
     }
 
     /**
@@ -1151,7 +1154,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['description']); // desc tag is invalid
+        self::assertNull($result->description); // desc tag is invalid
     }
 
     /**
@@ -1168,7 +1171,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['description']); // desc tag is invalid
+        self::assertNull($result->description); // desc tag is invalid
     }
 
     /**
@@ -1187,7 +1190,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['description']);
+        self::assertNull($result->description);
     }
 
     /**
@@ -1204,7 +1207,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['copyright']);
+        self::assertNull($result->copyright);
     }
 
     /**
@@ -1221,7 +1224,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNull($result['description']);
+        self::assertNull($result->description);
     }
 
     /**
@@ -1378,7 +1381,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNotNull($result['profileId']);
+        self::assertNotNull($result->profileId);
     }
 
     /**
@@ -1400,7 +1403,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertNotNull($result['illuminant']);
+        self::assertNotNull($result->illuminant);
     }
 
     /**
@@ -1418,7 +1421,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('XVND', $result['profileClass']);
+        self::assertSame('XVND', $result->profileClass);
     }
 
     /**
@@ -1436,7 +1439,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('UVWX', $result['colorSpace']);
+        self::assertSame('UVWX', $result->colorSpace);
     }
 
     /**
@@ -1454,7 +1457,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('Luv ', $result['pcs']);
+        self::assertSame('Luv ', $result->pcs);
     }
 
     /**
@@ -1472,7 +1475,7 @@ final class IccParserTest extends TestCase
         $result  = $decoder->decode($profile);
 
         self::assertNotNull($result);
-        self::assertSame('LNUX', $result['primaryPlatform']);
+        self::assertSame('LNUX', $result->primaryPlatform);
     }
 
     /**
@@ -1571,70 +1574,70 @@ final class IccParserTest extends TestCase
         self::assertNotNull($result);
 
         // XYZ tags
-        self::assertNotNull($result['blackPoint']);
-        self::assertEqualsWithDelta(0.0, $result['blackPoint']['x'], 0.001);
-        self::assertEqualsWithDelta(0.0, $result['blackPoint']['y'], 0.001);
-        self::assertEqualsWithDelta(0.0, $result['blackPoint']['z'], 0.001);
+        self::assertNotNull($result->blackPoint);
+        self::assertEqualsWithDelta(0.0, $result->blackPoint['x'], 0.001);
+        self::assertEqualsWithDelta(0.0, $result->blackPoint['y'], 0.001);
+        self::assertEqualsWithDelta(0.0, $result->blackPoint['z'], 0.001);
 
-        self::assertNotNull($result['redMatrixColumn']);
-        self::assertEqualsWithDelta(0.4361, $result['redMatrixColumn']['x'], 0.001);
-        self::assertEqualsWithDelta(0.2225, $result['redMatrixColumn']['y'], 0.001);
-        self::assertEqualsWithDelta(0.0139, $result['redMatrixColumn']['z'], 0.001);
+        self::assertNotNull($result->redMatrixColumn);
+        self::assertEqualsWithDelta(0.4361, $result->redMatrixColumn['x'], 0.001);
+        self::assertEqualsWithDelta(0.2225, $result->redMatrixColumn['y'], 0.001);
+        self::assertEqualsWithDelta(0.0139, $result->redMatrixColumn['z'], 0.001);
 
-        self::assertNotNull($result['greenMatrixColumn']);
-        self::assertEqualsWithDelta(0.3851, $result['greenMatrixColumn']['x'], 0.001);
-        self::assertEqualsWithDelta(0.7169, $result['greenMatrixColumn']['y'], 0.001);
-        self::assertEqualsWithDelta(0.0971, $result['greenMatrixColumn']['z'], 0.001);
+        self::assertNotNull($result->greenMatrixColumn);
+        self::assertEqualsWithDelta(0.3851, $result->greenMatrixColumn['x'], 0.001);
+        self::assertEqualsWithDelta(0.7169, $result->greenMatrixColumn['y'], 0.001);
+        self::assertEqualsWithDelta(0.0971, $result->greenMatrixColumn['z'], 0.001);
 
-        self::assertNotNull($result['blueMatrixColumn']);
-        self::assertEqualsWithDelta(0.1431, $result['blueMatrixColumn']['x'], 0.001);
-        self::assertEqualsWithDelta(0.0606, $result['blueMatrixColumn']['y'], 0.001);
-        self::assertEqualsWithDelta(0.7141, $result['blueMatrixColumn']['z'], 0.001);
+        self::assertNotNull($result->blueMatrixColumn);
+        self::assertEqualsWithDelta(0.1431, $result->blueMatrixColumn['x'], 0.001);
+        self::assertEqualsWithDelta(0.0606, $result->blueMatrixColumn['y'], 0.001);
+        self::assertEqualsWithDelta(0.7141, $result->blueMatrixColumn['z'], 0.001);
 
-        self::assertNotNull($result['luminance']);
-        self::assertEqualsWithDelta(76.0365, $result['luminance']['x'], 0.01);
-        self::assertEqualsWithDelta(80.0, $result['luminance']['y'], 0.01);
-        self::assertEqualsWithDelta(87.1246, $result['luminance']['z'], 0.01);
+        self::assertNotNull($result->luminance);
+        self::assertEqualsWithDelta(76.0365, $result->luminance['x'], 0.01);
+        self::assertEqualsWithDelta(80.0, $result->luminance['y'], 0.01);
+        self::assertEqualsWithDelta(87.1246, $result->luminance['z'], 0.01);
 
         // TRC tags (parametric curve type 0: Y = X^gamma)
-        self::assertNotNull($result['redTRC']);
-        self::assertArrayHasKey('gamma', $result['redTRC']);
-        self::assertEqualsWithDelta(2.2, $result['redTRC']['gamma'], 0.01);
+        self::assertNotNull($result->redTRC);
+        self::assertArrayHasKey('gamma', $result->redTRC);
+        self::assertEqualsWithDelta(2.2, $result->redTRC['gamma'], 0.01);
 
-        self::assertNotNull($result['greenTRC']);
-        self::assertArrayHasKey('gamma', $result['greenTRC']);
-        self::assertEqualsWithDelta(2.2, $result['greenTRC']['gamma'], 0.01);
+        self::assertNotNull($result->greenTRC);
+        self::assertArrayHasKey('gamma', $result->greenTRC);
+        self::assertEqualsWithDelta(2.2, $result->greenTRC['gamma'], 0.01);
 
-        self::assertNotNull($result['blueTRC']);
-        self::assertArrayHasKey('gamma', $result['blueTRC']);
-        self::assertEqualsWithDelta(2.2, $result['blueTRC']['gamma'], 0.01);
+        self::assertNotNull($result->blueTRC);
+        self::assertArrayHasKey('gamma', $result->blueTRC);
+        self::assertEqualsWithDelta(2.2, $result->blueTRC['gamma'], 0.01);
 
         // Text tags
-        self::assertSame('Test Manufacturer', $result['deviceMfgDesc']);
-        self::assertSame('Test Model', $result['deviceModelDesc']);
+        self::assertSame('Test Manufacturer', $result->deviceMfgDesc);
+        self::assertSame('Test Model', $result->deviceModelDesc);
 
         // Technology signature
-        self::assertSame('CRT ', $result['technology']);
+        self::assertSame('CRT ', $result->technology);
 
         // Viewing conditions (ICC.1:2022 §9.2.51 / §10.30)
-        self::assertNotNull($result['viewingConditions']);
-        self::assertEqualsWithDelta(19.6445, $result['viewingConditions']['illuminant']['x'], 0.001);
-        self::assertEqualsWithDelta(20.0, $result['viewingConditions']['illuminant']['y'], 0.001);
-        self::assertEqualsWithDelta(16.5330, $result['viewingConditions']['illuminant']['z'], 0.001);
-        self::assertEqualsWithDelta(0.3457, $result['viewingConditions']['surround']['x'], 0.001);
-        self::assertEqualsWithDelta(0.3585, $result['viewingConditions']['surround']['y'], 0.001);
-        self::assertEqualsWithDelta(0.2958, $result['viewingConditions']['surround']['z'], 0.001);
-        self::assertSame(1, $result['viewingConditions']['illuminantType']);
+        self::assertNotNull($result->viewingConditions);
+        self::assertEqualsWithDelta(19.6445, $result->viewingConditions['illuminant']['x'], 0.001);
+        self::assertEqualsWithDelta(20.0, $result->viewingConditions['illuminant']['y'], 0.001);
+        self::assertEqualsWithDelta(16.5330, $result->viewingConditions['illuminant']['z'], 0.001);
+        self::assertEqualsWithDelta(0.3457, $result->viewingConditions['surround']['x'], 0.001);
+        self::assertEqualsWithDelta(0.3585, $result->viewingConditions['surround']['y'], 0.001);
+        self::assertEqualsWithDelta(0.2958, $result->viewingConditions['surround']['z'], 0.001);
+        self::assertSame(1, $result->viewingConditions['illuminantType']);
 
         // Measurement data (ICC.1:2022 §9.2.34 / §10.14)
-        self::assertNotNull($result['measurement']);
-        self::assertSame(1, $result['measurement']['observer']);
-        self::assertEqualsWithDelta(0.9642, $result['measurement']['backing']['x'], 0.001);
-        self::assertEqualsWithDelta(1.0000, $result['measurement']['backing']['y'], 0.001);
-        self::assertEqualsWithDelta(0.8249, $result['measurement']['backing']['z'], 0.001);
-        self::assertSame(1, $result['measurement']['geometry']);
-        self::assertEqualsWithDelta(0.0, $result['measurement']['flare'], 0.001);
-        self::assertSame(1, $result['measurement']['illuminant']);
+        self::assertNotNull($result->measurement);
+        self::assertSame(1, $result->measurement['observer']);
+        self::assertEqualsWithDelta(0.9642, $result->measurement['backing']['x'], 0.001);
+        self::assertEqualsWithDelta(1.0000, $result->measurement['backing']['y'], 0.001);
+        self::assertEqualsWithDelta(0.8249, $result->measurement['backing']['z'], 0.001);
+        self::assertSame(1, $result->measurement['geometry']);
+        self::assertEqualsWithDelta(0.0, $result->measurement['flare'], 0.001);
+        self::assertSame(1, $result->measurement['illuminant']);
     }
 
     /**
