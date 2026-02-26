@@ -29,7 +29,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
 
+use function array_map;
 use function str_repeat;
 
 /**
@@ -269,5 +272,25 @@ final class AppleMakerNotesMergerTest extends TestCase
         self::assertTrue($flags['nightMode']);
         self::assertFalse($flags['hdrEnabled']);
         self::assertTrue($flags['hdrAuto']);
+    }
+
+    /**
+     * Guards the readability refactor by requiring dedicated fallback helpers.
+     * This keeps fallback precedence logic centralized instead of repeated per field.
+     */
+    #[Test]
+    public function mergeUsesDedicatedFallbackHelpers(): void
+    {
+        $reflection = new ReflectionClass(AppleMakerNotesMerger::class);
+        $privateMethods = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('preferMakerString', $privateMethods);
+        self::assertContains('preferMakerInt', $privateMethods);
+        self::assertContains('preferMakerFloat', $privateMethods);
+        self::assertContains('preferMakerFloatList', $privateMethods);
+        self::assertContains('normalizeFlags', $privateMethods);
     }
 }
