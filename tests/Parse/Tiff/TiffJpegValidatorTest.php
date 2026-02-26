@@ -138,16 +138,15 @@ final class TiffJpegValidatorTest extends TestCase
     }
 
     #[Test]
-    public function rejectsLengthWithoutOffset(): void
+    public function toleratesLengthWithoutOffset(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGInterchangeFormatLength requires JPEGInterchangeFormat');
-
         $ifd = new Ifd([
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, TiffConst::TYPE_LONG, 1, 100),
         ]);
 
         $this->validator->validateJpegInterchangePairTags($ifd);
+
+        $this->addToAssertionCount(1);
     }
 
     #[Test]

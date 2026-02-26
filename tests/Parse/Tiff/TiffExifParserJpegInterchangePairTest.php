@@ -86,6 +86,24 @@ final class TiffExifParserJpegInterchangePairTest extends TestCase
     }
 
     /**
+     * Length without offset is tolerated (Postel's Law): thumbnail extraction is skipped.
+     */
+    #[Test]
+    public function itToleratesMissingJpegInterchangeFormat(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildBlobWithIfd1JpegInterchange(
+                offsetValue: null,
+                lengthValue: -1,
+            ),
+        );
+
+        self::assertNotNull($parsed->ifd1);
+        self::assertNull($parsed->ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT));
+        self::assertNotNull($parsed->ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH));
+    }
+
+    /**
      * Non-zero offset with length=0 is tolerated (Postel's Law).
      */
     #[Test]
