@@ -88,7 +88,7 @@ final readonly class VideoSampleEntryParser
 
         $dataSize = $win->readU32BE();
         if ($dataSize !== 0) {
-            throw new ParseError('video sample entry data size must be 0', 1502);
+            throw new ParseError('video sample entry data size must be 0', 2051);
         }
 
         $frameCount = $win->readU16BE();

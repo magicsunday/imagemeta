@@ -108,7 +108,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
         if ($totalLength <= 0) {
             throw new ParseError(
                 sprintf('ExtendedXMP APP1 segment at offset %d has non-positive full length %d', $offset, $totalLength),
-                1472,
+                1998,
             );
         }
 
@@ -129,7 +129,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
         if ($chunkLength === 0) {
             throw new ParseError(
                 sprintf('ExtendedXMP APP1 segment at offset %d has empty chunk payload', $offset),
-                1473,
+                2000,
             );
         }
 
@@ -141,7 +141,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
                     $chunkOffset,
                     $totalLength,
                 ),
-                1473,
+                2001,
             );
         }
 
@@ -154,7 +154,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
                     $chunkOffset + $chunkLength,
                     $totalLength,
                 ),
-                1473,
+                2002,
             );
         }
 
@@ -175,7 +175,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
                     $this->totalLength[$guid],
                     $firstOffset,
                 ),
-                1474,
+                2004,
             );
         }
 
@@ -273,7 +273,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
                         $guid,
                         $offset,
                     ),
-                    1476,
+                    2006,
                 );
             }
         }
@@ -316,7 +316,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
         if (($chunks === []) || ($totalLength <= 0)) {
             throw new ParseError(
                 sprintf('ExtendedXMP GUID %s has no decodable extension chunks', $guid),
-                1477,
+                2008,
             );
         }
 
@@ -337,7 +337,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
                         $cursor,
                         $chunk['offset'],
                     ),
-                    1478,
+                    2010,
                 );
             }
 
@@ -366,7 +366,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
                     $cursor,
                     $baseOffset,
                 ),
-                1478,
+                2011,
             );
         }
 

@@ -101,7 +101,7 @@ final readonly class TiffJpegThumbnailValidator
                     $thumbnailOffset,
                     $thumbnailLength,
                 ),
-                1411,
+                1983,
                 $exception,
             );
         } finally {

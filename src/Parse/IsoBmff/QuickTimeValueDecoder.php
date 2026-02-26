@@ -255,7 +255,7 @@ final readonly class QuickTimeValueDecoder
 
         if ($type === self::DATA_TYPE_JPEG_WRAPPER) {
             if (($payloadSize < 2) || (!str_starts_with($payload, "\xFF\xD8"))) {
-                throw new ParseError('data box type 13 payload does not match JPEG/JFIF signature.', 1467);
+                throw new ParseError('data box type 13 payload does not match JPEG/JFIF signature.', 1994);
             }
 
             return $payload;
@@ -425,7 +425,7 @@ final readonly class QuickTimeValueDecoder
                 throw new ParseError(sprintf(
                     'metadata item "%s" data values must be ordered from most-specific to most-general per QuickTime File Format 2012 Data Ordering (p. 142)',
                     $entryType,
-                ), 1420);
+                ), 1985);
             }
 
             $previousSpecificity = $specificity;
@@ -465,7 +465,7 @@ final readonly class QuickTimeValueDecoder
         if ($payloadSize < 1 || $payloadSize > 4) {
             throw new ParseError(
                 sprintf('QuickTime integer payload must be 1–4 bytes, got %d', $payloadSize),
-                1464,
+                1993,
             );
         }
 

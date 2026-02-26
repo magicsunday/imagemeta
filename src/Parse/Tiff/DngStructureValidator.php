@@ -150,7 +150,7 @@ final readonly class DngStructureValidator
         if (!$ifd->get(DngTag::UNIQUE_CAMERA_MODEL) instanceof IfdEntry) {
             throw new ParseError(
                 'DNG requires UniqueCameraModel tag in IFD0 per DNG 1.7.1.0.',
-                1499,
+                2046,
             );
         }
     }
@@ -183,7 +183,7 @@ final readonly class DngStructureValidator
                     $required,
                     $photoValue !== null ? (string) $photoValue : 'none',
                 ),
-                1485,
+                2018,
             );
         }
     }
@@ -200,7 +200,7 @@ final readonly class DngStructureValidator
                         'DNG tag 0x%04X is restricted to IFD 0 per DNG 1.7.1.0 but found in additional IFD.',
                         $tag,
                     ),
-                    1488,
+                    2021,
                 );
             }
         }
@@ -235,21 +235,21 @@ final readonly class DngStructureValidator
         ) {
             throw new ParseError(
                 'JXL tags (JXLDistance, JXLEffort, JXLDecodeSpeed) require Compression = 52546 (JPEG XL).',
-                1490,
+                2024,
             );
         }
 
         if ($jxlEffort instanceof IfdEntry && is_int($jxlEffort->value) && ($jxlEffort->value < 1 || $jxlEffort->value > 9)) {
             throw new ParseError(
                 sprintf('JXLEffort must be 1–9, got %d.', $jxlEffort->value),
-                1489,
+                2022,
             );
         }
 
         if ($jxlDecodeSpeed instanceof IfdEntry && is_int($jxlDecodeSpeed->value) && ($jxlDecodeSpeed->value < 1 || $jxlDecodeSpeed->value > 4)) {
             throw new ParseError(
                 sprintf('JXLDecodeSpeed must be 1–4, got %d.', $jxlDecodeSpeed->value),
-                1489,
+                2023,
             );
         }
 
@@ -258,7 +258,7 @@ final readonly class DngStructureValidator
         if ($spp instanceof IfdEntry && is_int($spp->value) && $spp->value !== 1 && $spp->value !== 3) {
             throw new ParseError(
                 sprintf('JPEG XL SamplesPerPixel must be 1 or 3, got %d.', $spp->value),
-                1492,
+                2027,
             );
         }
 
@@ -267,7 +267,7 @@ final readonly class DngStructureValidator
         if ($photo instanceof IfdEntry && is_int($photo->value) && !in_array($photo->value, [0, 1, 2, 4, 32803, 34892, 51177, 52527], true)) {
             throw new ParseError(
                 sprintf('JPEG XL PhotometricInterpretation %d is not allowed.', $photo->value),
-                1493,
+                2028,
             );
         }
     }
@@ -289,7 +289,7 @@ final readonly class DngStructureValidator
         if (!$ifd->get(DngTag::CFA_REPEAT_PATTERN_DIM) instanceof IfdEntry) {
             throw new ParseError(
                 'CFA photometric (32803) requires CFARepeatPatternDim in the same IFD.',
-                1491,
+                2025,
             );
         }
 
@@ -298,7 +298,7 @@ final readonly class DngStructureValidator
         if (!$cfaEntry instanceof IfdEntry) {
             throw new ParseError(
                 'CFA photometric (32803) requires CFAPattern in the same IFD.',
-                1491,
+                2026,
             );
         }
 
@@ -316,7 +316,7 @@ final readonly class DngStructureValidator
             if (is_int($color) && $color > 2) {
                 throw new ParseError(
                     'Non-RGB CFA images require CFAPlaneColor per DNG 1.7.1.0.',
-                    1497,
+                    2038,
                 );
             }
         }
@@ -495,7 +495,7 @@ final readonly class DngStructureValidator
             if (($length - $offset) < 5) {
                 throw new ParseError(
                     sprintf('RGBTables payload truncated at table %d fields.', $t),
-                    1530,
+                    2061,
                 );
             }
 
@@ -806,7 +806,7 @@ final readonly class DngStructureValidator
         if (!is_int($entry->value) || $entry->value < 0 || $entry->value > 4) {
             throw new ParseError(
                 sprintf('PreviewColorSpace value must be 0..4, got %d.', is_int($entry->value) ? $entry->value : -1),
-                1560,
+                2062,
             );
         }
     }
@@ -828,7 +828,7 @@ final readonly class DngStructureValidator
         if ($entry->type !== TiffConst::TYPE_ASCII) {
             throw new ParseError(
                 sprintf('PreviewDateTime must use ASCII type, got %d.', $entry->type),
-                1561,
+                2063,
             );
         }
 
@@ -843,7 +843,7 @@ final readonly class DngStructureValidator
         if (preg_match('/^\d{4}-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/', $entry->value, $m) !== 1) {
             throw new ParseError(
                 sprintf('PreviewDateTime is not a valid ISO 8601 timestamp: %s.', $entry->value),
-                1563,
+                2064,
             );
         }
 
@@ -856,7 +856,7 @@ final readonly class DngStructureValidator
         if ($month < 1 || $month > 12 || $day < 1 || $day > 31 || $hour > 23 || $minute > 59 || $second > 59) {
             throw new ParseError(
                 sprintf('PreviewDateTime contains out-of-range date/time components: %s.', $entry->value),
-                1564,
+                2065,
             );
         }
     }

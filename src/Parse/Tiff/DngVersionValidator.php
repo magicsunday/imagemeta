@@ -86,7 +86,7 @@ final readonly class DngVersionValidator
                     $bwVer[3],
                     ...DngValidationSupport::SUPPORTED_DNG_VERSION,
                 ),
-                1496,
+                2034,
             );
         }
     }
@@ -114,7 +114,7 @@ final readonly class DngVersionValidator
                     $dngVer[2],
                     $dngVer[3],
                 ),
-                1498,
+                2043,
             );
         }
 
@@ -128,7 +128,7 @@ final readonly class DngVersionValidator
                     $dngVer[3],
                     ...DngValidationSupport::SUPPORTED_DNG_VERSION,
                 ),
-                1499,
+                2047,
             );
         }
     }
@@ -163,7 +163,7 @@ final readonly class DngVersionValidator
                     $dngVer[2],
                     $dngVer[3],
                 ),
-                1497,
+                2039,
             );
         }
     }
@@ -184,7 +184,7 @@ final readonly class DngVersionValidator
                         'DNG tag 0x%04X found in IFD 0 but required DNGVersion tag is missing.',
                         $tag,
                     ),
-                    1498,
+                    2044,
                 );
             }
         }
@@ -231,7 +231,7 @@ final readonly class DngVersionValidator
                         $bwVer[2],
                         $bwVer[3],
                     ),
-                    1478,
+                    2012,
                 );
             }
         }
@@ -265,7 +265,7 @@ final readonly class DngVersionValidator
                     $bwVer[2],
                     $bwVer[3],
                 ),
-                1500,
+                2049,
             );
         }
     }

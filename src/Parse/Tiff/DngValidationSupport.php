@@ -365,7 +365,7 @@ final readonly class DngValidationSupport
             if (count($value->values) !== 2) {
                 throw new ParseError(
                     sprintf('%s must decode to exactly two components.', $tagName),
-                    1602,
+                    2068,
                 );
             }
 
@@ -374,7 +374,7 @@ final readonly class DngValidationSupport
                 if ($rational->denominator <= 0) {
                     throw new ParseError(
                         sprintf('%s rational components must have denominator > 0.', $tagName),
-                        1603,
+                        2070,
                     );
                 }
 
@@ -388,7 +388,7 @@ final readonly class DngValidationSupport
             if (count($value->values) !== 2) {
                 throw new ParseError(
                     sprintf('%s must decode to exactly two components.', $tagName),
-                    1602,
+                    2069,
                 );
             }
 
@@ -406,7 +406,7 @@ final readonly class DngValidationSupport
 
         throw new ParseError(
             sprintf('%s must decode to a two-component numeric payload.', $tagName),
-            1604,
+            2071,
         );
     }
 

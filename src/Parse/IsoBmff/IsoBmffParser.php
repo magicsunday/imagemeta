@@ -539,7 +539,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
         $handle = fopen('php://temp', 'w+b');
         if ($handle === false) {
-            throw new ParseError('unable to create nested metadata stream.', 1464);
+            throw new ParseError('unable to create nested metadata stream.', 1992);
         }
 
         $written = fwrite($handle, pack('N', $metaSize) . BoxType::META->value . $payload);

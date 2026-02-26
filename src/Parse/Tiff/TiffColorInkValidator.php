@@ -417,7 +417,7 @@ final readonly class TiffColorInkValidator
                     $dotRangeEntry->count,
                     count($dotRangeValues),
                 ),
-                1721,
+                2078,
             );
         }
 

@@ -268,7 +268,7 @@ final readonly class TiffValueDecoder
                     $count,
                     $componentSize,
                 ),
-                1339,
+                1978,
             );
         }
 

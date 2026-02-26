@@ -205,14 +205,14 @@ final readonly class DngValueNormalizer
         if ($horizontalRepeatPixelUnit === 0 || $verticalRepeatPixelUnit === 0) {
             throw new ParseError(
                 sprintf('CFAPattern repeat units must be non-zero, got %d x %d', $horizontalRepeatPixelUnit, $verticalRepeatPixelUnit),
-                1506,
+                2058,
             );
         }
 
         if ($payloadLen !== $expectedSize) {
             throw new ParseError(
                 sprintf('CFAPattern payload size %d does not match expected %d (4 + %d x %d)', $payloadLen, $expectedSize, $horizontalRepeatPixelUnit, $verticalRepeatPixelUnit),
-                1507,
+                2059,
             );
         }
 
@@ -251,7 +251,7 @@ final readonly class DngValueNormalizer
             $this->countedImageDataTagName($tag),
             $tag,
             $type,
-        ), 1600);
+        ), 2066);
     }
 
     /**

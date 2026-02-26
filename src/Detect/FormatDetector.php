@@ -135,7 +135,7 @@ final readonly class FormatDetector
             try {
                 $code = ord($stream->read(1));
             } catch (BoundsError) {
-                throw new ParseError('JPEG stream too short: no marker after SOI', 1439);
+                throw new ParseError('JPEG stream too short: no marker after SOI', 1986);
             }
         }
 

@@ -200,7 +200,7 @@ final class IptcParser implements IptcParserInterface
                             $lengthBytes,
                             self::IIM_EXTENDED_LENGTH_MAX_BYTES,
                         ),
-                        1141,
+                        1969,
                     );
                 }
 

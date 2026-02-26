@@ -230,7 +230,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
     public function rejectsStripOffsetsWithSignedType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1600);
+        $this->expectExceptionCode(2066);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildStripLayoutTiff(
@@ -253,7 +253,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
     public function rejectsStripByteCountsWithSignedType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1600);
+        $this->expectExceptionCode(2066);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildStripLayoutTiff(
@@ -276,7 +276,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
     public function rejectsStripByteCountsWithIfdType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1600);
+        $this->expectExceptionCode(2066);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildStripLayoutTiff(

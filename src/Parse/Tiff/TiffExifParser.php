@@ -143,7 +143,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->bo = match ($boSig) {
             'II'    => Endian::Little,
             'MM'    => Endian::Big,
-            default => throw new ParseError('Bad TIFF byte order', 1301),
+            default => throw new ParseError('Bad TIFF byte order', 1970),
         };
 
         $this->dngValidator        = new DngValidator($this->bo, $this->buffer);
@@ -256,7 +256,7 @@ final class TiffExifParser implements TiffExifParserInterface
                 if (count($visitedOffsets) >= ParserLimits::MAX_IFD_CHAIN_LENGTH) {
                     throw new ParseError(
                         sprintf('IFD chain length exceeds maximum allowed %d.', ParserLimits::MAX_IFD_CHAIN_LENGTH),
-                        1964,
+                        2082,
                     );
                 }
 
@@ -408,7 +408,7 @@ final class TiffExifParser implements TiffExifParserInterface
             $firstIfd = $this->binaryReader->readU64();
 
             if ($firstIfd->isZero()) {
-                throw new ParseError('missing 0th IFD offset', 1302);
+                throw new ParseError('missing 0th IFD offset', 1971);
             }
 
             return $this->readIfd($firstIfd);
@@ -420,7 +420,7 @@ final class TiffExifParser implements TiffExifParserInterface
             $firstIfd = $this->binaryReader->readU32();
 
             if ($firstIfd < TiffConst::HEADER_SIZE_CLASSIC) {
-                throw new ParseError('missing 0th IFD offset', 1303);
+                throw new ParseError('missing 0th IFD offset', 1972);
             }
 
             return $this->readIfd($firstIfd);
@@ -428,7 +428,7 @@ final class TiffExifParser implements TiffExifParserInterface
 
         throw new ParseError(
             sprintf('Unknown TIFF magic 0x%04X', $magic),
-            1304,
+            1973,
         );
     }
 
@@ -452,7 +452,7 @@ final class TiffExifParser implements TiffExifParserInterface
 
         // The reserved field must remain zero (EXIF 3.0 §4.5.1; TIFF 6.0 §8 legacy rule).
         if ($reserved !== 0) {
-            throw new ParseError('Bad BigTIFF header (reserved != 0)', 1306);
+            throw new ParseError('Bad BigTIFF header (reserved != 0)', 1974);
         }
 
         $this->bigTiffOffsetSize = $offSize;

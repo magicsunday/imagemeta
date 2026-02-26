@@ -88,7 +88,7 @@ final readonly class JpegMarkerScanner
                             'Marker-stuffing sequence 0xFF00 at offset %d is not allowed before SOS marker segments',
                             $markerOffset,
                         ),
-                        1506,
+                        2056,
                     );
                 }
 

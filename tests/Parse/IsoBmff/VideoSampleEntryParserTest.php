@@ -281,7 +281,7 @@ final class VideoSampleEntryParserTest extends TestCase
         $parser = new VideoSampleEntryParser();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1502);
+        $this->expectExceptionCode(2051);
 
         $parser->parseVideoSampleEntry($win, 70, 'avc1');
     }

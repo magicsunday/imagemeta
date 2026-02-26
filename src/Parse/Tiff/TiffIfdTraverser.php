@@ -214,7 +214,7 @@ final class TiffIfdTraverser
         if ($offset < 8) {
             throw new ParseError(
                 sprintf('IFD pointer tag 0x%04X offset %d points into TIFF header', $tag, $offset),
-                1407,
+                1980,
             );
         }
 

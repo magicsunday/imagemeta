@@ -2300,7 +2300,7 @@ final class JpegParserTest extends TestCase
         $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1495);
+        $this->expectExceptionCode(2030);
         $this->expectExceptionMessageMatches('/SOS.*unknown component|unknown component.*SOS/i');
 
         $extractor->extractExifBlobs();
@@ -2330,7 +2330,7 @@ final class JpegParserTest extends TestCase
         $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1496);
+        $this->expectExceptionCode(2032);
         $this->expectExceptionMessageMatches('/SOS.*duplicate|duplicate.*SOS/i');
 
         $extractor->extractExifBlobs();
@@ -2359,7 +2359,7 @@ final class JpegParserTest extends TestCase
         $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1497);
+        $this->expectExceptionCode(2036);
         $this->expectExceptionMessageMatches('/SOS.*component count|component count.*SOF/i');
 
         $extractor->extractExifBlobs();
@@ -3014,7 +3014,7 @@ final class JpegParserTest extends TestCase
         $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1506);
+        $this->expectExceptionCode(2056);
 
         $extractor->extractExifBlobs();
     }

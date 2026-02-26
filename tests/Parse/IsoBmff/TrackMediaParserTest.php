@@ -862,7 +862,7 @@ final class TrackMediaParserTest extends TestCase
         );
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1463);
+        $this->expectExceptionCode(1990);
 
         $parser->parseTrak($descriptor, $context);
     }

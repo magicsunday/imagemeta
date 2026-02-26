@@ -303,7 +303,7 @@ final class JpegFrameValidatorTest extends TestCase
         $validator = $this->createValidator();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1498);
+        $this->expectExceptionCode(2040);
 
         $validator->validateSosHeader("\x01\x01", 0);
     }
@@ -322,7 +322,7 @@ final class JpegFrameValidatorTest extends TestCase
             . chr(0) . chr(0);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1498);
+        $this->expectExceptionCode(2041);
 
         $validator->validateSosHeader($sosPayload, 0);
     }
@@ -349,7 +349,7 @@ final class JpegFrameValidatorTest extends TestCase
             . chr(0) . chr(63) . chr(0);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1495);
+        $this->expectExceptionCode(2030);
 
         $validator->validateSosHeader($sosPayload, 100);
     }
@@ -378,7 +378,7 @@ final class JpegFrameValidatorTest extends TestCase
             . chr(0) . chr(63) . chr(0);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1496);
+        $this->expectExceptionCode(2032);
 
         $validator->validateSosHeader($sosPayload, 100);
     }

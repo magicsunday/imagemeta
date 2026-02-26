@@ -1672,7 +1672,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function rejectIfd1JpegCompressionForUncompressedRgbPrimary(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1468);
+        $this->expectExceptionCode(1995);
         $this->expectExceptionMessageMatches('/Table 3|uncompressed RGB|thumbnail/i');
 
         (new TiffExifParser())->parseFromBlob(
@@ -1695,7 +1695,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function rejectIfd1JpegCompressionForUncompressedYcbcrPrimary(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1468);
+        $this->expectExceptionCode(1995);
         $this->expectExceptionMessageMatches('/Table 3|uncompressed YCbCr|thumbnail/i');
 
         (new TiffExifParser())->parseFromBlob(
@@ -1992,8 +1992,8 @@ final class TiffExifParserNegativeTest extends TestCase
      */
     public static function provideInvalidFlashBitfields(): iterable
     {
-        yield 'return-not-detected without fired bit' => [0x04, 1419];
-        yield 'return-detected without fired bit' => [0x06, 1419];
+        yield 'return-not-detected without fired bit' => [0x04, 1984];
+        yield 'return-detected without fired bit' => [0x06, 1984];
     }
 
     /**
@@ -2362,7 +2362,7 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('P', 0);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1339);
+        $this->expectExceptionCode(1978);
 
         (new TiffExifParser())->parseFromBlob($header . $ifd, jpegContext: true);
     }

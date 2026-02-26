@@ -108,7 +108,7 @@ final class JpegMarkerScannerTest extends TestCase
         $scanner = $this->createScanner($data);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1506);
+        $this->expectExceptionCode(2056);
 
         $scanner->nextMarkerWithOffset(false);
     }

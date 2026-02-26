@@ -167,7 +167,7 @@ final readonly class TiffExifTagValidator
                     'IFD1 JPEG thumbnail compression is not allowed when IFD0 primary image uses %s per EXIF 3.0 §4.5.8 Table 3.',
                     $primaryStructure,
                 ),
-                1468,
+                1995,
             );
         }
     }
@@ -202,7 +202,7 @@ final readonly class TiffExifTagValidator
         if ((($returnBits === 2) || ($returnBits === 3)) && !$fired) {
             throw new ParseError(
                 sprintf('Flash value %d encodes return detection while flash-fired bit is unset per EXIF 3.0 §4.6.6.7.21', $flashBits),
-                1419,
+                1984,
             );
         }
     }
@@ -240,7 +240,7 @@ final readonly class TiffExifTagValidator
                     '%s must reside in the Exif IFD, not IFD0, per EXIF 3.0 %s.',
                     $name,
                     $section,
-                ), 1463);
+                ), 1991);
             }
         }
     }
@@ -251,7 +251,7 @@ final readonly class TiffExifTagValidator
             throw new ParseError(sprintf(
                 'MakerNoteSafety value %d is outside the valid domain {0, 1} per DNG 1.7.1.0.',
                 $value,
-            ), 1310);
+            ), 1975);
         }
     }
 

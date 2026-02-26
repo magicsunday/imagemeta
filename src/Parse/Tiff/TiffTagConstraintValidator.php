@@ -60,7 +60,7 @@ final readonly class TiffTagConstraintValidator
 
         $enhance = $ifd->get(DngTag::ENHANCE_PARAMS);
         if (!$enhance instanceof IfdEntry || !is_string($enhance->value)) {
-            throw new ParseError('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag per DNG 1.5.', 1323);
+            throw new ParseError('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag per DNG 1.5.', 1976);
         }
 
         if (rtrim($enhance->value, "\0") === '') {
@@ -128,7 +128,7 @@ final readonly class TiffTagConstraintValidator
 
         if ($t4Options instanceof IfdEntry) {
             if (($t4Options->type !== TiffConst::TYPE_LONG) || ($t4Options->count !== 1) || !is_int($t4Options->value)) {
-                throw new ParseError('T4Options must be LONG[1].', 1702);
+                throw new ParseError('T4Options must be LONG[1].', 2077);
             }
 
             $compression = $ifd->get(ExifTag::COMPRESSION);
@@ -229,7 +229,7 @@ final readonly class TiffTagConstraintValidator
         if ($bitDepth !== 1) {
             throw new ParseError(
                 sprintf('FillOrder=2 requires BitsPerSample=1, got %s.', $bitDepth !== null ? (string) $bitDepth : 'missing'),
-                1754,
+                2079,
             );
         }
 

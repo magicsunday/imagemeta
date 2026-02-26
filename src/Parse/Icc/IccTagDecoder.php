@@ -264,7 +264,7 @@ final readonly class IccTagDecoder
                     $tableEnd - $tagCountOffset,
                     $length - $tagCountOffset,
                 ),
-                1808,
+                2080,
             );
         }
 

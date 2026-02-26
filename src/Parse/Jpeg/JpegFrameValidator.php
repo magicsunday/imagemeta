@@ -201,7 +201,7 @@ final class JpegFrameValidator
         if ($payloadLength < 6) {
             throw new ParseError(
                 sprintf('SOS marker at offset %d is too short', $sosOffset),
-                1498,
+                2040,
             );
         }
 
@@ -209,7 +209,7 @@ final class JpegFrameValidator
         if ($componentCount === 0) {
             throw new ParseError(
                 sprintf('SOS marker at offset %d declares zero components', $sosOffset),
-                1498,
+                2041,
             );
         }
 
@@ -223,7 +223,7 @@ final class JpegFrameValidator
                     $payloadLength,
                     $expectedLength,
                 ),
-                1498,
+                2042,
             );
         }
 
@@ -246,7 +246,7 @@ final class JpegFrameValidator
                     $componentCount,
                     $frameComponentCount,
                 ),
-                1497,
+                2035,
             );
         }
 
@@ -258,7 +258,7 @@ final class JpegFrameValidator
                     $componentCount,
                     $frameComponentCount,
                 ),
-                1497,
+                2036,
             );
         }
 
@@ -274,7 +274,7 @@ final class JpegFrameValidator
                         $sosOffset,
                         $componentSelector,
                     ),
-                    1496,
+                    2032,
                 );
             }
 
@@ -285,7 +285,7 @@ final class JpegFrameValidator
                         $sosOffset,
                         $componentSelector,
                     ),
-                    1495,
+                    2030,
                 );
             }
 

@@ -256,7 +256,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
             if ($boxLength < 8) {
                 throw new ParseError(
                     sprintf('APP11 segment at offset %d has invalid JUMBF child box length %d', $segmentOffset, $boxLength),
-                    1332,
+                    1977,
                 );
             }
 

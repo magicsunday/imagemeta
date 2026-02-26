@@ -67,7 +67,7 @@ final readonly class TiffImageDataValidator
         if (!$rowsPerStripEntry instanceof IfdEntry || !is_int($rowsPerStripEntry->value) || $rowsPerStripEntry->value <= 0) {
             throw new ParseError(
                 'RowsPerStrip must be a positive integer when strip tags are present per EXIF 3.0 §4.6.5.2.2.',
-                1452,
+                1987,
             );
         }
 
@@ -87,7 +87,7 @@ final readonly class TiffImageDataValidator
                     'StripOffsets count %d does not match expected strip count %d per EXIF 3.0 §4.6.5.2.1/§4.6.5.2.2.',
                     $offsetCount,
                     $expectedCount,
-                ), 1453);
+                ), 1988);
             }
         }
 
@@ -98,7 +98,7 @@ final readonly class TiffImageDataValidator
                     'StripByteCounts count %d does not match expected strip count %d per EXIF 3.0 §4.6.5.2.3/§4.6.5.2.2.',
                     $byteCountCount,
                     $expectedCount,
-                ), 1454);
+                ), 1989);
             }
         }
 
@@ -385,7 +385,7 @@ final readonly class TiffImageDataValidator
         throw new ParseError(sprintf(
             '%s has unsupported value representation for range validation.',
             $this->countedImageDataTagName($tag),
-        ), 1702);
+        ), 2075);
     }
 
     /**
@@ -425,7 +425,7 @@ final readonly class TiffImageDataValidator
                         $byteCount,
                         $blobSize,
                     ),
-                    1702,
+                    2076,
                 );
             }
         }

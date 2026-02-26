@@ -269,7 +269,7 @@ final readonly class MetadataReader
         if ($stream->size() > $this->maxTiffSize) {
             throw new ParseError(
                 sprintf('TIFF stream size %d exceeds the maximum allowed size of %d bytes', $stream->size(), $this->maxTiffSize),
-                1122,
+                1968,
             );
         }
 

@@ -242,7 +242,7 @@ final readonly class PlistTextParser
         if ($depth > self::MAX_RECURSION_DEPTH) {
             throw new ParseError(
                 sprintf('Recursion depth exceeds limit of %d.', self::MAX_RECURSION_DEPTH),
-                1122,
+                1967,
             );
         }
 

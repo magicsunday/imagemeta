@@ -127,7 +127,7 @@ final readonly class DngCalibrationValidator
         if ($colorPlanes > 1 && !$ifd->get(DngTag::COLOR_MATRIX_1) instanceof IfdEntry) {
             throw new ParseError(
                 'ColorMatrix1 is required for non-monochrome DNG files per DNG 1.7.1.0.',
-                1472,
+                1999,
             );
         }
 
@@ -145,7 +145,7 @@ final readonly class DngCalibrationValidator
                         $tag,
                         $entry->type,
                     ),
-                    1469,
+                    1996,
                 );
             }
 
@@ -195,7 +195,7 @@ final readonly class DngCalibrationValidator
                         $tag,
                         $value,
                     ),
-                    1496,
+                    2033,
                 );
             }
 
@@ -209,7 +209,7 @@ final readonly class DngCalibrationValidator
                         $dngVer[2],
                         $dngVer[3],
                     ),
-                    1497,
+                    2037,
                 );
             }
         }
@@ -244,7 +244,7 @@ final readonly class DngCalibrationValidator
                         $illuminantTag,
                         $dataTag,
                     ),
-                    1471,
+                    1997,
                 );
             }
         }
@@ -271,7 +271,7 @@ final readonly class DngCalibrationValidator
         ) {
             throw new ParseError(
                 'CalibrationIlluminant3 requires CalibrationIlluminant1 and CalibrationIlluminant2 per DNG 1.7.1.0.',
-                1473,
+                2003,
             );
         }
 
@@ -279,7 +279,7 @@ final readonly class DngCalibrationValidator
         if (!$ifd->get(DngTag::COLOR_MATRIX_3) instanceof IfdEntry) {
             throw new ParseError(
                 'CalibrationIlluminant3 requires ColorMatrix3 per DNG 1.7.1.0.',
-                1474,
+                2005,
             );
         }
 
@@ -317,7 +317,7 @@ final readonly class DngCalibrationValidator
         ) {
             throw new ParseError(
                 'Triple-illuminant CalibrationIlluminant values must be distinct per DNG 1.7.1.0.',
-                1476,
+                2007,
             );
         }
     }
@@ -336,7 +336,7 @@ final readonly class DngCalibrationValidator
         ) {
             throw new ParseError(
                 'AsShotNeutral and AsShotWhiteXY are mutually exclusive per DNG 1.7.1.0.',
-                1477,
+                2009,
             );
         }
     }
@@ -366,7 +366,7 @@ final readonly class DngCalibrationValidator
                         $neutral->type,
                         $neutral->count,
                     ),
-                    1486,
+                    2019,
                 );
             }
         }
@@ -380,7 +380,7 @@ final readonly class DngCalibrationValidator
                     $whiteXY->type,
                     $whiteXY->count,
                 ),
-                1487,
+                2020,
             );
         }
     }
@@ -458,7 +458,7 @@ final readonly class DngCalibrationValidator
         ) {
             throw new ParseError(
                 'CalibrationIlluminant1 and CalibrationIlluminant2 must not have value 0 (unknown) when both are present per DNG 1.7.1.0.',
-                1479,
+                2013,
             );
         }
     }
@@ -479,7 +479,7 @@ final readonly class DngCalibrationValidator
         if (!in_array($entry->value, [0, 1, 2], true)) {
             throw new ParseError(
                 sprintf('ColorimetricReference value %d is outside the allowed domain {0,1,2}.', $entry->value),
-                1494,
+                2029,
             );
         }
 
@@ -502,7 +502,7 @@ final readonly class DngCalibrationValidator
                     $bwVer[2],
                     $bwVer[3],
                 ),
-                1495,
+                2031,
             );
         }
     }

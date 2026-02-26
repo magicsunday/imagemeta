@@ -405,7 +405,7 @@ final class JpegParser implements JpegParserInterface
                     $offset,
                     $this->firstSofOffset,
                 ),
-                1504,
+                2053,
             );
         }
 

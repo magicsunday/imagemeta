@@ -150,7 +150,7 @@ final class IccProfileAssembler implements SegmentAssemblerInterface
                             strlen($assembled),
                             $this->maxIccProfileSize,
                         ),
-                        1964,
+                        2081,
                     );
                 }
 

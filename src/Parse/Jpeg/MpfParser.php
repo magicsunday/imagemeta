@@ -242,7 +242,7 @@ final class MpfParser
                             $type,
                             $constraint['type'],
                         ),
-                        1407,
+                        1979,
                     );
                 }
 
@@ -253,7 +253,7 @@ final class MpfParser
                             $tag,
                             $componentCount,
                         ),
-                        1408,
+                        1981,
                     );
                 }
             }
@@ -443,7 +443,7 @@ final class MpfParser
             if ($reservedBits !== 0) {
                 throw new ParseError(
                     sprintf('MPEntry %d has non-zero reserved bits 27..29: 0x%08X', $i, $attributes),
-                    1409,
+                    1982,
                 );
             }
 

@@ -109,7 +109,7 @@ final readonly class DngProfileValidator
         if (count($vals) % 2 !== 0) {
             throw new ParseError(
                 'ProfileToneCurve FLOAT count must be even (x,y pairs) per DNG 1.7.1.0.',
-                1480,
+                2014,
             );
         }
 
@@ -130,7 +130,7 @@ final readonly class DngProfileValidator
             if (!is_finite($fv) || $fv < 0.0 || $fv > 1.0) {
                 throw new ParseError(
                     'ProfileToneCurve values must be finite floats in [0.0, 1.0] per DNG 1.7.1.0.',
-                    1482,
+                    2016,
                 );
             }
         }
@@ -142,7 +142,7 @@ final readonly class DngProfileValidator
             if ($floats[$i] <= $prevX) {
                 throw new ParseError(
                     'ProfileToneCurve x coordinates must be strictly increasing per DNG 1.7.1.0.',
-                    1481,
+                    2015,
                 );
             }
 
@@ -173,7 +173,7 @@ final readonly class DngProfileValidator
             ) {
                 throw new ParseError(
                     'SDR ProfileToneCurve must start at (0.0,0.0) and end at (1.0,1.0) per DNG 1.7.1.0.',
-                    1483,
+                    2017,
                 );
             }
         }
@@ -291,7 +291,7 @@ final readonly class DngProfileValidator
                         $valDivs,
                         $expectedCount,
                     ),
-                    1501,
+                    2050,
                 );
             }
 
@@ -308,7 +308,7 @@ final readonly class DngProfileValidator
                                 $tripleIndex / 3,
                                 $valueScale,
                             ),
-                            1502,
+                            2052,
                         );
                     }
                 }
@@ -348,7 +348,7 @@ final readonly class DngProfileValidator
             if ($dataType !== 1) {
                 throw new ParseError(
                     sprintf('IlluminantData 0x%04X has unknown DataType %d; expected 0 or 1.', $tag, $dataType),
-                    1504,
+                    2054,
                 );
             }
 
@@ -575,7 +575,7 @@ final readonly class DngProfileValidator
         if ($count < 2 || $count % 2 !== 0) {
             throw new ParseError(
                 sprintf('NoiseProfile count must be even (pairs of S,O), got %d.', $count),
-                1500,
+                2048,
             );
         }
 
@@ -593,7 +593,7 @@ final readonly class DngProfileValidator
             if ((is_float($o) || is_int($o)) && $o < 0.0) {
                 throw new ParseError(
                     sprintf('NoiseProfile O_%d must be >= 0, got %g.', $i / 2, $o),
-                    1499,
+                    2045,
                 );
             }
         }
@@ -674,7 +674,7 @@ final readonly class DngProfileValidator
         if (strlen($payload) !== 8) {
             throw new ParseError(
                 sprintf('ProfileDynamicRange payload must be 8 bytes, got %d.', strlen($payload)),
-                1505,
+                2055,
             );
         }
 
@@ -683,7 +683,7 @@ final readonly class DngProfileValidator
         if ($version !== 1) {
             throw new ParseError(
                 sprintf('ProfileDynamicRange Version must be 1, got %d.', $version),
-                1506,
+                2057,
             );
         }
 
@@ -702,7 +702,7 @@ final readonly class DngProfileValidator
             if ($hint > 1.0) {
                 throw new ParseError(
                     sprintf('SDR ProfileDynamicRange HintMaxOutputValue must be <= 1.0, got %g.', $hint),
-                    1508,
+                    2060,
                 );
             }
         }

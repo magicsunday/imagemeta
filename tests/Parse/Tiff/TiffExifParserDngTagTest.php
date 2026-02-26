@@ -1846,7 +1846,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsPairedCalibrationIlluminantWithZeroValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1479);
+        $this->expectExceptionCode(2013);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithPairedIlluminants(0, 17),
@@ -1936,7 +1936,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsProfileToneCurveWithOddCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1480);
+        $this->expectExceptionCode(2014);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithProfileToneCurve([0.0, 0.0, 0.5]),
@@ -1950,7 +1950,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsProfileToneCurveWithNonIncreasingX(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1481);
+        $this->expectExceptionCode(2015);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithProfileToneCurve([0.0, 0.0, 0.5, 0.5, 0.3, 0.8, 1.0, 1.0]),
@@ -1964,7 +1964,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsProfileToneCurveWithOutOfRangeValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1482);
+        $this->expectExceptionCode(2016);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithProfileToneCurve([0.0, 0.0, 0.5, 1.5, 1.0, 1.0]),
@@ -1991,7 +1991,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsSdrProfileToneCurveWithWrongEndpoints(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1483);
+        $this->expectExceptionCode(2017);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithProfileToneCurve([0.1, 0.0, 0.5, 0.5, 1.0, 1.0]),
@@ -2172,7 +2172,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsDepthMapIfdWithWrongPhotometric(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1485);
+        $this->expectExceptionCode(2018);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithRoleIfd(8, 2),
@@ -2186,7 +2186,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsSemanticMaskIfdWithWrongPhotometric(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1485);
+        $this->expectExceptionCode(2018);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithRoleIfd(65540, 2),
@@ -2341,7 +2341,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsAsShotNeutralWithWrongCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1486);
+        $this->expectExceptionCode(2019);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithWhiteBalanceLayout(
@@ -2360,7 +2360,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsAsShotNeutralWithWrongType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1486);
+        $this->expectExceptionCode(2019);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithWhiteBalanceLayout(
@@ -2397,7 +2397,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsAsShotWhiteXYWithWrongCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1487);
+        $this->expectExceptionCode(2020);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithWhiteBalanceLayout(
@@ -2416,7 +2416,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsAsShotWhiteXYWithWrongType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1487);
+        $this->expectExceptionCode(2020);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithWhiteBalanceLayout(
@@ -2547,7 +2547,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsIfd0OnlyTagInAdditionalIfd(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1488);
+        $this->expectExceptionCode(2021);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTagInSecondIfd(DngTag::AS_SHOT_WHITE_XY),
@@ -2628,7 +2628,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsJxlEffortOutOfRange(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1489);
+        $this->expectExceptionCode(2022);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithJxlTags(effort: 10),
@@ -2642,7 +2642,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsJxlDecodeSpeedOutOfRange(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1489);
+        $this->expectExceptionCode(2023);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithJxlTags(decodeSpeed: 5),
@@ -2656,7 +2656,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsJxlTagsWithNonJxlCompression(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1490);
+        $this->expectExceptionCode(2024);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithJxlTags(compression: 7),
@@ -2683,7 +2683,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsJxlWithUnsupportedSamplesPerPixel(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1492);
+        $this->expectExceptionCode(2027);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithJxlTags(samplesPerPixel: 4),
@@ -2697,7 +2697,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsJxlWithUnsupportedPhotometric(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1493);
+        $this->expectExceptionCode(2028);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithJxlTags(photometric: 6),
@@ -2724,7 +2724,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsCfaPhotometricMissingRepeatPatternDim(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1491);
+        $this->expectExceptionCode(2025);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCfaPhotometric(includeRepeatPatternDim: false),
@@ -2738,7 +2738,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsCfaPhotometricMissingCfaPattern(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1491);
+        $this->expectExceptionCode(2026);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCfaPhotometric(includeCfaPattern: false),
@@ -2778,7 +2778,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsNonRgbCfaWithoutCfaPlaneColor(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1497);
+        $this->expectExceptionCode(2038);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCfaPhotometric(cfaColors: pack('C4', 0, 1, 3, 4)),
@@ -2818,7 +2818,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsDngTagsWithoutDngVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1498);
+        $this->expectExceptionCode(2044);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithDngTagsNoDngVersion(),
@@ -2859,7 +2859,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsNoiseProfileWithNegativeO(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1499);
+        $this->expectExceptionCode(2045);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithNoiseProfile([0.001, -0.0001]),
@@ -2873,7 +2873,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsNoiseProfileWithOddCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1500);
+        $this->expectExceptionCode(2048);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithNoiseProfile([0.001, 0.0, 0.002]),
@@ -2900,7 +2900,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsProfileDynamicRangeBadLength(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1505);
+        $this->expectExceptionCode(2055);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithProfileDynamicRange(pack('v', 1) . pack('v', 0)),
@@ -2914,7 +2914,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsProfileDynamicRangeBadVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1506);
+        $this->expectExceptionCode(2057);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithProfileDynamicRange(pack('v', 2) . pack('v', 0) . pack('g', 0.0)),
@@ -2942,7 +2942,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsProfileDynamicRangeSdrHintAboveOne(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1508);
+        $this->expectExceptionCode(2060);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithProfileDynamicRange(pack('v', 1) . pack('v', 0) . pack('g', 1.5)),
@@ -3038,7 +3038,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsIlluminantDataUnknownDataType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1504);
+        $this->expectExceptionCode(2054);
 
         $payload = pack('v', 5) . str_repeat("\0", 16);
 
@@ -3054,7 +3054,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsHueSatMapDataCountMismatch(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1501);
+        $this->expectExceptionCode(2050);
 
         // dims = 2*2*1 = 4 triples = 12 floats; provide only 9
         (new TiffExifParser())->parseFromBlob(
@@ -3072,7 +3072,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsHueSatMapZeroSatValueScaleNotOne(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1502);
+        $this->expectExceptionCode(2052);
 
         // dims 2*2*1 = 4 triples; sat index 0 = zero-saturation row
         // Triple at index 0: (hue=0, sat=1.0, val=0.5) — valueScale should be 1.0
@@ -3142,7 +3142,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsColorimetricReference2BelowDng17(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1495);
+        $this->expectExceptionCode(2031);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithColorimetricReference(2, [1, 6, 0, 0]),
@@ -3169,7 +3169,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsColorimetricReferenceOutOfDomain(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1494);
+        $this->expectExceptionCode(2029);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithColorimetricReference(3, [1, 7, 0, 0]),
@@ -3183,7 +3183,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsDngBackwardVersionAboveSupported(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1496);
+        $this->expectExceptionCode(2034);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithBackwardVersion([2, 0, 0, 0]),
@@ -6098,7 +6098,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsPreviewColorSpaceOutOfDomain(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1560);
+        $this->expectExceptionCode(2062);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewColorSpace(TiffConst::TYPE_LONG, 5),
@@ -6186,7 +6186,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsPreviewDateTimeMalformedFormat(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1563);
+        $this->expectExceptionCode(2064);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewDateTime("June 15 2024\0"),
@@ -6200,7 +6200,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsPreviewDateTimeOverflow(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1564);
+        $this->expectExceptionCode(2065);
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithPreviewDateTime("2024-13-01T00:00:00\0"),

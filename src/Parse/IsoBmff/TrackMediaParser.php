@@ -572,7 +572,7 @@ final readonly class TrackMediaParser
                 ++$udtaCount;
 
                 if ($udtaCount > 1) {
-                    throw new ParseError('duplicate udta box in mdia', 1463);
+                    throw new ParseError('duplicate udta box in mdia', 1990);
                 }
 
                 ($this->processUdtaBox)($child, $context);

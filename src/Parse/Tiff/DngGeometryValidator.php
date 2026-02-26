@@ -61,7 +61,7 @@ final readonly class DngGeometryValidator
                         $activeArea->type,
                         $activeArea->count,
                     ),
-                    1605,
+                    2072,
                 );
             }
 
@@ -81,7 +81,7 @@ final readonly class DngGeometryValidator
                         $maskedAreas->type,
                         $maskedAreas->count,
                     ),
-                    1606,
+                    2073,
                 );
             }
 
@@ -97,7 +97,7 @@ final readonly class DngGeometryValidator
                                 $leftIndex,
                                 $rightIndex,
                             ),
-                            1607,
+                            2074,
                         );
                     }
                 }
@@ -229,7 +229,7 @@ final readonly class DngGeometryValidator
                         $sizeH,
                         $sizeV,
                     ),
-                    1601,
+                    2067,
                 );
             }
         }
