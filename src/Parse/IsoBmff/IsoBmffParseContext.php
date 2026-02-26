@@ -53,4 +53,14 @@ final class IsoBmffParseContext
      * True when the parsed ftyp brands explicitly allow QuickTime compatibility parsing.
      */
     public bool $allowQuickTimeMetaWithoutFullBox = false;
+
+    /**
+     * Image width in pixels extracted from the first ispe box.
+     */
+    public ?int $ispeWidth = null;
+
+    /**
+     * Image height in pixels extracted from the first ispe box.
+     */
+    public ?int $ispeHeight = null;
 }

@@ -51,6 +51,8 @@ final readonly class BoxPayloadCollection
         public array $countryLists,
         public array $languageLists,
         public bool $isMdta,
+        public ?int $ispeWidth = null,
+        public ?int $ispeHeight = null,
     ) {
     }
 }

@@ -81,6 +81,8 @@ final readonly class BoxPayloadCollector
         $countryLists = [];
         /** @var list<list<int>> $languageLists */
         $languageLists = [];
+        $ispeWidth     = null;
+        $ispeHeight    = null;
 
         $childOffset = $this->detectMetaChildOffset($meta, $allowQuickTimeMetaWithoutFullBox);
         foreach ($this->boxNavigator->walkChildren($meta, $childOffset) as $child) {
@@ -199,6 +201,12 @@ final readonly class BoxPayloadCollector
 
                     $languageLists = $this->quickTimeDecoder->parseLocaleListAtom($child, 'lang');
                     break;
+                case BoxType::IPRP->value:
+                    if ($ispeWidth === null) {
+                        [$ispeWidth, $ispeHeight] = $this->parseIprp($child);
+                    }
+
+                    break;
             }
         }
 
@@ -250,6 +258,8 @@ final readonly class BoxPayloadCollector
             $countryLists,
             $languageLists,
             $handlerType === QuickTimeKeyResolver::QUICKTIME_MDTA,
+            $ispeWidth,
+            $ispeHeight,
         );
     }
 
@@ -349,6 +359,82 @@ final readonly class BoxPayloadCollector
         }
 
         return Unpack::uint64(substr($bytes, $offset, 8), false, $context)->toInt($context);
+    }
+
+    /**
+     * Walks the item properties box (`iprp`) looking for an `ipco` child that contains an `ispe` box.
+     *
+     * ISO/IEC 14496-12 §8.11.14: iprp contains ipco (item property container) and ipma
+     * (item property association). We only need ipco to extract ispe dimensions.
+     *
+     * @param BoxDescriptor $iprp Box descriptor for the item properties box.
+     *
+     * @return array{0: ?int, 1: ?int} [width, height] from the first ispe box, or [null, null].
+     */
+    private function parseIprp(BoxDescriptor $iprp): array
+    {
+        foreach ($this->boxNavigator->walkChildren($iprp) as $child) {
+            if ($child->type === BoxType::IPCO->value) {
+                $result = $this->parseIpco($child);
+                if ($result[0] !== null) {
+                    return $result;
+                }
+            }
+        }
+
+        return [null, null];
+    }
+
+    /**
+     * Walks the item property container (`ipco`) looking for the first `ispe` box.
+     *
+     * @param BoxDescriptor $ipco Box descriptor for the item property container box.
+     *
+     * @return array{0: ?int, 1: ?int} [width, height] from the first ispe box, or [null, null].
+     */
+    private function parseIpco(BoxDescriptor $ipco): array
+    {
+        foreach ($this->boxNavigator->walkChildren($ipco) as $child) {
+            if ($child->type === BoxType::ISPE->value) {
+                return $this->parseIspe($child);
+            }
+        }
+
+        return [null, null];
+    }
+
+    /**
+     * Parses an Image Spatial Extents (`ispe`) FullBox.
+     *
+     * ISO/IEC 14496-12 §12.1.4: ispe is FullBox(version=0, flags=0) containing
+     * unsigned int(32) display_width and unsigned int(32) display_height.
+     *
+     * @param BoxDescriptor $ispe Box descriptor for the image spatial extents box.
+     *
+     * @return array{0: ?int, 1: ?int} [width, height] or [null, null] if the box is malformed.
+     */
+    private function parseIspe(BoxDescriptor $ispe): array
+    {
+        // FullBox header (4 bytes) + display_width (4 bytes) + display_height (4 bytes) = 12 bytes
+        if ($ispe->contentSize < 12) {
+            return [null, null];
+        }
+
+        $win = $ispe->window;
+        $win->seek(0);
+
+        $version = ord($win->read(1));
+        // Skip 3 bytes of flags
+        $win->read(3);
+
+        if ($version !== 0) {
+            return [null, null];
+        }
+
+        $width  = $this->readU32FromBytes($win->read(4), 0, 'ispe display_width');
+        $height = $this->readU32FromBytes($win->read(4), 0, 'ispe display_height');
+
+        return [$width, $height];
     }
 
     /**

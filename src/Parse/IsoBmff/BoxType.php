@@ -156,4 +156,13 @@ enum BoxType: string
 
     /** Media header box. */
     case MDHD = 'mdhd';
+
+    /** Item properties box. */
+    case IPRP = 'iprp';
+
+    /** Item property container box. */
+    case IPCO = 'ipco';
+
+    /** Image spatial extents property box. */
+    case ISPE = 'ispe';
 }

@@ -106,6 +106,8 @@ final readonly class Metadata
      * @param IsoBmffItemReferenceMap|null                         $isoBmffItemReferences    ISO BMFF item references extracted from metadata boxes. [ISO BMFF only]
      * @param IsoBmffDataReferenceMap|null                         $isoBmffDataReferences    ISO BMFF data references extracted from metadata boxes. [ISO BMFF only]
      * @param list<IsoBmffUnresolvedItem>                          $isoBmffUnresolvedItems   ISO BMFF item payloads that could not be resolved. [ISO BMFF only]
+     * @param int|null                                             $ispeWidth                Image width in pixels from the ispe box. [ISO BMFF only]
+     * @param int|null                                             $ispeHeight               Image height in pixels from the ispe box. [ISO BMFF only]
      * @param list<string>                                         $iptcBlobs                IPTC payloads captured from JPEG APP13 segments. [JPEG only]
      * @param IptcDocument|null                                    $iptcDoc                  Parsed IPTC IIM datasets from APP13 payloads. [JPEG only]
      * @param XmpParserInterface|null                              $xmpParser                Injected XMP parser for selective document creation.
@@ -136,6 +138,8 @@ final readonly class Metadata
         public ?IsoBmffItemReferenceMap $isoBmffItemReferences = null,
         public ?IsoBmffDataReferenceMap $isoBmffDataReferences = null,
         array $isoBmffUnresolvedItems = [],
+        public ?int $ispeWidth = null,
+        public ?int $ispeHeight = null,
         array $iptcBlobs = [],
         public ?IptcDocument $iptcDoc = null,
         private ?XmpParserInterface $xmpParser = null,

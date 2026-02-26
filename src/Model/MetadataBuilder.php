@@ -77,6 +77,10 @@ final class MetadataBuilder
     /** @var list<IsoBmffUnresolvedItem> */
     private array $isoBmffUnresolvedItems = [];
 
+    private ?int $ispeWidth = null;
+
+    private ?int $ispeHeight = null;
+
     /** @var list<string> */
     private array $iptcBlobs = [];
 
@@ -206,15 +210,21 @@ final class MetadataBuilder
      * @param IsoBmffItemReferenceMap|null $itemReferences  Item references extracted from metadata boxes.
      * @param IsoBmffDataReferenceMap|null $dataReferences  Data references extracted from metadata boxes.
      * @param list<IsoBmffUnresolvedItem>  $unresolvedItems Item payloads that could not be resolved.
+     * @param int|null                     $ispeWidth       Image width from ispe box.
+     * @param int|null                     $ispeHeight      Image height from ispe box.
      */
     public function withIsoBmff(
         ?IsoBmffItemReferenceMap $itemReferences = null,
         ?IsoBmffDataReferenceMap $dataReferences = null,
         array $unresolvedItems = [],
+        ?int $ispeWidth = null,
+        ?int $ispeHeight = null,
     ): self {
         $this->isoBmffItemReferences  = $itemReferences;
         $this->isoBmffDataReferences  = $dataReferences;
         $this->isoBmffUnresolvedItems = $unresolvedItems;
+        $this->ispeWidth              = $ispeWidth;
+        $this->ispeHeight             = $ispeHeight;
 
         return $this;
     }
@@ -288,6 +298,8 @@ final class MetadataBuilder
             isoBmffItemReferences: $this->isoBmffItemReferences,
             isoBmffDataReferences: $this->isoBmffDataReferences,
             isoBmffUnresolvedItems: $this->isoBmffUnresolvedItems,
+            ispeWidth: $this->ispeWidth,
+            ispeHeight: $this->ispeHeight,
             iptcBlobs: $this->iptcBlobs,
             iptcDoc: $this->iptcDoc,
             xmpParser: $this->xmpParser,
