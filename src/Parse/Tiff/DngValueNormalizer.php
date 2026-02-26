@@ -209,11 +209,18 @@ final readonly class DngValueNormalizer
             );
         }
 
-        if ($payloadLen !== $expectedSize) {
+        if ($payloadLen > $expectedSize) {
             throw new ParseError(
                 sprintf('CFAPattern payload size %d does not match expected %d (4 + %d x %d)', $payloadLen, $expectedSize, $horizontalRepeatPixelUnit, $verticalRepeatPixelUnit),
                 2059,
             );
+        }
+
+        // EXIF 3.0 §4.6.6.7.34 defines payload size as 4 + m*n bytes, but
+        // some cameras emit corrupted repeat dimensions with shorter payloads.
+        // Reader-side parsing keeps available pattern bytes instead of aborting.
+        if ($payloadLen < $expectedSize) {
+            $expectedPatternValues = $payloadLen - 4;
         }
 
         $components = [$horizontalRepeatPixelUnit, $verticalRepeatPixelUnit];
