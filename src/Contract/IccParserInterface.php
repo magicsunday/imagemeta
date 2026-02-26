@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Contract;
 
+use MagicSunday\ImageMeta\Model\Icc\IccProfile;
+
 /**
  * Defines the contract for decoding embedded ICC profile payloads.
  */
@@ -22,39 +24,7 @@ interface IccParserInterface
      * @param string|null        $profileData Raw ICC profile payload.
      * @param array<int, string> $segments    ICC profile chunks discovered in container metadata.
      *
-     * @return array{
-     *     description: string|null,
-     *     copyright: string|null,
-     *     whitePoint: array{x: float, y: float, z: float}|null,
-     *     blackPoint: array{x: float, y: float, z: float}|null,
-     *     redMatrixColumn: array{x: float, y: float, z: float}|null,
-     *     greenMatrixColumn: array{x: float, y: float, z: float}|null,
-     *     blueMatrixColumn: array{x: float, y: float, z: float}|null,
-     *     luminance: array{x: float, y: float, z: float}|null,
-     *     redTRC: array{gamma: float}|array{table: list<int>}|null,
-     *     greenTRC: array{gamma: float}|array{table: list<int>}|null,
-     *     blueTRC: array{gamma: float}|array{table: list<int>}|null,
-     *     deviceMfgDesc: string|null,
-     *     deviceModelDesc: string|null,
-     *     technology: string|null,
-     *     version: string|null,
-     *     pcs: string|null,
-     *     renderingIntent: string|null,
-     *     profileId: string|null,
-     *     cmmType: string|null,
-     *     profileClass: string|null,
-     *     colorSpace: string|null,
-     *     profileDateTime: string|null,
-     *     profileDateTimeUtc: string|null,
-     *     profileSignature: string|null,
-     *     profileFlags: string|null,
-     *     primaryPlatform: string|null,
-     *     deviceManufacturer: string|null,
-     *     deviceModel: string|null,
-     *     deviceAttributes: string|null,
-     *     profileCreator: string|null,
-     *     illuminant: array{x: float, y: float, z: float}|null,
-     * }|null
+     * @return IccProfile|null
      */
-    public function decode(?string $profileData, array $segments = []): ?array;
+    public function decode(?string $profileData, array $segments = []): ?IccProfile;
 }

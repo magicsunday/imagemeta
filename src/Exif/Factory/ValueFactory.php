@@ -485,12 +485,12 @@ final readonly class ValueFactory
         }
 
         return new ValueColorProfile(
-            profileName: $iccData['description'] ?? null,
-            profileVersion: $iccData['version'] ?? null,
-            pcs: $iccData['pcs'] ?? null,
-            renderingIntent: $iccData['renderingIntent'] ?? null,
+            profileName: $iccData?->description,
+            profileVersion: $iccData?->version,
+            pcs: $iccData?->pcs,
+            renderingIntent: $iccData?->renderingIntent,
             gamma: $exifDocument?->gamma(),
-            profileId: $iccData['profileId'] ?? null,
+            profileId: $iccData?->profileId,
         );
     }
 
