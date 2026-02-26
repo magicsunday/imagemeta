@@ -17,7 +17,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
-use MagicSunday\ImageMeta\Exif\Model\ExifRational;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational as ExifRationalScalar;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -248,7 +248,7 @@ final readonly class DngValidationSupport
 
         $value = $entry->value;
 
-        if (!$value instanceof ExifRational) {
+        if (!$value instanceof ExifRationalScalar) {
             throw new ParseError(sprintf('%s must decode to one rational component.', $tagName), $decodeErrCode);
         }
 
