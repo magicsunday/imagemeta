@@ -93,6 +93,34 @@ final class TiffExifParser implements TiffExifParserInterface
      */
     public function parseFromBlob(string $tiffBlob, ?Registry $registry = null, bool $jpegContext = false, bool $embeddedContext = false): ParsedExif
     {
+        [$byteOrderHandler, $tagDecoder]                  = $this->initializeState($tiffBlob);
+        [$ifd0, $exifIfd, $gpsIfd, $interopIfd, $subIfds] = $this->readPrimaryIfds($byteOrderHandler, $tagDecoder);
+        [$ifd1, $additionalIfds]                          = $this->walkAdditionalIfds($ifd0);
+
+        return $this->finalizeAndValidate(
+            $ifd0,
+            $ifd1,
+            $exifIfd,
+            $gpsIfd,
+            $interopIfd,
+            $registry,
+            $jpegContext,
+            $embeddedContext,
+            $additionalIfds,
+            $subIfds,
+        );
+    }
+
+    /**
+     * Initializes parser state and binary collaborators for a new TIFF blob.
+     *
+     * EXIF 3.0 §4.5.1 and TIFF 6.0 §2.1 define the byte-order marker handling
+     * and baseline TIFF header assumptions used during setup.
+     *
+     * @return array{0: TiffByteOrderHandler, 1: ExifTagDecoder}
+     */
+    private function initializeState(string $tiffBlob): array
+    {
         $this->buffer = new MemoryBuffer($tiffBlob);
         $this->buffer->seek(0);
 
@@ -142,6 +170,16 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->tagValidator       = new TiffExifTagValidator();
         $this->thumbnailValidator = new TiffJpegThumbnailValidator($this->buffer);
 
+        return [$byteOrderHandler, $tagDecoder];
+    }
+
+    /**
+     * Reads IFD0 and pointer-derived primary directories (Exif/GPS/Interop/SubIFD).
+     *
+     * @return array{0: Ifd, 1: ?Ifd, 2: ?Ifd, 3: ?Ifd, 4: array<int, Ifd>}
+     */
+    private function readPrimaryIfds(TiffByteOrderHandler $byteOrderHandler, ExifTagDecoder $tagDecoder): array
+    {
         $ifd0 = $this->readFirstIfd($byteOrderHandler, $tagDecoder);
 
         $this->traverser = new TiffIfdTraverser(
@@ -149,38 +187,65 @@ final class TiffExifParser implements TiffExifParserInterface
             fn (int|UInt64|string $offset): Ifd => $this->readIfd($offset),
         );
 
-        // follow pointers
-        $exifIfd = null;
-        $gpsIfd  = null;
-        $ifd1    = null;
-
-        $exifPointer = $ifd0->get(ExifTag::EXIF_IFD_POINTER);
-        if ($exifPointer instanceof IfdEntry) {
-            $offset = $this->traverser->pointerOffset($exifPointer);
-            if ($offset !== null) {
-                $exifIfd = $this->readIfd($offset);
-            }
-        }
-
+        $exifIfd    = $this->resolveExifIfd($ifd0);
         $interopIfd = $this->traverser->locateInteropIfd($exifIfd, $ifd0);
-
-        $gpsPointer = $ifd0->get(ExifTag::GPS_IFD_POINTER);
-        if ($gpsPointer instanceof IfdEntry) {
-            $gpsOffset = $this->traverser->pointerOffset($gpsPointer);
-            if ($gpsOffset !== null) {
-                $gpsIfd = $this->readIfd($gpsOffset);
-            }
-        }
+        $gpsIfd     = $this->resolveGpsIfd($ifd0);
 
         $this->tagValidator->validateGpsReferenceTagLayouts();
         $this->tagValidator->validateGpsCoordinateTagLayouts();
 
         $subIfds = $this->traverser->resolveSubIfds($ifd0);
 
+        return [$ifd0, $exifIfd, $gpsIfd, $interopIfd, $subIfds];
+    }
+
+    /**
+     * Resolves the Exif IFD pointer from IFD0.
+     */
+    private function resolveExifIfd(Ifd $ifd0): ?Ifd
+    {
+        $exifPointer = $ifd0->get(ExifTag::EXIF_IFD_POINTER);
+        if (!$exifPointer instanceof IfdEntry) {
+            return null;
+        }
+
+        $offset = $this->traverser->pointerOffset($exifPointer);
+        if ($offset === null) {
+            return null;
+        }
+
+        return $this->readIfd($offset);
+    }
+
+    /**
+     * Resolves the GPS IFD pointer from IFD0.
+     */
+    private function resolveGpsIfd(Ifd $ifd0): ?Ifd
+    {
+        $gpsPointer = $ifd0->get(ExifTag::GPS_IFD_POINTER);
+        if (!$gpsPointer instanceof IfdEntry) {
+            return null;
+        }
+
+        $offset = $this->traverser->pointerOffset($gpsPointer);
+        if ($offset === null) {
+            return null;
+        }
+
+        return $this->readIfd($offset);
+    }
+
+    /**
+     * Traverses the chained next-IFD pointers beyond IFD0.
+     *
+     * @return array{0: ?Ifd, 1: list<Ifd>}
+     */
+    private function walkAdditionalIfds(Ifd $ifd0): array
+    {
+        $ifd1           = null;
         $additionalIfds = [];
         $visitedOffsets = [];
-
-        $nextOffset = $ifd0->nextIfdOffset;
+        $nextOffset     = $ifd0->nextIfdOffset;
 
         try {
             while ($nextOffset !== null && $nextOffset > 0) {
@@ -212,6 +277,27 @@ final class TiffExifParser implements TiffExifParserInterface
             // than discarding all metadata.
         }
 
+        return [$ifd1, $additionalIfds];
+    }
+
+    /**
+     * Runs final validation and assembles the parsed EXIF result.
+     *
+     * @param list<Ifd>       $additionalIfds
+     * @param array<int, Ifd> $subIfds
+     */
+    private function finalizeAndValidate(
+        Ifd $ifd0,
+        ?Ifd $ifd1,
+        ?Ifd $exifIfd,
+        ?Ifd $gpsIfd,
+        ?Ifd $interopIfd,
+        ?Registry $registry,
+        bool $jpegContext,
+        bool $embeddedContext,
+        array $additionalIfds,
+        array $subIfds,
+    ): ParsedExif {
         $this->validateParsedIfds($ifd0, $ifd1, $exifIfd, $jpegContext, $embeddedContext, $additionalIfds);
 
         if (!($interopIfd instanceof Ifd) && ($additionalIfds !== [])) {
