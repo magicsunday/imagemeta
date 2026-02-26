@@ -13,14 +13,11 @@ namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
-use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
-use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
-use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
 use function array_key_exists;
 use function fopen;
@@ -39,12 +36,13 @@ use function strlen;
  * EXIF 3.0 §4.8 outlines embedding Exif items in ISO BMFF containers through
  * the `Exif` box and item metadata.
  *
- * @phpstan-type QuickTimeValue = string|int|float|bool
- * @phpstan-type QuickTimeKeyMap = array<string, QuickTimeValue>
- * @phpstan-type QuickTimeKeyEntry = array{namespace: string, name: string}
- * @phpstan-type QuickTimeRawDataAtom = array{type: int, locale: int, value: string|int|float, nestedKeys?: QuickTimeKeyMap, nestedAtoms?: QuickTimeDataAtomList}
- * @phpstan-type QuickTimeCoercedDataAtom = array{type: int, locale: int, value: string|int|float|bool}
- * @phpstan-type QuickTimeDataAtomList = array<string, list<QuickTimeCoercedDataAtom>>
+ * @phpstan-import-type MetaBoxPayloads from BoxPayloadCollector
+ * @phpstan-import-type QuickTimeValue from QuickTimeValueDecoder
+ * @phpstan-import-type QuickTimeKeyMap from QuickTimeValueDecoder
+ * @phpstan-import-type QuickTimeKeyEntry from QuickTimeValueDecoder
+ * @phpstan-import-type QuickTimeRawDataAtom from QuickTimeValueDecoder
+ * @phpstan-import-type QuickTimeCoercedDataAtom from QuickTimeValueDecoder
+ * @phpstan-import-type QuickTimeDataAtomList from QuickTimeValueDecoder
  */
 final readonly class IsoBmffParser implements IsoBmffParserInterface
 {
@@ -508,23 +506,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     /**
      * Delegates payload collection to BoxPayloadCollector.
      *
-     * @return array{
-     *     itemInfos: array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>,
-     *     locations: array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}>,
-     *     itemReferences: array<int, list<IsoBmffItemReference>>,
-     *     dataReferences: array<int, IsoBmffDataReference>,
-     *     primaryItemId: ?int,
-     *     directXmp: list<string>,
-     *     uuidXmp: list<string>,
-     *     directExif: list<string>,
-     *     idatPayload: ?string,
-     *     keysMaps: list<array<int, QuickTimeKeyEntry>>,
-     *     ilstBoxes: list<BoxDescriptor>,
-     *     hasMhdr: bool,
-     *     countryLists: list<list<int>>,
-     *     languageLists: list<list<int>>,
-     *     isMdta: bool
-     * }
+     * @return MetaBoxPayloads
      */
     private function collectDirectPayloads(BoxDescriptor $meta, IsoBmffParseContext $context, int $fileOffsetOrigin = 0): array
     {

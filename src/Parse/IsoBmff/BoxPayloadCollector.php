@@ -29,6 +29,23 @@ use function substr;
  * for EXIF, XMP, ICC, QuickTime metadata, and item-location structures.
  *
  * @phpstan-type QuickTimeKeyEntry = array{namespace: string, name: string}
+ * @phpstan-type MetaBoxPayloads = array{
+ *     itemInfos: array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>,
+ *     locations: array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}>,
+ *     itemReferences: array<int, list<IsoBmffItemReference>>,
+ *     dataReferences: array<int, IsoBmffDataReference>,
+ *     primaryItemId: ?int,
+ *     directXmp: list<string>,
+ *     uuidXmp: list<string>,
+ *     directExif: list<string>,
+ *     idatPayload: ?string,
+ *     keysMaps: list<array<int, QuickTimeKeyEntry>>,
+ *     ilstBoxes: list<BoxDescriptor>,
+ *     hasMhdr: bool,
+ *     countryLists: list<list<int>>,
+ *     languageLists: list<list<int>>,
+ *     isMdta: bool
+ * }
  */
 final readonly class BoxPayloadCollector
 {
@@ -55,23 +72,7 @@ final readonly class BoxPayloadCollector
     /**
      * Walks all children of a `meta` box and collects payloads grouped by type.
      *
-     * @return array{
-     *     itemInfos: array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>,
-     *     locations: array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}>,
-     *     itemReferences: array<int, list<IsoBmffItemReference>>,
-     *     dataReferences: array<int, IsoBmffDataReference>,
-     *     primaryItemId: ?int,
-     *     directXmp: list<string>,
-     *     uuidXmp: list<string>,
-     *     directExif: list<string>,
-     *     idatPayload: ?string,
-     *     keysMaps: list<array<int, QuickTimeKeyEntry>>,
-     *     ilstBoxes: list<BoxDescriptor>,
-     *     hasMhdr: bool,
-     *     countryLists: list<list<int>>,
-     *     languageLists: list<list<int>>,
-     *     isMdta: bool
-     * }
+     * @return MetaBoxPayloads
      */
     public function collect(BoxDescriptor $meta, bool $allowQuickTimeMetaWithoutFullBox, int $fileOffsetOrigin = 0): array
     {
