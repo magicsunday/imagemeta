@@ -160,18 +160,22 @@ use RuntimeException;
 
 use function chr;
 use function count;
+use function debug_backtrace;
 use function file_put_contents;
 use function ltrim;
 use function md5;
 use function pack;
 use function rename;
 use function sha1;
-use function strlen;
 use function stream_wrapper_register;
 use function stream_wrapper_unregister;
+use function strlen;
+use function substr;
 use function sys_get_temp_dir;
 use function tempnam;
 use function unlink;
+
+use const DEBUG_BACKTRACE_IGNORE_ARGS;
 
 /**
  * Exercises MetadataReader as the integration point across parsers and factories.
@@ -1366,8 +1370,7 @@ final class MetadataReaderTest extends TestCase
  */
 final class MetadataReaderDigestSwapStreamWrapper
 {
-    /** @var resource-context|null */
-    public $context;
+    public mixed $context;
 
     private static string $primaryPayload = '';
 
@@ -1381,21 +1384,21 @@ final class MetadataReaderDigestSwapStreamWrapper
 
     public static function configure(string $primaryPayload, string $replacementPayload): void
     {
-        self::$primaryPayload      = $primaryPayload;
-        self::$replacementPayload  = $replacementPayload;
+        self::$primaryPayload       = $primaryPayload;
+        self::$replacementPayload   = $replacementPayload;
         self::$hashFileReadObserved = false;
     }
 
     public static function reset(): void
     {
-        self::$primaryPayload      = '';
-        self::$replacementPayload  = '';
+        self::$primaryPayload       = '';
+        self::$replacementPayload   = '';
         self::$hashFileReadObserved = false;
     }
 
-    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
+    public function stream_open(): bool
     {
-        if (self::isHashFileOpen()) {
+        if ($this->isHashFileOpen()) {
             self::$hashFileReadObserved = true;
             $this->payload              = self::$primaryPayload;
         } elseif (self::$hashFileReadObserved) {
@@ -1411,7 +1414,7 @@ final class MetadataReaderDigestSwapStreamWrapper
 
     public function stream_read(int $count): string
     {
-        $chunk         = \substr($this->payload, $this->offset, $count);
+        $chunk = substr($this->payload, $this->offset, $count);
         $this->offset += strlen($chunk);
 
         return $chunk;
@@ -1459,7 +1462,7 @@ final class MetadataReaderDigestSwapStreamWrapper
     /**
      * @return array{7: int, size: int}
      */
-    public function url_stat(string $path, int $flags): array
+    public function url_stat(): array
     {
         return [
             7      => strlen(self::$primaryPayload),
@@ -1467,14 +1470,8 @@ final class MetadataReaderDigestSwapStreamWrapper
         ];
     }
 
-    private static function isHashFileOpen(): bool
+    private function isHashFileOpen(): bool
     {
-        foreach (\debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
-            if (($frame['function'] ?? null) === 'hash_file') {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), fn ($frame): bool => $frame['function'] === 'hash_file');
     }
 }

@@ -38,8 +38,9 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 
 use function class_exists;
-use function filesize;
-use function hash_file;
+use function hash_final;
+use function hash_init;
+use function hash_update;
 use function is_dir;
 use function is_string;
 use function pathinfo;
@@ -102,6 +103,7 @@ final readonly class MetadataReader
 
     /**
      * Reads metadata from the given file path by delegating to the appropriate parser.
+     * When digests are requested, metadata parsing and digest computation use the same opened stream snapshot.
      *
      * @param string $path        Path to the image or media file being inspected.
      * @param bool   $withDigests When true the SHA-1 and MD5 digests are calculated as part of the
@@ -116,14 +118,13 @@ final readonly class MetadataReader
             throw new ParseError(sprintf('Path is a directory, not a file: %s', $path), 1120);
         }
 
-        $mimeType  = $this->detectMimeType($path);
-        $fileSize  = $this->detectFileSize($path);
+        $stream    = Stream::fromPath($path);
+        $mimeType  = $this->detectMimeType($stream);
+        $fileSize  = $stream->size();
         $extension = $this->detectExtension($path);
 
-        [$sha1, $md5] = $withDigests ? $this->calculateDigests($path) : [null, null];
-
-        $stream = Stream::fromPath($path);
-        $type   = $this->formatDetector->detect($stream);
+        [$sha1, $md5] = $withDigests ? $this->calculateDigests($stream) : [null, null];
+        $type         = $this->formatDetector->detect($stream);
 
         return match ($type) {
             ContainerType::JPEG    => $this->fromJpeg($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
@@ -351,36 +352,31 @@ final readonly class MetadataReader
     }
 
     /**
-     * Attempts to detect the mime type of the provided path using the file information extension.
+     * Attempts to detect the mime type from the opened stream using the file information extension.
      */
-    private function detectMimeType(string $path): ?string
+    private function detectMimeType(Stream $stream): ?string
     {
         if (!class_exists(finfo::class)) {
             return null;
         }
 
+        $probeLength = $stream->size();
+        if ($probeLength > 8192) {
+            $probeLength = 8192;
+        }
+
+        $stream->seek(0);
+        $probe = $probeLength === 0 ? '' : $stream->read($probeLength);
+        $stream->seek(0);
+
         $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mime  = @$finfo->file($path);
+        $mime  = @$finfo->buffer($probe);
 
         if (!is_string($mime) || $mime === '') {
             return null;
         }
 
         return $mime;
-    }
-
-    /**
-     * Returns the filesize in bytes or null when not available.
-     */
-    private function detectFileSize(string $path): ?int
-    {
-        $size = @filesize($path);
-
-        if ($size === false) {
-            return null;
-        }
-
-        return $size;
     }
 
     /**
@@ -398,19 +394,29 @@ final readonly class MetadataReader
     }
 
     /**
-     * Calculates the SHA-1 and MD5 digests for the provided path.
+     * Calculates SHA-1 and MD5 digests by reading the opened stream once.
      *
      * @return array{0:?string,1:?string}
      */
-    private function calculateDigests(string $path): array
+    private function calculateDigests(Stream $stream): array
     {
-        $sha1 = hash_file('sha1', $path);
-        $md5  = hash_file('md5', $path);
+        $sha1Context = hash_init('sha1');
+        $md5Context  = hash_init('md5');
 
-        return [
-            is_string($sha1) ? $sha1 : null,
-            is_string($md5) ? $md5 : null,
-        ];
+        $stream->seek(0);
+
+        $remaining = $stream->size();
+        while ($remaining > 0) {
+            $chunkLength = $remaining > 8192 ? 8192 : $remaining;
+            $chunk       = $stream->read($chunkLength);
+            hash_update($sha1Context, $chunk);
+            hash_update($md5Context, $chunk);
+            $remaining -= $chunkLength;
+        }
+
+        $stream->seek(0);
+
+        return [hash_final($sha1Context), hash_final($md5Context)];
     }
 
     /**
