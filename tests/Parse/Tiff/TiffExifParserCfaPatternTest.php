@@ -108,16 +108,18 @@ final class TiffExifParserCfaPatternTest extends TestCase
     }
 
     /**
-     * Payload shorter than 4 + m*n bytes is rejected.
+     * Payload size mismatch is tolerated and available CFAPattern bytes are kept.
      */
     #[Test]
-    public function rejectsCfaPatternPayloadTooShortForMatrix(): void
+    public function itToleratesCfaPatternPayloadSizeMismatch(): void
     {
-        // Declares 2x2 (4 pattern bytes needed) but only 2 pattern bytes present
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('does not match');
+        // Declares 2x2 (4 pattern bytes expected) but only 2 bytes are available.
+        $result = $this->parseWithCfaPattern(pack('v', 2) . pack('v', 2) . "\x00\x01");
 
-        $this->parseWithCfaPattern(pack('v', 2) . pack('v', 2) . "\x00\x01");
+        $entry = $result->exifIfd?->get(ExifTag::CFA_PATTERN);
+        self::assertNotNull($entry);
+        self::assertInstanceOf(ExifNumericList::class, $entry->value);
+        self::assertSame([2, 2, 0, 1], $entry->value->values);
     }
 
     /**
