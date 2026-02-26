@@ -30,6 +30,10 @@ use function usort;
  *
  * EXIF 3.0 §4.7.3.1 requires APP2 ordering as Contents List first, then Stream Data.
  * EXIF 3.0 §4.7.3.4 and §4.7.3.5 define field-level structures for both segment bodies.
+ *
+ * @phpstan-type StreamEntry      = array{size:int, defaultByte:int, isStorage:bool}
+ * @phpstan-type StreamDataHeader = array{index:int, sequenceNumber:int, sequenceCount:int, streamOffset:int, data:string}
+ * @phpstan-type StreamRange      = array{start:int, end:int}
  */
 final class FlashPixStreamAssembler implements SegmentAssemblerInterface
 {
@@ -396,14 +400,50 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
 
         PayloadGuard::ensureMinimumLength($body, 10, sprintf('FlashPix stream data at offset %d', $offset), 1317);
 
-        $index          = (ord($body[0]) << 8) | ord($body[1]);
-        $sequenceNumber = (ord($body[2]) << 8) | ord($body[3]);
-        $sequenceCount  = (ord($body[4]) << 8) | ord($body[5]);
-        $streamOffset   = (ord($body[6]) << 24)
-            | (ord($body[7]) << 16)
-            | (ord($body[8]) << 8)
-            | ord($body[9]);
-        $data = substr($body, 10);
+        $header = $this->decodeStreamDataHeader($body);
+        $entry  = $this->validateStreamMetadata($header, $offset);
+
+        $this->validateSequenceMetadata($header, $offset);
+
+        $range = $this->validateRangeAndOverlap($header, $entry, $offset);
+        if ($range === null) {
+            return;
+        }
+
+        $this->commitStreamChunk($header, $range);
+    }
+
+    /**
+     * Decodes the fixed header fields of a FlashPix stream-data segment.
+     *
+     * @param string $body FPXR stream-data payload without signature.
+     *
+     * @return StreamDataHeader
+     */
+    private function decodeStreamDataHeader(string $body): array
+    {
+        return [
+            'index'          => (ord($body[0]) << 8) | ord($body[1]),
+            'sequenceNumber' => (ord($body[2]) << 8) | ord($body[3]),
+            'sequenceCount'  => (ord($body[4]) << 8) | ord($body[5]),
+            'streamOffset'   => (ord($body[6]) << 24)
+                | (ord($body[7]) << 16)
+                | (ord($body[8]) << 8)
+                | ord($body[9]),
+            'data' => substr($body, 10),
+        ];
+    }
+
+    /**
+     * Validates entry-level stream metadata and resolves the referenced contents-list entry.
+     *
+     * @param StreamDataHeader $header
+     *
+     * @return StreamEntry
+     */
+    private function validateStreamMetadata(array $header, int $offset): array
+    {
+        $index = $header['index'];
 
         if (!array_key_exists($index, $this->contents)) {
             throw new ParseError(
@@ -415,6 +455,20 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
                 1319,
             );
         }
+
+        return $this->contents[$index];
+    }
+
+    /**
+     * Validates sequence metadata and tracks seen segments per contents-list entry.
+     *
+     * @param StreamDataHeader $header
+     */
+    private function validateSequenceMetadata(array $header, int $offset): void
+    {
+        $index          = $header['index'];
+        $sequenceNumber = $header['sequenceNumber'];
+        $sequenceCount  = $header['sequenceCount'];
 
         if (($sequenceCount === 0) || ($sequenceNumber === 0) || ($sequenceNumber > $sequenceCount)) {
             throw new ParseError(
@@ -462,8 +516,22 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
         }
 
         $this->sequenceSeen[$index][$sequenceNumber] = true;
+    }
 
-        $entry = $this->contents[$index];
+    /**
+     * Validates stream bounds, ordering, cumulative size and overlap constraints.
+     *
+     * @param StreamDataHeader $header
+     * @param StreamEntry      $entry
+     *
+     * @return StreamRange|null
+     */
+    private function validateRangeAndOverlap(array $header, array $entry, int $offset): ?array
+    {
+        $index        = $header['index'];
+        $streamOffset = $header['streamOffset'];
+        $data         = $header['data'];
+
         if ($entry['isStorage']) {
             throw new ParseError(
                 sprintf(
@@ -503,7 +571,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
 
         $chunkLength = strlen($data);
         if ($chunkLength === 0) {
-            return;
+            return null;
         }
 
         $newCumulativeSize = $this->cumulativeStreamSize + $chunkLength;
@@ -542,12 +610,25 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             }
         }
 
-        $this->ranges[$index][] = ['start' => $start, 'end' => $end];
+        return ['start' => $start, 'end' => $end];
+    }
+
+    /**
+     * Commits a validated stream chunk and its covered byte range.
+     *
+     * @param StreamDataHeader $header
+     * @param StreamRange      $range
+     */
+    private function commitStreamChunk(array $header, array $range): void
+    {
+        $index = $header['index'];
+
+        $this->ranges[$index][] = $range;
 
         if (!array_key_exists($index, $this->chunks)) {
             $this->chunks[$index] = [];
         }
 
-        $this->chunks[$index][] = ['offset' => $start, 'data' => $data];
+        $this->chunks[$index][] = ['offset' => $range['start'], 'data' => $header['data']];
     }
 }
