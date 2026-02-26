@@ -42,6 +42,8 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
     private ReflectionMethod $getTagNameMethod;
 
+    private ReflectionMethod $printSectionMethod;
+
     private ReflectionMethod $formatValueMethod;
 
     protected function setUp(): void
@@ -54,6 +56,7 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $this->formatEnumNameMethod                = new ReflectionMethod($this->formatter, 'formatEnumName');
         $this->formatComponentsConfigurationMethod = new ReflectionMethod($this->formatter, 'formatComponentsConfiguration');
         $this->getTagNameMethod                    = new ReflectionMethod($this->formatter, 'getTagName');
+        $this->printSectionMethod                  = new ReflectionMethod($this->formatter, 'printSection');
         $this->formatValueMethod                   = new ReflectionMethod($this->formatter, 'formatValue');
     }
 
@@ -137,6 +140,29 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $actual = $this->getTagNameMethod->invoke($this->formatter, 0x0002, 'InteropIFD');
 
         self::assertSame('Interoperability Version', $actual);
+    }
+
+    #[Test]
+    public function suppressesIfdPointerTagsInFormattedOutput(): void
+    {
+        ob_start();
+        $this->printSectionMethod->invoke(
+            $this->formatter,
+            'IFD0',
+            [
+                ExifTag::EXIF_IFD_POINTER             => 214,
+                ExifTag::GPS_IFD_POINTER              => 978,
+                ExifTag::INTEROPERABILITY_IFD_POINTER => 948,
+                ExifTag::MAKE                         => 'Canon',
+            ],
+            true,
+        );
+        $output = (string) ob_get_clean();
+
+        self::assertStringNotContainsString('Exif IFD Pointer', $output);
+        self::assertStringNotContainsString('GPS IFD Pointer', $output);
+        self::assertStringNotContainsString('Interoperability Ifd Pointer', $output);
+        self::assertStringContainsString('Make', $output);
     }
 
     /**
