@@ -209,36 +209,7 @@ final readonly class QuickTimeKeyResolver
      */
     private function parseFreeformMean(BoxDescriptor $mean): string
     {
-        if ($mean->contentSize < 4) {
-            throw new ParseError('mean atom truncated', 1429);
-        }
-
-        $win = $mean->window;
-        $win->seek(0);
-
-        $version = $win->readU8();
-        $flags   = $this->boxNavigator->readUInt24($win);
-
-        if ($version !== 0) {
-            throw new ParseError('mean atom version must be 0', 1430);
-        }
-
-        if ($flags !== 0) {
-            throw new ParseError('mean atom flags must be 0', 1431);
-        }
-
-        $payloadSize = $mean->contentSize - 4;
-        if ($payloadSize < 1) {
-            throw new ParseError('mean atom has empty payload', 1432);
-        }
-
-        $value = $win->read($payloadSize);
-
-        if (!mb_check_encoding($value, 'UTF-8')) {
-            throw new ParseError('mean atom contains invalid UTF-8', 1433);
-        }
-
-        return $value;
+        return $this->parseFreeformAtomPayload($mean, 'mean');
     }
 
     /**
@@ -253,33 +224,49 @@ final readonly class QuickTimeKeyResolver
      */
     private function parseFreeformName(BoxDescriptor $name): string
     {
-        if ($name->contentSize < 4) {
-            throw new ParseError('name atom truncated', 1434);
+        return $this->parseFreeformAtomPayload($name, 'name');
+    }
+
+    /**
+     * Parses a free-form metadata atom (mean or name) as a FullAtom.
+     *
+     * QuickTime File Format 2012: both the mean and name atoms are FullAtoms
+     * with version 0 and flags 0. The remaining payload is a UTF-8 string.
+     *
+     * @param BoxDescriptor $atom  Box descriptor for the atom.
+     * @param string        $label Human-readable atom label for error messages.
+     *
+     * @return string The decoded payload string.
+     */
+    private function parseFreeformAtomPayload(BoxDescriptor $atom, string $label): string
+    {
+        if ($atom->contentSize < 4) {
+            throw new ParseError($label . ' atom truncated', 1429);
         }
 
-        $win = $name->window;
+        $win = $atom->window;
         $win->seek(0);
 
         $version = $win->readU8();
         $flags   = $this->boxNavigator->readUInt24($win);
 
         if ($version !== 0) {
-            throw new ParseError('name atom version must be 0', 1435);
+            throw new ParseError($label . ' atom version must be 0', 1430);
         }
 
         if ($flags !== 0) {
-            throw new ParseError('name atom flags must be 0', 1436);
+            throw new ParseError($label . ' atom flags must be 0', 1431);
         }
 
-        $payloadSize = $name->contentSize - 4;
+        $payloadSize = $atom->contentSize - 4;
         if ($payloadSize < 1) {
-            throw new ParseError('name atom has empty payload', 1437);
+            throw new ParseError($label . ' atom has empty payload', 1432);
         }
 
         $value = $win->read($payloadSize);
 
         if (!mb_check_encoding($value, 'UTF-8')) {
-            throw new ParseError('name atom contains invalid UTF-8', 1438);
+            throw new ParseError($label . ' atom contains invalid UTF-8', 1433);
         }
 
         return $value;
