@@ -133,7 +133,7 @@ final class IccParserTest extends TestCase
     public function decodeUsesExplicitDecodeStages(): void
     {
         $reflection = new ReflectionClass(IccParser::class);
-        $methods = array_map(
+        $methods    = array_map(
             static fn (ReflectionMethod $method): string => $method->getName(),
             $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
         );

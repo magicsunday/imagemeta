@@ -103,6 +103,74 @@ final readonly class IccParser implements IccParserInterface
      */
     public function decode(?string $profileData, array $segments = []): ?array
     {
+        $data = $this->selectDecodeInput($profileData, $segments);
+
+        // No ICC data at all — return null (absence, not error)
+        if ($data === null) {
+            return null;
+        }
+
+        ['data' => $data, 'profileSize' => $profileSize] = $this->validateAndNormalizeProfileData($data);
+
+        // Postel's Law: ICC.1:2022 §7.2.19 requires bytes 100-127 to be zero,
+        // but many widely deployed profiles (e.g. the ubiquitous Heidelberger
+        // "Lino" sRGB profile) have non-zero reserved bytes.  Tolerate silently
+        // — the reserved field has no semantic impact on tag extraction.
+
+        // Postel's Law: ICC.1:2022 §7.1 requires contiguous tag data with NULL
+        // padding after the tag table.  Many real-world profiles have padding
+        // gaps, overlapping tags, or non-zero padding bytes.  Since tags are
+        // accessed by their individual offset+size, layout deviations are
+        // harmless for data extraction.  Skip the layout check.
+
+        $headerFields = $this->decodeHeaderFields($data);
+        $tagFields    = $this->decodeTagFields($data, $profileSize, $headerFields['majorVersion']);
+
+        // Tolerate unknown platform and non-printable signature bytes.
+
+        return [
+            'description'        => $tagFields['description'],
+            'copyright'          => $tagFields['copyright'],
+            'whitePoint'         => $tagFields['whitePoint'],
+            'blackPoint'         => $tagFields['blackPoint'],
+            'redMatrixColumn'    => $tagFields['redMatrixColumn'],
+            'greenMatrixColumn'  => $tagFields['greenMatrixColumn'],
+            'blueMatrixColumn'   => $tagFields['blueMatrixColumn'],
+            'luminance'          => $tagFields['luminance'],
+            'redTRC'             => $tagFields['redTRC'],
+            'greenTRC'           => $tagFields['greenTRC'],
+            'blueTRC'            => $tagFields['blueTRC'],
+            'deviceMfgDesc'      => $tagFields['deviceMfgDesc'],
+            'deviceModelDesc'    => $tagFields['deviceModelDesc'],
+            'technology'         => $tagFields['technology'],
+            'version'            => $headerFields['version'],
+            'pcs'                => $headerFields['pcs'],
+            'renderingIntent'    => $headerFields['renderingIntent'],
+            'profileId'          => $headerFields['profileId'],
+            'cmmType'            => $headerFields['cmmType'],
+            'profileClass'       => $headerFields['profileClass'],
+            'colorSpace'         => $headerFields['colorSpace'],
+            'profileDateTime'    => $headerFields['profileDateTime'],
+            'profileDateTimeUtc' => $headerFields['profileDateTimeUtc'],
+            'profileSignature'   => $headerFields['profileSignature'],
+            'profileFlags'       => $headerFields['profileFlags'],
+            'primaryPlatform'    => $headerFields['primaryPlatform'],
+            'deviceManufacturer' => $headerFields['deviceManufacturer'],
+            'deviceModel'        => $headerFields['deviceModel'],
+            'deviceAttributes'   => $headerFields['deviceAttributes'],
+            'profileCreator'     => $headerFields['profileCreator'],
+            'illuminant'         => $headerFields['illuminant'],
+        ];
+    }
+
+    /**
+     * Selects profile input by preferring complete payloads and falling back to segment assembly.
+     *
+     * @param string|null        $profileData Raw ICC payload when available.
+     * @param array<int, string> $segments    APP2 ICC segments.
+     */
+    private function selectDecodeInput(?string $profileData, array $segments): ?string
+    {
         $data = $profileData;
         if ($data === null || strlen($data) < self::HEADER_LENGTH) {
             $combined = $this->combineSegments($segments);
@@ -111,11 +179,18 @@ final readonly class IccParser implements IccParserInterface
             }
         }
 
-        // No ICC data at all — return null (absence, not error)
-        if ($data === null) {
-            return null;
-        }
+        return $data;
+    }
 
+    /**
+     * Validates and normalizes ICC payload size/signature constraints before field extraction.
+     *
+     * @param string $data Candidate ICC payload.
+     *
+     * @return array{data: string, profileSize: int}
+     */
+    private function validateAndNormalizeProfileData(string $data): array
+    {
         // ICC data present but too short — malformed
         PayloadGuard::ensureMinimumLength($data, self::HEADER_LENGTH, 'ICC profile data', 1442);
 
@@ -136,7 +211,7 @@ final readonly class IccParser implements IccParserInterface
             $data = substr($data, 0, $profileSize);
         }
 
-        // ICC.1:2022 §7.2.9: Validate 'acsp' signature at bytes 36-39
+        // ICC.1:2022 §7.2.9: Validate 'acsp' signature at bytes 36-39.
         $signature = substr($data, 36, 4);
         if ($signature !== self::PROFILE_SIGNATURE) {
             throw new ParseError(
@@ -145,17 +220,37 @@ final readonly class IccParser implements IccParserInterface
             );
         }
 
-        // Postel's Law: ICC.1:2022 §7.2.19 requires bytes 100-127 to be zero,
-        // but many widely deployed profiles (e.g. the ubiquitous Heidelberger
-        // "Lino" sRGB profile) have non-zero reserved bytes.  Tolerate silently
-        // — the reserved field has no semantic impact on tag extraction.
+        return ['data' => $data, 'profileSize' => $profileSize];
+    }
 
-        // Postel's Law: ICC.1:2022 §7.1 requires contiguous tag data with NULL
-        // padding after the tag table.  Many real-world profiles have padding
-        // gaps, overlapping tags, or non-zero padding bytes.  Since tags are
-        // accessed by their individual offset+size, layout deviations are
-        // harmless for data extraction.  Skip the layout check.
-
+    /**
+     * Decodes ICC header-derived fields from the normalized payload.
+     *
+     * @param string $data Normalized ICC payload.
+     *
+     * @return array{
+     *   version: string|null,
+     *   profileClass: string|null,
+     *   colorSpace: string|null,
+     *   pcs: string|null,
+     *   renderingIntent: string|null,
+     *   profileId: string|null,
+     *   majorVersion: int,
+     *   cmmType: string|null,
+     *   profileDateTime: string|null,
+     *   profileDateTimeUtc: string|null,
+     *   profileSignature: string|null,
+     *   profileFlags: string|null,
+     *   primaryPlatform: string|null,
+     *   deviceManufacturer: string|null,
+     *   deviceModel: string|null,
+     *   deviceAttributes: string|null,
+     *   profileCreator: string|null,
+     *   illuminant: array{x: float, y: float, z: float}|null
+     * }
+     */
+    private function decodeHeaderFields(string $data): array
+    {
         // Tolerate non-zero reserved bytes in version field — extract major.minor only.
         $version = $this->headerDecoder->extractVersion($data);
 
@@ -168,20 +263,6 @@ final readonly class IccParser implements IccParserInterface
         $renderingIntent    = $this->headerDecoder->extractRenderingIntent($data);
         $profileId          = $this->headerDecoder->extractProfileId($data);
         $majorVersion       = ord($data[8]);
-        $description        = $this->tagDecoder->extractTag($data, $profileSize, 'desc', $majorVersion);
-        $copyright          = $this->tagDecoder->extractTag($data, $profileSize, 'cprt', $majorVersion);
-        $whitePoint         = $this->tagDecoder->extractWhitePoint($data, $profileSize);
-        $blackPoint         = $this->tagDecoder->extractXyzTag($data, $profileSize, 'bkpt');
-        $redMatrixColumn    = $this->tagDecoder->extractXyzTag($data, $profileSize, 'rXYZ');
-        $greenMatrixColumn  = $this->tagDecoder->extractXyzTag($data, $profileSize, 'gXYZ');
-        $blueMatrixColumn   = $this->tagDecoder->extractXyzTag($data, $profileSize, 'bXYZ');
-        $luminance          = $this->tagDecoder->extractXyzTag($data, $profileSize, 'lumi');
-        $redTRC             = $this->tagDecoder->extractTrcTag($data, $profileSize, 'rTRC');
-        $greenTRC           = $this->tagDecoder->extractTrcTag($data, $profileSize, 'gTRC');
-        $blueTRC            = $this->tagDecoder->extractTrcTag($data, $profileSize, 'bTRC');
-        $deviceMfgDesc      = $this->tagDecoder->extractTag($data, $profileSize, 'dmnd', $majorVersion);
-        $deviceModelDesc    = $this->tagDecoder->extractTag($data, $profileSize, 'dmdd', $majorVersion);
-        $technology         = $this->tagDecoder->extractSignatureTag($data, $profileSize, 'tech');
         $cmmType            = $this->headerDecoder->extractSignature(substr($data, IccTag::CMM_TYPE, 4));
         $profileDateTime    = $this->headerDecoder->extractProfileDateTime($data);
         $profileDateTimeUtc = $profileDateTime !== null ? ($profileDateTime . 'Z') : null;
@@ -192,33 +273,17 @@ final readonly class IccParser implements IccParserInterface
         $deviceModel        = $this->headerDecoder->extractSignature(substr($data, IccTag::DEVICE_MODEL, 4));
         $deviceAttributes   = $this->headerDecoder->extractHexField($data, IccTag::DEVICE_ATTRIBUTES, 8, true);
         $profileCreator     = $this->headerDecoder->extractSignature(substr($data, IccTag::PROFILE_CREATOR, 4));
-
-        // Tolerate unknown platform and non-printable signature bytes.
-
-        $illuminant = $this->headerDecoder->extractIlluminant($data);
+        $illuminant         = $this->headerDecoder->extractIlluminant($data);
 
         return [
-            'description'        => $description,
-            'copyright'          => $copyright,
-            'whitePoint'         => $whitePoint,
-            'blackPoint'         => $blackPoint,
-            'redMatrixColumn'    => $redMatrixColumn,
-            'greenMatrixColumn'  => $greenMatrixColumn,
-            'blueMatrixColumn'   => $blueMatrixColumn,
-            'luminance'          => $luminance,
-            'redTRC'             => $redTRC,
-            'greenTRC'           => $greenTRC,
-            'blueTRC'            => $blueTRC,
-            'deviceMfgDesc'      => $deviceMfgDesc,
-            'deviceModelDesc'    => $deviceModelDesc,
-            'technology'         => $technology,
             'version'            => $version,
+            'profileClass'       => $profileClass,
+            'colorSpace'         => $colorSpace,
             'pcs'                => $pcs,
             'renderingIntent'    => $renderingIntent,
             'profileId'          => $profileId,
+            'majorVersion'       => $majorVersion,
             'cmmType'            => $cmmType,
-            'profileClass'       => $profileClass,
-            'colorSpace'         => $colorSpace,
             'profileDateTime'    => $profileDateTime,
             'profileDateTimeUtc' => $profileDateTimeUtc,
             'profileSignature'   => $profileSignature,
@@ -229,6 +294,65 @@ final readonly class IccParser implements IccParserInterface
             'deviceAttributes'   => $deviceAttributes,
             'profileCreator'     => $profileCreator,
             'illuminant'         => $illuminant,
+        ];
+    }
+
+    /**
+     * Decodes ICC tag-derived fields from the normalized payload.
+     *
+     * @param string $data         Normalized ICC payload.
+     * @param int    $profileSize  Declared ICC profile size.
+     * @param int    $majorVersion Parsed ICC major version.
+     *
+     * @return array{
+     *   description: string|null,
+     *   copyright: string|null,
+     *   whitePoint: array{x: float, y: float, z: float}|null,
+     *   blackPoint: array{x: float, y: float, z: float}|null,
+     *   redMatrixColumn: array{x: float, y: float, z: float}|null,
+     *   greenMatrixColumn: array{x: float, y: float, z: float}|null,
+     *   blueMatrixColumn: array{x: float, y: float, z: float}|null,
+     *   luminance: array{x: float, y: float, z: float}|null,
+     *   redTRC: array{gamma: float}|array{table: list<int>}|null,
+     *   greenTRC: array{gamma: float}|array{table: list<int>}|null,
+     *   blueTRC: array{gamma: float}|array{table: list<int>}|null,
+     *   deviceMfgDesc: string|null,
+     *   deviceModelDesc: string|null,
+     *   technology: string|null
+     * }
+     */
+    private function decodeTagFields(string $data, int $profileSize, int $majorVersion): array
+    {
+        $description       = $this->tagDecoder->extractTag($data, $profileSize, 'desc', $majorVersion);
+        $copyright         = $this->tagDecoder->extractTag($data, $profileSize, 'cprt', $majorVersion);
+        $whitePoint        = $this->tagDecoder->extractWhitePoint($data, $profileSize);
+        $blackPoint        = $this->tagDecoder->extractXyzTag($data, $profileSize, 'bkpt');
+        $redMatrixColumn   = $this->tagDecoder->extractXyzTag($data, $profileSize, 'rXYZ');
+        $greenMatrixColumn = $this->tagDecoder->extractXyzTag($data, $profileSize, 'gXYZ');
+        $blueMatrixColumn  = $this->tagDecoder->extractXyzTag($data, $profileSize, 'bXYZ');
+        $luminance         = $this->tagDecoder->extractXyzTag($data, $profileSize, 'lumi');
+        $redTRC            = $this->tagDecoder->extractTrcTag($data, $profileSize, 'rTRC');
+        $greenTRC          = $this->tagDecoder->extractTrcTag($data, $profileSize, 'gTRC');
+        $blueTRC           = $this->tagDecoder->extractTrcTag($data, $profileSize, 'bTRC');
+        $deviceMfgDesc     = $this->tagDecoder->extractTag($data, $profileSize, 'dmnd', $majorVersion);
+        $deviceModelDesc   = $this->tagDecoder->extractTag($data, $profileSize, 'dmdd', $majorVersion);
+        $technology        = $this->tagDecoder->extractSignatureTag($data, $profileSize, 'tech');
+
+        return [
+            'description'       => $description,
+            'copyright'         => $copyright,
+            'whitePoint'        => $whitePoint,
+            'blackPoint'        => $blackPoint,
+            'redMatrixColumn'   => $redMatrixColumn,
+            'greenMatrixColumn' => $greenMatrixColumn,
+            'blueMatrixColumn'  => $blueMatrixColumn,
+            'luminance'         => $luminance,
+            'redTRC'            => $redTRC,
+            'greenTRC'          => $greenTRC,
+            'blueTRC'           => $blueTRC,
+            'deviceMfgDesc'     => $deviceMfgDesc,
+            'deviceModelDesc'   => $deviceModelDesc,
+            'technology'        => $technology,
         ];
     }
 
