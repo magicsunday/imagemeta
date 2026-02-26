@@ -23,21 +23,17 @@ use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 final readonly class BoxPayloadCollection
 {
     /**
-     * @param array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>                                                                                                        $itemInfos
+     * @param array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>                                                                                            $itemInfos
      * @param array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
-     * @param array<int, list<IsoBmffItemReference>>                                                                                                                                                     $itemReferences
-     * @param array<int, IsoBmffDataReference>                                                                                                                                                           $dataReferences
-     * @param ?int                                                                                                                                                                                       $primaryItemId
-     * @param list<string>                                                                                                                                                                               $directXmp
-     * @param list<string>                                                                                                                                                                               $uuidXmp
-     * @param list<string>                                                                                                                                                                               $directExif
-     * @param ?string                                                                                                                                                                                    $idatPayload
-     * @param list<array<int, QuickTimeKeyEntry>>                                                                                                                                                        $keysMaps
-     * @param list<BoxDescriptor>                                                                                                                                                                        $ilstBoxes
-     * @param bool                                                                                                                                                                                       $hasMhdr
-     * @param list<list<int>>                                                                                                                                                                            $countryLists
-     * @param list<list<int>>                                                                                                                                                                            $languageLists
-     * @param bool                                                                                                                                                                                       $isMdta
+     * @param array<int, list<IsoBmffItemReference>>                                                                                                                                        $itemReferences
+     * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences
+     * @param list<string>                                                                                                                                                                  $directXmp
+     * @param list<string>                                                                                                                                                                  $uuidXmp
+     * @param list<string>                                                                                                                                                                  $directExif
+     * @param list<array<int, QuickTimeKeyEntry>>                                                                                                                                           $keysMaps
+     * @param list<BoxDescriptor>                                                                                                                                                           $ilstBoxes
+     * @param list<list<int>>                                                                                                                                                               $countryLists
+     * @param list<list<int>>                                                                                                                                                               $languageLists
      */
     public function __construct(
         public array $itemInfos,

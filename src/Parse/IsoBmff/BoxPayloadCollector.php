@@ -44,7 +44,6 @@ final readonly class BoxPayloadCollector
         private BoxNavigator $boxNavigator,
         private TrackMediaParser $trackMediaParser,
         private IlocBoxParser $ilocBoxParser,
-        private ItemLocationResolver $itemLocationResolver,
         private QuickTimeMetadataDecoder $quickTimeDecoder,
         private QuickTimeKeyResolver $quickTimeKeyResolver,
         private ItemPayloadResolver $itemPayloadResolver,
@@ -137,10 +136,10 @@ final readonly class BoxPayloadCollector
                     $primaryItemId = $this->ilocBoxParser->parsePitm($child);
                     break;
                 case BoxType::IREF->value:
-                    $itemReferences = $this->itemLocationResolver->mergeItemReferences($itemReferences, $this->ilocBoxParser->parseIref($child));
+                    $itemReferences = ItemLocationResolver::mergeItemReferences($itemReferences, $this->ilocBoxParser->parseIref($child));
                     break;
                 case BoxType::DINF->value:
-                    $dataReferences = $this->itemLocationResolver->mergeDataReferences($dataReferences, $this->ilocBoxParser->parseDinf($child));
+                    $dataReferences = ItemLocationResolver::mergeDataReferences($dataReferences, $this->ilocBoxParser->parseDinf($child));
                     break;
                 case BoxType::XMP->value:
                     // Enforce payload cap before reading direct XMP box

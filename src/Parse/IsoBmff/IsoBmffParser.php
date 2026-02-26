@@ -102,7 +102,6 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $boxNavigator,
             $this->trackMediaParser,
             $this->ilocBoxParser,
-            $this->itemLocationResolver,
             $this->quickTimeDecoder,
             $this->quickTimeKeyResolver,
             $this->itemPayloadResolver,
