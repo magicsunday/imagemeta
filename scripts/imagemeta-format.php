@@ -707,6 +707,16 @@ final class MetadataFormatter
             $formattedValue = $this->formatValue($value, $ifdContext, $tagId);
 
             if ($showHex && is_numeric($key)) {
+                if (
+                    $tagId === ExifTag::EXIF_IFD_POINTER
+                    || $tagId === ExifTag::GPS_IFD_POINTER
+                    || $tagId === ExifTag::INTEROPERABILITY_IFD_POINTER
+                ) {
+                    // Suppress internal IFD offsets from output:
+                    // 0x8769 Exif IFD Pointer, 0x8825 GPS IFD Pointer, 0xA005 Interoperability IFD Pointer.
+                    continue;
+                }
+
                 $hexKey  = sprintf('0x%04x', (int) $key);
                 $tagName = $this->getTagName((int) $key, $ifdContext);
                 // Format with exactly 40 characters before the colon
