@@ -228,9 +228,9 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
     public function printsThumbnailImageSummaryFromIfd1LengthTag(): void
     {
         $ifd1 = new Ifd([
-            ExifTag::COMPRESSION                     => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
-            ExifTag::JPEG_INTERCHANGE_FORMAT         => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 10600),
-            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH  => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 7456),
+            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 10600),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 7456),
         ]);
 
         ob_start();
