@@ -1049,6 +1049,24 @@ final class TrackMediaParserTest extends TestCase
     }
 
     /**
+     * Metadata handler tracks tolerate minf without nmhd and continue parsing.
+     */
+    #[Test]
+    public function itToleratesMissingNmhdBoxInMetadataTrack(): void
+    {
+        $minf = $this->box('minf', $this->validDinfBox() . $this->box('stbl', $this->validStblContent('meta')));
+        $mdia = $this->box('mdia', $this->validHdlrBox('meta') . $this->validMdhdBox() . $minf);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->validTkhdBox() . $mdia,
+        );
+
+        $this->expectNotToPerformAssertions();
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
      * Tolerates minf with mismatched media header for handler.
      */
     #[Test]
