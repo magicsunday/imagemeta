@@ -28,7 +28,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
 
+use function array_map;
 use function chr;
 use function pack;
 use function str_repeat;
@@ -1392,5 +1395,22 @@ final class TrackMediaParserTest extends TestCase
         $this->expectExceptionCode(1161);
 
         $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Guards parseTrak refactoring by requiring explicit video/audio key assembly helpers.
+     */
+    #[Test]
+    public function parseTrakUsesDedicatedTrackKeyAssemblers(): void
+    {
+        $reflection = new ReflectionClass(TrackMediaParser::class);
+        $methods    = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('buildVideoTrackKeys', $methods);
+        self::assertContains('buildAudioTrackKeys', $methods);
+        self::assertContains('copyLpcmSampleInfoKeys', $methods);
     }
 }
