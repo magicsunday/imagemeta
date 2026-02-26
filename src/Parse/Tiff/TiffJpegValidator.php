@@ -299,14 +299,6 @@ final readonly class TiffJpegValidator
         }
 
         // Postel's Law: treat out-of-bounds range as "no thumbnail".
-        $blobSize = $this->support->buffer()->size();
-        if (
-            ($offsetEntry->value > $blobSize)
-            || ($lengthEntry->value > $blobSize)
-            || ($offsetEntry->value > ($blobSize - $lengthEntry->value))
-        ) {
-            return;
-        }
     }
 
     /**

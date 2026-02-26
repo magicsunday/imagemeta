@@ -15,7 +15,6 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
-use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
@@ -458,6 +457,7 @@ final readonly class TiffExifTagValidator
 
         match ($tag) {
             DngTag::MAKER_NOTE_SAFETY => $this->assertMakerNoteSafetyDomain($value),
+            TiffTag::PREDICTOR        => $this->assertPredictorDomain($value),
             default                   => null,
         };
     }
@@ -650,52 +650,6 @@ final readonly class TiffExifTagValidator
     }
 
     /**
-     * Validates CompositeImage value domain.
-     *
-     * EXIF 3.0 §4.6.6.7.47 defines CompositeImage values 0..3 and reserves
-     * all other codes. When value 3 is present, §4.6.6.7.48 and §4.6.6.7.49
-     * specify companion tags, but real-world files frequently omit them.
-     * Missing or malformed companions are tolerated per Postel's Law.
-     *
-     * @param Ifd|null   $exifIfd    EXIF IFD when present.
-     * @param ParsedExif $parsedExif Parsed EXIF result for companion validation.
-     */
-    public function validateCompositeImageDependencies(?Ifd $exifIfd, ParsedExif $parsedExif): void
-    {
-        if (!$exifIfd instanceof Ifd) {
-            return;
-        }
-
-        $compositeImage = $exifIfd->get(ExifTag::COMPOSITE_IMAGE);
-        if (!($compositeImage instanceof IfdEntry) || !is_int($compositeImage->value)) {
-            return;
-        }
-
-        $compositeValue = $compositeImage->value;
-        if (($compositeValue < 0) || ($compositeValue > 3)) {
-            throw new ParseError(
-                sprintf('CompositeImage value %d is outside the valid domain {0,1,2,3} per EXIF 3.0 §4.6.6.7.47.', $compositeValue),
-                1420,
-            );
-        }
-
-    }
-
-    /**
-     * Validates structural decoding for SourceExposureTimesOfCompositeImage.
-     *
-     * EXIF 3.0 §4.6.6.7.49 Figure 25 defines a complete binary layout.
-     * Malformed or truncated payloads are tolerated per Postel's Law; the
-     * decoded result will be null and callers can inspect it as needed.
-     *
-     * @param Ifd|null   $exifIfd    EXIF IFD when present.
-     * @param ParsedExif $parsedExif Parsed EXIF result for companion validation.
-     */
-    public function validateSourceExposureTimesPayload(?Ifd $exifIfd, ParsedExif $parsedExif): void
-    {
-    }
-
-    /**
      * Derives a human-readable TIFF type label from a type code.
      *
      * @param int $type TIFF field type code.
@@ -750,4 +704,13 @@ final readonly class TiffExifTagValidator
         }
     }
 
+    private function assertPredictorDomain(int $value): void
+    {
+        if ($value !== 1 && $value !== 2) {
+            throw new ParseError(sprintf(
+                'Predictor value %d is outside the valid domain {1, 2} per TIFF 6.0 §14.',
+                $value,
+            ), 1358);
+        }
+    }
 }

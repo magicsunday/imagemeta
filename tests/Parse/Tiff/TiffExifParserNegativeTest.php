@@ -1178,17 +1178,6 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Predictor value 3 is tolerated as an opaque integer (Postel's Law).
-     */
-    #[Test]
-    public function toleratesPredictorValueThree(): void
-    {
-        $parsed = (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(TiffTag::PREDICTOR, 3));
-
-        self::assertSame(3, $parsed->ifd0->get(TiffTag::PREDICTOR)?->value);
-    }
-
-    /**
      * Orientation value 0 is accepted (Postel's Law) — commonly means "unspecified".
      */
     #[Test]

@@ -220,7 +220,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $makerNoteDispatcher = new MakerNoteDispatcher();
         $makerNotes          = $makerNoteDispatcher->resolve($this->makerNoteRaw, $registry, $ifd0, $exifIfd);
 
-        $parsedExif = new ParsedExif(
+        return new ParsedExif(
             $ifd0,
             $exifIfd,
             $gpsIfd,
@@ -230,11 +230,6 @@ final class TiffExifParser implements TiffExifParserInterface
             $additionalIfds,
             $subIfds,
         );
-
-        $this->tagValidator->validateCompositeImageDependencies($exifIfd, $parsedExif);
-        $this->tagValidator->validateSourceExposureTimesPayload($exifIfd, $parsedExif);
-
-        return $parsedExif;
     }
 
     /**

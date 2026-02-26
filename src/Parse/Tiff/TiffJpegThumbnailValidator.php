@@ -77,6 +77,8 @@ final readonly class TiffJpegThumbnailValidator
             return;
         }
 
+        // Postel's Law: skip thumbnail when the declared range exceeds the TIFF
+        // data bounds rather than aborting the entire parse.
         $blobSize = $this->buffer->size();
         if (
             ($thumbnailOffset < 0)
@@ -84,14 +86,7 @@ final readonly class TiffJpegThumbnailValidator
             || ($thumbnailLength > $blobSize)
             || ($thumbnailOffset > ($blobSize - $thumbnailLength))
         ) {
-            throw new ParseError(
-                sprintf(
-                    'JPEG thumbnail stream at offset %d with length %d exceeds TIFF data bounds',
-                    $thumbnailOffset,
-                    $thumbnailLength,
-                ),
-                1410,
-            );
+            return;
         }
 
         $cursor = $this->buffer->tell();
