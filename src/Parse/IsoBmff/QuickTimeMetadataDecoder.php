@@ -27,12 +27,12 @@ use function sprintf;
  * {@see QuickTimeValueDecoder}, and box navigation to {@see BoxNavigator}.
  * Implements the metadata atom model defined in QuickTime File Format 2012 §9.
  *
- * @phpstan-type QuickTimeValue = string|int|float|bool
- * @phpstan-type QuickTimeKeyMap = array<string, QuickTimeValue>
- * @phpstan-type QuickTimeKeyEntry = array{namespace: string, name: string}
- * @phpstan-type QuickTimeRawDataAtom = array{type: int, locale: int, value: string|int|float, nestedKeys?: QuickTimeKeyMap, nestedAtoms?: QuickTimeDataAtomList}
- * @phpstan-type QuickTimeCoercedDataAtom = array{type: int, locale: int, value: string|int|float|bool}
- * @phpstan-type QuickTimeDataAtomList = array<string, list<QuickTimeCoercedDataAtom>>
+ * @phpstan-import-type QuickTimeValue from QuickTimeValueDecoder
+ * @phpstan-import-type QuickTimeKeyMap from QuickTimeValueDecoder
+ * @phpstan-import-type QuickTimeKeyEntry from QuickTimeValueDecoder
+ * @phpstan-import-type QuickTimeRawDataAtom from QuickTimeValueDecoder
+ * @phpstan-import-type QuickTimeCoercedDataAtom from QuickTimeValueDecoder
+ * @phpstan-import-type QuickTimeDataAtomList from QuickTimeValueDecoder
  */
 final readonly class QuickTimeMetadataDecoder
 {

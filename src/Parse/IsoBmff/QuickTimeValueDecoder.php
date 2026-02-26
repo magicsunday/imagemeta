@@ -37,6 +37,7 @@ use function trim;
  *
  * @phpstan-type QuickTimeValue = string|int|float|bool
  * @phpstan-type QuickTimeKeyMap = array<string, QuickTimeValue>
+ * @phpstan-type QuickTimeKeyEntry = array{namespace: string, name: string}
  * @phpstan-type QuickTimeRawDataAtom = array{type: int, locale: int, value: string|int|float, nestedKeys?: QuickTimeKeyMap, nestedAtoms?: QuickTimeDataAtomList}
  * @phpstan-type QuickTimeCoercedDataAtom = array{type: int, locale: int, value: string|int|float|bool}
  * @phpstan-type QuickTimeDataAtomList = array<string, list<QuickTimeCoercedDataAtom>>
