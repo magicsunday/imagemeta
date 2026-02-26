@@ -137,6 +137,26 @@ final class MetadataFormatter
     private const string VERSION = '1.0.0';
 
     /**
+     * exiftool-compatible labels for enum case names that are not cleanly derived
+     * from generic case conversion rules.
+     *
+     * @var array<string, string>
+     */
+    private const array ENUM_LABEL_OVERRIDES = [
+        'Srgb'                     => 'sRGB',
+        'Pattern'                  => 'Multi-segment',
+        'CoSited'                  => 'Co-sited',
+        'OneChipColorArea'         => 'One-chip Color Area',
+        'AboveEllipsoidalSurface'  => 'Above Sea Level',
+        'BelowEllipsoidalSurface'  => 'Below Sea Level',
+        'DirectlyPhotographedImage' => 'Directly Photographed',
+        'CompulsoryFire'           => 'Compulsory Fire',
+        'CompulsorySuppress'       => 'Compulsory Suppress',
+        'NoStrobeDetection'        => 'No Strobe Detection',
+        'NormalProcess'            => 'Normal',
+    ];
+
+    /**
      * Maps QuickTime metadata keys to numeric QuickTime tag labels for exiftool-like output.
      *
      * @var array<string, string>
@@ -540,26 +560,26 @@ final class MetadataFormatter
     }
 
     /**
-     * Converts enum name from SCREAMING_SNAKE_CASE to Title Case.
+     * Converts enum case names to exiftool-like labels.
      *
      * Examples:
-     *   AUTO -> Auto
      *   AUTO_BRACKET -> Auto Bracket
-     *   MANUAL -> Manual
+     *   OneChipColorArea -> One Chip Color Area
      *
-     * @param string $enumName The enum case name in SCREAMING_SNAKE_CASE
+     * @param string $enumName The enum case name.
      */
     private function formatEnumName(string $enumName): string
     {
-        if ($enumName === 'SRGB') {
-            return 'sRGB';
+        if (isset(self::ENUM_LABEL_OVERRIDES[$enumName])) {
+            return self::ENUM_LABEL_OVERRIDES[$enumName];
         }
 
-        // Split by underscore and convert each part to title case
-        $parts = explode('_', $enumName);
-        $parts = array_map(static fn (string $part): string => ucfirst(strtolower($part)), $parts);
+        // Convert both SCREAMING_SNAKE_CASE and PascalCase/camelCase enum names.
+        $normalized = str_replace('_', ' ', $enumName);
+        $normalized = preg_replace('/(?<=[a-z])([A-Z])/', ' $1', $normalized) ?? $normalized;
+        $normalized = preg_replace('/(?<=[A-Z])([A-Z][a-z])/', ' $1', $normalized) ?? $normalized;
 
-        return implode(' ', $parts);
+        return ucwords(strtolower($normalized));
     }
 
     /**
@@ -778,7 +798,7 @@ final class MetadataFormatter
                         $parts[] = 'Red-eye Reduction';
                     }
 
-                    return $rawValue . ' (' . implode(', ', $parts) . ')';
+                    return implode(', ', $parts);
                 }
             }
         }
@@ -861,17 +881,9 @@ final class MetadataFormatter
         }
 
         if ($value instanceof BackedEnum) {
-            // For enums, show both value and name in parentheses
-            // Example: "0 (Auto)" instead of "0 (AUTO)"
-            $enumValue = $value->value ?? $value->name;
-            $enumName  = $this->formatEnumName($value->name);
-
-            // Only add name in parentheses if it's different from the value
-            if ((string) $enumValue !== $enumName) {
-                return sprintf('%s (%s)', $enumValue, $enumName);
-            }
-
-            return (string) $enumValue;
+            // Match exiftool: known enum mappings are shown by label only.
+            // Unmapped values stay raw because they are not BackedEnum instances.
+            return $this->formatEnumName($value->name);
         }
 
         if (is_bool($value)) {
