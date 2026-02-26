@@ -36,7 +36,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
 
+use function array_map;
 use function chr;
 use function pack;
 use function strlen;
@@ -331,6 +334,23 @@ XML;
         // Even without XMP, the factory should produce all components
         $this->addToAssertionCount(1);
         self::assertSame([], $components['keywords']->flat);
+    }
+
+    /**
+     * Guards the component-assembly refactor by requiring grouped map helpers.
+     */
+    #[Test]
+    public function createComponentsUsesGroupedAssemblyMaps(): void
+    {
+        $reflection = new ReflectionClass(ValueFactory::class);
+        $methods = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('createMediaComponentMap', $methods);
+        self::assertContains('createXmpComponentMap', $methods);
+        self::assertContains('createComponentMap', $methods);
     }
 
     private function stubIccParser(): IccParserInterface
