@@ -305,10 +305,10 @@ XML;
     }
 
     /**
-     * Guards the component-assembly refactor by requiring grouped map helpers.
+     * Guards the component-assembly simplification by disallowing identity map helpers.
      */
     #[Test]
-    public function createComponentsUsesGroupedAssemblyMaps(): void
+    public function createComponentsAvoidsIdentityAssemblyHelpers(): void
     {
         $reflection = new ReflectionClass(ValueFactory::class);
         $methods    = array_map(
@@ -316,9 +316,9 @@ XML;
             $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
         );
 
-        self::assertContains('createMediaComponentMap', $methods);
-        self::assertContains('createXmpComponentMap', $methods);
-        self::assertContains('createComponentMap', $methods);
+        self::assertNotContains('createMediaComponentMap', $methods);
+        self::assertNotContains('createXmpComponentMap', $methods);
+        self::assertNotContains('createComponentMap', $methods);
     }
 
     private function stubIccParser(): IccParserInterface
