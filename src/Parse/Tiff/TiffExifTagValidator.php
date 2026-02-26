@@ -59,11 +59,11 @@ final readonly class TiffExifTagValidator
 
     /**
      * EXIF 3.0 §4.6.6.9 tags must reside in the Exif IFD, not IFD0.
+     * CameraOwnerName (EXIF 3.0 §4.6.6.9.2) is tolerated in IFD0.
      *
      * @var list<array{int, string, string}>
      */
     private const array EXIF_IFD_ONLY_TAGS = [
-        [ExifTag::CAMERA_OWNER_NAME, 'CameraOwnerName', '§4.6.6.9.2'],
         [ExifTag::PHOTOGRAPHER, 'Photographer', '§4.6.6.9.9'],
         [ExifTag::IMAGE_EDITOR, 'ImageEditor', '§4.6.6.9.10'],
         [ExifTag::CAMERA_FIRMWARE, 'CameraFirmware', '§4.6.6.9.11'],
@@ -241,6 +241,8 @@ final readonly class TiffExifTagValidator
      */
     public function validateExifIfdPlacement(Ifd $ifd0): void
     {
+        // EXIF 3.0 §4.6.6.9.2 defines CameraOwnerName in Exif IFD, but many
+        // files place it in IFD0; reader-side parsing preserves this value.
         foreach (self::EXIF_IFD_ONLY_TAGS as [$tag, $name, $section]) {
             if ($ifd0->get($tag) instanceof IfdEntry) {
                 throw new ParseError(sprintf(
