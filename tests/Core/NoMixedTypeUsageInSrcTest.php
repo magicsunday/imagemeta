@@ -45,7 +45,11 @@ final class NoMixedTypeUsageInSrcTest extends TestCase
         $it    = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($srcRoot));
 
         foreach ($it as $fileInfo) {
-            if (!$fileInfo instanceof SplFileInfo || !$fileInfo->isFile()) {
+            if (!$fileInfo instanceof SplFileInfo) {
+                continue;
+            }
+
+            if (!$fileInfo->isFile()) {
                 continue;
             }
 
@@ -103,12 +107,8 @@ final class NoMixedTypeUsageInSrcTest extends TestCase
             );
 
             foreach ($matches[0] as $match) {
-                $offset = $match[1];
-                if (!is_int($offset)) {
-                    continue;
-                }
-
-                $lineOffset   = substr_count((string) substr($text, 0, $offset), "\n");
+                $offset       = $match[1];
+                $lineOffset   = substr_count(substr($text, 0, $offset), "\n");
                 $violations[] = $relative . ':' . ($line + $lineOffset) . ' PHPDoc type';
             }
         }

@@ -274,11 +274,9 @@ final readonly class GpsCoordinateConverter
 
     /**
      * Resolves EXIF GPS degrees/minutes/seconds into a numeric list.
-     *
-     * @param int|float|string|UInt64|ExifRationalList|ExifNumericList|ExifRational|null $value
      */
     private function resolveCoordinatePairs(
-        mixed $value,
+        int|float|string|UInt64|ExifRationalList|ExifNumericList|ExifRational|null $value,
     ): ExifRationalList|ExifNumericList|null {
         if ($value instanceof ExifRationalList) {
             return $value;

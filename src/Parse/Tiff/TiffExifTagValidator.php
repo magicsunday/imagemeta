@@ -12,6 +12,10 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Exif\Model\ExifNumericList as ExifNumericValueList;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
+use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
@@ -91,12 +95,11 @@ final readonly class TiffExifTagValidator
 
     /**
      * Validates individual tag value domains inline during readDirEntry.
-     *
-     * @param int   $tag   TIFF tag identifier.
-     * @param mixed $value Decoded tag value.
      */
-    public function validateTagValueDomain(int $tag, mixed $value): void
-    {
+    public function validateTagValueDomain(
+        int $tag,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericValueList|UInt64 $value,
+    ): void {
         if (!is_int($value)) {
             return;
         }

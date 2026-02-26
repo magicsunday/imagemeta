@@ -11,6 +11,11 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
+use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
+use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
+
 /**
  * Factory for creating converter instances with their dependencies properly wired.
  *
@@ -67,7 +72,9 @@ final readonly class ConverterFactory
         // a callback that delegates to RationalConverter once the graph is complete.
         $rationalRef            = null;
         $this->numericConverter = new NumericConverter(
-            static function (mixed $value) use (&$rationalRef): ?float {
+            static function (
+                int|float|string|array|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
+            ) use (&$rationalRef): ?float {
                 /** @var RationalConverter $rationalRef */
                 return $rationalRef->toFloat($value);
             },

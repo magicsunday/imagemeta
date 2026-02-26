@@ -80,7 +80,7 @@ final readonly class PlistTextParser
      * @param PlistTextCursor $cursor The text cursor.
      * @param int             $depth  Current recursion depth (1-based; incremented on each nested call).
      *
-     * @return array<string, mixed>
+     * @return array<string, NativePlistValue>
      *
      * @phpstan-return NativePlistDictionary
      *
@@ -164,7 +164,7 @@ final readonly class PlistTextParser
      * @param PlistTextCursor $cursor The text cursor.
      * @param int             $depth  Current recursion depth passed from the enclosing container.
      *
-     * @return array<int|string, mixed>|bool|float|int|string|null
+     * @return NativePlistValue
      *
      * @phpstan-return NativePlistValue
      *
@@ -231,7 +231,7 @@ final readonly class PlistTextParser
      * @param PlistTextCursor $cursor The text cursor.
      * @param int             $depth  Current recursion depth passed from the enclosing container.
      *
-     * @return array<int, mixed>
+     * @return array<int, NativePlistValue>
      *
      * @phpstan-return array<int, NativePlistValue>
      *
