@@ -85,6 +85,7 @@ final readonly class TiffTagConstraintValidator
                 $entry instanceof IfdEntry
                 && is_int($entry->value)
                 && $entry->value !== 1
+                && $entry->value !== 6
             ) {
                 throw new ParseError(sprintf(
                     'Compression value %d in IFD0 is invalid; only 1 (uncompressed) is allowed.',

@@ -194,20 +194,27 @@ final readonly class TiffColorInkValidator
                 );
             }
 
-            $bitsPerSample = $this->support->resolveUniformBitsPerSample($ifd, 'TransferFunction', 1736);
-            $tableCount    = 2 ** $bitsPerSample;
+            // Postel's Law: TransferFunction requires BitsPerSample for count
+            // validation, but real-world cameras (e.g. FujiFilm DS-7/DS-10) omit
+            // BitsPerSample.  Skip the count check when the companion is absent.
+            $bitsEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
 
-            if (($transferFunction->count !== $tableCount) && ($transferFunction->count !== (3 * $tableCount))) {
-                throw new ParseError(
-                    sprintf(
-                        'TransferFunction count %d must be %d or %d for BitsPerSample=%d.',
-                        $transferFunction->count,
-                        $tableCount,
-                        3 * $tableCount,
-                        $bitsPerSample,
-                    ),
-                    1731,
-                );
+            if ($bitsEntry instanceof IfdEntry) {
+                $bitsPerSample = $this->support->resolveUniformBitsPerSample($ifd, 'TransferFunction', 1736);
+                $tableCount    = 2 ** $bitsPerSample;
+
+                if (($transferFunction->count !== $tableCount) && ($transferFunction->count !== (3 * $tableCount))) {
+                    throw new ParseError(
+                        sprintf(
+                            'TransferFunction count %d must be %d or %d for BitsPerSample=%d.',
+                            $transferFunction->count,
+                            $tableCount,
+                            3 * $tableCount,
+                            $bitsPerSample,
+                        ),
+                        1731,
+                    );
+                }
             }
         }
 

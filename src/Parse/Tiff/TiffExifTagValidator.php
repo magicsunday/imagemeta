@@ -18,7 +18,6 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
-use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 
 use function in_array;
 use function is_int;
@@ -273,7 +272,6 @@ final readonly class TiffExifTagValidator
      * @var list<array{int, string}>
      */
     private const array JPEG_PROHIBITED_TAGS = [
-        [ExifTag::STRIP_OFFSETS, 'StripOffsets'],
         [ExifTag::ROWS_PER_STRIP, 'RowsPerStrip'],
         [ExifTag::STRIP_BYTE_COUNTS, 'StripByteCounts'],
         [ExifTag::JPEG_INTERCHANGE_FORMAT, 'JPEGInterchangeFormat'],
@@ -638,13 +636,6 @@ final readonly class TiffExifTagValidator
                 ), 1353);
             }
         }
-
-        if ($ifd0->get(ExifTag::YCBCR_SUB_SAMPLING) instanceof IfdEntry) {
-            throw new ParseError(
-                'YCbCrSubSampling shall not be present in IFD0 for JPEG-compressed primary image per EXIF 3.0 §4.6.5.1.14.',
-                1354,
-            );
-        }
     }
 
     /**
@@ -666,11 +657,12 @@ final readonly class TiffExifTagValidator
     }
 
     /**
-     * Validates CompositeImage value domain and required companion tags.
+     * Validates CompositeImage value domain.
      *
      * EXIF 3.0 §4.6.6.7.47 defines CompositeImage values 0..3 and reserves
      * all other codes. When value 3 is present, §4.6.6.7.48 and §4.6.6.7.49
-     * require both companion tags with valid payload structures.
+     * specify companion tags, but real-world files frequently omit them.
+     * Missing or malformed companions are tolerated per Postel's Law.
      *
      * @param Ifd|null   $exifIfd    EXIF IFD when present.
      * @param ParsedExif $parsedExif Parsed EXIF result for companion validation.
@@ -694,67 +686,20 @@ final readonly class TiffExifTagValidator
             );
         }
 
-        if ($compositeValue !== 3) {
-            return;
-        }
-
-        $sourceImageNumber = $exifIfd->get(ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE);
-        if (!$sourceImageNumber instanceof IfdEntry) {
-            throw new ParseError(
-                'CompositeImage value 3 requires SourceImageNumberOfCompositeImage per EXIF 3.0 §4.6.6.7.48.',
-                1421,
-            );
-        }
-
-        if ($parsedExif->sourceImageNumberOfCompositeImage() === null) {
-            throw new ParseError(
-                'SourceImageNumberOfCompositeImage payload is invalid for CompositeImage value 3 per EXIF 3.0 §4.6.6.7.48.',
-                1422,
-            );
-        }
-
-        $sourceExposureTimes = $exifIfd->get(ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE);
-        if (!$sourceExposureTimes instanceof IfdEntry) {
-            throw new ParseError(
-                'CompositeImage value 3 requires SourceExposureTimesOfCompositeImage per EXIF 3.0 §4.6.6.7.49.',
-                1423,
-            );
-        }
-
-        if (!$parsedExif->sourceExposureTimesOfCompositeImage() instanceof SourceExposureTimes) {
-            throw new ParseError(
-                'SourceExposureTimesOfCompositeImage payload is invalid for CompositeImage value 3 per EXIF 3.0 §4.6.6.7.49.',
-                1424,
-            );
-        }
     }
 
     /**
-     * Validates strict structural decoding for SourceExposureTimesOfCompositeImage.
+     * Validates structural decoding for SourceExposureTimesOfCompositeImage.
      *
-     * EXIF 3.0 §4.6.6.7.49 Figure 25 defines a complete binary layout. Partial,
-     * truncated, or trailing payload bytes are non-conformant and rejected.
+     * EXIF 3.0 §4.6.6.7.49 Figure 25 defines a complete binary layout.
+     * Malformed or truncated payloads are tolerated per Postel's Law; the
+     * decoded result will be null and callers can inspect it as needed.
      *
      * @param Ifd|null   $exifIfd    EXIF IFD when present.
      * @param ParsedExif $parsedExif Parsed EXIF result for companion validation.
      */
     public function validateSourceExposureTimesPayload(?Ifd $exifIfd, ParsedExif $parsedExif): void
     {
-        if (!$exifIfd instanceof Ifd) {
-            return;
-        }
-
-        $entry = $exifIfd->get(ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE);
-        if (!$entry instanceof IfdEntry) {
-            return;
-        }
-
-        if (!$parsedExif->sourceExposureTimesOfCompositeImage() instanceof SourceExposureTimes) {
-            throw new ParseError(
-                'SourceExposureTimesOfCompositeImage payload is malformed or truncated per EXIF 3.0 §4.6.6.7.49 Figure 25.',
-                1425,
-            );
-        }
     }
 
     /**
