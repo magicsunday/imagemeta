@@ -52,6 +52,12 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
     private ReflectionMethod $printIccSectionMethod;
 
+    private ReflectionMethod $calcScaleFactorTo35MmEquivalentMethod;
+
+    private ReflectionMethod $calcFocalLength35MmEquivalentMethod;
+
+    private ReflectionMethod $formatCompositeDateMethod;
+
     private ReflectionMethod $formatValueMethod;
 
     protected function setUp(): void
@@ -66,6 +72,9 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $this->getTagNameMethod                    = new ReflectionMethod($this->formatter, 'getTagName');
         $this->printSectionMethod                  = new ReflectionMethod($this->formatter, 'printSection');
         $this->printIccSectionMethod               = new ReflectionMethod($this->formatter, 'printIccSection');
+        $this->calcScaleFactorTo35MmEquivalentMethod = new ReflectionMethod($this->formatter, 'calcScaleFactorTo35MmEquivalent');
+        $this->calcFocalLength35MmEquivalentMethod = new ReflectionMethod($this->formatter, 'calcFocalLength35MmEquivalent');
+        $this->formatCompositeDateMethod           = new ReflectionMethod($this->formatter, 'formatCompositeDate');
         $this->formatValueMethod                   = new ReflectionMethod($this->formatter, 'formatValue');
     }
 
@@ -188,6 +197,30 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         self::assertStringContainsString('---- ICC_Profile ----', $output);
         self::assertStringContainsString('---- ICC-header2 ----', $output);
         self::assertStringContainsString('---- ICC_Profile2 ----', $output);
+    }
+
+    #[Test]
+    public function calculatesScaleFactorTo35MmEquivalent(): void
+    {
+        $actual = $this->calcScaleFactorTo35MmEquivalentMethod->invoke($this->formatter, 24, 15.0);
+
+        self::assertEqualsWithDelta(1.6, $actual, 0.0001);
+    }
+
+    #[Test]
+    public function calculatesFocalLength35MmEquivalentFromScaleFactor(): void
+    {
+        $actual = $this->calcFocalLength35MmEquivalentMethod->invoke($this->formatter, 135.0, 1.6185185185);
+
+        self::assertEqualsWithDelta(218.5, $actual, 0.01);
+    }
+
+    #[Test]
+    public function formatsCompositeDateWithSubSeconds(): void
+    {
+        $actual = $this->formatCompositeDateMethod->invoke($this->formatter, '2008:05:30 15:56:01', '00');
+
+        self::assertSame('2008:05:30 15:56:01.00', $actual);
     }
 
     /**
