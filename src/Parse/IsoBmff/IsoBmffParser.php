@@ -36,7 +36,6 @@ use function strlen;
  * EXIF 3.0 §4.8 outlines embedding Exif items in ISO BMFF containers through
  * the `Exif` box and item metadata.
  *
- * @phpstan-import-type MetaBoxPayloads from BoxPayloadCollector
  * @phpstan-import-type QuickTimeValue from QuickTimeValueDecoder
  * @phpstan-import-type QuickTimeKeyMap from QuickTimeValueDecoder
  * @phpstan-import-type QuickTimeKeyEntry from QuickTimeValueDecoder
@@ -443,17 +442,17 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         // direct Exif boxes, UUID-wrapped payloads and item references, so we collect each
         // channel before normalising the referenced data.
         $payloads                = $this->collectDirectPayloads($meta, $context, $fileOffsetOrigin);
-        $context->itemReferences = $this->itemLocationResolver->mergeItemReferencesByContext($context->itemReferences, $meta->offset, $payloads['itemReferences']);
-        $context->dataReferences = $this->itemLocationResolver->mergeDataReferencesByContext($context->dataReferences, $meta->offset, $payloads['dataReferences']);
+        $context->itemReferences = $this->itemLocationResolver->mergeItemReferencesByContext($context->itemReferences, $meta->offset, $payloads->itemReferences);
+        $context->dataReferences = $this->itemLocationResolver->mergeDataReferencesByContext($context->dataReferences, $meta->offset, $payloads->dataReferences);
 
-        $idatPayload = $payloads['idatPayload'];
+        $idatPayload = $payloads->idatPayload;
 
-        [$exifItemIds, $xmpItemIds] = $this->itemLocationResolver->gatherItemIds($payloads['itemInfos'], $payloads['primaryItemId']);
+        [$exifItemIds, $xmpItemIds] = $this->itemLocationResolver->gatherItemIds($payloads->itemInfos, $payloads->primaryItemId);
 
         // Resolve EXIF item payloads and normalize leading headers.
         // EXIF 3.0 §4.8 notes that item payloads omit the APP1 signature; some
         // encoders still include it, so we normalize accordingly.
-        $exifResult = $this->itemLocationResolver->resolveQueuedItems($exifItemIds, $payloads['locations'], $payloads['itemReferences'], $this->itemPayloadResolver->normalizeExifBlob(...), $payloads['dataReferences'], $idatPayload, $meta->offset);
+        $exifResult = $this->itemLocationResolver->resolveQueuedItems($exifItemIds, $payloads->locations, $payloads->itemReferences, $this->itemPayloadResolver->normalizeExifBlob(...), $payloads->dataReferences, $idatPayload, $meta->offset);
 
         foreach ($exifResult->unresolvedItems as $unresolvedItem) {
             $context->unresolvedItems[] = $unresolvedItem;
@@ -466,12 +465,12 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         // EXIF 3.0 Annex A item metadata: when both item-based and direct Exif payloads
         // are present, keep item-based payloads first so pitm-driven default selection
         // remains deterministic for MetadataReader::fromIsoBmff().
-        foreach ($payloads['directExif'] as $blob) {
+        foreach ($payloads->directExif as $blob) {
             $context->exifBlobs[] = $blob;
         }
 
         // Resolve referenced XMP payloads in declared priority order.
-        $xmpResult = $this->itemLocationResolver->resolveQueuedItems($xmpItemIds, $payloads['locations'], $payloads['itemReferences'], null, $payloads['dataReferences'], $idatPayload, $meta->offset);
+        $xmpResult = $this->itemLocationResolver->resolveQueuedItems($xmpItemIds, $payloads->locations, $payloads->itemReferences, null, $payloads->dataReferences, $idatPayload, $meta->offset);
 
         foreach ($xmpResult->unresolvedItems as $unresolvedItem) {
             $context->unresolvedItems[] = $unresolvedItem;
@@ -481,23 +480,23 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $this->appendUniqueXmpToContext($context, $blob);
         }
 
-        foreach ($payloads['directXmp'] as $blob) {
+        foreach ($payloads->directXmp as $blob) {
             $this->appendUniqueXmpToContext($context, $blob);
         }
 
-        foreach ($payloads['uuidXmp'] as $blob) {
+        foreach ($payloads->uuidXmp as $blob) {
             $this->appendUniqueXmpToContext($context, $blob);
         }
 
         [$mergedQtKeys, $mergedQtDataAtoms] = $this->quickTimeDecoder->mergeQuickTimeKeys(
             $context->qtKeys,
-            $payloads['keysMaps'],
-            $payloads['ilstBoxes'],
+            $payloads->keysMaps,
+            $payloads->ilstBoxes,
             $context->qtDataAtoms,
-            $payloads['hasMhdr'],
-            $payloads['countryLists'],
-            $payloads['languageLists'],
-            $payloads['isMdta'],
+            $payloads->hasMhdr,
+            $payloads->countryLists,
+            $payloads->languageLists,
+            $payloads->isMdta,
         );
         $context->qtKeys      = $mergedQtKeys;
         $context->qtDataAtoms = $mergedQtDataAtoms;
@@ -505,10 +504,8 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
     /**
      * Delegates payload collection to BoxPayloadCollector.
-     *
-     * @return MetaBoxPayloads
      */
-    private function collectDirectPayloads(BoxDescriptor $meta, IsoBmffParseContext $context, int $fileOffsetOrigin = 0): array
+    private function collectDirectPayloads(BoxDescriptor $meta, IsoBmffParseContext $context, int $fileOffsetOrigin = 0): BoxPayloadCollection
     {
         return $this->boxPayloadCollector->collect($meta, $context->allowQuickTimeMetaWithoutFullBox, $fileOffsetOrigin);
     }

@@ -29,23 +29,6 @@ use function substr;
  * for EXIF, XMP, ICC, QuickTime metadata, and item-location structures.
  *
  * @phpstan-type QuickTimeKeyEntry = array{namespace: string, name: string}
- * @phpstan-type MetaBoxPayloads = array{
- *     itemInfos: array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>,
- *     locations: array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}>,
- *     itemReferences: array<int, list<IsoBmffItemReference>>,
- *     dataReferences: array<int, IsoBmffDataReference>,
- *     primaryItemId: ?int,
- *     directXmp: list<string>,
- *     uuidXmp: list<string>,
- *     directExif: list<string>,
- *     idatPayload: ?string,
- *     keysMaps: list<array<int, QuickTimeKeyEntry>>,
- *     ilstBoxes: list<BoxDescriptor>,
- *     hasMhdr: bool,
- *     countryLists: list<list<int>>,
- *     languageLists: list<list<int>>,
- *     isMdta: bool
- * }
  */
 final readonly class BoxPayloadCollector
 {
@@ -71,10 +54,8 @@ final readonly class BoxPayloadCollector
 
     /**
      * Walks all children of a `meta` box and collects payloads grouped by type.
-     *
-     * @return MetaBoxPayloads
      */
-    public function collect(BoxDescriptor $meta, bool $allowQuickTimeMetaWithoutFullBox, int $fileOffsetOrigin = 0): array
+    public function collect(BoxDescriptor $meta, bool $allowQuickTimeMetaWithoutFullBox, int $fileOffsetOrigin = 0): BoxPayloadCollection
     {
         /** @var array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos */
         $itemInfos = [];
@@ -254,23 +235,23 @@ final readonly class BoxPayloadCollector
             throw new ParseError(sprintf('pitm references non-existent item %d', $primaryItemId), 1167);
         }
 
-        return [
-            'itemInfos'      => $itemInfos,
-            'locations'      => $locations,
-            'itemReferences' => $itemReferences,
-            'dataReferences' => $dataReferences,
-            'primaryItemId'  => $primaryItemId,
-            'directXmp'      => $directXmp,
-            'uuidXmp'        => $uuidXmp,
-            'directExif'     => $directExif,
-            'idatPayload'    => $idatPayload,
-            'keysMaps'       => $keysMaps,
-            'ilstBoxes'      => $ilstBoxes,
-            'hasMhdr'        => $hasMhdr,
-            'countryLists'   => $countryLists,
-            'languageLists'  => $languageLists,
-            'isMdta'         => $handlerType === QuickTimeKeyResolver::QUICKTIME_MDTA,
-        ];
+        return new BoxPayloadCollection(
+            $itemInfos,
+            $locations,
+            $itemReferences,
+            $dataReferences,
+            $primaryItemId,
+            $directXmp,
+            $uuidXmp,
+            $directExif,
+            $idatPayload,
+            $keysMaps,
+            $ilstBoxes,
+            $hasMhdr,
+            $countryLists,
+            $languageLists,
+            $handlerType === QuickTimeKeyResolver::QUICKTIME_MDTA,
+        );
     }
 
     /**
