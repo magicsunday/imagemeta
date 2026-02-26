@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\FlashMode;
 use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
+use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
@@ -205,6 +206,36 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $actual = $this->calcScaleFactorTo35MmEquivalentMethod->invoke($this->formatter, 24, 15.0);
 
         self::assertEqualsWithDelta(1.6, $actual, 0.0001);
+    }
+
+    #[Test]
+    public function calculatesScaleFactorTo35MmEquivalentFromFocalPlaneData(): void
+    {
+        $actual = $this->calcScaleFactorTo35MmEquivalentMethod->invoke(
+            $this->formatter,
+            null,
+            57.0,
+            4438.356164383562,
+            3888,
+            ResolutionUnit::Inches->value,
+        );
+
+        self::assertEqualsWithDelta(1.6185, $actual, 0.0001);
+    }
+
+    #[Test]
+    public function returnsNullScaleFactorTo35MmEquivalentForInvalidFocalPlaneWidth(): void
+    {
+        $actual = $this->calcScaleFactorTo35MmEquivalentMethod->invoke(
+            $this->formatter,
+            null,
+            57.0,
+            4438.356164383562,
+            0,
+            ResolutionUnit::Inches->value,
+        );
+
+        self::assertNull($actual);
     }
 
     #[Test]
