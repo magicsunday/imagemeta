@@ -210,9 +210,6 @@ final readonly class ValueFactory
 
         $xmpValues = $this->createXmpValues($xmpDocument, $exifDocument, $quickTimeLookup, $metadata);
 
-        $mediaComponents = $this->createMediaComponentMap($media);
-        $xmpComponents   = $this->createXmpComponentMap($xmpValues);
-
         /** @var CoreComponents $coreComponents */
         $coreComponents = [
             ComponentKey::Author->value          => $author,
@@ -247,94 +244,10 @@ final readonly class ValueFactory
             ComponentKey::MakerNotesApple->value => $apple,
         ];
 
-        return $this->createComponentMap($coreComponents, $mediaComponents, $xmpComponents);
-    }
+        /** @var ValueComponents $components */
+        $components = [...$coreComponents, ...$media, ...$xmpValues];
 
-    /**
-     * Builds media-related components from the delegated media factory output.
-     *
-     * @param MediaComponents $media
-     *
-     * @return MediaComponents
-     */
-    private function createMediaComponentMap(array $media): array
-    {
-        return [
-            ComponentKey::Audio->value         => $media[ComponentKey::Audio->value],
-            ComponentKey::Container->value     => $media[ComponentKey::Container->value],
-            ComponentKey::EmbeddedAudio->value => $media[ComponentKey::EmbeddedAudio->value],
-            ComponentKey::FlashPix->value      => $media[ComponentKey::FlashPix->value],
-            ComponentKey::Video->value         => $media[ComponentKey::Video->value],
-        ];
-    }
-
-    /**
-     * Builds XMP-derived component entries from delegated XMP value creation.
-     *
-     * @param XmpComponents $xmpValues
-     *
-     * @return XmpComponents
-     */
-    private function createXmpComponentMap(array $xmpValues): array
-    {
-        return [
-            ComponentKey::DepthMap->value => $xmpValues[ComponentKey::DepthMap->value],
-            ComponentKey::Keywords->value => $xmpValues[ComponentKey::Keywords->value],
-            ComponentKey::Related->value  => $xmpValues[ComponentKey::Related->value],
-        ];
-    }
-
-    /**
-     * Assembles the final component map in the established key order.
-     *
-     * @param CoreComponents  $coreComponents
-     * @param MediaComponents $mediaComponents
-     * @param XmpComponents   $xmpComponents
-     *
-     * @return ValueComponents
-     */
-    private function createComponentMap(array $coreComponents, array $mediaComponents, array $xmpComponents): array
-    {
-        return [
-            ComponentKey::Audio->value           => $mediaComponents[ComponentKey::Audio->value],
-            ComponentKey::Author->value          => $coreComponents[ComponentKey::Author->value],
-            ComponentKey::Camera->value          => $coreComponents[ComponentKey::Camera->value],
-            ComponentKey::Capture->value         => $coreComponents[ComponentKey::Capture->value],
-            ComponentKey::ColorProfile->value    => $coreComponents[ComponentKey::ColorProfile->value],
-            ComponentKey::Composite->value       => $coreComponents[ComponentKey::Composite->value],
-            ComponentKey::Container->value       => $mediaComponents[ComponentKey::Container->value],
-            ComponentKey::Derived->value         => $coreComponents[ComponentKey::Derived->value],
-            ComponentKey::DepthMap->value        => $xmpComponents[ComponentKey::DepthMap->value],
-            ComponentKey::Device->value          => $coreComponents[ComponentKey::Device->value],
-            ComponentKey::EmbeddedAudio->value   => $mediaComponents[ComponentKey::EmbeddedAudio->value],
-            ComponentKey::Exposure->value        => $coreComponents[ComponentKey::Exposure->value],
-            ComponentKey::File->value            => $coreComponents[ComponentKey::File->value],
-            ComponentKey::FlashPix->value        => $mediaComponents[ComponentKey::FlashPix->value],
-            ComponentKey::Focus->value           => $coreComponents[ComponentKey::Focus->value],
-            ComponentKey::Gps->value             => $coreComponents[ComponentKey::Gps->value],
-            ComponentKey::Image->value           => $coreComponents[ComponentKey::Image->value],
-            ComponentKey::Integrity->value       => $coreComponents[ComponentKey::Integrity->value],
-            ComponentKey::Interop->value         => $coreComponents[ComponentKey::Interop->value],
-            ComponentKey::Iptc->value            => $coreComponents[ComponentKey::Iptc->value],
-            ComponentKey::Keywords->value        => $xmpComponents[ComponentKey::Keywords->value],
-            ComponentKey::Lens->value            => $coreComponents[ComponentKey::Lens->value],
-            ComponentKey::Motion->value          => $coreComponents[ComponentKey::Motion->value],
-            ComponentKey::MultiPicture->value    => $coreComponents[ComponentKey::MultiPicture->value],
-            ComponentKey::Processing->value      => $coreComponents[ComponentKey::Processing->value],
-            ComponentKey::Regions->value         => $coreComponents[ComponentKey::Regions->value],
-            ComponentKey::Related->value         => $xmpComponents[ComponentKey::Related->value],
-            ComponentKey::Rights->value          => $coreComponents[ComponentKey::Rights->value],
-            ComponentKey::Scene->value           => $coreComponents[ComponentKey::Scene->value],
-            ComponentKey::Sensor->value          => $coreComponents[ComponentKey::Sensor->value],
-            ComponentKey::Standards->value       => $coreComponents[ComponentKey::Standards->value],
-            ComponentKey::Temporal->value        => $coreComponents[ComponentKey::Temporal->value],
-            ComponentKey::Thumbnail->value       => $coreComponents[ComponentKey::Thumbnail->value],
-            ComponentKey::Tiff->value            => $coreComponents[ComponentKey::Tiff->value],
-            ComponentKey::Video->value           => $mediaComponents[ComponentKey::Video->value],
-            ComponentKey::WhiteBalance->value    => $coreComponents[ComponentKey::WhiteBalance->value],
-            ComponentKey::Xmp->value             => $coreComponents[ComponentKey::Xmp->value],
-            ComponentKey::MakerNotesApple->value => $coreComponents[ComponentKey::MakerNotesApple->value],
-        ];
+        return $components;
     }
 
     /**
