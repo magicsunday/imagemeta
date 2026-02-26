@@ -282,6 +282,55 @@ final class JxlParserTest extends TestCase
     }
 
     /**
+     * Enforces an aggregate metadata box count limit during JXL metadata extraction.
+     */
+    #[Test]
+    public function throwsWhenMetadataBoxCountExceedsAggregateLimit(): void
+    {
+        $xmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
+
+        $jxl = self::JXL_SIGNATURE
+            . $this->box('xml ', $xmp)
+            . $this->box('xml ', $xmp)
+            . $this->box('xml ', $xmp);
+
+        $stream = $this->streamFromString($jxl);
+        $parser = new JxlParser($stream, maxMetadataBoxCount: 2);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(2084);
+
+        $parser->extract();
+    }
+
+    /**
+     * Accepts metadata when the aggregate metadata payload size equals the configured limit.
+     */
+    #[Test]
+    public function acceptsMetadataWhenAggregateSizeMatchesLimit(): void
+    {
+        $xmp      = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
+        $tiff     = self::TIFF_LE_HEADER;
+        $exifBlob = pack('N', 0) . $tiff;
+
+        $jxl = self::JXL_SIGNATURE
+            . $this->box('Exif', $exifBlob)
+            . $this->box('xml ', $xmp);
+
+        $aggregateLimit = strlen($exifBlob) + strlen($xmp);
+
+        $stream = $this->streamFromString($jxl);
+        $parser = new JxlParser($stream, maxTotalMetadataBytes: $aggregateLimit);
+
+        [$exifBlobs, $xmpBlobs] = $parser->extract();
+
+        self::assertCount(1, $exifBlobs);
+        self::assertSame($tiff, $exifBlobs[0]);
+        self::assertCount(1, $xmpBlobs);
+        self::assertSame($xmp, $xmpBlobs[0]);
+    }
+
+    /**
      * Ignores unknown box types without raising errors.
      */
     #[Test]
