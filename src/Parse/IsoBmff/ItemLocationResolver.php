@@ -41,12 +41,12 @@ final readonly class ItemLocationResolver
     }
 
     /**
-     * Gathers item IDs from item info structures, separated by primary status.
+     * Gathers item IDs from item info structures, separated by metadata type.
      *
      * @param array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos     Item information structures.
      * @param int|null                                                                           $primaryItemId Primary item ID if known.
      *
-     * @return array{0: list<int>, 1: list<int>} Tuple of [primary item IDs, other item IDs].
+     * @return array{0: list<int>, 1: list<int>} Tuple of [EXIF item IDs, XMP item IDs].
      */
     public function gatherItemIds(array $itemInfos, ?int $primaryItemId): array
     {
