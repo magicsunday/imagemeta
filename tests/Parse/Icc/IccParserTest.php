@@ -185,6 +185,21 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Rejects truncated s15Fixed16 fields instead of returning a silent zero value.
+     */
+    #[Test]
+    public function s15Fixed16HelperRejectsTruncatedFields(): void
+    {
+        $reader = new IccBinaryReader();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(2086);
+        $this->expectExceptionMessage('ICC s15Fixed16 field truncated at offset 2: expected 4 bytes, got 2');
+
+        $reader->s15Fixed16("\x00\x01\x02\x03", 2);
+    }
+
+    /**
      * Feeds out-of-order ICC segments to the decoder.
      * This confirms the decoder sorts fragments before reconstruction.
      */
