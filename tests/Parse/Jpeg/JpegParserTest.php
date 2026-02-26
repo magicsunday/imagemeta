@@ -98,6 +98,8 @@ final class JpegParserTest extends TestCase
 
     private const string IPTC_SIGNATURE = "Photoshop 3.0\0";
 
+    private const string ADOBE_APP14_SIGNATURE = 'Adobe';
+
     private const string FPXR_SIGNATURE = 'FPXR';
 
     private const string AUDIO_SIGNATURE = "Exif\0\0Audio";
@@ -109,6 +111,8 @@ final class JpegParserTest extends TestCase
     private const int MARKER_APP11 = 0xEB;
 
     private const int MARKER_APP13 = 0xED;
+
+    private const int MARKER_APP14 = 0xEE;
 
     private const int MARKER_DQT = 0xDB;
 
@@ -3099,6 +3103,108 @@ final class JpegParserTest extends TestCase
         $this->expectExceptionCode(1266);
 
         $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Parses an APP14 Adobe marker and returns the ColorTransform value.
+     * The marker carries DCTEncodeVersion, APP14Flags0, APP14Flags1, and ColorTransform.
+     */
+    #[Test]
+    public function adobeApp14ColorTransformIsParsed(): void
+    {
+        $dctEncodeVersion = pack('n', 100);
+        $app14Flags0      = pack('n', 0);
+        $app14Flags1      = pack('n', 0);
+        $colorTransform   = "\x01"; // 1 = YCbCr
+
+        $payload = self::ADOBE_APP14_SIGNATURE
+            . $dctEncodeVersion
+            . $app14Flags0
+            . $app14Flags1
+            . $colorTransform;
+
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_APP14, $payload));
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame(1, $extractor->getAdobeApp14ColorTransform());
+    }
+
+    /**
+     * Returns null when no APP14 Adobe marker is present.
+     */
+    #[Test]
+    public function adobeApp14ReturnsNullWhenAbsent(): void
+    {
+        $jpeg      = $this->jpeg();
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertNull($extractor->getAdobeApp14ColorTransform());
+    }
+
+    /**
+     * Ignores APP14 segments without the "Adobe" signature.
+     * Non-Adobe APP14 markers must not pollute the ColorTransform value.
+     */
+    #[Test]
+    public function adobeApp14IgnoresNonAdobeSignature(): void
+    {
+        $payload = 'NotAd' . pack('n', 100) . pack('n', 0) . pack('n', 0) . "\x02";
+
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_APP14, $payload));
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertNull($extractor->getAdobeApp14ColorTransform());
+    }
+
+    /**
+     * Parses ColorTransform value 2 (YCCK) from APP14 Adobe marker.
+     */
+    #[Test]
+    public function adobeApp14ParsesYcckColorTransform(): void
+    {
+        $payload = self::ADOBE_APP14_SIGNATURE
+            . pack('n', 100) // DCTEncodeVersion
+            . pack('n', 0)   // APP14Flags0
+            . pack('n', 0)   // APP14Flags1
+            . "\x02";        // ColorTransform = 2 (YCCK)
+
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_APP14, $payload));
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame(2, $extractor->getAdobeApp14ColorTransform());
+    }
+
+    /**
+     * Parses ColorTransform value 0 (Unknown) from APP14 Adobe marker.
+     */
+    #[Test]
+    public function adobeApp14ParsesUnknownColorTransform(): void
+    {
+        $payload = self::ADOBE_APP14_SIGNATURE
+            . pack('n', 100) // DCTEncodeVersion
+            . pack('n', 0)   // APP14Flags0
+            . pack('n', 0)   // APP14Flags1
+            . "\x00";        // ColorTransform = 0 (Unknown)
+
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_APP14, $payload));
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame(0, $extractor->getAdobeApp14ColorTransform());
+    }
+
+    /**
+     * Ignores APP14 Adobe markers that are too short to contain a ColorTransform field.
+     */
+    #[Test]
+    public function adobeApp14IgnoresTruncatedPayload(): void
+    {
+        // Only signature + 4 bytes (missing last 3 bytes: APP14Flags1 + ColorTransform)
+        $payload = self::ADOBE_APP14_SIGNATURE . pack('n', 100) . pack('n', 0);
+
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_APP14, $payload));
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertNull($extractor->getAdobeApp14ColorTransform());
     }
 
     /**
