@@ -439,14 +439,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects BaselineExposureOffset with wrong count (2 instead of 1).
+     * Tolerates BaselineExposureOffset with wrong count (2 instead of 1).
+     * Postel's Law: fixed-length byte-count deviations are accepted.
      */
     #[Test]
-    public function rejectsBaselineExposureOffsetWrongCount(): void
+    public function toleratesBaselineExposureOffsetWrongCount(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-
         $blob = $this->buildClassicTiffWithEntry(
             DngTag::BASELINE_EXPOSURE_OFFSET,
             TiffConst::TYPE_RATIONAL,
@@ -454,7 +452,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1318, $e->getCode(), 'Byte-count deviation must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -477,14 +483,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects RawDataUniqueID with wrong count (15 instead of 16).
+     * Tolerates RawDataUniqueID with wrong count (15 instead of 16).
+     * Postel's Law: fixed-length byte-count deviations are accepted.
      */
     #[Test]
-    public function rejectsRawDataUniqueIdWrongCount(): void
+    public function toleratesRawDataUniqueIdWrongCount(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-
         $blob = $this->buildClassicTiffWithEntry(
             DngTag::RAW_DATA_UNIQUE_ID,
             TiffConst::TYPE_BYTE,
@@ -492,7 +496,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             str_repeat("\xAB", 15),
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1318, $e->getCode(), 'Byte-count deviation must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -515,14 +527,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects RawToPreviewGain with wrong count (2 instead of 1).
+     * Tolerates RawToPreviewGain with wrong count (2 instead of 1).
+     * Postel's Law: fixed-length byte-count deviations are accepted.
      */
     #[Test]
-    public function rejectsRawToPreviewGainWrongCount(): void
+    public function toleratesRawToPreviewGainWrongCount(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-
         $blob = $this->buildClassicTiffWithEntry(
             DngTag::RAW_TO_PREVIEW_GAIN,
             TiffConst::TYPE_DOUBLE,
@@ -530,7 +540,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             pack('e', 1.0) . pack('e', 2.0),
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1318, $e->getCode(), 'Byte-count deviation must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -577,14 +595,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSSpeedRef with wrong count (1 instead of 2).
+     * Tolerates GPSSpeedRef with wrong count (1 instead of 2).
+     * Postel's Law: fixed-length byte-count deviations are accepted.
      */
     #[Test]
-    public function rejectsGpsSpeedRefWrongCount(): void
+    public function toleratesGpsSpeedRefWrongCount(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-
         $blob = $this->buildClassicTiffWithEntry(
             ExifTag::GPS_SPEED_REF,
             TiffConst::TYPE_ASCII,
@@ -592,7 +608,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             'K',
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1318, $e->getCode(), 'Byte-count deviation must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -664,15 +688,13 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSStatus/GPSMeasureMode tags when encoded with wrong component count.
+     * Tolerates GPSStatus/GPSMeasureMode tags when encoded with wrong component count.
+     * Postel's Law: fixed-length byte-count deviations are accepted.
      */
     #[Test]
     #[DataProvider('provideGpsStatusAndMeasureModeTags')]
-    public function rejectsGpsStatusAndMeasureModeWrongCount(int $tag): void
+    public function toleratesGpsStatusAndMeasureModeWrongCount(int $tag): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-
         $blob = $this->buildClassicTiffWithEntry(
             $tag,
             TiffConst::TYPE_ASCII,
@@ -680,7 +702,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             'A',
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1318, $e->getCode(), 'Byte-count deviation must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -712,14 +742,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSDestDistanceRef with wrong count (1 instead of 2).
+     * Tolerates GPSDestDistanceRef with wrong count (1 instead of 2).
+     * Postel's Law: fixed-length byte-count deviations are accepted.
      */
     #[Test]
-    public function rejectsGpsDestDistanceRefWrongCount(): void
+    public function toleratesGpsDestDistanceRefWrongCount(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-
         $blob = $this->buildClassicTiffWithEntry(
             ExifTag::GPS_DEST_DISTANCE_REF,
             TiffConst::TYPE_ASCII,
@@ -727,7 +755,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             'K',
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1318, $e->getCode(), 'Byte-count deviation must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -841,15 +877,13 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPS bearing reference tags when encoded with wrong component count.
+     * Tolerates GPS bearing reference tags when encoded with wrong component count.
+     * Postel's Law: fixed-length byte-count deviations are accepted.
      */
     #[Test]
     #[DataProvider('provideGpsBearingRefTags')]
-    public function rejectsGpsBearingReferenceTagsWithWrongCount(int $tag): void
+    public function toleratesGpsBearingReferenceTagsWithWrongCount(int $tag): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-
         $blob = $this->buildClassicTiffWithEntry(
             $tag,
             TiffConst::TYPE_ASCII,
@@ -857,7 +891,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             'T',
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1318, $e->getCode(), 'Byte-count deviation must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**

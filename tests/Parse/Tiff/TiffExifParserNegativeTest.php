@@ -509,12 +509,37 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Feeds fixed-length tags with invalid counts via a data provider.
+     * Tolerates fixed-length tags with deviating byte counts (Postel's Law).
+     * The parser must not throw ParseError code 1318 for these cases.
+     */
+    #[Test]
+    #[DataProvider('toleratedFixedLengthTagProvider')]
+    public function toleratesFixedLengthTagsWithDeviatingCounts(
+        int $tag,
+        int $type,
+        int $count,
+        string $valueBytes,
+    ): void {
+        $blob = $this->buildClassicTiffWithEntry($tag, $type, $count, $valueBytes);
+
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1318, $e->getCode(), 'Byte-count deviation must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * Rejects fixed-length tags with type mismatches via a data provider.
      * Confirms the parser rejects each case with the expected ParseError message.
      */
     #[Test]
-    #[DataProvider('invalidFixedLengthTagProvider')]
-    public function rejectsFixedLengthTagsWithInvalidCounts(
+    #[DataProvider('invalidFixedLengthTagTypeProvider')]
+    public function rejectsFixedLengthTagsWithInvalidTypes(
         int $tag,
         int $type,
         int $count,
@@ -921,9 +946,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * @return array<string, array{0:int,1:int,2:int,3:string,4:string}>
+     * @return array<string, array{0:int,1:int,2:int,3:string}>
      */
-    public static function invalidFixedLengthTagProvider(): array
+    public static function toleratedFixedLengthTagProvider(): array
     {
         return [
             'GPSVersionID expects 4 bytes' => [
@@ -931,133 +956,124 @@ final class TiffExifParserNegativeTest extends TestCase
                 TiffConst::TYPE_BYTE,
                 3,
                 "\x02\x03\x00",
-                'GPSVersionID must contain exactly 4 bytes per EXIF 3.0 §4.6.7.1.1.',
             ],
             'SubjectLocation expects 2 SHORT' => [
                 ExifTag::SUBJECT_LOCATION,
                 TiffConst::TYPE_SHORT,
                 1,
                 "\x00\x64",
-                'SubjectLocation must contain exactly 2 bytes per EXIF 3.0 §4.6.6.7.29.',
-            ],
-            'SubjectLocation rejects LONG type' => [
-                ExifTag::SUBJECT_LOCATION,
-                TiffConst::TYPE_LONG,
-                2,
-                "\x00\x00\x00\x64\x00\x00\x00\xC8",
-                'SubjectLocation must use TIFF type SHORT per EXIF 3.0 §4.6.6.7.29.',
             ],
             'LensSpecification expects 4 RATIONAL' => [
                 ExifTag::LENS_SPECIFICATION,
                 TiffConst::TYPE_RATIONAL,
                 3,
                 "\x00\x00\x00\x1C\x00\x00\x00\x01\x00\x00\x00\x46\x00\x00\x00\x01\x00\x00\x00\x18\x00\x00\x00\x0A",
-                'LensSpecification must contain exactly 4 bytes per EXIF 3.0 §4.6.6.9.4.',
             ],
             'WhitePoint expects 2 RATIONAL' => [
                 ExifTag::WHITE_POINT,
                 TiffConst::TYPE_RATIONAL,
                 1,
                 str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 1),
-                'WhitePoint must contain exactly 2 bytes per EXIF 3.0 §4.6.5.3.2.',
             ],
             'PrimaryChromaticities expects 6 RATIONAL' => [
                 ExifTag::PRIMARY_CHROMATICITIES,
                 TiffConst::TYPE_RATIONAL,
                 5,
                 str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 5),
-                'PrimaryChromaticities must contain exactly 6 bytes per EXIF 3.0 §4.6.5.3.3.',
             ],
             'YCbCrCoefficients expects 3 RATIONAL' => [
                 ExifTag::YCBCR_COEFFICIENTS,
                 TiffConst::TYPE_RATIONAL,
                 2,
                 str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
-                'YCbCrCoefficients must contain exactly 3 bytes per EXIF 3.0 §4.6.5.3.4.',
             ],
             'ReferenceBlackWhite expects 6 RATIONAL' => [
                 ExifTag::REFERENCE_BLACK_WHITE,
                 TiffConst::TYPE_RATIONAL,
                 5,
                 str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 5),
-                'ReferenceBlackWhite must contain exactly 6 bytes per EXIF 3.0 §4.6.5.3.5.',
             ],
             'GPSTimeStamp expects 3 RATIONAL' => [
                 ExifTag::GPS_TIME_STAMP,
                 TiffConst::TYPE_RATIONAL,
                 2,
                 "\x00\x00\x00\x0C\x00\x00\x00\x01\x00\x00\x00\x22\x00\x00\x00\x01",
-                'GPSTimeStamp must contain exactly 3 bytes per EXIF 3.0 §4.6.7.1.8.',
             ],
             'GPSDateStamp expects 11 ASCII' => [
                 ExifTag::GPS_DATE_STAMP,
                 TiffConst::TYPE_ASCII,
                 10,
                 '2024:05:06',
-                'GPSDateStamp must contain exactly 11 bytes per EXIF 3.0 §4.6.7.1.30.',
             ],
             'FileSource expects 1 UNDEFINED' => [
                 ExifTag::FILE_SOURCE,
                 TiffConst::TYPE_UNDEFINED,
                 2,
                 "\x03\x00",
-                'FileSource must contain exactly 1 bytes per EXIF 3.0 §4.6.6.7.32.',
             ],
             'SceneType expects 1 UNDEFINED' => [
                 ExifTag::SCENE_TYPE,
                 TiffConst::TYPE_UNDEFINED,
                 2,
                 "\x01\x00",
-                'SceneType must contain exactly 1 bytes per EXIF 3.0 §4.6.6.7.33.',
             ],
             'GPSAltitudeRef expects 1 BYTE' => [
                 ExifTag::GPS_ALTITUDE_REF,
                 TiffConst::TYPE_BYTE,
                 2,
                 "\x00\x01",
-                'GPSAltitudeRef must contain exactly 1 bytes per EXIF 3.0 §4.6.7.1.6.',
             ],
             'GPSDifferential expects 1 SHORT' => [
                 ExifTag::GPS_DIFFERENTIAL,
                 TiffConst::TYPE_SHORT,
                 2,
                 "\x01\x00\x00\x00",
-                'GPSDifferential must contain exactly 1 bytes per EXIF 3.0 §4.6.7.1.31.',
             ],
             'DNGVersion expects 4 BYTE' => [
                 DngTag::DNG_VERSION,
                 TiffConst::TYPE_BYTE,
                 3,
                 "\x01\x07\x01",
-                'DNGVersion must contain exactly 4 bytes per DNG 1.7.1.0.',
             ],
             'DNGBackwardVersion expects 4 BYTE' => [
                 DngTag::DNG_BACKWARD_VERSION,
                 TiffConst::TYPE_BYTE,
                 3,
                 "\x01\x07\x01",
-                'DNGBackwardVersion must contain exactly 4 bytes per DNG 1.7.1.0.',
             ],
             'CFALayout expects 1 SHORT' => [
                 DngTag::CFA_LAYOUT,
                 TiffConst::TYPE_SHORT,
                 2,
                 "\x01\x00\x02\x00",
-                'CFALayout must contain exactly 1 bytes per DNG 1.7.1.0.',
             ],
             'BaselineExposure expects 1 SRATIONAL' => [
                 DngTag::BASELINE_EXPOSURE,
                 TiffConst::TYPE_SRATIONAL,
                 2,
                 str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
-                'BaselineExposure must contain exactly 1 bytes per DNG 1.7.1.0.',
             ],
             'RawDataUniqueID expects 16 BYTE' => [
                 DngTag::RAW_DATA_UNIQUE_ID,
                 TiffConst::TYPE_BYTE,
                 8,
                 str_repeat("\xAB", 8),
-                'RawDataUniqueID must contain exactly 16 bytes per DNG 1.7.1.0.',
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, array{0:int,1:int,2:int,3:string,4:string}>
+     */
+    public static function invalidFixedLengthTagTypeProvider(): array
+    {
+        return [
+            'SubjectLocation rejects LONG type' => [
+                ExifTag::SUBJECT_LOCATION,
+                TiffConst::TYPE_LONG,
+                2,
+                "\x00\x00\x00\x64\x00\x00\x00\xC8",
+                'SubjectLocation must use TIFF type SHORT per EXIF 3.0 §4.6.6.7.29.',
             ],
         ];
     }
