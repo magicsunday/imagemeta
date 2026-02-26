@@ -68,15 +68,15 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $formatterReflection = new ReflectionMethod('MagicSunday\\ImageMeta\\Scripts\\MetadataFormatter', 'format');
         $this->formatter     = $formatterReflection->getDeclaringClass()->newInstance();
 
-        $this->formatEnumNameMethod                = new ReflectionMethod($this->formatter, 'formatEnumName');
-        $this->formatComponentsConfigurationMethod = new ReflectionMethod($this->formatter, 'formatComponentsConfiguration');
-        $this->getTagNameMethod                    = new ReflectionMethod($this->formatter, 'getTagName');
-        $this->printSectionMethod                  = new ReflectionMethod($this->formatter, 'printSection');
-        $this->printIccSectionMethod               = new ReflectionMethod($this->formatter, 'printIccSection');
+        $this->formatEnumNameMethod                  = new ReflectionMethod($this->formatter, 'formatEnumName');
+        $this->formatComponentsConfigurationMethod   = new ReflectionMethod($this->formatter, 'formatComponentsConfiguration');
+        $this->getTagNameMethod                      = new ReflectionMethod($this->formatter, 'getTagName');
+        $this->printSectionMethod                    = new ReflectionMethod($this->formatter, 'printSection');
+        $this->printIccSectionMethod                 = new ReflectionMethod($this->formatter, 'printIccSection');
         $this->calcScaleFactorTo35MmEquivalentMethod = new ReflectionMethod($this->formatter, 'calcScaleFactorTo35MmEquivalent');
-        $this->calcFocalLength35MmEquivalentMethod = new ReflectionMethod($this->formatter, 'calcFocalLength35MmEquivalent');
-        $this->formatCompositeDateMethod           = new ReflectionMethod($this->formatter, 'formatCompositeDate');
-        $this->formatValueMethod                   = new ReflectionMethod($this->formatter, 'formatValue');
+        $this->calcFocalLength35MmEquivalentMethod   = new ReflectionMethod($this->formatter, 'calcFocalLength35MmEquivalent');
+        $this->formatCompositeDateMethod             = new ReflectionMethod($this->formatter, 'formatCompositeDate');
+        $this->formatValueMethod                     = new ReflectionMethod($this->formatter, 'formatValue');
     }
 
     #[Test]
