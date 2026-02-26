@@ -72,9 +72,11 @@ final readonly class TiffTagConstraintValidator
      * Validates Compression tag values per EXIF-specific domain rules.
      *
      * EXIF 3.0 §4.6.5.1.4: In JPEG context, IFD0 allows only 1 (uncompressed);
-     * IFD1 allows 1 or 6.  Standalone TIFF/DNG/NEF containers use many
+     * IFD1 allows 1 or 6. Standalone TIFF/DNG/NEF containers use many
      * compression methods (LZW, Deflate, etc.), so the IFD0 restriction is
-     * only enforced in JPEG context.
+     * only enforced in JPEG context. Reader-side parsing tolerates known
+     * real-world deviations (e.g. 4, 7 in IFD0 and 0 in IFD1) and preserves
+     * the raw values (Postel's Law).
      */
     public function validateCompressionDomain(Ifd $ifd0, ?Ifd $ifd1, bool $jpegContext): void
     {
@@ -85,7 +87,12 @@ final readonly class TiffTagConstraintValidator
                 $entry instanceof IfdEntry
                 && is_int($entry->value)
                 && $entry->value !== 1
+                // TIFF 6.0 §8 defines Compression=4 (CCITT Group 4) and
+                // Compression=7 (JPEG new-style); keep raw camera values for
+                // reader-side tolerance in JPEG APP1 EXIF (EXIF 3.0 §4.6.2).
+                && $entry->value !== 4
                 && $entry->value !== 6
+                && $entry->value !== 7
             ) {
                 throw new ParseError(sprintf(
                     'Compression value %d in IFD0 is invalid; only 1 (uncompressed) is allowed.',
@@ -103,6 +110,8 @@ final readonly class TiffTagConstraintValidator
         if (
             $thumbEntry instanceof IfdEntry
             && is_int($thumbEntry->value)
+            // Postel's Law: tolerate real-world IFD1 Compression=0 values.
+            && $thumbEntry->value !== 0
             && $thumbEntry->value !== 1
             && $thumbEntry->value !== 6
             // Postel's Law: accept Compression=7 (JPEG new-style TN2).
