@@ -177,8 +177,8 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
     #[Test]
     public function printsIndexedSectionsForMultipleIccProfiles(): void
     {
-        $profileA = self::buildMinimalIccProfile('Profile One');
-        $profileB = self::buildMinimalIccProfile('Profile Two');
+        $profileA = $this->buildMinimalIccProfile('Profile One');
+        $profileB = $this->buildMinimalIccProfile('Profile Two');
 
         ob_start();
         $this->printIccSectionMethod->invoke($this->formatter, $profileA . $profileB);
@@ -212,7 +212,7 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         yield 'Null configuration stays null' => [null, null];
     }
 
-    private static function buildMinimalIccProfile(string $description): string
+    private function buildMinimalIccProfile(string $description): string
     {
         $descriptionText = $description . "\0";
         $descTagData     = 'desc' . pack('N', 0) . pack('N', strlen($descriptionText)) . $descriptionText;

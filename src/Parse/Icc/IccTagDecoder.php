@@ -162,7 +162,7 @@ final readonly class IccTagDecoder
             return null;
         }
 
-        if (substr($tagData, 0, 4) !== 'view') {
+        if (!str_starts_with($tagData, 'view')) {
             return null;
         }
 
@@ -171,8 +171,8 @@ final readonly class IccTagDecoder
         }
 
         return [
-            'illuminant' => $this->parseXyzTriplet($tagData, 8),
-            'surround' => $this->parseXyzTriplet($tagData, 20),
+            'illuminant'     => $this->parseXyzTriplet($tagData, 8),
+            'surround'       => $this->parseXyzTriplet($tagData, 20),
             'illuminantType' => $this->reader->uInt32Be(substr($tagData, 32, 4)),
         ];
     }
@@ -201,7 +201,7 @@ final readonly class IccTagDecoder
             return null;
         }
 
-        if (substr($tagData, 0, 4) !== 'meas') {
+        if (!str_starts_with($tagData, 'meas')) {
             return null;
         }
 
@@ -210,10 +210,10 @@ final readonly class IccTagDecoder
         }
 
         return [
-            'observer' => $this->reader->uInt32Be(substr($tagData, 8, 4)),
-            'backing' => $this->parseXyzTriplet($tagData, 12),
-            'geometry' => $this->reader->uInt32Be(substr($tagData, 24, 4)),
-            'flare' => $this->reader->uInt32Be(substr($tagData, 28, 4)) / 65536.0,
+            'observer'   => $this->reader->uInt32Be(substr($tagData, 8, 4)),
+            'backing'    => $this->parseXyzTriplet($tagData, 12),
+            'geometry'   => $this->reader->uInt32Be(substr($tagData, 24, 4)),
+            'flare'      => $this->reader->uInt32Be(substr($tagData, 28, 4)) / 65536.0,
             'illuminant' => $this->reader->uInt32Be(substr($tagData, 32, 4)),
         ];
     }

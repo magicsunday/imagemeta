@@ -1658,9 +1658,7 @@ final class IccParserTest extends TestCase
         };
 
         // XYZ tag helper: 'XYZ ' + reserved(4) + 3 x s15Fixed16Number
-        $buildXyz = static function (float $x, float $y, float $z) use ($encodeS15): string {
-            return "XYZ \0\0\0\0" . $encodeS15($x) . $encodeS15($y) . $encodeS15($z);
-        };
+        $buildXyz = (static fn (float $x, float $y, float $z): string => "XYZ \0\0\0\0" . $encodeS15($x) . $encodeS15($y) . $encodeS15($z));
 
         $bkptData = $buildXyz(0.0, 0.0, 0.0);
         $rXyzData = $buildXyz(0.4361, 0.2225, 0.0139);
