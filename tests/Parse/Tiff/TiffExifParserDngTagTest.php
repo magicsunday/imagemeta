@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
+use MagicSunday\ImageMeta\Parse\Tiff\DngProfileValidator;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
@@ -34,7 +35,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
 
+use function array_map;
 use function count;
 use function ksort;
 use function pack;
@@ -47,6 +51,7 @@ use function unpack;
  */
 #[CoversClass(TiffExifParser::class)]
 #[UsesClass(DngTag::class)]
+#[UsesClass(DngProfileValidator::class)]
 #[UsesClass(DngValueNormalizer::class)]
 #[UsesClass(ExifTag::class)]
 #[UsesClass(Ifd::class)]
@@ -64,6 +69,25 @@ use function unpack;
 #[UsesClass(TiffValueDecoder::class)]
 final class TiffExifParserDngTagTest extends TestCase
 {
+    /**
+     * Guards staged DNG profile validation refactoring with explicit helper expectations.
+     */
+    #[Test]
+    public function dngProfileValidatorUsesStagedPayloadValidationHelpers(): void
+    {
+        $reflection = new ReflectionClass(DngProfileValidator::class);
+        $methods    = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('decodeProfileGainTableMap2Header', $methods);
+        self::assertContains('validateProfileGainTableMap2Header', $methods);
+        self::assertContains('validateProfileGainTableMap2Length', $methods);
+        self::assertContains('checkedMultiply', $methods);
+        self::assertContains('validateExtraCameraProfileRecord', $methods);
+    }
+
     /**
      * Parses DNG core tags from IFD0 and exposes them through ParsedExif accessors.
      */
