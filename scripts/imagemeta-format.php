@@ -1713,105 +1713,244 @@ final class MetadataFormatter
      */
     private function printIccSection(string $iccProfile): void
     {
-        $parser  = new IccParser();
-        $iccData = $parser->decode($iccProfile);
-        $header  = [];
-        $profile = [];
+        $parser = new IccParser();
 
-        if ($iccData !== null) {
-            if ($iccData['cmmType'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::CMM_TYPE, 'Profile CMM Type')] = $iccData['cmmType'];
+        foreach ($this->splitIccProfiles($iccProfile) as $index => $profilePayload) {
+            $iccData      = $parser->decode($profilePayload);
+            $header       = [];
+            $profile      = [];
+            $view         = [];
+            $measurement  = [];
+            $sectionIndex = $index + 1;
+
+            if ($iccData !== null) {
+                if ($iccData['cmmType'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::CMM_TYPE, 'Profile CMM Type')] = $iccData['cmmType'];
+                }
+
+                if ($iccData['version'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::PROFILE_VERSION, 'Profile Version')] = $iccData['version'];
+                }
+
+                if ($iccData['profileClass'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::PROFILE_CLASS, 'Profile Class')] = $iccData['profileClass'];
+                }
+
+                if ($iccData['colorSpace'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::COLOR_SPACE, 'Color Space Data')] = $iccData['colorSpace'];
+                }
+
+                if ($iccData['pcs'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::PCS, 'Profile Connection Space')] = $iccData['pcs'];
+                }
+
+                if ($iccData['profileDateTime'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::PROFILE_DATE_TIME, 'Profile Date Time')] = $iccData['profileDateTime'];
+                }
+
+                if ($iccData['profileSignature'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::PROFILE_SIGNATURE, 'Profile File Signature')] = $iccData['profileSignature'];
+                }
+
+                if ($iccData['profileFlags'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::PROFILE_FLAGS, 'Profile Flags')] = $this->decodeIccProfileFlags(
+                        $iccData['profileFlags']
+                    );
+                }
+
+                if ($iccData['primaryPlatform'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::PRIMARY_PLATFORM, 'Primary Platform')] = $iccData['primaryPlatform'];
+                }
+
+                if ($iccData['deviceManufacturer'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::DEVICE_MANUFACTURER, 'Device Manufacturer')] = $iccData['deviceManufacturer'];
+                }
+
+                if ($iccData['deviceModel'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::DEVICE_MODEL, 'Device Model')] = $iccData['deviceModel'];
+                }
+
+                if ($iccData['deviceAttributes'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::DEVICE_ATTRIBUTES, 'Device Attributes')] = $this->decodeIccDeviceAttributes(
+                        $iccData['deviceAttributes']
+                    );
+                }
+
+                if ($iccData['renderingIntent'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::RENDERING_INTENT, 'Rendering Intent')] = $iccData['renderingIntent'];
+                }
+
+                if ($iccData['illuminant'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::CONNECTION_SPACE_ILLUMINANT, 'Connection Space Illuminant')] = $this->formatXyzTriplet($iccData['illuminant']);
+                }
+
+                if ($iccData['profileCreator'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::PROFILE_CREATOR, 'Profile Creator')] = $iccData['profileCreator'];
+                }
+
+                if ($iccData['profileId'] !== null) {
+                    $header[$this->formatIccHeaderKey(IccTag::PROFILE_ID, 'Profile ID')] = $iccData['profileId'];
+                }
+
+                if ($iccData['description'] !== null) {
+                    $profile['Profile Description'] = $iccData['description'];
+                }
+
+                if ($iccData['copyright'] !== null) {
+                    $profile['Profile Copyright'] = $iccData['copyright'];
+                }
+
+                if ($iccData['whitePoint'] !== null) {
+                    $profile['Media White Point'] = $this->formatXyzTriplet($iccData['whitePoint']);
+                }
+
+                if ($iccData['blackPoint'] !== null) {
+                    $profile['Media Black Point'] = $this->formatXyzTriplet($iccData['blackPoint']);
+                }
+
+                if ($iccData['redMatrixColumn'] !== null) {
+                    $profile['Red Matrix Column'] = $this->formatXyzTriplet($iccData['redMatrixColumn']);
+                }
+
+                if ($iccData['greenMatrixColumn'] !== null) {
+                    $profile['Green Matrix Column'] = $this->formatXyzTriplet($iccData['greenMatrixColumn']);
+                }
+
+                if ($iccData['blueMatrixColumn'] !== null) {
+                    $profile['Blue Matrix Column'] = $this->formatXyzTriplet($iccData['blueMatrixColumn']);
+                }
+
+                if ($iccData['luminance'] !== null) {
+                    $profile['Luminance'] = $this->formatXyzTriplet($iccData['luminance']);
+                }
+
+                if ($iccData['deviceMfgDesc'] !== null) {
+                    $profile['Device Mfg Desc'] = $iccData['deviceMfgDesc'];
+                }
+
+                if ($iccData['deviceModelDesc'] !== null) {
+                    $profile['Device Model Desc'] = $iccData['deviceModelDesc'];
+                }
+
+                if ($iccData['technology'] !== null) {
+                    $profile['Technology'] = $iccData['technology'];
+                }
+
+                if ($iccData['redTRC'] !== null) {
+                    $profile['Red TRC'] = $this->formatIccTrc($iccData['redTRC']);
+                }
+
+                if ($iccData['greenTRC'] !== null) {
+                    $profile['Green TRC'] = $this->formatIccTrc($iccData['greenTRC']);
+                }
+
+                if ($iccData['blueTRC'] !== null) {
+                    $profile['Blue TRC'] = $this->formatIccTrc($iccData['blueTRC']);
+                }
+
+                if ($iccData['viewingConditions'] !== null) {
+                    $view['Illuminant XYZ'] = $this->formatXyzTriplet($iccData['viewingConditions']['illuminant']);
+                    $view['Surround XYZ'] = $this->formatXyzTriplet($iccData['viewingConditions']['surround']);
+                    $view['Illuminant Type'] = (string) $iccData['viewingConditions']['illuminantType'];
+                }
+
+                if ($iccData['measurement'] !== null) {
+                    $measurement['Observer'] = (string) $iccData['measurement']['observer'];
+                    $measurement['Backing XYZ'] = $this->formatXyzTriplet($iccData['measurement']['backing']);
+                    $measurement['Geometry'] = (string) $iccData['measurement']['geometry'];
+                    $measurement['Flare'] = number_format($iccData['measurement']['flare'], 6, '.', '');
+                    $measurement['Illuminant'] = (string) $iccData['measurement']['illuminant'];
+                }
             }
 
-            if ($iccData['version'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::PROFILE_VERSION, 'Profile Version')] = $iccData['version'];
+            // Fallback if decoder couldn't parse the profile
+            if ($header === [] && $profile === [] && $view === [] && $measurement === []) {
+                $header['Profile Description'] = '(Binary data)';
             }
 
-            if ($iccData['profileClass'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::PROFILE_CLASS, 'Profile Class')] = $iccData['profileClass'];
+            if ($header !== []) {
+                $this->printSection($this->formatIndexedIccSectionName('ICC-header', $sectionIndex), $header);
             }
 
-            if ($iccData['colorSpace'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::COLOR_SPACE, 'Color Space Data')] = $iccData['colorSpace'];
+            if ($profile !== []) {
+                $this->printSection($this->formatIndexedIccSectionName('ICC_Profile', $sectionIndex), $profile);
             }
 
-            if ($iccData['pcs'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::PCS, 'Profile Connection Space')] = $iccData['pcs'];
+            if ($view !== []) {
+                $this->printSection($this->formatIndexedIccSectionName('ICC-view', $sectionIndex), $view);
             }
 
-            if ($iccData['profileDateTime'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::PROFILE_DATE_TIME, 'Profile Date Time')] = $iccData['profileDateTime'];
-            }
-
-            if ($iccData['profileSignature'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::PROFILE_SIGNATURE, 'Profile File Signature')] = $iccData['profileSignature'];
-            }
-
-            if ($iccData['profileFlags'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::PROFILE_FLAGS, 'Profile Flags')] = $this->decodeIccProfileFlags(
-                    $iccData['profileFlags']
-                );
-            }
-
-            if ($iccData['primaryPlatform'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::PRIMARY_PLATFORM, 'Primary Platform')] = $iccData['primaryPlatform'];
-            }
-
-            if ($iccData['deviceManufacturer'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::DEVICE_MANUFACTURER, 'Device Manufacturer')] = $iccData['deviceManufacturer'];
-            }
-
-            if ($iccData['deviceModel'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::DEVICE_MODEL, 'Device Model')] = $iccData['deviceModel'];
-            }
-
-            if ($iccData['deviceAttributes'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::DEVICE_ATTRIBUTES, 'Device Attributes')] = $this->decodeIccDeviceAttributes(
-                    $iccData['deviceAttributes']
-                );
-            }
-
-            if ($iccData['renderingIntent'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::RENDERING_INTENT, 'Rendering Intent')] = $iccData['renderingIntent'];
-            }
-
-            if ($iccData['illuminant'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::CONNECTION_SPACE_ILLUMINANT, 'Connection Space Illuminant')] = $this->formatXyzTriplet($iccData['illuminant']);
-            }
-
-            if ($iccData['profileCreator'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::PROFILE_CREATOR, 'Profile Creator')] = $iccData['profileCreator'];
-            }
-
-            if ($iccData['profileId'] !== null) {
-                $header[$this->formatIccHeaderKey(IccTag::PROFILE_ID, 'Profile ID')] = $iccData['profileId'];
-            }
-
-            if ($iccData['description'] !== null) {
-                $profile['Profile Description'] = $iccData['description'];
-            }
-
-            if ($iccData['copyright'] !== null) {
-                $profile['Profile Copyright'] = $iccData['copyright'];
-            }
-
-            if ($iccData['whitePoint'] !== null) {
-                $profile['Media White Point'] = $this->formatXyzTriplet($iccData['whitePoint']);
+            if ($measurement !== []) {
+                $this->printSection($this->formatIndexedIccSectionName('ICC-meas', $sectionIndex), $measurement);
             }
         }
+    }
 
-        // Fallback if decoder couldn't parse the profile
-        if ($header === [] && $profile === []) {
-            $header['Profile Description'] = '(Binary data)';
+    /**
+     * Formats ICC section names with exiftool-style suffixes for additional profiles.
+     */
+    private function formatIndexedIccSectionName(string $baseName, int $sectionIndex): string
+    {
+        return $sectionIndex === 1 ? $baseName : ($baseName . $sectionIndex);
+    }
+
+    /**
+     * Splits concatenated ICC profile payloads into individual profiles.
+     *
+     * ICC.1:2022 §7.2.2 and §7.2.9 define profile size at bytes 0..3 and "acsp"
+     * signature at bytes 36..39 for each profile.
+     *
+     * @return list<string>
+     */
+    private function splitIccProfiles(string $payload): array
+    {
+        $profiles = [];
+        $offset   = 0;
+        $length   = strlen($payload);
+
+        while (($offset + 128) <= $length) {
+            $profileSizeData = unpack('Nsize', substr($payload, $offset, 4));
+            if (!is_array($profileSizeData) || !isset($profileSizeData['size']) || !is_int($profileSizeData['size'])) {
+                break;
+            }
+
+            $profileSize = $profileSizeData['size'];
+
+            if ($profileSize < 128) {
+                break;
+            }
+
+            if (($offset + 40) > $length || substr($payload, $offset + 36, 4) !== 'acsp') {
+                break;
+            }
+
+            if (($offset + $profileSize) > $length) {
+                break;
+            }
+
+            $profiles[] = substr($payload, $offset, $profileSize);
+            $offset += $profileSize;
         }
 
-        if ($header !== []) {
-            $this->printSection('ICC-header', $header);
+        return $profiles !== [] ? $profiles : [$payload];
+    }
+
+    /**
+     * Formats ICC TRC payloads as binary-size placeholders similar to exiftool.
+     *
+     * @param array{gamma: float}|array{table: list<int>} $trc
+     */
+    private function formatIccTrc(array $trc): string
+    {
+        if (isset($trc['table']) && is_array($trc['table'])) {
+            return sprintf('(Binary data %d bytes)', 8 + (count($trc['table']) * 2));
         }
 
-        if ($profile !== []) {
-            $this->printSection('ICC_Profile', $profile);
+        if (isset($trc['gamma']) && is_float($trc['gamma'])) {
+            return '(Binary data 12 bytes)';
         }
+
+        return '(Binary data)';
     }
 
     /**
