@@ -167,6 +167,7 @@ use function md5;
 use function pack;
 use function rename;
 use function sha1;
+use function str_repeat;
 use function stream_wrapper_register;
 use function stream_wrapper_unregister;
 use function strlen;
@@ -939,6 +940,40 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
+     * Verifies TIFF parsing succeeds when the source stream rejects full-size reads.
+     * This guards against whole-file materialization in MetadataReader::fromTiff().
+     */
+    #[Test]
+    public function fromTiffParsesWithoutFullStreamRead(): void
+    {
+        $make     = 'DNG Test Camera';
+        $model    = 'Synthetic DNG 1.0';
+        $dateTime = '2025:06:15 14:30:00';
+        $tiffBase = $this->littleEndianTiffWithExifTags($make, $model, $dateTime, 4000, 3000);
+        $payload  = $tiffBase . str_repeat("\0", 128 * 1024);
+
+        $scheme = 'imetatiffstream' . md5(__METHOD__);
+        $path   = $scheme . '://fixture.tiff';
+
+        MetadataReaderRejectWholeReadStreamWrapper::configure($payload);
+        $registered = stream_wrapper_register($scheme, MetadataReaderRejectWholeReadStreamWrapper::class);
+        if (!$registered) {
+            self::fail('Unable to register TIFF whole-read guard stream wrapper');
+        }
+
+        try {
+            $metadata = MetadataReader::createDefault()->read($path);
+        } finally {
+            stream_wrapper_unregister($scheme);
+            MetadataReaderRejectWholeReadStreamWrapper::reset();
+        }
+
+        self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
+        self::assertSame($make, $metadata->exifDoc->ifd0->get(ExifTag::MAKE)?->value);
+        self::assertSame($model, $metadata->exifDoc->ifd0->get(ExifTag::MODEL)?->value);
+    }
+
+    /**
      * Builds a JXL container with EXIF and XMP metadata and verifies MetadataReader
      * extracts both payloads through the JXL parsing path.
      */
@@ -1577,6 +1612,97 @@ final class MetadataReaderMimeProbeFailureStreamWrapper
         if (self::$failFirstRead) {
             self::$failFirstRead = false;
 
+            return '';
+        }
+
+        $chunk = substr(self::$payload, $this->offset, $count);
+        $this->offset += strlen($chunk);
+
+        return $chunk;
+    }
+
+    public function stream_eof(): bool
+    {
+        return $this->offset >= strlen(self::$payload);
+    }
+
+    public function stream_tell(): int
+    {
+        return $this->offset;
+    }
+
+    public function stream_seek(int $offset, int $whence = SEEK_SET): bool
+    {
+        $target = match ($whence) {
+            SEEK_SET => $offset,
+            SEEK_CUR => $this->offset + $offset,
+            SEEK_END => strlen(self::$payload) + $offset,
+            default  => -1,
+        };
+
+        if ($target < 0 || $target > strlen(self::$payload)) {
+            return false;
+        }
+
+        $this->offset = $target;
+
+        return true;
+    }
+
+    /**
+     * @return array{7: int, size: int}
+     */
+    public function stream_stat(): array
+    {
+        return [
+            7      => strlen(self::$payload),
+            'size' => strlen(self::$payload),
+        ];
+    }
+
+    /**
+     * @return array{7: int, size: int}
+     */
+    public function url_stat(): array
+    {
+        return [
+            7      => strlen(self::$payload),
+            'size' => strlen(self::$payload),
+        ];
+    }
+}
+
+/**
+ * Stream wrapper that rejects full-length single reads.
+ */
+final class MetadataReaderRejectWholeReadStreamWrapper
+{
+    public mixed $context;
+
+    private static string $payload = '';
+
+    private int $offset = 0;
+
+    public static function configure(string $payload): void
+    {
+        self::$payload = $payload;
+    }
+
+    public static function reset(): void
+    {
+        self::$payload = '';
+    }
+
+    public function stream_open(): bool
+    {
+        $this->offset = 0;
+
+        return true;
+    }
+
+    public function stream_read(int $count): string
+    {
+        if ($count >= strlen(self::$payload)) {
             return '';
         }
 
