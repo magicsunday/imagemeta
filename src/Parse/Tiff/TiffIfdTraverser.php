@@ -252,7 +252,11 @@ final class TiffIfdTraverser
         $value = $entry->value;
 
         if (is_int($value)) {
-            $offset = $this->validatePointerOffset($value, $entry->tag);
+            try {
+                $offset = $this->validatePointerOffset($value, $entry->tag);
+            } catch (ParseError|BoundsError) {
+                return [];
+            }
 
             return $offset !== null ? [$offset] : [];
         }
@@ -262,19 +266,35 @@ final class TiffIfdTraverser
                 return [];
             }
 
-            return [$this->offsetValidator->ensureOffset($value, sprintf('SubIFDs tag 0x%04X', $entry->tag))];
+            try {
+                return [$this->offsetValidator->ensureOffset($value, sprintf('SubIFDs tag 0x%04X', $entry->tag))];
+            } catch (ParseError|BoundsError) {
+                return [];
+            }
         }
 
         if ($value instanceof ExifNumericList) {
             $offsets = [];
             foreach ($value->values as $component) {
                 if (is_int($component)) {
-                    $offset = $this->validatePointerOffset($component, $entry->tag);
+                    try {
+                        $offset = $this->validatePointerOffset($component, $entry->tag);
+                    } catch (ParseError|BoundsError) {
+                        // Postel's Law: skip malformed/out-of-range SubIFD pointers and keep parsing.
+                        // TIFF 6.0 §2 (file-relative offsets), DNG 1.7.1.0 §DNG Format Overview (SubIFD Trees).
+                        continue;
+                    }
                     if ($offset !== null) {
                         $offsets[] = $offset;
                     }
                 } elseif ($component instanceof UInt64 && !$component->isZero()) {
-                    $offsets[] = $this->offsetValidator->ensureOffset($component, sprintf('SubIFDs tag 0x%04X', $entry->tag));
+                    try {
+                        $offsets[] = $this->offsetValidator->ensureOffset($component, sprintf('SubIFDs tag 0x%04X', $entry->tag));
+                    } catch (ParseError|BoundsError) {
+                        // Postel's Law: skip malformed/out-of-range SubIFD pointers and keep parsing.
+                        // TIFF 6.0 §2 (file-relative offsets), DNG 1.7.1.0 §DNG Format Overview (SubIFD Trees).
+                        continue;
+                    }
                 }
             }
 
