@@ -778,6 +778,91 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
+     * Verifies that MetadataReader rejects a path that does not exist on disk.
+     * The reader must throw a ParseError before any parsing is attempted.
+     */
+    #[Test]
+    public function readThrowsForNonExistentPath(): void
+    {
+        $path = sys_get_temp_dir() . '/imagemeta-nonexistent-' . md5(__METHOD__) . '.jpg';
+
+        $this->expectException(ParseError::class);
+        MetadataReader::createDefault()->read($path);
+    }
+
+    /**
+     * Verifies that MetadataReader rejects an empty file.
+     * The format detector cannot read any magic bytes, so a ParseError must be raised.
+     */
+    #[Test]
+    public function readThrowsForEmptyFile(): void
+    {
+        $path = $this->writeTempFile('', 'jpg');
+
+        try {
+            $this->expectException(ParseError::class);
+            MetadataReader::createDefault()->read($path);
+        } finally {
+            @unlink($path);
+        }
+    }
+
+    /**
+     * Verifies that MetadataReader rejects a JPEG stream whose SOI is followed by an invalid marker.
+     * The format detector must raise a ParseError when the post-SOI byte is not a valid marker prefix.
+     */
+    #[Test]
+    public function readThrowsForCorruptedJpegMissingSoiMarker(): void
+    {
+        // SOI marker followed by a non-marker byte instead of 0xFF
+        $corrupted = "\xFF\xD8\x00\x00";
+        $path      = $this->writeTempFile($corrupted, 'jpg');
+
+        try {
+            $this->expectException(ParseError::class);
+            MetadataReader::createDefault()->read($path);
+        } finally {
+            @unlink($path);
+        }
+    }
+
+    /**
+     * Verifies that MetadataReader rejects a file with an ISO BMFF-like header but an invalid ftyp box.
+     * A truncated ftyp payload must cause the format detector to raise a ParseError.
+     */
+    #[Test]
+    public function readThrowsForCorruptedIsoBmffInvalidFtyp(): void
+    {
+        // A box header claiming type 'ftyp' with a payload too short (< 8 bytes)
+        $corrupted = pack('N', 12) . 'ftyp' . "\x00\x00\x00\x00";
+        $path      = $this->writeTempFile($corrupted);
+
+        try {
+            $this->expectException(ParseError::class);
+            MetadataReader::createDefault()->read($path);
+        } finally {
+            @unlink($path);
+        }
+    }
+
+    /**
+     * Verifies that MetadataReader rejects a file whose content does not match any supported container.
+     * A random byte sequence must cause the format detector to raise a ParseError.
+     */
+    #[Test]
+    public function readThrowsForUnrecognizedFormat(): void
+    {
+        $path = $this->writeTempFile('This is not a valid image file.', 'bin');
+
+        try {
+            $this->expectException(ParseError::class);
+            MetadataReader::createDefault()->read($path);
+        } finally {
+            @unlink($path);
+        }
+    }
+
+    /**
      * Writes the provided binary payload to a temporary file and returns its path.
      * This checks the behavior for the specific inputs used in the test.
      *
