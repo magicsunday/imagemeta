@@ -132,6 +132,20 @@ XML;
     }
 
     /**
+     * Guards parse-loop refactoring by requiring dedicated node handler helpers.
+     */
+    #[Test]
+    public function parseUsesDedicatedNodeHandlers(): void
+    {
+        self::assertSame('handleElementNode', (new ReflectionMethod(XmpParser::class, 'handleElementNode'))->getName());
+        self::assertSame('handleTextLikeNode', (new ReflectionMethod(XmpParser::class, 'handleTextLikeNode'))->getName());
+        self::assertSame('handleEndElementNode', (new ReflectionMethod(XmpParser::class, 'handleEndElementNode'))->getName());
+        self::assertSame('finalizeRdfListItem', (new ReflectionMethod(XmpParser::class, 'finalizeRdfListItem'))->getName());
+        self::assertSame('propagateRdfValueToParent', (new ReflectionMethod(XmpParser::class, 'propagateRdfValueToParent'))->getName());
+        self::assertSame('shouldSkipAttribute', (new ReflectionMethod(XmpParser::class, 'shouldSkipAttribute'))->getName());
+    }
+
+    /**
      * Treats xml:* attributes as qualifiers and does not expose them as standalone properties.
      */
     #[Test]
