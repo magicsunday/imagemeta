@@ -65,9 +65,7 @@ final class JisTextDecoder
      */
     private static function convertToUtf8(string $source, string $payload): ?string
     {
-        set_error_handler(static function (): bool {
-            return true;
-        });
+        set_error_handler(static fn (): bool => true);
 
         try {
             $converted = iconv($source, 'UTF-8', $payload);

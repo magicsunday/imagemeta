@@ -405,7 +405,7 @@ final readonly class GpsTimestampConverter
         $decoded = match ($sourceEncoding) {
             CharacterEncoding::Jis  => JisTextDecoder::decode($payload),
             CharacterEncoding::Utf8 => $payload,
-            default                 => self::convertTextToUtf8($sourceEncoding->value, $payload),
+            default                 => $this->convertTextToUtf8($sourceEncoding->value, $payload),
         };
 
         if (!is_string($decoded) || $decoded === '') {
@@ -418,11 +418,9 @@ final readonly class GpsTimestampConverter
     /**
      * Converts text to UTF-8 while handling iconv failures explicitly.
      */
-    private static function convertTextToUtf8(string $sourceEncoding, string $payload): ?string
+    private function convertTextToUtf8(string $sourceEncoding, string $payload): ?string
     {
-        set_error_handler(static function (): bool {
-            return true;
-        });
+        set_error_handler(static fn (): bool => true);
 
         try {
             $converted = iconv($sourceEncoding, CharacterEncoding::Utf8->value, $payload);

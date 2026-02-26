@@ -25,8 +25,8 @@ use function is_string;
 use function ord;
 use function preg_match;
 use function preg_replace;
-use function round;
 use function restore_error_handler;
+use function round;
 use function rtrim;
 use function set_error_handler;
 use function strlen;
@@ -604,7 +604,7 @@ final readonly class IfdValueReader
             return null;
         }
 
-        $converted = self::convertTextToUtf8($encoding, $payload);
+        $converted = $this->convertTextToUtf8($encoding, $payload);
         if ($converted === null) {
             return null;
         }
@@ -617,11 +617,9 @@ final readonly class IfdValueReader
     /**
      * Converts text to UTF-8 while handling iconv failures explicitly.
      */
-    private static function convertTextToUtf8(string $sourceEncoding, string $payload): ?string
+    private function convertTextToUtf8(string $sourceEncoding, string $payload): ?string
     {
-        set_error_handler(static function (): bool {
-            return true;
-        });
+        set_error_handler(static fn (): bool => true);
 
         try {
             $converted = iconv($sourceEncoding, 'UTF-8', $payload);
