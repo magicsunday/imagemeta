@@ -14,7 +14,10 @@ namespace MagicSunday\ImageMeta\Tests\Scripts;
 use BackedEnum;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\FlashMode;
 use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
@@ -53,6 +56,8 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
     private ReflectionMethod $printIccSectionMethod;
 
+    private ReflectionMethod $printIfd1SectionMethod;
+
     private ReflectionMethod $calcScaleFactorTo35MmEquivalentMethod;
 
     private ReflectionMethod $calcFocalLength35MmEquivalentMethod;
@@ -73,6 +78,7 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $this->getTagNameMethod                      = new ReflectionMethod($this->formatter, 'getTagName');
         $this->printSectionMethod                    = new ReflectionMethod($this->formatter, 'printSection');
         $this->printIccSectionMethod                 = new ReflectionMethod($this->formatter, 'printIccSection');
+        $this->printIfd1SectionMethod                = new ReflectionMethod($this->formatter, 'printIfd1Section');
         $this->calcScaleFactorTo35MmEquivalentMethod = new ReflectionMethod($this->formatter, 'calcScaleFactorTo35MmEquivalent');
         $this->calcFocalLength35MmEquivalentMethod   = new ReflectionMethod($this->formatter, 'calcFocalLength35MmEquivalent');
         $this->formatCompositeDateMethod             = new ReflectionMethod($this->formatter, 'formatCompositeDate');
@@ -162,6 +168,16 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
     }
 
     #[Test]
+    public function resolvesThumbnailTagNamesInIfd1Context(): void
+    {
+        $thumbnailOffset = $this->getTagNameMethod->invoke($this->formatter, ExifTag::JPEG_INTERCHANGE_FORMAT, 'IFD1');
+        $thumbnailLength = $this->getTagNameMethod->invoke($this->formatter, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 'IFD1');
+
+        self::assertSame('Thumbnail Offset', $thumbnailOffset);
+        self::assertSame('Thumbnail Length', $thumbnailLength);
+    }
+
+    #[Test]
     public function suppressesIfdPointerTagsInFormattedOutput(): void
     {
         ob_start();
@@ -198,6 +214,33 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         self::assertStringContainsString('---- ICC_Profile ----', $output);
         self::assertStringContainsString('---- ICC-header2 ----', $output);
         self::assertStringContainsString('---- ICC_Profile2 ----', $output);
+    }
+
+    #[Test]
+    public function formatsIfd1CompressionAsOldStyleJpeg(): void
+    {
+        $actual = $this->formatValueMethod->invoke($this->formatter, Compression::Jpeg, 'IFD1', ExifTag::COMPRESSION);
+
+        self::assertSame('JPEG (old-style)', $actual);
+    }
+
+    #[Test]
+    public function printsThumbnailImageSummaryFromIfd1LengthTag(): void
+    {
+        $ifd1 = new Ifd([
+            ExifTag::COMPRESSION                     => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
+            ExifTag::JPEG_INTERCHANGE_FORMAT         => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 10600),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH  => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 7456),
+        ]);
+
+        ob_start();
+        $this->printIfd1SectionMethod->invoke($this->formatter, $ifd1);
+        $output = (string) ob_get_clean();
+
+        self::assertStringContainsString('Thumbnail Offset', $output);
+        self::assertStringContainsString('Thumbnail Length', $output);
+        self::assertStringContainsString('Compression                     : JPEG (old-style)', $output);
+        self::assertStringContainsString('Thumbnail Image                 : (Binary data 7456 bytes)', $output);
     }
 
     #[Test]
