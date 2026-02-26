@@ -132,14 +132,23 @@ final class RegistryTest extends TestCase
     #[Test]
     public function factoryAvoidsRedundantUppercaseSamsungRegistration(): void
     {
-        $method = new ReflectionMethod(RegistryFactory::class, 'createDefault');
-        $file   = file($method->getFileName()) ?: [];
-        $body   = implode(
+        $method   = new ReflectionMethod(RegistryFactory::class, 'createDefault');
+        $fileName = $method->getFileName();
+        self::assertIsString($fileName);
+
+        $sourceLines = file($fileName);
+        self::assertIsArray($sourceLines);
+        $startLine = $method->getStartLine();
+        $endLine   = $method->getEndLine();
+        self::assertIsInt($startLine);
+        self::assertIsInt($endLine);
+
+        $body = implode(
             '',
             array_slice(
-                $file,
-                $method->getStartLine() - 1,
-                $method->getEndLine() - $method->getStartLine() + 1,
+                $sourceLines,
+                $startLine - 1,
+                $endLine - $startLine + 1,
             ),
         );
 
