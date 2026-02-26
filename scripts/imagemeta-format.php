@@ -2223,7 +2223,33 @@ final class MetadataFormatter
     private function printCompositeSection(Metadata $metadata): void
     {
         $structured = $metadata->structured();
+        $exifDoc    = $metadata->exifDoc;
         $data       = [];
+
+        $focalLengthMm = $structured->hardware->lens?->focalLengthMm ?? $exifDoc?->focalLengthMm();
+        $focalLength35 = $structured->hardware->lens?->focalLengthIn35mm ?? $exifDoc?->focalLengthIn35mmFilm();
+        $focalPlaneXResolution = $structured->hardware->sensor?->focalPlaneXResolution ?? $exifDoc?->focalPlaneXResolution();
+        $focalPlaneResolutionUnit = $structured->hardware->sensor?->focalPlaneResolutionUnit?->value
+            ?? $exifDoc?->focalPlaneResolutionUnit();
+        $imageWidthPx = $exifDoc?->pixelXDimension() ?? $exifDoc?->imageWidth() ?? $metadata->jpegFrameWidth;
+        $scaleFactor35 = $structured->technical->derived?->cropFactor
+            ?? $this->calcScaleFactorTo35MmEquivalent(
+                $focalLength35,
+                $focalLengthMm,
+                $focalPlaneXResolution,
+                $imageWidthPx,
+                $focalPlaneResolutionUnit,
+            );
+        $focalLength35Equivalent = $focalLength35 !== null
+            ? (float) $focalLength35
+            : $this->calcFocalLength35MmEquivalent($focalLengthMm, $scaleFactor35);
+        $fNumber = $structured->settings->exposure?->settings?->fNumber ?? $exifDoc?->fNumber();
+        $circleOfConfusionMm = $structured->technical->derived?->circleOfConfusionMm
+            ?? $this->converters->calcCircleOfConfusionMm($scaleFactor35);
+        $fieldOfViewHorizontalDeg = $structured->technical->derived?->fieldOfViewHorizontalDeg
+            ?? $this->converters->calcHorizontalFovDeg($focalLength35, $scaleFactor35, $focalLengthMm);
+        $hyperfocalDistanceMetres = $structured->technical->derived?->hyperfocalDistanceMetres
+            ?? $this->converters->calcHyperfocalM($focalLengthMm, $fNumber, $circleOfConfusionMm);
 
         // Run Time Since Power Up (from Apple maker notes)
         if ($structured->makerNotesApple?->livePhoto?->runTime instanceof \MagicSunday\ImageMeta\Value\RunTime) {
@@ -2253,8 +2279,8 @@ final class MetadataFormatter
         }
 
         // Scale Factor To 35mm Equivalent
-        if ($structured->technical->derived?->cropFactor !== null) {
-            $data['Scale Factor To 35 mm Equivalent'] = round($structured->technical->derived->cropFactor, 1);
+        if ($scaleFactor35 !== null) {
+            $data['Scale Factor To 35 mm Equivalent'] = round($scaleFactor35, 1);
         }
 
         // Shutter Speed
@@ -2262,37 +2288,30 @@ final class MetadataFormatter
             $data['Shutter Speed'] = $this->formatShutterSpeed($structured->settings->exposure->settings->exposureTimeSec);
         }
 
-        // Create Date with subseconds
-        if ($structured->locationTime->temporal?->create instanceof DateTimeImmutable) {
-            $dateStr = $structured->locationTime->temporal->create->format('Y:m:d H:i:s');
-            if ($structured->locationTime->temporal->subSecTimeOriginal !== null) {
-                $dateStr .= '.' . $structured->locationTime->temporal->subSecTimeOriginal;
-            }
-            if ($structured->locationTime->temporal->offsetTimeOriginal !== null) {
-                $dateStr .= $structured->locationTime->temporal->offsetTimeOriginal;
-            }
-            $data['Create Date'] = $dateStr;
+        // Composite sub-second timestamps from EXIF date strings and SubSecTime* values.
+        // Formula: "<DateTime*>.<SubSecTime*>" (EXIF 3.0 §4.6.6.7.27-33).
+        $subSecCreateDate = $this->formatCompositeDate(
+            $exifDoc?->dateTimeDigitizedRaw(),
+            $exifDoc?->subSecTimeDigitized(),
+        );
+        if ($subSecCreateDate !== null) {
+            $data['Sub Sec Create Date'] = $subSecCreateDate;
         }
 
-        // Date/Time Original
-        if ($structured->locationTime->temporal?->original instanceof DateTimeImmutable) {
-            $dateStr = $structured->locationTime->temporal->original->format('Y:m:d H:i:s');
-            if ($structured->locationTime->temporal->subSecTimeOriginal !== null) {
-                $dateStr .= '.' . $structured->locationTime->temporal->subSecTimeOriginal;
-            }
-            if ($structured->locationTime->temporal->offsetTimeOriginal !== null) {
-                $dateStr .= $structured->locationTime->temporal->offsetTimeOriginal;
-            }
-            $data['Date/Time Original'] = $dateStr;
+        $subSecDateTimeOriginal = $this->formatCompositeDate(
+            $exifDoc?->dateTimeOriginalRaw(),
+            $exifDoc?->subSecTimeOriginal(),
+        );
+        if ($subSecDateTimeOriginal !== null) {
+            $data['Sub Sec Date/Time Original'] = $subSecDateTimeOriginal;
         }
 
-        // Modify Date
-        if ($structured->locationTime->temporal?->modify instanceof DateTimeImmutable) {
-            $dateStr = $structured->locationTime->temporal->modify->format('Y:m:d H:i:s');
-            if ($structured->locationTime->temporal->offsetTime !== null) {
-                $dateStr .= $structured->locationTime->temporal->offsetTime;
-            }
-            $data['Modify Date'] = $dateStr;
+        $subSecModifyDate = $this->formatCompositeDate(
+            $exifDoc?->dateTimeRaw(),
+            $exifDoc?->subSecTime(),
+        );
+        if ($subSecModifyDate !== null) {
+            $data['Sub Sec Modify Date'] = $subSecModifyDate;
         }
 
         // GPS Altitude
@@ -2332,27 +2351,27 @@ final class MetadataFormatter
         }
 
         // Circle Of Confusion
-        if ($structured->technical->derived?->circleOfConfusionMm !== null) {
-            $data['Circle Of Confusion'] = sprintf('%.3f mm', $structured->technical->derived->circleOfConfusionMm);
+        if ($circleOfConfusionMm !== null) {
+            $data['Circle Of Confusion'] = sprintf('%.3f mm', $circleOfConfusionMm);
         }
 
         // Field Of View
-        if ($structured->technical->derived?->fieldOfViewHorizontalDeg !== null) {
-            $data['Field Of View'] = sprintf('%.1f deg', $structured->technical->derived->fieldOfViewHorizontalDeg);
+        if ($fieldOfViewHorizontalDeg !== null) {
+            $data['Field Of View'] = sprintf('%.1f deg', $fieldOfViewHorizontalDeg);
         }
 
         // Focal Length with 35mm equivalent
-        if ($structured->hardware->lens?->focalLengthMm !== null) {
-            $focalStr = sprintf('%.1f mm', $structured->hardware->lens->focalLengthMm);
-            if ($structured->hardware->lens->focalLengthIn35mm !== null) {
-                $focalStr .= sprintf(' (35 mm equivalent: %.1f mm)', $structured->hardware->lens->focalLengthIn35mm);
+        if ($focalLengthMm !== null) {
+            $focalStr = sprintf('%.1f mm', $focalLengthMm);
+            if ($focalLength35Equivalent !== null) {
+                $focalStr .= sprintf(' (35 mm equivalent: %.1f mm)', $focalLength35Equivalent);
             }
             $data['Focal Length'] = $focalStr;
         }
 
         // Hyperfocal Distance
-        if ($structured->technical->derived?->hyperfocalDistanceMetres !== null) {
-            $data['Hyperfocal Distance'] = sprintf('%.2f m', $structured->technical->derived->hyperfocalDistanceMetres);
+        if ($hyperfocalDistanceMetres !== null) {
+            $data['Hyperfocal Distance'] = sprintf('%.2f m', $hyperfocalDistanceMetres);
         }
 
         // Light Value
@@ -2365,9 +2384,91 @@ final class MetadataFormatter
             $data['Lens ID'] = $structured->hardware->lens->lensModel;
         }
 
-        if (!empty($data)) {
+        if ($data !== []) {
             $this->printSection('Composite', $data);
         }
+    }
+
+    /**
+     * Calculates the 35mm scale factor from focal length and 35mm-equivalent focal length.
+     *
+     * Formula fallback:
+     * - scaleFactor = focalLength35mm / focalLengthMm
+     * - sensorWidthMm = (imageWidthPx / focalPlaneXResolution) * mmPerResolutionUnit
+     * - scaleFactor = 36.0 / sensorWidthMm
+     */
+    private function calcScaleFactorTo35MmEquivalent(
+        ?int $focalLength35mm,
+        ?float $focalLengthMm,
+        ?float $focalPlaneXResolution = null,
+        ?int $imageWidthPx = null,
+        ?int $focalPlaneResolutionUnit = null,
+    ): ?float
+    {
+        $scaleFactor = $this->converters->calcCropFactor($focalLength35mm, $focalLengthMm);
+        if ($scaleFactor !== null) {
+            return $scaleFactor;
+        }
+
+        if ($focalLengthMm === null || $focalLengthMm <= 0.0 || $focalPlaneXResolution === null || $focalPlaneXResolution <= 0.0 || $imageWidthPx === null || $imageWidthPx <= 0) {
+            return null;
+        }
+
+        $millimetersPerResolutionUnit = $this->millimetersPerResolutionUnit($focalPlaneResolutionUnit);
+        if ($millimetersPerResolutionUnit === null) {
+            return null;
+        }
+
+        $sensorWidthMm = ((float) $imageWidthPx / $focalPlaneXResolution) * $millimetersPerResolutionUnit;
+        if ($sensorWidthMm <= 0.0) {
+            return null;
+        }
+
+        $scaleFactor = 36.0 / $sensorWidthMm;
+        if ($scaleFactor <= 0.0 || $scaleFactor > 10.0) {
+            return null;
+        }
+
+        return $scaleFactor;
+    }
+
+    private function millimetersPerResolutionUnit(?int $resolutionUnit): ?float
+    {
+        return match ($resolutionUnit) {
+            ResolutionUnit::Inches->value => 25.4,
+            ResolutionUnit::Centimeter->value => 10.0,
+            default                        => null,
+        };
+    }
+
+    /**
+     * Calculates the 35mm-equivalent focal length from focal length and scale factor.
+     *
+     * Formula: focalLength35mm = focalLengthMm * scaleFactor.
+     */
+    private function calcFocalLength35MmEquivalent(?float $focalLengthMm, ?float $scaleFactor): ?float
+    {
+        if ($focalLengthMm === null || $focalLengthMm <= 0.0 || $scaleFactor === null || $scaleFactor <= 0.0) {
+            return null;
+        }
+
+        return $focalLengthMm * $scaleFactor;
+    }
+
+    /**
+     * Formats a composite timestamp string by appending sub-second precision when available.
+     */
+    private function formatCompositeDate(?string $date, ?string $subSeconds): ?string
+    {
+        if ($date === null) {
+            return null;
+        }
+
+        if ($subSeconds === null || $subSeconds === '') {
+            return $date;
+        }
+
+        return sprintf('%s.%s', $date, $subSeconds);
     }
 
     /**

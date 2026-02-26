@@ -220,7 +220,7 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
             ResolutionUnit::Inches->value,
         );
 
-        self::assertEqualsWithDelta(1.6185, $actual, 0.0001);
+        self::assertEqualsWithDelta(1.61795, $actual, 0.0001);
     }
 
     #[Test]
@@ -232,6 +232,21 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
             57.0,
             4438.356164383562,
             0,
+            ResolutionUnit::Inches->value,
+        );
+
+        self::assertNull($actual);
+    }
+
+    #[Test]
+    public function returnsNullScaleFactorTo35MmEquivalentForImplausibleCropFactor(): void
+    {
+        $actual = $this->calcScaleFactorTo35MmEquivalentMethod->invoke(
+            $this->formatter,
+            null,
+            135.0,
+            4438.356164383562,
+            100,
             ResolutionUnit::Inches->value,
         );
 
