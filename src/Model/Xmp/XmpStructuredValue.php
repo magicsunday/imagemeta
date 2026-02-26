@@ -20,11 +20,11 @@ use function sprintf;
  */
 final readonly class XmpStructuredValue
 {
-    /** @var array<string, array<int, string>|string|XmpLanguageAlternative|self> Structured child values keyed by Clark notation. */
+    /** @var array<string, array<int, string|self>|string|XmpLanguageAlternative|self> Structured child values keyed by Clark notation. */
     public array $fields;
 
     /**
-     * @param array<string, array<int, string>|string|XmpLanguageAlternative|self> $fields Structured child values keyed by Clark notation.
+     * @param array<string, array<int, string|self>|string|XmpLanguageAlternative|self> $fields Structured child values keyed by Clark notation.
      */
     public function __construct(
         array $fields,
@@ -55,7 +55,7 @@ final readonly class XmpStructuredValue
     /**
      * Returns a child value by namespace and local name.
      *
-     * @return array<int, string>|string|XmpLanguageAlternative|self|null
+     * @return array<int, string|self>|string|XmpLanguageAlternative|self|null
      */
     public function get(string $namespaceUri, string $localName): array|string|XmpLanguageAlternative|self|null
     {
@@ -73,10 +73,10 @@ final readonly class XmpStructuredValue
     }
 
     /**
-     * @param array<int, string>|string|XmpLanguageAlternative|self $existing
-     * @param array<int, string>|string|XmpLanguageAlternative|self $value
+     * @param array<int, string|self>|string|XmpLanguageAlternative|self $existing
+     * @param array<int, string|self>|string|XmpLanguageAlternative|self $value
      *
-     * @return array<int, string>|string|XmpLanguageAlternative|self
+     * @return array<int, string|self>|string|XmpLanguageAlternative|self
      */
     private static function mergeFieldValue(array|string|XmpLanguageAlternative|self $existing, array|string|XmpLanguageAlternative|self $value): array|string|XmpLanguageAlternative|self
     {

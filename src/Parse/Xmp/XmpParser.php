@@ -23,6 +23,8 @@ use XMLReader;
 use function array_key_exists;
 use function defined;
 use function in_array;
+use function is_array;
+use function is_string;
 use function sprintf;
 use function trim;
 
@@ -99,6 +101,12 @@ final class XmpParser implements XmpParserInterface
 
                     if ($namespace === self::RDF_NAMESPACE && $localName === 'li') {
                         $state->languageBuffers[$depth] = $this->readXmlLang($reader);
+
+                        // MWG Regions Specification and XMP §7.9.2.5: rdf:li items may use
+                        // parseType="Resource" to represent structured entries inside Bag/Seq containers.
+                        if ($this->hasRdfParseTypeResource($reader)) {
+                            $state->structuredBuffers[$depth] = [];
+                        }
                     }
 
                     // XMP Specification Part 1 §7.2: Extract namespace prefix declarations
@@ -146,6 +154,7 @@ final class XmpParser implements XmpParserInterface
                     if ($namespace === self::RDF_NAMESPACE && $localName === 'li') {
                         $text             = trim($state->textBuffers[$depth] ?? '');
                         $lang             = $state->languageBuffers[$depth] ?? '';
+                        $fields           = $state->structuredBuffers[$depth] ?? [];
                         $parentListBuffer = $this->findParentListBuffer($state, $depth, $lang);
                         if ($parentListBuffer !== null) {
                             $parentDepth = $parentListBuffer['depth'];
@@ -156,6 +165,8 @@ final class XmpParser implements XmpParserInterface
                                     'lang'  => $lang,
                                     'value' => $text,
                                 ];
+                            } elseif ($fields !== []) {
+                                $state->listBuffers[$parentDepth][] = new XmpStructuredValue($fields);
                             } else {
                                 $state->listBuffers[$parentDepth][] = $text;
                             }
@@ -345,17 +356,35 @@ final class XmpParser implements XmpParserInterface
             return;
         }
 
+        // Narrow list<string|XmpStructuredValue> to list<string> for top-level storage.
+        // Structured list items only occur in Bag/Seq containers with parseType="Resource"
+        // entries and are fully handled via the structured parent path above.
+        if (is_array($value)) {
+            /** @var list<string> $stringItems */
+            $stringItems = [];
+
+            foreach ($value as $item) {
+                if (is_string($item)) {
+                    $stringItems[] = $item;
+                }
+            }
+
+            $this->storeValue($state, $key, $stringItems);
+
+            return;
+        }
+
         $this->storeValue($state, $key, $value);
     }
 
     /**
-     * @return array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue
+     * @return array<int, string|XmpStructuredValue>|string|XmpLanguageAlternative|XmpStructuredValue
      */
     private function finalizeElementValue(
         XmpParseState $state,
         int $depth,
     ): array|string|XmpLanguageAlternative|XmpStructuredValue {
-        /** @var list<string> $items */
+        /** @var list<string|XmpStructuredValue> $items */
         $items = $state->listBuffers[$depth] ?? [];
         /** @var list<array{lang: string, value: string}> $altItems */
         $altItems = $state->altBuffers[$depth] ?? [];
@@ -389,7 +418,7 @@ final class XmpParser implements XmpParserInterface
     }
 
     /**
-     * @param array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue $value
+     * @param array<int, string|XmpStructuredValue>|string|XmpLanguageAlternative|XmpStructuredValue $value
      */
     private function appendStructuredFieldValue(
         XmpParseState $state,
@@ -416,6 +445,15 @@ final class XmpParser implements XmpParserInterface
             return;
         }
 
+        // Arrays containing XmpStructuredValue items (from structured rdf:li in Bag/Seq)
+        // are stored directly without accumulator merging.
+        if (is_array($value) || is_array($existing)) {
+            $state->structuredBuffers[$parentDepth][$key] = $value;
+
+            return;
+        }
+
+        /** @var array<string, string|XmpLanguageAlternative> $temporary */
         $temporary = ['value' => $existing];
 
         $temporary = XmpValueAccumulator::merge($temporary, 'value', $value);
@@ -426,10 +464,10 @@ final class XmpParser implements XmpParserInterface
     /**
      * Finalises the collected container/list data for the current element.
      *
-     * @param list<string>                             $items
+     * @param list<string|XmpStructuredValue>          $items
      * @param list<array{lang: string, value: string}> $altItems
      *
-     * @return list<string>|string|XmpLanguageAlternative
+     * @return list<string|XmpStructuredValue>|string|XmpLanguageAlternative
      */
     private function finalizeValue(array $items, array $altItems, string $listKind, string $text): array|string|XmpLanguageAlternative
     {

@@ -1302,6 +1302,265 @@ XML;
     }
 
     /**
+     * Parses MWG-RS face region data from a Bag of structured rdf:li items.
+     *
+     * MWG Regions Specification: mwg-rs:Regions contains a RegionList with
+     * a Bag of structured list items, each carrying Name, Type and Area fields.
+     * The parser must produce XmpStructuredValue items for each rdf:li that
+     * has parseType="Resource", and those structured items must be accessible
+     * via the parent property.
+     */
+    #[Test]
+    public function parseExtractsMwgRsFaceRegionsFromBag(): void
+    {
+        $xml = <<<'XML'
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description rdf:about=""
+      xmlns:mwg-rs="http://www.metadataworkinggroup.com/schemas/regions/"
+      xmlns:stArea="http://ns.adobe.com/xmp/sType/Area#"
+      xmlns:stDim="http://ns.adobe.com/xmp/sType/Dimensions#">
+      <mwg-rs:Regions rdf:parseType="Resource">
+        <mwg-rs:AppliedToDimensions rdf:parseType="Resource">
+          <stDim:w>4032</stDim:w>
+          <stDim:h>3024</stDim:h>
+          <stDim:unit>pixel</stDim:unit>
+        </mwg-rs:AppliedToDimensions>
+        <mwg-rs:RegionList>
+          <rdf:Bag>
+            <rdf:li rdf:parseType="Resource">
+              <mwg-rs:Name>John Doe</mwg-rs:Name>
+              <mwg-rs:Type>Face</mwg-rs:Type>
+              <mwg-rs:Area rdf:parseType="Resource">
+                <stArea:x>0.4567</stArea:x>
+                <stArea:y>0.2890</stArea:y>
+                <stArea:w>0.1230</stArea:w>
+                <stArea:h>0.1640</stArea:h>
+                <stArea:unit>normalized</stArea:unit>
+              </mwg-rs:Area>
+            </rdf:li>
+            <rdf:li rdf:parseType="Resource">
+              <mwg-rs:Name>Jane Smith</mwg-rs:Name>
+              <mwg-rs:Type>Face</mwg-rs:Type>
+              <mwg-rs:Area rdf:parseType="Resource">
+                <stArea:x>0.7123</stArea:x>
+                <stArea:y>0.3456</stArea:y>
+                <stArea:w>0.0987</stArea:w>
+                <stArea:h>0.1310</stArea:h>
+                <stArea:unit>normalized</stArea:unit>
+              </mwg-rs:Area>
+            </rdf:li>
+          </rdf:Bag>
+        </mwg-rs:RegionList>
+      </mwg-rs:Regions>
+    </rdf:Description>
+  </rdf:RDF>
+</x:xmpmeta>
+XML;
+
+        $mwgRsNs  = 'http://www.metadataworkinggroup.com/schemas/regions/';
+        $stAreaNs = 'http://ns.adobe.com/xmp/sType/Area#';
+        $stDimNs  = 'http://ns.adobe.com/xmp/sType/Dimensions#';
+
+        $document = (new XmpParser())->parse($xml);
+
+        // Regions is a structured property
+        $regions = $document->get($mwgRsNs, 'Regions');
+        self::assertInstanceOf(XmpStructuredValue::class, $regions);
+
+        // AppliedToDimensions is a nested structured value
+        $dimensions = $regions->get($mwgRsNs, 'AppliedToDimensions');
+        self::assertInstanceOf(XmpStructuredValue::class, $dimensions);
+        self::assertSame('4032', $dimensions->get($stDimNs, 'w'));
+        self::assertSame('3024', $dimensions->get($stDimNs, 'h'));
+        self::assertSame('pixel', $dimensions->get($stDimNs, 'unit'));
+
+        // RegionList is a list of structured values
+        $regionList = $regions->get($mwgRsNs, 'RegionList');
+        self::assertIsArray($regionList);
+        self::assertCount(2, $regionList);
+
+        // First face region
+        $firstRegion = $regionList[0];
+        self::assertInstanceOf(XmpStructuredValue::class, $firstRegion);
+        self::assertSame('John Doe', $firstRegion->get($mwgRsNs, 'Name'));
+        self::assertSame('Face', $firstRegion->get($mwgRsNs, 'Type'));
+
+        $firstArea = $firstRegion->get($mwgRsNs, 'Area');
+        self::assertInstanceOf(XmpStructuredValue::class, $firstArea);
+        self::assertSame('0.4567', $firstArea->get($stAreaNs, 'x'));
+        self::assertSame('0.2890', $firstArea->get($stAreaNs, 'y'));
+        self::assertSame('0.1230', $firstArea->get($stAreaNs, 'w'));
+        self::assertSame('0.1640', $firstArea->get($stAreaNs, 'h'));
+        self::assertSame('normalized', $firstArea->get($stAreaNs, 'unit'));
+
+        // Second face region
+        $secondRegion = $regionList[1];
+        self::assertInstanceOf(XmpStructuredValue::class, $secondRegion);
+        self::assertSame('Jane Smith', $secondRegion->get($mwgRsNs, 'Name'));
+        self::assertSame('Face', $secondRegion->get($mwgRsNs, 'Type'));
+
+        $secondArea = $secondRegion->get($mwgRsNs, 'Area');
+        self::assertInstanceOf(XmpStructuredValue::class, $secondArea);
+        self::assertSame('0.7123', $secondArea->get($stAreaNs, 'x'));
+        self::assertSame('0.3456', $secondArea->get($stAreaNs, 'y'));
+        self::assertSame('0.0987', $secondArea->get($stAreaNs, 'w'));
+        self::assertSame('0.1310', $secondArea->get($stAreaNs, 'h'));
+        self::assertSame('normalized', $secondArea->get($stAreaNs, 'unit'));
+
+        // Namespace prefixes are captured
+        self::assertSame('mwg-rs', $document->namespacePrefixes[$mwgRsNs]);
+        self::assertSame('stArea', $document->namespacePrefixes[$stAreaNs]);
+        self::assertSame('stDim', $document->namespacePrefixes[$stDimNs]);
+    }
+
+    /**
+     * Parses a single MWG-RS region with additional metadata fields.
+     *
+     * Exercises region types beyond Face (Pet) and optional fields like
+     * Rotation and extensions, ensuring the parser does not drop unknown
+     * child properties within the structured rdf:li.
+     */
+    #[Test]
+    public function parseExtractsSingleMwgRsRegionWithExtensions(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:mwg-rs="http://www.metadataworkinggroup.com/schemas/regions/"
+         xmlns:stArea="http://ns.adobe.com/xmp/sType/Area#">
+  <rdf:Description>
+    <mwg-rs:Regions rdf:parseType="Resource">
+      <mwg-rs:RegionList>
+        <rdf:Bag>
+          <rdf:li rdf:parseType="Resource">
+            <mwg-rs:Name>Buddy</mwg-rs:Name>
+            <mwg-rs:Type>Pet</mwg-rs:Type>
+            <mwg-rs:Rotation>12.5</mwg-rs:Rotation>
+            <mwg-rs:Area rdf:parseType="Resource">
+              <stArea:x>0.5</stArea:x>
+              <stArea:y>0.5</stArea:y>
+              <stArea:w>0.2</stArea:w>
+              <stArea:h>0.3</stArea:h>
+              <stArea:unit>normalized</stArea:unit>
+            </mwg-rs:Area>
+          </rdf:li>
+        </rdf:Bag>
+      </mwg-rs:RegionList>
+    </mwg-rs:Regions>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $mwgRsNs  = 'http://www.metadataworkinggroup.com/schemas/regions/';
+        $stAreaNs = 'http://ns.adobe.com/xmp/sType/Area#';
+
+        $document = (new XmpParser())->parse($xml);
+        $regions  = $document->get($mwgRsNs, 'Regions');
+        self::assertInstanceOf(XmpStructuredValue::class, $regions);
+
+        $regionList = $regions->get($mwgRsNs, 'RegionList');
+        self::assertIsArray($regionList);
+        self::assertCount(1, $regionList);
+
+        $region = $regionList[0];
+        self::assertInstanceOf(XmpStructuredValue::class, $region);
+        self::assertSame('Buddy', $region->get($mwgRsNs, 'Name'));
+        self::assertSame('Pet', $region->get($mwgRsNs, 'Type'));
+        self::assertSame('12.5', $region->get($mwgRsNs, 'Rotation'));
+
+        $area = $region->get($mwgRsNs, 'Area');
+        self::assertInstanceOf(XmpStructuredValue::class, $area);
+        self::assertSame('0.5', $area->get($stAreaNs, 'x'));
+        self::assertSame('0.5', $area->get($stAreaNs, 'y'));
+        self::assertSame('0.2', $area->get($stAreaNs, 'w'));
+        self::assertSame('0.3', $area->get($stAreaNs, 'h'));
+    }
+
+    /**
+     * Parses MWG-RS regions with an empty RegionList Bag.
+     *
+     * An empty rdf:Bag inside mwg-rs:RegionList should produce an empty
+     * list value, not crash or produce undefined behavior.
+     */
+    #[Test]
+    public function parseHandlesEmptyMwgRsRegionList(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:mwg-rs="http://www.metadataworkinggroup.com/schemas/regions/">
+  <rdf:Description>
+    <mwg-rs:Regions rdf:parseType="Resource">
+      <mwg-rs:RegionList>
+        <rdf:Bag>
+        </rdf:Bag>
+      </mwg-rs:RegionList>
+    </mwg-rs:Regions>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $mwgRsNs = 'http://www.metadataworkinggroup.com/schemas/regions/';
+
+        $document = (new XmpParser())->parse($xml);
+        $regions  = $document->get($mwgRsNs, 'Regions');
+        self::assertInstanceOf(XmpStructuredValue::class, $regions);
+
+        // Empty RegionList produces an empty string (no list items)
+        $regionList = $regions->get($mwgRsNs, 'RegionList');
+        self::assertSame('', $regionList);
+    }
+
+    /**
+     * Structured rdf:li items in a Bag inside a parseType="Resource" parent
+     * store structured values as list fields of the parent structured value.
+     */
+    #[Test]
+    public function parseExtractsStructuredBagItemsInsideStructuredParent(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:test="http://example.com/test/">
+  <rdf:Description>
+    <test:Container rdf:parseType="Resource">
+      <test:Items>
+        <rdf:Bag>
+          <rdf:li rdf:parseType="Resource">
+            <test:Label>Alpha</test:Label>
+            <test:Score>10</test:Score>
+          </rdf:li>
+          <rdf:li rdf:parseType="Resource">
+            <test:Label>Beta</test:Label>
+            <test:Score>20</test:Score>
+          </rdf:li>
+        </rdf:Bag>
+      </test:Items>
+    </test:Container>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $testNs   = 'http://example.com/test/';
+        $document = (new XmpParser())->parse($xml);
+
+        $container = $document->get($testNs, 'Container');
+        self::assertInstanceOf(XmpStructuredValue::class, $container);
+
+        $items = $container->get($testNs, 'Items');
+        self::assertIsArray($items);
+        self::assertCount(2, $items);
+
+        $first = $items[0];
+        self::assertInstanceOf(XmpStructuredValue::class, $first);
+        self::assertSame('Alpha', $first->get($testNs, 'Label'));
+        self::assertSame('10', $first->get($testNs, 'Score'));
+
+        $second = $items[1];
+        self::assertInstanceOf(XmpStructuredValue::class, $second);
+        self::assertSame('Beta', $second->get($testNs, 'Label'));
+        self::assertSame('20', $second->get($testNs, 'Score'));
+    }
+
+    /**
      * Stray rdf:li outside any rdf:Bag/rdf:Seq/rdf:Alt container must not inject values.
      */
     #[Test]

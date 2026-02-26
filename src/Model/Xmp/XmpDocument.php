@@ -358,7 +358,7 @@ final readonly class XmpDocument
     /**
      * Resolves the first non-empty textual value from supported XMP value forms.
      *
-     * @param array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue|null $value
+     * @param array<int, string|XmpStructuredValue>|string|XmpLanguageAlternative|XmpStructuredValue|null $value
      *
      * @return string|null First non-empty textual value or null.
      */
@@ -387,6 +387,10 @@ final readonly class XmpDocument
         }
 
         foreach ($value as $element) {
+            if (!is_string($element)) {
+                continue;
+            }
+
             $trimmed = trim($element);
             if ($trimmed !== '') {
                 return $trimmed;

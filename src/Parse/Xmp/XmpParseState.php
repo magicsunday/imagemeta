@@ -38,7 +38,7 @@ final class XmpParseState
     /** @var array<int, string> */
     public array $textBuffers = [];
 
-    /** @var array<int, list<string>> */
+    /** @var array<int, list<string|XmpStructuredValue>> */
     public array $listBuffers = [];
 
     /** @var array<int, list<array{lang: string, value: string}>> */
@@ -50,7 +50,7 @@ final class XmpParseState
     /** @var array<int, string> */
     public array $languageBuffers = [];
 
-    /** @var array<int, array<string, array<int, string>|string|XmpLanguageAlternative|XmpStructuredValue>> */
+    /** @var array<int, array<string, array<int, string|XmpStructuredValue>|string|XmpLanguageAlternative|XmpStructuredValue>> */
     public array $structuredBuffers = [];
 
     public bool $insideRdfGraph = false;
