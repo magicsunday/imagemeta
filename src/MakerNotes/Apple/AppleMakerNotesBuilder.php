@@ -46,7 +46,121 @@ final readonly class AppleMakerNotesBuilder
      */
     public function build(array $dictionary): ?AppleMakerNotes
     {
-        $semanticStyleCompact = null;
+        $semanticStyleCompact = $this->seedSemanticStyleKeys($dictionary);
+        $identityData         = $this->loadIdentitySection($dictionary);
+        $hdrData              = $this->loadHdrSection($dictionary);
+        $focusData            = $this->loadFocusSection($dictionary);
+        $styleData            = $this->loadStyleSection($dictionary, $semanticStyleCompact);
+        $cameraData           = $this->loadCameraSection($dictionary);
+
+        $snr                     = $this->extractor->floatValue($dictionary, 'SNRSetting', 'SNR');
+        $aeStable                = $this->extractor->boolDictionaryValue($dictionary, 'AEStable');
+        $aeTarget                = $this->extractor->rationalFloatValue($dictionary, 'AETarget');
+        $aeAverage               = $this->extractor->rationalFloatValue($dictionary, 'AEAverage');
+        $signalToNoiseRatioType  = $this->extractor->stringOrIntValue($dictionary, 'SignalToNoiseRatioType');
+        $luminanceNoiseAmplitude = $this->extractor->rationalFloatValue($dictionary, 'LuminanceNoiseAmplitude');
+        $runTime                 = $this->extractor->runTimeValue($dictionary, 'RunTime');
+        $livePhotoIndex          = $this->extractor->intValue($dictionary, ...AppleMaps::LIVE_PHOTO_INDEX_KEYS);
+        $livePhotoTime           = null;
+        if ($livePhotoIndex !== null && $runTime instanceof RunTime) {
+            $timescale = $runTime->timescale;
+            if ($timescale !== null && $timescale > 0) {
+                $livePhotoTime = $livePhotoIndex / $timescale;
+            }
+        }
+
+        $accelerationVector = $this->extractor->floatList($dictionary, 'AccelerationVector');
+        $flags              = $this->extractor->extractFlags($dictionary);
+        $identity           = AppleCaptureIdentity::createIfPresent(
+            $identityData['contentIdentifier'],
+            $identityData['imageCaptureRequestId'],
+            $identityData['burstUuid'],
+            $identityData['imageUniqueId'],
+            $identityData['photoIdentifier'],
+            $identityData['mediaGroupUuid'],
+        );
+
+        $hdr = AppleHdr::createIfPresent(
+            $hdrData['hdrHeadroom'],
+            $hdrData['hdrGain'],
+            $hdrData['hdrImageType'],
+        );
+
+        $autoExposure = ($aeStable !== null || $aeTarget !== null || $aeAverage !== null)
+            ? new AppleAutoExposure($aeStable, $aeTarget, $aeAverage)
+            : null;
+
+        $autoFocus = ($focusData['afStable'] !== null || $focusData['afPerformance'] !== null || $focusData['afMeasuredDepth'] !== null
+            || $focusData['afConfidence'] !== null || $focusData['focusPosition'] !== null || $focusData['focusDistanceRange'] !== null)
+            ? new AppleAutoFocus(
+                $focusData['afStable'],
+                $focusData['afPerformance'],
+                $focusData['afMeasuredDepth'],
+                $focusData['afConfidence'],
+                $focusData['focusPosition'],
+                $focusData['focusDistanceRange'],
+            )
+            : null;
+
+        $noise = ($snr !== null || $signalToNoiseRatioType !== null || $luminanceNoiseAmplitude !== null)
+            ? new AppleNoise($snr, $signalToNoiseRatioType, $luminanceNoiseAmplitude)
+            : null;
+
+        $style = ($styleData['semanticStylePreset'] !== null || $styleData['semanticStyleWarmth'] !== null || $styleData['semanticStyleTone'] !== null)
+            ? new AppleSemanticStyle(
+                $styleData['semanticStylePreset'],
+                $styleData['semanticStyleWarmth'],
+                $styleData['semanticStyleTone'],
+            )
+            : null;
+
+        $livePhoto = ($livePhotoIndex !== null || $livePhotoTime !== null
+            || $runTime instanceof RunTime || $accelerationVector !== null)
+            ? new AppleLivePhoto($livePhotoIndex, $livePhotoTime, $runTime, $accelerationVector)
+            : null;
+
+        $camera = (
+            $identityData['cameraType'] !== null || $cameraData['imageCaptureType'] !== null || $cameraData['makerNoteVersion'] !== null
+            || $cameraData['qualityHint'] !== null || $cameraData['oisMode'] !== null
+            || $cameraData['colorTemperature'] !== null || $cameraData['colorCorrectionMatrix'] !== null
+        )
+            ? new AppleCameraCapture(
+                $identityData['cameraType'],
+                $cameraData['imageCaptureType'],
+                $cameraData['makerNoteVersion'],
+                $cameraData['qualityHint'],
+                $cameraData['oisMode'],
+                $cameraData['colorTemperature'],
+                $cameraData['colorCorrectionMatrix'],
+            )
+            : null;
+
+        if (!$this->hasAnySectionData($identity, $hdr, $autoExposure, $autoFocus, $noise, $style, $livePhoto, $camera, $flags)) {
+            return null;
+        }
+
+        return new AppleMakerNotes(
+            $identity,
+            $hdr,
+            $autoExposure,
+            $autoFocus,
+            $noise,
+            $style,
+            $livePhoto,
+            $camera,
+            $flags,
+        );
+    }
+
+    /**
+     * Seeds explicit semantic-style keys from compact semantic-style fields when absent.
+     *
+     * @param NativePlistDictionary $dictionary
+     *
+     * @return array{0:?string,1:?float,2:?float}|null
+     */
+    private function seedSemanticStyleKeys(array &$dictionary): ?array
+    {
         if (
             !array_key_exists('SemanticStylePreset', $dictionary)
             && !array_key_exists('SemanticStyleWarmth', $dictionary)
@@ -68,8 +182,30 @@ final readonly class AppleMakerNotesBuilder
                     $dictionary['SemanticStyleTone'] = $compactTone;
                 }
             }
+
+            return $semanticStyleCompact;
         }
 
+        return null;
+    }
+
+    /**
+     * Loads capture identity and camera-type fields.
+     *
+     * @param NativePlistDictionary $dictionary
+     *
+     * @return array{
+     *     contentIdentifier:?string,
+     *     cameraType:string|int|null,
+     *     imageCaptureRequestId:string|int|null,
+     *     burstUuid:?string,
+     *     imageUniqueId:?string,
+     *     photoIdentifier:?string,
+     *     mediaGroupUuid:?string
+     * }
+     */
+    private function loadIdentitySection(array $dictionary): array
+    {
         $contentIdentifier = $this->extractor->stringValue($dictionary, 'ContentIdentifier');
         $cameraTypeCode    = $this->extractor->intValue($dictionary, 'CameraType');
 
@@ -79,28 +215,77 @@ final readonly class AppleMakerNotesBuilder
             $cameraType = $this->extractor->stringValue($dictionary, 'CameraType');
         }
 
-        $hdrHeadroom             = $this->extractor->floatValue($dictionary, 'HdrHeadroom', 'HDRHeadroom');
-        $hdrGain                 = $this->extractor->floatList($dictionary, 'HdrGain', 'HDRGain');
-        $snr                     = $this->extractor->floatValue($dictionary, 'SNRSetting', 'SNR');
-        $aeStable                = $this->extractor->boolDictionaryValue($dictionary, 'AEStable');
-        $aeTarget                = $this->extractor->rationalFloatValue($dictionary, 'AETarget');
-        $aeAverage               = $this->extractor->rationalFloatValue($dictionary, 'AEAverage');
-        $afStable                = $this->extractor->boolDictionaryValue($dictionary, 'AFStable');
-        $afPerformance           = $this->extractor->rationalFloatValue($dictionary, 'AFPerformance');
-        $signalToNoiseRatioType  = $this->extractor->stringOrIntValue($dictionary, 'SignalToNoiseRatioType');
-        $luminanceNoiseAmplitude = $this->extractor->rationalFloatValue($dictionary, 'LuminanceNoiseAmplitude');
-        $focusPosition           = $this->extractor->floatValue($dictionary, 'FocusPosition');
-        $runTime                 = $this->extractor->runTimeValue($dictionary, 'RunTime');
-        $livePhotoIndex          = $this->extractor->intValue($dictionary, ...AppleMaps::LIVE_PHOTO_INDEX_KEYS);
-        $livePhotoTime           = null;
-        if ($livePhotoIndex !== null && $runTime instanceof RunTime) {
-            $timescale = $runTime->timescale;
-            if ($timescale !== null && $timescale > 0) {
-                $livePhotoTime = $livePhotoIndex / $timescale;
-            }
-        }
+        return [
+            'contentIdentifier'     => $contentIdentifier,
+            'cameraType'            => $cameraType,
+            'imageCaptureRequestId' => $this->extractor->identifierValue($dictionary, 'ImageCaptureRequestID'),
+            'burstUuid'             => $this->extractor->stringValue($dictionary, 'BurstUUID'),
+            'imageUniqueId'         => $this->extractor->stringValue($dictionary, 'ImageUniqueID'),
+            'photoIdentifier'       => $this->extractor->stringValue($dictionary, 'PhotoIdentifier'),
+            'mediaGroupUuid'        => $this->extractor->stringValue($dictionary, 'MediaGroupUUID'),
+        ];
+    }
 
-        $colorTemperature    = $this->extractor->intValue($dictionary, 'ColorTemperature');
+    /**
+     * Loads HDR-specific fields from the dictionary.
+     *
+     * @param NativePlistDictionary $dictionary
+     *
+     * @return array{
+     *     hdrHeadroom:?float,
+     *     hdrGain:list<float>|null,
+     *     hdrImageType:?string
+     * }
+     */
+    private function loadHdrSection(array $dictionary): array
+    {
+        return [
+            'hdrHeadroom'  => $this->extractor->floatValue($dictionary, 'HdrHeadroom', 'HDRHeadroom'),
+            'hdrGain'      => $this->extractor->floatList($dictionary, 'HdrGain', 'HDRGain'),
+            'hdrImageType' => $this->extractor->enumeratedStringValue($dictionary, AppleMaps::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType'),
+        ];
+    }
+
+    /**
+     * Loads autofocus and focus-distance related fields.
+     *
+     * @param NativePlistDictionary $dictionary
+     *
+     * @return array{
+     *     afStable:?bool,
+     *     afPerformance:?float,
+     *     afMeasuredDepth:?float,
+     *     afConfidence:?float,
+     *     focusPosition:?float,
+     *     focusDistanceRange:list<float>|null
+     * }
+     */
+    private function loadFocusSection(array $dictionary): array
+    {
+        return [
+            'afStable'           => $this->extractor->boolDictionaryValue($dictionary, 'AFStable'),
+            'afPerformance'      => $this->extractor->rationalFloatValue($dictionary, 'AFPerformance'),
+            'afMeasuredDepth'    => $this->extractor->floatValue($dictionary, 'AFMeasuredDepth'),
+            'afConfidence'       => $this->extractor->floatValue($dictionary, 'AFConfidence'),
+            'focusPosition'      => $this->extractor->floatValue($dictionary, 'FocusPosition'),
+            'focusDistanceRange' => $this->extractor->focusDistanceRangeValue($dictionary),
+        ];
+    }
+
+    /**
+     * Loads semantic-style fields with compact semantic-style fallback behavior.
+     *
+     * @param NativePlistDictionary                   $dictionary
+     * @param array{0:?string,1:?float,2:?float}|null $semanticStyleCompact
+     *
+     * @return array{
+     *     semanticStylePreset:?string,
+     *     semanticStyleWarmth:?float,
+     *     semanticStyleTone:?float
+     * }
+     */
+    private function loadStyleSection(array $dictionary, ?array $semanticStyleCompact): array
+    {
         $semanticStylePreset = $this->extractor->stringValue($dictionary, 'SemanticStylePreset');
         $semanticStyleWarmth = $this->extractor->floatValue($dictionary, 'SemanticStyleWarmth');
         $semanticStyleTone   = $this->extractor->floatValue($dictionary, 'SemanticStyleTone');
@@ -125,79 +310,63 @@ final readonly class AppleMakerNotesBuilder
             }
         }
 
-        $accelerationVector    = $this->extractor->floatList($dictionary, 'AccelerationVector');
-        $flags                 = $this->extractor->extractFlags($dictionary);
-        $imageCaptureRequestId = $this->extractor->identifierValue($dictionary, 'ImageCaptureRequestID');
-        $mediaGroupUuid        = $this->extractor->stringValue($dictionary, 'MediaGroupUUID');
-        $qualityHint           = $this->extractor->stringOrNumericValue($dictionary, 'QualityHint');
-        $colorCorrectionMatrix = $this->extractor->floatList($dictionary, 'ColorCorrectionMatrix');
+        return [
+            'semanticStylePreset' => $semanticStylePreset,
+            'semanticStyleWarmth' => $semanticStyleWarmth,
+            'semanticStyleTone'   => $semanticStyleTone,
+        ];
+    }
 
-        $makerNoteVersion   = $this->extractor->makerNoteVersionValue($dictionary, 'MakerNoteVersion');
-        $hdrImageType       = $this->extractor->enumeratedStringValue($dictionary, AppleMaps::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
-        $burstUuid          = $this->extractor->stringValue($dictionary, 'BurstUUID');
-        $focusDistanceRange = $this->extractor->focusDistanceRangeValue($dictionary);
-        $oisMode            = $this->extractor->stringOrNumericValue($dictionary, 'OISMode');
-        $imageCaptureType   = $this->extractor->enumeratedStringValue($dictionary, AppleMaps::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
-        $imageUniqueId      = $this->extractor->stringValue($dictionary, 'ImageUniqueID');
-        $photoIdentifier    = $this->extractor->stringValue($dictionary, 'PhotoIdentifier');
-        $afMeasuredDepth    = $this->extractor->floatValue($dictionary, 'AFMeasuredDepth');
-        $afConfidence       = $this->extractor->floatValue($dictionary, 'AFConfidence');
+    /**
+     * Loads camera-capture related fields.
+     *
+     * @param NativePlistDictionary $dictionary
+     *
+     * @return array{
+     *     makerNoteVersion:?string,
+     *     imageCaptureType:?string,
+     *     qualityHint:?string,
+     *     oisMode:?string,
+     *     colorTemperature:?int,
+     *     colorCorrectionMatrix:list<float>|null
+     * }
+     */
+    private function loadCameraSection(array $dictionary): array
+    {
+        return [
+            'makerNoteVersion'      => $this->extractor->makerNoteVersionValue($dictionary, 'MakerNoteVersion'),
+            'imageCaptureType'      => $this->extractor->enumeratedStringValue($dictionary, AppleMaps::IMAGE_CAPTURE_TYPES, 'ImageCaptureType'),
+            'qualityHint'           => $this->extractor->stringOrNumericValue($dictionary, 'QualityHint'),
+            'oisMode'               => $this->extractor->stringOrNumericValue($dictionary, 'OISMode'),
+            'colorTemperature'      => $this->extractor->intValue($dictionary, 'ColorTemperature'),
+            'colorCorrectionMatrix' => $this->extractor->floatList($dictionary, 'ColorCorrectionMatrix'),
+        ];
+    }
 
-        $identity = AppleCaptureIdentity::createIfPresent($contentIdentifier, $imageCaptureRequestId, $burstUuid, $imageUniqueId, $photoIdentifier, $mediaGroupUuid);
-
-        $hdr = AppleHdr::createIfPresent($hdrHeadroom, $hdrGain, $hdrImageType);
-
-        $autoExposure = ($aeStable !== null || $aeTarget !== null || $aeAverage !== null)
-            ? new AppleAutoExposure($aeStable, $aeTarget, $aeAverage)
-            : null;
-
-        $autoFocus = ($afStable !== null || $afPerformance !== null || $afMeasuredDepth !== null
-            || $afConfidence !== null || $focusPosition !== null || $focusDistanceRange !== null)
-            ? new AppleAutoFocus($afStable, $afPerformance, $afMeasuredDepth, $afConfidence, $focusPosition, $focusDistanceRange)
-            : null;
-
-        $noise = ($snr !== null || $signalToNoiseRatioType !== null || $luminanceNoiseAmplitude !== null)
-            ? new AppleNoise($snr, $signalToNoiseRatioType, $luminanceNoiseAmplitude)
-            : null;
-
-        $style = ($semanticStylePreset !== null || $semanticStyleWarmth !== null || $semanticStyleTone !== null)
-            ? new AppleSemanticStyle($semanticStylePreset, $semanticStyleWarmth, $semanticStyleTone)
-            : null;
-
-        $livePhoto = ($livePhotoIndex !== null || $livePhotoTime !== null
-            || $runTime instanceof RunTime || $accelerationVector !== null)
-            ? new AppleLivePhoto($livePhotoIndex, $livePhotoTime, $runTime, $accelerationVector)
-            : null;
-
-        $camera = ($cameraType !== null || $imageCaptureType !== null || $makerNoteVersion !== null
-            || $qualityHint !== null || $oisMode !== null || $colorTemperature !== null || $colorCorrectionMatrix !== null)
-            ? new AppleCameraCapture($cameraType, $imageCaptureType, $makerNoteVersion, $qualityHint, $oisMode, $colorTemperature, $colorCorrectionMatrix)
-            : null;
-
-        if (
-            !$identity instanceof AppleCaptureIdentity
-            && !$hdr instanceof AppleHdr
-            && !$autoExposure instanceof AppleAutoExposure
-            && !$autoFocus instanceof AppleAutoFocus
-            && !$noise instanceof AppleNoise
-            && !$style instanceof AppleSemanticStyle
-            && !$livePhoto instanceof AppleLivePhoto
-            && !$camera instanceof AppleCameraCapture
-            && $flags === []
-        ) {
-            return null;
-        }
-
-        return new AppleMakerNotes(
-            $identity,
-            $hdr,
-            $autoExposure,
-            $autoFocus,
-            $noise,
-            $style,
-            $livePhoto,
-            $camera,
-            $flags,
-        );
+    /**
+     * Returns whether at least one maker-notes section contains data.
+     *
+     * @param array<string, bool> $flags
+     */
+    private function hasAnySectionData(
+        ?AppleCaptureIdentity $identity,
+        ?AppleHdr $hdr,
+        ?AppleAutoExposure $autoExposure,
+        ?AppleAutoFocus $autoFocus,
+        ?AppleNoise $noise,
+        ?AppleSemanticStyle $style,
+        ?AppleLivePhoto $livePhoto,
+        ?AppleCameraCapture $camera,
+        array $flags,
+    ): bool {
+        return $identity instanceof AppleCaptureIdentity
+            || $hdr instanceof AppleHdr
+            || $autoExposure instanceof AppleAutoExposure
+            || $autoFocus instanceof AppleAutoFocus
+            || $noise instanceof AppleNoise
+            || $style instanceof AppleSemanticStyle
+            || $livePhoto instanceof AppleLivePhoto
+            || $camera instanceof AppleCameraCapture
+            || $flags !== [];
     }
 }
