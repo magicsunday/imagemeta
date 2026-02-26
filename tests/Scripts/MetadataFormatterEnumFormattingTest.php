@@ -36,6 +36,8 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
     private ReflectionMethod $formatEnumNameMethod;
 
+    private ReflectionMethod $formatComponentsConfigurationMethod;
+
     private ReflectionMethod $formatValueMethod;
 
     protected function setUp(): void
@@ -45,8 +47,9 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $formatterReflection = new ReflectionMethod('MagicSunday\\ImageMeta\\Scripts\\MetadataFormatter', 'format');
         $this->formatter     = $formatterReflection->getDeclaringClass()->newInstance();
 
-        $this->formatEnumNameMethod = new ReflectionMethod($this->formatter, 'formatEnumName');
-        $this->formatValueMethod    = new ReflectionMethod($this->formatter, 'formatValue');
+        $this->formatEnumNameMethod               = new ReflectionMethod($this->formatter, 'formatEnumName');
+        $this->formatComponentsConfigurationMethod = new ReflectionMethod($this->formatter, 'formatComponentsConfiguration');
+        $this->formatValueMethod                  = new ReflectionMethod($this->formatter, 'formatValue');
     }
 
     #[Test]
@@ -100,5 +103,24 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $actual = $this->formatValueMethod->invoke($this->formatter, 999);
 
         self::assertSame('999', $actual);
+    }
+
+    #[Test]
+    #[DataProvider('provideComponentsConfigurations')]
+    public function formatsComponentsConfigurationInExifOrder(?array $labels, ?string $expected): void
+    {
+        $actual = $this->formatComponentsConfigurationMethod->invoke($this->formatter, $labels);
+
+        self::assertSame($expected, $actual);
+    }
+
+    /**
+     * @return iterable<string, array{0:?array<int, string>, 1:?string}>
+     */
+    public static function provideComponentsConfigurations(): iterable
+    {
+        yield 'YCbCr with implied absent fourth component' => [['Y', 'Cb', 'Cr'], 'Y, Cb, Cr, -'];
+        yield 'Full RGBA-style configuration already complete' => [['R', 'G', 'B', '-'], 'R, G, B, -'];
+        yield 'Null configuration stays null' => [null, null];
     }
 }
