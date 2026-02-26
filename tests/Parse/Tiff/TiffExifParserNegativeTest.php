@@ -1645,6 +1645,35 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * TIFF 6.0 §8 defines Compression=4 and Compression=7, and real-world EXIF
+     * files also contain thumbnail Compression=0. Reader-side parsing keeps these
+     * raw values instead of aborting (Postel's Law over EXIF 3.0 §4.6.2 strictness).
+     */
+    #[Test]
+    public function itToleratesNonStandardCompressionValue(): void
+    {
+        $ifd0Group4 = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::COMPRESSION, 4),
+            jpegContext: true,
+        );
+        self::assertSame(4, $ifd0Group4->ifd0->get(ExifTag::COMPRESSION)?->value);
+
+        $ifd0JpegNewStyle = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::COMPRESSION, 7),
+            jpegContext: true,
+        );
+        self::assertSame(7, $ifd0JpegNewStyle->ifd0->get(ExifTag::COMPRESSION)?->value);
+
+        $ifd1Zero = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTwoIfds(
+                [[ExifTag::IMAGE_WIDTH, 100], [ExifTag::IMAGE_LENGTH, 100]],
+                [[ExifTag::COMPRESSION, 0]],
+            ),
+        );
+        self::assertSame(0, $ifd1Zero->ifd1?->get(ExifTag::COMPRESSION)?->value);
+    }
+
+    /**
      * IFD1 Compression=1 is allowed when IFD0 is uncompressed RGB.
      */
     #[Test]
