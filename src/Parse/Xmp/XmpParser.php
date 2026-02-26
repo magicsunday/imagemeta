@@ -35,6 +35,8 @@ final class XmpParser implements XmpParserInterface
 {
     private const string RDF_NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
 
+    private const int MAX_XML_DEPTH = 240;
+
     /**
      * Parses an XMP packet and returns a document containing discovered properties.
      *
@@ -92,7 +94,14 @@ final class XmpParser implements XmpParserInterface
      */
     private function handleElementNode(XMLReader $reader, XmpParseState $state): void
     {
-        $depth     = $reader->depth;
+        $depth = $reader->depth;
+        if ($depth > self::MAX_XML_DEPTH) {
+            throw new ParseError(
+                sprintf('XMP XML nesting depth %d exceeds maximum allowed %d', $depth, self::MAX_XML_DEPTH),
+                ParseError::XMP_XML_DEPTH_LIMIT_EXCEEDED,
+            );
+        }
+
         $namespace = $reader->namespaceURI;
         $localName = $reader->localName;
 

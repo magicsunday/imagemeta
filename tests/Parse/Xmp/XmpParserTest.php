@@ -1128,7 +1128,7 @@ XML;
     #[Test]
     public function rejectsExcessiveXmlNestingDepth(): void
     {
-        $nestingDepth = 300;
+        $nestingDepth = 240;
         $openLayers   = str_repeat('<xmp:Layer>', $nestingDepth);
         $closeLayers  = str_repeat('</xmp:Layer>', $nestingDepth);
 
