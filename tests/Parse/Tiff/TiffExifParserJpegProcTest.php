@@ -111,7 +111,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsJpegProcWrongTypeOrCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGProc must use TIFF type SHORT');
+        $this->expectExceptionMessage('JPEGProc must be SHORT[1].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([
@@ -201,7 +201,7 @@ final class TiffExifParserJpegProcTest extends TestCase
     public function rejectsInvalidJpegRestartIntervalLayout(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGRestartInterval must use TIFF type SHORT');
+        $this->expectExceptionMessage('JPEGRestartInterval must be SHORT[1].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1([

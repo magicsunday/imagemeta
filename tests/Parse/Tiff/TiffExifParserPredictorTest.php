@@ -96,14 +96,11 @@ final class TiffExifParserPredictorTest extends TestCase
     }
 
     /**
-     * Predictor must use SHORT type.
+     * Predictor with wrong type is tolerated (Postel's Law).
      */
     #[Test]
-    public function rejectsPredictorWrongType(): void
+    public function toleratesPredictorWrongType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Predictor must use TIFF type SHORT');
-
         (new TiffExifParser())->parseFromBlob(
             $this->buildSingleIfdBlob(
                 predictorType: TiffConst::TYPE_RATIONAL,
@@ -111,17 +108,16 @@ final class TiffExifParserPredictorTest extends TestCase
                 predictorValues: [1],
             ),
         );
+
+        $this->addToAssertionCount(1);
     }
 
     /**
-     * Predictor must have count=1.
+     * Predictor with wrong count is tolerated (Postel's Law).
      */
     #[Test]
-    public function rejectsPredictorWrongCount(): void
+    public function toleratesPredictorWrongCount(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Predictor must contain exactly 1 bytes');
-
         (new TiffExifParser())->parseFromBlob(
             $this->buildSingleIfdBlob(
                 predictorType: TiffConst::TYPE_SHORT,
@@ -129,6 +125,8 @@ final class TiffExifParserPredictorTest extends TestCase
                 predictorValues: [1, 1],
             ),
         );
+
+        $this->addToAssertionCount(1);
     }
 
     /**

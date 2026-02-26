@@ -77,7 +77,7 @@ final class TiffExifParserPositionTagsTest extends TestCase
     public function rejectsWrongPositionTagLayout(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('XPosition must use TIFF type RATIONAL');
+        $this->expectExceptionMessage('XPosition must be RATIONAL[1].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildPositionTiff(

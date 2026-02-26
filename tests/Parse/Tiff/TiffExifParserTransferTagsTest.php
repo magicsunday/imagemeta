@@ -129,7 +129,7 @@ final class TiffExifParserTransferTagsTest extends TestCase
     public function rejectsInvalidTransferRangeTypeOrCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TransferRange must use TIFF type SHORT');
+        $this->expectExceptionMessage('TransferRange must be SHORT[6].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTransferTiff(
@@ -148,7 +148,7 @@ final class TiffExifParserTransferTagsTest extends TestCase
     public function rejectsInvalidReferenceBlackWhiteTypeOrCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ReferenceBlackWhite must use TIFF type RATIONAL');
+        $this->expectExceptionMessage('ReferenceBlackWhite must be RATIONAL[6].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTransferTiff(

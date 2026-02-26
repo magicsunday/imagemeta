@@ -113,7 +113,7 @@ final class TiffExifParserFillOrderTest extends TestCase
     public function rejectsInvalidFillOrderTypeOrCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('FillOrder must use TIFF type SHORT');
+        $this->expectExceptionMessage('FillOrder must be SHORT[1].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildFillOrderTiff(

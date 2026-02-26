@@ -113,7 +113,7 @@ final class TiffExifParserGrayResponseTest extends TestCase
     public function rejectsGrayResponseUnitWrongTypeOrCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('GrayResponseUnit must use TIFF type SHORT');
+        $this->expectExceptionMessage('GrayResponseUnit must be SHORT[1].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildGrayResponseTiff(

@@ -127,7 +127,7 @@ final class TiffExifParserJpegInterchangePairTest extends TestCase
     public function rejectsInvalidInterchangeFieldLayout(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGInterchangeFormat must use TIFF type LONG');
+        $this->expectExceptionMessage('JPEGInterchangeFormat must be LONG[1].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1JpegInterchange(

@@ -98,35 +98,31 @@ final class TiffExifParserGpsReferenceTest extends TestCase
     }
 
     /**
-     * Rejects GPS reference tags encoded with non-ASCII TIFF type.
+     * Tolerates GPS reference tags encoded with non-ASCII TIFF type (Postel's Law).
      */
     #[Test]
     #[DataProvider('provideGpsReferenceTags')]
-    public function rejectsGpsReferenceTagsWithWrongType(int $tag, string $value, string $_resultKey, int $_valueTag): void
+    public function toleratesGpsReferenceTagsWithWrongType(int $tag, string $value, string $_resultKey, int $_valueTag): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-        $this->expectExceptionMessage('must use TIFF type ASCII');
-
         (new TiffExifParser())->parseFromBlob(
             $this->buildClassicTiffWithSingleGpsEntry($tag, TiffConst::TYPE_BYTE, 2, $value . "\0"),
         );
+
+        $this->addToAssertionCount(1);
     }
 
     /**
-     * Rejects GPS reference tags encoded with wrong count.
+     * Tolerates GPS reference tags encoded with wrong count (Postel's Law).
      */
     #[Test]
     #[DataProvider('provideGpsReferenceTags')]
-    public function rejectsGpsReferenceTagsWithWrongCount(int $tag, string $value, string $_resultKey, int $_valueTag): void
+    public function toleratesGpsReferenceTagsWithWrongCount(int $tag, string $value, string $_resultKey, int $_valueTag): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1318);
-        $this->expectExceptionMessage('must contain exactly 2 bytes');
-
         (new TiffExifParser())->parseFromBlob(
             $this->buildClassicTiffWithSingleGpsEntry($tag, TiffConst::TYPE_ASCII, 3, $value . "\0\0"),
         );
+
+        $this->addToAssertionCount(1);
     }
 
     /**

@@ -172,8 +172,8 @@ final class TiffExifParser implements TiffExifParserInterface
             }
         }
 
-        $this->tagValidator->validateGpsReferenceTagLayouts($gpsIfd);
-        $this->tagValidator->validateGpsCoordinateTagLayouts($gpsIfd);
+        $this->tagValidator->validateGpsReferenceTagLayouts();
+        $this->tagValidator->validateGpsCoordinateTagLayouts();
 
         $subIfds = $this->traverser->resolveSubIfds($ifd0);
 
@@ -500,8 +500,8 @@ final class TiffExifParser implements TiffExifParserInterface
             return null;
         }
 
-        $this->tagValidator->validateFixedLengthTagLayout($tag, $type, $cnt);
-        $this->tagValidator->validateTypeOnlyTagLayout($tag, $type);
+        $this->tagValidator->validateFixedLengthTagLayout();
+        $this->tagValidator->validateTypeOnlyTagLayout();
 
         // Read the Value/Offset field.  For inline values (data fits within the
         // field) the raw bytes are returned directly to avoid endianness-dependent
