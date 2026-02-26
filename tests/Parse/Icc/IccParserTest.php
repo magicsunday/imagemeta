@@ -23,7 +23,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
 
+use function array_map;
 use function ceil;
 use function chr;
 use function count;
@@ -121,6 +124,24 @@ final class IccParserTest extends TestCase
 
         $this->expectException(ParseError::class);
         $decoder->decode('short');
+    }
+
+    /**
+     * Guards staged decode refactoring by requiring explicit decode-phase helpers.
+     */
+    #[Test]
+    public function decodeUsesExplicitDecodeStages(): void
+    {
+        $reflection = new ReflectionClass(IccParser::class);
+        $methods = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('selectDecodeInput', $methods);
+        self::assertContains('validateAndNormalizeProfileData', $methods);
+        self::assertContains('decodeHeaderFields', $methods);
+        self::assertContains('decodeTagFields', $methods);
     }
 
     /**
