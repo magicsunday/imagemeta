@@ -532,7 +532,7 @@ final class TiffExifParser implements TiffExifParserInterface
             // Postel's Law: classic TIFF files in the wild sometimes contain
             // corrupted IFD entry counts (e.g. 10825/25600/49152). Skip that
             // directory and continue parsing remaining metadata sources.
-            $ifd = new Ifd([]);
+            $ifd                        = new Ifd([]);
             $this->ifdCache[$offsetInt] = $ifd;
 
             return $ifd;
