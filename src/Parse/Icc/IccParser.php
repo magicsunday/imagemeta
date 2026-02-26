@@ -69,6 +69,17 @@ final readonly class IccParser implements IccParserInterface
      *     description: string|null,
      *     copyright: string|null,
      *     whitePoint: array{x: float, y: float, z: float}|null,
+     *     blackPoint: array{x: float, y: float, z: float}|null,
+     *     redMatrixColumn: array{x: float, y: float, z: float}|null,
+     *     greenMatrixColumn: array{x: float, y: float, z: float}|null,
+     *     blueMatrixColumn: array{x: float, y: float, z: float}|null,
+     *     luminance: array{x: float, y: float, z: float}|null,
+     *     redTRC: array{gamma: float}|array{table: list<int>}|null,
+     *     greenTRC: array{gamma: float}|array{table: list<int>}|null,
+     *     blueTRC: array{gamma: float}|array{table: list<int>}|null,
+     *     deviceMfgDesc: string|null,
+     *     deviceModelDesc: string|null,
+     *     technology: string|null,
      *     version: string|null,
      *     pcs: string|null,
      *     renderingIntent: string|null,
@@ -160,6 +171,17 @@ final readonly class IccParser implements IccParserInterface
         $description        = $this->tagDecoder->extractTag($data, $profileSize, 'desc', $majorVersion);
         $copyright          = $this->tagDecoder->extractTag($data, $profileSize, 'cprt', $majorVersion);
         $whitePoint         = $this->tagDecoder->extractWhitePoint($data, $profileSize);
+        $blackPoint         = $this->tagDecoder->extractXyzTag($data, $profileSize, 'bkpt');
+        $redMatrixColumn    = $this->tagDecoder->extractXyzTag($data, $profileSize, 'rXYZ');
+        $greenMatrixColumn  = $this->tagDecoder->extractXyzTag($data, $profileSize, 'gXYZ');
+        $blueMatrixColumn   = $this->tagDecoder->extractXyzTag($data, $profileSize, 'bXYZ');
+        $luminance          = $this->tagDecoder->extractXyzTag($data, $profileSize, 'lumi');
+        $redTRC             = $this->tagDecoder->extractTrcTag($data, $profileSize, 'rTRC');
+        $greenTRC           = $this->tagDecoder->extractTrcTag($data, $profileSize, 'gTRC');
+        $blueTRC            = $this->tagDecoder->extractTrcTag($data, $profileSize, 'bTRC');
+        $deviceMfgDesc      = $this->tagDecoder->extractTag($data, $profileSize, 'dmnd', $majorVersion);
+        $deviceModelDesc    = $this->tagDecoder->extractTag($data, $profileSize, 'dmdd', $majorVersion);
+        $technology         = $this->tagDecoder->extractSignatureTag($data, $profileSize, 'tech');
         $cmmType            = $this->headerDecoder->extractSignature(substr($data, IccTag::CMM_TYPE, 4));
         $profileDateTime    = $this->headerDecoder->extractProfileDateTime($data);
         $profileDateTimeUtc = $profileDateTime !== null ? ($profileDateTime . 'Z') : null;
@@ -179,6 +201,17 @@ final readonly class IccParser implements IccParserInterface
             'description'        => $description,
             'copyright'          => $copyright,
             'whitePoint'         => $whitePoint,
+            'blackPoint'         => $blackPoint,
+            'redMatrixColumn'    => $redMatrixColumn,
+            'greenMatrixColumn'  => $greenMatrixColumn,
+            'blueMatrixColumn'   => $blueMatrixColumn,
+            'luminance'          => $luminance,
+            'redTRC'             => $redTRC,
+            'greenTRC'           => $greenTRC,
+            'blueTRC'            => $blueTRC,
+            'deviceMfgDesc'      => $deviceMfgDesc,
+            'deviceModelDesc'    => $deviceModelDesc,
+            'technology'         => $technology,
             'version'            => $version,
             'pcs'                => $pcs,
             'renderingIntent'    => $renderingIntent,

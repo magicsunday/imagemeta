@@ -1562,12 +1562,15 @@ final class IccParserTest extends TestCase
 
         // TRC tags (parametric curve type 0: Y = X^gamma)
         self::assertNotNull($result['redTRC']);
+        self::assertArrayHasKey('gamma', $result['redTRC']);
         self::assertEqualsWithDelta(2.2, $result['redTRC']['gamma'], 0.01);
 
         self::assertNotNull($result['greenTRC']);
+        self::assertArrayHasKey('gamma', $result['greenTRC']);
         self::assertEqualsWithDelta(2.2, $result['greenTRC']['gamma'], 0.01);
 
         self::assertNotNull($result['blueTRC']);
+        self::assertArrayHasKey('gamma', $result['blueTRC']);
         self::assertEqualsWithDelta(2.2, $result['blueTRC']['gamma'], 0.01);
 
         // Text tags
@@ -1615,7 +1618,7 @@ final class IccParserTest extends TestCase
                 return pack('N', $raw);
             };
 
-            return 'XYZ ' . "\0\0\0\0" . $encode($x) . $encode($y) . $encode($z);
+            return "XYZ \0\0\0\0" . $encode($x) . $encode($y) . $encode($z);
         };
 
         $bkptData = $buildXyz(0.0, 0.0, 0.0);
@@ -1626,15 +1629,15 @@ final class IccParserTest extends TestCase
 
         // Parametric curve type 0: Y = X^gamma
         // 'para' + reserved(4) + functionType(2) + reserved(2) + gamma s15Fixed16
-        $gamma22   = (int) round(2.2 * 65536.0);
-        $paraData  = 'para' . "\0\0\0\0" . pack('n', 0) . "\0\0" . pack('N', $gamma22);
-        $rTrcData  = $paraData;
-        $gTrcData  = $paraData;
-        $bTrcData  = $paraData;
+        $gamma22  = (int) round(2.2 * 65536.0);
+        $paraData = "para\0\0\0\0" . pack('n', 0) . "\0\0" . pack('N', $gamma22);
+        $rTrcData = $paraData;
+        $gTrcData = $paraData;
+        $bTrcData = $paraData;
 
         // mluc text helper for dmnd/dmdd
         $buildMluc = static function (string $text): string {
-            $utf16       = '';
+            $utf16 = '';
             for ($i = 0; $i < strlen($text); ++$i) {
                 $utf16 .= "\x00" . $text[$i];
             }
@@ -1658,7 +1661,7 @@ final class IccParserTest extends TestCase
         $dmddData = $buildMluc('Test Model');
 
         // Technology signature: 'sig ' + reserved(4) + 4-byte signature
-        $techData = 'sig ' . "\0\0\0\0" . 'CRT ';
+        $techData = "sig \0\0\0\0CRT ";
 
         // Description tag (mluc)
         $descData = $buildMluc('Expanded Test Profile');
@@ -1682,13 +1685,8 @@ final class IccParserTest extends TestCase
         $tagCount  = count($tags);
         $tableSize = 4 + ($tagCount * 12);
 
-        // Tag data starts right after header + tag table
+        // Tag data starts right after header + tag table (always 4-byte aligned)
         $dataOffset = 128 + $tableSize;
-
-        // Ensure data offset is 4-byte aligned
-        if (($dataOffset % 4) !== 0) {
-            $dataOffset = (int) (ceil($dataOffset / 4) * 4);
-        }
 
         // Build tag table and concatenate data
         $tagTable = pack('N', $tagCount);

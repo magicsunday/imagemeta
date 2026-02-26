@@ -99,7 +99,24 @@ final readonly class IccTagDecoder
      */
     public function extractWhitePoint(string $data, int $profileSize): ?array
     {
-        $tagData = $this->findTagData($data, $profileSize, 'wtpt');
+        return $this->extractXyzTag($data, $profileSize, 'wtpt');
+    }
+
+    /**
+     * Extracts an XYZType tag from the tag table.
+     *
+     * ICC.1:2022 §10.31: XYZType contains one or more XYZNumber values.
+     * This method extracts the first XYZNumber (3 x s15Fixed16Number at offset 8).
+     *
+     * @param string $data         Raw ICC profile payload.
+     * @param int    $profileSize  Declared profile size limiting the accessible range.
+     * @param string $tagSignature 4-byte tag signature to search for.
+     *
+     * @return array{x: float, y: float, z: float}|null XYZ tristimulus values or null when not available.
+     */
+    public function extractXyzTag(string $data, int $profileSize, string $tagSignature): ?array
+    {
+        $tagData = $this->findTagData($data, $profileSize, $tagSignature);
         if ($tagData === null || strlen($tagData) < 20) {
             return null;
         }
@@ -112,14 +129,9 @@ final readonly class IccTagDecoder
         // ICC.1:2022 §10.31 reserved bytes 4..7 must be zero
         $reserved = substr($tagData, 4, 4);
         if ($reserved !== "\0\0\0\0") {
-            throw new ParseError('ICC wtpt XYZType reserved bytes 4..7 are non-zero', 1141);
-        }
-
-        // Wtpt must contain exactly one XYZNumber (20 bytes total)
-        if (strlen($tagData) !== 20) {
             throw new ParseError(
-                sprintf('ICC wtpt XYZType payload must be exactly 20 bytes, got %d', strlen($tagData)),
-                1142,
+                sprintf('ICC %s XYZType reserved bytes 4..7 are non-zero', $tagSignature),
+                1141,
             );
         }
 
@@ -130,6 +142,80 @@ final readonly class IccTagDecoder
             'y' => $this->reader->s15Fixed16($tagData, 12),
             'z' => $this->reader->s15Fixed16($tagData, 16),
         ];
+    }
+
+    /**
+     * Extracts a tone response curve (TRC) tag from the tag table.
+     *
+     * ICC.1:2022 §9.2.48 (redTRCTag), §9.2.27 (greenTRCTag), §9.2.7 (blueTRCTag):
+     * the permitted type is parametricCurveType or curveType.
+     *
+     * For parametricCurveType (§10.18): function type 0 stores a single gamma value.
+     * For curveType (§10.6): a count of 0 means identity (gamma 1.0), a count of 1
+     * stores gamma as uInt8Fixed8Number, otherwise a lookup table is present.
+     *
+     * @param string $data         Raw ICC profile payload.
+     * @param int    $profileSize  Declared profile size limiting the accessible range.
+     * @param string $tagSignature Tag signature to search for ('rTRC', 'gTRC', 'bTRC').
+     *
+     * @return array{gamma: float}|array{table: list<int>}|null Curve data or null when not available.
+     */
+    public function extractTrcTag(string $data, int $profileSize, string $tagSignature): ?array
+    {
+        $tagData = $this->findTagData($data, $profileSize, $tagSignature);
+        if ($tagData === null || strlen($tagData) < 8) {
+            return null;
+        }
+
+        $type = substr($tagData, 0, 4);
+
+        if ($type === 'para') {
+            return $this->parseParametricCurve($tagData);
+        }
+
+        if ($type === 'curv') {
+            return $this->parseCurveType($tagData);
+        }
+
+        return null;
+    }
+
+    /**
+     * Extracts a 4-byte signature tag from the tag table.
+     *
+     * ICC.1:2022 §10.22: signatureType stores a 4-byte signature after the
+     * type header (signature + reserved = 8 bytes).
+     *
+     * @param string $data         Raw ICC profile payload.
+     * @param int    $profileSize  Declared profile size limiting the accessible range.
+     * @param string $tagSignature Tag signature to search for.
+     *
+     * @return string|null 4-byte signature value or null when not available.
+     */
+    public function extractSignatureTag(string $data, int $profileSize, string $tagSignature): ?string
+    {
+        $tagData = $this->findTagData($data, $profileSize, $tagSignature);
+        if ($tagData === null || strlen($tagData) < 12) {
+            return null;
+        }
+
+        $type = substr($tagData, 0, 4);
+        if ($type !== 'sig ') {
+            return null;
+        }
+
+        // ICC.1:2022 §10.22 reserved bytes 4..7 must be zero
+        $reserved = substr($tagData, 4, 4);
+        if ($reserved !== "\0\0\0\0") {
+            return null;
+        }
+
+        $signature = substr($tagData, 8, 4);
+        if ($signature === "\0\0\0\0") {
+            return null;
+        }
+
+        return $signature;
     }
 
     /**
@@ -422,5 +508,100 @@ final readonly class IccTagDecoder
         }
 
         return $enUs ?? $enAny ?? $firstNonEmpty;
+    }
+
+    /**
+     * Parses a parametricCurveType tag payload.
+     *
+     * ICC.1:2022 §10.18: parametricCurveType encodes a tone curve as a function type
+     * (0..4) followed by one or more s15Fixed16Number parameters. Function type 0
+     * is a simple power curve Y = X^gamma with a single parameter.
+     *
+     * @param string $data Raw tag payload beginning with the type signature.
+     *
+     * @return array{gamma: float}|null Parsed gamma or null when invalid.
+     */
+    private function parseParametricCurve(string $data): ?array
+    {
+        // Minimum: 'para'(4) + reserved(4) + functionType(2) + reserved(2) + gamma(4) = 16
+        if (strlen($data) < 16) {
+            return null;
+        }
+
+        // ICC.1:2022 §10.18 reserved bytes 4..7 must be zero
+        $reserved = substr($data, 4, 4);
+        if ($reserved !== "\0\0\0\0") {
+            return null;
+        }
+
+        $functionType = $this->reader->uInt16Be(substr($data, 8, 2));
+
+        // Only function type 0 (simple gamma) is decoded; higher types
+        // require additional parameters beyond what this parser exposes.
+        if ($functionType !== 0) {
+            return null;
+        }
+
+        // s15Fixed16 gamma value at offset 12
+        $gamma = $this->reader->s15Fixed16($data, 12);
+
+        return ['gamma' => $gamma];
+    }
+
+    /**
+     * Parses a curveType tag payload.
+     *
+     * ICC.1:2022 §10.6: curveType stores a count followed by curve entries.
+     * - count 0: identity curve (gamma 1.0)
+     * - count 1: gamma encoded as uInt8Fixed8Number (value / 256.0)
+     * - count > 1: lookup table of uInt16Number values
+     *
+     * @param string $data Raw tag payload beginning with the type signature.
+     *
+     * @return array{gamma: float}|array{table: list<int>}|null Curve data or null when invalid.
+     */
+    private function parseCurveType(string $data): ?array
+    {
+        // Minimum: 'curv'(4) + reserved(4) + count(4) = 12
+        if (strlen($data) < 12) {
+            return null;
+        }
+
+        // ICC.1:2022 §10.6 reserved bytes 4..7 must be zero
+        $reserved = substr($data, 4, 4);
+        if ($reserved !== "\0\0\0\0") {
+            return null;
+        }
+
+        $count = $this->reader->uInt32Be(substr($data, 8, 4));
+
+        // Identity curve
+        if ($count === 0) {
+            return ['gamma' => 1.0];
+        }
+
+        // Single gamma value as uInt8Fixed8Number
+        if ($count === 1) {
+            if (strlen($data) < 14) {
+                return null;
+            }
+
+            $raw = $this->reader->uInt16Be(substr($data, 12, 2));
+
+            return ['gamma' => $raw / 256.0];
+        }
+
+        // Lookup table: count x uInt16Number entries
+        $needed = 12 + ($count * 2);
+        if (strlen($data) < $needed) {
+            return null;
+        }
+
+        $table = [];
+        for ($i = 0; $i < $count; ++$i) {
+            $table[] = $this->reader->uInt16Be(substr($data, 12 + ($i * 2), 2));
+        }
+
+        return ['table' => $table];
     }
 }
