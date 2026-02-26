@@ -179,13 +179,10 @@ final readonly class DngVersionValidator
 
         foreach (self::DNG_SENTINEL_TAGS as $tag) {
             if ($ifd->get($tag) instanceof IfdEntry) {
-                throw new ParseError(
-                    sprintf(
-                        'DNG tag 0x%04X found in IFD 0 but required DNGVersion tag is missing.',
-                        $tag,
-                    ),
-                    2044,
-                );
+                // DNG 1.7.1.0 requires DNGVersion for DNG files, but many JPEG
+                // files carry selected DNG tags without declaring DNGVersion.
+                // Reader-side parsing keeps those tags instead of aborting.
+                return;
             }
         }
     }
