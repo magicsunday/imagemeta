@@ -46,8 +46,11 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
 use Throwable;
 
+use function array_map;
 use function pack;
 use function str_pad;
 use function strlen;
@@ -85,6 +88,26 @@ use function substr;
 #[UsesClass(Unpack::class)]
 final class TiffExifParserNegativeTest extends TestCase
 {
+    /**
+     * Guards parseFromBlob refactoring by requiring explicit orchestration-phase helpers.
+     */
+    #[Test]
+    public function parseFromBlobUsesOrchestrationPhaseHelpers(): void
+    {
+        $reflection = new ReflectionClass(TiffExifParser::class);
+        $methods    = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('initializeState', $methods);
+        self::assertContains('readPrimaryIfds', $methods);
+        self::assertContains('walkAdditionalIfds', $methods);
+        self::assertContains('finalizeAndValidate', $methods);
+        self::assertContains('resolveExifIfd', $methods);
+        self::assertContains('resolveGpsIfd', $methods);
+    }
+
     /**
      * Uses a bogus byte-order marker instead of II/MM.
      * Confirms the parser raises ParseError for an invalid byte order value.
