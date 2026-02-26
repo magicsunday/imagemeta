@@ -873,6 +873,11 @@ final class MetadataFormatter
                 $parts[] = $this->formatValue($num, $ifdContext, $tagId);
             }
 
+            if ($ifdContext === 'GPS' && $tagId === ExifTag::GPS_VERSION_ID) {
+                // EXIF 3.0 §4.6.7.1.1 defines GPSVersionID as dotted version bytes (e.g. 2.4.0.0).
+                return implode('.', $parts);
+            }
+
             return implode(' ', $parts);
         }
 
@@ -897,7 +902,14 @@ final class MetadataFormatter
 
             // Check if it's a simple numeric array
             if (array_is_list($value)) {
-                return implode(' ', array_map(fn ($v): string => $this->formatValue($v, $ifdContext, $tagId), $value));
+                $parts = array_map(fn ($v): string => $this->formatValue($v, $ifdContext, $tagId), $value);
+
+                if ($ifdContext === 'GPS' && $tagId === ExifTag::GPS_VERSION_ID) {
+                    // EXIF 3.0 §4.6.7.1.1 defines GPSVersionID as dotted version bytes (e.g. 2.4.0.0).
+                    return implode('.', $parts);
+                }
+
+                return implode(' ', $parts);
             }
 
             return json_encode($value);
