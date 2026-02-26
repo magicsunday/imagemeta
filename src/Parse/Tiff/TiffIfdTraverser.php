@@ -186,7 +186,14 @@ final class TiffIfdTraverser
 
                 $this->interopVisitedOffsets[$offset] = true;
 
-                $candidate = ($this->readIfd)($offset);
+                try {
+                    $candidate = ($this->readIfd)($offset);
+                } catch (ParseError|BoundsError) {
+                    // Postel's Law: EXIF pointer tags may target truncated data in
+                    // real-world files; skip unreadable directories and continue.
+                    // EXIF 3.0 §4.6.3.
+                    continue;
+                }
 
                 if ($this->ifdLooksLikeInterop($candidate)) {
                     return $candidate;

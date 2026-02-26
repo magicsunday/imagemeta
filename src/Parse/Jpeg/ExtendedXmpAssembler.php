@@ -284,14 +284,12 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
             $guid = $basePacket['guid'];
 
             if (!array_key_exists($guid, $this->chunks)) {
-                throw new ParseError(
-                    sprintf(
-                        'XMP packet at offset %d references ExtendedXMP GUID %s but matching extension chunks are missing',
-                        $basePacket['offset'],
-                        $guid,
-                    ),
-                    1477,
-                );
+                // Postel's Law: keep the base packet when referenced extension
+                // chunks are absent. XMP readers should remain robust for
+                // incomplete extension payloads in real-world files.
+                // CIPA DC-X 008-Translation-2023-E A.2.3.3 (GUID).
+                ($this->appendXmpPacket)($basePacket['packet']);
+                continue;
             }
 
             if (!array_key_exists($guid, $assembledPayloads)) {

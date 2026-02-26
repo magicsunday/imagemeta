@@ -125,7 +125,20 @@ final readonly class MetadataReader
         $extension = $this->detectExtension($path);
 
         [$sha1, $md5] = $withDigests ? $this->calculateDigests($stream) : [null, null];
-        $type         = $this->formatDetector->detect($stream);
+        try {
+            $type = $this->formatDetector->detect($stream);
+        } catch (ParseError $exception) {
+            if (($exception->getCode() === 1031) || ($exception->getCode() === 1032)) {
+                // Postel's Law: tolerate unreadable/truncated signatures and
+                // return empty metadata instead of aborting the whole read.
+                return (new MetadataBuilder())
+                    ->withParsers($this->xmpParser, $this->iptcParser)
+                    ->withFileIdentity($mimeType, $fileSize, $extension, $sha1, $md5)
+                    ->build();
+            }
+
+            throw $exception;
+        }
 
         return match ($type) {
             ContainerType::JPEG    => $this->fromJpeg($stream, $mimeType, $fileSize, $extension, $sha1, $md5),

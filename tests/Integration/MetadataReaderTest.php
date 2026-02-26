@@ -1091,20 +1091,23 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Verifies that MetadataReader rejects an empty file.
-     * The format detector cannot read any magic bytes, so a ParseError must be raised.
+     * Verifies that MetadataReader tolerates an empty file by returning empty metadata.
+     * Container signature probing may fail on zero-length streams.
      */
     #[Test]
-    public function readThrowsForEmptyFile(): void
+    public function readReturnsEmptyMetadataForEmptyFile(): void
     {
         $path = $this->writeTempFile('', 'jpg');
 
         try {
-            $this->expectException(ParseError::class);
-            MetadataReader::createDefault()->read($path);
+            $metadata = MetadataReader::createDefault()->read($path);
         } finally {
             @unlink($path);
         }
+
+        self::assertSame([], $metadata->exifBlobs);
+        self::assertSame([], $metadata->xmpBlobs);
+        self::assertNull($metadata->exifDoc);
     }
 
     /**

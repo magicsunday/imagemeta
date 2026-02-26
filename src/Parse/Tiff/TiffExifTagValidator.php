@@ -36,8 +36,10 @@ final readonly class TiffExifTagValidator
     // Postel's Law: EXIF 3.0 §4.6.5.1 says several tags "shall not be recorded"
     // in IFD0 for JPEG-compressed primary images, but many cameras include them
     // anyway (e.g. BitsPerSample=8, SamplesPerPixel=3).  We only reject tags
-    // that would cause structural parsing conflicts — strip-based storage and
-    // JPEG interchange pointers.  Informational tags like BitsPerSample,
+    // that would cause structural parsing conflicts — JPEG interchange pointers.
+    // RowsPerStrip / StripByteCounts are tolerated because JPEG readers derive
+    // image layout from SOF markers in stream data.
+    // Informational tags like BitsPerSample,
     // SamplesPerPixel, PhotometricInterpretation, PlanarConfiguration, and
     // Compression are tolerated because they are redundant (derivable from the
     // JPEG SOF marker) and harmless.
@@ -48,11 +50,9 @@ final readonly class TiffExifTagValidator
      * EXIF 3.0 §4.6.5.1 specifies several tags that shall not be used when the
      * primary image data is JPEG-compressed.
      *
-     * @var list<array{int, string}>
+    * @var list<array{int, string}>
      */
     private const array JPEG_PROHIBITED_TAGS = [
-        [ExifTag::ROWS_PER_STRIP, 'RowsPerStrip'],
-        [ExifTag::STRIP_BYTE_COUNTS, 'StripByteCounts'],
         [ExifTag::JPEG_INTERCHANGE_FORMAT, 'JPEGInterchangeFormat'],
         [ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 'JPEGInterchangeFormatLength'],
     ];
@@ -217,8 +217,9 @@ final readonly class TiffExifTagValidator
     /**
      * Validates that tags prohibited in JPEG-compressed primary images are absent from IFD0.
      *
-     * EXIF 3.0 §4.6.5.1 prohibits strip/tile storage descriptors and
-     * YCbCrSubSampling in IFD0 when the primary image is JPEG-compressed.
+     * EXIF 3.0 §4.6.5.1 prohibits JPEG interchange pointers in IFD0 when the
+     * primary image is JPEG-compressed. RowsPerStrip/StripByteCounts are
+     * tolerated reader-side for real-world compatibility.
      *
      * @param Ifd $ifd0 Primary image IFD.
      */
