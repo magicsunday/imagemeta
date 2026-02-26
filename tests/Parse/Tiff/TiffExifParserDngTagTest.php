@@ -2815,14 +2815,13 @@ final class TiffExifParserDngTagTest extends TestCase
      * DNG-specific tags without DNGVersion in IFD0 triggers ParseError.
      */
     #[Test]
-    public function rejectsDngTagsWithoutDngVersion(): void
+    public function itToleratesDngTagsWithoutDngVersion(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(2044);
-
-        (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithDngTagsNoDngVersion(),
         );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::UNIQUE_CAMERA_MODEL));
     }
 
     /**
