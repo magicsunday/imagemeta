@@ -62,10 +62,10 @@ enum Orientation: int
     public function rotationDegrees(): int
     {
         return match ($this) {
-            self::Unknown, self::TopLeft, self::TopRight, self::BottomLeft => 0,
-            self::BottomRight, self::LeftTop => 180,
+            self::Unknown, self::TopLeft, self::TopRight => 0,
+            self::BottomRight, self::BottomLeft => 180,
             self::RightTop, self::RightBottom => 90,
-            self::LeftBottom => 270,
+            self::LeftTop, self::LeftBottom => 270,
         };
     }
 
