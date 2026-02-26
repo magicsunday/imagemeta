@@ -1304,6 +1304,39 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * CameraOwnerName in IFD0 is tolerated and preserved (Postel's Law).
+     *
+     * EXIF 3.0 §4.6.6.9.2 defines CameraOwnerName in ExifIFD, but some
+     * real-world files place it in IFD0.
+     */
+    #[Test]
+    public function itToleratesCameraOwnerNameInIfd0(): void
+    {
+        $cameraOwner = "Agent\0";
+        $ifdOffset   = 8;
+        $entryCount  = 3;
+        $ifdSize     = 2 + (12 * $entryCount) + 4;
+        $valueOffset = $ifdOffset + $ifdSize;
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . $this->buildIfdShortEntry(ExifTag::IMAGE_WIDTH, 100)
+            . $this->buildIfdShortEntry(ExifTag::IMAGE_LENGTH, 100)
+            . pack('v', ExifTag::CAMERA_OWNER_NAME)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($cameraOwner))
+            . pack('V', $valueOffset)
+            . pack('V', 0)
+            . $cameraOwner;
+
+        $parsed = (new TiffExifParser())->parseFromBlob($blob);
+
+        self::assertSame('Agent', $parsed->ifd0->get(ExifTag::CAMERA_OWNER_NAME)?->value);
+    }
+
+    /**
      * ASCII value containing bytes > 0x7F is decoded via Latin-1 fallback.
      * Real-world cameras write accented characters in ASCII fields.
      */
