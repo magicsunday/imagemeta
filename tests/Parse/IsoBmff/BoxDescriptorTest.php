@@ -12,18 +12,14 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
-use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
+use MagicSunday\ImageMeta\Tests\Helpers\IsoBmffBoxTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
-
-use function fopen;
-use function fwrite;
-use function rewind;
-use function strlen;
 
 /**
  * Tests the BoxDescriptor value object used to represent ISO BMFF boxes.
@@ -33,10 +29,12 @@ use function strlen;
  */
 #[CoversClass(BoxDescriptor::class)]
 #[UsesClass(ByteReader::class)]
-#[UsesClass(Stream::class)]
 #[UsesClass(StreamWindow::class)]
+#[UsesTrait(IsoBmffBoxTrait::class)]
 final class BoxDescriptorTest extends TestCase
 {
+    use IsoBmffBoxTrait;
+
     /**
      * Builds a descriptor with a window and explicit offsets/sizes.
      * This verifies the constructor stores all fields verbatim.
@@ -89,21 +87,6 @@ final class BoxDescriptorTest extends TestCase
 
     private function createWindow(string $data, int $offset, int $length): StreamWindow
     {
-        $handle = fopen('php://temp', 'wb+');
-        if ($handle === false) {
-            self::fail('Unable to create temporary stream handle.');
-        }
-
-        $bytesWritten = fwrite($handle, $data);
-        if ($bytesWritten !== strlen($data)) {
-            self::fail('Unable to populate temporary stream data.');
-        }
-
-        if (rewind($handle) === false) {
-            self::fail('Unable to rewind temporary stream handle.');
-        }
-
-        return (new Stream($handle, strlen($data)))
-            ->window($offset, $length);
+        return $this->createIsoBmffTempWindow($data, $offset, $length);
     }
 }

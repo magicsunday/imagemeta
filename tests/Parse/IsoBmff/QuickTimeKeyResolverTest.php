@@ -29,10 +29,7 @@ use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
-use function fopen;
-use function fwrite;
 use function pack;
-use function rewind;
 use function strlen;
 
 /**
@@ -67,25 +64,18 @@ final class QuickTimeKeyResolverTest extends TestCase
      */
     private function createResolverWithDescriptor(string $content): array
     {
-        $handle = fopen('php://temp', 'wb+');
-        if ($handle === false) {
-            self::fail('Unable to create temporary stream handle.');
-        }
-
-        fwrite($handle, $content);
-        rewind($handle);
-
-        $stream    = new Stream($handle, strlen($content));
-        $navigator = new BoxNavigator($stream);
-        $resolver  = new QuickTimeKeyResolver($navigator);
-        $window    = $stream->window(0, strlen($content));
+        $contentLength = strlen($content);
+        $stream        = $this->createIsoBmffTempStream($content);
+        $navigator     = new BoxNavigator($stream);
+        $resolver      = new QuickTimeKeyResolver($navigator);
+        $window        = $stream->window(0, $contentLength);
 
         $descriptor = new BoxDescriptor(
             type: 'keys',
-            size: 8 + strlen($content),
+            size: 8 + $contentLength,
             offset: 0,
             contentOffset: 0,
-            contentSize: strlen($content),
+            contentSize: $contentLength,
             window: $window,
             userType: null,
         );
@@ -373,25 +363,18 @@ final class QuickTimeKeyResolverTest extends TestCase
 
         $entryContent = $meanBox . $nameBox;
 
-        $handle = fopen('php://temp', 'wb+');
-        if ($handle === false) {
-            self::fail('Unable to create temporary stream handle.');
-        }
-
-        fwrite($handle, $entryContent);
-        rewind($handle);
-
-        $stream    = new Stream($handle, strlen($entryContent));
-        $navigator = new BoxNavigator($stream);
-        $resolver  = new QuickTimeKeyResolver($navigator);
-        $window    = $stream->window(0, strlen($entryContent));
+        $entryLength = strlen($entryContent);
+        $stream      = $this->createIsoBmffTempStream($entryContent);
+        $navigator   = new BoxNavigator($stream);
+        $resolver    = new QuickTimeKeyResolver($navigator);
+        $window      = $stream->window(0, $entryLength);
 
         $descriptor = new BoxDescriptor(
             type: '----',
-            size: 8 + strlen($entryContent),
+            size: 8 + $entryLength,
             offset: 0,
             contentOffset: 0,
-            contentSize: strlen($entryContent),
+            contentSize: $entryLength,
             window: $window,
             userType: null,
         );
@@ -415,25 +398,18 @@ final class QuickTimeKeyResolverTest extends TestCase
         $namePayload = chr(0) . chr(0) . chr(0) . chr(0) . 'ISRC';
         $nameBox     = $this->box('name', $namePayload);
 
-        $handle = fopen('php://temp', 'wb+');
-        if ($handle === false) {
-            self::fail('Unable to create temporary stream handle.');
-        }
-
-        fwrite($handle, $nameBox);
-        rewind($handle);
-
-        $stream    = new Stream($handle, strlen($nameBox));
-        $navigator = new BoxNavigator($stream);
-        $resolver  = new QuickTimeKeyResolver($navigator);
-        $window    = $stream->window(0, strlen($nameBox));
+        $nameLength = strlen($nameBox);
+        $stream     = $this->createIsoBmffTempStream($nameBox);
+        $navigator  = new BoxNavigator($stream);
+        $resolver   = new QuickTimeKeyResolver($navigator);
+        $window     = $stream->window(0, $nameLength);
 
         $descriptor = new BoxDescriptor(
             type: '----',
-            size: 8 + strlen($nameBox),
+            size: 8 + $nameLength,
             offset: 0,
             contentOffset: 0,
-            contentSize: strlen($nameBox),
+            contentSize: $nameLength,
             window: $window,
             userType: null,
         );
@@ -459,25 +435,18 @@ final class QuickTimeKeyResolverTest extends TestCase
 
         $entryContent = $meanBox . $nameBox;
 
-        $handle = fopen('php://temp', 'wb+');
-        if ($handle === false) {
-            self::fail('Unable to create temporary stream handle.');
-        }
-
-        fwrite($handle, $entryContent);
-        rewind($handle);
-
-        $stream    = new Stream($handle, strlen($entryContent));
-        $navigator = new BoxNavigator($stream);
-        $resolver  = new QuickTimeKeyResolver($navigator);
-        $window    = $stream->window(0, strlen($entryContent));
+        $entryLength = strlen($entryContent);
+        $stream      = $this->createIsoBmffTempStream($entryContent);
+        $navigator   = new BoxNavigator($stream);
+        $resolver    = new QuickTimeKeyResolver($navigator);
+        $window      = $stream->window(0, $entryLength);
 
         $descriptor = new BoxDescriptor(
             type: '----',
-            size: 8 + strlen($entryContent),
+            size: 8 + $entryLength,
             offset: 0,
             contentOffset: 0,
-            contentSize: strlen($entryContent),
+            contentSize: $entryLength,
             window: $window,
             userType: null,
         );

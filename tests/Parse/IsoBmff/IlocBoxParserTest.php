@@ -34,10 +34,7 @@ use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
-use function fopen;
-use function fwrite;
 use function pack;
-use function rewind;
 use function strlen;
 
 /**
@@ -77,25 +74,18 @@ final class IlocBoxParserTest extends TestCase
      */
     private function createParserWithDescriptor(string $content): array
     {
-        $handle = fopen('php://temp', 'wb+');
-        if ($handle === false) {
-            self::fail('Unable to create temporary stream handle.');
-        }
-
-        fwrite($handle, $content);
-        rewind($handle);
-
-        $stream    = new Stream($handle, strlen($content));
-        $navigator = new BoxNavigator($stream);
-        $parser    = new IlocBoxParser($navigator);
-        $window    = $stream->window(0, strlen($content));
+        $contentLength = strlen($content);
+        $stream        = $this->createIsoBmffTempStream($content);
+        $navigator     = new BoxNavigator($stream);
+        $parser        = new IlocBoxParser($navigator);
+        $window        = $stream->window(0, $contentLength);
 
         $descriptor = new BoxDescriptor(
             type: 'iloc',
-            size: 8 + strlen($content),
+            size: 8 + $contentLength,
             offset: 0,
             contentOffset: 0,
-            contentSize: strlen($content),
+            contentSize: $contentLength,
             window: $window,
             userType: null,
         );

@@ -13,7 +13,6 @@ namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
-use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
@@ -21,16 +20,14 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
 use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeValueDecoder;
+use MagicSunday\ImageMeta\Tests\Helpers\IsoBmffBoxTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
-use function fopen;
-use function fwrite;
 use function pack;
-use function rewind;
 use function strlen;
 
 /**
@@ -40,7 +37,6 @@ use function strlen;
  */
 #[CoversClass(QuickTimeValueDecoder::class)]
 #[UsesClass(ParseError::class)]
-#[UsesClass(Stream::class)]
 #[UsesClass(StreamWindow::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Unpack::class)]
@@ -48,8 +44,11 @@ use function strlen;
 #[UsesClass(BoxDescriptor::class)]
 #[UsesTrait(NormalizesOffsets::class)]
 #[UsesTrait(ReadsBinaryPrimitives::class)]
+#[UsesTrait(IsoBmffBoxTrait::class)]
 final class QuickTimeValueDecoderTest extends TestCase
 {
+    use IsoBmffBoxTrait;
+
     // =========================================================================
     // Helper methods
     // =========================================================================
@@ -69,23 +68,16 @@ final class QuickTimeValueDecoderTest extends TestCase
      */
     private function createDataBoxDescriptor(string $content): BoxDescriptor
     {
-        $handle = fopen('php://temp', 'wb+');
-        if ($handle === false) {
-            self::fail('Unable to create temporary stream handle.');
-        }
-
-        fwrite($handle, $content);
-        rewind($handle);
-
-        $stream = new Stream($handle, strlen($content));
-        $window = $stream->window(0, strlen($content));
+        $contentLength = strlen($content);
+        $stream        = $this->createIsoBmffTempStream($content);
+        $window        = $stream->window(0, $contentLength);
 
         return new BoxDescriptor(
             type: 'data',
-            size: 8 + strlen($content),
+            size: 8 + $contentLength,
             offset: 0,
             contentOffset: 0,
-            contentSize: strlen($content),
+            contentSize: $contentLength,
             window: $window,
             userType: null,
         );

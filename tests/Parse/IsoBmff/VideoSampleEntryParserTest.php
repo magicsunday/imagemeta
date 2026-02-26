@@ -13,22 +13,19 @@ namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
-use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
+use MagicSunday\ImageMeta\Tests\Helpers\IsoBmffBoxTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
-use function fopen;
-use function fwrite;
 use function pack;
-use function rewind;
 use function str_repeat;
-use function strlen;
 
 /**
  * Tests for the VideoSampleEntryParser, covering all ParseError paths
@@ -36,12 +33,14 @@ use function strlen;
  */
 #[CoversClass(VideoSampleEntryParser::class)]
 #[UsesClass(ParseError::class)]
-#[UsesClass(Stream::class)]
 #[UsesClass(StreamWindow::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Unpack::class)]
+#[UsesTrait(IsoBmffBoxTrait::class)]
 final class VideoSampleEntryParserTest extends TestCase
 {
+    use IsoBmffBoxTrait;
+
     /**
      * Builds a 70-byte video sample entry payload with configurable fields.
      *
@@ -103,22 +102,7 @@ final class VideoSampleEntryParserTest extends TestCase
 
     private function createWindow(string $data): StreamWindow
     {
-        $handle = fopen('php://temp', 'wb+');
-        if ($handle === false) {
-            self::fail('Unable to create temporary stream handle.');
-        }
-
-        $bytesWritten = fwrite($handle, $data);
-        if ($bytesWritten !== strlen($data)) {
-            self::fail('Unable to populate temporary stream data.');
-        }
-
-        if (rewind($handle) === false) {
-            self::fail('Unable to rewind temporary stream handle.');
-        }
-
-        return (new Stream($handle, strlen($data)))
-            ->window(0, strlen($data));
+        return $this->createIsoBmffTempWindow($data);
     }
 
     /**

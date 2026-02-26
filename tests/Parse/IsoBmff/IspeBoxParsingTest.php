@@ -43,11 +43,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
-use function fopen;
-use function fwrite;
 use function pack;
-use function rewind;
-use function strlen;
 
 /**
  * Exercises parsing of the ispe (Image Spatial Extents) box from ISO BMFF containers.
@@ -185,14 +181,6 @@ final class IspeBoxParsingTest extends TestCase
      */
     private function createExtractor(string $data): IsoBmffParser
     {
-        $fh = fopen('php://temp', 'wb+');
-        if ($fh === false) {
-            self::fail('Unable to open temporary stream for ISO BMFF test data.');
-        }
-
-        fwrite($fh, $data);
-        rewind($fh);
-
-        return new IsoBmffParser(new Stream($fh, strlen($data)));
+        return new IsoBmffParser($this->createIsoBmffTempStream($data));
     }
 }

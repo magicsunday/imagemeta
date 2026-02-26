@@ -48,10 +48,7 @@ use ReflectionMethod;
 
 use function array_map;
 use function chr;
-use function fopen;
-use function fwrite;
 use function pack;
-use function rewind;
 use function str_repeat;
 use function strlen;
 
@@ -102,15 +99,7 @@ final class BoxPayloadCollectorTest extends TestCase
      */
     private function createCollector(string $data): array
     {
-        $handle = fopen('php://temp', 'wb+');
-        if ($handle === false) {
-            self::fail('Unable to create temporary stream handle.');
-        }
-
-        fwrite($handle, $data);
-        rewind($handle);
-
-        $stream    = new Stream($handle, strlen($data));
+        $stream    = $this->createIsoBmffTempStream($data);
         $navigator = new BoxNavigator($stream);
 
         $keyResolver     = new QuickTimeKeyResolver($navigator);

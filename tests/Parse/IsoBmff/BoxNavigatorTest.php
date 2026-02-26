@@ -27,10 +27,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
-use function fopen;
-use function fwrite;
 use function pack;
-use function rewind;
 use function strlen;
 
 /**
@@ -64,24 +61,17 @@ final class BoxNavigatorTest extends TestCase
      */
     private function createNavigatorWithContainer(string $data): array
     {
-        $handle = fopen('php://temp', 'wb+');
-        if ($handle === false) {
-            self::fail('Unable to create temporary stream handle.');
-        }
-
-        fwrite($handle, $data);
-        rewind($handle);
-
-        $stream    = new Stream($handle, strlen($data));
-        $navigator = new BoxNavigator($stream);
-        $window    = $stream->window(0, strlen($data));
+        $contentSize = strlen($data);
+        $stream      = $this->createIsoBmffTempStream($data);
+        $navigator   = new BoxNavigator($stream);
+        $window      = $stream->window(0, $contentSize);
 
         $container = new BoxDescriptor(
             type: 'root',
-            size: strlen($data),
+            size: $contentSize,
             offset: 0,
             contentOffset: 0,
-            contentSize: strlen($data),
+            contentSize: $contentSize,
             window: $window,
             userType: null,
         );
@@ -94,15 +84,7 @@ final class BoxNavigatorTest extends TestCase
      */
     private function createNavigator(string $data): BoxNavigator
     {
-        $handle = fopen('php://temp', 'wb+');
-        if ($handle === false) {
-            self::fail('Unable to create temporary stream handle.');
-        }
-
-        fwrite($handle, $data);
-        rewind($handle);
-
-        return new BoxNavigator(new Stream($handle, strlen($data)));
+        return new BoxNavigator($this->createIsoBmffTempStream($data));
     }
 
     // =========================================================================
@@ -575,17 +557,7 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function readAllReturnsEmptyForZeroSizeWindow(): void
     {
-        $data = 'X';
-
-        $handle = fopen('php://temp', 'wb+');
-        if ($handle === false) {
-            self::fail('Unable to create temporary stream handle.');
-        }
-
-        fwrite($handle, $data);
-        rewind($handle);
-
-        $stream    = new Stream($handle, strlen($data));
+        $stream    = $this->createIsoBmffTempStream('X');
         $navigator = new BoxNavigator($stream);
         $window    = $stream->window(0, 0);
 

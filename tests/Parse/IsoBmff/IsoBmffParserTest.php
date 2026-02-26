@@ -47,13 +47,10 @@ use ReflectionMethod;
 use ReflectionProperty;
 
 use function chr;
-use function fopen;
-use function fwrite;
 use function hex2bin;
 use function iconv;
 use function is_int;
 use function pack;
-use function rewind;
 use function sort;
 use function strlen;
 use function substr;
@@ -7250,15 +7247,7 @@ final class IsoBmffParserTest extends TestCase
      */
     private function createExtractor(string $data): IsoBmffParser
     {
-        $fh = fopen('php://temp', 'wb+');
-        if ($fh === false) {
-            self::fail('Unable to open temporary stream for ISO BMFF test data.');
-        }
-
-        fwrite($fh, $data);
-        rewind($fh);
-
-        return new IsoBmffParser(new Stream($fh, strlen($data)));
+        return new IsoBmffParser($this->createIsoBmffTempStream($data));
     }
 
     /**

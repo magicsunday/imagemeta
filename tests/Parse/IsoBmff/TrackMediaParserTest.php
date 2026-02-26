@@ -30,10 +30,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
-use function fopen;
-use function fwrite;
 use function pack;
-use function rewind;
 use function str_repeat;
 use function strlen;
 
@@ -67,22 +64,9 @@ final class TrackMediaParserTest extends TestCase
      */
     private function createParserWithDescriptor(string $type, string $content): array
     {
-        $handle = fopen('php://temp', 'wb+');
-        if ($handle === false) {
-            self::fail('Unable to create temporary stream handle.');
-        }
-
-        $bytesWritten = fwrite($handle, $content);
-        if ($bytesWritten !== strlen($content)) {
-            self::fail('Unable to populate temporary stream data.');
-        }
-
-        if (rewind($handle) === false) {
-            self::fail('Unable to rewind temporary stream handle.');
-        }
-
-        $stream    = new Stream($handle, strlen($content));
-        $navigator = new BoxNavigator($stream);
+        $contentLength = strlen($content);
+        $stream        = $this->createIsoBmffTempStream($content);
+        $navigator     = new BoxNavigator($stream);
 
         $parser = new TrackMediaParser(
             $navigator,
@@ -90,14 +74,14 @@ final class TrackMediaParserTest extends TestCase
             static fn (BoxDescriptor $box): array => [],
         );
 
-        $window = $stream->window(0, strlen($content));
+        $window = $stream->window(0, $contentLength);
 
         $descriptor = new BoxDescriptor(
             type: $type,
-            size: 8 + strlen($content),
+            size: 8 + $contentLength,
             offset: 0,
             contentOffset: 0,
-            contentSize: strlen($content),
+            contentSize: $contentLength,
             window: $window,
             userType: null,
         );
