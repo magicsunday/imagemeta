@@ -284,6 +284,7 @@ final class TiffIfdTraverser
                         // TIFF 6.0 §2 (file-relative offsets), DNG 1.7.1.0 §DNG Format Overview (SubIFD Trees).
                         continue;
                     }
+
                     if ($offset !== null) {
                         $offsets[] = $offset;
                     }
