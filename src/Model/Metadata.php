@@ -28,6 +28,33 @@ use MagicSunday\ImageMeta\Value\StructuredMetadata;
 
 /**
  * Aggregates extracted metadata blobs alongside parsed representations.
+ *
+ * Not every property is populated for every container type.  The table below
+ * shows which groups of properties are available per container format detected
+ * by {@see \MagicSunday\ImageMeta\MetadataReader::read()}.
+ *
+ * | Property group                     | JPEG | ISO BMFF | TIFF |
+ * |------------------------------------|:----:|:--------:|:----:|
+ * | File identity (mimeType, fileSize, |      |          |      |
+ * |   extension, digestSha1, digestMd5)|  Y   |    Y     |  Y   |
+ * | EXIF (exifBlobs, exifDoc,          |      |          |      |
+ * |   makerNotes)                      |  Y   |    Y     |  Y   |
+ * | XMP (xmpBlobs, xmpDoc)             |  Y   |    Y     |  --  |
+ * | QuickTime (quickTime)              |  --  |    Y     |  --  |
+ * | JPEG segments (iccProfile,         |      |          |      |
+ * |   iccSegments, flashPixStreams,     |      |          |      |
+ * |   mpfDocument, jpegAudioStreams)    |  Y   |    --    |  --  |
+ * | JPEG frame (jpegBitsPerSample,     |      |          |      |
+ * |   jpegFrameSamplingFactors,         |      |          |      |
+ * |   jpegYCbCrSubSampling,            |      |          |      |
+ * |   jpegFrameWidth, jpegFrameHeight)  |  Y   |    --    |  --  |
+ * | ISO BMFF (isoBmffItemReferences,   |      |          |      |
+ * |   isoBmffDataReferences,            |      |          |      |
+ * |   isoBmffUnresolvedItems)           |  --  |    Y     |  --  |
+ * | IPTC (iptcBlobs, iptcDoc)           |  Y   |    --    |  --  |
+ *
+ * Properties outside their supported container group remain at their default
+ * value (null for scalars/objects, empty array for list types).
  */
 final readonly class Metadata
 {
@@ -36,51 +63,51 @@ final readonly class Metadata
      */
     private StructuredMetadataCache $structuredCache;
 
-    /** @var list<string> TIFF-EXIF blobs (first is primary). */
+    /** @var list<string> TIFF-EXIF blobs (first is primary). [JPEG, ISO BMFF, TIFF] */
     public array $exifBlobs;
 
-    /** @var list<string> XMP packets (RDF/XML), first is primary. */
+    /** @var list<string> XMP packets (RDF/XML), first is primary. [JPEG, ISO BMFF] */
     public array $xmpBlobs;
 
-    /** @var list<string> Raw ICC APP2 segments in encounter order. */
+    /** @var list<string> Raw ICC APP2 segments in encounter order. [JPEG only] */
     public array $iccSegments;
 
-    /** @var list<JpegAudioStream> EXIF audio streams embedded in JPEG APP2 markers. */
+    /** @var list<JpegAudioStream> EXIF audio streams embedded in JPEG APP2 markers. [JPEG only] */
     public array $jpegAudioStreams;
 
-    /** @var list<IsoBmffUnresolvedItem> ISO BMFF item payloads that could not be resolved. */
+    /** @var list<IsoBmffUnresolvedItem> ISO BMFF item payloads that could not be resolved. [ISO BMFF only] */
     public array $isoBmffUnresolvedItems;
 
-    /** @var list<string> IPTC payloads captured from JPEG APP13 segments. */
+    /** @var list<string> IPTC payloads captured from JPEG APP13 segments. [JPEG only] */
     public array $iptcBlobs;
 
     /**
-     * @param list<string>                                         $exifBlobs                TIFF-EXIF blobs (first is primary)
-     * @param QuickTimeMeta|null                                   $quickTime                QuickTime metadata extracted from ISO BMFF containers.
-     * @param ParsedExif|null                                      $exifDoc                  Parsed representation of the primary EXIF document.
-     * @param list<string>                                         $xmpBlobs                 XMP packets (RDF/XML), first is primary
-     * @param XmpDocument|null                                     $xmpDoc                   Parsed representation of the primary XMP packet.
-     * @param MakerNotesRecord|null                                $makerNotes               Decoded maker notes metadata for the primary EXIF blob.
-     * @param string|null                                          $iccProfile               Binary ICC profile when available.
-     * @param list<string>                                         $iccSegments              Raw ICC APP2 segments in encounter order.
-     * @param array<int, string>                                   $flashPixStreams          Concatenated FlashPix extension streams keyed by FPXR contents-list index.
-     * @param MpfDocument|null                                     $mpfDocument              Parsed MPF document derived from APP2 segments.
-     * @param list<JpegAudioStream>                                $jpegAudioStreams         EXIF audio streams embedded in JPEG APP2 markers.
-     * @param int|null                                             $jpegBitsPerSample        Sample precision reported by the JPEG frame header.
-     * @param array<int, array{horizontal:int, vertical:int}>|null $jpegFrameSamplingFactors Component sampling factors by identifier.
-     * @param array{0:int,1:int}|null                              $jpegYCbCrSubSampling     Derived YCbCr subsampling from the JPEG frame header.
-     * @param int|null                                             $jpegFrameWidth           Frame width reported by the JPEG start of frame marker.
-     * @param int|null                                             $jpegFrameHeight          Frame height reported by the JPEG start of frame marker.
-     * @param string|null                                          $mimeType                 Detected mime type for the source file.
-     * @param int|null                                             $fileSize                 Size of the source file in bytes.
-     * @param string|null                                          $extension                Lowercase file extension extracted from the path.
-     * @param string|null                                          $digestSha1               Lowercase hexadecimal SHA-1 digest of the payload.
-     * @param string|null                                          $digestMd5                Lowercase hexadecimal MD5 digest of the payload.
-     * @param IsoBmffItemReferenceMap|null                         $isoBmffItemReferences    ISO BMFF item references extracted from metadata boxes.
-     * @param IsoBmffDataReferenceMap|null                         $isoBmffDataReferences    ISO BMFF data references extracted from metadata boxes.
-     * @param list<IsoBmffUnresolvedItem>                          $isoBmffUnresolvedItems   ISO BMFF item payloads that could not be resolved.
-     * @param list<string>                                         $iptcBlobs                IPTC payloads captured from JPEG APP13 segments.
-     * @param IptcDocument|null                                    $iptcDoc                  Parsed IPTC IIM datasets from APP13 payloads.
+     * @param list<string>                                         $exifBlobs                TIFF-EXIF blobs (first is primary). [JPEG, ISO BMFF, TIFF]
+     * @param QuickTimeMeta|null                                   $quickTime                QuickTime metadata extracted from ISO BMFF containers. [ISO BMFF only]
+     * @param ParsedExif|null                                      $exifDoc                  Parsed representation of the primary EXIF document. [JPEG, ISO BMFF, TIFF]
+     * @param list<string>                                         $xmpBlobs                 XMP packets (RDF/XML), first is primary. [JPEG, ISO BMFF]
+     * @param XmpDocument|null                                     $xmpDoc                   Parsed representation of the primary XMP packet. [JPEG, ISO BMFF]
+     * @param MakerNotesRecord|null                                $makerNotes               Decoded maker notes metadata for the primary EXIF blob. [JPEG, ISO BMFF, TIFF]
+     * @param string|null                                          $iccProfile               Binary ICC profile when available. [JPEG only]
+     * @param list<string>                                         $iccSegments              Raw ICC APP2 segments in encounter order. [JPEG only]
+     * @param array<int, string>                                   $flashPixStreams          Concatenated FlashPix extension streams keyed by FPXR contents-list index. [JPEG only]
+     * @param MpfDocument|null                                     $mpfDocument              Parsed MPF document derived from APP2 segments. [JPEG only]
+     * @param list<JpegAudioStream>                                $jpegAudioStreams         EXIF audio streams embedded in JPEG APP2 markers. [JPEG only]
+     * @param int|null                                             $jpegBitsPerSample        Sample precision reported by the JPEG frame header. [JPEG only]
+     * @param array<int, array{horizontal:int, vertical:int}>|null $jpegFrameSamplingFactors Component sampling factors by identifier. [JPEG only]
+     * @param array{0:int,1:int}|null                              $jpegYCbCrSubSampling     Derived YCbCr subsampling from the JPEG frame header. [JPEG only]
+     * @param int|null                                             $jpegFrameWidth           Frame width reported by the JPEG start of frame marker. [JPEG only]
+     * @param int|null                                             $jpegFrameHeight          Frame height reported by the JPEG start of frame marker. [JPEG only]
+     * @param string|null                                          $mimeType                 Detected mime type for the source file. [JPEG, ISO BMFF, TIFF]
+     * @param int|null                                             $fileSize                 Size of the source file in bytes. [JPEG, ISO BMFF, TIFF]
+     * @param string|null                                          $extension                Lowercase file extension extracted from the path. [JPEG, ISO BMFF, TIFF]
+     * @param string|null                                          $digestSha1               Lowercase hexadecimal SHA-1 digest of the payload. [JPEG, ISO BMFF, TIFF]
+     * @param string|null                                          $digestMd5                Lowercase hexadecimal MD5 digest of the payload. [JPEG, ISO BMFF, TIFF]
+     * @param IsoBmffItemReferenceMap|null                         $isoBmffItemReferences    ISO BMFF item references extracted from metadata boxes. [ISO BMFF only]
+     * @param IsoBmffDataReferenceMap|null                         $isoBmffDataReferences    ISO BMFF data references extracted from metadata boxes. [ISO BMFF only]
+     * @param list<IsoBmffUnresolvedItem>                          $isoBmffUnresolvedItems   ISO BMFF item payloads that could not be resolved. [ISO BMFF only]
+     * @param list<string>                                         $iptcBlobs                IPTC payloads captured from JPEG APP13 segments. [JPEG only]
+     * @param IptcDocument|null                                    $iptcDoc                  Parsed IPTC IIM datasets from APP13 payloads. [JPEG only]
      * @param XmpParserInterface|null                              $xmpParser                Injected XMP parser for selective document creation.
      * @param IptcParserInterface|null                             $iptcParser               Injected IPTC parser for selective document creation.
      */
