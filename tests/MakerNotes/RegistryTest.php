@@ -24,6 +24,11 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
+
+use function array_slice;
+use function file;
+use function implode;
 
 /**
  * Exercises the maker notes Registry for decoder lookup by make strings.
@@ -122,5 +127,22 @@ final class RegistryTest extends TestCase
         self::assertInstanceOf(NikonDecoder::class, $registry->find('Nikon Corporation'));
         self::assertInstanceOf(SamsungDecoder::class, $registry->find('SAMSUNG'));
         self::assertInstanceOf(SonyDecoder::class, $registry->find('Sony Corporation'));
+    }
+
+    #[Test]
+    public function factoryAvoidsRedundantUppercaseSamsungRegistration(): void
+    {
+        $method = new ReflectionMethod(RegistryFactory::class, 'createDefault');
+        $file   = file($method->getFileName()) ?: [];
+        $body   = implode(
+            '',
+            array_slice(
+                $file,
+                $method->getStartLine() - 1,
+                $method->getEndLine() - $method->getStartLine() + 1,
+            ),
+        );
+
+        self::assertStringNotContainsString("\$registry->register('SAMSUNG', \$samsungDecoder);", $body);
     }
 }
