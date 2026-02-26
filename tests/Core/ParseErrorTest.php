@@ -21,9 +21,6 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
-use function restore_error_handler;
-use function set_error_handler;
-use function str_contains;
 use function sys_get_temp_dir;
 use function uniqid;
 
@@ -66,24 +63,9 @@ final class ParseErrorTest extends TestCase
         $path = sys_get_temp_dir() . '/imagemeta-missing-' . uniqid('', true);
 
         $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1010);
         $this->expectExceptionMessage('Cannot open the provided file path.');
 
-        $previousHandler = set_error_handler(static function (int $errno, string $errstr) use ($path, &$previousHandler): bool {
-            if (str_contains($errstr, $path)) {
-                return true;
-            }
-
-            if ($previousHandler !== null) {
-                return (bool) $previousHandler($errno, $errstr);
-            }
-
-            return false;
-        });
-
-        try {
-            Stream::fromPath($path);
-        } finally {
-            restore_error_handler();
-        }
+        Stream::fromPath($path);
     }
 }
