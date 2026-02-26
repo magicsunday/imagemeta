@@ -46,8 +46,8 @@ ImageMeta is a PHP library for read-only metadata extraction from image and medi
 | Main API | `MagicSunday\ImageMeta\MetadataReader`                  |
 | Output   | Raw `Model\Metadata` + typed `Value\StructuredMetadata` |
 
-## ❓ What is this?
-ImageMeta reads metadata from supported containers and returns a unified, typed PHP model. It is designed for integration scenarios that need predictable parsing behavior across EXIF, XMP, IPTC, and QuickTime metadata sources.
+## ✅ What it does
+ImageMeta reads metadata from supported containers and returns one typed PHP model you can use in application code.
 
 ## 🎯 Why does this exist?
 Many PHP applications need one consistent metadata API across modern container formats and metadata families. Typical standard functions such as `exif_read_data()` are EXIF-focused and do not provide a unified, typed model across JPEG, ISO BMFF, and TIFF-based inputs. This project exists to close that integration gap with deterministic parser behavior.
@@ -87,7 +87,7 @@ Notes:
 - Container support is signature-based; there is no static extension whitelist.
 - File-level support depends on whether the input actually contains parseable metadata blocks.
 
-## 🚀 Usage
+## 🚀 Quick Start
 
 ```bash
 composer require magicsunday/imagemeta
@@ -103,14 +103,84 @@ use MagicSunday\ImageMeta\MetadataReader;
 $metadata = MetadataReader::createDefault()->read('/path/to/photo.heic');
 $structured = $metadata->structured();
 
-$cameraMake = $structured->camera->make;
-$iso = $structured->exposure->iso;
-$latitude = $structured->gps->latitudeCoordinate?->signed;
+$cameraMake = $structured->hardware->camera->make;
+$iso = $structured->settings->exposure->settings?->iso;
+$latitude = $structured->locationTime->gps->position?->latitudeCoordinate?->signed;
 
 // Optional low-level access:
 $exif = $metadata->exifDoc;
 $xmp = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
 $quickTime = $metadata->quickTime;
+```
+
+Use this when your application needs one metadata read path for JPEG, ISO BMFF, and TIFF-based files.
+
+## 🧪 How to use it
+
+### Common scenario: normalized metadata for business logic
+
+```php
+$metadata = \MagicSunday\ImageMeta\MetadataReader::createDefault()->read('/path/to/file.jpg');
+$structured = $metadata->structured();
+
+$capturedAt = $structured->locationTime->capture->dateTime;
+$lensModel = $structured->hardware->lens->lensModel;
+$gps = $structured->locationTime->gps->position?->latitudeCoordinate?->signed;
+```
+
+Use `structured()` when you need stable property names across different container formats.
+
+### Optional scenario: include content digests
+
+```php
+$metadata = \MagicSunday\ImageMeta\MetadataReader::createDefault()->read('/path/to/file.heic', true);
+$sha1 = $metadata->digestSha1;
+$md5 = $metadata->digestMd5;
+```
+
+Set the second `read()` argument to `true` when you need reproducible file identity values for deduplication or audit workflows.
+
+### Optional scenario: access low-level parser output
+
+```php
+$metadata = \MagicSunday\ImageMeta\MetadataReader::createDefault()->read('/path/to/file.mov');
+
+$exifBlobCount = count($metadata->exifBlobs);
+$xmpDocument = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+$quickTime = $metadata->quickTime;
+```
+
+Use low-level fields when your integration needs source-level payload inspection in addition to normalized structured values.
+
+## 🧾 Configuration / API reference
+
+### `MetadataReader::createDefault(?TiffExifParserInterface $tiffReader = null): MetadataReader`
+
+- **Description:** Creates a `MetadataReader` with bundled parser components.
+- **Parameters:**
+  - `$tiffReader` (optional): provide a custom TIFF/EXIF parser implementation for advanced integration and testing.
+- **Returns:** `MetadataReader`.
+- **Error behavior:** this factory method does not perform file I/O and does not throw parser errors on its own.
+- **Example:**
+
+```php
+$reader = \MagicSunday\ImageMeta\MetadataReader::createDefault();
+```
+
+### `MetadataReader::read(string $path, bool $withDigests = false): Metadata`
+
+- **Description:** Detects the container type from file content and extracts available metadata into one `Metadata` aggregate.
+- **Parameters:**
+  - `$path`: absolute or relative file path to a local file. Directories and unsupported or malformed files are rejected.
+  - `$withDigests`: when `true`, calculates SHA-1 and MD5 and adds them to the returned metadata.
+- **Returns:** `MagicSunday\ImageMeta\Model\Metadata`.
+- **Error behavior:**
+  - Throws `MagicSunday\ImageMeta\Core\ParseError` for malformed/unsupported content, non-file paths, and parser validation failures.
+  - Throws `MagicSunday\ImageMeta\Core\BoundsError` for out-of-range stream access.
+- **Example:**
+
+```php
+$metadata = \MagicSunday\ImageMeta\MetadataReader::createDefault()->read('/path/to/file.avif', true);
 ```
 
 ## 🛡️ Error handling & guarantees
@@ -125,6 +195,20 @@ $quickTime = $metadata->quickTime;
 - **Not guaranteed:**
   - Full coverage of all proprietary maker-note formats.
   - Fully streaming behavior in every path (standalone TIFF is currently materialized before EXIF parsing).
+
+## 🛠️ Troubleshooting
+
+### `ParseError`: "Path is a directory, not a file"
+
+`read()` only accepts file paths. Pass a concrete file path, not a directory path.
+
+### `ParseError` on empty, unsupported, or corrupted files
+
+The reader uses signature-based detection and strict parser validation. Verify that the file contains a supported container (`JPEG`, `ISO BMFF`, `TIFF`) and valid metadata blocks.
+
+### Missing fields in `structured()`
+
+Structured values are nullable when a source payload does not provide the corresponding metadata. Check low-level fields (`exifDoc`, `xmpDoc`, `quickTime`, blobs) if you need to diagnose source availability.
 
 ## 🛠️ Development
 
