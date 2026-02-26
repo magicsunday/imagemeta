@@ -2220,6 +2220,12 @@ final class MetadataFormatter
      */
     private function formatShutterSpeed(float $exposureTime): string
     {
+        // Some files carry malformed EXIF ExposureTime values of 0; treat them
+        // as an unknown/zero shutter speed instead of dividing by zero.
+        if ($exposureTime <= 0.0) {
+            return '0';
+        }
+
         if ($exposureTime >= 1) {
             return number_format($exposureTime, 1);
         }
