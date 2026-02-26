@@ -37,6 +37,14 @@ use function substr;
  * DNG 1.7.1.0 defines structural and semantic rules for camera profiles,
  * tone curves, hue/saturation maps, look tables, gain maps, ICC profile
  * pairs, and related metadata validated by this class.
+ *
+ * @phpstan-type GainTableMap2Header = array{
+ *     mapPointsV:int,
+ *     mapPointsH:int,
+ *     mapPointsN:int,
+ *     dataType:int,
+ *     gamma:float
+ * }
  */
 final readonly class DngProfileValidator
 {
@@ -715,8 +723,21 @@ final readonly class DngProfileValidator
 
         $payload = $entry->value;
         PayloadGuard::ensureMinimumLength($payload, 80, 'ProfileGainTableMap2 payload', 1516);
-        $length = strlen($payload);
+        $header = $this->decodeProfileGainTableMap2Header($payload);
 
+        $bytesPerElement = $this->validateProfileGainTableMap2Header($header);
+        $this->validateProfileGainTableMap2Length(strlen($payload), $header, $bytesPerElement);
+    }
+
+    /**
+     * Decodes ProfileGainTableMap2 fixed header fields used for staged validation.
+     *
+     * @param string $payload ProfileGainTableMap2 raw payload bytes.
+     *
+     * @return GainTableMap2Header
+     */
+    private function decodeProfileGainTableMap2Header(string $payload): array
+    {
         // DNG 1.7.1.0 ProfileGainTableMap2 80-byte header layout:
         // Bytes  0– 3: MapPointsV (uint32)
         // Bytes  4– 7: MapPointsH (uint32)
@@ -726,28 +747,47 @@ final readonly class DngProfileValidator
         // Bytes 64–67: DataType (uint32, 0=float32/1=float16/2=uint8/3=uint16)
         // Bytes 68–71: Gamma (float32, 0.25–4.0)
         // Bytes 72–79: reserved
-        $mapPointsV = $this->support->unpackU32(substr($payload, 0, 4));
-        $mapPointsH = $this->support->unpackU32(substr($payload, 4, 4));
-        $mapPointsN = $this->support->unpackU32(substr($payload, 40, 4));
-        $dataType   = $this->support->unpackU32(substr($payload, 64, 4));
-        $gamma      = $this->support->unpackFloat(substr($payload, 68, 4));
+        return [
+            'mapPointsV' => $this->support->unpackU32(substr($payload, 0, 4)),
+            'mapPointsH' => $this->support->unpackU32(substr($payload, 4, 4)),
+            'mapPointsN' => $this->support->unpackU32(substr($payload, 40, 4)),
+            'dataType'   => $this->support->unpackU32(substr($payload, 64, 4)),
+            'gamma'      => $this->support->unpackFloat(substr($payload, 68, 4)),
+        ];
+    }
 
-        if (!isset(self::GAIN_TABLE_MAP2_ELEMENT_BYTES[$dataType])) {
+    /**
+     * Validates ProfileGainTableMap2 scalar header values and returns bytes per element.
+     *
+     * @param GainTableMap2Header $header
+     */
+    private function validateProfileGainTableMap2Header(array $header): int
+    {
+        if (!isset(self::GAIN_TABLE_MAP2_ELEMENT_BYTES[$header['dataType']])) {
             throw new ParseError(
-                sprintf('ProfileGainTableMap2 DataType must be 0..3, got %d.', $dataType),
+                sprintf('ProfileGainTableMap2 DataType must be 0..3, got %d.', $header['dataType']),
                 1517,
             );
         }
 
-        if ($gamma < 0.25 || $gamma > 4.0) {
+        if ($header['gamma'] < 0.25 || $header['gamma'] > 4.0) {
             throw new ParseError(
-                sprintf('ProfileGainTableMap2 Gamma must be 0.25..4.0, got %g.', $gamma),
+                sprintf('ProfileGainTableMap2 Gamma must be 0.25..4.0, got %g.', $header['gamma']),
                 1518,
             );
         }
 
-        $bytesPerElement = self::GAIN_TABLE_MAP2_ELEMENT_BYTES[$dataType];
-        $expectedLength  = 80 + ($bytesPerElement * $mapPointsV * $mapPointsH * $mapPointsN);
+        return self::GAIN_TABLE_MAP2_ELEMENT_BYTES[$header['dataType']];
+    }
+
+    /**
+     * Validates ProfileGainTableMap2 payload length against declared map dimensions.
+     *
+     * @param GainTableMap2Header $header
+     */
+    private function validateProfileGainTableMap2Length(int $length, array $header, int $bytesPerElement): void
+    {
+        $expectedLength = 80 + ($bytesPerElement * $header['mapPointsV'] * $header['mapPointsH'] * $header['mapPointsN']);
 
         if ($length !== $expectedLength) {
             throw new ParseError(
@@ -755,9 +795,9 @@ final readonly class DngProfileValidator
                     'ProfileGainTableMap2 count mismatch: expected %d (80 + %d*%d*%d*%d), got %d.',
                     $expectedLength,
                     $bytesPerElement,
-                    $mapPointsV,
-                    $mapPointsH,
-                    $mapPointsN,
+                    $header['mapPointsV'],
+                    $header['mapPointsH'],
+                    $header['mapPointsN'],
                     $length,
                 ),
                 1519,
@@ -843,17 +883,18 @@ final readonly class DngProfileValidator
             );
         }
 
-        if ($mapPointsV > intdiv(PHP_INT_MAX, $mapPointsH)) {
-            throw new ParseError('ProfileGainTableMap size multiplication overflow (V*H).', 1689);
-        }
-
-        $vh = $mapPointsV * $mapPointsH;
-
-        if ($vh > intdiv(PHP_INT_MAX, $mapPointsN)) {
-            throw new ParseError('ProfileGainTableMap size multiplication overflow (V*H*N).', 1690);
-        }
-
-        $entryCount = $vh * $mapPointsN;
+        $vh = $this->checkedMultiply(
+            $mapPointsV,
+            $mapPointsH,
+            'ProfileGainTableMap size multiplication overflow (V*H).',
+            1689,
+        );
+        $entryCount = $this->checkedMultiply(
+            $vh,
+            $mapPointsN,
+            'ProfileGainTableMap size multiplication overflow (V*H*N).',
+            1690,
+        );
 
         if ($entryCount > intdiv(PHP_INT_MAX - 64, 4)) {
             throw new ParseError('ProfileGainTableMap payload size overflow.', 1691);
@@ -888,6 +929,22 @@ final readonly class DngProfileValidator
                 );
             }
         }
+    }
+
+    /**
+     * Multiplies two integers with overflow checking against PHP_INT_MAX.
+     */
+    private function checkedMultiply(int $left, int $right, string $overflowMessage, int $code): int
+    {
+        if ($left === 0 || $right === 0) {
+            return 0;
+        }
+
+        if ($left > intdiv(PHP_INT_MAX, $right)) {
+            throw new ParseError($overflowMessage, $code);
+        }
+
+        return $left * $right;
     }
 
     /**
@@ -958,19 +1015,7 @@ final readonly class DngProfileValidator
             return;
         }
 
-        if ($entry->type !== TiffConst::TYPE_LONG) {
-            throw new ParseError(
-                'ExtraCameraProfiles must use LONG type per DNG 1.7.1.0.',
-                1586,
-            );
-        }
-
-        if ($entry->count < 1) {
-            throw new ParseError(
-                'ExtraCameraProfiles must contain at least one profile offset per DNG 1.7.1.0.',
-                1587,
-            );
-        }
+        $this->validateExtraCameraProfilesEntry($entry);
 
         $profileOffsets = $this->extractDngExtraCameraProfileOffsets($entry);
         if (count($profileOffsets) !== $entry->count) {
@@ -984,81 +1029,110 @@ final readonly class DngProfileValidator
         $blobSize = $buffer->size();
 
         foreach ($profileOffsets as $profileIndex => $profileOffset) {
-            if (($profileOffset < 0) || ($profileOffset > ($blobSize - 8))) {
-                throw new ParseError(
-                    sprintf(
-                        'ExtraCameraProfiles offset #%d (%d) is outside TIFF payload bounds.',
-                        $profileIndex + 1,
-                        $profileOffset,
-                    ),
-                    1589,
-                );
-            }
+            $this->validateExtraCameraProfileRecord($profileIndex, $profileOffset, $blobSize);
+        }
+    }
 
-            $cursorBeforeRead = $buffer->tell();
-            $buffer->seek($profileOffset);
-            $profileHeader = $buffer->read(8);
-            $buffer->seek($cursorBeforeRead);
-
-            $byteOrderMarker = substr($profileHeader, 0, 2);
-            if ($byteOrderMarker === 'II') {
-                $profileIsLittleEndian = true;
-            } elseif ($byteOrderMarker === 'MM') {
-                $profileIsLittleEndian = false;
-            } else {
-                throw new ParseError(
-                    sprintf(
-                        'ExtraCameraProfiles profile #%d has invalid byte-order marker 0x%02X%02X.',
-                        $profileIndex + 1,
-                        ord($byteOrderMarker[0]),
-                        ord($byteOrderMarker[1]),
-                    ),
-                    1590,
-                );
-            }
-
-            $magicFormat = $profileIsLittleEndian ? 'v' : 'n';
-            $magicValue  = Unpack::int($magicFormat, substr($profileHeader, 2, 2), 'ExtraCameraProfiles magic');
-            if ($magicValue !== 0x4352) {
-                throw new ParseError(
-                    sprintf(
-                        'ExtraCameraProfiles profile #%d has invalid magic 0x%04X (expected 0x4352).',
-                        $profileIndex + 1,
-                        $magicValue,
-                    ),
-                    1591,
-                );
-            }
-
-            $ifdOffsetFormat = $profileIsLittleEndian ? 'V' : 'N';
-            $innerIfdOffset  = Unpack::int(
-                $ifdOffsetFormat,
-                substr($profileHeader, 4, 4),
-                'ExtraCameraProfiles inner IFD offset',
+    /**
+     * Validates the ExtraCameraProfiles tag-level type/count constraints.
+     */
+    private function validateExtraCameraProfilesEntry(IfdEntry $entry): void
+    {
+        if ($entry->type !== TiffConst::TYPE_LONG) {
+            throw new ParseError(
+                'ExtraCameraProfiles must use LONG type per DNG 1.7.1.0.',
+                1586,
             );
+        }
 
-            if ($innerIfdOffset < 8) {
-                throw new ParseError(
-                    sprintf(
-                        'ExtraCameraProfiles profile #%d inner IFD offset %d must be >= 8.',
-                        $profileIndex + 1,
-                        $innerIfdOffset,
-                    ),
-                    1592,
-                );
-            }
+        if ($entry->count < 1) {
+            throw new ParseError(
+                'ExtraCameraProfiles must contain at least one profile offset per DNG 1.7.1.0.',
+                1587,
+            );
+        }
+    }
 
-            $absoluteInnerIfdOffset = $profileOffset + $innerIfdOffset;
-            if ($absoluteInnerIfdOffset > ($blobSize - 2)) {
-                throw new ParseError(
-                    sprintf(
-                        'ExtraCameraProfiles profile #%d inner IFD offset %d is outside TIFF payload bounds.',
-                        $profileIndex + 1,
-                        $innerIfdOffset,
-                    ),
-                    1593,
-                );
-            }
+    /**
+     * Validates one ExtraCameraProfiles offset target and its embedded profile header.
+     */
+    private function validateExtraCameraProfileRecord(int $profileIndex, int $profileOffset, int $blobSize): void
+    {
+        if (($profileOffset < 0) || ($profileOffset > ($blobSize - 8))) {
+            throw new ParseError(
+                sprintf(
+                    'ExtraCameraProfiles offset #%d (%d) is outside TIFF payload bounds.',
+                    $profileIndex + 1,
+                    $profileOffset,
+                ),
+                1589,
+            );
+        }
+
+        $buffer           = $this->support->buffer();
+        $cursorBeforeRead = $buffer->tell();
+        $buffer->seek($profileOffset);
+        $profileHeader = $buffer->read(8);
+        $buffer->seek($cursorBeforeRead);
+
+        $byteOrderMarker = substr($profileHeader, 0, 2);
+        if ($byteOrderMarker === 'II') {
+            $profileIsLittleEndian = true;
+        } elseif ($byteOrderMarker === 'MM') {
+            $profileIsLittleEndian = false;
+        } else {
+            throw new ParseError(
+                sprintf(
+                    'ExtraCameraProfiles profile #%d has invalid byte-order marker 0x%02X%02X.',
+                    $profileIndex + 1,
+                    ord($byteOrderMarker[0]),
+                    ord($byteOrderMarker[1]),
+                ),
+                1590,
+            );
+        }
+
+        $magicFormat = $profileIsLittleEndian ? 'v' : 'n';
+        $magicValue  = Unpack::int($magicFormat, substr($profileHeader, 2, 2), 'ExtraCameraProfiles magic');
+        if ($magicValue !== 0x4352) {
+            throw new ParseError(
+                sprintf(
+                    'ExtraCameraProfiles profile #%d has invalid magic 0x%04X (expected 0x4352).',
+                    $profileIndex + 1,
+                    $magicValue,
+                ),
+                1591,
+            );
+        }
+
+        $ifdOffsetFormat = $profileIsLittleEndian ? 'V' : 'N';
+        $innerIfdOffset  = Unpack::int(
+            $ifdOffsetFormat,
+            substr($profileHeader, 4, 4),
+            'ExtraCameraProfiles inner IFD offset',
+        );
+
+        if ($innerIfdOffset < 8) {
+            throw new ParseError(
+                sprintf(
+                    'ExtraCameraProfiles profile #%d inner IFD offset %d must be >= 8.',
+                    $profileIndex + 1,
+                    $innerIfdOffset,
+                ),
+                1592,
+            );
+        }
+
+        $absoluteInnerIfdOffset = $profileOffset + $innerIfdOffset;
+        if ($absoluteInnerIfdOffset > ($blobSize - 2)) {
+            throw new ParseError(
+                sprintf(
+                    'ExtraCameraProfiles profile #%d inner IFD offset %d is outside TIFF payload bounds.',
+                    $profileIndex + 1,
+                    $innerIfdOffset,
+                ),
+                1593,
+            );
         }
     }
 
