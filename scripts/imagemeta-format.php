@@ -947,9 +947,7 @@ final class MetadataFormatter
 
         if (is_float($value)) {
             if ($tagId === ExifTag::FOCAL_LENGTH) {
-                $formatted = rtrim(rtrim(number_format($value, 1, '.', ''), '0'), '.');
-
-                return $formatted . ' mm';
+                return number_format($value, 1, '.', '') . ' mm';
             }
 
             if ($tagId === ExifTag::F_NUMBER || $tagId === ExifTag::APERTURE_VALUE || $tagId === ExifTag::MAX_APERTURE_VALUE) {
@@ -2301,9 +2299,8 @@ final class MetadataFormatter
                 $metadata->jpegFrameWidth,
                 $metadata->jpegFrameHeight
             );
-            $data['Megapixels'] = round(
+            $data['Megapixels'] = $this->formatCompositeMegapixels(
                 ($metadata->jpegFrameWidth * $metadata->jpegFrameHeight) / 1000000,
-                1
             );
         }
 
@@ -2498,6 +2495,22 @@ final class MetadataFormatter
         }
 
         return sprintf('%s.%s', $date, $subSeconds);
+    }
+
+    /**
+     * Formats composite megapixels close to exiftool output precision.
+     */
+    private function formatCompositeMegapixels(float $megapixels): string
+    {
+        if ($megapixels < 0.001) {
+            return number_format($megapixels, 6, '.', '');
+        }
+
+        if ($megapixels < 1.0) {
+            return number_format($megapixels, 3, '.', '');
+        }
+
+        return number_format($megapixels, 1, '.', '');
     }
 
     /**
