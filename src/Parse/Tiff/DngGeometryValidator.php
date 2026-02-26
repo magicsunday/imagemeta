@@ -13,7 +13,6 @@ namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
-use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -291,33 +290,23 @@ final readonly class DngGeometryValidator
      */
     public function validateDngBestQualityScale(Ifd $ifd): void
     {
-        $entry = $ifd->get(DngTag::BEST_QUALITY_SCALE);
+        $scalar = $this->support->extractRationalScalar(
+            $ifd,
+            DngTag::BEST_QUALITY_SCALE,
+            'BestQualityScale',
+            TiffConst::TYPE_RATIONAL,
+            'RATIONAL',
+            1641,
+            1642,
+            1643,
+            'be > 0',
+        );
 
-        if (!$entry instanceof IfdEntry) {
+        if ($scalar === null) {
             return;
         }
 
-        if (($entry->type !== TiffConst::TYPE_RATIONAL) || ($entry->count !== 1)) {
-            throw new ParseError(
-                sprintf(
-                    'BestQualityScale must be RATIONAL[1], got type %d count %d.',
-                    $entry->type,
-                    $entry->count,
-                ),
-                1641,
-            );
-        }
-
-        $value = $entry->value;
-        if (!$value instanceof ExifRational) {
-            throw new ParseError('BestQualityScale must decode to one rational component.', 1642);
-        }
-
-        if ($value->denominator <= 0) {
-            throw new ParseError('BestQualityScale denominator must be > 0.', 1643);
-        }
-
-        if (($value->numerator / $value->denominator) <= 0.0) {
+        if ($scalar <= 0.0) {
             throw new ParseError('BestQualityScale value must be > 0.', 1644);
         }
     }
@@ -329,33 +318,22 @@ final readonly class DngGeometryValidator
      */
     public function validateDngLinearResponseLimit(Ifd $ifd): void
     {
-        $entry = $ifd->get(DngTag::LINEAR_RESPONSE_LIMIT);
+        $limit = $this->support->extractRationalScalar(
+            $ifd,
+            DngTag::LINEAR_RESPONSE_LIMIT,
+            'LinearResponseLimit',
+            TiffConst::TYPE_RATIONAL,
+            'RATIONAL',
+            1645,
+            1646,
+            1647,
+            'be > 0',
+        );
 
-        if (!$entry instanceof IfdEntry) {
+        if ($limit === null) {
             return;
         }
 
-        if (($entry->type !== TiffConst::TYPE_RATIONAL) || ($entry->count !== 1)) {
-            throw new ParseError(
-                sprintf(
-                    'LinearResponseLimit must be RATIONAL[1], got type %d count %d.',
-                    $entry->type,
-                    $entry->count,
-                ),
-                1645,
-            );
-        }
-
-        $value = $entry->value;
-        if (!$value instanceof ExifRational) {
-            throw new ParseError('LinearResponseLimit must decode to one rational component.', 1646);
-        }
-
-        if ($value->denominator <= 0) {
-            throw new ParseError('LinearResponseLimit denominator must be > 0.', 1647);
-        }
-
-        $limit = $value->numerator / $value->denominator;
         if (($limit <= 0.0) || ($limit > 1.0)) {
             throw new ParseError(
                 sprintf('LinearResponseLimit must be in (0.0, 1.0], got %.6F.', $limit),
@@ -484,40 +462,22 @@ final readonly class DngGeometryValidator
         ];
 
         foreach ($tagNames as $tag => $name) {
-            $entry = $ifd->get($tag);
+            $scalar = $this->support->extractRationalScalar(
+                $ifd,
+                $tag,
+                $name,
+                TiffConst::TYPE_RATIONAL,
+                'RATIONAL',
+                1654,
+                1655,
+                1656,
+                'be > 0',
+            );
 
-            if (!$entry instanceof IfdEntry) {
+            if ($scalar === null) {
                 continue;
             }
 
-            if (($entry->type !== TiffConst::TYPE_RATIONAL) || ($entry->count !== 1)) {
-                throw new ParseError(
-                    sprintf(
-                        '%s must be RATIONAL[1], got type %d count %d.',
-                        $name,
-                        $entry->type,
-                        $entry->count,
-                    ),
-                    1654,
-                );
-            }
-
-            $value = $entry->value;
-            if (!$value instanceof ExifRational) {
-                throw new ParseError(
-                    sprintf('%s must decode to one rational component.', $name),
-                    1655,
-                );
-            }
-
-            if ($value->denominator <= 0) {
-                throw new ParseError(
-                    sprintf('%s denominator must be > 0.', $name),
-                    1656,
-                );
-            }
-
-            $scalar = $value->numerator / $value->denominator;
             if (!is_finite($scalar) || ($scalar <= 0.0)) {
                 throw new ParseError(
                     sprintf('%s must be a positive finite scalar, got %.6F.', $name, $scalar),
@@ -545,39 +505,21 @@ final readonly class DngGeometryValidator
         ];
 
         foreach ($tagRules as $tag => $rule) {
-            $entry = $ifd->get($tag);
+            $scalar = $this->support->extractRationalScalar(
+                $ifd,
+                $tag,
+                $rule['name'],
+                TiffConst::TYPE_RATIONAL,
+                'RATIONAL',
+                1662,
+                1663,
+                1664,
+                'be > 0',
+            );
 
-            if (!$entry instanceof IfdEntry) {
+            if ($scalar === null) {
                 continue;
             }
-
-            if (($entry->type !== TiffConst::TYPE_RATIONAL) || ($entry->count !== 1)) {
-                throw new ParseError(
-                    sprintf(
-                        '%s must be RATIONAL[1], got type %d count %d.',
-                        $rule['name'],
-                        $entry->type,
-                        $entry->count,
-                    ),
-                    1662,
-                );
-            }
-
-            if (!$entry->value instanceof ExifRational) {
-                throw new ParseError(
-                    sprintf('%s must decode to one rational component.', $rule['name']),
-                    1663,
-                );
-            }
-
-            if ($entry->value->denominator <= 0) {
-                throw new ParseError(
-                    sprintf('%s denominator must be > 0.', $rule['name']),
-                    1664,
-                );
-            }
-
-            $scalar = $entry->value->numerator / $entry->value->denominator;
 
             if (!is_finite($scalar)) {
                 throw new ParseError(

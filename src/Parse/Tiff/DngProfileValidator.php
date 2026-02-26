@@ -15,7 +15,6 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
-use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
@@ -481,34 +480,22 @@ final readonly class DngProfileValidator
      */
     public function validateDngBaselineExposure(Ifd $ifd): void
     {
-        $entry = $ifd->get(DngTag::BASELINE_EXPOSURE);
+        $scalar = $this->support->extractRationalScalar(
+            $ifd,
+            DngTag::BASELINE_EXPOSURE,
+            'BaselineExposure',
+            TiffConst::TYPE_SRATIONAL,
+            'SRATIONAL',
+            1672,
+            1673,
+            1674,
+            'not be zero',
+            false,
+        );
 
-        if (!$entry instanceof IfdEntry) {
+        if ($scalar === null) {
             return;
         }
-
-        if (($entry->type !== TiffConst::TYPE_SRATIONAL) || ($entry->count !== 1)) {
-            throw new ParseError(
-                sprintf(
-                    'BaselineExposure must be SRATIONAL[1], got type %d count %d.',
-                    $entry->type,
-                    $entry->count,
-                ),
-                1672,
-            );
-        }
-
-        $value = $entry->value;
-
-        if (!$value instanceof ExifRational) {
-            throw new ParseError('BaselineExposure must decode to one rational component.', 1673);
-        }
-
-        if ($value->denominator === 0) {
-            throw new ParseError('BaselineExposure denominator must not be zero.', 1674);
-        }
-
-        $scalar = $value->numerator / $value->denominator;
 
         if (!is_finite($scalar)) {
             throw new ParseError('BaselineExposure must be finite.', 1675);

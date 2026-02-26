@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -206,6 +207,57 @@ final readonly class DngValidationSupport
         }
 
         return null;
+    }
+
+    /**
+     * Extracts a scalar from a single-component RATIONAL/SRATIONAL-style tag.
+     *
+     * @param string $expectedTypeName     Human-readable type name used in messages.
+     * @param string $denominatorCondition Condition phrase appended to "denominator must ...".
+     */
+    public function extractRationalScalar(
+        Ifd $ifd,
+        int $tag,
+        string $tagName,
+        int $expectedType,
+        string $expectedTypeName,
+        int $typeErrCode,
+        int $decodeErrCode,
+        int $denominatorErrCode,
+        string $denominatorCondition,
+        bool $requirePositiveDenominator = true,
+    ): ?float {
+        $entry = $ifd->get($tag);
+
+        if (!$entry instanceof IfdEntry) {
+            return null;
+        }
+
+        if (($entry->type !== $expectedType) || ($entry->count !== 1)) {
+            throw new ParseError(
+                sprintf(
+                    '%s must be %s[1], got type %d count %d.',
+                    $tagName,
+                    $expectedTypeName,
+                    $entry->type,
+                    $entry->count,
+                ),
+                $typeErrCode,
+            );
+        }
+
+        $value = $entry->value;
+
+        if (!$value instanceof ExifRational) {
+            throw new ParseError(sprintf('%s must decode to one rational component.', $tagName), $decodeErrCode);
+        }
+
+        $denominator = $value->denominator;
+        if ($requirePositiveDenominator ? ($denominator <= 0) : ($denominator === 0)) {
+            throw new ParseError(sprintf('%s denominator must %s.', $tagName, $denominatorCondition), $denominatorErrCode);
+        }
+
+        return $value->numerator / $denominator;
     }
 
     /**
