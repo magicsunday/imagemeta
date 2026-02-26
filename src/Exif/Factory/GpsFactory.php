@@ -187,192 +187,22 @@ final readonly class GpsFactory
             $time = $this->stringValue($exifDocument?->gpsTimeStampString());
         }
 
-        // Fill from XMP when EXIF values are absent.
-        $xmpLatRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLatitudeRef'));
-        if ($latitudeRef === null) {
-            $latitudeRef = $xmpLatRef;
-        }
-
-        if ($latitude === null) {
-            $latitude = $this->parseCoordinate(
-                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLatitude'),
-                $xmpLatRef ?? $latitudeRef,
-            );
-        }
-
-        $xmpLonRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLongitudeRef'));
-        if ($longitudeRef === null) {
-            $longitudeRef = $xmpLonRef;
-        }
-
-        if ($longitude === null) {
-            $longitude = $this->parseCoordinate(
-                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLongitude'),
-                $xmpLonRef ?? $longitudeRef,
-            );
-        }
-
-        if ($latitude !== null) {
-            $latitude = round($latitude, 6);
-        }
-
-        if ($longitude !== null) {
-            $longitude = round($longitude, 6);
-        }
-
-        if ($altitude === null && $xmpDocument instanceof XmpDocument) {
-            $altitudeXmp = $xmpDocument->float(XmpNamespace::EXIF->value, 'GPSAltitude');
-            if ($altitudeXmp !== null) {
-                $altRefXmp = $this->intValue($xmpDocument->int(XmpNamespace::EXIF->value, 'GPSAltitudeRef'));
-                $altRef    = $altitudeRef ?? $altRefXmp;
-
-                if (GpsEnum\GpsAltitudeRef::tryFrom($altRef ?? 0)?->isBelow() === true) {
-                    $altitudeXmp = -$altitudeXmp;
-                }
-
-                $altitude = $altitudeXmp;
-
-                $altitudeRef ??= $altRefXmp;
-            }
-        }
-
-        if ($status === null) {
-            $status = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSStatus'));
-        }
-
-        if ($measureMode === null) {
-            $measureMode = $this->stringValue($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSMeasureMode'));
-        }
-
-        if ($dop === null) {
-            $dop = $this->floatValue($xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSDOP'));
-        }
-
-        if ($trackRef === null) {
-            $trackRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSTrackRef'));
-        }
-
-        if ($track === null) {
-            $track = $this->floatValue($xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSTrack'));
-        }
-
-        if ($imgDirRef === null) {
-            $imgDirRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSImgDirectionRef'));
-        }
-
-        if ($imgDir === null) {
-            $imgDir = $this->floatValue($xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSImgDirection'));
-        }
-
-        if ($mapDatum === null) {
-            $mapDatum = $this->stringValue($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSMapDatum'));
-        }
-
-        $xmpSpeedRef = $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSSpeedRef');
-        if ($speedRef === null) {
-            $speedRef = $this->uppercase($xmpSpeedRef);
-        }
-
-        if ($speedOriginalRef === null) {
-            $speedOriginalRef = $this->stringValue($xmpSpeedRef);
-        }
-
-        $speedValue = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSSpeed');
-        if ($speedValue !== null) {
-            if ($speedMs === null && $speedRef !== null) {
-                $speedMs = $this->convertSpeedToMetresPerSecond($speedValue, $speedRef);
-            }
-
-            if ($speedOriginal === null) {
-                $speedOriginal = $speedValue;
-            }
-        }
-
-        $xmpDestLatRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLatitudeRef'));
-        if ($destLatRef === null) {
-            $destLatRef = $xmpDestLatRef;
-        }
-
-        if ($destLat === null) {
-            $destLat = $this->parseCoordinate(
-                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLatitude'),
-                $xmpDestLatRef ?? $destLatRef,
-            );
-        }
-
-        $xmpDestLonRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLongitudeRef'));
-        if ($destLonRef === null) {
-            $destLonRef = $xmpDestLonRef;
-        }
-
-        if ($destLon === null) {
-            $destLon = $this->parseCoordinate(
-                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLongitude'),
-                $xmpDestLonRef ?? $destLonRef,
-            );
-        }
-
-        $xmpDestBearRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestBearingRef'));
-        if ($destBearRef === null) {
-            $destBearRef = $xmpDestBearRef;
-        }
-
-        if ($destBear === null) {
-            $xmpDestBear = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSDestBearing');
-            if ($xmpDestBear !== null) {
-                $destBear = $xmpDestBear;
-            }
-        }
-
-        $xmpDestDistRef = $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestDistanceRef');
-        if ($destDistRef === null) {
-            $destDistRef = $this->uppercase($xmpDestDistRef);
-        }
-
-        if ($destDistOriginalRef === null) {
-            $destDistOriginalRef = $this->stringValue($xmpDestDistRef);
-        }
-
-        $destDistValue = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSDestDistance');
-        if ($destDistValue !== null) {
-            if ($destDistMetre === null && $destDistRef !== null) {
-                $convertedDistance = $this->convertDistanceToMetres($destDistValue, $destDistRef);
-                if ($convertedDistance !== null) {
-                    $destDistMetre = $convertedDistance;
-                }
-            }
-
-            if ($destDistOriginal === null) {
-                $destDistOriginal = $destDistValue;
-            }
-        }
-
-        if ($date === null) {
-            $date = $this->normalizeDate($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDateStamp'));
-        }
-
-        if ($time === null) {
-            $time = $this->stringValue($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSTimeStamp'));
-        }
-
-        if (!$timestamp instanceof DateTimeImmutable) {
-            $timestamp = $this->parseXmpTimestamp($xmpDocument);
-        }
-
-        if (!$timestamp instanceof DateTimeImmutable) {
-            $timestamp = $this->combineDateAndTime($date, $time);
-        }
-
-        $differential = $this->intValue($gpsData['differential'] ?? null);
-        $hError       = $this->floatValue($gpsData['h_positioning_error'] ?? null);
-        $hasData      = array_any([
+        [$latitude, $longitude, $latitudeRef, $longitudeRef] = $this->applyCoordinateFallbacks(
+            $xmpDocument,
             $latitude,
             $longitude,
+            $latitudeRef,
+            $longitudeRef,
+        );
+
+        [$altitude, $altitudeRef] = $this->applyAltitudeFallbacks(
+            $xmpDocument,
             $altitude,
             $altitudeRef,
-            $version,
-            $versionRaw,
-            $satellites,
+        );
+
+        [$status, $measureMode, $dop, $speedRef, $speedMs, $speedOriginalRef, $speedOriginal, $trackRef, $track, $imgDirRef, $imgDir, $mapDatum] = $this->applyMovementFallbacks(
+            $xmpDocument,
             $status,
             $measureMode,
             $dop,
@@ -385,6 +215,10 @@ final readonly class GpsFactory
             $imgDirRef,
             $imgDir,
             $mapDatum,
+        );
+
+        [$destLatRef, $destLat, $destLonRef, $destLon, $destBearRef, $destBear, $destDistRef, $destDistMetre, $destDistOriginalRef, $destDistOriginal] = $this->applyDestinationFallbacks(
+            $xmpDocument,
             $destLatRef,
             $destLat,
             $destLonRef,
@@ -395,17 +229,25 @@ final readonly class GpsFactory
             $destDistMetre,
             $destDistOriginalRef,
             $destDistOriginal,
-            $processingMethod,
-            $areaInformation,
+        );
+
+        [$date, $time, $timestamp] = $this->applyTimingFallbacks(
+            $xmpDocument,
             $date,
-            $dateRaw,
             $time,
             $timestamp,
-            $differential,
-            $hError,
-        ], fn ($value): bool => $value !== null);
+        );
 
-        if (!$hasData) {
+        $differential = $this->intValue($gpsData['differential'] ?? null);
+        $hError       = $this->floatValue($gpsData['h_positioning_error'] ?? null);
+        if (!$this->hasAnyGpsData(
+            [$latitude, $longitude, $altitude, $altitudeRef, $mapDatum],
+            [$satellites, $status, $measureMode, $dop, $differential, $hError],
+            [$speedRef, $speedMs, $speedOriginalRef, $speedOriginal, $trackRef, $track, $imgDirRef, $imgDir],
+            [$destLatRef, $destLat, $destLonRef, $destLon, $destBearRef, $destBear, $destDistRef, $destDistMetre, $destDistOriginalRef, $destDistOriginal],
+            [$version, $versionRaw, $processingMethod, $areaInformation],
+            [$date, $dateRaw, $time, $timestamp],
+        )) {
             return null;
         }
 
@@ -470,6 +312,277 @@ final readonly class GpsFactory
             processingMethod: $processingMethod,
             areaInformation: $areaInformation,
         );
+    }
+
+    /**
+     * Applies EXIF-first coordinate fallback with XMP as secondary source.
+     *
+     * @return array{0:?float,1:?float,2:?string,3:?string}
+     */
+    private function applyCoordinateFallbacks(
+        ?XmpDocument $xmpDocument,
+        ?float $latitude,
+        ?float $longitude,
+        ?string $latitudeRef,
+        ?string $longitudeRef,
+    ): array {
+        $xmpLatRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLatitudeRef'));
+        if ($latitudeRef === null) {
+            $latitudeRef = $xmpLatRef;
+        }
+
+        if ($latitude === null) {
+            $latitude = $this->parseCoordinate(
+                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLatitude'),
+                $xmpLatRef ?? $latitudeRef,
+            );
+        }
+
+        $xmpLonRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLongitudeRef'));
+        if ($longitudeRef === null) {
+            $longitudeRef = $xmpLonRef;
+        }
+
+        if ($longitude === null) {
+            $longitude = $this->parseCoordinate(
+                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLongitude'),
+                $xmpLonRef ?? $longitudeRef,
+            );
+        }
+
+        if ($latitude !== null) {
+            $latitude = round($latitude, 6);
+        }
+
+        if ($longitude !== null) {
+            $longitude = round($longitude, 6);
+        }
+
+        return [$latitude, $longitude, $latitudeRef, $longitudeRef];
+    }
+
+    /**
+     * Applies EXIF-first altitude fallback with XMP as secondary source.
+     *
+     * @return array{0:?float,1:?int}
+     */
+    private function applyAltitudeFallbacks(
+        ?XmpDocument $xmpDocument,
+        ?float $altitude,
+        ?int $altitudeRef,
+    ): array {
+        if ($altitude === null && $xmpDocument instanceof XmpDocument) {
+            $altitudeXmp = $xmpDocument->float(XmpNamespace::EXIF->value, 'GPSAltitude');
+            if ($altitudeXmp !== null) {
+                $altRefXmp = $this->intValue($xmpDocument->int(XmpNamespace::EXIF->value, 'GPSAltitudeRef'));
+                $altRef    = $altitudeRef ?? $altRefXmp;
+
+                if (GpsEnum\GpsAltitudeRef::tryFrom($altRef ?? 0)?->isBelow() === true) {
+                    $altitudeXmp = -$altitudeXmp;
+                }
+
+                $altitude = $altitudeXmp;
+
+                $altitudeRef ??= $altRefXmp;
+            }
+        }
+
+        return [$altitude, $altitudeRef];
+    }
+
+    /**
+     * Applies EXIF-first movement and measurement fallbacks using XMP secondary values.
+     *
+     * @return array{0:?string,1:?string,2:?float,3:?string,4:?float,5:?string,6:?float,7:?string,8:?float,9:?string,10:?float,11:?string}
+     */
+    private function applyMovementFallbacks(
+        ?XmpDocument $xmpDocument,
+        ?string $status,
+        ?string $measureMode,
+        ?float $dop,
+        ?string $speedRef,
+        ?float $speedMs,
+        ?string $speedOriginalRef,
+        ?float $speedOriginal,
+        ?string $trackRef,
+        ?float $track,
+        ?string $imgDirRef,
+        ?float $imgDir,
+        ?string $mapDatum,
+    ): array {
+        if ($status === null) {
+            $status = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSStatus'));
+        }
+
+        if ($measureMode === null) {
+            $measureMode = $this->stringValue($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSMeasureMode'));
+        }
+
+        if ($dop === null) {
+            $dop = $this->floatValue($xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSDOP'));
+        }
+
+        if ($trackRef === null) {
+            $trackRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSTrackRef'));
+        }
+
+        if ($track === null) {
+            $track = $this->floatValue($xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSTrack'));
+        }
+
+        if ($imgDirRef === null) {
+            $imgDirRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSImgDirectionRef'));
+        }
+
+        if ($imgDir === null) {
+            $imgDir = $this->floatValue($xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSImgDirection'));
+        }
+
+        if ($mapDatum === null) {
+            $mapDatum = $this->stringValue($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSMapDatum'));
+        }
+
+        $xmpSpeedRef = $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSSpeedRef');
+        if ($speedRef === null) {
+            $speedRef = $this->uppercase($xmpSpeedRef);
+        }
+
+        if ($speedOriginalRef === null) {
+            $speedOriginalRef = $this->stringValue($xmpSpeedRef);
+        }
+
+        $speedValue = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSSpeed');
+        if ($speedValue !== null) {
+            if ($speedMs === null && $speedRef !== null) {
+                $speedMs = $this->convertSpeedToMetresPerSecond($speedValue, $speedRef);
+            }
+
+            if ($speedOriginal === null) {
+                $speedOriginal = $speedValue;
+            }
+        }
+
+        return [$status, $measureMode, $dop, $speedRef, $speedMs, $speedOriginalRef, $speedOriginal, $trackRef, $track, $imgDirRef, $imgDir, $mapDatum];
+    }
+
+    /**
+     * Applies EXIF-first destination fallbacks using XMP secondary values.
+     *
+     * @return array{0:?string,1:?float,2:?string,3:?float,4:?string,5:?float,6:?string,7:?float,8:?string,9:?float}
+     */
+    private function applyDestinationFallbacks(
+        ?XmpDocument $xmpDocument,
+        ?string $destLatRef,
+        ?float $destLat,
+        ?string $destLonRef,
+        ?float $destLon,
+        ?string $destBearRef,
+        ?float $destBear,
+        ?string $destDistRef,
+        ?float $destDistMetre,
+        ?string $destDistOriginalRef,
+        ?float $destDistOriginal,
+    ): array {
+        $xmpDestLatRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLatitudeRef'));
+        if ($destLatRef === null) {
+            $destLatRef = $xmpDestLatRef;
+        }
+
+        if ($destLat === null) {
+            $destLat = $this->parseCoordinate(
+                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLatitude'),
+                $xmpDestLatRef ?? $destLatRef,
+            );
+        }
+
+        $xmpDestLonRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLongitudeRef'));
+        if ($destLonRef === null) {
+            $destLonRef = $xmpDestLonRef;
+        }
+
+        if ($destLon === null) {
+            $destLon = $this->parseCoordinate(
+                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLongitude'),
+                $xmpDestLonRef ?? $destLonRef,
+            );
+        }
+
+        $xmpDestBearRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestBearingRef'));
+        if ($destBearRef === null) {
+            $destBearRef = $xmpDestBearRef;
+        }
+
+        if ($destBear === null) {
+            $xmpDestBear = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSDestBearing');
+            if ($xmpDestBear !== null) {
+                $destBear = $xmpDestBear;
+            }
+        }
+
+        $xmpDestDistRef = $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestDistanceRef');
+        if ($destDistRef === null) {
+            $destDistRef = $this->uppercase($xmpDestDistRef);
+        }
+
+        if ($destDistOriginalRef === null) {
+            $destDistOriginalRef = $this->stringValue($xmpDestDistRef);
+        }
+
+        $destDistValue = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSDestDistance');
+        if ($destDistValue !== null) {
+            if ($destDistMetre === null && $destDistRef !== null) {
+                $convertedDistance = $this->convertDistanceToMetres($destDistValue, $destDistRef);
+                if ($convertedDistance !== null) {
+                    $destDistMetre = $convertedDistance;
+                }
+            }
+
+            if ($destDistOriginal === null) {
+                $destDistOriginal = $destDistValue;
+            }
+        }
+
+        return [$destLatRef, $destLat, $destLonRef, $destLon, $destBearRef, $destBear, $destDistRef, $destDistMetre, $destDistOriginalRef, $destDistOriginal];
+    }
+
+    /**
+     * Applies EXIF-first timing fallback with XMP and derived timestamp synthesis.
+     *
+     * @return array{0:?string,1:?string,2:?DateTimeImmutable}
+     */
+    private function applyTimingFallbacks(
+        ?XmpDocument $xmpDocument,
+        ?string $date,
+        ?string $time,
+        ?DateTimeImmutable $timestamp,
+    ): array {
+        if ($date === null) {
+            $date = $this->normalizeDate($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDateStamp'));
+        }
+
+        if ($time === null) {
+            $time = $this->stringValue($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSTimeStamp'));
+        }
+
+        if (!$timestamp instanceof DateTimeImmutable) {
+            $timestamp = $this->parseXmpTimestamp($xmpDocument);
+        }
+
+        if (!$timestamp instanceof DateTimeImmutable) {
+            $timestamp = $this->combineDateAndTime($date, $time);
+        }
+
+        return [$date, $time, $timestamp];
+    }
+
+    /**
+     * Returns true when any GPS group contains at least one non-null value.
+     *
+     * @param list<int|float|string|DateTimeImmutable|null> ...$groups
+     */
+    private function hasAnyGpsData(array ...$groups): bool
+    {
+        return array_any($groups, fn ($group): bool => array_any($group, static fn ($value): bool => $value !== null));
     }
 
     /**
