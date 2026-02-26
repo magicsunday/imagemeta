@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
@@ -68,6 +69,8 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
     private ReflectionMethod $formatValueMethod;
 
+    private ReflectionMethod $getDecodedValueFromParsedExifMethod;
+
     protected function setUp(): void
     {
         require_once __DIR__ . '/../../scripts/imagemeta-format.php';
@@ -86,6 +89,7 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $this->formatCompositeDateMethod             = new ReflectionMethod($this->formatter, 'formatCompositeDate');
         $this->formatCompositeMegapixelsMethod       = new ReflectionMethod($this->formatter, 'formatCompositeMegapixels');
         $this->formatValueMethod                     = new ReflectionMethod($this->formatter, 'formatValue');
+        $this->getDecodedValueFromParsedExifMethod   = new ReflectionMethod($this->formatter, 'getDecodedValueFromParsedExif');
     }
 
     #[Test]
@@ -348,6 +352,47 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
     }
 
     /**
+     * @return iterable<string, array{0:string}>
+     */
+    public static function provideEmptyUserCommentPrefixes(): iterable
+    {
+        yield 'undefined marker with null payload' => [str_repeat("\0", 8) . str_repeat("\0", 16)];
+        yield 'ascii marker with null payload' => ["ASCII\0\0\0" . str_repeat("\0", 16)];
+        yield 'unicode marker with null payload' => ["UNICODE\0" . str_repeat("\0", 16)];
+        yield 'jis marker with null payload' => ["JIS\0\0\0\0\0" . str_repeat("\0", 16)];
+    }
+
+    #[Test]
+    #[DataProvider('provideEmptyUserCommentPrefixes')]
+    public function returnsEmptyStringForNullFilledUserCommentPayload(string $raw): void
+    {
+        $parsedExif = $this->buildParsedExifWithUserComment($raw);
+        $actual     = $this->getDecodedValueFromParsedExifMethod->invoke(
+            $this->formatter,
+            ExifTag::USER_COMMENT,
+            $raw,
+            $parsedExif,
+        );
+
+        self::assertSame('', $actual);
+    }
+
+    #[Test]
+    public function keepsDecodedUserCommentTextForAsciiPayload(): void
+    {
+        $raw        = "ASCII\0\0\0Hello World\0";
+        $parsedExif = $this->buildParsedExifWithUserComment($raw);
+        $actual     = $this->getDecodedValueFromParsedExifMethod->invoke(
+            $this->formatter,
+            ExifTag::USER_COMMENT,
+            $raw,
+            $parsedExif,
+        );
+
+        self::assertSame('Hello World', $actual);
+    }
+
+    /**
      * @param list<string>|null $labels
      */
     #[Test]
@@ -391,5 +436,23 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
             . pack('N', strlen($descTagData));
 
         return $header . $tagTable . $descTagData;
+    }
+
+    private function buildParsedExifWithUserComment(string $raw): ParsedExif
+    {
+        return new ParsedExif(
+            new Ifd([]),
+            new Ifd([
+                ExifTag::USER_COMMENT => new IfdEntry(
+                    ExifTag::USER_COMMENT,
+                    7,
+                    strlen($raw),
+                    $raw,
+                ),
+            ]),
+            null,
+            null,
+            null,
+        );
     }
 }
