@@ -23,6 +23,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
+
+use function array_map;
 
 /**
  * Exercises AppleMakerNotesBuilder decoding of the MediaGroupUUID field.
@@ -40,6 +44,26 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(SemanticStyle::class)]
 final class AppleMakerNotesBuilderNewFieldsTest extends TestCase
 {
+    /**
+     * Guards builder refactoring by requiring explicit section loader and predicate helpers.
+     */
+    #[Test]
+    public function buildUsesSectionLoadersAndPresencePredicates(): void
+    {
+        $reflection = new ReflectionClass(AppleMakerNotesBuilder::class);
+        $methods    = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('loadIdentitySection', $methods);
+        self::assertContains('loadHdrSection', $methods);
+        self::assertContains('loadFocusSection', $methods);
+        self::assertContains('loadStyleSection', $methods);
+        self::assertContains('loadCameraSection', $methods);
+        self::assertContains('hasAnySectionData', $methods);
+    }
+
     /**
      * Provides a dictionary with a MediaGroupUUID value.
      * Ensures the builder extracts it into the identity group.
