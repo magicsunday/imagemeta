@@ -292,8 +292,8 @@ final class EnumMappingTest extends TestCase
         self::assertSame(0, Orientation::TopLeft->rotationDegrees());
         self::assertSame(0, Orientation::TopRight->rotationDegrees());
         self::assertSame(180, Orientation::BottomRight->rotationDegrees());
-        self::assertSame(0, Orientation::BottomLeft->rotationDegrees());
-        self::assertSame(180, Orientation::LeftTop->rotationDegrees());
+        self::assertSame(180, Orientation::BottomLeft->rotationDegrees());
+        self::assertSame(270, Orientation::LeftTop->rotationDegrees());
         self::assertSame(90, Orientation::RightTop->rotationDegrees());
         self::assertSame(90, Orientation::RightBottom->rotationDegrees());
         self::assertSame(270, Orientation::LeftBottom->rotationDegrees());
