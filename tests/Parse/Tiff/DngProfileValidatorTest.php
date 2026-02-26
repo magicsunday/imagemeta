@@ -26,7 +26,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
 
+use function array_map;
 use function pack;
 use function str_repeat;
 
@@ -51,6 +54,18 @@ final class DngProfileValidatorTest extends TestCase
         $buffer          = new MemoryBuffer(str_repeat("\0", 256));
         $support         = new DngValidationSupport(Endian::Little, $buffer);
         $this->validator = new DngProfileValidator($support);
+    }
+
+    #[Test]
+    public function usesSingleParameterizedLong3DimensionValidator(): void
+    {
+        $reflection = new ReflectionClass(DngProfileValidator::class);
+        $methods    = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('validateDngDimsLong3', $methods);
     }
 
     // --- ProfileToneCurve ---
