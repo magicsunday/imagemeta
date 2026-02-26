@@ -905,6 +905,28 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
+     * Rejects malformed UTF-16 GPS undefined payloads with odd-length content.
+     */
+    #[Test]
+    public function rejectsGpsUndefinedUnicodePayloadWithOddLengthUtf16Bom(): void
+    {
+        $malformedPayload = "UNICODE\0\xFE\xFF\x00A\x00";
+
+        $gps = new Ifd([
+            ExifTag::GPS_PROCESSING_METHOD => new IfdEntry(
+                ExifTag::GPS_PROCESSING_METHOD,
+                7,
+                strlen($malformedPayload),
+                $malformedPayload,
+            ),
+        ]);
+
+        $result = $this->converters->gpsFromIfd($gps);
+
+        self::assertNull($result['processing_method']);
+    }
+
+    /**
      * Returns null when decoded GPS undefined strings are empty.
      * It ensures missing or invalid inputs yield no value.
      */

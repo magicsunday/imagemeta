@@ -180,6 +180,21 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     }
 
     /**
+     * Supplies a legacy UTF-16 payload with BOM but odd byte length.
+     * Confirms malformed UTF-16 content is rejected deterministically.
+     */
+    #[Test]
+    public function rejectsUnicodePrefixWithOddLengthUtf16BomContent(): void
+    {
+        $raw = "UNICODE\0\xFE\xFF\x00A\x00";
+
+        $parsedExif = $this->parsedExifWithUserComment($raw);
+
+        self::assertNull($parsedExif->userComment());
+        self::assertSame('UNICODE', $parsedExif->userCommentEncoding());
+    }
+
+    /**
      * Supplies a JIS-prefixed comment encoded as ISO-2022-JP.
      * Confirms JIS-marker decoding follows EXIF-aligned JIS strategy.
      */
