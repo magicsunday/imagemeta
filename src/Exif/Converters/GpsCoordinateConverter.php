@@ -213,19 +213,9 @@ final readonly class GpsCoordinateConverter
         $sign  = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
         $value = $sign * ($deg + $min / 60.0 + $sec / 3600.0);
 
-        if ($isLatitudeRef && (($value < -90.0) || ($value > 90.0))) {
-            throw new ParseError(sprintf(
-                'GPS coordinate %s is outside the valid latitude range [-90, 90] per EXIF 3.0 §4.6.7.1.3.',
-                $value,
-            ), 1463);
-        }
-
-        if ($isLongitudeRef && (($value < -180.0) || ($value > 180.0))) {
-            throw new ParseError(sprintf(
-                'GPS coordinate %s is outside the valid longitude range [-180, 180] per EXIF 3.0 §4.6.7.1.5.',
-                $value,
-            ), 1464);
-        }
+        // EXIF 3.0 §4.6.7.1.3 and §4.6.7.1.5 define nominal latitude/longitude
+        // ranges, but reader-side Postel handling keeps out-of-range camera data
+        // as-is so downstream consumers can decide how to interpret it.
 
         return $value;
     }
