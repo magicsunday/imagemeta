@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\Endian;
-use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 
@@ -37,7 +37,7 @@ final readonly class DngValidator
 
     public function __construct(
         Endian $bo,
-        MemoryBuffer $buffer,
+        BinaryReadAccessInterface $buffer,
     ) {
         $support           = new DngValidationSupport($bo, $buffer);
         $this->version     = new DngVersionValidator($support);

@@ -827,7 +827,7 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Builds a minimal TIFF file and parses it through MetadataReader.
-     * Verifies the TIFF detection path populates EXIF blobs, parsed IFD0 tags, and structured camera metadata.
+     * Verifies the TIFF detection path parses IFD0 tags and structured camera metadata.
      */
     #[Test]
     public function readTiffPopulatesMetadata(): void
@@ -845,7 +845,7 @@ final class MetadataReaderTest extends TestCase
             @unlink($path);
         }
 
-        self::assertSame([$tiff], $metadata->exifBlobs);
+        self::assertSame([], $metadata->exifBlobs);
         self::assertSame([], $metadata->xmpBlobs);
         self::assertNull($metadata->quickTime);
         self::assertNull($metadata->xmpDoc);
@@ -881,7 +881,7 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Verifies that MetadataReader rejects a TIFF stream whose reported size exceeds the configured maximum.
-     * The reader must throw a ParseError before attempting to materialise the blob in memory.
+     * The reader must throw a ParseError before parsing.
      */
     #[Test]
     public function fromTiffThrowsWhenStreamExceedsMaxSize(): void
@@ -933,7 +933,8 @@ final class MetadataReaderTest extends TestCase
             );
 
             $metadata = $reader->read($path);
-            self::assertNotEmpty($metadata->exifBlobs);
+            self::assertSame([], $metadata->exifBlobs);
+            self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
         } finally {
             @unlink($path);
         }
@@ -969,6 +970,7 @@ final class MetadataReaderTest extends TestCase
         }
 
         self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
+        self::assertSame([], $metadata->exifBlobs);
         self::assertSame($make, $metadata->exifDoc->ifd0->get(ExifTag::MAKE)?->value);
         self::assertSame($model, $metadata->exifDoc->ifd0->get(ExifTag::MODEL)?->value);
     }

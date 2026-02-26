@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
-use MagicSunday\ImageMeta\Core\MemoryBuffer;
+use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
@@ -31,14 +31,14 @@ use function sprintf;
 final readonly class TiffValidationSupport
 {
     public function __construct(
-        private MemoryBuffer $buffer,
+        private BinaryReadAccessInterface $buffer,
     ) {
     }
 
     /**
      * Returns the underlying memory buffer.
      */
-    public function buffer(): MemoryBuffer
+    public function buffer(): BinaryReadAccessInterface
     {
         return $this->buffer;
     }

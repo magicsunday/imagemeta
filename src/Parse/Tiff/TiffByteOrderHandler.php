@@ -11,11 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\Endian;
-use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function intdiv;
 use function pack;
@@ -30,25 +31,33 @@ final readonly class TiffByteOrderHandler
     /**
      * Reads an unsigned 16-bit integer using the provided endianness.
      */
-    public function readUint16(MemoryBuffer $buffer, Endian $endianness): int
+    public function readUint16(BinaryReadAccessInterface $buffer, Endian $endianness): int
     {
-        return $endianness === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
+        $format = $endianness === Endian::Little ? 'v' : 'n';
+
+        return Unpack::int($format, $buffer->read(2), 'TIFF 16-bit value');
     }
 
     /**
      * Reads an unsigned 32-bit integer using the provided endianness.
      */
-    public function readUint32(MemoryBuffer $buffer, Endian $endianness): int
+    public function readUint32(BinaryReadAccessInterface $buffer, Endian $endianness): int
     {
-        return $endianness === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
+        $format = $endianness === Endian::Little ? 'V' : 'N';
+
+        return Unpack::int($format, $buffer->read(4), 'TIFF 32-bit value');
     }
 
     /**
      * Reads an unsigned 64-bit integer using the provided endianness.
      */
-    public function readUint64(MemoryBuffer $buffer, Endian $endianness): UInt64
+    public function readUint64(BinaryReadAccessInterface $buffer, Endian $endianness): UInt64
     {
-        return $endianness === Endian::Little ? $buffer->readU64LE() : $buffer->readU64BE();
+        return Unpack::uint64(
+            $buffer->read(8),
+            $endianness === Endian::Little,
+            'TIFF 64-bit value',
+        );
     }
 
     /**

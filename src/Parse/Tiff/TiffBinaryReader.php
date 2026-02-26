@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\Endian;
-use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
@@ -27,14 +27,14 @@ use function substr;
 final readonly class TiffBinaryReader
 {
     /**
-     * @param MemoryBuffer         $buffer            Seekable binary buffer.
-     * @param Endian               $bo                Byte order (Little/Big endian).
-     * @param TiffByteOrderHandler $byteOrderHandler  Endian-aware primitive I/O.
-     * @param bool                 $bigTiff           Whether this is a BigTIFF structure.
-     * @param int                  $bigTiffOffsetSize BigTIFF offset field width.
+     * @param BinaryReadAccessInterface $buffer            Seekable binary source.
+     * @param Endian                    $bo                Byte order (Little/Big endian).
+     * @param TiffByteOrderHandler      $byteOrderHandler  Endian-aware primitive I/O.
+     * @param bool                      $bigTiff           Whether this is a BigTIFF structure.
+     * @param int                       $bigTiffOffsetSize BigTIFF offset field width.
      */
     public function __construct(
-        private MemoryBuffer $buffer,
+        private BinaryReadAccessInterface $buffer,
         private Endian $bo,
         private TiffByteOrderHandler $byteOrderHandler,
         private bool $bigTiff,

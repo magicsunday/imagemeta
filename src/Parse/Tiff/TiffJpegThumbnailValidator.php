@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\BoundsError;
-use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -34,10 +34,10 @@ use function strlen;
 final readonly class TiffJpegThumbnailValidator
 {
     /**
-     * @param MemoryBuffer $buffer Seekable binary buffer for thumbnail stream validation.
+     * @param BinaryReadAccessInterface $buffer Seekable binary source for thumbnail stream validation.
      */
     public function __construct(
-        private MemoryBuffer $buffer,
+        private BinaryReadAccessInterface $buffer,
     ) {
     }
 

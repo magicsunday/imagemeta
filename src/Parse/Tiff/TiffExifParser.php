@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Contract\TiffExifParserInterface;
+use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
@@ -41,7 +42,7 @@ use function sprintf;
  */
 final class TiffExifParser implements TiffExifParserInterface
 {
-    private MemoryBuffer $buffer;
+    private BinaryReadAccessInterface $buffer;
 
     private Endian $bo;
 
@@ -93,7 +94,38 @@ final class TiffExifParser implements TiffExifParserInterface
      */
     public function parseFromBlob(string $tiffBlob, ?Registry $registry = null, bool $jpegContext = false, bool $embeddedContext = false): ParsedExif
     {
-        [$byteOrderHandler, $tagDecoder]                  = $this->initializeState($tiffBlob);
+        $buffer = new MemoryBuffer($tiffBlob);
+
+        return $this->parseFromSource($buffer, $registry, $jpegContext, $embeddedContext);
+    }
+
+    /**
+     * Parses EXIF from a seekable TIFF data source without pre-materializing a full blob.
+     *
+     * @param BinaryReadAccessInterface $tiffSource      Seekable TIFF data source.
+     * @param Registry|null             $registry        Optional registry used to decode manufacturer-specific maker notes.
+     * @param bool                      $jpegContext     Whether the TIFF is embedded in a JPEG context.
+     * @param bool                      $embeddedContext Whether the TIFF is embedded in an ISO BMFF context.
+     */
+    public function parseFromStream(
+        BinaryReadAccessInterface $tiffSource,
+        ?Registry $registry = null,
+        bool $jpegContext = false,
+        bool $embeddedContext = false,
+    ): ParsedExif {
+        return $this->parseFromSource($tiffSource, $registry, $jpegContext, $embeddedContext);
+    }
+
+    /**
+     * Parses EXIF from a seekable TIFF data source.
+     */
+    private function parseFromSource(
+        BinaryReadAccessInterface $tiffSource,
+        ?Registry $registry = null,
+        bool $jpegContext = false,
+        bool $embeddedContext = false,
+    ): ParsedExif {
+        [$byteOrderHandler, $tagDecoder]                  = $this->initializeState($tiffSource);
         [$ifd0, $exifIfd, $gpsIfd, $interopIfd, $subIfds] = $this->readPrimaryIfds($byteOrderHandler, $tagDecoder);
         [$ifd1, $additionalIfds]                          = $this->walkAdditionalIfds($ifd0);
 
@@ -112,16 +144,16 @@ final class TiffExifParser implements TiffExifParserInterface
     }
 
     /**
-     * Initializes parser state and binary collaborators for a new TIFF blob.
+     * Initializes parser state and binary collaborators for a new TIFF source.
      *
      * EXIF 3.0 §4.5.1 and TIFF 6.0 §2.1 define the byte-order marker handling
      * and baseline TIFF header assumptions used during setup.
      *
      * @return array{0: TiffByteOrderHandler, 1: ExifTagDecoder}
      */
-    private function initializeState(string $tiffBlob): array
+    private function initializeState(BinaryReadAccessInterface $tiffSource): array
     {
-        $this->buffer = new MemoryBuffer($tiffBlob);
+        $this->buffer = $tiffSource;
         $this->buffer->seek(0);
 
         $this->blobSize = UInt64::fromInt($this->buffer->size());

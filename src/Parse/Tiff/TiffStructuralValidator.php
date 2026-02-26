@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
-use MagicSunday\ImageMeta\Core\MemoryBuffer;
+use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 
 /**
@@ -34,7 +34,7 @@ final readonly class TiffStructuralValidator
     private TiffImageDataValidator $imageData;
 
     public function __construct(
-        MemoryBuffer $buffer,
+        BinaryReadAccessInterface $buffer,
     ) {
         $support         = new TiffValidationSupport($buffer);
         $this->tag       = new TiffTagConstraintValidator($support);

@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\BoundsError;
-use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
@@ -32,11 +32,11 @@ use function strspn;
 final readonly class TiffOffsetValidator
 {
     /**
-     * @param MemoryBuffer $buffer   Seekable binary buffer for size queries.
-     * @param UInt64       $blobSize Total blob size for bounds checks.
+     * @param BinaryReadAccessInterface $buffer   Seekable binary source for size queries.
+     * @param UInt64                    $blobSize Total blob size for bounds checks.
      */
     public function __construct(
-        private MemoryBuffer $buffer,
+        private BinaryReadAccessInterface $buffer,
         private UInt64 $blobSize,
     ) {
     }

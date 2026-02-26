@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\Endian;
-use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
@@ -48,14 +48,14 @@ final readonly class DngValidationSupport
 
     public function __construct(
         private Endian $bo,
-        private MemoryBuffer $buffer,
+        private BinaryReadAccessInterface $buffer,
     ) {
     }
 
     /**
      * Returns the underlying binary buffer for direct seek/read operations.
      */
-    public function buffer(): MemoryBuffer
+    public function buffer(): BinaryReadAccessInterface
     {
         return $this->buffer;
     }

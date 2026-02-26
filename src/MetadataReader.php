@@ -57,7 +57,7 @@ use const PATHINFO_EXTENSION;
 final readonly class MetadataReader
 {
     /**
-     * Maximum number of bytes accepted when materialising a TIFF stream into memory (256 MiB).
+     * Maximum number of bytes accepted when parsing standalone TIFF streams (256 MiB).
      */
     private const int MAX_TIFF_SIZE = 256 * 1024 * 1024;
 
@@ -275,17 +275,25 @@ final readonly class MetadataReader
             );
         }
 
-        $stream->seek(0);
-        $tiffBlob = $stream->read($stream->size());
+        $registry  = $this->createMakerNotesRegistry();
+        $exifBlobs = [];
 
-        $registry   = $this->createMakerNotesRegistry();
-        $exifDoc    = $this->tiffReader->parseFromBlob($tiffBlob, $registry);
-        $makerNotes = $exifDoc->makerNotes();
-        $makerNotes = $this->appleMerger->merge($makerNotes, null);
+        if ($this->tiffReader instanceof TiffExifParser) {
+            $stream->seek(0);
+            $exifDoc = $this->tiffReader->parseFromStream($stream, $registry);
+        } else {
+            // Compatibility fallback for custom parsers implementing only the blob contract.
+            $stream->seek(0);
+            $tiffBlob  = $stream->read($stream->size());
+            $exifDoc   = $this->tiffReader->parseFromBlob($tiffBlob, $registry);
+            $exifBlobs = [$tiffBlob];
+        }
+
+        $makerNotes = $this->appleMerger->merge($exifDoc->makerNotes(), null);
 
         return (new MetadataBuilder())
             ->withParsers($this->xmpParser, $this->iptcParser)
-            ->withExif([$tiffBlob], $exifDoc, $makerNotes)
+            ->withExif($exifBlobs, $exifDoc, $makerNotes)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
             ->build();
     }
