@@ -43,7 +43,10 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
 
+use function array_map;
 use function chr;
 use function fopen;
 use function fwrite;
@@ -361,5 +364,24 @@ final class BoxPayloadCollectorTest extends TestCase
         $collection              = $collector->collect($metaBox, true);
 
         self::assertSame(["MM\x00\x2Aqt-exif"], $collection->directExif);
+    }
+
+    /**
+     * Guards the readability refactor by requiring focused dispatch helper methods.
+     */
+    #[Test]
+    public function collectUsesFocusedDispatchHelpers(): void
+    {
+        $reflection = new ReflectionClass(BoxPayloadCollector::class);
+        $methods = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('collectDirectExifPayload', $methods);
+        self::assertContains('collectDirectXmpPayload', $methods);
+        self::assertContains('collectUuidXmpPayload', $methods);
+        self::assertContains('collectIdatPayload', $methods);
+        self::assertContains('assertPayloadWithinLimit', $methods);
     }
 }
