@@ -150,6 +150,21 @@ final class TiffExifParserSubIfdTest extends TestCase
     }
 
     /**
+     * TIFF 6.0 §2 defines byte offsets as file-relative; invalid offsets must not abort reader parsing.
+     * DNG 1.7.1.0 §DNG Format Overview (SubIFD Trees) allows SubIFD usage but does not require all pointers to be usable.
+     */
+    #[Test]
+    public function itToleratesIfdPointerExceedingTiffDataLength(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithOutOfRangeAndValidSubIfdPointers(),
+        );
+
+        self::assertCount(1, $parsed->subIfds());
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
      * Builds a minimal valid TIFF blob with the given number of SubIFDs.
      */
     private function buildTiffWithSubIfds(int $subIfdCount): string
@@ -497,6 +512,69 @@ final class TiffExifParserSubIfdTest extends TestCase
 
         // External offset array: two pointers to the same SubIFD (cycle)
         $externalOffsets = pack('V', $subIfdOffset) . pack('V', $subIfdOffset);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifd0Offset)
+            . $ifd0Block
+            . $externalOffsets
+            . $subIfdBlock;
+    }
+
+    /**
+     * Builds a TIFF with SubIFDs LONG[2]: one out-of-range pointer and one valid pointer.
+     */
+    private function buildTiffWithOutOfRangeAndValidSubIfdPointers(): string
+    {
+        $ifd0Offset = 8;
+
+        // IFD0: 4 entries (ImageWidth, ImageLength, Compression, SubIFDs)
+        $ifd0EntryCount = 4;
+        $ifd0Size       = 2 + (12 * $ifd0EntryCount) + 4;
+
+        // External SubIFDs offset array (2 LONGs = 8 bytes)
+        $externalStart = $ifd0Offset + $ifd0Size;
+
+        // Valid SubIFD starts after the external offsets array
+        $subIfdOffset = $externalStart + 8;
+
+        // Minimal SubIFD: 1 entry (ImageWidth)
+        $subIfdBlock = pack('v', 1) // entry count
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 200) . pack('v', 0)
+            . pack('V', 0); // no next IFD
+
+        $ifd0Entries = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 64) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 64) . pack('v', 0),
+            ExifTag::COMPRESSION => pack('v', ExifTag::COMPRESSION)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 1) . pack('v', 0),
+            TiffTag::SUB_IFDS => pack('v', TiffTag::SUB_IFDS)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', 2)
+                . pack('V', $externalStart),
+        ];
+
+        ksort($ifd0Entries);
+
+        $ifd0Block = pack('v', count($ifd0Entries));
+        foreach ($ifd0Entries as $entry) {
+            $ifd0Block .= $entry;
+        }
+
+        $ifd0Block .= pack('V', 0);
+
+        $externalOffsets = pack('V', 99999) . pack('V', $subIfdOffset);
 
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
