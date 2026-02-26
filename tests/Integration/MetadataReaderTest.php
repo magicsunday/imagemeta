@@ -81,6 +81,8 @@ use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserInterface;
+use MagicSunday\ImageMeta\Parse\Jxl\JxlParser;
+use MagicSunday\ImageMeta\Parse\Jxl\JxlParserFactory;
 use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
@@ -236,6 +238,8 @@ use function unlink;
 #[UsesClass(IptcParser::class)]
 #[UsesClass(JpegParser::class)]
 #[UsesClass(JpegParserFactory::class)]
+#[UsesClass(JxlParser::class)]
+#[UsesClass(JxlParserFactory::class)]
 #[UsesClass(Keywords::class)]
 #[UsesClass(Lens::class)]
 #[UsesClass(LocationTime::class)]
@@ -561,6 +565,7 @@ final class MetadataReaderTest extends TestCase
                 formatDetector: new FormatDetector(),
                 jpegParserFactory: $jpegParserFactory,
                 isoBmffParserFactory: $isoFactory,
+                jxlParserFactory: new JxlParserFactory(),
             );
             $result = $metadata->read($path);
         } finally {
@@ -792,6 +797,7 @@ final class MetadataReaderTest extends TestCase
                 formatDetector: new FormatDetector(),
                 jpegParserFactory: new JpegParserFactory(),
                 isoBmffParserFactory: new IsoBmffParserFactory(),
+                jxlParserFactory: new JxlParserFactory(),
                 maxTiffSize: strlen($tiff) - 1,
             );
 
@@ -821,6 +827,7 @@ final class MetadataReaderTest extends TestCase
                 formatDetector: new FormatDetector(),
                 jpegParserFactory: new JpegParserFactory(),
                 isoBmffParserFactory: new IsoBmffParserFactory(),
+                jxlParserFactory: new JxlParserFactory(),
                 maxTiffSize: strlen($tiff),
             );
 
@@ -829,6 +836,108 @@ final class MetadataReaderTest extends TestCase
         } finally {
             @unlink($path);
         }
+    }
+
+    /**
+     * Builds a JXL container with EXIF and XMP metadata and verifies MetadataReader
+     * extracts both payloads through the JXL parsing path.
+     */
+    #[Test]
+    public function readJxlPopulatesExifAndXmp(): void
+    {
+        $tiff = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R5', 'synthetic-canon-maker-note', true);
+        $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+            . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+            . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:title="JXL Test" />'
+            . '</rdf:RDF>'
+            . '</x:xmpmeta>';
+
+        $jxlSignature = "\x00\x00\x00\x0C\x4A\x58\x4C\x20\x0D\x0A\x87\x0A";
+        $ftyp         = $this->box('ftyp', 'jxl ' . pack('N', 0));
+        $exifBox      = $this->box('Exif', pack('N', 0) . $tiff);
+        $xmlBox       = $this->box('xml ', $xmp);
+        $jxlPayload   = $jxlSignature . $ftyp . $exifBox . $xmlBox;
+
+        $path = $this->writeTempFile($jxlPayload, 'jxl');
+
+        try {
+            $metadata = MetadataReader::createDefault()->read($path);
+        } finally {
+            @unlink($path);
+        }
+
+        self::assertSame([$tiff], $metadata->exifBlobs);
+        self::assertSame([$xmp], $metadata->xmpBlobs);
+        self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
+        self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
+        self::assertSame('Canon', $metadata->makerNotes->vendor);
+        self::assertNull($metadata->quickTime);
+        self::assertNull($metadata->isoBmffItemReferences);
+        self::assertNull($metadata->isoBmffDataReferences);
+        self::assertSame([], $metadata->isoBmffUnresolvedItems);
+        self::assertNull($metadata->iccProfile);
+        self::assertSame([], $metadata->iccSegments);
+        self::assertSame('jxl', $metadata->extension);
+        self::assertSame(strlen($jxlPayload), $metadata->fileSize);
+    }
+
+    /**
+     * Builds a JXL container without any metadata boxes and verifies MetadataReader
+     * returns an empty result without raising errors.
+     */
+    #[Test]
+    public function readJxlWithoutMetadataReturnsEmptyResult(): void
+    {
+        $jxlSignature = "\x00\x00\x00\x0C\x4A\x58\x4C\x20\x0D\x0A\x87\x0A";
+        $ftyp         = $this->box('ftyp', 'jxl ' . pack('N', 0));
+        $jxlPayload   = $jxlSignature . $ftyp . $this->box('jxlc', 'codestream-data');
+
+        $path = $this->writeTempFile($jxlPayload, 'jxl');
+
+        try {
+            $metadata = MetadataReader::createDefault()->read($path);
+        } finally {
+            @unlink($path);
+        }
+
+        self::assertSame([], $metadata->exifBlobs);
+        self::assertSame([], $metadata->xmpBlobs);
+        self::assertNull($metadata->exifDoc);
+        self::assertNull($metadata->xmpDoc);
+        self::assertNull($metadata->quickTime);
+        self::assertSame('jxl', $metadata->extension);
+    }
+
+    /**
+     * Builds a JXL container with only XMP and verifies MetadataReader extracts XMP
+     * without requiring EXIF to be present.
+     */
+    #[Test]
+    public function readJxlWithOnlyXmpPopulatesXmp(): void
+    {
+        $xmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+            . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+            . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:creator="Agent" />'
+            . '</rdf:RDF>'
+            . '</x:xmpmeta>';
+
+        $jxlSignature = "\x00\x00\x00\x0C\x4A\x58\x4C\x20\x0D\x0A\x87\x0A";
+        $ftyp         = $this->box('ftyp', 'jxl ' . pack('N', 0));
+        $jxlPayload   = $jxlSignature . $ftyp . $this->box('xml ', $xmp);
+
+        $path = $this->writeTempFile($jxlPayload, 'jxl');
+
+        try {
+            $metadata = MetadataReader::createDefault()->read($path);
+        } finally {
+            @unlink($path);
+        }
+
+        self::assertSame([], $metadata->exifBlobs);
+        self::assertSame([$xmp], $metadata->xmpBlobs);
+        self::assertNull($metadata->exifDoc);
+        self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
     }
 
     /**

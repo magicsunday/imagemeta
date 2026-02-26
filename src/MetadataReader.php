@@ -32,6 +32,8 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactory;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactoryInterface;
+use MagicSunday\ImageMeta\Parse\Jxl\JxlParserFactory;
+use MagicSunday\ImageMeta\Parse\Jxl\JxlParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 
@@ -65,6 +67,7 @@ final readonly class MetadataReader
      * @param FormatDetector                $formatDetector       Container format detector.
      * @param JpegParserFactoryInterface    $jpegParserFactory    Factory creating JPEG parser instances.
      * @param IsoBmffParserFactoryInterface $isoBmffParserFactory Factory creating ISO BMFF parser instances.
+     * @param JxlParserFactoryInterface     $jxlParserFactory     Factory creating JPEG XL parser instances.
      * @param int                           $maxTiffSize          Maximum stream size in bytes before TIFF materialisation is rejected.
      */
     public function __construct(
@@ -75,6 +78,7 @@ final readonly class MetadataReader
         private FormatDetector $formatDetector,
         private JpegParserFactoryInterface $jpegParserFactory,
         private IsoBmffParserFactoryInterface $isoBmffParserFactory,
+        private JxlParserFactoryInterface $jxlParserFactory,
         private int $maxTiffSize = self::MAX_TIFF_SIZE,
     ) {
     }
@@ -92,6 +96,7 @@ final readonly class MetadataReader
             new FormatDetector(),
             new JpegParserFactory(),
             new IsoBmffParserFactory(),
+            new JxlParserFactory(),
         );
     }
 
@@ -124,7 +129,7 @@ final readonly class MetadataReader
             ContainerType::JPEG    => $this->fromJpeg($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
             ContainerType::ISOBMFF => $this->fromIsoBmff($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
             ContainerType::TIFF    => $this->fromTiff($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
-            ContainerType::JXL     => throw new ParseError('JPEG XL (JXL) container detected but parsing is not yet supported', 1550),
+            ContainerType::JXL     => $this->fromJxl($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
         };
     }
 
@@ -279,6 +284,48 @@ final readonly class MetadataReader
         return (new MetadataBuilder())
             ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif([$tiffBlob], $exifDoc, $makerNotes)
+            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
+            ->build();
+    }
+
+    /**
+     * Extracts metadata from a JPEG XL container.
+     *
+     * ISO/IEC 18181-2 defines JXL containers as ISO BMFF-compatible with top-level
+     * `Exif` and `xml ` boxes for EXIF and XMP metadata respectively.
+     *
+     * @param Stream  $stream     Source stream positioned at the start of the file.
+     * @param ?string $mimeType   MIME type associated with the inspected file.
+     * @param ?int    $fileSize   File size in bytes if it could be determined.
+     * @param ?string $extension  File extension detected from the path or stream.
+     * @param ?string $digestSha1 Pre-computed SHA-1 digest for the stream contents.
+     * @param ?string $digestMd5  Pre-computed MD5 digest for the stream contents.
+     */
+    private function fromJxl(
+        Stream $stream,
+        ?string $mimeType,
+        ?int $fileSize,
+        ?string $extension,
+        ?string $digestSha1,
+        ?string $digestMd5,
+    ): Metadata {
+        [$exifBlobs, $xmpBlobs] = $this->jxlParserFactory->create($stream)->extract();
+
+        $exifDoc    = null;
+        $makerNotes = null;
+        if ($exifBlobs !== []) {
+            $registry   = $this->createMakerNotesRegistry();
+            $exifDoc    = $this->tiffReader->parseFromBlob($exifBlobs[0], $registry, embeddedContext: true);
+            $makerNotes = $exifDoc->makerNotes();
+        }
+
+        $makerNotes = $this->appleMerger->merge($makerNotes, null);
+        $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
+
+        return (new MetadataBuilder())
+            ->withParsers($this->xmpParser, $this->iptcParser)
+            ->withExif($exifBlobs, $exifDoc, $makerNotes)
+            ->withXmp($xmpBlobs, $xmpDoc)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
             ->build();
     }
