@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Scripts;
 
 use BackedEnum;
+use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
@@ -110,6 +111,19 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
     public function formatsGpsVersionIdWithDots(): void
     {
         $actual = $this->formatValueMethod->invoke($this->formatter, [2, 2, 0, 0], 'GPS', ExifTag::GPS_VERSION_ID);
+
+        self::assertSame('2.2.0.0', $actual);
+    }
+
+    #[Test]
+    public function formatsGpsVersionIdNumericListWithDots(): void
+    {
+        $actual = $this->formatValueMethod->invoke(
+            $this->formatter,
+            new ExifNumericList([2, 2, 0, 0]),
+            'GPS',
+            ExifTag::GPS_VERSION_ID,
+        );
 
         self::assertSame('2.2.0.0', $actual);
     }
