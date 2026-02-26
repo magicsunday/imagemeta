@@ -47,9 +47,9 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $formatterReflection = new ReflectionMethod('MagicSunday\\ImageMeta\\Scripts\\MetadataFormatter', 'format');
         $this->formatter     = $formatterReflection->getDeclaringClass()->newInstance();
 
-        $this->formatEnumNameMethod               = new ReflectionMethod($this->formatter, 'formatEnumName');
+        $this->formatEnumNameMethod                = new ReflectionMethod($this->formatter, 'formatEnumName');
         $this->formatComponentsConfigurationMethod = new ReflectionMethod($this->formatter, 'formatComponentsConfiguration');
-        $this->formatValueMethod                  = new ReflectionMethod($this->formatter, 'formatValue');
+        $this->formatValueMethod                   = new ReflectionMethod($this->formatter, 'formatValue');
     }
 
     #[Test]
@@ -105,6 +105,9 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         self::assertSame('999', $actual);
     }
 
+    /**
+     * @param list<string>|null $labels
+     */
     #[Test]
     #[DataProvider('provideComponentsConfigurations')]
     public function formatsComponentsConfigurationInExifOrder(?array $labels, ?string $expected): void
