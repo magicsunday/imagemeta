@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
+use MagicSunday\ImageMeta\Parse\Jpeg\FlashPixStreamAssembler;
 use MagicSunday\ImageMeta\Parse\Jpeg\IccProfileAssembler;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegApp1Handler;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegAudioSegmentParser;
@@ -36,8 +37,10 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use ReflectionMethod;
 
+use function array_map;
 use function array_values;
 use function chr;
 use function count;
@@ -80,6 +83,7 @@ use function unlink;
 #[UsesClass(JpegMarkerScanner::class)]
 #[UsesClass(JpegFrameValidator::class)]
 #[UsesClass(IccProfileAssembler::class)]
+#[UsesClass(FlashPixStreamAssembler::class)]
 #[UsesClass(JpegAudioSegmentParser::class)]
 #[UsesClass(JpegApp1Handler::class)]
 final class JpegParserTest extends TestCase
@@ -3228,6 +3232,25 @@ final class JpegParserTest extends TestCase
         $method = new ReflectionMethod(JpegParser::class, 'processStartOfFrame');
 
         self::assertTrue($method->isPrivate());
+    }
+
+    /**
+     * Guards FlashPix stream-data refactoring by requiring phased validation helpers.
+     */
+    #[Test]
+    public function flashPixStreamDataUsesPhasedValidationHelpers(): void
+    {
+        $reflection = new ReflectionClass(FlashPixStreamAssembler::class);
+        $methods    = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('decodeStreamDataHeader', $methods);
+        self::assertContains('validateStreamMetadata', $methods);
+        self::assertContains('validateSequenceMetadata', $methods);
+        self::assertContains('validateRangeAndOverlap', $methods);
+        self::assertContains('commitStreamChunk', $methods);
     }
 
     /**
