@@ -373,4 +373,22 @@ final class BoxPayloadCollectorTest extends TestCase
         self::assertContains('collectIdatPayload', $methods);
         self::assertContains('assertPayloadWithinLimit', $methods);
     }
+
+    /**
+     * Guards item payload resolver refactoring by requiring method-specific handlers.
+     */
+    #[Test]
+    public function itemPayloadResolverUsesConstructionMethodHandlers(): void
+    {
+        $reflection = new ReflectionClass(ItemPayloadResolver::class);
+        $methods    = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('resolveFileOffsetItemData', $methods);
+        self::assertContains('resolveIdatOffsetItemData', $methods);
+        self::assertContains('resolveItemOffsetItemData', $methods);
+        self::assertContains('resolveReferencedItemData', $methods);
+    }
 }
