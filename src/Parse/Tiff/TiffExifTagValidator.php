@@ -50,7 +50,7 @@ final readonly class TiffExifTagValidator
      * EXIF 3.0 §4.6.5.1 specifies several tags that shall not be used when the
      * primary image data is JPEG-compressed.
      *
-    * @var list<array{int, string}>
+     * @var list<array{int, string}>
      */
     private const array JPEG_PROHIBITED_TAGS = [
         [ExifTag::JPEG_INTERCHANGE_FORMAT, 'JPEGInterchangeFormat'],

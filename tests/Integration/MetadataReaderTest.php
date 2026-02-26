@@ -162,6 +162,7 @@ use function chr;
 use function count;
 use function debug_backtrace;
 use function file_put_contents;
+use function is_file;
 use function ltrim;
 use function md5;
 use function pack;
@@ -1249,7 +1250,7 @@ final class MetadataReaderTest extends TestCase
     private function fixturePath(string $relativePath): string
     {
         $path = __DIR__ . '/../../' . ltrim($relativePath, '/');
-        if (!\is_file($path)) {
+        if (!is_file($path)) {
             self::markTestSkipped(sprintf('Required fixture missing: %s', $relativePath));
         }
 
