@@ -1580,7 +1580,7 @@ final class MetadataReaderMimeProbeFailureStreamWrapper
             return '';
         }
 
-        $chunk         = substr(self::$payload, $this->offset, $count);
+        $chunk = substr(self::$payload, $this->offset, $count);
         $this->offset += strlen($chunk);
 
         return $chunk;

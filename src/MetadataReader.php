@@ -36,6 +36,7 @@ use MagicSunday\ImageMeta\Parse\Jxl\JxlParserFactory;
 use MagicSunday\ImageMeta\Parse\Jxl\JxlParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
+use ValueError;
 
 use function class_exists;
 use function hash_final;
@@ -365,12 +366,26 @@ final readonly class MetadataReader
             $probeLength = 8192;
         }
 
-        $stream->seek(0);
-        $probe = $probeLength === 0 ? '' : $stream->read($probeLength);
-        $stream->seek(0);
+        $probe = '';
+        try {
+            $stream->seek(0);
+            $probe = $probeLength === 0 ? '' : $stream->read($probeLength);
+        } catch (BoundsError|ParseError) {
+            return null;
+        } finally {
+            try {
+                $stream->seek(0);
+            } catch (BoundsError|ParseError) {
+                // Ignore seek-reset failures in optional MIME detection fallback.
+            }
+        }
 
         $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mime  = @$finfo->buffer($probe);
+        try {
+            $mime = $finfo->buffer($probe);
+        } catch (ValueError) {
+            return null;
+        }
 
         if (!is_string($mime) || $mime === '') {
             return null;
