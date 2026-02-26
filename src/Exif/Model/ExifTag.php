@@ -40,6 +40,13 @@ final readonly class ExifTag
     public const int INTEROPERABILITY_INDEX = 0x0001;
 
     /**
+     * Interoperability rule version stored in the Interoperability IFD.
+     *
+     * EXIF 3.0 §4.6.8 Table 16 defines this as InteroperabilityVersion (tag 0x0002).
+     */
+    public const int INTEROPERABILITY_VERSION = 0x0002;
+
+    /**
      * Latitude expressed as degrees, minutes and seconds.
      */
     public const int GPS_LATITUDE = 0x0002;
