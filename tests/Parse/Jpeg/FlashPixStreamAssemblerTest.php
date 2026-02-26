@@ -19,6 +19,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
+use function count;
 use function iconv;
 use function pack;
 use function str_repeat;
@@ -130,6 +131,33 @@ final class FlashPixStreamAssemblerTest extends TestCase
     }
 
     /**
+     * Tolerates oversized FlashPix contents-list entries and skips their stream assembly.
+     */
+    #[Test]
+    public function itToleratesFlashPixStreamEntryExceedingMaximumSize(): void
+    {
+        $assembler = new FlashPixStreamAssembler(
+            maxContentEntries: 10,
+            maxStreamSize: 100,
+            maxFlashPixTotalSize: 100_000,
+        );
+
+        $contentsList = $this->buildContentsListPayloadWithEntries([
+            ['size' => 200, 'defaultByte' => 0, 'name' => '/too-big'],
+            ['size' => 8, 'defaultByte' => 0, 'name' => '/ok'],
+        ]);
+        $assembler->handleSegment($contentsList, 0);
+
+        // Oversized stream entry must be tolerated and skipped instead of aborting parsing.
+        $assembler->handleSegment($this->buildStreamDataPayload(0, 1, 1, 0, 'ignored'), 100);
+        $assembler->handleSegment($this->buildStreamDataPayload(1, 1, 1, 0, 'ABCDEFGH'), 120);
+
+        $assembler->finalise();
+
+        self::assertSame([1 => 'ABCDEFGH'], $assembler->getStreams());
+    }
+
+    /**
      * Builds a complete FPXR contents-list payload with one stream entry.
      *
      * EXIF 3.0 §4.7.3.3–4: "FPXR" + NUL + version + entry-count(2B) + entries.
@@ -158,6 +186,28 @@ final class FlashPixStreamAssemblerTest extends TestCase
             . "\x00\x00";               // NUL terminator (UTF-16LE)
 
         $body = pack('n', 1) . $entry;  // entry count = 1
+
+        return "FPXR\x00\x00" . $body;
+    }
+
+    /**
+     * Builds a complete FPXR contents-list payload with multiple stream entries.
+     *
+     * @param list<array{size:int, defaultByte:int, name:string}> $entries
+     */
+    private function buildContentsListPayloadWithEntries(array $entries): string
+    {
+        $body = pack('n', count($entries));
+
+        foreach ($entries as $entry) {
+            $nameUtf16 = iconv('UTF-8', 'UTF-16LE', $entry['name']);
+            assert($nameUtf16 !== false);
+
+            $body .= pack('N', $entry['size'])
+                . chr($entry['defaultByte'])
+                . $nameUtf16
+                . "\x00\x00";
+        }
 
         return "FPXR\x00\x00" . $body;
     }
