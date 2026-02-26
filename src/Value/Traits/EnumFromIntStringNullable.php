@@ -64,8 +64,6 @@ trait EnumFromIntStringNullable
 
     /**
      * Resolves and caches the enum backing type name per enum class.
-     *
-     * @return 'int'|'string'|''
      */
     private static function exifBackingTypeName(): string
     {
