@@ -622,6 +622,47 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
+     * Simulates a probe-read failure in MIME detection and verifies explicit null fallback.
+     */
+    #[Test]
+    public function readFallsBackToNullMimeTypeWhenProbeReadFails(): void
+    {
+        $makerNote  = 'mime-fallback-maker-note';
+        $tiff       = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R5', $makerNote);
+        $sofPayload = $this->buildBaselineStartOfFramePayload(8, 256, 256);
+
+        $jpeg = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
+            . $this->segment(0xDB, "\x00")
+            . $this->segment(0xC4, "\x00")
+            . $this->segment(0xC0, $sofPayload)
+            . $this->segment(0xDA, "\x03\x01\x00\x02\x11\x03\x11\x00\x3F\x00")
+            . 'scan-data'
+            . "\xFF\xD9";
+
+        $scheme = 'imetamime' . md5(__METHOD__);
+        $path   = $scheme . '://fixture.jpg';
+
+        MetadataReaderMimeProbeFailureStreamWrapper::configure($jpeg);
+        $registered = stream_wrapper_register($scheme, MetadataReaderMimeProbeFailureStreamWrapper::class);
+        if (!$registered) {
+            self::fail('Unable to register mime probe failure stream wrapper');
+        }
+
+        try {
+            $metadata = MetadataReader::createDefault()->read($path);
+        } finally {
+            stream_wrapper_unregister($scheme);
+            MetadataReaderMimeProbeFailureStreamWrapper::reset();
+        }
+
+        self::assertNull($metadata->mimeType);
+        self::assertSame([$tiff], $metadata->exifBlobs);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
+        self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1);
+    }
+
+    /**
      * Simulates a path replacement between digest and parse phases.
      * Ensures digests and parsed metadata are derived from the same snapshot.
      */
@@ -1045,6 +1086,29 @@ final class MetadataReaderTest extends TestCase
             MetadataReader::createDefault()->read($path);
         } finally {
             @unlink($path);
+        }
+    }
+
+    /**
+     * Verifies deterministic ParseError when stream stat metadata cannot be resolved.
+     */
+    #[Test]
+    public function readThrowsWhenStreamStatFails(): void
+    {
+        $scheme = 'imetastat' . md5(__METHOD__);
+        $path   = $scheme . '://fixture.jpg';
+
+        $registered = stream_wrapper_register($scheme, MetadataReaderStatFailureStreamWrapper::class);
+        if (!$registered) {
+            self::fail('Unable to register stat failure stream wrapper');
+        }
+
+        try {
+            $this->expectException(ParseError::class);
+            $this->expectExceptionCode(1011);
+            MetadataReader::createDefault()->read($path);
+        } finally {
+            stream_wrapper_unregister($scheme);
         }
     }
 
@@ -1473,5 +1537,131 @@ final class MetadataReaderDigestSwapStreamWrapper
     private function isHashFileOpen(): bool
     {
         return array_any(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), fn ($frame): bool => $frame['function'] === 'hash_file');
+    }
+}
+
+/**
+ * Stream wrapper that fails the first read to simulate a MIME probe failure.
+ */
+final class MetadataReaderMimeProbeFailureStreamWrapper
+{
+    public mixed $context;
+
+    private static string $payload = '';
+
+    private static bool $failFirstRead = true;
+
+    private int $offset = 0;
+
+    public static function configure(string $payload): void
+    {
+        self::$payload       = $payload;
+        self::$failFirstRead = true;
+    }
+
+    public static function reset(): void
+    {
+        self::$payload       = '';
+        self::$failFirstRead = true;
+    }
+
+    public function stream_open(): bool
+    {
+        $this->offset = 0;
+
+        return true;
+    }
+
+    public function stream_read(int $count): string
+    {
+        if (self::$failFirstRead) {
+            self::$failFirstRead = false;
+
+            return '';
+        }
+
+        $chunk         = substr(self::$payload, $this->offset, $count);
+        $this->offset += strlen($chunk);
+
+        return $chunk;
+    }
+
+    public function stream_eof(): bool
+    {
+        return $this->offset >= strlen(self::$payload);
+    }
+
+    public function stream_tell(): int
+    {
+        return $this->offset;
+    }
+
+    public function stream_seek(int $offset, int $whence = SEEK_SET): bool
+    {
+        $target = match ($whence) {
+            SEEK_SET => $offset,
+            SEEK_CUR => $this->offset + $offset,
+            SEEK_END => strlen(self::$payload) + $offset,
+            default  => -1,
+        };
+
+        if ($target < 0 || $target > strlen(self::$payload)) {
+            return false;
+        }
+
+        $this->offset = $target;
+
+        return true;
+    }
+
+    /**
+     * @return array{7: int, size: int}
+     */
+    public function stream_stat(): array
+    {
+        return [
+            7      => strlen(self::$payload),
+            'size' => strlen(self::$payload),
+        ];
+    }
+
+    /**
+     * @return array{7: int, size: int}
+     */
+    public function url_stat(): array
+    {
+        return [
+            7      => strlen(self::$payload),
+            'size' => strlen(self::$payload),
+        ];
+    }
+}
+
+/**
+ * Stream wrapper that causes fstat() to fail.
+ */
+final class MetadataReaderStatFailureStreamWrapper
+{
+    public mixed $context;
+
+    public function stream_open(): bool
+    {
+        return true;
+    }
+
+    public function stream_stat(): bool
+    {
+        return false;
+    }
+
+    /**
+     * @return array{7: int, size: int}
+     */
+    public function url_stat(): array
+    {
+        return [
+            7      => 0,
+            'size' => 0,
+        ];
     }
 }
