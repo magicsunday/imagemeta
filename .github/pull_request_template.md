@@ -110,3 +110,15 @@ Docs im Repo:
 - [ ] Security (Bounds, Offsets, XML-Flags)
 - [ ] Reviewer (Minimalität, DX, Spec-Refs, Enums)
 - [ ] Release (PR-Text, Labels, Milestone, „Closes #…“)
+
+---
+
+## Senior Reviewer Output Protocol
+- Confirm plan alignment with issue scope, acceptance criteria, and allowed file scope.
+- Check architecture and clean-code constraints (SOLID, DRY, KISS, YAGNI, GRASP, LoD, SoC) with concrete evidence.
+- Prioritize high-impact findings only:
+  - 🔴 Critical — must fix before merge (correctness, security, CI/spec violations).
+  - 🟡 Important — should fix before merge (maintainability, robustness, test gaps tied to scope).
+  - 🟢 Suggestion — optional improvement (only if clearly low-risk and in-scope).
+- For each finding include: confidence (0-100), severity, exact file+line, why it matters, rule/spec reference, and a concrete fix snippet.
+- Do not report low-confidence or stylistic noise; reward correct defensive patterns and minimal, well-bounded changes.
