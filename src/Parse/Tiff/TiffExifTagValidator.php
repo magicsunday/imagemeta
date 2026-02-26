@@ -201,8 +201,12 @@ final readonly class TiffExifTagValidator
         // Postel's Law: accept reserved return-status bits.
         $fired      = ($flashBits & 0x01) !== 0;
         $returnBits = ($flashBits >> 1) & 0x03;
+        $modeBits   = ($flashBits >> 3) & 0x03;
 
-        if ((($returnBits === 2) || ($returnBits === 3)) && !$fired) {
+        // EXIF 3.0 §4.6.6.7.21 marks return-detection bits without fired bit as invalid.
+        // Tolerate real-world camera values like 20/30 when mode bits are populated,
+        // but keep rejecting the strict unknown-mode variants (e.g. 0x04/0x06).
+        if ((($returnBits === 2) || ($returnBits === 3)) && !$fired && ($modeBits === 0)) {
             throw new ParseError(
                 sprintf('Flash value %d encodes return detection while flash-fired bit is unset per EXIF 3.0 §4.6.6.7.21', $flashBits),
                 1984,
