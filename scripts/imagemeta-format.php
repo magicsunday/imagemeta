@@ -32,6 +32,7 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Exif\Text\UndefinedTextMarker;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
@@ -1268,11 +1269,50 @@ final class MetadataFormatter
 
             // UserComment - Decode multicode prefix and payload
             // EXIF 3.0 §4.6.6.4.2
-            ExifTag::USER_COMMENT => $exifDoc->userComment(),
+            ExifTag::USER_COMMENT => $this->formatUserCommentValue($rawValue, $exifDoc),
 
             // No special accessor available
             default => null,
         };
+    }
+
+    /**
+     * Formats UserComment values and keeps null-filled marker payloads blank.
+     *
+     * EXIF 3.0 §4.6.4 / §4.6.6.4.2 define an 8-byte charset marker prefix.
+     */
+    private function formatUserCommentValue(mixed $rawValue, ParsedExif $exifDoc): ?string
+    {
+        $decoded = $exifDoc->userComment();
+        if ($decoded !== null) {
+            return $decoded;
+        }
+
+        if (is_string($rawValue) && $this->isEmptyUserCommentRaw($rawValue)) {
+            return '';
+        }
+
+        return null;
+    }
+
+    /**
+     * Detects UserComment payloads that carry only marker+padding bytes.
+     */
+    private function isEmptyUserCommentRaw(string $raw): bool
+    {
+        if (strlen($raw) < 8) {
+            return false;
+        }
+
+        $prefix = substr($raw, 0, 8);
+        $marker = UndefinedTextMarker::canonicalMarkerFromPrefix($prefix);
+        if ($marker === '') {
+            return false;
+        }
+
+        $content = substr($raw, 8);
+
+        return trim($content, "\0 ") === '';
     }
 
     /**
