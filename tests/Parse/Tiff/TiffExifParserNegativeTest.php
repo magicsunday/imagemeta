@@ -1945,6 +1945,41 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * Tolerates real-world Flash values that encode return detection while fired bit is unset.
+     *
+     * EXIF 3.0 §4.6.6.7.21 marks this as invalid, but reader-side Postel handling keeps
+     * metadata extraction alive for camera files that store values like 20 and 30.
+     *
+     * @param int                $flashValue       Raw EXIF Flash SHORT value.
+     * @param bool               $fired            Decoded fired bit.
+     * @param FlashReturn|null   $returnDetection  Decoded return detection state.
+     * @param FlashMode|null     $mode             Decoded flash mode.
+     * @param FlashFunction|null $functionPresence Decoded flash function flag.
+     * @param bool               $redEyeReduction  Decoded red-eye bit.
+     */
+    #[Test]
+    #[DataProvider('provideToleratedRealWorldInvalidFlashBitfields')]
+    public function toleratesRealWorldInvalidFlashBitfields(
+        int $flashValue,
+        bool $fired,
+        ?FlashReturn $returnDetection,
+        ?FlashMode $mode,
+        ?FlashFunction $functionPresence,
+        bool $redEyeReduction,
+    ): void {
+        $result    = (new TiffExifParser())->parseFromBlob($this->buildTiffWithExifShortTag(ExifTag::FLASH, $flashValue));
+        $flashInfo = $result->flashInfo();
+
+        self::assertSame($flashValue, $result->flash());
+        self::assertNotNull($flashInfo);
+        self::assertSame($fired, $flashInfo->fired);
+        self::assertSame($returnDetection, $flashInfo->returnDetection);
+        self::assertSame($mode, $flashInfo->mode);
+        self::assertSame($functionPresence, $flashInfo->functionPresence);
+        self::assertSame($redEyeReduction, $flashInfo->redEyeReduction);
+    }
+
+    /**
      * Rejects reserved/invalid Flash bitfield combinations per EXIF 3.0 §4.6.6.7.21.
      *
      * @param int $flashValue Raw EXIF Flash SHORT value.
@@ -1994,6 +2029,15 @@ final class TiffExifParserNegativeTest extends TestCase
     {
         yield 'return-not-detected without fired bit' => [0x04, 1984];
         yield 'return-detected without fired bit' => [0x06, 1984];
+    }
+
+    /**
+     * @return iterable<string, array{0:int, 1:bool, 2:FlashReturn|null, 3:FlashMode|null, 4:FlashFunction|null, 5:bool}>
+     */
+    public static function provideToleratedRealWorldInvalidFlashBitfields(): iterable
+    {
+        yield 'value 20: return-not-detected while fired bit unset' => [20, false, FlashReturn::ReturnNotDetected, FlashMode::CompulsorySuppress, FlashFunction::Present, false];
+        yield 'value 30: return-detected while fired bit unset' => [30, false, FlashReturn::ReturnDetected, FlashMode::Auto, FlashFunction::Present, false];
     }
 
     /**
