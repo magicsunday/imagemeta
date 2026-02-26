@@ -88,22 +88,10 @@ final readonly class BoxPayloadCollector
         foreach ($this->boxNavigator->walkChildren($meta, $childOffset) as $child) {
             switch ($child->type) {
                 case BoxType::HDLR->value:
-                    ++$hdlrCount;
-                    if ($hdlrCount > 1) {
-                        throw new ParseError('meta must contain exactly one hdlr box', 1478);
-                    }
-
-                    [$handlerType] = $this->trackMediaParser->parseHdlr($child);
+                    $this->collectHdlr($child, $hdlrCount, $handlerType);
                     break;
                 case BoxType::EXIF->value:
-                    // Enforce payload cap before reading direct Exif box
-                    if ($child->contentSize > $this->maxItemPayloadSize) {
-                        throw new ParseError('direct Exif box payload exceeds maximum allowed size', 1396);
-                    }
-
-                    // The EXIF 3.0 §4.8 Exif box must expose the TIFF header directly; normalize deviations.
-                    $blob         = $this->boxNavigator->readAll($child->window);
-                    $directExif[] = $this->itemPayloadResolver->normalizeExifBlob($blob);
+                    $this->collectDirectExifPayload($child, $directExif);
                     break;
                 case BoxType::IINF->value:
                     foreach ($this->ilocBoxParser->parseIinf($child) as $info) {
@@ -119,20 +107,7 @@ final readonly class BoxPayloadCollector
                     $locations = $this->ilocBoxParser->parseIloc($child, $fileOffsetOrigin);
                     break;
                 case BoxType::IDAT->value:
-                    // ISO/IEC 14496-12 §8.11.11.2 specifies aligned(8), but
-                    // virtually all Apple and Android encoders produce idat
-                    // boxes at non-aligned offsets.  Skip the alignment check.
-
-                    if ($idatPayload !== null) {
-                        throw new ParseError('meta context must contain at most one idat box', 1414);
-                    }
-
-                    if ($child->contentSize > $this->maxItemPayloadSize) {
-                        throw new ParseError('idat payload exceeds configured limit', 1164);
-                    }
-
-                    $idatPayload = $this->boxNavigator->readAll($child->window);
-
+                    $this->collectIdatPayload($child, $idatPayload);
                     break;
                 case BoxType::PITM->value:
                     $primaryItemId = $this->ilocBoxParser->parsePitm($child);
@@ -144,66 +119,33 @@ final readonly class BoxPayloadCollector
                     $dataReferences = ItemLocationResolver::mergeDataReferences($dataReferences, $this->ilocBoxParser->parseDinf($child));
                     break;
                 case BoxType::XMP->value:
-                    // Enforce payload cap before reading direct XMP box
-                    if ($child->contentSize > $this->maxItemPayloadSize) {
-                        throw new ParseError('direct XMP box payload exceeds maximum allowed size', 1397);
-                    }
-
-                    $directXmp[] = $this->boxNavigator->readAll($child->window);
+                    $this->collectDirectXmpPayload($child, $directXmp);
                     break;
                 case BoxType::UUID->value:
-                    if ($child->userType === self::XMP_UUID) {
-                        // Enforce payload cap before reading uuid XMP box
-                        if ($child->contentSize > $this->maxItemPayloadSize) {
-                            throw new ParseError('uuid XMP box payload exceeds maximum allowed size', 1900);
-                        }
-
-                        $uuidXmp[] = $this->boxNavigator->readAll($child->window);
-                    }
-
+                    $this->collectUuidXmpPayload($child, $uuidXmp);
                     break;
                 case BoxType::MHDR->value:
-                    $this->quickTimeDecoder->parseMhdr($child);
-                    $requiresHdlr = true;
-                    $hasMhdr      = true;
+                    $this->collectMhdr($child, $requiresHdlr, $hasMhdr);
                     break;
                 case BoxType::KEYS->value:
-                    $requiresHdlr = true;
-
-                    if ($keysMaps !== []) {
-                        throw new ParseError('meta must contain at most one keys atom', 1964);
-                    }
-
-                    $keysMaps[] = $this->quickTimeKeyResolver->parseKeys($child);
+                    $this->collectKeysAtom($child, $requiresHdlr, $keysMaps);
                     break;
                 case BoxType::ILST->value:
-                    if ($ilstBoxes !== []) {
-                        throw new ParseError('meta must contain at most one ilst atom', 1504);
-                    }
-
-                    $ilstBoxes[] = $child;
+                    $this->collectIlstAtom($child, $ilstBoxes);
                     break;
                 case BoxType::CTRY->value:
-                    $requiresHdlr = true;
-
-                    if ($countryLists !== []) {
-                        throw new ParseError('meta must contain at most one ctry atom', 1959);
-                    }
-
-                    $countryLists = $this->quickTimeDecoder->parseLocaleListAtom($child, 'ctry');
+                    $this->collectLocaleListAtom($child, 'ctry', 1959, $requiresHdlr, $countryLists);
                     break;
                 case BoxType::LANG->value:
-                    $requiresHdlr = true;
-
-                    if ($languageLists !== []) {
-                        throw new ParseError('meta must contain at most one lang atom', 1960);
-                    }
-
-                    $languageLists = $this->quickTimeDecoder->parseLocaleListAtom($child, 'lang');
+                    $this->collectLocaleListAtom($child, 'lang', 1960, $requiresHdlr, $languageLists);
                     break;
                 case BoxType::IPRP->value:
                     if ($ispeWidth === null) {
-                        [$ispeWidth, $ispeHeight] = $this->parseIprp($child);
+                        ['width' => $parsedWidth, 'height' => $parsedHeight] = $this->parseIprp($child);
+                        if ($parsedWidth !== null) {
+                            $ispeWidth  = $parsedWidth;
+                            $ispeHeight = $parsedHeight;
+                        }
                     }
 
                     break;
@@ -261,6 +203,144 @@ final readonly class BoxPayloadCollector
             $ispeWidth,
             $ispeHeight,
         );
+    }
+
+    /**
+     * Collects and validates the single required handler box.
+     */
+    private function collectHdlr(BoxDescriptor $child, int &$hdlrCount, ?string &$handlerType): void
+    {
+        ++$hdlrCount;
+        if ($hdlrCount > 1) {
+            throw new ParseError('meta must contain exactly one hdlr box', 1478);
+        }
+
+        [$handlerType] = $this->trackMediaParser->parseHdlr($child);
+    }
+
+    /**
+     * Collects direct Exif payloads from `Exif` boxes.
+     *
+     * @param list<string> $directExif
+     */
+    private function collectDirectExifPayload(BoxDescriptor $child, array &$directExif): void
+    {
+        $this->assertPayloadWithinLimit($child, 'direct Exif box payload exceeds maximum allowed size', 1396);
+
+        // The EXIF 3.0 §4.8 Exif box must expose the TIFF header directly; normalize deviations.
+        $blob         = $this->boxNavigator->readAll($child->window);
+        $directExif[] = $this->itemPayloadResolver->normalizeExifBlob($blob);
+    }
+
+    /**
+     * Collects direct XMP payloads from `XMP ` boxes.
+     *
+     * @param list<string> $directXmp
+     */
+    private function collectDirectXmpPayload(BoxDescriptor $child, array &$directXmp): void
+    {
+        $this->assertPayloadWithinLimit($child, 'direct XMP box payload exceeds maximum allowed size', 1397);
+        $directXmp[] = $this->boxNavigator->readAll($child->window);
+    }
+
+    /**
+     * Collects XMP payloads from UUID boxes with the XMP UUID signature.
+     *
+     * @param list<string> $uuidXmp
+     */
+    private function collectUuidXmpPayload(BoxDescriptor $child, array &$uuidXmp): void
+    {
+        if ($child->userType !== self::XMP_UUID) {
+            return;
+        }
+
+        $this->assertPayloadWithinLimit($child, 'uuid XMP box payload exceeds maximum allowed size', 1900);
+        $uuidXmp[] = $this->boxNavigator->readAll($child->window);
+    }
+
+    /**
+     * Collects and validates a single `idat` payload.
+     *
+     * @param-out string $idatPayload
+     */
+    private function collectIdatPayload(BoxDescriptor $child, ?string &$idatPayload): void
+    {
+        // ISO/IEC 14496-12 §8.11.11.2 specifies aligned(8), but
+        // virtually all Apple and Android encoders produce idat
+        // boxes at non-aligned offsets. Skip the alignment check.
+        if ($idatPayload !== null) {
+            throw new ParseError('meta context must contain at most one idat box', 1414);
+        }
+
+        $this->assertPayloadWithinLimit($child, 'idat payload exceeds configured limit', 1164);
+        $idatPayload = $this->boxNavigator->readAll($child->window);
+    }
+
+    /**
+     * Collects and validates a single `keys` atom.
+     *
+     * @param list<array<int, QuickTimeKeyEntry>> $keysMaps
+     */
+    private function collectKeysAtom(BoxDescriptor $child, bool &$requiresHdlr, array &$keysMaps): void
+    {
+        $requiresHdlr = true;
+
+        if ($keysMaps !== []) {
+            throw new ParseError('meta must contain at most one keys atom', 1964);
+        }
+
+        $keysMaps[] = $this->quickTimeKeyResolver->parseKeys($child);
+    }
+
+    /**
+     * Collects and validates a single `ilst` atom.
+     *
+     * @param list<BoxDescriptor> $ilstBoxes
+     */
+    private function collectIlstAtom(BoxDescriptor $child, array &$ilstBoxes): void
+    {
+        if ($ilstBoxes !== []) {
+            throw new ParseError('meta must contain at most one ilst atom', 1504);
+        }
+
+        $ilstBoxes[] = $child;
+    }
+
+    /**
+     * Collects and validates QuickTime locale list atoms (`ctry`/`lang`).
+     *
+     * @param 'ctry'|'lang'   $atomType
+     * @param list<list<int>> $lists
+     */
+    private function collectLocaleListAtom(BoxDescriptor $child, string $atomType, int $duplicateCode, bool &$requiresHdlr, array &$lists): void
+    {
+        $requiresHdlr = true;
+
+        if ($lists !== []) {
+            throw new ParseError(sprintf('meta must contain at most one %s atom', $atomType), $duplicateCode);
+        }
+
+        $lists = $this->quickTimeDecoder->parseLocaleListAtom($child, $atomType);
+    }
+
+    /**
+     * Collects metadata header presence and marks hdlr requirement.
+     */
+    private function collectMhdr(BoxDescriptor $child, bool &$requiresHdlr, bool &$hasMhdr): void
+    {
+        $this->quickTimeDecoder->parseMhdr($child);
+        $requiresHdlr = true;
+        $hasMhdr      = true;
+    }
+
+    /**
+     * Enforces the configured payload size limit before reading a box body.
+     */
+    private function assertPayloadWithinLimit(BoxDescriptor $child, string $errorMessage, int $errorCode): void
+    {
+        if ($child->contentSize > $this->maxItemPayloadSize) {
+            throw new ParseError($errorMessage, $errorCode);
+        }
     }
 
     /**
@@ -369,20 +449,20 @@ final readonly class BoxPayloadCollector
      *
      * @param BoxDescriptor $iprp Box descriptor for the item properties box.
      *
-     * @return array{0: ?int, 1: ?int} [width, height] from the first ispe box, or [null, null].
+     * @return array{width: ?int, height: ?int} Width/height from the first ispe box, or null pair.
      */
     private function parseIprp(BoxDescriptor $iprp): array
     {
         foreach ($this->boxNavigator->walkChildren($iprp) as $child) {
             if ($child->type === BoxType::IPCO->value) {
-                $result = $this->parseIpco($child);
-                if ($result[0] !== null) {
-                    return $result;
+                $dimensions = $this->parseIpco($child);
+                if ($dimensions['width'] !== null) {
+                    return $dimensions;
                 }
             }
         }
 
-        return [null, null];
+        return ['width' => null, 'height' => null];
     }
 
     /**
@@ -390,7 +470,7 @@ final readonly class BoxPayloadCollector
      *
      * @param BoxDescriptor $ipco Box descriptor for the item property container box.
      *
-     * @return array{0: ?int, 1: ?int} [width, height] from the first ispe box, or [null, null].
+     * @return array{width: ?int, height: ?int} Width/height from the first ispe box, or null pair.
      */
     private function parseIpco(BoxDescriptor $ipco): array
     {
@@ -400,7 +480,7 @@ final readonly class BoxPayloadCollector
             }
         }
 
-        return [null, null];
+        return ['width' => null, 'height' => null];
     }
 
     /**
@@ -411,13 +491,13 @@ final readonly class BoxPayloadCollector
      *
      * @param BoxDescriptor $ispe Box descriptor for the image spatial extents box.
      *
-     * @return array{0: ?int, 1: ?int} [width, height] or [null, null] if the box is malformed.
+     * @return array{width: ?int, height: ?int} Width/height or null pair if the box is malformed.
      */
     private function parseIspe(BoxDescriptor $ispe): array
     {
         // FullBox header (4 bytes) + display_width (4 bytes) + display_height (4 bytes) = 12 bytes
         if ($ispe->contentSize < 12) {
-            return [null, null];
+            return ['width' => null, 'height' => null];
         }
 
         $win = $ispe->window;
@@ -428,13 +508,13 @@ final readonly class BoxPayloadCollector
         $win->read(3);
 
         if ($version !== 0) {
-            return [null, null];
+            return ['width' => null, 'height' => null];
         }
 
         $width  = $this->readU32FromBytes($win->read(4), 0, 'ispe display_width');
         $height = $this->readU32FromBytes($win->read(4), 0, 'ispe display_height');
 
-        return [$width, $height];
+        return ['width' => $width, 'height' => $height];
     }
 
     /**

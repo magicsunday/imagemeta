@@ -373,7 +373,7 @@ final class BoxPayloadCollectorTest extends TestCase
     public function collectUsesFocusedDispatchHelpers(): void
     {
         $reflection = new ReflectionClass(BoxPayloadCollector::class);
-        $methods = array_map(
+        $methods    = array_map(
             static fn (ReflectionMethod $method): string => $method->getName(),
             $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
         );
