@@ -137,10 +137,84 @@ final readonly class IccTagDecoder
 
         // ICC.1:2022 §10.31: XYZType contains XYZNumber at offset 8
         // XYZNumber is 3 x s15Fixed16Number (each 4 bytes)
+        return $this->parseXyzTriplet($tagData, 8);
+    }
+
+    /**
+     * Extracts viewing conditions data from the viewingConditionsTag ('view').
+     *
+     * ICC.1:2022 §9.2.51 and §10.30 define viewingConditionsType as:
+     * signature + reserved + illuminant XYZ + surround XYZ + illuminant type.
+     *
+     * @param string $data        Raw ICC profile payload.
+     * @param int    $profileSize Declared profile size limiting the accessible range.
+     *
+     * @return array{
+     *   illuminant: array{x: float, y: float, z: float},
+     *   surround: array{x: float, y: float, z: float},
+     *   illuminantType: int
+     * }|null
+     */
+    public function extractViewingConditions(string $data, int $profileSize): ?array
+    {
+        $tagData = $this->findTagData($data, $profileSize, 'view');
+        if ($tagData === null || strlen($tagData) < 36) {
+            return null;
+        }
+
+        if (substr($tagData, 0, 4) !== 'view') {
+            return null;
+        }
+
+        if (substr($tagData, 4, 4) !== "\0\0\0\0") {
+            return null;
+        }
+
         return [
-            'x' => $this->reader->s15Fixed16($tagData, 8),
-            'y' => $this->reader->s15Fixed16($tagData, 12),
-            'z' => $this->reader->s15Fixed16($tagData, 16),
+            'illuminant' => $this->parseXyzTriplet($tagData, 8),
+            'surround' => $this->parseXyzTriplet($tagData, 20),
+            'illuminantType' => $this->reader->uInt32Be(substr($tagData, 32, 4)),
+        ];
+    }
+
+    /**
+     * Extracts measurement data from the measurementTag ('meas').
+     *
+     * ICC.1:2022 §9.2.34 and §10.14 define measurementType as:
+     * signature + reserved + observer + backing XYZ + geometry + flare + illuminant.
+     *
+     * @param string $data        Raw ICC profile payload.
+     * @param int    $profileSize Declared profile size limiting the accessible range.
+     *
+     * @return array{
+     *   observer: int,
+     *   backing: array{x: float, y: float, z: float},
+     *   geometry: int,
+     *   flare: float,
+     *   illuminant: int
+     * }|null
+     */
+    public function extractMeasurement(string $data, int $profileSize): ?array
+    {
+        $tagData = $this->findTagData($data, $profileSize, 'meas');
+        if ($tagData === null || strlen($tagData) < 36) {
+            return null;
+        }
+
+        if (substr($tagData, 0, 4) !== 'meas') {
+            return null;
+        }
+
+        if (substr($tagData, 4, 4) !== "\0\0\0\0") {
+            return null;
+        }
+
+        return [
+            'observer' => $this->reader->uInt32Be(substr($tagData, 8, 4)),
+            'backing' => $this->parseXyzTriplet($tagData, 12),
+            'geometry' => $this->reader->uInt32Be(substr($tagData, 24, 4)),
+            'flare' => $this->reader->uInt32Be(substr($tagData, 28, 4)) / 65536.0,
+            'illuminant' => $this->reader->uInt32Be(substr($tagData, 32, 4)),
         ];
     }
 
@@ -303,6 +377,20 @@ final readonly class IccTagDecoder
         }
 
         return null;
+    }
+
+    /**
+     * Parses one XYZNumber triplet (3 x s15Fixed16Number) from a payload offset.
+     *
+     * @return array{x: float, y: float, z: float}
+     */
+    private function parseXyzTriplet(string $data, int $offset): array
+    {
+        return [
+            'x' => $this->reader->s15Fixed16($data, $offset),
+            'y' => $this->reader->s15Fixed16($data, $offset + 4),
+            'z' => $this->reader->s15Fixed16($data, $offset + 8),
+        ];
     }
 
     /**

@@ -80,6 +80,18 @@ final readonly class IccParser implements IccParserInterface
      *     deviceMfgDesc: string|null,
      *     deviceModelDesc: string|null,
      *     technology: string|null,
+     *     viewingConditions: array{
+     *       illuminant: array{x: float, y: float, z: float},
+     *       surround: array{x: float, y: float, z: float},
+     *       illuminantType: int
+     *     }|null,
+     *     measurement: array{
+     *       observer: int,
+     *       backing: array{x: float, y: float, z: float},
+     *       geometry: int,
+     *       flare: float,
+     *       illuminant: int
+     *     }|null,
      *     version: string|null,
      *     pcs: string|null,
      *     renderingIntent: string|null,
@@ -143,6 +155,8 @@ final readonly class IccParser implements IccParserInterface
             'deviceMfgDesc'      => $tagFields['deviceMfgDesc'],
             'deviceModelDesc'    => $tagFields['deviceModelDesc'],
             'technology'         => $tagFields['technology'],
+            'viewingConditions'  => $tagFields['viewingConditions'],
+            'measurement'        => $tagFields['measurement'],
             'version'            => $headerFields['version'],
             'pcs'                => $headerFields['pcs'],
             'renderingIntent'    => $headerFields['renderingIntent'],
@@ -318,7 +332,19 @@ final readonly class IccParser implements IccParserInterface
      *   blueTRC: array{gamma: float}|array{table: list<int>}|null,
      *   deviceMfgDesc: string|null,
      *   deviceModelDesc: string|null,
-     *   technology: string|null
+     *   technology: string|null,
+     *   viewingConditions: array{
+     *     illuminant: array{x: float, y: float, z: float},
+     *     surround: array{x: float, y: float, z: float},
+     *     illuminantType: int
+     *   }|null,
+     *   measurement: array{
+     *     observer: int,
+     *     backing: array{x: float, y: float, z: float},
+     *     geometry: int,
+     *     flare: float,
+     *     illuminant: int
+     *   }|null
      * }
      */
     private function decodeTagFields(string $data, int $profileSize, int $majorVersion): array
@@ -337,6 +363,8 @@ final readonly class IccParser implements IccParserInterface
         $deviceMfgDesc     = $this->tagDecoder->extractTag($data, $profileSize, 'dmnd', $majorVersion);
         $deviceModelDesc   = $this->tagDecoder->extractTag($data, $profileSize, 'dmdd', $majorVersion);
         $technology        = $this->tagDecoder->extractSignatureTag($data, $profileSize, 'tech');
+        $viewingConditions = $this->tagDecoder->extractViewingConditions($data, $profileSize);
+        $measurement       = $this->tagDecoder->extractMeasurement($data, $profileSize);
 
         return [
             'description'       => $description,
@@ -353,6 +381,8 @@ final readonly class IccParser implements IccParserInterface
             'deviceMfgDesc'     => $deviceMfgDesc,
             'deviceModelDesc'   => $deviceModelDesc,
             'technology'        => $technology,
+            'viewingConditions' => $viewingConditions,
+            'measurement'       => $measurement,
         ];
     }
 
