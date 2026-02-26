@@ -66,6 +66,11 @@ use MagicSunday\ImageMeta\Value\Xmp as ValueXmp;
 /**
  * Builds the structured metadata aggregate by orchestrating value-object creation from
  * ParsedExif, QuickTimeMeta and MakerNotes sources.
+ *
+ * @phpstan-type MediaComponents array{audio: ValueAudio, container: Container, embeddedAudio: AudioClips, flashPix: FlashPix, video: Video}
+ * @phpstan-type XmpComponents array{depthMap: DepthMap, keywords: Keywords, related: RelatedAssets}
+ * @phpstan-type CoreComponents array{author: Author, camera: Camera, capture: Capture, colorProfile: ValueColorProfile, composite: CompositeImageInfo, derived: Derived, device: Device, exposure: Exposure, file: ValueFile, focus: Focus, gps: Gps, image: Image, integrity: Integrity, interop: ValueInterop, iptc: ValueIptc, lens: Lens, motion: Motion, multiPicture: MultiPicture, processing: ValueProcessingSettings, regions: RegionCollection, rights: Rights, scene: Scene, sensor: Sensor, standards: ValueStandards, temporal: Temporal, thumbnail: Thumbnail, tiff: TiffData, whiteBalance: WhiteBalanceDetails, xmp: ValueXmp, makerNotesApple: AppleMakerNotes|null}
+ * @phpstan-type ValueComponents array{audio: ValueAudio, author: Author, camera: Camera, capture: Capture, colorProfile: ValueColorProfile, composite: CompositeImageInfo, container: Container, derived: Derived, depthMap: DepthMap, device: Device, embeddedAudio: AudioClips, exposure: Exposure, file: ValueFile, flashPix: FlashPix, focus: Focus, gps: Gps, image: Image, integrity: Integrity, interop: ValueInterop, iptc: ValueIptc, keywords: Keywords, lens: Lens, motion: Motion, multiPicture: MultiPicture, processing: ValueProcessingSettings, regions: RegionCollection, related: RelatedAssets, rights: Rights, scene: Scene, sensor: Sensor, standards: ValueStandards, temporal: Temporal, thumbnail: Thumbnail, tiff: TiffData, video: Video, whiteBalance: WhiteBalanceDetails, xmp: ValueXmp, makerNotesApple: AppleMakerNotes|null}
  */
 final readonly class ValueFactory
 {
@@ -110,7 +115,7 @@ final readonly class ValueFactory
      *
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
-     * @return array{audio: ValueAudio, author: Author, camera: Camera, capture: Capture, colorProfile: ValueColorProfile, composite: CompositeImageInfo, container: Container, derived: Derived, depthMap: DepthMap, device: Device, embeddedAudio: AudioClips, exposure: Exposure, file: ValueFile, flashPix: FlashPix, focus: Focus, gps: Gps, image: Image, integrity: Integrity, interop: ValueInterop, iptc: ValueIptc, keywords: Keywords, lens: Lens, motion: Motion, multiPicture: MultiPicture, processing: ValueProcessingSettings, regions: RegionCollection, related: RelatedAssets, rights: Rights, scene: Scene, sensor: Sensor, standards: ValueStandards, temporal: Temporal, thumbnail: Thumbnail, tiff: TiffData, video: Video, whiteBalance: WhiteBalanceDetails, xmp: ValueXmp, makerNotesApple: AppleMakerNotes|null}
+     * @return ValueComponents
      */
     public function createComponents(Metadata $metadata): array
     {
@@ -205,34 +210,31 @@ final readonly class ValueFactory
 
         $xmpValues = $this->createXmpValues($xmpDocument, $exifDocument, $quickTimeLookup, $metadata);
 
-        return [
-            ComponentKey::Audio->value           => $media[ComponentKey::Audio->value],
+        $mediaComponents = $this->createMediaComponentMap($media);
+        $xmpComponents   = $this->createXmpComponentMap($xmpValues);
+
+        /** @var CoreComponents $coreComponents */
+        $coreComponents = [
             ComponentKey::Author->value          => $author,
             ComponentKey::Camera->value          => $camera,
             ComponentKey::Capture->value         => $capture,
             ComponentKey::ColorProfile->value    => $colorProfile,
             ComponentKey::Composite->value       => $composite,
-            ComponentKey::Container->value       => $media[ComponentKey::Container->value],
             ComponentKey::Derived->value         => $derived,
-            ComponentKey::DepthMap->value        => $xmpValues[ComponentKey::DepthMap->value],
             ComponentKey::Device->value          => $device,
-            ComponentKey::EmbeddedAudio->value   => $media[ComponentKey::EmbeddedAudio->value],
             ComponentKey::Exposure->value        => $exposure,
             ComponentKey::File->value            => $file,
-            ComponentKey::FlashPix->value        => $media[ComponentKey::FlashPix->value],
             ComponentKey::Focus->value           => $focus,
             ComponentKey::Gps->value             => $gps,
             ComponentKey::Image->value           => $image,
             ComponentKey::Integrity->value       => $integrity,
             ComponentKey::Interop->value         => $interop,
             ComponentKey::Iptc->value            => new ValueIptc($iptcDocument),
-            ComponentKey::Keywords->value        => $xmpValues[ComponentKey::Keywords->value],
             ComponentKey::Lens->value            => $lens,
             ComponentKey::Motion->value          => $motion,
             ComponentKey::MultiPicture->value    => $multiPicture,
             ComponentKey::Processing->value      => $processing,
             ComponentKey::Regions->value         => $regions,
-            ComponentKey::Related->value         => $xmpValues[ComponentKey::Related->value],
             ComponentKey::Rights->value          => $rights,
             ComponentKey::Scene->value           => $scene,
             ComponentKey::Sensor->value          => $sensor,
@@ -240,10 +242,98 @@ final readonly class ValueFactory
             ComponentKey::Temporal->value        => $temporal,
             ComponentKey::Thumbnail->value       => $thumbnail,
             ComponentKey::Tiff->value            => $tiff,
-            ComponentKey::Video->value           => $media[ComponentKey::Video->value],
             ComponentKey::WhiteBalance->value    => $whiteBalanceDetails,
             ComponentKey::Xmp->value             => new ValueXmp($xmpDocument),
             ComponentKey::MakerNotesApple->value => $apple,
+        ];
+
+        return $this->createComponentMap($coreComponents, $mediaComponents, $xmpComponents);
+    }
+
+    /**
+     * Builds media-related components from the delegated media factory output.
+     *
+     * @param MediaComponents $media
+     *
+     * @return MediaComponents
+     */
+    private function createMediaComponentMap(array $media): array
+    {
+        return [
+            ComponentKey::Audio->value         => $media[ComponentKey::Audio->value],
+            ComponentKey::Container->value     => $media[ComponentKey::Container->value],
+            ComponentKey::EmbeddedAudio->value => $media[ComponentKey::EmbeddedAudio->value],
+            ComponentKey::FlashPix->value      => $media[ComponentKey::FlashPix->value],
+            ComponentKey::Video->value         => $media[ComponentKey::Video->value],
+        ];
+    }
+
+    /**
+     * Builds XMP-derived component entries from delegated XMP value creation.
+     *
+     * @param XmpComponents $xmpValues
+     *
+     * @return XmpComponents
+     */
+    private function createXmpComponentMap(array $xmpValues): array
+    {
+        return [
+            ComponentKey::DepthMap->value => $xmpValues[ComponentKey::DepthMap->value],
+            ComponentKey::Keywords->value => $xmpValues[ComponentKey::Keywords->value],
+            ComponentKey::Related->value  => $xmpValues[ComponentKey::Related->value],
+        ];
+    }
+
+    /**
+     * Assembles the final component map in the established key order.
+     *
+     * @param CoreComponents  $coreComponents
+     * @param MediaComponents $mediaComponents
+     * @param XmpComponents   $xmpComponents
+     *
+     * @return ValueComponents
+     */
+    private function createComponentMap(array $coreComponents, array $mediaComponents, array $xmpComponents): array
+    {
+        return [
+            ComponentKey::Audio->value           => $mediaComponents[ComponentKey::Audio->value],
+            ComponentKey::Author->value          => $coreComponents[ComponentKey::Author->value],
+            ComponentKey::Camera->value          => $coreComponents[ComponentKey::Camera->value],
+            ComponentKey::Capture->value         => $coreComponents[ComponentKey::Capture->value],
+            ComponentKey::ColorProfile->value    => $coreComponents[ComponentKey::ColorProfile->value],
+            ComponentKey::Composite->value       => $coreComponents[ComponentKey::Composite->value],
+            ComponentKey::Container->value       => $mediaComponents[ComponentKey::Container->value],
+            ComponentKey::Derived->value         => $coreComponents[ComponentKey::Derived->value],
+            ComponentKey::DepthMap->value        => $xmpComponents[ComponentKey::DepthMap->value],
+            ComponentKey::Device->value          => $coreComponents[ComponentKey::Device->value],
+            ComponentKey::EmbeddedAudio->value   => $mediaComponents[ComponentKey::EmbeddedAudio->value],
+            ComponentKey::Exposure->value        => $coreComponents[ComponentKey::Exposure->value],
+            ComponentKey::File->value            => $coreComponents[ComponentKey::File->value],
+            ComponentKey::FlashPix->value        => $mediaComponents[ComponentKey::FlashPix->value],
+            ComponentKey::Focus->value           => $coreComponents[ComponentKey::Focus->value],
+            ComponentKey::Gps->value             => $coreComponents[ComponentKey::Gps->value],
+            ComponentKey::Image->value           => $coreComponents[ComponentKey::Image->value],
+            ComponentKey::Integrity->value       => $coreComponents[ComponentKey::Integrity->value],
+            ComponentKey::Interop->value         => $coreComponents[ComponentKey::Interop->value],
+            ComponentKey::Iptc->value            => $coreComponents[ComponentKey::Iptc->value],
+            ComponentKey::Keywords->value        => $xmpComponents[ComponentKey::Keywords->value],
+            ComponentKey::Lens->value            => $coreComponents[ComponentKey::Lens->value],
+            ComponentKey::Motion->value          => $coreComponents[ComponentKey::Motion->value],
+            ComponentKey::MultiPicture->value    => $coreComponents[ComponentKey::MultiPicture->value],
+            ComponentKey::Processing->value      => $coreComponents[ComponentKey::Processing->value],
+            ComponentKey::Regions->value         => $coreComponents[ComponentKey::Regions->value],
+            ComponentKey::Related->value         => $xmpComponents[ComponentKey::Related->value],
+            ComponentKey::Rights->value          => $coreComponents[ComponentKey::Rights->value],
+            ComponentKey::Scene->value           => $coreComponents[ComponentKey::Scene->value],
+            ComponentKey::Sensor->value          => $coreComponents[ComponentKey::Sensor->value],
+            ComponentKey::Standards->value       => $coreComponents[ComponentKey::Standards->value],
+            ComponentKey::Temporal->value        => $coreComponents[ComponentKey::Temporal->value],
+            ComponentKey::Thumbnail->value       => $coreComponents[ComponentKey::Thumbnail->value],
+            ComponentKey::Tiff->value            => $coreComponents[ComponentKey::Tiff->value],
+            ComponentKey::Video->value           => $mediaComponents[ComponentKey::Video->value],
+            ComponentKey::WhiteBalance->value    => $coreComponents[ComponentKey::WhiteBalance->value],
+            ComponentKey::Xmp->value             => $coreComponents[ComponentKey::Xmp->value],
+            ComponentKey::MakerNotesApple->value => $coreComponents[ComponentKey::MakerNotesApple->value],
         ];
     }
 
