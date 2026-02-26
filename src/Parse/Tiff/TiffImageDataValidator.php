@@ -371,7 +371,7 @@ final readonly class TiffImageDataValidator
                 if (!is_int($component)) {
                     throw new ParseError(sprintf(
                         '%s contains a non-integer component at index %d.',
-                        $this->countedImageDataTagName($tag),
+                        TiffValidationSupport::countedImageDataTagName($tag),
                         $index,
                     ), 1702);
                 }
@@ -384,7 +384,7 @@ final readonly class TiffImageDataValidator
 
         throw new ParseError(sprintf(
             '%s has unsupported value representation for range validation.',
-            $this->countedImageDataTagName($tag),
+            TiffValidationSupport::countedImageDataTagName($tag),
         ), 2075);
     }
 
@@ -417,10 +417,10 @@ final readonly class TiffImageDataValidator
                 throw new ParseError(
                     sprintf(
                         '%s[%d]=%d with %s[%d]=%d exceeds TIFF data bounds (size=%d).',
-                        $this->countedImageDataTagName($offsetTag),
+                        TiffValidationSupport::countedImageDataTagName($offsetTag),
                         $index,
                         $offset,
-                        $this->countedImageDataTagName($byteCountTag),
+                        TiffValidationSupport::countedImageDataTagName($byteCountTag),
                         $index,
                         $byteCount,
                         $blobSize,
@@ -431,17 +431,4 @@ final readonly class TiffImageDataValidator
         }
     }
 
-    /**
-     * Returns the canonical tag label for strip/tile counted image-data fields.
-     */
-    private function countedImageDataTagName(int $tag): string
-    {
-        return match ($tag) {
-            ExifTag::STRIP_OFFSETS     => 'StripOffsets',
-            ExifTag::STRIP_BYTE_COUNTS => 'StripByteCounts',
-            TiffTag::TILE_OFFSETS      => 'TileOffsets',
-            TiffTag::TILE_BYTE_COUNTS  => 'TileByteCounts',
-            default                    => sprintf('IFD tag 0x%04X', $tag),
-        };
-    }
 }

@@ -255,26 +255,10 @@ final readonly class DngValueNormalizer
 
         throw new ParseError(sprintf(
             '%s (tag 0x%04X) must use integer TIFF field types; got type %d.',
-            $this->countedImageDataTagName($tag),
+            TiffValidationSupport::countedImageDataTagName($tag),
             $tag,
             $type,
         ), 2066);
-    }
-
-    /**
-     * Returns the canonical tag label for strip/tile counted image-data fields.
-     *
-     * @param int $tag Tag identifier.
-     */
-    private function countedImageDataTagName(int $tag): string
-    {
-        return match ($tag) {
-            ExifTag::STRIP_OFFSETS     => 'StripOffsets',
-            ExifTag::STRIP_BYTE_COUNTS => 'StripByteCounts',
-            TiffTag::TILE_OFFSETS      => 'TileOffsets',
-            TiffTag::TILE_BYTE_COUNTS  => 'TileByteCounts',
-            default                    => sprintf('IFD tag 0x%04X', $tag),
-        };
     }
 
     /**

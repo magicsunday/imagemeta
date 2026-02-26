@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
 use function is_float;
 use function is_int;
@@ -41,6 +42,20 @@ final readonly class TiffValidationSupport
     public function buffer(): BinaryReadAccessInterface
     {
         return $this->buffer;
+    }
+
+    /**
+     * Returns canonical strip/tile tag labels used in validation messages.
+     */
+    public static function countedImageDataTagName(int $tag): string
+    {
+        return match ($tag) {
+            ExifTag::STRIP_OFFSETS     => 'StripOffsets',
+            ExifTag::STRIP_BYTE_COUNTS => 'StripByteCounts',
+            TiffTag::TILE_OFFSETS      => 'TileOffsets',
+            TiffTag::TILE_BYTE_COUNTS  => 'TileByteCounts',
+            default                    => sprintf('IFD tag 0x%04X', $tag),
+        };
     }
 
     /**
