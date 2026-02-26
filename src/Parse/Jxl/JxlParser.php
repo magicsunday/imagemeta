@@ -47,15 +47,29 @@ final readonly class JxlParser implements JxlParserInterface
      */
     private const int MAX_PAYLOAD_SIZE = 16 * 1024 * 1024;
 
+    /**
+     * Maximum combined size of all extracted metadata payloads in bytes (64 MiB).
+     */
+    private const int MAX_TOTAL_METADATA_BYTES = 64 * 1024 * 1024;
+
+    /**
+     * Maximum number of metadata boxes (`Exif` + `xml `) extracted from one JXL container.
+     */
+    private const int MAX_METADATA_BOX_COUNT = 64;
+
     private BoxNavigator $boxNavigator;
 
     /**
-     * @param Stream $stream         Stream positioned at the beginning of the JXL container.
-     * @param int    $maxPayloadSize Maximum allowed size for a single metadata payload in bytes.
+     * @param Stream $stream                Stream positioned at the beginning of the JXL container.
+     * @param int    $maxPayloadSize        Maximum allowed size for a single metadata payload in bytes.
+     * @param int    $maxTotalMetadataBytes Maximum combined size of all metadata payloads in bytes.
+     * @param int    $maxMetadataBoxCount   Maximum number of metadata boxes (`Exif` + `xml `) to process.
      */
     public function __construct(
         private Stream $stream,
         private int $maxPayloadSize = self::MAX_PAYLOAD_SIZE,
+        private int $maxTotalMetadataBytes = self::MAX_TOTAL_METADATA_BYTES,
+        private int $maxMetadataBoxCount = self::MAX_METADATA_BOX_COUNT,
     ) {
         $this->boxNavigator = new BoxNavigator($stream);
     }
@@ -71,20 +85,38 @@ final readonly class JxlParser implements JxlParserInterface
         $exifBlobs = [];
         /** @var list<string> $xmpBlobs */
         $xmpBlobs = [];
+        $totalMetadataBytes = 0;
+        $metadataBoxCount   = 0;
 
         foreach ($this->walkTopLevelBoxes() as $box) {
-            if ($box->type === self::BOX_EXIF) {
-                if ($box->contentSize > $this->maxPayloadSize) {
+            if ($box->type !== self::BOX_EXIF && $box->type !== self::BOX_XML) {
+                continue;
+            }
+
+            if ($box->contentSize > $this->maxPayloadSize) {
+                if ($box->type === self::BOX_EXIF) {
                     throw new ParseError('JXL Exif box payload exceeds maximum allowed size', 1560);
                 }
 
+                throw new ParseError('JXL xml box payload exceeds maximum allowed size', 1561);
+            }
+
+            // AGENTS.md §4 requires explicit limits for metadata boxes and packets.
+            if ($metadataBoxCount >= $this->maxMetadataBoxCount) {
+                throw new ParseError('JXL metadata box count exceeds maximum allowed value', 2084);
+            }
+
+            if ($box->contentSize > ($this->maxTotalMetadataBytes - $totalMetadataBytes)) {
+                throw new ParseError('JXL combined metadata payload exceeds maximum allowed size', 2083);
+            }
+
+            ++$metadataBoxCount;
+            $totalMetadataBytes += $box->contentSize;
+
+            if ($box->type === self::BOX_EXIF) {
                 $blob        = $this->boxNavigator->readAll($box->window);
                 $exifBlobs[] = $this->normalizeExifBlob($blob);
-            } elseif ($box->type === self::BOX_XML) {
-                if ($box->contentSize > $this->maxPayloadSize) {
-                    throw new ParseError('JXL xml box payload exceeds maximum allowed size', 1561);
-                }
-
+            } else {
                 $xmpBlobs[] = $this->boxNavigator->readAll($box->window);
             }
         }
