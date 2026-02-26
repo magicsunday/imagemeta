@@ -168,68 +168,70 @@ final class GpsCoordinateConverterTest extends TestCase
     }
 
     /**
-     * Rejects latitude values outside the valid range [-90, 90].
+     * Tolerates latitude values outside the nominal EXIF range and preserves raw values.
      *
      * @param list<ExifRational> $rationals
      */
     #[Test]
     #[DataProvider('provideOutOfRangeLatitudes')]
-    public function rejectsLatitudeOutOfRange(string $ref, array $rationals): void
+    public function toleratesLatitudeOutOfRange(string $ref, array $rationals, float $expected): void
     {
-        $val = new ExifRationalList($rationals);
+        $val    = new ExifRationalList($rationals);
+        $result = $this->converter->dmsToFloat($ref, $val);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1463);
-
-        $this->converter->dmsToFloat($ref, $val);
+        self::assertNotNull($result);
+        self::assertEqualsWithDelta($expected, $result, 0.000001);
     }
 
     /**
-     * @return iterable<string, array{0: string, 1: list<ExifRational>}>
+     * @return iterable<string, array{0: string, 1: list<ExifRational>, 2: float}>
      */
     public static function provideOutOfRangeLatitudes(): iterable
     {
         yield 'north above 90' => [
             'N',
             [new ExifRational(91, 1), new ExifRational(0, 1), new ExifRational(0, 1)],
+            91.0,
         ];
 
         yield 'south above 90' => [
             'S',
             [new ExifRational(91, 1), new ExifRational(0, 1), new ExifRational(0, 1)],
+            -91.0,
         ];
     }
 
     /**
-     * Rejects longitude values outside the valid range [-180, 180].
+     * Tolerates longitude values outside the nominal EXIF range and preserves raw values.
      *
      * @param list<ExifRational> $rationals
      */
     #[Test]
     #[DataProvider('provideOutOfRangeLongitudes')]
-    public function rejectsLongitudeOutOfRange(string $ref, array $rationals): void
+    public function toleratesLongitudeOutOfRange(string $ref, array $rationals, float $expected): void
     {
-        $val = new ExifRationalList($rationals);
+        $val    = new ExifRationalList($rationals);
+        $result = $this->converter->dmsToFloat($ref, $val);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1464);
-
-        $this->converter->dmsToFloat($ref, $val);
+        self::assertNotNull($result);
+        self::assertEqualsWithDelta($expected, $result, 0.000001);
     }
 
     /**
-     * @return iterable<string, array{0: string, 1: list<ExifRational>}>
+     * @return iterable<string, array{0: string, 1: list<ExifRational>, 2: float}>
      */
     public static function provideOutOfRangeLongitudes(): iterable
     {
         yield 'east above 180' => [
             'E',
             [new ExifRational(181, 1), new ExifRational(0, 1), new ExifRational(0, 1)],
+            181.0,
         ];
 
         yield 'west above 180' => [
             'W',
             [new ExifRational(181, 1), new ExifRational(0, 1), new ExifRational(0, 1)],
+            -181.0,
         ];
     }
 

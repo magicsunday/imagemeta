@@ -13,7 +13,6 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Core\Endian;
-use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
@@ -137,35 +136,33 @@ final class TiffExifParserGpsReferenceTest extends TestCase
     }
 
     /**
-     * Rejects latitude values above +90 degrees from a classic TIFF GPS IFD.
+     * Tolerates latitude values above +90 degrees from a classic TIFF GPS IFD.
      */
     #[Test]
-    public function rejectsLatitudeAboveNinetyFromClassicTiff(): void
+    public function toleratesLatitudeAboveNinetyFromClassicTiff(): void
     {
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob($this->buildGpsExample(Endian::Little, 91, 180, 'N', 'E', true));
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1463);
-        $this->expectExceptionMessage('outside the valid latitude range');
+        $gps = $result->gps();
 
-        $result->gps();
+        self::assertSame('N', $gps['lat_ref']);
+        self::assertEqualsWithDelta(91.0, $gps['lat'], 0.000001);
     }
 
     /**
-     * Rejects longitude values above +180 degrees from a classic TIFF GPS IFD.
+     * Tolerates longitude values above +180 degrees from a classic TIFF GPS IFD.
      */
     #[Test]
-    public function rejectsLongitudeAboveOneHundredEightyFromClassicTiff(): void
+    public function toleratesLongitudeAboveOneHundredEightyFromClassicTiff(): void
     {
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob($this->buildGpsExample(Endian::Little, 90, 181, 'N', 'E', true));
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1464);
-        $this->expectExceptionMessage('outside the valid longitude range');
+        $gps = $result->gps();
 
-        $result->gps();
+        self::assertSame('E', $gps['lon_ref']);
+        self::assertEqualsWithDelta(181.0, $gps['lon'], 0.000001);
     }
 
     /**

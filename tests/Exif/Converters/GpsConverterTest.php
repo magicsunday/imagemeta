@@ -524,44 +524,42 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
-     * Rejects coordinate values that exceed their geographic range.
+     * Tolerates out-of-range GPS coordinates and preserves raw signed values.
      *
      * @param list<array{0:int,1:int}> $dms
      */
     #[Test]
     #[DataProvider('provideOutOfRangeCoordinateValues')]
-    public function rejectsOutOfRangeCoordinateValues(int $refTag, int $valueTag, string $ref, array $dms, int $errorCode, string $messageFragment): void
+    public function toleratesOutOfRangeCoordinateValues(int $refTag, int $valueTag, string $ref, array $dms, string $coordKey, float $expected): void
     {
         $entries = [
             $refTag   => new IfdEntry($refTag, 2, 2, $ref),
             $valueTag => new IfdEntry($valueTag, 10, 3, $dms),
         ];
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode($errorCode);
-        $this->expectExceptionMessage($messageFragment);
+        $result = $this->converter->fromIfd(new Ifd($entries));
 
-        $this->converter->fromIfd(new Ifd($entries));
+        self::assertEqualsWithDelta($expected, $result[$coordKey], 0.000001);
     }
 
     /**
-     * @return iterable<string, array{0:int, 1:int, 2:string, 3:list<array{0:int,1:int}>, 4:int, 5:string}>
+     * @return iterable<string, array{0:int, 1:int, 2:string, 3:list<array{0:int,1:int}>, 4:string, 5:float}>
      */
     public static function provideOutOfRangeCoordinateValues(): iterable
     {
         yield 'latitude above 90 N' => [
             ExifTag::GPS_LATITUDE_REF, ExifTag::GPS_LATITUDE, 'N',
-            [[91, 1], [0, 1], [0, 1]], 1463, 'outside the valid latitude range',
+            [[91, 1], [0, 1], [0, 1]], 'lat', 91.0,
         ];
 
         yield 'longitude above 180 W' => [
             ExifTag::GPS_LONGITUDE_REF, ExifTag::GPS_LONGITUDE, 'W',
-            [[181, 1], [0, 1], [0, 1]], 1464, 'outside the valid longitude range',
+            [[181, 1], [0, 1], [0, 1]], 'lon', -181.0,
         ];
 
         yield 'dest latitude above 90 S' => [
             ExifTag::GPS_DEST_LATITUDE_REF, ExifTag::GPS_DEST_LATITUDE, 'S',
-            [[91, 1], [0, 1], [0, 1]], 1463, 'outside the valid latitude range',
+            [[91, 1], [0, 1], [0, 1]], 'dest_lat', -91.0,
         ];
     }
 
