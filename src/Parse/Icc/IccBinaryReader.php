@@ -85,18 +85,27 @@ final class IccBinaryReader
     {
         $bytes = substr($data, $offset, 4);
         if (strlen($bytes) < 4) {
-            return 0.0;
+            throw new ParseError(
+                sprintf('ICC s15Fixed16 field truncated at offset %d: expected 4 bytes, got %d', $offset, strlen($bytes)),
+                2086,
+            );
         }
 
         // Unpack as unsigned 32-bit big-endian
         $unpacked = unpack('Nvalue', $bytes);
         if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
-            return 0.0;
+            throw new ParseError(
+                sprintf('ICC s15Fixed16 unpack failed at offset %d', $offset),
+                2087,
+            );
         }
 
         $unsigned = $unpacked['value'];
         if (!is_int($unsigned)) {
-            return 0.0;
+            throw new ParseError(
+                sprintf('ICC s15Fixed16 unpack returned non-integer at offset %d', $offset),
+                2088,
+            );
         }
 
         // Convert to signed if necessary (two's complement)
