@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Scripts;
 
+use BackedEnum;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\FlashMode;
@@ -41,7 +42,8 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
     {
         require_once __DIR__ . '/../../scripts/imagemeta-format.php';
 
-        $this->formatter = new \MagicSunday\ImageMeta\Scripts\MetadataFormatter();
+        $formatterReflection = new ReflectionMethod('MagicSunday\\ImageMeta\\Scripts\\MetadataFormatter', 'format');
+        $this->formatter     = $formatterReflection->getDeclaringClass()->newInstance();
 
         $this->formatEnumNameMethod = new ReflectionMethod($this->formatter, 'formatEnumName');
         $this->formatValueMethod    = new ReflectionMethod($this->formatter, 'formatValue');
@@ -49,7 +51,7 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
     #[Test]
     #[DataProvider('provideKnownEnums')]
-    public function omitsRawPrefixForKnownEnums(\BackedEnum $value, string $expected): void
+    public function omitsRawPrefixForKnownEnums(BackedEnum $value, string $expected): void
     {
         $actual = $this->formatValueMethod->invoke($this->formatter, $value);
 
@@ -57,7 +59,7 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{0:\BackedEnum, 1:string}>
+     * @return iterable<string, array{0:BackedEnum, 1:string}>
      */
     public static function provideKnownEnums(): iterable
     {
@@ -100,4 +102,3 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         self::assertSame('999', $actual);
     }
 }
-
