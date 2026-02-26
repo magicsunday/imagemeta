@@ -186,53 +186,15 @@ final readonly class DngProfileValidator
      */
     public function validateDngHueSatMapDims(Ifd $ifd): void
     {
-        $entry = $ifd->get(DngTag::PROFILE_HUE_SAT_MAP_DIMS);
-
-        if (!$entry instanceof IfdEntry) {
-            return;
-        }
-
-        if ($entry->type !== TiffConst::TYPE_LONG || $entry->count !== 3) {
-            throw new ParseError(
-                sprintf('ProfileHueSatMapDims must be LONG[3], got type %d count %d.', $entry->type, $entry->count),
-                1511,
-            );
-        }
-
-        $value = $entry->value;
-
-        if (!$value instanceof ExifNumericList || count($value->values) !== 3) {
-            return;
-        }
-
-        $hueDivs = $value->values[0];
-        $satDivs = $value->values[1];
-        $valDivs = $value->values[2];
-
-        if (!is_int($hueDivs) || !is_int($satDivs) || !is_int($valDivs)) {
-            return;
-        }
-
-        if ($hueDivs < 1) {
-            throw new ParseError(
-                sprintf('ProfileHueSatMapDims HueDivisions must be >= 1, got %d.', $hueDivs),
-                1512,
-            );
-        }
-
-        if ($satDivs < 2) {
-            throw new ParseError(
-                sprintf('ProfileHueSatMapDims SaturationDivisions must be >= 2, got %d.', $satDivs),
-                1513,
-            );
-        }
-
-        if ($valDivs < 1) {
-            throw new ParseError(
-                sprintf('ProfileHueSatMapDims ValueDivisions must be >= 1, got %d.', $valDivs),
-                1514,
-            );
-        }
+        $this->validateDngDimsLong3(
+            $ifd,
+            DngTag::PROFILE_HUE_SAT_MAP_DIMS,
+            'ProfileHueSatMapDims',
+            1511,
+            1512,
+            1513,
+            1514,
+        );
     }
 
     /**
@@ -372,7 +334,30 @@ final readonly class DngProfileValidator
      */
     public function validateDngProfileLookTableDims(Ifd $ifd): void
     {
-        $entry = $ifd->get(DngTag::PROFILE_LOOK_TABLE_DIMS);
+        $this->validateDngDimsLong3(
+            $ifd,
+            DngTag::PROFILE_LOOK_TABLE_DIMS,
+            'ProfileLookTableDims',
+            1547,
+            1548,
+            1549,
+            1550,
+        );
+    }
+
+    /**
+     * Validates DNG LONG[3] dimension tags (Hue/Saturation/Value divisions).
+     */
+    private function validateDngDimsLong3(
+        Ifd $ifd,
+        int $tag,
+        string $tagName,
+        int $typeErrCode,
+        int $hueErrCode,
+        int $satErrCode,
+        int $valErrCode,
+    ): void {
+        $entry = $ifd->get($tag);
 
         if (!$entry instanceof IfdEntry) {
             return;
@@ -380,8 +365,8 @@ final readonly class DngProfileValidator
 
         if ($entry->type !== TiffConst::TYPE_LONG || $entry->count !== 3) {
             throw new ParseError(
-                sprintf('ProfileLookTableDims must be LONG[3], got type %d count %d.', $entry->type, $entry->count),
-                1547,
+                sprintf('%s must be LONG[3], got type %d count %d.', $tagName, $entry->type, $entry->count),
+                $typeErrCode,
             );
         }
 
@@ -401,22 +386,22 @@ final readonly class DngProfileValidator
 
         if ($hueDivs < 1) {
             throw new ParseError(
-                sprintf('ProfileLookTableDims HueDivisions must be >= 1, got %d.', $hueDivs),
-                1548,
+                sprintf('%s HueDivisions must be >= 1, got %d.', $tagName, $hueDivs),
+                $hueErrCode,
             );
         }
 
         if ($satDivs < 2) {
             throw new ParseError(
-                sprintf('ProfileLookTableDims SaturationDivisions must be >= 2, got %d.', $satDivs),
-                1549,
+                sprintf('%s SaturationDivisions must be >= 2, got %d.', $tagName, $satDivs),
+                $satErrCode,
             );
         }
 
         if ($valDivs < 1) {
             throw new ParseError(
-                sprintf('ProfileLookTableDims ValueDivisions must be >= 1, got %d.', $valDivs),
-                1550,
+                sprintf('%s ValueDivisions must be >= 1, got %d.', $tagName, $valDivs),
+                $valErrCode,
             );
         }
     }
