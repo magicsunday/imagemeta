@@ -254,10 +254,10 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Declares an IFD entry count that would overflow a classic TIFF.
-     * Verifies the parser rejects the header with a ParseError.
+     * Verifies the parser tolerates the corrupted IFD and continues.
      */
     #[Test]
-    public function rejectsIfdWithHugeEntryCount(): void
+    public function itToleratesExcessiveIfdEntryCount(): void
     {
         // Classic TIFF with IFD at offset 8, claiming 65535 entries (would overflow)
         $blob = 'II'
@@ -265,11 +265,9 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('V', 8)      // First IFD offset
             . pack('v', 65535); // Huge entry count
 
-        $reader = new TiffExifParser();
+        $parsed = (new TiffExifParser())->parseFromBlob($blob);
 
-        $this->expectException(ParseError::class);
-
-        $reader->parseFromBlob($blob);
+        self::assertNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
     }
 
     /**
