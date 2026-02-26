@@ -64,6 +64,8 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
     private ReflectionMethod $formatCompositeDateMethod;
 
+    private ReflectionMethod $formatCompositeMegapixelsMethod;
+
     private ReflectionMethod $formatValueMethod;
 
     protected function setUp(): void
@@ -82,6 +84,7 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $this->calcScaleFactorTo35MmEquivalentMethod = new ReflectionMethod($this->formatter, 'calcScaleFactorTo35MmEquivalent');
         $this->calcFocalLength35MmEquivalentMethod   = new ReflectionMethod($this->formatter, 'calcFocalLength35MmEquivalent');
         $this->formatCompositeDateMethod             = new ReflectionMethod($this->formatter, 'formatCompositeDate');
+        $this->formatCompositeMegapixelsMethod       = new ReflectionMethod($this->formatter, 'formatCompositeMegapixels');
         $this->formatValueMethod                     = new ReflectionMethod($this->formatter, 'formatValue');
     }
 
@@ -157,6 +160,14 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         );
 
         self::assertSame('2.2.0.0', $actual);
+    }
+
+    #[Test]
+    public function formatsFocalLengthWithOneDecimalPlace(): void
+    {
+        $actual = $this->formatValueMethod->invoke($this->formatter, 135.0, null, ExifTag::FOCAL_LENGTH);
+
+        self::assertSame('135.0 mm', $actual);
     }
 
     #[Test]
@@ -310,6 +321,30 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $actual = $this->formatCompositeDateMethod->invoke($this->formatter, '2008:05:30 15:56:01', '00');
 
         self::assertSame('2008:05:30 15:56:01.00', $actual);
+    }
+
+    #[Test]
+    public function formatsCompositeMegapixelsWithThreeDecimalsBelowOne(): void
+    {
+        $actual = $this->formatCompositeMegapixelsMethod->invoke($this->formatter, 0.0068);
+
+        self::assertSame('0.007', $actual);
+    }
+
+    #[Test]
+    public function formatsCompositeMegapixelsWithSixDecimalsForTinyValues(): void
+    {
+        $actual = $this->formatCompositeMegapixelsMethod->invoke($this->formatter, 0.000064);
+
+        self::assertSame('0.000064', $actual);
+    }
+
+    #[Test]
+    public function formatsCompositeMegapixelsWithOneDecimalAtOrAboveOne(): void
+    {
+        $actual = $this->formatCompositeMegapixelsMethod->invoke($this->formatter, 12.224);
+
+        self::assertSame('12.2', $actual);
     }
 
     /**
