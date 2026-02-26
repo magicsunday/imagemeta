@@ -27,6 +27,7 @@ use MagicSunday\ImageMeta\Parse\ParserLimits;
 
 use function count;
 use function in_array;
+use function is_int;
 use function is_string;
 use function sprintf;
 
@@ -381,31 +382,13 @@ final class TiffExifParser implements TiffExifParserInterface
      */
     private function readIfd(int|UInt64|string $offset): Ifd
     {
-        if ($offset instanceof UInt64) {
-            // A zero pointer denotes an absent directory (EXIF 3.0 §4.5.2 Note 1),
-            // so return an empty IFD structure.
-            if ($offset->isZero()) {
-                return new Ifd([]);
-            }
-
-            $offsetInt = $this->offsetValidator->ensureOffset($offset, 'IFD offset');
-        } elseif (is_int($offset)) {
-            // EXIF 3.0 §4.5.2 clarifies that null or non-positive offsets mean the
-            // referenced directory is omitted.
-            if ($offset <= 0) {
-                return new Ifd([]);
-            }
-
-            $offsetInt = $this->offsetValidator->ensureOffset($offset, 'IFD offset');
-        } else {
-            // BigTIFF offsets may arrive as decimal strings (§4.5.2, BigTIFF note),
-            // with zero indicating that the referenced directory is absent.
-            if ($this->offsetValidator->decimalStringIsZero($offset)) {
-                return new Ifd([]);
-            }
-
-            $offsetInt = $this->offsetValidator->ensureOffset($offset, 'IFD offset');
+        // A zero or non-positive pointer denotes an absent directory
+        // (EXIF 3.0 §4.5.2 Note 1), so return an empty IFD structure.
+        if ($this->isAbsentIfdOffset($offset)) {
+            return new Ifd([]);
         }
+
+        $offsetInt = $this->offsetValidator->ensureOffset($offset, 'IFD offset');
 
         if (isset($this->ifdCache[$offsetInt])) {
             return $this->ifdCache[$offsetInt];
@@ -472,6 +455,27 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->ifdCache[$offsetInt] = $ifd;
 
         return $ifd;
+    }
+
+    /**
+     * Determines whether the given offset represents an absent IFD.
+     *
+     * A zero UInt64, a non-positive integer, or a decimal-string zero all signal that
+     * the referenced directory does not exist (EXIF 3.0 §4.5.2 Note 1).
+     *
+     * @param int|UInt64|string $offset Candidate IFD offset.
+     */
+    private function isAbsentIfdOffset(int|UInt64|string $offset): bool
+    {
+        if ($offset instanceof UInt64) {
+            return $offset->isZero();
+        }
+
+        if (is_int($offset)) {
+            return $offset <= 0;
+        }
+
+        return $this->offsetValidator->decimalStringIsZero($offset);
     }
 
     /**
