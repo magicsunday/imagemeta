@@ -31,7 +31,7 @@ use function usort;
  * EXIF 3.0 §4.7.3.1 requires APP2 ordering as Contents List first, then Stream Data.
  * EXIF 3.0 §4.7.3.4 and §4.7.3.5 define field-level structures for both segment bodies.
  *
- * @phpstan-type StreamEntry      = array{size:int, defaultByte:int, isStorage:bool}
+ * @phpstan-type StreamEntry      = array{size:int, defaultByte:int, isStorage:bool, skipAssembly:bool}
  * @phpstan-type StreamDataHeader = array{index:int, sequenceNumber:int, sequenceCount:int, streamOffset:int, data:string}
  * @phpstan-type StreamRange      = array{start:int, end:int}
  */
@@ -39,7 +39,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
 {
     private const int FLASHPIX_STORAGE_ENTITY_SIZE = 0xFFFFFFFF;
 
-    /** @var array<int, array{size:int, defaultByte:int, isStorage:bool}> */
+    /** @var array<int, array{size:int, defaultByte:int, isStorage:bool, skipAssembly:bool}> */
     private array $contents = [];
 
     /** @var array<int, list<array{offset:int, data:string}>> */
@@ -294,17 +294,8 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
 
             [, $cursor] = $this->parseName($body, $cursor, $offset, $index);
 
-            $isStorage = $entitySize === self::FLASHPIX_STORAGE_ENTITY_SIZE;
-            if (!$isStorage && $entitySize > $this->maxStreamSize) {
-                throw new ParseError(
-                    sprintf(
-                        'FlashPix stream entry %d at offset %d exceeds maximum size',
-                        $index,
-                        $offset,
-                    ),
-                    1310,
-                );
-            }
+            $isStorage    = $entitySize === self::FLASHPIX_STORAGE_ENTITY_SIZE;
+            $skipAssembly = !$isStorage && $entitySize > $this->maxStreamSize;
 
             if ($isStorage) {
                 if (($length - $cursor) < 16) {
@@ -322,9 +313,10 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             }
 
             $this->contents[$index] = [
-                'size'        => $entitySize,
-                'defaultByte' => $defaultByte,
-                'isStorage'   => $isStorage,
+                'size'         => $entitySize,
+                'defaultByte'  => $defaultByte,
+                'isStorage'    => $isStorage,
+                'skipAssembly' => $skipAssembly,
             ];
         }
 
@@ -402,6 +394,13 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
 
         $header = $this->decodeStreamDataHeader($body);
         $entry  = $this->validateStreamMetadata($header, $offset);
+
+        // Postel's Law: tolerate malformed contents-list entries whose declared
+        // size exceeds the configured assembly bound and skip FPXR assembly for
+        // those entries so EXIF/XMP/ICC/IPTC extraction can continue.
+        if ($entry['skipAssembly']) {
+            return;
+        }
 
         $this->validateSequenceMetadata($header, $offset);
 
