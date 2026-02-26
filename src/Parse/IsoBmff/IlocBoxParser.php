@@ -329,7 +329,7 @@ final readonly class IlocBoxParser
             }
 
             $entry      = $this->parseSingleItemReference($child, $version);
-            $references = $this->mergeItemReferences($references, [
+            $references = ItemLocationResolver::mergeItemReferences($references, [
                 $entry['fromItemId'] => $entry['references'],
             ]);
         }
@@ -360,7 +360,7 @@ final readonly class IlocBoxParser
                     throw new ParseError('dinf must contain exactly one dref box', 1366);
                 }
 
-                $references = $this->mergeDataReferences($references, $this->parseDref($child));
+                $references = ItemLocationResolver::mergeDataReferences($references, $this->parseDref($child));
             }
         }
 
@@ -742,44 +742,4 @@ final readonly class IlocBoxParser
         return $value !== '' ? $value : null;
     }
 
-    /**
-     * Merges ISO BMFF item reference mappings.
-     *
-     * @param array<int, list<IsoBmffItemReference>> $existing
-     * @param array<int, list<IsoBmffItemReference>> $incoming
-     *
-     * @return array<int, list<IsoBmffItemReference>>
-     */
-    private function mergeItemReferences(array $existing, array $incoming): array
-    {
-        foreach ($incoming as $fromId => $references) {
-            if (!isset($existing[$fromId])) {
-                $existing[$fromId] = $references;
-                continue;
-            }
-
-            foreach ($references as $reference) {
-                $existing[$fromId][] = $reference;
-            }
-        }
-
-        return $existing;
-    }
-
-    /**
-     * Merges ISO BMFF data reference mappings.
-     *
-     * @param array<int, IsoBmffDataReference> $existing
-     * @param array<int, IsoBmffDataReference> $incoming
-     *
-     * @return array<int, IsoBmffDataReference>
-     */
-    private function mergeDataReferences(array $existing, array $incoming): array
-    {
-        foreach ($incoming as $index => $reference) {
-            $existing[$index] = $reference;
-        }
-
-        return $existing;
-    }
 }

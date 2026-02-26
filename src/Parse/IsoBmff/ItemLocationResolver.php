@@ -214,7 +214,7 @@ final readonly class ItemLocationResolver
      *
      * @return array<int, list<IsoBmffItemReference>>
      */
-    public function mergeItemReferences(array $existing, array $incoming): array
+    public static function mergeItemReferences(array $existing, array $incoming): array
     {
         foreach ($incoming as $fromId => $references) {
             if (!isset($existing[$fromId])) {
@@ -238,7 +238,7 @@ final readonly class ItemLocationResolver
      *
      * @return array<int, IsoBmffDataReference>
      */
-    public function mergeDataReferences(array $existing, array $incoming): array
+    public static function mergeDataReferences(array $existing, array $incoming): array
     {
         foreach ($incoming as $index => $reference) {
             $existing[$index] = $reference;
