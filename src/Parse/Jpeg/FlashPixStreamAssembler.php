@@ -330,6 +330,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      *
      * @param string $body   FPXR contents-list body.
      * @param int    $cursor Current parsing offset in $body.
+     *
      * @return array{0:string, 1:int}|null
      */
     private function parseName(string $body, int $cursor): ?array
