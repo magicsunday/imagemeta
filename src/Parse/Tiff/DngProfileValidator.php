@@ -224,7 +224,24 @@ final readonly class DngProfileValidator
             return;
         }
 
-        $expectedCount = $hueDivs * $satDivs * $valDivs * 3;
+        $hs = $this->checkedMultiply(
+            $hueDivs,
+            $satDivs,
+            'ProfileHueSatMapData size overflow (H*S).',
+            2089,
+        );
+        $hsv = $this->checkedMultiply(
+            $hs,
+            $valDivs,
+            'ProfileHueSatMapData size overflow (H*S*V).',
+            2090,
+        );
+        $expectedCount = $this->checkedMultiply(
+            $hsv,
+            3,
+            'ProfileHueSatMapData size overflow (H*S*V*3).',
+            2091,
+        );
 
         foreach (self::HUE_SAT_MAP_DATA_TAGS as $tag) {
             $dataEntry = $ifd->get($tag);
@@ -456,7 +473,24 @@ final readonly class DngProfileValidator
             return;
         }
 
-        $expectedCount = $hueDivs * $satDivs * $valDivs * 3;
+        $hs = $this->checkedMultiply(
+            $hueDivs,
+            $satDivs,
+            'ProfileLookTableData size overflow (H*S).',
+            2092,
+        );
+        $hsv = $this->checkedMultiply(
+            $hs,
+            $valDivs,
+            'ProfileLookTableData size overflow (H*S*V).',
+            2093,
+        );
+        $expectedCount = $this->checkedMultiply(
+            $hsv,
+            3,
+            'ProfileLookTableData size overflow (H*S*V*3).',
+            2094,
+        );
 
         if ($dataEntry->count !== $expectedCount) {
             throw new ParseError(
