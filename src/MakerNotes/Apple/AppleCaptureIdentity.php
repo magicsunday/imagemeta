@@ -22,6 +22,7 @@ final readonly class AppleCaptureIdentity
      * @param string|null     $burstUuid             Identifier referencing the originating burst.
      * @param string|null     $imageUniqueId         Unique image identifier distinct from EXIF/ImageUniqueID.
      * @param string|null     $photoIdentifier       Photos framework identifier for the asset.
+     * @param string|null     $mediaGroupUuid        Media group UUID linking related assets.
      */
     public function __construct(
         public ?string $contentIdentifier,
@@ -29,6 +30,7 @@ final readonly class AppleCaptureIdentity
         public ?string $burstUuid,
         public ?string $imageUniqueId,
         public ?string $photoIdentifier,
+        public ?string $mediaGroupUuid = null,
     ) {
     }
 
@@ -41,6 +43,7 @@ final readonly class AppleCaptureIdentity
         ?string $burstUuid,
         ?string $imageUniqueId,
         ?string $photoIdentifier,
+        ?string $mediaGroupUuid = null,
     ): ?self {
         if (
             $contentIdentifier === null
@@ -48,10 +51,11 @@ final readonly class AppleCaptureIdentity
             && $burstUuid === null
             && $imageUniqueId === null
             && $photoIdentifier === null
+            && $mediaGroupUuid === null
         ) {
             return null;
         }
 
-        return new self($contentIdentifier, $imageCaptureRequestId, $burstUuid, $imageUniqueId, $photoIdentifier);
+        return new self($contentIdentifier, $imageCaptureRequestId, $burstUuid, $imageUniqueId, $photoIdentifier, $mediaGroupUuid);
     }
 }

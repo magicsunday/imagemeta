@@ -104,6 +104,11 @@ final class AppleMakerNotesMerger
             $photoIdentifier = $lookup->string('PhotoIdentifier');
         }
 
+        $mediaGroupUuid = $makerNotes?->identity?->mediaGroupUuid;
+        if ($mediaGroupUuid === null) {
+            $mediaGroupUuid = $lookup->string('MediaGroupUUID');
+        }
+
         $hdrHeadroom = $makerNotes?->hdr?->headroom;
         if ($hdrHeadroom === null) {
             $hdrHeadroom = $lookup->float('HdrHeadroom', 'HDRHeadroom');
@@ -235,7 +240,7 @@ final class AppleMakerNotesMerger
             }
         }
 
-        $identity = AppleCaptureIdentity::createIfPresent($contentIdentifier, $imageCaptureRequestId, $burstUuid, $imageUniqueId, $photoIdentifier);
+        $identity = AppleCaptureIdentity::createIfPresent($contentIdentifier, $imageCaptureRequestId, $burstUuid, $imageUniqueId, $photoIdentifier, $mediaGroupUuid);
 
         $hdr = AppleHdr::createIfPresent($hdrHeadroom, $hdrGain, $hdrImageType);
 

@@ -128,6 +128,7 @@ final readonly class AppleMakerNotesBuilder
         $accelerationVector    = $this->extractor->floatList($dictionary, 'AccelerationVector');
         $flags                 = $this->extractor->extractFlags($dictionary);
         $imageCaptureRequestId = $this->extractor->identifierValue($dictionary, 'ImageCaptureRequestID');
+        $mediaGroupUuid        = $this->extractor->stringValue($dictionary, 'MediaGroupUUID');
         $qualityHint           = $this->extractor->stringOrNumericValue($dictionary, 'QualityHint');
         $colorCorrectionMatrix = $this->extractor->floatList($dictionary, 'ColorCorrectionMatrix');
 
@@ -142,7 +143,7 @@ final readonly class AppleMakerNotesBuilder
         $afMeasuredDepth    = $this->extractor->floatValue($dictionary, 'AFMeasuredDepth');
         $afConfidence       = $this->extractor->floatValue($dictionary, 'AFConfidence');
 
-        $identity = AppleCaptureIdentity::createIfPresent($contentIdentifier, $imageCaptureRequestId, $burstUuid, $imageUniqueId, $photoIdentifier);
+        $identity = AppleCaptureIdentity::createIfPresent($contentIdentifier, $imageCaptureRequestId, $burstUuid, $imageUniqueId, $photoIdentifier, $mediaGroupUuid);
 
         $hdr = AppleHdr::createIfPresent($hdrHeadroom, $hdrGain, $hdrImageType);
 
