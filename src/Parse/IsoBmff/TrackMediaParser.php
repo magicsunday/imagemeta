@@ -136,84 +136,126 @@ final readonly class TrackMediaParser
             $context->qtKeys[QuickTimeMeta::HANDLER_DESCRIPTION_KEY] = $handlerName;
         }
 
-        /** @var QuickTimeKeyMap $trackKeys */
-        $trackKeys = [];
-
-        if ($handler === 'vide') {
-            $width  = $sampleInfo['width'] ?? $tkhdWidth;
-            $height = $sampleInfo['height'] ?? $tkhdHeight;
-
-            if ($width !== null && $width > 0) {
-                $trackKeys[QuickTimeMeta::VIDEO_WIDTH_KEY] = $width;
-            }
-
-            if ($height !== null && $height > 0) {
-                $trackKeys[QuickTimeMeta::VIDEO_HEIGHT_KEY] = $height;
-            }
-
-            if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
-                $trackKeys[QuickTimeMeta::VIDEO_CODEC_KEY] = $sampleInfo['format'];
-            }
-
-            if (isset($sampleInfo['compressorName']) && $sampleInfo['compressorName'] !== '') {
-                $trackKeys[QuickTimeMeta::COMPRESSOR_NAME_KEY] = $sampleInfo['compressorName'];
-            }
-
-            if (isset($sampleInfo['horizontalResolution'])) {
-                $trackKeys[QuickTimeMeta::VIDEO_HORIZONTAL_RESOLUTION_KEY] = $sampleInfo['horizontalResolution'];
-            }
-
-            if (isset($sampleInfo['verticalResolution'])) {
-                $trackKeys[QuickTimeMeta::VIDEO_VERTICAL_RESOLUTION_KEY] = $sampleInfo['verticalResolution'];
-            }
-
-            if (isset($sampleInfo['frameCount']) && $sampleInfo['frameCount'] !== 1) {
-                $trackKeys[QuickTimeMeta::VIDEO_FRAME_COUNT_KEY] = $sampleInfo['frameCount'];
-            }
-        } elseif ($handler === 'soun') {
-            if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
-                $trackKeys[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
-                $trackKeys[QuickTimeMeta::AUDIO_CODEC_KEY]  = $sampleInfo['format'];
-            }
-
-            if (isset($sampleInfo['channels'])) {
-                $trackKeys[QuickTimeMeta::AUDIO_CHANNELS_KEY] = $sampleInfo['channels'];
-            }
-
-            if (isset($sampleInfo['bitsPerSample'])) {
-                $trackKeys[QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY] = $sampleInfo['bitsPerSample'];
-            }
-
-            if (isset($sampleInfo['sampleRate'])) {
-                $trackKeys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY] = $sampleInfo['sampleRate'];
-            }
-
-            $lpcmKeys = [
-                QuickTimeMeta::AUDIO_LPCM_FORMAT_FLAGS_KEY,
-                QuickTimeMeta::AUDIO_LPCM_NUMERIC_FORMAT_KEY,
-                QuickTimeMeta::AUDIO_LPCM_ENDIANNESS_KEY,
-                QuickTimeMeta::AUDIO_LPCM_PACKING_KEY,
-                QuickTimeMeta::AUDIO_LPCM_IS_FLOAT_KEY,
-                QuickTimeMeta::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY,
-                QuickTimeMeta::AUDIO_LPCM_IS_BIG_ENDIAN_KEY,
-                QuickTimeMeta::AUDIO_LPCM_IS_PACKED_KEY,
-                QuickTimeMeta::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY,
-                QuickTimeMeta::AUDIO_LPCM_BYTES_PER_PACKET_KEY,
-                QuickTimeMeta::AUDIO_LPCM_FRAMES_PER_PACKET_KEY,
-            ];
-
-            foreach ($lpcmKeys as $lpcmKey) {
-                if (array_key_exists($lpcmKey, $sampleInfo)) {
-                    $trackKeys[$lpcmKey] = $sampleInfo[$lpcmKey];
-                }
-            }
-        }
+        $trackKeys = match ($handler) {
+            'vide'  => $this->buildVideoTrackKeys($sampleInfo, $tkhdWidth, $tkhdHeight),
+            'soun'  => $this->buildAudioTrackKeys($sampleInfo),
+            default => [],
+        };
 
         return [
             'handler'          => $handler,
             'isEnabledInMovie' => $isEnabledInMovie,
             'keys'             => $trackKeys,
         ];
+    }
+
+    /**
+     * Builds QuickTime keys for video tracks, preserving sample-over-tkhd precedence.
+     *
+     * @param SampleEntryMap $sampleInfo
+     *
+     * @return QuickTimeKeyMap
+     */
+    private function buildVideoTrackKeys(array $sampleInfo, ?int $tkhdWidth, ?int $tkhdHeight): array
+    {
+        $width  = $sampleInfo['width'] ?? $tkhdWidth;
+        $height = $sampleInfo['height'] ?? $tkhdHeight;
+
+        /** @var QuickTimeKeyMap $trackKeys */
+        $trackKeys = [];
+
+        if ($width !== null && $width > 0) {
+            $trackKeys[QuickTimeMeta::VIDEO_WIDTH_KEY] = $width;
+        }
+
+        if ($height !== null && $height > 0) {
+            $trackKeys[QuickTimeMeta::VIDEO_HEIGHT_KEY] = $height;
+        }
+
+        if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
+            $trackKeys[QuickTimeMeta::VIDEO_CODEC_KEY] = $sampleInfo['format'];
+        }
+
+        if (isset($sampleInfo['compressorName']) && $sampleInfo['compressorName'] !== '') {
+            $trackKeys[QuickTimeMeta::COMPRESSOR_NAME_KEY] = $sampleInfo['compressorName'];
+        }
+
+        if (isset($sampleInfo['horizontalResolution'])) {
+            $trackKeys[QuickTimeMeta::VIDEO_HORIZONTAL_RESOLUTION_KEY] = $sampleInfo['horizontalResolution'];
+        }
+
+        if (isset($sampleInfo['verticalResolution'])) {
+            $trackKeys[QuickTimeMeta::VIDEO_VERTICAL_RESOLUTION_KEY] = $sampleInfo['verticalResolution'];
+        }
+
+        if (isset($sampleInfo['frameCount']) && $sampleInfo['frameCount'] !== 1) {
+            $trackKeys[QuickTimeMeta::VIDEO_FRAME_COUNT_KEY] = $sampleInfo['frameCount'];
+        }
+
+        return $trackKeys;
+    }
+
+    /**
+     * Builds QuickTime keys for audio tracks.
+     *
+     * @param SampleEntryMap $sampleInfo
+     *
+     * @return QuickTimeKeyMap
+     */
+    private function buildAudioTrackKeys(array $sampleInfo): array
+    {
+        /** @var QuickTimeKeyMap $trackKeys */
+        $trackKeys = [];
+
+        if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
+            $trackKeys[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
+            $trackKeys[QuickTimeMeta::AUDIO_CODEC_KEY]  = $sampleInfo['format'];
+        }
+
+        if (isset($sampleInfo['channels'])) {
+            $trackKeys[QuickTimeMeta::AUDIO_CHANNELS_KEY] = $sampleInfo['channels'];
+        }
+
+        if (isset($sampleInfo['bitsPerSample'])) {
+            $trackKeys[QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY] = $sampleInfo['bitsPerSample'];
+        }
+
+        if (isset($sampleInfo['sampleRate'])) {
+            $trackKeys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY] = $sampleInfo['sampleRate'];
+        }
+
+        $this->copyLpcmSampleInfoKeys($sampleInfo, $trackKeys);
+
+        return $trackKeys;
+    }
+
+    /**
+     * Copies LPCM-derived sample-info keys into the track key map.
+     *
+     * @param SampleEntryMap  $sampleInfo
+     * @param QuickTimeKeyMap $trackKeys
+     */
+    private function copyLpcmSampleInfoKeys(array $sampleInfo, array &$trackKeys): void
+    {
+        $lpcmKeys = [
+            QuickTimeMeta::AUDIO_LPCM_FORMAT_FLAGS_KEY,
+            QuickTimeMeta::AUDIO_LPCM_NUMERIC_FORMAT_KEY,
+            QuickTimeMeta::AUDIO_LPCM_ENDIANNESS_KEY,
+            QuickTimeMeta::AUDIO_LPCM_PACKING_KEY,
+            QuickTimeMeta::AUDIO_LPCM_IS_FLOAT_KEY,
+            QuickTimeMeta::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY,
+            QuickTimeMeta::AUDIO_LPCM_IS_BIG_ENDIAN_KEY,
+            QuickTimeMeta::AUDIO_LPCM_IS_PACKED_KEY,
+            QuickTimeMeta::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY,
+            QuickTimeMeta::AUDIO_LPCM_BYTES_PER_PACKET_KEY,
+            QuickTimeMeta::AUDIO_LPCM_FRAMES_PER_PACKET_KEY,
+        ];
+
+        foreach ($lpcmKeys as $lpcmKey) {
+            if (array_key_exists($lpcmKey, $sampleInfo)) {
+                $trackKeys[$lpcmKey] = $sampleInfo[$lpcmKey];
+            }
+        }
     }
 
     /**
