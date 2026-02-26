@@ -158,6 +158,55 @@ final class FlashPixStreamAssemblerTest extends TestCase
     }
 
     /**
+     * Tolerates truncated contents-list entries and skips malformed tails.
+     */
+    #[Test]
+    public function itToleratesTruncatedFlashPixContentsEntry(): void
+    {
+        $assembler = new FlashPixStreamAssembler(
+            maxContentEntries: 10,
+            maxStreamSize: 1_000_000,
+            maxFlashPixTotalSize: 100_000,
+        );
+
+        $payload = "FPXR\x00\x00"
+            . pack('n', 1)
+            . "\x00\x00\x00\x10";
+
+        $assembler->handleSegment($payload, 0);
+        $assembler->finalise();
+
+        self::assertSame([], $assembler->getStreams());
+    }
+
+    /**
+     * Tolerates unterminated UTF-16LE contents-list names and skips malformed entries.
+     */
+    #[Test]
+    public function itToleratesUnterminatedFlashPixContentsName(): void
+    {
+        $assembler = new FlashPixStreamAssembler(
+            maxContentEntries: 10,
+            maxStreamSize: 1_000_000,
+            maxFlashPixTotalSize: 100_000,
+        );
+
+        $nameUtf16 = iconv('UTF-8', 'UTF-16LE', '/unterminated');
+        assert($nameUtf16 !== false);
+
+        $payload = "FPXR\x00\x00"
+            . pack('n', 1)
+            . pack('N', 32)
+            . chr(0)
+            . $nameUtf16;
+
+        $assembler->handleSegment($payload, 0);
+        $assembler->finalise();
+
+        self::assertSame([], $assembler->getStreams());
+    }
+
+    /**
      * Builds a complete FPXR contents-list payload with one stream entry.
      *
      * EXIF 3.0 §4.7.3.3–4: "FPXR" + NUL + version + entry-count(2B) + entries.
