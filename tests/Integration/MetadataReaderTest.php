@@ -167,6 +167,8 @@ use function pack;
 use function rename;
 use function sha1;
 use function strlen;
+use function stream_wrapper_register;
+use function stream_wrapper_unregister;
 use function sys_get_temp_dir;
 use function tempnam;
 use function unlink;
@@ -613,6 +615,59 @@ final class MetadataReaderTest extends TestCase
         $structured = $metadata->structured();
         self::assertSame($expectedSha1, $structured->provenance->file->digestSha1);
         self::assertSame($expectedMd5, $structured->provenance->file->digestMd5);
+    }
+
+    /**
+     * Simulates a path replacement between digest and parse phases.
+     * Ensures digests and parsed metadata are derived from the same snapshot.
+     */
+    #[Test]
+    public function readWithDigestsUsesConsistentSnapshotWhenPathChanges(): void
+    {
+        $makerNoteA = 'snapshot-maker-note-a';
+        $makerNoteB = 'snapshot-maker-note-b';
+        $tiffA      = $this->littleEndianTiffWithMakerNote('Nikon Corporation', 'Z 9', $makerNoteA);
+        $tiffB      = $this->littleEndianTiffWithMakerNote('Nikon Corporation', 'Z 9', $makerNoteB);
+        $sofPayload = $this->buildBaselineStartOfFramePayload(8, 256, 256);
+
+        $jpegA = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiffA)
+            . $this->segment(0xDB, "\x00")
+            . $this->segment(0xC4, "\x00")
+            . $this->segment(0xC0, $sofPayload)
+            . $this->segment(0xDA, "\x03\x01\x00\x02\x11\x03\x11\x00\x3F\x00")
+            . 'scan-data-a'
+            . "\xFF\xD9";
+        $jpegB = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiffB)
+            . $this->segment(0xDB, "\x00")
+            . $this->segment(0xC4, "\x00")
+            . $this->segment(0xC0, $sofPayload)
+            . $this->segment(0xDA, "\x03\x01\x00\x02\x11\x03\x11\x00\x3F\x00")
+            . 'scan-data-b'
+            . "\xFF\xD9";
+
+        $scheme = 'imeta' . md5(__METHOD__);
+        $path   = $scheme . '://fixture.jpg';
+
+        MetadataReaderDigestSwapStreamWrapper::configure($jpegA, $jpegB);
+        $registered = stream_wrapper_register($scheme, MetadataReaderDigestSwapStreamWrapper::class);
+        if (!$registered) {
+            self::fail('Unable to register swap stream wrapper');
+        }
+
+        try {
+            $metadata = MetadataReader::createDefault()->read($path, true);
+        } finally {
+            stream_wrapper_unregister($scheme);
+            MetadataReaderDigestSwapStreamWrapper::reset();
+        }
+
+        self::assertSame(sha1($jpegA), $metadata->digestSha1);
+        self::assertSame(md5($jpegA), $metadata->digestMd5);
+        self::assertSame([$tiffA], $metadata->exifBlobs);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
+        self::assertSame(sha1($makerNoteA), $metadata->makerNotes->sha1);
     }
 
     /**
@@ -1303,5 +1358,123 @@ final class MetadataReaderTest extends TestCase
             . pack('n', 0xFFFF);
 
         return $this->box($format, $payload);
+    }
+}
+
+/**
+ * Stream wrapper that serves primary bytes during hash_file calls and replacement bytes afterwards.
+ */
+final class MetadataReaderDigestSwapStreamWrapper
+{
+    /** @var resource-context|null */
+    public $context;
+
+    private static string $primaryPayload = '';
+
+    private static string $replacementPayload = '';
+
+    private static bool $hashFileReadObserved = false;
+
+    private int $offset = 0;
+
+    private string $payload = '';
+
+    public static function configure(string $primaryPayload, string $replacementPayload): void
+    {
+        self::$primaryPayload      = $primaryPayload;
+        self::$replacementPayload  = $replacementPayload;
+        self::$hashFileReadObserved = false;
+    }
+
+    public static function reset(): void
+    {
+        self::$primaryPayload      = '';
+        self::$replacementPayload  = '';
+        self::$hashFileReadObserved = false;
+    }
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
+    {
+        if (self::isHashFileOpen()) {
+            self::$hashFileReadObserved = true;
+            $this->payload              = self::$primaryPayload;
+        } elseif (self::$hashFileReadObserved) {
+            $this->payload = self::$replacementPayload;
+        } else {
+            $this->payload = self::$primaryPayload;
+        }
+
+        $this->offset = 0;
+
+        return true;
+    }
+
+    public function stream_read(int $count): string
+    {
+        $chunk         = \substr($this->payload, $this->offset, $count);
+        $this->offset += strlen($chunk);
+
+        return $chunk;
+    }
+
+    public function stream_eof(): bool
+    {
+        return $this->offset >= strlen($this->payload);
+    }
+
+    public function stream_tell(): int
+    {
+        return $this->offset;
+    }
+
+    public function stream_seek(int $offset, int $whence = SEEK_SET): bool
+    {
+        $target = match ($whence) {
+            SEEK_SET => $offset,
+            SEEK_CUR => $this->offset + $offset,
+            SEEK_END => strlen($this->payload) + $offset,
+            default  => -1,
+        };
+
+        if ($target < 0 || $target > strlen($this->payload)) {
+            return false;
+        }
+
+        $this->offset = $target;
+
+        return true;
+    }
+
+    /**
+     * @return array{7: int, size: int}
+     */
+    public function stream_stat(): array
+    {
+        return [
+            7      => strlen($this->payload),
+            'size' => strlen($this->payload),
+        ];
+    }
+
+    /**
+     * @return array{7: int, size: int}
+     */
+    public function url_stat(string $path, int $flags): array
+    {
+        return [
+            7      => strlen(self::$primaryPayload),
+            'size' => strlen(self::$primaryPayload),
+        ];
+    }
+
+    private static function isHashFileOpen(): bool
+    {
+        foreach (\debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
+            if (($frame['function'] ?? null) === 'hash_file') {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
