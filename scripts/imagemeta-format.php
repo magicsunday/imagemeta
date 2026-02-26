@@ -755,6 +755,16 @@ final class MetadataFormatter
             return $this->interopTagNames[$tagId];
         }
 
+        if ($ifdContext === 'IFD1') {
+            if ($tagId === ExifTag::JPEG_INTERCHANGE_FORMAT) {
+                return 'Thumbnail Offset';
+            }
+
+            if ($tagId === ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH) {
+                return 'Thumbnail Length';
+            }
+        }
+
         // Fall back to general TIFF and EXIF tag maps
         return $this->tiffTagNames[$tagId]
             ?? $this->exifTagNames[$tagId]
@@ -772,6 +782,16 @@ final class MetadataFormatter
     {
         if ($value === null) {
             return '(none)';
+        }
+
+        if ($ifdContext === 'IFD1' && $tagId === ExifTag::COMPRESSION) {
+            if ($value instanceof Compression && $value === Compression::Jpeg) {
+                return 'JPEG (old-style)';
+            }
+
+            if ((is_int($value) || is_string($value)) && (int) $value === Compression::Jpeg->value) {
+                return 'JPEG (old-style)';
+            }
         }
 
         // Special handling for Flash tag (0x9209) - EXIF 3.0 §4.6.4
@@ -1978,18 +1998,27 @@ final class MetadataFormatter
      */
     private function printIfd1Section(?Ifd $ifd1): void
     {
-        $data = [];
+        $data            = [];
+        $thumbnailLength = null;
 
         // Collect IFD1 tags
         if (($ifd1 instanceof Ifd) && isset($ifd1->entries)) {
             foreach ($ifd1->entries as $tagId => $entry) {
                 // Convert raw value to enum if applicable
                 $data[$tagId] = $this->convertToEnumIfApplicable($tagId, $entry->value);
+
+                if ($tagId === ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH && is_int($entry->value) && $entry->value >= 0) {
+                    $thumbnailLength = $entry->value;
+                }
+            }
+
+            if ($thumbnailLength !== null) {
+                $data['Thumbnail Image'] = sprintf('(Binary data %d bytes)', $thumbnailLength);
             }
         }
 
         if ($data !== []) {
-            $this->printSection('IFD1', $data, showHex: true);
+            $this->printSection('IFD1', $data, showHex: true, ifdContext: 'IFD1');
         }
     }
 
