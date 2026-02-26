@@ -396,12 +396,11 @@ final readonly class TiffExifTagValidator
             return;
         }
 
-        throw new ParseError(sprintf(
-            '%s must contain exactly %d bytes per %s.',
-            $rule[self::RULE_NAME],
-            $rule[self::RULE_COUNT],
-            $rule[self::RULE_SPEC],
-        ), 1318);
+        // Postel's Law: tolerate fixed-length byte-count deviations.
+        // Many real-world cameras write tags with component counts that differ
+        // from the spec-mandated length.  Attempt to read the value with
+        // whatever bytes are available (truncating or padding) rather than
+        // aborting.
     }
 
     /**
@@ -488,14 +487,8 @@ final readonly class TiffExifTagValidator
                 ), 1317);
             }
 
-            if ($entry->count !== $rule[self::RULE_COUNT]) {
-                throw new ParseError(sprintf(
-                    '%s must contain exactly %d bytes per %s.',
-                    $rule[self::RULE_NAME],
-                    $rule[self::RULE_COUNT],
-                    $rule[self::RULE_SPEC],
-                ), 1318);
-            }
+            // Postel's Law: tolerate fixed-length byte-count deviations in
+            // GPS reference tags.  Real-world cameras write varying counts.
         }
     }
 
@@ -521,14 +514,8 @@ final readonly class TiffExifTagValidator
             // SHORT, LONG, etc.).  Skip the type check and only validate the
             // component count to follow Postel's Law.
 
-            if ($entry->count !== $rule[self::RULE_COUNT]) {
-                throw new ParseError(sprintf(
-                    '%s must contain exactly %d bytes per %s.',
-                    $rule[self::RULE_NAME],
-                    $rule[self::RULE_COUNT],
-                    $rule[self::RULE_SPEC],
-                ), 1318);
-            }
+            // Postel's Law: tolerate fixed-length byte-count deviations in
+            // GPS coordinate tags.  Real-world cameras write varying counts.
         }
     }
 
