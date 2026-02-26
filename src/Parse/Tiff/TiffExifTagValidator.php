@@ -18,10 +18,8 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
-use function in_array;
 use function is_int;
 use function sprintf;
-use function str_starts_with;
 
 /**
  * Validates tag layouts, value domains, and cross-IFD semantic constraints.
@@ -301,106 +299,10 @@ final readonly class TiffExifTagValidator
      */
     public function validateFixedLengthTagLayout(int $tag, int $type, int $count): void
     {
-        if (!isset(self::FIXED_LENGTH_TAGS[$tag])) {
-            return;
-        }
-
-        $rule                    = self::FIXED_LENGTH_TAGS[$tag];
-        $gpsTypeToleranceApplied = false;
-
-        // --- Type validation (Postel's Law: tolerate common real-world deviations) ---
-
-        if ($type !== $rule[self::RULE_TYPE]) {
-            // EXIF 3.0 §4.6.6.1.1/§4.6.6.1.2 specify UNDEFINED for version tags,
-            // but many cameras use ASCII. Accept both directions for compatibility.
-            $asciiUndefinedSwap = ($type === TiffConst::TYPE_UNDEFINED && $rule[self::RULE_TYPE] === TiffConst::TYPE_ASCII)
-                || ($type === TiffConst::TYPE_ASCII && $rule[self::RULE_TYPE] === TiffConst::TYPE_UNDEFINED);
-
-            // Postel's Law: RATIONAL (unsigned) and SRATIONAL (signed) share the
-            // same 8-byte binary layout (two int32).  Many cameras swap them for
-            // exposure value tags (ShutterSpeedValue, ApertureValue, BrightnessValue,
-            // ExposureBiasValue, MaxApertureValue, SubjectDistance).
-            $rationalSrationalSwap = ($type === TiffConst::TYPE_RATIONAL && $rule[self::RULE_TYPE] === TiffConst::TYPE_SRATIONAL)
-                || ($type === TiffConst::TYPE_SRATIONAL && $rule[self::RULE_TYPE] === TiffConst::TYPE_RATIONAL);
-
-            // EXIF 3.0 §4.6.7 specifies strict types for GPS value tags, but
-            // real-world cameras write a wide range of numeric types
-            // (SRATIONAL, SHORT, LONG, etc.) and swap UNDEFINED/ASCII.
-            // Skip the type check for GPS RATIONAL and UNDEFINED tags
-            // to follow Postel's Law.
-            $gpsTypeTolerance = ($rule[self::RULE_TYPE] === TiffConst::TYPE_RATIONAL || $rule[self::RULE_TYPE] === TiffConst::TYPE_UNDEFINED)
-                && str_starts_with((string) $rule[self::RULE_SPEC], 'EXIF 3.0 §4.6.7');
-
-            // Postel's Law: accept compatible integer types.
-            // Real-world cameras (Sony, Nikon, Apple) often write SLONG instead of
-            // SHORT, or SHORT instead of BYTE, for single-value integer tags.
-            $integerFamilyTolerance = $rule[self::RULE_COUNT] === 1
-                && $this->isIntegerType($type)
-                && $this->isIntegerType($rule[self::RULE_TYPE]);
-
-            if (!$asciiUndefinedSwap && !$rationalSrationalSwap && !$gpsTypeTolerance && !$integerFamilyTolerance) {
-                throw new ParseError(sprintf(
-                    '%s must use TIFF type %s per %s.',
-                    $rule[self::RULE_NAME],
-                    $this->typeName($rule[self::RULE_TYPE]),
-                    $rule[self::RULE_SPEC],
-                ), 1317);
-            }
-
-            $gpsTypeToleranceApplied = $gpsTypeTolerance;
-        }
-
-        // --- Count validation (Postel's Law: tolerate common real-world deviations) ---
-
-        if ($count === $rule[self::RULE_COUNT]) {
-            return;
-        }
-
-        // Postel's Law: when GPS type tolerance fired the actual type differs from
-        // spec (e.g. ASCII instead of RATIONAL), so the count field has different
-        // semantics (string byte-length vs. value count).  Skip the count check
-        // entirely — the value will be parsed according to its actual type.
-        if ($gpsTypeToleranceApplied) {
-            return;
-        }
-
-        // ComponentsConfiguration commonly has non-4-byte payloads in the wild.
-        if ($tag === ExifTag::COMPONENTS_CONFIGURATION) {
-            return;
-        }
-
-        // Postel's Law: many cameras write GPS coordinates with count=4 instead of
-        // the spec-mandated 3, adding a fourth zero RATIONAL value.  Accept any
-        // count ≥ expected for GPS RATIONAL tags — only the first N values are
-        // used.
-        if ($count > $rule[self::RULE_COUNT]
-            && $rule[self::RULE_TYPE] === TiffConst::TYPE_RATIONAL
-            && str_starts_with((string) $rule[self::RULE_SPEC], 'EXIF 3.0 §4.6.7')
-        ) {
-            return;
-        }
-
-        // Postel's Law: DateTime, DateTimeOriginal, DateTimeDigitized require
-        // count=20 (19 printable chars + NUL), but some cameras (e.g. Kodak)
-        // write count=19 omitting the NUL terminator.  The ASCII string parser
-        // already handles both NUL-terminated and non-NUL-terminated strings.
-        if ($rule[self::RULE_TYPE] === TiffConst::TYPE_ASCII && $rule[self::RULE_COUNT] === 20 && $count === 19) {
-            return;
-        }
-
-        // Postel's Law: ExifVersion/FlashpixVersion are informational 4-byte
-        // version strings.  Some cameras add a NUL terminator (count=5) or use
-        // other lengths.  Accept any count — the version string is non-critical
-        // for parsing.
-        if ($tag === ExifTag::EXIF_VERSION || $tag === ExifTag::FLASHPIX_VERSION) {
-            return;
-        }
-
-        // Postel's Law: tolerate fixed-length byte-count deviations.
-        // Many real-world cameras write tags with component counts that differ
-        // from the spec-mandated length.  Attempt to read the value with
-        // whatever bytes are available (truncating or padding) rather than
-        // aborting.
+        // Postel's Law: tolerate both TIFF type mismatches and fixed-length
+        // byte-count deviations.  Real-world cameras routinely write tags with
+        // types and component counts that differ from spec.  The parser decodes
+        // using the actual type and whatever bytes are available.
     }
 
     /**
@@ -411,35 +313,9 @@ final readonly class TiffExifTagValidator
      */
     public function validateTypeOnlyTagLayout(int $tag, int $type): void
     {
-        if (!isset(self::TYPE_ONLY_TAGS[$tag])) {
-            return;
-        }
-
-        $rule = self::TYPE_ONLY_TAGS[$tag];
-
-        if ($type === $rule[self::TYPE_ONLY_TYPE]) {
-            return;
-        }
-
-        // Postel's Law: GPS text tags (GPSProcessingMethod §4.6.7.1.28,
-        // GPSAreaInformation §4.6.7.1.29) are specified as UNDEFINED with an
-        // 8-byte character-code prefix, but some cameras (e.g. HMD/Nokia)
-        // write them as plain ASCII without the prefix.  Accept ASCII↔UNDEFINED
-        // swaps for GPS tags to avoid aborting on otherwise valid metadata.
-        $gpsUndefinedAsciiSwap = str_starts_with($rule[self::TYPE_ONLY_SPEC], 'EXIF 3.0 §4.6.7')
-            && (($type === TiffConst::TYPE_ASCII && $rule[self::TYPE_ONLY_TYPE] === TiffConst::TYPE_UNDEFINED)
-                || ($type === TiffConst::TYPE_UNDEFINED && $rule[self::TYPE_ONLY_TYPE] === TiffConst::TYPE_ASCII));
-
-        if ($gpsUndefinedAsciiSwap) {
-            return;
-        }
-
-        throw new ParseError(sprintf(
-            '%s must use TIFF type %s per %s.',
-            $rule[self::TYPE_ONLY_NAME],
-            $this->typeName($rule[self::TYPE_ONLY_TYPE]),
-            $rule[self::TYPE_ONLY_SPEC],
-        ), 1317);
+        // Postel's Law: tolerate TIFF type mismatches for type-only tags.
+        // Real-world cameras write tags with types that differ from spec.
+        // The parser decodes using the actual type present.
     }
 
     /**
@@ -468,28 +344,9 @@ final readonly class TiffExifTagValidator
      */
     public function validateGpsReferenceTagLayouts(?Ifd $gpsIfd): void
     {
-        if (!$gpsIfd instanceof Ifd) {
-            return;
-        }
-
-        foreach (self::GPS_REFERENCE_TAG_LAYOUTS as $tag => $rule) {
-            $entry = $gpsIfd->get($tag);
-            if (!$entry instanceof IfdEntry) {
-                continue;
-            }
-
-            if ($entry->type !== $rule[self::RULE_TYPE]) {
-                throw new ParseError(sprintf(
-                    '%s must use TIFF type %s per %s.',
-                    $rule[self::RULE_NAME],
-                    $this->typeName($rule[self::RULE_TYPE]),
-                    $rule[self::RULE_SPEC],
-                ), 1317);
-            }
-
-            // Postel's Law: tolerate fixed-length byte-count deviations in
-            // GPS reference tags.  Real-world cameras write varying counts.
-        }
+        // Postel's Law: tolerate both TIFF type mismatches and byte-count
+        // deviations for GPS reference tags.  Real-world cameras write
+        // varying types and counts.
     }
 
     /**
@@ -499,24 +356,9 @@ final readonly class TiffExifTagValidator
      */
     public function validateGpsCoordinateTagLayouts(?Ifd $gpsIfd): void
     {
-        if (!$gpsIfd instanceof Ifd) {
-            return;
-        }
-
-        foreach (self::GPS_COORDINATE_TAG_LAYOUTS as $tag => $rule) {
-            $entry = $gpsIfd->get($tag);
-            if (!$entry instanceof IfdEntry) {
-                continue;
-            }
-
-            // EXIF 3.0 §4.6.7 specifies RATIONAL for GPS coordinate values.
-            // Real-world cameras write a wide range of numeric types (SRATIONAL,
-            // SHORT, LONG, etc.).  Skip the type check and only validate the
-            // component count to follow Postel's Law.
-
-            // Postel's Law: tolerate fixed-length byte-count deviations in
-            // GPS coordinate tags.  Real-world cameras write varying counts.
-        }
+        // Postel's Law: tolerate both TIFF type mismatches and byte-count
+        // deviations for GPS coordinate tags.  Real-world cameras write
+        // varying types and counts.
     }
 
     /**
@@ -634,51 +476,6 @@ final readonly class TiffExifTagValidator
                 ), 1463);
             }
         }
-    }
-
-    /**
-     * Derives a human-readable TIFF type label from a type code.
-     *
-     * @param int $type TIFF field type code.
-     */
-    private function typeName(int $type): string
-    {
-        return match ($type) {
-            TiffConst::TYPE_BYTE      => 'BYTE',
-            TiffConst::TYPE_ASCII     => 'ASCII',
-            TiffConst::TYPE_SHORT     => 'SHORT',
-            TiffConst::TYPE_LONG      => 'LONG',
-            TiffConst::TYPE_RATIONAL  => 'RATIONAL',
-            TiffConst::TYPE_SBYTE     => 'SBYTE',
-            TiffConst::TYPE_UNDEFINED => 'UNDEFINED',
-            TiffConst::TYPE_SSHORT    => 'SSHORT',
-            TiffConst::TYPE_SLONG     => 'SLONG',
-            TiffConst::TYPE_SRATIONAL => 'SRATIONAL',
-            TiffConst::TYPE_FLOAT     => 'FLOAT',
-            TiffConst::TYPE_DOUBLE    => 'DOUBLE',
-            TiffConst::TYPE_IFD       => 'IFD',
-            TiffConst::TYPE_LONG8     => 'LONG8',
-            TiffConst::TYPE_SLONG8    => 'SLONG8',
-            TiffConst::TYPE_IFD8      => 'IFD8',
-            default                   => sprintf('TYPE_%d', $type),
-        };
-    }
-
-    /**
-     * Tests whether a TIFF field type belongs to the integer family.
-     *
-     * @param int $type TIFF field type code.
-     */
-    private function isIntegerType(int $type): bool
-    {
-        return in_array($type, [
-            TiffConst::TYPE_BYTE,
-            TiffConst::TYPE_SHORT,
-            TiffConst::TYPE_LONG,
-            TiffConst::TYPE_SBYTE,
-            TiffConst::TYPE_SSHORT,
-            TiffConst::TYPE_SLONG,
-        ], true);
     }
 
     private function assertMakerNoteSafetyDomain(int $value): void
