@@ -21,6 +21,7 @@ use function array_key_exists;
 use function count;
 use function dirname;
 use function file_get_contents;
+use function in_array;
 use function is_array;
 use function is_string;
 use function sort;
@@ -31,6 +32,8 @@ use function token_get_all;
 
 /**
  * Enforces AGENTS.md §4 by forbidding runtime @-suppressed call expressions in src/.
+ *
+ * @phpstan-type PhpToken array{0:int,1:string,2:int}|string
  */
 final class SuppressedRuntimeCallGuardTest extends TestCase
 {
@@ -120,13 +123,14 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
     }
 
     /**
-     * @return int|null
+     * @param list<PhpToken> $tokens
      */
     private function tokenLine(array $tokens, int $index): ?int
     {
-        for ($cursor = $index; $cursor < count($tokens); ++$cursor) {
+        $counter = count($tokens);
+        for ($cursor = $index; $cursor < $counter; ++$cursor) {
             $token = $tokens[$cursor];
-            if (is_array($token) && isset($token[2]) && is_int($token[2])) {
+            if (is_array($token)) {
                 return $token[2];
             }
         }
@@ -134,11 +138,17 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
         return null;
     }
 
+    /**
+     * @param PhpToken $token
+     */
     private function isIgnorableToken(array|string $token): bool
     {
         return is_array($token) && $token[0] === T_WHITESPACE;
     }
 
+    /**
+     * @param PhpToken $token
+     */
     private function isSuppressedCallStartToken(array|string $token): bool
     {
         if ($token === '\\') {
@@ -156,6 +166,9 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
             || (defined('T_NAME_RELATIVE') && $token[0] === T_NAME_RELATIVE);
     }
 
+    /**
+     * @param PhpToken $token
+     */
     private function isSuppressedCallBodyToken(array|string $token): bool
     {
         if ($token === '\\') {
@@ -166,11 +179,7 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
             return false;
         }
 
-        return $token[0] === T_STRING
-            || $token[0] === T_VARIABLE
-            || $token[0] === T_DOUBLE_COLON
-            || $token[0] === T_OBJECT_OPERATOR
-            || $token[0] === T_NULLSAFE_OBJECT_OPERATOR
+        return in_array($token[0], [T_STRING, T_VARIABLE, T_DOUBLE_COLON, T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR], true)
             || (defined('T_NAME_QUALIFIED') && $token[0] === T_NAME_QUALIFIED)
             || (defined('T_NAME_FULLY_QUALIFIED') && $token[0] === T_NAME_FULLY_QUALIFIED)
             || (defined('T_NAME_RELATIVE') && $token[0] === T_NAME_RELATIVE);
