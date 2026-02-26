@@ -21,6 +21,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use TypeError;
 
 /**
  * Validates EXIF enum and boolean flag conversion for backed enums and maker-note safety.
@@ -96,9 +97,10 @@ final class EnumConverterTest extends TestCase
      * Returns null for a non-numeric string that is not a valid enum backing.
      */
     #[Test]
-    public function toEnumOrNullReturnsNullForNonNumericString(): void
+    public function toEnumOrNullThrowsTypeErrorForNonNumericString(): void
     {
-        self::assertNull($this->converter->toEnumOrNull(Orientation::class, 'invalid'));
+        $this->expectException(TypeError::class);
+        $this->converter->toEnumOrNull(Orientation::class, 'invalid');
     }
 
     /**

@@ -324,8 +324,8 @@ final readonly class ItemPayloadResolver
      * validation, and safe offset arithmetic per ISO/IEC 14496-12 §8.11.3.
      *
      * @param list<array{offset:int,length:int,index:?int}> $extents
-     * @param Closure(int, int): string                     $readData       Reads $length bytes at $offset from the container.
-     * @param ExtentErrorCodes                              $errorCodes     Per-construction-method error codes for each validation step.
+     * @param Closure(int, int): string                     $readData   Reads $length bytes at $offset from the container.
+     * @param ExtentErrorCodes                              $errorCodes Per-construction-method error codes for each validation step.
      */
     private function walkLinearExtents(
         array $extents,
@@ -391,8 +391,8 @@ final readonly class ItemPayloadResolver
      * Validates all components are non-negative and checks for integer overflow
      * at each addition step.
      *
-     * @param int $negativeCode     Error code for negative offset components.
-     * @param int $overflowCode     Error code for base+extent overflow.
+     * @param int $negativeCode       Error code for negative offset components.
+     * @param int $overflowCode       Error code for base+extent overflow.
      * @param int $originOverflowCode Error code for +origin overflow (unused when $originOffset is 0).
      */
     private function computeSafeOffset(

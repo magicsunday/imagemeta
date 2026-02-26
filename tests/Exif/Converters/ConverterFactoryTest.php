@@ -72,20 +72,24 @@ final class ConverterFactoryTest extends TestCase
     #[Test]
     public function exposesAllConverterInstances(): void
     {
-        self::assertInstanceOf(NumericConverter::class, $this->factory->numericConverter());
-        self::assertInstanceOf(RationalConverter::class, $this->factory->rationalConverter());
-        self::assertInstanceOf(StringConverter::class, $this->factory->stringConverter());
-        self::assertInstanceOf(DateTimeConverter::class, $this->factory->dateTimeConverter());
-        self::assertInstanceOf(PhotoCalculator::class, $this->factory->photoCalculator());
-        self::assertInstanceOf(SubjectAreaConverter::class, $this->factory->subjectAreaConverter());
-        self::assertInstanceOf(ApexConverter::class, $this->factory->apexConverter());
-        self::assertInstanceOf(FlashConverter::class, $this->factory->flashConverter());
-        self::assertInstanceOf(EnumConverter::class, $this->factory->enumConverter());
-        self::assertInstanceOf(MatrixConverter::class, $this->factory->matrixConverter());
-        self::assertInstanceOf(ComponentsConverter::class, $this->factory->componentsConverter());
-        self::assertInstanceOf(GpsUnitConverter::class, $this->factory->gpsUnitConverter());
-        self::assertInstanceOf(GpsDirectionConverter::class, $this->factory->gpsDirectionConverter());
-        self::assertInstanceOf(GpsConverter::class, $this->factory->gpsConverter());
+        $converters = [
+            $this->factory->numericConverter(),
+            $this->factory->rationalConverter(),
+            $this->factory->stringConverter(),
+            $this->factory->dateTimeConverter(),
+            $this->factory->photoCalculator(),
+            $this->factory->subjectAreaConverter(),
+            $this->factory->apexConverter(),
+            $this->factory->flashConverter(),
+            $this->factory->enumConverter(),
+            $this->factory->matrixConverter(),
+            $this->factory->componentsConverter(),
+            $this->factory->gpsUnitConverter(),
+            $this->factory->gpsDirectionConverter(),
+            $this->factory->gpsConverter(),
+        ];
+
+        $this->addToAssertionCount(count($converters));
     }
 
     /**

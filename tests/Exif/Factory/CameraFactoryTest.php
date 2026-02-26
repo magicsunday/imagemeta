@@ -133,7 +133,7 @@ final class CameraFactoryTest extends TestCase
         // Put an integer where ASCII strings are expected (make/model),
         // and a string where a SHORT is expected (sensing method).
         $ifd0Entries = [
-            ExifTag::MAKE => new IfdEntry(ExifTag::MAKE, 3, 1, 42),
+            ExifTag::MAKE  => new IfdEntry(ExifTag::MAKE, 3, 1, 42),
             ExifTag::MODEL => new IfdEntry(ExifTag::MODEL, 3, 1, 99),
         ];
 
@@ -202,7 +202,7 @@ final class CameraFactoryTest extends TestCase
 
         // Invalid enum should degrade — either null or the default DigitalCamera
         self::assertTrue(
-            $camera->fileSource === null || $camera->fileSource === FileSource::DigitalCamera,
+            !$camera->fileSource instanceof FileSource || $camera->fileSource === FileSource::DigitalCamera,
             'FileSource should be null or default DigitalCamera for invalid backing value',
         );
     }

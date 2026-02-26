@@ -268,7 +268,8 @@ final class ImageFactoryTest extends TestCase
 
         self::assertNull($image->width);
         self::assertNull($image->height);
-        self::assertNull($image->orientation);
+        // orientation() is non-nullable, defaults to TopLeft for invalid values
+        self::assertSame(Orientation::TopLeft, $image->orientation);
     }
 
     /**

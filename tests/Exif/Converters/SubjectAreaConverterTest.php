@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Exif\Converters;
 
 use MagicSunday\ImageMeta\Exif\Converters\SubjectAreaConverter;
-use MagicSunday\ImageMeta\Value\Enum\SubjectAreaType;
 use MagicSunday\ImageMeta\Value\SubjectArea;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;

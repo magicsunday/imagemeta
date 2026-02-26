@@ -741,5 +741,4 @@ final readonly class IlocBoxParser
 
         return $value !== '' ? $value : null;
     }
-
 }

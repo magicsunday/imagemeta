@@ -234,11 +234,11 @@ final class SensorFactoryTest extends TestCase
         );
 
         $factory = new SensorFactory();
-        $sensor  = $factory->create($metadata);
+        $factory->create($metadata);
 
         // Truncated CFA pattern should either be null or have incomplete data
         // The key is that no exception is thrown
-        self::assertTrue(true, 'Factory handled truncated CFA pattern without exception');
+        $this->addToAssertionCount(1);
     }
 
     /**

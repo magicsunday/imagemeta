@@ -38,8 +38,8 @@ final class PhotoCalculatorTest extends TestCase
     #[Test]
     public function calcHyperfocalMReturnsCorrectValue(): void
     {
-        // f=50mm, f/8, CoC=0.03mm -> H = 50^2/(8*0.03) + 50 = 2500/0.24 + 50 = 10466.67 + 50 = 10516.67mm -> 10.517m
-        self::assertEqualsWithDelta(10.517, $this->calculator->calcHyperfocalM(50.0, 8.0, 0.03), 0.001);
+        // f=50mm, f/8, CoC=0.03mm -> H = 50^2/(8*0.03) + 50 = 2500/0.24 + 50 = 10416.67 + 50 = 10466.67mm -> 10.467m
+        self::assertEqualsWithDelta(10.467, $this->calculator->calcHyperfocalM(50.0, 8.0, 0.03), 0.001);
     }
 
     /**

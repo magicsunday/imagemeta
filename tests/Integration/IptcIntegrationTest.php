@@ -120,7 +120,6 @@ use function file_put_contents;
 use function ltrim;
 use function pack;
 use function rename;
-use function str_pad;
 use function strlen;
 use function sys_get_temp_dir;
 use function tempnam;
@@ -241,8 +240,8 @@ final class IptcIntegrationTest extends TestCase
     #[Test]
     public function readJpegWithApp13PopulatesIptcMetadata(): void
     {
-        $caption = 'A synthetic test caption';
-        $byLine  = 'Test Author';
+        $caption  = 'A synthetic test caption';
+        $byLine   = 'Test Author';
         $keyword1 = 'landscape';
         $keyword2 = 'sunset';
 
@@ -288,7 +287,7 @@ final class IptcIntegrationTest extends TestCase
     #[Test]
     public function readJpegWithMultipleApp13SegmentsMergesIptcData(): void
     {
-        $caption  = 'Caption from first segment';
+        $caption    = 'Caption from first segment';
         $objectName = 'Object from second segment';
 
         $iptcData1 = $this->buildIptcIimData([
