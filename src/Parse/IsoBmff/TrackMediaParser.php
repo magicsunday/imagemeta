@@ -663,6 +663,12 @@ final readonly class TrackMediaParser
 
         // Validate media header presence and handler match
         if ($mediaHdrType === null) {
+            // QuickTime metadata tracks may use gmhd (or omit nmhd entirely)
+            // while still providing parseable sample tables in minf/stbl.
+            if ($handlerType === 'meta') {
+                return $result;
+            }
+
             throw new ParseError(sprintf('minf missing required media header box %s for handler %s', $expectedMediaHdr, $handlerType), 1422);
         }
 
