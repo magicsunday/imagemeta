@@ -1015,7 +1015,10 @@ final class MetadataFormatter
         }
 
         if (count($labels) < 4) {
-            $labels = array_pad($labels, -4, '-');
+            // ComponentsConfiguration mapping is:
+            // 0 => '-', 1 => 'Y', 2 => 'Cb', 3 => 'Cr', 4 => 'R', 5 => 'G', 6 => 'B'.
+            // Preserve EXIF byte order and right-pad missing trailing components.
+            $labels = array_pad($labels, 4, '-');
         }
 
         return implode(', ', $labels);
