@@ -420,14 +420,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects BaselineExposureOffset with wrong type (LONG instead of RATIONAL).
+     * Tolerates BaselineExposureOffset with wrong type (LONG instead of RATIONAL).
+     * Postel's Law: TIFF type mismatches are accepted.
      */
     #[Test]
-    public function rejectsBaselineExposureOffsetWrongType(): void
+    public function toleratesBaselineExposureOffsetWrongType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-
         $blob = $this->buildClassicTiffWithEntry(
             DngTag::BASELINE_EXPOSURE_OFFSET,
             TiffConst::TYPE_LONG,
@@ -435,7 +433,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             "\x00\x00\x00\x01",
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type mismatch must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -464,14 +470,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects RawToPreviewGain with wrong type (RATIONAL instead of DOUBLE).
+     * Tolerates RawToPreviewGain with wrong type (RATIONAL instead of DOUBLE).
+     * Postel's Law: TIFF type mismatches are accepted.
      */
     #[Test]
-    public function rejectsRawToPreviewGainWrongType(): void
+    public function toleratesRawToPreviewGainWrongType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-
         $blob = $this->buildClassicTiffWithEntry(
             DngTag::RAW_TO_PREVIEW_GAIN,
             TiffConst::TYPE_RATIONAL,
@@ -479,7 +483,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             "\x00\x00\x00\x01\x00\x00\x00\x01",
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type mismatch must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -508,14 +520,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects RawDataUniqueID with wrong type (UNDEFINED instead of BYTE).
+     * Tolerates RawDataUniqueID with wrong type (UNDEFINED instead of BYTE).
+     * Postel's Law: TIFF type mismatches are accepted.
      */
     #[Test]
-    public function rejectsRawDataUniqueIdWrongType(): void
+    public function toleratesRawDataUniqueIdWrongType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-
         $blob = $this->buildClassicTiffWithEntry(
             DngTag::RAW_DATA_UNIQUE_ID,
             TiffConst::TYPE_UNDEFINED,
@@ -523,7 +533,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             str_repeat("\xAB", 16),
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type mismatch must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -576,14 +594,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSSpeedRef with wrong type (BYTE instead of ASCII).
+     * Tolerates GPSSpeedRef with wrong type (BYTE instead of ASCII).
+     * Postel's Law: TIFF type mismatches are accepted.
      */
     #[Test]
-    public function rejectsGpsSpeedRefWrongType(): void
+    public function toleratesGpsSpeedRefWrongType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-
         $blob = $this->buildClassicTiffWithEntry(
             ExifTag::GPS_SPEED_REF,
             TiffConst::TYPE_BYTE,
@@ -591,7 +607,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             "K\0",
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type mismatch must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -668,15 +692,13 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSStatus/GPSMeasureMode tags when encoded with non-ASCII TIFF type.
+     * Tolerates GPSStatus/GPSMeasureMode tags when encoded with non-ASCII TIFF type.
+     * Postel's Law: TIFF type mismatches are accepted.
      */
     #[Test]
     #[DataProvider('provideGpsStatusAndMeasureModeTags')]
-    public function rejectsGpsStatusAndMeasureModeWrongType(int $tag): void
+    public function toleratesGpsStatusAndMeasureModeWrongType(int $tag): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-
         $blob = $this->buildClassicTiffWithEntry(
             $tag,
             TiffConst::TYPE_BYTE,
@@ -684,7 +706,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             "A\0",
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type mismatch must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -723,14 +753,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSDestDistanceRef with wrong type (BYTE instead of ASCII).
+     * Tolerates GPSDestDistanceRef with wrong type (BYTE instead of ASCII).
+     * Postel's Law: TIFF type mismatches are accepted.
      */
     #[Test]
-    public function rejectsGpsDestDistanceRefWrongType(): void
+    public function toleratesGpsDestDistanceRefWrongType(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-
         $blob = $this->buildClassicTiffWithEntry(
             ExifTag::GPS_DEST_DISTANCE_REF,
             TiffConst::TYPE_BYTE,
@@ -738,7 +766,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             "K\0",
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type mismatch must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -791,16 +827,13 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSMapDatum when encoded with non-ASCII TIFF type.
+     * Tolerates GPSMapDatum when encoded with non-ASCII TIFF type.
+     * Postel's Law: TIFF type mismatches are accepted.
      */
     #[Test]
-    #[DataProvider('provideInvalidGpsMapDatumTypes')]
-    public function rejectsGpsMapDatumWithWrongType(int $type, int $count, string $valueBytes): void
+    #[DataProvider('provideToleratedGpsMapDatumTypes')]
+    public function toleratesGpsMapDatumWithWrongType(int $type, int $count, string $valueBytes): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-        $this->expectExceptionMessage('GPSMapDatum must use TIFF type ASCII');
-
         $blob = $this->buildClassicTiffWithEntry(
             ExifTag::GPS_MAP_DATUM,
             $type,
@@ -808,13 +841,21 @@ final class TiffExifParserFixedLengthTest extends TestCase
             $valueBytes,
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type mismatch must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
      * @return iterable<string, array{0:int,1:int,2:string}>
      */
-    public static function provideInvalidGpsMapDatumTypes(): iterable
+    public static function provideToleratedGpsMapDatumTypes(): iterable
     {
         yield 'SHORT type' => [
             TiffConst::TYPE_SHORT,
@@ -824,16 +865,13 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPSSatellites when encoded with non-ASCII TIFF type.
+     * Tolerates GPSSatellites when encoded with non-ASCII TIFF type.
+     * Postel's Law: TIFF type mismatches are accepted.
      */
     #[Test]
-    #[DataProvider('provideInvalidGpsSatellitesTypes')]
-    public function rejectsGpsSatellitesWithWrongType(int $type, int $count, string $valueBytes): void
+    #[DataProvider('provideToleratedGpsSatellitesTypes')]
+    public function toleratesGpsSatellitesWithWrongType(int $type, int $count, string $valueBytes): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-        $this->expectExceptionMessage('GPSSatellites must use TIFF type ASCII');
-
         $blob = $this->buildClassicTiffWithEntry(
             ExifTag::GPS_SATELLITES,
             $type,
@@ -841,13 +879,21 @@ final class TiffExifParserFixedLengthTest extends TestCase
             $valueBytes,
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type mismatch must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
      * @return iterable<string, array{0:int,1:int,2:string}>
      */
-    public static function provideInvalidGpsSatellitesTypes(): iterable
+    public static function provideToleratedGpsSatellitesTypes(): iterable
     {
         yield 'SHORT type' => [
             TiffConst::TYPE_SHORT,
@@ -857,15 +903,13 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Rejects GPS bearing reference tags when encoded with non-ASCII TIFF type.
+     * Tolerates GPS bearing reference tags when encoded with non-ASCII TIFF type.
+     * Postel's Law: TIFF type mismatches are accepted.
      */
     #[Test]
     #[DataProvider('provideGpsBearingRefTags')]
-    public function rejectsGpsBearingReferenceTagsWithWrongType(int $tag): void
+    public function toleratesGpsBearingReferenceTagsWithWrongType(int $tag): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-
         $blob = $this->buildClassicTiffWithEntry(
             $tag,
             TiffConst::TYPE_BYTE,
@@ -873,7 +917,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             "T\0",
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type mismatch must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -984,14 +1036,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
     }
 
     /**
-     * Still rejects ASCII type for SHORT Orientation tag (cross-family).
+     * Tolerates ASCII type for SHORT Orientation tag (Postel's Law).
+     * Previously rejected as cross-family mismatch, now tolerated.
      */
     #[Test]
-    public function rejectsAsciiForShortOrientationTag(): void
+    public function toleratesAsciiForShortOrientationTag(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1317);
-
         $blob = $this->buildClassicTiffWithEntry(
             ExifTag::ORIENTATION,
             TiffConst::TYPE_ASCII,
@@ -999,7 +1049,15 @@ final class TiffExifParserFixedLengthTest extends TestCase
             '1',
         );
 
-        (new TiffExifParser())->parseFromBlob($blob);
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type mismatch must not be rejected');
+
+            return;
+        }
+
+        $this->addToAssertionCount(1);
     }
 
     private function buildClassicTiffWithEntry(int $tag, int $type, int $count, string $valueBytes): string

@@ -534,26 +534,28 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Rejects fixed-length tags with type mismatches via a data provider.
-     * Confirms the parser rejects each case with the expected ParseError message.
+     * Tolerates fixed-length tags with TIFF type mismatches (Postel's Law).
+     * The parser must not throw ParseError code 1317 for these cases.
      */
     #[Test]
-    #[DataProvider('invalidFixedLengthTagTypeProvider')]
-    public function rejectsFixedLengthTagsWithInvalidTypes(
+    #[DataProvider('toleratedFixedLengthTagTypeProvider')]
+    public function toleratesFixedLengthTagsWithTypeMismatches(
         int $tag,
         int $type,
         int $count,
         string $valueBytes,
-        string $expectedMessage,
     ): void {
         $blob = $this->buildClassicTiffWithEntry($tag, $type, $count, $valueBytes);
 
-        $reader = new TiffExifParser();
+        try {
+            (new TiffExifParser())->parseFromBlob($blob);
+        } catch (ParseError $e) {
+            self::assertNotSame(1317, $e->getCode(), 'Type mismatch must not be rejected');
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage($expectedMessage);
+            return;
+        }
 
-        $reader->parseFromBlob($blob);
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -1063,17 +1065,16 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * @return array<string, array{0:int,1:int,2:int,3:string,4:string}>
+     * @return array<string, array{0:int,1:int,2:int,3:string}>
      */
-    public static function invalidFixedLengthTagTypeProvider(): array
+    public static function toleratedFixedLengthTagTypeProvider(): array
     {
         return [
-            'SubjectLocation rejects LONG type' => [
+            'SubjectLocation tolerates LONG type' => [
                 ExifTag::SUBJECT_LOCATION,
                 TiffConst::TYPE_LONG,
                 2,
                 "\x00\x00\x00\x64\x00\x00\x00\xC8",
-                'SubjectLocation must use TIFF type SHORT per EXIF 3.0 §4.6.6.7.29.',
             ],
         ];
     }
