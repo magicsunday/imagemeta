@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
+use Closure;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Stream;
@@ -38,6 +39,16 @@ use function substr;
  *
  * Handles reading extent data from the raw stream, idat payloads,
  * and item-offset construction methods per ISO/IEC 14496-12 §8.11.3.
+ *
+ * @phpstan-type ExtentErrorCodes array{
+ *     negativeOffset:   int,
+ *     offsetOverflow:   int,
+ *     originOverflow:   int,
+ *     outsideContainer: int,
+ *     payloadLimit:     int,
+ *     lengthExceeds:    int,
+ *     extentOutside:    int,
+ * }
  */
 final readonly class ItemPayloadResolver
 {
@@ -80,76 +91,24 @@ final readonly class ItemPayloadResolver
                 return new IsoBmffItemResolveResult(null, [$this->createUnresolvedItem($itemId, $location, $dataReferences, $metaContextOffset)]);
             }
 
-            $blob        = '';
-            $total       = 0;
-            $fileSize    = $this->stream->size();
-            $extentCount = count($location['extents']);
-            foreach ($location['extents'] as $extent) {
-                $length = $extent['length'];
-
-                // Implied extent_length semantics for single-extent items
-                if ($length === 0) {
-                    if ($extentCount !== 1) {
-                        continue;
-                    }
-
-                    $baseOffset   = $location['baseOffset'];
-                    $extentOffset = $extent['offset'];
-                    $originOffset = $location['fileOffsetOrigin'];
-                    if ($baseOffset < 0 || $extentOffset < 0 || $originOffset < 0) {
-                        throw new ParseError('iloc negative offset', 1180);
-                    }
-
-                    if ($baseOffset > PHP_INT_MAX - $extentOffset) {
-                        throw new ParseError('iloc offset overflow', 1181);
-                    }
-
-                    $effectiveOffset = $baseOffset + $extentOffset;
-                    if ($originOffset > PHP_INT_MAX - $effectiveOffset) {
-                        throw new ParseError('iloc offset overflow', 1874);
-                    }
-
-                    $effectiveOffset += $originOffset;
-                    if ($effectiveOffset > $fileSize) {
-                        throw new ParseError('iloc extent outside file', 1182);
-                    }
-
-                    $length = $fileSize - $effectiveOffset;
-                }
-
-                if ($length > $this->maxItemPayloadSize - $total) {
-                    throw new ParseError('iloc item payload exceeds configured limit', 1178);
-                }
-
-                if (($total > $fileSize) || ($length > ($fileSize - $total))) {
-                    throw new ParseError('iloc extent length exceeds file size', 1179);
-                }
-
-                $total += $length;
-
-                $baseOffset   = $location['baseOffset'];
-                $extentOffset = $extent['offset'];
-                $originOffset = $location['fileOffsetOrigin'];
-                if ($baseOffset < 0 || $extentOffset < 0 || $originOffset < 0) {
-                    throw new ParseError('iloc negative offset', 1873);
-                }
-
-                if ($baseOffset > PHP_INT_MAX - $extentOffset) {
-                    throw new ParseError('iloc offset overflow', 1875);
-                }
-
-                $offset = $baseOffset + $extentOffset;
-                if ($originOffset > PHP_INT_MAX - $offset) {
-                    throw new ParseError('iloc offset overflow', 1876);
-                }
-
-                $offset += $originOffset;
-                if (($length > $fileSize) || ($offset > ($fileSize - $length))) {
-                    throw new ParseError('iloc extent outside file', 1877);
-                }
-
-                $blob .= $this->boxNavigator->readAll($this->stream->window($offset, $length));
-            }
+            $blob = $this->walkLinearExtents(
+                $location['extents'],
+                $location['baseOffset'],
+                $location['fileOffsetOrigin'],
+                $this->stream->size(),
+                fn (int $offset, int $length): string => $this->boxNavigator->readAll($this->stream->window($offset, $length)),
+                'iloc extent outside file',
+                'iloc extent length exceeds file size',
+                [
+                    'negativeOffset'   => 1180,
+                    'offsetOverflow'   => 1181,
+                    'originOverflow'   => 1874,
+                    'outsideContainer' => 1182,
+                    'payloadLimit'     => 1178,
+                    'lengthExceeds'    => 1179,
+                    'extentOutside'    => 1877,
+                ],
+            );
 
             return new IsoBmffItemResolveResult($blob === '' ? null : $blob, []);
         }
@@ -160,64 +119,24 @@ final readonly class ItemPayloadResolver
             }
 
             // ISO/IEC 14496-12 §8.11.3.2 defines construction_method=1 offsets as idat-relative.
-            $blob        = '';
-            $total       = 0;
-            $idatSize    = strlen($idatPayload);
-            $extentCount = count($location['extents']);
-            foreach ($location['extents'] as $extent) {
-                $length = $extent['length'];
-
-                // Implied extent_length semantics for single-extent items
-                if ($length === 0) {
-                    if ($extentCount !== 1) {
-                        continue;
-                    }
-
-                    $baseOffset   = $location['baseOffset'];
-                    $extentOffset = $extent['offset'];
-                    if ($baseOffset < 0 || $extentOffset < 0) {
-                        throw new ParseError('iloc negative offset', 1185);
-                    }
-
-                    if ($baseOffset > PHP_INT_MAX - $extentOffset) {
-                        throw new ParseError('iloc offset overflow', 1186);
-                    }
-
-                    $effectiveOffset = $baseOffset + $extentOffset;
-                    if ($effectiveOffset > $idatSize) {
-                        throw new ParseError('iloc extent outside idat payload', 1187);
-                    }
-
-                    $length = $idatSize - $effectiveOffset;
-                }
-
-                if ($length > $this->maxItemPayloadSize - $total) {
-                    throw new ParseError('iloc item payload exceeds configured limit', 1183);
-                }
-
-                if (($total > $idatSize) || ($length > ($idatSize - $total))) {
-                    throw new ParseError('iloc extent length exceeds idat payload', 1184);
-                }
-
-                $total += $length;
-
-                $baseOffset   = $location['baseOffset'];
-                $extentOffset = $extent['offset'];
-                if ($baseOffset < 0 || $extentOffset < 0) {
-                    throw new ParseError('iloc negative offset', 1878);
-                }
-
-                if ($baseOffset > PHP_INT_MAX - $extentOffset) {
-                    throw new ParseError('iloc offset overflow', 1879);
-                }
-
-                $offset = $baseOffset + $extentOffset;
-                if (($length > $idatSize) || ($offset > ($idatSize - $length))) {
-                    throw new ParseError('iloc extent outside idat payload', 1880);
-                }
-
-                $blob .= substr($idatPayload, $offset, $length);
-            }
+            $blob = $this->walkLinearExtents(
+                $location['extents'],
+                $location['baseOffset'],
+                0,
+                strlen($idatPayload),
+                static fn (int $offset, int $length): string => substr($idatPayload, $offset, $length),
+                'iloc extent outside idat payload',
+                'iloc extent length exceeds idat payload',
+                [
+                    'negativeOffset'   => 1185,
+                    'offsetOverflow'   => 1186,
+                    'originOverflow'   => 0,
+                    'outsideContainer' => 1187,
+                    'payloadLimit'     => 1183,
+                    'lengthExceeds'    => 1184,
+                    'extentOutside'    => 1880,
+                ],
+            );
 
             return new IsoBmffItemResolveResult($blob === '' ? null : $blob, []);
         }
@@ -284,17 +203,7 @@ final readonly class ItemPayloadResolver
 
             $referenceData = $result->data;
             $referenceSize = strlen($referenceData);
-            $baseOffset    = $location['baseOffset'];
-            $extentOffset  = $extent['offset'];
-            if ($baseOffset < 0 || $extentOffset < 0) {
-                throw new ParseError('iloc negative offset', 1189);
-            }
-
-            if ($baseOffset > PHP_INT_MAX - $extentOffset) {
-                throw new ParseError('iloc offset overflow', 1190);
-            }
-
-            $offset = $baseOffset + $extentOffset;
+            $offset        = $this->computeSafeOffset($location['baseOffset'], $extent['offset'], 0, 1189, 1190, 0);
 
             // Implied extent_length semantics for single-extent items
             if ($length === 0) {
@@ -406,6 +315,113 @@ final readonly class ItemPayloadResolver
         }
 
         return strtolower($contentType) === 'application/rdf+xml';
+    }
+
+    /**
+     * Walks extents for construction methods with a fixed-size container (file or idat).
+     *
+     * Handles implied extent_length semantics, payload size limits, container bounds
+     * validation, and safe offset arithmetic per ISO/IEC 14496-12 §8.11.3.
+     *
+     * @param list<array{offset:int,length:int,index:?int}> $extents
+     * @param Closure(int, int): string                     $readData       Reads $length bytes at $offset from the container.
+     * @param ExtentErrorCodes                              $errorCodes     Per-construction-method error codes for each validation step.
+     */
+    private function walkLinearExtents(
+        array $extents,
+        int $baseOffset,
+        int $originOffset,
+        int $containerSize,
+        Closure $readData,
+        string $outsideMessage,
+        string $lengthMessage,
+        array $errorCodes,
+    ): string {
+        $blob        = '';
+        $total       = 0;
+        $extentCount = count($extents);
+
+        foreach ($extents as $extent) {
+            $length = $extent['length'];
+            $offset = $this->computeSafeOffset(
+                $baseOffset,
+                $extent['offset'],
+                $originOffset,
+                $errorCodes['negativeOffset'],
+                $errorCodes['offsetOverflow'],
+                $errorCodes['originOverflow'],
+            );
+
+            // Implied extent_length semantics for single-extent items
+            if ($length === 0) {
+                if ($extentCount !== 1) {
+                    continue;
+                }
+
+                if ($offset > $containerSize) {
+                    throw new ParseError($outsideMessage, $errorCodes['outsideContainer']);
+                }
+
+                $length = $containerSize - $offset;
+            }
+
+            if ($length > $this->maxItemPayloadSize - $total) {
+                throw new ParseError('iloc item payload exceeds configured limit', $errorCodes['payloadLimit']);
+            }
+
+            if (($total > $containerSize) || ($length > ($containerSize - $total))) {
+                throw new ParseError($lengthMessage, $errorCodes['lengthExceeds']);
+            }
+
+            $total += $length;
+
+            if (($length > $containerSize) || ($offset > ($containerSize - $length))) {
+                throw new ParseError($outsideMessage, $errorCodes['extentOutside']);
+            }
+
+            $blob .= $readData($offset, $length);
+        }
+
+        return $blob;
+    }
+
+    /**
+     * Computes a safe effective offset from base, extent, and optional origin components.
+     *
+     * Validates all components are non-negative and checks for integer overflow
+     * at each addition step.
+     *
+     * @param int $negativeCode     Error code for negative offset components.
+     * @param int $overflowCode     Error code for base+extent overflow.
+     * @param int $originOverflowCode Error code for +origin overflow (unused when $originOffset is 0).
+     */
+    private function computeSafeOffset(
+        int $baseOffset,
+        int $extentOffset,
+        int $originOffset,
+        int $negativeCode,
+        int $overflowCode,
+        int $originOverflowCode,
+    ): int {
+        if ($baseOffset < 0 || $extentOffset < 0 || $originOffset < 0) {
+            throw new ParseError('iloc negative offset', $negativeCode);
+        }
+
+        if ($baseOffset > PHP_INT_MAX - $extentOffset) {
+            throw new ParseError('iloc offset overflow', $overflowCode);
+        }
+
+        $offset = $baseOffset + $extentOffset;
+
+        if ($originOffset !== 0) {
+            if ($originOffset > PHP_INT_MAX - $offset) {
+                throw new ParseError('iloc offset overflow', $originOverflowCode);
+            }
+
+            $offset += $originOffset;
+        }
+
+        return $offset;
     }
 
     /**
