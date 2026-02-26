@@ -720,6 +720,60 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
+     * Builds a minimal TIFF file and parses it through MetadataReader.
+     * Verifies the TIFF detection path populates EXIF blobs, parsed IFD0 tags, and structured camera metadata.
+     */
+    #[Test]
+    public function readTiffPopulatesMetadata(): void
+    {
+        $make     = 'DNG Test Camera';
+        $model    = 'Synthetic DNG 1.0';
+        $dateTime = '2025:06:15 14:30:00';
+        $tiff     = $this->littleEndianTiffWithExifTags($make, $model, $dateTime, 4000, 3000);
+
+        $path = $this->writeTempFile($tiff, 'tiff');
+
+        try {
+            $metadata = MetadataReader::createDefault()->read($path);
+        } finally {
+            @unlink($path);
+        }
+
+        self::assertSame([$tiff], $metadata->exifBlobs);
+        self::assertSame([], $metadata->xmpBlobs);
+        self::assertNull($metadata->quickTime);
+        self::assertNull($metadata->xmpDoc);
+        self::assertNull($metadata->iccProfile);
+        self::assertSame([], $metadata->iccSegments);
+        self::assertSame([], $metadata->flashPixStreams);
+        self::assertNull($metadata->isoBmffItemReferences);
+        self::assertNull($metadata->isoBmffDataReferences);
+        self::assertSame([], $metadata->isoBmffUnresolvedItems);
+        self::assertSame('tiff', $metadata->extension);
+        self::assertSame(strlen($tiff), $metadata->fileSize);
+
+        self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
+
+        $makeEntry = $metadata->exifDoc->ifd0->get(ExifTag::MAKE);
+        self::assertNotNull($makeEntry);
+        self::assertSame($make, $makeEntry->value);
+
+        $modelEntry = $metadata->exifDoc->ifd0->get(ExifTag::MODEL);
+        self::assertNotNull($modelEntry);
+        self::assertSame($model, $modelEntry->value);
+
+        $dateTimeEntry = $metadata->exifDoc->ifd0->get(ExifTag::DATETIME);
+        self::assertNotNull($dateTimeEntry);
+        self::assertSame($dateTime, $dateTimeEntry->value);
+
+        $structured = $metadata->structured();
+        self::assertSame($make, $structured->hardware->camera->make);
+        self::assertSame($model, $structured->hardware->camera->model);
+        self::assertSame('tiff', $structured->provenance->file->extension);
+        self::assertSame(strlen($tiff), $structured->provenance->file->fileSize);
+    }
+
+    /**
      * Verifies that MetadataReader rejects a TIFF stream whose reported size exceeds the configured maximum.
      * The reader must throw a ParseError before attempting to materialise the blob in memory.
      */
@@ -965,6 +1019,67 @@ final class MetadataReaderTest extends TestCase
             . $modelData . $modelPad
             . $exifIfd
             . $makerNote . $notePad;
+    }
+
+    /**
+     * Builds a minimal little-endian TIFF containing IFD0 with Make, Model, DateTime, and image dimensions.
+     */
+    private function littleEndianTiffWithExifTags(string $make, string $model, string $dateTime, int $width, int $height): string
+    {
+        $makeData     = $make . "\0";
+        $modelData    = $model . "\0";
+        $dateTimeData = $dateTime . "\0";
+
+        // Pad values to even length for TIFF 6.0 word-alignment
+        $makePad     = strlen($makeData) % 2 !== 0 ? "\0" : '';
+        $modelPad    = strlen($modelData) % 2 !== 0 ? "\0" : '';
+        $dateTimePad = strlen($dateTimeData) % 2 !== 0 ? "\0" : '';
+
+        $ifd0Offset = 8;
+        $ifd0Count  = 5;
+        $ifd0Size   = 2 + ($ifd0Count * 12) + 4;
+
+        $currentOffset = $ifd0Offset + $ifd0Size;
+
+        $makeOffset = $currentOffset;
+        $currentOffset += strlen($makeData) + strlen($makePad);
+
+        $modelOffset = $currentOffset;
+        $currentOffset += strlen($modelData) + strlen($modelPad);
+
+        $dateTimeOffset = $currentOffset;
+
+        // Tags must appear in ascending order per TIFF 6.0 section 2
+        $ifd0 = pack('v', $ifd0Count)
+            . pack('v', ExifTag::IMAGE_WIDTH)       // 0x0100
+            . pack('v', 3)
+            . pack('V', 1)
+            . pack('v', $width) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)      // 0x0101
+            . pack('v', 3)
+            . pack('V', 1)
+            . pack('v', $height) . pack('v', 0)
+            . pack('v', ExifTag::MAKE)               // 0x010F
+            . pack('v', 2)
+            . pack('V', strlen($makeData))
+            . pack('V', $makeOffset)
+            . pack('v', ExifTag::MODEL)              // 0x0110
+            . pack('v', 2)
+            . pack('V', strlen($modelData))
+            . pack('V', $modelOffset)
+            . pack('v', ExifTag::DATETIME)           // 0x0132
+            . pack('v', 2)
+            . pack('V', strlen($dateTimeData))
+            . pack('V', $dateTimeOffset)
+            . pack('V', 0);
+
+        return 'II'
+            . pack('v', 0x2A)
+            . pack('V', $ifd0Offset)
+            . $ifd0
+            . $makeData . $makePad
+            . $modelData . $modelPad
+            . $dateTimeData . $dateTimePad;
     }
 
     /**
