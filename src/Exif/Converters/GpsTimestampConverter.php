@@ -31,7 +31,9 @@ use function floor;
 use function iconv;
 use function is_string;
 use function preg_match;
+use function restore_error_handler;
 use function round;
+use function set_error_handler;
 use function sprintf;
 use function str_replace;
 use function strlen;
@@ -403,7 +405,7 @@ final readonly class GpsTimestampConverter
         $decoded = match ($sourceEncoding) {
             CharacterEncoding::Jis  => JisTextDecoder::decode($payload),
             CharacterEncoding::Utf8 => $payload,
-            default                 => @iconv($sourceEncoding->value, CharacterEncoding::Utf8->value, $payload),
+            default                 => self::convertTextToUtf8($sourceEncoding->value, $payload),
         };
 
         if (!is_string($decoded) || $decoded === '') {
@@ -411,5 +413,23 @@ final readonly class GpsTimestampConverter
         }
 
         return $this->stringConverter->sanitize($decoded);
+    }
+
+    /**
+     * Converts text to UTF-8 while handling iconv failures explicitly.
+     */
+    private static function convertTextToUtf8(string $sourceEncoding, string $payload): ?string
+    {
+        set_error_handler(static function (): bool {
+            return true;
+        });
+
+        try {
+            $converted = iconv($sourceEncoding, CharacterEncoding::Utf8->value, $payload);
+        } finally {
+            restore_error_handler();
+        }
+
+        return is_string($converted) ? $converted : null;
     }
 }

@@ -26,7 +26,9 @@ use function ord;
 use function preg_match;
 use function preg_replace;
 use function round;
+use function restore_error_handler;
 use function rtrim;
+use function set_error_handler;
 use function strlen;
 use function substr;
 use function trim;
@@ -602,13 +604,31 @@ final readonly class IfdValueReader
             return null;
         }
 
-        $converted = @iconv($encoding, 'UTF-8', $payload);
-        if ($converted === false) {
+        $converted = self::convertTextToUtf8($encoding, $payload);
+        if ($converted === null) {
             return null;
         }
 
         $trimmed = trim($converted, "\0 ");
 
         return $trimmed === '' ? null : $trimmed;
+    }
+
+    /**
+     * Converts text to UTF-8 while handling iconv failures explicitly.
+     */
+    private static function convertTextToUtf8(string $sourceEncoding, string $payload): ?string
+    {
+        set_error_handler(static function (): bool {
+            return true;
+        });
+
+        try {
+            $converted = iconv($sourceEncoding, 'UTF-8', $payload);
+        } finally {
+            restore_error_handler();
+        }
+
+        return is_string($converted) ? $converted : null;
     }
 }

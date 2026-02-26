@@ -12,6 +12,9 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Text;
 
 use function iconv;
+use function is_string;
+use function restore_error_handler;
+use function set_error_handler;
 use function trim;
 
 /**
@@ -41,8 +44,8 @@ final class JisTextDecoder
         ];
 
         foreach ($sources as $source) {
-            $converted = @iconv($source, 'UTF-8', $payload);
-            if ($converted === false) {
+            $converted = self::convertToUtf8($source, $payload);
+            if ($converted === null) {
                 continue;
             }
 
@@ -55,5 +58,23 @@ final class JisTextDecoder
         }
 
         return null;
+    }
+
+    /**
+     * Converts a payload to UTF-8 while handling iconv failures explicitly.
+     */
+    private static function convertToUtf8(string $source, string $payload): ?string
+    {
+        set_error_handler(static function (): bool {
+            return true;
+        });
+
+        try {
+            $converted = iconv($source, 'UTF-8', $payload);
+        } finally {
+            restore_error_handler();
+        }
+
+        return is_string($converted) ? $converted : null;
     }
 }
