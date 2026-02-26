@@ -318,7 +318,7 @@ final class JpegParser implements JpegParserInterface
             $this->config->flashPixMaxStreamSize,
             $this->config->maxFlashPixTotalSize,
         );
-        $this->flashPixStreams           = [];
+        $this->flashPixStreams          = [];
         $this->mpfSegments              = [];
         $this->mpfDocument              = null;
         $this->iptcPayloads             = [];
