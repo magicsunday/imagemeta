@@ -430,5 +430,4 @@ final readonly class TiffImageDataValidator
             }
         }
     }
-
 }
