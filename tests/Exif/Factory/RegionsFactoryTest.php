@@ -149,6 +149,84 @@ final class RegionsFactoryTest extends TestCase
     }
 
     /**
+     * Supplies MWG region tags with missing geometry coordinates (no width/height).
+     * Verifies the factory skips incomplete regions rather than crashing.
+     */
+    #[Test]
+    public function skipsRegionsWithMissingGeometry(): void
+    {
+        $nsMwgRegions = 'http://www.metadataworkinggroup.com/schemas/regions/';
+        $nsStArea     = 'http://ns.adobe.com/xmp/sType/Area#';
+
+        $xmpData = [
+            '{' . $nsMwgRegions . '}Type'              => ['Face'],
+            '{' . $nsMwgRegions . '}Name'              => ['Missing Geometry'],
+            '{' . $nsMwgRegions . '}PersonDisplayName' => [],
+            '{' . $nsMwgRegions . '}Confidence'        => [],
+            '{' . $nsMwgRegions . '}Rotation'          => [],
+            '{' . $nsStArea . '}x'                     => ['0.5'],
+            '{' . $nsStArea . '}y'                     => ['0.5'],
+            '{' . $nsStArea . '}w'                     => [],
+            '{' . $nsStArea . '}h'                     => [],
+        ];
+
+        $xmpDoc = new XmpDocument($xmpData, []);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpBlobs: [],
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new RegionsFactory();
+        $regions = $factory->create($metadata);
+
+        self::assertSame([], $regions->items);
+    }
+
+    /**
+     * Supplies MWG region tags with a non-standard region type label.
+     * Verifies the factory handles the unknown type gracefully.
+     */
+    #[Test]
+    public function handlesUnknownRegionTypeLabel(): void
+    {
+        $nsMwgRegions = 'http://www.metadataworkinggroup.com/schemas/regions/';
+        $nsStArea     = 'http://ns.adobe.com/xmp/sType/Area#';
+
+        $xmpData = [
+            '{' . $nsMwgRegions . '}Type'              => ['UnknownType'],
+            '{' . $nsMwgRegions . '}Name'              => ['Test'],
+            '{' . $nsMwgRegions . '}PersonDisplayName' => [],
+            '{' . $nsMwgRegions . '}Confidence'        => [],
+            '{' . $nsMwgRegions . '}Rotation'          => [],
+            '{' . $nsStArea . '}x'                     => ['0.5'],
+            '{' . $nsStArea . '}y'                     => ['0.5'],
+            '{' . $nsStArea . '}w'                     => ['0.2'],
+            '{' . $nsStArea . '}h'                     => ['0.2'],
+        ];
+
+        $xmpDoc = new XmpDocument($xmpData, []);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpBlobs: [],
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new RegionsFactory();
+        $regions = $factory->create($metadata);
+
+        // The region should still be created with an Unknown type fallback
+        self::assertCount(1, $regions->items);
+        self::assertSame(RegionType::Unknown, $regions->items[0]->type);
+    }
+
+    /**
      * Provides overlapping MWG and Apple faceinfo regions for the same face.
      * Ensures the factory merges them into a single region using richer metadata.
      */

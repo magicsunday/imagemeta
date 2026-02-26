@@ -291,6 +291,110 @@ final class TemporalFactoryTest extends TestCase
         }
     }
 
+    /**
+     * Supplies a sub-second value containing non-numeric characters.
+     * Verifies the factory strips non-digits and normalizes the result.
+     */
+    #[Test]
+    public function sanitizesNonNumericSubSeconds(): void
+    {
+        $parsedExif = $this->parsedExif(
+            subSecTime: 'abc',
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory  = new TemporalFactory();
+        $temporal = $factory->create($metadata);
+
+        // Non-numeric sub-seconds should be stripped to null
+        self::assertNull($temporal->subSecTime);
+    }
+
+    /**
+     * Supplies an EXIF date/time value that is all zeros (0000:00:00 00:00:00).
+     * Verifies the factory treats it as missing rather than returning an epoch date.
+     */
+    #[Test]
+    public function handlesAllZerosDateTimeAsNull(): void
+    {
+        $ifd0Entries = [
+            ExifTag::DATETIME => new IfdEntry(
+                ExifTag::DATETIME,
+                2,
+                20,
+                '0000:00:00 00:00:00',
+            ),
+        ];
+
+        $ifd0    = new Ifd($ifd0Entries);
+        $exifIfd = new Ifd([]);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory  = new TemporalFactory();
+        $temporal = $factory->create($metadata);
+
+        // An all-zeros date should not produce a valid modify timestamp
+        self::assertNull($temporal->modify);
+    }
+
+    /**
+     * Supplies an empty offset time string in the EXIF IFD.
+     * Verifies the factory handles an empty offset without crashing.
+     */
+    #[Test]
+    public function handlesEmptyOffsetTimeGracefully(): void
+    {
+        $exifEntries = [
+            ExifTag::OFFSET_TIME => new IfdEntry(
+                ExifTag::OFFSET_TIME,
+                2,
+                1,
+                '',
+            ),
+        ];
+
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd($exifEntries);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory  = new TemporalFactory();
+        $temporal = $factory->create($metadata);
+
+        // Empty offset should not produce a timezone
+        self::assertNull($temporal->tz);
+    }
+
     private function parsedExif(
         ?DateTimeImmutable $create = null,
         ?DateTimeImmutable $modify = null,

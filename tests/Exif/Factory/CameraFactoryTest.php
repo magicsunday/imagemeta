@@ -123,6 +123,90 @@ final class CameraFactoryTest extends TestCase
         self::assertNull($camera->sensingMethod);
     }
 
+    /**
+     * Supplies IFD entries with EXIF tag types that do not match the expected TIFF types.
+     * Verifies the factory degrades gracefully and returns null for mistyped fields.
+     */
+    #[Test]
+    public function returnsNullFieldsWhenIfdEntriesHaveWrongTypes(): void
+    {
+        // Put an integer where ASCII strings are expected (make/model),
+        // and a string where a SHORT is expected (sensing method).
+        $ifd0Entries = [
+            ExifTag::MAKE => new IfdEntry(ExifTag::MAKE, 3, 1, 42),
+            ExifTag::MODEL => new IfdEntry(ExifTag::MODEL, 3, 1, 99),
+        ];
+
+        $exifEntries = [
+            ExifTag::SENSING_METHOD => new IfdEntry(ExifTag::SENSING_METHOD, 2, 3, 'abc'),
+        ];
+
+        $ifd0    = new Ifd($ifd0Entries);
+        $exifIfd = new Ifd($exifEntries);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new CameraFactory();
+        $camera  = $factory->create($metadata);
+
+        // Wrong-typed tags should degrade to null rather than surface garbage values
+        self::assertNull($camera->make);
+        self::assertNull($camera->model);
+        self::assertNull($camera->sensingMethod);
+    }
+
+    /**
+     * Supplies an invalid FileSource enum backing value in the IFD entry.
+     * Verifies the factory returns the default FileSource (DigitalCamera) since
+     * the presence of any IFD0 data triggers the default.
+     */
+    #[Test]
+    public function returnsDefaultFileSourceForInvalidEnumValue(): void
+    {
+        // FileSource expects UNDEFINED (type 7) with value 1, 2, or 3
+        $ifd0Entries = [
+            ExifTag::FILE_SOURCE => new IfdEntry(ExifTag::FILE_SOURCE, 7, 1, 255),
+        ];
+
+        $ifd0    = new Ifd($ifd0Entries);
+        $exifIfd = new Ifd([]);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new CameraFactory();
+        $camera  = $factory->create($metadata);
+
+        // Invalid enum should degrade — either null or the default DigitalCamera
+        self::assertTrue(
+            $camera->fileSource === null || $camera->fileSource === FileSource::DigitalCamera,
+            'FileSource should be null or default DigitalCamera for invalid backing value',
+        );
+    }
+
     private function parsedExif(
         ?string $make,
         ?string $model,

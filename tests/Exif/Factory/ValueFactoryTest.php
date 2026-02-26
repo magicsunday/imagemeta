@@ -268,6 +268,113 @@ XML;
         self::assertSame('4.4', $components['colorProfile']->profileVersion);
     }
 
+    /**
+     * Supplies Metadata with no EXIF, no XMP, no QuickTime, and no ICC data.
+     * Verifies ValueFactory produces a complete component array with null/default values.
+     */
+    #[Test]
+    public function producesCompleteComponentArrayFromEmptyMetadata(): void
+    {
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertArrayHasKey('camera', $components);
+        self::assertArrayHasKey('lens', $components);
+        self::assertArrayHasKey('exposure', $components);
+        self::assertArrayHasKey('sensor', $components);
+        self::assertArrayHasKey('device', $components);
+        self::assertArrayHasKey('image', $components);
+        self::assertArrayHasKey('scene', $components);
+        self::assertArrayHasKey('temporal', $components);
+        self::assertArrayHasKey('regions', $components);
+        self::assertArrayHasKey('multiPicture', $components);
+
+        // All camera fields should be null
+        self::assertNull($components['camera']->make);
+        self::assertNull($components['camera']->model);
+    }
+
+    /**
+     * Supplies malformed XMP (non-XML) content to the XMP parser.
+     * Verifies the ValueFactory handles invalid XMP gracefully and still produces components.
+     */
+    #[Test]
+    public function handlesNonXmlXmpGracefully(): void
+    {
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: null,
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        // Even without XMP, the factory should produce all components
+        self::assertArrayHasKey('keywords', $components);
+        self::assertSame([], $components['keywords']->flat);
+    }
+
+    private function stubIccParser(): IccParserInterface
+    {
+        return new readonly class () implements IccParserInterface {
+            /**
+             * @return array{
+             *     description: string|null,
+             *     copyright: string|null,
+             *     whitePoint: array{x: float, y: float, z: float}|null,
+             *     version: string|null,
+             *     pcs: string|null,
+             *     renderingIntent: string|null,
+             *     profileId: string|null,
+             *     cmmType: string|null,
+             *     profileClass: string|null,
+             *     colorSpace: string|null,
+             *     profileDateTime: string|null,
+             *     profileDateTimeUtc: string|null,
+             *     profileSignature: string|null,
+             *     profileFlags: string|null,
+             *     primaryPlatform: string|null,
+             *     deviceManufacturer: string|null,
+             *     deviceModel: string|null,
+             *     deviceAttributes: string|null,
+             *     profileCreator: string|null,
+             *     illuminant: array{x: float, y: float, z: float}|null,
+             * }
+             */
+            public function decode(?string $profileData, array $segments = []): array
+            {
+                return [
+                    'description'        => null,
+                    'copyright'          => null,
+                    'whitePoint'         => null,
+                    'version'            => null,
+                    'pcs'                => null,
+                    'renderingIntent'    => null,
+                    'profileId'          => null,
+                    'cmmType'            => null,
+                    'profileClass'       => null,
+                    'colorSpace'         => null,
+                    'profileDateTime'    => null,
+                    'profileDateTimeUtc' => null,
+                    'profileSignature'   => null,
+                    'profileFlags'       => null,
+                    'primaryPlatform'    => null,
+                    'deviceManufacturer' => null,
+                    'deviceModel'        => null,
+                    'deviceAttributes'   => null,
+                    'profileCreator'     => null,
+                    'illuminant'         => null,
+                ];
+            }
+        };
+    }
+
     private const string PHOTOSHOP_SIGNATURE = "Photoshop 3.0\0";
 
     private function resourceBlock(int $resourceId, string $data, string $name = ''): string

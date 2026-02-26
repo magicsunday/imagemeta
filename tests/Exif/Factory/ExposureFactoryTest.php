@@ -102,6 +102,79 @@ final class ExposureFactoryTest extends TestCase
         self::assertTrue($exposure->flash->fired);
     }
 
+    /**
+     * Supplies an IFD entry with a wrong TIFF type for ISO (ASCII instead of SHORT).
+     * Verifies the factory degrades gracefully and returns null ISO.
+     */
+    #[Test]
+    public function returnsNullIsoWhenTagHasWrongType(): void
+    {
+        $entries = [
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                2,
+                3,
+                'abc',
+            ),
+        ];
+
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd($entries);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory  = new ExposureFactory();
+        $exposure = $factory->create($metadata);
+
+        self::assertNotNull($exposure->settings);
+        self::assertNull($exposure->settings->iso);
+    }
+
+    /**
+     * Supplies IFD entries with empty EXIF IFD (no flash, no ISO).
+     * Confirms flash defaults to not-fired and ISO stays null.
+     */
+    #[Test]
+    public function emptyExifIfdYieldsDefaultFlashAndNullIso(): void
+    {
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd([]);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory  = new ExposureFactory();
+        $exposure = $factory->create($metadata);
+
+        self::assertNotNull($exposure->settings);
+        self::assertNull($exposure->settings->iso);
+        self::assertInstanceOf(FlashInfo::class, $exposure->flash);
+        self::assertFalse($exposure->flash->fired);
+    }
+
     private function parsedExifWithIsoAndFlash(?int $iso, ?int $flash): ParsedExif
     {
         $entries = [];

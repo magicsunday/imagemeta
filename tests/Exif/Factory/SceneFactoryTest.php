@@ -169,6 +169,84 @@ final class SceneFactoryTest extends TestCase
     }
 
     /**
+     * Supplies an invalid SceneCaptureType enum backing value.
+     * Verifies the factory returns null for the type field.
+     */
+    #[Test]
+    public function returnsNullForInvalidSceneCaptureType(): void
+    {
+        $exifEntries = [
+            ExifTag::SCENE_CAPTURE_TYPE => new IfdEntry(
+                ExifTag::SCENE_CAPTURE_TYPE,
+                3,
+                1,
+                255,
+            ),
+        ];
+
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd($exifEntries);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new SceneFactory();
+        $scene   = $factory->create($metadata);
+
+        self::assertNull($scene->type);
+    }
+
+    /**
+     * Supplies an invalid LightSource enum backing value.
+     * Verifies the factory returns null for the light field.
+     */
+    #[Test]
+    public function returnsNullForInvalidLightSource(): void
+    {
+        $exifEntries = [
+            ExifTag::LIGHT_SOURCE => new IfdEntry(
+                ExifTag::LIGHT_SOURCE,
+                3,
+                1,
+                254,
+            ),
+        ];
+
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd($exifEntries);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new SceneFactory();
+        $scene   = $factory->create($metadata);
+
+        self::assertNull($scene->light);
+    }
+
+    /**
      * Creates Metadata without EXIF, QuickTime, or maker notes scene data.
      * Ensures all scene fields remain null when no inputs are available.
      */

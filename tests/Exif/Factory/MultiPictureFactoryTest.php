@@ -91,6 +91,74 @@ final class MultiPictureFactoryTest extends TestCase
     }
 
     /**
+     * Supplies an MPF document with zero image count and an empty entries list.
+     * Verifies the factory handles zero-count documents without crashing.
+     */
+    #[Test]
+    public function handlesZeroImageCountDocument(): void
+    {
+        $mpfDocument = new MpfDocument(
+            version: '0100',
+            imageCount: 0,
+            entries: [],
+            attributes: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            mpfDocument: $mpfDocument,
+        );
+
+        $factory      = new MultiPictureFactory();
+        $multiPicture = $factory->create($metadata);
+
+        self::assertSame('0100', $multiPicture->version);
+        self::assertSame(0, $multiPicture->imageCount);
+        self::assertSame([], $multiPicture->entries);
+        self::assertNull($multiPicture->totalFrames);
+        self::assertNull($multiPicture->individualImageNumber);
+    }
+
+    /**
+     * Supplies an MPF document with a single entry containing zero-sized image data.
+     * Verifies the factory preserves the zero-size entry without errors.
+     */
+    #[Test]
+    public function handlesEntryWithZeroImageSize(): void
+    {
+        $entries = [
+            new MpfEntry(
+                attributes: 0,
+                imageSize: 0,
+                dataOffset: 0,
+                dependentImage1: 0,
+                dependentImage2: 0,
+            ),
+        ];
+
+        $mpfDocument = new MpfDocument(
+            version: '0100',
+            imageCount: 1,
+            entries: $entries,
+            attributes: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            mpfDocument: $mpfDocument,
+        );
+
+        $factory      = new MultiPictureFactory();
+        $multiPicture = $factory->create($metadata);
+
+        self::assertCount(1, $multiPicture->entries);
+        self::assertSame(0, $multiPicture->entries[0]->imageSize);
+        self::assertSame(0, $multiPicture->entries[0]->dataOffset);
+    }
+
+    /**
      * Creates Metadata without an MPF document.
      * Ensures the multi-picture value object uses null/empty defaults.
      */

@@ -216,6 +216,101 @@ final class ImageFactoryTest extends TestCase
     }
 
     /**
+     * Supplies IFD entries with wrong TIFF types for width, height, and orientation.
+     * Verifies the factory degrades gracefully to null for mistyped dimension fields.
+     */
+    #[Test]
+    public function returnsNullDimensionsWhenIfdEntriesHaveWrongTypes(): void
+    {
+        // Put ASCII strings where LONG integers are expected for width/height
+        $ifd0Entries = [
+            ExifTag::IMAGE_WIDTH => new IfdEntry(
+                ExifTag::IMAGE_WIDTH,
+                TiffConst::TYPE_ASCII,
+                4,
+                'wide',
+            ),
+            ExifTag::IMAGE_LENGTH => new IfdEntry(
+                ExifTag::IMAGE_LENGTH,
+                TiffConst::TYPE_ASCII,
+                4,
+                'tall',
+            ),
+        ];
+
+        // Put an invalid orientation code
+        $ifd0Entries[ExifTag::ORIENTATION] = new IfdEntry(
+            ExifTag::ORIENTATION,
+            3,
+            1,
+            255,
+        );
+
+        $ifd0    = new Ifd($ifd0Entries);
+        $exifIfd = new Ifd([]);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertNull($image->width);
+        self::assertNull($image->height);
+        self::assertNull($image->orientation);
+    }
+
+    /**
+     * Supplies an invalid ColorSpace enum backing value.
+     * Verifies the factory returns null rather than crashing.
+     */
+    #[Test]
+    public function returnsNullColorSpaceForInvalidEnumValue(): void
+    {
+        $exifEntries = [
+            ExifTag::COLOR_SPACE => new IfdEntry(
+                ExifTag::COLOR_SPACE,
+                3,
+                1,
+                9999,
+            ),
+        ];
+
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd($exifEntries);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertNull($image->colorSpace);
+    }
+
+    /**
      * @param list<int>|null $componentsConfiguration
      */
     private function parsedExif(

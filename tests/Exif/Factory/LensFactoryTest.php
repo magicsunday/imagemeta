@@ -21,6 +21,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function count;
 use function strlen;
 
 /**
@@ -152,6 +153,100 @@ final class LensFactoryTest extends TestCase
         self::assertSame('Sony', $lens->lensMake);
         self::assertSame('FE 24-70mm F2.8 GM', $lens->lensModel);
         self::assertNull($lens->maxApertureFNumber);
+    }
+
+    /**
+     * Supplies IFD entries with wrong TIFF types for lens make and model.
+     * Verifies the factory degrades gracefully and returns null for mistyped fields.
+     */
+    #[Test]
+    public function returnsNullFieldsWhenLensTagsHaveWrongTypes(): void
+    {
+        // Put SHORT integers where ASCII strings are expected
+        $exifEntries = [
+            ExifTag::LENS_MAKE => new IfdEntry(
+                ExifTag::LENS_MAKE,
+                3,
+                1,
+                42,
+            ),
+            ExifTag::LENS_MODEL => new IfdEntry(
+                ExifTag::LENS_MODEL,
+                3,
+                1,
+                99,
+            ),
+        ];
+
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd($exifEntries);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new LensFactory();
+        $lens    = $factory->create($metadata);
+
+        self::assertNull($lens->lensMake);
+        self::assertNull($lens->lensModel);
+    }
+
+    /**
+     * Supplies a truncated lens specification with only 2 rational values instead of 4.
+     * Verifies the factory handles the incomplete data without crashing.
+     */
+    #[Test]
+    public function handlesTruncatedLensSpecification(): void
+    {
+        $exifEntries = [
+            ExifTag::LENS_SPECIFICATION => new IfdEntry(
+                ExifTag::LENS_SPECIFICATION,
+                5,
+                2,
+                [
+                    [24, 1],
+                    [70, 1],
+                ],
+            ),
+        ];
+
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd($exifEntries);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new LensFactory();
+        $lens    = $factory->create($metadata);
+
+        // A truncated specification should either be null or have fewer entries
+        // — the key is that no exception is thrown
+        self::assertTrue(
+            $lens->lensSpecification === null || count($lens->lensSpecification) < 4,
+            'Truncated lens specification should not produce 4 values',
+        );
     }
 
     /**

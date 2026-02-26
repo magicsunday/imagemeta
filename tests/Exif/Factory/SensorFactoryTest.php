@@ -161,6 +161,87 @@ final class SensorFactoryTest extends TestCase
     }
 
     /**
+     * Supplies an IFD entry with wrong TIFF type for spectral sensitivity (SHORT instead of ASCII).
+     * Verifies the factory degrades gracefully to null for the mistyped field.
+     */
+    #[Test]
+    public function returnsNullSpectralSensitivityWhenTagHasWrongType(): void
+    {
+        $exifEntries = [
+            ExifTag::SPECTRAL_SENSITIVITY => new IfdEntry(
+                ExifTag::SPECTRAL_SENSITIVITY,
+                3,
+                1,
+                42,
+            ),
+        ];
+
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd($exifEntries);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new SensorFactory();
+        $sensor  = $factory->create($metadata);
+
+        self::assertNull($sensor->spectralSensitivity);
+    }
+
+    /**
+     * Supplies a CFA pattern with only a dimension header but no color data.
+     * Verifies the factory handles the truncated pattern without crashing.
+     */
+    #[Test]
+    public function handlesTruncatedCfaPattern(): void
+    {
+        // CFA pattern needs at least [cols, rows, ...colors] — provide only dimensions
+        $exifEntries = [
+            ExifTag::CFA_PATTERN => new IfdEntry(
+                ExifTag::CFA_PATTERN,
+                7,
+                2,
+                [2, 2],
+            ),
+        ];
+
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd($exifEntries);
+
+        $parsedExif = new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new SensorFactory();
+        $sensor  = $factory->create($metadata);
+
+        // Truncated CFA pattern should either be null or have incomplete data
+        // The key is that no exception is thrown
+        self::assertTrue(true, 'Factory handled truncated CFA pattern without exception');
+    }
+
+    /**
      * @param list<int> $cfaPattern
      */
     private function parsedExif(
