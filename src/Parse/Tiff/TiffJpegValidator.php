@@ -272,10 +272,9 @@ final readonly class TiffJpegValidator
         }
 
         if ($lengthEntry instanceof IfdEntry && !($offsetEntry instanceof IfdEntry)) {
-            throw new ParseError(
-                'JPEGInterchangeFormatLength requires JPEGInterchangeFormat.',
-                1830,
-            );
+            // EXIF 3.0 §4.6.5.1.6 defines offset/length as a pair, but some
+            // files provide only the length tag; skip thumbnail extraction.
+            return;
         }
 
         if (!($offsetEntry instanceof IfdEntry) || !is_int($offsetEntry->value)) {
