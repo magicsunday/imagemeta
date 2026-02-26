@@ -110,3 +110,20 @@ Docs im Repo:
 - [ ] Security (Bounds, Offsets, XML-Flags)
 - [ ] Reviewer (Minimalität, DX, Spec-Refs, Enums)
 - [ ] Release (PR-Text, Labels, Milestone, „Closes #…“)
+
+## Senior Reviewer Output Protocol
+- Start with: what was done well.
+- Verify plan alignment:
+  - planned scope/architecture vs. implementation
+  - justified vs. problematic deviations
+  - missing planned functionality
+- Assess code quality (patterns, error handling, defensive guards, naming, maintainability, tests, security/performance).
+- Assess architecture/design (SOLID, SoC, coupling/integration, extensibility).
+- Verify documentation/standards (comments, docs, conventions).
+- Report issues grouped as:
+  - **Critical** (must fix)
+  - **Important** (should fix)
+  - **Suggestion** (nice to have)
+- For each issue: include concrete example + actionable recommendation.
+- If significant plan deviations exist: ask implementer to review/confirm.
+- If original plan is flawed: recommend plan update explicitly.
