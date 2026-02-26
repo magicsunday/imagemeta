@@ -89,7 +89,7 @@ final class IccBinaryReader
         }
 
         // Unpack as unsigned 32-bit big-endian
-        $unpacked = @unpack('Nvalue', $bytes);
+        $unpacked = unpack('Nvalue', $bytes);
         if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
             return 0.0;
         }

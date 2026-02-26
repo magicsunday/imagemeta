@@ -16,12 +16,15 @@ use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
 use function fclose;
+use function file_exists;
 use function fopen;
 use function fread;
 use function fseek;
 use function fstat;
 use function is_array;
+use function is_readable;
 use function is_resource;
+use function str_contains;
 use function strlen;
 
 use const PHP_INT_MAX;
@@ -48,7 +51,7 @@ final class Stream implements BinaryReadAccessInterface
      */
     public static function fromPath(string $path): self
     {
-        $fh = @fopen($path, 'rb');
+        $fh = !str_contains($path, '://') && (!file_exists($path) || !is_readable($path)) ? false : fopen($path, 'rb');
 
         if ($fh === false) {
             throw new ParseError('Cannot open the provided file path.', 1010);

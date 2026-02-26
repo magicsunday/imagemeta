@@ -268,7 +268,7 @@ final readonly class MatrixConverter
         // Decode header using the TIFF byte order of the enclosing
         // EXIF document instead of hardcoded big-endian.
         $shortFmt = $endian === Endian::Little ? 'vcolumns/vrows' : 'ncolumns/nrows';
-        $header   = @unpack($shortFmt, substr($payload, 0, 4));
+        $header   = unpack($shortFmt, substr($payload, 0, 4));
         if (!is_array($header)) {
             return null;
         }
@@ -411,7 +411,7 @@ final readonly class MatrixConverter
         }
 
         $fmt   = $endian === Endian::Little ? 'V' : 'N';
-        $value = @unpack($fmt, substr($payload, $offset, 4));
+        $value = unpack($fmt, substr($payload, $offset, 4));
         if (!is_array($value)) {
             return null;
         }

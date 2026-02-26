@@ -12,9 +12,11 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Core\Util;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use ValueError;
 
 use function is_float;
 use function is_int;
+use function strlen;
 use function unpack;
 
 /**
@@ -67,7 +69,15 @@ final class Unpack
     public static function uint64(string $bytes, bool $littleEndian, string $context): UInt64
     {
         $format = $littleEndian ? 'V2' : 'N2';
-        $parts  = @unpack($format, $bytes);
+        if (strlen($bytes) !== 8) {
+            $parts = false;
+        } else {
+            try {
+                $parts = unpack($format, $bytes);
+            } catch (ValueError) {
+                $parts = false;
+            }
+        }
 
         if ($parts === false || !isset($parts[1], $parts[2])) {
             throw new ParseError('Failed to unpack ' . $context . '.', 1027);
@@ -100,7 +110,11 @@ final class Unpack
      */
     private static function numeric(string $format, string $bytes, string $context): int|float
     {
-        $result = @unpack($format, $bytes);
+        try {
+            $result = unpack($format, $bytes);
+        } catch (ValueError) {
+            $result = false;
+        }
 
         if ($result === false || !isset($result[1])) {
             throw new ParseError('Failed to unpack ' . $context . '.', 1029);

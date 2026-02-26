@@ -161,7 +161,7 @@ final class JpegFrameValidator
             $index += 3;
         }
 
-        $fields = @unpack('nlines/nsamples', substr($payload, 1, 4));
+        $fields = unpack('nlines/nsamples', substr($payload, 1, 4));
 
         if (($fields === false) || !isset($fields['lines'], $fields['samples'])) {
             throw new ParseError(sprintf('SOF marker 0x%02X at offset %d has invalid dimensions', $marker, $offset), 1287);

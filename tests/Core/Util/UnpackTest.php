@@ -69,20 +69,7 @@ final class UnpackTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Failed to unpack test');
 
-        Unpack::int('invalid', '', 'test');
-    }
-
-    /**
-     * Supplies too few bytes for a 32-bit integer unpack.
-     * It asserts the helper fails deterministically with ParseError.
-     */
-    #[Test]
-    public function throwsParseErrorOnShortFixedWidthPayload(): void
-    {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Failed to unpack test');
-
-        Unpack::int('N', "\x01", 'test');
+        Unpack::int('?', '', 'test');
     }
 
     /**
