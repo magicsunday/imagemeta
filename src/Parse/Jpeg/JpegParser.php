@@ -19,7 +19,9 @@ use MagicSunday\ImageMeta\Model\Jpeg\Marker;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 
 use function implode;
+use function ord;
 use function sprintf;
+use function str_starts_with;
 use function strlen;
 use function substr;
 
@@ -36,6 +38,17 @@ final class JpegParser implements JpegParserInterface
      */
     private const string MPF_SIGNATURE = "MPF\0";
 
+    /**
+     * Signature identifying Adobe APP14 payloads.
+     */
+    private const string ADOBE_APP14_SIGNATURE = 'Adobe';
+
+    /**
+     * Minimum payload length for a valid Adobe APP14 segment:
+     * 5-byte signature + 2-byte DCTEncodeVersion + 2-byte Flags0 + 2-byte Flags1 + 1-byte ColorTransform.
+     */
+    private const int ADOBE_APP14_MIN_LENGTH = 12;
+
     private bool $parsed = false;
 
     /** @var array<int, string> */
@@ -48,6 +61,8 @@ final class JpegParser implements JpegParserInterface
 
     /** @var list<string> */
     private array $iptcPayloads = [];
+
+    private ?int $adobeApp14ColorTransform = null;
 
     private readonly MarkerHandlerRegistry $markerHandlerRegistry;
 
@@ -146,6 +161,19 @@ final class JpegParser implements JpegParserInterface
         $this->parseIfNeeded();
 
         return $this->iptcPayloads;
+    }
+
+    /**
+     * Returns the Adobe APP14 ColorTransform value, or null when no Adobe marker was found.
+     *
+     * The ColorTransform byte indicates the colour encoding:
+     * 0 = Unknown/RGB, 1 = YCbCr, 2 = YCCK.
+     */
+    public function getAdobeApp14ColorTransform(): ?int
+    {
+        $this->parseIfNeeded();
+
+        return $this->adobeApp14ColorTransform;
     }
 
     /**
@@ -290,11 +318,12 @@ final class JpegParser implements JpegParserInterface
             $this->config->flashPixMaxStreamSize,
             $this->config->maxFlashPixTotalSize,
         );
-        $this->flashPixStreams = [];
-        $this->mpfSegments     = [];
-        $this->mpfDocument     = null;
-        $this->iptcPayloads    = [];
-        $this->firstSofOffset  = null;
+        $this->flashPixStreams           = [];
+        $this->mpfSegments              = [];
+        $this->mpfDocument              = null;
+        $this->iptcPayloads             = [];
+        $this->adobeApp14ColorTransform = null;
+        $this->firstSofOffset           = null;
     }
 
     /**
@@ -341,6 +370,12 @@ final class JpegParser implements JpegParserInterface
 
         if ($marker === Marker::APP11) {
             $this->jumbfParser->handleSegment($payload, $offset);
+
+            return false;
+        }
+
+        if ($marker === Marker::APP14) {
+            $this->handleAdobeApp14Segment($payload);
 
             return false;
         }
@@ -441,5 +476,24 @@ final class JpegParser implements JpegParserInterface
         }
 
         $this->mpfSegments[] = substr($payload, $signatureLength);
+    }
+
+    /**
+     * Extracts the ColorTransform byte from an Adobe APP14 marker payload.
+     *
+     * The Adobe APP14 layout is: 5-byte "Adobe" signature, 2-byte DCTEncodeVersion,
+     * 2-byte APP14Flags0, 2-byte APP14Flags1, 1-byte ColorTransform.
+     */
+    private function handleAdobeApp14Segment(string $payload): void
+    {
+        if (!str_starts_with($payload, self::ADOBE_APP14_SIGNATURE)) {
+            return;
+        }
+
+        if (strlen($payload) < self::ADOBE_APP14_MIN_LENGTH) {
+            return;
+        }
+
+        $this->adobeApp14ColorTransform = ord($payload[11]);
     }
 }
