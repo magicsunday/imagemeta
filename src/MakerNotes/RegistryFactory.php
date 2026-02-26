@@ -36,7 +36,6 @@ final class RegistryFactory
         $registry->register('Nikon', $nikonDecoder);
         $registry->register('Nikon Corporation', $nikonDecoder);
         $registry->register('Samsung', $samsungDecoder);
-        $registry->register('SAMSUNG', $samsungDecoder);
         $registry->register('Samsung Electronics', $samsungDecoder);
         $registry->register('Sony', $sonyDecoder);
         $registry->register('Sony Corporation', $sonyDecoder);
