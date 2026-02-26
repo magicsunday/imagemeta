@@ -50,8 +50,8 @@ final readonly class JxlParser implements JxlParserInterface
     private BoxNavigator $boxNavigator;
 
     /**
-     * @param Stream $stream          Stream positioned at the beginning of the JXL container.
-     * @param int    $maxPayloadSize  Maximum allowed size for a single metadata payload in bytes.
+     * @param Stream $stream         Stream positioned at the beginning of the JXL container.
+     * @param int    $maxPayloadSize Maximum allowed size for a single metadata payload in bytes.
      */
     public function __construct(
         private Stream $stream,
@@ -78,8 +78,8 @@ final readonly class JxlParser implements JxlParserInterface
                     throw new ParseError('JXL Exif box payload exceeds maximum allowed size', 1560);
                 }
 
-                $blob         = $this->boxNavigator->readAll($box->window);
-                $exifBlobs[]  = $this->normalizeExifBlob($blob);
+                $blob        = $this->boxNavigator->readAll($box->window);
+                $exifBlobs[] = $this->normalizeExifBlob($blob);
             } elseif ($box->type === self::BOX_XML) {
                 if ($box->contentSize > $this->maxPayloadSize) {
                     throw new ParseError('JXL xml box payload exceeds maximum allowed size', 1561);

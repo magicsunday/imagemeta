@@ -28,7 +28,12 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
+use function assert;
+use function fopen;
+use function fwrite;
+use function is_resource;
 use function pack;
+use function rewind;
 use function strlen;
 
 /**
@@ -76,7 +81,7 @@ final class JxlParserTest extends TestCase
             . $this->box('Exif', $exifBlob)
             . $this->box('jxlc', 'codestream-data');
 
-        $stream = Stream::fromString($jxl);
+        $stream = $this->streamFromString($jxl);
         $parser = new JxlParser($stream);
 
         [$exifBlobs, $xmpBlobs] = $parser->extract();
@@ -103,7 +108,7 @@ final class JxlParserTest extends TestCase
             . $this->box('xml ', $xmp)
             . $this->box('jxlc', 'codestream-data');
 
-        $stream = Stream::fromString($jxl);
+        $stream = $this->streamFromString($jxl);
         $parser = new JxlParser($stream);
 
         [$exifBlobs, $xmpBlobs] = $parser->extract();
@@ -129,7 +134,7 @@ final class JxlParserTest extends TestCase
             . $this->box('xml ', $xmp)
             . $this->box('jxlc', 'codestream-data');
 
-        $stream = Stream::fromString($jxl);
+        $stream = $this->streamFromString($jxl);
         $parser = new JxlParser($stream);
 
         [$exifBlobs, $xmpBlobs] = $parser->extract();
@@ -150,7 +155,7 @@ final class JxlParserTest extends TestCase
             . $this->box('ftyp', 'jxl ' . pack('N', 0))
             . $this->box('jxlc', 'codestream-data');
 
-        $stream = Stream::fromString($jxl);
+        $stream = $this->streamFromString($jxl);
         $parser = new JxlParser($stream);
 
         [$exifBlobs, $xmpBlobs] = $parser->extract();
@@ -171,7 +176,7 @@ final class JxlParserTest extends TestCase
         $jxl = self::JXL_SIGNATURE
             . $this->box('Exif', $exifBlob);
 
-        $stream = Stream::fromString($jxl);
+        $stream = $this->streamFromString($jxl);
         $parser = new JxlParser($stream);
 
         [$exifBlobs, $xmpBlobs] = $parser->extract();
@@ -190,7 +195,7 @@ final class JxlParserTest extends TestCase
         $jxl = self::JXL_SIGNATURE
             . $this->box('Exif', "\x00\x00");
 
-        $stream = Stream::fromString($jxl);
+        $stream = $this->streamFromString($jxl);
         $parser = new JxlParser($stream);
 
         $this->expectException(ParseError::class);
@@ -208,7 +213,7 @@ final class JxlParserTest extends TestCase
         $jxl = self::JXL_SIGNATURE
             . $this->box('Exif', pack('N', 255) . 'II');
 
-        $stream = Stream::fromString($jxl);
+        $stream = $this->streamFromString($jxl);
         $parser = new JxlParser($stream);
 
         $this->expectException(ParseError::class);
@@ -226,7 +231,7 @@ final class JxlParserTest extends TestCase
         $jxl = self::JXL_SIGNATURE
             . $this->box('Exif', pack('N', 0) . 'XX' . "\x2A\x00\x00\x00\x00\x00");
 
-        $stream = Stream::fromString($jxl);
+        $stream = $this->streamFromString($jxl);
         $parser = new JxlParser($stream);
 
         $this->expectException(ParseError::class);
@@ -247,7 +252,7 @@ final class JxlParserTest extends TestCase
         $jxl = self::JXL_SIGNATURE
             . $this->box('Exif', $exifBlob);
 
-        $stream = Stream::fromString($jxl);
+        $stream = $this->streamFromString($jxl);
         $parser = new JxlParser($stream, maxPayloadSize: 4);
 
         $this->expectException(ParseError::class);
@@ -267,7 +272,7 @@ final class JxlParserTest extends TestCase
         $jxl = self::JXL_SIGNATURE
             . $this->box('xml ', $xmp);
 
-        $stream = Stream::fromString($jxl);
+        $stream = $this->streamFromString($jxl);
         $parser = new JxlParser($stream, maxPayloadSize: 4);
 
         $this->expectException(ParseError::class);
@@ -288,7 +293,7 @@ final class JxlParserTest extends TestCase
             . $this->box('jxlp', 'partial-codestream')
             . $this->box('jbrd', 'brotli-data');
 
-        $stream = Stream::fromString($jxl);
+        $stream = $this->streamFromString($jxl);
         $parser = new JxlParser($stream);
 
         [$exifBlobs, $xmpBlobs] = $parser->extract();
@@ -305,12 +310,22 @@ final class JxlParserTest extends TestCase
     {
         $jxl = self::JXL_SIGNATURE;
 
-        $stream = Stream::fromString($jxl);
+        $stream = $this->streamFromString($jxl);
         $parser = new JxlParser($stream);
 
         [$exifBlobs, $xmpBlobs] = $parser->extract();
 
         self::assertSame([], $exifBlobs);
         self::assertSame([], $xmpBlobs);
+    }
+
+    private function streamFromString(string $data): Stream
+    {
+        $fh = fopen('php://memory', 'r+b');
+        assert(is_resource($fh));
+        fwrite($fh, $data);
+        rewind($fh);
+
+        return new Stream($fh, strlen($data));
     }
 }
