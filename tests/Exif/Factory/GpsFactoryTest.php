@@ -31,6 +31,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 use function sprintf;
 use function strlen;
@@ -994,6 +995,23 @@ final class GpsFactoryTest extends TestCase
         self::assertSame(90.0, $gps->movement->track);
         self::assertSame(180.0, $gps->movement->imageDirection);
         self::assertSame('WGS-84', $gps->position->mapDatum);
+    }
+
+    /**
+     * Ensures the resolveGps orchestration is split into dedicated fallback helpers.
+     *
+     * This refactor guard keeps coordinate, movement/speed, destination, and
+     * data-presence flow in separate methods for a flatter resolveGps() path.
+     */
+    #[Test]
+    public function resolveGpsFlowIsSplitIntoFallbackHelpers(): void
+    {
+        $reflection = new ReflectionClass(GpsFactory::class);
+
+        self::assertTrue($reflection->hasMethod('applyCoordinateFallbacks'));
+        self::assertTrue($reflection->hasMethod('applyMovementFallbacks'));
+        self::assertTrue($reflection->hasMethod('applyDestinationFallbacks'));
+        self::assertTrue($reflection->hasMethod('hasAnyGpsData'));
     }
 
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
