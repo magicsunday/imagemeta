@@ -29,6 +29,9 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function file_get_contents;
+use function substr_count;
+
 /**
  * Verifies TIFF tag-level constraint validation logic.
  *
@@ -365,12 +368,12 @@ final class TiffTagConstraintValidatorTest extends TestCase
     #[Test]
     public function requiresConsolidatedSingleIntegerEntryGuardsInValidatorSource(): void
     {
-        $source = \file_get_contents(__DIR__ . '/../../../src/Parse/Tiff/TiffTagConstraintValidator.php');
+        $source = file_get_contents(__DIR__ . '/../../../src/Parse/Tiff/TiffTagConstraintValidator.php');
 
         self::assertNotFalse($source);
         self::assertLessThanOrEqual(
             3,
-            \substr_count($source, 'count !== 1) || !is_int('),
+            substr_count($source, 'count !== 1) || !is_int('),
             'Expected repeated single-integer guard fragments to be consolidated.',
         );
     }

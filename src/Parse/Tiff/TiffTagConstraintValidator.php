@@ -136,18 +136,16 @@ final readonly class TiffTagConstraintValidator
         $t4Options = $ifd->get(TiffTag::T4_OPTIONS);
 
         if ($t4Options instanceof IfdEntry) {
-            if (($t4Options->type !== TiffConst::TYPE_LONG) || ($t4Options->count !== 1) || !is_int($t4Options->value)) {
-                throw new ParseError('T4Options must be LONG[1].', 2077);
-            }
+            $t4OptionsValue = $this->requireSingleIntEntryValue($t4Options, TiffConst::TYPE_LONG, 'T4Options must be LONG[1].', 2077);
 
             $compression = $ifd->get(ExifTag::COMPRESSION);
             if (!($compression instanceof IfdEntry) || ($compression->value !== 3)) {
                 throw new ParseError('T4Options is only valid when Compression = 3 (CCITT Group 3).', 1703);
             }
 
-            if (($t4Options->value & ~0b111) !== 0) {
+            if (($t4OptionsValue & ~0b111) !== 0) {
                 throw new ParseError(
-                    sprintf('T4Options has reserved bits set (value=0x%X); only bits 0..2 are allowed.', $t4Options->value),
+                    sprintf('T4Options has reserved bits set (value=0x%X); only bits 0..2 are allowed.', $t4OptionsValue),
                     1704,
                 );
             }
@@ -159,25 +157,23 @@ final readonly class TiffTagConstraintValidator
             return;
         }
 
-        if (($t6Options->type !== TiffConst::TYPE_LONG) || ($t6Options->count !== 1) || !is_int($t6Options->value)) {
-            throw new ParseError('T6Options must be LONG[1].', 1705);
-        }
+        $t6OptionsValue = $this->requireSingleIntEntryValue($t6Options, TiffConst::TYPE_LONG, 'T6Options must be LONG[1].', 1705);
 
         $compression = $ifd->get(ExifTag::COMPRESSION);
         if (!($compression instanceof IfdEntry) || ($compression->value !== 4)) {
             throw new ParseError('T6Options is only valid when Compression = 4 (CCITT Group 4).', 1706);
         }
 
-        if (($t6Options->value & 0b1) !== 0) {
+        if (($t6OptionsValue & 0b1) !== 0) {
             throw new ParseError(
-                sprintf('T6Options bit 0 is reserved and must be 0 (value=0x%X).', $t6Options->value),
+                sprintf('T6Options bit 0 is reserved and must be 0 (value=0x%X).', $t6OptionsValue),
                 1707,
             );
         }
 
-        if (($t6Options->value & ~0b10) !== 0) {
+        if (($t6OptionsValue & ~0b10) !== 0) {
             throw new ParseError(
-                sprintf('T6Options has reserved bits set (value=0x%X); only bit 1 is allowed.', $t6Options->value),
+                sprintf('T6Options has reserved bits set (value=0x%X); only bit 1 is allowed.', $t6OptionsValue),
                 1708,
             );
         }
@@ -199,18 +195,16 @@ final readonly class TiffTagConstraintValidator
             return;
         }
 
-        if (($fillOrderEntry->type !== TiffConst::TYPE_SHORT) || ($fillOrderEntry->count !== 1) || !is_int($fillOrderEntry->value)) {
-            throw new ParseError('FillOrder must be SHORT[1].', 1752);
-        }
+        $fillOrderValue = $this->requireSingleIntEntryValue($fillOrderEntry, TiffConst::TYPE_SHORT, 'FillOrder must be SHORT[1].', 1752);
 
-        if (($fillOrderEntry->value !== 1) && ($fillOrderEntry->value !== 2)) {
+        if (($fillOrderValue !== 1) && ($fillOrderValue !== 2)) {
             throw new ParseError(
-                sprintf('FillOrder value %d is invalid; allowed values are 1 or 2.', $fillOrderEntry->value),
+                sprintf('FillOrder value %d is invalid; allowed values are 1 or 2.', $fillOrderValue),
                 1753,
             );
         }
 
-        if ($fillOrderEntry->value !== 2) {
+        if ($fillOrderValue !== 2) {
             return;
         }
 
@@ -305,16 +299,16 @@ final readonly class TiffTagConstraintValidator
         $cellWidthEntry     = $ifd->get(TiffTag::CELL_WIDTH);
         $cellLengthEntry    = $ifd->get(TiffTag::CELL_LENGTH);
 
-        if ($threshholdingEntry instanceof IfdEntry) {
-            if (($threshholdingEntry->type !== TiffConst::TYPE_SHORT) || ($threshholdingEntry->count !== 1) || !is_int($threshholdingEntry->value)) {
-                throw new ParseError('Threshholding must be SHORT[1].', 1798);
-            }
+        $threshholdingValue = null;
 
-            if (($threshholdingEntry->value < 1) || ($threshholdingEntry->value > 3)) {
+        if ($threshholdingEntry instanceof IfdEntry) {
+            $threshholdingValue = $this->requireSingleIntEntryValue($threshholdingEntry, TiffConst::TYPE_SHORT, 'Threshholding must be SHORT[1].', 1798);
+
+            if (($threshholdingValue < 1) || ($threshholdingValue > 3)) {
                 throw new ParseError(
                     sprintf(
                         'Threshholding value %d is invalid; allowed values are 1,2,3.',
-                        $threshholdingEntry->value,
+                        $threshholdingValue,
                     ),
                     1799,
                 );
@@ -325,28 +319,20 @@ final readonly class TiffTagConstraintValidator
         $hasCellLength = $cellLengthEntry instanceof IfdEntry;
 
         if ($hasCellWidth) {
-            if (($cellWidthEntry->type !== TiffConst::TYPE_SHORT) || ($cellWidthEntry->count !== 1) || !is_int($cellWidthEntry->value)) {
-                throw new ParseError('CellWidth must be SHORT[1].', 1800);
-            }
+            $cellWidthValue = $this->requireSingleIntEntryValue($cellWidthEntry, TiffConst::TYPE_SHORT, 'CellWidth must be SHORT[1].', 1800);
 
-            if ($cellWidthEntry->value <= 0) {
-                throw new ParseError(sprintf('CellWidth must be > 0, got %d.', $cellWidthEntry->value), 1801);
+            if ($cellWidthValue <= 0) {
+                throw new ParseError(sprintf('CellWidth must be > 0, got %d.', $cellWidthValue), 1801);
             }
         }
 
         if ($hasCellLength) {
-            if (($cellLengthEntry->type !== TiffConst::TYPE_SHORT) || ($cellLengthEntry->count !== 1) || !is_int($cellLengthEntry->value)) {
-                throw new ParseError('CellLength must be SHORT[1].', 1802);
-            }
+            $cellLengthValue = $this->requireSingleIntEntryValue($cellLengthEntry, TiffConst::TYPE_SHORT, 'CellLength must be SHORT[1].', 1802);
 
-            if ($cellLengthEntry->value <= 0) {
-                throw new ParseError(sprintf('CellLength must be > 0, got %d.', $cellLengthEntry->value), 1803);
+            if ($cellLengthValue <= 0) {
+                throw new ParseError(sprintf('CellLength must be > 0, got %d.', $cellLengthValue), 1803);
             }
         }
-
-        $threshholdingValue = $threshholdingEntry instanceof IfdEntry
-            ? $threshholdingEntry->value
-            : null;
 
         if (($threshholdingValue === 2) && (!$hasCellWidth || !$hasCellLength)) {
             throw new ParseError('Threshholding=2 requires both CellWidth and CellLength.', 1804);
@@ -521,23 +507,21 @@ final readonly class TiffTagConstraintValidator
         IfdEntry $newSubfileTypeEntry,
         bool $strictTiffNewSubfileType,
     ): void {
-        if (($newSubfileTypeEntry->type !== TiffConst::TYPE_LONG) || ($newSubfileTypeEntry->count !== 1) || !is_int($newSubfileTypeEntry->value)) {
-            throw new ParseError('NewSubfileType must be LONG[1].', 1788);
-        }
+        $newSubfileTypeValue = $this->requireSingleIntEntryValue($newSubfileTypeEntry, TiffConst::TYPE_LONG, 'NewSubfileType must be LONG[1].', 1788);
 
-        $isDngExtendedNewSubfileType = in_array($newSubfileTypeEntry->value, [8, 9, 16, 65540], true);
+        $isDngExtendedNewSubfileType = in_array($newSubfileTypeValue, [8, 9, 16, 65540], true);
 
-        if ($strictTiffNewSubfileType && !$isDngExtendedNewSubfileType && (($newSubfileTypeEntry->value & ~0b111) !== 0)) {
+        if ($strictTiffNewSubfileType && !$isDngExtendedNewSubfileType && (($newSubfileTypeValue & ~0b111) !== 0)) {
             throw new ParseError(
                 sprintf(
                     'NewSubfileType value %d contains reserved bits outside 0..2.',
-                    $newSubfileTypeEntry->value,
+                    $newSubfileTypeValue,
                 ),
                 1789,
             );
         }
 
-        if ($strictTiffNewSubfileType && !$isDngExtendedNewSubfileType && (($newSubfileTypeEntry->value & 0b100) !== 0)) {
+        if ($strictTiffNewSubfileType && !$isDngExtendedNewSubfileType && (($newSubfileTypeValue & 0b100) !== 0)) {
             $photometricEntry = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
             $photometricCode  = (($photometricEntry instanceof IfdEntry) && is_int($photometricEntry->value))
                 ? $photometricEntry->value
@@ -563,15 +547,13 @@ final readonly class TiffTagConstraintValidator
      */
     private function validateSubfileTypeEntry(IfdEntry $subfileTypeEntry): void
     {
-        if (($subfileTypeEntry->type !== TiffConst::TYPE_SHORT) || ($subfileTypeEntry->count !== 1) || !is_int($subfileTypeEntry->value)) {
-            throw new ParseError('SubfileType must be SHORT[1].', 1791);
-        }
+        $subfileTypeValue = $this->requireSingleIntEntryValue($subfileTypeEntry, TiffConst::TYPE_SHORT, 'SubfileType must be SHORT[1].', 1791);
 
-        if (($subfileTypeEntry->value < 1) || ($subfileTypeEntry->value > 3)) {
+        if (($subfileTypeValue < 1) || ($subfileTypeValue > 3)) {
             throw new ParseError(
                 sprintf(
                     'SubfileType value %d is invalid; allowed values are 1..3.',
-                    $subfileTypeEntry->value,
+                    $subfileTypeValue,
                 ),
                 1792,
             );
@@ -676,6 +658,20 @@ final readonly class TiffTagConstraintValidator
                 1807,
             );
         }
+    }
+
+    /**
+     * Validates a tag entry as a single integer component of the expected TIFF type.
+     */
+    private function requireSingleIntEntryValue(IfdEntry $entry, int $expectedType, string $errorMessage, int $errorCode): int
+    {
+        if (($entry->type !== $expectedType) || ($entry->count !== 1) || !is_int($entry->value)) {
+            throw new ParseError($errorMessage, $errorCode);
+        }
+
+        $value = $entry->value;
+
+        return $value;
     }
 
     /**
