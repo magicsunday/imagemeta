@@ -119,10 +119,12 @@ $elapsed = (hrtime(true) - $startTime) / 1e9;
 $passed  = $total - $failed;
 echo "\n";
 
+$avgMs = $total > 0 ? ($elapsed / $total) * 1000 : 0;
+
 if ($failed === 0) {
-    echo sprintf("  ✔ %d/%d files passed (%.1fs)\n", $passed, $total, $elapsed);
+    echo sprintf("  ✔ %d/%d files passed (%.1fs, ⌀ %.1fms)\n", $passed, $total, $elapsed, $avgMs);
 } else {
-    fprintf(STDERR, sprintf("  ✘ %d/%d files passed, %d failed (%.1fs)\n", $passed, $total, $failed, $elapsed));
+    fprintf(STDERR, sprintf("  ✘ %d/%d files passed, %d failed (%.1fs, ⌀ %.1fms)\n", $passed, $total, $failed, $elapsed, $avgMs));
 }
 
 echo "\n";
