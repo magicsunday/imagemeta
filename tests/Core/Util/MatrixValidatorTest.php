@@ -16,6 +16,10 @@ use MagicSunday\ImageMeta\Core\Util\MatrixValidator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
+
+use function array_map;
 
 /**
  * Exercises MatrixValidator for validating decoded matrix payloads.
@@ -29,6 +33,18 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(MatrixParts::class)]
 final class MatrixValidatorTest extends TestCase
 {
+    #[Test]
+    public function usesDedicatedLabelNormalizationHelper(): void
+    {
+        $reflection = new ReflectionClass(MatrixValidator::class);
+        $methods    = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('normalizeLabelList', $methods);
+    }
+
     /**
      * Validates matrices that include required row and column labels.
      * It exercises the scenario described by the test name.
