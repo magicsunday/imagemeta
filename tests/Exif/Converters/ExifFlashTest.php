@@ -12,13 +12,17 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Exif\Converters;
 
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
-use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
-use MagicSunday\ImageMeta\Value\Enum\FlashMode;
-use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
+use MagicSunday\ImageMeta\Value\Enum\{
+    FlashFunction,
+    FlashMode,
+    FlashReturn,
+};
 use MagicSunday\ImageMeta\Value\FlashInfo;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\{
+    CoversClass,
+    Test,
+    UsesClass,
+};
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -42,12 +46,14 @@ final class ExifFlashTest extends TestCase
     {
         $info = ExifFlash::fromExifValue(127);
 
-        self::assertNotNull($info);
-        self::assertTrue($info->fired);
-        self::assertSame(FlashMode::Auto, $info->mode);
-        self::assertSame(FlashReturn::ReturnDetected, $info->returnDetection);
-        self::assertSame(FlashFunction::Absent, $info->functionPresence);
-        self::assertTrue($info->redEyeReduction);
+        $this->assertFlashInfo(
+            $info,
+            fired: true,
+            mode: FlashMode::Auto,
+            returnDetection: FlashReturn::ReturnDetected,
+            functionPresence: FlashFunction::Absent,
+            redEyeReduction: true,
+        );
     }
 
     /**
@@ -59,12 +65,14 @@ final class ExifFlashTest extends TestCase
     {
         $info = ExifFlash::fromExifValue(2);
 
-        self::assertNotNull($info);
-        self::assertFalse($info->fired);
-        self::assertSame(FlashMode::Unknown, $info->mode);
-        self::assertSame(FlashReturn::Reserved, $info->returnDetection);
-        self::assertSame(FlashFunction::Present, $info->functionPresence);
-        self::assertFalse($info->redEyeReduction);
+        $this->assertFlashInfo(
+            $info,
+            fired: false,
+            mode: FlashMode::Unknown,
+            returnDetection: FlashReturn::Reserved,
+            functionPresence: FlashFunction::Present,
+            redEyeReduction: false,
+        );
     }
 
     /**
@@ -75,5 +83,21 @@ final class ExifFlashTest extends TestCase
     public function returnsNullWhenNoValueIsProvided(): void
     {
         self::assertNull(ExifFlash::fromExifValue(null));
+    }
+
+    private function assertFlashInfo(
+        ?FlashInfo $info,
+        bool $fired,
+        FlashMode $mode,
+        FlashReturn $returnDetection,
+        FlashFunction $functionPresence,
+        bool $redEyeReduction,
+    ): void {
+        self::assertNotNull($info);
+        self::assertSame($fired, $info->fired);
+        self::assertSame($mode, $info->mode);
+        self::assertSame($returnDetection, $info->returnDetection);
+        self::assertSame($functionPresence, $info->functionPresence);
+        self::assertSame($redEyeReduction, $info->redEyeReduction);
     }
 }
