@@ -1450,22 +1450,31 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Uses an mdta key entry without the required trailing NUL terminator.
-     * Verifies the parser rejects malformed QuickTime key declarations.
+     * Uses an mdta key entry without a trailing NUL terminator.
+     * Verifies key names are accepted unchanged for mdta entries.
      */
     #[Test]
-    public function rejectMdtaKeyNameWithoutNullTerminator(): void
+    public function mdtaKeyNameWithoutNullTerminatorIsAccepted(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys mdta key_value missing NUL terminator');
-
         $mdtaKey   = 'com.apple.quicktime.content.identifier';
         $mdtaEntry = pack('N', 8 + strlen($mdtaKey)) . 'mdta' . $mdtaKey;
         $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $mdtaEntry);
-        $meta      = $this->box('meta', "\0\0\0\0" . $keys);
-        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $this->createExtractor($ftyp . $meta)->extract();
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'not-terminated-value');
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov = $this->moov($this->box('udta', $meta));
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertArrayHasKey($mdtaKey, $qtMeta->keys);
+        self::assertSame('not-terminated-value', $qtMeta->keys[$mdtaKey]);
     }
 
     /**

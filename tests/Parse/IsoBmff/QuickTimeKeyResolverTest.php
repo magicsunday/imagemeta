@@ -86,14 +86,14 @@ final class QuickTimeKeyResolverTest extends TestCase
     /**
      * Builds a keys box payload with a single mdta key entry.
      */
-    private function buildKeysPayloadWithMdtaKey(string $keyName): string
+    private function buildKeysPayloadWithMdtaKey(string $keyName, bool $appendTerminator = true): string
     {
         // version=0, flags=0
         $data = chr(0) . chr(0) . chr(0) . chr(0);
         // entry_count=1
         $data .= pack('N', 1);
-        // entry: size(4) + namespace(4) + key_value (NUL-terminated for mdta)
-        $keyValue  = $keyName . "\0";
+        // entry: size(4) + namespace(4) + key_value
+        $keyValue  = $appendTerminator ? ($keyName . "\0") : $keyName;
         $entrySize = 8 + strlen($keyValue);
 
         return $data . (pack('N', $entrySize) . 'mdta' . $keyValue);
@@ -270,22 +270,34 @@ final class QuickTimeKeyResolverTest extends TestCase
     }
 
     /**
-     * Rejects mdta key_value missing NUL terminator.
+     * Accepts mdta key_value without trailing NUL terminator.
      */
     #[Test]
-    public function parseKeysRejectsMdtaMissingNulTerminator(): void
+    public function parseKeysAcceptsMdtaMissingNulTerminator(): void
+    {
+        $keyName = 'com.apple.quicktime.title';
+        $payload = $this->buildKeysPayloadWithMdtaKey($keyName, false);
+
+        [$resolver, $descriptor] = $this->createResolverWithDescriptor($payload);
+        $map                     = $resolver->parseKeys($descriptor);
+
+        self::assertArrayHasKey(1, $map);
+        self::assertSame('mdta', $map[1]['namespace']);
+        self::assertSame($keyName, $map[1]['name']);
+    }
+
+    /**
+     * Rejects mdta key_value containing embedded NUL bytes.
+     */
+    #[Test]
+    public function parseKeysRejectsMdtaEmbeddedNulBytes(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys mdta key_value missing NUL terminator');
+        $this->expectExceptionMessage('keys mdta key_value contains embedded NUL bytes');
 
-        // version=0, flags=0, entry_count=1
-        $data = chr(0) . chr(0) . chr(0) . chr(0) . pack('N', 1);
-        // mdta key without NUL terminator
-        $keyValue  = 'com.apple.quicktime.title';
-        $entrySize = 8 + strlen($keyValue);
-        $data .= pack('N', $entrySize) . 'mdta' . $keyValue;
+        $payload = $this->buildKeysPayloadWithMdtaKey("com.apple\0quicktime.title");
 
-        [$resolver, $descriptor] = $this->createResolverWithDescriptor($data);
+        [$resolver, $descriptor] = $this->createResolverWithDescriptor($payload);
         $resolver->parseKeys($descriptor);
     }
 
