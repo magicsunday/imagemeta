@@ -17,6 +17,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
+
+use function array_map;
 
 /**
  * Exercises AppleDecoder numeric normalization helpers for maker note fields.
@@ -30,6 +34,22 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(AppleRationalNormalizer::class)]
 final class AppleDecoderNumericValueTest extends TestCase
 {
+    /**
+     * Guards duplicate-reduction refactors by requiring dedicated key-iteration and numeric coercion helpers.
+     */
+    #[Test]
+    public function extractorUsesReusableCandidateAndNumericHelpers(): void
+    {
+        $reflection = new ReflectionClass(AppleDictionaryValueExtractor::class);
+        $methods    = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('valuesForKeys', $methods);
+        self::assertContains('intOrFloatAsIntOrString', $methods);
+    }
+
     /**
      * Provides a whitespace-separated numerator/denominator value for AFPerformance.
      * Confirms rationalFloatValue converts the pair into a floating-point ratio.
