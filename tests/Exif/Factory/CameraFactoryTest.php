@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -50,14 +51,7 @@ final class CameraFactoryTest extends TestCase
             sensingMethod: SensingMethod::OneChipColorArea,
         );
 
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new CameraFactory();
-        $camera  = $factory->create($metadata);
+        $camera = $this->createCamera($parsedExif);
 
         self::assertSame('Canon', $camera->make);
         self::assertSame('EOS R6', $camera->model);
@@ -74,13 +68,7 @@ final class CameraFactoryTest extends TestCase
     #[Test]
     public function createsWithNullExifDoc(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-        );
-
-        $factory = new CameraFactory();
-        $camera  = $factory->create($metadata);
+        $camera = $this->createCamera(null);
 
         self::assertNull($camera->make);
         self::assertNull($camera->model);
@@ -106,14 +94,7 @@ final class CameraFactoryTest extends TestCase
             sensingMethod: null,
         );
 
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new CameraFactory();
-        $camera  = $factory->create($metadata);
+        $camera = $this->createCamera($parsedExif);
 
         self::assertSame('Nikon', $camera->make);
         self::assertNull($camera->model);
@@ -141,25 +122,8 @@ final class CameraFactoryTest extends TestCase
             ExifTag::SENSING_METHOD => new IfdEntry(ExifTag::SENSING_METHOD, 2, 3, 'abc'),
         ];
 
-        $ifd0    = new Ifd($ifd0Entries);
-        $exifIfd = new Ifd($exifEntries);
-
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new CameraFactory();
-        $camera  = $factory->create($metadata);
+        $parsedExif = $this->createParsedExifFromEntries($ifd0Entries, $exifEntries);
+        $camera     = $this->createCamera($parsedExif);
 
         // Wrong-typed tags should degrade to null rather than surface garbage values
         self::assertNull($camera->make);
@@ -180,25 +144,8 @@ final class CameraFactoryTest extends TestCase
             ExifTag::FILE_SOURCE => new IfdEntry(ExifTag::FILE_SOURCE, 7, 1, 255),
         ];
 
-        $ifd0    = new Ifd($ifd0Entries);
-        $exifIfd = new Ifd([]);
-
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new CameraFactory();
-        $camera  = $factory->create($metadata);
+        $parsedExif = $this->createParsedExifFromEntries($ifd0Entries, []);
+        $camera     = $this->createCamera($parsedExif);
 
         // Invalid enum should degrade — either null or the default DigitalCamera
         self::assertTrue(
@@ -242,15 +189,32 @@ final class CameraFactoryTest extends TestCase
             $exifEntries[ExifTag::SENSING_METHOD] = new IfdEntry(ExifTag::SENSING_METHOD, 3, 1, $sensingMethod->value);
         }
 
-        $ifd0    = new Ifd($ifd0Entries);
-        $exifIfd = new Ifd($exifEntries);
+        return $this->createParsedExifFromEntries($ifd0Entries, $exifEntries);
+    }
 
+    /**
+     * @param array<int, IfdEntry> $ifd0Entries
+     * @param array<int, IfdEntry> $exifEntries
+     */
+    private function createParsedExifFromEntries(array $ifd0Entries, array $exifEntries): ParsedExif
+    {
         return new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
+            ifd0: new Ifd($ifd0Entries),
+            exifIfd: new Ifd($exifEntries),
             gpsIfd: null,
             interopIfd: null,
             ifd1: null,
         );
+    }
+
+    private function createCamera(?ParsedExif $parsedExif): Camera
+    {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        return (new CameraFactory())->create($metadata);
     }
 }
