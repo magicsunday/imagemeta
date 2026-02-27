@@ -16,18 +16,22 @@ use MagicSunday\ImageMeta\Exif\Converters\GpsUnitConverter;
 use MagicSunday\ImageMeta\Exif\Converters\NumericConverter;
 use MagicSunday\ImageMeta\Exif\Converters\RationalConverter;
 use MagicSunday\ImageMeta\Exif\Converters\ValidatesGpsRef;
-use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
-use MagicSunday\ImageMeta\Exif\Model\ExifRational;
-use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
-use MagicSunday\ImageMeta\Exif\Model\ExifTag;
-use MagicSunday\ImageMeta\Exif\Model\Ifd;
-use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\{
+    ExifNumericList,
+    ExifRational,
+    ExifRationalList,
+    ExifTag,
+    Ifd,
+    IfdEntry,
+};
 use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
-use PHPUnit\Framework\Attributes\UsesTrait;
+use PHPUnit\Framework\Attributes\{
+    CoversClass,
+    DataProvider,
+    Test,
+    UsesClass,
+    UsesTrait,
+};
 use PHPUnit\Framework\TestCase;
 
 /**
