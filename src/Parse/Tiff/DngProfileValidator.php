@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 
+use function array_any;
 use function count;
 use function intdiv;
 use function is_finite;
@@ -871,10 +872,8 @@ final readonly class DngProfileValidator
             $this->support->unpackFloat(substr($payload, 60, 4)),   // reserved
         ];
 
-        foreach ($headerScalars as $scalar) {
-            if (!is_finite($scalar)) {
-                throw new ParseError('ProfileGainTableMap header contains non-finite scalar fields.', 1687);
-            }
+        if (array_any($headerScalars, static fn (float $scalar): bool => !is_finite($scalar))) {
+            throw new ParseError('ProfileGainTableMap header contains non-finite scalar fields.', 1687);
         }
 
         if (($mapPointsV < 1) || ($mapPointsH < 1) || ($mapPointsN < 1)) {

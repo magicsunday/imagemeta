@@ -38,6 +38,7 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use ValueError;
 
+use function array_map;
 use function class_exists;
 use function hash_final;
 use function hash_init;
@@ -196,11 +197,7 @@ final readonly class MetadataReader
 
         $iptcDoc = null;
         if ($iptcBlobs !== []) {
-            $documents = [];
-
-            foreach ($iptcBlobs as $blob) {
-                $documents[] = $this->iptcParser->parse($blob);
-            }
+            $documents = array_map($this->iptcParser->parse(...), $iptcBlobs);
 
             $iptcDoc = IptcDocument::merge(...$documents);
         }
@@ -364,11 +361,7 @@ final readonly class MetadataReader
             return null;
         }
 
-        $documents = [];
-
-        foreach ($xmpBlobs as $blob) {
-            $documents[] = $this->xmpParser->parse($blob);
-        }
+        $documents = array_map($this->xmpParser->parse(...), $xmpBlobs);
 
         return XmpDocument::merge(...$documents);
     }

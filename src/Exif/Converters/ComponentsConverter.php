@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 
+use function array_all;
 use function array_any;
 use function array_filter;
 use function array_values;
@@ -61,10 +62,8 @@ final readonly class ComponentsConverter
             return null;
         }
 
-        foreach ($components as $code) {
-            if ($code < 0 || $code > 6) {
-                return null;
-            }
+        if (!array_all($components, static fn (int $code): bool => $code >= 0 && $code <= 6)) {
+            return null;
         }
 
         return $components;

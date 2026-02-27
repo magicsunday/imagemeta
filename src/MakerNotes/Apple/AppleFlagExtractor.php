@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
+use function array_find;
 use function array_flip;
 use function array_is_list;
 use function array_key_exists;
@@ -153,13 +154,15 @@ final readonly class AppleFlagExtractor
         }
 
         if (!array_is_list($value)) {
-            foreach (['flags', 'Flags', 'value', 'Value', 'mask', 'Mask', 'bitPositions', 'BitPositions'] as $key) {
-                if (array_key_exists($key, $value)) {
-                    /** @var NativePlistValue $candidate */
-                    $candidate = $value[$key];
+            $candidateKey = array_find(
+                ['flags', 'Flags', 'value', 'Value', 'mask', 'Mask', 'bitPositions', 'BitPositions'],
+                static fn (string $key): bool => array_key_exists($key, $value),
+            );
+            if ($candidateKey !== null) {
+                /** @var NativePlistValue $candidate */
+                $candidate = $value[$candidateKey];
 
-                    return $this->bitPositions($candidate);
-                }
+                return $this->bitPositions($candidate);
             }
 
             if (!array_key_exists('values', $value)) {

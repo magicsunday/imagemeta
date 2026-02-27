@@ -50,6 +50,7 @@ use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\ProcessingSettings as ValueProcessingSettings;
+use MagicSunday\ImageMeta\Value\Region;
 use MagicSunday\ImageMeta\Value\RegionCollection;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
@@ -514,13 +515,10 @@ final readonly class ValueFactory
      */
     private function countFaceRegions(RegionCollection $regions): ?int
     {
-        $count = 0;
-
-        foreach ($regions->items as $region) {
-            if ($region->type === RegionType::Face) {
-                ++$count;
-            }
-        }
+        $count = count(array_filter(
+            $regions->items,
+            static fn (Region $region): bool => $region->type === RegionType::Face,
+        ));
 
         return $count > 0 ? $count : null;
     }

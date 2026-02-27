@@ -177,11 +177,7 @@ final readonly class Metadata
             return null;
         }
 
-        $documents = [];
-
-        foreach ($this->xmpBlobs as $blob) {
-            $documents[] = $this->xmpParser->parse($blob);
-        }
+        $documents = array_map($this->xmpParser->parse(...), $this->xmpBlobs);
 
         return XmpDocument::merge(...$documents);
     }
@@ -199,11 +195,7 @@ final readonly class Metadata
             return null;
         }
 
-        $documents = [];
-
-        foreach ($this->iptcBlobs as $blob) {
-            $documents[] = $this->iptcParser->parse($blob);
-        }
+        $documents = array_map($this->iptcParser->parse(...), $this->iptcBlobs);
 
         return IptcDocument::merge(...$documents);
     }

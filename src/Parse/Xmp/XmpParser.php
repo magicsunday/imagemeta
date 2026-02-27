@@ -20,7 +20,9 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
 use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
 use XMLReader;
 
+use function array_filter;
 use function array_key_exists;
+use function array_values;
 use function defined;
 use function in_array;
 use function is_array;
@@ -423,13 +425,7 @@ final class XmpParser implements XmpParserInterface
         // entries and are fully handled via the structured parent path above.
         if (is_array($value)) {
             /** @var list<string> $stringItems */
-            $stringItems = [];
-
-            foreach ($value as $item) {
-                if (is_string($item)) {
-                    $stringItems[] = $item;
-                }
-            }
+            $stringItems = array_values(array_filter($value, is_string(...)));
 
             $this->storeValue($state, $key, $stringItems);
 

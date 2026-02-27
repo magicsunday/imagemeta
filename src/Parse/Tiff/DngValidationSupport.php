@@ -24,6 +24,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 
+use function array_map;
 use function count;
 use function implode;
 use function in_array;
@@ -517,16 +518,14 @@ final readonly class DngValidationSupport
      */
     public function describeAllowedTiffTypes(array $types): string
     {
-        $names = [];
-        foreach ($types as $type) {
-            $names[] = match ($type) {
+        return implode('|', array_map(
+            static fn (int $type): string => match ($type) {
                 TiffConst::TYPE_SHORT    => 'SHORT',
                 TiffConst::TYPE_LONG     => 'LONG',
                 TiffConst::TYPE_RATIONAL => 'RATIONAL',
                 default                  => (string) $type,
-            };
-        }
-
-        return implode('|', $names);
+            },
+            $types,
+        ));
     }
 }

@@ -177,14 +177,18 @@ final readonly class DngVersionValidator
             return;
         }
 
-        foreach (self::DNG_SENTINEL_TAGS as $tag) {
-            if ($ifd->get($tag) instanceof IfdEntry) {
-                // DNG 1.7.1.0 requires DNGVersion for DNG files, but many JPEG
-                // files carry selected DNG tags without declaring DNGVersion.
-                // Reader-side parsing keeps those tags instead of aborting.
-                return;
-            }
+        $hasDngSentinelTag = array_any(
+            self::DNG_SENTINEL_TAGS,
+            static fn (int $tag): bool => $ifd->get($tag) instanceof IfdEntry,
+        );
+
+        if (!$hasDngSentinelTag) {
+            return;
         }
+
+        // DNG 1.7.1.0 requires DNGVersion for DNG files, but many JPEG files
+        // carry selected DNG tags without declaring DNGVersion. Reader-side
+        // parsing keeps those tags instead of aborting.
     }
 
     /**

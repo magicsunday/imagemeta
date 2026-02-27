@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Exif\Factory;
 
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
+use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\MultiPictureEntry;
 
@@ -55,16 +56,16 @@ final readonly class MultiPictureFactory
             );
         }
 
-        $entries = [];
-        foreach ($document->entries as $entry) {
-            $entries[] = new MultiPictureEntry(
+        $entries = array_map(
+            static fn (MpfEntry $entry): MultiPictureEntry => new MultiPictureEntry(
                 attributes: $entry->attributes,
                 imageSize: $entry->imageSize,
                 dataOffset: $entry->dataOffset,
                 dependentImage1: $entry->dependentImage1,
                 dependentImage2: $entry->dependentImage2,
-            );
-        }
+            ),
+            $document->entries,
+        );
 
         $attributes = $document->attributes;
 

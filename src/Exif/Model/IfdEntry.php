@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Exif\Model;
 
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
+use function array_filter;
 use function array_values;
 use function count;
 use function is_array;
@@ -127,14 +128,10 @@ final readonly class IfdEntry
      */
     private function normalizeNumericList(array $value): array
     {
-        $numericValues = [];
-        foreach ($value as $component) {
-            if (is_int($component) || is_float($component)) {
-                $numericValues[] = $component;
-            }
-        }
-
-        return $numericValues;
+        return array_values(array_filter(
+            $value,
+            static fn (int|float|array $component): bool => is_int($component) || is_float($component),
+        ));
     }
 
     /**

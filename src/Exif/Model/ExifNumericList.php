@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Exif\Model;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
+use function array_all;
 use function array_is_list;
 use function is_float;
 use function is_int;
@@ -69,10 +70,11 @@ final readonly class ExifNumericList
      */
     private function assertNumericValues(array $values): void
     {
-        foreach ($values as $value) {
-            if (!is_int($value) && !is_float($value) && !$value instanceof UInt64) {
-                throw new ParseError('Numeric EXIF lists may only contain integers, floats, or UInt64 values.', 1866);
-            }
+        if (!array_all(
+            $values,
+            static fn (bool|float|int|string|UInt64 $value): bool => is_int($value) || is_float($value) || $value instanceof UInt64,
+        )) {
+            throw new ParseError('Numeric EXIF lists may only contain integers, floats, or UInt64 values.', 1866);
         }
     }
 }

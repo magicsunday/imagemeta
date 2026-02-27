@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 use MagicSunday\ImageMeta\Core\ParseError;
 
 use function array_key_exists;
+use function array_map;
 use function count;
 use function is_int;
 use function is_string;
@@ -140,10 +141,7 @@ final class KeyedArchiveUnarchiver
     public function resolveArrayValue(ApplePlistArray $value): ApplePlistArray
     {
         /** @var KeyedArchiveArray $resolved */
-        $resolved = [];
-        foreach ($value->values() as $entry) {
-            $resolved[] = $this->resolveValue($entry);
-        }
+        $resolved = array_map($this->resolveValue(...), $value->values());
 
         return new ApplePlistArray($resolved);
     }
@@ -288,10 +286,7 @@ final class KeyedArchiveUnarchiver
         }
 
         /** @var KeyedArchiveArray $resolved */
-        $resolved = [];
-        foreach ($objects->values() as $entry) {
-            $resolved[] = $this->resolveValue($entry);
-        }
+        $resolved = array_map($this->resolveValue(...), $objects->values());
 
         return new ApplePlistArray($resolved);
     }

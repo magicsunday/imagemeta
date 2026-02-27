@@ -19,6 +19,8 @@ use function array_find;
 use function array_is_list;
 use function array_key_exists;
 use function array_keys;
+use function array_map;
+use function array_values;
 use function is_array;
 use function is_string;
 use function strpos;
@@ -123,13 +125,8 @@ final readonly class KeyedArchiveResolver
         }
 
         if ($value instanceof ApplePlistArray) {
-            $result = [];
-            foreach ($value->values() as $entry) {
-                $result[] = $this->plistValueToPhp($entry);
-            }
-
             /** @phpstan-ignore-next-line */
-            return $result;
+            return array_values(array_map($this->plistValueToPhp(...), $value->values()));
         }
 
         if ($value instanceof ApplePlistDictionary) {

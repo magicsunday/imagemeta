@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -24,6 +25,7 @@ use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 
+use function array_any;
 use function in_array;
 use function intdiv;
 use function is_int;
@@ -312,13 +314,14 @@ final readonly class DngStructureValidator
             return;
         }
 
-        foreach ($cfaValue->values as $color) {
-            if (is_int($color) && $color > 2) {
-                throw new ParseError(
-                    'Non-RGB CFA images require CFAPlaneColor per DNG 1.7.1.0.',
-                    2038,
-                );
-            }
+        if (array_any(
+            $cfaValue->values,
+            static fn (int|float|UInt64 $color): bool => is_int($color) && $color > 2,
+        )) {
+            throw new ParseError(
+                'Non-RGB CFA images require CFAPlaneColor per DNG 1.7.1.0.',
+                2038,
+            );
         }
     }
 
