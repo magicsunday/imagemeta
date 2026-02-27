@@ -361,4 +361,17 @@ final class TiffTagConstraintValidatorTest extends TestCase
 
         $this->validator->validateSubfileAndPageTags($ifd, true);
     }
+
+    #[Test]
+    public function requiresConsolidatedSingleIntegerEntryGuardsInValidatorSource(): void
+    {
+        $source = \file_get_contents(__DIR__ . '/../../../src/Parse/Tiff/TiffTagConstraintValidator.php');
+
+        self::assertNotFalse($source);
+        self::assertLessThanOrEqual(
+            3,
+            \substr_count($source, 'count !== 1) || !is_int('),
+            'Expected repeated single-integer guard fragments to be consolidated.',
+        );
+    }
 }
