@@ -226,7 +226,7 @@ final readonly class TiffSampleValidator
         $samplesPerPixel = 1;
         $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
         if (($samplesEntry instanceof IfdEntry) && is_int($samplesEntry->value) && ($samplesEntry->value > 0)) {
-            $samplesPerPixel = $samplesEntry->value;
+            return $samplesEntry->value;
         }
 
         return $samplesPerPixel;
