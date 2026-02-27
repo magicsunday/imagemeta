@@ -45,8 +45,8 @@ final class MetadataBuilderTest extends TestCase
         self::assertInstanceOf(StructuredMetadataCache::class, $secondCache);
         self::assertNotSame($firstCache, $secondCache);
 
-        $builderProperty        = new ReflectionProperty(StructuredMetadataCache::class, 'builder');
-        $firstStructuredBuilder = $builderProperty->getValue($firstCache);
+        $builderProperty         = new ReflectionProperty(StructuredMetadataCache::class, 'builder');
+        $firstStructuredBuilder  = $builderProperty->getValue($firstCache);
         $secondStructuredBuilder = $builderProperty->getValue($secondCache);
 
         self::assertInstanceOf(StructuredMetadataBuilder::class, $firstStructuredBuilder);

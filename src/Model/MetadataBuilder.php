@@ -101,7 +101,7 @@ final class MetadataBuilder
 
     private ?IptcParserInterface $iptcParser = null;
 
-    private StructuredMetadataAssemblyBuilder $structuredMetadataBuilder;
+    private readonly StructuredMetadataAssemblyBuilder $structuredMetadataBuilder;
 
     public function __construct()
     {
