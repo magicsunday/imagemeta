@@ -163,8 +163,9 @@ final class QuickTimeValueDecoderTest extends TestCase
     public function parseDataBoxStructuredSignedIntEightBytes(): void
     {
         $decoder = $this->createDecoder();
-        $content = pack('N', 0x15) . pack('N', 0) . hex2bin('FFFFFFFFFFFFFFFE');
-        self::assertIsString($content);
+        $payload = hex2bin('FFFFFFFFFFFFFFFE');
+        self::assertIsString($payload);
+        $content = pack('N', 0x15) . pack('N', 0) . $payload;
 
         $descriptor = $this->createDataBoxDescriptor($content);
         $result     = $decoder->parseDataBoxStructured($descriptor);

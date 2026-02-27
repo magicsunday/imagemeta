@@ -356,7 +356,8 @@ final readonly class QuickTimeValueDecoder
     /**
      * Decodes a variable-width big-endian signed integer from a QuickTime data box.
      *
-     * QuickTime File Format 2012, Table 3-5: type 21 supports 1, 2, 3, or 4 byte payloads.
+     * QuickTime File Format 2012, Table 3-5: type 21 defines up to 4-byte payloads.
+     * Reader tolerance accepts 8-byte encodings observed in the wild.
      *
      * @param string $payload     Raw payload bytes.
      * @param int    $payloadSize Length of the payload in bytes.
@@ -365,6 +366,38 @@ final readonly class QuickTimeValueDecoder
      */
     private function decodeQuickTimeSignedInt(string $payload, int $payloadSize): int
     {
+        if ($payloadSize === 8) {
+            $parts = unpack('Nhigh/Nlow', $payload);
+            if ($parts === false || !isset($parts['high'], $parts['low']) || !is_int($parts['high']) || !is_int($parts['low'])) {
+                throw new ParseError('Failed to decode QuickTime signed integer payload.', 2095);
+            }
+
+            $high = $parts['high'];
+            $low  = $parts['low'];
+
+            if (($high & 0x80000000) === 0) {
+                return ($high << 32) | $low;
+            }
+
+            if (($high === 0x80000000) && ($low === 0)) {
+                return PHP_INT_MIN;
+            }
+
+            $invHigh = (~$high) & 0xFFFFFFFF;
+            $invLow  = (~$low) & 0xFFFFFFFF;
+
+            if ($invLow === 0xFFFFFFFF) {
+                $invLow = 0;
+                ++$invHigh;
+            } else {
+                ++$invLow;
+            }
+
+            $magnitude = ($invHigh << 32) | $invLow;
+
+            return -$magnitude;
+        }
+
         $unsigned = $this->decodeQuickTimeUnsignedInt($payload, $payloadSize);
         $signBit  = 1 << (($payloadSize * 8) - 1);
 
@@ -374,7 +407,8 @@ final readonly class QuickTimeValueDecoder
     /**
      * Decodes a variable-width big-endian unsigned integer from a QuickTime data box.
      *
-     * QuickTime File Format 2012, Table 3-5: type 22 supports 1, 2, 3, or 4 byte payloads.
+     * QuickTime File Format 2012, Table 3-5: type 22 defines up to 4-byte payloads.
+     * Reader tolerance accepts 8-byte encodings observed in the wild.
      *
      * @param string $payload     Raw payload bytes.
      * @param int    $payloadSize Length of the payload in bytes.
@@ -383,16 +417,21 @@ final readonly class QuickTimeValueDecoder
      */
     private function decodeQuickTimeUnsignedInt(string $payload, int $payloadSize): int
     {
-        if ($payloadSize < 1 || $payloadSize > 4) {
+        if ($payloadSize < 1 || $payloadSize > 8) {
             throw new ParseError(
-                sprintf('QuickTime integer payload must be 1–4 bytes, got %d', $payloadSize),
+                sprintf('QuickTime integer payload must be 1–8 bytes, got %d', $payloadSize),
                 1993,
             );
         }
 
         $value = 0;
         for ($i = 0; $i < $payloadSize; ++$i) {
-            $value = ($value << 8) | ord($payload[$i]);
+            $byte = ord($payload[$i]);
+            if ($value > intdiv(PHP_INT_MAX - $byte, 256)) {
+                throw new ParseError('QuickTime integer payload exceeds supported integer range.', 2096);
+            }
+
+            $value = ($value * 256) + $byte;
         }
 
         return $value;
