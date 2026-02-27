@@ -27,11 +27,13 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
-use PHPUnit\Framework\Attributes\UsesTrait;
+use PHPUnit\Framework\Attributes\{
+    CoversClass,
+    DataProvider,
+    Test,
+    UsesClass,
+    UsesTrait,
+};
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -471,14 +473,7 @@ final class GpsConverterTest extends TestCase
     #[DataProvider('provideOutOfRangeDmsComponents')]
     public function toleratesOutOfRangeDmsComponents(int $refTag, int $valueTag, string $ref, array $dms, string $coordKey, float $expected): void
     {
-        $entries = [
-            $refTag   => new IfdEntry($refTag, 2, 2, $ref),
-            $valueTag => new IfdEntry($valueTag, 10, 3, $dms),
-        ];
-
-        $result = $this->converter->fromIfd(new Ifd($entries));
-
-        self::assertEqualsWithDelta($expected, $result[$coordKey], 0.000001);
+        $this->assertDmsCoordinateValue($refTag, $valueTag, $ref, $dms, $coordKey, $expected);
     }
 
     /**
@@ -531,6 +526,14 @@ final class GpsConverterTest extends TestCase
     #[Test]
     #[DataProvider('provideOutOfRangeCoordinateValues')]
     public function toleratesOutOfRangeCoordinateValues(int $refTag, int $valueTag, string $ref, array $dms, string $coordKey, float $expected): void
+    {
+        $this->assertDmsCoordinateValue($refTag, $valueTag, $ref, $dms, $coordKey, $expected);
+    }
+
+    /**
+     * @param list<array{0:int,1:int}> $dms
+     */
+    private function assertDmsCoordinateValue(int $refTag, int $valueTag, string $ref, array $dms, string $coordKey, float $expected): void
     {
         $entries = [
             $refTag   => new IfdEntry($refTag, 2, 2, $ref),
