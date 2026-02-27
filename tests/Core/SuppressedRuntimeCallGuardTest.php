@@ -43,24 +43,23 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
     private function phpSourceFiles(string $srcRoot): array
     {
         /** @var list<string> $files */
-        $files = [];
-        $it    = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($srcRoot));
+        $files    = [];
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($srcRoot));
 
-        foreach ($it as $fileInfo) {
-            if (!$fileInfo instanceof SplFileInfo) {
+        foreach ($iterator as $entry) {
+            if (!$entry instanceof SplFileInfo) {
                 continue;
             }
 
-            if (!$fileInfo->isFile()) {
+            if (!$entry->isFile()) {
                 continue;
             }
 
-            $path = $fileInfo->getPathname();
-            if (!str_ends_with($path, '.php')) {
+            if (!str_ends_with($entry->getFilename(), '.php')) {
                 continue;
             }
 
-            $files[] = $path;
+            $files[] = $entry->getPathname();
         }
 
         sort($files);
