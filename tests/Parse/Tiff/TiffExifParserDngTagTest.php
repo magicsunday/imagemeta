@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Parse\Tiff\DngGeometryValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\DngProfileValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
@@ -38,8 +39,11 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
 
+use function array_slice;
 use function array_map;
 use function count;
+use function file;
+use function implode;
 use function ksort;
 use function pack;
 use function str_pad;
@@ -86,6 +90,36 @@ final class TiffExifParserDngTagTest extends TestCase
         self::assertContains('validateProfileGainTableMap2Length', $methods);
         self::assertContains('checkedMultiply', $methods);
         self::assertContains('validateExtraCameraProfileRecord', $methods);
+    }
+
+    /**
+     * Keeps proxy-size validation free of dead local fallback assignments.
+     */
+    #[Test]
+    public function dngGeometryValidatorAvoidsDeadProxyFallbackAssignments(): void
+    {
+        $method   = new ReflectionMethod(DngGeometryValidator::class, 'validateDngOriginalProxySizes');
+        $fileName = $method->getFileName();
+        self::assertIsString($fileName);
+
+        $sourceLines = file($fileName);
+        self::assertIsArray($sourceLines);
+        $startLine = $method->getStartLine();
+        $endLine   = $method->getEndLine();
+        self::assertIsInt($startLine);
+        self::assertIsInt($endLine);
+
+        $body = implode(
+            '',
+            array_slice(
+                $sourceLines,
+                $startLine - 1,
+                $endLine - $startLine + 1,
+            ),
+        );
+
+        self::assertStringNotContainsString('$originalBestQualityFinalSize = $originalDefaultFinalSize;', $body);
+        self::assertStringNotContainsString('$originalDefaultCropSize = $originalDefaultFinalSize;', $body);
     }
 
     /**
