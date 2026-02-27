@@ -144,12 +144,16 @@ final readonly class DngValueNormalizer
      * @param int    $type     TIFF field type code.
      * @param int    $count    Number of values represented.
      * @param string $rawBytes Raw value bytes read for the entry.
+     * @param int|null $componentSize Precomputed bytes per component for this TIFF type.
+     * @param int|null $expectedLength Precomputed total byte count for this value.
      */
     public function normalizeCountedImageDataField(
         int $tag,
         int $type,
         int $count,
         string $rawBytes,
+        ?int $componentSize = null,
+        ?int $expectedLength = null,
     ): int|ExifNumericList {
         $this->validateCountedImageDataType($tag, $type);
 
@@ -157,7 +161,14 @@ final readonly class DngValueNormalizer
             return new ExifNumericList([]);
         }
 
-        $components = $this->decodeCountedComponents($tag, $type, $rawBytes, $count);
+        $components = $this->decodeCountedComponents(
+            $tag,
+            $type,
+            $rawBytes,
+            $count,
+            $componentSize,
+            $expectedLength,
+        );
 
         if ($count === 1) {
             return $components[0] ?? 0;
@@ -268,15 +279,24 @@ final readonly class DngValueNormalizer
      * @param int    $type     TIFF field type code.
      * @param string $rawBytes Raw bytes representing the values.
      * @param int    $count    Number of values represented.
+     * @param int|null $componentSize Precomputed bytes per component for this TIFF type.
+     * @param int|null $expectedLength Precomputed total byte count for this value.
      *
      * @return list<int>
      */
-    private function decodeCountedComponents(int $tag, int $type, string $rawBytes, int $count): array
+    private function decodeCountedComponents(
+        int $tag,
+        int $type,
+        string $rawBytes,
+        int $count,
+        ?int $componentSize = null,
+        ?int $expectedLength = null,
+    ): array
     {
-        $componentSize = $this->decoder->bytesPerComponent($type);
+        $componentSize ??= $this->decoder->bytesPerComponent($type);
         assert($componentSize !== null);
 
-        $expectedLength  = $this->decoder->safeValueByteCount($componentSize, $count);
+        $expectedLength ??= $this->decoder->safeValueByteCount($componentSize, $count);
         $availableLength = strlen($rawBytes);
 
         if ($availableLength < $expectedLength) {

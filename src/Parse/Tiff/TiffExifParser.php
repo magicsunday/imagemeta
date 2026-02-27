@@ -646,8 +646,8 @@ final class TiffExifParser implements TiffExifParserInterface
 
         [$valOrOff, $inlineBytes] = $this->binaryReader->readValueOrOffset($valueBytes);
 
-        [$rawBytes] = $this->decoder->valueBytes($type, $cnt, $valOrOff, $inlineBytes);
-        $value      = $this->decoder->decodeBytes($tag, $type, $cnt, $rawBytes);
+        [$rawBytes] = $this->decoder->valueBytes($type, $cnt, $valOrOff, $inlineBytes, $componentSize, $valueBytes);
+        $value      = $this->decoder->decodeBytes($tag, $type, $cnt, $rawBytes, $componentSize, $valueBytes);
         $value      = $this->decoder->convertUInt64Values($tag, $value);
 
         $value = $this->dngNormalizer->normalizeDngStringValue($tag, $type, $rawBytes, $value);
@@ -666,7 +666,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->tagValidator->validateTagValueDomain($tag, $value);
 
         if ($this->dngNormalizer->isCountedImageDataTag($tag)) {
-            $value = $this->dngNormalizer->normalizeCountedImageDataField($tag, $type, $cnt, $rawBytes);
+            $value = $this->dngNormalizer->normalizeCountedImageDataField($tag, $type, $cnt, $rawBytes, $componentSize, $valueBytes);
         }
 
         return new IfdEntry($tag, $type, $cnt, $value);

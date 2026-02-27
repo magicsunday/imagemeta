@@ -92,15 +92,23 @@ final readonly class TiffValueDecoder
      * @param int               $count         Number of values represented.
      * @param int|UInt64|string $valueOrOffset Inline value bytes or an offset into the blob.
      * @param string|null       $inlineBytes   Raw bytes captured from the value/offset field.
+     * @param int|null          $componentSize Precomputed bytes per component for this TIFF type.
+     * @param int|null          $valueBytes    Precomputed total byte count for this value.
      *
      * @return array{0: string, 1: int|null}
      */
-    public function valueBytes(int $type, int $count, int|UInt64|string $valueOrOffset, ?string $inlineBytes = null): array
-    {
-        $unitSize = $this->bytesPerComponent($type);
+    public function valueBytes(
+        int $type,
+        int $count,
+        int|UInt64|string $valueOrOffset,
+        ?string $inlineBytes = null,
+        ?int $componentSize = null,
+        ?int $valueBytes = null,
+    ): array {
+        $unitSize = $componentSize ?? $this->bytesPerComponent($type);
         assert($unitSize !== null);
 
-        $dataSize        = $this->safeValueByteCount($unitSize, $count);
+        $dataSize        = $valueBytes ?? $this->safeValueByteCount($unitSize, $count);
         $inlineThreshold = 4;
 
         if ($inlineBytes !== null) {
@@ -134,21 +142,30 @@ final readonly class TiffValueDecoder
      * @param int    $type  TIFF field type code.
      * @param int    $count Number of values represented.
      * @param string $bytes Raw value bytes read from the blob.
+     * @param int|null $componentSize Precomputed bytes per component for this TIFF type.
+     * @param int|null $expectedBytes Precomputed total byte count for this value.
      */
-    public function decodeBytes(int $tag, int $type, int $count, string $bytes): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
+    public function decodeBytes(
+        int $tag,
+        int $type,
+        int $count,
+        string $bytes,
+        ?int $componentSize = null,
+        ?int $expectedBytes = null,
+    ): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
     {
-        $componentSize = $this->bytesPerComponent($type);
+        $componentSize ??= $this->bytesPerComponent($type);
         assert($componentSize !== null);
 
-        $bytesLength   = strlen($bytes);
-        $expectedBytes = $this->safeValueByteCount($componentSize, $count);
+        $bytesLength    = strlen($bytes);
+        $expectedLength = $expectedBytes ?? $this->safeValueByteCount($componentSize, $count);
 
-        if ($bytesLength < $expectedBytes) {
+        if ($bytesLength < $expectedLength) {
             throw new ParseError(
                 sprintf(
                     'Truncated value for TIFF type %d (expected %d bytes, got %d)',
                     $type,
-                    $expectedBytes,
+                    $expectedLength,
                     $bytesLength,
                 ),
                 1328,
