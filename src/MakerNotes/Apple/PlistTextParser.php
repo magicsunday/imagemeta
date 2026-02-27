@@ -147,11 +147,6 @@ final readonly class PlistTextParser
 
             if ($terminator === ';' || $terminator === ',') {
                 $cursor->advance();
-                continue;
-            }
-
-            if ($terminator === '}') {
-                continue;
             }
         }
 
@@ -279,10 +274,6 @@ final readonly class PlistTextParser
 
             if ($terminator === ',' || $terminator === ';') {
                 $cursor->advance();
-            }
-
-            if ($terminator === ')') {
-                continue;
             }
         }
 

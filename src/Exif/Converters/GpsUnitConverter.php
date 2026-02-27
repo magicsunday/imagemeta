@@ -82,16 +82,8 @@ final readonly class GpsUnitConverter
     public function extractFromIfd(Ifd $gps): array
     {
         $result = [
-            'alt_ref'                    => null,
-            'alt'                        => null,
-            'speed_ref'                  => null,
-            'speed_ms'                   => null,
-            'speed_original_ref'         => null,
-            'speed_original'             => null,
-            'dest_distance_ref'          => null,
-            'dest_distance_m'            => null,
-            'dest_distance_original_ref' => null,
-            'dest_distance_original'     => null,
+            'alt_ref' => null,
+            'alt'     => null,
         ];
 
         // Altitude

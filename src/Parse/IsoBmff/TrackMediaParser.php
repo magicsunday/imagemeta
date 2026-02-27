@@ -473,7 +473,7 @@ final readonly class TrackMediaParser
      *
      * @param BoxDescriptor $mdhd Media header box descriptor.
      */
-    private function parseMdhd(BoxDescriptor $mdhd): int
+    private function parseMdhd(BoxDescriptor $mdhd): void
     {
         $win = $mdhd->window;
         $win->seek(0);
@@ -510,8 +510,6 @@ final readonly class TrackMediaParser
         if ($timescale === 0) {
             throw new ParseError('mdhd timescale must not be zero', 1905);
         }
-
-        return $timescale;
     }
 
     /**

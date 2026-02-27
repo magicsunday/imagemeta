@@ -60,33 +60,31 @@ final readonly class GpsDirectionConverter
      */
     public function extractFromIfd(Ifd $gps): array
     {
-        $result = [
-            'track_ref'         => null,
-            'track'             => null,
-            'img_direction_ref' => null,
-            'img_direction'     => null,
-            'dest_bearing_ref'  => null,
-            'dest_bearing'      => null,
-        ];
-
         // EXIF 3.0 §4.6.7.1.15 GPSTrackRef: 'T' or 'M'; default 'T'
-        [$result['track_ref'], $result['track']] = $this->extractBearing($gps, ExifTag::GPS_TRACK_REF, ExifTag::GPS_TRACK);
+        [$trackRef, $track] = $this->extractBearing($gps, ExifTag::GPS_TRACK_REF, ExifTag::GPS_TRACK);
 
         // EXIF 3.0 §4.6.7.1.17 GPSImgDirectionRef: 'T' or 'M'; default 'T'
-        [$result['img_direction_ref'], $result['img_direction']] = $this->extractBearing(
+        [$imgDirectionRef, $imgDirection] = $this->extractBearing(
             $gps,
             ExifTag::GPS_IMG_DIRECTION_REF,
             ExifTag::GPS_IMG_DIRECTION,
         );
 
         // EXIF 3.0 §4.6.7.1.24 GPSDestBearingRef: 'T' or 'M'; default 'T'
-        [$result['dest_bearing_ref'], $result['dest_bearing']] = $this->extractBearing(
+        [$destBearingRef, $destBearing] = $this->extractBearing(
             $gps,
             ExifTag::GPS_DEST_BEARING_REF,
             ExifTag::GPS_DEST_BEARING,
         );
 
-        return $result;
+        return [
+            'track_ref'         => $trackRef,
+            'track'             => $track,
+            'img_direction_ref' => $imgDirectionRef,
+            'img_direction'     => $imgDirection,
+            'dest_bearing_ref'  => $destBearingRef,
+            'dest_bearing'      => $destBearing,
+        ];
     }
 
     /**

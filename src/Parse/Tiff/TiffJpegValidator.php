@@ -65,8 +65,6 @@ final readonly class TiffJpegValidator
             if (!$isJpegCompression) {
                 throw new ParseError('JPEGProc is only valid when Compression=6 (JPEG).', 1828);
             }
-
-            return;
         }
 
         // TIFF 6.0 Section 22 requires JPEGProc for Compression=6 (old-style
@@ -276,11 +274,6 @@ final readonly class TiffJpegValidator
                 );
             }
 
-            return;
-        }
-
-        // Postel's Law: treat zero/missing length as "no thumbnail".
-        if (!($lengthEntry instanceof IfdEntry) || !is_int($lengthEntry->value) || $lengthEntry->value <= 0) {
             return;
         }
 

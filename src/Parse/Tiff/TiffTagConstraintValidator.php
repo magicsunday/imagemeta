@@ -661,7 +661,7 @@ final readonly class TiffTagConstraintValidator
     /**
      * Validates a position tag as RATIONAL[1] with non-zero denominator.
      */
-    private function validatePositionRational(IfdEntry $entry, string $tagName): ExifRational
+    private function validatePositionRational(IfdEntry $entry, string $tagName): void
     {
         if (($entry->type !== TiffConst::TYPE_RATIONAL) || ($entry->count !== 1) || !($entry->value instanceof ExifRational)) {
             throw new ParseError(
@@ -676,8 +676,6 @@ final readonly class TiffTagConstraintValidator
                 1807,
             );
         }
-
-        return $entry->value;
     }
 
     /**

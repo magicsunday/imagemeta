@@ -20,7 +20,9 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
@@ -183,14 +185,8 @@ final readonly class MetadataReader
         $sampling        = $jpeg->getFrameComponentSamplingFactors();
         $subSampling     = $jpeg->getFrameYCbCrSubSampling();
 
-        $exifDoc    = null;
-        $makerNotes = null;
         // Parse the primary EXIF blob and map vendor-specific maker notes.
-        if ($exifBlobs !== []) {
-            $registry   = $this->createMakerNotesRegistry();
-            $exifDoc    = $this->tiffReader->parseFromBlob($exifBlobs[0], $registry, jpegContext: true);
-            $makerNotes = $exifDoc->makerNotes();
-        }
+        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($exifBlobs, jpegContext: true);
 
         $makerNotes = $this->appleMerger->merge($makerNotes, null);
         $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
@@ -234,18 +230,11 @@ final readonly class MetadataReader
     ): Metadata {
         [$exifBlobs, $xmpBlobs, $qt, $isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems, $ispeWidth, $ispeHeight] = $this->isoBmffParserFactory->create($stream)->extract();
 
-        $exifDoc    = null;
-        $makerNotes = null;
-        if ($exifBlobs !== []) {
-            $registry = $this->createMakerNotesRegistry();
-
-            // ISO BMFF containers store image dimensions in the ispe box and
-            // image data in mdat — TIFF-level dimension/strip/tile tags are
-            // not required.  Unlike JPEG context, JPEG-prohibited tags
-            // (ImageWidth etc.) may legitimately appear in the EXIF blob.
-            $exifDoc    = $this->tiffReader->parseFromBlob($exifBlobs[0], $registry, embeddedContext: true);
-            $makerNotes = $exifDoc->makerNotes();
-        }
+        // ISO BMFF containers store image dimensions in the ispe box and
+        // image data in mdat — TIFF-level dimension/strip/tile tags are
+        // not required.  Unlike JPEG context, JPEG-prohibited tags
+        // (ImageWidth etc.) may legitimately appear in the EXIF blob.
+        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($exifBlobs, embeddedContext: true);
 
         $makerNotes = $this->appleMerger->merge($makerNotes, $qt);
         $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
@@ -331,13 +320,7 @@ final readonly class MetadataReader
     ): Metadata {
         [$exifBlobs, $xmpBlobs] = $this->jxlParserFactory->create($stream)->extract();
 
-        $exifDoc    = null;
-        $makerNotes = null;
-        if ($exifBlobs !== []) {
-            $registry   = $this->createMakerNotesRegistry();
-            $exifDoc    = $this->tiffReader->parseFromBlob($exifBlobs[0], $registry, embeddedContext: true);
-            $makerNotes = $exifDoc->makerNotes();
-        }
+        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($exifBlobs, embeddedContext: true);
 
         $makerNotes = $this->appleMerger->merge($makerNotes, null);
         $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
@@ -375,10 +358,7 @@ final readonly class MetadataReader
             return null;
         }
 
-        $probeLength = $stream->size();
-        if ($probeLength > 8192) {
-            $probeLength = 8192;
-        }
+        $probeLength = min($stream->size(), 8192);
 
         $probe = '';
         try {
@@ -436,7 +416,7 @@ final readonly class MetadataReader
 
         $remaining = $stream->size();
         while ($remaining > 0) {
-            $chunkLength = $remaining > 8192 ? 8192 : $remaining;
+            $chunkLength = min($remaining, 8192);
             $chunk       = $stream->read($chunkLength);
             hash_update($sha1Context, $chunk);
             hash_update($md5Context, $chunk);
@@ -454,5 +434,32 @@ final readonly class MetadataReader
     private function createMakerNotesRegistry(): Registry
     {
         return RegistryFactory::createDefault();
+    }
+
+    /**
+     * Parses the primary EXIF blob and returns the parsed document plus maker notes.
+     *
+     * @param list<string> $exifBlobs
+     *
+     * @return array{0: ?ParsedExif, 1: ?MakerNotesRecord}
+     */
+    private function parseEmbeddedExifBlobs(
+        array $exifBlobs,
+        bool $jpegContext = false,
+        bool $embeddedContext = false,
+    ): array {
+        if ($exifBlobs === []) {
+            return [null, null];
+        }
+
+        $registry = $this->createMakerNotesRegistry();
+        $exifDoc  = $this->tiffReader->parseFromBlob(
+            $exifBlobs[0],
+            $registry,
+            $jpegContext,
+            $embeddedContext,
+        );
+
+        return [$exifDoc, $exifDoc->makerNotes()];
     }
 }

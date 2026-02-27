@@ -14,6 +14,9 @@ namespace MagicSunday\ImageMeta\Value;
 use MagicSunday\ImageMeta\Core\Util\MatrixParts;
 use MagicSunday\ImageMeta\Core\Util\MatrixValidator;
 
+use function array_any;
+use function in_array;
+
 /**
  * Spatial Frequency Response (SFR) value object.
  *
@@ -76,12 +79,8 @@ final readonly class SpatialFrequencyResponse
             return null;
         }
 
-        foreach ($parts->values as $row) {
-            foreach ($row as $cell) {
-                if ($cell === null) {
-                    return null;
-                }
-            }
+        if (array_any($parts->values, static fn (array $row): bool => in_array(null, $row, true))) {
+            return null;
         }
 
         /** @var list<list<float>> $values */

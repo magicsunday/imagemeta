@@ -16,7 +16,7 @@ use function count;
 /**
  * Represents array property list values.
  */
-final class ApplePlistArray implements ApplePlistValueInterface
+final readonly class ApplePlistArray implements ApplePlistValueInterface
 {
     /**
      * @param list<ApplePlistValueInterface> $values

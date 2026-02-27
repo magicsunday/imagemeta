@@ -49,14 +49,13 @@ final readonly class ExifTagDecoder
 
         if ($firstHighByteOffset >= 0) {
             $text = rtrim($bytes, "\0");
+            if (mb_check_encoding($text, 'UTF-8')) {
+                return $text;
+            }
 
             // EXIF 3.0 §4.6.5.4 designates certain tags as UTF-8 text.
             // Malformed sequences are scrubbed with U+FFFD (Postel's Law).
             if (in_array($tag, $utf8Tags, true)) {
-                if (mb_check_encoding($text, 'UTF-8')) {
-                    return $text;
-                }
-
                 $previous = mb_substitute_character();
                 mb_substitute_character(0xFFFD);
                 $scrubbed = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
@@ -70,10 +69,6 @@ final readonly class ExifTagDecoder
             // for accented characters in names and locations.  Strategy: try
             // UTF-8 first (superset of ASCII), fall back to Latin-1 (every
             // byte sequence is valid Latin-1).
-            if (mb_check_encoding($text, 'UTF-8')) {
-                return $text;
-            }
-
             return mb_convert_encoding($text, 'UTF-8', 'ISO-8859-1');
         }
 

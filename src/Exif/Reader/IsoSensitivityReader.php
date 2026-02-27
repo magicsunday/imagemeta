@@ -178,7 +178,7 @@ final readonly class IsoSensitivityReader
             ExifTag::EXPOSURE_INDEX,
         ];
 
-        foreach ($this->fallbackIfds->resolve(includePrimaryThumbnail: true, includeIfd0: false) as $ifd) {
+        foreach ($this->fallbackIfds->resolve() as $ifd) {
             foreach ($tagPriority as $tag) {
                 $value = $this->reader->coerceIntValue($this->reader->value($ifd, $tag));
                 if ($value !== null) {

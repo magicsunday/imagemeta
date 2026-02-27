@@ -16,7 +16,6 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use function array_all;
 use function array_any;
 use function array_find;
-use function array_is_list;
 use function array_key_exists;
 use function array_keys;
 use function array_map;
@@ -80,15 +79,9 @@ final readonly class KeyedArchiveResolver
             return $unarchived;
         }
 
-        foreach ($dictionary as $value) {
-            if (!is_array($value)) {
-                continue;
-            }
-
-            $candidate = $this->resolveNestedKeyedArchive($value);
-            if ($candidate !== null) {
-                return $candidate;
-            }
+        $candidate = $this->resolveNestedCandidateFromEntries($dictionary);
+        if ($candidate !== null) {
+            return $candidate;
         }
 
         if (self::isStringKeyedDictionary($dictionary)) {
@@ -190,22 +183,21 @@ final readonly class KeyedArchiveResolver
             return $unarchived;
         }
 
-        if (array_is_list($value)) {
-            foreach ($value as $entry) {
-                if (!is_array($entry)) {
-                    continue;
-                }
+        return $this->resolveNestedCandidateFromEntries($value);
+    }
 
-                $candidate = $this->resolveNestedKeyedArchive($entry);
-                if ($candidate !== null) {
-                    return $candidate;
-                }
-            }
-
-            return null;
-        }
-
-        foreach ($value as $entry) {
+    /**
+     * Resolves the first nested keyed archive candidate from iterable dictionary/array entries.
+     *
+     * @param array<int|string, NativePlistValue> $entries
+     *
+     * @return NativePlistDictionary|null
+     *
+     * @phpstan-return NativePlistDictionary|null
+     */
+    private function resolveNestedCandidateFromEntries(array $entries): ?array
+    {
+        foreach ($entries as $entry) {
             if (!is_array($entry)) {
                 continue;
             }

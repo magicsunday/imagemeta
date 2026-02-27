@@ -353,7 +353,7 @@ final readonly class BoxPayloadCollector
         $window = $meta->window;
         $window->seek(0);
 
-        $peekLength = $meta->contentSize < 20 ? $meta->contentSize : 20;
+        $peekLength = min($meta->contentSize, 20);
         $peek       = $window->read($peekLength);
         $peekSize   = strlen($peek);
 

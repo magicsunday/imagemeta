@@ -93,11 +93,11 @@ final class IdeInspectionCleanupTicket1822Test extends TestCase
 
         $this->assertSourceDoesNotContain(
             '/src/MakerNotes/Apple/ApplePlistArray.php',
-            'public function __construct(private array $values)',
+            'final class ApplePlistArray implements ApplePlistValueInterface',
         );
         $this->assertSourceContains(
             '/src/MakerNotes/Apple/ApplePlistArray.php',
-            'public function __construct(private readonly array $values)',
+            'final readonly class ApplePlistArray implements ApplePlistValueInterface',
         );
 
         $this->assertSourceDoesNotContain(
@@ -164,7 +164,7 @@ final class IdeInspectionCleanupTicket1822Test extends TestCase
         );
         $this->assertSourceContains(
             '/src/Value/SpatialFrequencyResponse.php',
-            "if (array_any(\$parts->values, static fn (array \$row): bool => in_array(null, \$row, true)))",
+            'if (array_any($parts->values, static fn (array $row): bool => in_array(null, $row, true)))',
         );
 
         $this->assertSourceDoesNotContain(
