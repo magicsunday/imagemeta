@@ -11,13 +11,19 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Core;
 
-use MagicSunday\ImageMeta\Core\ByteReader;
-use MagicSunday\ImageMeta\Core\ParseError;
-use MagicSunday\ImageMeta\Core\Util\UInt64;
-use MagicSunday\ImageMeta\Core\Util\Unpack;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use MagicSunday\ImageMeta\Core\{
+    ByteReader,
+    ParseError,
+};
+use MagicSunday\ImageMeta\Core\Util\{
+    UInt64,
+    Unpack,
+};
+use PHPUnit\Framework\Attributes\{
+    CoversClass,
+    Test,
+    UsesClass,
+};
 use PHPUnit\Framework\TestCase;
 
 use function chr;
@@ -41,10 +47,31 @@ final class ByteReaderTest extends TestCase
      */
     private function createReader(string $data): ByteReader
     {
+        return $this->createTestReader($data, bounded: false);
+    }
+
+    /**
+     * Creates a ByteReader backed by a fixed byte string that throws ParseError
+     * when a read would exceed the available data.
+     */
+    private function createBoundedReader(string $data): ByteReader
+    {
+        return $this->createTestReader($data, bounded: true);
+    }
+
+    /**
+     * Creates a ByteReader backed by a fixed byte string.
+     */
+    private function createTestReader(string $data, bool $bounded): ByteReader
+    {
         $position = 0;
 
         return new ByteReader(
-            read: static function (int $length) use ($data, &$position): string {
+            read: static function (int $length) use ($data, &$position, $bounded): string {
+                if ($bounded && ($position + $length > strlen($data))) {
+                    throw new ParseError('Read beyond end of data.', 1029);
+                }
+
                 $result = substr($data, $position, $length);
                 $position += $length;
 
@@ -188,39 +215,6 @@ final class ByteReaderTest extends TestCase
 
         $reader->seek(0);
         self::assertSame(0xAA, $reader->readU8());
-    }
-
-    /**
-     * Creates a ByteReader backed by a fixed byte string that throws ParseError
-     * when a read would exceed the available data.
-     */
-    private function createBoundedReader(string $data): ByteReader
-    {
-        $position = 0;
-
-        return new ByteReader(
-            read: static function (int $length) use ($data, &$position): string {
-                if ($position + $length > strlen($data)) {
-                    throw new ParseError('Read beyond end of data.', 1029);
-                }
-
-                $result = substr($data, $position, $length);
-                $position += $length;
-
-                return $result;
-            },
-            tell: static function () use (&$position): int {
-                return $position;
-            },
-            seek: static function (int|UInt64 $offset) use (&$position): void {
-                if ($offset instanceof UInt64) {
-                    $offset = $offset->toInt('seek');
-                }
-
-                $position = $offset;
-            },
-            context: 'test',
-        );
     }
 
     /**
