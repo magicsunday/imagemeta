@@ -1406,10 +1406,10 @@ final class JpegParserTest extends TestCase
 
     /**
      * References a contents-list index that does not exist.
-     * This verifies stream-data index bounds are validated.
+     * This verifies malformed stream-data entries are skipped per reader tolerance.
      */
     #[Test]
-    public function flashPixInvalidContentsListIndexThrowsParseError(): void
+    public function flashPixInvalidContentsListIndexIsIgnored(): void
     {
         $contents = self::segment(
             self::MARKER_APP2,
@@ -1418,14 +1418,13 @@ final class JpegParserTest extends TestCase
             ]),
         );
         $invalidIndex = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(1, 1, 1, 0, 'abcd'));
+        $validIndex   = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 1, 1, 0, 'wxyz'));
 
-        $jpeg = $this->jpeg($contents, $invalidIndex);
+        $jpeg = $this->jpeg($contents, $invalidIndex, $validIndex);
 
         $extractor = $this->createExtractor($jpeg);
 
-        $this->expectException(ParseError::class);
-
-        $extractor->getFlashPixStreams();
+        self::assertSame([0 => 'wxyz' . str_repeat("\x00", 4)], $extractor->getFlashPixStreams());
     }
 
     /**

@@ -163,6 +163,29 @@ final class FlashPixStreamAssemblerTest extends TestCase
     }
 
     /**
+     * Tolerates stream-data segments referencing an unknown contents-list index.
+     */
+    #[Test]
+    public function itSkipsFlashPixStreamDataWithUnknownContentsListIndex(): void
+    {
+        $assembler = new FlashPixStreamAssembler(
+            maxContentEntries: 10,
+            maxStreamSize: 1_000_000,
+            maxFlashPixTotalSize: 100_000,
+        );
+
+        $assembler->handleSegment($this->buildContentsListPayload(8), 0);
+
+        // Invalid index 1 must be ignored instead of aborting assembly.
+        $assembler->handleSegment($this->buildStreamDataPayload(1, 1, 1, 0, 'bad!'), 100);
+        $assembler->handleSegment($this->buildStreamDataPayload(0, 1, 1, 0, 'good'), 120);
+
+        $assembler->finalise();
+
+        self::assertSame([0 => 'good' . str_repeat("\x00", 4)], $assembler->getStreams());
+    }
+
+    /**
      * Tolerates truncated contents-list entries and skips malformed tails.
      */
     #[Test]
