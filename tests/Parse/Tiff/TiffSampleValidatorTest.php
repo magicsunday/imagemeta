@@ -25,6 +25,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
+
+use function array_map;
 
 /**
  * Verifies TIFF sample-related tag validation logic.
@@ -46,6 +50,19 @@ final class TiffSampleValidatorTest extends TestCase
         $buffer          = new MemoryBuffer("\0");
         $support         = new TiffValidationSupport($buffer);
         $this->validator = new TiffSampleValidator($support);
+    }
+
+    #[Test]
+    public function usesDedicatedSampleCountAndMinMaxHelpers(): void
+    {
+        $reflection = new ReflectionClass(TiffSampleValidator::class);
+        $methods    = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('resolveSamplesPerPixel', $methods);
+        self::assertContains('validateMinOrMaxSampleValueEntry', $methods);
     }
 
     // --- MinMaxSampleValue ---
