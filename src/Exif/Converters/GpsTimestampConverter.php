@@ -109,39 +109,40 @@ final readonly class GpsTimestampConverter
     ): array {
         $raw = is_string($value) ? $value : null;
         if (!is_string($value)) {
-            return [
-                'normalized' => null,
-                'raw'        => $raw,
-            ];
+            return $this->invalidDateResult($raw);
         }
 
         $clean = trim(str_replace("\0", '', $value));
         if ($clean === '') {
-            return [
-                'normalized' => null,
-                'raw'        => $raw,
-            ];
+            return $this->invalidDateResult($raw);
         }
 
         if (preg_match('/^\d{4}:\d{2}:\d{2}$/', $clean) !== 1) {
-            return [
-                'normalized' => null,
-                'raw'        => $raw,
-            ];
+            return $this->invalidDateResult($raw);
         }
 
         $year  = (int) substr($clean, 0, 4);
         $month = (int) substr($clean, 5, 2);
         $day   = (int) substr($clean, 8, 2);
         if (!checkdate($month, $day, $year)) {
-            return [
-                'normalized' => null,
-                'raw'        => $raw,
-            ];
+            return $this->invalidDateResult($raw);
         }
 
         return [
             'normalized' => str_replace(':', '-', $clean),
+            'raw'        => $raw,
+        ];
+    }
+
+    /**
+     * Returns the canonical null result for invalid GPS date payloads.
+     *
+     * @return array{normalized: null, raw: ?string}
+     */
+    private function invalidDateResult(?string $raw): array
+    {
+        return [
+            'normalized' => null,
             'raw'        => $raw,
         ];
     }

@@ -70,48 +70,47 @@ final readonly class GpsDirectionConverter
         ];
 
         // EXIF 3.0 §4.6.7.1.15 GPSTrackRef: 'T' or 'M'; default 'T'
-        $trackRefEntry       = $gps->get(ExifTag::GPS_TRACK_REF);
-        $trackEntry          = $gps->get(ExifTag::GPS_TRACK);
-        $trackRefValue       = $trackRefEntry?->value;
-        $trackRefNormalized  = is_string($trackRefValue) ? strtoupper(trim($trackRefValue)) : null;
-        $result['track_ref'] = $this->validateGpsRef($trackRefNormalized, self::GPS_BEARING_REF_VALUES);
-        $trackRefInvalid     = ($trackRefNormalized !== null) && ($result['track_ref'] === null);
-        if (($result['track_ref'] === null) && (!$trackRefEntry instanceof IfdEntry) && ($trackEntry instanceof IfdEntry)) {
-            $result['track_ref'] = 'T';
-        }
-
-        $trackValue      = $this->rationalConverter->toFloat($trackEntry?->value);
-        $result['track'] = $trackRefInvalid ? null : $this->normalizeBearing($trackValue);
+        [$result['track_ref'], $result['track']] = $this->extractBearing($gps, ExifTag::GPS_TRACK_REF, ExifTag::GPS_TRACK);
 
         // EXIF 3.0 §4.6.7.1.17 GPSImgDirectionRef: 'T' or 'M'; default 'T'
-        $imgDirRefEntry              = $gps->get(ExifTag::GPS_IMG_DIRECTION_REF);
-        $imgDirEntry                 = $gps->get(ExifTag::GPS_IMG_DIRECTION);
-        $imgDirRefValue              = $imgDirRefEntry?->value;
-        $imgDirRefNormalized         = is_string($imgDirRefValue) ? strtoupper(trim($imgDirRefValue)) : null;
-        $result['img_direction_ref'] = $this->validateGpsRef($imgDirRefNormalized, self::GPS_BEARING_REF_VALUES);
-        $imgDirRefInvalid            = ($imgDirRefNormalized !== null) && ($result['img_direction_ref'] === null);
-        if (($result['img_direction_ref'] === null) && (!$imgDirRefEntry instanceof IfdEntry) && ($imgDirEntry instanceof IfdEntry)) {
-            $result['img_direction_ref'] = 'T';
-        }
-
-        $imgDirectionValue       = $this->rationalConverter->toFloat($imgDirEntry?->value);
-        $result['img_direction'] = $imgDirRefInvalid ? null : $this->normalizeBearing($imgDirectionValue);
+        [$result['img_direction_ref'], $result['img_direction']] = $this->extractBearing(
+            $gps,
+            ExifTag::GPS_IMG_DIRECTION_REF,
+            ExifTag::GPS_IMG_DIRECTION,
+        );
 
         // EXIF 3.0 §4.6.7.1.24 GPSDestBearingRef: 'T' or 'M'; default 'T'
-        $destBearRefEntry           = $gps->get(ExifTag::GPS_DEST_BEARING_REF);
-        $destBearEntry              = $gps->get(ExifTag::GPS_DEST_BEARING);
-        $destBearingRefValue        = $destBearRefEntry?->value;
-        $destBearingRefNormalized   = is_string($destBearingRefValue) ? strtoupper(trim($destBearingRefValue)) : null;
-        $result['dest_bearing_ref'] = $this->validateGpsRef($destBearingRefNormalized, self::GPS_BEARING_REF_VALUES);
-        $destBearingRefInvalid      = ($destBearingRefNormalized !== null) && ($result['dest_bearing_ref'] === null);
-        if (($result['dest_bearing_ref'] === null) && (!$destBearRefEntry instanceof IfdEntry) && ($destBearEntry instanceof IfdEntry)) {
-            $result['dest_bearing_ref'] = 'T';
-        }
-
-        $destBearingValue       = $this->rationalConverter->toFloat($destBearEntry?->value);
-        $result['dest_bearing'] = $destBearingRefInvalid ? null : $this->normalizeBearing($destBearingValue);
+        [$result['dest_bearing_ref'], $result['dest_bearing']] = $this->extractBearing(
+            $gps,
+            ExifTag::GPS_DEST_BEARING_REF,
+            ExifTag::GPS_DEST_BEARING,
+        );
 
         return $result;
+    }
+
+    /**
+     * Resolves a bearing reference/value pair with EXIF defaulting semantics.
+     *
+     * @return array{0:?string, 1:?float}
+     */
+    private function extractBearing(Ifd $gps, int $referenceTag, int $valueTag): array
+    {
+        $referenceEntry     = $gps->get($referenceTag);
+        $valueEntry         = $gps->get($valueTag);
+        $referenceRaw       = $referenceEntry?->value;
+        $referenceCandidate = is_string($referenceRaw) ? strtoupper(trim($referenceRaw)) : null;
+        $reference          = $this->validateGpsRef($referenceCandidate, self::GPS_BEARING_REF_VALUES);
+        $referenceInvalid   = ($referenceCandidate !== null) && ($reference === null);
+
+        if (($reference === null) && (!$referenceEntry instanceof IfdEntry) && ($valueEntry instanceof IfdEntry)) {
+            $reference = 'T';
+        }
+
+        $bearingValue = $this->rationalConverter->toFloat($valueEntry?->value);
+        $bearing      = $referenceInvalid ? null : $this->normalizeBearing($bearingValue);
+
+        return [$reference, $bearing];
     }
 
     /**
