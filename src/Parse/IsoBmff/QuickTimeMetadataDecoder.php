@@ -202,25 +202,10 @@ final readonly class QuickTimeMetadataDecoder
      */
     public function parseMhdr(BoxDescriptor $mhdr): void
     {
-        if ($mhdr->contentSize < 8) {
-            throw new ParseError('mhdr atom truncated', 1237);
-        }
-
-        $win = $mhdr->window;
-        $win->seek(0);
-
-        $version = $win->readU8();
-        $flags   = ($win->readU8() << 16) | ($win->readU8() << 8) | $win->readU8();
-
-        if ($version !== 0) {
-            throw new ParseError('mhdr atom version must be 0', 1238);
-        }
-
-        if ($flags !== 0) {
-            throw new ParseError('mhdr atom flags must be 0', 1239);
-        }
+        $this->validateFullAtomHeader($mhdr, 'mhdr', 8, 1237, 1238, 1239);
 
         // nextItemID — read for validation but not currently exposed
+        $win = $mhdr->window;
         $win->readU32BE();
     }
 
@@ -239,24 +224,8 @@ final readonly class QuickTimeMetadataDecoder
      */
     public function parseLocaleListAtom(BoxDescriptor $box, string $label): array
     {
-        if ($box->contentSize < 8) {
-            throw new ParseError(sprintf('%s atom truncated', $label), 1240);
-        }
-
-        $win = $box->window;
-        $win->seek(0);
-
-        $version = $win->readU8();
-        $flags   = ($win->readU8() << 16) | ($win->readU8() << 8) | $win->readU8();
-
-        if ($version !== 0) {
-            throw new ParseError(sprintf('%s atom version must be 0', $label), 1241);
-        }
-
-        if ($flags !== 0) {
-            throw new ParseError(sprintf('%s atom flags must be 0', $label), 1242);
-        }
-
+        $this->validateFullAtomHeader($box, $label, 8, 1240, 1241, 1242);
+        $win        = $box->window;
         $entryCount = $win->readU32BE();
 
         if ($entryCount > QuickTimeValueDecoder::MAX_LOCALE_LIST_ENTRIES) {
@@ -428,23 +397,8 @@ final readonly class QuickTimeMetadataDecoder
      */
     private function parseIlstNameAtom(BoxDescriptor $name, array &$seenNames): string
     {
-        if ($name->contentSize < 4) {
-            throw new ParseError('ilst name atom truncated', 1227);
-        }
-
+        $this->validateFullAtomHeader($name, 'ilst name', 4, 1227, 1228, 1229);
         $win = $name->window;
-        $win->seek(0);
-
-        $version = $win->readU8();
-        $flags   = ($win->readU8() << 16) | ($win->readU8() << 8) | $win->readU8();
-
-        if ($version !== 0) {
-            throw new ParseError('ilst name atom version must be 0', 1228);
-        }
-
-        if ($flags !== 0) {
-            throw new ParseError('ilst name atom flags must be 0', 1229);
-        }
 
         $payloadSize = $name->contentSize - 4;
         if ($payloadSize < 1) {
@@ -483,23 +437,8 @@ final readonly class QuickTimeMetadataDecoder
      */
     private function parseIlstItemInfo(BoxDescriptor $itif, array &$seenItemIds): void
     {
-        if ($itif->contentSize < 8) {
-            throw new ParseError('itif atom truncated', 1233);
-        }
-
+        $this->validateFullAtomHeader($itif, 'itif', 8, 1233, 1234, 1235);
         $win = $itif->window;
-        $win->seek(0);
-
-        $version = $win->readU8();
-        $flags   = ($win->readU8() << 16) | ($win->readU8() << 8) | $win->readU8();
-
-        if ($version !== 0) {
-            throw new ParseError('itif atom version must be 0', 1234);
-        }
-
-        if ($flags !== 0) {
-            throw new ParseError('itif atom flags must be 0', 1235);
-        }
 
         $itemId = $win->readU32BE();
 
@@ -511,6 +450,38 @@ final readonly class QuickTimeMetadataDecoder
         }
 
         $seenItemIds[$itemId] = true;
+    }
+
+    /**
+     * Validates a FullAtom header (version/flags) and leaves the window at payload offset.
+     *
+     * QuickTime File Format 2012 FullAtom layout: version (8-bit) + flags (24-bit).
+     */
+    private function validateFullAtomHeader(
+        BoxDescriptor $box,
+        string $label,
+        int $minimumContentSize,
+        int $truncatedCode,
+        int $versionCode,
+        int $flagsCode,
+    ): void {
+        if ($box->contentSize < $minimumContentSize) {
+            throw new ParseError(sprintf('%s atom truncated', $label), $truncatedCode);
+        }
+
+        $window = $box->window;
+        $window->seek(0);
+
+        $version = $window->readU8();
+        $flags   = ($window->readU8() << 16) | ($window->readU8() << 8) | $window->readU8();
+
+        if ($version !== 0) {
+            throw new ParseError(sprintf('%s atom version must be 0', $label), $versionCode);
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError(sprintf('%s atom flags must be 0', $label), $flagsCode);
+        }
     }
 
     /**
