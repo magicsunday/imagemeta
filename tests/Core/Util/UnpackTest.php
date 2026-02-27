@@ -11,12 +11,18 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Core\Util;
 
-use MagicSunday\ImageMeta\Core\ParseError;
-use MagicSunday\ImageMeta\Core\Util\UInt64;
-use MagicSunday\ImageMeta\Core\Util\Unpack;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use MagicSunday\ImageMeta\Core\{
+    ParseError,
+};
+use MagicSunday\ImageMeta\Core\Util\{
+    UInt64,
+    Unpack,
+};
+use PHPUnit\Framework\Attributes\{
+    CoversClass,
+    Test,
+    UsesClass,
+};
 use PHPUnit\Framework\TestCase;
 
 use function chr;
