@@ -26,6 +26,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
+
+use function array_map;
 
 /**
  * Exercises GpsTimestampConverter extraction of GPS date, time and timestamp fields.
@@ -54,6 +58,21 @@ final class GpsTimestampConverterTest extends TestCase
         $stringConverter   = new StringConverter();
 
         $this->converter = new GpsTimestampConverter($rationalConverter, $stringConverter);
+    }
+
+    /**
+     * Guards duplicate-reduction refactors by requiring a dedicated invalid-date result helper.
+     */
+    #[Test]
+    public function normalizeDateUsesDedicatedInvalidResultHelper(): void
+    {
+        $reflection = new ReflectionClass(GpsTimestampConverter::class);
+        $methods    = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('invalidDateResult', $methods);
     }
 
     /**

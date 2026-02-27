@@ -21,6 +21,10 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
+
+use function array_map;
 
 /**
  * Exercises GpsDirectionConverter::normalizeBearing() with valid, invalid
@@ -42,6 +46,21 @@ final class GpsDirectionConverterTest extends TestCase
         $rationalConverter = new RationalConverter($numericConverter);
 
         $this->converter = new GpsDirectionConverter($rationalConverter);
+    }
+
+    /**
+     * Guards duplicate-reduction refactors by requiring a dedicated bearing extraction helper.
+     */
+    #[Test]
+    public function extractFromIfdUsesDedicatedBearingHelper(): void
+    {
+        $reflection = new ReflectionClass(GpsDirectionConverter::class);
+        $methods    = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('extractBearing', $methods);
     }
 
     /**
