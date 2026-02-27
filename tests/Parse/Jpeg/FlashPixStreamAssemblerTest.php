@@ -17,12 +17,17 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 use function chr;
 use function count;
 use function iconv;
 use function pack;
+use function restore_error_handler;
+use function set_error_handler;
 use function str_repeat;
+use function strlen;
+use function substr;
 
 /**
  * Exercises the cumulative size limit of the FlashPix stream assembler.
@@ -204,6 +209,49 @@ final class FlashPixStreamAssemblerTest extends TestCase
         $assembler->finalise();
 
         self::assertSame([], $assembler->getStreams());
+    }
+
+    /**
+     * Tolerates malformed UTF-16LE code units in names without emitting PHP notices.
+     */
+    #[Test]
+    public function itSalvagesValidFlashPixNamePortionsWithoutIconvNotice(): void
+    {
+        $assembler = new FlashPixStreamAssembler(
+            maxContentEntries: 10,
+            maxStreamSize: 1_000_000,
+            maxFlashPixTotalSize: 100_000,
+        );
+        $method    = new ReflectionMethod(FlashPixStreamAssembler::class, 'parseName');
+
+        $validUtf16 = iconv('UTF-8', 'UTF-16LE', '/ok/after');
+        assert($validUtf16 !== false);
+
+        // Insert an unpaired high surrogate between valid UTF-16LE spans.
+        $malformedUtf16 = substr($validUtf16, 0, 6) . "\x00\xD8" . substr($validUtf16, 6);
+        $body           = $malformedUtf16 . "\x00\x00";
+        $notices        = [];
+
+        set_error_handler(
+            static function (int $severity, string $message) use (&$notices): bool {
+                if ($severity === E_NOTICE) {
+                    $notices[] = $message;
+                }
+
+                return true;
+            },
+        );
+
+        try {
+            $result = $method->invoke($assembler, $body, 0);
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertIsArray($result);
+        self::assertSame('/ok/after', $result[0]);
+        self::assertSame(strlen($body), $result[1]);
+        self::assertSame([], $notices);
     }
 
     /**
