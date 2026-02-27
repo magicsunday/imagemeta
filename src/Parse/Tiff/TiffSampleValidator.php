@@ -44,53 +44,31 @@ final readonly class TiffSampleValidator
             return;
         }
 
-        $samplesPerPixel = 1;
-        $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
-        if (($samplesEntry instanceof IfdEntry) && is_int($samplesEntry->value) && ($samplesEntry->value > 0)) {
-            $samplesPerPixel = $samplesEntry->value;
-        }
+        $samplesPerPixel = $this->resolveSamplesPerPixel($ifd);
 
         $minSampleValues = null;
         $maxSampleValues = null;
 
         if ($minSampleValueEntry instanceof IfdEntry) {
-            if ($minSampleValueEntry->type !== TiffConst::TYPE_SHORT) {
-                throw new ParseError('MinSampleValue must be SHORT.', 1818);
-            }
-
-            if ($minSampleValueEntry->count !== $samplesPerPixel) {
-                throw new ParseError(
-                    sprintf(
-                        'MinSampleValue count %d must match SamplesPerPixel %d.',
-                        $minSampleValueEntry->count,
-                        $samplesPerPixel,
-                    ),
-                    1819,
-                );
-            }
-
-            $minSampleValues = $this->support->extractIntegerTagComponents($minSampleValueEntry, 'MinSampleValue');
-            $this->validateMinMaxValueRangeAgainstBitsPerSample($ifd, 'MinSampleValue', $minSampleValues);
+            $minSampleValues = $this->validateMinOrMaxSampleValueEntry(
+                $ifd,
+                $minSampleValueEntry,
+                'MinSampleValue',
+                $samplesPerPixel,
+                1818,
+                1819,
+            );
         }
 
         if ($maxSampleValueEntry instanceof IfdEntry) {
-            if ($maxSampleValueEntry->type !== TiffConst::TYPE_SHORT) {
-                throw new ParseError('MaxSampleValue must be SHORT.', 1820);
-            }
-
-            if ($maxSampleValueEntry->count !== $samplesPerPixel) {
-                throw new ParseError(
-                    sprintf(
-                        'MaxSampleValue count %d must match SamplesPerPixel %d.',
-                        $maxSampleValueEntry->count,
-                        $samplesPerPixel,
-                    ),
-                    1821,
-                );
-            }
-
-            $maxSampleValues = $this->support->extractIntegerTagComponents($maxSampleValueEntry, 'MaxSampleValue');
-            $this->validateMinMaxValueRangeAgainstBitsPerSample($ifd, 'MaxSampleValue', $maxSampleValues);
+            $maxSampleValues = $this->validateMinOrMaxSampleValueEntry(
+                $ifd,
+                $maxSampleValueEntry,
+                'MaxSampleValue',
+                $samplesPerPixel,
+                1820,
+                1821,
+            );
         }
 
         if (($minSampleValues === null) || ($maxSampleValues === null)) {
@@ -189,11 +167,7 @@ final readonly class TiffSampleValidator
             return;
         }
 
-        $samplesPerPixel = 1;
-        $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
-        if (($samplesEntry instanceof IfdEntry) && is_int($samplesEntry->value) && ($samplesEntry->value > 0)) {
-            $samplesPerPixel = $samplesEntry->value;
-        }
+        $samplesPerPixel = $this->resolveSamplesPerPixel($ifd);
 
         $sampleFormats = ($sampleFormatEntry instanceof IfdEntry)
             ? $this->validateSampleFormatEntry($sampleFormatEntry, $samplesPerPixel)
@@ -242,6 +216,55 @@ final readonly class TiffSampleValidator
         }
 
         return $this->support->extractIntegerTagComponents($sampleFormatEntry, 'SampleFormat');
+    }
+
+    /**
+     * Resolves effective SamplesPerPixel with TIFF baseline default 1.
+     */
+    private function resolveSamplesPerPixel(Ifd $ifd): int
+    {
+        $samplesPerPixel = 1;
+        $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+        if (($samplesEntry instanceof IfdEntry) && is_int($samplesEntry->value) && ($samplesEntry->value > 0)) {
+            $samplesPerPixel = $samplesEntry->value;
+        }
+
+        return $samplesPerPixel;
+    }
+
+    /**
+     * Validates one Min/Max sample entry and checks BitsPerSample range compatibility.
+     *
+     * @return list<int>
+     */
+    private function validateMinOrMaxSampleValueEntry(
+        Ifd $ifd,
+        IfdEntry $entry,
+        string $tagName,
+        int $samplesPerPixel,
+        int $typeErrorCode,
+        int $countErrorCode,
+    ): array {
+        if ($entry->type !== TiffConst::TYPE_SHORT) {
+            throw new ParseError(sprintf('%s must be SHORT.', $tagName), $typeErrorCode);
+        }
+
+        if ($entry->count !== $samplesPerPixel) {
+            throw new ParseError(
+                sprintf(
+                    '%s count %d must match SamplesPerPixel %d.',
+                    $tagName,
+                    $entry->count,
+                    $samplesPerPixel,
+                ),
+                $countErrorCode,
+            );
+        }
+
+        $values = $this->support->extractIntegerTagComponents($entry, $tagName);
+        $this->validateMinMaxValueRangeAgainstBitsPerSample($ifd, $tagName, $values);
+
+        return $values;
     }
 
     /**
