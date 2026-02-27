@@ -140,11 +140,11 @@ final readonly class DngValueNormalizer
     /**
      * Normalizes numeric list fields that describe strip or tile data.
      *
-     * @param int    $tag      TIFF tag identifier.
-     * @param int    $type     TIFF field type code.
-     * @param int    $count    Number of values represented.
-     * @param string $rawBytes Raw value bytes read for the entry.
-     * @param int|null $componentSize Precomputed bytes per component for this TIFF type.
+     * @param int      $tag            TIFF tag identifier.
+     * @param int      $type           TIFF field type code.
+     * @param int      $count          Number of values represented.
+     * @param string   $rawBytes       Raw value bytes read for the entry.
+     * @param int|null $componentSize  Precomputed bytes per component for this TIFF type.
      * @param int|null $expectedLength Precomputed total byte count for this value.
      */
     public function normalizeCountedImageDataField(
@@ -275,11 +275,11 @@ final readonly class DngValueNormalizer
     /**
      * Decodes numeric components for counted strip/tile entries into integers.
      *
-     * @param int    $tag      TIFF tag identifier.
-     * @param int    $type     TIFF field type code.
-     * @param string $rawBytes Raw bytes representing the values.
-     * @param int    $count    Number of values represented.
-     * @param int|null $componentSize Precomputed bytes per component for this TIFF type.
+     * @param int      $tag            TIFF tag identifier.
+     * @param int      $type           TIFF field type code.
+     * @param string   $rawBytes       Raw bytes representing the values.
+     * @param int      $count          Number of values represented.
+     * @param int|null $componentSize  Precomputed bytes per component for this TIFF type.
      * @param int|null $expectedLength Precomputed total byte count for this value.
      *
      * @return list<int>
@@ -291,8 +291,7 @@ final readonly class DngValueNormalizer
         int $count,
         ?int $componentSize = null,
         ?int $expectedLength = null,
-    ): array
-    {
+    ): array {
         $componentSize ??= $this->decoder->bytesPerComponent($type);
         assert($componentSize !== null);
 

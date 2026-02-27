@@ -138,10 +138,10 @@ final readonly class TiffValueDecoder
     /**
      * Converts raw bytes into PHP scalar values based on the TIFF type.
      *
-     * @param int    $tag   Tag identifier for encoding-specific rules.
-     * @param int    $type  TIFF field type code.
-     * @param int    $count Number of values represented.
-     * @param string $bytes Raw value bytes read from the blob.
+     * @param int      $tag           Tag identifier for encoding-specific rules.
+     * @param int      $type          TIFF field type code.
+     * @param int      $count         Number of values represented.
+     * @param string   $bytes         Raw value bytes read from the blob.
      * @param int|null $componentSize Precomputed bytes per component for this TIFF type.
      * @param int|null $expectedBytes Precomputed total byte count for this value.
      */
@@ -152,8 +152,7 @@ final readonly class TiffValueDecoder
         string $bytes,
         ?int $componentSize = null,
         ?int $expectedBytes = null,
-    ): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
-    {
+    ): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 {
         $componentSize ??= $this->bytesPerComponent($type);
         assert($componentSize !== null);
 
