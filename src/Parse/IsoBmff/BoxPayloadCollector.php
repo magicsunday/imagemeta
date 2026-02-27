@@ -373,11 +373,7 @@ final readonly class BoxPayloadCollector
             $type = substr($peek, 4, 4);
 
             if ($this->boxNavigator->isPrintableFourcc($type) && $this->isPlausibleBoxSize($peek, 0, $meta->contentSize)) {
-                if ($allowQuickTimeMetaWithoutFullBox) {
-                    return 0;
-                }
-
-                throw new ParseError('meta box missing required FullBox header', 1454);
+                return 0;
             }
         }
 
