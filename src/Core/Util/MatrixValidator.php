@@ -67,31 +67,15 @@ final class MatrixValidator
             return null;
         }
 
-        $normalizedColumnLabels = [];
-        foreach ($columnLabels as $columnLabel) {
-            if (!is_string($columnLabel)) {
-                return null;
-            }
-
-            $normalizedColumnLabels[] = $columnLabel;
-        }
-
-        if (count($normalizedColumnLabels) !== $columns) {
+        $normalizedColumnLabels = self::normalizeLabelList($columnLabels, $columns);
+        if ($normalizedColumnLabels === null) {
             return null;
         }
 
         $normalizedRowLabels = null;
         if ($rowLabels !== null) {
-            $normalizedRowLabels = [];
-            foreach ($rowLabels as $rowLabel) {
-                if (!is_string($rowLabel)) {
-                    return null;
-                }
-
-                $normalizedRowLabels[] = $rowLabel;
-            }
-
-            if (count($normalizedRowLabels) !== $rows) {
+            $normalizedRowLabels = self::normalizeLabelList($rowLabels, $rows);
+            if ($normalizedRowLabels === null) {
                 return null;
             }
         }
@@ -134,5 +118,28 @@ final class MatrixValidator
             $normalizedRowLabels,
             $normalizedValues
         );
+    }
+
+    /**
+     * Normalizes a label list and validates its expected size.
+     *
+     * @return list<string>|null
+     */
+    private static function normalizeLabelList(array $labels, int $expectedCount): ?array
+    {
+        $normalizedLabels = [];
+        foreach ($labels as $label) {
+            if (!is_string($label)) {
+                return null;
+            }
+
+            $normalizedLabels[] = $label;
+        }
+
+        if (count($normalizedLabels) !== $expectedCount) {
+            return null;
+        }
+
+        return $normalizedLabels;
     }
 }
