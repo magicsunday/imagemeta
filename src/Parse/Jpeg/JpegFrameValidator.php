@@ -238,7 +238,7 @@ final class JpegFrameValidator
         // subset of frame components; non-progressive scans require all of them.
         $isProgressive = $this->frameMarker === Marker::SOF2;
 
-        if ($isProgressive && $componentCount > $frameComponentCount) {
+        if ($isProgressive && ($componentCount > $frameComponentCount)) {
             throw new ParseError(
                 sprintf(
                     'SOS marker at offset %d has component count %d exceeding SOF component count %d',
@@ -250,7 +250,7 @@ final class JpegFrameValidator
             );
         }
 
-        if (!$isProgressive && $componentCount !== $frameComponentCount) {
+        if (!$isProgressive && ($componentCount !== $frameComponentCount)) {
             throw new ParseError(
                 sprintf(
                     'SOS marker at offset %d has component count %d but SOF declares component count %d',

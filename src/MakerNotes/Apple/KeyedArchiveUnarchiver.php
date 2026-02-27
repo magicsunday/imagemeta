@@ -111,10 +111,7 @@ final class KeyedArchiveUnarchiver
             return $this->resolveUid($uid);
         }
 
-        if (
-            $value->has('NS.keys')
-            && $value->has('NS.objects')
-        ) {
+        if ($value->has('NS.keys') && $value->has('NS.objects')) {
             return $this->resolveDictionary($value);
         }
 

@@ -73,10 +73,10 @@ final readonly class AppleRationalNormalizer
             }
 
             $components = preg_split('/\s+/', $normalized);
-            if ($components !== false && count($components) === 2) {
+            if (($components !== false) && (count($components) === 2)) {
                 [$numerator, $denominator] = $components;
 
-                if ($numerator !== '' && $denominator !== '' && is_numeric($numerator) && is_numeric($denominator)) {
+                if (($numerator !== '') && ($denominator !== '') && is_numeric($numerator) && is_numeric($denominator)) {
                     $denominatorFloat = (float) $denominator;
                     if ($denominatorFloat === 0.0) {
                         return null;
@@ -117,7 +117,7 @@ final readonly class AppleRationalNormalizer
 
         $numerator   = $this->numericComponentFromArray($value, 'numerator', 'Numerator', 'num', 'Num', 'numer');
         $denominator = $this->numericComponentFromArray($value, 'denominator', 'Denominator', 'den', 'Den', 'denom', 'Denom');
-        if ($numerator !== null && $denominator !== null) {
+        if (($numerator !== null) && ($denominator !== null)) {
             if ($denominator === 0.0) {
                 return null;
             }
@@ -138,7 +138,7 @@ final readonly class AppleRationalNormalizer
             /** @var NativePlistValue $component */
             $component = $value[1];
             $den       = $this->numericScalarValue($component);
-            if ($num !== null && $den !== null && $den !== 0.0) {
+            if (($num !== null) && ($den !== null) && ($den !== 0.0)) {
                 return $num / $den;
             }
         }

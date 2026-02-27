@@ -296,7 +296,7 @@ final class MpfParser
             // at the end of the 4-byte field per TIFF 6.0 Value/Offset semantics.
             $bytes = $this->packInt($valueOrOffset, $endian);
 
-            if ($endian === Endian::Big && $byteCount < 4) {
+            if (($endian === Endian::Big) && ($byteCount < 4)) {
                 return substr($bytes, 4 - $byteCount);
             }
 

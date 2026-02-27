@@ -80,12 +80,7 @@ final readonly class TiffJpegThumbnailValidator
         // Postel's Law: skip thumbnail when the declared range exceeds the TIFF
         // data bounds rather than aborting the entire parse.
         $blobSize = $this->buffer->size();
-        if (
-            ($thumbnailOffset < 0)
-            || ($thumbnailOffset > $blobSize)
-            || ($thumbnailLength > $blobSize)
-            || ($thumbnailOffset > ($blobSize - $thumbnailLength))
-        ) {
+        if (($thumbnailOffset < 0) || ($thumbnailOffset > $blobSize) || ($thumbnailLength > $blobSize) || ($thumbnailOffset > ($blobSize - $thumbnailLength))) {
             return;
         }
 

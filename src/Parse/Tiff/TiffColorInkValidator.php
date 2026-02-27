@@ -159,11 +159,7 @@ final readonly class TiffColorInkValidator
         $transferRange    = $ifd->get(TiffTag::TRANSFER_RANGE);
         $referenceBw      = $ifd->get(ExifTag::REFERENCE_BLACK_WHITE);
 
-        if (
-            !($transferFunction instanceof IfdEntry)
-            && !($transferRange instanceof IfdEntry)
-            && !($referenceBw instanceof IfdEntry)
-        ) {
+        if ((!$transferFunction instanceof IfdEntry) && (!$transferRange instanceof IfdEntry) && (!$referenceBw instanceof IfdEntry)) {
             return;
         }
 
@@ -324,12 +320,7 @@ final readonly class TiffColorInkValidator
         $photometric        = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
         $targetPrinterEntry = $ifd->get(TiffTag::TARGET_PRINTER);
 
-        if (
-            ($targetPrinterEntry instanceof IfdEntry)
-            && ($photometric instanceof IfdEntry)
-            && is_int($photometric->value)
-            && ($photometric->value !== 5)
-        ) {
+        if (($targetPrinterEntry instanceof IfdEntry) && ($photometric instanceof IfdEntry) && is_int($photometric->value) && ($photometric->value !== 5)) {
             throw new ParseError(
                 'TargetPrinter (tag 337) is only valid when PhotometricInterpretation=5 (Separated).',
                 1721,

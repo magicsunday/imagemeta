@@ -38,7 +38,7 @@ final readonly class AppleHdr
         ?array $gain,
         ?string $imageType,
     ): ?self {
-        if ($headroom === null && $gain === null && $imageType === null) {
+        if (($headroom === null) && ($gain === null) && ($imageType === null)) {
             return null;
         }
 

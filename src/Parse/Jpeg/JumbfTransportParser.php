@@ -186,10 +186,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
         }
 
         $sequenceNumber = Unpack::int('N', substr($payload, 6, 4), 'APP11 sequence number');
-        if (
-            ($sequenceNumber === 0)
-            || ($sequenceNumber > self::MAX_SEQUENCE_NUMBER)
-        ) {
+        if (($sequenceNumber === 0) || ($sequenceNumber > self::MAX_SEQUENCE_NUMBER)) {
             throw new ParseError(
                 sprintf('APP11 segment at offset %d has out-of-range sequence number %d', $segmentOffset, $sequenceNumber),
                 1336,
@@ -301,11 +298,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
             return null;
         }
 
-        if (
-            !str_contains($payload, '<?xml')
-            && !str_contains($payload, '<x:xmpmeta')
-            && !str_contains($payload, '<rdf:RDF')
-        ) {
+        if (!str_contains($payload, '<?xml') && !str_contains($payload, '<x:xmpmeta') && !str_contains($payload, '<rdf:RDF')) {
             return null;
         }
 

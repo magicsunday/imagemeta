@@ -72,7 +72,7 @@ final readonly class AppleDictionaryValueExtractor
         $rawValue  = $this->intValue($value, 'value', 'Value');
         $flags     = $this->intValue($value, 'flags', 'Flags');
 
-        if ($epoch === null && $timescale === null && $rawValue === null && $flags === null) {
+        if (($epoch === null) && ($timescale === null) && ($rawValue === null) && ($flags === null)) {
             return null;
         }
 

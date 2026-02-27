@@ -172,15 +172,15 @@ final class ParseErrorCodeUniquenessTest extends TestCase
                     }
                 }
 
-                if ($depth === 1 && $text === ',') {
+                if (($depth === 1) && ($text === ',')) {
                     ++$argIndex;
                     continue;
                 }
 
-                if ($argIndex === 2 && $depth >= 1) {
+                if (($argIndex === 2) && ($depth >= 1)) {
                     $argTokens[] = $tt;
 
-                    if (is_array($tt) && $tt[0] === T_LNUMBER) {
+                    if (is_array($tt) && ($tt[0] === T_LNUMBER)) {
                         $numberLine = $tt[2];
                     }
                 }

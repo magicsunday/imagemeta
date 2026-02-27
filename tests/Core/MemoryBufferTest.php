@@ -79,7 +79,7 @@ namespace MagicSunday\ImageMeta\Tests\Core {
          */
         public static function invokeSubstrProxy(string $string, int $offset, ?int $length = null): string
         {
-            if (self::$forceShortRead && $length !== null && $length > 0) {
+            if (self::$forceShortRead && ($length !== null) && ($length > 0)) {
                 --$length;
             }
 

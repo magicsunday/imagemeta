@@ -292,10 +292,7 @@ final readonly class ColorSpaceExifReader
 
         // TIFF 6.0 §21: Default [2,2] for YCbCr in TIFF context.
         // In JPEG context, let SOF-derived subsampling take precedence.
-        if (
-            $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry
-            && $this->photometric() === Photometric::Ycbcr
-        ) {
+        if (($this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry) && ($this->photometric() === Photometric::Ycbcr)) {
             return [2, 2];
         }
 
@@ -449,7 +446,7 @@ final readonly class ColorSpaceExifReader
      */
     private function validateYcbcrPair(int $horiz, int $vert): ?array
     {
-        if ($horiz === 2 && ($vert === 1 || $vert === 2)) {
+        if (($horiz === 2) && ($vert === 1 || $vert === 2)) {
             return [$horiz, $vert];
         }
 

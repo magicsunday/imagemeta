@@ -304,7 +304,7 @@ final readonly class QuickTimeValueDecoder
         $country  = ($locale >> 16) & 0xFFFF;
         $language = $locale & 0xFFFF;
 
-        if ($country >= 1 && $country <= 255) {
+        if (($country >= 1) && ($country <= 255)) {
             if ($countryLists === []) {
                 throw new ParseError(sprintf('data atom locale country index %d requires a ctry list atom', $country), 1247);
             }
@@ -314,7 +314,7 @@ final readonly class QuickTimeValueDecoder
             }
         }
 
-        if ($language >= 1 && $language <= 255) {
+        if (($language >= 1) && ($language <= 255)) {
             if ($languageLists === []) {
                 throw new ParseError(sprintf('data atom locale language index %d requires a lang list atom', $language), 1249);
             }

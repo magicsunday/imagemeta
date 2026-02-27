@@ -63,7 +63,7 @@ final readonly class IccHeaderDecoder
         $minor         = $minorBugfix >> 4;
         $bugfixVersion = $minorBugfix & BitMask::LOW_NIBBLE;
 
-        if ($major === 0 && $minor === 0 && $bugfixVersion === 0) {
+        if (($major === 0) && ($minor === 0) && ($bugfixVersion === 0)) {
             return null;
         }
 
@@ -193,12 +193,7 @@ final readonly class IccHeaderDecoder
 
         // ICC.1:2022 §4.2 and §7.2.6: validate calendar/time field ranges.
         // Invalid header fields are treated as absent metadata and therefore return null.
-        if (
-            !checkdate($month, $day, $year)
-            || ($hour > 23)
-            || ($minute > 59)
-            || ($second > 59)
-        ) {
+        if (!checkdate($month, $day, $year) || ($hour > 23) || ($minute > 59) || ($second > 59)) {
             return null;
         }
 
@@ -275,7 +270,7 @@ final readonly class IccHeaderDecoder
         }
 
         $bytes = substr($data, $offset, $length);
-        if (!$allowZero && $bytes === str_repeat("\0", $length)) {
+        if (!$allowZero && ($bytes === str_repeat("\0", $length))) {
             return null;
         }
 

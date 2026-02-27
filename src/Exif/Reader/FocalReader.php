@@ -176,7 +176,7 @@ final readonly class FocalReader
                 return FileSource::fromExifValue((int) $value);
             }
 
-            if (is_string($value) && $value !== '') {
+            if (is_string($value) && ($value !== '')) {
                 return FileSource::fromExifValue(ord($value[0]));
             }
         }

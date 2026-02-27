@@ -587,10 +587,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             );
         }
 
-        if (
-            $streamOffset > $entry['size']
-            || ($streamOffset + strlen($data)) > $entry['size']
-        ) {
+        if ($streamOffset > $entry['size'] || ($streamOffset + strlen($data)) > $entry['size']) {
             throw new ParseError(
                 sprintf(
                     'FlashPix stream data at offset %d exceeds declared stream size for entry %d',

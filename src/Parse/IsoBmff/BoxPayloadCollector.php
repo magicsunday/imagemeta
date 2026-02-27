@@ -180,7 +180,7 @@ final readonly class BoxPayloadCollector
         }
 
         // ISO/IEC 14496-12 §8.11.4: the primary item must reference an existing item.
-        if ($primaryItemId !== null && !isset($locations[$primaryItemId]) && !isset($itemInfos[$primaryItemId])) {
+        if (($primaryItemId !== null) && !isset($locations[$primaryItemId]) && !isset($itemInfos[$primaryItemId])) {
             throw new ParseError(sprintf('pitm references non-existent item %d', $primaryItemId), 1167);
         }
 
@@ -377,7 +377,7 @@ final readonly class BoxPayloadCollector
             }
         }
 
-        if ($allowQuickTimeMetaWithoutFullBox === false && $peekSize >= 4) {
+        if (($allowQuickTimeMetaWithoutFullBox === false) && ($peekSize >= 4)) {
             $this->validateMetaFullBoxHeader($peek);
 
             return 4;

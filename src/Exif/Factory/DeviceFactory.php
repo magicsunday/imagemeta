@@ -33,10 +33,7 @@ final readonly class DeviceFactory
         $exif     = $metadata->exifDoc;
         $software = $exif?->software() ?? $exif?->hostComputer();
 
-        if (
-            ($software === null)
-            && $metadata->quickTime instanceof QuickTimeMeta
-        ) {
+        if (($software === null) && ($metadata->quickTime instanceof QuickTimeMeta)) {
             $lookup   = new QuickTimeLookup($metadata->quickTime);
             $software = $lookup->string(
                 'com.apple.quicktime.software',

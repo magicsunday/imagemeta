@@ -73,7 +73,7 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
         $sampleCount = Unpack::int('N', substr($payload, $signatureLength + 9, 4), 'audio sample count');
         $data        = substr($payload, self::AUDIO_HEADER_LENGTH);
 
-        if ($channels === 0 || $channels > 2) {
+        if (($channels === 0) || ($channels > 2)) {
             throw new ParseError(sprintf('Audio segment at offset %d has unsupported channel count %d', $offset, $channels), 1272);
         }
 
@@ -92,15 +92,15 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
         $formatName = $format->label();
 
         // Allow PCM 24-bit sample size per EXIF 3.0 §5.4.2
-        if ($format === JpegAudioFormat::Pcm && !in_array($bitDepth, [8, 16, 24], true)) {
+        if (($format === JpegAudioFormat::Pcm) && (!in_array($bitDepth, [8, 16, 24], true))) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid PCM bit depth %d', $offset, $bitDepth), 1276);
         }
 
-        if ($format === JpegAudioFormat::MuLaw && $bitDepth !== 8) {
+        if (($format === JpegAudioFormat::MuLaw) && ($bitDepth !== 8)) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid μ-law bit depth %d', $offset, $bitDepth), 1277);
         }
 
-        if ($format === JpegAudioFormat::ImaAdpcm && $bitDepth !== 4) {
+        if (($format === JpegAudioFormat::ImaAdpcm) && ($bitDepth !== 4)) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid IMA-ADPCM bit depth %d', $offset, $bitDepth), 1278);
         }
 
@@ -115,7 +115,7 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
         }
 
         // Non-empty IMA-ADPCM payload with dwSampleLength=0 is semantically inconsistent
-        if ($format === JpegAudioFormat::ImaAdpcm && $sampleCount === 0 && $data !== '') {
+        if (($format === JpegAudioFormat::ImaAdpcm) && ($sampleCount === 0) && ($data !== '')) {
             throw new ParseError(sprintf('Audio segment at offset %d has non-empty IMA-ADPCM payload with zero sample count', $offset), 1883);
         }
 

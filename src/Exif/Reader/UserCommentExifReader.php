@@ -243,7 +243,7 @@ final readonly class UserCommentExifReader
         $length = strlen($content);
         for ($i = 0; $i < $length; ++$i) {
             $byte = ord($content[$i]);
-            if ($byte < 0x20 && !in_array($byte, [0x09, 0x0A, 0x0D], true)) {
+            if (($byte < 0x20) && !in_array($byte, [0x09, 0x0A, 0x0D], true)) {
                 return false;
             }
 
@@ -292,7 +292,7 @@ final readonly class UserCommentExifReader
             }
         }
 
-        if ($nullsOnEven === 0 && $nullsOnOdd === 0) {
+        if (($nullsOnEven === 0) && ($nullsOnOdd === 0)) {
             return false;
         }
 

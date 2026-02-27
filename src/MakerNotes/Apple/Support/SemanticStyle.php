@@ -122,7 +122,7 @@ final class SemanticStyle
         $warmth = self::float($warmthRaw);
         $tone   = self::float($toneRaw);
 
-        if ($preset === null && $warmth === null && $tone === null) {
+        if (($preset === null) && ($warmth === null) && ($tone === null)) {
             return null;
         }
 
@@ -166,7 +166,7 @@ final class SemanticStyle
             }
 
             $scalar = self::extractScalar($entry);
-            if ($scalar === null && $entry !== null) {
+            if (($scalar === null) && ($entry !== null)) {
                 continue;
             }
 
@@ -196,14 +196,7 @@ final class SemanticStyle
             if ($valueKey !== null) {
                 $candidate = $entry[$valueKey];
 
-                if (
-                    is_array($candidate)
-                    || is_bool($candidate)
-                    || is_float($candidate)
-                    || is_int($candidate)
-                    || is_string($candidate)
-                    || $candidate === null
-                ) {
+                if (is_array($candidate) || is_bool($candidate) || is_float($candidate) || is_int($candidate) || is_string($candidate) || $candidate === null) {
                     return self::extractScalar($candidate);
                 }
 
@@ -216,14 +209,7 @@ final class SemanticStyle
                 array_find(
                     $entry,
                     static function (array|bool|float|int|string|object|null $candidate) use (&$scalar): bool {
-                        if (
-                            is_array($candidate)
-                            || is_bool($candidate)
-                            || is_float($candidate)
-                            || is_int($candidate)
-                            || is_string($candidate)
-                            || $candidate === null
-                        ) {
+                        if (is_array($candidate) || is_bool($candidate) || is_float($candidate) || is_int($candidate) || is_string($candidate) || $candidate === null) {
                             $scalar = self::extractScalar($candidate);
 
                             return $scalar !== null;

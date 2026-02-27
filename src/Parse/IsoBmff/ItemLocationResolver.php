@@ -70,22 +70,14 @@ final readonly class ItemLocationResolver
         $exifItemIds = array_values(array_unique($exifItemIds));
         $xmpItemIds  = array_values(array_unique($xmpItemIds));
 
-        if (
-            ($primaryItemId !== null)
-            && isset($itemInfos[$primaryItemId])
-            && $this->payloadResolver->isExifItem($itemInfos[$primaryItemId])
-        ) {
+        if (($primaryItemId !== null) && isset($itemInfos[$primaryItemId]) && $this->payloadResolver->isExifItem($itemInfos[$primaryItemId])) {
             // EXIF 3.0 Annex A.2.5: pitm marks the default metadata item; prioritize
             // the primary item for EXIF candidate resolution when it is EXIF-typed.
             array_unshift($exifItemIds, $primaryItemId);
             $exifItemIds = array_values(array_unique($exifItemIds));
         }
 
-        if (
-            ($primaryItemId !== null)
-            && isset($itemInfos[$primaryItemId])
-            && $this->payloadResolver->isXmpItem($itemInfos[$primaryItemId])
-        ) {
+        if (($primaryItemId !== null) && isset($itemInfos[$primaryItemId]) && $this->payloadResolver->isXmpItem($itemInfos[$primaryItemId])) {
             // ISO/IEC 14496-12 §8.11.4: pitm identifies the primary item, not its metadata type.
             // Prioritize only when item descriptors (EXIF 3.0 Annex A.2.3) explicitly mark XMP.
             array_unshift($xmpItemIds, $primaryItemId);

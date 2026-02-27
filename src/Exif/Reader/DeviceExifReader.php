@@ -324,10 +324,7 @@ final readonly class DeviceExifReader
     {
         $raw = $this->reader->rawString($this->exifIfd, ExifTag::DEVICE_SETTING_DESCRIPTION);
 
-        if (
-            ($raw === null)
-            || (strlen($raw) < 4)
-        ) {
+        if (($raw === null) || (strlen($raw) < 4)) {
             return null;
         }
 
@@ -343,10 +340,7 @@ final readonly class DeviceExifReader
         $columns = $unpacked[1] ?? null;
         $rows    = $unpacked[2] ?? null;
 
-        if (
-            !is_int($columns)
-            || !is_int($rows)
-        ) {
+        if (!is_int($columns) || !is_int($rows)) {
             return null;
         }
 
@@ -389,7 +383,7 @@ final readonly class DeviceExifReader
         while (($offset + 4) <= $length) {
             $bom = substr($payload, $offset, 2);
 
-            if ($bom !== "\xFF\xFE" && $bom !== "\xFE\xFF") {
+            if (($bom !== "\xFF\xFE") && ($bom !== "\xFE\xFF")) {
                 break;
             }
 
@@ -398,7 +392,7 @@ final readonly class DeviceExifReader
             $termFound = false;
 
             while (($pos + 1) < $length) {
-                if ($payload[$pos] === "\x00" && $payload[$pos + 1] === "\x00") {
+                if (($payload[$pos] === "\x00") && ($payload[$pos + 1] === "\x00")) {
                     $termFound = true;
 
                     break;

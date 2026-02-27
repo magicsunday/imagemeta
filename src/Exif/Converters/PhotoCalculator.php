@@ -91,7 +91,7 @@ final readonly class PhotoCalculator
             return $fov;
         }
 
-        if ($cropFactor !== null && $cropFactor > 0.0) {
+        if (($cropFactor !== null) && ($cropFactor > 0.0)) {
             $equivalent = 50.0 * $cropFactor;
 
             return rad2deg(2.0 * atan(self::FULL_FRAME_DIAGONAL_MM / (2.0 * $equivalent)));
@@ -135,13 +135,13 @@ final readonly class PhotoCalculator
         ?int $focalLength35mm,
         ?float $cropFactor,
     ): ?float {
-        if ($focalLengthMm !== null && $focalLengthMm > 0.0 && $cropFactor !== null && $cropFactor > 0.0) {
+        if (($focalLengthMm !== null) && ($focalLengthMm > 0.0) && ($cropFactor !== null) && ($cropFactor > 0.0)) {
             $sensorDimension = $fullFrameDimensionMm / $cropFactor;
 
             return rad2deg(2.0 * atan($sensorDimension / (2.0 * $focalLengthMm)));
         }
 
-        if ($focalLength35mm !== null && $focalLength35mm > 0) {
+        if (($focalLength35mm !== null) && ($focalLength35mm > 0)) {
             return rad2deg(2.0 * atan($fullFrameDimensionMm / (2.0 * (float) $focalLength35mm)));
         }
 

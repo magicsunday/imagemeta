@@ -45,14 +45,7 @@ final readonly class AppleCaptureIdentity
         ?string $photoIdentifier,
         ?string $mediaGroupUuid = null,
     ): ?self {
-        if (
-            $contentIdentifier === null
-            && $imageCaptureRequestId === null
-            && $burstUuid === null
-            && $imageUniqueId === null
-            && $photoIdentifier === null
-            && $mediaGroupUuid === null
-        ) {
+        if (($contentIdentifier === null) && ($imageCaptureRequestId === null) && ($burstUuid === null) && ($imageUniqueId === null) && ($photoIdentifier === null) && ($mediaGroupUuid === null)) {
             return null;
         }
 

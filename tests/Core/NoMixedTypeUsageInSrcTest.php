@@ -89,7 +89,7 @@ final class NoMixedTypeUsageInSrcTest extends TestCase
 
             [$id, $text, $line] = $token;
 
-            if ($id === T_STRING && strtolower($text) === 'mixed') {
+            if (($id === T_STRING) && (strtolower($text) === 'mixed')) {
                 $violations[] = $relative . ':' . $line . ' runtime type declaration';
                 continue;
             }

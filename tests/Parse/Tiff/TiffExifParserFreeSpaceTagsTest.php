@@ -205,7 +205,7 @@ final class TiffExifParserFreeSpaceTagsTest extends TestCase
             . pack('V', 0)
             . $payloadTail;
 
-        if ($padToRequiredSize && is_array($freeOffsets) && is_array($freeByteCounts) && $freeOffsets !== [] && $freeByteCounts !== []) {
+        if ($padToRequiredSize && is_array($freeOffsets) && is_array($freeByteCounts) && ($freeOffsets !== []) && ($freeByteCounts !== [])) {
             $requiredSize = 0;
 
             $limit = min(count($freeOffsets), count($freeByteCounts));

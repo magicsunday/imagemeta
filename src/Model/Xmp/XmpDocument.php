@@ -461,7 +461,7 @@ final readonly class XmpDocument
             return true;
         }
 
-        if ($clark !== '' && $clark[0] === '{') {
+        if (($clark !== '') && ($clark[0] === '{')) {
             $pos = strpos($clark, '}');
             if ($pos !== false) {
                 return substr($clark, $pos + 1) === $localName;

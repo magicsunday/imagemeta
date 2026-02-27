@@ -42,10 +42,7 @@ final readonly class XmpSegmentHandler implements MarkerHandlerInterface
 
     public function handle(Stream $stream, string $payload, int $offset): void
     {
-        if (
-            !str_starts_with($payload, self::XMP_SIGNATURE)
-            && !str_starts_with($payload, self::EXTENDED_XMP_SIGNATURE)
-        ) {
+        if (!str_starts_with($payload, self::XMP_SIGNATURE) && !str_starts_with($payload, self::EXTENDED_XMP_SIGNATURE)) {
             return;
         }
 

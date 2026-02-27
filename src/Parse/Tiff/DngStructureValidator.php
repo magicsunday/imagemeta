@@ -230,25 +230,21 @@ final readonly class DngStructureValidator
 
         $compression = $ifd->get(ExifTag::COMPRESSION);
 
-        if (
-            !$compression instanceof IfdEntry
-            || !is_int($compression->value)
-            || $compression->value !== Compression::JpegXl->value
-        ) {
+        if (!$compression instanceof IfdEntry || !is_int($compression->value) || $compression->value !== Compression::JpegXl->value) {
             throw new ParseError(
                 'JXL tags (JXLDistance, JXLEffort, JXLDecodeSpeed) require Compression = 52546 (JPEG XL).',
                 2024,
             );
         }
 
-        if ($jxlEffort instanceof IfdEntry && is_int($jxlEffort->value) && ($jxlEffort->value < 1 || $jxlEffort->value > 9)) {
+        if (($jxlEffort instanceof IfdEntry) && is_int($jxlEffort->value) && ($jxlEffort->value < 1 || $jxlEffort->value > 9)) {
             throw new ParseError(
                 sprintf('JXLEffort must be 1–9, got %d.', $jxlEffort->value),
                 2022,
             );
         }
 
-        if ($jxlDecodeSpeed instanceof IfdEntry && is_int($jxlDecodeSpeed->value) && ($jxlDecodeSpeed->value < 1 || $jxlDecodeSpeed->value > 4)) {
+        if (($jxlDecodeSpeed instanceof IfdEntry) && is_int($jxlDecodeSpeed->value) && ($jxlDecodeSpeed->value < 1 || $jxlDecodeSpeed->value > 4)) {
             throw new ParseError(
                 sprintf('JXLDecodeSpeed must be 1–4, got %d.', $jxlDecodeSpeed->value),
                 2023,
@@ -257,7 +253,7 @@ final readonly class DngStructureValidator
 
         $spp = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
 
-        if ($spp instanceof IfdEntry && is_int($spp->value) && $spp->value !== 1 && $spp->value !== 3) {
+        if (($spp instanceof IfdEntry) && is_int($spp->value) && ($spp->value !== 1) && ($spp->value !== 3)) {
             throw new ParseError(
                 sprintf('JPEG XL SamplesPerPixel must be 1 or 3, got %d.', $spp->value),
                 2027,
@@ -266,7 +262,7 @@ final readonly class DngStructureValidator
 
         $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
 
-        if ($photo instanceof IfdEntry && is_int($photo->value) && !in_array($photo->value, [0, 1, 2, 4, 32803, 34892, 51177, 52527], true)) {
+        if (($photo instanceof IfdEntry) && is_int($photo->value) && !in_array($photo->value, [0, 1, 2, 4, 32803, 34892, 51177, 52527], true)) {
             throw new ParseError(
                 sprintf('JPEG XL PhotometricInterpretation %d is not allowed.', $photo->value),
                 2028,
@@ -348,7 +344,7 @@ final readonly class DngStructureValidator
         if ($entry->value >= 6) {
             $bwVer = $this->support->getEffectiveDngBackwardVersion($ifd);
 
-            if ($bwVer !== null && $this->support->dngVersionLessThan($bwVer, [1, 3, 0, 0])) {
+            if (($bwVer !== null) && $this->support->dngVersionLessThan($bwVer, [1, 3, 0, 0])) {
                 throw new ParseError(
                     sprintf(
                         'CFALayout value %d requires DNGBackwardVersion >= 1.3.0.0, got %d.%d.%d.%d.',
@@ -468,7 +464,7 @@ final readonly class DngStructureValidator
             );
         }
 
-        if ($compositeMethod !== 0 && $compositeMethod !== 1) {
+        if (($compositeMethod !== 0) && ($compositeMethod !== 1)) {
             throw new ParseError(
                 sprintf('RGBTables CompositeMethod must be 0 or 1, got %d.', $compositeMethod),
                 1529,
@@ -548,7 +544,7 @@ final readonly class DngStructureValidator
             $offset += $tableDataSize;
         }
 
-        if ($numTables > 1 && $zeroNameCount > 1) {
+        if (($numTables > 1) && ($zeroNameCount > 1)) {
             throw new ParseError(
                 sprintf('RGBTables allows at most one unnamed table when NumTables > 1, got %d.', $zeroNameCount),
                 1536,
@@ -918,7 +914,7 @@ final readonly class DngStructureValidator
         }
 
         // 0/0 sentinel means unknown
-        if ($entry->value->numerator === 0 && $entry->value->denominator === 0) {
+        if (($entry->value->numerator === 0) && ($entry->value->denominator === 0)) {
             return;
         }
 

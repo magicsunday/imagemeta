@@ -148,7 +148,7 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
             return null;
         }
 
-        if ($makerNoteVersion === null && $deviceType === null && $modelId === null) {
+        if (($makerNoteVersion === null) && ($deviceType === null) && ($modelId === null)) {
             return null;
         }
 

@@ -1736,7 +1736,7 @@ final class TiffExifParserDngTagTest extends TestCase
             $this->patchOffset($blob, DngTag::UNIQUE_CAMERA_MODEL, $offset);
         }
 
-        if ($localizedModel !== null && strlen($localizedModel) > 4) {
+        if (($localizedModel !== null) && (strlen($localizedModel) > 4)) {
             $offset = strlen($blob) + strlen($outOfBand);
             $outOfBand .= $localizedModel;
             $this->patchOffset($blob, DngTag::LOCALIZED_CAMERA_MODEL, $offset);

@@ -102,7 +102,7 @@ final readonly class TiffImageDataValidator
             }
         }
 
-        if ($stripOffsetsEntry instanceof IfdEntry && $stripByteCountsEntry instanceof IfdEntry) {
+        if (($stripOffsetsEntry instanceof IfdEntry) && ($stripByteCountsEntry instanceof IfdEntry)) {
             $this->validateCountedImageDataRanges(
                 ExifTag::STRIP_OFFSETS,
                 $this->countedImageDataValues($stripOffsetsEntry, ExifTag::STRIP_OFFSETS),
@@ -179,19 +179,11 @@ final readonly class TiffImageDataValidator
      */
     private function validateTileDimensions(?IfdEntry $tileWidthEntry, ?IfdEntry $tileLengthEntry): array
     {
-        if (
-            !$tileWidthEntry instanceof IfdEntry
-            || !is_int($tileWidthEntry->value)
-            || ($tileWidthEntry->value <= 0)
-        ) {
+        if (!$tileWidthEntry instanceof IfdEntry || !is_int($tileWidthEntry->value) || ($tileWidthEntry->value <= 0)) {
             throw new ParseError('TileWidth must be a positive integer when tiled layout tags are present.', 1695);
         }
 
-        if (
-            !$tileLengthEntry instanceof IfdEntry
-            || !is_int($tileLengthEntry->value)
-            || ($tileLengthEntry->value <= 0)
-        ) {
+        if (!$tileLengthEntry instanceof IfdEntry || !is_int($tileLengthEntry->value) || ($tileLengthEntry->value <= 0)) {
             throw new ParseError('TileLength must be a positive integer when tiled layout tags are present.', 1696);
         }
 
@@ -228,14 +220,7 @@ final readonly class TiffImageDataValidator
     ): void {
         $imageWidthEntry  = $ifd0->get(ExifTag::IMAGE_WIDTH);
         $imageLengthEntry = $ifd0->get(ExifTag::IMAGE_LENGTH);
-        if (
-            !$imageWidthEntry instanceof IfdEntry
-            || !is_int($imageWidthEntry->value)
-            || ($imageWidthEntry->value <= 0)
-            || !$imageLengthEntry instanceof IfdEntry
-            || !is_int($imageLengthEntry->value)
-            || ($imageLengthEntry->value <= 0)
-        ) {
+        if (!$imageWidthEntry instanceof IfdEntry || !is_int($imageWidthEntry->value) || ($imageWidthEntry->value <= 0) || !$imageLengthEntry instanceof IfdEntry || !is_int($imageLengthEntry->value) || ($imageLengthEntry->value <= 0)) {
             return;
         }
 
@@ -320,13 +305,13 @@ final readonly class TiffImageDataValidator
     {
         $planarConfiguration = 1;
         $planarEntry         = $ifd->get(ExifTag::PLANAR_CONFIGURATION);
-        if ($planarEntry instanceof IfdEntry && is_int($planarEntry->value)) {
+        if (($planarEntry instanceof IfdEntry) && is_int($planarEntry->value)) {
             $planarConfiguration = $planarEntry->value;
         }
 
         $samplesPerPixel = 1;
         $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
-        if ($samplesEntry instanceof IfdEntry && is_int($samplesEntry->value) && $samplesEntry->value > 0) {
+        if (($samplesEntry instanceof IfdEntry) && is_int($samplesEntry->value) && ($samplesEntry->value > 0)) {
             $samplesPerPixel = $samplesEntry->value;
         }
 
@@ -407,13 +392,7 @@ final readonly class TiffImageDataValidator
             $offset    = $offsets[$index] ?? 0;
             $byteCount = $byteCounts[$index] ?? 0;
 
-            if (
-                ($offset < 0)
-                || ($byteCount < 0)
-                || ($offset > $blobSize)
-                || ($byteCount > $blobSize)
-                || ($offset > ($blobSize - $byteCount))
-            ) {
+            if (($offset < 0) || ($byteCount < 0) || ($offset > $blobSize) || ($byteCount > $blobSize) || ($offset > ($blobSize - $byteCount))) {
                 throw new ParseError(
                     sprintf(
                         '%s[%d]=%d with %s[%d]=%d exceeds TIFF data bounds (size=%d).',

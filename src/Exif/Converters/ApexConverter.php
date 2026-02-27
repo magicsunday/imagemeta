@@ -191,7 +191,7 @@ final readonly class ApexConverter
             return null;
         }
 
-        if ($value instanceof ExifRational && $this->isUnknownBrightnessDenominator($value->denominator)) {
+        if (($value instanceof ExifRational) && $this->isUnknownBrightnessDenominator($value->denominator)) {
             return null;
         }
 

@@ -74,7 +74,7 @@ final readonly class ExifConvenience
 
         $cameraLabel = null;
 
-        if ($make !== null && $model !== null) {
+        if (($make !== null) && ($model !== null)) {
             $cameraLabel = $this->startsWithCaseInsensitive($model, $make) ? $model : $make . ' ' . $model;
         } elseif ($make !== null || $model !== null) {
             $cameraLabel = $make ?? $model;
@@ -126,7 +126,7 @@ final readonly class ExifConvenience
         }
 
         $equivalent = $derived?->equivalent35mm;
-        if ($equivalent !== null && !$this->containsEquivalent($parts, $equivalent)) {
+        if (($equivalent !== null) && !$this->containsEquivalent($parts, $equivalent)) {
             $parts[] = sprintf('%d mm eq', $equivalent);
         }
 
@@ -439,7 +439,7 @@ final readonly class ExifConvenience
 
         $reference = $position->altitudeRef;
 
-        if ($reference instanceof GpsAltitudeRef && $reference->isBelow()) {
+        if (($reference instanceof GpsAltitudeRef) && $reference->isBelow()) {
             return -$altitude;
         }
 

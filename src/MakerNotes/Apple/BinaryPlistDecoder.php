@@ -556,7 +556,7 @@ final class BinaryPlistDecoder
             $value = $this->reader->readUint($payloadOffset, $size);
 
             // Handle platform-dependent overflow edge case:
-            if ($size === PHP_INT_SIZE && $value < 0) {
+            if (($size === PHP_INT_SIZE) && ($value < 0)) {
                 return sprintf('%u', $value);
             }
 

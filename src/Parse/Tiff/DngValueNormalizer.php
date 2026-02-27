@@ -108,13 +108,13 @@ final readonly class DngValueNormalizer
         // DNG 1.7.1.0: LocalizedCameraModel may be stored as BYTE instead of
         // ASCII. When type is BYTE, treat the raw bytes as a NUL-terminated
         // UTF-8 string rather than a numeric list.
-        if ($tag === DngTag::LOCALIZED_CAMERA_MODEL && $type === TiffFieldType::Byte->value) {
+        if (($tag === DngTag::LOCALIZED_CAMERA_MODEL) && ($type === TiffFieldType::Byte->value)) {
             return rtrim($rawBytes, "\0");
         }
 
         // DNG 1.7.0.0: ProfileGroupName must be ASCII or BYTE with NUL terminator.
         if ($tag === DngTag::PROFILE_GROUP_NAME) {
-            if ($type !== TiffFieldType::Ascii->value && $type !== TiffFieldType::Byte->value) {
+            if (($type !== TiffFieldType::Ascii->value) && ($type !== TiffFieldType::Byte->value)) {
                 return $value;
             }
 
@@ -125,7 +125,7 @@ final readonly class DngValueNormalizer
 
         // DNG 1.7.1.0: String tags that must be ASCII or BYTE, NUL-terminated UTF-8.
         if (in_array($tag, self::DNG_UTF8_STRING_TAGS, true)) {
-            if ($type !== TiffFieldType::Ascii->value && $type !== TiffFieldType::Byte->value) {
+            if (($type !== TiffFieldType::Ascii->value) && ($type !== TiffFieldType::Byte->value)) {
                 return $value;
             }
 
@@ -196,7 +196,7 @@ final readonly class DngValueNormalizer
         $expectedPatternValues = $horizontalRepeatPixelUnit * $verticalRepeatPixelUnit;
         $expectedSize          = 4 + $expectedPatternValues;
 
-        if ($expectedSize !== $payloadLen && ($horizontalRepeatPixelUnit > 0 && $verticalRepeatPixelUnit > 0)) {
+        if (($expectedSize !== $payloadLen) && ($horizontalRepeatPixelUnit > 0 && $verticalRepeatPixelUnit > 0)) {
             if ($this->binaryReader->byteOrder() === Endian::Little) {
                 $swappedH = (ord($bytes[0]) << 8) | ord($bytes[1]);
                 $swappedV = (ord($bytes[2]) << 8) | ord($bytes[3]);
@@ -205,7 +205,7 @@ final readonly class DngValueNormalizer
                 $swappedV = ord($bytes[2]) | (ord($bytes[3]) << 8);
             }
 
-            if ($swappedH > 0 && $swappedV > 0 && (4 + $swappedH * $swappedV) === $payloadLen) {
+            if (($swappedH > 0) && ($swappedV > 0) && ((4 + $swappedH * $swappedV) === $payloadLen)) {
                 $horizontalRepeatPixelUnit = $swappedH;
                 $verticalRepeatPixelUnit   = $swappedV;
                 $expectedPatternValues     = $swappedH * $swappedV;

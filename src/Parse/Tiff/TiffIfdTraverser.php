@@ -295,7 +295,7 @@ final class TiffIfdTraverser
                     if ($offset !== null) {
                         $offsets[] = $offset;
                     }
-                } elseif ($component instanceof UInt64 && !$component->isZero()) {
+                } elseif (($component instanceof UInt64) && !$component->isZero()) {
                     try {
                         $offsets[] = $this->offsetValidator->ensureOffset($component, sprintf('SubIFDs tag 0x%04X', $entry->tag));
                     } catch (ParseError|BoundsError) {

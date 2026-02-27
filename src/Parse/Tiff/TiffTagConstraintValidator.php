@@ -199,11 +199,7 @@ final readonly class TiffTagConstraintValidator
             return;
         }
 
-        if (
-            ($fillOrderEntry->type !== TiffConst::TYPE_SHORT)
-            || ($fillOrderEntry->count !== 1)
-            || !is_int($fillOrderEntry->value)
-        ) {
+        if (($fillOrderEntry->type !== TiffConst::TYPE_SHORT) || ($fillOrderEntry->count !== 1) || !is_int($fillOrderEntry->value)) {
             throw new ParseError('FillOrder must be SHORT[1].', 1752);
         }
 
@@ -244,7 +240,7 @@ final readonly class TiffTagConstraintValidator
 
         $compressionCode  = 1;
         $compressionEntry = $ifd->get(ExifTag::COMPRESSION);
-        if ($compressionEntry instanceof IfdEntry && is_int($compressionEntry->value)) {
+        if (($compressionEntry instanceof IfdEntry) && is_int($compressionEntry->value)) {
             $compressionCode = $compressionEntry->value;
         }
 
@@ -310,11 +306,7 @@ final readonly class TiffTagConstraintValidator
         $cellLengthEntry    = $ifd->get(TiffTag::CELL_LENGTH);
 
         if ($threshholdingEntry instanceof IfdEntry) {
-            if (
-                ($threshholdingEntry->type !== TiffConst::TYPE_SHORT)
-                || ($threshholdingEntry->count !== 1)
-                || !is_int($threshholdingEntry->value)
-            ) {
+            if (($threshholdingEntry->type !== TiffConst::TYPE_SHORT) || ($threshholdingEntry->count !== 1) || !is_int($threshholdingEntry->value)) {
                 throw new ParseError('Threshholding must be SHORT[1].', 1798);
             }
 
@@ -384,7 +376,7 @@ final readonly class TiffTagConstraintValidator
         $xPosition = $ifd->get(TiffTag::X_POSITION);
         $yPosition = $ifd->get(TiffTag::Y_POSITION);
 
-        if (!($xPosition instanceof IfdEntry) && !($yPosition instanceof IfdEntry)) {
+        if ((!$xPosition instanceof IfdEntry) && (!$yPosition instanceof IfdEntry)) {
             return;
         }
 
@@ -411,7 +403,7 @@ final readonly class TiffTagConstraintValidator
         $freeOffsetsEntry    = $ifd->get(TiffTag::FREE_OFFSETS);
         $freeByteCountsEntry = $ifd->get(TiffTag::FREE_BYTE_COUNTS);
 
-        if (!($freeOffsetsEntry instanceof IfdEntry) && !($freeByteCountsEntry instanceof IfdEntry)) {
+        if ((!$freeOffsetsEntry instanceof IfdEntry) && (!$freeByteCountsEntry instanceof IfdEntry)) {
             return;
         }
 
@@ -475,11 +467,7 @@ final readonly class TiffTagConstraintValidator
         }
 
         $compression = $ifd->get(ExifTag::COMPRESSION);
-        if (
-            ($compression instanceof IfdEntry)
-            && is_int($compression->value)
-            && in_array($compression->value, [Compression::Lzw->value, Compression::AdobeDeflate->value], true)
-        ) {
+        if (($compression instanceof IfdEntry) && is_int($compression->value) && in_array($compression->value, [Compression::Lzw->value, Compression::AdobeDeflate->value], true)) {
             return;
         }
 
@@ -506,14 +494,14 @@ final readonly class TiffTagConstraintValidator
             return;
         }
 
-        if (is_int($widthEntry->value) && $widthEntry->value <= 0) {
+        if (is_int($widthEntry->value) && ($widthEntry->value <= 0)) {
             throw new ParseError(sprintf(
                 'ImageWidth value %d is invalid; must be a positive integer per EXIF 3.0 §4.6.4.',
                 $widthEntry->value,
             ), 1355);
         }
 
-        if (is_int($lengthEntry->value) && $lengthEntry->value <= 0) {
+        if (is_int($lengthEntry->value) && ($lengthEntry->value <= 0)) {
             throw new ParseError(sprintf(
                 'ImageLength value %d is invalid; must be a positive integer per EXIF 3.0 §4.6.4.',
                 $lengthEntry->value,
@@ -533,21 +521,13 @@ final readonly class TiffTagConstraintValidator
         IfdEntry $newSubfileTypeEntry,
         bool $strictTiffNewSubfileType,
     ): void {
-        if (
-            ($newSubfileTypeEntry->type !== TiffConst::TYPE_LONG)
-            || ($newSubfileTypeEntry->count !== 1)
-            || !is_int($newSubfileTypeEntry->value)
-        ) {
+        if (($newSubfileTypeEntry->type !== TiffConst::TYPE_LONG) || ($newSubfileTypeEntry->count !== 1) || !is_int($newSubfileTypeEntry->value)) {
             throw new ParseError('NewSubfileType must be LONG[1].', 1788);
         }
 
         $isDngExtendedNewSubfileType = in_array($newSubfileTypeEntry->value, [8, 9, 16, 65540], true);
 
-        if (
-            $strictTiffNewSubfileType
-            && !$isDngExtendedNewSubfileType
-            && (($newSubfileTypeEntry->value & ~0b111) !== 0)
-        ) {
+        if ($strictTiffNewSubfileType && !$isDngExtendedNewSubfileType && (($newSubfileTypeEntry->value & ~0b111) !== 0)) {
             throw new ParseError(
                 sprintf(
                     'NewSubfileType value %d contains reserved bits outside 0..2.',
@@ -557,11 +537,7 @@ final readonly class TiffTagConstraintValidator
             );
         }
 
-        if (
-            $strictTiffNewSubfileType
-            && !$isDngExtendedNewSubfileType
-            && (($newSubfileTypeEntry->value & 0b100) !== 0)
-        ) {
+        if ($strictTiffNewSubfileType && !$isDngExtendedNewSubfileType && (($newSubfileTypeEntry->value & 0b100) !== 0)) {
             $photometricEntry = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
             $photometricCode  = (($photometricEntry instanceof IfdEntry) && is_int($photometricEntry->value))
                 ? $photometricEntry->value
@@ -587,11 +563,7 @@ final readonly class TiffTagConstraintValidator
      */
     private function validateSubfileTypeEntry(IfdEntry $subfileTypeEntry): void
     {
-        if (
-            ($subfileTypeEntry->type !== TiffConst::TYPE_SHORT)
-            || ($subfileTypeEntry->count !== 1)
-            || !is_int($subfileTypeEntry->value)
-        ) {
+        if (($subfileTypeEntry->type !== TiffConst::TYPE_SHORT) || ($subfileTypeEntry->count !== 1) || !is_int($subfileTypeEntry->value)) {
             throw new ParseError('SubfileType must be SHORT[1].', 1791);
         }
 
@@ -618,14 +590,7 @@ final readonly class TiffTagConstraintValidator
         ?IfdEntry $subfileTypeEntry,
         bool $strictTiffNewSubfileType,
     ): void {
-        if (
-            !$strictTiffNewSubfileType
-            || (!$newSubfileTypeEntry instanceof IfdEntry)
-            || (!$subfileTypeEntry instanceof IfdEntry)
-            || !is_int($newSubfileTypeEntry->value)
-            || !is_int($subfileTypeEntry->value)
-            || in_array($newSubfileTypeEntry->value, [8, 9, 16, 65540], true)
-        ) {
+        if (!$strictTiffNewSubfileType || (!$newSubfileTypeEntry instanceof IfdEntry) || (!$subfileTypeEntry instanceof IfdEntry) || !is_int($newSubfileTypeEntry->value) || !is_int($subfileTypeEntry->value) || in_array($newSubfileTypeEntry->value, [8, 9, 16, 65540], true)) {
             return;
         }
 
@@ -698,11 +663,7 @@ final readonly class TiffTagConstraintValidator
      */
     private function validatePositionRational(IfdEntry $entry, string $tagName): ExifRational
     {
-        if (
-            ($entry->type !== TiffConst::TYPE_RATIONAL)
-            || ($entry->count !== 1)
-            || !($entry->value instanceof ExifRational)
-        ) {
+        if (($entry->type !== TiffConst::TYPE_RATIONAL) || ($entry->count !== 1) || !($entry->value instanceof ExifRational)) {
             throw new ParseError(
                 sprintf('%s must be RATIONAL[1].', $tagName),
                 1806,
@@ -726,7 +687,7 @@ final readonly class TiffTagConstraintValidator
      */
     private function extractFreeSpaceComponents(IfdEntry $entry, string $tagName): array
     {
-        if ($entry->type !== TiffConst::TYPE_LONG && $entry->type !== TiffConst::TYPE_LONG8) {
+        if (($entry->type !== TiffConst::TYPE_LONG) && ($entry->type !== TiffConst::TYPE_LONG8)) {
             throw new ParseError(
                 sprintf('%s must use LONG/LONG8 type.', $tagName),
                 1814,

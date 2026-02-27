@@ -369,11 +369,7 @@ final readonly class QuickTimeMetadataDecoder
                         continue;
                     }
 
-                    if (
-                        ($structured['type'] === QuickTimeDataType::NestedMetadata->value)
-                        && array_key_exists('nestedKeys', $structured)
-                        && array_key_exists('nestedAtoms', $structured)
-                    ) {
+                    if (($structured['type'] === QuickTimeDataType::NestedMetadata->value) && array_key_exists('nestedKeys', $structured) && array_key_exists('nestedAtoms', $structured)) {
                         $this->mergeNestedType28Values(
                             $effectiveKey,
                             $structured['nestedKeys'],
@@ -397,7 +393,7 @@ final readonly class QuickTimeMetadataDecoder
                         'locale' => $structured['locale'],
                         'value'  => $coerced,
                     ];
-                } elseif ($sub->type === BoxType::NAME->value && !$isFreeform) {
+                } elseif (($sub->type === BoxType::NAME->value) && !$isFreeform) {
                     $itemName = $this->parseIlstNameAtom($sub, $seenNames);
 
                     // Use name as fallback key when no key index or fourcc is available

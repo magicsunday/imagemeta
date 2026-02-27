@@ -40,7 +40,7 @@ final readonly class TiffSampleValidator
         $minSampleValueEntry = $ifd->get(TiffTag::MIN_SAMPLE_VALUE);
         $maxSampleValueEntry = $ifd->get(TiffTag::MAX_SAMPLE_VALUE);
 
-        if (!($minSampleValueEntry instanceof IfdEntry) && !($maxSampleValueEntry instanceof IfdEntry)) {
+        if ((!$minSampleValueEntry instanceof IfdEntry) && (!$maxSampleValueEntry instanceof IfdEntry)) {
             return;
         }
 
@@ -185,11 +185,7 @@ final readonly class TiffSampleValidator
         $sMinEntry         = $ifd->get(TiffTag::S_MIN_SAMPLE_VALUE);
         $sMaxEntry         = $ifd->get(TiffTag::S_MAX_SAMPLE_VALUE);
 
-        if (
-            !($sampleFormatEntry instanceof IfdEntry)
-            && !($sMinEntry instanceof IfdEntry)
-            && !($sMaxEntry instanceof IfdEntry)
-        ) {
+        if ((!$sampleFormatEntry instanceof IfdEntry) && (!$sMinEntry instanceof IfdEntry) && (!$sMaxEntry instanceof IfdEntry)) {
             return;
         }
 
@@ -295,11 +291,11 @@ final readonly class TiffSampleValidator
         ?array $sMinValues,
         ?array $sMaxValues,
     ): void {
-        if ($sampleFormats !== null && ($sMinEntry instanceof IfdEntry)) {
+        if (($sampleFormats !== null) && ($sMinEntry instanceof IfdEntry)) {
             $this->validateSampleDomainTypeCompatibility('SMinSampleValue', $sMinEntry->type, $sampleFormats);
         }
 
-        if ($sampleFormats !== null && ($sMaxEntry instanceof IfdEntry)) {
+        if (($sampleFormats !== null) && ($sMaxEntry instanceof IfdEntry)) {
             $this->validateSampleDomainTypeCompatibility('SMaxSampleValue', $sMaxEntry->type, $sampleFormats);
         }
 
@@ -379,11 +375,7 @@ final readonly class TiffSampleValidator
             return;
         }
 
-        if (
-            ($extraSamplesEntry->type !== TiffConst::TYPE_SHORT)
-            || ($extraSamplesEntry->count !== 1)
-            || !is_int($extraSamplesEntry->value)
-        ) {
+        if (($extraSamplesEntry->type !== TiffConst::TYPE_SHORT) || ($extraSamplesEntry->count !== 1) || !is_int($extraSamplesEntry->value)) {
             throw new ParseError('ExtraSamples must be SHORT[1].', 1766);
         }
 
@@ -411,7 +403,7 @@ final readonly class TiffSampleValidator
         $grayResponseUnit  = $ifd->get(TiffTag::GRAY_RESPONSE_UNIT);
         $grayResponseCurve = $ifd->get(TiffTag::GRAY_RESPONSE_CURVE);
 
-        if (!($grayResponseUnit instanceof IfdEntry) && !($grayResponseCurve instanceof IfdEntry)) {
+        if ((!$grayResponseUnit instanceof IfdEntry) && (!$grayResponseCurve instanceof IfdEntry)) {
             return;
         }
 
@@ -431,11 +423,7 @@ final readonly class TiffSampleValidator
         }
 
         if ($grayResponseUnit instanceof IfdEntry) {
-            if (
-                ($grayResponseUnit->type !== TiffConst::TYPE_SHORT)
-                || ($grayResponseUnit->count !== 1)
-                || !is_int($grayResponseUnit->value)
-            ) {
+            if (($grayResponseUnit->type !== TiffConst::TYPE_SHORT) || ($grayResponseUnit->count !== 1) || !is_int($grayResponseUnit->value)) {
                 throw new ParseError('GrayResponseUnit must be SHORT[1].', 1769);
             }
 
@@ -491,10 +479,7 @@ final readonly class TiffSampleValidator
             return;
         }
 
-        if (
-            ($halftoneHintsEntry->type !== TiffConst::TYPE_SHORT)
-            || ($halftoneHintsEntry->count !== 2)
-        ) {
+        if (($halftoneHintsEntry->type !== TiffConst::TYPE_SHORT) || ($halftoneHintsEntry->count !== 2)) {
             throw new ParseError('HalftoneHints must be SHORT[2].', 1779);
         }
 

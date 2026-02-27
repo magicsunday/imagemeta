@@ -127,7 +127,7 @@ final readonly class PlistTextParser
 
             $delimiter = $cursor->peek();
 
-            if ($delimiter !== '=' && $delimiter !== ':') {
+            if (($delimiter !== '=') && ($delimiter !== ':')) {
                 throw new ParseError('Dictionary entry is missing a separator.', 1107);
             }
 

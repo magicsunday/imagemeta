@@ -365,7 +365,7 @@ final readonly class ItemPayloadResolver
 
         // Validate the data at the pointed offset starts with a valid TIFF header (II or MM)
         $tiffSig = substr($blob, 4 + $offset, 2);
-        if ($tiffSig !== 'II' && $tiffSig !== 'MM') {
+        if (($tiffSig !== 'II') && ($tiffSig !== 'MM')) {
             throw new ParseError('Exif item TIFF-header offset does not point to valid TIFF signature', 1899);
         }
 
@@ -380,12 +380,12 @@ final readonly class ItemPayloadResolver
     public function isExifItem(array $info): bool
     {
         $itemType = $info['itemType'] ?? null;
-        if (is_string($itemType) && strcasecmp($itemType, BoxType::EXIF->value) === 0) {
+        if (is_string($itemType) && (strcasecmp($itemType, BoxType::EXIF->value) === 0)) {
             return true;
         }
 
         $name = $info['name'] ?? null;
-        if (is_string($name) && strcasecmp($name, BoxType::EXIF->value) === 0) {
+        if (is_string($name) && (strcasecmp($name, BoxType::EXIF->value) === 0)) {
             return true;
         }
 

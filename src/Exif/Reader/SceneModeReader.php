@@ -138,7 +138,7 @@ final readonly class SceneModeReader
             return null;
         }
 
-        if (is_string($value) && $value !== '') {
+        if (is_string($value) && ($value !== '')) {
             return SceneType::fromExifValue(ord($value[0]));
         }
 

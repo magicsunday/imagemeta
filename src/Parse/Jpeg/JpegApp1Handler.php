@@ -182,14 +182,14 @@ final class JpegApp1Handler
         PayloadGuard::ensureMinimumLength($tiffData, 4, 'APP1 Exif payload', 1400);
 
         $byteOrder = substr($tiffData, 0, 2);
-        if ($byteOrder !== 'II' && $byteOrder !== 'MM') {
+        if (($byteOrder !== 'II') && ($byteOrder !== 'MM')) {
             throw new ParseError('APP1 Exif TIFF header has invalid byte order', 1401);
         }
 
         $format = $byteOrder === 'II' ? 'v' : 'n';
         $magic  = Unpack::int($format, substr($tiffData, 2, 2), 'APP1 Exif TIFF magic number');
 
-        if ($magic !== 0x002A && $magic !== 0x002B) {
+        if (($magic !== 0x002A) && ($magic !== 0x002B)) {
             throw new ParseError('APP1 Exif TIFF header has invalid magic number', 1402);
         }
     }

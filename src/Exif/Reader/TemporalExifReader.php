@@ -356,9 +356,9 @@ final readonly class TemporalExifReader
         $normalized = str_replace(':', '-', substr($rawDateTime, 0, 10)) . substr($rawDateTime, 10);
         $format     = 'Y-m-d H:i:s';
 
-        if ($subSeconds !== null && $subSeconds !== '') {
+        if (($subSeconds !== null) && ($subSeconds !== '')) {
             $digits = preg_replace('/[^0-9]/', '', $subSeconds);
-            if ($digits !== null && $digits !== '') {
+            if (($digits !== null) && ($digits !== '')) {
                 $digits = substr($digits, 0, 6);
                 $digits = str_pad($digits, 6, '0');
                 $normalized .= '.' . $digits;
@@ -373,13 +373,10 @@ final readonly class TemporalExifReader
         }
 
         $lastErrors = DateTimeImmutable::getLastErrors();
-        if (
-            is_array($lastErrors)
-            && (
-                $lastErrors['warning_count'] > 0
-                || $lastErrors['error_count'] > 0
-            )
-        ) {
+        if (is_array($lastErrors) && (
+            $lastErrors['warning_count'] > 0
+            || $lastErrors['error_count'] > 0
+        )) {
             return null;
         }
 

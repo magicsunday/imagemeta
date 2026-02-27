@@ -83,7 +83,7 @@ final readonly class IfdEntry
 
         $numericValues = $this->normalizeNumericList($arrayValue);
 
-        if ($count === 1 && count($numericValues) === 1) {
+        if (($count === 1) && (count($numericValues) === 1)) {
             return $numericValues[0];
         }
 

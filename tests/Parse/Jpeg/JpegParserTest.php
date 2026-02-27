@@ -2613,10 +2613,7 @@ final class JpegParserTest extends TestCase
                 $segmentList[] = self::segment(self::MARKER_DHT, "\x00");
             }
 
-            if (
-                !$this->containsMarkerSegment($segmentList, self::MARKER_SOF0)
-                && !$this->containsMarkerSegment($segmentList, self::MARKER_SOF2)
-            ) {
+            if (!$this->containsMarkerSegment($segmentList, self::MARKER_SOF0) && !$this->containsMarkerSegment($segmentList, self::MARKER_SOF2)) {
                 $segmentList[] = self::segment(self::MARKER_SOF0, $this->defaultSofPayload());
             }
 

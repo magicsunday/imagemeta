@@ -124,7 +124,7 @@ final readonly class DngCalibrationValidator
         $colorPlanes = $cfaEntry->count;
 
         // DNG 1.7.1.0 p. 32: ColorMatrix1 is required for all non-monochrome DNG files.
-        if ($colorPlanes > 1 && !$ifd->get(DngTag::COLOR_MATRIX_1) instanceof IfdEntry) {
+        if (($colorPlanes > 1) && (!$ifd->get(DngTag::COLOR_MATRIX_1) instanceof IfdEntry)) {
             throw new ParseError(
                 'ColorMatrix1 is required for non-monochrome DNG files per DNG 1.7.1.0.',
                 1999,
@@ -199,7 +199,7 @@ final readonly class DngCalibrationValidator
                 );
             }
 
-            if ($value === 255 && $dngVer !== null && $this->support->dngVersionLessThan($dngVer, [1, 6, 0, 0])) {
+            if (($value === 255) && ($dngVer !== null) && $this->support->dngVersionLessThan($dngVer, [1, 6, 0, 0])) {
                 throw new ParseError(
                     sprintf(
                         'CalibrationIlluminant 0x%04X = 255 (Other) requires DNG >= 1.6.0.0, got %d.%d.%d.%d.',
@@ -266,9 +266,7 @@ final readonly class DngCalibrationValidator
         }
 
         // CalibrationIlluminant1 and CalibrationIlluminant2 must also be present
-        if (!$ifd->get(DngTag::CALIBRATION_ILLUMINANT_1) instanceof IfdEntry
-            || !$ifd->get(DngTag::CALIBRATION_ILLUMINANT_2) instanceof IfdEntry
-        ) {
+        if (!$ifd->get(DngTag::CALIBRATION_ILLUMINANT_1) instanceof IfdEntry || !$ifd->get(DngTag::CALIBRATION_ILLUMINANT_2) instanceof IfdEntry) {
             throw new ParseError(
                 'CalibrationIlluminant3 requires CalibrationIlluminant1 and CalibrationIlluminant2 per DNG 1.7.1.0.',
                 2003,
@@ -292,7 +290,7 @@ final readonly class DngCalibrationValidator
                 }
             }
 
-            if ($present !== 0 && $present !== 3) {
+            if (($present !== 0) && ($present !== 3)) {
                 throw new ParseError(
                     sprintf(
                         'DNG triple-illuminant tag set 0x%04X/0x%04X/0x%04X must be all-or-none per DNG 1.7.1.0.',
@@ -311,10 +309,7 @@ final readonly class DngCalibrationValidator
         /** @var IfdEntry $illum2 */
         $illum2 = $ifd->get(DngTag::CALIBRATION_ILLUMINANT_2);
 
-        if (
-            is_int($illum1->value) && is_int($illum2->value) && is_int($illum3->value)
-            && ($illum1->value === $illum2->value || $illum1->value === $illum3->value || $illum2->value === $illum3->value)
-        ) {
+        if (is_int($illum1->value) && is_int($illum2->value) && is_int($illum3->value) && ($illum1->value === $illum2->value || $illum1->value === $illum3->value || $illum2->value === $illum3->value)) {
             throw new ParseError(
                 'Triple-illuminant CalibrationIlluminant values must be distinct per DNG 1.7.1.0.',
                 2007,
@@ -330,10 +325,7 @@ final readonly class DngCalibrationValidator
      */
     public function validateDngWhiteBalanceExclusivity(Ifd $ifd): void
     {
-        if (
-            $ifd->get(DngTag::AS_SHOT_NEUTRAL) instanceof IfdEntry
-            && $ifd->get(DngTag::AS_SHOT_WHITE_XY) instanceof IfdEntry
-        ) {
+        if (($ifd->get(DngTag::AS_SHOT_NEUTRAL) instanceof IfdEntry) && ($ifd->get(DngTag::AS_SHOT_WHITE_XY) instanceof IfdEntry)) {
             throw new ParseError(
                 'AsShotNeutral and AsShotWhiteXY are mutually exclusive per DNG 1.7.1.0.',
                 2009,
@@ -373,7 +365,7 @@ final readonly class DngCalibrationValidator
 
         $whiteXY = $ifd->get(DngTag::AS_SHOT_WHITE_XY);
 
-        if ($whiteXY instanceof IfdEntry && ($whiteXY->type !== TiffConst::TYPE_RATIONAL || $whiteXY->count !== 2)) {
+        if (($whiteXY instanceof IfdEntry) && ($whiteXY->type !== TiffConst::TYPE_RATIONAL || $whiteXY->count !== 2)) {
             throw new ParseError(
                 sprintf(
                     'AsShotWhiteXY must be RATIONAL with count 2 per DNG 1.7.1.0, got type %d count %d.',
@@ -401,10 +393,7 @@ final readonly class DngCalibrationValidator
 
         $colorPlanes = $this->support->resolveDngColorPlanes($ifd);
 
-        if (
-            ($entry->type !== TiffConst::TYPE_RATIONAL)
-            || (($colorPlanes !== null) && ($entry->count !== $colorPlanes))
-        ) {
+        if (($entry->type !== TiffConst::TYPE_RATIONAL) || (($colorPlanes !== null) && ($entry->count !== $colorPlanes))) {
             throw new ParseError(
                 sprintf(
                     'AnalogBalance must be RATIONAL with count = ColorPlanes (%s), got type %d count %d.',
@@ -452,10 +441,7 @@ final readonly class DngCalibrationValidator
             return;
         }
 
-        if (
-            (is_int($illum1->value) && $illum1->value === 0)
-            || (is_int($illum2->value) && $illum2->value === 0)
-        ) {
+        if ((is_int($illum1->value) && $illum1->value === 0) || (is_int($illum2->value) && $illum2->value === 0)) {
             throw new ParseError(
                 'CalibrationIlluminant1 and CalibrationIlluminant2 must not have value 0 (unknown) when both are present per DNG 1.7.1.0.',
                 2013,
@@ -577,12 +563,7 @@ final readonly class DngCalibrationValidator
         string $iccName,
         IccParser $iccParser,
     ): void {
-        if (
-            ($iccEntry->type !== TiffConst::TYPE_UNDEFINED)
-            || ($iccEntry->count < 1)
-            || !is_string($iccEntry->value)
-            || (strlen($iccEntry->value) !== $iccEntry->count)
-        ) {
+        if (($iccEntry->type !== TiffConst::TYPE_UNDEFINED) || ($iccEntry->count < 1) || !is_string($iccEntry->value) || (strlen($iccEntry->value) !== $iccEntry->count)) {
             throw new ParseError(
                 sprintf(
                     '%s must be UNDEFINED with byte-count matching payload length, got type %d count %d.',
@@ -664,10 +645,7 @@ final readonly class DngCalibrationValidator
      */
     private function validateDngPreProfileMatrixComponents(IfdEntry $matrixEntry, string $matrixName): void
     {
-        if (
-            !$matrixEntry->value instanceof ExifRationalList
-            || count($matrixEntry->value->values) !== $matrixEntry->count
-        ) {
+        if (!$matrixEntry->value instanceof ExifRationalList || count($matrixEntry->value->values) !== $matrixEntry->count) {
             throw new ParseError(
                 sprintf('%s must decode to SRATIONAL list with %d components.', $matrixName, $matrixEntry->count),
                 1682,

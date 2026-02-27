@@ -133,7 +133,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 $this->parseMoovBox($box, $context);
             } elseif ($box->type === BoxType::MOOF->value) {
                 $this->parseMoofBox($box, $context);
-            } elseif ($box->type === BoxType::UUID->value && $box->userType === BoxPayloadCollector::XMP_UUID) {
+            } elseif (($box->type === BoxType::UUID->value) && ($box->userType === BoxPayloadCollector::XMP_UUID)) {
                 if ($box->contentSize > $this->config->maxItemPayloadSize) {
                     throw new ParseError('uuid XMP payload exceeds maximum allowed size', 1368);
                 }
@@ -500,7 +500,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $context->qtKeys      = $mergedQtKeys;
         $context->qtDataAtoms = $mergedQtDataAtoms;
 
-        if ($context->ispeWidth === null && $payloads->ispeWidth !== null) {
+        if (($context->ispeWidth === null) && ($payloads->ispeWidth !== null)) {
             $context->ispeWidth  = $payloads->ispeWidth;
             $context->ispeHeight = $payloads->ispeHeight;
         }

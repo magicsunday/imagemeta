@@ -248,7 +248,7 @@ final class MpfParserTest extends TestCase
         $dataOffset = $ifdOffset + 2 + ($count * 12) + 4;
 
         foreach ($entries as [$tag, $type, $components, $value]) {
-            if (is_string($value) && strlen($value) > 4) {
+            if (is_string($value) && (strlen($value) > 4)) {
                 $offset = $dataOffset + strlen($data);
                 $body .= pack('v', $tag)
                     . pack('v', $type)

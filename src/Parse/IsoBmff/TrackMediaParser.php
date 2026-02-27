@@ -128,11 +128,7 @@ final readonly class TrackMediaParser
             ];
         }
 
-        if (
-            $handlerName !== null
-            && $handlerName !== ''
-            && !array_key_exists(QuickTimeMeta::HANDLER_DESCRIPTION_KEY, $context->qtKeys)
-        ) {
+        if (($handlerName !== null) && ($handlerName !== '') && !array_key_exists(QuickTimeMeta::HANDLER_DESCRIPTION_KEY, $context->qtKeys)) {
             $context->qtKeys[QuickTimeMeta::HANDLER_DESCRIPTION_KEY] = $handlerName;
         }
 
@@ -164,19 +160,19 @@ final readonly class TrackMediaParser
         /** @var QuickTimeKeyMap $trackKeys */
         $trackKeys = [];
 
-        if ($width !== null && $width > 0) {
+        if (($width !== null) && ($width > 0)) {
             $trackKeys[QuickTimeMeta::VIDEO_WIDTH_KEY] = $width;
         }
 
-        if ($height !== null && $height > 0) {
+        if (($height !== null) && ($height > 0)) {
             $trackKeys[QuickTimeMeta::VIDEO_HEIGHT_KEY] = $height;
         }
 
-        if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
+        if (isset($sampleInfo['format']) && ($sampleInfo['format'] !== '')) {
             $trackKeys[QuickTimeMeta::VIDEO_CODEC_KEY] = $sampleInfo['format'];
         }
 
-        if (isset($sampleInfo['compressorName']) && $sampleInfo['compressorName'] !== '') {
+        if (isset($sampleInfo['compressorName']) && ($sampleInfo['compressorName'] !== '')) {
             $trackKeys[QuickTimeMeta::COMPRESSOR_NAME_KEY] = $sampleInfo['compressorName'];
         }
 
@@ -188,7 +184,7 @@ final readonly class TrackMediaParser
             $trackKeys[QuickTimeMeta::VIDEO_VERTICAL_RESOLUTION_KEY] = $sampleInfo['verticalResolution'];
         }
 
-        if (isset($sampleInfo['frameCount']) && $sampleInfo['frameCount'] !== 1) {
+        if (isset($sampleInfo['frameCount']) && ($sampleInfo['frameCount'] !== 1)) {
             $trackKeys[QuickTimeMeta::VIDEO_FRAME_COUNT_KEY] = $sampleInfo['frameCount'];
         }
 
@@ -207,7 +203,7 @@ final readonly class TrackMediaParser
         /** @var QuickTimeKeyMap $trackKeys */
         $trackKeys = [];
 
-        if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
+        if (isset($sampleInfo['format']) && ($sampleInfo['format'] !== '')) {
             $trackKeys[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
             $trackKeys[QuickTimeMeta::AUDIO_CODEC_KEY]  = $sampleInfo['format'];
         }
@@ -279,7 +275,7 @@ final readonly class TrackMediaParser
         $version = $win->readU8();
         $flags   = $this->boxNavigator->readUInt24($win);
 
-        if ($version !== 0 && $version !== 1) {
+        if (($version !== 0) && ($version !== 1)) {
             throw new ParseError('unsupported mvhd box version', 1908);
         }
 
@@ -380,7 +376,7 @@ final readonly class TrackMediaParser
                 // ISO/IEC 14496-12 §8.4.3: NUL-terminated UTF-8 handler name.
                 $trimmed = rtrim($nameBytes, "\0");
 
-                if ($trimmed !== '' && !mb_check_encoding($trimmed, 'UTF-8')) {
+                if (($trimmed !== '') && !mb_check_encoding($trimmed, 'UTF-8')) {
                     throw new ParseError('hdlr handler name contains invalid UTF-8', 1384);
                 }
 
@@ -414,7 +410,7 @@ final readonly class TrackMediaParser
         $version = $win->readU8();
         $flags   = $this->boxNavigator->readUInt24($win);
 
-        if ($version !== 0 && $version !== 1) {
+        if (($version !== 0) && ($version !== 1)) {
             throw new ParseError('unsupported tkhd box version', 1145);
         }
 
@@ -489,7 +485,7 @@ final readonly class TrackMediaParser
         $version = $win->readU8();
         $flags   = $this->boxNavigator->readUInt24($win);
 
-        if ($version !== 0 && $version !== 1) {
+        if (($version !== 0) && ($version !== 1)) {
             throw new ParseError('unsupported mdhd box version', 1903);
         }
 
@@ -828,10 +824,10 @@ final readonly class TrackMediaParser
 
             // Use first entry only; skip parsing subsequent entries to
             // avoid implicit 'last entry wins' when entry_count > 1
-            if ($result === [] && $handlerType === 'vide') {
+            if (($result === []) && ($handlerType === 'vide')) {
                 $normalizedFormat = $this->boxNavigator->normalizeFourcc($format);
                 $result           = $this->videoParser->parseVideoSampleEntry($win, $entryEnd, $normalizedFormat);
-            } elseif ($result === [] && $handlerType === 'soun') {
+            } elseif (($result === []) && ($handlerType === 'soun')) {
                 $normalizedFormat = $this->boxNavigator->normalizeFourcc($format);
                 $result           = $this->audioParser->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $normalizedFormat, $version);
             }

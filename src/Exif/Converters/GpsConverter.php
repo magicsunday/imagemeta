@@ -217,7 +217,7 @@ final readonly class GpsConverter
         $dopValue = $this->rationalConverter->toFloat($dopEntry?->value);
 
         // Tolerate negative DOP — set to null.
-        if ($dopValue !== null && $dopValue < 0.0) {
+        if (($dopValue !== null) && ($dopValue < 0.0)) {
             $dopValue = null;
         }
 
@@ -231,7 +231,7 @@ final readonly class GpsConverter
             $diffValue = $diffValue->values[0] ?? null;
         }
 
-        if (is_int($diffValue) && GpsDifferential::tryFrom($diffValue) !== null) {
+        if (is_int($diffValue) && (GpsDifferential::tryFrom($diffValue) !== null)) {
             $result['differential'] = $diffValue;
         }
 
@@ -240,7 +240,7 @@ final readonly class GpsConverter
         $hPositioningErrorValue = $this->rationalConverter->toFloat($hPositionEntry?->value);
 
         // Tolerate negative HPositioningError — set to null.
-        if ($hPositioningErrorValue !== null && $hPositioningErrorValue < 0.0) {
+        if (($hPositioningErrorValue !== null) && ($hPositioningErrorValue < 0.0)) {
             $hPositioningErrorValue = null;
         }
 

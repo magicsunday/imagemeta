@@ -153,7 +153,7 @@ final readonly class DngProfileValidator
         $isSdr    = true;
         $dynRange = $ifd->get(DngTag::PROFILE_DYNAMIC_RANGE);
 
-        if ($dynRange instanceof IfdEntry && is_string($dynRange->value) && strlen($dynRange->value) >= 4) {
+        if (($dynRange instanceof IfdEntry) && is_string($dynRange->value) && (strlen($dynRange->value) >= 4)) {
             // Bytes 2-3 are DynamicRange SHORT (LE): 0=SDR, 1=HDR
             $range = ord($dynRange->value[2]) | (ord($dynRange->value[3]) << 8);
 
@@ -162,15 +162,10 @@ final readonly class DngProfileValidator
             }
         }
 
-        if ($isSdr && count($floats) >= 4) {
+        if ($isSdr && (count($floats) >= 4)) {
             $lastIdx = count($floats) - 1;
 
-            if (
-                $floats[0] !== 0.0
-                || $floats[1] !== 0.0
-                || $floats[$lastIdx - 1] !== 1.0
-                || $floats[$lastIdx] !== 1.0
-            ) {
+            if ($floats[0] !== 0.0 || $floats[1] !== 0.0 || $floats[$lastIdx - 1] !== 1.0 || $floats[$lastIdx] !== 1.0) {
                 throw new ParseError(
                     'SDR ProfileToneCurve must start at (0.0,0.0) and end at (1.0,1.0) per DNG 1.7.1.0.',
                     2017,
@@ -279,7 +274,7 @@ final readonly class DngProfileValidator
                     $tripleIndex = ($hue * $satDivs * $valDivs + 0 * $valDivs + $val) * 3;
                     $valueScale  = $dataValue->values[$tripleIndex + 2] ?? null;
 
-                    if ((is_float($valueScale) || is_int($valueScale)) && (float) $valueScale !== 1.0) {
+                    if ((is_float($valueScale) || is_int($valueScale)) && ((float) $valueScale !== 1.0)) {
                         throw new ParseError(
                             sprintf(
                                 'ProfileHueSatMapData 0x%04X zero-saturation entry at index %d has valueScale %g, must be 1.0.',
@@ -435,14 +430,14 @@ final readonly class DngProfileValidator
         $dataEntry = $ifd->get(DngTag::PROFILE_LOOK_TABLE_DATA);
 
         // Pair consistency: both must be present or both absent
-        if ($dimsEntry instanceof IfdEntry && !$dataEntry instanceof IfdEntry) {
+        if (($dimsEntry instanceof IfdEntry) && (!$dataEntry instanceof IfdEntry)) {
             throw new ParseError(
                 'ProfileLookTableDims is present but ProfileLookTableData is missing.',
                 1551,
             );
         }
 
-        if (!$dimsEntry instanceof IfdEntry && $dataEntry instanceof IfdEntry) {
+        if ((!$dimsEntry instanceof IfdEntry) && ($dataEntry instanceof IfdEntry)) {
             throw new ParseError(
                 'ProfileLookTableData is present but ProfileLookTableDims is missing.',
                 1552,
@@ -590,14 +585,14 @@ final readonly class DngProfileValidator
             $s = $value->values[$i];
             $o = $value->values[$i + 1];
 
-            if ((is_float($s) || is_int($s)) && $s <= 0.0) {
+            if ((is_float($s) || is_int($s)) && ($s <= 0.0)) {
                 throw new ParseError(
                     sprintf('NoiseProfile S_%d must be > 0, got %g.', $i / 2, $s),
                     1499,
                 );
             }
 
-            if ((is_float($o) || is_int($o)) && $o < 0.0) {
+            if ((is_float($o) || is_int($o)) && ($o < 0.0)) {
                 throw new ParseError(
                     sprintf('NoiseProfile O_%d must be >= 0, got %g.', $i / 2, $o),
                     2045,
@@ -654,7 +649,7 @@ final readonly class DngProfileValidator
 
         $valDivs = $dimsValue->values[2];
 
-        if (is_int($valDivs) && $valDivs === 1) {
+        if (is_int($valDivs) && ($valDivs === 1)) {
             throw new ParseError(
                 sprintf('%s must not be present for 2.5D tables (ValueDivisions == 1).', $name),
                 1557,
@@ -696,7 +691,7 @@ final readonly class DngProfileValidator
 
         $dynamicRange = $this->support->unpackU16(substr($payload, 2, 2));
 
-        if ($dynamicRange !== 0 && $dynamicRange !== 1) {
+        if (($dynamicRange !== 0) && ($dynamicRange !== 1)) {
             throw new ParseError(
                 sprintf('ProfileDynamicRange DynamicRange must be 0 or 1, got %d.', $dynamicRange),
                 1507,

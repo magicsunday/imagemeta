@@ -62,9 +62,9 @@ final readonly class AppleMakerNotesBuilder
         $runTime                 = $this->extractor->runTimeValue($dictionary, 'RunTime');
         $livePhotoIndex          = $this->extractor->intValue($dictionary, ...AppleMaps::LIVE_PHOTO_INDEX_KEYS);
         $livePhotoTime           = null;
-        if ($livePhotoIndex !== null && $runTime instanceof RunTime) {
+        if (($livePhotoIndex !== null) && ($runTime instanceof RunTime)) {
             $timescale = $runTime->timescale;
-            if ($timescale !== null && $timescale > 0) {
+            if (($timescale !== null) && ($timescale > 0)) {
                 $livePhotoTime = $livePhotoIndex / $timescale;
             }
         }
@@ -161,11 +161,7 @@ final readonly class AppleMakerNotesBuilder
      */
     private function seedSemanticStyleKeys(array &$dictionary): ?array
     {
-        if (
-            !array_key_exists('SemanticStylePreset', $dictionary)
-            && !array_key_exists('SemanticStyleWarmth', $dictionary)
-            && !array_key_exists('SemanticStyleTone', $dictionary)
-        ) {
+        if (!array_key_exists('SemanticStylePreset', $dictionary) && !array_key_exists('SemanticStyleWarmth', $dictionary) && !array_key_exists('SemanticStyleTone', $dictionary)) {
             $semanticStyleCompact = SemanticStyle::fromDictionary($dictionary);
             if ($semanticStyleCompact !== null) {
                 [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
@@ -297,15 +293,15 @@ final readonly class AppleMakerNotesBuilder
         if ($semanticStyleCompact !== null) {
             [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
 
-            if ($semanticStylePreset === null && $compactPreset !== null) {
+            if (($semanticStylePreset === null) && ($compactPreset !== null)) {
                 $semanticStylePreset = $compactPreset;
             }
 
-            if ($semanticStyleWarmth === null && $compactWarmth !== null) {
+            if (($semanticStyleWarmth === null) && ($compactWarmth !== null)) {
                 $semanticStyleWarmth = $compactWarmth;
             }
 
-            if ($semanticStyleTone === null && $compactTone !== null) {
+            if (($semanticStyleTone === null) && ($compactTone !== null)) {
                 $semanticStyleTone = $compactTone;
             }
         }

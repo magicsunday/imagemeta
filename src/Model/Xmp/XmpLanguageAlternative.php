@@ -159,7 +159,7 @@ final readonly class XmpLanguageAlternative
         foreach ($entries as $index => $entry) {
             $lang = $entry['lang'];
 
-            if ($lang !== '' && array_key_exists($lang, $seen)) {
+            if (($lang !== '') && array_key_exists($lang, $seen)) {
                 throw new ParseError(sprintf(
                     'Duplicate xml:lang "%s" in rdf:Alt per XMP spec LanguageAlternative',
                     $lang,

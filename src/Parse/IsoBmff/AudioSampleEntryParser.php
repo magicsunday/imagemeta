@@ -117,7 +117,7 @@ final readonly class AudioSampleEntryParser
             throw new ParseError('audio sample entry vendor must be 0', 1921);
         }
 
-        if ($version === 1 && $stsdVersion !== 1) {
+        if (($version === 1) && ($stsdVersion !== 1)) {
             throw new ParseError('audio sample entry version 1 requires stsd version 1', 1472);
         }
 
@@ -132,7 +132,7 @@ final readonly class AudioSampleEntryParser
             return $result;
         }
 
-        if ($version !== 0 && $version !== 1) {
+        if (($version !== 0) && ($version !== 1)) {
             throw new ParseError(sprintf('unsupported audio sample entry version %d', $version), 1922);
         }
 
@@ -146,11 +146,11 @@ final readonly class AudioSampleEntryParser
         $packetSize    = $win->readU16BE();
 
         if ($version === 0) {
-            if ($channels !== 1 && $channels !== 2) {
+            if (($channels !== 1) && ($channels !== 2)) {
                 throw new ParseError('audio sample entry version 0 channels must be 1 or 2', 1935);
             }
 
-            if ($sampleSize !== 8 && $sampleSize !== 16) {
+            if (($sampleSize !== 8) && ($sampleSize !== 16)) {
                 throw new ParseError('audio sample entry version 0 sample size must be 8 or 16 bits', 1936);
             }
 
@@ -164,7 +164,7 @@ final readonly class AudioSampleEntryParser
         }
 
         $sampleRateRaw = $win->readU32BE();
-        if ($version === 0 && $sampleRateRaw > self::VERSION_0_SAMPLE_RATE_MAX_16_16) {
+        if (($version === 0) && ($sampleRateRaw > self::VERSION_0_SAMPLE_RATE_MAX_16_16)) {
             throw new ParseError('audio sample entry version 0 sampleRate must be <= 65535', 1508);
         }
 
@@ -240,14 +240,7 @@ final readonly class AudioSampleEntryParser
         $constBytesPerAudioPacket      = $win->readU32BE();
         $constLpcmFramesPerAudioPacket = $win->readU32BE();
 
-        if (
-            $always3 !== 3
-            || $always16 !== 16
-            || $alwaysMinus2 !== self::VERSION_2_ALWAYS_MINUS_2
-            || $always0 !== 0
-            || $always65536 !== 65536
-            || $always7F000000 !== self::VERSION_2_ALWAYS_7F000000
-        ) {
+        if ($always3 !== 3 || $always16 !== 16 || $alwaysMinus2 !== self::VERSION_2_ALWAYS_MINUS_2 || $always0 !== 0 || $always65536 !== 65536 || $always7F000000 !== self::VERSION_2_ALWAYS_7F000000) {
             throw new ParseError('audio sample entry version 2 constants are invalid', 1460);
         }
 
@@ -313,11 +306,11 @@ final readonly class AudioSampleEntryParser
             $constLpcmFramesPerAudioPacket,
         );
 
-        if ($isPacked && $constBytesPerAudioPacket !== $minBytesPerAudioPacket) {
+        if ($isPacked && ($constBytesPerAudioPacket !== $minBytesPerAudioPacket)) {
             throw new ParseError('lpcm constBytesPerAudioPacket must match packed channel/bit-depth layout', 1492);
         }
 
-        if (!$isPacked && $constBytesPerAudioPacket < $minBytesPerAudioPacket) {
+        if (!$isPacked && ($constBytesPerAudioPacket < $minBytesPerAudioPacket)) {
             throw new ParseError('lpcm constBytesPerAudioPacket is too small for aligned channel/bit-depth layout', 1493);
         }
 

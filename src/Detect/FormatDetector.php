@@ -170,7 +170,7 @@ final readonly class FormatDetector
      */
     private function looksLikeTiff(Stream $stream, string $magic2): bool
     {
-        if ($magic2 !== 'II' && $magic2 !== 'MM') {
+        if (($magic2 !== 'II') && ($magic2 !== 'MM')) {
             return false;
         }
 
@@ -223,12 +223,12 @@ final readonly class FormatDetector
             }
 
             // Validate box size covers at least the header
-            if ($size !== 0 && $size < $headerSize) {
+            if (($size !== 0) && ($size < $headerSize)) {
                 return false;
             }
 
             // uuid boxes need at least 24 bytes (header + 16-byte usertype)
-            if ($boxType === 'uuid' && $size !== 0 && $size < 24) {
+            if (($boxType === 'uuid') && ($size !== 0) && ($size < 24)) {
                 return false;
             }
 

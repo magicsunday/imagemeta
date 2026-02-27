@@ -332,7 +332,7 @@ final class TiffExifParser implements TiffExifParserInterface
     ): ParsedExif {
         $this->validateParsedIfds($ifd0, $ifd1, $exifIfd, $jpegContext, $embeddedContext, $additionalIfds);
 
-        if (!($interopIfd instanceof Ifd) && ($additionalIfds !== [])) {
+        if ((!$interopIfd instanceof Ifd) && ($additionalIfds !== [])) {
             $interopIfd = $this->traverser->locateInteropIfd(...$additionalIfds);
         }
 
@@ -619,10 +619,7 @@ final class TiffExifParser implements TiffExifParserInterface
 
         $cnt = $this->bigTiff ? $this->binaryReader->readU64()->toInt('directory entry value count') : $this->binaryReader->readU32();
 
-        if (
-            !$this->bigTiff
-            && in_array($type, [TiffConst::TYPE_LONG8, TiffConst::TYPE_SLONG8, TiffConst::TYPE_IFD8], true)
-        ) {
+        if (!$this->bigTiff && in_array($type, [TiffConst::TYPE_LONG8, TiffConst::TYPE_SLONG8, TiffConst::TYPE_IFD8], true)) {
             $this->binaryReader->readValueOrOffset(0);
 
             return null;
@@ -652,7 +649,7 @@ final class TiffExifParser implements TiffExifParserInterface
 
         $value = $this->dngNormalizer->normalizeDngStringValue($tag, $type, $rawBytes, $value);
 
-        if ($tag === ExifTag::CFA_PATTERN && is_string($value)) {
+        if (($tag === ExifTag::CFA_PATTERN) && is_string($value)) {
             $value = $this->dngNormalizer->decodeCfaPatternPayload($rawBytes);
         }
 

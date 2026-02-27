@@ -135,7 +135,7 @@ final readonly class VideoSampleEntryParser
             throw new ParseError('video sample entry depth is not allowed by QuickTime domain', 1494);
         }
 
-        if (in_array($depth, self::QUICKTIME_VIDEO_NO_COLOR_TABLE_DEPTHS, true) && $colorTableId !== -1) {
+        if (in_array($depth, self::QUICKTIME_VIDEO_NO_COLOR_TABLE_DEPTHS, true) && ($colorTableId !== -1)) {
             throw new ParseError('video sample entry depth without color table must use colorTableId -1', 1495);
         }
 

@@ -294,7 +294,7 @@ final readonly class IfdValueReader
             return [$value];
         }
 
-        if (is_string($value) && $value !== '') {
+        if (is_string($value) && ($value !== '')) {
             $length = strlen($value);
             $bytes  = [];
             for ($i = 0; $i < $length; ++$i) {

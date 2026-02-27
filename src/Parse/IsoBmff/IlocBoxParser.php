@@ -138,7 +138,7 @@ final readonly class IlocBoxParser
 
                     // ISO/IEC 14496-12 §8.11.3.2: extent_index is 1-based and 0 is
                     // reserved. This only applies to construction_method=2 (item_offset).
-                    if ($constructionMethod === ConstructionMethod::ItemOffset && $extentIndex === 0) {
+                    if (($constructionMethod === ConstructionMethod::ItemOffset) && ($extentIndex === 0)) {
                         throw new ParseError('iloc extent_index 0 is reserved', 1208);
                     }
                 }
@@ -194,7 +194,7 @@ final readonly class IlocBoxParser
         $version = $win->readU8();
         $flags   = $this->boxNavigator->readUInt24($win);
 
-        if ($version !== 0 && $version !== 1) {
+        if (($version !== 0) && ($version !== 1)) {
             throw new ParseError('unsupported iinf box version', 1193);
         }
 
@@ -202,7 +202,7 @@ final readonly class IlocBoxParser
             throw new ParseError('unsupported iinf box flags', 1194);
         }
 
-        if ($version === 1 && $iinf->contentSize < 8) {
+        if (($version === 1) && ($iinf->contentSize < 8)) {
             throw new ParseError('iinf box truncated', 1195);
         }
 
@@ -435,7 +435,7 @@ final readonly class IlocBoxParser
     private function parseDataReferenceEntry(BoxDescriptor $entry, int $index): IsoBmffDataReference
     {
         // Postel's Law: skip unknown dref types (e.g. "alis", "rsrc").
-        if ($entry->type !== BoxType::URL->value && $entry->type !== BoxType::URN->value) {
+        if (($entry->type !== BoxType::URL->value) && ($entry->type !== BoxType::URN->value)) {
             return new IsoBmffDataReference(
                 $index,
                 $this->boxNavigator->normalizeFourcc($entry->type),
@@ -620,14 +620,14 @@ final readonly class IlocBoxParser
 
         // ISO 14496-12 §8.11.6: when item_type == 'mime', content_type
         // is mandatory and must be non-empty
-        if ($itemType === 'mime' && ($contentType === null || $contentType === '')) {
+        if (($itemType === 'mime') && ($contentType === null || $contentType === '')) {
             throw new ParseError('infe mime item requires non-empty content_type', 1391);
         }
 
         // ISO 14496-12: if item_type == 'mime' and 4+ bytes remain after the
         // NUL-terminated strings, a 4-byte extension_type follows
         $extensionType = null;
-        if ($itemType === 'mime' && (strlen($payload) - $offset) >= 4) {
+        if (($itemType === 'mime') && ((strlen($payload) - $offset) >= 4)) {
             $extensionType = substr($payload, $offset, 4);
         }
 

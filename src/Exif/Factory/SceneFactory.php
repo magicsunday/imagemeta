@@ -84,19 +84,16 @@ final readonly class SceneFactory
 
         $hdrScene = null;
 
-        if ($hdrLabel !== null && $this->isHdrSceneLabel($hdrLabel)) {
+        if (($hdrLabel !== null) && $this->isHdrSceneLabel($hdrLabel)) {
             $hdrScene = true;
         }
 
         if ($hdrScene === null) {
             $hdrHeadroom = $apple->hdr?->headroom;
 
-            if ($hdrHeadroom !== null && $hdrHeadroom > 0.0) {
+            if (($hdrHeadroom !== null) && ($hdrHeadroom > 0.0)) {
                 $hdrScene = true;
-            } elseif (
-                $this->appleFlag($appleFlags, 'hdrEnabled') === true
-                || $this->appleFlag($appleFlags, 'hdrAuto') === true
-            ) {
+            } elseif ($this->appleFlag($appleFlags, 'hdrEnabled') === true || $this->appleFlag($appleFlags, 'hdrAuto') === true) {
                 $hdrScene = true;
             }
         }

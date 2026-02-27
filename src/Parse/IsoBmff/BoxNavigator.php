@@ -138,7 +138,7 @@ final readonly class BoxNavigator
             // recording size while the file ends mid-stream.  Clamping the
             // effective size lets the parser continue scanning for metadata
             // boxes that may follow (or precede) the mdat.
-            if ($type === 'mdat' && $allowImplicitSize) {
+            if (($type === 'mdat') && $allowImplicitSize) {
                 $size = $limit - $offset;
             } else {
                 throw new ParseError(

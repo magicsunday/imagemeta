@@ -50,10 +50,7 @@ final readonly class DngGeometryValidator
     {
         $activeArea = $ifd->get(DngTag::ACTIVE_AREA);
         if ($activeArea instanceof IfdEntry) {
-            if (
-                !in_array($activeArea->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)
-                || ($activeArea->count !== 4)
-            ) {
+            if (!in_array($activeArea->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true) || ($activeArea->count !== 4)) {
                 throw new ParseError(
                     sprintf(
                         'ActiveArea must be SHORT|LONG with count 4, got type %d count %d.',
@@ -69,11 +66,7 @@ final readonly class DngGeometryValidator
 
         $maskedAreas = $ifd->get(DngTag::MASKED_AREAS);
         if ($maskedAreas instanceof IfdEntry) {
-            if (
-                !in_array($maskedAreas->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)
-                || ($maskedAreas->count < 4)
-                || ($maskedAreas->count % 4 !== 0)
-            ) {
+            if (!in_array($maskedAreas->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true) || ($maskedAreas->count < 4) || ($maskedAreas->count % 4 !== 0)) {
                 throw new ParseError(
                     sprintf(
                         'MaskedAreas must be SHORT|LONG with count 4*N, got type %d count %d.',
@@ -116,7 +109,7 @@ final readonly class DngGeometryValidator
         $samplesPerPixel = null;
         $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
 
-        if ($samplesEntry instanceof IfdEntry && is_int($samplesEntry->value) && $samplesEntry->value > 0) {
+        if (($samplesEntry instanceof IfdEntry) && is_int($samplesEntry->value) && ($samplesEntry->value > 0)) {
             $samplesPerPixel = $samplesEntry->value;
         }
 
@@ -169,14 +162,11 @@ final readonly class DngGeometryValidator
 
         $defaultCropOrigin = $ifd->get(DngTag::DEFAULT_CROP_ORIGIN);
         if ($defaultCropOrigin instanceof IfdEntry) {
-            if (
-                !in_array(
-                    $defaultCropOrigin->type,
-                    [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_RATIONAL],
-                    true,
-                )
-                || ($defaultCropOrigin->count !== 2)
-            ) {
+            if (!in_array(
+                $defaultCropOrigin->type,
+                [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_RATIONAL],
+                true,
+            ) || ($defaultCropOrigin->count !== 2)) {
                 throw new ParseError(
                     sprintf(
                         'DefaultCropOrigin must be SHORT|LONG|RATIONAL with count 2, got type %d count %d.',
@@ -202,14 +192,11 @@ final readonly class DngGeometryValidator
 
         $defaultCropSize = $ifd->get(DngTag::DEFAULT_CROP_SIZE);
         if ($defaultCropSize instanceof IfdEntry) {
-            if (
-                !in_array(
-                    $defaultCropSize->type,
-                    [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_RATIONAL],
-                    true,
-                )
-                || ($defaultCropSize->count !== 2)
-            ) {
+            if (!in_array(
+                $defaultCropSize->type,
+                [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_RATIONAL],
+                true,
+            ) || ($defaultCropSize->count !== 2)) {
                 throw new ParseError(
                     sprintf(
                         'DefaultCropSize must be SHORT|LONG|RATIONAL with count 2, got type %d count %d.',
@@ -569,7 +556,7 @@ final readonly class DngGeometryValidator
         foreach ($value->values as $index => $component) {
             if ($component->denominator === 0) {
                 $isApertureField = $index >= 2;
-                if ($isApertureField && $component->numerator === 0) {
+                if ($isApertureField && ($component->numerator === 0)) {
                     $components[] = null;
                     continue;
                 }
@@ -770,11 +757,7 @@ final readonly class DngGeometryValidator
         $activeLength = null;
         $activeArea   = $ifd->get(DngTag::ACTIVE_AREA);
 
-        if (
-            $activeArea instanceof IfdEntry
-            && in_array($activeArea->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)
-            && ($activeArea->count === 4)
-        ) {
+        if (($activeArea instanceof IfdEntry) && in_array($activeArea->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true) && ($activeArea->count === 4)) {
             $rectangles = $this->support->extractDngRectangles($activeArea, 'ActiveArea');
             if (count($rectangles) === 1) {
                 $activeWidth  = $rectangles[0]['right'] - $rectangles[0]['left'];
@@ -909,10 +892,7 @@ final readonly class DngGeometryValidator
             return;
         }
 
-        if (
-            ($entry->type !== TiffConst::TYPE_SHORT && $entry->type !== TiffConst::TYPE_LONG)
-            || $entry->count !== 2
-        ) {
+        if (($entry->type !== TiffConst::TYPE_SHORT && $entry->type !== TiffConst::TYPE_LONG) || $entry->count !== 2) {
             throw new ParseError(
                 sprintf('SubTileBlockSize must be (SHORT|LONG)[2], got type %d count %d.', $entry->type, $entry->count),
                 1577,
@@ -951,10 +931,7 @@ final readonly class DngGeometryValidator
             return;
         }
 
-        if (
-            ($entry->type !== TiffConst::TYPE_SHORT && $entry->type !== TiffConst::TYPE_LONG)
-            || $entry->count !== 1
-        ) {
+        if (($entry->type !== TiffConst::TYPE_SHORT && $entry->type !== TiffConst::TYPE_LONG) || $entry->count !== 1) {
             throw new ParseError(
                 sprintf('RowInterleaveFactor must be (SHORT|LONG)[1], got type %d count %d.', $entry->type, $entry->count),
                 1579,

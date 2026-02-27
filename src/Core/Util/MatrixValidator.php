@@ -45,12 +45,7 @@ final class MatrixValidator
         $labels  = $matrix['labels'] ?? null;
         $values  = $matrix['values'] ?? null;
 
-        if (
-            !is_int($columns)
-            || !is_int($rows)
-            || !is_array($labels)
-            || !is_array($values)
-        ) {
+        if (!is_int($columns) || !is_int($rows) || !is_array($labels) || !is_array($values)) {
             return null;
         }
 
@@ -64,17 +59,11 @@ final class MatrixValidator
         }
 
         $rowLabels = $labels['rows'] ?? null;
-        if (
-            ($rowLabels === null)
-            && $requireRowLabels
-        ) {
+        if (($rowLabels === null) && $requireRowLabels) {
             return null;
         }
 
-        if (
-            ($rowLabels !== null)
-            && !is_array($rowLabels)
-        ) {
+        if (($rowLabels !== null) && !is_array($rowLabels)) {
             return null;
         }
 

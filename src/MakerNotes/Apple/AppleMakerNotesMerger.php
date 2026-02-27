@@ -38,7 +38,7 @@ final class AppleMakerNotesMerger
         ?MakerNotesRecord $makerNotes,
         ?QuickTimeMeta $quickTime,
     ): ?MakerNotesRecord {
-        if ($makerNotes instanceof MakerNotesRecord && $makerNotes->vendor !== 'Apple') {
+        if (($makerNotes instanceof MakerNotesRecord) && ($makerNotes->vendor !== 'Apple')) {
             return $makerNotes;
         }
 
@@ -80,7 +80,7 @@ final class AppleMakerNotesMerger
         $lookup = new QuickTimeLookup($quickTime);
 
         $contentIdentifier = $makerNotes?->identity?->contentIdentifier;
-        if ($contentIdentifier === null && $quickTime instanceof QuickTimeMeta) {
+        if (($contentIdentifier === null) && ($quickTime instanceof QuickTimeMeta)) {
             $contentIdentifier = $quickTime->contentIdentifier();
         }
 
@@ -132,15 +132,15 @@ final class AppleMakerNotesMerger
         if ($semanticStyleComposite !== null) {
             [$compositePreset, $compositeWarmth, $compositeTone] = $semanticStyleComposite;
 
-            if ($semanticPreset === null && $compositePreset !== null) {
+            if (($semanticPreset === null) && ($compositePreset !== null)) {
                 $semanticPreset = $compositePreset;
             }
 
-            if ($semanticWarmth === null && $compositeWarmth !== null) {
+            if (($semanticWarmth === null) && ($compositeWarmth !== null)) {
                 $semanticWarmth = $compositeWarmth;
             }
 
-            if ($semanticTone === null && $compositeTone !== null) {
+            if (($semanticTone === null) && ($compositeTone !== null)) {
                 $semanticTone = $compositeTone;
             }
         }
@@ -287,7 +287,7 @@ final class AppleMakerNotesMerger
     {
         $values = get_object_vars($apple);
 
-        if (array_key_exists('flags', $values) && $values['flags'] !== []) {
+        if (array_key_exists('flags', $values) && ($values['flags'] !== [])) {
             return true;
         }
 

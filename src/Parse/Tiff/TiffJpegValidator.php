@@ -89,10 +89,7 @@ final readonly class TiffJpegValidator
 
         $losslessPredictorsEntry = $ifd->get(TiffTag::JPEG_LOSSLESS_PREDICTORS);
         if ($losslessPredictorsEntry instanceof IfdEntry) {
-            if (
-                ($losslessPredictorsEntry->type !== TiffConst::TYPE_SHORT)
-                || ($losslessPredictorsEntry->count !== $samplesPerPixel)
-            ) {
+            if (($losslessPredictorsEntry->type !== TiffConst::TYPE_SHORT) || ($losslessPredictorsEntry->count !== $samplesPerPixel)) {
                 throw new ParseError('JPEGLosslessPredictors must be SHORT[SamplesPerPixel].', 1836);
             }
 
@@ -115,10 +112,7 @@ final readonly class TiffJpegValidator
 
         $pointTransformsEntry = $ifd->get(TiffTag::JPEG_POINT_TRANSFORMS);
         if ($pointTransformsEntry instanceof IfdEntry) {
-            if (
-                ($pointTransformsEntry->type !== TiffConst::TYPE_SHORT)
-                || ($pointTransformsEntry->count !== $samplesPerPixel)
-            ) {
+            if (($pointTransformsEntry->type !== TiffConst::TYPE_SHORT) || ($pointTransformsEntry->count !== $samplesPerPixel)) {
                 throw new ParseError('JPEGPointTransforms must be SHORT[SamplesPerPixel].', 1838);
             }
 
@@ -155,11 +149,7 @@ final readonly class TiffJpegValidator
             return;
         }
 
-        if (
-            ($restartIntervalEntry->type !== TiffConst::TYPE_SHORT)
-            || ($restartIntervalEntry->count !== 1)
-            || !is_int($restartIntervalEntry->value)
-        ) {
+        if (($restartIntervalEntry->type !== TiffConst::TYPE_SHORT) || ($restartIntervalEntry->count !== 1) || !is_int($restartIntervalEntry->value)) {
             throw new ParseError('JPEGRestartInterval must be SHORT[1].', 1851);
         }
 
@@ -174,10 +164,7 @@ final readonly class TiffJpegValidator
 
         // JPEGProc may be absent when Compression=6 — see validateJpegProcTag().
         $jpegProcEntry = $ifd->get(TiffTag::JPEG_PROC);
-        if (
-            ($jpegProcEntry instanceof IfdEntry)
-            && (!is_int($jpegProcEntry->value) || !in_array($jpegProcEntry->value, [1, 14], true))
-        ) {
+        if (($jpegProcEntry instanceof IfdEntry) && (!is_int($jpegProcEntry->value) || !in_array($jpegProcEntry->value, [1, 14], true))) {
             throw new ParseError('JPEGRestartInterval requires valid JPEGProc metadata.', 1853);
         }
     }
@@ -267,11 +254,11 @@ final readonly class TiffJpegValidator
         $offsetEntry = $ifd->get(ExifTag::JPEG_INTERCHANGE_FORMAT);
         $lengthEntry = $ifd->get(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
 
-        if (!($offsetEntry instanceof IfdEntry) && !($lengthEntry instanceof IfdEntry)) {
+        if ((!$offsetEntry instanceof IfdEntry) && (!$lengthEntry instanceof IfdEntry)) {
             return;
         }
 
-        if ($lengthEntry instanceof IfdEntry && !($offsetEntry instanceof IfdEntry)) {
+        if (($lengthEntry instanceof IfdEntry) && (!$offsetEntry instanceof IfdEntry)) {
             // EXIF 3.0 §4.6.5.1.6 defines offset/length as a pair, but some
             // files provide only the length tag; skip thumbnail extraction.
             return;

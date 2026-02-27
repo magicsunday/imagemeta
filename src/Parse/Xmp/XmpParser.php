@@ -110,7 +110,7 @@ final class XmpParser implements XmpParserInterface
         $state->elementPath[$depth] = [$namespace, $localName];
         $state->textBuffers[$depth] = '';
 
-        if ($namespace === self::RDF_NAMESPACE && $localName === 'RDF') {
+        if (($namespace === self::RDF_NAMESPACE) && ($localName === 'RDF')) {
             $state->insideRdfGraph = true;
         }
 
@@ -126,7 +126,7 @@ final class XmpParser implements XmpParserInterface
             }
         }
 
-        if ($namespace === self::RDF_NAMESPACE && in_array($localName, ['Alt', 'Bag', 'Seq'], true)) {
+        if (($namespace === self::RDF_NAMESPACE) && in_array($localName, ['Alt', 'Bag', 'Seq'], true)) {
             for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
                 if (isset($state->listBuffers[$parentDepth])) {
                     $state->listKinds[$parentDepth] = $localName;
@@ -135,7 +135,7 @@ final class XmpParser implements XmpParserInterface
             }
         }
 
-        if ($namespace === self::RDF_NAMESPACE && $localName === 'li') {
+        if (($namespace === self::RDF_NAMESPACE) && ($localName === 'li')) {
             $state->languageBuffers[$depth] = $this->readXmlLang($reader);
 
             // MWG Regions Specification and XMP §7.9.2.5: rdf:li items may use
@@ -158,7 +158,7 @@ final class XmpParser implements XmpParserInterface
             return;
         }
 
-        if ($state->insideRdfGraph && $namespace !== self::RDF_NAMESPACE) {
+        if ($state->insideRdfGraph && ($namespace !== self::RDF_NAMESPACE)) {
             $this->storeFinalizedElementValue($state, $depth, $namespace, $localName);
         }
 
@@ -171,7 +171,7 @@ final class XmpParser implements XmpParserInterface
     private function handleTextLikeNode(XMLReader $reader, XmpParseState $state): void
     {
         $depth = $reader->depth - 1;
-        if ($depth >= 0 && array_key_exists($depth, $state->textBuffers)) {
+        if (($depth >= 0) && array_key_exists($depth, $state->textBuffers)) {
             $state->textBuffers[$depth] .= $reader->value;
         }
     }
@@ -188,15 +188,15 @@ final class XmpParser implements XmpParserInterface
 
         [$namespace, $localName] = $info;
 
-        if ($namespace === self::RDF_NAMESPACE && $localName === 'RDF') {
+        if (($namespace === self::RDF_NAMESPACE) && ($localName === 'RDF')) {
             $state->insideRdfGraph = false;
         }
 
-        if ($namespace === self::RDF_NAMESPACE && $localName === 'li') {
+        if (($namespace === self::RDF_NAMESPACE) && ($localName === 'li')) {
             $this->finalizeRdfListItem($state, $depth);
-        } elseif ($namespace === self::RDF_NAMESPACE && $localName === 'value') {
+        } elseif (($namespace === self::RDF_NAMESPACE) && ($localName === 'value')) {
             $this->propagateRdfValueToParent($state, $depth);
-        } elseif ($state->insideRdfGraph && $namespace !== self::RDF_NAMESPACE) {
+        } elseif ($state->insideRdfGraph && ($namespace !== self::RDF_NAMESPACE)) {
             $this->storeFinalizedElementValue($state, $depth, $namespace, $localName);
         }
 
@@ -252,7 +252,7 @@ final class XmpParser implements XmpParserInterface
 
             [$parentNamespace, $parentLocalName] = $parentInfo;
 
-            if ($parentNamespace === self::RDF_NAMESPACE && $parentLocalName === 'li') {
+            if (($parentNamespace === self::RDF_NAMESPACE) && ($parentLocalName === 'li')) {
                 $state->textBuffers[$parentDepth] = $text;
                 break;
             }
@@ -288,7 +288,7 @@ final class XmpParser implements XmpParserInterface
                 $prefix       = ($attrLocalName === 'xmlns') ? '' : $attrLocalName;
 
                 // Store the mapping if not already present (first declaration wins)
-                if ($namespaceUri !== '' && !isset($state->namespacePrefixes[$namespaceUri])) {
+                if (($namespaceUri !== '') && !isset($state->namespacePrefixes[$namespaceUri])) {
                     $state->namespacePrefixes[$namespaceUri] = $prefix;
                 }
             }
@@ -371,11 +371,7 @@ final class XmpParser implements XmpParserInterface
         $reader->moveToFirstAttribute();
 
         do {
-            if (
-                ($reader->namespaceURI === self::RDF_NAMESPACE)
-                && ($reader->localName === 'parseType')
-                && (trim($reader->value) === 'Resource')
-            ) {
+            if (($reader->namespaceURI === self::RDF_NAMESPACE) && ($reader->localName === 'parseType') && (trim($reader->value) === 'Resource')) {
                 $isResource = true;
                 break;
             }
@@ -554,7 +550,7 @@ final class XmpParser implements XmpParserInterface
         $reader->moveToFirstAttribute();
 
         do {
-            if ($reader->namespaceURI === 'http://www.w3.org/XML/1998/namespace' && $reader->localName === 'lang') {
+            if (($reader->namespaceURI === 'http://www.w3.org/XML/1998/namespace') && ($reader->localName === 'lang')) {
                 $language = $reader->value;
                 break;
             }

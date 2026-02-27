@@ -89,7 +89,7 @@ final readonly class JxlParser implements JxlParserInterface
         $metadataBoxCount   = 0;
 
         foreach ($this->walkTopLevelBoxes() as $box) {
-            if ($box->type !== self::BOX_EXIF && $box->type !== self::BOX_XML) {
+            if (($box->type !== self::BOX_EXIF) && ($box->type !== self::BOX_XML)) {
                 continue;
             }
 
@@ -163,7 +163,7 @@ final readonly class JxlParser implements JxlParserInterface
         }
 
         $tiffSig = substr($blob, 4 + $offset, 2);
-        if ($tiffSig !== 'II' && $tiffSig !== 'MM') {
+        if (($tiffSig !== 'II') && ($tiffSig !== 'MM')) {
             throw new ParseError('JXL Exif TIFF-header offset does not point to valid TIFF signature', 1564);
         }
 

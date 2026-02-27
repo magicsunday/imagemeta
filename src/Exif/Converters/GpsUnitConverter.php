@@ -112,12 +112,12 @@ final readonly class GpsUnitConverter
             $alt = $this->rationalConverter->toFloat($altEntry->value);
 
             // Tolerate negative altitude — use absolute magnitude.
-            if ($alt !== null && $alt < 0.0) {
+            if (($alt !== null) && ($alt < 0.0)) {
                 $alt = -$alt;
             }
 
             // EXIF 3.0 §4.6.7.1.6: Values 1 (below ellipsoidal) and 3 (below sea level) indicate negative altitude
-            if ($alt !== null && GpsAltitudeRef::tryFrom($result['alt_ref'])?->isBelow() === true) {
+            if (($alt !== null) && (GpsAltitudeRef::tryFrom($result['alt_ref'])?->isBelow() === true)) {
                 $alt = -$alt;
             }
 
@@ -139,7 +139,7 @@ final readonly class GpsUnitConverter
             is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null,
             self::GPS_SPEED_REF_VALUES,
         );
-        if ($speedRef === null && !$speedRefEntry instanceof IfdEntry && $speedEntry instanceof IfdEntry) {
+        if (($speedRef === null) && (!$speedRefEntry instanceof IfdEntry) && ($speedEntry instanceof IfdEntry)) {
             $speedRef = 'K';
         }
 
@@ -161,7 +161,7 @@ final readonly class GpsUnitConverter
             is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null,
             self::GPS_DISTANCE_REF_VALUES,
         );
-        if ($result['dest_distance_ref'] === null && !$destDistRefEntry instanceof IfdEntry && $destDistEntry instanceof IfdEntry) {
+        if (($result['dest_distance_ref'] === null) && (!$destDistRefEntry instanceof IfdEntry) && ($destDistEntry instanceof IfdEntry)) {
             $result['dest_distance_ref'] = 'K';
         }
 

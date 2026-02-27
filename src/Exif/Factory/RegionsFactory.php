@@ -235,7 +235,7 @@ final readonly class RegionsFactory
             $height  = $heights[$index] ?? null;
 
             $geometry = null;
-            if ($centerX !== null && $centerY !== null && $width !== null && $height !== null) {
+            if (($centerX !== null) && ($centerY !== null) && ($width !== null) && ($height !== null)) {
                 $geometry = $this->normalizer->normalizedBox($centerX, $centerY, $width, $height, $dimensions);
             }
 

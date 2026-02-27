@@ -48,7 +48,7 @@ final readonly class QuickTimeLookup
 
         foreach ($keys as $key) {
             $value = $this->quickTime->stringValue($key);
-            if ($value !== null && $value !== '') {
+            if (($value !== null) && ($value !== '')) {
                 return $value;
             }
         }

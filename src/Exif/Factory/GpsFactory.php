@@ -371,7 +371,7 @@ final readonly class GpsFactory
         ?float $altitude,
         ?int $altitudeRef,
     ): array {
-        if ($altitude === null && $xmpDocument instanceof XmpDocument) {
+        if (($altitude === null) && ($xmpDocument instanceof XmpDocument)) {
             $altitudeXmp = $xmpDocument->float(XmpNamespace::EXIF->value, 'GPSAltitude');
             if ($altitudeXmp !== null) {
                 $altRefXmp = $this->intValue($xmpDocument->int(XmpNamespace::EXIF->value, 'GPSAltitudeRef'));
@@ -453,7 +453,7 @@ final readonly class GpsFactory
 
         $speedValue = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSSpeed');
         if ($speedValue !== null) {
-            if ($speedMs === null && $speedRef !== null) {
+            if (($speedMs === null) && ($speedRef !== null)) {
                 $speedMs = $this->convertSpeedToMetresPerSecond($speedValue, $speedRef);
             }
 
@@ -530,7 +530,7 @@ final readonly class GpsFactory
 
         $destDistValue = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSDestDistance');
         if ($destDistValue !== null) {
-            if ($destDistMetre === null && $destDistRef !== null) {
+            if (($destDistMetre === null) && ($destDistRef !== null)) {
                 $convertedDistance = $this->convertDistanceToMetres($destDistValue, $destDistRef);
                 if ($convertedDistance !== null) {
                     $destDistMetre = $convertedDistance;
@@ -614,7 +614,7 @@ final readonly class GpsFactory
             $min = XmpDocument::parseNumericValue($parts[1]);
             $sec = XmpDocument::parseNumericValue($parts[2]);
 
-            if ($deg !== null && $min !== null && $sec !== null) {
+            if (($deg !== null) && ($min !== null) && ($sec !== null)) {
                 if ($deg < 0.0 || $min < 0.0 || $sec < 0.0) {
                     return null;
                 }

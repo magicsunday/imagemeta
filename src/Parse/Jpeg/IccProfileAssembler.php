@@ -132,10 +132,7 @@ final class IccProfileAssembler implements SegmentAssemblerInterface
      */
     public function finalise(): void
     {
-        if (
-            $this->expectedCount > 0
-            && count($this->sequence) === $this->expectedCount
-        ) {
+        if (($this->expectedCount > 0) && (count($this->sequence) === $this->expectedCount)) {
             $expectedSequence = range(1, $this->expectedCount);
             $presentSequence  = array_keys($this->sequence);
             sort($presentSequence);

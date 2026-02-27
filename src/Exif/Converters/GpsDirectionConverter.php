@@ -76,7 +76,7 @@ final readonly class GpsDirectionConverter
         $trackRefNormalized  = is_string($trackRefValue) ? strtoupper(trim($trackRefValue)) : null;
         $result['track_ref'] = $this->validateGpsRef($trackRefNormalized, self::GPS_BEARING_REF_VALUES);
         $trackRefInvalid     = ($trackRefNormalized !== null) && ($result['track_ref'] === null);
-        if ($result['track_ref'] === null && !$trackRefEntry instanceof IfdEntry && $trackEntry instanceof IfdEntry) {
+        if (($result['track_ref'] === null) && (!$trackRefEntry instanceof IfdEntry) && ($trackEntry instanceof IfdEntry)) {
             $result['track_ref'] = 'T';
         }
 
@@ -90,7 +90,7 @@ final readonly class GpsDirectionConverter
         $imgDirRefNormalized         = is_string($imgDirRefValue) ? strtoupper(trim($imgDirRefValue)) : null;
         $result['img_direction_ref'] = $this->validateGpsRef($imgDirRefNormalized, self::GPS_BEARING_REF_VALUES);
         $imgDirRefInvalid            = ($imgDirRefNormalized !== null) && ($result['img_direction_ref'] === null);
-        if ($result['img_direction_ref'] === null && !$imgDirRefEntry instanceof IfdEntry && $imgDirEntry instanceof IfdEntry) {
+        if (($result['img_direction_ref'] === null) && (!$imgDirRefEntry instanceof IfdEntry) && ($imgDirEntry instanceof IfdEntry)) {
             $result['img_direction_ref'] = 'T';
         }
 
@@ -104,7 +104,7 @@ final readonly class GpsDirectionConverter
         $destBearingRefNormalized   = is_string($destBearingRefValue) ? strtoupper(trim($destBearingRefValue)) : null;
         $result['dest_bearing_ref'] = $this->validateGpsRef($destBearingRefNormalized, self::GPS_BEARING_REF_VALUES);
         $destBearingRefInvalid      = ($destBearingRefNormalized !== null) && ($result['dest_bearing_ref'] === null);
-        if ($result['dest_bearing_ref'] === null && !$destBearRefEntry instanceof IfdEntry && $destBearEntry instanceof IfdEntry) {
+        if (($result['dest_bearing_ref'] === null) && (!$destBearRefEntry instanceof IfdEntry) && ($destBearEntry instanceof IfdEntry)) {
             $result['dest_bearing_ref'] = 'T';
         }
 

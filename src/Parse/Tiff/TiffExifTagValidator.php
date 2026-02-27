@@ -257,7 +257,7 @@ final readonly class TiffExifTagValidator
 
     private function assertMakerNoteSafetyDomain(int $value): void
     {
-        if ($value !== 0 && $value !== 1) {
+        if (($value !== 0) && ($value !== 1)) {
             throw new ParseError(sprintf(
                 'MakerNoteSafety value %d is outside the valid domain {0, 1} per DNG 1.7.1.0.',
                 $value,
@@ -267,7 +267,7 @@ final readonly class TiffExifTagValidator
 
     private function assertPredictorDomain(int $value): void
     {
-        if ($value !== 1 && $value !== 2) {
+        if (($value !== 1) && ($value !== 2)) {
             throw new ParseError(sprintf(
                 'Predictor value %d is outside the valid domain {1, 2} per TIFF 6.0 §14.',
                 $value,

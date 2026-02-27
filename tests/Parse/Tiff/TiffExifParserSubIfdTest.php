@@ -238,7 +238,7 @@ final class TiffExifParserSubIfdTest extends TestCase
             . pack('v', 64) . pack('v', 0);
 
         // SubIFDs LONG[N] (tag 0x014A)
-        if ($subIfdCount === 1 && !$needsExternal) {
+        if (($subIfdCount === 1) && !$needsExternal) {
             $entries[TiffTag::SUB_IFDS] = pack('v', TiffTag::SUB_IFDS)
                 . pack('v', TiffConst::TYPE_LONG)
                 . pack('V', 1)

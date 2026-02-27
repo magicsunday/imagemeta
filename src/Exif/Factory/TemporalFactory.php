@@ -91,7 +91,7 @@ final readonly class TemporalFactory
         [$original, $tz, $subOriginalRaw] = $this->originalTimestampComponents($exifDocument);
 
         $originalWithTz = $original;
-        if ($original instanceof DateTimeImmutable && $tz instanceof DateTimeZone) {
+        if (($original instanceof DateTimeImmutable) && ($tz instanceof DateTimeZone)) {
             $originalWithTz = $original->setTimezone($tz);
         }
 
@@ -109,11 +109,7 @@ final readonly class TemporalFactory
 
         $tzSource = null;
 
-        if (
-            ($tz instanceof DateTimeZone)
-            && ($offsetTimeOriginal !== null)
-            && ($this->converters->parseOffset($offsetTimeOriginal) instanceof DateTimeZone)
-        ) {
+        if (($tz instanceof DateTimeZone) && ($offsetTimeOriginal !== null) && ($this->converters->parseOffset($offsetTimeOriginal) instanceof DateTimeZone)) {
             $tzSource = 'OffsetTimeOriginal';
         }
 
@@ -146,22 +142,18 @@ final readonly class TemporalFactory
         $original = $document->dateTimeOriginalBestEffort();
         $offset   = $document->offsetTimeOriginal();
 
-        if ($offset === null && $this->dateTimeStringEmpty($document->dateTimeOriginalRaw())) {
+        if (($offset === null) && $this->dateTimeStringEmpty($document->dateTimeOriginalRaw())) {
             $offset = $document->offsetTimeDigitized();
         }
 
-        if (
-            $offset === null
-            && $this->dateTimeStringEmpty($document->dateTimeOriginalRaw())
-            && $this->dateTimeStringEmpty($document->dateTimeDigitizedRaw())
-        ) {
+        if (($offset === null) && $this->dateTimeStringEmpty($document->dateTimeOriginalRaw()) && $this->dateTimeStringEmpty($document->dateTimeDigitizedRaw())) {
             $offset = $document->offsetTime();
         }
 
         $offsetString = $this->normalizeOffsetValue($offset);
         $timezone     = $this->converters->parseOffset($offsetString);
 
-        if ($timezone instanceof DateTimeZone && $original instanceof DateTimeImmutable) {
+        if (($timezone instanceof DateTimeZone) && ($original instanceof DateTimeImmutable)) {
             $original = $original->setTimezone($timezone);
         }
 
