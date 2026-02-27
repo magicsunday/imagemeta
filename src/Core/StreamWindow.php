@@ -79,11 +79,7 @@ final class StreamWindow implements BinaryReadAccessInterface
      */
     public function read(int|UInt64 $length): string
     {
-        if ($length instanceof UInt64) {
-            if ($length->isZero()) {
-                return '';
-            }
-        } elseif ($length === 0) {
+        if ($this->isZeroLength($length)) {
             return '';
         }
 

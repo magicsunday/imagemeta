@@ -104,6 +104,22 @@ trait NormalizesOffsets
     }
 
     /**
+     * Determines whether a requested read length represents zero bytes.
+     *
+     * @param int|UInt64 $length Requested length.
+     *
+     * @return bool True when the requested length is zero.
+     */
+    protected function isZeroLength(int|UInt64 $length): bool
+    {
+        if ($length instanceof UInt64) {
+            return $length->isZero();
+        }
+
+        return $length === 0;
+    }
+
+    /**
      * Normalizes a read length and enforces positive bounds.
      *
      * @param int|UInt64 $length  Requested length.
