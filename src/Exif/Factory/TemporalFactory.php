@@ -76,14 +76,18 @@ final readonly class TemporalFactory
         $exifCreate = $exifDocument?->dateTimeDigitized();
         $exifModify = $exifDocument?->dateTime();
 
-        $xmpCreate = $this->parseFlexibleDate($xmpDocument?->string(XmpNamespace::XAP->value, 'CreateDate'))
-            ?? $this->parseFlexibleDate($xmpDocument?->string(XmpNamespace::EXIF->value, 'CreateDate'));
-        $xmpModify = $this->parseFlexibleDate($xmpDocument?->string(XmpNamespace::XAP->value, 'ModifyDate'))
-            ?? $this->parseFlexibleDate($xmpDocument?->string(XmpNamespace::EXIF->value, 'ModifyDate'));
-        $xmpDateCreated  = $this->parseFlexibleDate($xmpDocument?->string(XmpNamespace::PHOTOSHOP->value, 'DateCreated'));
+        $xmpCreate = $this->parseFirstAvailableDate(
+            $xmpDocument?->string(XmpNamespace::XAP->value, 'CreateDate'),
+            $xmpDocument?->string(XmpNamespace::EXIF->value, 'CreateDate'),
+        );
+        $xmpModify = $this->parseFirstAvailableDate(
+            $xmpDocument?->string(XmpNamespace::XAP->value, 'ModifyDate'),
+            $xmpDocument?->string(XmpNamespace::EXIF->value, 'ModifyDate'),
+        );
+        $xmpDateCreated  = $this->parseFirstAvailableDate($xmpDocument?->string(XmpNamespace::PHOTOSHOP->value, 'DateCreated'));
         $lookup          = new QuickTimeLookup($quickTime);
-        $quickTimeCreate = $this->parseFlexibleDate($lookup->string('CreationDate'));
-        $quickTimeModify = $this->parseFlexibleDate($lookup->string('ModifyDate'));
+        $quickTimeCreate = $this->parseFirstAvailableDate($lookup->string('CreationDate'));
+        $quickTimeModify = $this->parseFirstAvailableDate($lookup->string('ModifyDate'));
 
         $create = $exifCreate ?? $xmpCreate ?? $quickTimeCreate ?? $xmpDateCreated;
         $modify = $exifModify ?? $xmpModify ?? $quickTimeModify;
@@ -230,6 +234,21 @@ final readonly class TemporalFactory
 
         // EXIF 3.0 §4.6.6.6.6 — digits are aligned with the start (right-pad fractional seconds)
         return str_pad($digits, 3, '0', STR_PAD_RIGHT);
+    }
+
+    /**
+     * Returns the first successfully parsed date from ordered timestamp candidates.
+     */
+    private function parseFirstAvailableDate(?string ...$values): ?DateTimeImmutable
+    {
+        foreach ($values as $value) {
+            $parsed = $this->parseFlexibleDate($value);
+            if ($parsed instanceof DateTimeImmutable) {
+                return $parsed;
+            }
+        }
+
+        return null;
     }
 
     /**
