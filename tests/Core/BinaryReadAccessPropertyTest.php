@@ -11,16 +11,22 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Core;
 
-use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
-use MagicSunday\ImageMeta\Core\ByteReader;
-use MagicSunday\ImageMeta\Core\MemoryBuffer;
-use MagicSunday\ImageMeta\Core\Stream;
-use MagicSunday\ImageMeta\Core\StreamWindow;
-use MagicSunday\ImageMeta\Core\Util\UInt64;
-use MagicSunday\ImageMeta\Core\Util\Unpack;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use MagicSunday\ImageMeta\Core\{
+    BinaryReadAccessInterface,
+    ByteReader,
+    MemoryBuffer,
+    Stream,
+    StreamWindow,
+};
+use MagicSunday\ImageMeta\Core\Util\{
+    UInt64,
+    Unpack,
+};
+use PHPUnit\Framework\Attributes\{
+    CoversClass,
+    Test,
+    UsesClass,
+};
 use PHPUnit\Framework\TestCase;
 
 use function random_bytes;
