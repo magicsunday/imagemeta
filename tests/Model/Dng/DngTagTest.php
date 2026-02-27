@@ -21,7 +21,7 @@ use ReflectionClassConstant;
 use function array_values;
 use function count;
 use function sort;
-use function strpos;
+use function str_contains;
 
 /**
  * Verifies DNG tag catalog completeness and ID correctness.
@@ -127,9 +127,9 @@ final class DngTagTest extends TestCase
 
             $doc = (string) $constant->getDocComment();
             self::assertNotSame('', $doc, sprintf('Missing PHPDoc for %s.', $name));
-            self::assertNotSame(false, strpos($doc, 'Legacy tag'), sprintf('Legacy marker missing for %s.', $name));
-            self::assertNotSame(false, strpos($doc, 'DNG Version 1.4.0.0'), sprintf('Historical source missing for %s.', $name));
-            self::assertNotSame(false, strpos($doc, 'not present in the tracked DNG 1.7.1.0 HTML specification'), sprintf('Tracked-spec status missing for %s.', $name));
+            self::assertTrue(str_contains($doc, 'Legacy tag'), sprintf('Legacy marker missing for %s.', $name));
+            self::assertTrue(str_contains($doc, 'DNG Version 1.4.0.0'), sprintf('Historical source missing for %s.', $name));
+            self::assertTrue(str_contains($doc, 'not present in the tracked DNG 1.7.1.0 HTML specification'), sprintf('Tracked-spec status missing for %s.', $name));
         }
     }
 
