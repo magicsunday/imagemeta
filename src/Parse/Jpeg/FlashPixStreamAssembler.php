@@ -357,12 +357,65 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             return ['', $cursor];
         }
 
-        $decoded = iconv('UTF-16LE', 'UTF-8', $nameBytes);
-        if ($decoded === false) {
+        // EXIF 3.0 §4.7.3.4 defines UTF-16LE contents-list names.
+        // Reader tolerance: drop isolated surrogate code units and decode
+        // the remaining valid UTF-16LE sequence without emitting notices.
+        $sanitizedNameBytes = $this->sanitizeUtf16LeNameBytes($nameBytes);
+        if ($sanitizedNameBytes === '') {
+            return ['', $cursor];
+        }
+
+        $decoded = iconv('UTF-16LE', 'UTF-8//IGNORE', $sanitizedNameBytes);
+        if ($decoded === false || $decoded === '') {
             return ['', $cursor];
         }
 
         return [$decoded, $cursor];
+    }
+
+    /**
+     * Drops malformed UTF-16LE surrogate code units while preserving valid code units.
+     *
+     * @param string $nameBytes Raw UTF-16LE code units without the NUL terminator.
+     *
+     * @return string Sanitized UTF-16LE bytes safe to decode.
+     */
+    private function sanitizeUtf16LeNameBytes(string $nameBytes): string
+    {
+        $cursor    = 0;
+        $length    = strlen($nameBytes);
+        $sanitized = '';
+
+        while (($length - $cursor) >= 2) {
+            $codeUnit = ord($nameBytes[$cursor]) | (ord($nameBytes[$cursor + 1]) << 8);
+
+            if (($codeUnit >= 0xD800) && ($codeUnit <= 0xDBFF)) {
+                if (($length - $cursor) >= 4) {
+                    $nextCodeUnit = ord($nameBytes[$cursor + 2]) | (ord($nameBytes[$cursor + 3]) << 8);
+                    if (($nextCodeUnit >= 0xDC00) && ($nextCodeUnit <= 0xDFFF)) {
+                        $sanitized .= substr($nameBytes, $cursor, 4);
+                        $cursor += 4;
+
+                        continue;
+                    }
+                }
+
+                $cursor += 2;
+
+                continue;
+            }
+
+            if (($codeUnit >= 0xDC00) && ($codeUnit <= 0xDFFF)) {
+                $cursor += 2;
+
+                continue;
+            }
+
+            $sanitized .= substr($nameBytes, $cursor, 2);
+            $cursor += 2;
+        }
+
+        return $sanitized;
     }
 
     /**
