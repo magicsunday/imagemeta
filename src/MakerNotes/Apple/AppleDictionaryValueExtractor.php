@@ -91,13 +91,7 @@ final readonly class AppleDictionaryValueExtractor
      */
     public function boolDictionaryValue(array $dictionary, string ...$keys): ?bool
     {
-        foreach ($keys as $key) {
-            if (!array_key_exists($key, $dictionary)) {
-                continue;
-            }
-
-            /** @var NativePlistValue $candidate */
-            $candidate = $dictionary[$key];
+        foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
             $value     = $this->flagExtractor->boolValue($candidate);
             if ($value !== null) {
                 return $value;
@@ -119,13 +113,7 @@ final readonly class AppleDictionaryValueExtractor
      */
     public function rationalFloatValue(array $dictionary, string ...$keys): ?float
     {
-        foreach ($keys as $key) {
-            if (!array_key_exists($key, $dictionary)) {
-                continue;
-            }
-
-            /** @var NativePlistValue $candidate */
-            $candidate = $dictionary[$key];
+        foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
             $float     = $this->rationalNormalizer->normalizeRationalFloat($candidate);
             if ($float !== null) {
                 return $float;
@@ -147,28 +135,13 @@ final readonly class AppleDictionaryValueExtractor
      */
     public function stringOrIntValue(array $dictionary, string ...$keys): string|int|null
     {
-        foreach ($keys as $key) {
-            if (!array_key_exists($key, $dictionary)) {
-                continue;
+        foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
+            if (is_int($candidate) || is_float($candidate)) {
+                return $this->intOrFloatAsIntOrString($candidate);
             }
 
-            $value = $dictionary[$key];
-
-            if (is_int($value)) {
-                return $value;
-            }
-
-            if (is_float($value)) {
-                $intValue = (int) $value;
-                if ((float) $intValue === $value) {
-                    return $intValue;
-                }
-
-                return (string) $value;
-            }
-
-            if (is_string($value)) {
-                $trimmed = trim($value);
+            if (is_string($candidate)) {
+                $trimmed = trim($candidate);
                 if ($trimmed === '') {
                     continue;
                 }
@@ -196,28 +169,13 @@ final readonly class AppleDictionaryValueExtractor
      */
     public function identifierValue(array $dictionary, string ...$keys): string|int|null
     {
-        foreach ($keys as $key) {
-            if (!array_key_exists($key, $dictionary)) {
-                continue;
+        foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
+            if (is_int($candidate) || is_float($candidate)) {
+                return $this->intOrFloatAsIntOrString($candidate);
             }
 
-            $value = $dictionary[$key];
-
-            if (is_int($value)) {
-                return $value;
-            }
-
-            if (is_float($value)) {
-                $intValue = (int) $value;
-                if ((float) $intValue === $value) {
-                    return $intValue;
-                }
-
-                return (string) $value;
-            }
-
-            if (is_string($value)) {
-                $trimmed = trim($value);
+            if (is_string($candidate)) {
+                $trimmed = trim($candidate);
 
                 return $trimmed !== '' ? $trimmed : null;
             }
@@ -317,18 +275,13 @@ final readonly class AppleDictionaryValueExtractor
      */
     public function floatValue(array $dictionary, string ...$keys): ?float
     {
-        foreach ($keys as $key) {
-            if (!array_key_exists($key, $dictionary)) {
-                continue;
+        foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
+            if (is_float($candidate)) {
+                return $candidate;
             }
 
-            $value = $dictionary[$key];
-            if (is_float($value)) {
-                return $value;
-            }
-
-            if (is_int($value) || is_numeric($value)) {
-                return (float) $value;
+            if (is_int($candidate) || is_numeric($candidate)) {
+                return (float) $candidate;
             }
         }
 
@@ -347,18 +300,13 @@ final readonly class AppleDictionaryValueExtractor
      */
     public function intValue(array $dictionary, string ...$keys): ?int
     {
-        foreach ($keys as $key) {
-            if (!array_key_exists($key, $dictionary)) {
-                continue;
+        foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
+            if (is_int($candidate)) {
+                return $candidate;
             }
 
-            $value = $dictionary[$key];
-            if (is_int($value)) {
-                return $value;
-            }
-
-            if (is_numeric($value)) {
-                return (int) $value;
+            if (is_numeric($candidate)) {
+                return (int) $candidate;
             }
         }
 
@@ -378,38 +326,33 @@ final readonly class AppleDictionaryValueExtractor
      */
     public function floatList(array $dictionary, string ...$keys): ?array
     {
-        foreach ($keys as $key) {
-            if (!array_key_exists($key, $dictionary)) {
+        foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
+            if (is_float($candidate)) {
+                return [$candidate];
+            }
+
+            if (is_int($candidate)) {
+                return [(float) $candidate];
+            }
+
+            if (is_string($candidate) && is_numeric($candidate)) {
+                return [(float) $candidate];
+            }
+
+            if (!is_array($candidate)) {
                 continue;
             }
 
-            $value = $dictionary[$key];
-            if (is_float($value)) {
-                return [$value];
+            if (!array_is_list($candidate) && array_key_exists('values', $candidate) && is_array($candidate['values'])) {
+                $candidate = $candidate['values'];
             }
 
-            if (is_int($value)) {
-                return [(float) $value];
-            }
-
-            if (is_string($value) && is_numeric($value)) {
-                return [(float) $value];
-            }
-
-            if (!is_array($value)) {
-                continue;
-            }
-
-            if (!array_is_list($value) && array_key_exists('values', $value) && is_array($value['values'])) {
-                $value = $value['values'];
-            }
-
-            if (!array_is_list($value)) {
+            if (!array_is_list($candidate)) {
                 continue;
             }
 
             $result = [];
-            foreach ($value as $entry) {
+            foreach ($candidate as $entry) {
                 if (is_float($entry)) {
                     $result[] = $entry;
                 } elseif (is_int($entry) || is_numeric($entry)) {
@@ -546,13 +489,7 @@ final readonly class AppleDictionaryValueExtractor
      */
     public function stringOrNumericValue(array $dictionary, string ...$keys): ?string
     {
-        foreach ($keys as $key) {
-            if (!array_key_exists($key, $dictionary)) {
-                continue;
-            }
-
-            /** @var NativePlistValue $candidate */
-            $candidate = $dictionary[$key];
+        foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
             if (is_string($candidate)) {
                 $trimmed = trim($candidate);
                 if ($trimmed !== '') {
@@ -579,13 +516,7 @@ final readonly class AppleDictionaryValueExtractor
      */
     public function enumeratedStringValue(array $dictionary, array $map, string ...$keys): ?string
     {
-        foreach ($keys as $key) {
-            if (!array_key_exists($key, $dictionary)) {
-                continue;
-            }
-
-            /** @var NativePlistValue $candidate */
-            $candidate = $dictionary[$key];
+        foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
             if (is_string($candidate)) {
                 $trimmed = trim($candidate);
                 if ($trimmed === '') {
@@ -613,6 +544,50 @@ final readonly class AppleDictionaryValueExtractor
         }
 
         return null;
+    }
+
+    /**
+     * Returns existing dictionary values for the provided key order.
+     *
+     * @param array<int|string, NativePlistValue> $dictionary
+     *
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
+     *
+     * @return list<NativePlistValue>
+     *
+     * @phpstan-return list<NativePlistValue>
+     */
+    private function valuesForKeys(array $dictionary, string ...$keys): array
+    {
+        $values = [];
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $dictionary)) {
+                continue;
+            }
+
+            /** @var NativePlistValue $value */
+            $value    = $dictionary[$key];
+            $values[] = $value;
+        }
+
+        return $values;
+    }
+
+    /**
+     * Converts integer and float candidates to int|string while preserving integral float handling.
+     */
+    private function intOrFloatAsIntOrString(int|float $value): int|string
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+
+        $intValue = (int) $value;
+        if ((float) $intValue === $value) {
+            return $intValue;
+        }
+
+        return (string) $value;
     }
 
     /**
