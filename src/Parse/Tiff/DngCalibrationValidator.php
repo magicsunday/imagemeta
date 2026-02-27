@@ -441,7 +441,7 @@ final readonly class DngCalibrationValidator
             return;
         }
 
-        if ((is_int($illum1->value) && $illum1->value === 0) || (is_int($illum2->value) && $illum2->value === 0)) {
+        if (($illum1->value === 0) || ($illum2->value === 0)) {
             throw new ParseError(
                 'CalibrationIlluminant1 and CalibrationIlluminant2 must not have value 0 (unknown) when both are present per DNG 1.7.1.0.',
                 2013,

@@ -382,7 +382,7 @@ final readonly class XmpDocument
             return $trimmed === '' ? null : $trimmed;
         }
 
-        if ($value instanceof XmpStructuredValue || !is_array($value)) {
+        if (!is_array($value)) {
             return null;
         }
 

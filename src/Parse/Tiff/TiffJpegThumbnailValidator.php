@@ -57,7 +57,7 @@ final readonly class TiffJpegThumbnailValidator
         }
 
         $compression = $ifd1->get(ExifTag::COMPRESSION);
-        if (!($compression instanceof IfdEntry) || !is_int($compression->value) || ($compression->value !== 6)) {
+        if (!($compression instanceof IfdEntry) || ($compression->value !== 6)) {
             return;
         }
 

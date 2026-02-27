@@ -627,7 +627,7 @@ final readonly class DngProfileValidator
             );
         }
 
-        if (!is_int($entry->value) || ($entry->value !== 0 && $entry->value !== 1)) {
+        if (($entry->value !== 0) && ($entry->value !== 1)) {
             throw new ParseError(
                 sprintf('%s value must be 0 (Linear) or 1 (sRGB), got %d.', $name, is_int($entry->value) ? $entry->value : -1),
                 1556,
@@ -649,7 +649,7 @@ final readonly class DngProfileValidator
 
         $valDivs = $dimsValue->values[2];
 
-        if (is_int($valDivs) && ($valDivs === 1)) {
+        if ($valDivs === 1) {
             throw new ParseError(
                 sprintf('%s must not be present for 2.5D tables (ValueDivisions == 1).', $name),
                 1557,

@@ -280,7 +280,7 @@ final readonly class DngStructureValidator
     {
         $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
 
-        if (!$photo instanceof IfdEntry || !is_int($photo->value) || $photo->value !== 32803) {
+        if (!$photo instanceof IfdEntry || $photo->value !== 32803) {
             return;
         }
 

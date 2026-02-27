@@ -537,7 +537,7 @@ final readonly class BoxPayloadCollector
                 return false;
             }
 
-            if ($largeSize === 0 || $largeSize < 16) {
+            if ($largeSize < 16) {
                 return false;
             }
 

@@ -148,12 +148,12 @@ final readonly class TiffExifTagValidator
         }
 
         $thumbCompression = $ifd1->get(ExifTag::COMPRESSION);
-        if (!($thumbCompression instanceof IfdEntry) || !is_int($thumbCompression->value) || ($thumbCompression->value !== 6)) {
+        if (!($thumbCompression instanceof IfdEntry) || ($thumbCompression->value !== 6)) {
             return;
         }
 
         $primaryCompression = $ifd0->get(ExifTag::COMPRESSION);
-        if (!($primaryCompression instanceof IfdEntry) || !is_int($primaryCompression->value) || ($primaryCompression->value !== 1)) {
+        if (!($primaryCompression instanceof IfdEntry) || ($primaryCompression->value !== 1)) {
             return;
         }
 

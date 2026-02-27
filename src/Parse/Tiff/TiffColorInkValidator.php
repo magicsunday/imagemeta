@@ -320,14 +320,14 @@ final readonly class TiffColorInkValidator
         $photometric        = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
         $targetPrinterEntry = $ifd->get(TiffTag::TARGET_PRINTER);
 
-        if (($targetPrinterEntry instanceof IfdEntry) && ($photometric instanceof IfdEntry) && is_int($photometric->value) && ($photometric->value !== 5)) {
+        if (($targetPrinterEntry instanceof IfdEntry) && ($photometric instanceof IfdEntry) && ($photometric->value !== 5)) {
             throw new ParseError(
                 'TargetPrinter (tag 337) is only valid when PhotometricInterpretation=5 (Separated).',
                 1721,
             );
         }
 
-        return ($photometric instanceof IfdEntry) && is_int($photometric->value) && ($photometric->value === 5);
+        return ($photometric instanceof IfdEntry) && ($photometric->value === 5);
     }
 
     /**

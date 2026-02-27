@@ -141,7 +141,7 @@ final readonly class TiffTagConstraintValidator
             }
 
             $compression = $ifd->get(ExifTag::COMPRESSION);
-            if (!($compression instanceof IfdEntry) || !is_int($compression->value) || ($compression->value !== 3)) {
+            if (!($compression instanceof IfdEntry) || ($compression->value !== 3)) {
                 throw new ParseError('T4Options is only valid when Compression = 3 (CCITT Group 3).', 1703);
             }
 
@@ -164,7 +164,7 @@ final readonly class TiffTagConstraintValidator
         }
 
         $compression = $ifd->get(ExifTag::COMPRESSION);
-        if (!($compression instanceof IfdEntry) || !is_int($compression->value) || ($compression->value !== 4)) {
+        if (!($compression instanceof IfdEntry) || ($compression->value !== 4)) {
             throw new ParseError('T6Options is only valid when Compression = 4 (CCITT Group 4).', 1706);
         }
 
@@ -462,7 +462,7 @@ final readonly class TiffTagConstraintValidator
     public function validatePredictorTag(Ifd $ifd): void
     {
         $predictor = $ifd->get(TiffTag::PREDICTOR);
-        if (!($predictor instanceof IfdEntry) || !is_int($predictor->value) || ($predictor->value !== 2)) {
+        if (!($predictor instanceof IfdEntry) || ($predictor->value !== 2)) {
             return;
         }
 

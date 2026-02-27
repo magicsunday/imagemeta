@@ -418,7 +418,7 @@ final readonly class DngGeometryValidator
             );
         }
 
-        if (!is_int($entry->value) || ($entry->value !== 0 && $entry->value !== 1)) {
+        if (($entry->value !== 0) && ($entry->value !== 1)) {
             throw new ParseError(
                 sprintf('DefaultBlackRender value must be 0 (Auto) or 1 (None), got %d.', is_int($entry->value) ? $entry->value : -1),
                 1570,

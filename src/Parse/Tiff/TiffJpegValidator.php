@@ -164,7 +164,7 @@ final readonly class TiffJpegValidator
 
         // JPEGProc may be absent when Compression=6 — see validateJpegProcTag().
         $jpegProcEntry = $ifd->get(TiffTag::JPEG_PROC);
-        if (($jpegProcEntry instanceof IfdEntry) && (!is_int($jpegProcEntry->value) || !in_array($jpegProcEntry->value, [1, 14], true))) {
+        if (($jpegProcEntry instanceof IfdEntry) && !in_array($jpegProcEntry->value, [1, 14], true)) {
             throw new ParseError('JPEGRestartInterval requires valid JPEGProc metadata.', 1853);
         }
     }
