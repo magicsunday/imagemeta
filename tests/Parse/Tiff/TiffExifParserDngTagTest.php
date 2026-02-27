@@ -39,8 +39,8 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
 
-use function array_slice;
 use function array_map;
+use function array_slice;
 use function count;
 use function file;
 use function implode;
