@@ -250,37 +250,27 @@ final readonly class DngGeometryValidator
      */
     public function validateDngOriginalProxySizes(Ifd $ifd): void
     {
-        $originalDefaultFinalSize = $this->support->extractDngOriginalProxySize(
+        $this->support->extractDngOriginalProxySize(
             $ifd,
             DngTag::ORIGINAL_DEFAULT_FINAL_SIZE,
             'OriginalDefaultFinalSize',
             [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG],
         );
-        $originalBestQualityFinalSize = $this->support->extractDngOriginalProxySize(
+        $this->support->extractDngOriginalProxySize(
             $ifd,
             DngTag::ORIGINAL_BEST_QUALITY_FINAL_SIZE,
             'OriginalBestQualityFinalSize',
             [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG],
         );
-        $originalDefaultCropSize = $this->support->extractDngOriginalProxySize(
+        $this->support->extractDngOriginalProxySize(
             $ifd,
             DngTag::ORIGINAL_DEFAULT_CROP_SIZE,
             'OriginalDefaultCropSize',
             [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_RATIONAL],
         );
 
-        // Fallback semantics: missing best-quality/crop size inherit from
-        // OriginalDefaultFinalSize when it is explicitly present.
-        if (($originalBestQualityFinalSize === null) && ($originalDefaultFinalSize !== null)) {
-            $originalBestQualityFinalSize = $originalDefaultFinalSize;
-        }
-
-        if (($originalDefaultCropSize === null) && ($originalDefaultFinalSize !== null)) {
-            $originalDefaultCropSize = $originalDefaultFinalSize;
-        }
-
-        // When OriginalDefaultFinalSize is absent, defaults are based on current-file
-        // size tags; omission is valid and intentionally non-fatal.
+        // The reader validates presence/type/value only; DNG default semantics are
+        // descriptive and are not materialized as local fallback assignments.
     }
 
     /**
