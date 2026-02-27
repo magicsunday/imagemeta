@@ -222,7 +222,7 @@ final class FlashPixStreamAssemblerTest extends TestCase
             maxStreamSize: 1_000_000,
             maxFlashPixTotalSize: 100_000,
         );
-        $method    = new ReflectionMethod(FlashPixStreamAssembler::class, 'parseName');
+        $method = new ReflectionMethod(FlashPixStreamAssembler::class, 'parseName');
 
         $validUtf16 = iconv('UTF-8', 'UTF-16LE', '/ok/after');
         assert($validUtf16 !== false);
