@@ -16,13 +16,17 @@ use MagicSunday\ImageMeta\Exif\Converters\FlashConverter;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
-use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
-use MagicSunday\ImageMeta\Value\Enum\FlashMode;
-use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
+use MagicSunday\ImageMeta\Value\Enum\{
+    FlashFunction,
+    FlashMode,
+    FlashReturn,
+};
 use MagicSunday\ImageMeta\Value\FlashInfo;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\{
+    CoversClass,
+    Test,
+    UsesClass,
+};
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -53,8 +57,7 @@ final class FlashConverterTest extends TestCase
     {
         $info = $this->converter->fromShort(1);
 
-        self::assertNotNull($info);
-        self::assertTrue($info->fired);
+        $this->assertFlashFired($info, true);
     }
 
     /**
@@ -65,8 +68,7 @@ final class FlashConverterTest extends TestCase
     {
         $info = $this->converter->fromShort(1.0);
 
-        self::assertNotNull($info);
-        self::assertTrue($info->fired);
+        $this->assertFlashFired($info, true);
     }
 
     /**
@@ -77,8 +79,7 @@ final class FlashConverterTest extends TestCase
     {
         $info = $this->converter->fromShort('0');
 
-        self::assertNotNull($info);
-        self::assertFalse($info->fired);
+        $this->assertFlashFired($info, false);
     }
 
     /**
@@ -89,8 +90,7 @@ final class FlashConverterTest extends TestCase
     {
         $info = $this->converter->fromShort(new ExifNumericList([1]));
 
-        self::assertNotNull($info);
-        self::assertTrue($info->fired);
+        $this->assertFlashFired($info, true);
     }
 
     /**
@@ -110,8 +110,7 @@ final class FlashConverterTest extends TestCase
     {
         $info = $this->converter->fromShort(new ExifRational(1, 1));
 
-        self::assertNotNull($info);
-        self::assertTrue($info->fired);
+        $this->assertFlashFired($info, true);
     }
 
     /**
@@ -133,8 +132,7 @@ final class FlashConverterTest extends TestCase
             new ExifRationalList([new ExifRational(1, 1)]),
         );
 
-        self::assertNotNull($info);
-        self::assertTrue($info->fired);
+        $this->assertFlashFired($info, true);
     }
 
     /**
@@ -173,11 +171,35 @@ final class FlashConverterTest extends TestCase
         // Value 127: bits 0-6 all set
         $info = $this->converter->fromShort(127);
 
+        $this->assertFlashInfo(
+            $info,
+            fired: true,
+            mode: FlashMode::Auto,
+            returnDetection: FlashReturn::ReturnDetected,
+            functionPresence: FlashFunction::Absent,
+            redEyeReduction: true,
+        );
+    }
+
+    private function assertFlashFired(?FlashInfo $info, bool $fired): void
+    {
         self::assertNotNull($info);
-        self::assertTrue($info->fired);
-        self::assertSame(FlashMode::Auto, $info->mode);
-        self::assertSame(FlashReturn::ReturnDetected, $info->returnDetection);
-        self::assertSame(FlashFunction::Absent, $info->functionPresence);
-        self::assertTrue($info->redEyeReduction);
+        self::assertSame($fired, $info->fired);
+    }
+
+    private function assertFlashInfo(
+        ?FlashInfo $info,
+        bool $fired,
+        FlashMode $mode,
+        FlashReturn $returnDetection,
+        FlashFunction $functionPresence,
+        bool $redEyeReduction,
+    ): void {
+        self::assertNotNull($info);
+        self::assertSame($fired, $info->fired);
+        self::assertSame($mode, $info->mode);
+        self::assertSame($returnDetection, $info->returnDetection);
+        self::assertSame($functionPresence, $info->functionPresence);
+        self::assertSame($redEyeReduction, $info->redEyeReduction);
     }
 }
