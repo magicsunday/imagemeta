@@ -122,9 +122,9 @@ echo "\n";
 $avgMs = $total > 0 ? ($elapsed / $total) * 1000 : 0;
 
 if ($failed === 0) {
-    echo sprintf("  ✔ %d/%d files passed (%.1fs, ⌀ %.1fms)\n", $passed, $total, $elapsed, $avgMs);
+    echo sprintf("  ✔ %d/%d files passed (%.1fs, Ø %.1fms)\n", $passed, $total, $elapsed, $avgMs);
 } else {
-    fprintf(STDERR, sprintf("  ✘ %d/%d files passed, %d failed (%.1fs, ⌀ %.1fms)\n", $passed, $total, $failed, $elapsed, $avgMs));
+    fprintf(STDERR, sprintf("  ✘ %d/%d files passed, %d failed (%.1fs, Ø %.1fms)\n", $passed, $total, $failed, $elapsed, $avgMs));
 }
 
 echo "\n";
