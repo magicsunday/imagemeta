@@ -102,10 +102,19 @@ if (is_file($input)) {
 }
 
 // Process files — output failures immediately
-$startTime = hrtime(true);
-$reader    = MetadataReader::createDefault();
-$total     = 0;
-$failed    = 0;
+$reader = MetadataReader::createDefault();
+
+// Warmup: trigger autoloading and JIT compilation before timed run
+if ($files !== []) {
+    try {
+        $reader->read($files[0][0]);
+    } catch (Throwable) {
+    }
+}
+
+$total   = 0;
+$failed  = 0;
+$totalNs = 0;
 
 echo "\n";
 
@@ -121,14 +130,16 @@ foreach ($files as [$absolutePath, $relativePath]) {
         $fileMs = (hrtime(true) - $fileStart) / 1e6;
         fprintf(STDERR, "  %-{$maxPathLen}s  %6.1fms  %s\n", $relativePath, $fileMs, $throwable->getMessage());
     }
+
+    $totalNs += hrtime(true) - $fileStart;
 }
 
 // Summary
-$elapsed = (hrtime(true) - $startTime) / 1e9;
+$elapsed = $totalNs / 1e9;
 $passed  = $total - $failed;
 echo "\n";
 
-$avgMs = $total > 0 ? ($elapsed / $total) * 1000 : 0;
+$avgMs = $total > 0 ? ($totalNs / $total) / 1e6 : 0;
 
 if ($failed === 0) {
     echo sprintf("  ✔ %d/%d files passed (%.1fs, Ø %.1fms)\n", $passed, $total, $elapsed, $avgMs);
