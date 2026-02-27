@@ -25,7 +25,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
 
+use function array_map;
 use function date_default_timezone_get;
 use function date_default_timezone_set;
 use function strlen;
@@ -42,6 +45,18 @@ use function strlen;
 #[UsesClass(XmpDocument::class)]
 final class TemporalFactoryTest extends TestCase
 {
+    #[Test]
+    public function usesDedicatedFallbackDateHelper(): void
+    {
+        $reflection = new ReflectionClass(TemporalFactory::class);
+        $methods    = array_map(
+            static fn (ReflectionMethod $method): string => $method->getName(),
+            $reflection->getMethods(ReflectionMethod::IS_PRIVATE),
+        );
+
+        self::assertContains('parseFirstAvailableDate', $methods);
+    }
+
     /**
      * Supplies EXIF date/time tags with offsets and sub-second components.
      * Verifies TemporalFactory produces DateTime values and preserves sub-second strings.
