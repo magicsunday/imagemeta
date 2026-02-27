@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Model;
 use MagicSunday\ImageMeta\Contract\IptcParserInterface;
 use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder as StructuredMetadataAssemblyBuilder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
@@ -99,6 +100,13 @@ final class MetadataBuilder
     private ?XmpParserInterface $xmpParser = null;
 
     private ?IptcParserInterface $iptcParser = null;
+
+    private StructuredMetadataAssemblyBuilder $structuredMetadataBuilder;
+
+    public function __construct()
+    {
+        $this->structuredMetadataBuilder = StructuredMetadataAssemblyBuilder::createDefault();
+    }
 
     /**
      * Configures parser instances for selective document creation.
@@ -304,6 +312,7 @@ final class MetadataBuilder
             iptcDoc: $this->iptcDoc,
             xmpParser: $this->xmpParser,
             iptcParser: $this->iptcParser,
+            structuredMetadataBuilder: $this->structuredMetadataBuilder,
         );
     }
 }

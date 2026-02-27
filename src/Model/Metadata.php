@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Model;
 use MagicSunday\ImageMeta\Contract\IptcParserInterface;
 use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
@@ -112,6 +113,7 @@ final readonly class Metadata
      * @param IptcDocument|null                                    $iptcDoc                  Parsed IPTC IIM datasets from APP13 payloads. [JPEG only]
      * @param XmpParserInterface|null                              $xmpParser                Injected XMP parser for selective document creation.
      * @param IptcParserInterface|null                             $iptcParser               Injected IPTC parser for selective document creation.
+     * @param StructuredMetadataBuilder|null                       $structuredMetadataBuilder Injected builder for structured metadata assembly.
      */
     public function __construct(
         array $exifBlobs,
@@ -144,6 +146,7 @@ final readonly class Metadata
         public ?IptcDocument $iptcDoc = null,
         private ?XmpParserInterface $xmpParser = null,
         private ?IptcParserInterface $iptcParser = null,
+        ?StructuredMetadataBuilder $structuredMetadataBuilder = null,
     ) {
         $this->exifBlobs              = [...$exifBlobs];
         $this->xmpBlobs               = [...$xmpBlobs];
@@ -151,7 +154,9 @@ final readonly class Metadata
         $this->jpegAudioStreams       = [...$jpegAudioStreams];
         $this->isoBmffUnresolvedItems = [...$isoBmffUnresolvedItems];
         $this->iptcBlobs              = [...$iptcBlobs];
-        $this->structuredCache        = StructuredMetadataCache::createDefault();
+        $this->structuredCache        = new StructuredMetadataCache(
+            $structuredMetadataBuilder ?? StructuredMetadataBuilder::createDefault(),
+        );
     }
 
     /**
