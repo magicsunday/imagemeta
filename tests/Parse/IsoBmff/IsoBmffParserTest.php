@@ -131,21 +131,23 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects a headerless meta box for non-QuickTime BMFF brands.
-     * ISO/IEC 14496-12:2015 defines meta as FullBox(version=0, flags=0).
+     * Parses EXIF from a non-full meta box in an ISO BMFF-branded file.
+     * Reader tolerance accepts plausible child-box structure at offset 0.
      */
     #[Test]
-    public function rejectNonFullMetaBoxInIsoBmff(): void
+    public function extractExifFromNonFullMetaBoxInIsoBmff(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('meta box missing required FullBox header');
-
         $exifPayload = pack('N', 0) . "MM\x00\x2Aisom-exif";
         $meta        = $this->box('meta', $this->box('Exif', $exifPayload));
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+        $data        = $ftyp . $meta;
 
-        $extractor = $this->createExtractor($ftyp . $meta);
-        $extractor->extract();
+        $extractor           = $this->createExtractor($data);
+        [$exifs, $xmps, $qt] = $extractor->extract();
+
+        self::assertSame(["MM\x00\x2Aisom-exif"], $exifs);
+        self::assertSame([], $xmps);
+        self::assertNotNull($qt);
     }
 
     /**
@@ -181,6 +183,19 @@ final class IsoBmffParserTest extends TestCase
         $payload = $this->extendedBox('hdlr', "\0\0\0\0");
 
         $offset = $this->detectMetaChildOffsetForPayload($payload, true);
+
+        self::assertSame(0, $offset);
+    }
+
+    /**
+     * Accepts a valid child candidate at offset 0 even when QuickTime mode is disabled.
+     */
+    #[Test]
+    public function detectMetaChildOffsetAcceptsOffsetZeroWhenQuickTimeDisabled(): void
+    {
+        $payload = $this->box('hdlr', "\0\0\0\0");
+
+        $offset = $this->detectMetaChildOffsetForPayload($payload, false);
 
         self::assertSame(0, $offset);
     }

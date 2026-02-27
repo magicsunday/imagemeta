@@ -318,22 +318,22 @@ final class BoxPayloadCollectorTest extends TestCase
     }
 
     /**
-     * Rejects a non-full meta box when QuickTime compatibility is not enabled.
+     * Collects from a non-full meta box even when QuickTime compatibility is disabled.
      */
     #[Test]
-    public function collectRejectsNonFullMetaWhenQuickTimeDisabled(): void
+    public function collectAcceptsNonFullMetaWhenQuickTimeDisabled(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('meta box missing required FullBox header');
-
-        $hdlrBox = $this->box('hdlr', $this->hdlrPayload('pict'));
+        $exifBlob = pack('N', 0) . "MM\x00\x2Aisom-exif";
+        $exifBox  = $this->box('Exif', $exifBlob);
 
         // meta without FullBox header (children start immediately)
-        $metaData = $this->box('meta', $hdlrBox);
+        $metaData = $this->box('meta', $exifBox);
 
         [$collector, $navigator] = $this->createCollector($metaData);
         $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collector->collect($metaBox, false);
+        $collection              = $collector->collect($metaBox, false);
+
+        self::assertSame(["MM\x00\x2Aisom-exif"], $collection->directExif);
     }
 
     /**
