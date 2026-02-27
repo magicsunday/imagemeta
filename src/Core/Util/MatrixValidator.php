@@ -123,6 +123,8 @@ final class MatrixValidator
     /**
      * Normalizes a label list and validates its expected size.
      *
+     * @param bool[]|float[]|int[]|string[]|null[] $labels
+     *
      * @return list<string>|null
      */
     private static function normalizeLabelList(array $labels, int $expectedCount): ?array
