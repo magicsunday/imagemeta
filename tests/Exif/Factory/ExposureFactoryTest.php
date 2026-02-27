@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -42,14 +43,7 @@ final class ExposureFactoryTest extends TestCase
     {
         $parsedExif = $this->parsedExifWithIsoAndFlash(100, 0x0001);
 
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory  = new ExposureFactory();
-        $exposure = $factory->create($metadata);
+        $exposure = $this->createExposure($parsedExif);
 
         self::assertNotNull($exposure->settings);
         self::assertSame(100, $exposure->settings->iso);
@@ -64,13 +58,7 @@ final class ExposureFactoryTest extends TestCase
     #[Test]
     public function createsWithNullExifDoc(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-        );
-
-        $factory  = new ExposureFactory();
-        $exposure = $factory->create($metadata);
+        $exposure = $this->createExposure(null);
 
         self::assertNotNull($exposure->settings);
         self::assertNull($exposure->settings->iso);
@@ -87,14 +75,7 @@ final class ExposureFactoryTest extends TestCase
     {
         $parsedExif = $this->parsedExifWithIsoAndFlash(null, 0x0019);
 
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory  = new ExposureFactory();
-        $exposure = $factory->create($metadata);
+        $exposure = $this->createExposure($parsedExif);
 
         self::assertNotNull($exposure->settings);
         self::assertNull($exposure->settings->iso);
@@ -118,25 +99,8 @@ final class ExposureFactoryTest extends TestCase
             ),
         ];
 
-        $ifd0    = new Ifd([]);
-        $exifIfd = new Ifd($entries);
-
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory  = new ExposureFactory();
-        $exposure = $factory->create($metadata);
+        $parsedExif = $this->createParsedExifWithExifEntries($entries);
+        $exposure   = $this->createExposure($parsedExif);
 
         self::assertNotNull($exposure->settings);
         self::assertNull($exposure->settings->iso);
@@ -149,25 +113,8 @@ final class ExposureFactoryTest extends TestCase
     #[Test]
     public function emptyExifIfdYieldsDefaultFlashAndNullIso(): void
     {
-        $ifd0    = new Ifd([]);
-        $exifIfd = new Ifd([]);
-
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory  = new ExposureFactory();
-        $exposure = $factory->create($metadata);
+        $parsedExif = $this->createParsedExifWithExifEntries([]);
+        $exposure   = $this->createExposure($parsedExif);
 
         self::assertNotNull($exposure->settings);
         self::assertNull($exposure->settings->iso);
@@ -197,15 +144,31 @@ final class ExposureFactoryTest extends TestCase
             );
         }
 
-        $ifd0    = new Ifd([]);
-        $exifIfd = new Ifd($entries);
+        return $this->createParsedExifWithExifEntries($entries);
+    }
 
+    /**
+     * @param array<int, IfdEntry> $entries
+     */
+    private function createParsedExifWithExifEntries(array $entries): ParsedExif
+    {
         return new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
+            ifd0: new Ifd([]),
+            exifIfd: new Ifd($entries),
             gpsIfd: null,
             interopIfd: null,
             ifd1: null,
         );
+    }
+
+    private function createExposure(?ParsedExif $parsedExif): Exposure
+    {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        return (new ExposureFactory())->create($metadata);
     }
 }
