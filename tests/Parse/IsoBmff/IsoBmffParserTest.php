@@ -291,6 +291,41 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Decodes an unsigned 8-byte integer payload in a QuickTime data box.
+     */
+    #[Test]
+    public function decodeEightByteUnsignedIntPayload(): void
+    {
+        $key     = 'com.apple.quicktime.test';
+        $payload = pack('N2', 0, 42);
+
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(42, $qtMeta->keys[$key]);
+    }
+
+    /**
+     * Decodes a signed 8-byte integer payload in a QuickTime data box.
+     */
+    #[Test]
+    public function decodeEightByteSignedIntPayload(): void
+    {
+        $key     = 'com.apple.quicktime.test';
+        $payload = hex2bin('FFFFFFFFFFFFFFFE');
+        self::assertIsString($payload);
+
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(-2, $qtMeta->keys[$key]);
+    }
+
+    /**
      * Resolves iloc items that are split across multiple extents.
      * This verifies the extractor concatenates extents to reassemble the EXIF blob.
      */
@@ -1697,9 +1732,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Type 21 with 5-byte payload (>4 bytes) raises ParseError.
+     * Type 21 with 9-byte payload (>8 bytes) raises ParseError.
      *
-     * QuickTime File Format 2012, Table 3-5: type 21 requires 1–4 bytes.
+     * Reader tolerance permits 8-byte payloads, but longer values remain invalid.
      */
     #[Test]
     public function rejectsOversizedSignedIntPayload(): void
@@ -1707,14 +1742,14 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
 
         $key  = 'com.apple.quicktime.test';
-        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, pack('N', 0) . chr(1));
+        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, pack('N2', 0, 0) . chr(1));
         $this->createExtractor($file)->extract();
     }
 
     /**
-     * Type 22 with 5-byte payload (>4 bytes) raises ParseError.
+     * Type 22 with 9-byte payload (>8 bytes) raises ParseError.
      *
-     * QuickTime File Format 2012, Table 3-5: type 22 requires 1–4 bytes.
+     * Reader tolerance permits 8-byte payloads, but longer values remain invalid.
      */
     #[Test]
     public function rejectsOversizedUnsignedIntPayload(): void
@@ -1722,7 +1757,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
 
         $key  = 'com.apple.quicktime.test';
-        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, "\x00\x00\x00\x00\x01");
+        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, pack('N2', 0, 0) . chr(1));
         $this->createExtractor($file)->extract();
     }
 

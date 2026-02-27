@@ -141,6 +141,39 @@ final class QuickTimeValueDecoderTest extends TestCase
     }
 
     /**
+     * Parses a data box with an 8-byte unsigned integer payload.
+     */
+    #[Test]
+    public function parseDataBoxStructuredUnsignedIntEightBytes(): void
+    {
+        $decoder = $this->createDecoder();
+        $content = pack('N', 0x16) . pack('N', 0) . pack('N2', 0, 42);
+
+        $descriptor = $this->createDataBoxDescriptor($content);
+        $result     = $decoder->parseDataBoxStructured($descriptor);
+
+        self::assertSame(0x16, $result['type']);
+        self::assertSame(42, $result['value']);
+    }
+
+    /**
+     * Parses a data box with an 8-byte signed integer payload.
+     */
+    #[Test]
+    public function parseDataBoxStructuredSignedIntEightBytes(): void
+    {
+        $decoder = $this->createDecoder();
+        $content = pack('N', 0x15) . pack('N', 0) . hex2bin('FFFFFFFFFFFFFFFE');
+        self::assertIsString($content);
+
+        $descriptor = $this->createDataBoxDescriptor($content);
+        $result     = $decoder->parseDataBoxStructured($descriptor);
+
+        self::assertSame(0x15, $result['type']);
+        self::assertSame(-2, $result['value']);
+    }
+
+    /**
      * Parses a data box with a float32 payload.
      */
     #[Test]
@@ -269,7 +302,7 @@ final class QuickTimeValueDecoderTest extends TestCase
         $this->expectExceptionMessage('QuickTime integer payload must be 1');
 
         $decoder = $this->createDecoder();
-        $decoder->decodeDataPayload(0x15, "\x00\x00\x00\x00\x00", 5);
+        $decoder->decodeDataPayload(0x15, "\x00\x00\x00\x00\x00\x00\x00\x00\x00", 9);
     }
 
     /**
