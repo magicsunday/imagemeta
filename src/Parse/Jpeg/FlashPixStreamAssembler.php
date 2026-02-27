@@ -439,7 +439,13 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
         PayloadGuard::ensureMinimumLength($body, 10, sprintf('FlashPix stream data at offset %d', $offset), 1317);
 
         $header = $this->decodeStreamDataHeader($body);
-        $entry  = $this->validateStreamMetadata($header, $offset);
+        $entry  = $this->validateStreamMetadata($header);
+        if ($entry === null) {
+            // EXIF 3.0 §4.7.3.5 defines the stream-data index as a contents-list
+            // entry order reference. Reader tolerance: ignore out-of-bounds
+            // references and continue parsing remaining metadata.
+            return;
+        }
 
         // Postel's Law: tolerate malformed contents-list entries whose declared
         // size exceeds the configured assembly bound and skip FPXR assembly for
@@ -484,21 +490,14 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      *
      * @param StreamDataHeader $header
      *
-     * @return StreamEntry
+     * @return StreamEntry|null
      */
-    private function validateStreamMetadata(array $header, int $offset): array
+    private function validateStreamMetadata(array $header): ?array
     {
         $index = $header['index'];
 
         if (!array_key_exists($index, $this->contents)) {
-            throw new ParseError(
-                sprintf(
-                    'FlashPix stream data at offset %d has invalid contents-list index %d',
-                    $offset,
-                    $index,
-                ),
-                1319,
-            );
+            return null;
         }
 
         return $this->contents[$index];
