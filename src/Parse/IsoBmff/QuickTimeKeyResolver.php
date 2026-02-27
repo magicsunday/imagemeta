@@ -120,13 +120,12 @@ final readonly class QuickTimeKeyResolver
             $name = $win->read($size - 8);
 
             if ($namespace === self::QUICKTIME_MDTA) {
-                // QuickTime File Format 2012, "Metadata item keys atom": mdta key_value is
-                // a NUL-terminated UTF-8 string; strip terminator before storing key names.
-                if (!str_ends_with($name, "\0")) {
-                    throw new ParseError('keys mdta key_value missing NUL terminator', 1455);
+                // QuickTime File Format 2012, "Metadata Item Keys Atom" defines
+                // key_value as uint8[Key_size-8] containing the key name bytes.
+                // Some writers append a trailing NUL; tolerate and strip exactly one.
+                if (str_ends_with($name, "\0")) {
+                    $name = substr($name, 0, -1);
                 }
-
-                $name = substr($name, 0, -1);
 
                 if ($name === '') {
                     throw new ParseError('keys mdta key_value is empty after NUL terminator removal', 1456);
