@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
+use MagicSunday\ImageMeta\MakerNotes\Apple\PlistMarkerType;
+use MagicSunday\ImageMeta\MakerNotes\Apple\PlistSimpleMarker;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -19,35 +21,49 @@ final class PlistMarkerEnumsTest extends TestCase
     #[Test]
     public function plistMarkerTypeEnumExistsWithExpectedCases(): void
     {
-        $class = 'MagicSunday\\ImageMeta\\MakerNotes\\Apple\\PlistMarkerType';
-
-        self::assertTrue(enum_exists($class));
-
-        if (!enum_exists($class)) {
-            return;
+        $actual = [];
+        foreach (PlistMarkerType::cases() as $case) {
+            $actual[$case->name] = $case->value;
         }
 
-        self::assertSame(0, $class::Simple->value);
-        self::assertSame(1, $class::Integer->value);
-        self::assertSame(4, $class::Data->value);
-        self::assertSame(13, $class::Dictionary->value);
+        self::assertSame(
+            [
+                'Simple'     => 0x0,
+                'Integer'    => 0x1,
+                'Real'       => 0x2,
+                'Date'       => 0x3,
+                'Data'       => 0x4,
+                'Ascii'      => 0x5,
+                'Unicode'    => 0x6,
+                'Utf8'       => 0x7,
+                'Uid'        => 0x8,
+                'Array'      => 0xA,
+                'Set'        => 0xB,
+                'Dictionary' => 0xD,
+            ],
+            $actual,
+        );
     }
 
     #[Test]
     public function plistSimpleMarkerEnumExistsWithExpectedCases(): void
     {
-        $class = 'MagicSunday\\ImageMeta\\MakerNotes\\Apple\\PlistSimpleMarker';
-
-        self::assertTrue(enum_exists($class));
-
-        if (!enum_exists($class)) {
-            return;
+        $actual = [];
+        foreach (PlistSimpleMarker::cases() as $case) {
+            $actual[$case->name] = $case->value;
         }
 
-        self::assertSame(0, $class::Null->value);
-        self::assertSame(8, $class::False->value);
-        self::assertSame(9, $class::True->value);
-        self::assertSame(15, $class::Fill->value);
+        self::assertSame(
+            [
+                'Null'    => 0x0,
+                'False'   => 0x8,
+                'True'    => 0x9,
+                'Url'     => 0xC,
+                'BaseUrl' => 0xD,
+                'Uuid'    => 0xE,
+                'Fill'    => 0xF,
+            ],
+            $actual,
+        );
     }
 }
-

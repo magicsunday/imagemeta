@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\Samsung\SamsungMakerNotes;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffFieldType;
 
 use function rtrim;
 use function sha1;
@@ -41,12 +42,6 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
     private const int TAG_DEVICE_TYPE = 0x0002;
 
     private const int TAG_MODEL_ID = 0x0003;
-
-    private const int TYPE_ASCII = 2;
-
-    private const int TYPE_SHORT = 3;
-
-    private const int TYPE_LONG = 4;
 
     /**
      * Creates a metadata value object describing the Samsung maker note payload.
@@ -242,10 +237,10 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
     private function typeSize(int $type): int
     {
         return match ($type) {
-            self::TYPE_ASCII => 1,
-            self::TYPE_SHORT => 2,
-            self::TYPE_LONG  => 4,
-            default          => 0,
+            TiffFieldType::Ascii->value => 1,
+            TiffFieldType::Short->value => 2,
+            TiffFieldType::Long->value  => 4,
+            default                     => 0,
         };
     }
 
@@ -264,7 +259,7 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
      */
     private function parseInt(string $valueBytes, int $type, Endian $endian): ?int
     {
-        if ($type === self::TYPE_SHORT) {
+        if ($type === TiffFieldType::Short->value) {
             if (strlen($valueBytes) < 2) {
                 return null;
             }
@@ -272,7 +267,7 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
             return Unpack::int($endian === Endian::Little ? 'v' : 'n', substr($valueBytes, 0, 2), 'Samsung SHORT');
         }
 
-        if ($type === self::TYPE_LONG) {
+        if ($type === TiffFieldType::Long->value) {
             if (strlen($valueBytes) < 4) {
                 return null;
             }

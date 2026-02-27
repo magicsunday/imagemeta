@@ -45,87 +45,6 @@ use function trim;
 final readonly class QuickTimeValueDecoder
 {
     /**
-     * QuickTime `data` box type code for UTF-8 encoded text payloads.
-     */
-    private const int DATA_TYPE_UTF8 = 1;
-
-    /**
-     * QuickTime `data` box type code for UTF-16 (big-endian) encoded text payloads.
-     */
-    private const int DATA_TYPE_UTF16 = 2;
-
-    /**
-     * QuickTime `data` box type code for Shift-JIS encoded text payloads.
-     * QuickTime File Format 2012, Table 3-5, type code 3.
-     */
-    private const int DATA_TYPE_SHIFT_JIS = 3;
-
-    /**
-     * QuickTime `data` box type code for UTF-8 sort-string text payloads.
-     * QuickTime File Format 2012, Table 3-5, type code 4.
-     */
-    private const int DATA_TYPE_UTF8_SORT = 4;
-
-    /**
-     * QuickTime `data` box type code for UTF-16BE sort-string text payloads.
-     * QuickTime File Format 2012, Table 3-5, type code 5.
-     */
-    private const int DATA_TYPE_UTF16_SORT = 5;
-
-    /**
-     * QuickTime `data` box type code for classic MacRoman encoded text payloads.
-     */
-    private const int DATA_TYPE_MAC_ROMAN = 7;
-
-    /**
-     * QuickTime `data` box type code for JPEG payloads in JFIF-compatible wrapper.
-     * QuickTime File Format 2012, Table 3-5, type code 13.
-     */
-    private const int DATA_TYPE_JPEG_WRAPPER = 0x0D;
-
-    /**
-     * QuickTime `data` box type code for PNG payloads in PNG wrapper.
-     * QuickTime File Format 2012, Table 3-5, type code 14.
-     */
-    private const int DATA_TYPE_PNG_WRAPPER = 0x0E;
-
-    /**
-     * QuickTime `data` box type code for BMP payloads in Windows bitmap wrapper.
-     * QuickTime File Format 2012, Table 3-5, type code 27.
-     */
-    private const int DATA_TYPE_BMP_WRAPPER = 0x1B;
-
-    /**
-     * QuickTime `data` box type code for signed big-endian integer payloads.
-     * QuickTime File Format 2012, Table 3-5, type code 21.
-     */
-    private const int DATA_TYPE_SIGNED_INT = 0x15;
-
-    /**
-     * QuickTime `data` box type code for unsigned big-endian integer payloads.
-     * QuickTime File Format 2012, Table 3-5, type code 22.
-     */
-    private const int DATA_TYPE_UNSIGNED_INT = 0x16;
-
-    /**
-     * QuickTime `data` box type code for 32-bit big-endian floating point payloads.
-     * QuickTime File Format 2012, Table 3-5, type code 23.
-     */
-    private const int DATA_TYPE_FLOAT32 = 0x17;
-
-    /**
-     * QuickTime `data` box type code for 64-bit big-endian floating point payloads.
-     * QuickTime File Format 2012, Table 3-5, type code 24.
-     */
-    private const int DATA_TYPE_FLOAT64 = 0x18;
-
-    /**
-     * QuickTime `data` box type code for nested metadata atom payloads.
-     * QuickTime File Format 2012, Table 3-5, type code 28.
-     */
-    public const int DATA_TYPE_NESTED_METADATA = 0x1C;
-
-    /**
      * QuickTime metadata keys that should be coerced into expected value types.
      *
      * @var array<string, 'int'|'float'|'bool'|'string'>
@@ -188,7 +107,7 @@ final readonly class QuickTimeValueDecoder
         $payloadSize = $data->contentSize - 8;
         $payload     = $payloadSize > 0 ? $win->read($payloadSize) : '';
 
-        if ($type === self::DATA_TYPE_NESTED_METADATA) {
+        if ($type === QuickTimeDataType::NestedMetadata->value) {
             $nested = ($this->nestedMetadataParser)($payload);
 
             return [
@@ -216,7 +135,9 @@ final readonly class QuickTimeValueDecoder
      */
     public function decodeDataPayload(int $type, string $payload, int $payloadSize): string|int|float
     {
-        if (($type === self::DATA_TYPE_UTF8) || ($type === self::DATA_TYPE_UTF8_SORT)) {
+        $dataType = QuickTimeDataType::tryFrom($type);
+
+        if (($dataType === QuickTimeDataType::Utf8) || ($dataType === QuickTimeDataType::Utf8Sort)) {
             if (!mb_check_encoding($payload, 'UTF-8')) {
                 throw new ParseError('data box UTF-8 payload contains invalid byte sequence.', 1253);
             }
@@ -226,7 +147,7 @@ final readonly class QuickTimeValueDecoder
             return $payload;
         }
 
-        if ($type === self::DATA_TYPE_SHIFT_JIS) {
+        if ($dataType === QuickTimeDataType::ShiftJis) {
             if (!mb_check_encoding($payload, 'SJIS')) {
                 throw new ParseError('data box Shift-JIS payload contains malformed sequence.', 1450);
             }
@@ -239,7 +160,7 @@ final readonly class QuickTimeValueDecoder
             return rtrim($converted, "\0");
         }
 
-        if (($type === self::DATA_TYPE_UTF16) || ($type === self::DATA_TYPE_UTF16_SORT)) {
+        if (($dataType === QuickTimeDataType::Utf16) || ($dataType === QuickTimeDataType::Utf16Sort)) {
             if (($payloadSize % 2) !== 0) {
                 throw new ParseError('data box UTF-16BE payload has odd byte count.', 1254);
             }
@@ -253,7 +174,7 @@ final readonly class QuickTimeValueDecoder
             return rtrim($converted, "\0");
         }
 
-        if ($type === self::DATA_TYPE_JPEG_WRAPPER) {
+        if ($dataType === QuickTimeDataType::JpegWrapper) {
             if (($payloadSize < 2) || (!str_starts_with($payload, "\xFF\xD8"))) {
                 throw new ParseError('data box type 13 payload does not match JPEG/JFIF signature.', 1994);
             }
@@ -261,7 +182,7 @@ final readonly class QuickTimeValueDecoder
             return $payload;
         }
 
-        if ($type === self::DATA_TYPE_PNG_WRAPPER) {
+        if ($dataType === QuickTimeDataType::PngWrapper) {
             if (($payloadSize < 8) || (!str_starts_with($payload, "\x89PNG\x0D\x0A\x1A\x0A"))) {
                 throw new ParseError('data box type 14 payload does not match PNG signature.', 1468);
             }
@@ -269,7 +190,7 @@ final readonly class QuickTimeValueDecoder
             return $payload;
         }
 
-        if ($type === self::DATA_TYPE_BMP_WRAPPER) {
+        if ($dataType === QuickTimeDataType::BmpWrapper) {
             if (($payloadSize < 2) || (!str_starts_with($payload, 'BM'))) {
                 throw new ParseError('data box type 27 payload does not match BMP signature.', 1469);
             }
@@ -279,7 +200,7 @@ final readonly class QuickTimeValueDecoder
 
         $trimmed = trim($payload, "\0");
 
-        if ($type === self::DATA_TYPE_MAC_ROMAN) {
+        if ($dataType === QuickTimeDataType::MacRoman) {
             $converted = iconv('macintosh', 'UTF-8', $trimmed);
 
             if ($converted === false) {
@@ -291,15 +212,15 @@ final readonly class QuickTimeValueDecoder
 
         // QuickTime File Format 2012 Table 3-5: type 21/22 encode integers
         // in 1, 2, 3, or 4 bytes (big-endian).
-        if ($type === self::DATA_TYPE_SIGNED_INT) {
+        if ($dataType === QuickTimeDataType::SignedInt) {
             return $this->decodeQuickTimeSignedInt($payload, $payloadSize);
         }
 
-        if ($type === self::DATA_TYPE_UNSIGNED_INT) {
+        if ($dataType === QuickTimeDataType::UnsignedInt) {
             return $this->decodeQuickTimeUnsignedInt($payload, $payloadSize);
         }
 
-        if ($type === self::DATA_TYPE_FLOAT32) {
+        if ($dataType === QuickTimeDataType::Float32) {
             // Reject truncated float32 payloads
             if ($payloadSize < 4) {
                 throw new ParseError('data box float32 payload truncated', 1418);
@@ -312,7 +233,7 @@ final readonly class QuickTimeValueDecoder
             return Unpack::float('G', substr($payload, 0, 4), 'QuickTime float32 payload');
         }
 
-        if ($type === self::DATA_TYPE_FLOAT64) {
+        if ($dataType === QuickTimeDataType::Float64) {
             // Reject truncated float64 payloads
             if ($payloadSize < 8) {
                 throw new ParseError('data box float64 payload truncated', 1419);

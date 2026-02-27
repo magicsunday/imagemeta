@@ -370,7 +370,7 @@ final readonly class QuickTimeMetadataDecoder
                     }
 
                     if (
-                        ($structured['type'] === QuickTimeValueDecoder::DATA_TYPE_NESTED_METADATA)
+                        ($structured['type'] === QuickTimeDataType::NestedMetadata->value)
                         && array_key_exists('nestedKeys', $structured)
                         && array_key_exists('nestedAtoms', $structured)
                     ) {
@@ -577,7 +577,7 @@ final readonly class QuickTimeMetadataDecoder
             }
 
             $atomsList[$flattenedKey][] = [
-                'type'   => QuickTimeValueDecoder::DATA_TYPE_NESTED_METADATA,
+                'type'   => QuickTimeDataType::NestedMetadata->value,
                 'locale' => $parentLocale,
                 'value'  => $coerced,
             ];

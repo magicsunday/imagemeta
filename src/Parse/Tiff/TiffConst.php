@@ -55,97 +55,97 @@ final class TiffConst
      * 8-bit unsigned integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_BYTE = 1;
+    public const int TYPE_BYTE = TiffFieldType::Byte->value;
 
     /**
      * 8-bit byte containing 7-bit ASCII code; last byte NUL.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_ASCII = 2;
+    public const int TYPE_ASCII = TiffFieldType::Ascii->value;
 
     /**
      * 16-bit unsigned integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_SHORT = 3;
+    public const int TYPE_SHORT = TiffFieldType::Short->value;
 
     /**
      * 32-bit unsigned integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_LONG = 4;
+    public const int TYPE_LONG = TiffFieldType::Long->value;
 
     /**
      * Two LONGs: numerator and denominator.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_RATIONAL = 5;
+    public const int TYPE_RATIONAL = TiffFieldType::Rational->value;
 
     /**
      * 8-bit signed (two's complement) integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_SBYTE = 6;
+    public const int TYPE_SBYTE = TiffFieldType::SByte->value;
 
     /**
      * 8-bit byte that may contain anything; interpretation depends on field definition.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_UNDEFINED = 7;
+    public const int TYPE_UNDEFINED = TiffFieldType::Undefined->value;
 
     /**
      * 16-bit signed (two's complement) integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_SSHORT = 8;
+    public const int TYPE_SSHORT = TiffFieldType::SShort->value;
 
     /**
      * 32-bit signed (two's complement) integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_SLONG = 9;
+    public const int TYPE_SLONG = TiffFieldType::SLong->value;
 
     /**
      * Two SLONGs: signed numerator and denominator.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_SRATIONAL = 10;
+    public const int TYPE_SRATIONAL = TiffFieldType::SRational->value;
 
     /**
      * 4-byte IEEE floating point value.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_FLOAT = 11;
+    public const int TYPE_FLOAT = TiffFieldType::Float->value;
 
     /**
      * 8-byte IEEE double precision floating point value.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_DOUBLE = 12;
+    public const int TYPE_DOUBLE = TiffFieldType::Double->value;
 
     /**
      * 32-bit unsigned offset to IFD (TIFF Technical Note 1).
      * BigTIFF specification; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_IFD = 13;
+    public const int TYPE_IFD = TiffFieldType::Ifd->value;
 
     /**
      * 64-bit unsigned integer (BigTIFF).
      * BigTIFF specification; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_LONG8 = 16;
+    public const int TYPE_LONG8 = TiffFieldType::Long8->value;
 
     /**
      * 64-bit signed (two's complement) integer (BigTIFF).
      * BigTIFF specification; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_SLONG8 = 17;
+    public const int TYPE_SLONG8 = TiffFieldType::SLong8->value;
 
     /**
      * 64-bit unsigned offset to IFD (BigTIFF).
      * BigTIFF specification; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_IFD8 = 18;
+    public const int TYPE_IFD8 = TiffFieldType::Ifd8->value;
 
     /**
      * EXIF 3.0 §4.6.6.8 — sentinel denominator value indicating an unknown measurement.

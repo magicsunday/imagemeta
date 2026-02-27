@@ -37,9 +37,6 @@ final class PlistBinaryReader
     /** @var int Mask to isolate info nibble */
     private const int MARKER_INFO_MASK = BitMask::LOW_NIBBLE;
 
-    /** @var int Integer marker type */
-    private const int MARKER_TYPE_INTEGER = 1;
-
     /** @var string Raw data payload */
     private string $data = '';
 
@@ -153,7 +150,7 @@ final class PlistBinaryReader
         $marker    = ord($this->data[$sizeMarkerOffset]);
         $type      = $marker >> 4;
         $innerInfo = $marker & self::MARKER_INFO_MASK;
-        if ($type !== self::MARKER_TYPE_INTEGER) {
+        if ($type !== PlistMarkerType::Integer->value) {
             throw new ParseError('Size marker does not encode an integer.', 1085);
         }
 

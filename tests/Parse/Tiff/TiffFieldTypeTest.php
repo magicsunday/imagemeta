@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Parse\Tiff\TiffFieldType;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -19,21 +20,31 @@ final class TiffFieldTypeTest extends TestCase
     #[Test]
     public function enumExistsAndExposesExpectedFieldTypeValues(): void
     {
-        $class = 'MagicSunday\\ImageMeta\\Parse\\Tiff\\TiffFieldType';
-
-        self::assertTrue(enum_exists($class));
-
-        if (!enum_exists($class)) {
-            return;
+        $actual = [];
+        foreach (TiffFieldType::cases() as $case) {
+            $actual[$case->name] = $case->value;
         }
 
-        self::assertSame(1, $class::Byte->value);
-        self::assertSame(2, $class::Ascii->value);
-        self::assertSame(3, $class::Short->value);
-        self::assertSame(4, $class::Long->value);
-        self::assertSame(5, $class::Rational->value);
-        self::assertSame(16, $class::Long8->value);
-        self::assertSame(18, $class::Ifd8->value);
+        self::assertSame(
+            [
+                'Byte'      => 0x01,
+                'Ascii'     => 0x02,
+                'Short'     => 0x03,
+                'Long'      => 0x04,
+                'Rational'  => 0x05,
+                'SByte'     => 0x06,
+                'Undefined' => 0x07,
+                'SShort'    => 0x08,
+                'SLong'     => 0x09,
+                'SRational' => 0x0A,
+                'Float'     => 0x0B,
+                'Double'    => 0x0C,
+                'Ifd'       => 0x0D,
+                'Long8'     => 0x10,
+                'SLong8'    => 0x11,
+                'Ifd8'      => 0x12,
+            ],
+            $actual,
+        );
     }
 }
-

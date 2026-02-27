@@ -172,20 +172,20 @@ final readonly class TiffValueDecoder
         }
 
         // ASCII
-        if ($type === TiffConst::TYPE_ASCII) {
+        if ($type === TiffFieldType::Ascii->value) {
             return $this->tagDecoder->decodeAscii($tag, $count, $bytes, self::EXIF_30_UTF8_TAGS);
         }
 
-        if ($type === TiffConst::TYPE_UNDEFINED) {
+        if ($type === TiffFieldType::Undefined->value) {
             return $bytes;
         }
 
         // RATIONAL / SRATIONAL
-        if ($type === TiffConst::TYPE_RATIONAL || $type === TiffConst::TYPE_SRATIONAL) {
+        if ($type === TiffFieldType::Rational->value || $type === TiffFieldType::SRational->value) {
             $rationalValues = [];
             for ($i = 0; $i < $count; ++$i) {
-                $num              = $this->binaryReader->read32FromBytes($bytes, $i * 8, $type === TiffConst::TYPE_SRATIONAL);
-                $den              = $this->binaryReader->read32FromBytes($bytes, $i * 8 + 4, $type === TiffConst::TYPE_SRATIONAL);
+                $num              = $this->binaryReader->read32FromBytes($bytes, $i * 8, $type === TiffFieldType::SRational->value);
+                $den              = $this->binaryReader->read32FromBytes($bytes, $i * 8 + 4, $type === TiffFieldType::SRational->value);
                 $rationalValues[] = new ExifRational($num, $den);
             }
 
@@ -198,17 +198,17 @@ final readonly class TiffValueDecoder
         $cursor = 0;
         for ($i = 0; $i < $count; ++$i) {
             $vals[] = match ($type) {
-                TiffConst::TYPE_BYTE   => ord($bytes[$cursor]),
-                TiffConst::TYPE_SBYTE  => $this->binaryReader->toSigned(ord($bytes[$cursor]), 8),
-                TiffConst::TYPE_SHORT  => $this->binaryReader->unpackU16(substr($bytes, $cursor, 2)),
-                TiffConst::TYPE_SSHORT => $this->binaryReader->unpackS16(substr($bytes, $cursor, 2)),
-                TiffConst::TYPE_LONG, TiffConst::TYPE_IFD => $this->binaryReader->unpackU32(substr($bytes, $cursor, 4)),
-                TiffConst::TYPE_SLONG => $this->binaryReader->unpackS32(substr($bytes, $cursor, 4)),
-                TiffConst::TYPE_LONG8, TiffConst::TYPE_IFD8 => $this->binaryReader->unpackU64(substr($bytes, $cursor, 8)),
-                TiffConst::TYPE_SLONG8 => $this->binaryReader->unpackS64(substr($bytes, $cursor, 8)),
-                TiffConst::TYPE_FLOAT  => $this->binaryReader->unpackFloat(substr($bytes, $cursor, 4)),
-                TiffConst::TYPE_DOUBLE => $this->binaryReader->unpackDouble(substr($bytes, $cursor, 8)),
-                default                => throw new ParseError('Unsupported type in decodeBytes: ' . $type, 1886),
+                TiffFieldType::Byte->value   => ord($bytes[$cursor]),
+                TiffFieldType::SByte->value  => $this->binaryReader->toSigned(ord($bytes[$cursor]), 8),
+                TiffFieldType::Short->value  => $this->binaryReader->unpackU16(substr($bytes, $cursor, 2)),
+                TiffFieldType::SShort->value => $this->binaryReader->unpackS16(substr($bytes, $cursor, 2)),
+                TiffFieldType::Long->value, TiffFieldType::Ifd->value => $this->binaryReader->unpackU32(substr($bytes, $cursor, 4)),
+                TiffFieldType::SLong->value => $this->binaryReader->unpackS32(substr($bytes, $cursor, 4)),
+                TiffFieldType::Long8->value, TiffFieldType::Ifd8->value => $this->binaryReader->unpackU64(substr($bytes, $cursor, 8)),
+                TiffFieldType::SLong8->value => $this->binaryReader->unpackS64(substr($bytes, $cursor, 8)),
+                TiffFieldType::Float->value  => $this->binaryReader->unpackFloat(substr($bytes, $cursor, 4)),
+                TiffFieldType::Double->value => $this->binaryReader->unpackDouble(substr($bytes, $cursor, 8)),
+                default                      => throw new ParseError('Unsupported type in decodeBytes: ' . $type, 1886),
             };
             $cursor += $componentSize;
         }
@@ -259,14 +259,7 @@ final readonly class TiffValueDecoder
      */
     public function bytesPerComponent(int $type): ?int
     {
-        return match ($type) {
-            TiffConst::TYPE_BYTE, TiffConst::TYPE_ASCII, TiffConst::TYPE_SBYTE, TiffConst::TYPE_UNDEFINED => 1,
-            TiffConst::TYPE_SHORT, TiffConst::TYPE_SSHORT => 2,
-            TiffConst::TYPE_LONG, TiffConst::TYPE_IFD, TiffConst::TYPE_SLONG, TiffConst::TYPE_FLOAT => 4,
-            TiffConst::TYPE_RATIONAL, TiffConst::TYPE_SRATIONAL, TiffConst::TYPE_DOUBLE,
-            TiffConst::TYPE_LONG8, TiffConst::TYPE_SLONG8, TiffConst::TYPE_IFD8 => 8,
-            default => null,
-        };
+        return TiffFieldType::tryFrom($type)?->bytesPerComponent();
     }
 
     /**

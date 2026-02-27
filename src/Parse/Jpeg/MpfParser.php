@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Parse\ParserLimits;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffFieldType;
 
 use function array_any;
 use function array_is_list;
@@ -102,15 +103,15 @@ final class MpfParser
         // MP Index IFD tag type/count constraints per EXIF 3.0 §4.6.2
         $indexConstraints = [
             self::TAG_MPF_VERSION => [
-                'type'    => TiffConst::TYPE_ASCII,
+                'type'    => TiffFieldType::Ascii->value,
                 'countFn' => static fn (int $c): bool => $c === 4,
             ],
             self::TAG_NUMBER_OF_IMAGES => [
-                'type'    => TiffConst::TYPE_LONG,
+                'type'    => TiffFieldType::Long->value,
                 'countFn' => static fn (int $c): bool => $c === 1,
             ],
             self::TAG_MP_ENTRY => [
-                'type'    => TiffConst::TYPE_UNDEFINED,
+                'type'    => TiffFieldType::Undefined->value,
                 'countFn' => static fn (int $c): bool => $c >= 16 && ($c % 16) === 0,
             ],
         ];
@@ -149,23 +150,23 @@ final class MpfParser
             // MP Attribute IFD tag type/count constraints per EXIF 3.0 §4.6.4
             $attributeConstraints = [
                 self::TAG_IMAGE_UID_LIST => [
-                    'type'    => TiffConst::TYPE_UNDEFINED,
+                    'type'    => TiffFieldType::Undefined->value,
                     'countFn' => static fn (int $c): bool => $c >= 33 && ($c % 33) === 0,
                 ],
                 self::TAG_TOTAL_FRAMES => [
-                    'type'    => TiffConst::TYPE_LONG,
+                    'type'    => TiffFieldType::Long->value,
                     'countFn' => static fn (int $c): bool => $c === 1,
                 ],
                 self::TAG_INDIVIDUAL_IMAGE_NUMBER => [
-                    'type'    => TiffConst::TYPE_LONG,
+                    'type'    => TiffFieldType::Long->value,
                     'countFn' => static fn (int $c): bool => $c === 1,
                 ],
                 self::TAG_PANORAMA_ANGLE => [
-                    'type'    => TiffConst::TYPE_RATIONAL,
+                    'type'    => TiffFieldType::Rational->value,
                     'countFn' => static fn (int $c): bool => $c === 1,
                 ],
                 self::TAG_PANORAMA_AXIS => [
-                    'type'    => TiffConst::TYPE_RATIONAL,
+                    'type'    => TiffFieldType::Rational->value,
                     'countFn' => static fn (int $c): bool => $c === 3,
                 ],
             ];

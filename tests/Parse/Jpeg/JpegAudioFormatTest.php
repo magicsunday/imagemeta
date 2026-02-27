@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Jpeg;
 
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegAudioFormat;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -19,17 +20,18 @@ final class JpegAudioFormatTest extends TestCase
     #[Test]
     public function enumExistsAndExposesExpectedAudioFormatValues(): void
     {
-        $class = 'MagicSunday\\ImageMeta\\Parse\\Jpeg\\JpegAudioFormat';
-
-        self::assertTrue(enum_exists($class));
-
-        if (!enum_exists($class)) {
-            return;
+        $actual = [];
+        foreach (JpegAudioFormat::cases() as $case) {
+            $actual[$case->name] = $case->value;
         }
 
-        self::assertSame(0, $class::Pcm->value);
-        self::assertSame(1, $class::MuLaw->value);
-        self::assertSame(2, $class::ImaAdpcm->value);
+        self::assertSame(
+            [
+                'Pcm'      => 0x0,
+                'MuLaw'    => 0x1,
+                'ImaAdpcm' => 0x2,
+            ],
+            $actual,
+        );
     }
 }
-

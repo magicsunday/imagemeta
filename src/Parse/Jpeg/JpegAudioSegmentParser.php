@@ -37,12 +37,6 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
 
     private const int AUDIO_HEADER_LENGTH = 24;
 
-    private const int AUDIO_FORMAT_PCM = 0;
-
-    private const int AUDIO_FORMAT_MU_LAW = 1;
-
-    private const int AUDIO_FORMAT_IMA_ADPCM = 2;
-
     /** @var list<JpegAudioStream> */
     private array $streams = [];
 
@@ -70,8 +64,8 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
             );
         }
 
-        $format   = ord($payload[$signatureLength + 2]);
-        $channels = ord($payload[$signatureLength + 3]);
+        $formatCode = ord($payload[$signatureLength + 2]);
+        $channels   = ord($payload[$signatureLength + 3]);
 
         $sampleRate = Unpack::int('N', substr($payload, $signatureLength + 4, 4), 'audio sample rate');
         $bitDepth   = ord($payload[$signatureLength + 8]);
@@ -83,43 +77,34 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
             throw new ParseError(sprintf('Audio segment at offset %d has unsupported channel count %d', $offset, $channels), 1272);
         }
 
+        $format = JpegAudioFormat::tryFrom($formatCode);
+        if (!$format instanceof JpegAudioFormat) {
+            throw new ParseError(sprintf('Audio segment at offset %d uses unknown format %d', $offset, $formatCode), 1275);
+        }
+
         // Format-aware sampling rate validation per EXIF 3.0 §5.4.1
-        $allowedSampleRates = match ($format) {
-            self::AUDIO_FORMAT_PCM       => [8_000, 11_025, 22_050, 32_000, 44_100, 48_000, 96_000, 192_000],
-            self::AUDIO_FORMAT_MU_LAW    => [8_000],
-            self::AUDIO_FORMAT_IMA_ADPCM => [8_000, 11_025, 22_050, 44_100],
-            default                      => [],
-        };
+        $allowedSampleRates = $format->allowedSampleRates();
 
         if (!in_array($sampleRate, $allowedSampleRates, true)) {
             throw new ParseError(sprintf('Audio segment at offset %d uses unsupported sample rate %d', $offset, $sampleRate), 1273);
         }
 
-        $formatName = match ($format) {
-            self::AUDIO_FORMAT_PCM       => 'PCM',
-            self::AUDIO_FORMAT_MU_LAW    => 'MU_LAW_PCM',
-            self::AUDIO_FORMAT_IMA_ADPCM => 'IMA_ADPCM',
-            default                      => null,
-        };
-
-        if ($formatName === null) {
-            throw new ParseError(sprintf('Audio segment at offset %d uses unknown format %d', $offset, $format), 1275);
-        }
+        $formatName = $format->label();
 
         // Allow PCM 24-bit sample size per EXIF 3.0 §5.4.2
-        if ($format === self::AUDIO_FORMAT_PCM && !in_array($bitDepth, [8, 16, 24], true)) {
+        if ($format === JpegAudioFormat::Pcm && !in_array($bitDepth, [8, 16, 24], true)) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid PCM bit depth %d', $offset, $bitDepth), 1276);
         }
 
-        if ($format === self::AUDIO_FORMAT_MU_LAW && $bitDepth !== 8) {
+        if ($format === JpegAudioFormat::MuLaw && $bitDepth !== 8) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid μ-law bit depth %d', $offset, $bitDepth), 1277);
         }
 
-        if ($format === self::AUDIO_FORMAT_IMA_ADPCM && $bitDepth !== 4) {
+        if ($format === JpegAudioFormat::ImaAdpcm && $bitDepth !== 4) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid IMA-ADPCM bit depth %d', $offset, $bitDepth), 1278);
         }
 
-        if ($format !== self::AUDIO_FORMAT_IMA_ADPCM) {
+        if ($format !== JpegAudioFormat::ImaAdpcm) {
             $bytesPerSample = (int) (($bitDepth / 8) * $channels);
             if ($bytesPerSample > 0) {
                 $expectedLength = $sampleCount * $bytesPerSample;
@@ -130,7 +115,7 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
         }
 
         // Non-empty IMA-ADPCM payload with dwSampleLength=0 is semantically inconsistent
-        if ($format === self::AUDIO_FORMAT_IMA_ADPCM && $sampleCount === 0 && $data !== '') {
+        if ($format === JpegAudioFormat::ImaAdpcm && $sampleCount === 0 && $data !== '') {
             throw new ParseError(sprintf('Audio segment at offset %d has non-empty IMA-ADPCM payload with zero sample count', $offset), 1883);
         }
 

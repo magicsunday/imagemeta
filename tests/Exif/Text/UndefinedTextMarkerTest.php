@@ -39,4 +39,3 @@ final class UndefinedTextMarkerTest extends TestCase
         self::assertNull(UndefinedTextMarker::encodingForMarker('UNKNOWN'));
     }
 }
-

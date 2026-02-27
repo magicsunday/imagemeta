@@ -55,9 +55,9 @@ final readonly class DngValueNormalizer
      * @var list<int>
      */
     private const array COUNTED_IMAGE_DATA_INTEGER_TYPES = [
-        TiffConst::TYPE_SHORT,
-        TiffConst::TYPE_LONG,
-        TiffConst::TYPE_LONG8,
+        TiffFieldType::Short->value,
+        TiffFieldType::Long->value,
+        TiffFieldType::Long8->value,
     ];
 
     /**
@@ -108,28 +108,28 @@ final readonly class DngValueNormalizer
         // DNG 1.7.1.0: LocalizedCameraModel may be stored as BYTE instead of
         // ASCII. When type is BYTE, treat the raw bytes as a NUL-terminated
         // UTF-8 string rather than a numeric list.
-        if ($tag === DngTag::LOCALIZED_CAMERA_MODEL && $type === TiffConst::TYPE_BYTE) {
+        if ($tag === DngTag::LOCALIZED_CAMERA_MODEL && $type === TiffFieldType::Byte->value) {
             return rtrim($rawBytes, "\0");
         }
 
         // DNG 1.7.0.0: ProfileGroupName must be ASCII or BYTE with NUL terminator.
         if ($tag === DngTag::PROFILE_GROUP_NAME) {
-            if ($type !== TiffConst::TYPE_ASCII && $type !== TiffConst::TYPE_BYTE) {
+            if ($type !== TiffFieldType::Ascii->value && $type !== TiffFieldType::Byte->value) {
                 return $value;
             }
 
-            if ($type === TiffConst::TYPE_BYTE) {
+            if ($type === TiffFieldType::Byte->value) {
                 return rtrim($rawBytes, "\0");
             }
         }
 
         // DNG 1.7.1.0: String tags that must be ASCII or BYTE, NUL-terminated UTF-8.
         if (in_array($tag, self::DNG_UTF8_STRING_TAGS, true)) {
-            if ($type !== TiffConst::TYPE_ASCII && $type !== TiffConst::TYPE_BYTE) {
+            if ($type !== TiffFieldType::Ascii->value && $type !== TiffFieldType::Byte->value) {
                 return $value;
             }
 
-            if ($type === TiffConst::TYPE_BYTE) {
+            if ($type === TiffFieldType::Byte->value) {
                 return rtrim($rawBytes, "\0");
             }
         }
@@ -308,10 +308,10 @@ final readonly class DngValueNormalizer
             $chunk = substr($rawBytes, $i * $componentSize, $componentSize);
 
             $value = match ($type) {
-                TiffConst::TYPE_SHORT => $this->binaryReader->unpackU16($chunk),
-                TiffConst::TYPE_LONG  => $this->binaryReader->unpackU32($chunk),
-                TiffConst::TYPE_LONG8 => $this->binaryReader->unpackU64($chunk),
-                default               => throw new ParseError('Unsupported numeric type for strip/tile field: ' . $type, 1327),
+                TiffFieldType::Short->value => $this->binaryReader->unpackU16($chunk),
+                TiffFieldType::Long->value  => $this->binaryReader->unpackU32($chunk),
+                TiffFieldType::Long8->value => $this->binaryReader->unpackU64($chunk),
+                default                     => throw new ParseError('Unsupported numeric type for strip/tile field: ' . $type, 1327),
             };
 
             if ($value instanceof UInt64) {

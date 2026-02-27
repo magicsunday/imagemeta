@@ -19,20 +19,22 @@ use function strtoupper;
 use function trim;
 
 /**
- * Central marker/encoding mapping for EXIF UNDEFINED text fields.
- *
- * EXIF 3.0 §4.6.4 defines the 8-byte character code area used by
- * UserComment and GPS UNDEFINED text tags.
+ * EXIF UNDEFINED text marker identifiers (EXIF 3.0 §4.6.4).
  */
-final class UndefinedTextMarker
+enum UndefinedTextMarker: string
 {
-    public const string MARKER_ASCII = 'ASCII';
+    case Ascii     = 'ASCII';
+    case Unicode   = 'UNICODE';
+    case Jis       = 'JIS';
+    case Undefined = 'UNDEFINED';
 
-    public const string MARKER_UNICODE = 'UNICODE';
+    public const string MARKER_ASCII = self::Ascii->value;
 
-    public const string MARKER_JIS = 'JIS';
+    public const string MARKER_UNICODE = self::Unicode->value;
 
-    public const string MARKER_UNDEFINED = 'UNDEFINED';
+    public const string MARKER_JIS = self::Jis->value;
+
+    public const string MARKER_UNDEFINED = self::Undefined->value;
 
     /**
      * Resolves an 8-byte EXIF marker prefix to its canonical identifier.
@@ -46,7 +48,7 @@ final class UndefinedTextMarker
         $stripped = trim(str_replace(['\\0', "\0"], '', $prefix));
 
         if ($stripped === '') {
-            return self::MARKER_UNDEFINED;
+            return self::Undefined->value;
         }
 
         if (preg_match('/^([A-Za-z]+)/', $stripped, $matches) !== 1) {
@@ -56,10 +58,10 @@ final class UndefinedTextMarker
         $normalized = strtoupper($matches[1]);
 
         return match ($normalized) {
-            self::MARKER_ASCII   => self::MARKER_ASCII,
-            self::MARKER_UNICODE => self::MARKER_UNICODE,
-            self::MARKER_JIS     => self::MARKER_JIS,
-            self::MARKER_UNDEFINED, 'UNDEF' => self::MARKER_UNDEFINED,
+            self::Ascii->value   => self::Ascii->value,
+            self::Unicode->value => self::Unicode->value,
+            self::Jis->value     => self::Jis->value,
+            self::Undefined->value, 'UNDEF' => self::Undefined->value,
             default => '',
         };
     }
@@ -75,12 +77,12 @@ final class UndefinedTextMarker
      */
     public static function encodingForMarker(string $marker): ?CharacterEncoding
     {
-        return match ($marker) {
-            self::MARKER_ASCII     => CharacterEncoding::Ascii,
-            self::MARKER_UNICODE   => CharacterEncoding::Utf8,
-            self::MARKER_JIS       => CharacterEncoding::Jis,
-            self::MARKER_UNDEFINED => CharacterEncoding::Undefined,
-            default                => null,
+        return match (self::tryFrom($marker)) {
+            self::Ascii     => CharacterEncoding::Ascii,
+            self::Unicode   => CharacterEncoding::Utf8,
+            self::Jis       => CharacterEncoding::Jis,
+            self::Undefined => CharacterEncoding::Undefined,
+            null            => null,
         };
     }
 }

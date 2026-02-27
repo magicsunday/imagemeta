@@ -44,63 +44,6 @@ final class BinaryPlistDecoder
 {
     private readonly PlistBinaryReader $reader;
 
-    /** @var int Simple marker type */
-    private const int MARKER_TYPE_SIMPLE = 0;
-
-    /** @var int Integer marker type */
-    private const int MARKER_TYPE_INTEGER = 1;
-
-    /** @var int Real (float/double) marker type */
-    private const int MARKER_TYPE_REAL = 2;
-
-    /** @var int Date marker type */
-    private const int MARKER_TYPE_DATE = 3;
-
-    /** @var int Data (opaque bytes) marker type */
-    private const int MARKER_TYPE_DATA = 4;
-
-    /** @var int ASCII string marker type */
-    private const int MARKER_TYPE_ASCII = 5;
-
-    /** @var int UTF-16BE string marker type */
-    private const int MARKER_TYPE_UNICODE = 6;
-
-    /** @var int UTF-8 string marker type (non-standard but observed in the wild) */
-    private const int MARKER_TYPE_UTF8 = 7;
-
-    /** @var int UID marker type */
-    private const int MARKER_TYPE_UID = 8;
-
-    /** @var int Array marker type */
-    private const int MARKER_TYPE_ARRAY = 10;
-
-    /** @var int Set marker type (treated as Array) */
-    private const int MARKER_TYPE_SET = 11;
-
-    /** @var int Dictionary marker type */
-    private const int MARKER_TYPE_DICTIONARY = 13;
-
-    /** @var int Simple: null */
-    private const int MARKER_SIMPLE_NULL = 0;
-
-    /** @var int Simple: false */
-    private const int MARKER_SIMPLE_FALSE = 8;
-
-    /** @var int Simple: true */
-    private const int MARKER_SIMPLE_TRUE = 9;
-
-    /** @var int Simple: URL (Foundation) */
-    private const int MARKER_SIMPLE_URL = 12;
-
-    /** @var int Simple: base URL (Foundation) */
-    private const int MARKER_SIMPLE_BASE_URL = 13;
-
-    /** @var int Simple: UUID (Foundation) */
-    private const int MARKER_SIMPLE_UUID = 14;
-
-    /** @var int Simple: fill byte */
-    private const int MARKER_SIMPLE_FILL = 15;
-
     /** @var int Info nibble that signals extended length encoding */
     private const int MARKER_INFO_EXTENDED = 0x0F;
 
@@ -313,19 +256,19 @@ final class BinaryPlistDecoder
 
         try {
             return match ($type) {
-                self::MARKER_TYPE_SIMPLE     => $this->parseSimple($info),
-                self::MARKER_TYPE_INTEGER    => $this->wrapScalar($this->parseInteger($offset, $info)),
-                self::MARKER_TYPE_REAL       => $this->wrapScalar($this->parseReal($offset, $info)),
-                self::MARKER_TYPE_DATE       => $this->wrapScalar($this->parseDate($offset, $info)),
-                self::MARKER_TYPE_DATA       => $this->wrapScalar($this->parseData($offset, $info)),
-                self::MARKER_TYPE_ASCII      => $this->wrapScalar($this->parseAscii($offset, $info)),
-                self::MARKER_TYPE_UNICODE    => $this->wrapScalar($this->parseUnicode($offset, $info)),
-                self::MARKER_TYPE_UTF8       => $this->wrapScalar($this->parseUtf8($offset, $info)),
-                self::MARKER_TYPE_UID        => $this->wrapScalar($this->parseUid($offset, $info)),
-                self::MARKER_TYPE_ARRAY      => $this->parseArray($offset, $info),
-                self::MARKER_TYPE_SET        => $this->parseSet($offset, $info),
-                self::MARKER_TYPE_DICTIONARY => $this->parseDictionary($offset, $info),
-                default                      => throw new ParseError('Unsupported property list object type.', 1056),
+                PlistMarkerType::Simple->value     => $this->parseSimple($info),
+                PlistMarkerType::Integer->value    => $this->wrapScalar($this->parseInteger($offset, $info)),
+                PlistMarkerType::Real->value       => $this->wrapScalar($this->parseReal($offset, $info)),
+                PlistMarkerType::Date->value       => $this->wrapScalar($this->parseDate($offset, $info)),
+                PlistMarkerType::Data->value       => $this->wrapScalar($this->parseData($offset, $info)),
+                PlistMarkerType::Ascii->value      => $this->wrapScalar($this->parseAscii($offset, $info)),
+                PlistMarkerType::Unicode->value    => $this->wrapScalar($this->parseUnicode($offset, $info)),
+                PlistMarkerType::Utf8->value       => $this->wrapScalar($this->parseUtf8($offset, $info)),
+                PlistMarkerType::Uid->value        => $this->wrapScalar($this->parseUid($offset, $info)),
+                PlistMarkerType::Array->value      => $this->parseArray($offset, $info),
+                PlistMarkerType::Set->value        => $this->parseSet($offset, $info),
+                PlistMarkerType::Dictionary->value => $this->parseDictionary($offset, $info),
+                default                            => throw new ParseError('Unsupported property list object type.', 1056),
             };
         } finally {
             unset($this->visiting[$index]);
@@ -354,15 +297,15 @@ final class BinaryPlistDecoder
     {
         $value = match ($info) {
             // Treat fill byte defensively as null
-            self::MARKER_SIMPLE_NULL,
-            self::MARKER_SIMPLE_FILL  => null,
-            self::MARKER_SIMPLE_FALSE => false,
-            self::MARKER_SIMPLE_TRUE  => true,
+            PlistSimpleMarker::Null->value,
+            PlistSimpleMarker::Fill->value  => null,
+            PlistSimpleMarker::False->value => false,
+            PlistSimpleMarker::True->value  => true,
             // Foundation types we don't model — decode to null to avoid hard failures.
-            self::MARKER_SIMPLE_URL,
-            self::MARKER_SIMPLE_BASE_URL,
-            self::MARKER_SIMPLE_UUID => null,
-            default                  => throw new ParseError('Unsupported simple property list object.', 1057),
+            PlistSimpleMarker::Url->value,
+            PlistSimpleMarker::BaseUrl->value,
+            PlistSimpleMarker::Uuid->value => null,
+            default                        => throw new ParseError('Unsupported simple property list object.', 1057),
         };
 
         return $this->wrapScalar($value);
