@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
+use MagicSunday\ImageMeta\Value\Image;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -64,14 +65,7 @@ final class ImageFactoryTest extends TestCase
             userCommentEncoding: CharacterEncoding::Ascii->value,
         );
 
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new ImageFactory();
-        $image   = $factory->create($metadata);
+        $image = $this->createImageFromParsedExif($parsedExif);
 
         self::assertSame(6000, $image->width);
         self::assertSame(4000, $image->height);
@@ -145,14 +139,7 @@ final class ImageFactoryTest extends TestCase
             userCommentEncoding: null,
         );
 
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new ImageFactory();
-        $image   = $factory->create($metadata);
+        $image = $this->createImageFromParsedExif($parsedExif);
 
         self::assertSame(ColorSpace::Srgb, $image->colorSpace);
     }
@@ -181,14 +168,7 @@ final class ImageFactoryTest extends TestCase
             userCommentEncoding: null,
         );
 
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new ImageFactory();
-        $image   = $factory->create($metadata);
+        $image = $this->createImageFromParsedExif($parsedExif);
 
         self::assertSame(ColorSpace::Uncalibrated, $image->colorSpace);
     }
@@ -200,13 +180,7 @@ final class ImageFactoryTest extends TestCase
     #[Test]
     public function createsWithNullExifDoc(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-        );
-
-        $factory = new ImageFactory();
-        $image   = $factory->create($metadata);
+        $image = $this->createImageFromParsedExif(null);
 
         self::assertNull($image->width);
         self::assertNull($image->height);
@@ -246,25 +220,8 @@ final class ImageFactoryTest extends TestCase
             255,
         );
 
-        $ifd0    = new Ifd($ifd0Entries);
-        $exifIfd = new Ifd([]);
-
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new ImageFactory();
-        $image   = $factory->create($metadata);
+        $parsedExif = $this->createParsedExifFromEntries($ifd0Entries, [], []);
+        $image      = $this->createImageFromParsedExif($parsedExif);
 
         self::assertNull($image->width);
         self::assertNull($image->height);
@@ -288,25 +245,8 @@ final class ImageFactoryTest extends TestCase
             ),
         ];
 
-        $ifd0    = new Ifd([]);
-        $exifIfd = new Ifd($exifEntries);
-
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new ImageFactory();
-        $image   = $factory->create($metadata);
+        $parsedExif = $this->createParsedExifFromEntries([], $exifEntries, []);
+        $image      = $this->createImageFromParsedExif($parsedExif);
 
         self::assertNull($image->colorSpace);
     }
@@ -457,16 +397,33 @@ final class ImageFactoryTest extends TestCase
             );
         }
 
-        $ifd0    = new Ifd($ifd0Entries);
-        $exifIfd = new Ifd($exifEntries);
-        $interop = new Ifd($interopEntries);
+        return $this->createParsedExifFromEntries($ifd0Entries, $exifEntries, $interopEntries);
+    }
 
+    /**
+     * @param array<int, IfdEntry> $ifd0Entries
+     * @param array<int, IfdEntry> $exifEntries
+     * @param array<int, IfdEntry> $interopEntries
+     */
+    private function createParsedExifFromEntries(array $ifd0Entries, array $exifEntries, array $interopEntries): ParsedExif
+    {
         return new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
+            ifd0: new Ifd($ifd0Entries),
+            exifIfd: new Ifd($exifEntries),
             gpsIfd: null,
-            interopIfd: $interop,
+            interopIfd: new Ifd($interopEntries),
             ifd1: null,
         );
+    }
+
+    private function createImageFromParsedExif(?ParsedExif $parsedExif): Image
+    {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        return (new ImageFactory())->create($metadata);
     }
 }
