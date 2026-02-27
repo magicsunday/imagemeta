@@ -92,7 +92,7 @@ final readonly class AppleDictionaryValueExtractor
     public function boolDictionaryValue(array $dictionary, string ...$keys): ?bool
     {
         foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
-            $value     = $this->flagExtractor->boolValue($candidate);
+            $value = $this->flagExtractor->boolValue($candidate);
             if ($value !== null) {
                 return $value;
             }
@@ -114,7 +114,7 @@ final readonly class AppleDictionaryValueExtractor
     public function rationalFloatValue(array $dictionary, string ...$keys): ?float
     {
         foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
-            $float     = $this->rationalNormalizer->normalizeRationalFloat($candidate);
+            $float = $this->rationalNormalizer->normalizeRationalFloat($candidate);
             if ($float !== null) {
                 return $float;
             }
