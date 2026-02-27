@@ -12,12 +12,21 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Core\Traits;
 
 use MagicSunday\ImageMeta\Core\BoundsError;
+use MagicSunday\ImageMeta\Core\MemoryBuffer;
+use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
+
+use function array_slice;
+use function file;
+use function implode;
 
 use const PHP_INT_MAX;
 
@@ -29,6 +38,9 @@ use const PHP_INT_MAX;
  */
 #[CoversClass(BoundsError::class)]
 #[UsesTrait(NormalizesOffsets::class)]
+#[UsesClass(Stream::class)]
+#[UsesClass(MemoryBuffer::class)]
+#[UsesClass(StreamWindow::class)]
 final class NormalizesOffsetsTest extends TestCase
 {
     /**
@@ -56,5 +68,39 @@ final class NormalizesOffsetsTest extends TestCase
         $this->expectException(BoundsError::class);
 
         $stub->resolveRelativeOffset(1, PHP_INT_MAX, 'overflow test');
+    }
+
+    #[Test]
+    public function coreReadersUseSharedZeroLengthGuardInReadMethods(): void
+    {
+        $readers = [
+            Stream::class,
+            MemoryBuffer::class,
+            StreamWindow::class,
+        ];
+
+        foreach ($readers as $reader) {
+            $method   = new ReflectionMethod($reader, 'read');
+            $fileName = $method->getFileName();
+            self::assertIsString($fileName);
+
+            $sourceLines = file($fileName);
+            self::assertIsArray($sourceLines);
+            $startLine = $method->getStartLine();
+            $endLine   = $method->getEndLine();
+            self::assertIsInt($startLine);
+            self::assertIsInt($endLine);
+
+            $body = implode(
+                '',
+                array_slice(
+                    $sourceLines,
+                    $startLine - 1,
+                    $endLine - $startLine + 1,
+                ),
+            );
+
+            self::assertStringContainsString('$this->isZeroLength($length)', $body);
+        }
     }
 }
