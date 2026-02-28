@@ -52,7 +52,7 @@ final class SegmentHandlersTest extends TestCase
     {
         $stream  = new Stream($this->createTempStream('JPEG'), 4);
         $hits    = 0;
-        $handler = new ExifSegmentHandler(function (string $payload, int $offset) use (&$hits): void {
+        $handler = new ExifSegmentHandler(function (string $_payload, int $_offset) use (&$hits): void {
             ++$hits;
         });
 
@@ -72,7 +72,7 @@ final class SegmentHandlersTest extends TestCase
     {
         $stream  = new Stream($this->createTempStream('JPEG'), 4);
         $hits    = 0;
-        $handler = new XmpSegmentHandler(function (string $payload, int $offset) use (&$hits): void {
+        $handler = new XmpSegmentHandler(function (string $_payload, int $_offset) use (&$hits): void {
             ++$hits;
         });
 
@@ -95,16 +95,16 @@ final class SegmentHandlersTest extends TestCase
         $mpf    = 0;
         $fpx    = 0;
 
-        $iccHandler = new IccProfileHandler(function (string $payload, int $offset) use (&$icc): void {
+        $iccHandler = new IccProfileHandler(function (string $_payload, int $_offset) use (&$icc): void {
             ++$icc;
         });
-        $audioHandler = new AudioStreamHandler(function (string $payload, int $offset) use (&$audio): void {
+        $audioHandler = new AudioStreamHandler(function (string $_payload, int $_offset) use (&$audio): void {
             ++$audio;
         });
-        $mpfHandler = new MpfDocumentHandler(function (string $payload, int $offset) use (&$mpf): void {
+        $mpfHandler = new MpfDocumentHandler(function (string $_payload, int $_offset) use (&$mpf): void {
             ++$mpf;
         });
-        $flashPixHandler = new FlashPixHandler(function (string $payload, int $offset) use (&$fpx): void {
+        $flashPixHandler = new FlashPixHandler(function (string $_payload, int $_offset) use (&$fpx): void {
             ++$fpx;
         });
 
@@ -136,7 +136,7 @@ final class SegmentHandlersTest extends TestCase
     {
         $stream  = new Stream($this->createTempStream('JPEG'), 4);
         $hits    = 0;
-        $handler = new IptcSegmentHandler(function (string $payload, int $offset) use (&$hits): void {
+        $handler = new IptcSegmentHandler(function (string $_payload, int $_offset) use (&$hits): void {
             ++$hits;
         });
 
