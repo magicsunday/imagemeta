@@ -78,8 +78,7 @@ final class ParseErrorCodeUniquenessTest extends TestCase
         $hits = [];
         $n    = count($tokens);
 
-        for ($i = 0; $i < $n; ++$i) {
-            $token = $tokens[$i];
+        foreach ($tokens as $i => $token) {
             if (!is_array($token)) {
                 continue;
             }
