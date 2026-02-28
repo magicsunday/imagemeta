@@ -7198,7 +7198,7 @@ final class TiffExifParserDngTagTest extends TestCase
         (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithOriginalRawFileData(
                 TiffConst::TYPE_UNDEFINED,
-                substr($payload, 0, strlen($payload) - 4),
+                substr($payload, 0, -4),
             ),
         );
     }
