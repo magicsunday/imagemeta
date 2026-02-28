@@ -37,6 +37,8 @@ final class ApexConverterTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->converter = new ApexConverter(
             new RationalConverter(new NumericConverter()),
         );
