@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -103,102 +104,30 @@ final class EnumConverterTest extends TestCase
         $this->converter->toEnumOrNull(Orientation::class, 'invalid');
     }
 
-    /**
-     * MakerNoteSafety returns false for integer 0.
-     */
     #[Test]
-    public function makerNoteSafetyReturnsFalseForZero(): void
-    {
-        self::assertFalse($this->converter->makerNoteSafety(0));
+    #[DataProvider('makerNoteSafetyProvider')]
+    public function makerNoteSafetyMapsInputsToExpectedValues(
+        int|float|string|ExifNumericList|ExifRational|null $input,
+        ?bool $expected,
+    ): void {
+        self::assertSame($expected, $this->converter->makerNoteSafety($input));
     }
 
     /**
-     * MakerNoteSafety returns true for integer 1.
+     * @return iterable<string, array{0: int|float|string|ExifNumericList|ExifRational|null, 1: bool|null}>
      */
-    #[Test]
-    public function makerNoteSafetyReturnsTrueForOne(): void
+    public static function makerNoteSafetyProvider(): iterable
     {
-        self::assertTrue($this->converter->makerNoteSafety(1));
-    }
-
-    /**
-     * MakerNoteSafety returns null for values outside the 0/1 domain.
-     */
-    #[Test]
-    public function makerNoteSafetyReturnsNullForOutOfRange(): void
-    {
-        self::assertNull($this->converter->makerNoteSafety(2));
-    }
-
-    /**
-     * MakerNoteSafety returns null for null input.
-     */
-    #[Test]
-    public function makerNoteSafetyReturnsNullForNull(): void
-    {
-        self::assertNull($this->converter->makerNoteSafety(null));
-    }
-
-    /**
-     * MakerNoteSafety handles float values that are whole numbers.
-     */
-    #[Test]
-    public function makerNoteSafetyAcceptsWholeFloat(): void
-    {
-        self::assertTrue($this->converter->makerNoteSafety(1.0));
-    }
-
-    /**
-     * MakerNoteSafety rejects fractional float values.
-     */
-    #[Test]
-    public function makerNoteSafetyRejectsNonWholeFloat(): void
-    {
-        self::assertNull($this->converter->makerNoteSafety(0.5));
-    }
-
-    /**
-     * MakerNoteSafety accepts numeric string "1".
-     */
-    #[Test]
-    public function makerNoteSafetyAcceptsNumericString(): void
-    {
-        self::assertTrue($this->converter->makerNoteSafety('1'));
-    }
-
-    /**
-     * MakerNoteSafety rejects non-digit string.
-     */
-    #[Test]
-    public function makerNoteSafetyRejectsNonDigitString(): void
-    {
-        self::assertNull($this->converter->makerNoteSafety('abc'));
-    }
-
-    /**
-     * MakerNoteSafety extracts first value from ExifNumericList.
-     */
-    #[Test]
-    public function makerNoteSafetyExtractsFromNumericList(): void
-    {
-        self::assertFalse($this->converter->makerNoteSafety(new ExifNumericList([0])));
-    }
-
-    /**
-     * MakerNoteSafety handles ExifRational input.
-     */
-    #[Test]
-    public function makerNoteSafetyHandlesRational(): void
-    {
-        self::assertTrue($this->converter->makerNoteSafety(new ExifRational(1, 1)));
-    }
-
-    /**
-     * MakerNoteSafety handles ExifRational with zero denominator.
-     */
-    #[Test]
-    public function makerNoteSafetyHandlesZeroDenominatorRational(): void
-    {
-        self::assertNull($this->converter->makerNoteSafety(new ExifRational(1, 0)));
+        yield 'zero' => [0, false];
+        yield 'one' => [1, true];
+        yield 'out of range' => [2, null];
+        yield 'null' => [null, null];
+        yield 'whole float' => [1.0, true];
+        yield 'fractional float' => [0.5, null];
+        yield 'numeric string' => ['1', true];
+        yield 'non-digit string' => ['abc', null];
+        yield 'numeric list' => [new ExifNumericList([0]), false];
+        yield 'rational' => [new ExifRational(1, 1), true];
+        yield 'zero denominator rational' => [new ExifRational(1, 0), null];
     }
 }
