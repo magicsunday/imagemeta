@@ -224,7 +224,7 @@ final class BoxNavigatorTest extends TestCase
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
-        self::assertSame(['term'], $this->walkChildTypes($navigator, $container, 0, true));
+        self::assertSame(['term'], $this->walkChildTypes($navigator, $container, allowTrailingTerminator: true));
     }
 
     // =========================================================================
@@ -299,7 +299,7 @@ final class BoxNavigatorTest extends TestCase
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
-        foreach ($navigator->walkChildren($container, 0, true) as $_) {
+        foreach ($navigator->walkChildren($container, allowTrailingTerminator: true) as $_) {
             // Force generator execution
         }
     }
@@ -406,7 +406,7 @@ final class BoxNavigatorTest extends TestCase
 
         $boxBytes  = pack('N', 0) . 'testPAYLOAD';
         $navigator = $this->createNavigator($boxBytes);
-        $navigator->readBoxAt(0, strlen($boxBytes), false);
+        $navigator->readBoxAt(0, strlen($boxBytes));
     }
 
     /**
