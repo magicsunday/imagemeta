@@ -135,13 +135,11 @@ final readonly class ImageStructureExifReader
      */
     public function orientation(): Orientation
     {
-        $rawOrientation = $this->reader->enumValue($this->ifd0, ExifTag::ORIENTATION);
-
         // Normalizes numeric-string encodings emitted by some cameras.
-        $orientation = Orientation::fromExifValue($rawOrientation);
-
         // TIFF 6.0 §8: Default is 1 (top-left) when tag is not present
-        return $orientation ?? Orientation::TopLeft;
+        return Orientation::fromExifValue(
+            $this->reader->enumValue($this->ifd0, ExifTag::ORIENTATION)
+        ) ?? Orientation::TopLeft;
     }
 
     /**
@@ -239,11 +237,10 @@ final readonly class ImageStructureExifReader
      */
     public function resolutionUnit(): ResolutionUnit
     {
-        $value = $this->reader->enumValue($this->ifd0, ExifTag::RESOLUTION_UNIT);
-        $unit  = ResolutionUnit::fromExifValue($value);
-
         // TIFF 6.0 §8: Default is 2 (INCHES) when tag is not present
-        return $unit ?? ResolutionUnit::Inches;
+        return ResolutionUnit::fromExifValue(
+            $this->reader->enumValue($this->ifd0, ExifTag::RESOLUTION_UNIT)
+        ) ?? ResolutionUnit::Inches;
     }
 
     // ========================================================================
