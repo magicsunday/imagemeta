@@ -5768,18 +5768,36 @@ final class TiffExifParserDngTagTest extends TestCase
         ];
 
         foreach ($overrides as $tag => $override) {
-            $baseTag = $tags[$tag] ?? [
+            $baseTag = [
                 'tag'     => $tag,
                 'type'    => TiffConst::TYPE_LONG,
                 'count'   => 1,
                 'payload' => pack('V', 1),
             ];
+            if (isset($tags[$tag])) {
+                $baseTag = $tags[$tag];
+            }
+
+            $type = $baseTag['type'];
+            if (isset($override['type'])) {
+                $type = $override['type'];
+            }
+
+            $count = $baseTag['count'];
+            if (isset($override['count'])) {
+                $count = $override['count'];
+            }
+
+            $payload = $baseTag['payload'];
+            if (isset($override['payload'])) {
+                $payload = $override['payload'];
+            }
 
             $tags[$tag] = [
                 'tag'     => $tag,
-                'type'    => $override['type'] ?? $baseTag['type'],
-                'count'   => $override['count'] ?? $baseTag['count'],
-                'payload' => $override['payload'] ?? $baseTag['payload'],
+                'type'    => $type,
+                'count'   => $count,
+                'payload' => $payload,
             ];
         }
 
