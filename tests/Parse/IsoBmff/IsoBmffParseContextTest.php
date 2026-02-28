@@ -61,15 +61,30 @@ final class IsoBmffParseContextTest extends TestCase
     {
         $context = new IsoBmffParseContext();
 
-        self::assertSame([], $context->exifBlobs);
-        self::assertSame([], $context->xmpBlobs);
-        self::assertSame([], $context->qtKeys);
-        self::assertSame([], $context->itemReferences);
-        self::assertSame([], $context->dataReferences);
-        self::assertSame([], $context->unresolvedItems);
-        self::assertSame([], $context->xmpHashes);
-        self::assertSame([], $context->qtDataAtoms);
-        self::assertSame([], $context->queuedUuidXmp);
+        self::assertSame(
+            [
+                'exifBlobs'       => [],
+                'xmpBlobs'        => [],
+                'qtKeys'          => [],
+                'itemReferences'  => [],
+                'dataReferences'  => [],
+                'unresolvedItems' => [],
+                'xmpHashes'       => [],
+                'qtDataAtoms'     => [],
+                'queuedUuidXmp'   => [],
+            ],
+            [
+                'exifBlobs'       => $context->exifBlobs,
+                'xmpBlobs'        => $context->xmpBlobs,
+                'qtKeys'          => $context->qtKeys,
+                'itemReferences'  => $context->itemReferences,
+                'dataReferences'  => $context->dataReferences,
+                'unresolvedItems' => $context->unresolvedItems,
+                'xmpHashes'       => $context->xmpHashes,
+                'qtDataAtoms'     => $context->qtDataAtoms,
+                'queuedUuidXmp'   => $context->queuedUuidXmp,
+            ],
+        );
         self::assertSame(0, $context->moovCount);
         self::assertFalse($context->allowQuickTimeMetaWithoutFullBox);
     }
