@@ -20,6 +20,7 @@ use PHPUnit\Framework\TestCase;
 
 use function pack;
 use function str_pad;
+use function strlen;
 
 /**
  * Tests IccTagDecoder tag data size alignment handling.
