@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Value\CfaPattern;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
+use MagicSunday\ImageMeta\Value\Sensor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -45,22 +46,13 @@ final class SensorFactoryTest extends TestCase
     #[Test]
     public function createsFromExifMetadata(): void
     {
-        $parsedExif = $this->parsedExif(
+        $sensor = $this->createSensor($this->parsedExif(
             cfaPattern: [2, 2, 0, 1, 1, 2],
             spectralSensitivity: 'ISO 12232',
             focalPlaneXResolution: 3000.0,
             focalPlaneYResolution: 3000.0,
             focalPlaneResolutionUnit: ResolutionUnit::Inches,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new SensorFactory();
-        $sensor  = $factory->create($metadata);
+        ));
 
         self::assertInstanceOf(CfaPattern::class, $sensor->cfaPattern);
         self::assertSame([
@@ -83,13 +75,7 @@ final class SensorFactoryTest extends TestCase
     #[Test]
     public function createsWithNullExifDoc(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-        );
-
-        $factory = new SensorFactory();
-        $sensor  = $factory->create($metadata);
+        $sensor = $this->createSensor();
 
         self::assertNull($sensor->pixelPitchUm);
         self::assertNull($sensor->sensorType);
@@ -110,23 +96,14 @@ final class SensorFactoryTest extends TestCase
     #[Test]
     public function handlesInvalidResolutionUnit(): void
     {
-        $parsedExif = $this->parsedExif(
+        $sensor = $this->createSensor($this->parsedExif(
             cfaPattern: [],
             spectralSensitivity: null,
             focalPlaneXResolution: 2000.0,
             focalPlaneYResolution: 2000.0,
             focalPlaneResolutionUnit: null,
             focalPlaneResolutionUnitCode: 999,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new SensorFactory();
-        $sensor  = $factory->create($metadata);
+        ));
 
         self::assertNull($sensor->focalPlaneResolutionUnit);
         self::assertSame(2000.0, $sensor->focalPlaneXResolution);
@@ -140,22 +117,13 @@ final class SensorFactoryTest extends TestCase
     #[Test]
     public function convertsResolutionUnitCmToEnum(): void
     {
-        $parsedExif = $this->parsedExif(
+        $sensor = $this->createSensor($this->parsedExif(
             cfaPattern: [],
             spectralSensitivity: null,
             focalPlaneXResolution: 1200.0,
             focalPlaneYResolution: 1200.0,
             focalPlaneResolutionUnit: ResolutionUnit::Centimeter,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new SensorFactory();
-        $sensor  = $factory->create($metadata);
+        ));
 
         self::assertSame(ResolutionUnit::Centimeter, $sensor->focalPlaneResolutionUnit);
     }
@@ -167,34 +135,14 @@ final class SensorFactoryTest extends TestCase
     #[Test]
     public function returnsNullSpectralSensitivityWhenTagHasWrongType(): void
     {
-        $exifEntries = [
+        $sensor = $this->createSensor($this->parsedExifFromEntries([
             ExifTag::SPECTRAL_SENSITIVITY => new IfdEntry(
                 ExifTag::SPECTRAL_SENSITIVITY,
                 3,
                 1,
                 42,
             ),
-        ];
-
-        $ifd0    = new Ifd([]);
-        $exifIfd = new Ifd($exifEntries);
-
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new SensorFactory();
-        $sensor  = $factory->create($metadata);
+        ]));
 
         self::assertNull($sensor->spectralSensitivity);
     }
@@ -207,38 +155,29 @@ final class SensorFactoryTest extends TestCase
     public function handlesTruncatedCfaPattern(): void
     {
         // CFA pattern needs at least [cols, rows, ...colors] — provide only dimensions
-        $exifEntries = [
+        $this->createSensor($this->parsedExifFromEntries([
             ExifTag::CFA_PATTERN => new IfdEntry(
                 ExifTag::CFA_PATTERN,
                 7,
                 2,
                 [2, 2],
             ),
-        ];
-
-        $ifd0    = new Ifd([]);
-        $exifIfd = new Ifd($exifEntries);
-
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new SensorFactory();
-        $factory->create($metadata);
+        ]));
 
         // Truncated CFA pattern should either be null or have incomplete data
         // The key is that no exception is thrown
         $this->addToAssertionCount(1);
+    }
+
+    private function createSensor(?ParsedExif $exifDoc = null): Sensor
+    {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $exifDoc,
+        );
+
+        return new SensorFactory()->create($metadata);
     }
 
     /**
@@ -306,6 +245,14 @@ final class SensorFactoryTest extends TestCase
             );
         }
 
+        return $this->parsedExifFromEntries($exifEntries);
+    }
+
+    /**
+     * @param array<int, IfdEntry> $exifEntries
+     */
+    private function parsedExifFromEntries(array $exifEntries): ParsedExif
+    {
         $ifd0    = new Ifd([]);
         $exifIfd = new Ifd($exifEntries);
 
