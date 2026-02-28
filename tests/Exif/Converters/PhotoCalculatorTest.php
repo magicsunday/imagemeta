@@ -29,6 +29,8 @@ final class PhotoCalculatorTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->calculator = new PhotoCalculator();
     }
 
