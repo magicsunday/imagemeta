@@ -147,12 +147,7 @@ final readonly class KeyedArchiveResolver
         }
 
         if (array_is_list($value)) {
-            $entries = [];
-            foreach ($value as $entry) {
-                $entries[] = $this->nativeToPlistValue($entry);
-            }
-
-            return new ApplePlistArray($entries);
+            return new ApplePlistArray(array_map($this->nativeToPlistValue(...), $value));
         }
 
         $entries = [];
@@ -222,11 +217,10 @@ final readonly class KeyedArchiveResolver
      */
     private function unarchiveKeyedArchive(array $dictionary): ?array
     {
-        if ($this->isKeyedArchive($dictionary)) {
-            return $this->unarchiveNormalizedKeyedArchive($dictionary);
-        }
+        $normalized = $this->isKeyedArchive($dictionary)
+            ? $dictionary
+            : $this->normalizeKeyedArchive($dictionary);
 
-        $normalized = $this->normalizeKeyedArchive($dictionary);
         if ($normalized === null) {
             return null;
         }
