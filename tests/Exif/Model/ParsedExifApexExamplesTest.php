@@ -51,16 +51,7 @@ final class ParsedExifApexExamplesTest extends TestCase
     #[Test]
     public function returnsMaxApertureApexFromSpecExample(): void
     {
-        $exifIfd = new Ifd([
-            ExifTag::MAX_APERTURE_VALUE => new IfdEntry(
-                ExifTag::MAX_APERTURE_VALUE,
-                5,
-                1,
-                new ExifRational(297, 100),
-            ),
-        ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifWithRational(ExifTag::MAX_APERTURE_VALUE, 5, 297, 100);
 
         self::assertEqualsWithDelta(2.97, $parsedExif->maxApertureApex(), 0.0001);
     }
@@ -72,16 +63,7 @@ final class ParsedExifApexExamplesTest extends TestCase
     #[Test]
     public function returnsExposureBiasFromSpecExample(): void
     {
-        $exifIfd = new Ifd([
-            ExifTag::EXPOSURE_BIAS_VALUE => new IfdEntry(
-                ExifTag::EXPOSURE_BIAS_VALUE,
-                10,
-                1,
-                new ExifRational(-1, 1),
-            ),
-        ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifWithRational(ExifTag::EXPOSURE_BIAS_VALUE, 10, -1, 1);
 
         self::assertSame(-1.0, $parsedExif->exposureBias());
     }
@@ -93,16 +75,7 @@ final class ParsedExifApexExamplesTest extends TestCase
     #[Test]
     public function returnsShutterSpeedSecondsFromSpecExample(): void
     {
-        $exifIfd = new Ifd([
-            ExifTag::SHUTTER_SPEED_VALUE => new IfdEntry(
-                ExifTag::SHUTTER_SPEED_VALUE,
-                10,
-                1,
-                new ExifRational(-2, 1),
-            ),
-        ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifWithRational(ExifTag::SHUTTER_SPEED_VALUE, 10, -2, 1);
 
         self::assertSame(4.0, $parsedExif->shutterSpeedSeconds());
     }
@@ -114,16 +87,7 @@ final class ParsedExifApexExamplesTest extends TestCase
     #[Test]
     public function returnsBrightnessValueFromSpecRange(): void
     {
-        $exifIfd = new Ifd([
-            ExifTag::BRIGHTNESS_VALUE => new IfdEntry(
-                ExifTag::BRIGHTNESS_VALUE,
-                10,
-                1,
-                new ExifRational(7600, 100),
-            ),
-        ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifWithRational(ExifTag::BRIGHTNESS_VALUE, 10, 7600, 100);
 
         self::assertEqualsWithDelta(76.0, $parsedExif->brightnessValue(), 0.0001);
     }
@@ -135,16 +99,7 @@ final class ParsedExifApexExamplesTest extends TestCase
     #[Test]
     public function returnsNullWhenBrightnessValueIsUnknown(): void
     {
-        $exifIfd = new Ifd([
-            ExifTag::BRIGHTNESS_VALUE => new IfdEntry(
-                ExifTag::BRIGHTNESS_VALUE,
-                10,
-                1,
-                new ExifRational(-1, 1),
-            ),
-        ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifWithRational(ExifTag::BRIGHTNESS_VALUE, 10, -1, 1);
 
         self::assertNull($parsedExif->brightnessValue());
     }
@@ -156,16 +111,7 @@ final class ParsedExifApexExamplesTest extends TestCase
     #[Test]
     public function returnsApertureFromSpecExample(): void
     {
-        $exifIfd = new Ifd([
-            ExifTag::APERTURE_VALUE => new IfdEntry(
-                ExifTag::APERTURE_VALUE,
-                5,
-                1,
-                new ExifRational(5, 1),
-            ),
-        ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifWithRational(ExifTag::APERTURE_VALUE, 5, 5, 1);
 
         self::assertSame(5.0, $parsedExif->apertureValue());
     }
@@ -177,16 +123,7 @@ final class ParsedExifApexExamplesTest extends TestCase
     #[Test]
     public function returnsFNumberFromSpecExample(): void
     {
-        $exifIfd = new Ifd([
-            ExifTag::F_NUMBER => new IfdEntry(
-                ExifTag::F_NUMBER,
-                5,
-                1,
-                new ExifRational(28, 10),
-            ),
-        ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifWithRational(ExifTag::F_NUMBER, 5, 28, 10);
 
         self::assertSame(2.8, $parsedExif->fNumber());
     }
@@ -198,17 +135,17 @@ final class ParsedExifApexExamplesTest extends TestCase
     #[Test]
     public function returnsExposureTimeFromSpecExample(): void
     {
-        $exifIfd = new Ifd([
-            ExifTag::EXPOSURE_TIME => new IfdEntry(
-                ExifTag::EXPOSURE_TIME,
-                5,
-                1,
-                new ExifRational(1, 400),
-            ),
-        ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifWithRational(ExifTag::EXPOSURE_TIME, 5, 1, 400);
 
         self::assertEqualsWithDelta(0.0025, $parsedExif->exposureTime(), 0.0000001);
+    }
+
+    private function parsedExifWithRational(int $tag, int $type, int $numerator, int $denominator): ParsedExif
+    {
+        $exifIfd = new Ifd([
+            $tag => new IfdEntry($tag, $type, 1, new ExifRational($numerator, $denominator)),
+        ]);
+
+        return new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
     }
 }
