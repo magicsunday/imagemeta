@@ -68,6 +68,14 @@ use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
+use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
+use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
+use MagicSunday\ImageMeta\Value\Enum\FlashMode;
+use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
+use MagicSunday\ImageMeta\Value\FlashInfo;
+use MagicSunday\ImageMeta\Value\RunTime;
 use ReflectionClass;
 use ReflectionProperty;
 use Throwable;
@@ -629,7 +637,7 @@ final class MetadataFormatter
         }
 
         // MakerNotes section
-        if ($metadata->makerNotes instanceof \MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord) {
+        if ($metadata->makerNotes instanceof MakerNotesRecord) {
             $this->printMakerNotesSection($metadata->makerNotes);
         }
 
@@ -721,19 +729,17 @@ final class MetadataFormatter
                 // Format with exactly 40 characters before the colon
                 // hex(6) + space(1) + tag name (padded to fill remaining 33 chars) = 40 total
                 $label = sprintf('%s %s', $hexKey, $tagName);
-                printf("%-39s: %s\n", $label, $formattedValue);
             } elseif (!$showHex && is_string($key) && preg_match('/^0x[0-9a-fA-F]{4}\\s/', $key) === 1) {
                 $label = $key;
-                printf("%-39s: %s\n", $label, $formattedValue);
             } elseif (!$showHex && is_string($key) && preg_match('/^[a-z0-9]{4}\\s/', $key) === 1) {
                 $label = $key;
-                printf("%-39s: %s\n", $label, $formattedValue);
             } else {
                 // Format with exactly 40 characters before the colon
                 // "     - " (7 chars) + key name (padded to fill remaining 33 chars) = 40 total
                 $label = sprintf('     - %s', $key);
-                printf("%-39s: %s\n", $label, $formattedValue);
             }
+
+            printf("%-39s: %s\n", $label, $formattedValue);
         }
     }
 
@@ -802,24 +808,24 @@ final class MetadataFormatter
 
             if (is_int($rawValue) || is_string($rawValue)) {
                 $flashInfo = ExifFlash::fromExifValue($rawValue);
-                if ($flashInfo instanceof \MagicSunday\ImageMeta\Value\FlashInfo) {
+                if ($flashInfo instanceof FlashInfo) {
                     $parts = [];
 
                     $parts[] = $flashInfo->fired ? 'Flash Fired' : 'Flash Did Not Fire';
 
-                    if ($flashInfo->mode instanceof \MagicSunday\ImageMeta\Value\Enum\FlashMode) {
+                    if ($flashInfo->mode instanceof FlashMode) {
                         $modeName = $this->formatEnumName($flashInfo->mode->name);
                         $parts[]  = $modeName . ' Mode';
                     }
 
-                    if ($flashInfo->returnDetection instanceof \MagicSunday\ImageMeta\Value\Enum\FlashReturn && $flashInfo->fired) {
+                    if ($flashInfo->returnDetection instanceof FlashReturn && $flashInfo->fired) {
                         $returnName = $this->formatEnumName($flashInfo->returnDetection->name);
                         if ($returnName !== 'No Strobe Detection') {
                             $parts[] = $returnName;
                         }
                     }
 
-                    if ($flashInfo->functionPresence instanceof \MagicSunday\ImageMeta\Value\Enum\FlashFunction && $flashInfo->functionPresence->name === 'ABSENT') {
+                    if ($flashInfo->functionPresence instanceof FlashFunction && $flashInfo->functionPresence->name === 'ABSENT') {
                         $parts[] = 'No Flash Function';
                     }
 
@@ -1666,10 +1672,10 @@ final class MetadataFormatter
     /**
      * Prints MakerNotes sections.
      */
-    private function printMakerNotesSection(\MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord $makerNotes): void
+    private function printMakerNotesSection(MakerNotesRecord $makerNotes): void
     {
         // For Apple maker notes, extract detailed information
-        if ($makerNotes->apple instanceof \MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes) {
+        if ($makerNotes->apple instanceof AppleMakerNotes) {
             $data  = [];
             $apple = $makerNotes->apple;
 
@@ -2163,7 +2169,7 @@ final class MetadataFormatter
 
         $data['Image Count'] = $mpfDocument->imageCount;
 
-        if ($mpfDocument->attributes instanceof \MagicSunday\ImageMeta\Model\Mpf\MpfAttributes) {
+        if ($mpfDocument->attributes instanceof MpfAttributes) {
             $attrs      = $mpfDocument->attributes;
             $reflection = new ReflectionClass($attrs);
             $properties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
@@ -2307,7 +2313,7 @@ final class MetadataFormatter
             ?? $this->converters->calcHyperfocalM($focalLengthMm, $fNumber, $circleOfConfusionMm);
 
         // Run Time Since Power Up (from Apple maker notes)
-        if ($structured->makerNotesApple?->livePhoto?->runTime instanceof \MagicSunday\ImageMeta\Value\RunTime) {
+        if ($structured->makerNotesApple?->livePhoto?->runTime instanceof RunTime) {
             $runTime = $structured->makerNotesApple->livePhoto->runTime;
             if ($runTime->value !== null && $runTime->timescale !== null && $runTime->timescale > 0) {
                 $seconds                         = $runTime->value / $runTime->timescale;
