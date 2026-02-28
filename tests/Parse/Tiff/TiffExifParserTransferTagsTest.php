@@ -32,6 +32,7 @@ use PHPUnit\Framework\TestCase;
 use function array_map;
 use function count;
 use function implode;
+use function is_array;
 use function ksort;
 use function str_pad;
 use function strlen;
