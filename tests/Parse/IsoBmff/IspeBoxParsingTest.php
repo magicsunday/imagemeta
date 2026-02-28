@@ -89,21 +89,7 @@ final class IspeBoxParsingTest extends TestCase
     #[Test]
     public function extractReturnsIspeWidthAndHeight(): void
     {
-        // ispe is a FullBox(version=0, flags=0) with display_width(u32) + display_height(u32)
-        $ispe = $this->fullBox('ispe', pack('N', 4032) . pack('N', 3024));
-
-        // ipco contains property boxes
-        $ipco = $this->box('ipco', $ispe);
-
-        // iprp contains ipco (and optionally ipma, which we omit)
-        $iprp = $this->box('iprp', $ipco);
-
-        // Build a valid meta box with hdlr (pict handler) + iprp
-        $hdlr = $this->fullBox('hdlr', pack('N', 0) . 'pict' . str_repeat("\0", 12));
-        $meta = $this->fullBox('meta', $hdlr . $iprp);
-        $ftyp = $this->box('ftyp', 'heic' . pack('N', 0));
-
-        $data      = $ftyp . $meta;
+        $data      = $this->buildIspeContainer(pack('N', 4032) . pack('N', 3024));
         $extractor = $this->createExtractor($data);
         $result    = $extractor->extract();
 
@@ -137,16 +123,7 @@ final class IspeBoxParsingTest extends TestCase
     #[Test]
     public function extractReturnsNullForTruncatedIspe(): void
     {
-        // ispe with only version/flags but no width/height payload
-        $ispe = $this->fullBox('ispe', '');
-
-        $ipco = $this->box('ipco', $ispe);
-        $iprp = $this->box('iprp', $ipco);
-        $hdlr = $this->fullBox('hdlr', pack('N', 0) . 'pict' . str_repeat("\0", 12));
-        $meta = $this->fullBox('meta', $hdlr . $iprp);
-        $ftyp = $this->box('ftyp', 'heic' . pack('N', 0));
-
-        $data      = $ftyp . $meta;
+        $data      = $this->buildIspeContainer('');
         $extractor = $this->createExtractor($data);
         $result    = $extractor->extract();
 
@@ -161,19 +138,27 @@ final class IspeBoxParsingTest extends TestCase
     #[Test]
     public function extractIspeFromAvifContainer(): void
     {
-        $ispe = $this->fullBox('ispe', pack('N', 1920) . pack('N', 1080));
-        $ipco = $this->box('ipco', $ispe);
-        $iprp = $this->box('iprp', $ipco);
-        $hdlr = $this->fullBox('hdlr', pack('N', 0) . 'pict' . str_repeat("\0", 12));
-        $meta = $this->fullBox('meta', $hdlr . $iprp);
-        $ftyp = $this->box('ftyp', 'avif' . pack('N', 0));
-
-        $data      = $ftyp . $meta;
+        $data      = $this->buildIspeContainer(pack('N', 1920) . pack('N', 1080), 'avif');
         $extractor = $this->createExtractor($data);
         $result    = $extractor->extract();
 
         self::assertSame(1920, $result[6]);
         self::assertSame(1080, $result[7]);
+    }
+
+    /**
+     * Builds a minimal HEIC/AVIF-style container with the given ispe payload.
+     */
+    private function buildIspeContainer(string $ispePayload, string $brand = 'heic'): string
+    {
+        $ispe = $this->fullBox('ispe', $ispePayload);
+        $ipco = $this->box('ipco', $ispe);
+        $iprp = $this->box('iprp', $ipco);
+        $hdlr = $this->fullBox('hdlr', pack('N', 0) . 'pict' . str_repeat("\0", 12));
+        $meta = $this->fullBox('meta', $hdlr . $iprp);
+        $ftyp = $this->box('ftyp', $brand . pack('N', 0));
+
+        return $ftyp . $meta;
     }
 
     /**
