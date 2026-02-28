@@ -32,6 +32,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function count;
+use function implode;
 use function ksort;
 use function str_pad;
 
@@ -565,14 +566,8 @@ final class TiffExifParserJpegProcTest extends TestCase
      */
     private function buildIfdBlock(array $entries, int $nextIfdOffset): string
     {
-        $ifdEntries = '';
-
-        foreach ($entries as $entry) {
-            $ifdEntries .= $entry;
-        }
-
         return pack('v', count($entries))
-            . $ifdEntries
+            . implode('', $entries)
             . pack('V', $nextIfdOffset);
     }
 
@@ -590,15 +585,14 @@ final class TiffExifParserJpegProcTest extends TestCase
      */
     private function numericEntry(int $tag, int $type, int $count, array $values): string
     {
-        $payload = '';
-
-        foreach ($values as $value) {
-            $payload .= match ($type) {
+        $payload = implode('', array_map(
+            static fn (int $value): string => match ($type) {
                 TiffConst::TYPE_SHORT => pack('v', $value),
                 TiffConst::TYPE_LONG  => pack('V', $value),
                 default               => pack('v', $value),
-            };
-        }
+            },
+            $values,
+        ));
 
         return pack('v', $tag)
             . pack('v', $type)
