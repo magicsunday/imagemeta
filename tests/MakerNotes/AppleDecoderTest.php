@@ -81,6 +81,21 @@ use function strlen;
 #[UsesClass(PlistTextParser::class)]
 final class AppleDecoderTest extends TestCase
 {
+    private function decodeAppleMakerNotesRecord(string $raw): MakerNotesRecord
+    {
+        $decoder = new AppleDecoder();
+
+        return $decoder->decode($raw, 'Apple', 'iPhone');
+    }
+
+    private function decodeAppleMakerNotes(string $raw): AppleMakerNotes
+    {
+        $apple = $this->decodeAppleMakerNotesRecord($raw)->apple;
+        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+
+        return $apple;
+    }
+
     /**
      * Decodes a keyed-archive payload that includes camera type information.
      * Ensures AppleDecoder maps the camera type code and extracts the content identifier.
@@ -100,13 +115,8 @@ final class AppleDecoderTest extends TestCase
             . '004c005200590060006800730076007d007f008200850087008a008c008f0092'
             . '009400970099009e00a700b200b500c200cb00df00ea010001030108010b010d'
             . '0000000000000201000000000000002700000000000000000000000000000112';
-        $raw     = (string) hex2bin($hex);
-        $decoder = new AppleDecoder();
-
-        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
-
-        $apple = $metadata->apple;
-        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        $raw   = (string) hex2bin($hex);
+        $apple = $this->decodeAppleMakerNotes($raw);
         self::assertSame('archived-photo-uuid', $apple->identity?->contentIdentifier);
         self::assertSame('Front', $apple->camera?->cameraType);
     }
@@ -137,13 +147,8 @@ final class AppleDecoderTest extends TestCase
             . 'b502b702ba02bc02cb02ce02d002d302d502d802da02dd02df02e202e402e702ea02ec02ef02f102f402f602f902fb02fe0300030303050308030a03'
             . '0d030f03120317031a031c0000000000000201000000000000007300000000000000000000000000000321'
         ;
-        $raw     = (string) hex2bin($hex);
-        $decoder = new AppleDecoder();
-
-        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
-
-        $apple = $metadata->apple;
-        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        $raw   = (string) hex2bin($hex);
+        $apple = $this->decodeAppleMakerNotes($raw);
         self::assertSame('archived-photo-uuid', $apple->identity?->contentIdentifier);
         self::assertEqualsWithDelta(3.25, $apple->hdr?->headroom, 1e-12);
         self::assertSame([1.0, 1.5, 1.75], $apple->hdr?->gain);
@@ -175,16 +180,13 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function decodeParsesAppleMakerNotes(): void
     {
-        $raw     = $this->buildMakerNotesBlob();
-        $decoder = new AppleDecoder();
-
-        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
+        $raw      = $this->buildMakerNotesBlob();
+        $metadata = $this->decodeAppleMakerNotesRecord($raw);
         self::assertSame('Apple', $metadata->vendor);
         self::assertSame(strlen($raw), $metadata->length);
         self::assertSame(sha1($raw), $metadata->sha1);
 
-        $apple = $metadata->apple;
-        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        $apple = $this->decodeAppleMakerNotes($raw);
         self::assertSame('photo-uuid', $apple->identity?->contentIdentifier);
         self::assertSame('Tele', $apple->camera?->cameraType);
         self::assertEqualsWithDelta(2.5, $apple->hdr?->headroom, 1e-12);
@@ -212,12 +214,7 @@ final class AppleDecoderTest extends TestCase
     {
         $raw = '{ ContentIdentifier = "padded"; LivePhotoAuto = 1; }' . str_repeat("\0", 8);
 
-        $decoder = new AppleDecoder();
-
-        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
-
-        $apple = $metadata->apple;
-        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        $apple = $this->decodeAppleMakerNotes($raw);
         self::assertSame('padded', $apple->identity?->contentIdentifier);
         self::assertTrue($apple->flags['livePhotoAuto']);
     }
@@ -231,12 +228,7 @@ final class AppleDecoderTest extends TestCase
     {
         $raw = '{ ContentIdentifier = "flags-zero"; SceneFlags = 0; ImageProcessingFlags = 0; PhotosAppFeatureFlags = 0; }';
 
-        $decoder = new AppleDecoder();
-
-        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
-
-        $apple = $metadata->apple;
-        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        $apple = $this->decodeAppleMakerNotes($raw);
         self::assertSame('flags-zero', $apple->identity?->contentIdentifier);
 
         self::assertArrayHasKey('nightMode', $apple->flags);
@@ -261,13 +253,8 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function decodeResolvesLivePhotoMovieIndex(): void
     {
-        $raw     = $this->buildMakerNotesBlobWithMovieIndex();
-        $decoder = new AppleDecoder();
-
-        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
-
-        $apple = $metadata->apple;
-        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        $raw   = $this->buildMakerNotesBlobWithMovieIndex();
+        $apple = $this->decodeAppleMakerNotes($raw);
         self::assertSame(2, $apple->livePhoto?->index);
     }
 
@@ -278,13 +265,8 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function decodeMapsSemanticStyleFromCompactArray(): void
     {
-        $raw     = (string) hex2bin('62706c6973743030d2010203045f1011436f6e74656e744964656e7469666965725d53656d616e7469635374796c655d636f6d706163742d7374796c65d405060708090a0b0c525f30525f31525f32525f33555669766964233fd000000000000023bfb999999999999a1001080d212f3d46494c4f5258616a0000000000000101000000000000000d0000000000000000000000000000006c');
-        $decoder = new AppleDecoder();
-
-        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
-
-        $apple = $metadata->apple;
-        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        $raw   = (string) hex2bin('62706c6973743030d2010203045f1011436f6e74656e744964656e7469666965725d53656d616e7469635374796c655d636f6d706163742d7374796c65d405060708090a0b0c525f30525f31525f32525f33555669766964233fd000000000000023bfb999999999999a1001080d212f3d46494c4f5258616a0000000000000101000000000000000d0000000000000000000000000000006c');
+        $apple = $this->decodeAppleMakerNotes($raw);
         self::assertSame('compact-style', $apple->identity?->contentIdentifier);
         self::assertSame('Vivid', $apple->semanticStyle?->preset);
         self::assertEqualsWithDelta(0.25, $apple->semanticStyle->warmth, 1e-12);
