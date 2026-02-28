@@ -59,10 +59,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function bitsPerSampleReturnsDefaultInTiffContext(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(8, $parsedExif->bitsPerSample());
     }
@@ -74,8 +73,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function bitsPerSampleReturnsNullInJpegContext(): void
     {
-        $ifd0       = new Ifd([]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+        $parsedExif = $this->parsedExifFromIfd0([]);
 
         self::assertNull($parsedExif->bitsPerSample());
     }
@@ -87,10 +85,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function bitsPerSampleListReturnsDefaultVector(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         // Default: SamplesPerPixel=1 for TIFF context without photometric → [8]
         self::assertSame([8], $parsedExif->bitsPerSampleList());
@@ -102,10 +99,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function bitsPerSampleListPreservesMultipleComponents(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::BITS_PER_SAMPLE => new IfdEntry(ExifTag::BITS_PER_SAMPLE, 3, 3, [8, 10, 8]),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame([8, 10, 8], $parsedExif->bitsPerSampleList());
         self::assertSame(8, $parsedExif->bitsPerSample());
@@ -117,8 +113,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function bitsPerSampleListReturnsNullInJpegContext(): void
     {
-        $ifd0       = new Ifd([]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+        $parsedExif = $this->parsedExifFromIfd0([]);
 
         self::assertNull($parsedExif->bitsPerSampleList());
     }
@@ -130,8 +125,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function samplesPerPixelReturnsThreeInJpegContext(): void
     {
-        $ifd0       = new Ifd([]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+        $parsedExif = $this->parsedExifFromIfd0([]);
 
         self::assertSame(3, $parsedExif->samplesPerPixel());
     }
@@ -143,7 +137,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function samplesPerPixelReturnsOneForGrayscale(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
                 ExifTag::PHOTOMETRIC_INTERPRETATION,
                 3,
@@ -151,7 +145,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
                 Photometric::BlackIsZero->value,
             ),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(1, $parsedExif->samplesPerPixel());
     }
@@ -163,7 +156,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function samplesPerPixelReturnsThreeForRgb(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
                 ExifTag::PHOTOMETRIC_INTERPRETATION,
                 3,
@@ -171,7 +164,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
                 Photometric::Rgb->value,
             ),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(3, $parsedExif->samplesPerPixel());
     }
@@ -183,10 +175,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function samplesPerPixelReturnsOneInTiffContextWithoutPhotometric(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(1, $parsedExif->samplesPerPixel());
     }
@@ -200,8 +191,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function compressionReturnsUncompressedWhenMissing(): void
     {
-        $ifd0       = new Ifd([]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+        $parsedExif = $this->parsedExifFromIfd0([]);
 
         self::assertSame(Compression::Uncompressed, $parsedExif->compression());
     }
@@ -214,11 +204,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function compressionReturnsJpegXlForCode52546(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, 52546),
         ]);
-
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(Compression::JpegXl, $parsedExif->compression());
     }
@@ -230,11 +218,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function compressionReturnsNullForUnsupportedPresentCode(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, 99999),
         ]);
-
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertNull($parsedExif->compression());
     }
@@ -249,8 +235,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function orientationReturnsDefaultWhenMissing(): void
     {
-        $ifd0       = new Ifd([]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+        $parsedExif = $this->parsedExifFromIfd0([]);
 
         self::assertSame(Orientation::TopLeft, $parsedExif->orientation());
     }
@@ -264,10 +249,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function planarConfigurationReturnsChunkyInTiffContext(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(PlanarConfiguration::Chunky, $parsedExif->planarConfiguration());
     }
@@ -281,8 +265,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function planarConfigurationReturnsNullInJpegContext(): void
     {
-        $ifd0       = new Ifd([]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+        $parsedExif = $this->parsedExifFromIfd0([]);
 
         self::assertNull($parsedExif->planarConfiguration());
     }
@@ -297,8 +280,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function resolutionUnitReturnsDefaultWhenMissing(): void
     {
-        $ifd0       = new Ifd([]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+        $parsedExif = $this->parsedExifFromIfd0([]);
 
         self::assertSame(ResolutionUnit::Inches, $parsedExif->resolutionUnit());
     }
@@ -310,8 +292,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function resolutionDefaultsTo72InJpegContext(): void
     {
-        $ifd0       = new Ifd([]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+        $parsedExif = $this->parsedExifFromIfd0([]);
 
         self::assertSame(72.0, $parsedExif->xResolution());
         self::assertSame(72.0, $parsedExif->yResolution());
@@ -324,10 +305,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function resolutionReturnsNullInTiffContext(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertNull($parsedExif->xResolution());
         self::assertNull($parsedExif->yResolution());
@@ -342,7 +322,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function ycbcrPositioningDefaultsToCenteredForYcbcr(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
                 ExifTag::PHOTOMETRIC_INTERPRETATION,
                 3,
@@ -350,7 +330,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
                 Photometric::Ycbcr->value,
             ),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(YCbCrPositioning::Centered, $parsedExif->ycbcrPositioning());
     }
@@ -362,7 +341,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function ycbcrPositioningReturnsNullForNonYcbcr(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
                 ExifTag::PHOTOMETRIC_INTERPRETATION,
                 3,
@@ -370,7 +349,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
                 Photometric::Rgb->value,
             ),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertNull($parsedExif->ycbcrPositioning());
     }
@@ -382,7 +360,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function ycbcrSubSamplingDefaultsInTiffYcbcrContext(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::COMPRESSION                => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
                 ExifTag::PHOTOMETRIC_INTERPRETATION,
@@ -391,7 +369,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
                 Photometric::Ycbcr->value,
             ),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame([2, 2], $parsedExif->ycbcrSubSampling());
     }
@@ -403,8 +380,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function ycbcrSubSamplingReturnsNullInJpegContext(): void
     {
-        $ifd0       = new Ifd([]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+        $parsedExif = $this->parsedExifFromIfd0([]);
 
         self::assertNull($parsedExif->ycbcrSubSampling());
     }
@@ -416,7 +392,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function ycbcrSubSamplingReturnsNullForNonYcbcr(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::COMPRESSION                => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
                 ExifTag::PHOTOMETRIC_INTERPRETATION,
@@ -425,7 +401,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
                 Photometric::Rgb->value,
             ),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertNull($parsedExif->ycbcrSubSampling());
     }
@@ -437,20 +412,19 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function referenceBlackWhiteDefaultsForRgb(): void
     {
-        $ifd0 = new Ifd([
-            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
-                ExifTag::PHOTOMETRIC_INTERPRETATION,
-                3,
-                1,
-                Photometric::Rgb->value,
-            ),
-        ]);
-
-        $exifIfd = new Ifd([
-            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::Srgb->value),
-        ]);
-
-        $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifFromEntries(
+            [
+                ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                    ExifTag::PHOTOMETRIC_INTERPRETATION,
+                    3,
+                    1,
+                    Photometric::Rgb->value,
+                ),
+            ],
+            [
+                ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::Srgb->value),
+            ],
+        );
 
         self::assertSame(
             [0.0, 255.0, 0.0, 255.0, 0.0, 255.0],
@@ -465,20 +439,19 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function referenceBlackWhiteDefaultsForYCbCr(): void
     {
-        $ifd0 = new Ifd([
-            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
-                ExifTag::PHOTOMETRIC_INTERPRETATION,
-                3,
-                1,
-                Photometric::Ycbcr->value,
-            ),
-        ]);
-
-        $exifIfd = new Ifd([
-            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::Srgb->value),
-        ]);
-
-        $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifFromEntries(
+            [
+                ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                    ExifTag::PHOTOMETRIC_INTERPRETATION,
+                    3,
+                    1,
+                    Photometric::Ycbcr->value,
+                ),
+            ],
+            [
+                ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::Srgb->value),
+            ],
+        );
 
         self::assertSame(
             [0.0, 255.0, 128.0, 128.0, 128.0, 128.0],
@@ -493,20 +466,19 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function referenceBlackWhiteDefaultsAreSuppressedForUncalibratedColorSpace(): void
     {
-        $ifd0 = new Ifd([
-            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
-                ExifTag::PHOTOMETRIC_INTERPRETATION,
-                3,
-                1,
-                Photometric::Rgb->value,
-            ),
-        ]);
-
-        $exifIfd = new Ifd([
-            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::Uncalibrated->value),
-        ]);
-
-        $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifFromEntries(
+            [
+                ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                    ExifTag::PHOTOMETRIC_INTERPRETATION,
+                    3,
+                    1,
+                    Photometric::Rgb->value,
+                ),
+            ],
+            [
+                ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::Uncalibrated->value),
+            ],
+        );
 
         self::assertNull($parsedExif->referenceBlackWhite());
     }
@@ -518,21 +490,17 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function transferFunctionRequiresCompleteLut(): void
     {
-        $incomplete = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::TRANSFER_FUNCTION => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, 6, [0, 1, 2, 3, 4, 5]),
         ]);
-
-        $parsedExif = new ParsedExif($incomplete, null, null, null, null);
 
         self::assertNull($parsedExif->transferFunction());
 
         $table = range(0, 767);
 
-        $complete = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::TRANSFER_FUNCTION => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, count($table), $table),
         ]);
-
-        $parsedExif = new ParsedExif($complete, null, null, null, null);
 
         self::assertSame($table, $parsedExif->transferFunction());
     }
@@ -544,10 +512,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function transferFunctionDefaultsToGamma22InTiffContext(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         $table = $parsedExif->transferFunction();
 
@@ -566,8 +533,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function transferFunctionReturnsNullInJpegContext(): void
     {
-        $ifd0       = new Ifd([]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+        $parsedExif = $this->parsedExifFromIfd0([]);
 
         self::assertNull($parsedExif->transferFunction());
     }
@@ -578,8 +544,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function minSampleValueDefaultsToZero(): void
     {
-        $ifd0       = new Ifd([]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+        $parsedExif = $this->parsedExifFromIfd0([]);
 
         self::assertSame(0, $parsedExif->minSampleValue());
     }
@@ -590,10 +555,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function maxSampleValueDefaultsTo255For8Bit(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(255, $parsedExif->maxSampleValue());
     }
@@ -605,10 +569,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function transferRangeDefaultsInTiffContext(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
         ]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         $range = $parsedExif->transferRange();
 
@@ -622,8 +585,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function transferRangeReturnsNullInJpegContext(): void
     {
-        $ifd0       = new Ifd([]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+        $parsedExif = $this->parsedExifFromIfd0([]);
 
         self::assertNull($parsedExif->transferRange());
     }
@@ -635,7 +597,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function ycbcrCoefficientsDefaultToAnnexDWhenMissing(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
                 ExifTag::PHOTOMETRIC_INTERPRETATION,
                 3,
@@ -644,11 +606,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
             ),
         ]);
 
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
-
         self::assertSame([0.299, 0.587, 0.114], $parsedExif->ycbcrCoefficients());
 
-        $rgbIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
                 ExifTag::PHOTOMETRIC_INTERPRETATION,
                 3,
@@ -657,8 +617,23 @@ final class ParsedExifDefaultValuesTest extends TestCase
             ),
         ]);
 
-        $parsedExif = new ParsedExif($rgbIfd, null, null, null, null);
-
         self::assertNull($parsedExif->ycbcrCoefficients());
+    }
+
+    /**
+     * @param array<int, IfdEntry> $ifd0Entries
+     */
+    private function parsedExifFromIfd0(array $ifd0Entries): ParsedExif
+    {
+        return new ParsedExif(new Ifd($ifd0Entries), null, null, null, null);
+    }
+
+    /**
+     * @param array<int, IfdEntry> $ifd0Entries
+     * @param array<int, IfdEntry> $exifEntries
+     */
+    private function parsedExifFromEntries(array $ifd0Entries, array $exifEntries): ParsedExif
+    {
+        return new ParsedExif(new Ifd($ifd0Entries), new Ifd($exifEntries), null, null, null);
     }
 }
