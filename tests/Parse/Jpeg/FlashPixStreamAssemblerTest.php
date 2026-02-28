@@ -19,6 +19,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
+use function assert;
 use function chr;
 use function count;
 use function iconv;
