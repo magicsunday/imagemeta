@@ -141,6 +141,41 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Metadata::class)]
 final class MetadataTest extends TestCase
 {
+    private function createParsedExifDocument(string $make, string $model): ParsedExif
+    {
+        $ifd0 = new Ifd([
+            ExifTag::MAKE  => new IfdEntry(ExifTag::MAKE, 2, 1, $make),
+            ExifTag::MODEL => new IfdEntry(ExifTag::MODEL, 2, 1, $model),
+        ]);
+
+        return new ParsedExif($ifd0, null, null, null, null);
+    }
+
+    /**
+     * @param list<string> $exifBlobs
+     * @param list<string> $xmpBlobs
+     */
+    private function createMetadataWithCoreDocuments(
+        array $exifBlobs,
+        string $contentIdentifier,
+        string $make,
+        string $model,
+        array $xmpBlobs,
+        string $xmpDate,
+    ): Metadata {
+        return new Metadata(
+            $exifBlobs,
+            new QuickTimeMeta([
+                'com.apple.quicktime.content.identifier' => $contentIdentifier,
+            ]),
+            $this->createParsedExifDocument($make, $model),
+            $xmpBlobs,
+            new XmpDocument([
+                '{http://ns.adobe.com/photoshop/1.0/}DateCreated' => $xmpDate,
+            ]),
+        );
+    }
+
     /**
      * Stores provided metadata components and exposes them via accessors.
      * It confirms the object preserves the supplied metadata.
@@ -153,20 +188,15 @@ final class MetadataTest extends TestCase
             'alternate-exif-blob',
         ];
 
-        $quickTime = new QuickTimeMeta([
-            'com.apple.quicktime.content.identifier' => 'movie-123',
-        ]);
-
-        $ifd0 = new Ifd([
-            ExifTag::MAKE  => new IfdEntry(ExifTag::MAKE, 2, 1, 'Canon'),
-            ExifTag::MODEL => new IfdEntry(ExifTag::MODEL, 2, 1, 'EOS R5'),
-        ]);
-        $exifDoc  = new ParsedExif($ifd0, null, null, null, null);
         $xmpBlobs = [
             '<x:xmpmeta>\n  <!-- primary -->\n</x:xmpmeta>',
             '<x:xmpmeta>\n  <!-- secondary -->\n</x:xmpmeta>',
         ];
-        $xmpDoc = new XmpDocument([
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.content.identifier' => 'movie-123',
+        ]);
+        $exifDoc = $this->createParsedExifDocument('Canon', 'EOS R5');
+        $xmpDoc  = new XmpDocument([
             '{http://ns.adobe.com/photoshop/1.0/}DateCreated' => '2024-05-01',
         ]);
 
@@ -266,26 +296,17 @@ final class MetadataTest extends TestCase
             'alternate-exif-blob',
         ];
 
-        $quickTime = new QuickTimeMeta([
-            'com.apple.quicktime.content.identifier' => 'clip-42',
-        ]);
-
-        $ifd0 = new Ifd([
-            ExifTag::MAKE  => new IfdEntry(ExifTag::MAKE, 2, 1, 'Fujifilm'),
-            ExifTag::MODEL => new IfdEntry(ExifTag::MODEL, 2, 1, 'X-T5'),
-        ]);
-
-        $exifDoc = new ParsedExif($ifd0, null, null, null, null);
-
         $xmpBlobs = [
             '<x:xmpmeta>\n  <photoshop:DateCreated>2024-06-01</photoshop:DateCreated>\n</x:xmpmeta>',
         ];
-
-        $xmpDoc = new XmpDocument([
-            '{http://ns.adobe.com/photoshop/1.0/}DateCreated' => '2024-06-01',
-        ]);
-
-        $metadata = new Metadata($exifBlobs, $quickTime, $exifDoc, $xmpBlobs, $xmpDoc);
+        $metadata = $this->createMetadataWithCoreDocuments(
+            $exifBlobs,
+            'clip-42',
+            'Fujifilm',
+            'X-T5',
+            $xmpBlobs,
+            '2024-06-01',
+        );
 
         self::assertSame('primary-exif-blob', $metadata->exifBlobs[0]);
         self::assertSame('clip-42', $metadata->quickTime?->contentIdentifier());
