@@ -84,7 +84,7 @@ final readonly class QuickTimeValueDecoder
      *
      * @param BoxDescriptor $data Box descriptor for the `data` box.
      *
-     * @return QuickTimeRawDataAtom
+     * @return QuickTimeRawDataAtom Structured data atom with decoded payload and locale metadata.
      */
     public function parseDataBoxStructured(BoxDescriptor $data): array
     {
@@ -132,6 +132,8 @@ final readonly class QuickTimeValueDecoder
      * @param int    $type        Well-known type code (24-bit).
      * @param string $payload     Raw payload bytes.
      * @param int    $payloadSize Length of the payload in bytes.
+     *
+     * @return string|int|float Decoded payload value for the requested QuickTime data type.
      */
     public function decodeDataPayload(int $type, string $payload, int $payloadSize): string|int|float
     {
@@ -252,9 +254,9 @@ final readonly class QuickTimeValueDecoder
     /**
      * Coerces QuickTime metadata values into expected value types when possible.
      *
-     * @param QuickTimeValue $value
+     * @param QuickTimeValue $value Raw QuickTime metadata value to coerce.
      *
-     * @return QuickTimeValue
+     * @return QuickTimeValue Coerced value when conversion succeeds, otherwise the original value.
      */
     public function coerceQuickTimeValue(string $key, string|int|float|bool $value): string|int|float|bool
     {
@@ -276,6 +278,8 @@ final readonly class QuickTimeValueDecoder
      * Converts a four-character code into its integer representation.
      *
      * @param string $fourcc Four-character code to convert.
+     *
+     * @return int|null Integer representation of the four-character code, or null when invalid.
      */
     public function fourccToIndex(string $fourcc): ?int
     {
@@ -440,7 +444,9 @@ final readonly class QuickTimeValueDecoder
     /**
      * Converts QuickTime metadata values into integers when possible.
      *
-     * @param QuickTimeValue $value
+     * @param QuickTimeValue $value QuickTime metadata value to convert.
+     *
+     * @return int|null Integer representation when conversion succeeds, otherwise null.
      */
     private function parseQuickTimeInt(string|int|float|bool $value): ?int
     {
@@ -468,7 +474,9 @@ final readonly class QuickTimeValueDecoder
     /**
      * Converts QuickTime metadata values into floats when possible.
      *
-     * @param QuickTimeValue $value
+     * @param QuickTimeValue $value QuickTime metadata value to convert.
+     *
+     * @return float|null Floating-point representation when conversion succeeds, otherwise null.
      */
     private function parseQuickTimeFloat(string|int|float|bool $value): ?float
     {
@@ -490,7 +498,9 @@ final readonly class QuickTimeValueDecoder
     /**
      * Converts QuickTime metadata values into booleans when possible.
      *
-     * @param QuickTimeValue $value
+     * @param QuickTimeValue $value QuickTime metadata value to convert.
+     *
+     * @return bool|null Boolean representation when conversion succeeds, otherwise null.
      */
     private function parseQuickTimeBool(string|int|float|bool $value): ?bool
     {
@@ -518,6 +528,8 @@ final readonly class QuickTimeValueDecoder
      * A default locale (country=0, language=0) therefore ranks lowest.
      *
      * @param int $locale 32-bit locale indicator (country << 16 | language).
+     *
+     * @return int Specificity score used for deterministic locale ordering checks.
      */
     private function localeSpecificityScore(int $locale): int
     {
