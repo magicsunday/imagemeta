@@ -4049,7 +4049,12 @@ final class TiffExifParserDngTagTest extends TestCase
             $matrix2Offset = $ifd2Offset + 2 + (12 * ($includeNames ? 2 : 1)) + 4;
             $name2Offset   = $matrix2Offset + strlen($matrixData);
         } else {
-            $ifd1Offset = 0;
+            $ifd1Offset     = 0;
+            $ifd1EntryCount = 0;
+            $ifd2Offset     = 0;
+            $matrix2Offset  = 0;
+            $profile2Name   = '';
+            $name2Offset    = 0;
         }
 
         $ifd0 = pack('v', $ifd0EntryCount)
