@@ -51,6 +51,8 @@ final class DngProfileValidatorTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $buffer          = new MemoryBuffer(str_repeat("\0", 256));
         $support         = new DngValidationSupport(Endian::Little, $buffer);
         $this->validator = new DngProfileValidator($support);
