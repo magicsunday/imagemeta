@@ -437,14 +437,7 @@ final class BinaryPlistDecoder
      */
     private function parseData(int $offset, int $info): string
     {
-        [$size, $header] = $this->reader->readLength($offset, $info);
-
-        $payload = substr($this->reader->data(), $offset + $header, $size);
-        if (strlen($payload) !== $size) {
-            throw new ParseError('Incomplete data payload.', 1071);
-        }
-
-        return $payload;
+        return $this->readPayload($offset, $info, 1071);
     }
 
     /**
@@ -457,14 +450,7 @@ final class BinaryPlistDecoder
      */
     private function parseAscii(int $offset, int $info): string
     {
-        [$size, $header] = $this->reader->readLength($offset, $info);
-
-        $payload = substr($this->reader->data(), $offset + $header, $size);
-        if (strlen($payload) !== $size) {
-            throw new ParseError('Incomplete ASCII string payload.', 1072);
-        }
-
-        return $payload;
+        return $this->readPayload($offset, $info, 1072);
     }
 
     /**
@@ -507,12 +493,7 @@ final class BinaryPlistDecoder
      */
     private function parseUtf8(int $offset, int $info): string
     {
-        [$size, $header] = $this->reader->readLength($offset, $info);
-
-        $payload = substr($this->reader->data(), $offset + $header, $size);
-        if (strlen($payload) !== $size) {
-            throw new ParseError('Incomplete UTF-8 string payload.', 1075);
-        }
+        $payload = $this->readPayload($offset, $info, 1075);
 
         // Normalizes/validates UTF-8 input
         $decoded = iconv('UTF-8', 'UTF-8', $payload);
@@ -521,6 +502,27 @@ final class BinaryPlistDecoder
         }
 
         return $decoded;
+    }
+
+    /**
+     * Reads a variable-length payload at the given offset, validating completeness.
+     *
+     * @param int $offset    Byte offset in payload.
+     * @param int $info      Info nibble (length or extended length marker).
+     * @param int $errorCode Error code for incomplete payload.
+     *
+     * @throws ParseError
+     */
+    private function readPayload(int $offset, int $info, int $errorCode): string
+    {
+        [$size, $header] = $this->reader->readLength($offset, $info);
+
+        $payload = substr($this->reader->data(), $offset + $header, $size);
+        if (strlen($payload) !== $size) {
+            throw new ParseError('Incomplete plist object payload.', $errorCode);
+        }
+
+        return $payload;
     }
 
     /**
