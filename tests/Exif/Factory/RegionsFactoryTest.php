@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Exif\Factory\RegionsFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\RegionType;
+use MagicSunday\ImageMeta\Value\RegionCollection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -33,6 +34,12 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(RegionCoordinateNormalizer::class)]
 final class RegionsFactoryTest extends TestCase
 {
+    private const string NS_MWG_REGIONS = 'http://www.metadataworkinggroup.com/schemas/regions/';
+
+    private const string NS_ST_AREA = 'http://ns.adobe.com/xmp/sType/Area#';
+
+    private const string NS_APPLE_FACEINFO = 'http://ns.apple.com/faceinfo/1.0/';
+
     /**
      * Creates Metadata without an XMP document.
      * Ensures RegionsFactory returns an empty region list.
@@ -40,13 +47,7 @@ final class RegionsFactoryTest extends TestCase
     #[Test]
     public function createsEmptyRegionsWithNullXmpDoc(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-        );
-
-        $factory = new RegionsFactory();
-        $regions = $factory->create($metadata);
+        $regions = $this->createRegions();
 
         self::assertSame([], $regions->items);
     }
@@ -58,33 +59,19 @@ final class RegionsFactoryTest extends TestCase
     #[Test]
     public function extractsMwgRegions(): void
     {
-        $nsMwgRegions = 'http://www.metadataworkinggroup.com/schemas/regions/';
-        $nsStArea     = 'http://ns.adobe.com/xmp/sType/Area#';
-
         $xmpData = [
-            '{' . $nsMwgRegions . '}Type'              => ['Face'],
-            '{' . $nsMwgRegions . '}Name'              => ['John Doe'],
-            '{' . $nsMwgRegions . '}PersonDisplayName' => [],
-            '{' . $nsMwgRegions . '}Confidence'        => ['0.95'],
-            '{' . $nsMwgRegions . '}Rotation'          => ['0.0'],
-            '{' . $nsStArea . '}x'                     => ['0.5'],
-            '{' . $nsStArea . '}y'                     => ['0.5'],
-            '{' . $nsStArea . '}w'                     => ['0.2'],
-            '{' . $nsStArea . '}h'                     => ['0.2'],
+            '{' . self::NS_MWG_REGIONS . '}Type'              => ['Face'],
+            '{' . self::NS_MWG_REGIONS . '}Name'              => ['John Doe'],
+            '{' . self::NS_MWG_REGIONS . '}PersonDisplayName' => [],
+            '{' . self::NS_MWG_REGIONS . '}Confidence'        => ['0.95'],
+            '{' . self::NS_MWG_REGIONS . '}Rotation'          => ['0.0'],
+            '{' . self::NS_ST_AREA . '}x'                     => ['0.5'],
+            '{' . self::NS_ST_AREA . '}y'                     => ['0.5'],
+            '{' . self::NS_ST_AREA . '}w'                     => ['0.2'],
+            '{' . self::NS_ST_AREA . '}h'                     => ['0.2'],
         ];
 
-        $xmpDoc = new XmpDocument($xmpData, []);
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: null,
-            xmpBlobs: [],
-            xmpDoc: $xmpDoc,
-        );
-
-        $factory = new RegionsFactory();
-        $regions = $factory->create($metadata);
+        $regions = $this->createRegions($xmpData);
 
         self::assertCount(1, $regions->items);
 
@@ -106,36 +93,23 @@ final class RegionsFactoryTest extends TestCase
     #[Test]
     public function extractsAppleFaceRegions(): void
     {
-        $nsAppleFaceInfo = 'http://ns.apple.com/faceinfo/1.0/';
-
         $xmpData = [
-            '{' . $nsAppleFaceInfo . '}CenterX'         => ['0.5'],
-            '{' . $nsAppleFaceInfo . '}CenterY'         => ['0.5'],
-            '{' . $nsAppleFaceInfo . '}Width'           => ['0.2'],
-            '{' . $nsAppleFaceInfo . '}Height'          => ['0.2'],
-            '{' . $nsAppleFaceInfo . '}ConfidenceLevel' => ['90.0'],
-            '{' . $nsAppleFaceInfo . '}Confidence'      => [],
-            '{' . $nsAppleFaceInfo . '}AngleInfoRoll'   => [],
-            '{' . $nsAppleFaceInfo . '}Roll'            => [],
-            '{' . $nsAppleFaceInfo . '}Yaw'             => [],
-            '{' . $nsAppleFaceInfo . '}Name'            => ['Jane Doe'],
-            '{' . $nsAppleFaceInfo . '}FullName'        => [],
-            '{' . $nsAppleFaceInfo . '}FaceID'          => ['ABC123'],
-            '{' . $nsAppleFaceInfo . '}FaceUUID'        => [],
+            '{' . self::NS_APPLE_FACEINFO . '}CenterX'         => ['0.5'],
+            '{' . self::NS_APPLE_FACEINFO . '}CenterY'         => ['0.5'],
+            '{' . self::NS_APPLE_FACEINFO . '}Width'           => ['0.2'],
+            '{' . self::NS_APPLE_FACEINFO . '}Height'          => ['0.2'],
+            '{' . self::NS_APPLE_FACEINFO . '}ConfidenceLevel' => ['90.0'],
+            '{' . self::NS_APPLE_FACEINFO . '}Confidence'      => [],
+            '{' . self::NS_APPLE_FACEINFO . '}AngleInfoRoll'   => [],
+            '{' . self::NS_APPLE_FACEINFO . '}Roll'            => [],
+            '{' . self::NS_APPLE_FACEINFO . '}Yaw'             => [],
+            '{' . self::NS_APPLE_FACEINFO . '}Name'            => ['Jane Doe'],
+            '{' . self::NS_APPLE_FACEINFO . '}FullName'        => [],
+            '{' . self::NS_APPLE_FACEINFO . '}FaceID'          => ['ABC123'],
+            '{' . self::NS_APPLE_FACEINFO . '}FaceUUID'        => [],
         ];
 
-        $xmpDoc = new XmpDocument($xmpData, []);
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: null,
-            xmpBlobs: [],
-            xmpDoc: $xmpDoc,
-        );
-
-        $factory = new RegionsFactory();
-        $regions = $factory->create($metadata);
+        $regions = $this->createRegions($xmpData);
 
         self::assertCount(1, $regions->items);
 
@@ -155,33 +129,19 @@ final class RegionsFactoryTest extends TestCase
     #[Test]
     public function skipsRegionsWithMissingGeometry(): void
     {
-        $nsMwgRegions = 'http://www.metadataworkinggroup.com/schemas/regions/';
-        $nsStArea     = 'http://ns.adobe.com/xmp/sType/Area#';
-
         $xmpData = [
-            '{' . $nsMwgRegions . '}Type'              => ['Face'],
-            '{' . $nsMwgRegions . '}Name'              => ['Missing Geometry'],
-            '{' . $nsMwgRegions . '}PersonDisplayName' => [],
-            '{' . $nsMwgRegions . '}Confidence'        => [],
-            '{' . $nsMwgRegions . '}Rotation'          => [],
-            '{' . $nsStArea . '}x'                     => ['0.5'],
-            '{' . $nsStArea . '}y'                     => ['0.5'],
-            '{' . $nsStArea . '}w'                     => [],
-            '{' . $nsStArea . '}h'                     => [],
+            '{' . self::NS_MWG_REGIONS . '}Type'              => ['Face'],
+            '{' . self::NS_MWG_REGIONS . '}Name'              => ['Missing Geometry'],
+            '{' . self::NS_MWG_REGIONS . '}PersonDisplayName' => [],
+            '{' . self::NS_MWG_REGIONS . '}Confidence'        => [],
+            '{' . self::NS_MWG_REGIONS . '}Rotation'          => [],
+            '{' . self::NS_ST_AREA . '}x'                     => ['0.5'],
+            '{' . self::NS_ST_AREA . '}y'                     => ['0.5'],
+            '{' . self::NS_ST_AREA . '}w'                     => [],
+            '{' . self::NS_ST_AREA . '}h'                     => [],
         ];
 
-        $xmpDoc = new XmpDocument($xmpData, []);
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: null,
-            xmpBlobs: [],
-            xmpDoc: $xmpDoc,
-        );
-
-        $factory = new RegionsFactory();
-        $regions = $factory->create($metadata);
+        $regions = $this->createRegions($xmpData);
 
         self::assertSame([], $regions->items);
     }
@@ -193,33 +153,19 @@ final class RegionsFactoryTest extends TestCase
     #[Test]
     public function handlesUnknownRegionTypeLabel(): void
     {
-        $nsMwgRegions = 'http://www.metadataworkinggroup.com/schemas/regions/';
-        $nsStArea     = 'http://ns.adobe.com/xmp/sType/Area#';
-
         $xmpData = [
-            '{' . $nsMwgRegions . '}Type'              => ['UnknownType'],
-            '{' . $nsMwgRegions . '}Name'              => ['Test'],
-            '{' . $nsMwgRegions . '}PersonDisplayName' => [],
-            '{' . $nsMwgRegions . '}Confidence'        => [],
-            '{' . $nsMwgRegions . '}Rotation'          => [],
-            '{' . $nsStArea . '}x'                     => ['0.5'],
-            '{' . $nsStArea . '}y'                     => ['0.5'],
-            '{' . $nsStArea . '}w'                     => ['0.2'],
-            '{' . $nsStArea . '}h'                     => ['0.2'],
+            '{' . self::NS_MWG_REGIONS . '}Type'              => ['UnknownType'],
+            '{' . self::NS_MWG_REGIONS . '}Name'              => ['Test'],
+            '{' . self::NS_MWG_REGIONS . '}PersonDisplayName' => [],
+            '{' . self::NS_MWG_REGIONS . '}Confidence'        => [],
+            '{' . self::NS_MWG_REGIONS . '}Rotation'          => [],
+            '{' . self::NS_ST_AREA . '}x'                     => ['0.5'],
+            '{' . self::NS_ST_AREA . '}y'                     => ['0.5'],
+            '{' . self::NS_ST_AREA . '}w'                     => ['0.2'],
+            '{' . self::NS_ST_AREA . '}h'                     => ['0.2'],
         ];
 
-        $xmpDoc = new XmpDocument($xmpData, []);
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: null,
-            xmpBlobs: [],
-            xmpDoc: $xmpDoc,
-        );
-
-        $factory = new RegionsFactory();
-        $regions = $factory->create($metadata);
+        $regions = $this->createRegions($xmpData);
 
         // The region should still be created with an Unknown type fallback
         self::assertCount(1, $regions->items);
@@ -233,38 +179,49 @@ final class RegionsFactoryTest extends TestCase
     #[Test]
     public function mergesOverlappingRegions(): void
     {
-        $nsMwgRegions   = 'http://www.metadataworkinggroup.com/schemas/regions/';
-        $nsStArea       = 'http://ns.adobe.com/xmp/sType/Area#';
-        $nsAppleFaceInf = 'http://ns.apple.com/faceinfo/1.0/';
-
         $xmpData = [
             // MWG region covering a face without person or confidence metadata.
-            '{' . $nsMwgRegions . '}Type'              => ['Face'],
-            '{' . $nsMwgRegions . '}Name'              => [''],
-            '{' . $nsMwgRegions . '}PersonDisplayName' => [],
-            '{' . $nsMwgRegions . '}Confidence'        => [],
-            '{' . $nsMwgRegions . '}Rotation'          => [],
-            '{' . $nsStArea . '}x'                     => ['0.5'],
-            '{' . $nsStArea . '}y'                     => ['0.5'],
-            '{' . $nsStArea . '}w'                     => ['0.2'],
-            '{' . $nsStArea . '}h'                     => ['0.2'],
+            '{' . self::NS_MWG_REGIONS . '}Type'              => ['Face'],
+            '{' . self::NS_MWG_REGIONS . '}Name'              => [''],
+            '{' . self::NS_MWG_REGIONS . '}PersonDisplayName' => [],
+            '{' . self::NS_MWG_REGIONS . '}Confidence'        => [],
+            '{' . self::NS_MWG_REGIONS . '}Rotation'          => [],
+            '{' . self::NS_ST_AREA . '}x'                     => ['0.5'],
+            '{' . self::NS_ST_AREA . '}y'                     => ['0.5'],
+            '{' . self::NS_ST_AREA . '}w'                     => ['0.2'],
+            '{' . self::NS_ST_AREA . '}h'                     => ['0.2'],
             // Apple faceinfo entry with overlapping geometry and richer metadata.
-            '{' . $nsAppleFaceInf . '}CenterX'         => ['0.5'],
-            '{' . $nsAppleFaceInf . '}CenterY'         => ['0.5'],
-            '{' . $nsAppleFaceInf . '}Width'           => ['0.2'],
-            '{' . $nsAppleFaceInf . '}Height'          => ['0.2'],
-            '{' . $nsAppleFaceInf . '}ConfidenceLevel' => [],
-            '{' . $nsAppleFaceInf . '}Confidence'      => ['95.0'],
-            '{' . $nsAppleFaceInf . '}AngleInfoRoll'   => [],
-            '{' . $nsAppleFaceInf . '}Roll'            => [],
-            '{' . $nsAppleFaceInf . '}Yaw'             => [],
-            '{' . $nsAppleFaceInf . '}Name'            => ['Bob Smith'],
-            '{' . $nsAppleFaceInf . '}FullName'        => [],
-            '{' . $nsAppleFaceInf . '}FaceID'          => [],
-            '{' . $nsAppleFaceInf . '}FaceUUID'        => [],
+            '{' . self::NS_APPLE_FACEINFO . '}CenterX'         => ['0.5'],
+            '{' . self::NS_APPLE_FACEINFO . '}CenterY'         => ['0.5'],
+            '{' . self::NS_APPLE_FACEINFO . '}Width'           => ['0.2'],
+            '{' . self::NS_APPLE_FACEINFO . '}Height'          => ['0.2'],
+            '{' . self::NS_APPLE_FACEINFO . '}ConfidenceLevel' => [],
+            '{' . self::NS_APPLE_FACEINFO . '}Confidence'      => ['95.0'],
+            '{' . self::NS_APPLE_FACEINFO . '}AngleInfoRoll'   => [],
+            '{' . self::NS_APPLE_FACEINFO . '}Roll'            => [],
+            '{' . self::NS_APPLE_FACEINFO . '}Yaw'             => [],
+            '{' . self::NS_APPLE_FACEINFO . '}Name'            => ['Bob Smith'],
+            '{' . self::NS_APPLE_FACEINFO . '}FullName'        => [],
+            '{' . self::NS_APPLE_FACEINFO . '}FaceID'          => [],
+            '{' . self::NS_APPLE_FACEINFO . '}FaceUUID'        => [],
         ];
 
-        $xmpDoc = new XmpDocument($xmpData, []);
+        $regions = $this->createRegions($xmpData);
+
+        self::assertCount(1, $regions->items);
+
+        $region = $regions->items[0];
+
+        self::assertSame('Bob Smith', $region->personName);
+        self::assertEqualsWithDelta(0.95, $region->confidence, 0.01);
+    }
+
+    /**
+     * @param array<string, list<string>>|null $xmpData
+     */
+    private function createRegions(?array $xmpData = null): RegionCollection
+    {
+        $xmpDoc = $xmpData !== null ? new XmpDocument($xmpData, []) : null;
 
         $metadata = new Metadata(
             exifBlobs: [],
@@ -274,14 +231,6 @@ final class RegionsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new RegionsFactory();
-        $regions = $factory->create($metadata);
-
-        self::assertCount(1, $regions->items);
-
-        $region = $regions->items[0];
-
-        self::assertSame('Bob Smith', $region->personName);
-        self::assertEqualsWithDelta(0.95, $region->confidence, 0.01);
+        return new RegionsFactory()->create($metadata);
     }
 }
