@@ -60,8 +60,8 @@ use function strlen;
  * The suite checks RunTime extraction and nested dictionary value normalization.
  * This ensures keyed-archive maker notes are decoded reliably.
  *
- * @phpstan-type NativePlistValue array<string|int, mixed>|bool|float|int|string|null
- * @phpstan-type NativePlistDictionary array<string, mixed>
+ * @phpstan-type NativePlistValue = array<string|int, mixed>|bool|float|int|string|null
+ * @phpstan-type NativePlistDictionary = array<string, mixed>
  */
 #[CoversClass(AppleDecoder::class)]
 #[CoversClass(KeyedArchiveResolver::class)]
@@ -575,7 +575,8 @@ final class BinaryPlistNullValue implements BinaryPlistValue
 final readonly class BinaryPlistScalarValue implements BinaryPlistValue
 {
     /**
-     * @param 'bool'|'int'|'float'|'string' $type
+     * @param 'bool'|'int'|'float'|'string' $type  Plist scalar type marker.
+     * @param bool|float|int|string         $value Scalar value to encode.
      */
     public function __construct(
         private string $type,
@@ -644,9 +645,10 @@ final readonly class BinaryPlistDictionaryValue implements BinaryPlistValue
 final class BinaryPlistNode
 {
     /**
-     * @param 'null'|'bool'|'int'|'float'|'string'|'array'|'dict' $type
+     * @param 'null'|'bool'|'int'|'float'|'string'|'array'|'dict' $type  Node type marker.
+     * @param array|bool|float|int|string|null                    $value Node payload.
      *
-     * @phpstan-param 'null'|'bool'|'int'|'float'|'string'|'array'|'dict' $type
+     * @phpstan-param 'null'|'bool'|'int'|'float'|'string'|'array'|'dict'                           $type
      * @phpstan-param bool|float|int|string|null|list<int>|array{keys: list<int>, values: list<int>} $value
      */
     public function __construct(
