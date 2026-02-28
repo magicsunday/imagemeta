@@ -17,6 +17,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
 
+use function array_filter;
 use function count;
 use function dirname;
 use function file_get_contents;
@@ -235,12 +236,7 @@ final class ParseErrorCodeUniquenessTest extends TestCase
         }
 
         /** @var array<int, list<string>> $duplicates */
-        $duplicates = [];
-        foreach ($locationsByCode as $code => $locations) {
-            if (count($locations) > 1) {
-                $duplicates[$code] = $locations;
-            }
-        }
+        $duplicates = array_filter($locationsByCode, static fn (array $locations): bool => count($locations) > 1);
 
         ksort($duplicates);
 
