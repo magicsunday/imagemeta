@@ -11,12 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Core;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function dirname;
 use function file_get_contents;
-use function is_string;
 use function preg_match;
 
 /**
@@ -24,28 +24,30 @@ use function preg_match;
  */
 final class SuppressedIconvGuardTest extends TestCase
 {
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function exifTextDecoderFiles(): array
+    {
+        return [
+            'jis text decoder'        => ['src/Exif/Text/JisTextDecoder.php'],
+            'ifd value reader'        => ['src/Exif/Model/IfdValueReader.php'],
+            'gps timestamp converter' => ['src/Exif/Converters/GpsTimestampConverter.php'],
+        ];
+    }
+
     #[Test]
-    public function listedExifTextDecoderFilesDoNotUseSuppressedIconv(): void
+    #[DataProvider('exifTextDecoderFiles')]
+    public function listedExifTextDecoderFilesDoNotUseSuppressedIconv(string $relativePath): void
     {
         $repoRoot = dirname(__DIR__, 2);
-        $files    = [
-            'src/Exif/Text/JisTextDecoder.php',
-            'src/Exif/Model/IfdValueReader.php',
-            'src/Exif/Converters/GpsTimestampConverter.php',
-        ];
+        $contents = file_get_contents($repoRoot . '/' . $relativePath);
 
-        $violations = [];
-        foreach ($files as $relativePath) {
-            $contents = file_get_contents($repoRoot . '/' . $relativePath);
-            if (!is_string($contents)) {
-                continue;
-            }
-
-            if (preg_match('/@iconv\s*\(/', $contents) === 1) {
-                $violations[] = $relativePath;
-            }
-        }
-
-        self::assertSame([], $violations, 'Suppressed iconv calls must be removed.');
+        self::assertIsString($contents);
+        self::assertNotSame(
+            1,
+            preg_match('/@iconv\s*\(/', $contents),
+            'Suppressed iconv calls must be removed.',
+        );
     }
 }
