@@ -17,6 +17,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
+use function sprintf;
+
 /**
  * Verifies IccTag offset constants match ICC.1:2022 profile header layout.
  */
