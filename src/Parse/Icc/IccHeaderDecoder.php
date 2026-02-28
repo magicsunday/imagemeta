@@ -84,7 +84,7 @@ final readonly class IccHeaderDecoder
      */
     public function extractSignature(string $signature): ?string
     {
-        if ($signature === '' || strlen($signature) < 4) {
+        if (strlen($signature) < 4) {
             return null;
         }
 
