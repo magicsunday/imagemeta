@@ -1579,19 +1579,13 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{0:string, 1:string}>
+     * @return iterable<string, array{0:string}>
      */
     public static function provideInvalidThumbnailBoundaryStreams(): iterable
     {
-        yield 'missing-soi' => [
-            "\x00\xD8\xFF\xD9",
-            '/thumbnail stream.*missing SOI|missing SOI.*thumbnail stream/i',
-        ];
+        yield 'missing-soi' => ["\x00\xD8\xFF\xD9"];
 
-        yield 'missing-eoi' => [
-            "\xFF\xD8\xFF\xDB\x00\x04\x00\x00\xFF\x00",
-            '/thumbnail stream.*missing EOI|missing EOI.*thumbnail stream/i',
-        ];
+        yield 'missing-eoi' => ["\xFF\xD8\xFF\xDB\x00\x04\x00\x00\xFF\x00"];
     }
 
     /**
@@ -1851,7 +1845,7 @@ final class TiffExifParserNegativeTest extends TestCase
      */
     #[Test]
     #[DataProvider('provideInvalidThumbnailBoundaryStreams')]
-    public function tolerateIfd1JpegThumbnailMissingSoiOrEoi(string $thumbnailStream, string $expectedMessage): void
+    public function tolerateIfd1JpegThumbnailMissingSoiOrEoi(string $thumbnailStream): void
     {
         $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithJpegThumbnailStream($thumbnailStream),
