@@ -74,18 +74,7 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
             [0.5],
         ]);
 
-        $exifIfd = new Ifd([
-            ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(
-                ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,
-                TiffConst::TYPE_UNDEFINED,
-                strlen($payload),
-                $payload,
-            ),
-        ]);
-
-        $parsed = new ParsedExif(new Ifd([]), $exifIfd, null, null, null, byteOrder: $byteOrder);
-
-        $result = $parsed->sourceExposureTimesOfCompositeImage();
+        $result = $this->parseCompositeExposure($payload, $byteOrder);
 
         self::assertInstanceOf(SourceExposureTimes::class, $result);
         self::assertSame(5.0, $result->totalExposurePeriod);
@@ -122,18 +111,7 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
             [0.25, 0.5],
         ]);
 
-        $exifIfd = new Ifd([
-            ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(
-                ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,
-                TiffConst::TYPE_UNDEFINED,
-                strlen($payload),
-                $payload,
-            ),
-        ]);
-
-        $parsed = new ParsedExif(new Ifd([]), $exifIfd, null, null, null, byteOrder: $byteOrder);
-
-        $result = $parsed->sourceExposureTimesOfCompositeImage();
+        $result = $this->parseCompositeExposure($payload, $byteOrder);
 
         self::assertInstanceOf(SourceExposureTimes::class, $result);
         self::assertSame(10.0, $result->totalExposurePeriod);
@@ -147,19 +125,7 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
     #[Test]
     public function returnsNullForTruncatedPayload(): void
     {
-        $payload = "\x00\x01\x00\x00";
-        $exifIfd = new Ifd([
-            ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(
-                ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,
-                TiffConst::TYPE_UNDEFINED,
-                strlen($payload),
-                $payload,
-            ),
-        ]);
-
-        $parsed = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        self::assertNull($parsed->sourceExposureTimesOfCompositeImage());
+        self::assertNull($this->parseCompositeExposure("\x00\x01\x00\x00"));
     }
 
     /**
@@ -182,18 +148,7 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
         $payload   = $this->buildPayload($summary, Endian::Little, [[0.1, 0.2]]);
         $truncated = substr($payload, 0, strlen($payload) - 3);
 
-        $exifIfd = new Ifd([
-            ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(
-                ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,
-                TiffConst::TYPE_UNDEFINED,
-                strlen($truncated),
-                $truncated,
-            ),
-        ]);
-
-        $parsed = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        self::assertNull($parsed->sourceExposureTimesOfCompositeImage());
+        self::assertNull($this->parseCompositeExposure($truncated));
     }
 
     /**
@@ -215,6 +170,11 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
 
         $payload = $this->buildPayload($summary, Endian::Little, [[0.1, 0.2]]) . "\x00";
 
+        self::assertNull($this->parseCompositeExposure($payload));
+    }
+
+    private function parseCompositeExposure(string $payload, Endian $byteOrder = Endian::Little): ?SourceExposureTimes
+    {
         $exifIfd = new Ifd([
             ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(
                 ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,
@@ -224,9 +184,8 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
             ),
         ]);
 
-        $parsed = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        self::assertNull($parsed->sourceExposureTimesOfCompositeImage());
+        return (new ParsedExif(new Ifd([]), $exifIfd, null, null, null, byteOrder: $byteOrder))
+            ->sourceExposureTimesOfCompositeImage();
     }
 
     /**
