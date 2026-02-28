@@ -1693,8 +1693,7 @@ final class MetadataFormatter
 
                 if ($value !== null) {
                     // Convert property name to title case
-                    $displayName        = $this->propertyNameToDisplayName($name);
-                    $data[$displayName] = $value;
+                    $data[$this->propertyNameToDisplayName($name)] = $value;
                 }
             }
 
@@ -2140,9 +2139,7 @@ final class MetadataFormatter
             return self::QUICKTIME_KEY_LABELS[$key];
         }
 
-        $displayName = $this->quickTimeKeyToDisplayName($key);
-
-        return $displayName;
+        return $this->quickTimeKeyToDisplayName($key);
     }
 
     /**
@@ -2186,8 +2183,7 @@ final class MetadataFormatter
                 $value = $property->getValue($attrs);
 
                 if ($value !== null) {
-                    $displayName        = $this->propertyNameToDisplayName($name);
-                    $data[$displayName] = $value;
+                    $data[$this->propertyNameToDisplayName($name)] = $value;
                 }
             }
         }
