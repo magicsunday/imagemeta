@@ -3801,7 +3801,7 @@ final class IsoBmffParserTest extends TestCase
             sampleRate: 48000,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 0, 48000));
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, mdhdTimescale: 48000));
         [, , $quickTime] = $extractor->extract();
 
         self::assertNotNull($quickTime);
@@ -3821,7 +3821,7 @@ final class IsoBmffParserTest extends TestCase
             sampleRate: 24000,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 0, 48000));
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, mdhdTimescale: 48000));
         [, , $quickTime] = $extractor->extract();
 
         self::assertNotNull($quickTime);
@@ -3924,7 +3924,7 @@ final class IsoBmffParserTest extends TestCase
             sampleRate: 44100,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 0, 48000));
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, mdhdTimescale: 48000));
         [, , $quickTime] = $extractor->extract();
 
         self::assertNotNull($quickTime);
