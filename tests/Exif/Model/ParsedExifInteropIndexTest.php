@@ -50,18 +50,7 @@ final class ParsedExifInteropIndexTest extends TestCase
     #[Test]
     public function returnsValidInteropIndex(): void
     {
-        $interopIfd = new Ifd([
-            ExifTag::INTEROPERABILITY_INDEX => new IfdEntry(
-                ExifTag::INTEROPERABILITY_INDEX,
-                TiffConst::TYPE_ASCII,
-                4,
-                "R98\0",
-            ),
-        ]);
-
-        $parsed = new ParsedExif(new Ifd([]), null, null, $interopIfd, null);
-
-        self::assertSame('R98', $parsed->interopIndex());
+        self::assertSame('R98', $this->parseInteropIndex(TiffConst::TYPE_ASCII, 4, "R98\0"));
     }
 
     /**
@@ -70,18 +59,7 @@ final class ParsedExifInteropIndexTest extends TestCase
     #[Test]
     public function rejectsInteropIndexWithWrongCount(): void
     {
-        $interopIfd = new Ifd([
-            ExifTag::INTEROPERABILITY_INDEX => new IfdEntry(
-                ExifTag::INTEROPERABILITY_INDEX,
-                TiffConst::TYPE_ASCII,
-                3,
-                'R98',
-            ),
-        ]);
-
-        $parsed = new ParsedExif(new Ifd([]), null, null, $interopIfd, null);
-
-        self::assertNull($parsed->interopIndex());
+        self::assertNull($this->parseInteropIndex(TiffConst::TYPE_ASCII, 3, 'R98'));
     }
 
     /**
@@ -90,17 +68,21 @@ final class ParsedExifInteropIndexTest extends TestCase
     #[Test]
     public function rejectsInteropIndexWithWrongType(): void
     {
+        self::assertNull($this->parseInteropIndex(TiffConst::TYPE_UNDEFINED, 4, "R98\0"));
+    }
+
+    private function parseInteropIndex(int $type, int $count, string $value): ?string
+    {
         $interopIfd = new Ifd([
             ExifTag::INTEROPERABILITY_INDEX => new IfdEntry(
                 ExifTag::INTEROPERABILITY_INDEX,
-                TiffConst::TYPE_UNDEFINED,
-                4,
-                "R98\0",
+                $type,
+                $count,
+                $value,
             ),
         ]);
 
-        $parsed = new ParsedExif(new Ifd([]), null, null, $interopIfd, null);
-
-        self::assertNull($parsed->interopIndex());
+        return (new ParsedExif(new Ifd([]), null, null, $interopIfd, null))
+            ->interopIndex();
     }
 }
