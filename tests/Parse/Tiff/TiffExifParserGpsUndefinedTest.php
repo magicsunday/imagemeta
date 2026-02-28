@@ -55,7 +55,7 @@ final class TiffExifParserGpsUndefinedTest extends TestCase
      */
     #[Test]
     #[DataProvider('provideGpsUndefinedTags')]
-    public function acceptsGpsUndefinedTagsWithCorrectType(int $tag, string $name, string $resultKey): void
+    public function acceptsGpsUndefinedTagsWithCorrectType(int $tag, string $_name, string $resultKey): void
     {
         $payload = "ASCII\0\0\0GPS test";
 
