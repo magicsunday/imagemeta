@@ -11,12 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Core;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function dirname;
 use function file_get_contents;
-use function is_string;
 use function preg_match;
 
 /**
@@ -24,31 +24,33 @@ use function preg_match;
  */
 final class SuppressedBinaryIoGuardTest extends TestCase
 {
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function binaryIoFiles(): array
+    {
+        return [
+            'core stream'          => ['src/Core/Stream.php'],
+            'unpack util'          => ['src/Core/Util/Unpack.php'],
+            'icc binary reader'    => ['src/Parse/Icc/IccBinaryReader.php'],
+            'plist binary reader'  => ['src/MakerNotes/Apple/PlistBinaryReader.php'],
+            'jpeg frame validator' => ['src/Parse/Jpeg/JpegFrameValidator.php'],
+            'matrix converter'     => ['src/Exif/Converters/MatrixConverter.php'],
+        ];
+    }
+
     #[Test]
-    public function listedBinaryIoFilesDoNotUseSuppressedFopenOrUnpack(): void
+    #[DataProvider('binaryIoFiles')]
+    public function listedBinaryIoFilesDoNotUseSuppressedFopenOrUnpack(string $relativePath): void
     {
         $repoRoot = dirname(__DIR__, 2);
-        $files    = [
-            'src/Core/Stream.php',
-            'src/Core/Util/Unpack.php',
-            'src/Parse/Icc/IccBinaryReader.php',
-            'src/MakerNotes/Apple/PlistBinaryReader.php',
-            'src/Parse/Jpeg/JpegFrameValidator.php',
-            'src/Exif/Converters/MatrixConverter.php',
-        ];
+        $contents = file_get_contents($repoRoot . '/' . $relativePath);
 
-        $violations = [];
-        foreach ($files as $relativePath) {
-            $contents = file_get_contents($repoRoot . '/' . $relativePath);
-            if (!is_string($contents)) {
-                continue;
-            }
-
-            if (preg_match('/@(?:fopen|unpack)\s*\(/', $contents) === 1) {
-                $violations[] = $relativePath;
-            }
-        }
-
-        self::assertSame([], $violations, 'Suppressed binary I/O calls must be removed.');
+        self::assertIsString($contents);
+        self::assertNotSame(
+            1,
+            preg_match('/@(?:fopen|unpack)\s*\(/', $contents),
+            'Suppressed binary I/O calls must be removed.',
+        );
     }
 }
