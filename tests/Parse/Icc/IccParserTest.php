@@ -1692,7 +1692,7 @@ final class IccParserTest extends TestCase
         // mluc text helper for dmnd/dmdd
         $buildMluc = static function (string $text): string {
             $utf16 = '';
-            for ($i = 0; $i < strlen($text); ++$i) {
+            for ($i = 0, $len = strlen($text); $i < $len; ++$i) {
                 $utf16 .= "\x00" . $text[$i];
             }
 
