@@ -246,15 +246,11 @@ final readonly class TiffJpegValidator
             throw new ParseError('JPEGInterchangeFormat must be LONG[1].', 1831);
         }
 
-        if ($offsetEntry->value <= 0) {
-            if ($lengthEntry instanceof IfdEntry) {
-                throw new ParseError(
-                    'JPEGInterchangeFormatLength is invalid when JPEGInterchangeFormat is zero.',
-                    1832,
-                );
-            }
-
-            return;
+        if ($offsetEntry->value <= 0 && $lengthEntry instanceof IfdEntry) {
+            throw new ParseError(
+                'JPEGInterchangeFormatLength is invalid when JPEGInterchangeFormat is zero.',
+                1832,
+            );
         }
 
         // Postel's Law: treat out-of-bounds range as "no thumbnail".
