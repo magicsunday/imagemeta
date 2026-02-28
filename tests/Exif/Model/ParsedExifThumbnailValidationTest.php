@@ -51,8 +51,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     #[Test]
     public function hasThumbnailReturnsTrueForValidJpegThumbnail(): void
     {
-        $ifd0 = new Ifd([]);
-        $ifd1 = new Ifd([
+        $parsedExif = $this->parsedExifWithThumbnail([
             ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 512),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(
@@ -62,8 +61,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
                 2048,
             ),
         ]);
-
-        $parsedExif = new ParsedExif($ifd0, null, null, null, $ifd1);
 
         self::assertTrue($parsedExif->hasThumbnail());
     }
@@ -75,8 +72,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     #[Test]
     public function hasThumbnailReturnsFalseWhenJpegInterchangeFormatIsMissing(): void
     {
-        $ifd0 = new Ifd([]);
-        $ifd1 = new Ifd([
+        $parsedExif = $this->parsedExifWithThumbnail([
             ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(
                 ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH,
@@ -85,8 +81,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
                 2048,
             ),
         ]);
-
-        $parsedExif = new ParsedExif($ifd0, null, null, null, $ifd1);
 
         self::assertFalse($parsedExif->hasThumbnail());
     }
@@ -98,13 +92,10 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     #[Test]
     public function hasThumbnailReturnsFalseWhenJpegInterchangeFormatLengthIsMissing(): void
     {
-        $ifd0 = new Ifd([]);
-        $ifd1 = new Ifd([
+        $parsedExif = $this->parsedExifWithThumbnail([
             ExifTag::COMPRESSION             => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::JPEG_INTERCHANGE_FORMAT => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 512),
         ]);
-
-        $parsedExif = new ParsedExif($ifd0, null, null, null, $ifd1);
 
         self::assertFalse($parsedExif->hasThumbnail());
     }
@@ -116,8 +107,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     #[Test]
     public function hasThumbnailReturnsFalseWhenCompressionIsNotJpeg(): void
     {
-        $ifd0 = new Ifd([]);
-        $ifd1 = new Ifd([
+        $parsedExif = $this->parsedExifWithThumbnail([
             ExifTag::COMPRESSION => new IfdEntry(
                 ExifTag::COMPRESSION,
                 3,
@@ -133,8 +123,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
             ),
         ]);
 
-        $parsedExif = new ParsedExif($ifd0, null, null, null, $ifd1);
-
         self::assertFalse($parsedExif->hasThumbnail());
     }
 
@@ -145,8 +133,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     #[Test]
     public function hasThumbnailReturnsFalseWhenLengthIsZero(): void
     {
-        $ifd0 = new Ifd([]);
-        $ifd1 = new Ifd([
+        $parsedExif = $this->parsedExifWithThumbnail([
             ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 512),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(
@@ -156,8 +143,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
                 0,
             ),
         ]);
-
-        $parsedExif = new ParsedExif($ifd0, null, null, null, $ifd1);
 
         self::assertFalse($parsedExif->hasThumbnail());
     }
@@ -169,8 +154,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     #[Test]
     public function hasThumbnailReturnsFalseWhenCompressionTagIsMissing(): void
     {
-        $ifd0 = new Ifd([]);
-        $ifd1 = new Ifd([
+        $parsedExif = $this->parsedExifWithThumbnail([
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 512),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(
                 ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH,
@@ -179,8 +163,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
                 2048,
             ),
         ]);
-
-        $parsedExif = new ParsedExif($ifd0, null, null, null, $ifd1);
 
         self::assertFalse($parsedExif->hasThumbnail());
     }
@@ -192,8 +174,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     #[Test]
     public function hasThumbnailReturnsFalseForLzwCompression(): void
     {
-        $ifd0 = new Ifd([]);
-        $ifd1 = new Ifd([
+        $parsedExif = $this->parsedExifWithThumbnail([
             ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Lzw->value),
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 512),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(
@@ -203,8 +184,6 @@ final class ParsedExifThumbnailValidationTest extends TestCase
                 2048,
             ),
         ]);
-
-        $parsedExif = new ParsedExif($ifd0, null, null, null, $ifd1);
 
         self::assertFalse($parsedExif->hasThumbnail());
     }
@@ -216,9 +195,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     #[Test]
     public function hasThumbnailReturnsFalseForEmptyIfd1(): void
     {
-        $ifd0       = new Ifd([]);
-        $ifd1       = new Ifd([]);
-        $parsedExif = new ParsedExif($ifd0, null, null, null, $ifd1);
+        $parsedExif = $this->parsedExifWithThumbnail([]);
 
         self::assertFalse($parsedExif->hasThumbnail());
     }
@@ -230,8 +207,7 @@ final class ParsedExifThumbnailValidationTest extends TestCase
     #[Test]
     public function hasThumbnailReturnsFalseWhenLengthIsNegative(): void
     {
-        $ifd0 = new Ifd([]);
-        $ifd1 = new Ifd([
+        $parsedExif = $this->parsedExifWithThumbnail([
             ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 512),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(
@@ -242,8 +218,14 @@ final class ParsedExifThumbnailValidationTest extends TestCase
             ),
         ]);
 
-        $parsedExif = new ParsedExif($ifd0, null, null, null, $ifd1);
-
         self::assertFalse($parsedExif->hasThumbnail());
+    }
+
+    /**
+     * @param array<int, IfdEntry> $ifd1Entries
+     */
+    private function parsedExifWithThumbnail(array $ifd1Entries): ParsedExif
+    {
+        return new ParsedExif(new Ifd([]), null, null, null, new Ifd($ifd1Entries));
     }
 }
