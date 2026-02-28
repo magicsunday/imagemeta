@@ -186,17 +186,21 @@ final class IdeInspectionCleanupTicket1822Test extends TestCase
         );
     }
 
-    private function assertSourceDoesNotContain(string $path, string $needle): void
+    private function loadSource(string $path): string
     {
         $source = file_get_contents(__DIR__ . '/../..' . $path);
         self::assertIsString($source);
-        self::assertStringNotContainsString($needle, $source);
+
+        return $source;
+    }
+
+    private function assertSourceDoesNotContain(string $path, string $needle): void
+    {
+        self::assertStringNotContainsString($needle, $this->loadSource($path));
     }
 
     private function assertSourceContains(string $path, string $needle): void
     {
-        $source = file_get_contents(__DIR__ . '/../..' . $path);
-        self::assertIsString($source);
-        self::assertStringContainsString($needle, $source);
+        self::assertStringContainsString($needle, $this->loadSource($path));
     }
 }
