@@ -117,6 +117,7 @@ use PHPUnit\Framework\TestCase;
 
 use function chr;
 use function file_put_contents;
+use function implode;
 use function ltrim;
 use function pack;
 use function rename;
@@ -232,6 +233,22 @@ final class IptcIntegrationTest extends TestCase
 {
     private const int MARKER_APP13 = 0xED;
 
+    private function buildJpeg(string ...$segments): string
+    {
+        return "\xFF\xD8" . implode('', $segments) . "\xFF\xD9";
+    }
+
+    private function readMetadataFromJpeg(string $jpeg): Metadata
+    {
+        $path = $this->writeTempFile($jpeg, 'jpg');
+
+        try {
+            return MetadataReader::createDefault()->read($path);
+        } finally {
+            @unlink($path);
+        }
+    }
+
     /**
      * Builds a JPEG with an APP13 segment containing Photoshop 8BIM IPTC datasets
      * (Caption, By-line, Keywords) and verifies that MetadataReader populates
@@ -254,17 +271,11 @@ final class IptcIntegrationTest extends TestCase
 
         $app13Payload = $this->buildPhotoshopApp13Payload($iptcData);
 
-        $jpeg = "\xFF\xD8"
-            . $this->segment(self::MARKER_APP13, $app13Payload)
-            . "\xFF\xD9";
-
-        $path = $this->writeTempFile($jpeg, 'jpg');
-
-        try {
-            $metadata = MetadataReader::createDefault()->read($path);
-        } finally {
-            @unlink($path);
-        }
+        $metadata = $this->readMetadataFromJpeg(
+            $this->buildJpeg(
+                $this->segment(self::MARKER_APP13, $app13Payload),
+            ),
+        );
 
         self::assertCount(1, $metadata->iptcBlobs);
         self::assertSame($app13Payload, $metadata->iptcBlobs[0]);
@@ -301,18 +312,12 @@ final class IptcIntegrationTest extends TestCase
         $app13Payload1 = $this->buildPhotoshopApp13Payload($iptcData1);
         $app13Payload2 = $this->buildPhotoshopApp13Payload($iptcData2);
 
-        $jpeg = "\xFF\xD8"
-            . $this->segment(self::MARKER_APP13, $app13Payload1)
-            . $this->segment(self::MARKER_APP13, $app13Payload2)
-            . "\xFF\xD9";
-
-        $path = $this->writeTempFile($jpeg, 'jpg');
-
-        try {
-            $metadata = MetadataReader::createDefault()->read($path);
-        } finally {
-            @unlink($path);
-        }
+        $metadata = $this->readMetadataFromJpeg(
+            $this->buildJpeg(
+                $this->segment(self::MARKER_APP13, $app13Payload1),
+                $this->segment(self::MARKER_APP13, $app13Payload2),
+            ),
+        );
 
         self::assertCount(2, $metadata->iptcBlobs);
         self::assertInstanceOf(IptcDocument::class, $metadata->iptcDoc);
@@ -327,15 +332,7 @@ final class IptcIntegrationTest extends TestCase
     #[Test]
     public function readJpegWithoutApp13LeavesIptcEmpty(): void
     {
-        $jpeg = "\xFF\xD8\xFF\xD9";
-
-        $path = $this->writeTempFile($jpeg, 'jpg');
-
-        try {
-            $metadata = MetadataReader::createDefault()->read($path);
-        } finally {
-            @unlink($path);
-        }
+        $metadata = $this->readMetadataFromJpeg($this->buildJpeg());
 
         self::assertSame([], $metadata->iptcBlobs);
         self::assertNull($metadata->iptcDoc);
