@@ -16,6 +16,9 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\PlistSimpleMarker;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Verifies the PlistMarkerType and PlistSimpleMarker enums expose the expected cases and values.
+ */
 final class PlistMarkerEnumsTest extends TestCase
 {
     #[Test]
