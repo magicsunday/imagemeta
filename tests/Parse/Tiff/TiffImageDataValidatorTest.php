@@ -46,10 +46,7 @@ final class TiffImageDataValidatorTest extends TestCase
     #[Test]
     public function acceptsValidStripLayout(): void
     {
-        $blobSize  = 2048;
-        $buffer    = new MemoryBuffer(str_repeat("\0", $blobSize));
-        $support   = new TiffValidationSupport($buffer);
-        $validator = new TiffImageDataValidator($support);
+        $validator = $this->createValidator(2048);
 
         $ifd = new Ifd([
             ExifTag::IMAGE_WIDTH       => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 64),
@@ -70,9 +67,7 @@ final class TiffImageDataValidatorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('RowsPerStrip must be a positive integer');
 
-        $buffer    = new MemoryBuffer(str_repeat("\0", 1024));
-        $support   = new TiffValidationSupport($buffer);
-        $validator = new TiffImageDataValidator($support);
+        $validator = $this->createValidator();
 
         $ifd = new Ifd([
             ExifTag::IMAGE_WIDTH       => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 64),
@@ -90,9 +85,7 @@ final class TiffImageDataValidatorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('StripOffsets count 2 does not match expected strip count 1');
 
-        $buffer    = new MemoryBuffer(str_repeat("\0", 2048));
-        $support   = new TiffValidationSupport($buffer);
-        $validator = new TiffImageDataValidator($support);
+        $validator = $this->createValidator(2048);
 
         $ifd = new Ifd([
             ExifTag::IMAGE_WIDTH    => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 64),
@@ -109,10 +102,7 @@ final class TiffImageDataValidatorTest extends TestCase
     #[Test]
     public function acceptsValidTileLayout(): void
     {
-        $blobSize  = 65536;
-        $buffer    = new MemoryBuffer(str_repeat("\0", $blobSize));
-        $support   = new TiffValidationSupport($buffer);
-        $validator = new TiffImageDataValidator($support);
+        $validator = $this->createValidator(65536);
 
         $ifd = new Ifd([
             ExifTag::IMAGE_WIDTH      => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 64),
@@ -134,9 +124,7 @@ final class TiffImageDataValidatorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('TileWidth 15 must be an integer multiple of 16');
 
-        $buffer    = new MemoryBuffer(str_repeat("\0", 1024));
-        $support   = new TiffValidationSupport($buffer);
-        $validator = new TiffImageDataValidator($support);
+        $validator = $this->createValidator();
 
         $ifd = new Ifd([
             TiffTag::TILE_WIDTH       => new IfdEntry(TiffTag::TILE_WIDTH, TiffConst::TYPE_LONG, 1, 15),
@@ -154,9 +142,7 @@ final class TiffImageDataValidatorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Strip and tile layout tags must not be mixed');
 
-        $buffer    = new MemoryBuffer(str_repeat("\0", 1024));
-        $support   = new TiffValidationSupport($buffer);
-        $validator = new TiffImageDataValidator($support);
+        $validator = $this->createValidator();
 
         $ifd = new Ifd([
             ExifTag::ROWS_PER_STRIP   => new IfdEntry(ExifTag::ROWS_PER_STRIP, TiffConst::TYPE_SHORT, 1, 64),
@@ -175,9 +161,7 @@ final class TiffImageDataValidatorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('TileOffsets and TileByteCounts must both be present');
 
-        $buffer    = new MemoryBuffer(str_repeat("\0", 1024));
-        $support   = new TiffValidationSupport($buffer);
-        $validator = new TiffImageDataValidator($support);
+        $validator = $this->createValidator();
 
         $ifd = new Ifd([
             TiffTag::TILE_WIDTH   => new IfdEntry(TiffTag::TILE_WIDTH, TiffConst::TYPE_LONG, 1, 16),
@@ -186,5 +170,13 @@ final class TiffImageDataValidatorTest extends TestCase
         ]);
 
         $validator->validateTileLayoutConsistency($ifd);
+    }
+
+    private function createValidator(int $blobSize = 1024): TiffImageDataValidator
+    {
+        $buffer  = new MemoryBuffer(str_repeat("\0", $blobSize));
+        $support = new TiffValidationSupport($buffer);
+
+        return new TiffImageDataValidator($support);
     }
 }
