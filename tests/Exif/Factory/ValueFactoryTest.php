@@ -194,14 +194,16 @@ XML;
     #[Test]
     public function usesInjectedIccParserDependency(): void
     {
-        $called = false;
+        $called  = false;
+        $profile = $this->createIccProfile(description: 'Injected ICC', version: '4.4');
 
         $iccParser = new readonly class(function () use (&$called): void {
             $called = true;
-        }) implements IccParserInterface {
+        }, $profile) implements IccParserInterface {
             public function __construct(
                 /** @var Closure():void $onDecode */
                 private Closure $onDecode,
+                private IccProfile $profile,
             ) {
             }
 
@@ -209,41 +211,7 @@ XML;
             {
                 ($this->onDecode)();
 
-                return new IccProfile(
-                    description: 'Injected ICC',
-                    copyright: null,
-                    whitePoint: null,
-                    blackPoint: null,
-                    redMatrixColumn: null,
-                    greenMatrixColumn: null,
-                    blueMatrixColumn: null,
-                    luminance: null,
-                    redTRC: null,
-                    greenTRC: null,
-                    blueTRC: null,
-                    deviceMfgDesc: null,
-                    deviceModelDesc: null,
-                    technology: null,
-                    viewingConditions: null,
-                    measurement: null,
-                    version: '4.4',
-                    pcs: null,
-                    renderingIntent: null,
-                    profileId: null,
-                    cmmType: null,
-                    profileClass: null,
-                    colorSpace: null,
-                    profileDateTime: null,
-                    profileDateTimeUtc: null,
-                    profileSignature: null,
-                    profileFlags: null,
-                    primaryPlatform: null,
-                    deviceManufacturer: null,
-                    deviceModel: null,
-                    deviceAttributes: null,
-                    profileCreator: null,
-                    illuminant: null,
-                );
+                return $this->profile;
             }
         };
 
@@ -321,46 +289,58 @@ XML;
         self::assertNotContains('createComponentMap', $methods);
     }
 
+    private function createIccProfile(?string $description = null, ?string $version = null): IccProfile
+    {
+        return new IccProfile(
+            description: $description,
+            copyright: null,
+            whitePoint: null,
+            blackPoint: null,
+            redMatrixColumn: null,
+            greenMatrixColumn: null,
+            blueMatrixColumn: null,
+            luminance: null,
+            redTRC: null,
+            greenTRC: null,
+            blueTRC: null,
+            deviceMfgDesc: null,
+            deviceModelDesc: null,
+            technology: null,
+            viewingConditions: null,
+            measurement: null,
+            version: $version,
+            pcs: null,
+            renderingIntent: null,
+            profileId: null,
+            cmmType: null,
+            profileClass: null,
+            colorSpace: null,
+            profileDateTime: null,
+            profileDateTimeUtc: null,
+            profileSignature: null,
+            profileFlags: null,
+            primaryPlatform: null,
+            deviceManufacturer: null,
+            deviceModel: null,
+            deviceAttributes: null,
+            profileCreator: null,
+            illuminant: null,
+        );
+    }
+
     private function stubIccParser(): IccParserInterface
     {
-        return new readonly class implements IccParserInterface {
+        $profile = $this->createIccProfile();
+
+        return new readonly class($profile) implements IccParserInterface {
+            public function __construct(
+                private IccProfile $profile,
+            ) {
+            }
+
             public function decode(?string $profileData, array $segments = []): IccProfile
             {
-                return new IccProfile(
-                    description: null,
-                    copyright: null,
-                    whitePoint: null,
-                    blackPoint: null,
-                    redMatrixColumn: null,
-                    greenMatrixColumn: null,
-                    blueMatrixColumn: null,
-                    luminance: null,
-                    redTRC: null,
-                    greenTRC: null,
-                    blueTRC: null,
-                    deviceMfgDesc: null,
-                    deviceModelDesc: null,
-                    technology: null,
-                    viewingConditions: null,
-                    measurement: null,
-                    version: null,
-                    pcs: null,
-                    renderingIntent: null,
-                    profileId: null,
-                    cmmType: null,
-                    profileClass: null,
-                    colorSpace: null,
-                    profileDateTime: null,
-                    profileDateTimeUtc: null,
-                    profileSignature: null,
-                    profileFlags: null,
-                    primaryPlatform: null,
-                    deviceManufacturer: null,
-                    deviceModel: null,
-                    deviceAttributes: null,
-                    profileCreator: null,
-                    illuminant: null,
-                );
+                return $this->profile;
             }
         };
     }
