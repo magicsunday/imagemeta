@@ -277,12 +277,12 @@ final readonly class MetadataReader
         $registry  = $this->createMakerNotesRegistry();
         $exifBlobs = [];
 
+        $stream->seek(0);
+
         if ($this->tiffReader instanceof TiffExifParser) {
-            $stream->seek(0);
             $exifDoc = $this->tiffReader->parseFromStream($stream, $registry);
         } else {
             // Compatibility fallback for custom parsers implementing only the blob contract.
-            $stream->seek(0);
             $tiffBlob  = $stream->read($stream->size());
             $exifDoc   = $this->tiffReader->parseFromBlob($tiffBlob, $registry);
             $exifBlobs = [$tiffBlob];
