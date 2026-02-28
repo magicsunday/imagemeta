@@ -18,6 +18,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function sprintf;
+
 /**
  * Exercises XmpDocument merging and value aggregation behavior.
  * It verifies duplicate properties are combined into arrays across documents.
