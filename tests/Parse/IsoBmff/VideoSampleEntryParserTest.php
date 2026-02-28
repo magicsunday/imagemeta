@@ -26,6 +26,7 @@ use PHPUnit\Framework\TestCase;
 
 use function pack;
 use function str_repeat;
+use function strlen;
 
 /**
  * Tests for the VideoSampleEntryParser, covering all ParseError paths
