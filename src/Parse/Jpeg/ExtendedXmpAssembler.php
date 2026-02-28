@@ -208,11 +208,10 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
      * Extracts xmpNote:HasExtendedXMP GUID references from base XMP packets.
      *
      * @param string $packet Raw base XMP packet.
-     * @param int    $offset APP1 marker offset for diagnostics.
      *
      * @return string|null Uppercase GUID when present, null otherwise.
      */
-    public function extractGuidFromPacket(string $packet, int $offset): ?string
+    public function extractGuidFromPacket(string $packet): ?string
     {
         if (!str_contains($packet, 'xmpNote:HasExtendedXMP')) {
             return null;

@@ -67,7 +67,7 @@ final class ExtendedXmpAssemblerTest extends TestCase
 
         $packet = '<x:xmpmeta><rdf:RDF xmpNote:HasExtendedXMP="NOT-A-VALID-GUID"/></rdf:RDF></x:xmpmeta>';
 
-        $result = $assembler->extractGuidFromPacket($packet, 0);
+        $result = $assembler->extractGuidFromPacket($packet);
         self::assertNull($result);
     }
 

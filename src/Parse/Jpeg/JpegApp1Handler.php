@@ -87,7 +87,7 @@ final class JpegApp1Handler
             $this->exifBlobs[] = $tiffData;
         } elseif (str_starts_with($payload, self::XMP_SIGNATURE)) {
             $packet = substr($payload, strlen(self::XMP_SIGNATURE));
-            $guid   = $this->extendedXmpAssembler->extractGuidFromPacket($packet, $offset);
+            $guid   = $this->extendedXmpAssembler->extractGuidFromPacket($packet);
 
             if ($guid !== null) {
                 $this->extendedXmpAssembler->addBasePacket($packet, $guid, $offset);
