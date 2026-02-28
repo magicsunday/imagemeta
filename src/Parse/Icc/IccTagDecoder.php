@@ -127,8 +127,7 @@ final readonly class IccTagDecoder
         }
 
         // ICC.1:2022 §10.31 reserved bytes 4..7 must be zero
-        $reserved = substr($tagData, 4, 4);
-        if ($reserved !== "\0\0\0\0") {
+        if (!$this->hasZeroReservedBytes($tagData)) {
             throw new ParseError(
                 sprintf('ICC %s XYZType reserved bytes 4..7 are non-zero', $tagSignature),
                 1141,
@@ -166,7 +165,7 @@ final readonly class IccTagDecoder
             return null;
         }
 
-        if (substr($tagData, 4, 4) !== "\0\0\0\0") {
+        if (!$this->hasZeroReservedBytes($tagData)) {
             return null;
         }
 
@@ -205,7 +204,7 @@ final readonly class IccTagDecoder
             return null;
         }
 
-        if (substr($tagData, 4, 4) !== "\0\0\0\0") {
+        if (!$this->hasZeroReservedBytes($tagData)) {
             return null;
         }
 
@@ -279,8 +278,7 @@ final readonly class IccTagDecoder
         }
 
         // ICC.1:2022 §10.22 reserved bytes 4..7 must be zero
-        $reserved = substr($tagData, 4, 4);
-        if ($reserved !== "\0\0\0\0") {
+        if (!$this->hasZeroReservedBytes($tagData)) {
             return null;
         }
 
@@ -380,6 +378,17 @@ final readonly class IccTagDecoder
     }
 
     /**
+     * Checks whether the ICC reserved bytes at offset 4..7 are all zero.
+     *
+     * ICC.1:2022 §10.1: all tag types begin with a 4-byte type signature
+     * followed by 4 reserved bytes that must be set to zero.
+     */
+    private function hasZeroReservedBytes(string $data): bool
+    {
+        return substr($data, 4, 4) === "\0\0\0\0";
+    }
+
+    /**
      * Parses one XYZNumber triplet (3 x s15Fixed16Number) from a payload offset.
      *
      * @return array{x: float, y: float, z: float}
@@ -411,8 +420,7 @@ final readonly class IccTagDecoder
         }
 
         // ICC.1:2022 §10.1 + §10.24 reserved bytes 4..7 must be zero.
-        $reserved = substr($data, 4, 4);
-        if ($reserved !== "\0\0\0\0") {
+        if (!$this->hasZeroReservedBytes($data)) {
             return null;
         }
 
@@ -455,8 +463,7 @@ final readonly class IccTagDecoder
         }
 
         // ICC.1:2022 §10.1 reserved bytes 4..7 must be zero.
-        $reserved = substr($data, 4, 4);
-        if ($reserved !== "\0\0\0\0") {
+        if (!$this->hasZeroReservedBytes($data)) {
             return null;
         }
 
@@ -617,8 +624,7 @@ final readonly class IccTagDecoder
         }
 
         // ICC.1:2022 §10.18 reserved bytes 4..7 must be zero
-        $reserved = substr($data, 4, 4);
-        if ($reserved !== "\0\0\0\0") {
+        if (!$this->hasZeroReservedBytes($data)) {
             return null;
         }
 
@@ -656,8 +662,7 @@ final readonly class IccTagDecoder
         }
 
         // ICC.1:2022 §10.6 reserved bytes 4..7 must be zero
-        $reserved = substr($data, 4, 4);
-        if ($reserved !== "\0\0\0\0") {
+        if (!$this->hasZeroReservedBytes($data)) {
             return null;
         }
 
