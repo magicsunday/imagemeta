@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
+use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
@@ -71,20 +72,7 @@ final readonly class TemporalExifReader
      */
     public function dateTimeOriginalRaw(): ?string
     {
-        $value = $this->reader->str($this->exifIfd, ExifTag::DATETIME_ORIGINAL);
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        foreach ($this->fallbackIfds->resolve(includeIfd0: true) as $ifd) {
-            $candidate = $this->reader->str($ifd, ExifTag::DATETIME_ORIGINAL);
-            if ($candidate !== null) {
-                return $candidate;
-            }
-        }
-
-        return null;
+        return $this->resolveWithFallback($this->reader->str(...), ExifTag::DATETIME_ORIGINAL);
     }
 
     /**
@@ -145,19 +133,7 @@ final readonly class TemporalExifReader
      */
     public function dateTimeDigitizedRaw(): ?string
     {
-        $value = $this->reader->str($this->exifIfd, ExifTag::DATETIME_DIGITIZED);
-        if ($value !== null) {
-            return $value;
-        }
-
-        foreach ($this->fallbackIfds->resolve(includeIfd0: true) as $ifd) {
-            $candidate = $this->reader->str($ifd, ExifTag::DATETIME_DIGITIZED);
-            if ($candidate !== null) {
-                return $candidate;
-            }
-        }
-
-        return null;
+        return $this->resolveWithFallback($this->reader->str(...), ExifTag::DATETIME_DIGITIZED);
     }
 
     /**
@@ -192,19 +168,7 @@ final readonly class TemporalExifReader
      */
     public function offsetTimeOriginal(): ?string
     {
-        $offset = $this->normalizedOffset($this->exifIfd, ExifTag::OFFSET_TIME_ORIGINAL);
-        if ($offset !== null) {
-            return $offset;
-        }
-
-        foreach ($this->fallbackIfds->resolve(includeIfd0: true) as $ifd) {
-            $candidate = $this->normalizedOffset($ifd, ExifTag::OFFSET_TIME_ORIGINAL);
-            if ($candidate !== null) {
-                return $candidate;
-            }
-        }
-
-        return null;
+        return $this->resolveWithFallback($this->normalizedOffset(...), ExifTag::OFFSET_TIME_ORIGINAL);
     }
 
     /**
@@ -215,19 +179,7 @@ final readonly class TemporalExifReader
      */
     public function offsetTimeDigitized(): ?string
     {
-        $offset = $this->normalizedOffset($this->exifIfd, ExifTag::OFFSET_TIME_DIGITIZED);
-        if ($offset !== null) {
-            return $offset;
-        }
-
-        foreach ($this->fallbackIfds->resolve(includeIfd0: true) as $ifd) {
-            $candidate = $this->normalizedOffset($ifd, ExifTag::OFFSET_TIME_DIGITIZED);
-            if ($candidate !== null) {
-                return $candidate;
-            }
-        }
-
-        return null;
+        return $this->resolveWithFallback($this->normalizedOffset(...), ExifTag::OFFSET_TIME_DIGITIZED);
     }
 
     /**
@@ -238,19 +190,7 @@ final readonly class TemporalExifReader
      */
     public function offsetTime(): ?string
     {
-        $offset = $this->normalizedOffset($this->exifIfd, ExifTag::OFFSET_TIME);
-        if ($offset !== null) {
-            return $offset;
-        }
-
-        foreach ($this->fallbackIfds->resolve(includeIfd0: true) as $ifd) {
-            $candidate = $this->normalizedOffset($ifd, ExifTag::OFFSET_TIME);
-            if ($candidate !== null) {
-                return $candidate;
-            }
-        }
-
-        return null;
+        return $this->resolveWithFallback($this->normalizedOffset(...), ExifTag::OFFSET_TIME);
     }
 
     /**
@@ -388,19 +328,7 @@ final readonly class TemporalExifReader
      */
     private function offsetTimeOriginalRaw(): ?string
     {
-        $offset = $this->reader->rawOffset($this->exifIfd, ExifTag::OFFSET_TIME_ORIGINAL);
-        if ($offset !== null) {
-            return $offset;
-        }
-
-        foreach ($this->fallbackIfds->resolve(includeIfd0: true) as $ifd) {
-            $candidate = $this->reader->rawOffset($ifd, ExifTag::OFFSET_TIME_ORIGINAL);
-            if ($candidate !== null) {
-                return $candidate;
-            }
-        }
-
-        return null;
+        return $this->resolveWithFallback($this->reader->rawOffset(...), ExifTag::OFFSET_TIME_ORIGINAL);
     }
 
     /**
@@ -408,19 +336,7 @@ final readonly class TemporalExifReader
      */
     private function offsetTimeDigitizedRaw(): ?string
     {
-        $offset = $this->reader->rawOffset($this->exifIfd, ExifTag::OFFSET_TIME_DIGITIZED);
-        if ($offset !== null) {
-            return $offset;
-        }
-
-        foreach ($this->fallbackIfds->resolve(includeIfd0: true) as $ifd) {
-            $candidate = $this->reader->rawOffset($ifd, ExifTag::OFFSET_TIME_DIGITIZED);
-            if ($candidate !== null) {
-                return $candidate;
-            }
-        }
-
-        return null;
+        return $this->resolveWithFallback($this->reader->rawOffset(...), ExifTag::OFFSET_TIME_DIGITIZED);
     }
 
     /**
@@ -428,13 +344,24 @@ final readonly class TemporalExifReader
      */
     private function offsetTimeRaw(): ?string
     {
-        $offset = $this->reader->rawOffset($this->exifIfd, ExifTag::OFFSET_TIME);
-        if ($offset !== null) {
-            return $offset;
+        return $this->resolveWithFallback($this->reader->rawOffset(...), ExifTag::OFFSET_TIME);
+    }
+
+    /**
+     * Tries the exifIfd first, then iterates fallback IFDs, returning the first non-null result.
+     *
+     * @param Closure(Ifd|null, int): ?string $extractor Tag value extraction callback.
+     * @param int                             $tag       EXIF tag constant.
+     */
+    private function resolveWithFallback(Closure $extractor, int $tag): ?string
+    {
+        $value = $extractor($this->exifIfd, $tag);
+        if ($value !== null) {
+            return $value;
         }
 
         foreach ($this->fallbackIfds->resolve(includeIfd0: true) as $ifd) {
-            $candidate = $this->reader->rawOffset($ifd, ExifTag::OFFSET_TIME);
+            $candidate = $extractor($ifd, $tag);
             if ($candidate !== null) {
                 return $candidate;
             }
