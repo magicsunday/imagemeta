@@ -47,6 +47,7 @@ use function implode;
 use function ksort;
 use function pack;
 use function str_pad;
+use function str_repeat;
 use function strlen;
 use function unpack;
 
@@ -660,10 +661,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         if ($includeColorMat1) {
             $matCount = $colorPlanes * 3;
-
-            for ($i = 0; $i < $matCount; ++$i) {
-                $sratData .= pack('VV', 1, 1);
-            }
+            $sratData = str_repeat(pack('VV', 1, 1), $matCount);
 
             $ifdData .= pack('v', DngTag::COLOR_MATRIX_1)
                 . pack('v', TiffConst::TYPE_SRATIONAL)
@@ -709,10 +707,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $cfaValues = str_pad($cfaValues, 4, "\0");
 
         // SRATIONAL data: each entry is 8 bytes (numerator + denominator)
-        $sratData = '';
-        for ($i = 0; $i < $count; ++$i) {
-            $sratData .= pack('VV', 1, 1); // 1/1 for each element
-        }
+        $sratData = str_repeat(pack('VV', 1, 1), $count);
 
         // Tags must be in ascending order: IMAGE_WIDTH(0x100) < IMAGE_LENGTH(0x101)
         // < CFA_PLANE_COLOR(0xC616) < matrix tag (0xC621+)
@@ -1098,10 +1093,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $curOffset  = $ifdOffset + $ifdSize;
 
         // Build SRATIONAL data block (all matrices use same dummy data: 1/1)
-        $sratBlock = '';
-        for ($i = 0; $i < $matCount; ++$i) {
-            $sratBlock .= pack('VV', 1, 1);
-        }
+        $sratBlock = str_repeat(pack('VV', 1, 1), $matCount);
 
         // Replace placeholders with actual matrix entries pointing to out-of-line data
         foreach ($tags as $tag => &$data) {
@@ -2513,11 +2505,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         // ColorMatrix1: SRATIONAL, count = colorPlanes * 3
         $cm1Count = $colorPlanes * 3;
-        $cm1Data  = '';
-
-        for ($i = 0; $i < $cm1Count; ++$i) {
-            $cm1Data .= pack('VV', 1, 1); // SRATIONAL 1/1
-        }
+        $cm1Data  = str_repeat(pack('VV', 1, 1), $cm1Count);
 
         $tags[DngTag::COLOR_MATRIX_1] = pack('v', DngTag::COLOR_MATRIX_1)
             . pack('v', TiffConst::TYPE_SRATIONAL)
@@ -4556,11 +4544,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('g', 0.0); // MapInputWeights[4]
 
         $gainCount = $mapPointsV * $mapPointsH * $mapPointsN;
-        $gains     = '';
-
-        for ($i = 0; $i < $gainCount; ++$i) {
-            $gains .= pack('g', $gain);
-        }
+        $gains     = str_repeat(pack('g', $gain), $gainCount);
 
         return $header . $gains;
     }
