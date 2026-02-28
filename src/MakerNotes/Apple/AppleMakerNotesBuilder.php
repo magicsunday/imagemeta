@@ -206,7 +206,11 @@ final readonly class AppleMakerNotesBuilder
         $cameraTypeCode    = $this->extractor->intValue($dictionary, 'CameraType');
 
         if ($cameraTypeCode !== null) {
-            $cameraType = AppleMaps::CAMERA_TYPE_MAP[$cameraTypeCode] ?? $cameraTypeCode;
+            if (array_key_exists($cameraTypeCode, AppleMaps::CAMERA_TYPE_MAP)) {
+                $cameraType = AppleMaps::CAMERA_TYPE_MAP[$cameraTypeCode];
+            } else {
+                $cameraType = $cameraTypeCode;
+            }
         } else {
             $cameraType = $this->extractor->stringValue($dictionary, 'CameraType');
         }
