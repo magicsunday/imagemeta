@@ -36,6 +36,8 @@ use PHPUnit\Framework\Attributes\{
 };
 use PHPUnit\Framework\TestCase;
 
+use function sprintf;
+
 /**
  * Exercises GpsConverter validation of EXIF GPS reference and status tags.
  * It verifies that invalid reference values are rejected per EXIF 3.0 §4.6.7.
