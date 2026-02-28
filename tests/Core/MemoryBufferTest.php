@@ -59,6 +59,8 @@ namespace MagicSunday\ImageMeta\Tests\Core {
 
         protected function tearDown(): void
         {
+            parent::tearDown();
+
             self::$forceShortRead = false;
         }
 
