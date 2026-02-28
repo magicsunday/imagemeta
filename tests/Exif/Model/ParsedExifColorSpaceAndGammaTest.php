@@ -51,11 +51,9 @@ final class ParsedExifColorSpaceAndGammaTest extends TestCase
     #[Test]
     public function colorSpaceIsNullForReservedValues(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, 2),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertNull($parsedExif->colorSpace());
     }
@@ -67,7 +65,7 @@ final class ParsedExifColorSpaceAndGammaTest extends TestCase
     #[Test]
     public function colorSpaceDefaultsToSrgbWhenAbsentInExifIfd(): void
     {
-        $parsedExif = new ParsedExif(new Ifd([]), new Ifd([]), null, null, null);
+        $parsedExif = $this->parsedExifFromExifEntries([]);
 
         self::assertSame(ColorSpace::Srgb, $parsedExif->colorSpace());
     }
@@ -91,11 +89,9 @@ final class ParsedExifColorSpaceAndGammaTest extends TestCase
     #[Test]
     public function gammaReturnsRationalValue(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::GAMMA => new IfdEntry(ExifTag::GAMMA, 5, 1, [22, 10]),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(2.2, $parsedExif->gamma());
     }
@@ -107,8 +103,16 @@ final class ParsedExifColorSpaceAndGammaTest extends TestCase
     #[Test]
     public function gammaReturnsNullWhenMissing(): void
     {
-        $parsedExif = new ParsedExif(new Ifd([]), new Ifd([]), null, null, null);
+        $parsedExif = $this->parsedExifFromExifEntries([]);
 
         self::assertNull($parsedExif->gamma());
+    }
+
+    /**
+     * @param array<int, IfdEntry> $exifEntries
+     */
+    private function parsedExifFromExifEntries(array $exifEntries): ParsedExif
+    {
+        return new ParsedExif(new Ifd([]), new Ifd($exifEntries), null, null, null);
     }
 }
