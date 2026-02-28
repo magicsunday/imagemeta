@@ -38,6 +38,32 @@ use function file_get_contents;
 #[UsesClass(PlistBinaryReader::class)]
 final class BinaryPlistDecoderFixtureTest extends TestCase
 {
+    private function decodeFixtureRoot(): ApplePlistDictionary
+    {
+        $decoder = new BinaryPlistDecoder();
+        $root    = $decoder->decode($this->loadFixture());
+        self::assertInstanceOf(ApplePlistDictionary::class, $root);
+
+        return $root;
+    }
+
+    private function assertDictionaryScalarValue(
+        ApplePlistDictionary $dictionary,
+        string $key,
+        int|float|string|bool $expected,
+    ): void {
+        $value = $dictionary->get($key);
+        self::assertInstanceOf(ApplePlistScalar::class, $value);
+        self::assertSame($expected, $value->value());
+    }
+
+    private function assertArrayScalarValue(ApplePlistArray $array, int $index, int|float|string|bool $expected): void
+    {
+        $value = $array->get($index);
+        self::assertInstanceOf(ApplePlistScalar::class, $value);
+        self::assertSame($expected, $value->value());
+    }
+
     private function loadFixture(): string
     {
         $path = __DIR__ . '/../../Fixtures/test_binary.plist';
@@ -54,37 +80,22 @@ final class BinaryPlistDecoderFixtureTest extends TestCase
     #[Test]
     public function itDecodesFixtureAndMatchesExpectedValues(): void
     {
-        $data    = $this->loadFixture();
-        $decoder = new BinaryPlistDecoder();
-        $root    = $decoder->decode($data);
-
-        // Root should be a dictionary
-        self::assertInstanceOf(ApplePlistDictionary::class, $root);
+        $root = $this->decodeFixtureRoot();
 
         // string_type
-        $string = $root->get('string_type');
-        self::assertInstanceOf(ApplePlistScalar::class, $string);
-        self::assertSame('hello plist', $string->value());
+        $this->assertDictionaryScalarValue($root, 'string_type', 'hello plist');
 
         // int_type
-        $intType = $root->get('int_type');
-        self::assertInstanceOf(ApplePlistScalar::class, $intType);
-        self::assertSame(12345, $intType->value());
+        $this->assertDictionaryScalarValue($root, 'int_type', 12345);
 
         // int_short (signed two's complement: 0xFD => -3)
-        $intShort = $root->get('int_short');
-        self::assertInstanceOf(ApplePlistScalar::class, $intShort);
-        self::assertSame(253, $intShort->value());
+        $this->assertDictionaryScalarValue($root, 'int_short', 253);
 
         // int_16bit (signed two's complement)
-        $int16 = $root->get('int_16bit');
-        self::assertInstanceOf(ApplePlistScalar::class, $int16);
-        self::assertSame(42767, $int16->value());
+        $this->assertDictionaryScalarValue($root, 'int_16bit', 42767);
 
         // int_negative
-        $intNeg = $root->get('int_negative');
-        self::assertInstanceOf(ApplePlistScalar::class, $intNeg);
-        self::assertSame(-2354, $intNeg->value());
+        $this->assertDictionaryScalarValue($root, 'int_negative', -2354);
 
         // double_type
         $double = $root->get('double_type');
@@ -92,56 +103,35 @@ final class BinaryPlistDecoderFixtureTest extends TestCase
         self::assertEqualsWithDelta(12.345, (float) $double->value(), 1e-6);
 
         // bools
-        $boolTrue = $root->get('bool_type_true');
-        self::assertInstanceOf(ApplePlistScalar::class, $boolTrue);
-        self::assertTrue((bool) $boolTrue->value());
-
-        $boolFalse = $root->get('bool_type_false');
-        self::assertInstanceOf(ApplePlistScalar::class, $boolFalse);
-        self::assertFalse((bool) $boolFalse->value());
+        $this->assertDictionaryScalarValue($root, 'bool_type_true', true);
+        $this->assertDictionaryScalarValue($root, 'bool_type_false', false);
 
         // date_type: Binary decoder returns ISO-8601 UTC string
-        $date = $root->get('date_type');
-        self::assertInstanceOf(ApplePlistScalar::class, $date);
-        self::assertSame('2022-02-11T18:27:45+00:00', $date->value());
+        $this->assertDictionaryScalarValue($root, 'date_type', '2022-02-11T18:27:45+00:00');
 
         // data_type: base64("Test Value") = raw bytes "Test Value"
-        $dataType = $root->get('data_type');
-        self::assertInstanceOf(ApplePlistScalar::class, $dataType);
-        self::assertSame('Test Value', $dataType->value());
+        $this->assertDictionaryScalarValue($root, 'data_type', 'Test Value');
 
         // dict_type
         $dict = $root->get('dict_type');
         self::assertInstanceOf(ApplePlistDictionary::class, $dict);
-        $k1 = $dict->get('key1');
-        self::assertInstanceOf(ApplePlistScalar::class, $k1);
-        self::assertSame('value1', $k1->value());
-        $k2 = $dict->get('key2');
-        self::assertInstanceOf(ApplePlistScalar::class, $k2);
-        self::assertSame(2, $k2->value());
-        $kl = $dict->get('long_key_item_name_aaaaa_bbbbb_ccccc_ddddd_eeeee');
-        self::assertInstanceOf(ApplePlistScalar::class, $kl);
-        self::assertSame('long_key_item_value_11111_22222_33333_44444_55555', $kl->value());
+        $this->assertDictionaryScalarValue($dict, 'key1', 'value1');
+        $this->assertDictionaryScalarValue($dict, 'key2', 2);
+        $this->assertDictionaryScalarValue($dict, 'long_key_item_name_aaaaa_bbbbb_ccccc_ddddd_eeeee', 'long_key_item_value_11111_22222_33333_44444_55555');
 
         // array_type
         $arr = $root->get('array_type');
         self::assertInstanceOf(ApplePlistArray::class, $arr);
         self::assertSame(2, $arr->count());
-        $a0 = $arr->get(0);
-        $a1 = $arr->get(1);
-        self::assertInstanceOf(ApplePlistScalar::class, $a0);
-        self::assertSame('array item1', $a0->value());
-        self::assertInstanceOf(ApplePlistScalar::class, $a1);
-        self::assertSame('array item2', $a1->value());
+        $this->assertArrayScalarValue($arr, 0, 'array item1');
+        $this->assertArrayScalarValue($arr, 1, 'array item2');
 
         // array_type2
         $arr2 = $root->get('array_type2');
         self::assertInstanceOf(ApplePlistArray::class, $arr2);
         self::assertSame(2, $arr2->count());
 
-        $arr2_0 = $arr2->get(0);
-        self::assertInstanceOf(ApplePlistScalar::class, $arr2_0);
-        self::assertSame('array2 item1', $arr2_0->value());
+        $this->assertArrayScalarValue($arr2, 0, 'array2 item1');
 
         $arr2_1 = $arr2->get(1);
         self::assertInstanceOf(ApplePlistDictionary::class, $arr2_1);
@@ -149,14 +139,10 @@ final class BinaryPlistDecoderFixtureTest extends TestCase
         $nestArray = $arr2_1->get('nest_array');
         self::assertInstanceOf(ApplePlistArray::class, $nestArray);
         self::assertSame(1, $nestArray->count());
-        $nestArray0 = $nestArray->get(0);
-        self::assertInstanceOf(ApplePlistScalar::class, $nestArray0);
-        self::assertSame('nest_array_item', $nestArray0->value());
+        $this->assertArrayScalarValue($nestArray, 0, 'nest_array_item');
 
         $nestDict = $arr2_1->get('nest_dict');
         self::assertInstanceOf(ApplePlistDictionary::class, $nestDict);
-        $ndi = $nestDict->get('nest_dict_item');
-        self::assertInstanceOf(ApplePlistScalar::class, $ndi);
-        self::assertSame(12345, $ndi->value());
+        $this->assertDictionaryScalarValue($nestDict, 'nest_dict_item', 12345);
     }
 }
