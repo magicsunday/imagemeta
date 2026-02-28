@@ -15,8 +15,10 @@ use MagicSunday\ImageMeta\Core\ParseError;
 
 use function intdiv;
 use function min;
+use function ord;
 use function rtrim;
 use function sprintf;
+use function str_starts_with;
 use function strlen;
 use function substr;
 
