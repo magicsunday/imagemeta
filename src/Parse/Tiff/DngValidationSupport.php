@@ -482,7 +482,7 @@ final readonly class DngValidationSupport
             return null;
         }
 
-        if (!in_array($entry->type, $allowedTypes, true) || ($entry->count !== 2)) {
+        if (($entry->count !== 2) || !in_array($entry->type, $allowedTypes, true)) {
             throw new ParseError(
                 sprintf(
                     '%s must use %s with count 2, got type %d count %d.',
