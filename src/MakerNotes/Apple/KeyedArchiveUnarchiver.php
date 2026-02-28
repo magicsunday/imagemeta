@@ -161,7 +161,7 @@ final class KeyedArchiveUnarchiver
     private function isUidReference(ApplePlistDictionary $reference): bool
     {
         $entries = $reference->entries();
-        if (count($entries) !== 1 || !array_key_exists('CF$UID', $entries)) {
+        if (!array_key_exists('CF$UID', $entries) || count($entries) !== 1) {
             return false;
         }
 
