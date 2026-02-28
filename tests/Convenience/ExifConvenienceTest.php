@@ -65,14 +65,7 @@ final class ExifConvenienceTest extends TestCase
             ),
         );
 
-        $lens = new Lens(
-            null,
-            null,
-            null,
-            50.0,
-            null,
-            null
-        );
+        $lens = $this->createLens(focalLengthMm: 50.0);
 
         $summary = (new ExifConvenience())->exposureSummary(
             $exposure,
@@ -241,14 +234,7 @@ final class ExifConvenienceTest extends TestCase
             null,
             null,
         );
-        $lens = new Lens(
-            null,
-            'RF 24-70mm',
-            null,
-            null,
-            null,
-            null
-        );
+        $lens = $this->createLens(lensModel: 'RF 24-70mm');
 
         self::assertSame(
             'Canon EOS R6 · RF 24-70mm',
@@ -274,13 +260,9 @@ final class ExifConvenienceTest extends TestCase
             null,
             null,
         );
-        $lens = new Lens(
-            null,
-            'EF 50mm',
-            null,
-            50.0,
-            null,
-            null
+        $lens = $this->createLens(
+            lensModel    : 'EF 50mm',
+            focalLengthMm: 50.0,
         );
         $image = new Image(
             width: 6000,
@@ -339,6 +321,18 @@ final class ExifConvenienceTest extends TestCase
                 $exposure,
                 $gps
             )
+        );
+    }
+
+    private function createLens(?string $lensModel = null, ?float $focalLengthMm = null): Lens
+    {
+        return new Lens(
+            null,
+            $lensModel,
+            null,
+            $focalLengthMm,
+            null,
+            null,
         );
     }
 }
