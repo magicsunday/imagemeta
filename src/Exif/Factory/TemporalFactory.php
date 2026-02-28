@@ -233,7 +233,7 @@ final readonly class TemporalFactory
         $digits = substr($digits, 0, 3);
 
         // EXIF 3.0 §4.6.6.6.6 — digits are aligned with the start (right-pad fractional seconds)
-        return str_pad($digits, 3, '0', STR_PAD_RIGHT);
+        return str_pad($digits, 3, '0');
     }
 
     /**
