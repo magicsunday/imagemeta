@@ -51,18 +51,17 @@ final class ParsedExifImageDimensionsTest extends TestCase
     #[Test]
     public function prefersCompressedPixelDimensionsWhenAvailable(): void
     {
-        $ifd0 = new Ifd([
-            ExifTag::COMPRESSION  => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
-            ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 640),
-            ExifTag::IMAGE_LENGTH => new IfdEntry(ExifTag::IMAGE_LENGTH, 4, 1, 480),
-        ]);
-
-        $exifIfd = new Ifd([
-            ExifTag::PIXEL_X_DIMENSION => new IfdEntry(ExifTag::PIXEL_X_DIMENSION, 4, 1, 800),
-            ExifTag::PIXEL_Y_DIMENSION => new IfdEntry(ExifTag::PIXEL_Y_DIMENSION, 4, 1, 600),
-        ]);
-
-        $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifFromEntries(
+            [
+                ExifTag::COMPRESSION  => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
+                ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 640),
+                ExifTag::IMAGE_LENGTH => new IfdEntry(ExifTag::IMAGE_LENGTH, 4, 1, 480),
+            ],
+            [
+                ExifTag::PIXEL_X_DIMENSION => new IfdEntry(ExifTag::PIXEL_X_DIMENSION, 4, 1, 800),
+                ExifTag::PIXEL_Y_DIMENSION => new IfdEntry(ExifTag::PIXEL_Y_DIMENSION, 4, 1, 600),
+            ],
+        );
 
         self::assertSame(800, $parsedExif->imageWidth());
         self::assertSame(600, $parsedExif->imageHeight());
@@ -75,18 +74,17 @@ final class ParsedExifImageDimensionsTest extends TestCase
     #[Test]
     public function ignoresCompressedDimensionsForUncompressedImages(): void
     {
-        $ifd0 = new Ifd([
-            ExifTag::COMPRESSION  => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
-            ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 1024),
-            ExifTag::IMAGE_LENGTH => new IfdEntry(ExifTag::IMAGE_LENGTH, 4, 1, 768),
-        ]);
-
-        $exifIfd = new Ifd([
-            ExifTag::PIXEL_X_DIMENSION => new IfdEntry(ExifTag::PIXEL_X_DIMENSION, 4, 1, 800),
-            ExifTag::PIXEL_Y_DIMENSION => new IfdEntry(ExifTag::PIXEL_Y_DIMENSION, 4, 1, 600),
-        ]);
-
-        $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifFromEntries(
+            [
+                ExifTag::COMPRESSION  => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
+                ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 1024),
+                ExifTag::IMAGE_LENGTH => new IfdEntry(ExifTag::IMAGE_LENGTH, 4, 1, 768),
+            ],
+            [
+                ExifTag::PIXEL_X_DIMENSION => new IfdEntry(ExifTag::PIXEL_X_DIMENSION, 4, 1, 800),
+                ExifTag::PIXEL_Y_DIMENSION => new IfdEntry(ExifTag::PIXEL_Y_DIMENSION, 4, 1, 600),
+            ],
+        );
 
         self::assertSame(1024, $parsedExif->imageWidth());
         self::assertSame(768, $parsedExif->imageHeight());
@@ -99,19 +97,27 @@ final class ParsedExifImageDimensionsTest extends TestCase
     #[Test]
     public function prefersPixelDimensionsWhenCompressionTagIsAbsent(): void
     {
-        $ifd0 = new Ifd([
-            ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 640),
-            ExifTag::IMAGE_LENGTH => new IfdEntry(ExifTag::IMAGE_LENGTH, 4, 1, 480),
-        ]);
-
-        $exifIfd = new Ifd([
-            ExifTag::PIXEL_X_DIMENSION => new IfdEntry(ExifTag::PIXEL_X_DIMENSION, 4, 1, 800),
-            ExifTag::PIXEL_Y_DIMENSION => new IfdEntry(ExifTag::PIXEL_Y_DIMENSION, 4, 1, 600),
-        ]);
-
-        $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifFromEntries(
+            [
+                ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 640),
+                ExifTag::IMAGE_LENGTH => new IfdEntry(ExifTag::IMAGE_LENGTH, 4, 1, 480),
+            ],
+            [
+                ExifTag::PIXEL_X_DIMENSION => new IfdEntry(ExifTag::PIXEL_X_DIMENSION, 4, 1, 800),
+                ExifTag::PIXEL_Y_DIMENSION => new IfdEntry(ExifTag::PIXEL_Y_DIMENSION, 4, 1, 600),
+            ],
+        );
 
         self::assertSame(800, $parsedExif->imageWidth());
         self::assertSame(600, $parsedExif->imageHeight());
+    }
+
+    /**
+     * @param array<int, IfdEntry> $ifd0Entries
+     * @param array<int, IfdEntry> $exifEntries
+     */
+    private function parsedExifFromEntries(array $ifd0Entries, array $exifEntries): ParsedExif
+    {
+        return new ParsedExif(new Ifd($ifd0Entries), new Ifd($exifEntries), null, null, null);
     }
 }
