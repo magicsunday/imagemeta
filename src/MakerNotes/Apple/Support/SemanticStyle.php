@@ -144,7 +144,7 @@ final class SemanticStyle
         if (!array_is_list($semantic)) {
             $nestedKey = array_find(
                 ['values', 'Values'],
-                static fn (string $key): bool => array_key_exists($key, $semantic) && is_array($semantic[$key])
+                static fn (string $key): bool => array_key_exists($key, $semantic)
             );
 
             if ($nestedKey !== null) {
@@ -196,11 +196,11 @@ final class SemanticStyle
             if ($valueKey !== null) {
                 $candidate = $entry[$valueKey];
 
-                if (is_array($candidate) || is_bool($candidate) || is_float($candidate) || is_int($candidate) || is_string($candidate) || $candidate === null) {
-                    return self::extractScalar($candidate);
+                if (is_object($candidate)) {
+                    return null;
                 }
 
-                return null;
+                return self::extractScalar($candidate);
             }
 
             if (array_is_list($entry)) {
