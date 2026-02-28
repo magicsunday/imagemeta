@@ -15,6 +15,9 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffFieldType;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Verifies the TiffFieldType enum exposes the expected TIFF field type cases and values.
+ */
 final class TiffFieldTypeTest extends TestCase
 {
     #[Test]
