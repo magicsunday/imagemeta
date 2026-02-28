@@ -51,15 +51,6 @@ final readonly class DngVersionValidator
         DngTag::ILLUMINANT_DATA_3,
     ];
 
-    /**
-     * DNG sentinel tags whose presence implies the file is a DNG document.
-     *
-     * @var list<int>
-     */
-    private const array DNG_SENTINEL_TAGS = [
-        DngTag::UNIQUE_CAMERA_MODEL,
-    ];
-
     public function __construct(
         private DngValidationSupport $support,
     ) {
@@ -174,15 +165,6 @@ final readonly class DngVersionValidator
     public function validateDngRequiredVersion(Ifd $ifd): void
     {
         if ($ifd->get(DngTag::DNG_VERSION) instanceof IfdEntry) {
-            return;
-        }
-
-        $hasDngSentinelTag = array_any(
-            self::DNG_SENTINEL_TAGS,
-            static fn (int $tag): bool => $ifd->get($tag) instanceof IfdEntry,
-        );
-
-        if (!$hasDngSentinelTag) {
             return;
         }
 
