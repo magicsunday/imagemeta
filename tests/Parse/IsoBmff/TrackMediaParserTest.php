@@ -1074,7 +1074,7 @@ final class TrackMediaParserTest extends TestCase
     {
         // Handler is 'vide' but media header is 'smhd' (expected 'vmhd')
         $minf = $this->box('minf', $this->validDinfBox() . $this->validSmhdBox() . $this->box('stbl', $this->validStblContent()));
-        $mdia = $this->box('mdia', $this->validHdlrBox('vide') . $this->validMdhdBox() . $minf);
+        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
