@@ -51,7 +51,7 @@ final class ParsedExifBasicTagsTest extends TestCase
     #[Test]
     public function imageDescriptionTrimsNullPadding(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::IMAGE_DESCRIPTION => new IfdEntry(
                 ExifTag::IMAGE_DESCRIPTION,
                 TiffConst::TYPE_ASCII,
@@ -59,8 +59,6 @@ final class ParsedExifBasicTagsTest extends TestCase
                 "1988 company picnic\0\0",
             ),
         ]);
-
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame('1988 company picnic', $parsedExif->imageDescription());
     }
@@ -72,12 +70,10 @@ final class ParsedExifBasicTagsTest extends TestCase
     #[Test]
     public function cameraMakeAndModelReturnStrings(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::MAKE  => new IfdEntry(ExifTag::MAKE, TiffConst::TYPE_ASCII, 8, "Magic\0"),
             ExifTag::MODEL => new IfdEntry(ExifTag::MODEL, TiffConst::TYPE_ASCII, 13, "PhotonPro\0\0"),
         ]);
-
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame('Magic', $parsedExif->cameraMake());
         self::assertSame('PhotonPro', $parsedExif->cameraModel());
@@ -90,7 +86,7 @@ final class ParsedExifBasicTagsTest extends TestCase
     #[Test]
     public function softwareReturnsNullForEmptyString(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::SOFTWARE => new IfdEntry(
                 ExifTag::SOFTWARE,
                 TiffConst::TYPE_ASCII,
@@ -99,8 +95,14 @@ final class ParsedExifBasicTagsTest extends TestCase
             ),
         ]);
 
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
-
         self::assertNull($parsedExif->software());
+    }
+
+    /**
+     * @param array<int, IfdEntry> $ifd0Entries
+     */
+    private function parsedExifFromIfd0(array $ifd0Entries): ParsedExif
+    {
+        return new ParsedExif(new Ifd($ifd0Entries), null, null, null, null);
     }
 }
