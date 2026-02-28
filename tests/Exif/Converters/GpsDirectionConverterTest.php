@@ -64,11 +64,11 @@ final class GpsDirectionConverterTest extends TestCase
     }
 
     /**
-     * Verifies that valid bearing values are accepted and returned as floats.
+     * Verifies that valid and boundary bearing values are accepted and returned as floats.
      */
     #[Test]
-    #[DataProvider('provideValidBearings')]
-    public function acceptsValidBearings(int|float|null $input, ?float $expected): void
+    #[DataProvider('provideValidAndEdgeBearings')]
+    public function acceptsValidAndEdgeBearings(int|float|null $input, ?float $expected): void
     {
         self::assertSame($expected, $this->converter->normalizeBearing($input));
     }
@@ -76,12 +76,14 @@ final class GpsDirectionConverterTest extends TestCase
     /**
      * @return iterable<string, array{0: int|float|null, 1: ?float}>
      */
-    public static function provideValidBearings(): iterable
+    public static function provideValidAndEdgeBearings(): iterable
     {
         yield 'zero bearing' => [0.0, 0.0];
         yield 'mid bearing' => [180.0, 180.0];
         yield 'max valid float' => [359.99, 359.99];
         yield 'null passthrough' => [null, null];
+        yield 'lower bound exactly zero' => [0.0, 0.0];
+        yield 'upper bound just below 360' => [359.999, 359.999];
     }
 
     /**
@@ -103,24 +105,5 @@ final class GpsDirectionConverterTest extends TestCase
         yield 'exactly 360' => [360.0, 0.0];
         yield 'above 360' => [361.0, 1.0];
         yield 'negative integer' => [-1.0, 359.0];
-    }
-
-    /**
-     * Verifies boundary values at the edges of the valid [0, 360) range.
-     */
-    #[Test]
-    #[DataProvider('provideBearingEdgeCases')]
-    public function acceptsBearingEdgeCases(int|float $input, float $expected): void
-    {
-        self::assertSame($expected, $this->converter->normalizeBearing($input));
-    }
-
-    /**
-     * @return iterable<string, array{0: int|float, 1: float}>
-     */
-    public static function provideBearingEdgeCases(): iterable
-    {
-        yield 'lower bound exactly zero' => [0.0, 0.0];
-        yield 'upper bound just below 360' => [359.999, 359.999];
     }
 }
