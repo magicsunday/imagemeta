@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Parse\Tiff\ExifTagDecoder;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
@@ -27,7 +28,9 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
+use function file_get_contents;
 use function str_repeat;
+use function substr_count;
 
 /**
  * Verifies TIFF value decoding with precomputed component size / byte-count hints.
@@ -99,6 +102,53 @@ final class TiffValueDecoderTest extends TestCase
             "\x34\x12",
             2,
             4,
+        );
+    }
+
+    #[Test]
+    public function decodeBytesReturnsNumericListForMultipleShortValues(): void
+    {
+        $decoder = $this->createDecoder();
+        $value   = $decoder->decodeBytes(
+            ExifTag::BITS_PER_SAMPLE,
+            TiffConst::TYPE_SHORT,
+            3,
+            "\x08\x00\x08\x00\x08\x00",
+            2,
+            6,
+        );
+
+        self::assertInstanceOf(ExifNumericList::class, $value);
+        self::assertSame([8, 8, 8], $value->values);
+    }
+
+    #[Test]
+    public function decodeBytesRejectsUnsupportedFieldType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1886);
+
+        $decoder = $this->createDecoder();
+        $decoder->decodeBytes(
+            ExifTag::IMAGE_WIDTH,
+            99,
+            1,
+            "\x00",
+            1,
+            1,
+        );
+    }
+
+    #[Test]
+    public function requiresConsolidatedComponentSliceCallsInDecoderSource(): void
+    {
+        $source = file_get_contents(__DIR__ . '/../../../src/Parse/Tiff/TiffValueDecoder.php');
+
+        self::assertNotFalse($source);
+        self::assertLessThanOrEqual(
+            2,
+            substr_count($source, 'substr($bytes, $cursor,'),
+            'Expected repeated component slicing in decodeBytes() to be consolidated.',
         );
     }
 
