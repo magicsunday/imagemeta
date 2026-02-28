@@ -168,13 +168,13 @@ final class GpsCoordinateConverterTest extends TestCase
     }
 
     /**
-     * Tolerates latitude values outside the nominal EXIF range and preserves raw values.
+     * Tolerates coordinates outside the nominal EXIF range and preserves raw values.
      *
      * @param list<ExifRational> $rationals
      */
     #[Test]
-    #[DataProvider('provideOutOfRangeLatitudes')]
-    public function toleratesLatitudeOutOfRange(string $ref, array $rationals, float $expected): void
+    #[DataProvider('provideOutOfRangeCoordinates')]
+    public function toleratesCoordinatesOutOfRange(string $ref, array $rationals, float $expected): void
     {
         $val    = new ExifRationalList($rationals);
         $result = $this->converter->dmsToFloat($ref, $val);
@@ -186,7 +186,7 @@ final class GpsCoordinateConverterTest extends TestCase
     /**
      * @return iterable<string, array{0: string, 1: list<ExifRational>, 2: float}>
      */
-    public static function provideOutOfRangeLatitudes(): iterable
+    public static function provideOutOfRangeCoordinates(): iterable
     {
         yield 'north above 90' => [
             'N',
@@ -199,29 +199,7 @@ final class GpsCoordinateConverterTest extends TestCase
             [new ExifRational(91, 1), new ExifRational(0, 1), new ExifRational(0, 1)],
             -91.0,
         ];
-    }
 
-    /**
-     * Tolerates longitude values outside the nominal EXIF range and preserves raw values.
-     *
-     * @param list<ExifRational> $rationals
-     */
-    #[Test]
-    #[DataProvider('provideOutOfRangeLongitudes')]
-    public function toleratesLongitudeOutOfRange(string $ref, array $rationals, float $expected): void
-    {
-        $val    = new ExifRationalList($rationals);
-        $result = $this->converter->dmsToFloat($ref, $val);
-
-        self::assertNotNull($result);
-        self::assertEqualsWithDelta($expected, $result, 0.000001);
-    }
-
-    /**
-     * @return iterable<string, array{0: string, 1: list<ExifRational>, 2: float}>
-     */
-    public static function provideOutOfRangeLongitudes(): iterable
-    {
         yield 'east above 180' => [
             'E',
             [new ExifRational(181, 1), new ExifRational(0, 1), new ExifRational(0, 1)],
