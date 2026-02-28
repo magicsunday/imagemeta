@@ -76,10 +76,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function audioClipsIsolatesClipsArray(): void
     {
-        $clips = [new AudioClip('wav', 1, 44100, 16, 'data', '1.0')];
-        $obj   = new AudioClips($clips);
-
-        $clips[] = new AudioClip('mp3', 2, 48000, 24, 'more', '1.0');
+        $obj = new AudioClips([new AudioClip('wav', 1, 44100, 16, 'data', '1.0')]);
 
         self::assertCount(1, $obj->clips);
     }
@@ -96,12 +93,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function keywordsIsolatesFlatAndHierarchicalArrays(): void
     {
-        $flat         = ['a', 'b'];
-        $hierarchical = ['x|y'];
-        $obj          = new Keywords($flat, $hierarchical);
-
-        $flat[]         = 'c';
-        $hierarchical[] = 'z|w';
+        $obj = new Keywords(['a', 'b'], ['x|y']);
 
         self::assertCount(2, $obj->flat);
         self::assertNotNull($obj->hierarchical);
@@ -111,10 +103,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function keywordsIsolatesNullHierarchical(): void
     {
-        $flat = ['a'];
-        $obj  = new Keywords($flat, null);
-
-        $flat[] = 'b';
+        $obj = new Keywords(['a'], null);
 
         self::assertCount(1, $obj->flat);
         self::assertNull($obj->hierarchical);
@@ -127,18 +116,13 @@ final class DefensiveCopyTest extends TestCase
         $items = [];
         $obj   = new RegionCollection($items);
 
-        $items[] = 'fake';
-
         self::assertCount(0, $obj->items);
     }
 
     #[Test]
     public function deviceSettingDescriptionIsolatesSettingsArray(): void
     {
-        $settings = ['ISO 100', 'f/2.8'];
-        $obj      = new DeviceSettingDescription(2, 1, $settings);
-
-        $settings[] = 'AWB';
+        $obj = new DeviceSettingDescription(2, 1, ['ISO 100', 'f/2.8']);
 
         self::assertCount(2, $obj->settings);
     }
@@ -146,10 +130,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function sourceExposureTimesIsolatesSequencesArray(): void
     {
-        $sequences = [[1.0, 2.0]];
-        $obj       = new SourceExposureTimes(null, null, null, null, null, null, null, null, $sequences);
-
-        $sequences[] = [3.0];
+        $obj = new SourceExposureTimes(null, null, null, null, null, null, null, null, [[1.0, 2.0]]);
 
         self::assertCount(1, $obj->sequences);
     }
@@ -157,14 +138,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function oecfIsolatesArrayProperties(): void
     {
-        $columnLabels = ['col1'];
-        $rowLabels    = ['row1'];
-        $values       = [[1.0]];
-        $obj          = new Oecf(1, 1, $columnLabels, $rowLabels, $values);
-
-        $columnLabels[] = 'col2';
-        $rowLabels[]    = 'row2';
-        $values[]       = [2.0];
+        $obj = new Oecf(1, 1, ['col1'], ['row1'], [[1.0]]);
 
         self::assertCount(1, $obj->columnLabels);
         self::assertCount(1, $obj->rowLabels);
@@ -174,12 +148,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function spatialFrequencyResponseIsolatesArrayProperties(): void
     {
-        $frequencies = ['10lp/mm'];
-        $values      = [[0.5]];
-        $obj         = new SpatialFrequencyResponse(1, 1, $frequencies, $values);
-
-        $frequencies[] = '20lp/mm';
-        $values[]      = [0.8];
+        $obj = new SpatialFrequencyResponse(1, 1, ['10lp/mm'], [[0.5]]);
 
         self::assertCount(1, $obj->spatialFrequencies);
         self::assertCount(1, $obj->values);
@@ -188,14 +157,16 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function multiPictureIsolatesArrayProperties(): void
     {
-        $entries = [new MultiPictureEntry(0x030000, 2048, 1024, 0, 0)];
-        $angle   = [['numerator' => 1, 'denominator' => 2]];
-        $axis    = [['numerator' => 3, 'denominator' => 4]];
-        $obj     = new MultiPicture('0100', 1, $entries, null, null, null, $angle, $axis);
-
-        $entries[] = new MultiPictureEntry(0, 0, 0, 0, 0);
-        $angle[]   = ['numerator' => 5, 'denominator' => 6];
-        $axis[]    = ['numerator' => 7, 'denominator' => 8];
+        $obj = new MultiPicture(
+            '0100',
+            1,
+            [new MultiPictureEntry(0x030000, 2048, 1024, 0, 0)],
+            null,
+            null,
+            null,
+            [['numerator' => 1, 'denominator' => 2]],
+            [['numerator' => 3, 'denominator' => 4]],
+        );
 
         self::assertCount(1, $obj->entries);
         self::assertNotNull($obj->panoramaAngle);
@@ -207,10 +178,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function multiPictureIsolatesNullableArrays(): void
     {
-        $entries = [new MultiPictureEntry(0, 0, 0, 0, 0)];
-        $obj     = new MultiPicture('0100', 1, $entries, null, null, null, null, null);
-
-        $entries[] = new MultiPictureEntry(0, 0, 0, 0, 0);
+        $obj = new MultiPicture('0100', 1, [new MultiPictureEntry(0, 0, 0, 0, 0)], null, null, null, null, null);
 
         self::assertCount(1, $obj->entries);
         self::assertNull($obj->panoramaAngle);
@@ -220,12 +188,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function metadataIsolatesListArrayProperties(): void
     {
-        $exifBlobs = ['blob1'];
-        $xmpBlobs  = ['xmp1'];
-        $obj       = new Metadata($exifBlobs, null, xmpBlobs: $xmpBlobs);
-
-        $exifBlobs[] = 'blob2';
-        $xmpBlobs[]  = 'xmp2';
+        $obj = new Metadata(['blob1'], null, xmpBlobs: ['xmp1']);
 
         self::assertCount(1, $obj->exifBlobs);
         self::assertCount(1, $obj->xmpBlobs);
@@ -234,12 +197,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function xmpDocumentIsolatesArrayProperties(): void
     {
-        $data     = ['{ns}prop' => 'value'];
-        $prefixes = ['ns' => 'p'];
-        $obj      = new XmpDocument($data, $prefixes);
-
-        $data['{ns}other'] = 'other';
-        $prefixes['ns2']   = 'p2';
+        $obj = new XmpDocument(['{ns}prop' => 'value'], ['ns' => 'p']);
 
         self::assertCount(1, $obj->data);
         self::assertCount(1, $obj->namespacePrefixes);
@@ -248,10 +206,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function quickTimeMetaIsolatesArrayProperties(): void
     {
-        $keys = ['key1' => 'value1'];
-        $obj  = new QuickTimeMeta($keys);
-
-        $keys['key2'] = 'value2';
+        $obj = new QuickTimeMeta(['key1' => 'value1']);
 
         self::assertCount(1, $obj->keys);
     }
@@ -259,10 +214,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function xmpLanguageAlternativeIsolatesEntriesArray(): void
     {
-        $entries = [['lang' => 'en', 'value' => 'Hello']];
-        $obj     = new XmpLanguageAlternative($entries);
-
-        $entries[] = ['lang' => 'de', 'value' => 'Hallo'];
+        $obj = new XmpLanguageAlternative([['lang' => 'en', 'value' => 'Hello']]);
 
         self::assertCount(1, $obj->entries);
     }
@@ -270,10 +222,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function xmpStructuredValueIsolatesFieldsArray(): void
     {
-        $fields = ['{ns}field' => 'value'];
-        $obj    = new XmpStructuredValue($fields);
-
-        $fields['{ns}other'] = 'other';
+        $obj = new XmpStructuredValue(['{ns}field' => 'value']);
 
         self::assertCount(1, $obj->fields);
     }
@@ -281,10 +230,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function iptcDocumentIsolatesDatasetsArray(): void
     {
-        $datasets = ['2:5' => ['title']];
-        $obj      = new IptcDocument($datasets);
-
-        $datasets['2:120'] = ['caption'];
+        $obj = new IptcDocument(['2:5' => ['title']]);
 
         self::assertCount(1, $obj->datasets);
     }
@@ -292,10 +238,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function mpfDocumentIsolatesEntriesArray(): void
     {
-        $entries = [new MpfEntry(0, 1024, 0, 0, 0)];
-        $obj     = new MpfDocument('0100', 1, $entries, null);
-
-        $entries[] = new MpfEntry(0, 2048, 512, 0, 0);
+        $obj = new MpfDocument('0100', 1, [new MpfEntry(0, 1024, 0, 0, 0)], null);
 
         self::assertCount(1, $obj->entries);
     }
@@ -303,12 +246,14 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function mpfAttributesIsolatesNullableArrays(): void
     {
-        $angle = [['numerator' => 1, 'denominator' => 2]];
-        $axis  = [['numerator' => 3, 'denominator' => 4]];
-        $obj   = new MpfAttributes(null, null, null, $angle, $axis, []);
-
-        $angle[] = ['numerator' => 5, 'denominator' => 6];
-        $axis[]  = ['numerator' => 7, 'denominator' => 8];
+        $obj = new MpfAttributes(
+            null,
+            null,
+            null,
+            [['numerator' => 1, 'denominator' => 2]],
+            [['numerator' => 3, 'denominator' => 4]],
+            [],
+        );
 
         self::assertNotNull($obj->panoramaAngle);
         self::assertCount(1, $obj->panoramaAngle);
