@@ -30,7 +30,7 @@ return static function (RectorConfig $rectorConfig): void {
         && !mkdir($concurrentDirectory, 0775, true)
         && !is_dir($concurrentDirectory)
     ) {
-        throw new \RuntimeException(
+        throw new RuntimeException(
             sprintf(
                 'Directory "%s" was not created',
                 $concurrentDirectory
@@ -43,7 +43,7 @@ return static function (RectorConfig $rectorConfig): void {
         && !mkdir($concurrentDirectory, 0775, true)
         && !is_dir($concurrentDirectory)
     ) {
-        throw new \RuntimeException(
+        throw new RuntimeException(
             sprintf(
                 'Directory "%s" was not created',
                 $concurrentDirectory
