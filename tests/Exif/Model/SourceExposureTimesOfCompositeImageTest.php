@@ -146,7 +146,7 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
         ];
 
         $payload   = $this->buildPayload($summary, Endian::Little, [[0.1, 0.2]]);
-        $truncated = substr($payload, 0, strlen($payload) - 3);
+        $truncated = substr($payload, 0, -3);
 
         self::assertNull($this->parseCompositeExposure($truncated));
     }
