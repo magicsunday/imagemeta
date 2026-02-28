@@ -62,7 +62,7 @@ final class QuickTimeKeyResolverTest extends TestCase
      *
      * @return array{0: QuickTimeKeyResolver, 1: BoxDescriptor}
      */
-    private function createResolverWithDescriptor(string $content): array
+    private function createResolverWithDescriptor(string $content, string $type = 'keys'): array
     {
         $contentLength = strlen($content);
         $stream        = $this->createIsoBmffTempStream($content);
@@ -71,7 +71,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $window        = $stream->window(0, $contentLength);
 
         $descriptor = new BoxDescriptor(
-            type: 'keys',
+            type: $type,
             size: 8 + $contentLength,
             offset: 0,
             contentOffset: 0,
@@ -373,23 +373,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $namePayload = chr(0) . chr(0) . chr(0) . chr(0) . 'ISRC';
         $nameBox     = $this->box('name', $namePayload);
 
-        $entryContent = $meanBox . $nameBox;
-
-        $entryLength = strlen($entryContent);
-        $stream      = $this->createIsoBmffTempStream($entryContent);
-        $navigator   = new BoxNavigator($stream);
-        $resolver    = new QuickTimeKeyResolver($navigator);
-        $window      = $stream->window(0, $entryLength);
-
-        $descriptor = new BoxDescriptor(
-            type: '----',
-            size: 8 + $entryLength,
-            offset: 0,
-            contentOffset: 0,
-            contentSize: $entryLength,
-            window: $window,
-            userType: null,
-        );
+        [$resolver, $descriptor] = $this->createResolverWithDescriptor($meanBox . $nameBox, '----');
 
         $key = $resolver->parseFreeformKey($descriptor);
 
@@ -410,21 +394,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $namePayload = chr(0) . chr(0) . chr(0) . chr(0) . 'ISRC';
         $nameBox     = $this->box('name', $namePayload);
 
-        $nameLength = strlen($nameBox);
-        $stream     = $this->createIsoBmffTempStream($nameBox);
-        $navigator  = new BoxNavigator($stream);
-        $resolver   = new QuickTimeKeyResolver($navigator);
-        $window     = $stream->window(0, $nameLength);
-
-        $descriptor = new BoxDescriptor(
-            type: '----',
-            size: 8 + $nameLength,
-            offset: 0,
-            contentOffset: 0,
-            contentSize: $nameLength,
-            window: $window,
-            userType: null,
-        );
+        [$resolver, $descriptor] = $this->createResolverWithDescriptor($nameBox, '----');
 
         self::assertNull($resolver->parseFreeformKey($descriptor));
     }
@@ -445,23 +415,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $namePayload = chr(0) . chr(0) . chr(0) . chr(0) . 'ISRC';
         $nameBox     = $this->box('name', $namePayload);
 
-        $entryContent = $meanBox . $nameBox;
-
-        $entryLength = strlen($entryContent);
-        $stream      = $this->createIsoBmffTempStream($entryContent);
-        $navigator   = new BoxNavigator($stream);
-        $resolver    = new QuickTimeKeyResolver($navigator);
-        $window      = $stream->window(0, $entryLength);
-
-        $descriptor = new BoxDescriptor(
-            type: '----',
-            size: 8 + $entryLength,
-            offset: 0,
-            contentOffset: 0,
-            contentSize: $entryLength,
-            window: $window,
-            userType: null,
-        );
+        [$resolver, $descriptor] = $this->createResolverWithDescriptor($meanBox . $nameBox, '----');
 
         $resolver->parseFreeformKey($descriptor);
     }
