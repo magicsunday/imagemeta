@@ -123,27 +123,12 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function parsesBigTiffWithLargeEntryCount(): void
     {
-        // BigTIFF header
-        $blob = 'II'
-            . pack('v', TiffConst::MAGIC_BIG)
-            . pack('v', 8)      // Offset size
-            . pack('v', 0)      // Reserved
-            . pack('P', 16);    // First IFD at offset 16
+        $blob = $this->buildStandardBigTiffHeader();
 
         // IFD with 64-bit entry count (4 entries)
         $blob .= pack('P', 4);  // Entry count (64-bit)
 
-        // ImageWidth SHORT[1] = 100
-        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
-            . pack('v', TiffConst::TYPE_SHORT)
-            . pack('P', 1)
-            . pack('v', 100) . pack('a6', '');
-
-        // ImageLength SHORT[1] = 100
-        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
-            . pack('v', TiffConst::TYPE_SHORT)
-            . pack('P', 1)
-            . pack('v', 100) . pack('a6', '');
+        $blob .= $this->buildBigTiffDimensionEntries();
 
         // Entry 3: Manufacturer (ASCII string "Test")
         $blob .= pack('v', 0x010F)               // Tag
@@ -173,12 +158,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function parsesBigTiffWithLong8Type(): void
     {
-        // BigTIFF header
-        $blob = 'II'
-            . pack('v', TiffConst::MAGIC_BIG)
-            . pack('v', 8)
-            . pack('v', 0)
-            . pack('P', 16);
+        $blob = $this->buildStandardBigTiffHeader();
 
         // IFD with 2 entries
         $blob .= pack('P', 2);
@@ -210,25 +190,11 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function parsesBigTiffWithSlong8Type(): void
     {
-        $blob = 'II'
-            . pack('v', TiffConst::MAGIC_BIG)
-            . pack('v', 8)
-            . pack('v', 0)
-            . pack('P', 16);
+        $blob = $this->buildStandardBigTiffHeader();
 
         $blob .= pack('P', 3);  // 3 entries
 
-        // ImageWidth SHORT[1] = 100
-        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
-            . pack('v', TiffConst::TYPE_SHORT)
-            . pack('P', 1)
-            . pack('v', 100) . pack('a6', '');
-
-        // ImageLength SHORT[1] = 100
-        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
-            . pack('v', TiffConst::TYPE_SHORT)
-            . pack('P', 1)
-            . pack('v', 100) . pack('a6', '');
+        $blob .= $this->buildBigTiffDimensionEntries();
 
         // Entry with SLONG8 (signed 64-bit value: -42) on a non-dimension tag
         $blob .= pack('v', 0xFF00)                // Tag: dummy (non-pointer tag)
@@ -251,25 +217,11 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function parsesBigTiffWithIfd8PointerType(): void
     {
-        $blob = 'II'
-            . pack('v', TiffConst::MAGIC_BIG)
-            . pack('v', 8)
-            . pack('v', 0)
-            . pack('P', 16);
+        $blob = $this->buildStandardBigTiffHeader();
 
         $blob .= pack('P', 3);
 
-        // ImageWidth SHORT[1] = 100
-        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
-            . pack('v', TiffConst::TYPE_SHORT)
-            . pack('P', 1)
-            . pack('v', 100) . pack('a6', '');
-
-        // ImageLength SHORT[1] = 100
-        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
-            . pack('v', TiffConst::TYPE_SHORT)
-            . pack('P', 1)
-            . pack('v', 100) . pack('a6', '');
+        $blob .= $this->buildBigTiffDimensionEntries();
 
         // Entry: SubIFDs pointer using IFD8 type pointing to offset 0 (no sub-IFD)
         $blob .= pack('v', 0x014A)              // Tag: SubIFDs
@@ -313,11 +265,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function skipsBigTiffValueOffsetBeyond4GB(): void
     {
-        $blob = 'II'
-            . pack('v', TiffConst::MAGIC_BIG)
-            . pack('v', 8)
-            . pack('v', 0)
-            . pack('P', 16);
+        $blob = $this->buildStandardBigTiffHeader();
 
         $blob .= pack('P', 1);  // 1 entry
 
@@ -344,11 +292,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function rejectsBigTiffTruncatedEntry(): void
     {
-        $blob = 'II'
-            . pack('v', TiffConst::MAGIC_BIG)
-            . pack('v', 8)
-            . pack('v', 0)
-            . pack('P', 16);
+        $blob = $this->buildStandardBigTiffHeader();
 
         $blob .= pack('P', 1);     // Claim 1 entry
         $blob .= pack('v', 0x010F); // Tag only (incomplete entry)
@@ -368,11 +312,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function rejectsBigTiffWithHugeEntryCount(): void
     {
-        $blob = 'II'
-            . pack('v', TiffConst::MAGIC_BIG)
-            . pack('v', 8)
-            . pack('v', 0)
-            . pack('P', 16);
+        $blob = $this->buildStandardBigTiffHeader();
 
         // Claim absurdly high entry count (would require terabytes)
         $blob .= pack('P', 0xFFFFFFFFFFFF);
@@ -382,6 +322,33 @@ final class TiffExifParserBigTiffTest extends TestCase
         $this->expectException(ParseError::class);
 
         $reader->parseFromBlob($blob);
+    }
+
+    /**
+     * Builds a standard BigTIFF header (LE, offset-size=8, reserved=0, first IFD at offset 16).
+     */
+    private function buildStandardBigTiffHeader(): string
+    {
+        return 'II'
+            . pack('v', TiffConst::MAGIC_BIG)
+            . pack('v', 8)
+            . pack('v', 0)
+            . pack('P', 16);
+    }
+
+    /**
+     * Builds a pair of BigTIFF IFD entries for ImageWidth and ImageLength (SHORT, value 100).
+     */
+    private function buildBigTiffDimensionEntries(): string
+    {
+        return pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('P', 1)
+            . pack('v', 100) . pack('a6', '')
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('P', 1)
+            . pack('v', 100) . pack('a6', '');
     }
 
     /**
