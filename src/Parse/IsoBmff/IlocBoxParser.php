@@ -179,7 +179,7 @@ final readonly class IlocBoxParser
      *
      * @param BoxDescriptor $iinf Box descriptor containing the item information payload.
      *
-     * @return list<InfeItem>
+     * @return list<InfeItem> Parsed item information entries from all contained infe boxes.
      */
     public function parseIinf(BoxDescriptor $iinf): array
     {
@@ -431,6 +431,8 @@ final readonly class IlocBoxParser
      *
      * @param BoxDescriptor $entry Data reference entry descriptor.
      * @param int           $index One-based index of the reference.
+     *
+     * @return IsoBmffDataReference Parsed data reference entry for the given box.
      */
     private function parseDataReferenceEntry(BoxDescriptor $entry, int $index): IsoBmffDataReference
     {
@@ -703,6 +705,8 @@ final readonly class IlocBoxParser
      * ISO/IEC 14496-12 §8.11.3.3 limits size nibbles to 0, 4, or 8 bytes.
      *
      * @param int $nibble Raw nibble extracted from the length-size field.
+     *
+     * @return int Validated byte width (0, 4, or 8).
      */
     private function validateSizeNibble(int $nibble): int
     {
@@ -721,6 +725,8 @@ final readonly class IlocBoxParser
      *
      * @param string $payload Binary payload to read from.
      * @param int    &$offset Current read position; advanced past the NUL terminator.
+     *
+     * @return string|null Extracted string or null when no data remains.
      */
     private function readNulString(string $payload, int &$offset): ?string
     {
