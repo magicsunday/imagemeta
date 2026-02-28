@@ -19,6 +19,8 @@ use SplFileInfo;
 
 use function count;
 use function dirname;
+use function file_get_contents;
+use function implode;
 use function in_array;
 use function is_array;
 use function ksort;
