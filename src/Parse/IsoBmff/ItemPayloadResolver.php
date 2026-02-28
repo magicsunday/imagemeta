@@ -40,7 +40,7 @@ use function substr;
  * Handles reading extent data from the raw stream, idat payloads,
  * and item-offset construction methods per ISO/IEC 14496-12 §8.11.3.
  *
- * @phpstan-type ExtentErrorCodes array{
+ * @phpstan-type ExtentErrorCodes = array{
  *     negativeOffset:   int,
  *     offsetOverflow:   int,
  *     originOverflow:   int,
@@ -67,11 +67,15 @@ final readonly class ItemPayloadResolver
     /**
      * Resolves metadata item references described by an `iloc` box.
      *
-     * @param int                                                                                                                                                                           $itemId         Identifier of the item to resolve.
-     * @param array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
-     * @param array<int, list<IsoBmffItemReference>>                                                                                                                                        $itemReferences
-     * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences
-     * @param list<int>                                                                                                                                                                     $visitedItemIds
+     * @param int                                                                                                                                                                           $itemId            Identifier of the item to resolve.
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations         Item location metadata.
+     * @param array<int, list<IsoBmffItemReference>>                                                                                                                                        $itemReferences    Parsed item references.
+     * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences    Parsed data references.
+     * @param ?string                                                                                                                                                                       $idatPayload       Cached idat payload for construction_method=1 extents.
+     * @param int                                                                                                                                                                           $metaContextOffset Absolute file offset of the owning meta box.
+     * @param list<int>                                                                                                                                                                     $visitedItemIds    Item IDs already visited for cycle detection.
+     *
+     * @return IsoBmffItemResolveResult Resolved payload data and any unresolved item descriptors.
      */
     public function resolveItemData(int $itemId, array $locations, array $itemReferences, array $dataReferences, ?string $idatPayload, int $metaContextOffset, array $visitedItemIds = []): IsoBmffItemResolveResult
     {
@@ -107,8 +111,12 @@ final readonly class ItemPayloadResolver
     /**
      * Resolves method-0 file_offset items against the primary file stream.
      *
-     * @param array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>} $location
-     * @param array<int, IsoBmffDataReference>                                                                                                                                  $dataReferences
+     * @param int                                                                                                                                                               $itemId            Identifier of the item being resolved.
+     * @param array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>} $location          Item location metadata.
+     * @param array<int, IsoBmffDataReference>                                                                                                                                  $dataReferences    Parsed data references.
+     * @param int                                                                                                                                                               $metaContextOffset Absolute file offset of the owning meta box.
+     *
+     * @return IsoBmffItemResolveResult Resolved file-offset payload or unresolved item descriptor.
      */
     private function resolveFileOffsetItemData(int $itemId, array $location, array $dataReferences, int $metaContextOffset): IsoBmffItemResolveResult
     {
@@ -143,8 +151,13 @@ final readonly class ItemPayloadResolver
     /**
      * Resolves method-1 idat_offset items against the idat payload.
      *
-     * @param array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>} $location
-     * @param array<int, IsoBmffDataReference>                                                                                                                                  $dataReferences
+     * @param int                                                                                                                                                               $itemId            Identifier of the item being resolved.
+     * @param array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>} $location          Item location metadata.
+     * @param array<int, IsoBmffDataReference>                                                                                                                                  $dataReferences    Parsed data references.
+     * @param ?string                                                                                                                                                           $idatPayload       Cached idat payload bytes.
+     * @param int                                                                                                                                                               $metaContextOffset Absolute file offset of the owning meta box.
+     *
+     * @return IsoBmffItemResolveResult Resolved idat-offset payload or unresolved item descriptor.
      */
     private function resolveIdatOffsetItemData(int $itemId, array $location, array $dataReferences, ?string $idatPayload, int $metaContextOffset): IsoBmffItemResolveResult
     {
@@ -178,11 +191,16 @@ final readonly class ItemPayloadResolver
     /**
      * Resolves method-2 item_offset items via iloc item references.
      *
-     * @param array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}             $location
-     * @param array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
-     * @param array<int, list<IsoBmffItemReference>>                                                                                                                                        $itemReferences
-     * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences
-     * @param list<int>                                                                                                                                                                     $visitedItemIds
+     * @param int                                                                                                                                                                           $itemId            Identifier of the item being resolved.
+     * @param array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}             $location          Item location metadata.
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations         All item locations.
+     * @param array<int, list<IsoBmffItemReference>>                                                                                                                                        $itemReferences    Parsed item references.
+     * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences    Parsed data references.
+     * @param ?string                                                                                                                                                                       $idatPayload       Cached idat payload bytes.
+     * @param int                                                                                                                                                                           $metaContextOffset Absolute file offset of the owning meta box.
+     * @param list<int>                                                                                                                                                                     $visitedItemIds    Item IDs already visited for cycle detection.
+     *
+     * @return IsoBmffItemResolveResult Resolved item-offset payload or unresolved item descriptor.
      */
     private function resolveItemOffsetItemData(
         int $itemId,
@@ -282,11 +300,17 @@ final readonly class ItemPayloadResolver
     /**
      * Resolves a referenced item for construction_method=2 while preserving cycle/unresolved semantics.
      *
-     * @param array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}             $location
-     * @param array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
-     * @param array<int, list<IsoBmffItemReference>>                                                                                                                                        $itemReferences
-     * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences
-     * @param list<int>                                                                                                                                                                     $visitedItemIds
+     * @param int                                                                                                                                                                           $itemId            Identifier of the referring item.
+     * @param int                                                                                                                                                                           $referenceItemId   Identifier of the referenced item to resolve.
+     * @param array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}             $location          Location metadata for the referring item.
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations         All item locations.
+     * @param array<int, list<IsoBmffItemReference>>                                                                                                                                        $itemReferences    Parsed item references.
+     * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences    Parsed data references.
+     * @param ?string                                                                                                                                                                       $idatPayload       Cached idat payload bytes.
+     * @param int                                                                                                                                                                           $metaContextOffset Absolute file offset of the owning meta box.
+     * @param list<int>                                                                                                                                                                     $visitedItemIds    Item IDs already visited for cycle detection.
+     *
+     * @return IsoBmffItemResolveResult Resolved referenced item payload or unresolved item descriptor.
      */
     private function resolveReferencedItemData(
         int $itemId,
@@ -327,6 +351,10 @@ final readonly class ItemPayloadResolver
 
     /**
      * Maps iloc extent_index values to zero-based reference positions.
+     *
+     * @param ?int $extentIndex One-based extent index or null when index_size is zero.
+     *
+     * @return int Zero-based reference position.
      */
     private function resolveItemOffsetReferencePosition(?int $extentIndex): int
     {
@@ -375,7 +403,9 @@ final readonly class ItemPayloadResolver
     /**
      * Determines whether the given item descriptor represents EXIF content.
      *
-     * @param array{id: int, itemType: ?string, name: ?string, contentType: ?string} $info
+     * @param array{id: int, itemType: ?string, name: ?string, contentType: ?string} $info Item descriptor to check.
+     *
+     * @return bool True when the descriptor advertises EXIF content, otherwise false.
      */
     public function isExifItem(array $info): bool
     {
@@ -402,7 +432,9 @@ final readonly class ItemPayloadResolver
     /**
      * Determines whether the given item descriptor represents XMP content.
      *
-     * @param array{id: int, itemType: ?string, name: ?string, contentType: ?string} $info
+     * @param array{id: int, itemType: ?string, name: ?string, contentType: ?string} $info Item descriptor to check.
+     *
+     * @return bool True when the descriptor advertises XMP content, otherwise false.
      */
     public function isXmpItem(array $info): bool
     {
@@ -429,9 +461,16 @@ final readonly class ItemPayloadResolver
      * Handles implied extent_length semantics, payload size limits, container bounds
      * validation, and safe offset arithmetic per ISO/IEC 14496-12 §8.11.3.
      *
-     * @param list<array{offset:int,length:int,index:?int}> $extents
-     * @param Closure(int, int): string                     $readData   Reads $length bytes at $offset from the container.
-     * @param ExtentErrorCodes                              $errorCodes Per-construction-method error codes for each validation step.
+     * @param list<array{offset:int,length:int,index:?int}> $extents        Extent definitions from the iloc entry.
+     * @param int                                           $baseOffset     Base offset from the iloc entry.
+     * @param int                                           $originOffset   File offset origin for the extent calculations.
+     * @param int                                           $containerSize  Total size of the data container in bytes.
+     * @param Closure(int, int): string                     $readData       Reads $length bytes at $offset from the container.
+     * @param string                                        $outsideMessage Error message when an extent falls outside the container.
+     * @param string                                        $lengthMessage  Error message when extent length exceeds container size.
+     * @param ExtentErrorCodes                              $errorCodes     Per-construction-method error codes for each validation step.
+     *
+     * @return string Concatenated extent data read from the container.
      */
     private function walkLinearExtents(
         array $extents,
@@ -497,9 +536,14 @@ final readonly class ItemPayloadResolver
      * Validates all components are non-negative and checks for integer overflow
      * at each addition step.
      *
+     * @param int $baseOffset         Base offset component.
+     * @param int $extentOffset       Extent offset component.
+     * @param int $originOffset       Origin offset component.
      * @param int $negativeCode       Error code for negative offset components.
      * @param int $overflowCode       Error code for base+extent overflow.
      * @param int $originOverflowCode Error code for +origin overflow (unused when $originOffset is 0).
+     *
+     * @return int Computed effective offset.
      */
     private function computeSafeOffset(
         int $baseOffset,
@@ -533,8 +577,12 @@ final readonly class ItemPayloadResolver
     /**
      * Creates an unresolved item descriptor for external references.
      *
-     * @param array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>} $location
-     * @param array<int, IsoBmffDataReference>                                                                                                                                  $dataReferences
+     * @param int                                                                                                                                                               $itemId            Identifier of the unresolved item.
+     * @param array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>} $location          Item location metadata.
+     * @param array<int, IsoBmffDataReference>                                                                                                                                  $dataReferences    Parsed data references.
+     * @param int                                                                                                                                                               $metaContextOffset Absolute file offset of the owning meta box.
+     *
+     * @return IsoBmffUnresolvedItem Unresolved item descriptor for deferred resolution.
      */
     private function createUnresolvedItem(int $itemId, array $location, array $dataReferences, int $metaContextOffset): IsoBmffUnresolvedItem
     {
