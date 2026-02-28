@@ -29,7 +29,9 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function count;
+use function implode;
 use function ksort;
 use function str_pad;
 use function strlen;
@@ -194,11 +196,7 @@ final class TiffExifParserTransferTagsTest extends TestCase
         $ifdSize    = 2 + (12 * $entryCount) + 4;
         $dataOffset = $ifdOffset + $ifdSize;
 
-        $ifdEntries = '';
-
-        foreach ($entries as $entry) {
-            $ifdEntries .= $entry;
-        }
+        $ifdEntries = implode('', $entries);
 
         $ifdEntries .= pack('v', ExifTag::TRANSFER_FUNCTION)
             . pack('v', TiffConst::TYPE_SHORT)
@@ -337,14 +335,10 @@ final class TiffExifParserTransferTagsTest extends TestCase
      */
     private function packRationalPayload(array $values): string
     {
-        $payload = '';
-
-        foreach ($values as $value) {
-            $payload .= pack('V', $value);
-            $payload .= pack('V', 1);
-        }
-
-        return $payload;
+        return implode('', array_map(
+            static fn (int $value): string => pack('V', $value) . pack('V', 1),
+            $values,
+        ));
     }
 
     /**
@@ -352,17 +346,14 @@ final class TiffExifParserTransferTagsTest extends TestCase
      */
     private function packNumericPayload(int $type, array $values): string
     {
-        $payload = '';
-
-        foreach ($values as $value) {
-            $payload .= match ($type) {
+        return implode('', array_map(
+            static fn (int $value): string => match ($type) {
                 TiffConst::TYPE_BYTE  => pack('C', $value),
                 TiffConst::TYPE_SHORT => pack('v', $value),
                 TiffConst::TYPE_LONG  => pack('V', $value),
                 default               => pack('V', $value),
-            };
-        }
-
-        return $payload;
+            },
+            $values,
+        ));
     }
 }
