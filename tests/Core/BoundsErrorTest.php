@@ -16,12 +16,17 @@ use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
+use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
+use function fopen;
+use function fwrite;
+use function rewind;
 use function strlen;
 
 /**
@@ -39,37 +44,64 @@ final class BoundsErrorTest extends TestCase
 {
     use CreatesTempStream;
 
-    /**
-     * Attempts to read past EOF after consuming the entire stream.
-     * It verifies the BoundsError message includes the read range and stream size.
-     */
     #[Test]
-    public function streamReadBeyondEndReportsContextInBoundsError(): void
+    #[DataProvider('boundsErrorCases')]
+    public function reportsContextInBoundsError(callable $operation, string $expectedMessage): void
     {
-        $payload = 'meta';
-
-        $stream = new Stream($this->createTempStream($payload), strlen($payload));
-
-        $stream->read(4);
-
         $this->expectException(BoundsError::class);
-        $this->expectExceptionMessage('read beyond EOF: 4+1 > 4');
+        $this->expectExceptionMessage($expectedMessage);
 
-        $stream->read(1);
+        $operation();
     }
 
     /**
-     * Attempts to seek beyond the buffer length.
-     * It verifies the BoundsError message reports the attempted offset.
+     * @return array<string, array{0: callable(): void, 1: string}>
      */
-    #[Test]
-    public function memoryBufferSeekOutsideRangeReportsAttemptedOffset(): void
+    public static function boundsErrorCases(): array
     {
-        $buffer = new MemoryBuffer('guard');
+        return [
+            'stream read beyond EOF' => [
+                function (): void {
+                    $payload = 'meta';
+                    $stream  = new Stream(self::createTempStreamStatic($payload), strlen($payload));
 
-        $this->expectException(BoundsError::class);
-        $this->expectExceptionMessage('MemoryBuffer seek out of range: 6');
+                    $stream->read(4);
+                    $stream->read(1);
+                },
+                'read beyond EOF: 4+1 > 4',
+            ],
+            'memory buffer seek out of range' => [
+                static function (): void {
+                    $buffer = new MemoryBuffer('guard');
 
-        $buffer->seek(6);
+                    $buffer->seek(6);
+                },
+                'MemoryBuffer seek out of range: 6',
+            ],
+        ];
+    }
+
+    /**
+     * @return resource
+     */
+    private static function createTempStreamStatic(string $payload)
+    {
+        $handle = fopen('php://temp', 'r+b');
+
+        if ($handle === false) {
+            Assert::fail('Unable to create temporary stream.');
+        }
+
+        $written = fwrite($handle, $payload);
+
+        if ($written === false || $written !== strlen($payload)) {
+            Assert::fail('Unable to populate temporary stream.');
+        }
+
+        if (rewind($handle) === false) {
+            Assert::fail('Unable to rewind temporary stream.');
+        }
+
+        return $handle;
     }
 }
