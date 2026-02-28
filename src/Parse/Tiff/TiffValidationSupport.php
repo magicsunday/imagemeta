@@ -140,22 +140,25 @@ final readonly class TiffValidationSupport
             );
         }
 
-        $bitDepths = [];
+        $bitDepths            = [];
+        $invalidComponentType = false;
 
         if (is_int($bitsEntry->value)) {
             $bitDepths[] = $bitsEntry->value;
         } elseif ($bitsEntry->value instanceof ExifNumericList) {
             foreach ($bitsEntry->value->values as $component) {
                 if (!is_int($component)) {
-                    throw new ParseError(
-                        sprintf('BitsPerSample must decode to integer components for %s.', $context),
-                        $baseErrCode + 1,
-                    );
+                    $invalidComponentType = true;
+                    break;
                 }
 
                 $bitDepths[] = $component;
             }
         } else {
+            $invalidComponentType = true;
+        }
+
+        if ($invalidComponentType) {
             throw new ParseError(
                 sprintf('BitsPerSample must decode to integer components for %s.', $context),
                 $baseErrCode + 1,

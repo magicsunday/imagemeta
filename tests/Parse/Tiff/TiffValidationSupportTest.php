@@ -24,6 +24,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function file_get_contents;
+use function substr_count;
+
 #[CoversClass(TiffValidationSupport::class)]
 final class TiffValidationSupportTest extends TestCase
 {
@@ -80,12 +83,12 @@ final class TiffValidationSupportTest extends TestCase
     #[Test]
     public function requiresSingleBitsPerSampleIntegerComponentErrorTemplateInSource(): void
     {
-        $source = \file_get_contents(__DIR__ . '/../../../src/Parse/Tiff/TiffValidationSupport.php');
+        $source = file_get_contents(__DIR__ . '/../../../src/Parse/Tiff/TiffValidationSupport.php');
 
         self::assertNotFalse($source);
         self::assertSame(
             1,
-            \substr_count($source, 'BitsPerSample must decode to integer components for %s.'),
+            substr_count($source, 'BitsPerSample must decode to integer components for %s.'),
             'Expected duplicated BitsPerSample integer-component error template to be consolidated.',
         );
     }

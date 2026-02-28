@@ -669,9 +669,7 @@ final readonly class TiffTagConstraintValidator
             throw new ParseError($errorMessage, $errorCode);
         }
 
-        $value = $entry->value;
-
-        return $value;
+        return $entry->{'value'};
     }
 
     /**
