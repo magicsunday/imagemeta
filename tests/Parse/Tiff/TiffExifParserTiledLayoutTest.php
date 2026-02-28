@@ -32,6 +32,8 @@ use PHPUnit\Framework\TestCase;
 
 use function intdiv;
 use function ksort;
+use function max;
+use function min;
 use function str_pad;
 use function str_repeat;
 use function strlen;
