@@ -1125,7 +1125,7 @@ final class MetadataFormatter
     /**
      * Normalises XMP values to match ExifTool-style output for key fields.
      */
-    private function formatXmpValue(string $prefix, string $localName, mixed $value, ?ParsedExif $exifDoc): mixed
+    private function formatXmpValue(string $prefix, string $localName, mixed $value): mixed
     {
         if ($prefix !== 'exif') {
             return $value;
@@ -1742,14 +1742,14 @@ final class MetadataFormatter
                     $grouped[$prefix] = [];
                 }
 
-                $grouped[$prefix][$localName] = $this->formatXmpValue($prefix, $localName, $convertedValue, $exifDoc);
+                $grouped[$prefix][$localName] = $this->formatXmpValue($prefix, $localName, $convertedValue);
             } else {
                 // No namespace - use 'unknown' prefix
                 if (!isset($grouped['unknown'])) {
                     $grouped['unknown'] = [];
                 }
 
-                $grouped['unknown'][$clarkNotation] = $this->formatXmpValue('unknown', $clarkNotation, $value, $exifDoc);
+                $grouped['unknown'][$clarkNotation] = $this->formatXmpValue('unknown', $clarkNotation, $value);
             }
         }
 
