@@ -217,25 +217,7 @@ final class TiffExifParserSubIfdTest extends TestCase
         }
 
         // Build IFD0 entries (must be sorted by tag)
-        $entries = [];
-
-        // Compression SHORT[1] = 1 (tag 0x0103)
-        $entries[ExifTag::COMPRESSION] = pack('v', ExifTag::COMPRESSION)
-            . pack('v', TiffConst::TYPE_SHORT)
-            . pack('V', 1)
-            . pack('v', 1) . pack('v', 0);
-
-        // ImageWidth SHORT[1] = 64 (tag 0x0100)
-        $entries[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
-            . pack('v', TiffConst::TYPE_SHORT)
-            . pack('V', 1)
-            . pack('v', 64) . pack('v', 0);
-
-        // ImageLength SHORT[1] = 64 (tag 0x0101)
-        $entries[ExifTag::IMAGE_LENGTH] = pack('v', ExifTag::IMAGE_LENGTH)
-            . pack('v', TiffConst::TYPE_SHORT)
-            . pack('V', 1)
-            . pack('v', 64) . pack('v', 0);
+        $entries = $this->baseIfd0Entries();
 
         // SubIFDs LONG[N] (tag 0x014A)
         if (($subIfdCount === 1) && !$needsExternal) {
@@ -250,15 +232,7 @@ final class TiffExifParserSubIfdTest extends TestCase
                 . pack('V', $externalStart);
         }
 
-        ksort($entries);
-
-        // Assemble IFD0
-        $ifd0 = pack('v', count($entries));
-        foreach ($entries as $entry) {
-            $ifd0 .= $entry;
-        }
-
-        $ifd0 .= pack('V', 0); // no next IFD
+        $ifd0 = $this->assembleIfdBlock($entries);
 
         // External SubIFD offset array
         $externalOffsets = '';
@@ -282,34 +256,10 @@ final class TiffExifParserSubIfdTest extends TestCase
      */
     private function buildMinimalTiff(): string
     {
-        $entries = [
-            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 64) . pack('v', 0),
-            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 64) . pack('v', 0),
-            ExifTag::COMPRESSION => pack('v', ExifTag::COMPRESSION)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 1) . pack('v', 0),
-        ];
-
-        ksort($entries);
-
-        $ifd0 = pack('v', count($entries));
-        foreach ($entries as $entry) {
-            $ifd0 .= $entry;
-        }
-
-        $ifd0 .= pack('V', 0);
-
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
-            . $ifd0;
+            . $this->assembleIfdBlock($this->baseIfd0Entries());
     }
 
     /**
@@ -317,38 +267,17 @@ final class TiffExifParserSubIfdTest extends TestCase
      */
     private function buildTiffWithSubIfdOffset(int $offset): string
     {
-        $entries = [
-            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 64) . pack('v', 0),
-            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 64) . pack('v', 0),
-            ExifTag::COMPRESSION => pack('v', ExifTag::COMPRESSION)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 1) . pack('v', 0),
+        $entries = $this->baseIfd0Entries() + [
             TiffTag::SUB_IFDS => pack('v', TiffTag::SUB_IFDS)
                 . pack('v', TiffConst::TYPE_LONG)
                 . pack('V', 1)
                 . pack('V', $offset),
         ];
 
-        ksort($entries);
-
-        $ifd0 = pack('v', count($entries));
-        foreach ($entries as $entry) {
-            $ifd0 .= $entry;
-        }
-
-        $ifd0 .= pack('V', 0);
-
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
-            . $ifd0;
+            . $this->assembleIfdBlock($entries);
     }
 
     /**
@@ -356,38 +285,17 @@ final class TiffExifParserSubIfdTest extends TestCase
      */
     private function buildTiffWithBadPointer(int $pointerTag): string
     {
-        $entries = [
-            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 64) . pack('v', 0),
-            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 64) . pack('v', 0),
-            ExifTag::COMPRESSION => pack('v', ExifTag::COMPRESSION)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 1) . pack('v', 0),
+        $entries = $this->baseIfd0Entries() + [
             $pointerTag => pack('v', $pointerTag)
                 . pack('v', TiffConst::TYPE_ASCII)
                 . pack('V', 4)
                 . 'abcd',
         ];
 
-        ksort($entries);
-
-        $ifd0 = pack('v', count($entries));
-        foreach ($entries as $entry) {
-            $ifd0 .= $entry;
-        }
-
-        $ifd0 .= pack('V', 0);
-
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
-            . $ifd0;
+            . $this->assembleIfdBlock($entries);
     }
 
     /**
@@ -402,19 +310,7 @@ final class TiffExifParserSubIfdTest extends TestCase
         $ifd0Size       = 2 + (12 * $ifd0EntryCount) + 4;
         $exifIfdOffset  = $ifd0Offset + $ifd0Size;
 
-        $ifd0Entries = [
-            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 64) . pack('v', 0),
-            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 64) . pack('v', 0),
-            ExifTag::COMPRESSION => pack('v', ExifTag::COMPRESSION)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 1) . pack('v', 0),
+        $ifd0Entries = $this->baseIfd0Entries() + [
             ExifTag::EXIF_IFD_POINTER => pack('v', ExifTag::EXIF_IFD_POINTER)
                 . pack('v', TiffConst::TYPE_LONG)
                 . pack('V', 1)
@@ -432,28 +328,11 @@ final class TiffExifParserSubIfdTest extends TestCase
                 . pack('V', 99999),
         ];
 
-        ksort($ifd0Entries);
-        ksort($exifEntries);
-
-        $ifd0Block = pack('v', count($ifd0Entries));
-        foreach ($ifd0Entries as $entry) {
-            $ifd0Block .= $entry;
-        }
-
-        $ifd0Block .= pack('V', 0);
-
-        $exifBlock = pack('v', count($exifEntries));
-        foreach ($exifEntries as $entry) {
-            $exifBlock .= $entry;
-        }
-
-        $exifBlock .= pack('V', 0);
-
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset)
-            . $ifd0Block
-            . $exifBlock;
+            . $this->assembleIfdBlock($ifd0Entries)
+            . $this->assembleIfdBlock($exifEntries);
     }
 
     /**
@@ -482,33 +361,12 @@ final class TiffExifParserSubIfdTest extends TestCase
             . pack('V', 0); // no next IFD
 
         // IFD0 entries — SubIFDs has count=2, both pointing to same offset
-        $ifd0Entries = [
-            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 64) . pack('v', 0),
-            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 64) . pack('v', 0),
-            ExifTag::COMPRESSION => pack('v', ExifTag::COMPRESSION)
-                . pack('v', TiffConst::TYPE_SHORT)
-                . pack('V', 1)
-                . pack('v', 1) . pack('v', 0),
+        $ifd0Entries = $this->baseIfd0Entries() + [
             TiffTag::SUB_IFDS => pack('v', TiffTag::SUB_IFDS)
                 . pack('v', TiffConst::TYPE_LONG)
                 . pack('V', 2)
                 . pack('V', $externalStart), // offset to external value
         ];
-
-        ksort($ifd0Entries);
-
-        $ifd0Block = pack('v', count($ifd0Entries));
-        foreach ($ifd0Entries as $entry) {
-            $ifd0Block .= $entry;
-        }
-
-        $ifd0Block .= pack('V', 0);
 
         // External offset array: two pointers to the same SubIFD (cycle)
         $externalOffsets = pack('V', $subIfdOffset) . pack('V', $subIfdOffset);
@@ -516,7 +374,7 @@ final class TiffExifParserSubIfdTest extends TestCase
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset)
-            . $ifd0Block
+            . $this->assembleIfdBlock($ifd0Entries)
             . $externalOffsets
             . $subIfdBlock;
     }
@@ -546,7 +404,31 @@ final class TiffExifParserSubIfdTest extends TestCase
             . pack('v', 200) . pack('v', 0)
             . pack('V', 0); // no next IFD
 
-        $ifd0Entries = [
+        $ifd0Entries = $this->baseIfd0Entries() + [
+            TiffTag::SUB_IFDS => pack('v', TiffTag::SUB_IFDS)
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('V', 2)
+                . pack('V', $externalStart),
+        ];
+
+        $externalOffsets = pack('V', 99999) . pack('V', $subIfdOffset);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifd0Offset)
+            . $this->assembleIfdBlock($ifd0Entries)
+            . $externalOffsets
+            . $subIfdBlock;
+    }
+
+    /**
+     * Returns the three base IFD0 entries shared across all test builders.
+     *
+     * @return array<int, string>
+     */
+    private function baseIfd0Entries(): array
+    {
+        return [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -559,28 +441,24 @@ final class TiffExifParserSubIfdTest extends TestCase
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
                 . pack('v', 1) . pack('v', 0),
-            TiffTag::SUB_IFDS => pack('v', TiffTag::SUB_IFDS)
-                . pack('v', TiffConst::TYPE_LONG)
-                . pack('V', 2)
-                . pack('V', $externalStart),
         ];
+    }
 
-        ksort($ifd0Entries);
+    /**
+     * Sorts entries by tag and assembles a TIFF IFD block with next-IFD offset = 0.
+     *
+     * @param array<int, string> $entries
+     */
+    private function assembleIfdBlock(array $entries): string
+    {
+        ksort($entries);
 
-        $ifd0Block = pack('v', count($ifd0Entries));
-        foreach ($ifd0Entries as $entry) {
-            $ifd0Block .= $entry;
+        $block = pack('v', count($entries));
+
+        foreach ($entries as $entry) {
+            $block .= $entry;
         }
 
-        $ifd0Block .= pack('V', 0);
-
-        $externalOffsets = pack('V', 99999) . pack('V', $subIfdOffset);
-
-        return 'II'
-            . pack('v', TiffConst::MAGIC_CLASSIC)
-            . pack('V', $ifd0Offset)
-            . $ifd0Block
-            . $externalOffsets
-            . $subIfdBlock;
+        return $block . pack('V', 0);
     }
 }
