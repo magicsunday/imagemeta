@@ -51,7 +51,7 @@ final readonly class DngGeometryValidator
     {
         $activeArea = $ifd->get(DngTag::ACTIVE_AREA);
         if ($activeArea instanceof IfdEntry) {
-            if (!in_array($activeArea->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true) || ($activeArea->count !== 4)) {
+            if (($activeArea->count !== 4) || !in_array($activeArea->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)) {
                 throw new ParseError(
                     sprintf(
                         'ActiveArea must be SHORT|LONG with count 4, got type %d count %d.',
@@ -67,7 +67,7 @@ final readonly class DngGeometryValidator
 
         $maskedAreas = $ifd->get(DngTag::MASKED_AREAS);
         if ($maskedAreas instanceof IfdEntry) {
-            if (!in_array($maskedAreas->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true) || ($maskedAreas->count < 4) || ($maskedAreas->count % 4 !== 0)) {
+            if (($maskedAreas->count < 4) || ($maskedAreas->count % 4 !== 0) || !in_array($maskedAreas->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)) {
                 throw new ParseError(
                     sprintf(
                         'MaskedAreas must be SHORT|LONG with count 4*N, got type %d count %d.',
@@ -162,11 +162,11 @@ final readonly class DngGeometryValidator
 
         $defaultCropOrigin = $ifd->get(DngTag::DEFAULT_CROP_ORIGIN);
         if ($defaultCropOrigin instanceof IfdEntry) {
-            if (!in_array(
+            if (($defaultCropOrigin->count !== 2) || !in_array(
                 $defaultCropOrigin->type,
                 [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_RATIONAL],
                 true,
-            ) || ($defaultCropOrigin->count !== 2)) {
+            )) {
                 throw new ParseError(
                     sprintf(
                         'DefaultCropOrigin must be SHORT|LONG|RATIONAL with count 2, got type %d count %d.',
@@ -192,11 +192,11 @@ final readonly class DngGeometryValidator
 
         $defaultCropSize = $ifd->get(DngTag::DEFAULT_CROP_SIZE);
         if ($defaultCropSize instanceof IfdEntry) {
-            if (!in_array(
+            if (($defaultCropSize->count !== 2) || !in_array(
                 $defaultCropSize->type,
                 [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG, TiffConst::TYPE_RATIONAL],
                 true,
-            ) || ($defaultCropSize->count !== 2)) {
+            )) {
                 throw new ParseError(
                     sprintf(
                         'DefaultCropSize must be SHORT|LONG|RATIONAL with count 2, got type %d count %d.',
@@ -455,7 +455,7 @@ final readonly class DngGeometryValidator
                 continue;
             }
 
-            if (!is_finite($scalar) || ($scalar <= 0.0)) {
+            if (($scalar <= 0.0) || !is_finite($scalar)) {
                 throw new ParseError(
                     sprintf('%s must be a positive finite scalar, got %.6F.', $name, $scalar),
                     1657,
@@ -757,7 +757,7 @@ final readonly class DngGeometryValidator
         $activeLength = null;
         $activeArea   = $ifd->get(DngTag::ACTIVE_AREA);
 
-        if (($activeArea instanceof IfdEntry) && in_array($activeArea->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true) && ($activeArea->count === 4)) {
+        if (($activeArea instanceof IfdEntry) && ($activeArea->count === 4) && in_array($activeArea->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)) {
             $rectangles = $this->support->extractDngRectangles($activeArea, 'ActiveArea');
             if (count($rectangles) === 1) {
                 $activeWidth  = $rectangles[0]['right'] - $rectangles[0]['left'];
