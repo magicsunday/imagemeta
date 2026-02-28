@@ -64,16 +64,7 @@ final class JpegFrameValidatorTest extends TestCase
     {
         $validator = $this->createValidator();
 
-        // SOF2 payload: 8-bit precision, 100 lines, 100 samples, 3 components (Y=1, Cb=2, Cr=3)
-        $sofPayload = chr(8)                      // precision
-            . pack('n', 100)                      // lines
-            . pack('n', 100)                      // samples per line
-            . chr(3)                              // component count
-            . chr(1) . chr(0x22) . chr(0)         // Y:  id=1, H=2 V=2, quant=0
-            . chr(2) . chr(0x11) . chr(1)         // Cb: id=2, H=1 V=1, quant=1
-            . chr(3) . chr(0x11) . chr(1);        // Cr: id=3, H=1 V=1, quant=1
-
-        $validator->handleStartOfFrame(Marker::SOF2, $sofPayload, 0);
+        $validator->handleStartOfFrame(Marker::SOF2, $this->buildYCbCr420SofPayload(100, 100), 0);
 
         // SOS with only 1 component (Y) — valid for progressive scan
         $sosPayload = chr(1)                      // 1 component
@@ -96,16 +87,7 @@ final class JpegFrameValidatorTest extends TestCase
     {
         $validator = $this->createValidator();
 
-        // SOF0 payload: 3 components
-        $sofPayload = chr(8)
-            . pack('n', 100)
-            . pack('n', 100)
-            . chr(3)
-            . chr(1) . chr(0x22) . chr(0)
-            . chr(2) . chr(0x11) . chr(1)
-            . chr(3) . chr(0x11) . chr(1);
-
-        $validator->handleStartOfFrame(Marker::SOF0, $sofPayload, 0);
+        $validator->handleStartOfFrame(Marker::SOF0, $this->buildYCbCr420SofPayload(100, 100), 0);
 
         // SOS with only 1 component — invalid for baseline
         $sosPayload = chr(1)
@@ -124,15 +106,7 @@ final class JpegFrameValidatorTest extends TestCase
     {
         $validator = $this->createValidator();
 
-        $sofPayload = chr(8)                      // 8-bit precision
-            . pack('n', 480)                      // lines
-            . pack('n', 640)                      // samples per line
-            . chr(3)                              // 3 components
-            . chr(1) . chr(0x22) . chr(0)         // Y:  H=2 V=2
-            . chr(2) . chr(0x11) . chr(1)         // Cb: H=1 V=1
-            . chr(3) . chr(0x11) . chr(1);        // Cr: H=1 V=1
-
-        $validator->handleStartOfFrame(Marker::SOF0, $sofPayload, 0);
+        $validator->handleStartOfFrame(Marker::SOF0, $this->buildYCbCr420SofPayload(480, 640), 0);
 
         self::assertSame(8, $validator->getFrameBitsPerSample());
         self::assertSame(480, $validator->getFrameLines());
@@ -416,15 +390,7 @@ final class JpegFrameValidatorTest extends TestCase
     {
         $validator = $this->createValidator();
 
-        $sofPayload = chr(8)
-            . pack('n', 100)
-            . pack('n', 200)
-            . chr(3)
-            . chr(1) . chr(0x22) . chr(0)
-            . chr(2) . chr(0x11) . chr(1)
-            . chr(3) . chr(0x11) . chr(1);
-
-        $validator->handleStartOfFrame(Marker::SOF0, $sofPayload, 0);
+        $validator->handleStartOfFrame(Marker::SOF0, $this->buildYCbCr420SofPayload(100, 200), 0);
         self::assertNotNull($validator->getFrameBitsPerSample());
 
         $validator->reset();
@@ -463,19 +429,25 @@ final class JpegFrameValidatorTest extends TestCase
         $validator = new JpegFrameValidator($scanner);
 
         // Set up SOF state so SOS validation can check component selectors
-        $sofPayload = chr(8)
-            . pack('n', 100)
-            . pack('n', 100)
-            . chr(3)
-            . chr(1) . chr(0x22) . chr(0)
-            . chr(2) . chr(0x11) . chr(1)
-            . chr(3) . chr(0x11) . chr(1);
-
-        $validator->handleStartOfFrame(Marker::SOF0, $sofPayload, 0);
+        $validator->handleStartOfFrame(Marker::SOF0, $this->buildYCbCr420SofPayload(100, 100), 0);
 
         // Should not throw
         $validator->validateSosSegment(0);
         self::assertNotNull($validator->getFrameComponentSampling());
+    }
+
+    /**
+     * Builds a 3-component SOF payload with YCbCr 4:2:0 sampling (Y=2x2, Cb/Cr=1x1).
+     */
+    private function buildYCbCr420SofPayload(int $lines, int $samples): string
+    {
+        return chr(8)
+            . pack('n', $lines)
+            . pack('n', $samples)
+            . chr(3)
+            . chr(1) . chr(0x22) . chr(0)
+            . chr(2) . chr(0x11) . chr(1)
+            . chr(3) . chr(0x11) . chr(1);
     }
 
     private function createValidator(): JpegFrameValidator
