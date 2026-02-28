@@ -51,18 +51,7 @@ final class ParsedExifSubjectDistanceTest extends TestCase
     #[Test]
     public function returnsSubjectDistanceFromSpecExample(): void
     {
-        $exifIfd = new Ifd([
-            ExifTag::SUBJECT_DISTANCE => new IfdEntry(
-                ExifTag::SUBJECT_DISTANCE,
-                5,
-                1,
-                new ExifRational(20, 10),
-            ),
-        ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        self::assertSame(2.0, $parsedExif->subjectDistance());
+        self::assertSame(2.0, $this->parseSubjectDistance(new ExifRational(20, 10)));
     }
 
     /**
@@ -72,18 +61,7 @@ final class ParsedExifSubjectDistanceTest extends TestCase
     #[Test]
     public function returnsInfinityWhenSubjectDistanceRecordsInfinity(): void
     {
-        $exifIfd = new Ifd([
-            ExifTag::SUBJECT_DISTANCE => new IfdEntry(
-                ExifTag::SUBJECT_DISTANCE,
-                5,
-                1,
-                new ExifRational(0xFFFFFFFF, 1),
-            ),
-        ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        self::assertSame(INF, $parsedExif->subjectDistance());
+        self::assertSame(INF, $this->parseSubjectDistance(new ExifRational(0xFFFFFFFF, 1)));
     }
 
     /**
@@ -93,17 +71,21 @@ final class ParsedExifSubjectDistanceTest extends TestCase
     #[Test]
     public function returnsNullWhenSubjectDistanceIsUnknown(): void
     {
+        self::assertNull($this->parseSubjectDistance(new ExifRational(0, 10)));
+    }
+
+    private function parseSubjectDistance(ExifRational $rational): ?float
+    {
         $exifIfd = new Ifd([
             ExifTag::SUBJECT_DISTANCE => new IfdEntry(
                 ExifTag::SUBJECT_DISTANCE,
                 5,
                 1,
-                new ExifRational(0, 10),
+                $rational,
             ),
         ]);
 
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        self::assertNull($parsedExif->subjectDistance());
+        return (new ParsedExif(new Ifd([]), $exifIfd, null, null, null))
+            ->subjectDistance();
     }
 }
