@@ -109,7 +109,7 @@ final class BitMaskTest extends TestCase
     {
         $mask = $this->combineMasks($bits);
 
-        self::assertSame($mask, $this->bitMaskValue($expected));
+        self::assertSame($this->bitMaskValue($expected), $mask);
     }
 
     /**
@@ -134,7 +134,7 @@ final class BitMaskTest extends TestCase
     {
         $shifted = $this->bitMaskValue($source) << $shift;
 
-        self::assertSame($shifted, $this->bitMaskValue($expected));
+        self::assertSame($this->bitMaskValue($expected), $shifted);
     }
 
     /**
@@ -162,7 +162,7 @@ final class BitMaskTest extends TestCase
     {
         $incremented = $this->bitMaskValue($source) + 1;
 
-        self::assertSame($incremented, $this->bitMaskValue($expected));
+        self::assertSame($this->bitMaskValue($expected), $incremented);
     }
 
     /**
@@ -190,7 +190,7 @@ final class BitMaskTest extends TestCase
     {
         $halved = intdiv($this->bitMaskValue($source), 2);
 
-        self::assertSame($halved, $this->bitMaskValue($expected));
+        self::assertSame($this->bitMaskValue($expected), $halved);
     }
 
     /**
@@ -202,7 +202,7 @@ final class BitMaskTest extends TestCase
     {
         $decremented = $this->bitMaskValue('SIGN_BIT_32') - 1;
 
-        self::assertSame($decremented, $this->bitMaskValue('INT31_MAX'));
+        self::assertSame($this->bitMaskValue('INT31_MAX'), $decremented);
     }
 
     private function fromHex(string $hex): int
