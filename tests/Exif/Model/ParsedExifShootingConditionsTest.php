@@ -60,11 +60,9 @@ final class ParsedExifShootingConditionsTest extends TestCase
     #[Test]
     public function returnsExposureProgramEnumFromExifValue(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::EXPOSURE_PROGRAM => new IfdEntry(ExifTag::EXPOSURE_PROGRAM, 3, 1, 4),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(ExposureProgram::ShutterPriority, $parsedExif->exposureProgram());
     }
@@ -76,11 +74,9 @@ final class ParsedExifShootingConditionsTest extends TestCase
     #[Test]
     public function returnsCustomRenderedValue(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::CUSTOM_RENDERED => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(CustomRendered::CustomProcess, $parsedExif->customRendered());
     }
@@ -92,19 +88,15 @@ final class ParsedExifShootingConditionsTest extends TestCase
     #[Test]
     public function normalizesDigitalZoomRatioAndTreatsZeroAsMissing(): void
     {
-        $ratioIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::DIGITAL_ZOOM_RATIO => new IfdEntry(ExifTag::DIGITAL_ZOOM_RATIO, 5, 1, [0, 10]),
         ]);
 
-        $parsedExif = new ParsedExif(new Ifd([]), $ratioIfd, null, null, null);
-
         self::assertNull($parsedExif->digitalZoomRatio());
 
-        $ratioIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::DIGITAL_ZOOM_RATIO => new IfdEntry(ExifTag::DIGITAL_ZOOM_RATIO, 5, 1, [150, 100]),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $ratioIfd, null, null, null);
 
         self::assertSame(1.5, $parsedExif->digitalZoomRatio());
     }
@@ -116,13 +108,11 @@ final class ParsedExifShootingConditionsTest extends TestCase
     #[Test]
     public function returnsWhiteBalanceAndExposureModeEnums(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::WHITE_BALANCE      => new IfdEntry(ExifTag::WHITE_BALANCE, 3, 1, 1),
             ExifTag::EXPOSURE_MODE      => new IfdEntry(ExifTag::EXPOSURE_MODE, 3, 1, 0),
             ExifTag::SCENE_CAPTURE_TYPE => new IfdEntry(ExifTag::SCENE_CAPTURE_TYPE, 3, 1, 4),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(WhiteBalance::Manual, $parsedExif->whiteBalance());
         self::assertSame(ExposureMode::Auto, $parsedExif->exposureMode());
@@ -136,12 +126,11 @@ final class ParsedExifShootingConditionsTest extends TestCase
     #[Test]
     public function returnsRawAndTypedFlashInformation(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::FLASH => new IfdEntry(ExifTag::FLASH, 3, 1, 0x7D),
         ]);
 
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-        $flashInfo  = $parsedExif->flashInfo();
+        $flashInfo = $parsedExif->flashInfo();
 
         self::assertSame(0x7D, $parsedExif->flash());
         self::assertNotNull($flashInfo);
@@ -172,11 +161,9 @@ final class ParsedExifShootingConditionsTest extends TestCase
     #[Test]
     public function returnsNullForReservedExposureProgramValue(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::EXPOSURE_PROGRAM => new IfdEntry(ExifTag::EXPOSURE_PROGRAM, 3, 1, 9),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertNull($parsedExif->exposureProgram());
     }
@@ -189,11 +176,10 @@ final class ParsedExifShootingConditionsTest extends TestCase
     public function returnsSpectralSensitivityString(): void
     {
         $spectralString = "ISO 12232 SOS\0";
-        $exifIfd        = new Ifd([
+
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::SPECTRAL_SENSITIVITY => new IfdEntry(ExifTag::SPECTRAL_SENSITIVITY, 2, 14, $spectralString),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame('ISO 12232 SOS', $parsedExif->spectralSensitivity());
     }
@@ -205,11 +191,9 @@ final class ParsedExifShootingConditionsTest extends TestCase
     #[Test]
     public function returnsPhotographicSensitivityViaAlias(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 640),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(640, $parsedExif->photographicSensitivity());
     }
@@ -221,11 +205,9 @@ final class ParsedExifShootingConditionsTest extends TestCase
     #[Test]
     public function returnsExposureIndexFromRational(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::EXPOSURE_INDEX => new IfdEntry(ExifTag::EXPOSURE_INDEX, 5, 1, [[320, 2]]),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(160.0, $parsedExif->exposureIndex());
     }
@@ -237,11 +219,9 @@ final class ParsedExifShootingConditionsTest extends TestCase
     #[Test]
     public function returnsSensingMethodEnum(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::SENSING_METHOD => new IfdEntry(ExifTag::SENSING_METHOD, 3, 1, SensingMethod::OneChipColorArea->value),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(SensingMethod::OneChipColorArea, $parsedExif->sensingMethod());
     }
@@ -253,11 +233,9 @@ final class ParsedExifShootingConditionsTest extends TestCase
     #[Test]
     public function ignoresReservedSensingMethodCodes(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::SENSING_METHOD => new IfdEntry(ExifTag::SENSING_METHOD, 3, 1, 6),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertNull($parsedExif->sensingMethod());
     }
@@ -269,11 +247,9 @@ final class ParsedExifShootingConditionsTest extends TestCase
     #[Test]
     public function returnsFileSourceFromUndefinedByte(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::FILE_SOURCE => new IfdEntry(ExifTag::FILE_SOURCE, 7, 1, "\x03"),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(FileSource::DigitalCamera, $parsedExif->fileSource());
     }
@@ -285,12 +261,18 @@ final class ParsedExifShootingConditionsTest extends TestCase
     #[Test]
     public function returnsSceneTypeFromUndefinedByte(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::SCENE_TYPE => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, "\x01"),
         ]);
 
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
         self::assertSame(SceneType::DirectlyPhotographedImage, $parsedExif->sceneType());
+    }
+
+    /**
+     * @param array<int, IfdEntry> $exifEntries
+     */
+    private function parsedExifFromExifEntries(array $exifEntries): ParsedExif
+    {
+        return new ParsedExif(new Ifd([]), new Ifd($exifEntries), null, null, null);
     }
 }
