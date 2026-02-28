@@ -87,7 +87,12 @@ final readonly class EnumConverter
         ExifNumericList|ExifRationalList|ExifRational|int|float|string|null $value,
     ): ?bool {
         if ($value instanceof ExifNumericList) {
-            $value = $value->values[0] ?? null;
+            $first = $value->values[0] ?? null;
+            if (!is_int($first) && !is_float($first)) {
+                return null;
+            }
+
+            $value = $first;
         }
 
         if ($value instanceof ExifRationalList) {
