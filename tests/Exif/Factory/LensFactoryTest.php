@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Value\Lens;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -41,7 +42,7 @@ final class LensFactoryTest extends TestCase
     #[Test]
     public function createsFromExifMetadata(): void
     {
-        $parsedExif = $this->parsedExif(
+        $lens = $this->createLens($this->parsedExif(
             lensMake: 'Canon',
             lensModel: 'RF 24-70mm F2.8 L IS USM',
             lensSerialNumber: '123456789',
@@ -49,16 +50,7 @@ final class LensFactoryTest extends TestCase
             focalLength35Mm: 50,
             maxApertureApex: 2.0,
             lensSpecification: [24.0, 70.0, 2.8, 2.8],
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new LensFactory();
-        $lens    = $factory->create($metadata);
+        ));
 
         self::assertSame('Canon', $lens->lensMake);
         self::assertSame('RF 24-70mm F2.8 L IS USM', $lens->lensModel);
@@ -76,13 +68,7 @@ final class LensFactoryTest extends TestCase
     #[Test]
     public function createsWithNullExifDoc(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-        );
-
-        $factory = new LensFactory();
-        $lens    = $factory->create($metadata);
+        $lens = $this->createLens(null);
 
         self::assertNull($lens->lensMake);
         self::assertNull($lens->lensModel);
@@ -100,7 +86,7 @@ final class LensFactoryTest extends TestCase
     #[Test]
     public function calculatesMaxApertureFromApex(): void
     {
-        $parsedExif = $this->parsedExif(
+        $lens = $this->createLens($this->parsedExif(
             lensMake: null,
             lensModel: null,
             lensSerialNumber: null,
@@ -108,16 +94,7 @@ final class LensFactoryTest extends TestCase
             focalLength35Mm: null,
             maxApertureApex: 1.0,
             lensSpecification: null,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new LensFactory();
-        $lens    = $factory->create($metadata);
+        ));
 
         self::assertNotNull($lens->maxApertureFNumber);
         self::assertEqualsWithDelta(1.4142135, $lens->maxApertureFNumber, 0.0001);
@@ -130,7 +107,7 @@ final class LensFactoryTest extends TestCase
     #[Test]
     public function handlesNullMaxApertureApex(): void
     {
-        $parsedExif = $this->parsedExif(
+        $lens = $this->createLens($this->parsedExif(
             lensMake: 'Sony',
             lensModel: 'FE 24-70mm F2.8 GM',
             lensSerialNumber: null,
@@ -138,16 +115,7 @@ final class LensFactoryTest extends TestCase
             focalLength35Mm: 35,
             maxApertureApex: null,
             lensSpecification: null,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new LensFactory();
-        $lens    = $factory->create($metadata);
+        ));
 
         self::assertSame('Sony', $lens->lensMake);
         self::assertSame('FE 24-70mm F2.8 GM', $lens->lensModel);
@@ -177,25 +145,7 @@ final class LensFactoryTest extends TestCase
             ),
         ];
 
-        $ifd0    = new Ifd([]);
-        $exifIfd = new Ifd($exifEntries);
-
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new LensFactory();
-        $lens    = $factory->create($metadata);
+        $lens = $this->createLens($this->parsedExifFromEntries($exifEntries));
 
         self::assertNull($lens->lensMake);
         self::assertNull($lens->lensModel);
@@ -220,25 +170,7 @@ final class LensFactoryTest extends TestCase
             ),
         ];
 
-        $ifd0    = new Ifd([]);
-        $exifIfd = new Ifd($exifEntries);
-
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new LensFactory();
-        $factory->create($metadata);
+        $this->createLens($this->parsedExifFromEntries($exifEntries));
 
         // A truncated specification should either be null or have fewer entries
         // — the key is that no exception is thrown
@@ -329,6 +261,25 @@ final class LensFactoryTest extends TestCase
             );
         }
 
+        return $this->parsedExifFromEntries($exifEntries);
+    }
+
+    private function createLens(?ParsedExif $parsedExif): Lens
+    {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        return new LensFactory()->create($metadata);
+    }
+
+    /**
+     * @param array<int, IfdEntry> $exifEntries
+     */
+    private function parsedExifFromEntries(array $exifEntries): ParsedExif
+    {
         $ifd0    = new Ifd([]);
         $exifIfd = new Ifd($exifEntries);
 
