@@ -549,7 +549,7 @@ final readonly class IfdValueReader
         $value = $this->value($ifd, $tag);
 
         if (is_string($value)) {
-            $digits = preg_replace('/[^0-9]/', '', $value);
+            $digits = preg_replace('/\D/', '', $value);
 
             return ($digits !== null && $digits !== '') ? $digits : null;
         }
