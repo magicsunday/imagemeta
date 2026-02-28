@@ -73,6 +73,8 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         require_once __DIR__ . '/../../scripts/imagemeta-format.php';
 
         $formatterReflection = new ReflectionMethod('MagicSunday\\ImageMeta\\Scripts\\MetadataFormatter', 'format');
