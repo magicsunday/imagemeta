@@ -122,6 +122,7 @@ use PHPUnit\Framework\TestCase;
 
 use function chr;
 use function file_put_contents;
+use function implode;
 use function ltrim;
 use function pack;
 use function rename;
@@ -244,6 +245,22 @@ final class IccIntegrationTest extends TestCase
 {
     private const int MARKER_APP2 = 0xE2;
 
+    private function buildJpeg(string ...$segments): string
+    {
+        return "\xFF\xD8" . implode('', $segments) . "\xFF\xD9";
+    }
+
+    private function readMetadataFromJpeg(string $jpeg): Metadata
+    {
+        $path = $this->writeTempFile($jpeg, 'jpg');
+
+        try {
+            return MetadataReader::createDefault()->read($path);
+        } finally {
+            @unlink($path);
+        }
+    }
+
     /**
      * Builds a JPEG with a single-segment ICC profile inside APP2 and verifies that
      * MetadataReader populates iccProfile, iccSegments, and structured ColorProfile.
@@ -255,17 +272,11 @@ final class IccIntegrationTest extends TestCase
         $iccProfile  = $this->buildIccProfile($description);
         $iccSegment  = $this->buildIccSegment($iccProfile, sequenceNumber: 1, sequenceCount: 1);
 
-        $jpeg = "\xFF\xD8"
-            . $this->segment(self::MARKER_APP2, $iccSegment)
-            . "\xFF\xD9";
-
-        $path = $this->writeTempFile($jpeg, 'jpg');
-
-        try {
-            $metadata = MetadataReader::createDefault()->read($path);
-        } finally {
-            @unlink($path);
-        }
+        $metadata = $this->readMetadataFromJpeg(
+            $this->buildJpeg(
+                $this->segment(self::MARKER_APP2, $iccSegment),
+            ),
+        );
 
         self::assertCount(1, $metadata->iccSegments);
         self::assertSame($iccProfile, $metadata->iccProfile);
@@ -295,18 +306,12 @@ final class IccIntegrationTest extends TestCase
         $segment1 = $this->buildIccSegment($chunk1, sequenceNumber: 1, sequenceCount: 2, raw: true);
         $segment2 = $this->buildIccSegment($chunk2, sequenceNumber: 2, sequenceCount: 2, raw: true);
 
-        $jpeg = "\xFF\xD8"
-            . $this->segment(self::MARKER_APP2, $segment1)
-            . $this->segment(self::MARKER_APP2, $segment2)
-            . "\xFF\xD9";
-
-        $path = $this->writeTempFile($jpeg, 'jpg');
-
-        try {
-            $metadata = MetadataReader::createDefault()->read($path);
-        } finally {
-            @unlink($path);
-        }
+        $metadata = $this->readMetadataFromJpeg(
+            $this->buildJpeg(
+                $this->segment(self::MARKER_APP2, $segment1),
+                $this->segment(self::MARKER_APP2, $segment2),
+            ),
+        );
 
         self::assertCount(2, $metadata->iccSegments);
         self::assertSame($iccProfile, $metadata->iccProfile);
@@ -324,15 +329,7 @@ final class IccIntegrationTest extends TestCase
     #[Test]
     public function readJpegWithoutIccLeavesColorProfileEmpty(): void
     {
-        $jpeg = "\xFF\xD8\xFF\xD9";
-
-        $path = $this->writeTempFile($jpeg, 'jpg');
-
-        try {
-            $metadata = MetadataReader::createDefault()->read($path);
-        } finally {
-            @unlink($path);
-        }
+        $metadata = $this->readMetadataFromJpeg($this->buildJpeg());
 
         self::assertSame([], $metadata->iccSegments);
         self::assertNull($metadata->iccProfile);
