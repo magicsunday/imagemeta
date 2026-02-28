@@ -45,7 +45,7 @@ final class ParsedExifJpegLegacyTagsTest extends TestCase
     #[Test]
     public function jpegLosslessPredictorsReturnsIfd0Value(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             TiffTag::JPEG_LOSSLESS_PREDICTORS => new IfdEntry(
                 TiffTag::JPEG_LOSSLESS_PREDICTORS,
                 3,
@@ -54,8 +54,7 @@ final class ParsedExifJpegLegacyTagsTest extends TestCase
             ),
         ]);
 
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
-        $value      = $parsedExif->jpegLosslessPredictors();
+        $value = $parsedExif->jpegLosslessPredictors();
 
         self::assertInstanceOf(ExifNumericList::class, $value);
         self::assertSame([1, 3, 5], $value->values);
@@ -67,7 +66,7 @@ final class ParsedExifJpegLegacyTagsTest extends TestCase
     #[Test]
     public function jpegLosslessPredictorsReturnsNullWhenAbsent(): void
     {
-        $parsedExif = new ParsedExif(new Ifd([]), null, null, null, null);
+        $parsedExif = $this->parsedExifFromIfd0([]);
 
         self::assertNull($parsedExif->jpegLosslessPredictors());
     }
@@ -78,7 +77,7 @@ final class ParsedExifJpegLegacyTagsTest extends TestCase
     #[Test]
     public function neighboringJpegLegacyAccessorsRemainUnchanged(): void
     {
-        $ifd0 = new Ifd([
+        $parsedExif = $this->parsedExifFromIfd0([
             TiffTag::JPEG_PROC                => new IfdEntry(TiffTag::JPEG_PROC, 3, 1, 14),
             TiffTag::JPEG_RESTART_INTERVAL    => new IfdEntry(TiffTag::JPEG_RESTART_INTERVAL, 3, 1, 8),
             TiffTag::JPEG_LOSSLESS_PREDICTORS => new IfdEntry(TiffTag::JPEG_LOSSLESS_PREDICTORS, 3, 2, [4, 6]),
@@ -87,8 +86,6 @@ final class ParsedExifJpegLegacyTagsTest extends TestCase
             TiffTag::JPEG_DC_TABLES           => new IfdEntry(TiffTag::JPEG_DC_TABLES, 4, 2, [300, 400]),
             TiffTag::JPEG_AC_TABLES           => new IfdEntry(TiffTag::JPEG_AC_TABLES, 4, 2, [500, 600]),
         ]);
-
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         $jpegLosslessPredictors = $parsedExif->jpegLosslessPredictors();
         $jpegPointTransforms    = $parsedExif->jpegPointTransforms();
@@ -108,5 +105,13 @@ final class ParsedExifJpegLegacyTagsTest extends TestCase
         self::assertSame([300, 400], $jpegDCTables->values);
         self::assertInstanceOf(ExifNumericList::class, $jpegACTables);
         self::assertSame([500, 600], $jpegACTables->values);
+    }
+
+    /**
+     * @param array<int, IfdEntry> $ifd0Entries
+     */
+    private function parsedExifFromIfd0(array $ifd0Entries): ParsedExif
+    {
+        return new ParsedExif(new Ifd($ifd0Entries), null, null, null, null);
     }
 }
