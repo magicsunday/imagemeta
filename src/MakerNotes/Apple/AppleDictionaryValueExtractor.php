@@ -343,7 +343,7 @@ final readonly class AppleDictionaryValueExtractor
                 continue;
             }
 
-            if (!array_is_list($candidate) && array_key_exists('values', $candidate) && is_array($candidate['values'])) {
+            if (array_key_exists('values', $candidate) && is_array($candidate['values'])) {
                 $candidate = $candidate['values'];
             }
 
@@ -436,7 +436,7 @@ final readonly class AppleDictionaryValueExtractor
             return null;
         }
 
-        if (!array_is_list($value) && array_key_exists('values', $value) && is_array($value['values'])) {
+        if (array_key_exists('values', $value) && is_array($value['values'])) {
             $value = $value['values'];
         }
 
