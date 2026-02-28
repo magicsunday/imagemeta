@@ -15,6 +15,9 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeDataType;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Verifies the QuickTimeDataType enum exposes the expected data type cases and values.
+ */
 final class QuickTimeDataTypeTest extends TestCase
 {
     #[Test]
