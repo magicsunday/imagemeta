@@ -28,6 +28,7 @@ use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
+use function iterator_to_array;
 use function pack;
 use function strlen;
 
@@ -243,9 +244,7 @@ final class BoxNavigatorTest extends TestCase
         $child                   = $this->box('test', 'X');
         [$navigator, $container] = $this->createNavigatorWithContainer($child);
 
-        foreach ($navigator->walkChildren($container, -1) as $_) {
-            unset($_);
-        }
+        iterator_to_array($navigator->walkChildren($container, -1));
     }
 
     /**
@@ -260,9 +259,7 @@ final class BoxNavigatorTest extends TestCase
         $child                   = $this->box('test', 'X');
         [$navigator, $container] = $this->createNavigatorWithContainer($child);
 
-        foreach ($navigator->walkChildren($container, $container->contentSize + 1) as $_) {
-            unset($_);
-        }
+        iterator_to_array($navigator->walkChildren($container, $container->contentSize + 1));
     }
 
     /**
@@ -279,9 +276,7 @@ final class BoxNavigatorTest extends TestCase
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
-        foreach ($navigator->walkChildren($container) as $_) {
-            unset($_);
-        }
+        iterator_to_array($navigator->walkChildren($container));
     }
 
     /**
@@ -299,9 +294,7 @@ final class BoxNavigatorTest extends TestCase
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
-        foreach ($navigator->walkChildren($container, allowTrailingTerminator: true) as $_) {
-            unset($_);
-        }
+        iterator_to_array($navigator->walkChildren($container, allowTrailingTerminator: true));
     }
 
     // =========================================================================
