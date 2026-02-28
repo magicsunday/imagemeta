@@ -64,6 +64,9 @@ use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp as ValueXmp;
 
+use function array_filter;
+use function count;
+
 /**
  * Builds the structured metadata aggregate by orchestrating value-object creation from
  * ParsedExif, QuickTimeMeta and MakerNotes sources.
