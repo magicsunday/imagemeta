@@ -114,19 +114,19 @@ final readonly class TiffValueDecoder
         if ($inlineBytes !== null) {
             PayloadGuard::ensureMinimumLength($inlineBytes, $dataSize, sprintf('Inline value for TIFF type %d', $type), 1336);
 
-            return [substr($inlineBytes, 0, $dataSize), null];
+            return [$this->sliceBytes($inlineBytes, 0, $dataSize), null];
         }
 
         if ($dataSize <= $inlineThreshold) {
             if (is_string($valueOrOffset)) {
                 PayloadGuard::ensureMinimumLength($valueOrOffset, $dataSize, sprintf('Inline value for TIFF type %d', $type), 1337);
 
-                return [substr($valueOrOffset, 0, $dataSize), null];
+                return [$this->sliceBytes($valueOrOffset, 0, $dataSize), null];
             }
 
             $raw = $this->binaryReader->uXToBytes($valueOrOffset, $inlineThreshold);
 
-            return [substr($raw, 0, $dataSize), null];
+            return [$this->sliceBytes($raw, 0, $dataSize), null];
         }
 
         $offset = $this->offsetValidator->ensureOffset($valueOrOffset, sprintf('Value offset for TIFF type %d', $type), $dataSize);
@@ -197,17 +197,18 @@ final readonly class TiffValueDecoder
         $vals   = [];
         $cursor = 0;
         for ($i = 0; $i < $count; ++$i) {
-            $vals[] = match ($type) {
+            $componentBytes = $this->sliceBytes($bytes, $cursor, $componentSize);
+            $vals[]         = match ($type) {
                 TiffFieldType::Byte->value   => ord($bytes[$cursor]),
                 TiffFieldType::SByte->value  => $this->binaryReader->toSigned(ord($bytes[$cursor]), 8),
-                TiffFieldType::Short->value  => $this->binaryReader->unpackU16(substr($bytes, $cursor, 2)),
-                TiffFieldType::SShort->value => $this->binaryReader->unpackS16(substr($bytes, $cursor, 2)),
-                TiffFieldType::Long->value, TiffFieldType::Ifd->value => $this->binaryReader->unpackU32(substr($bytes, $cursor, 4)),
-                TiffFieldType::SLong->value => $this->binaryReader->unpackS32(substr($bytes, $cursor, 4)),
-                TiffFieldType::Long8->value, TiffFieldType::Ifd8->value => $this->binaryReader->unpackU64(substr($bytes, $cursor, 8)),
-                TiffFieldType::SLong8->value => $this->binaryReader->unpackS64(substr($bytes, $cursor, 8)),
-                TiffFieldType::Float->value  => $this->binaryReader->unpackFloat(substr($bytes, $cursor, 4)),
-                TiffFieldType::Double->value => $this->binaryReader->unpackDouble(substr($bytes, $cursor, 8)),
+                TiffFieldType::Short->value  => $this->binaryReader->unpackU16($componentBytes),
+                TiffFieldType::SShort->value => $this->binaryReader->unpackS16($componentBytes),
+                TiffFieldType::Long->value, TiffFieldType::Ifd->value => $this->binaryReader->unpackU32($componentBytes),
+                TiffFieldType::SLong->value => $this->binaryReader->unpackS32($componentBytes),
+                TiffFieldType::Long8->value, TiffFieldType::Ifd8->value => $this->binaryReader->unpackU64($componentBytes),
+                TiffFieldType::SLong8->value => $this->binaryReader->unpackS64($componentBytes),
+                TiffFieldType::Float->value  => $this->binaryReader->unpackFloat($componentBytes),
+                TiffFieldType::Double->value => $this->binaryReader->unpackDouble($componentBytes),
                 default                      => throw new ParseError('Unsupported type in decodeBytes: ' . $type, 1886),
             };
             $cursor += $componentSize;
@@ -311,5 +312,10 @@ final readonly class TiffValueDecoder
         }
 
         return $value->toInt(sprintf('IFD tag 0x%04X value', $tag));
+    }
+
+    private function sliceBytes(string $bytes, int $offset, int $length): string
+    {
+        return substr($bytes, $offset, $length);
     }
 }
