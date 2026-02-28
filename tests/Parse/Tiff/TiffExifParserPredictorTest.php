@@ -250,14 +250,8 @@ final class TiffExifParserPredictorTest extends TestCase
      */
     private function buildIfdBlock(array $entries, int $nextIfdOffset): string
     {
-        $entryPayload = '';
-
-        foreach ($entries as $entry) {
-            $entryPayload .= $entry;
-        }
-
         return pack('v', count($entries))
-            . $entryPayload
+            . implode('', $entries)
             . pack('V', $nextIfdOffset);
     }
 
@@ -278,15 +272,14 @@ final class TiffExifParserPredictorTest extends TestCase
      */
     private function numericEntry(int $tag, int $type, int $count, array $values): string
     {
-        $payload = '';
-
-        foreach ($values as $value) {
-            $payload .= match ($type) {
+        $payload = implode('', array_map(
+            static fn (int $value): string => match ($type) {
                 TiffConst::TYPE_SHORT => pack('v', $value),
                 TiffConst::TYPE_LONG  => pack('V', $value),
                 default               => pack('v', $value),
-            };
-        }
+            },
+            $values,
+        ));
 
         return pack('v', $tag)
             . pack('v', $type)
