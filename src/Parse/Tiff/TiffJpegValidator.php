@@ -182,29 +182,9 @@ final readonly class TiffJpegValidator
         $jpegDcTablesEntry = $ifd->get(TiffTag::JPEG_DC_TABLES);
         $jpegAcTablesEntry = $ifd->get(TiffTag::JPEG_AC_TABLES);
 
-        if ($jpegQTablesEntry instanceof IfdEntry) {
-            if (($jpegQTablesEntry->type !== TiffConst::TYPE_LONG) || ($jpegQTablesEntry->count !== $samplesPerPixel)) {
-                throw new ParseError('JPEGQTables must be LONG[SamplesPerPixel].', 1842);
-            }
-
-            $this->validateJpegTableOffsets($jpegQTablesEntry, 'JPEGQTables');
-        }
-
-        if ($jpegDcTablesEntry instanceof IfdEntry) {
-            if (($jpegDcTablesEntry->type !== TiffConst::TYPE_LONG) || ($jpegDcTablesEntry->count !== $samplesPerPixel)) {
-                throw new ParseError('JPEGDCTables must be LONG[SamplesPerPixel].', 1843);
-            }
-
-            $this->validateJpegTableOffsets($jpegDcTablesEntry, 'JPEGDCTables');
-        }
-
-        if ($jpegAcTablesEntry instanceof IfdEntry) {
-            if (($jpegAcTablesEntry->type !== TiffConst::TYPE_LONG) || ($jpegAcTablesEntry->count !== $samplesPerPixel)) {
-                throw new ParseError('JPEGACTables must be LONG[SamplesPerPixel].', 1844);
-            }
-
-            $this->validateJpegTableOffsets($jpegAcTablesEntry, 'JPEGACTables');
-        }
+        $this->validateJpegTableEntry($jpegQTablesEntry, 'JPEGQTables', $samplesPerPixel, 1842);
+        $this->validateJpegTableEntry($jpegDcTablesEntry, 'JPEGDCTables', $samplesPerPixel, 1843);
+        $this->validateJpegTableEntry($jpegAcTablesEntry, 'JPEGACTables', $samplesPerPixel, 1844);
 
         $hasJpegTableTags = ($jpegQTablesEntry instanceof IfdEntry)
             || ($jpegDcTablesEntry instanceof IfdEntry)
@@ -300,6 +280,24 @@ final readonly class TiffJpegValidator
         }
 
         return [$jpegProc, $samplesPerPixel];
+    }
+
+    /**
+     * Validates a single JPEG table tag (type, count) and its offset bounds.
+     *
+     * TIFF 6.0 Section 22 defines JPEG table tags as LONG[SamplesPerPixel].
+     */
+    private function validateJpegTableEntry(?IfdEntry $entry, string $tagName, int $samplesPerPixel, int $errorCode): void
+    {
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (($entry->type !== TiffConst::TYPE_LONG) || ($entry->count !== $samplesPerPixel)) {
+            throw new ParseError(sprintf('%s must be LONG[SamplesPerPixel].', $tagName), $errorCode);
+        }
+
+        $this->validateJpegTableOffsets($entry, $tagName);
     }
 
     /**
