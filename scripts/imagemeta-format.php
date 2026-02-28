@@ -495,9 +495,7 @@ final class MetadataFormatter
 
         // Call the enum's fromExifValue method if it exists
         if (method_exists($enumClass, 'fromExifValue')) {
-            $enumInstance = $enumClass::fromExifValue($scalarValue);
-
-            return $enumInstance ?? $value;
+            return $enumClass::fromExifValue($scalarValue) ?? $value;
         }
 
         return $value;
@@ -554,9 +552,7 @@ final class MetadataFormatter
         // Call the enum's fromExifValue method if it exists
         // XMP and EXIF use the same enum value systems
         if (method_exists($enumClass, 'fromExifValue')) {
-            $enumInstance = $enumClass::fromExifValue($scalarValue);
-            
-            return $enumInstance ?? $value;
+            return $enumClass::fromExifValue($scalarValue) ?? $value;
         }
         
         return $value;
@@ -703,7 +699,7 @@ final class MetadataFormatter
      */
     private function printSection(string $sectionName, array $data, bool $showHex = false, ?string $ifdContext = null): void
     {
-        echo "---- {$sectionName} ----\n";
+        echo "---- $sectionName ----\n";
 
         foreach ($data as $key => $value) {
             $tagId          = is_numeric($key) ? (int) $key : null;
@@ -884,7 +880,7 @@ final class MetadataFormatter
             }
 
             // If it's a simple fraction, show as fraction
-            if ($value->denominator !== 1 && abs($decimal) < 10) {
+            if (abs($decimal) < 10) {
                 return sprintf('%d/%d', $value->numerator, $value->denominator);
             }
 
@@ -958,9 +954,7 @@ final class MetadataFormatter
             }
 
             // Clean up unnecessary decimals
-            $formatted = number_format($value, 10, '.', '');
-
-            return rtrim(rtrim($formatted, '0'), '.');
+            return rtrim(rtrim(number_format($value, 10, '.', ''), '0'), '.');
         }
 
         if (is_string($value)) {
@@ -1134,9 +1128,7 @@ final class MetadataFormatter
         }
 
         if ($localName === 'ExposureTime' && is_numeric($value)) {
-            $formatted = $this->converters->formatExposureTime((float) $value);
-
-            return $formatted ?? $value;
+            return $this->converters->formatExposureTime((float) $value) ?? $value;
         }
 
         if ($localName === 'ShutterSpeedValue' && is_numeric($value)) {
@@ -1150,9 +1142,7 @@ final class MetadataFormatter
         }
 
         if (($localName === 'ExposureBiasValue' || $localName === 'DigitalZoomRatio') && is_numeric($value)) {
-            $floatVal = (float) $value;
-
-            return rtrim(rtrim(number_format($floatVal, 10, '.', ''), '0'), '.');
+            return rtrim(rtrim(number_format((float) $value, 10, '.', ''), '0'), '.');
         }
 
         return $value;
