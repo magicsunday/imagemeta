@@ -68,18 +68,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     public function returnsNullWhenDataTooShort(): void
     {
         // Only 2 bytes instead of required minimum 4
-        $shortData = "\x05\x00";
-        $entry     = new IfdEntry(
-            tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
-            type: 7, // UNDEFINED
-            count: 2,
-            value: $shortData,
-        );
-
-        $exifIfd    = new Ifd([ExifTag::DEVICE_SETTING_DESCRIPTION => $entry]);
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        self::assertNull($parsedExif->deviceSettingDescription());
+        self::assertNull($this->parseDeviceSettingDescription("\x05\x00"));
     }
 
     /**
@@ -90,18 +79,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     public function parsesLittleEndianWithoutSettings(): void
     {
         // Little-endian: 5 columns (0x05 0x00), 10 rows (0x0A 0x00)
-        $data  = "\x05\x00\x0A\x00";
-        $entry = new IfdEntry(
-            tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
-            type: 7, // UNDEFINED
-            count: 4,
-            value: $data,
-        );
-
-        $exifIfd    = new Ifd([ExifTag::DEVICE_SETTING_DESCRIPTION => $entry]);
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        $result = $parsedExif->deviceSettingDescription();
+        $result = $this->parseDeviceSettingDescription("\x05\x00\x0A\x00");
 
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(5, $result->columns);
@@ -117,18 +95,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     public function parsesBigEndianWithoutSettings(): void
     {
         // Big-endian: 5 columns (0x00 0x05), 10 rows (0x00 0x0A)
-        $data  = "\x00\x05\x00\x0A";
-        $entry = new IfdEntry(
-            tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
-            type: 7, // UNDEFINED
-            count: 4,
-            value: $data,
-        );
-
-        $exifIfd    = new Ifd([ExifTag::DEVICE_SETTING_DESCRIPTION => $entry]);
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null, byteOrder: Endian::Big);
-
-        $result = $parsedExif->deviceSettingDescription();
+        $result = $this->parseDeviceSettingDescription("\x00\x05\x00\x0A", Endian::Big);
 
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(5, $result->columns);
@@ -145,18 +112,9 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     {
         // Little-endian: 3 columns, 7 rows
         // BOM (FF FE) + UTF-16LE "Test" + NULL terminator
-        $data  = "\x03\x00\x07\x00\xFF\xFET\x00e\x00s\x00t\x00\x00\x00";
-        $entry = new IfdEntry(
-            tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
-            type: 7, // UNDEFINED
-            count: strlen($data),
-            value: $data,
+        $result = $this->parseDeviceSettingDescription(
+            "\x03\x00\x07\x00\xFF\xFET\x00e\x00s\x00t\x00\x00\x00",
         );
-
-        $exifIfd    = new Ifd([ExifTag::DEVICE_SETTING_DESCRIPTION => $entry]);
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        $result = $parsedExif->deviceSettingDescription();
 
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(3, $result->columns);
@@ -173,18 +131,9 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     {
         // Little-endian: 3 columns, 7 rows
         // BOM (FE FF) + UTF-16BE "Test" + NULL terminator
-        $data  = "\x03\x00\x07\x00\xFE\xFF\x00T\x00e\x00s\x00t\x00\x00";
-        $entry = new IfdEntry(
-            tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
-            type: 7, // UNDEFINED
-            count: strlen($data),
-            value: $data,
+        $result = $this->parseDeviceSettingDescription(
+            "\x03\x00\x07\x00\xFE\xFF\x00T\x00e\x00s\x00t\x00\x00",
         );
-
-        $exifIfd    = new Ifd([ExifTag::DEVICE_SETTING_DESCRIPTION => $entry]);
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        $result = $parsedExif->deviceSettingDescription();
 
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(3, $result->columns);
@@ -203,18 +152,9 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         // BOM (FF FE) + UTF-16LE "ISO:100 WB:Auto"
         $settingsText = 'ISO:100 WB:Auto';
         $utf16le      = mb_convert_encoding($settingsText, 'UTF-16LE', 'UTF-8');
-        $data         = "\x05\x00\x0A\x00\xFF\xFE" . $utf16le . "\x00\x00";
-        $entry        = new IfdEntry(
-            tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
-            type: 7, // UNDEFINED
-            count: strlen($data),
-            value: $data,
+        $result       = $this->parseDeviceSettingDescription(
+            "\x05\x00\x0A\x00\xFF\xFE" . $utf16le . "\x00\x00",
         );
-
-        $exifIfd    = new Ifd([ExifTag::DEVICE_SETTING_DESCRIPTION => $entry]);
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        $result = $parsedExif->deviceSettingDescription();
 
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(5, $result->columns);
@@ -231,18 +171,9 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     {
         // Little-endian: 3 columns, 7 rows
         // UTF-16LE "Test" WITHOUT BOM
-        $data  = "\x03\x00\x07\x00T\x00e\x00s\x00t\x00\x00\x00";
-        $entry = new IfdEntry(
-            tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
-            type: 7, // UNDEFINED
-            count: strlen($data),
-            value: $data,
+        $result = $this->parseDeviceSettingDescription(
+            "\x03\x00\x07\x00T\x00e\x00s\x00t\x00\x00\x00",
         );
-
-        $exifIfd    = new Ifd([ExifTag::DEVICE_SETTING_DESCRIPTION => $entry]);
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        $result = $parsedExif->deviceSettingDescription();
 
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(3, $result->columns);
@@ -259,18 +190,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     {
         // Little-endian: 2 columns, 3 rows
         // Empty UTF-16 string (just null terminator)
-        $data  = "\x02\x00\x03\x00\x00\x00";
-        $entry = new IfdEntry(
-            tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
-            type: 7, // UNDEFINED
-            count: 6,
-            value: $data,
-        );
-
-        $exifIfd    = new Ifd([ExifTag::DEVICE_SETTING_DESCRIPTION => $entry]);
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        $result = $parsedExif->deviceSettingDescription();
+        $result = $this->parseDeviceSettingDescription("\x02\x00\x03\x00\x00\x00");
 
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(2, $result->columns);
@@ -287,24 +207,32 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     {
         $firstSetting  = mb_convert_encoding('ISO:100', 'UTF-16LE', 'UTF-8');
         $secondSetting = mb_convert_encoding('WB:Auto', 'UTF-16LE', 'UTF-8');
-        $data          = "\x02\x00\x02\x00"
+        $result        = $this->parseDeviceSettingDescription(
+            "\x02\x00\x02\x00"
             . "\xFF\xFE" . $firstSetting . "\x00\x00"
-            . "\xFF\xFE" . $secondSetting . "\x00\x00";
-        $entry = new IfdEntry(
-            tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
-            type: 7, // UNDEFINED
-            count: strlen($data),
-            value: $data,
+            . "\xFF\xFE" . $secondSetting . "\x00\x00",
         );
-
-        $exifIfd    = new Ifd([ExifTag::DEVICE_SETTING_DESCRIPTION => $entry]);
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        $result = $parsedExif->deviceSettingDescription();
 
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(2, $result->columns);
         self::assertSame(2, $result->rows);
         self::assertSame(['ISO:100', 'WB:Auto'], $result->settings);
+    }
+
+    private function parseDeviceSettingDescription(
+        string $data,
+        Endian $byteOrder = Endian::Little,
+    ): ?DeviceSettingDescription {
+        $entry = new IfdEntry(
+            tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
+            type: 7,
+            count: strlen($data),
+            value: $data,
+        );
+
+        $exifIfd    = new Ifd([ExifTag::DEVICE_SETTING_DESCRIPTION => $entry]);
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null, byteOrder: $byteOrder);
+
+        return $parsedExif->deviceSettingDescription();
     }
 }
