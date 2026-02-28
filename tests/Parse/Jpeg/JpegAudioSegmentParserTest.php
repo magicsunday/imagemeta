@@ -42,25 +42,39 @@ final class JpegAudioSegmentParserTest extends TestCase
     private const string AUDIO_SIGNATURE = "Exif\0\0Audio";
 
     /**
+     * Builds an EXIF audio APP2 segment payload with configurable header fields.
+     */
+    private function buildAudioPayload(
+        int $majorVersion = 1,
+        int $minorVersion = 0,
+        int $format = 0,
+        int $channels = 1,
+        int $sampleRate = 8000,
+        int $bitDepth = 16,
+        int $sampleCount = 0,
+        string $audioData = '',
+    ): string {
+        return self::AUDIO_SIGNATURE
+            . chr($majorVersion)
+            . chr($minorVersion)
+            . chr($format)
+            . chr($channels)
+            . pack('N', $sampleRate)
+            . chr($bitDepth)
+            . pack('N', $sampleCount)
+            . $audioData;
+    }
+
+    /**
      * Parses a valid PCM mono audio segment with 8 kHz sample rate and 16-bit depth.
      */
     #[Test]
     public function parsesValidPcmMonoAudioSegment(): void
     {
         $sampleCount = 4;
-        $channels    = 1;
-        $bitDepth    = 16;
         $audioData   = str_repeat("\x00\x01", $sampleCount);
 
-        $payload = self::AUDIO_SIGNATURE
-            . chr(1)                            // major version
-            . chr(0)                            // minor version
-            . chr(0)                            // format: PCM
-            . chr($channels)                    // channels: mono
-            . pack('N', 8000)                   // sample rate: 8 kHz
-            . chr($bitDepth)                    // bit depth: 16
-            . pack('N', $sampleCount)           // sample count
-            . $audioData;
+        $payload = $this->buildAudioPayload(sampleCount: $sampleCount, audioData: $audioData);
 
         $parser = new JpegAudioSegmentParser();
         $parser->handleSegment($payload, 0);
@@ -82,18 +96,9 @@ final class JpegAudioSegmentParserTest extends TestCase
     public function parsesValidMuLawAudioSegment(): void
     {
         $sampleCount = 8;
-        $channels    = 1;
-        $bitDepth    = 8;
         $audioData   = str_repeat("\x7F", $sampleCount);
 
-        $payload = self::AUDIO_SIGNATURE
-            . chr(1) . chr(0)                   // version 1.00
-            . chr(1)                            // format: MU_LAW
-            . chr($channels)
-            . pack('N', 8000)
-            . chr($bitDepth)
-            . pack('N', $sampleCount)
-            . $audioData;
+        $payload = $this->buildAudioPayload(format: 1, bitDepth: 8, sampleCount: $sampleCount, audioData: $audioData);
 
         $parser = new JpegAudioSegmentParser();
         $parser->handleSegment($payload, 0);
@@ -126,12 +131,7 @@ final class JpegAudioSegmentParserTest extends TestCase
     #[Test]
     public function throwsWhenMajorVersionIsUnsupported(): void
     {
-        $payload = self::AUDIO_SIGNATURE
-            . chr(2) . chr(0)                   // unsupported major version
-            . chr(0) . chr(1)
-            . pack('N', 8000)
-            . chr(16)
-            . pack('N', 0);
+        $payload = $this->buildAudioPayload(majorVersion: 2);
 
         $parser = new JpegAudioSegmentParser();
 
@@ -147,13 +147,7 @@ final class JpegAudioSegmentParserTest extends TestCase
     #[Test]
     public function throwsWhenChannelCountIsZero(): void
     {
-        $payload = self::AUDIO_SIGNATURE
-            . chr(1) . chr(0)
-            . chr(0)                            // format: PCM
-            . chr(0)                            // zero channels
-            . pack('N', 8000)
-            . chr(16)
-            . pack('N', 0);
+        $payload = $this->buildAudioPayload(channels: 0);
 
         $parser = new JpegAudioSegmentParser();
 
@@ -169,13 +163,7 @@ final class JpegAudioSegmentParserTest extends TestCase
     #[Test]
     public function throwsWhenSampleRateIsUnsupported(): void
     {
-        $payload = self::AUDIO_SIGNATURE
-            . chr(1) . chr(0)
-            . chr(0)                            // format: PCM
-            . chr(1)                            // mono
-            . pack('N', 7777)                   // unsupported sample rate
-            . chr(16)
-            . pack('N', 0);
+        $payload = $this->buildAudioPayload(sampleRate: 7777);
 
         $parser = new JpegAudioSegmentParser();
 
@@ -191,13 +179,7 @@ final class JpegAudioSegmentParserTest extends TestCase
     #[Test]
     public function throwsWhenPcmBitDepthIsInvalid(): void
     {
-        $payload = self::AUDIO_SIGNATURE
-            . chr(1) . chr(0)
-            . chr(0)                            // format: PCM
-            . chr(1)                            // mono
-            . pack('N', 8000)
-            . chr(32)                           // invalid bit depth for PCM
-            . pack('N', 0);
+        $payload = $this->buildAudioPayload(bitDepth: 32);
 
         $parser = new JpegAudioSegmentParser();
 
@@ -213,14 +195,7 @@ final class JpegAudioSegmentParserTest extends TestCase
     #[Test]
     public function throwsWhenPcmDataLengthIsInconsistent(): void
     {
-        $payload = self::AUDIO_SIGNATURE
-            . chr(1) . chr(0)
-            . chr(0)                            // format: PCM
-            . chr(1)                            // mono
-            . pack('N', 8000)
-            . chr(16)                           // 16-bit = 2 bytes per sample
-            . pack('N', 4)                      // 4 samples expected = 8 bytes
-            . "\x00\x01\x02";                   // only 3 bytes of data
+        $payload = $this->buildAudioPayload(sampleCount: 4, audioData: "\x00\x01\x02");
 
         $parser = new JpegAudioSegmentParser();
 
@@ -239,13 +214,7 @@ final class JpegAudioSegmentParserTest extends TestCase
         $sampleCount = 2;
         $audioData   = str_repeat("\x00\x01", $sampleCount);
 
-        $payload = self::AUDIO_SIGNATURE
-            . chr(1) . chr(0)
-            . chr(0) . chr(1)
-            . pack('N', 8000)
-            . chr(16)
-            . pack('N', $sampleCount)
-            . $audioData;
+        $payload = $this->buildAudioPayload(sampleCount: $sampleCount, audioData: $audioData);
 
         $parser = new JpegAudioSegmentParser();
         $parser->handleSegment($payload, 0);
