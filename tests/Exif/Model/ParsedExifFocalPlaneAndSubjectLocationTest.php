@@ -51,7 +51,7 @@ final class ParsedExifFocalPlaneAndSubjectLocationTest extends TestCase
     #[Test]
     public function focalPlaneResolutionConvertsRationals(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::FOCAL_PLANE_X_RESOLUTION => new IfdEntry(
                 ExifTag::FOCAL_PLANE_X_RESOLUTION,
                 TiffConst::TYPE_RATIONAL,
@@ -72,8 +72,6 @@ final class ParsedExifFocalPlaneAndSubjectLocationTest extends TestCase
             ),
         ]);
 
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
         self::assertSame(3000.0, $parsedExif->focalPlaneXResolution());
         self::assertSame(2950.0, $parsedExif->focalPlaneYResolution());
         self::assertSame(3, $parsedExif->focalPlaneResolutionUnit());
@@ -86,7 +84,7 @@ final class ParsedExifFocalPlaneAndSubjectLocationTest extends TestCase
     #[Test]
     public function subjectLocationRequiresTwoCoordinates(): void
     {
-        $validIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::SUBJECT_LOCATION => new IfdEntry(
                 ExifTag::SUBJECT_LOCATION,
                 TiffConst::TYPE_SHORT,
@@ -95,11 +93,9 @@ final class ParsedExifFocalPlaneAndSubjectLocationTest extends TestCase
             ),
         ]);
 
-        $parsedExif = new ParsedExif(new Ifd([]), $validIfd, null, null, null);
-
         self::assertSame([1200, 800], $parsedExif->subjectLocation());
 
-        $invalidIfd = new Ifd([
+        $parsedInvalid = $this->parsedExifFromExifEntries([
             ExifTag::SUBJECT_LOCATION => new IfdEntry(
                 ExifTag::SUBJECT_LOCATION,
                 TiffConst::TYPE_SHORT,
@@ -108,8 +104,14 @@ final class ParsedExifFocalPlaneAndSubjectLocationTest extends TestCase
             ),
         ]);
 
-        $parsedInvalid = new ParsedExif(new Ifd([]), $invalidIfd, null, null, null);
-
         self::assertNull($parsedInvalid->subjectLocation());
+    }
+
+    /**
+     * @param array<int, IfdEntry> $exifEntries
+     */
+    private function parsedExifFromExifEntries(array $exifEntries): ParsedExif
+    {
+        return new ParsedExif(new Ifd([]), new Ifd($exifEntries), null, null, null);
     }
 }
