@@ -32,6 +32,8 @@ final class SubjectAreaConverterTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->converter = new SubjectAreaConverter();
     }
 
