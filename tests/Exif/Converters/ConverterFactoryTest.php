@@ -64,6 +64,8 @@ final class ConverterFactoryTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->factory = new ConverterFactory();
     }
 
