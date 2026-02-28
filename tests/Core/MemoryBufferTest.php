@@ -57,11 +57,6 @@ namespace MagicSunday\ImageMeta\Tests\Core {
     {
         private static bool $forceShortRead = false;
 
-        protected function setUp(): void
-        {
-            self::$forceShortRead = false;
-        }
-
         protected function tearDown(): void
         {
             self::$forceShortRead = false;
