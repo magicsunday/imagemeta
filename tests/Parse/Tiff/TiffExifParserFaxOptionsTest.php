@@ -29,6 +29,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function count;
+
 /**
  * Verifies TIFF fax options coupling and bitfield constraints.
  */
