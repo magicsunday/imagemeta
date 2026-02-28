@@ -34,6 +34,8 @@ final class ComponentsConverterTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->converter = new ComponentsConverter(new NumericConverter());
     }
 
