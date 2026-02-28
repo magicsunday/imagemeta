@@ -15,6 +15,9 @@ use MagicSunday\ImageMeta\Parse\Jpeg\JpegAudioFormat;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Verifies the JpegAudioFormat enum exposes the expected audio format cases and values.
+ */
 final class JpegAudioFormatTest extends TestCase
 {
     #[Test]
