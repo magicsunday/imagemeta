@@ -81,10 +81,7 @@ final class JxlParserTest extends TestCase
             . $this->box('Exif', $exifBlob)
             . $this->box('jxlc', 'codestream-data');
 
-        $stream = $this->streamFromString($jxl);
-        $parser = new JxlParser($stream);
-
-        [$exifBlobs, $xmpBlobs] = $parser->extract();
+        [$exifBlobs, $xmpBlobs] = $this->extractFromJxl($jxl);
 
         self::assertCount(1, $exifBlobs);
         self::assertSame($tiff, $exifBlobs[0]);
@@ -108,10 +105,7 @@ final class JxlParserTest extends TestCase
             . $this->box('xml ', $xmp)
             . $this->box('jxlc', 'codestream-data');
 
-        $stream = $this->streamFromString($jxl);
-        $parser = new JxlParser($stream);
-
-        [$exifBlobs, $xmpBlobs] = $parser->extract();
+        [$exifBlobs, $xmpBlobs] = $this->extractFromJxl($jxl);
 
         self::assertSame([], $exifBlobs);
         self::assertCount(1, $xmpBlobs);
@@ -134,10 +128,7 @@ final class JxlParserTest extends TestCase
             . $this->box('xml ', $xmp)
             . $this->box('jxlc', 'codestream-data');
 
-        $stream = $this->streamFromString($jxl);
-        $parser = new JxlParser($stream);
-
-        [$exifBlobs, $xmpBlobs] = $parser->extract();
+        [$exifBlobs, $xmpBlobs] = $this->extractFromJxl($jxl);
 
         self::assertCount(1, $exifBlobs);
         self::assertSame($tiff, $exifBlobs[0]);
@@ -155,10 +146,7 @@ final class JxlParserTest extends TestCase
             . $this->box('ftyp', 'jxl ' . pack('N', 0))
             . $this->box('jxlc', 'codestream-data');
 
-        $stream = $this->streamFromString($jxl);
-        $parser = new JxlParser($stream);
-
-        [$exifBlobs, $xmpBlobs] = $parser->extract();
+        [$exifBlobs, $xmpBlobs] = $this->extractFromJxl($jxl);
 
         self::assertSame([], $exifBlobs);
         self::assertSame([], $xmpBlobs);
@@ -176,10 +164,7 @@ final class JxlParserTest extends TestCase
         $jxl = self::JXL_SIGNATURE
             . $this->box('Exif', $exifBlob);
 
-        $stream = $this->streamFromString($jxl);
-        $parser = new JxlParser($stream);
-
-        [$exifBlobs, $xmpBlobs] = $parser->extract();
+        [$exifBlobs, $xmpBlobs] = $this->extractFromJxl($jxl);
 
         self::assertCount(1, $exifBlobs);
         self::assertSame($tiff, $exifBlobs[0]);
@@ -195,13 +180,10 @@ final class JxlParserTest extends TestCase
         $jxl = self::JXL_SIGNATURE
             . $this->box('Exif', "\x00\x00");
 
-        $stream = $this->streamFromString($jxl);
-        $parser = new JxlParser($stream);
-
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1562);
 
-        $parser->extract();
+        $this->extractFromJxl($jxl);
     }
 
     /**
@@ -213,13 +195,10 @@ final class JxlParserTest extends TestCase
         $jxl = self::JXL_SIGNATURE
             . $this->box('Exif', pack('N', 255) . 'II');
 
-        $stream = $this->streamFromString($jxl);
-        $parser = new JxlParser($stream);
-
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1563);
 
-        $parser->extract();
+        $this->extractFromJxl($jxl);
     }
 
     /**
@@ -231,13 +210,10 @@ final class JxlParserTest extends TestCase
         $jxl = self::JXL_SIGNATURE
             . $this->box('Exif', pack('N', 0) . 'XX' . "\x2A\x00\x00\x00\x00\x00");
 
-        $stream = $this->streamFromString($jxl);
-        $parser = new JxlParser($stream);
-
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1564);
 
-        $parser->extract();
+        $this->extractFromJxl($jxl);
     }
 
     /**
@@ -342,10 +318,7 @@ final class JxlParserTest extends TestCase
             . $this->box('jxlp', 'partial-codestream')
             . $this->box('jbrd', 'brotli-data');
 
-        $stream = $this->streamFromString($jxl);
-        $parser = new JxlParser($stream);
-
-        [$exifBlobs, $xmpBlobs] = $parser->extract();
+        [$exifBlobs, $xmpBlobs] = $this->extractFromJxl($jxl);
 
         self::assertSame([], $exifBlobs);
         self::assertSame([], $xmpBlobs);
@@ -357,15 +330,20 @@ final class JxlParserTest extends TestCase
     #[Test]
     public function handlesBareSignatureOnly(): void
     {
-        $jxl = self::JXL_SIGNATURE;
-
-        $stream = $this->streamFromString($jxl);
-        $parser = new JxlParser($stream);
-
-        [$exifBlobs, $xmpBlobs] = $parser->extract();
+        [$exifBlobs, $xmpBlobs] = $this->extractFromJxl(self::JXL_SIGNATURE);
 
         self::assertSame([], $exifBlobs);
         self::assertSame([], $xmpBlobs);
+    }
+
+    /**
+     * @return array{0: list<string>, 1: list<string>}
+     */
+    private function extractFromJxl(string $jxl): array
+    {
+        $stream = $this->streamFromString($jxl);
+
+        return (new JxlParser($stream))->extract();
     }
 
     private function streamFromString(string $data): Stream
