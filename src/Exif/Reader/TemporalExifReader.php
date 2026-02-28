@@ -297,7 +297,7 @@ final readonly class TemporalExifReader
         $format     = 'Y-m-d H:i:s';
 
         if (($subSeconds !== null) && ($subSeconds !== '')) {
-            $digits = preg_replace('/[^0-9]/', '', $subSeconds);
+            $digits = preg_replace('/\D/', '', $subSeconds);
             if (($digits !== null) && ($digits !== '')) {
                 $digits = substr($digits, 0, 6);
                 $digits = str_pad($digits, 6, '0');
