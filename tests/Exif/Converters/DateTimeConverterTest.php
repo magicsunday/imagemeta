@@ -31,6 +31,8 @@ final class DateTimeConverterTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->converter = new DateTimeConverter();
     }
 
