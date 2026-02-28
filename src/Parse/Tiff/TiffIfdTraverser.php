@@ -77,6 +77,10 @@ final class TiffIfdTraverser
                 return $this->validatePointerOffset($value, $entry->tag);
             }
 
+            if (is_float($value)) {
+                return $this->pointerOffsetFromFloat($value, $entry->tag);
+            }
+
             if ($value instanceof UInt64) {
                 if ($value->isZero()) {
                     return null;
@@ -85,14 +89,14 @@ final class TiffIfdTraverser
                 return $this->offsetValidator->ensureOffset($value, sprintf('IFD pointer tag 0x%04X', $entry->tag));
             }
 
-            if (is_float($value)) {
-                return $this->pointerOffsetFromFloat($value, $entry->tag);
-            }
-
             if ($value instanceof ExifNumericList) {
                 $first = $value->values[0] ?? null;
                 if (is_int($first)) {
                     return $this->validatePointerOffset($first, $entry->tag);
+                }
+
+                if (is_float($first)) {
+                    return $this->pointerOffsetFromFloat($first, $entry->tag);
                 }
 
                 if ($first instanceof UInt64) {
@@ -101,10 +105,6 @@ final class TiffIfdTraverser
                     }
 
                     return $this->offsetValidator->ensureOffset($first, sprintf('IFD pointer tag 0x%04X', $entry->tag));
-                }
-
-                if (is_float($first)) {
-                    return $this->pointerOffsetFromFloat($first, $entry->tag);
                 }
             }
 
