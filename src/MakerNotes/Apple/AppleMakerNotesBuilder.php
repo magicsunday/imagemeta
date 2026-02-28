@@ -22,9 +22,9 @@ use function array_key_exists;
  * Extracts and normalizes all maker note fields from a decoded Apple dictionary,
  * mapping enumerated types, computing derived fields, and validating presence.
  *
- * @phpstan-type NativePlistScalar bool|float|int|string|null
- * @phpstan-type NativePlistValue NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar>>>>>>>
- * @phpstan-type NativePlistDictionary array<string, NativePlistValue>
+ * @phpstan-type NativePlistScalar = bool|float|int|string|null
+ * @phpstan-type NativePlistValue = NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar>>>>>>>
+ * @phpstan-type NativePlistDictionary = array<string, NativePlistValue>
  */
 final readonly class AppleMakerNotesBuilder
 {
@@ -39,8 +39,6 @@ final readonly class AppleMakerNotesBuilder
      * Builds an AppleMakerNotes value object from decoded dictionary.
      *
      * @param NativePlistDictionary $dictionary Decoded maker notes dictionary.
-     *
-     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return AppleMakerNotes|null Apple maker notes object or null if invalid.
      */
@@ -155,9 +153,9 @@ final readonly class AppleMakerNotesBuilder
     /**
      * Seeds explicit semantic-style keys from compact semantic-style fields when absent.
      *
-     * @param NativePlistDictionary $dictionary
+     * @param NativePlistDictionary $dictionary Decoded maker notes dictionary to seed.
      *
-     * @return array{0:?string,1:?float,2:?float}|null
+     * @return array{0:?string,1:?float,2:?float}|null Compact semantic-style tuple or null when explicit keys exist.
      */
     private function seedSemanticStyleKeys(array &$dictionary): ?array
     {
@@ -188,7 +186,7 @@ final readonly class AppleMakerNotesBuilder
     /**
      * Loads capture identity and camera-type fields.
      *
-     * @param NativePlistDictionary $dictionary
+     * @param NativePlistDictionary $dictionary Decoded maker notes dictionary.
      *
      * @return array{
      *     contentIdentifier:?string,
@@ -229,7 +227,7 @@ final readonly class AppleMakerNotesBuilder
     /**
      * Loads HDR-specific fields from the dictionary.
      *
-     * @param NativePlistDictionary $dictionary
+     * @param NativePlistDictionary $dictionary Decoded maker notes dictionary.
      *
      * @return array{
      *     hdrHeadroom:?float,
@@ -249,7 +247,7 @@ final readonly class AppleMakerNotesBuilder
     /**
      * Loads autofocus and focus-distance related fields.
      *
-     * @param NativePlistDictionary $dictionary
+     * @param NativePlistDictionary $dictionary Decoded maker notes dictionary.
      *
      * @return array{
      *     afStable:?bool,
@@ -275,8 +273,8 @@ final readonly class AppleMakerNotesBuilder
     /**
      * Loads semantic-style fields with compact semantic-style fallback behavior.
      *
-     * @param NativePlistDictionary                   $dictionary
-     * @param array{0:?string,1:?float,2:?float}|null $semanticStyleCompact
+     * @param NativePlistDictionary                   $dictionary           Decoded maker notes dictionary.
+     * @param array{0:?string,1:?float,2:?float}|null $semanticStyleCompact Compact semantic-style tuple from prior seeding.
      *
      * @return array{
      *     semanticStylePreset:?string,
@@ -320,7 +318,7 @@ final readonly class AppleMakerNotesBuilder
     /**
      * Loads camera-capture related fields.
      *
-     * @param NativePlistDictionary $dictionary
+     * @param NativePlistDictionary $dictionary Decoded maker notes dictionary.
      *
      * @return array{
      *     makerNoteVersion:?string,
@@ -346,7 +344,17 @@ final readonly class AppleMakerNotesBuilder
     /**
      * Returns whether at least one maker-notes section contains data.
      *
-     * @param array<string, bool> $flags
+     * @param ?AppleCaptureIdentity $identity     Capture identity section.
+     * @param ?AppleHdr             $hdr          HDR section.
+     * @param ?AppleAutoExposure    $autoExposure Auto-exposure section.
+     * @param ?AppleAutoFocus       $autoFocus    Autofocus section.
+     * @param ?AppleNoise           $noise        Noise section.
+     * @param ?AppleSemanticStyle   $style        Semantic style section.
+     * @param ?AppleLivePhoto       $livePhoto    Live photo section.
+     * @param ?AppleCameraCapture   $camera       Camera capture section.
+     * @param array<string, bool>   $flags        Extracted boolean flags.
+     *
+     * @return bool True when at least one section contains data, otherwise false.
      */
     private function hasAnySectionData(
         ?AppleCaptureIdentity $identity,
