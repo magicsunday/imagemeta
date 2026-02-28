@@ -303,8 +303,8 @@ final class IccIntegrationTest extends TestCase
         $chunk1   = substr($iccProfile, 0, $midpoint);
         $chunk2   = substr($iccProfile, $midpoint);
 
-        $segment1 = $this->buildIccSegment($chunk1, sequenceNumber: 1, sequenceCount: 2, raw: true);
-        $segment2 = $this->buildIccSegment($chunk2, sequenceNumber: 2, sequenceCount: 2, raw: true);
+        $segment1 = $this->buildIccSegment($chunk1, sequenceNumber: 1, sequenceCount: 2);
+        $segment2 = $this->buildIccSegment($chunk2, sequenceNumber: 2, sequenceCount: 2);
 
         $metadata = $this->readMetadataFromJpeg(
             $this->buildJpeg(
@@ -430,7 +430,6 @@ final class IccIntegrationTest extends TestCase
      * @param string $data           Raw ICC profile data or chunk.
      * @param int    $sequenceNumber Chunk sequence number (1-based).
      * @param int    $sequenceCount  Total number of chunks.
-     * @param bool   $raw            When true, data is a raw chunk; when false, data is a complete profile.
      *
      * @return string APP2 segment payload with ICC_PROFILE header.
      */
@@ -438,7 +437,6 @@ final class IccIntegrationTest extends TestCase
         string $data,
         int $sequenceNumber,
         int $sequenceCount,
-        bool $raw = false,
     ): string {
         return "ICC_PROFILE\0"
             . chr($sequenceNumber)
