@@ -43,6 +43,8 @@ final class GpsCoordinateConverterTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $numericConverter  = new NumericConverter();
         $rationalConverter = new RationalConverter($numericConverter);
 
