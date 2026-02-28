@@ -39,6 +39,8 @@ final class RationalConverterTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->converter = new RationalConverter(new NumericConverter());
     }
 
