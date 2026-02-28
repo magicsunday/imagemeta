@@ -30,6 +30,11 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+use function count;
+use function implode;
+use function ksort;
+
 /**
  * Verifies TIFF Predictor semantics and Compression coupling.
  */
