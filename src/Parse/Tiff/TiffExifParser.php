@@ -57,10 +57,6 @@ final class TiffExifParser implements TiffExifParserInterface
     /** @var array<int, Ifd> */
     private array $ifdCache = [];
 
-    private ?TiffByteOrderHandler $byteOrderHandler = null;
-
-    private ?ExifTagDecoder $tagDecoder = null;
-
     private ?IfdParser $ifdParser = null;
 
     private DngValidator $dngValidator;
@@ -161,12 +157,10 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->makerNoteRaw      = null;
         $this->ifdCache          = [];
         $this->bigTiffOffsetSize = 8;
-        $this->byteOrderHandler ??= new TiffByteOrderHandler();
-        $this->tagDecoder ??= new ExifTagDecoder();
         $this->ifdParser ??= new IfdParser();
 
-        $byteOrderHandler = $this->byteOrderHandler;
-        $tagDecoder       = $this->tagDecoder;
+        $byteOrderHandler = new TiffByteOrderHandler();
+        $tagDecoder       = new ExifTagDecoder();
 
         // byte order
         // EXIF 3.0 §4.5.1 follows TIFF 6.0 §2.1 (Image File Header) in defining the
