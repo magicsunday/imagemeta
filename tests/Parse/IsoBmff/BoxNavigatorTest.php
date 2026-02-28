@@ -27,6 +27,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function pack;
 use function strlen;
 
@@ -87,6 +88,51 @@ final class BoxNavigatorTest extends TestCase
         return new BoxNavigator($this->createIsoBmffTempStream($data));
     }
 
+    /**
+     * Creates a navigator backed by a single-byte dummy stream.
+     */
+    private function createDummyNavigator(): BoxNavigator
+    {
+        return $this->createNavigator('X');
+    }
+
+    /**
+     * Materializes child descriptors for easier assertions.
+     *
+     * @return list<BoxDescriptor>
+     */
+    private function walkChildrenToList(
+        BoxNavigator $navigator,
+        BoxDescriptor $container,
+        int $offset = 0,
+        bool $allowTrailingTerminator = false,
+    ): array {
+        $children = [];
+
+        foreach ($navigator->walkChildren($container, $offset, $allowTrailingTerminator) as $box) {
+            $children[] = $box;
+        }
+
+        return $children;
+    }
+
+    /**
+     * Materializes child types for simpler order assertions.
+     *
+     * @return list<string>
+     */
+    private function walkChildTypes(
+        BoxNavigator $navigator,
+        BoxDescriptor $container,
+        int $offset = 0,
+        bool $allowTrailingTerminator = false,
+    ): array {
+        return array_map(
+            static fn (BoxDescriptor $box): string => $box->type,
+            $this->walkChildrenToList($navigator, $container, $offset, $allowTrailingTerminator),
+        );
+    }
+
     // =========================================================================
     // walkChildren — positive tests
     // =========================================================================
@@ -104,12 +150,7 @@ final class BoxNavigatorTest extends TestCase
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
-        $types = [];
-        foreach ($navigator->walkChildren($container) as $box) {
-            $types[] = $box->type;
-        }
-
-        self::assertSame(['abcd', 'efgh'], $types);
+        self::assertSame(['abcd', 'efgh'], $this->walkChildTypes($navigator, $container));
     }
 
     /**
@@ -123,10 +164,7 @@ final class BoxNavigatorTest extends TestCase
 
         [$navigator, $container] = $this->createNavigatorWithContainer($child);
 
-        $children = [];
-        foreach ($navigator->walkChildren($container) as $box) {
-            $children[] = $box;
-        }
+        $children = $this->walkChildrenToList($navigator, $container);
 
         self::assertCount(1, $children);
         self::assertSame('test', $children[0]->type);
@@ -148,12 +186,7 @@ final class BoxNavigatorTest extends TestCase
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
-        $types = [];
-        foreach ($navigator->walkChildren($container, 4) as $box) {
-            $types[] = $box->type;
-        }
-
-        self::assertSame(['skip'], $types);
+        self::assertSame(['skip'], $this->walkChildTypes($navigator, $container, 4));
     }
 
     /**
@@ -168,18 +201,12 @@ final class BoxNavigatorTest extends TestCase
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
-        $outerBoxes = [];
-        foreach ($navigator->walkChildren($container) as $box) {
-            $outerBoxes[] = $box;
-        }
+        $outerBoxes = $this->walkChildrenToList($navigator, $container);
 
         self::assertCount(1, $outerBoxes);
         self::assertSame('outr', $outerBoxes[0]->type);
 
-        $innerBoxes = [];
-        foreach ($navigator->walkChildren($outerBoxes[0]) as $box) {
-            $innerBoxes[] = $box;
-        }
+        $innerBoxes = $this->walkChildrenToList($navigator, $outerBoxes[0]);
 
         self::assertCount(1, $innerBoxes);
         self::assertSame('innr', $innerBoxes[0]->type);
@@ -197,12 +224,7 @@ final class BoxNavigatorTest extends TestCase
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
-        $types = [];
-        foreach ($navigator->walkChildren($container, 0, true) as $box) {
-            $types[] = $box->type;
-        }
-
-        self::assertSame(['term'], $types);
+        self::assertSame(['term'], $this->walkChildTypes($navigator, $container, 0, true));
     }
 
     // =========================================================================
@@ -474,7 +496,7 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function isPrintableFourccAcceptsPrintableAscii(): void
     {
-        $navigator = $this->createNavigator('X');
+        $navigator = $this->createDummyNavigator();
 
         self::assertTrue($navigator->isPrintableFourcc('ftyp'));
         self::assertTrue($navigator->isPrintableFourcc('moov'));
@@ -487,7 +509,7 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function isPrintableFourccAcceptsCopyrightPrefix(): void
     {
-        $navigator = $this->createNavigator('X');
+        $navigator = $this->createDummyNavigator();
 
         self::assertTrue($navigator->isPrintableFourcc("\xA9nam"));
         self::assertTrue($navigator->isPrintableFourcc("\xA9ART"));
@@ -499,7 +521,7 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function isPrintableFourccRejectsInvalid(): void
     {
-        $navigator = $this->createNavigator('X');
+        $navigator = $this->createDummyNavigator();
 
         self::assertFalse($navigator->isPrintableFourcc(''));
         self::assertFalse($navigator->isPrintableFourcc('ab'));
@@ -517,7 +539,7 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function normalizeFourccReturnsPrintableUnchanged(): void
     {
-        $navigator = $this->createNavigator('X');
+        $navigator = $this->createDummyNavigator();
 
         self::assertSame('ftyp', $navigator->normalizeFourcc('ftyp'));
     }
@@ -528,7 +550,7 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function normalizeFourccConvertsNonPrintableToHex(): void
     {
-        $navigator = $this->createNavigator('X');
+        $navigator = $this->createDummyNavigator();
 
         self::assertSame('00000001', $navigator->normalizeFourcc("\x00\x00\x00\x01"));
     }
