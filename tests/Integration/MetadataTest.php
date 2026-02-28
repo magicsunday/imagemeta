@@ -75,6 +75,9 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
+use function pack;
+use function strlen;
+
 /**
  * Exercises the Metadata aggregate as the central container for parsed blobs and documents.
  * It builds instances with EXIF, XMP, QuickTime, and maker note inputs to verify storage.
