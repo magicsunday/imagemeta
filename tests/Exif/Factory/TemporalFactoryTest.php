@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Value\Temporal;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -64,26 +65,19 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function createsFromExifMetadata(): void
     {
-        $parsedExif = $this->parsedExif(
-            create: new DateTimeImmutable('2023-06-15T14:30:00+02:00'),
-            modify: new DateTimeImmutable('2023-06-16T10:00:00+02:00'),
-            original: new DateTimeImmutable('2023-06-15T14:00:00+02:00'),
-            offsetTime: '+02:00',
-            offsetTimeOriginal: '+02:00',
-            offsetTimeDigitized: '+02:00',
-            subSecTime: '500',
-            subSecTimeOriginal: '500',
-            subSecTimeDigitized: '500',
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                create: new DateTimeImmutable('2023-06-15T14:30:00+02:00'),
+                modify: new DateTimeImmutable('2023-06-16T10:00:00+02:00'),
+                original: new DateTimeImmutable('2023-06-15T14:00:00+02:00'),
+                offsetTime: '+02:00',
+                offsetTimeOriginal: '+02:00',
+                offsetTimeDigitized: '+02:00',
+                subSecTime: '500',
+                subSecTimeOriginal: '500',
+                subSecTimeDigitized: '500',
+            ),
         );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory  = new TemporalFactory();
-        $temporal = $factory->create($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
@@ -101,22 +95,13 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function fallsBackToXmpTimestamps(): void
     {
-        $parsedExif = $this->parsedExif();
-
-        $xmp = new XmpDocument([
-            '{http://ns.adobe.com/exif/1.0/}CreateDate' => '2023-06-15T14:30:00+02:00',
-            '{http://ns.adobe.com/exif/1.0/}ModifyDate' => '2023-06-16T10:00:00+02:00',
-        ]);
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-            xmpDoc: $xmp,
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(),
+            xmpDoc: new XmpDocument([
+                '{http://ns.adobe.com/exif/1.0/}CreateDate' => '2023-06-15T14:30:00+02:00',
+                '{http://ns.adobe.com/exif/1.0/}ModifyDate' => '2023-06-16T10:00:00+02:00',
+            ]),
         );
-
-        $factory  = new TemporalFactory();
-        $temporal = $factory->create($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
@@ -129,21 +114,13 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function fallsBackToQuickTimeTimestamps(): void
     {
-        $parsedExif = $this->parsedExif();
-
-        $quickTime = new QuickTimeMeta([
-            'CreationDate' => '2023-06-15T14:30:00+02:00',
-            'ModifyDate'   => '2023-06-16T10:00:00+02:00',
-        ]);
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: $quickTime,
-            exifDoc: $parsedExif,
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(),
+            quickTime: new QuickTimeMeta([
+                'CreationDate' => '2023-06-15T14:30:00+02:00',
+                'ModifyDate'   => '2023-06-16T10:00:00+02:00',
+            ]),
         );
-
-        $factory  = new TemporalFactory();
-        $temporal = $factory->create($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
@@ -159,20 +136,13 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function sanitizesSubSeconds(): void
     {
-        $parsedExif = $this->parsedExif(
-            subSecTime: '9',
-            subSecTimeOriginal: '12',
-            subSecTimeDigitized: '123',
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                subSecTime: '9',
+                subSecTimeOriginal: '12',
+                subSecTimeDigitized: '123',
+            ),
         );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory  = new TemporalFactory();
-        $temporal = $factory->create($metadata);
 
         // "9" = 0.9s → right-padded to "900"
         self::assertSame('900', $temporal->subSecTime);
@@ -190,18 +160,11 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function truncatesSubSecondsLongerThanThreeDigits(): void
     {
-        $parsedExif = $this->parsedExif(
-            subSecTime: '5000',
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                subSecTime: '5000',
+            ),
         );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory  = new TemporalFactory();
-        $temporal = $factory->create($metadata);
 
         self::assertSame('500', $temporal->subSecTime);
     }
@@ -213,13 +176,7 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function createsWithNullMetadata(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-        );
-
-        $factory  = new TemporalFactory();
-        $temporal = $factory->create($metadata);
+        $temporal = $this->createTemporal();
 
         self::assertNull($temporal->create);
         self::assertNull($temporal->modify);
@@ -234,18 +191,11 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function xmpNonIsoDateStringIsRejected(): void
     {
-        $xmp = new XmpDocument([
-            '{http://ns.adobe.com/xap/1.0/}CreateDate' => 'June 15, 2023 2:30 PM',
-        ]);
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            xmpDoc: $xmp,
+        $temporal = $this->createTemporal(
+            xmpDoc: new XmpDocument([
+                '{http://ns.adobe.com/xap/1.0/}CreateDate' => 'June 15, 2023 2:30 PM',
+            ]),
         );
-
-        $factory  = new TemporalFactory();
-        $temporal = $factory->create($metadata);
 
         self::assertNull($temporal->create);
     }
@@ -257,18 +207,11 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function xmpValidIsoDateStringIsAccepted(): void
     {
-        $xmp = new XmpDocument([
-            '{http://ns.adobe.com/xap/1.0/}CreateDate' => '2023-06-15T14:30:00+02:00',
-        ]);
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            xmpDoc: $xmp,
+        $temporal = $this->createTemporal(
+            xmpDoc: new XmpDocument([
+                '{http://ns.adobe.com/xap/1.0/}CreateDate' => '2023-06-15T14:30:00+02:00',
+            ]),
         );
-
-        $factory  = new TemporalFactory();
-        $temporal = $factory->create($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
         self::assertSame('2023-06-15', $temporal->create->format('Y-m-d'));
@@ -286,18 +229,11 @@ final class TemporalFactoryTest extends TestCase
         try {
             date_default_timezone_set('America/New_York');
 
-            $xmp = new XmpDocument([
-                '{http://ns.adobe.com/xap/1.0/}CreateDate' => '2023-06-15T14:30:00',
-            ]);
-
-            $metadata = new Metadata(
-                exifBlobs: [],
-                quickTime: null,
-                xmpDoc: $xmp,
+            $temporal = $this->createTemporal(
+                xmpDoc: new XmpDocument([
+                    '{http://ns.adobe.com/xap/1.0/}CreateDate' => '2023-06-15T14:30:00',
+                ]),
             );
-
-            $factory  = new TemporalFactory();
-            $temporal = $factory->create($metadata);
 
             self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
             self::assertSame('14:30:00', $temporal->create->setTimezone(new DateTimeZone('UTC'))->format('H:i:s'));
@@ -313,18 +249,11 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function sanitizesNonNumericSubSeconds(): void
     {
-        $parsedExif = $this->parsedExif(
-            subSecTime: 'abc',
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                subSecTime: 'abc',
+            ),
         );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory  = new TemporalFactory();
-        $temporal = $factory->create($metadata);
 
         // Non-numeric sub-seconds should be stripped to null
         self::assertNull($temporal->subSecTime);
@@ -337,34 +266,18 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function handlesAllZerosDateTimeAsNull(): void
     {
-        $ifd0Entries = [
-            ExifTag::DATETIME => new IfdEntry(
-                ExifTag::DATETIME,
-                2,
-                20,
-                '0000:00:00 00:00:00',
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExifFromEntries(
+                ifd0Entries: [
+                    ExifTag::DATETIME => new IfdEntry(
+                        ExifTag::DATETIME,
+                        2,
+                        20,
+                        '0000:00:00 00:00:00',
+                    ),
+                ],
             ),
-        ];
-
-        $ifd0    = new Ifd($ifd0Entries);
-        $exifIfd = new Ifd([]);
-
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
         );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory  = new TemporalFactory();
-        $temporal = $factory->create($metadata);
 
         // An all-zeros date should not produce a valid modify timestamp
         self::assertNull($temporal->modify);
@@ -377,37 +290,51 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function handlesEmptyOffsetTimeGracefully(): void
     {
-        $exifEntries = [
-            ExifTag::OFFSET_TIME => new IfdEntry(
-                ExifTag::OFFSET_TIME,
-                2,
-                1,
-                '',
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExifFromEntries(
+                exifEntries: [
+                    ExifTag::OFFSET_TIME => new IfdEntry(
+                        ExifTag::OFFSET_TIME,
+                        2,
+                        1,
+                        '',
+                    ),
+                ],
             ),
-        ];
+        );
 
-        $ifd0    = new Ifd([]);
-        $exifIfd = new Ifd($exifEntries);
+        // Empty offset should not produce a timezone
+        self::assertNull($temporal->tz);
+    }
 
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
+    private function createTemporal(
+        ?ParsedExif $exifDoc = null,
+        ?QuickTimeMeta $quickTime = null,
+        ?XmpDocument $xmpDoc = null,
+    ): Temporal {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            exifDoc: $exifDoc,
+            xmpDoc: $xmpDoc,
+        );
+
+        return new TemporalFactory()->create($metadata);
+    }
+
+    /**
+     * @param array<int, IfdEntry> $ifd0Entries
+     * @param array<int, IfdEntry> $exifEntries
+     */
+    private function parsedExifFromEntries(array $ifd0Entries = [], array $exifEntries = []): ParsedExif
+    {
+        return new ParsedExif(
+            ifd0: new Ifd($ifd0Entries),
+            exifIfd: new Ifd($exifEntries),
             gpsIfd: null,
             interopIfd: null,
             ifd1: null,
         );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory  = new TemporalFactory();
-        $temporal = $factory->create($metadata);
-
-        // Empty offset should not produce a timezone
-        self::assertNull($temporal->tz);
     }
 
     private function parsedExif(
@@ -421,9 +348,8 @@ final class TemporalFactoryTest extends TestCase
         ?string $subSecTimeOriginal = null,
         ?string $subSecTimeDigitized = null,
     ): ParsedExif {
-        $ifd0Entries   = [];
-        $exifEntries   = [];
-        $hasAnyEntries = false;
+        $ifd0Entries = [];
+        $exifEntries = [];
 
         if ($modify instanceof DateTimeImmutable) {
             $ifd0Entries[ExifTag::DATETIME] = new IfdEntry(
@@ -432,7 +358,6 @@ final class TemporalFactoryTest extends TestCase
                 20,
                 $modify->format('Y:m:d H:i:s'),
             );
-            $hasAnyEntries = true;
         }
 
         if ($create instanceof DateTimeImmutable) {
@@ -442,7 +367,6 @@ final class TemporalFactoryTest extends TestCase
                 20,
                 $create->format('Y:m:d H:i:s'),
             );
-            $hasAnyEntries = true;
         }
 
         if ($original instanceof DateTimeImmutable) {
@@ -452,7 +376,6 @@ final class TemporalFactoryTest extends TestCase
                 20,
                 $original->format('Y:m:d H:i:s'),
             );
-            $hasAnyEntries = true;
         }
 
         if ($offsetTime !== null) {
@@ -462,7 +385,6 @@ final class TemporalFactoryTest extends TestCase
                 strlen($offsetTime),
                 $offsetTime,
             );
-            $hasAnyEntries = true;
         }
 
         if ($offsetTimeOriginal !== null) {
@@ -472,7 +394,6 @@ final class TemporalFactoryTest extends TestCase
                 strlen($offsetTimeOriginal),
                 $offsetTimeOriginal,
             );
-            $hasAnyEntries = true;
         }
 
         if ($offsetTimeDigitized !== null) {
@@ -482,7 +403,6 @@ final class TemporalFactoryTest extends TestCase
                 strlen($offsetTimeDigitized),
                 $offsetTimeDigitized,
             );
-            $hasAnyEntries = true;
         }
 
         if ($subSecTime !== null) {
@@ -492,7 +412,6 @@ final class TemporalFactoryTest extends TestCase
                 strlen($subSecTime),
                 $subSecTime,
             );
-            $hasAnyEntries = true;
         }
 
         if ($subSecTimeOriginal !== null) {
@@ -502,7 +421,6 @@ final class TemporalFactoryTest extends TestCase
                 strlen($subSecTimeOriginal),
                 $subSecTimeOriginal,
             );
-            $hasAnyEntries = true;
         }
 
         if ($subSecTimeDigitized !== null) {
@@ -512,28 +430,8 @@ final class TemporalFactoryTest extends TestCase
                 strlen($subSecTimeDigitized),
                 $subSecTimeDigitized,
             );
-            $hasAnyEntries = true;
         }
 
-        if (!$hasAnyEntries) {
-            return new ParsedExif(
-                ifd0: new Ifd([]),
-                exifIfd: new Ifd([]),
-                gpsIfd: null,
-                interopIfd: null,
-                ifd1: null,
-            );
-        }
-
-        $ifd0    = new Ifd($ifd0Entries);
-        $exifIfd = new Ifd($exifEntries);
-
-        return new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
-        );
+        return $this->parsedExifFromEntries($ifd0Entries, $exifEntries);
     }
 }
