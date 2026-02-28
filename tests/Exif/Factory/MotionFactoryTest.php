@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleLivePhoto;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Value\Motion;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -45,33 +46,9 @@ final class MotionFactoryTest extends TestCase
     #[Test]
     public function createsFromAppleMakerNotes(): void
     {
-        $apple = new AppleMakerNotes(
-            identity: null,
-            hdr: null,
-            autoExposure: null,
-            autoFocus: null,
-            noise: null,
-            semanticStyle: null,
-            livePhoto: new AppleLivePhoto(index: null, time: null, runTime: null, accelerationVector: [0.1, 0.2, 0.98]),
-            camera: null,
-            flags: [],
+        $motion = $this->createMotion(
+            makerNotes: $this->appleMakerNotesRecord([0.1, 0.2, 0.98]),
         );
-
-        $makerNotes = new MakerNotesRecord(
-            vendor: 'APPLE',
-            length: 0,
-            sha1: str_repeat('0', 40),
-            apple: $apple,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            makerNotes: $makerNotes,
-        );
-
-        $factory = new MotionFactory();
-        $motion  = $factory->create($metadata);
 
         self::assertSame(0.1, $motion->accelX);
         self::assertSame(0.2, $motion->accelY);
@@ -85,16 +62,9 @@ final class MotionFactoryTest extends TestCase
     #[Test]
     public function fallsBackToExifDataWhenAppleVectorMissing(): void
     {
-        $exifDoc = $this->parsedExifWithAccelerationVector(-0.1, -0.2, -0.98);
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $exifDoc,
+        $motion = $this->createMotion(
+            exifDoc: $this->parsedExifWithAccelerationVector(-0.1, -0.2, -0.98),
         );
-
-        $factory = new MotionFactory();
-        $motion  = $factory->create($metadata);
 
         self::assertEqualsWithDelta(-0.1, $motion->accelX, 1.0e-12);
         self::assertEqualsWithDelta(-0.2, $motion->accelY, 1.0e-12);
@@ -108,36 +78,10 @@ final class MotionFactoryTest extends TestCase
     #[Test]
     public function prefersAppleOverExifAccelerationVector(): void
     {
-        $exifDoc = $this->parsedExifWithAccelerationVector(-0.1, -0.2, -0.98);
-
-        $apple = new AppleMakerNotes(
-            identity: null,
-            hdr: null,
-            autoExposure: null,
-            autoFocus: null,
-            noise: null,
-            semanticStyle: null,
-            livePhoto: new AppleLivePhoto(index: null, time: null, runTime: null, accelerationVector: [0.5, 0.6, 0.7]),
-            camera: null,
-            flags: [],
+        $motion = $this->createMotion(
+            exifDoc: $this->parsedExifWithAccelerationVector(-0.1, -0.2, -0.98),
+            makerNotes: $this->appleMakerNotesRecord([0.5, 0.6, 0.7]),
         );
-
-        $makerNotes = new MakerNotesRecord(
-            vendor: 'APPLE',
-            length: 0,
-            sha1: str_repeat('0', 40),
-            apple: $apple,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $exifDoc,
-            makerNotes: $makerNotes,
-        );
-
-        $factory = new MotionFactory();
-        $motion  = $factory->create($metadata);
 
         self::assertSame(0.5, $motion->accelX);
         self::assertSame(0.6, $motion->accelY);
@@ -151,13 +95,7 @@ final class MotionFactoryTest extends TestCase
     #[Test]
     public function createsWithNullMetadata(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-        );
-
-        $factory = new MotionFactory();
-        $motion  = $factory->create($metadata);
+        $motion = $this->createMotion();
 
         self::assertNull($motion->accelX);
         self::assertNull($motion->accelY);
@@ -171,33 +109,9 @@ final class MotionFactoryTest extends TestCase
     #[Test]
     public function handlesPartialAccelerationVectorFromApple(): void
     {
-        $apple = new AppleMakerNotes(
-            identity: null,
-            hdr: null,
-            autoExposure: null,
-            autoFocus: null,
-            noise: null,
-            semanticStyle: null,
-            livePhoto: new AppleLivePhoto(index: null, time: null, runTime: null, accelerationVector: [0.1, 0.2]),
-            camera: null,
-            flags: [],
+        $motion = $this->createMotion(
+            makerNotes: $this->appleMakerNotesRecord([0.1, 0.2]),
         );
-
-        $makerNotes = new MakerNotesRecord(
-            vendor: 'APPLE',
-            length: 0,
-            sha1: str_repeat('0', 40),
-            apple: $apple,
-        );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            makerNotes: $makerNotes,
-        );
-
-        $factory = new MotionFactory();
-        $motion  = $factory->create($metadata);
 
         self::assertSame(0.1, $motion->accelX);
         self::assertSame(0.2, $motion->accelY);
@@ -231,6 +145,48 @@ final class MotionFactoryTest extends TestCase
             interopIfd: null,
             ifd1: null,
         );
+    }
+
+    /**
+     * @param list<float>|null $accelerationVector
+     */
+    private function appleMakerNotesRecord(?array $accelerationVector): MakerNotesRecord
+    {
+        $apple = new AppleMakerNotes(
+            identity: null,
+            hdr: null,
+            autoExposure: null,
+            autoFocus: null,
+            noise: null,
+            semanticStyle: null,
+            livePhoto: new AppleLivePhoto(
+                index: null,
+                time: null,
+                runTime: null,
+                accelerationVector: $accelerationVector,
+            ),
+            camera: null,
+            flags: [],
+        );
+
+        return new MakerNotesRecord(
+            vendor: 'APPLE',
+            length: 0,
+            sha1: str_repeat('0', 40),
+            apple: $apple,
+        );
+    }
+
+    private function createMotion(?ParsedExif $exifDoc = null, ?MakerNotesRecord $makerNotes = null): Motion
+    {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $exifDoc,
+            makerNotes: $makerNotes,
+        );
+
+        return new MotionFactory()->create($metadata);
     }
 
     private function toScaledComponent(float $value, int $scale): int
