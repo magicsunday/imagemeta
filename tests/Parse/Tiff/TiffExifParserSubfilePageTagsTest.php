@@ -30,6 +30,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function count;
+use function implode;
 use function ksort;
 
 /**
@@ -223,17 +224,12 @@ final class TiffExifParserSubfilePageTagsTest extends TestCase
 
         $ifdOffset  = 8;
         $entryCount = count($entries);
-        $ifdEntries = '';
-
-        foreach ($entries as $entry) {
-            $ifdEntries .= $entry;
-        }
 
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . pack('v', $entryCount)
-            . $ifdEntries
+            . implode('', $entries)
             . pack('V', 0);
     }
 }
