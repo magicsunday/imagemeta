@@ -183,19 +183,19 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
         return new BinaryPlistNullValue();
     }
 
-    private function plistInt(int $value): BinaryPlistIntValue
+    private function plistInt(int $value): BinaryPlistScalarValue
     {
-        return new BinaryPlistIntValue($value);
+        return new BinaryPlistScalarValue('int', $value);
     }
 
-    private function plistFloat(float $value): BinaryPlistFloatValue
+    private function plistFloat(float $value): BinaryPlistScalarValue
     {
-        return new BinaryPlistFloatValue($value);
+        return new BinaryPlistScalarValue('float', $value);
     }
 
-    private function plistString(string $value): BinaryPlistStringValue
+    private function plistString(string $value): BinaryPlistScalarValue
     {
-        return new BinaryPlistStringValue($value);
+        return new BinaryPlistScalarValue('string', $value);
     }
 
     /**
@@ -572,60 +572,20 @@ final class BinaryPlistNullValue implements BinaryPlistValue
 /**
  * @internal
  */
-final readonly class BinaryPlistBoolValue implements BinaryPlistValue
+final readonly class BinaryPlistScalarValue implements BinaryPlistValue
 {
-    public function __construct(private bool $value)
-    {
+    /**
+     * @param 'bool'|'int'|'float'|'string' $type
+     */
+    public function __construct(
+        private string $type,
+        private bool|float|int|string $value,
+    ) {
     }
 
     public function collect(BinaryPlistEncoder $encoder): int
     {
-        return $encoder->addNode(new BinaryPlistNode('bool', $this->value));
-    }
-}
-
-/**
- * @internal
- */
-final readonly class BinaryPlistIntValue implements BinaryPlistValue
-{
-    public function __construct(private int $value)
-    {
-    }
-
-    public function collect(BinaryPlistEncoder $encoder): int
-    {
-        return $encoder->addNode(new BinaryPlistNode('int', $this->value));
-    }
-}
-
-/**
- * @internal
- */
-final readonly class BinaryPlistFloatValue implements BinaryPlistValue
-{
-    public function __construct(private float $value)
-    {
-    }
-
-    public function collect(BinaryPlistEncoder $encoder): int
-    {
-        return $encoder->addNode(new BinaryPlistNode('float', $this->value));
-    }
-}
-
-/**
- * @internal
- */
-final readonly class BinaryPlistStringValue implements BinaryPlistValue
-{
-    public function __construct(private string $value)
-    {
-    }
-
-    public function collect(BinaryPlistEncoder $encoder): int
-    {
-        return $encoder->addNode(new BinaryPlistNode('string', $this->value));
+        return $encoder->addNode(new BinaryPlistNode($this->type, $this->value));
     }
 }
 
@@ -670,7 +630,7 @@ final readonly class BinaryPlistDictionaryValue implements BinaryPlistValue
         $values = [];
 
         foreach ($this->entries as $key => $value) {
-            $keys[]   = $encoder->collectValue(new BinaryPlistStringValue($key));
+            $keys[]   = $encoder->collectValue(new BinaryPlistScalarValue('string', $key));
             $values[] = $encoder->collectValue($value);
         }
 
