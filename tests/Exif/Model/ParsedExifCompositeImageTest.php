@@ -49,19 +49,7 @@ final class ParsedExifCompositeImageTest extends TestCase
     #[Test]
     public function returnsCountsWhenValuesMeetSpecRequirements(): void
     {
-        $ifd0    = new Ifd([]);
-        $exifIfd = new Ifd([
-            ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE => new IfdEntry(
-                ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE,
-                TiffConst::TYPE_SHORT,
-                2,
-                [6, 4],
-            ),
-        ]);
-
-        $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
-
-        self::assertSame([6, 4], $parsedExif->sourceImageNumberOfCompositeImage());
+        self::assertSame([6, 4], $this->parseCompositeImageCount([6, 4]));
     }
 
     /**
@@ -71,19 +59,7 @@ final class ParsedExifCompositeImageTest extends TestCase
     #[Test]
     public function returnsNullWhenCountsAreBelowMinimum(): void
     {
-        $ifd0    = new Ifd([]);
-        $exifIfd = new Ifd([
-            ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE => new IfdEntry(
-                ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE,
-                TiffConst::TYPE_SHORT,
-                2,
-                [1, 0],
-            ),
-        ]);
-
-        $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
-
-        self::assertNull($parsedExif->sourceImageNumberOfCompositeImage());
+        self::assertNull($this->parseCompositeImageCount([1, 0]));
     }
 
     /**
@@ -93,18 +69,26 @@ final class ParsedExifCompositeImageTest extends TestCase
     #[Test]
     public function returnsNullWhenUsedCountExceedsCapturedTotal(): void
     {
-        $ifd0    = new Ifd([]);
+        self::assertNull($this->parseCompositeImageCount([3, 5]));
+    }
+
+    /**
+     * @param list<int> $values
+     *
+     * @return list<int>|null
+     */
+    private function parseCompositeImageCount(array $values): ?array
+    {
         $exifIfd = new Ifd([
             ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE => new IfdEntry(
                 ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE,
                 TiffConst::TYPE_SHORT,
                 2,
-                [3, 5],
+                $values,
             ),
         ]);
 
-        $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
-
-        self::assertNull($parsedExif->sourceImageNumberOfCompositeImage());
+        return (new ParsedExif(new Ifd([]), $exifIfd, null, null, null))
+            ->sourceImageNumberOfCompositeImage();
     }
 }
