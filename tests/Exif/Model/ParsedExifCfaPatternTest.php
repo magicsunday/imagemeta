@@ -29,6 +29,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function count;
+
 /**
  * Exercises CFA pattern decoding from EXIF numeric lists into CfaPattern values.
  * It validates repeat unit sizes and the conversion to CfaPatternColor enums.
@@ -53,17 +55,7 @@ final class ParsedExifCfaPatternTest extends TestCase
     #[Test]
     public function parsesCfaPatternWithRepeatUnits(): void
     {
-        $cfaPattern = new IfdEntry(
-            ExifTag::CFA_PATTERN,
-            7,
-            6,
-            new ExifNumericList([2, 2, 0, 1, 2, 1]),
-        );
-
-        $exifIfd    = new Ifd([ExifTag::CFA_PATTERN => $cfaPattern]);
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
-        $pattern = $parsedExif->cfaPattern();
+        $pattern = $this->parseCfaPattern([2, 2, 0, 1, 2, 1]);
 
         self::assertInstanceOf(CfaPattern::class, $pattern);
         self::assertSame(2, $pattern->horizontalRepeatPixelUnit);
@@ -81,16 +73,24 @@ final class ParsedExifCfaPatternTest extends TestCase
     #[Test]
     public function returnsNullWhenPatternIsIncomplete(): void
     {
-        $cfaPattern = new IfdEntry(
+        self::assertNull($this->parseCfaPattern([2, 2, 0, 1]));
+    }
+
+    /**
+     * @param list<int> $values
+     */
+    private function parseCfaPattern(array $values): ?CfaPattern
+    {
+        $entry = new IfdEntry(
             ExifTag::CFA_PATTERN,
             7,
-            4,
-            new ExifNumericList([2, 2, 0, 1]),
+            count($values),
+            new ExifNumericList($values),
         );
 
-        $exifIfd    = new Ifd([ExifTag::CFA_PATTERN => $cfaPattern]);
+        $exifIfd    = new Ifd([ExifTag::CFA_PATTERN => $entry]);
         $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
-        self::assertNull($parsedExif->cfaPattern());
+        return $parsedExif->cfaPattern();
     }
 }
