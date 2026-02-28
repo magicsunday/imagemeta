@@ -350,21 +350,21 @@ final class MpfParser
 
             case TiffConst::TYPE_SHORT:
                 for ($i = 0; $i < $componentCount; ++$i) {
-                    $values[] = $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
+                    $values[] = $this->readU16($buffer, $endian);
                 }
 
                 break;
 
             case TiffConst::TYPE_LONG:
                 for ($i = 0; $i < $componentCount; ++$i) {
-                    $values[] = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
+                    $values[] = $this->readU32($buffer, $endian);
                 }
 
                 break;
 
             case TiffConst::TYPE_SLONG:
                 for ($i = 0; $i < $componentCount; ++$i) {
-                    $unsigned = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
+                    $unsigned = $this->readU32($buffer, $endian);
                     $values[] = $this->toSigned32($unsigned);
                 }
 
@@ -373,8 +373,8 @@ final class MpfParser
             case TiffConst::TYPE_RATIONAL:
             case TiffConst::TYPE_SRATIONAL:
                 for ($i = 0; $i < $componentCount; ++$i) {
-                    $numerator   = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
-                    $denominator = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
+                    $numerator   = $this->readU32($buffer, $endian);
+                    $denominator = $this->readU32($buffer, $endian);
                     if ($type === TiffConst::TYPE_SRATIONAL) {
                         $numerator   = $this->toSigned32($numerator);
                         $denominator = $this->toSigned32($denominator);
@@ -432,11 +432,11 @@ final class MpfParser
         $entries = [];
         $count   = (int) ($length / $entrySize);
         for ($i = 0; $i < $count; ++$i) {
-            $attributes = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
-            $size       = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
-            $offset     = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
-            $dep1       = $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
-            $dep2       = $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
+            $attributes = $this->readU32($buffer, $endian);
+            $size       = $this->readU32($buffer, $endian);
+            $offset     = $this->readU32($buffer, $endian);
+            $dep1       = $this->readU16($buffer, $endian);
+            $dep2       = $this->readU16($buffer, $endian);
 
             // Validate Individual Image Attribute bitfield per MPF spec
             // Bits 27..29 must be zero (reserved)
