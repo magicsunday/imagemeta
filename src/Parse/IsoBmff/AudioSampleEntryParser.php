@@ -258,7 +258,7 @@ final readonly class AudioSampleEntryParser
             throw new ParseError('audio sample entry version 2 channel count must be positive', 1486);
         }
 
-        if (!is_finite($audioSampleRate) || $audioSampleRate <= 0.0) {
+        if ($audioSampleRate <= 0.0 || !is_finite($audioSampleRate)) {
             throw new ParseError('audio sample entry version 2 sample rate must be positive', 1487);
         }
 
