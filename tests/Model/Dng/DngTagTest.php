@@ -18,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionClassConstant;
 
+use function array_unique;
 use function array_values;
 use function count;
 use function sort;
