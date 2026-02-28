@@ -184,7 +184,7 @@ final readonly class TiffColorInkValidator
                 throw new ParseError(
                     sprintf(
                         'TransferFunction is only valid for PhotometricInterpretation {0,1,2,3,6}, got %s.',
-                        (string) $photometricValue,
+                        $photometricValue,
                     ),
                     1730,
                 );
@@ -223,7 +223,7 @@ final readonly class TiffColorInkValidator
                 throw new ParseError(
                     sprintf(
                         'TransferRange is only valid for PhotometricInterpretation RGB(2) or YCbCr(6), got %s.',
-                        (string) $photometricValue,
+                        $photometricValue,
                     ),
                     1733,
                 );
@@ -242,7 +242,7 @@ final readonly class TiffColorInkValidator
             throw new ParseError(
                 sprintf(
                     'ReferenceBlackWhite is only valid for PhotometricInterpretation RGB(2) or YCbCr(6), got %s.',
-                    (string) $photometricValue,
+                    $photometricValue,
                 ),
                 1735,
             );
