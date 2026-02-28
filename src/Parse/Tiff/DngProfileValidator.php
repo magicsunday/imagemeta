@@ -127,7 +127,7 @@ final readonly class DngProfileValidator
 
         // Check all values are finite and in [0.0, 1.0]
         foreach ($floats as $fv) {
-            if ($fv < 0.0 || $fv > 1.0 || !is_finite($fv)) {
+            if (($fv < 0.0) || ($fv > 1.0) || !is_finite($fv)) {
                 throw new ParseError(
                     'ProfileToneCurve values must be finite floats in [0.0, 1.0] per DNG 1.7.1.0.',
                     2016,
