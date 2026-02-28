@@ -16,6 +16,9 @@ use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Verifies the UndefinedTextMarker enum for canonical marker resolution and encoding mapping.
+ */
 final class UndefinedTextMarkerTest extends TestCase
 {
     #[Test]
