@@ -55,6 +55,8 @@ final class TiffStructuralValidatorTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $buffer          = new MemoryBuffer("\0");
         $this->validator = new TiffStructuralValidator($buffer);
     }
