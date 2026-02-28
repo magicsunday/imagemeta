@@ -151,7 +151,7 @@ final readonly class DeviceExifReader
         }
 
         return array_map(
-            fn (float $component): float => $component * self::ACCELERATION_MGAL_TO_MS2,
+            static fn (float $component): float => $component * self::ACCELERATION_MGAL_TO_MS2,
             $vector,
         );
     }
@@ -180,7 +180,7 @@ final readonly class DeviceExifReader
             }
 
             $scaled = array_map(
-                fn (float $component): float => $component * self::ACCELERATION_MGAL_TO_MS2,
+                static fn (float $component): float => $component * self::ACCELERATION_MGAL_TO_MS2,
                 $vector,
             );
 
