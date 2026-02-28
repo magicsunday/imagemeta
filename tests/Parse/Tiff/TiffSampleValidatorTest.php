@@ -47,6 +47,8 @@ final class TiffSampleValidatorTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $buffer          = new MemoryBuffer("\0");
         $support         = new TiffValidationSupport($buffer);
         $this->validator = new TiffSampleValidator($support);
