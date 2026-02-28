@@ -46,6 +46,13 @@ use function substr;
 #[UsesClass(PlistBinaryReader::class)]
 final class BinaryPlistDecoderTest extends TestCase
 {
+    private function decodeSingleObject(string $objectBytes): ApplePlistScalar|ApplePlistArray|ApplePlistDictionary
+    {
+        $decoder = new BinaryPlistDecoder();
+
+        return $decoder->decode($this->buildPlistWithSingleObject($objectBytes));
+    }
+
     /**
      * Passes an empty payload to the binary plist decoder.
      * Ensures a ParseError is raised for the missing header.
@@ -171,13 +178,9 @@ final class BinaryPlistDecoderTest extends TestCase
     #[Test]
     public function decodeAsciiString(): void
     {
-        $decoder = new BinaryPlistDecoder();
-
         // Single ASCII string "Hi" (type=5, len=2) → marker 0x52 + payload
-        $object  = chr(0x50 | 0x02) . 'Hi';
-        $payload = $this->buildPlistWithSingleObject($object);
-
-        $result = $decoder->decode($payload);
+        $object = chr(0x50 | 0x02) . 'Hi';
+        $result = $this->decodeSingleObject($object);
         self::assertInstanceOf(ApplePlistScalar::class, $result);
         self::assertSame('Hi', $result->value());
     }
@@ -189,13 +192,9 @@ final class BinaryPlistDecoderTest extends TestCase
     #[Test]
     public function decodeInteger(): void
     {
-        $decoder = new BinaryPlistDecoder();
-
         // Integer 42 with 1-byte payload: marker 0x10 + payload 0x2A
-        $object  = chr(0x10) . chr(0x2A);
-        $payload = $this->buildPlistWithSingleObject($object);
-
-        $result = $decoder->decode($payload);
+        $object = chr(0x10) . chr(0x2A);
+        $result = $this->decodeSingleObject($object);
         self::assertInstanceOf(ApplePlistScalar::class, $result);
         self::assertSame(42, $result->value());
     }
@@ -207,13 +206,9 @@ final class BinaryPlistDecoderTest extends TestCase
     #[Test]
     public function decodeDateEpoch(): void
     {
-        $decoder = new BinaryPlistDecoder();
-
         // Date mit 8-Byte double Sekunden seit 2001-01-01, hier 0.0
-        $object  = chr(0x30 | 0x03) . pack('E', 0.0); // marker 0x33
-        $payload = $this->buildPlistWithSingleObject($object);
-
-        $result = $decoder->decode($payload);
+        $object = chr(0x30 | 0x03) . pack('E', 0.0); // marker 0x33
+        $result = $this->decodeSingleObject($object);
         self::assertInstanceOf(ApplePlistScalar::class, $result);
         // Keine Mikrosekunden in der Ausgabe bei .000000
         self::assertSame('2001-01-01T00:00:00+00:00', $result->value());
@@ -226,13 +221,9 @@ final class BinaryPlistDecoderTest extends TestCase
     #[Test]
     public function decodeDateNonZeroSeconds(): void
     {
-        $decoder = new BinaryPlistDecoder();
-
         // +60.0 Sekunden nach 2001-01-01T00:00:00Z -> 00:01:00 (ohne Mikrosekunden)
-        $object  = chr(0x30 | 0x03) . pack('E', 60.0);
-        $payload = $this->buildPlistWithSingleObject($object);
-
-        $result = $decoder->decode($payload);
+        $object = chr(0x30 | 0x03) . pack('E', 60.0);
+        $result = $this->decodeSingleObject($object);
         self::assertInstanceOf(ApplePlistScalar::class, $result);
         self::assertSame('2001-01-01T00:01:00+00:00', $result->value());
     }
@@ -244,13 +235,9 @@ final class BinaryPlistDecoderTest extends TestCase
     #[Test]
     public function decodeDateNegativeSeconds(): void
     {
-        $decoder = new BinaryPlistDecoder();
-
         // -60.0 Sekunden relativ zu 2001-01-01T00:00:00Z => 2000-12-31T23:59:00Z
-        $object  = chr(0x30 | 0x03) . pack('E', -60.0);
-        $payload = $this->buildPlistWithSingleObject($object);
-
-        $result = $decoder->decode($payload);
+        $object = chr(0x30 | 0x03) . pack('E', -60.0);
+        $result = $this->decodeSingleObject($object);
         self::assertInstanceOf(ApplePlistScalar::class, $result);
         self::assertSame('2000-12-31T23:59:00+00:00', $result->value());
     }
@@ -262,13 +249,9 @@ final class BinaryPlistDecoderTest extends TestCase
     #[Test]
     public function decodeDateSubSecondAfterEpoch(): void
     {
-        $decoder = new BinaryPlistDecoder();
-
         // +0.5 Sekunden nach 2001-01-01T00:00:00Z -> 00:00:00.500000 (Mikrosekunden bleiben erhalten)
-        $object  = chr(0x30 | 0x03) . pack('E', 0.5);
-        $payload = $this->buildPlistWithSingleObject($object);
-
-        $result = $decoder->decode($payload);
+        $object = chr(0x30 | 0x03) . pack('E', 0.5);
+        $result = $this->decodeSingleObject($object);
         self::assertInstanceOf(ApplePlistScalar::class, $result);
         self::assertSame('2001-01-01T00:00:00.500000+00:00', $result->value());
     }
@@ -280,13 +263,9 @@ final class BinaryPlistDecoderTest extends TestCase
     #[Test]
     public function decodeDateSubSecondBeforeEpoch(): void
     {
-        $decoder = new BinaryPlistDecoder();
-
         // -0.5 Sekunden vor 2001-01-01T00:00:00Z -> 2000-12-31T23:59:59.500000 (Mikrosekunden bleiben erhalten)
-        $object  = chr(0x30 | 0x03) . pack('E', -0.5);
-        $payload = $this->buildPlistWithSingleObject($object);
-
-        $result = $decoder->decode($payload);
+        $object = chr(0x30 | 0x03) . pack('E', -0.5);
+        $result = $this->decodeSingleObject($object);
         self::assertInstanceOf(ApplePlistScalar::class, $result);
         self::assertSame('2000-12-31T23:59:59.500000+00:00', $result->value());
     }
@@ -298,14 +277,10 @@ final class BinaryPlistDecoderTest extends TestCase
     #[Test]
     public function decodeUnicodeString(): void
     {
-        $decoder = new BinaryPlistDecoder();
-
         // Unicode string "Ä" (U+00C4) in UTF-16BE => 0x00 0xC4, length (chars) = 1
-        $utf16   = iconv('UTF-8', 'UTF-16BE', 'Ä');
-        $object  = chr(0x60 | 0x01) . $utf16;
-        $payload = $this->buildPlistWithSingleObject($object);
-
-        $result = $decoder->decode($payload);
+        $utf16  = iconv('UTF-8', 'UTF-16BE', 'Ä');
+        $object = chr(0x60 | 0x01) . $utf16;
+        $result = $this->decodeSingleObject($object);
         self::assertInstanceOf(ApplePlistScalar::class, $result);
         self::assertSame('Ä', $result->value());
     }
@@ -317,15 +292,12 @@ final class BinaryPlistDecoderTest extends TestCase
     #[Test]
     public function decodeUidLargerThanPhpIntSize(): void
     {
-        $decoder = new BinaryPlistDecoder();
-
         // 9-byte UID: 0x01 00 00 00 00 00 00 00 00  => 2^64 = 18446744073709551616
         $uidBytes = "\x01" . str_repeat("\x00", 8);
         $marker   = 0x80 | (9 - 1); // size-1 in info nibble
         $object   = chr($marker) . $uidBytes;
 
-        $payload = $this->buildPlistWithSingleObject($object);
-        $result  = $decoder->decode($payload);
+        $result = $this->decodeSingleObject($object);
 
         self::assertInstanceOf(ApplePlistScalar::class, $result);
         self::assertSame('18446744073709551616', $result->value());
