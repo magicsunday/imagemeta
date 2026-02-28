@@ -30,6 +30,7 @@ use MagicSunday\ImageMeta\Exif\Converters\StringConverter;
 use MagicSunday\ImageMeta\Exif\Converters\SubjectAreaConverter;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -70,26 +71,10 @@ final class ConverterFactoryTest extends TestCase
      * Verifies all getter methods return instances of the correct types.
      */
     #[Test]
-    public function exposesAllConverterInstances(): void
+    #[DataProvider('converterGetterProvider')]
+    public function exposesAllConverterInstances(callable $getter): void
     {
-        $converters = [
-            $this->factory->numericConverter(),
-            $this->factory->rationalConverter(),
-            $this->factory->stringConverter(),
-            $this->factory->dateTimeConverter(),
-            $this->factory->photoCalculator(),
-            $this->factory->subjectAreaConverter(),
-            $this->factory->apexConverter(),
-            $this->factory->flashConverter(),
-            $this->factory->enumConverter(),
-            $this->factory->matrixConverter(),
-            $this->factory->componentsConverter(),
-            $this->factory->gpsUnitConverter(),
-            $this->factory->gpsDirectionConverter(),
-            $this->factory->gpsConverter(),
-        ];
-
-        $this->addToAssertionCount(count($converters));
+        self::assertIsObject($getter($this->factory));
     }
 
     /**
@@ -110,15 +95,42 @@ final class ConverterFactoryTest extends TestCase
      * Returns the same instance on repeated calls.
      */
     #[Test]
-    public function returnsSameInstanceOnRepeatedCalls(): void
+    #[DataProvider('stableConverterGetterProvider')]
+    public function returnsSameInstanceOnRepeatedCalls(callable $getter): void
     {
         self::assertSame(
-            $this->factory->numericConverter(),
-            $this->factory->numericConverter(),
+            $getter($this->factory),
+            $getter($this->factory),
         );
-        self::assertSame(
-            $this->factory->rationalConverter(),
-            $this->factory->rationalConverter(),
-        );
+    }
+
+    /**
+     * @return iterable<string, array{0: callable(ConverterFactory): object}>
+     */
+    public static function converterGetterProvider(): iterable
+    {
+        yield 'numeric' => [static fn (ConverterFactory $factory): object => $factory->numericConverter()];
+        yield 'rational' => [static fn (ConverterFactory $factory): object => $factory->rationalConverter()];
+        yield 'string' => [static fn (ConverterFactory $factory): object => $factory->stringConverter()];
+        yield 'date time' => [static fn (ConverterFactory $factory): object => $factory->dateTimeConverter()];
+        yield 'photo calculator' => [static fn (ConverterFactory $factory): object => $factory->photoCalculator()];
+        yield 'subject area' => [static fn (ConverterFactory $factory): object => $factory->subjectAreaConverter()];
+        yield 'apex' => [static fn (ConverterFactory $factory): object => $factory->apexConverter()];
+        yield 'flash' => [static fn (ConverterFactory $factory): object => $factory->flashConverter()];
+        yield 'enum' => [static fn (ConverterFactory $factory): object => $factory->enumConverter()];
+        yield 'matrix' => [static fn (ConverterFactory $factory): object => $factory->matrixConverter()];
+        yield 'components' => [static fn (ConverterFactory $factory): object => $factory->componentsConverter()];
+        yield 'gps unit' => [static fn (ConverterFactory $factory): object => $factory->gpsUnitConverter()];
+        yield 'gps direction' => [static fn (ConverterFactory $factory): object => $factory->gpsDirectionConverter()];
+        yield 'gps' => [static fn (ConverterFactory $factory): object => $factory->gpsConverter()];
+    }
+
+    /**
+     * @return iterable<string, array{0: callable(ConverterFactory): object}>
+     */
+    public static function stableConverterGetterProvider(): iterable
+    {
+        yield 'numeric' => [static fn (ConverterFactory $factory): object => $factory->numericConverter()];
+        yield 'rational' => [static fn (ConverterFactory $factory): object => $factory->rationalConverter()];
     }
 }
