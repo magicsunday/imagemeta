@@ -48,6 +48,7 @@ use ReflectionMethod;
 
 use function array_map;
 use function chr;
+use function implode;
 use function pack;
 use function str_repeat;
 use function strlen;
@@ -150,6 +151,33 @@ final class BoxPayloadCollectorTest extends TestCase
         return $data;
     }
 
+    /**
+     * Wraps meta children in a FullBox meta container.
+     */
+    private function createFullMetaData(string ...$children): string
+    {
+        return $this->box('meta', chr(0) . chr(0) . chr(0) . chr(0) . implode('', $children));
+    }
+
+    /**
+     * Wraps meta children in a non-FullBox meta container.
+     */
+    private function createMetaData(string ...$children): string
+    {
+        return $this->box('meta', implode('', $children));
+    }
+
+    /**
+     * Collects payloads from a meta box.
+     */
+    private function collectMetaData(string $metaData, bool $allowQuickTimeMetaWithoutFullBox = false): BoxPayloadCollection
+    {
+        [$collector, $navigator] = $this->createCollector($metaData);
+        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
+
+        return $collector->collect($metaBox, $allowQuickTimeMetaWithoutFullBox);
+    }
+
     // =========================================================================
     // collect — positive tests
     // =========================================================================
@@ -164,13 +192,7 @@ final class BoxPayloadCollectorTest extends TestCase
         $exifBox  = $this->box('Exif', $exifBlob);
         $hdlrBox  = $this->box('hdlr', $this->hdlrPayload('pict'));
 
-        // meta as FullBox: version=0, flags=0 + children
-        $metaPayload = chr(0) . chr(0) . chr(0) . chr(0) . $hdlrBox . $exifBox;
-        $metaData    = $this->box('meta', $metaPayload);
-
-        [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collection              = $collector->collect($metaBox, false);
+        $collection = $this->collectMetaData($this->createFullMetaData($hdlrBox, $exifBox));
 
         self::assertSame(["MM\x00\x2Atest-exif"], $collection->directExif);
         self::assertSame([], $collection->directXmp);
@@ -186,12 +208,7 @@ final class BoxPayloadCollectorTest extends TestCase
         $xmpBox  = $this->box('XMP ', $xmpData);
         $hdlrBox = $this->box('hdlr', $this->hdlrPayload('pict'));
 
-        $metaPayload = chr(0) . chr(0) . chr(0) . chr(0) . $hdlrBox . $xmpBox;
-        $metaData    = $this->box('meta', $metaPayload);
-
-        [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collection              = $collector->collect($metaBox, false);
+        $collection = $this->collectMetaData($this->createFullMetaData($hdlrBox, $xmpBox));
 
         self::assertSame([$xmpData], $collection->directXmp);
         self::assertSame([], $collection->directExif);
@@ -207,12 +224,7 @@ final class BoxPayloadCollectorTest extends TestCase
         $idatBox     = $this->box('idat', $idatPayload);
         $hdlrBox     = $this->box('hdlr', $this->hdlrPayload('pict'));
 
-        $metaPayload = chr(0) . chr(0) . chr(0) . chr(0) . $hdlrBox . $idatBox;
-        $metaData    = $this->box('meta', $metaPayload);
-
-        [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collection              = $collector->collect($metaBox, false);
+        $collection = $this->collectMetaData($this->createFullMetaData($hdlrBox, $idatBox));
 
         self::assertSame('binary-payload-data', $collection->idatPayload);
     }
@@ -242,12 +254,7 @@ final class BoxPayloadCollectorTest extends TestCase
             . pack('N', 10);
         $ilocBox = $this->box('iloc', $ilocPayload);
 
-        $metaPayload = chr(0) . chr(0) . chr(0) . chr(0) . $hdlrBox . $pitmBox . $ilocBox;
-        $metaData    = $this->box('meta', $metaPayload);
-
-        [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collection              = $collector->collect($metaBox, false);
+        $collection = $this->collectMetaData($this->createFullMetaData($hdlrBox, $pitmBox, $ilocBox));
 
         self::assertSame(42, $collection->primaryItemId);
     }
@@ -268,12 +275,7 @@ final class BoxPayloadCollectorTest extends TestCase
         $hdlrBox1 = $this->box('hdlr', $this->hdlrPayload('pict'));
         $hdlrBox2 = $this->box('hdlr', $this->hdlrPayload('mdta'));
 
-        $metaPayload = chr(0) . chr(0) . chr(0) . chr(0) . $hdlrBox1 . $hdlrBox2;
-        $metaData    = $this->box('meta', $metaPayload);
-
-        [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collector->collect($metaBox, false);
+        $this->collectMetaData($this->createFullMetaData($hdlrBox1, $hdlrBox2));
     }
 
     /**
@@ -288,12 +290,7 @@ final class BoxPayloadCollectorTest extends TestCase
         $hdlrBox = $this->box('hdlr', $this->hdlrPayload('pict'));
 
         // meta FullBox with version=1 (unsupported)
-        $metaPayload = chr(1) . chr(0) . chr(0) . chr(0) . $hdlrBox;
-        $metaData    = $this->box('meta', $metaPayload);
-
-        [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collector->collect($metaBox, false);
+        $this->collectMetaData($this->box('meta', chr(1) . chr(0) . chr(0) . chr(0) . $hdlrBox));
     }
 
     /**
@@ -309,12 +306,7 @@ final class BoxPayloadCollectorTest extends TestCase
         $idatBox1 = $this->box('idat', 'first');
         $idatBox2 = $this->box('idat', 'second');
 
-        $metaPayload = chr(0) . chr(0) . chr(0) . chr(0) . $hdlrBox . $idatBox1 . $idatBox2;
-        $metaData    = $this->box('meta', $metaPayload);
-
-        [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collector->collect($metaBox, false);
+        $this->collectMetaData($this->createFullMetaData($hdlrBox, $idatBox1, $idatBox2));
     }
 
     /**
@@ -326,12 +318,7 @@ final class BoxPayloadCollectorTest extends TestCase
         $exifBlob = pack('N', 0) . "MM\x00\x2Aisom-exif";
         $exifBox  = $this->box('Exif', $exifBlob);
 
-        // meta without FullBox header (children start immediately)
-        $metaData = $this->box('meta', $exifBox);
-
-        [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collection              = $collector->collect($metaBox, false);
+        $collection = $this->collectMetaData($this->createMetaData($exifBox));
 
         self::assertSame(["MM\x00\x2Aisom-exif"], $collection->directExif);
     }
@@ -345,12 +332,7 @@ final class BoxPayloadCollectorTest extends TestCase
         $exifBlob = pack('N', 0) . "MM\x00\x2Aqt-exif";
         $exifBox  = $this->box('Exif', $exifBlob);
 
-        // meta without FullBox header (children start immediately)
-        $metaData = $this->box('meta', $exifBox);
-
-        [$collector, $navigator] = $this->createCollector($metaData);
-        $metaBox                 = $navigator->readBoxAt(0, strlen($metaData), true);
-        $collection              = $collector->collect($metaBox, true);
+        $collection = $this->collectMetaData($this->createMetaData($exifBox), true);
 
         self::assertSame(["MM\x00\x2Aqt-exif"], $collection->directExif);
     }
