@@ -43,6 +43,8 @@ final class TiffColorInkValidatorTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $buffer          = new MemoryBuffer("\0");
         $support         = new TiffValidationSupport($buffer);
         $this->validator = new TiffColorInkValidator($support);
