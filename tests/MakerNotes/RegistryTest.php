@@ -40,6 +40,29 @@ use function implode;
 #[UsesClass(RegistryFactory::class)]
 final class RegistryTest extends TestCase
 {
+    private function readMethodBody(string $class, string $methodName): string
+    {
+        $method   = new ReflectionMethod($class, $methodName);
+        $fileName = $method->getFileName();
+        self::assertIsString($fileName);
+
+        $sourceLines = file($fileName);
+        self::assertIsArray($sourceLines);
+        $startLine = $method->getStartLine();
+        $endLine   = $method->getEndLine();
+        self::assertIsInt($startLine);
+        self::assertIsInt($endLine);
+
+        return implode(
+            '',
+            array_slice(
+                $sourceLines,
+                $startLine - 1,
+                $endLine - $startLine + 1,
+            ),
+        );
+    }
+
     /**
      * Provides make strings that should resolve to the registered decoder.
      * This checks the behavior for the specific inputs used in the test.
@@ -132,25 +155,7 @@ final class RegistryTest extends TestCase
     #[Test]
     public function factoryAvoidsRedundantUppercaseSamsungRegistration(): void
     {
-        $method   = new ReflectionMethod(RegistryFactory::class, 'createDefault');
-        $fileName = $method->getFileName();
-        self::assertIsString($fileName);
-
-        $sourceLines = file($fileName);
-        self::assertIsArray($sourceLines);
-        $startLine = $method->getStartLine();
-        $endLine   = $method->getEndLine();
-        self::assertIsInt($startLine);
-        self::assertIsInt($endLine);
-
-        $body = implode(
-            '',
-            array_slice(
-                $sourceLines,
-                $startLine - 1,
-                $endLine - $startLine + 1,
-            ),
-        );
+        $body = $this->readMethodBody(RegistryFactory::class, 'createDefault');
 
         self::assertStringNotContainsString("\$registry->register('SAMSUNG', \$samsungDecoder);", $body);
     }
