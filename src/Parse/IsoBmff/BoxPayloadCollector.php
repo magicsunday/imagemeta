@@ -38,7 +38,17 @@ final readonly class BoxPayloadCollector
     public const string XMP_UUID = "\xBE\x7A\xCF\xCB\x97\xA9\x42\xE8\x9C\x71\x99\x94\x91\xE3\xAF\xAC";
 
     /**
-     * @param int $maxItemPayloadSize Maximum cumulative payload size in bytes.
+     * @param int                      $maxItemPayloadSize   Maximum cumulative payload size in bytes.
+     * @param BoxNavigator             $boxNavigator         Navigator used to walk and read BMFF box payloads.
+     * @param TrackMediaParser         $trackMediaParser     Parser used for handler references
+     *                                                       in media-related boxes.
+     * @param IlocBoxParser            $ilocBoxParser        Parser used for item-location-related child
+     *                                                       boxes.
+     * @param QuickTimeMetadataDecoder $quickTimeDecoder     Decoder for QuickTime-specific
+     *                                                       metadata atoms.
+     * @param QuickTimeKeyResolver     $quickTimeKeyResolver Resolver for QuickTime key tables.
+     * @param ItemPayloadResolver      $itemPayloadResolver  Resolver for item payload
+     *                                                       normalization and extraction.
      */
     public function __construct(
         private BoxNavigator $boxNavigator,
@@ -53,6 +63,14 @@ final readonly class BoxPayloadCollector
 
     /**
      * Walks all children of a `meta` box and collects payloads grouped by type.
+     *
+     * @param BoxDescriptor $meta                             Meta box descriptor whose children should be collected.
+     * @param bool          $allowQuickTimeMetaWithoutFullBox Whether to accept QuickTime-compatible
+     *                                                        meta boxes without a FullBox header.
+     * @param int           $fileOffsetOrigin                 Absolute file offset used as origin for iloc-derived
+     *                                                        extents.
+     *
+     * @return BoxPayloadCollection Aggregated payloads and child-box-derived metadata extracted from the meta box.
      */
     public function collect(BoxDescriptor $meta, bool $allowQuickTimeMetaWithoutFullBox, int $fileOffsetOrigin = 0): BoxPayloadCollection
     {
@@ -221,7 +239,8 @@ final readonly class BoxPayloadCollector
     /**
      * Collects direct Exif payloads from `Exif` boxes.
      *
-     * @param list<string> $directExif
+     * @param BoxDescriptor $child      Exif child box whose payload should be normalized and collected.
+     * @param list<string>  $directExif Collected direct Exif payloads from sibling boxes.
      */
     private function collectDirectExifPayload(BoxDescriptor $child, array &$directExif): void
     {
@@ -235,7 +254,8 @@ final readonly class BoxPayloadCollector
     /**
      * Collects direct XMP payloads from `XMP ` boxes.
      *
-     * @param list<string> $directXmp
+     * @param BoxDescriptor $child     XMP child box whose payload should be collected.
+     * @param list<string>  $directXmp Collected direct XMP payloads from sibling boxes.
      */
     private function collectDirectXmpPayload(BoxDescriptor $child, array &$directXmp): void
     {
@@ -246,7 +266,8 @@ final readonly class BoxPayloadCollector
     /**
      * Collects XMP payloads from UUID boxes with the XMP UUID signature.
      *
-     * @param list<string> $uuidXmp
+     * @param BoxDescriptor $child   UUID child box whose payload may contain XMP data.
+     * @param list<string>  $uuidXmp Collected UUID-based XMP payloads from sibling boxes.
      */
     private function collectUuidXmpPayload(BoxDescriptor $child, array &$uuidXmp): void
     {
@@ -261,7 +282,9 @@ final readonly class BoxPayloadCollector
     /**
      * Collects and validates a single `idat` payload.
      *
-     * @param-out string $idatPayload
+     * @param BoxDescriptor $child `idat` child box whose payload should be collected.
+     *
+     * @param-out string       $idatPayload Captured `idat` payload bytes when the box is present.
      */
     private function collectIdatPayload(BoxDescriptor $child, ?string &$idatPayload): void
     {
@@ -279,7 +302,11 @@ final readonly class BoxPayloadCollector
     /**
      * Collects and validates a single `keys` atom.
      *
-     * @param list<array<int, QuickTimeKeyEntry>> $keysMaps
+     * @param BoxDescriptor                       $child        `keys` child box to parse.
+     * @param bool                                $requiresHdlr Flag marking that an `hdlr` box is required for the
+     *                                                          current meta context.
+     * @param list<array<int, QuickTimeKeyEntry>> $keysMaps     Parsed QuickTime key-entry
+     *                                                          maps collected from the meta box.
      */
     private function collectKeysAtom(BoxDescriptor $child, bool &$requiresHdlr, array &$keysMaps): void
     {
@@ -295,7 +322,8 @@ final readonly class BoxPayloadCollector
     /**
      * Collects and validates a single `ilst` atom.
      *
-     * @param list<BoxDescriptor> $ilstBoxes
+     * @param BoxDescriptor       $child     `ilst` child box to retain for later decoding.
+     * @param list<BoxDescriptor> $ilstBoxes Collected `ilst` box descriptors for the current meta box.
      */
     private function collectIlstAtom(BoxDescriptor $child, array &$ilstBoxes): void
     {
@@ -309,8 +337,14 @@ final readonly class BoxPayloadCollector
     /**
      * Collects and validates QuickTime locale list atoms (`ctry`/`lang`).
      *
-     * @param 'ctry'|'lang'   $atomType
-     * @param list<list<int>> $lists
+     * @param BoxDescriptor   $child         Locale-list child box to decode.
+     * @param 'ctry'|'lang'   $atomType      Expected locale-list atom type.
+     * @param int             $duplicateCode ParseError code used when a duplicate locale-list atom
+     *                                       is encountered.
+     * @param bool            $requiresHdlr  Flag marking that an `hdlr` box is required for the
+     *                                       current meta context.
+     * @param list<list<int>> $lists         Parsed locale lists grouped by contained entry
+     *                                       order.
      */
     private function collectLocaleListAtom(BoxDescriptor $child, string $atomType, int $duplicateCode, bool &$requiresHdlr, array &$lists): void
     {
@@ -335,6 +369,10 @@ final readonly class BoxPayloadCollector
 
     /**
      * Enforces the configured payload size limit before reading a box body.
+     *
+     * @param BoxDescriptor $child        Box whose payload size should be validated.
+     * @param string        $errorMessage ParseError message used when the configured limit is exceeded.
+     * @param int           $errorCode    ParseError code used when the configured limit is exceeded.
      */
     private function assertPayloadWithinLimit(BoxDescriptor $child, string $errorMessage, int $errorCode): void
     {
@@ -345,6 +383,13 @@ final readonly class BoxPayloadCollector
 
     /**
      * Determines whether the meta box includes a full box header (version/flags).
+     *
+     * @param BoxDescriptor $meta                             Meta box descriptor whose child layout should be
+     *                                                        inspected.
+     * @param bool          $allowQuickTimeMetaWithoutFullBox Whether to accept a QuickTime-style
+     *                                                        meta box without a FullBox header.
+     *
+     * @return int Child-content offset within the meta box payload.
      */
     private function detectMetaChildOffset(BoxDescriptor $meta, bool $allowQuickTimeMetaWithoutFullBox): int
     {
@@ -415,6 +460,12 @@ final readonly class BoxPayloadCollector
 
     /**
      * Reads a big-endian 32-bit unsigned integer from a byte sequence.
+     *
+     * @param string $bytes   Byte sequence containing the unsigned integer.
+     * @param int    $offset  Offset into the byte sequence where the integer starts.
+     * @param string $context Human-readable context included in error messages.
+     *
+     * @return int Parsed 32-bit unsigned integer value.
      */
     private function readU32FromBytes(string $bytes, int $offset, string $context): int
     {
@@ -427,6 +478,12 @@ final readonly class BoxPayloadCollector
 
     /**
      * Reads a big-endian 64-bit unsigned integer from a byte sequence.
+     *
+     * @param string $bytes   Byte sequence containing the unsigned integer.
+     * @param int    $offset  Offset into the byte sequence where the integer starts.
+     * @param string $context Human-readable context included in error messages.
+     *
+     * @return int Parsed 64-bit unsigned integer value as a PHP integer.
      */
     private function readU64FromBytes(string $bytes, int $offset, string $context): int
     {
@@ -515,6 +572,12 @@ final readonly class BoxPayloadCollector
 
     /**
      * Checks if a box size value is plausible for the provided container size.
+     *
+     * @param string $peek   Byte sequence containing a candidate box header.
+     * @param int    $offset Offset to the box size field within the byte sequence.
+     * @param int    $limit  Maximum allowed size relative to the current container.
+     *
+     * @return bool True when the encoded size fits within the container, otherwise false.
      */
     private function isPlausibleBoxSize(string $peek, int $offset, int $limit): bool
     {
