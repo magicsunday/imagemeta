@@ -127,7 +127,7 @@ final readonly class DngProfileValidator
 
         // Check all values are finite and in [0.0, 1.0]
         foreach ($floats as $fv) {
-            if (!is_finite($fv) || $fv < 0.0 || $fv > 1.0) {
+            if ($fv < 0.0 || $fv > 1.0 || !is_finite($fv)) {
                 throw new ParseError(
                     'ProfileToneCurve values must be finite floats in [0.0, 1.0] per DNG 1.7.1.0.',
                     2016,
@@ -922,7 +922,7 @@ final readonly class DngProfileValidator
             $gain = $this->support->unpackFloat(substr($payload, $offset, 4));
             $offset += 4;
 
-            if (!is_finite($gain) || ($gain < 0.0)) {
+            if (($gain < 0.0) || !is_finite($gain)) {
                 throw new ParseError(
                     sprintf('ProfileGainTableMap gain[%d] must be finite and >= 0, got %g.', $i, $gain),
                     1693,
