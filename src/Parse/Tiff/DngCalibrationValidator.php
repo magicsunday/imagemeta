@@ -419,7 +419,7 @@ final readonly class DngCalibrationValidator
 
             $gain = $component->numerator / $component->denominator;
 
-            if (!is_finite($gain) || ($gain <= 0.0)) {
+            if (($gain <= 0.0) || !is_finite($gain)) {
                 throw new ParseError(
                     sprintf('AnalogBalance component %d must be a positive finite gain, got %.6F.', $index, $gain),
                     1670,
