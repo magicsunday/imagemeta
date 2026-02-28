@@ -52,11 +52,9 @@ final class ParsedExifSensitivityTest extends TestCase
     #[Test]
     public function sensitivityTypeReturnsEnumForNumericStrings(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::SENSITIVITY_TYPE => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, '4'),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(SensitivityType::SosAndRei, $parsedExif->sensitivityType());
     }
@@ -68,11 +66,9 @@ final class ParsedExifSensitivityTest extends TestCase
     #[Test]
     public function standardOutputSensitivityReturnsValue(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::STANDARD_OUTPUT_SENSITIVITY => new IfdEntry(ExifTag::STANDARD_OUTPUT_SENSITIVITY, 4, 1, 80),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(80, $parsedExif->standardOutputSensitivity());
     }
@@ -84,11 +80,9 @@ final class ParsedExifSensitivityTest extends TestCase
     #[Test]
     public function recommendedExposureIndexReturnsValue(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::RECOMMENDED_EXPOSURE_INDEX => new IfdEntry(ExifTag::RECOMMENDED_EXPOSURE_INDEX, 4, 1, 160),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(160, $parsedExif->recommendedExposureIndex());
     }
@@ -100,11 +94,9 @@ final class ParsedExifSensitivityTest extends TestCase
     #[Test]
     public function isoSpeedValueReturnsValue(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::ISO_SPEED => new IfdEntry(ExifTag::ISO_SPEED, 4, 1, 400),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(400, $parsedExif->isoSpeedValue());
     }
@@ -116,22 +108,18 @@ final class ParsedExifSensitivityTest extends TestCase
     #[Test]
     public function isoSpeedLatitudeYyyRequiresRelatedTags(): void
     {
-        $missingIsoIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::ISO_SPEED_LATITUDE_YYY => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 4, 1, 20),
             ExifTag::ISO_SPEED_LATITUDE_ZZZ => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 4, 1, 30),
         ]);
 
-        $parsedExif = new ParsedExif(new Ifd([]), $missingIsoIfd, null, null, null);
-
         self::assertNull($parsedExif->isoSpeedLatitudeYyy());
 
-        $completeIfd = new Ifd([
+        $parsedWithIso = $this->parsedExifFromExifEntries([
             ExifTag::ISO_SPEED              => new IfdEntry(ExifTag::ISO_SPEED, 4, 1, 200),
             ExifTag::ISO_SPEED_LATITUDE_YYY => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 4, 1, 20),
             ExifTag::ISO_SPEED_LATITUDE_ZZZ => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 4, 1, 30),
         ]);
-
-        $parsedWithIso = new ParsedExif(new Ifd([]), $completeIfd, null, null, null);
 
         self::assertSame(20, $parsedWithIso->isoSpeedLatitudeYyy());
     }
@@ -157,9 +145,7 @@ final class ParsedExifSensitivityTest extends TestCase
             $entries[$tag] = new IfdEntry($tag, 3, 1, $value);
         }
 
-        $exifIfd = new Ifd($entries);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+        $parsedExif = $this->parsedExifFromExifEntries($entries);
 
         self::assertSame($expected, $parsedExif->iso());
     }
@@ -171,12 +157,10 @@ final class ParsedExifSensitivityTest extends TestCase
     #[Test]
     public function isoFallsBackWhenSensitivityTypeValueIsUnknown(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::SENSITIVITY_TYPE => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, 99),
             ExifTag::ISO_SPEED        => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 1600),
         ]);
-
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(1600, $parsedExif->iso());
     }
@@ -188,18 +172,24 @@ final class ParsedExifSensitivityTest extends TestCase
     #[Test]
     public function returnsIsoLatitudeValues(): void
     {
-        $exifIfd = new Ifd([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::ISO_SPEED              => new IfdEntry(ExifTag::ISO_SPEED, 4, 1, 200),
             ExifTag::ISO_SPEED_LATITUDE_YYY => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 4, 1, 90),
             ExifTag::ISO_SPEED_LATITUDE_ZZZ => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 4, 1, 100),
         ]);
 
-        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
-
         self::assertSame(90, $parsedExif->isoSpeedLatitudeYyy());
         self::assertSame(100, $parsedExif->isoSpeedLatitudeZzz());
         self::assertSame(90, $parsedExif->isoLatitudeYyy());
         self::assertSame(100, $parsedExif->isoLatitudeZzz());
+    }
+
+    /**
+     * @param array<int, IfdEntry> $exifEntries
+     */
+    private function parsedExifFromExifEntries(array $exifEntries): ParsedExif
+    {
+        return new ParsedExif(new Ifd([]), new Ifd($exifEntries), null, null, null);
     }
 
     /**
