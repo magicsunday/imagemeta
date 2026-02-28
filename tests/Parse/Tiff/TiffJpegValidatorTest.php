@@ -44,6 +44,8 @@ final class TiffJpegValidatorTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         // Use a buffer with some content so that JPEG table offset validation can work
         $buffer          = new MemoryBuffer("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
         $support         = new TiffValidationSupport($buffer);
