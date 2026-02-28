@@ -27,6 +27,7 @@ use function in_array;
 use function is_int;
 use function pack;
 use function rewind;
+use function sprintf;
 use function strlen;
 
 /**
@@ -202,13 +203,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
         foreach ($this->boxNavigator->walkChildren($moov) as $child) {
             if ($child->type === BoxType::META->value) {
-                // QuickTime File Format 2012, "Metadata Structure": only one
-                // metadata atom is allowed per container location.
-                if ($metaSeen) {
-                    throw new ParseError('duplicate meta box in moov', 1870);
-                }
-
-                $metaSeen = true;
+                $this->guardDuplicateMetaBox($metaSeen, 'moov', 1870);
                 $this->parseMetaBox($child, $context);
             } elseif ($child->type === BoxType::UDTA->value) {
                 ++$udtaCount;
@@ -286,11 +281,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
         foreach ($this->boxNavigator->walkChildren($moof) as $child) {
             if ($child->type === BoxType::META->value) {
-                if ($metaSeen) {
-                    throw new ParseError('duplicate meta box in moof', 1416);
-                }
-
-                $metaSeen = true;
+                $this->guardDuplicateMetaBox($metaSeen, 'moof', 1416);
                 $this->parseMetaBox($child, $context, $moof->offset);
             } elseif ($child->type === BoxType::UDTA->value) {
                 $this->parseUdtaBox($child, $context, $moof->offset);
@@ -361,13 +352,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
         foreach ($this->boxNavigator->walkChildren($udta, allowTrailingTerminator: true) as $child) {
             if ($child->type === BoxType::META->value) {
-                // QuickTime File Format 2012, "Metadata Structure": only one
-                // metadata atom is allowed per container location.
-                if ($metaSeen) {
-                    throw new ParseError('duplicate meta box in udta', 1143);
-                }
-
-                $metaSeen = true;
+                $this->guardDuplicateMetaBox($metaSeen, 'udta', 1143);
                 $this->parseMetaBox($child, $context, $fileOffsetOrigin);
             } elseif ($child->type === BoxType::NAME->value) {
                 $this->quickTimeDecoder->parseUdtaNameAtom($child, $context);
@@ -375,6 +360,27 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 $this->quickTimeDecoder->parseUdtaTextAtom($child, $context);
             }
         }
+    }
+
+    /**
+     * Guards against duplicate meta boxes within a single container.
+     *
+     * QuickTime File Format 2012, "Metadata Structure": only one
+     * metadata atom is allowed per container location.
+     *
+     * @param bool   $metaSeen  Whether a meta box has already been encountered (updated by reference).
+     * @param string $container Container name for the error message.
+     * @param int    $errorCode Error code for the ParseError.
+     *
+     * @throws ParseError When a duplicate meta box is detected.
+     */
+    private function guardDuplicateMetaBox(bool &$metaSeen, string $container, int $errorCode): void
+    {
+        if ($metaSeen) {
+            throw new ParseError(sprintf('duplicate meta box in %s', $container), $errorCode);
+        }
+
+        $metaSeen = true;
     }
 
     /**
