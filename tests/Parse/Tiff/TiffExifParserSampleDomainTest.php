@@ -30,6 +30,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function count;
+use function is_array;
 use function ksort;
 use function str_pad;
 use function strlen;
