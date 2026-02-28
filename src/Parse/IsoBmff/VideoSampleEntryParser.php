@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function in_array;
 use function pack;
+use function sprintf;
 use function substr;
 
 /**
