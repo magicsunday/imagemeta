@@ -127,9 +127,8 @@ final readonly class FocalReader
 
         $horizontalRepeatPixelUnit = $components[0];
         $verticalRepeatPixelUnit   = $components[1];
-        $patternValues             = array_slice($components, 2);
 
-        return CfaPattern::fromComponents($horizontalRepeatPixelUnit, $verticalRepeatPixelUnit, $patternValues);
+        return CfaPattern::fromComponents($horizontalRepeatPixelUnit, $verticalRepeatPixelUnit, array_slice($components, 2));
     }
 
     /**
