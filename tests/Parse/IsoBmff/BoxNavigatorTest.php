@@ -244,7 +244,7 @@ final class BoxNavigatorTest extends TestCase
         [$navigator, $container] = $this->createNavigatorWithContainer($child);
 
         foreach ($navigator->walkChildren($container, -1) as $_) {
-            // Force generator execution
+            unset($_);
         }
     }
 
@@ -261,7 +261,7 @@ final class BoxNavigatorTest extends TestCase
         [$navigator, $container] = $this->createNavigatorWithContainer($child);
 
         foreach ($navigator->walkChildren($container, $container->contentSize + 1) as $_) {
-            // Force generator execution
+            unset($_);
         }
     }
 
@@ -280,7 +280,7 @@ final class BoxNavigatorTest extends TestCase
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
         foreach ($navigator->walkChildren($container) as $_) {
-            // Force generator execution
+            unset($_);
         }
     }
 
@@ -300,7 +300,7 @@ final class BoxNavigatorTest extends TestCase
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
         foreach ($navigator->walkChildren($container, allowTrailingTerminator: true) as $_) {
-            // Force generator execution
+            unset($_);
         }
     }
 
