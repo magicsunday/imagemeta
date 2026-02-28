@@ -70,21 +70,19 @@ final readonly class UserCommentExifReader
     public function userCommentEncoding(): ?string
     {
         $raw = $this->rawUserComment();
-        if ($raw === null || strlen($raw) < 8) {
+        if ($raw === null) {
             return null;
         }
 
-        $prefix            = substr($raw, 0, 8);
-        $canonicalEncoding = $this->canonicalUserCommentMarker($prefix);
-
-        if ($canonicalEncoding === '') {
+        $parsed = $this->parseUserCommentPrefix($raw);
+        if ($parsed === null) {
             return null;
         }
 
-        $content    = substr($raw, 8);
-        $hasContent = trim($content, "\0 ") !== '';
+        [$encoding, $content] = $parsed;
+        $hasContent           = trim($content, "\0 ") !== '';
 
-        return $hasContent ? $canonicalEncoding : null;
+        return $hasContent ? $encoding : null;
     }
 
     /**
@@ -101,18 +99,16 @@ final readonly class UserCommentExifReader
         }
 
         $raw = $this->rawUserComment();
-        if ($raw === null || strlen($raw) < 8) {
+        if ($raw === null) {
             return null;
         }
 
-        $prefix            = substr($raw, 0, 8);
-        $canonicalEncoding = $this->canonicalUserCommentMarker($prefix);
-
-        if ($canonicalEncoding === '') {
+        $parsed = $this->parseUserCommentPrefix($raw);
+        if ($parsed === null) {
             return null;
         }
 
-        $content = substr($raw, 8);
+        [, $content] = $parsed;
 
         return $this->inferUserCommentEncoding($content);
     }
@@ -150,6 +146,32 @@ final readonly class UserCommentExifReader
      */
     private function decodeUserComment(string $raw): ?string
     {
+        $parsed = $this->parseUserCommentPrefix($raw);
+        if ($parsed === null) {
+            return null;
+        }
+
+        [$encoding, $content] = $parsed;
+        $sanitized            = trim($content, "\0 ");
+
+        if ($sanitized === '') {
+            return null;
+        }
+
+        return match ($encoding) {
+            'UNICODE' => $this->decodeUnicodeUserComment($content),
+            'JIS'     => $this->decodeJisComment($sanitized),
+            default   => $sanitized,
+        };
+    }
+
+    /**
+     * Parses the 8-byte user comment prefix and returns the encoding and content.
+     *
+     * @return array{string, string}|null Encoding identifier and payload, or null if invalid.
+     */
+    private function parseUserCommentPrefix(string $raw): ?array
+    {
         if (strlen($raw) < 8) {
             return null;
         }
@@ -161,18 +183,7 @@ final readonly class UserCommentExifReader
             return null;
         }
 
-        $content   = substr($raw, 8);
-        $sanitized = trim($content, "\0 ");
-
-        if ($sanitized === '') {
-            return null;
-        }
-
-        return match ($canonicalEncoding) {
-            'UNICODE' => $this->decodeUnicodeUserComment($content),
-            'JIS'     => $this->decodeJisComment($sanitized),
-            default   => $sanitized,
-        };
+        return [$canonicalEncoding, substr($raw, 8)];
     }
 
     /**
