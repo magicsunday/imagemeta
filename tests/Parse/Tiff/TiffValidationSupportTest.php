@@ -27,6 +27,9 @@ use PHPUnit\Framework\TestCase;
 use function file_get_contents;
 use function substr_count;
 
+/**
+ * Verifies the TiffValidationSupport helper for tag name resolution and BitsPerSample validation.
+ */
 #[CoversClass(TiffValidationSupport::class)]
 final class TiffValidationSupportTest extends TestCase
 {
