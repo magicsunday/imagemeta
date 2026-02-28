@@ -40,6 +40,8 @@ final class EnumConverterTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->converter = new EnumConverter(
             new RationalConverter(new NumericConverter()),
         );
