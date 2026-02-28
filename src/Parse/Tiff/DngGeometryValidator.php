@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 
+use function array_slice;
 use function count;
 use function in_array;
 use function is_finite;
@@ -79,10 +80,9 @@ final readonly class DngGeometryValidator
 
             $rectangles = $this->support->extractDngRectangles($maskedAreas, 'MaskedAreas');
 
-            $rectangleCount = count($rectangles);
-            for ($leftIndex = 0; $leftIndex < $rectangleCount; ++$leftIndex) {
-                for ($rightIndex = $leftIndex + 1; $rightIndex < $rectangleCount; ++$rightIndex) {
-                    if ($this->support->dngRectanglesOverlap($rectangles[$leftIndex], $rectangles[$rightIndex])) {
+            foreach ($rectangles as $leftIndex => $leftRectangle) {
+                foreach (array_slice($rectangles, $leftIndex + 1, null, true) as $rightIndex => $rightRectangle) {
+                    if ($this->support->dngRectanglesOverlap($leftRectangle, $rightRectangle)) {
                         throw new ParseError(
                             sprintf(
                                 'MaskedAreas rectangles %d and %d overlap.',
