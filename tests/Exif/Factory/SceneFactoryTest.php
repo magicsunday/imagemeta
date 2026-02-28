@@ -25,9 +25,12 @@ use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
+use MagicSunday\ImageMeta\Value\Scene;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+
+use function str_repeat;
 
 /**
  * Exercises SceneFactory for mapping EXIF and maker note inputs to Scene values.
@@ -47,21 +50,15 @@ final class SceneFactoryTest extends TestCase
     #[Test]
     public function createsFromExifMetadata(): void
     {
-        $parsedExif = $this->parsedExif(
-            sceneCaptureType: SceneCaptureType::Standard,
-            sceneType: SceneType::DirectlyPhotographedImage->value,
-            lightSource: LightSource::Daylight,
-            subjectDistanceRange: SubjectDistanceRange::Close,
+        $scene = $this->createScene(
+            exifDoc: $this->parsedExif(
+                sceneCaptureType: SceneCaptureType::Standard,
+                sceneType: SceneType::DirectlyPhotographedImage->value,
+                lightSource: LightSource::Daylight,
+                subjectDistanceRange: SubjectDistanceRange::Close,
+            ),
+            faceCount: 2,
         );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new SceneFactory();
-        $scene   = $factory->create($metadata, 2);
 
         self::assertSame(SceneCaptureType::Standard, $scene->type);
         self::assertSame(SceneType::DirectlyPhotographedImage, $scene->sceneType);
@@ -96,14 +93,7 @@ final class SceneFactoryTest extends TestCase
             apple: $apple,
         );
 
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            makerNotes: $makerNotes,
-        );
-
-        $factory = new SceneFactory();
-        $scene   = $factory->create($metadata);
+        $scene = $this->createScene(makerNotes: $makerNotes);
 
         self::assertTrue($scene->hdrScene);
     }
@@ -115,17 +105,11 @@ final class SceneFactoryTest extends TestCase
     #[Test]
     public function detectsNightModeFromQuickTime(): void
     {
-        $quickTime = new QuickTimeMeta([
-            'NightMode' => true,
-        ]);
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: $quickTime,
+        $scene = $this->createScene(
+            quickTime: new QuickTimeMeta([
+                'NightMode' => true,
+            ]),
         );
-
-        $factory = new SceneFactory();
-        $scene   = $factory->create($metadata);
 
         self::assertTrue($scene->nightMode);
     }
@@ -156,14 +140,7 @@ final class SceneFactoryTest extends TestCase
             apple: $apple,
         );
 
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            makerNotes: $makerNotes,
-        );
-
-        $factory = new SceneFactory();
-        $scene   = $factory->create($metadata);
+        $scene = $this->createScene(makerNotes: $makerNotes);
 
         self::assertTrue($scene->hdrScene);
     }
@@ -175,34 +152,16 @@ final class SceneFactoryTest extends TestCase
     #[Test]
     public function returnsNullForInvalidSceneCaptureType(): void
     {
-        $exifEntries = [
-            ExifTag::SCENE_CAPTURE_TYPE => new IfdEntry(
-                ExifTag::SCENE_CAPTURE_TYPE,
-                3,
-                1,
-                255,
-            ),
-        ];
-
-        $ifd0    = new Ifd([]);
-        $exifIfd = new Ifd($exifEntries);
-
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
+        $scene = $this->createScene(
+            exifDoc: $this->parsedExifFromEntries([
+                ExifTag::SCENE_CAPTURE_TYPE => new IfdEntry(
+                    ExifTag::SCENE_CAPTURE_TYPE,
+                    3,
+                    1,
+                    255,
+                ),
+            ]),
         );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new SceneFactory();
-        $scene   = $factory->create($metadata);
 
         self::assertNull($scene->type);
     }
@@ -214,34 +173,16 @@ final class SceneFactoryTest extends TestCase
     #[Test]
     public function returnsNullForInvalidLightSource(): void
     {
-        $exifEntries = [
-            ExifTag::LIGHT_SOURCE => new IfdEntry(
-                ExifTag::LIGHT_SOURCE,
-                3,
-                1,
-                254,
-            ),
-        ];
-
-        $ifd0    = new Ifd([]);
-        $exifIfd = new Ifd($exifEntries);
-
-        $parsedExif = new ParsedExif(
-            ifd0: $ifd0,
-            exifIfd: $exifIfd,
-            gpsIfd: null,
-            interopIfd: null,
-            ifd1: null,
+        $scene = $this->createScene(
+            exifDoc: $this->parsedExifFromEntries([
+                ExifTag::LIGHT_SOURCE => new IfdEntry(
+                    ExifTag::LIGHT_SOURCE,
+                    3,
+                    1,
+                    254,
+                ),
+            ]),
         );
-
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: $parsedExif,
-        );
-
-        $factory = new SceneFactory();
-        $scene   = $factory->create($metadata);
 
         self::assertNull($scene->light);
     }
@@ -253,13 +194,7 @@ final class SceneFactoryTest extends TestCase
     #[Test]
     public function createsWithNullMetadata(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-        );
-
-        $factory = new SceneFactory();
-        $scene   = $factory->create($metadata);
+        $scene = $this->createScene();
 
         self::assertNull($scene->type);
         self::assertNull($scene->sceneType);
@@ -268,6 +203,22 @@ final class SceneFactoryTest extends TestCase
         self::assertNull($scene->hdrScene);
         self::assertNull($scene->nightMode);
         self::assertNull($scene->subjectDistanceRange);
+    }
+
+    private function createScene(
+        ?ParsedExif $exifDoc = null,
+        ?QuickTimeMeta $quickTime = null,
+        ?MakerNotesRecord $makerNotes = null,
+        ?int $faceCount = null,
+    ): Scene {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            exifDoc: $exifDoc,
+            makerNotes: $makerNotes,
+        );
+
+        return new SceneFactory()->create($metadata, $faceCount);
     }
 
     private function parsedExif(
@@ -314,6 +265,14 @@ final class SceneFactoryTest extends TestCase
             );
         }
 
+        return $this->parsedExifFromEntries($exifEntries);
+    }
+
+    /**
+     * @param array<int, IfdEntry> $exifEntries
+     */
+    private function parsedExifFromEntries(array $exifEntries): ParsedExif
+    {
         $ifd0    = new Ifd([]);
         $exifIfd = new Ifd($exifEntries);
 
