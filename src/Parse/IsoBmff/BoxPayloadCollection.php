@@ -18,22 +18,28 @@ use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 /**
  * Immutable collection of box payloads extracted from a `meta` box.
  *
- * @phpstan-import-type QuickTimeKeyEntry from BoxPayloadCollector
+ * @phpstan-type QuickTimeKeyEntry = array{namespace: string, name: string}
  */
 final readonly class BoxPayloadCollection
 {
     /**
-     * @param array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>                                                                                            $itemInfos
-     * @param array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
-     * @param array<int, list<IsoBmffItemReference>>                                                                                                                                        $itemReferences
-     * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences
-     * @param list<string>                                                                                                                                                                  $directXmp
-     * @param list<string>                                                                                                                                                                  $uuidXmp
-     * @param list<string>                                                                                                                                                                  $directExif
-     * @param list<array<int, QuickTimeKeyEntry>>                                                                                                                                           $keysMaps
-     * @param list<BoxDescriptor>                                                                                                                                                           $ilstBoxes
-     * @param list<list<int>>                                                                                                                                                               $countryLists
-     * @param list<list<int>>                                                                                                                                                               $languageLists
+     * @param array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>                                                                                            $itemInfos      Item information entries keyed by item ID.
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations      Item locations keyed by item ID.
+     * @param array<int, list<IsoBmffItemReference>>                                                                                                                                        $itemReferences Item references keyed by source item ID.
+     * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences Data references keyed by index.
+     * @param ?int                                                                                                                                                                          $primaryItemId  Primary item identifier.
+     * @param list<string>                                                                                                                                                                  $directXmp      Direct XMP payloads.
+     * @param list<string>                                                                                                                                                                  $uuidXmp        UUID-based XMP payloads.
+     * @param list<string>                                                                                                                                                                  $directExif     Direct EXIF payloads.
+     * @param ?string                                                                                                                                                                       $idatPayload    Cached idat payload bytes.
+     * @param list<array<int, QuickTimeKeyEntry>>                                                                                                                                           $keysMaps       Parsed QuickTime key-entry maps.
+     * @param list<BoxDescriptor>                                                                                                                                                           $ilstBoxes      Collected ilst box descriptors.
+     * @param bool                                                                                                                                                                          $hasMhdr        Whether a metadata header was present.
+     * @param list<list<int>>                                                                                                                                                               $countryLists   Parsed country locale lists.
+     * @param list<list<int>>                                                                                                                                                               $languageLists  Parsed language locale lists.
+     * @param bool                                                                                                                                                                          $isMdta         Whether the handler type is mdta.
+     * @param ?int                                                                                                                                                                          $ispeWidth      Image spatial extents width.
+     * @param ?int                                                                                                                                                                          $ispeHeight     Image spatial extents height.
      */
     public function __construct(
         public array $itemInfos,
