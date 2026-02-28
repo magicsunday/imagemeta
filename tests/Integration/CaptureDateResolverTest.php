@@ -147,15 +147,7 @@ final class CaptureDateResolverTest extends TestCase
     #[Test]
     public function returnsXmpCreateDateWhenExifIsMissing(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: null,
-            xmpBlobs: [],
-            xmpDoc: new XmpDocument([
-                '{' . self::XMP_NAMESPACE . '}CreateDate' => '2024-03-30T12:34:56Z',
-            ]),
-        );
+        $metadata = $this->metadataWithXmpCreateDate('2024-03-30T12:34:56Z');
 
         $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
@@ -170,15 +162,7 @@ final class CaptureDateResolverTest extends TestCase
     #[Test]
     public function ignoresNonIsoCreateDateValues(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: null,
-            xmpBlobs: [],
-            xmpDoc: new XmpDocument([
-                '{' . self::XMP_NAMESPACE . '}CreateDate' => 'not-a-date',
-            ]),
-        );
+        $metadata = $this->metadataWithXmpCreateDate('not-a-date');
 
         self::assertNull((new CaptureDateResolver())->bestCaptureDateTime($metadata));
     }
@@ -190,18 +174,10 @@ final class CaptureDateResolverTest extends TestCase
     #[Test]
     public function acceptsFirstArrayElementWhenIsoString(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: null,
-            xmpBlobs: [],
-            xmpDoc: new XmpDocument([
-                '{' . self::XMP_NAMESPACE . '}CreateDate' => [
-                    '2024-03-30T12:34:56Z',
-                    '2024-03-30T12:34:56+01:00',
-                ],
-            ]),
-        );
+        $metadata = $this->metadataWithXmpCreateDate([
+            '2024-03-30T12:34:56Z',
+            '2024-03-30T12:34:56+01:00',
+        ]);
 
         $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
@@ -257,15 +233,7 @@ final class CaptureDateResolverTest extends TestCase
     #[Test]
     public function acceptsXmpCreateDateWithoutTimezone(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: null,
-            xmpBlobs: [],
-            xmpDoc: new XmpDocument([
-                '{' . self::XMP_NAMESPACE . '}CreateDate' => '2024-01-15T10:30:00',
-            ]),
-        );
+        $metadata = $this->metadataWithXmpCreateDate('2024-01-15T10:30:00');
 
         $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
@@ -281,15 +249,7 @@ final class CaptureDateResolverTest extends TestCase
     #[Test]
     public function acceptsXmpCreateDateWithFractionalSecondsAndNoTimezone(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: null,
-            xmpBlobs: [],
-            xmpDoc: new XmpDocument([
-                '{' . self::XMP_NAMESPACE . '}CreateDate' => '2024-01-15T10:30:00.123',
-            ]),
-        );
+        $metadata = $this->metadataWithXmpCreateDate('2024-01-15T10:30:00.123');
 
         $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
@@ -305,15 +265,7 @@ final class CaptureDateResolverTest extends TestCase
     #[Test]
     public function acceptsXmpCreateDateWithHourOnlyTimezoneOffset(): void
     {
-        $metadata = new Metadata(
-            exifBlobs: [],
-            quickTime: null,
-            exifDoc: null,
-            xmpBlobs: [],
-            xmpDoc: new XmpDocument([
-                '{' . self::XMP_NAMESPACE . '}CreateDate' => '2024-01-15T10:30:00+05',
-            ]),
-        );
+        $metadata = $this->metadataWithXmpCreateDate('2024-01-15T10:30:00+05');
 
         $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
@@ -372,5 +324,21 @@ final class CaptureDateResolverTest extends TestCase
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-05-01T12:34:56+00:00', $result->format(DATE_ATOM));
+    }
+
+    /**
+     * @param string|list<string> $createDate
+     */
+    private function metadataWithXmpCreateDate(string|array $createDate): Metadata
+    {
+        return new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpBlobs: [],
+            xmpDoc: new XmpDocument([
+                '{' . self::XMP_NAMESPACE . '}CreateDate' => $createDate,
+            ]),
+        );
     }
 }
