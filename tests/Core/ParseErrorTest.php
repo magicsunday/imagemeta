@@ -15,12 +15,17 @@ use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
+use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
+use function fopen;
+use function fwrite;
+use function rewind;
 use function sys_get_temp_dir;
 use function uniqid;
 
@@ -38,34 +43,58 @@ final class ParseErrorTest extends TestCase
 {
     use CreatesTempStream;
 
-    /**
-     * Declares a stream length larger than the payload to force a short read.
-     * It asserts that the short-read ParseError is raised with the expected message.
-     */
     #[Test]
-    public function streamReadThrowsParseErrorOnShortRead(): void
+    #[DataProvider('parseErrorCases')]
+    public function reportsParseErrorsWithExpectedContext(callable $operation, string $expectedMessage, ?int $expectedCode): void
     {
-        $stream = new Stream($this->createTempStream('A'), 2);
-
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('short read');
+        $this->expectExceptionMessage($expectedMessage);
 
-        $stream->read(2);
+        if ($expectedCode !== null) {
+            $this->expectExceptionCode($expectedCode);
+        }
+
+        $operation();
     }
 
     /**
-     * Attempts to open a missing file path to trigger an open failure.
-     * It asserts the ParseError is thrown with a generic message.
+     * @return array<string, array{0: callable(): void, 1: string, 2: int|null}>
      */
-    #[Test]
-    public function streamFromPathThrowsParseErrorWhenFileMissing(): void
+    public static function parseErrorCases(): array
     {
-        $path = sys_get_temp_dir() . '/imagemeta-missing-' . uniqid('', true);
+        return [
+            'stream short read' => [
+                static function (): void {
+                    $handle = fopen('php://temp', 'r+b');
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1010);
-        $this->expectExceptionMessage('Cannot open the provided file path.');
+                    if ($handle === false) {
+                        Assert::fail('Unable to create temporary stream.');
+                    }
 
-        Stream::fromPath($path);
+                    $written = fwrite($handle, 'A');
+
+                    if ($written === false || $written !== 1) {
+                        Assert::fail('Unable to populate temporary stream.');
+                    }
+
+                    if (rewind($handle) === false) {
+                        Assert::fail('Unable to rewind temporary stream.');
+                    }
+
+                    (new Stream($handle, 2))->read(2);
+                },
+                'short read',
+                null,
+            ],
+            'missing file path' => [
+                static function (): void {
+                    $path = sys_get_temp_dir() . '/imagemeta-missing-' . uniqid('', true);
+
+                    Stream::fromPath($path);
+                },
+                'Cannot open the provided file path.',
+                1010,
+            ],
+        ];
     }
 }
