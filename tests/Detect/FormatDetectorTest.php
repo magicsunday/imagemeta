@@ -72,29 +72,11 @@ final class FormatDetectorTest extends TestCase
         self::assertSame(ContainerType::ISOBMFF, $detected);
     }
 
-    /**
-     * Rejects an ftyp box when its declared size exceeds remaining stream bytes.
-     * This prevents false-positive ISO BMFF detection on truncated signatures.
-     */
     #[Test]
-    public function detectRejectsIsoBmffWhenFtypDeclaredSizeExceedsStreamBounds(): void
+    #[DataProvider('unsupportedContainerProvider')]
+    public function detectRejectsUnsupportedContainerShapes(string $bytes): void
     {
-        $stream = $this->createStream("\x00\x00\x00\x18ftypisom");
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported or unknown container');
-
-        (new FormatDetector())->detect($stream);
-    }
-
-    /**
-     * Rejects an extended-size ftyp box when largesize exceeds remaining stream bytes.
-     * This hardens signature scanning against out-of-bounds 64-bit size declarations.
-     */
-    #[Test]
-    public function detectRejectsIsoBmffWhenFtypLargeSizeExceedsStreamBounds(): void
-    {
-        $stream = $this->createStream("\x00\x00\x00\x01ftyp\x00\x00\x00\x00\x00\x00\x00\x20isom");
+        $stream = $this->createStream($bytes);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Unsupported or unknown container');
@@ -163,21 +145,6 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Rejects ftyp when payload is too short for major_brand + minor_version (< 8 bytes).
-     */
-    #[Test]
-    public function detectRejectsFtypWithTooShortPayload(): void
-    {
-        // size=12 → payload=4 bytes (< 8 required), type='ftyp', 4 bytes payload
-        $stream = $this->createStream("\x00\x00\x00\x0Cftypisom");
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported or unknown container');
-
-        (new FormatDetector())->detect($stream);
-    }
-
-    /**
      * Accepts ftyp with a 9-byte payload (8 required + 1 trailing byte).
      * Malformed files in the wild may produce non-aligned payloads; the ftyp
      * type and the minimum 8-byte payload are sufficient for detection.
@@ -210,24 +177,6 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Rejects a stream with an unknown non-padding box before the signature.
-     */
-    #[Test]
-    public function detectRejectsUnknownNonPaddingLeadingBox(): void
-    {
-        // unknown box 'abcd'(size=8) + ftyp(size=16)
-        $stream = $this->createStream(
-            "\x00\x00\x00\x08abcd"
-            . "\x00\x00\x00\x10ftypisom\x00\x00\x00\x00"
-        );
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported or unknown container');
-
-        (new FormatDetector())->detect($stream);
-    }
-
-    /**
      * Detects ISO-BMFF when more than four leading padding boxes precede ftyp.
      */
     #[Test]
@@ -240,21 +189,6 @@ final class FormatDetectorTest extends TestCase
         $detected = (new FormatDetector())->detect($stream);
 
         self::assertSame(ContainerType::ISOBMFF, $detected);
-    }
-
-    /**
-     * Rejects a stream with only an mdat box as sole ISO-BMFF evidence.
-     */
-    #[Test]
-    public function detectRejectsMdatOnlyAsIsoBmff(): void
-    {
-        // size=16, type='mdat', followed by 8 bytes of payload
-        $stream = $this->createStream("\x00\x00\x00\x10mdat" . str_repeat("\x00", 8));
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported or unknown container');
-
-        (new FormatDetector())->detect($stream);
     }
 
     /**
@@ -291,23 +225,6 @@ final class FormatDetectorTest extends TestCase
         $detected = (new FormatDetector())->detect($stream);
 
         self::assertSame(ContainerType::ISOBMFF, $detected);
-    }
-
-    /**
-     * Header budget still rejects streams with too many padding boxes.
-     */
-    #[Test]
-    public function detectRejectsTooManyPaddingBoxesExceedingHeaderBudget(): void
-    {
-        $padding = str_repeat("\x00\x00\x00\x08free", 8193);
-        $ftyp    = "\x00\x00\x00\x10ftypisom\x00\x00\x00\x00";
-
-        $stream = $this->createStream($padding . $ftyp);
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported or unknown container');
-
-        (new FormatDetector())->detect($stream);
     }
 
     /**
@@ -390,34 +307,6 @@ final class FormatDetectorTest extends TestCase
         $detected = (new FormatDetector())->detect($stream);
 
         self::assertSame(ContainerType::TIFF, $detected);
-    }
-
-    /**
-     * Rejects a stream starting with a valid byte-order mark but an invalid TIFF magic.
-     */
-    #[Test]
-    public function detectRejectsTiffWithInvalidMagic(): void
-    {
-        $stream = $this->createStream('II' . pack('v', 0x0099) . pack('V', 8));
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported or unknown container');
-
-        (new FormatDetector())->detect($stream);
-    }
-
-    /**
-     * Rejects a stream starting with II but too short to contain the magic number.
-     */
-    #[Test]
-    public function detectRejectsTruncatedTiffHeader(): void
-    {
-        $stream = $this->createStream('II*');
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported or unknown container');
-
-        (new FormatDetector())->detect($stream);
     }
 
     /**
@@ -548,6 +437,27 @@ final class FormatDetectorTest extends TestCase
     {
         yield 'empty stream' => [''];
         yield 'single byte' => ["\xFF"];
+    }
+
+    /**
+     * @return iterable<string, array{0: string}>
+     */
+    public static function unsupportedContainerProvider(): iterable
+    {
+        yield 'ftyp declared size exceeds bounds' => ["\x00\x00\x00\x18ftypisom"];
+        yield 'ftyp large size exceeds bounds' => ["\x00\x00\x00\x01ftyp\x00\x00\x00\x00\x00\x00\x00\x20isom"];
+        yield 'ftyp payload too short' => ["\x00\x00\x00\x0Cftypisom"];
+        yield 'unknown non-padding leading box' => [
+            "\x00\x00\x00\x08abcd"
+            . "\x00\x00\x00\x10ftypisom\x00\x00\x00\x00",
+        ];
+        yield 'mdat only' => ["\x00\x00\x00\x10mdat" . str_repeat("\x00", 8)];
+        yield 'too many padding boxes' => [
+            str_repeat("\x00\x00\x00\x08free", 8193)
+            . "\x00\x00\x00\x10ftypisom\x00\x00\x00\x00",
+        ];
+        yield 'tiff invalid magic' => ['II' . pack('v', 0x0099) . pack('V', 8)];
+        yield 'truncated tiff header' => ['II*'];
     }
 
     /**
