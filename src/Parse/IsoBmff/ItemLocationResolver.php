@@ -97,6 +97,8 @@ final readonly class ItemLocationResolver
      * @param array<int, IsoBmffDataReference>                                                                                                                                              $dataReferences    Parsed data references for the current meta box.
      * @param string|null                                                                                                                                                                   $idatPayload       Cached idat payload for construction_method=1 extents.
      * @param int                                                                                                                                                                           $metaContextOffset Absolute file offset of the owning meta box.
+     *
+     * @return IsoBmffQueuedResolveResult Resolved payloads and any unresolved item descriptors.
      */
     public function resolveQueuedItems(array $itemIds, array $locations, array $itemReferences, ?callable $transform, array $dataReferences, ?string $idatPayload, int $metaContextOffset): IsoBmffQueuedResolveResult
     {
@@ -125,6 +127,9 @@ final readonly class ItemLocationResolver
      * The caller is responsible for tracking the hash and accumulating the blob.
      *
      * @param array<string, bool> $xmpHashes Previously seen hashes.
+     * @param string              $blob      XMP payload to hash.
+     *
+     * @return string|null SHA-1 hash when the blob is unique, null when already seen.
      */
     public function uniqueXmpHash(array $xmpHashes, string $blob): ?string
     {
@@ -140,8 +145,9 @@ final readonly class ItemLocationResolver
      * context, so identical numeric item IDs from separate meta boxes must not
      * be merged into one global bucket.
      *
-     * @param array<int, array<int, list<IsoBmffItemReference>>> $existing
-     * @param array<int, list<IsoBmffItemReference>>             $incoming
+     * @param array<int, array<int, list<IsoBmffItemReference>>> $existing      Previously merged references.
+     * @param int                                                $contextOffset Absolute file offset of the owning meta box.
+     * @param array<int, list<IsoBmffItemReference>>             $incoming      Incoming references to merge.
      *
      * @return array<int, array<int, list<IsoBmffItemReference>>>
      */
@@ -176,8 +182,9 @@ final readonly class ItemLocationResolver
      * metadata context, so identical numeric indexes from different meta boxes
      * must remain separate.
      *
-     * @param array<int, array<int, IsoBmffDataReference>> $existing
-     * @param array<int, IsoBmffDataReference>             $incoming
+     * @param array<int, array<int, IsoBmffDataReference>> $existing      Previously merged data references.
+     * @param int                                          $contextOffset Absolute file offset of the owning meta box.
+     * @param array<int, IsoBmffDataReference>             $incoming      Incoming data references to merge.
      *
      * @return array<int, array<int, IsoBmffDataReference>>
      */
