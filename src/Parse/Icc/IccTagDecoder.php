@@ -592,7 +592,6 @@ final readonly class IccTagDecoder
 
             $firstNonEmpty ??= $utf;
 
-            /** @noinspection OnlyWritesOnParameterInspection — both variables are read in the return below */
             if ($lang === 'en') {
                 $enAny ??= $utf;
 
