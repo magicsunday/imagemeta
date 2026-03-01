@@ -361,6 +361,21 @@ final readonly class ExifTag
     public const int REFERENCE_BLACK_WHITE = 0x0214;
 
     /**
+     * DCF image file format; EXIF 3.0 §4.6.6.10.1, ASCII.
+     */
+    public const int RELATED_IMAGE_FILE_FORMAT = 0x1000;
+
+    /**
+     * Width of the related primary image; EXIF 3.0 §4.6.6.10.2, LONG or SHORT.
+     */
+    public const int RELATED_IMAGE_WIDTH = 0x1001;
+
+    /**
+     * Height of the related primary image; EXIF 3.0 §4.6.6.10.3, LONG or SHORT.
+     */
+    public const int RELATED_IMAGE_HEIGHT = 0x1002;
+
+    /**
      * Copyright notice associated with the image.
      */
     public const int COPYRIGHT = 0x8298;
