@@ -730,16 +730,6 @@ final class MetadataFormatter
             $formattedValue = $this->formatValue($value, $ifdContext, $tagId);
 
             if ($showHex && is_numeric($key)) {
-                if (
-                    $tagId === ExifTag::EXIF_IFD_POINTER
-                    || $tagId === ExifTag::GPS_IFD_POINTER
-                    || $tagId === ExifTag::INTEROPERABILITY_IFD_POINTER
-                ) {
-                    // Suppress internal IFD offsets from output:
-                    // 0x8769 Exif IFD Pointer, 0x8825 GPS IFD Pointer, 0xA005 Interoperability IFD Pointer.
-                    continue;
-                }
-
                 $hexKey  = sprintf('0x%04x', (int) $key);
                 $tagName = $this->getTagName((int) $key, $ifdContext);
                 // Format with exactly 40 characters before the colon
@@ -1666,6 +1656,10 @@ final class MetadataFormatter
 
         // Collect IFD0 tags from the ifd0 entries
         foreach ($exif->ifd0->entries as $tagId => $entry) {
+            if ($this->isIfdPointerTag($tagId)) {
+                continue;
+            }
+
             // Use ParsedExif accessor methods for tags with special decoding
             $value = $this->getDecodedValueFromParsedExif($tagId, $entry->value, $exif);
 
@@ -1727,6 +1721,16 @@ final class MetadataFormatter
         $length = is_string($rawValue) ? strlen($rawValue) : 0;
 
         return sprintf('(Binary data, %d bytes)', $length);
+    }
+
+    /**
+     * Returns true for IFD pointer tags that should be excluded from display.
+     */
+    private function isIfdPointerTag(int $tagId): bool
+    {
+        return $tagId === ExifTag::EXIF_IFD_POINTER
+            || $tagId === ExifTag::GPS_IFD_POINTER
+            || $tagId === ExifTag::INTEROPERABILITY_IFD_POINTER;
     }
 
     /**
