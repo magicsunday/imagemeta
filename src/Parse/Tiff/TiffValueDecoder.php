@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 
+use function assert;
 use function in_array;
 use function intdiv;
 use function is_string;

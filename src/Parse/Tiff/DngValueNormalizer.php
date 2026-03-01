@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
+use function assert;
 use function in_array;
 use function ord;
 use function rtrim;
