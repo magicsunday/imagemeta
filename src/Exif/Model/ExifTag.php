@@ -197,6 +197,11 @@ final readonly class ExifTag
     public const int GPS_H_POSITIONING_ERROR = 0x001F;
 
     /**
+     * Software or firmware that generated the image; TIFF/EP §5.6.1.
+     */
+    public const int PROCESSING_SOFTWARE = 0x000B;
+
+    /**
      * The number of columns of image data, equal to the number of pixels per row.
      *
      * EXIF 3.0 §4.6.5.1.1 (also TIFF 6.0 §8) defines this baseline tag as a SHORT or LONG
@@ -361,6 +366,16 @@ final readonly class ExifTag
     public const int REFERENCE_BLACK_WHITE = 0x0214;
 
     /**
+     * Windows XP rating stored by Windows Explorer (0–5 stars); Microsoft EXIF extension.
+     */
+    public const int RATING = 0x4746;
+
+    /**
+     * Windows XP rating as a percentage (0–100); Microsoft EXIF extension.
+     */
+    public const int RATING_PERCENT = 0x4749;
+
+    /**
      * DCF image file format; EXIF 3.0 §4.6.6.10.1, ASCII.
      */
     public const int RELATED_IMAGE_FILE_FORMAT = 0x1000;
@@ -425,6 +440,11 @@ final readonly class ExifTag
      * Opto-electronic conversion function parameters.
      */
     public const int OECF = 0x8828;
+
+    /**
+     * Time-zone offset(s) of the ModifyDate relative to UTC; deprecated pre-EXIF 2.3 tag.
+     */
+    public const int TIME_ZONE_OFFSET = 0x882A;
 
     /**
      * Type of sensitivity value recorded in ISO tags.
@@ -564,6 +584,19 @@ final readonly class ExifTag
     /**
      * Area of interest covered by the exposure metering.
      */
+    /**
+     * Image number assigned by the camera; deprecated pre-EXIF 2.3 tag.
+     */
+    public const int IMAGE_NUMBER = 0x9211;
+
+    /**
+     * TIFF/EP standard identification version; TIFF/EP §5.3.
+     */
+    public const int TIFF_EP_STANDARD_ID = 0x9216;
+
+    /**
+     * Area of interest covered by the exposure metering.
+     */
     public const int SUBJECT_AREA = 0x9214;
 
     /**
@@ -625,6 +658,11 @@ final readonly class ExifTag
      * Camera elevation angle relative to the horizon; EXIF 3.0 §4.6.6.8.7, SRATIONAL degrees, 0xFFFFFFFF denominator = unknown.
      */
     public const int CAMERA_ELEVATION_ANGLE = 0x9405;
+
+    /**
+     * Epson Print Image Matching binary data; proprietary vendor extension.
+     */
+    public const int PRINT_IMAGE_MATCHING = 0xC4A5;
 
     /**
      * Windows XP image title stored as UCS-2 (UTF-16LE) encoded BYTE array.
@@ -925,6 +963,16 @@ final readonly class ExifTag
      * Applied gamma correction value.
      */
     public const int GAMMA = 0xA500;
+
+    /**
+     * Microsoft padding for in-place EXIF editing; content is filler bytes.
+     */
+    public const int PADDING = 0xEA1C;
+
+    /**
+     * Microsoft offset adjustment when EXIF block has been relocated.
+     */
+    public const int OFFSET_SCHEMA = 0xEA1D;
 
     /**
      * Prevent instantiation of this constants-only utility class.

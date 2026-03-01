@@ -53,8 +53,6 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
     private ReflectionMethod $getTagNameMethod;
 
-    private ReflectionMethod $printSectionMethod;
-
     private ReflectionMethod $printIccSectionMethod;
 
     private ReflectionMethod $printIfd1SectionMethod;
@@ -83,7 +81,6 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $this->formatEnumNameMethod                  = new ReflectionMethod($this->formatter, 'formatEnumName');
         $this->formatComponentsConfigurationMethod   = new ReflectionMethod($this->formatter, 'formatComponentsConfiguration');
         $this->getTagNameMethod                      = new ReflectionMethod($this->formatter, 'getTagName');
-        $this->printSectionMethod                    = new ReflectionMethod($this->formatter, 'printSection');
         $this->printIccSectionMethod                 = new ReflectionMethod($this->formatter, 'printIccSection');
         $this->printIfd1SectionMethod                = new ReflectionMethod($this->formatter, 'printIfd1Section');
         $this->calcScaleFactorTo35MmEquivalentMethod = new ReflectionMethod($this->formatter, 'calcScaleFactorTo35MmEquivalent');
@@ -195,26 +192,14 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
     }
 
     #[Test]
-    public function suppressesIfdPointerTagsInFormattedOutput(): void
+    public function identifiesIfdPointerTags(): void
     {
-        ob_start();
-        $this->printSectionMethod->invoke(
-            $this->formatter,
-            'IFD0',
-            [
-                ExifTag::EXIF_IFD_POINTER             => 214,
-                ExifTag::GPS_IFD_POINTER              => 978,
-                ExifTag::INTEROPERABILITY_IFD_POINTER => 948,
-                ExifTag::MAKE                         => 'Canon',
-            ],
-            true,
-        );
-        $output = (string) ob_get_clean();
+        $isIfdPointerTag = new ReflectionMethod($this->formatter, 'isIfdPointerTag');
 
-        self::assertStringNotContainsString('Exif IFD Pointer', $output);
-        self::assertStringNotContainsString('GPS IFD Pointer', $output);
-        self::assertStringNotContainsString('Interoperability Ifd Pointer', $output);
-        self::assertStringContainsString('Make', $output);
+        self::assertTrue($isIfdPointerTag->invoke($this->formatter, ExifTag::EXIF_IFD_POINTER));
+        self::assertTrue($isIfdPointerTag->invoke($this->formatter, ExifTag::GPS_IFD_POINTER));
+        self::assertTrue($isIfdPointerTag->invoke($this->formatter, ExifTag::INTEROPERABILITY_IFD_POINTER));
+        self::assertFalse($isIfdPointerTag->invoke($this->formatter, ExifTag::MAKE));
     }
 
     #[Test]

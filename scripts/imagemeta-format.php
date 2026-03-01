@@ -31,6 +31,7 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Exif\Text\UndefinedTextMarker;
@@ -197,6 +198,13 @@ final class MetadataFormatter
     private array $tiffTagNames = [];
 
     /**
+     * Maps tag IDs to their human-readable names for DNG tags.
+     *
+     * @var array<int, string>
+     */
+    private array $dngTagNames = [];
+
+    /**
      * Maps tag IDs to their human-readable names for GPS IFD tags.
      *
      * @var array<int, string>
@@ -273,6 +281,14 @@ final class MetadataFormatter
         foreach ($tiffReflection->getConstants() as $name => $value) {
             if (is_int($value)) {
                 $this->tiffTagNames[$value] = $this->constantNameToTagName($name);
+            }
+        }
+
+        // Build DNG tag map
+        $dngReflection = new ReflectionClass(DngTag::class);
+        foreach ($dngReflection->getConstants() as $name => $value) {
+            if (is_int($value)) {
+                $this->dngTagNames[$value] = $this->constantNameToTagName($name);
             }
         }
 
@@ -431,6 +447,31 @@ final class MetadataFormatter
             'XP_AUTHOR'                 => 'XP Author',
             'XP_KEYWORDS'               => 'XP Keywords',
             'XP_SUBJECT'                => 'XP Subject',
+            'PRINT_IMAGE_MATCHING'      => 'Print Image Matching',
+            'PADDING'                   => 'Padding',
+            'OFFSET_SCHEMA'             => 'Offset Schema',
+            'PROCESSING_SOFTWARE'       => 'Processing Software',
+            'TIME_ZONE_OFFSET'          => 'Time Zone Offset',
+            'IMAGE_NUMBER'              => 'Image Number',
+            'TIFF_EP_STANDARD_ID'       => 'TIFF/EP Standard ID',
+            'RATING'                    => 'Rating',
+            'RATING_PERCENT'            => 'Rating Percent',
+            'YCBCR_COEFFICIENTS'        => 'YCbCr Coefficients',
+            'DNG_VERSION'               => 'DNG Version',
+            'DNG_BACKWARD_VERSION'      => 'DNG Backward Version',
+            'CFA_REPEAT_PATTERN_DIM'    => 'CFA Repeat Pattern Dim',
+            'CFA_PLANE_COLOR'           => 'CFA Plane Color',
+            'CFA_LAYOUT'                => 'CFA Layout',
+            'DNG_PRIVATE_DATA'          => 'DNG Private Data',
+            'AS_SHOT_ICC_PROFILE'       => 'As Shot ICC Profile',
+            'CURRENT_ICC_PROFILE'       => 'Current ICC Profile',
+            'PROFILE_HUE_SAT_MAP_DATA_1' => 'Profile Hue Sat Map Data 1',
+            'PROFILE_HUE_SAT_MAP_DATA_2' => 'Profile Hue Sat Map Data 2',
+            'PROFILE_HUE_SAT_MAP_DATA_3_V17' => 'Profile Hue Sat Map Data 3',
+            'PROFILE_GAIN_TABLE_MAP_2'  => 'Profile Gain Table Map 2',
+            'JXL_DISTANCE'              => 'JXL Distance',
+            'JXL_EFFORT'                => 'JXL Effort',
+            'JXL_DECODE_SPEED'          => 'JXL Decode Speed',
         ];
 
         if (isset($specialCases[$constantName])) {
@@ -776,9 +817,10 @@ final class MetadataFormatter
             }
         }
 
-        // Fall back to general TIFF and EXIF tag maps
+        // Fall back to general TIFF, EXIF and DNG tag maps
         return $this->tiffTagNames[$tagId]
             ?? $this->exifTagNames[$tagId]
+            ?? $this->dngTagNames[$tagId]
             ?? sprintf('Unknown 0x%04x', $tagId);
     }
 
@@ -1281,6 +1323,16 @@ final class MetadataFormatter
             ExifTag::XP_AUTHOR   => $exifDoc->xpAuthor(),
             ExifTag::XP_KEYWORDS => $exifDoc->xpKeywords(),
             ExifTag::XP_SUBJECT  => $exifDoc->xpSubject(),
+
+            // PrintImageMatching - Binary Epson PIM data, show summary only
+            ExifTag::PRINT_IMAGE_MATCHING => is_string($rawValue)
+                ? sprintf('(PIM data, %d bytes)', strlen($rawValue))
+                : null,
+
+            // Padding - Microsoft filler bytes, show summary only
+            ExifTag::PADDING => is_string($rawValue)
+                ? sprintf('(%d bytes)', strlen($rawValue))
+                : null,
 
             // LearningOptOutIn - Decode pair-based opt-out/opt-in entries
             // EXIF 3.1 §4.6.5.4
