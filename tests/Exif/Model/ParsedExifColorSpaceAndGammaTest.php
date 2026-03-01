@@ -45,17 +45,30 @@ use PHPUnit\Framework\TestCase;
 final class ParsedExifColorSpaceAndGammaTest extends TestCase
 {
     /**
-     * Uses a reserved ColorSpace value to indicate "uncalibrated".
-     * Confirms colorSpace() returns null when the value is not a known enum.
+     * Uses a reserved ColorSpace value that is not defined in the enum.
+     * Confirms colorSpace() returns null when the value is not a known enum case.
      */
     #[Test]
     public function colorSpaceIsNullForReservedValues(): void
     {
         $parsedExif = $this->parsedExifFromExifEntries([
-            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, 2),
+            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, 999),
         ]);
 
         self::assertNull($parsedExif->colorSpace());
+    }
+
+    /**
+     * Returns AdobeRgb for ColorSpace value 2 (non-standard but universal).
+     */
+    #[Test]
+    public function colorSpaceReturnsAdobeRgb(): void
+    {
+        $parsedExif = $this->parsedExifFromExifEntries([
+            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, 2),
+        ]);
+
+        self::assertSame(ColorSpace::AdobeRgb, $parsedExif->colorSpace());
     }
 
     /**
