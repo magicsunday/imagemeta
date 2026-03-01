@@ -50,6 +50,14 @@ final readonly class QuickTimeMetadataDecoder
         "\xA9alb" => 'com.apple.quicktime.album',
         "\xA9cmt" => 'com.apple.quicktime.comment',
         "\xA9day" => 'com.apple.quicktime.creationDate',
+        "\xA9cpy" => 'com.apple.quicktime.copyright',
+        "\xA9too" => 'com.apple.quicktime.software',
+        "\xA9gen" => 'com.apple.quicktime.genre',
+        "\xA9mak" => 'com.apple.quicktime.make',
+        "\xA9mod" => 'com.apple.quicktime.model',
+        "\xA9swr" => 'com.apple.quicktime.software',
+        "\xA9wrt" => 'com.apple.quicktime.author',
+        "\xA9xyz" => 'com.apple.quicktime.location.ISO6709',
     ];
 
     /**

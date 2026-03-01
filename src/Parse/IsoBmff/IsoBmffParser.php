@@ -356,6 +356,12 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 $this->parseMetaBox($child, $context, $fileOffsetOrigin);
             } elseif ($child->type === BoxType::NAME->value) {
                 $this->quickTimeDecoder->parseUdtaNameAtom($child, $context);
+            } elseif ($child->type === 'XMP_') {
+                if ($child->contentSize > $this->config->maxItemPayloadSize) {
+                    throw new ParseError('udta XMP_ payload exceeds maximum allowed size', 2100);
+                }
+
+                $this->appendUniqueXmpToContext($context, $this->boxNavigator->readAll($child->window));
             } else {
                 $this->quickTimeDecoder->parseUdtaTextAtom($child, $context);
             }

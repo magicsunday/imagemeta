@@ -29,6 +29,7 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxPayloadCollector;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserConfig;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemLocationResolver;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemPayloadResolver;
 use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeKeyResolver;
@@ -5260,6 +5261,96 @@ final class IsoBmffParserTest extends TestCase
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertArrayNotHasKey('com.apple.quicktime.title', $qtMeta->keys);
         self::assertArrayNotHasKey('com.apple.quicktime.artist', $qtMeta->keys);
+    }
+
+    /**
+     * Parses GPS coordinates from the ©xyz udta text atom.
+     * The raw ISO 6709 location string is stored under the canonical key.
+     */
+    #[Test]
+    public function parsesGpsLocationFromUdtaXyzAtom(): void
+    {
+        $gps  = "+48.1234+011.5678+500.000/\0";
+        $moov = $this->moov($this->box('udta', $this->box("\xA9xyz", $gps)));
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('+48.1234+011.5678+500.000/', $qtMeta->keys['com.apple.quicktime.location.ISO6709']);
+    }
+
+    /**
+     * Parses encoder software from the ©too udta text atom.
+     */
+    #[Test]
+    public function parsesEncoderFromUdtaTooAtom(): void
+    {
+        $moov = $this->moov($this->box('udta', $this->box("\xA9too", "HandBrake 1.8.0\0")));
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('HandBrake 1.8.0', $qtMeta->keys['com.apple.quicktime.software']);
+    }
+
+    /**
+     * Parses camera make and model from ©mak and ©mod udta text atoms.
+     */
+    #[Test]
+    public function parsesCameraMakeModelFromUdta(): void
+    {
+        $udta = $this->box('udta', $this->box("\xA9mak", "Apple\0") . $this->box("\xA9mod", "iPhone 16 Pro\0"));
+        $moov = $this->moov($udta);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('Apple', $qtMeta->keys['com.apple.quicktime.make']);
+        self::assertSame('iPhone 16 Pro', $qtMeta->keys['com.apple.quicktime.model']);
+    }
+
+    /**
+     * Extracts XMP from a udta XMP_ atom (Adobe QuickTime convention).
+     */
+    #[Test]
+    public function extractsXmpFromUdtaXmpUnderscoreAtom(): void
+    {
+        $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
+        $udta = $this->box('udta', $this->box('XMP_', $xmp));
+        $moov = $this->moov($udta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, $xmpBlobs] = $extractor->extract();
+
+        self::assertCount(1, $xmpBlobs);
+        self::assertSame($xmp, $xmpBlobs[0]);
+    }
+
+    /**
+     * Throws ParseError when udta XMP_ payload exceeds the configured limit.
+     */
+    #[Test]
+    public function throwsForOversizedUdtaXmpPayload(): void
+    {
+        $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
+        $udta = $this->box('udta', $this->box('XMP_', $xmp));
+        $moov = $this->moov($udta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $stream    = $this->createIsoBmffTempStream($ftyp . $moov);
+        $extractor = new IsoBmffParser($stream, new IsoBmffParserConfig(maxItemPayloadSize: 4));
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(2100);
+
+        $extractor->extract();
     }
 
     #[Test]
