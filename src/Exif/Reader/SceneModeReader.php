@@ -23,6 +23,8 @@ use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CorrectionApplied;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\DevelopmentCharacteristic;
+use MagicSunday\ImageMeta\Value\Enum\DevelopmentDefault;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
@@ -277,6 +279,48 @@ final readonly class SceneModeReader
         $value = $this->reader->enumValue($this->exifIfd, ExifTag::SUBJECT_DISTANCE_RANGE);
 
         return SubjectDistanceRange::fromExifValue($value);
+    }
+
+    /**
+     * Returns the development characteristic from the packed DevelopmentType tag.
+     *
+     * EXIF 3.1 §4.6.6.7.47: high byte (bits 15–8) of the packed SHORT.
+     */
+    public function developmentCharacteristic(): ?DevelopmentCharacteristic
+    {
+        $value = $this->reader->int($this->exifIfd, ExifTag::DEVELOPMENT_TYPE);
+
+        if ($value === null) {
+            return null;
+        }
+
+        return DevelopmentCharacteristic::tryFrom(($value >> 8) & 0xFF);
+    }
+
+    /**
+     * Returns the factory default comparison from the packed DevelopmentType tag.
+     *
+     * EXIF 3.1 §4.6.6.7.47: low byte (bits 7–0) of the packed SHORT.
+     */
+    public function developmentDefault(): ?DevelopmentDefault
+    {
+        $value = $this->reader->int($this->exifIfd, ExifTag::DEVELOPMENT_TYPE);
+
+        if ($value === null) {
+            return null;
+        }
+
+        return DevelopmentDefault::tryFrom($value & 0xFF);
+    }
+
+    /**
+     * Returns the development type description string.
+     *
+     * EXIF 3.1 §4.6.6.7.48 (DevelopmentTypeDescription): UTF-8, no default.
+     */
+    public function developmentTypeDescription(): ?string
+    {
+        return $this->reader->str($this->exifIfd, ExifTag::DEVELOPMENT_TYPE_DESCRIPTION);
     }
 
     /**

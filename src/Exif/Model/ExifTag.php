@@ -762,6 +762,16 @@ final readonly class ExifTag
     public const int SUBJECT_DISTANCE_RANGE = 0xA40C;
 
     /**
+     * Qualitative type of image processing (development) applied at capture; EXIF 3.1 §4.6.6.7.47, SHORT packed.
+     */
+    public const int DEVELOPMENT_TYPE = 0xA40D;
+
+    /**
+     * Concrete image processing description for DevelopmentType; EXIF 3.1 §4.6.6.7.48, UTF-8.
+     */
+    public const int DEVELOPMENT_TYPE_DESCRIPTION = 0xA40E;
+
+    /**
      * Whether distortion correction was applied at capture; EXIF 3.1 §4.6.6.7.49, SHORT, 0–1.
      */
     public const int DISTORTION_CORRECTION = 0xA40F;

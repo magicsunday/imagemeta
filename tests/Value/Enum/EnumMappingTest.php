@@ -15,6 +15,8 @@ use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\CorrectionApplied;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\DevelopmentCharacteristic;
+use MagicSunday\ImageMeta\Value\Enum\DevelopmentDefault;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
@@ -66,6 +68,8 @@ use ReflectionMethod;
 #[CoversClass(Compression::class)]
 #[CoversClass(CorrectionApplied::class)]
 #[CoversClass(CustomRendered::class)]
+#[CoversClass(DevelopmentCharacteristic::class)]
+#[CoversClass(DevelopmentDefault::class)]
 #[CoversClass(NoiseReduction::class)]
 #[CoversClass(SceneCaptureType::class)]
 #[CoversClass(WhiteBalance::class)]
@@ -210,6 +214,34 @@ final class EnumMappingTest extends TestCase
         self::assertNull(NoiseReduction::fromExifValue(4));
         self::assertNull(NoiseReduction::fromExifValue('10'));
         self::assertNull(NoiseReduction::fromExifValue(null));
+    }
+
+    /**
+     * Maps DevelopmentCharacteristic enum values.
+     * EXIF 3.1 §4.6.6.7.47: high byte of packed DevelopmentType SHORT.
+     */
+    #[Test]
+    public function mapsDevelopmentCharacteristicValues(): void
+    {
+        self::assertSame(DevelopmentCharacteristic::FaithfulReproduction, DevelopmentCharacteristic::fromExifValue(0x01));
+        self::assertSame(DevelopmentCharacteristic::ModerateProcessing, DevelopmentCharacteristic::fromExifValue(0x02));
+        self::assertSame(DevelopmentCharacteristic::ExtremeDifference, DevelopmentCharacteristic::fromExifValue(0x04));
+        self::assertNull(DevelopmentCharacteristic::fromExifValue(0x03));
+        self::assertNull(DevelopmentCharacteristic::fromExifValue(null));
+    }
+
+    /**
+     * Maps DevelopmentDefault enum values.
+     * EXIF 3.1 §4.6.6.7.47: low byte of packed DevelopmentType SHORT.
+     */
+    #[Test]
+    public function mapsDevelopmentDefaultValues(): void
+    {
+        self::assertSame(DevelopmentDefault::FactoryDefault, DevelopmentDefault::fromExifValue(0x01));
+        self::assertSame(DevelopmentDefault::Different, DevelopmentDefault::fromExifValue(0x02));
+        self::assertSame(DevelopmentDefault::Unknown, DevelopmentDefault::fromExifValue(0x04));
+        self::assertNull(DevelopmentDefault::fromExifValue(0x03));
+        self::assertNull(DevelopmentDefault::fromExifValue(null));
     }
 
     /**

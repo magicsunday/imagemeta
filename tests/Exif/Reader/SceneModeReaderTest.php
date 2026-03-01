@@ -20,6 +20,8 @@ use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CorrectionApplied;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\DevelopmentCharacteristic;
+use MagicSunday\ImageMeta\Value\Enum\DevelopmentDefault;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
 use MagicSunday\ImageMeta\Value\Enum\NoiseReduction;
@@ -220,6 +222,59 @@ final class SceneModeReaderTest extends TestCase
         $reader = $this->createReader([]);
 
         self::assertNull($reader->noiseReduction());
+    }
+
+    /**
+     * Supplies a packed DevelopmentType SHORT with faithful reproduction and factory default.
+     * EXIF 3.1 §4.6.6.7.47: high byte=0x01 (faithful), low byte=0x01 (factory default).
+     */
+    #[Test]
+    public function readsDevelopmentTypeComponents(): void
+    {
+        $packed      = (0x01 << 8) | 0x02;
+        $exifEntries = [
+            ExifTag::DEVELOPMENT_TYPE => new IfdEntry(ExifTag::DEVELOPMENT_TYPE, 3, 1, $packed),
+        ];
+
+        $reader = $this->createReader($exifEntries);
+
+        self::assertSame(DevelopmentCharacteristic::FaithfulReproduction, $reader->developmentCharacteristic());
+        self::assertSame(DevelopmentDefault::Different, $reader->developmentDefault());
+    }
+
+    /**
+     * Supplies a DevelopmentTypeDescription tag with a UTF-8 string.
+     * EXIF 3.1 §4.6.6.7.48.
+     */
+    #[Test]
+    public function readsDevelopmentTypeDescription(): void
+    {
+        $exifEntries = [
+            ExifTag::DEVELOPMENT_TYPE_DESCRIPTION => new IfdEntry(
+                ExifTag::DEVELOPMENT_TYPE_DESCRIPTION,
+                7,
+                18,
+                "Standard process\0",
+            ),
+        ];
+
+        $reader = $this->createReader($exifEntries);
+
+        self::assertSame('Standard process', $reader->developmentTypeDescription());
+    }
+
+    /**
+     * Verifies null is returned when development type tags are absent.
+     * EXIF 3.1 §4.6.6.7.47–48: no default value defined.
+     */
+    #[Test]
+    public function returnsNullForAbsentDevelopmentTypeTags(): void
+    {
+        $reader = $this->createReader([]);
+
+        self::assertNull($reader->developmentCharacteristic());
+        self::assertNull($reader->developmentDefault());
+        self::assertNull($reader->developmentTypeDescription());
     }
 
     /**
