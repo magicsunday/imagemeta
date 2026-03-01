@@ -870,13 +870,13 @@ final readonly class DngStructureValidator
     public function validateDngDepthEnums(Ifd $ifd): void
     {
         $rules = [
-            DngTag::DEPTH_FORMAT       => ['name' => 'DepthFormat', 'allowed' => [0, 1, 2]],
-            DngTag::DEPTH_UNITS        => ['name' => 'DepthUnits', 'allowed' => [0, 1]],
-            DngTag::DEPTH_MEASURE_TYPE => ['name' => 'DepthMeasureType', 'allowed' => [0, 1, 2]],
+            ['tag' => DngTag::DEPTH_FORMAT, 'name' => 'DepthFormat', 'allowed' => [0, 1, 2]],
+            ['tag' => DngTag::DEPTH_UNITS, 'name' => 'DepthUnits', 'allowed' => [0, 1]],
+            ['tag' => DngTag::DEPTH_MEASURE_TYPE, 'name' => 'DepthMeasureType', 'allowed' => [0, 1, 2]],
         ];
 
-        foreach ($rules as $tag => $config) {
-            $entry = $ifd->get($tag);
+        foreach ($rules as $config) {
+            $entry = $ifd->get($config['tag']);
 
             if (!$entry instanceof IfdEntry) {
                 continue;
