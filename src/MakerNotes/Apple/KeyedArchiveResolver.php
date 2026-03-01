@@ -123,13 +123,8 @@ final readonly class KeyedArchiveResolver
         }
 
         if ($value instanceof ApplePlistDictionary) {
-            $entries = [];
-            foreach ($value->entries() as $key => $entry) {
-                $entries[$key] = $this->plistValueToPhp($entry);
-            }
-
             /** @phpstan-ignore-next-line */
-            return $entries;
+            return array_map($this->plistValueToPhp(...), $value->entries());
         }
 
         throw new ParseError('Unsupported property list value.', 1118);
