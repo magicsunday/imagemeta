@@ -130,19 +130,11 @@ final class AppleMakerNotesMerger
 
         $semanticStyleComposite = SemanticStyle::fromQuickTime($quickTime);
         if ($semanticStyleComposite !== null) {
-            [$compositePreset, $compositeWarmth, $compositeTone] = $semanticStyleComposite;
-
-            if (($semanticPreset === null) && ($compositePreset !== null)) {
-                $semanticPreset = $compositePreset;
-            }
-
-            if (($semanticWarmth === null) && ($compositeWarmth !== null)) {
-                $semanticWarmth = $compositeWarmth;
-            }
-
-            if (($semanticTone === null) && ($compositeTone !== null)) {
-                $semanticTone = $compositeTone;
-            }
+            [
+                'preset' => $semanticPreset,
+                'warmth' => $semanticWarmth,
+                'tone'   => $semanticTone,
+            ] = SemanticStyle::mergeIntoFields($semanticPreset, $semanticWarmth, $semanticTone, $semanticStyleComposite);
         }
 
         $flags = $this->normalizeFlags($makerNotes?->flags, $this->quickTimeFlags($quickTime));

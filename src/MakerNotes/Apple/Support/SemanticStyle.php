@@ -128,6 +128,24 @@ final class SemanticStyle
     }
 
     /**
+     * Merges a decomposed semantic style tuple into individual fields, filling only null values.
+     *
+     * @param array<int, string|float|null> $tuple
+     *
+     * @phpstan-param array{0:?string,1:?float,2:?float} $tuple
+     *
+     * @return array{preset:?string,warmth:?float,tone:?float}
+     */
+    public static function mergeIntoFields(?string $preset, ?float $warmth, ?float $tone, array $tuple): array
+    {
+        return [
+            'preset' => $preset ?? $tuple[0],
+            'warmth' => $warmth ?? $tuple[1],
+            'tone'   => $tone ?? $tuple[2],
+        ];
+    }
+
+    /**
      * Normalizes semantic style entries from dictionary or list format.
      *
      * @param SemanticStyleDictionary $semantic Raw semantic style data.

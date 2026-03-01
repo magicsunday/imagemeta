@@ -297,19 +297,11 @@ final readonly class AppleMakerNotesBuilder
         }
 
         if ($semanticStyleCompact !== null) {
-            [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
-
-            if (($semanticStylePreset === null) && ($compactPreset !== null)) {
-                $semanticStylePreset = $compactPreset;
-            }
-
-            if (($semanticStyleWarmth === null) && ($compactWarmth !== null)) {
-                $semanticStyleWarmth = $compactWarmth;
-            }
-
-            if (($semanticStyleTone === null) && ($compactTone !== null)) {
-                $semanticStyleTone = $compactTone;
-            }
+            [
+                'preset' => $semanticStylePreset,
+                'warmth' => $semanticStyleWarmth,
+                'tone'   => $semanticStyleTone,
+            ] = SemanticStyle::mergeIntoFields($semanticStylePreset, $semanticStyleWarmth, $semanticStyleTone, $semanticStyleCompact);
         }
 
         return [
