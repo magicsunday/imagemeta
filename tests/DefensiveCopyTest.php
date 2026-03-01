@@ -160,7 +160,7 @@ final class DefensiveCopyTest extends TestCase
         $obj = new MultiPicture(
             '0100',
             1,
-            [new MultiPictureEntry(0x030000, 2048, 1024, 0, 0)],
+            [new MultiPictureEntry(0x030000, 2048, 1024, 0, 0, false, false, false, null, null)],
             null,
             null,
             null,
@@ -172,7 +172,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function multiPictureIsolatesNullableArrays(): void
     {
-        $obj = new MultiPicture('0100', 1, [new MultiPictureEntry(0, 0, 0, 0, 0)], null, null, null);
+        $obj = new MultiPicture('0100', 1, [new MultiPictureEntry(0, 0, 0, 0, 0, false, false, false, null, null)], null, null, null);
 
         self::assertCount(1, $obj->entries);
     }
@@ -230,7 +230,7 @@ final class DefensiveCopyTest extends TestCase
     #[Test]
     public function mpfDocumentIsolatesEntriesArray(): void
     {
-        $obj = new MpfDocument('0100', 1, [new MpfEntry(0, 1024, 0, 0, 0)], null);
+        $obj = new MpfDocument('0100', 1, [new MpfEntry(0, 1024, 0, 0, 0, false, false, false, null, null)], null);
 
         self::assertCount(1, $obj->entries);
     }

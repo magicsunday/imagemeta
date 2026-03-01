@@ -61,6 +61,11 @@ final readonly class MultiPictureFactory
                 dataOffset: $entry->dataOffset,
                 dependentImage1: $entry->dependentImage1,
                 dependentImage2: $entry->dependentImage2,
+                isDependentParent: $entry->isDependentParent,
+                isDependentChild: $entry->isDependentChild,
+                isRepresentativeImage: $entry->isRepresentativeImage,
+                imageType: $entry->imageType,
+                imageDataFormat: $entry->imageDataFormat,
             ),
             $document->entries,
         );

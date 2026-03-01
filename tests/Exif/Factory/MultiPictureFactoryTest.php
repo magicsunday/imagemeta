@@ -16,9 +16,12 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
+use MagicSunday\ImageMeta\Value\Enum\MpImageDataFormat;
+use MagicSunday\ImageMeta\Value\Enum\MpImageType;
 use MagicSunday\ImageMeta\Value\MultiPictureEntry;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -30,6 +33,8 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(MultiPictureFactory::class)]
+#[UsesClass(MpImageDataFormat::class)]
+#[UsesClass(MpImageType::class)]
 final class MultiPictureFactoryTest extends TestCase
 {
     /**
@@ -46,6 +51,11 @@ final class MultiPictureFactoryTest extends TestCase
                 dataOffset: 2048,
                 dependentImage1: 0,
                 dependentImage2: 0,
+                isDependentParent: false,
+                isDependentChild: false,
+                isRepresentativeImage: false,
+                imageType: MpImageType::Undefined,
+                imageDataFormat: null,
             ),
             new MpfEntry(
                 attributes: 2,
@@ -53,6 +63,11 @@ final class MultiPictureFactoryTest extends TestCase
                 dataOffset: 4096,
                 dependentImage1: 1,
                 dependentImage2: 0,
+                isDependentParent: false,
+                isDependentChild: false,
+                isRepresentativeImage: false,
+                imageType: MpImageType::Undefined,
+                imageDataFormat: null,
             ),
         ];
 
@@ -86,6 +101,10 @@ final class MultiPictureFactoryTest extends TestCase
         self::assertSame(2, $multiPicture->totalFrames);
         self::assertSame(1, $multiPicture->individualImageNumber);
         self::assertSame('uid-1,uid-2', $multiPicture->imageUidList);
+
+        $first = $multiPicture->entries[0];
+        self::assertSame(MpImageType::Undefined, $first->imageType);
+        self::assertFalse($first->isDependentParent);
     }
 
     /**
@@ -132,6 +151,11 @@ final class MultiPictureFactoryTest extends TestCase
                 dataOffset: 0,
                 dependentImage1: 0,
                 dependentImage2: 0,
+                isDependentParent: false,
+                isDependentChild: false,
+                isRepresentativeImage: false,
+                imageType: MpImageType::Undefined,
+                imageDataFormat: MpImageDataFormat::Jpeg,
             ),
         ];
 

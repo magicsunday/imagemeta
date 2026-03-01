@@ -22,6 +22,8 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Parse\ParserLimits;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffFieldType;
+use MagicSunday\ImageMeta\Value\Enum\MpImageDataFormat;
+use MagicSunday\ImageMeta\Value\Enum\MpImageType;
 
 use function count;
 use function is_int;
@@ -507,26 +509,44 @@ final class MpfParser
             $dep2       = $this->readU16($buffer, $endian);
 
             // Validate Individual Image Attribute bitfield per MPF spec
-            // Bits 27..29 must be zero (reserved)
-            $reservedBits = ($attributes >> 27) & 0x07;
+            // Bits 27..28 must be zero (reserved); CIPA DC-007-2025, §5.2.3.3, Figure 8
+            $reservedBits = ($attributes >> 27) & 0x03;
             if ($reservedBits !== 0) {
                 throw new ParseError(
-                    sprintf('MPEntry %d has non-zero reserved bits 27..29: 0x%08X', $i, $attributes),
+                    sprintf('MPEntry %d has non-zero reserved bits 27..28: 0x%08X', $i, $attributes),
                     1982,
                 );
             }
 
-            // Bits 24..26 encode image type; value 7 is reserved and must not be used
-            $imageType = ($attributes >> 24) & 0x07;
-            if ($imageType === 7) {
+            // Bits 24..26 encode type info; value 7 is reserved and must not be used
+            $typeInfo = ($attributes >> 24) & 0x07;
+            if ($typeInfo === 7) {
                 throw new ParseError(
-                    sprintf('MPEntry %d has reserved image type value 7: 0x%08X', $i, $attributes),
+                    sprintf('MPEntry %d has reserved type info value 7: 0x%08X', $i, $attributes),
                     1410,
                 );
             }
 
-            // The MP Entry tuple mirrors the Attribute, Size, Offset, and Dependent image fields mandated by EXIF 3.0 §4.6.3.
-            $entries[] = new MpfEntry($attributes, $size, $offset, $dep1, $dep2);
+            // Decompose the Individual Image Attribute bitfield (CIPA DC-007-2025, §5.2.3.3, Figure 8)
+            $isDependentParent     = ($attributes & (1 << 31)) !== 0;
+            $isDependentChild      = ($attributes & (1 << 30)) !== 0;
+            $isRepresentativeImage = ($attributes & (1 << 29)) !== 0;
+            $subType               = ($attributes >> 16) & 0xFF;
+            $typeCode              = ($typeInfo << 16) | $subType;
+            $imageDataFormat       = $attributes & 0x07;
+
+            $entries[] = new MpfEntry(
+                $attributes,
+                $size,
+                $offset,
+                $dep1,
+                $dep2,
+                $isDependentParent,
+                $isDependentChild,
+                $isRepresentativeImage,
+                MpImageType::tryFrom($typeCode),
+                MpImageDataFormat::tryFrom($imageDataFormat),
+            );
         }
 
         return $entries;

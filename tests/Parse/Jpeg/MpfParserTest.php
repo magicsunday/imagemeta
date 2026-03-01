@@ -20,6 +20,8 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfParser;
+use MagicSunday\ImageMeta\Value\Enum\MpImageDataFormat;
+use MagicSunday\ImageMeta\Value\Enum\MpImageType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -48,6 +50,8 @@ use function strlen;
 #[UsesClass(MpfAttributes::class)]
 #[UsesClass(MpfDocument::class)]
 #[UsesClass(MpfEntry::class)]
+#[UsesClass(MpImageDataFormat::class)]
+#[UsesClass(MpImageType::class)]
 final class MpfParserTest extends TestCase
 {
     private const int TAG_MPF_VERSION = 0xB000;
@@ -107,8 +111,30 @@ final class MpfParserTest extends TestCase
             version: '0100',
             imageCount: 2,
             entries: [
-                new MpfEntry(0x83000044, 1_000, 2_048, 1, 0),
-                new MpfEntry(0x44000088, 2_000, 4_096, 0, 2),
+                new MpfEntry(
+                    0x83000044,
+                    1_000,
+                    2_048,
+                    1,
+                    0,
+                    true,
+                    false,
+                    false,
+                    MpImageType::BaselinePrimaryImage,
+                    null,
+                ),
+                new MpfEntry(
+                    0x44000088,
+                    2_000,
+                    4_096,
+                    0,
+                    2,
+                    false,
+                    true,
+                    false,
+                    MpImageType::OriginalPreservationImage,
+                    MpImageDataFormat::Jpeg,
+                ),
             ],
             attributes: new MpfAttributes(
                 individualImageNumber: 2,
@@ -163,6 +189,33 @@ final class MpfParserTest extends TestCase
 
         $this->expectException(ParseError::class);
         $parser->parse($this->buildMpfPayload($indexEntries));
+    }
+
+    /**
+     * Verifies bitfield decomposition for an entry with all flags set.
+     */
+    #[Test]
+    public function decomposesRepresentativeParentEntry(): void
+    {
+        $entriesData = $this->buildMpEntries([
+            [0xE3000000, 4_096, 0, 0, 0],
+        ]);
+
+        $indexEntries = [
+            [self::TAG_MPF_VERSION, self::TYPE_ASCII, 4, '0100'],
+            [self::TAG_NUMBER_OF_IMAGES, self::TYPE_LONG, 1, 1],
+            [self::TAG_MP_ENTRY, self::TYPE_UNDEFINED, strlen($entriesData), $entriesData],
+        ];
+
+        $parser   = new MpfParser();
+        $document = $parser->parse($this->buildMpfPayload($indexEntries));
+
+        $entry = $document->entries[0];
+        self::assertTrue($entry->isDependentParent);
+        self::assertTrue($entry->isDependentChild);
+        self::assertTrue($entry->isRepresentativeImage);
+        self::assertSame(MpImageType::BaselinePrimaryImage, $entry->imageType);
+        self::assertSame(MpImageDataFormat::Jpeg, $entry->imageDataFormat);
     }
 
     /**

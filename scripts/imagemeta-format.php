@@ -29,6 +29,7 @@ use MagicSunday\ImageMeta\Model\Icc\IccTag;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
+use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -2209,22 +2210,31 @@ final class MetadataFormatter
     /**
      * Formats MPF entry type information.
      */
-    private function formatMpfEntryType($entry): string
+    private function formatMpfEntryType(MpfEntry $entry): string
     {
-        $reflection = new ReflectionClass($entry);
-        $properties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
-        $parts      = [];
+        $parts = [];
 
-        foreach ($properties as $property) {
-            $name  = $property->getName();
-            $value = $property->getValue($entry);
-
-            if (($value !== null) && ($name !== 'dataOffset') && ($name !== 'size')) {
-                $parts[] = sprintf('%s=%s', $name, $value);
-            }
+        if ($entry->imageType !== null) {
+            $parts[] = $entry->imageType->name;
+        } else {
+            $parts[] = sprintf('Unknown type (0x%06X)', ($entry->attributes >> 16) & 0x07FF);
         }
 
-        return $parts !== [] ? implode(', ', $parts) : 'Unknown';
+        if ($entry->isRepresentativeImage) {
+            $parts[] = 'Representative';
+        }
+
+        if ($entry->isDependentParent) {
+            $parts[] = 'Parent';
+        }
+
+        if ($entry->isDependentChild) {
+            $parts[] = 'Child';
+        }
+
+        $parts[] = sprintf('size=%d', $entry->imageSize);
+
+        return implode(', ', $parts);
     }
 
     /**
