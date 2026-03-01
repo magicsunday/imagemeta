@@ -80,6 +80,7 @@ Many PHP applications need one consistent metadata API across modern container f
 | XMP                                | RDF/XML parsing via `XMLReader`                                         |
 | IPTC                               | IIM extraction from JPEG APP13                                          |
 | QuickTime metadata                 | Extracted from ISO BMFF structures                                      |
+| MPF                                | CIPA DC-007-2025, 3rd Edition (all MP type codes incl. Gain Map)        |
 | JPEG auxiliary payloads            | ICC profile, MPF, FlashPix streams, EXIF audio streams                  |
 | Output model                       | `MagicSunday\ImageMeta\Model\Metadata` + `->structured()`               |
 
@@ -185,6 +186,7 @@ Primary files used by parser development:
 - `docs/Quicktime-File-Format-2012.pdf`
 - `docs/XMP.pdf`
 - `docs/ICC.pdf`
+- `docs/MPF.pdf` -- MPF 3rd Edition (CIPA DC-007-2025)
 - `docs/DNG_Spec_1_7_1_0.pdf`
 
 HTML mirrors (`docs/*.html`) are available for faster navigation/search during implementation.
