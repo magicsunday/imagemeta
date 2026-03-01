@@ -562,6 +562,11 @@ final readonly class ExifTag
     public const int USER_COMMENT = 0x9286;
 
     /**
+     * Copyright holder's AI/ML learning opt-out/opt-in intention; EXIF 3.1 §4.6.5.4, UNDEFINED, byte pairs.
+     */
+    public const int LEARNING_OPT_OUT_IN = 0x9287;
+
+    /**
      * Fractional seconds for the ModifyDate timestamp.
      */
     public const int SUB_SEC_TIME = 0x9290;

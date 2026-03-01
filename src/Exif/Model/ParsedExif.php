@@ -66,6 +66,7 @@ use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\FlashInfo;
+use MagicSunday\ImageMeta\Value\LearningOptOutIn;
 use MagicSunday\ImageMeta\Value\Oecf;
 use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
@@ -507,6 +508,11 @@ final class ParsedExif implements ExifIfd0DataInterface, ExifIfd1DataInterface, 
     public function artist(): ?string
     {
         return $this->descriptionReader()->artist();
+    }
+
+    public function learningOptOutIn(): ?LearningOptOutIn
+    {
+        return $this->descriptionReader()->learningOptOutIn();
     }
 
     public function imageUniqueId(): ?string

@@ -17,6 +17,10 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\Reader\DescriptionExifReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Value\Enum\LearningIntention;
+use MagicSunday\ImageMeta\Value\Enum\LearningUsage;
+use MagicSunday\ImageMeta\Value\LearningOptOutIn;
+use MagicSunday\ImageMeta\Value\LearningOptOutInEntry;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -32,6 +36,10 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(IfdValueReader::class)]
+#[UsesClass(LearningIntention::class)]
+#[UsesClass(LearningOptOutIn::class)]
+#[UsesClass(LearningOptOutInEntry::class)]
+#[UsesClass(LearningUsage::class)]
 #[UsesClass(ValueConverters::class)]
 final class DescriptionExifReaderTest extends TestCase
 {
@@ -163,6 +171,144 @@ final class DescriptionExifReaderTest extends TestCase
         $reader = $this->createReader([], $exifEntries);
 
         self::assertSame('Fallback Owner', $reader->artist());
+    }
+
+    /**
+     * Supplies a single-pair LearningOptOutIn payload: Usage=All, Intention=Opt-out.
+     * Verifies the reader parses a single (usage, intention) byte pair.
+     */
+    #[Test]
+    public function readsLearningOptOutInSinglePair(): void
+    {
+        $exifEntries = [
+            ExifTag::LEARNING_OPT_OUT_IN => new IfdEntry(ExifTag::LEARNING_OPT_OUT_IN, 7, 2, "\x00\x00"),
+        ];
+
+        $reader = $this->createReader([], $exifEntries);
+        $result = $reader->learningOptOutIn();
+
+        self::assertNotNull($result);
+        self::assertCount(1, $result->entries);
+        self::assertSame(LearningUsage::All, $result->entries[0]->usage);
+        self::assertSame(LearningIntention::OptOut, $result->entries[0]->intention);
+    }
+
+    /**
+     * Supplies a multi-pair LearningOptOutIn payload:
+     * All/Opt-out + NonGenerative/Opt-in.
+     */
+    #[Test]
+    public function readsLearningOptOutInMultiPair(): void
+    {
+        $exifEntries = [
+            ExifTag::LEARNING_OPT_OUT_IN => new IfdEntry(ExifTag::LEARNING_OPT_OUT_IN, 7, 4, "\x00\x00\x01\x01"),
+        ];
+
+        $reader = $this->createReader([], $exifEntries);
+        $result = $reader->learningOptOutIn();
+
+        self::assertNotNull($result);
+        self::assertCount(2, $result->entries);
+        self::assertSame(LearningUsage::All, $result->entries[0]->usage);
+        self::assertSame(LearningIntention::OptOut, $result->entries[0]->intention);
+        self::assertSame(LearningUsage::NonGenerativeTraining, $result->entries[1]->usage);
+        self::assertSame(LearningIntention::OptIn, $result->entries[1]->intention);
+    }
+
+    /**
+     * Supplies all five usage values paired with different intentions.
+     */
+    #[Test]
+    public function readsAllLearningUsageValues(): void
+    {
+        $exifEntries = [
+            ExifTag::LEARNING_OPT_OUT_IN => new IfdEntry(
+                ExifTag::LEARNING_OPT_OUT_IN,
+                7,
+                10,
+                "\x00\x02\x01\x01\x02\x00\x03\x00\x04\x01",
+            ),
+        ];
+
+        $reader = $this->createReader([], $exifEntries);
+        $result = $reader->learningOptOutIn();
+
+        self::assertNotNull($result);
+        self::assertCount(5, $result->entries);
+        self::assertSame(LearningUsage::All, $result->entries[0]->usage);
+        self::assertSame(LearningIntention::Unspecified, $result->entries[0]->intention);
+        self::assertSame(LearningUsage::NonGenerativeTraining, $result->entries[1]->usage);
+        self::assertSame(LearningUsage::GenerativeTraining, $result->entries[2]->usage);
+        self::assertSame(LearningUsage::DataMining, $result->entries[3]->usage);
+        self::assertSame(LearningUsage::FoundationModelInput, $result->entries[4]->usage);
+    }
+
+    /**
+     * Verifies null is returned when the tag is absent.
+     */
+    #[Test]
+    public function returnsNullForAbsentLearningOptOutIn(): void
+    {
+        $reader = $this->createReader([], []);
+
+        self::assertNull($reader->learningOptOutIn());
+    }
+
+    /**
+     * Supplies an empty UNDEFINED payload (zero bytes).
+     * Verifies null is returned for payloads too short to contain a pair.
+     */
+    #[Test]
+    public function returnsNullForEmptyLearningOptOutInPayload(): void
+    {
+        $exifEntries = [
+            ExifTag::LEARNING_OPT_OUT_IN => new IfdEntry(ExifTag::LEARNING_OPT_OUT_IN, 7, 0, ''),
+        ];
+
+        $reader = $this->createReader([], $exifEntries);
+
+        self::assertNull($reader->learningOptOutIn());
+    }
+
+    /**
+     * Supplies an odd-length payload (3 bytes). The trailing incomplete byte is ignored.
+     */
+    #[Test]
+    public function ignoresTrailingByteInOddLengthPayload(): void
+    {
+        $exifEntries = [
+            ExifTag::LEARNING_OPT_OUT_IN => new IfdEntry(ExifTag::LEARNING_OPT_OUT_IN, 7, 3, "\x00\x00\x01"),
+        ];
+
+        $reader = $this->createReader([], $exifEntries);
+        $result = $reader->learningOptOutIn();
+
+        self::assertNotNull($result);
+        self::assertCount(1, $result->entries);
+    }
+
+    /**
+     * Supplies a pair with reserved usage and intention byte values.
+     * Pairs with unknown enum values are skipped.
+     */
+    #[Test]
+    public function skipsUnknownUsageOrIntentionValues(): void
+    {
+        $exifEntries = [
+            ExifTag::LEARNING_OPT_OUT_IN => new IfdEntry(
+                ExifTag::LEARNING_OPT_OUT_IN,
+                7,
+                6,
+                "\x00\x00\xFF\x00\x01\xFF",
+            ),
+        ];
+
+        $reader = $this->createReader([], $exifEntries);
+        $result = $reader->learningOptOutIn();
+
+        self::assertNotNull($result);
+        self::assertCount(1, $result->entries);
+        self::assertSame(LearningUsage::All, $result->entries[0]->usage);
     }
 
     /**

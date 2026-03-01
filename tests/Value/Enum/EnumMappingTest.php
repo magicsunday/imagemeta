@@ -26,6 +26,8 @@ use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsMeasureMode;
 use MagicSunday\ImageMeta\Value\Enum\GpsSpeedRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsStatus;
+use MagicSunday\ImageMeta\Value\Enum\LearningIntention;
+use MagicSunday\ImageMeta\Value\Enum\LearningUsage;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
 use MagicSunday\ImageMeta\Value\Enum\NoiseReduction;
@@ -70,6 +72,8 @@ use ReflectionMethod;
 #[CoversClass(CustomRendered::class)]
 #[CoversClass(DevelopmentCharacteristic::class)]
 #[CoversClass(DevelopmentDefault::class)]
+#[CoversClass(LearningIntention::class)]
+#[CoversClass(LearningUsage::class)]
 #[CoversClass(NoiseReduction::class)]
 #[CoversClass(SceneCaptureType::class)]
 #[CoversClass(WhiteBalance::class)]
@@ -242,6 +246,58 @@ final class EnumMappingTest extends TestCase
         self::assertSame(DevelopmentDefault::Unknown, DevelopmentDefault::fromExifValue(0x04));
         self::assertNull(DevelopmentDefault::fromExifValue(0x03));
         self::assertNull(DevelopmentDefault::fromExifValue(null));
+    }
+
+    /**
+     * Maps LearningUsage enum values from integer and string inputs.
+     * EXIF 3.1 §4.6.5.4: 0–4 defined.
+     */
+    #[Test]
+    public function mapsLearningUsageValues(): void
+    {
+        self::assertSame(LearningUsage::All, LearningUsage::fromExifValue(0));
+        self::assertSame(LearningUsage::NonGenerativeTraining, LearningUsage::fromExifValue(1));
+        self::assertSame(LearningUsage::GenerativeTraining, LearningUsage::fromExifValue(2));
+        self::assertSame(LearningUsage::DataMining, LearningUsage::fromExifValue(3));
+        self::assertSame(LearningUsage::FoundationModelInput, LearningUsage::fromExifValue(4));
+        self::assertSame(LearningUsage::All, LearningUsage::fromExifValue('0'));
+    }
+
+    /**
+     * Supplies reserved LearningUsage codes outside the defined range.
+     * EXIF 3.1 §4.6.5.4: values other than 0–4 are reserved.
+     */
+    #[Test]
+    public function returnsNullForReservedLearningUsageCodes(): void
+    {
+        self::assertNull(LearningUsage::fromExifValue(5));
+        self::assertNull(LearningUsage::fromExifValue('10'));
+        self::assertNull(LearningUsage::fromExifValue(null));
+    }
+
+    /**
+     * Maps LearningIntention enum values from integer and string inputs.
+     * EXIF 3.1 §4.6.5.4: 0–2 defined.
+     */
+    #[Test]
+    public function mapsLearningIntentionValues(): void
+    {
+        self::assertSame(LearningIntention::OptOut, LearningIntention::fromExifValue(0));
+        self::assertSame(LearningIntention::OptIn, LearningIntention::fromExifValue(1));
+        self::assertSame(LearningIntention::Unspecified, LearningIntention::fromExifValue(2));
+        self::assertSame(LearningIntention::OptOut, LearningIntention::fromExifValue('0'));
+    }
+
+    /**
+     * Supplies reserved LearningIntention codes outside the defined range.
+     * EXIF 3.1 §4.6.5.4: values other than 0–2 are reserved.
+     */
+    #[Test]
+    public function returnsNullForReservedLearningIntentionCodes(): void
+    {
+        self::assertNull(LearningIntention::fromExifValue(3));
+        self::assertNull(LearningIntention::fromExifValue('5'));
+        self::assertNull(LearningIntention::fromExifValue(null));
     }
 
     /**

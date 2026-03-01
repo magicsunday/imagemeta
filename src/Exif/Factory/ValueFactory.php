@@ -463,6 +463,7 @@ final readonly class ValueFactory
             usageTerms: $xmpDocument?->string(XmpNamespace::XAP_RIGHTS->value, 'UsageTerms'),
             licenseUrl: $xmpDocument?->string(XmpNamespace::XAP_RIGHTS->value, 'WebStatement'),
             creditLine: $xmpDocument?->string(XmpNamespace::PHOTOSHOP->value, 'Credit'),
+            learningOptOutIn: $exifDocument?->learningOptOutIn(),
         );
     }
 

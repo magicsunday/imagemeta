@@ -16,9 +16,15 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Value\Enum\LearningIntention;
+use MagicSunday\ImageMeta\Value\Enum\LearningUsage;
+use MagicSunday\ImageMeta\Value\LearningOptOutIn;
+use MagicSunday\ImageMeta\Value\LearningOptOutInEntry;
 
 use function array_find;
+use function ord;
 use function preg_match;
+use function strlen;
 
 /**
  * Reads document metadata, attribution, and EXIF version fields.
@@ -242,5 +248,42 @@ final readonly class DescriptionExifReader
         }
 
         return $this->converters->toExifVersion($value);
+    }
+
+    // ========================================================================
+    // AI/ML learning opt-out/opt-in
+    // ========================================================================
+
+    /**
+     * Returns the copyright holder's AI/ML training opt-out/opt-in intentions.
+     *
+     * EXIF 3.1 §4.6.5.4 (LearningOptOutIn) stores a sequence of (Usage, Intention)
+     * byte pairs in an UNDEFINED tag. Pairs with reserved values are skipped.
+     */
+    public function learningOptOutIn(): ?LearningOptOutIn
+    {
+        $raw = $this->reader->rawString($this->exifIfd, ExifTag::LEARNING_OPT_OUT_IN);
+
+        if ($raw === null || strlen($raw) < 2) {
+            return null;
+        }
+
+        /** @var list<LearningOptOutInEntry> $entries */
+        $entries = [];
+
+        for ($i = 0; ($i + 1) < strlen($raw); $i += 2) {
+            $usage     = LearningUsage::tryFrom(ord($raw[$i]));
+            $intention = LearningIntention::tryFrom(ord($raw[$i + 1]));
+
+            if ($usage !== null && $intention !== null) {
+                $entries[] = new LearningOptOutInEntry($usage, $intention);
+            }
+        }
+
+        if ($entries === []) {
+            return null;
+        }
+
+        return new LearningOptOutIn($entries);
     }
 }
