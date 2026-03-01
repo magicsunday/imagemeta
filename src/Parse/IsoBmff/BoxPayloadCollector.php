@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
+use function in_array;
 use function ord;
 use function sprintf;
 use function strlen;
@@ -184,7 +185,7 @@ final readonly class BoxPayloadCollector
         // handler reference type is 'mdta' before interpreting keys/ilst structures.
         // When hdlr is present but declares a different handler (e.g. 'pict' in
         // ISOBMFF), discard collected keys/ilst to prevent misinterpretation.
-        if (($handlerType !== null) && ($handlerType !== QuickTimeKeyResolver::QUICKTIME_MDTA)) {
+        if (!in_array($handlerType, [null, QuickTimeKeyResolver::QUICKTIME_MDTA, QuickTimeKeyResolver::QUICKTIME_MDIR], true)) {
             $keysMaps      = [];
             $ilstBoxes     = [];
             $countryLists  = [];
@@ -224,6 +225,7 @@ final readonly class BoxPayloadCollector
             $countryLists,
             $languageLists,
             $handlerType === QuickTimeKeyResolver::QUICKTIME_MDTA,
+            $handlerType === QuickTimeKeyResolver::QUICKTIME_MDIR,
             $ispeWidth,
             $ispeHeight,
             $iccProfile,

@@ -1366,6 +1366,99 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Extracts iTunes-style ilst metadata when the handler type is 'mdir'.
+     * The fourcc ©nam maps to the canonical key com.apple.quicktime.title.
+     * No keys atom is required for mdir handlers.
+     */
+    #[Test]
+    public function extractsMdirIlstMetadata(): void
+    {
+        $title = 'My Video Title';
+
+        // ilst entry: ©nam with UTF-8 data (type=1)
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . $title);
+        $ilstEntry = $this->box("\xA9nam", $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        // hdlr with handler type 'mdir'
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdir" . str_repeat("\0", 12));
+
+        $metaPayload = "\0\0\0\0" . $hdlr . $ilst;
+        $meta        = $this->box('meta', $metaPayload);
+        $moov        = $this->moov($this->box('udta', $meta));
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertNotNull($qtMeta);
+        self::assertArrayHasKey('com.apple.quicktime.title', $qtMeta->keys);
+        self::assertSame($title, $qtMeta->keys['com.apple.quicktime.title']);
+    }
+
+    /**
+     * Extracts multiple mdir ilst entries and resolves each fourcc to its
+     * canonical key. Verifies that printable but unmapped fourchars fall
+     * back to the raw fourcc as key name.
+     */
+    #[Test]
+    public function mdirHandlerResolvesMultipleFourccKeys(): void
+    {
+        $title  = 'Test Title';
+        $artist = 'Test Artist';
+        $custom = 'custom-value';
+
+        // Known fourchars
+        $dataTitle  = $this->box('data', pack('N', 1) . pack('N', 0) . $title);
+        $dataArtist = $this->box('data', pack('N', 1) . pack('N', 0) . $artist);
+        // Unknown printable fourcc — should fall back to raw key
+        $dataCustom = $this->box('data', pack('N', 1) . pack('N', 0) . $custom);
+
+        $ilst = $this->box('ilst', $this->box("\xA9nam", $dataTitle)
+            . $this->box("\xA9ART", $dataArtist)
+            . $this->box('cpil', $dataCustom));
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdir" . str_repeat("\0", 12));
+
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $ilst);
+        $moov = $this->moov($this->box('udta', $meta));
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertNotNull($qtMeta);
+        self::assertSame($title, $qtMeta->keys['com.apple.quicktime.title']);
+        self::assertSame($artist, $qtMeta->keys['com.apple.quicktime.artist']);
+        // 'cpil' is printable but not in MDIR_KEY_MAP — uses raw fourcc
+        self::assertSame($custom, $qtMeta->keys['cpil']);
+    }
+
+    /**
+     * Verifies that mdir handler does not require a keys subatom.
+     * An mdir meta box with only hdlr + ilst is valid.
+     */
+    #[Test]
+    public function mdirHandlerDoesNotRequireKeysAtom(): void
+    {
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'software-name');
+        $ilstEntry = $this->box("\xA9too", $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdir" . str_repeat("\0", 12));
+
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $ilst);
+        $moov = $this->moov($this->box('udta', $meta));
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertNotNull($qtMeta);
+        self::assertSame('software-name', $qtMeta->keys['com.apple.quicktime.software']);
+    }
+
+    /**
      * QuickTime File Format 2012, "Metadata Structure": an mdta meta box
      * must contain a keys subatom. When keys is missing, the parser rejects
      * the meta box.

@@ -75,10 +75,11 @@ final readonly class QuickTimeMetadataDecoder
      * @param list<list<int>>                     $countryLists  Parsed country list arrays from ctry atom.
      * @param list<list<int>>                     $languageLists Parsed language list arrays from lang atom.
      * @param bool                                $isMdta        Whether the handler type is mdta.
+     * @param bool                                $isMdir        Whether the handler type is mdir.
      *
      * @return array{0: QuickTimeKeyMap, 1: QuickTimeDataAtomList}
      */
-    public function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes, array $existingAtoms = [], bool $hasMhdr = false, array $countryLists = [], array $languageLists = [], bool $isMdta = false): array
+    public function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes, array $existingAtoms = [], bool $hasMhdr = false, array $countryLists = [], array $languageLists = [], bool $isMdta = false, bool $isMdir = false): array
     {
         /** @var array<int, QuickTimeKeyEntry> $keyIndex */
         $keyIndex   = [];
@@ -93,7 +94,7 @@ final readonly class QuickTimeMetadataDecoder
 
         // Merge all ilst entries into the cumulative QuickTime metadata set.
         foreach ($ilstBoxes as $ilst) {
-            [$ilstKeys, $ilstAtoms, $ilstHasItemIds] = $this->parseIlst($ilst, $keyIndex, $countryLists, $languageLists, $isMdta);
+            [$ilstKeys, $ilstAtoms, $ilstHasItemIds] = $this->parseIlst($ilst, $keyIndex, $countryLists, $languageLists, $isMdta, $isMdir);
             $existing                                = $this->mergeAssociative($existing, $ilstKeys);
             $existingAtoms                           = $this->mergeAtomLists($existingAtoms, $ilstAtoms);
 
@@ -280,10 +281,11 @@ final readonly class QuickTimeMetadataDecoder
      * @param list<list<int>>               $countryLists  Parsed country list arrays from ctry atom.
      * @param list<list<int>>               $languageLists Parsed language list arrays from lang atom.
      * @param bool                          $isMdta        Whether the handler type is mdta.
+     * @param bool                          $isMdir        Whether the handler type is mdir.
      *
      * @return array{0: QuickTimeKeyMap, 1: QuickTimeDataAtomList, 2: bool}
      */
-    private function parseIlst(BoxDescriptor $ilst, array $keyIndex, array $countryLists = [], array $languageLists = [], bool $isMdta = false): array
+    private function parseIlst(BoxDescriptor $ilst, array $keyIndex, array $countryLists = [], array $languageLists = [], bool $isMdta = false, bool $isMdir = false): array
     {
         $result      = [];
         $atomsList   = [];
@@ -311,6 +313,16 @@ final readonly class QuickTimeMetadataDecoder
             } elseif ($isMdta) {
                 // Tolerate out-of-range or non-numeric key indices in mdta mode
                 continue;
+            } elseif ($isMdir) {
+                $keyName = $this->keyResolver->resolveMdirKey($entry->type);
+
+                if ($keyName === null) {
+                    if ($this->boxNavigator->isPrintableFourcc($entry->type)) {
+                        $keyName = $entry->type;
+                    } else {
+                        continue;
+                    }
+                }
             } elseif ($this->boxNavigator->isPrintableFourcc($entry->type)) {
                 $keyName = $entry->type;
             }

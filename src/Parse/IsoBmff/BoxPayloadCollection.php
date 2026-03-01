@@ -38,6 +38,7 @@ final readonly class BoxPayloadCollection
      * @param list<list<int>>                                                                                                                                                               $countryLists   Parsed country locale lists.
      * @param list<list<int>>                                                                                                                                                               $languageLists  Parsed language locale lists.
      * @param bool                                                                                                                                                                          $isMdta         Whether the handler type is mdta.
+     * @param bool                                                                                                                                                                          $isMdir         Whether the handler type is mdir.
      * @param ?int                                                                                                                                                                          $ispeWidth      Image spatial extents width.
      * @param ?int                                                                                                                                                                          $ispeHeight     Image spatial extents height.
      * @param ?string                                                                                                                                                                       $iccProfile     Binary ICC profile from colr box.
@@ -58,6 +59,7 @@ final readonly class BoxPayloadCollection
         public array $countryLists,
         public array $languageLists,
         public bool $isMdta,
+        public bool $isMdir,
         public ?int $ispeWidth = null,
         public ?int $ispeHeight = null,
         public ?string $iccProfile = null,

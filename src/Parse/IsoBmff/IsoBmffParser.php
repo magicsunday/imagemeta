@@ -506,6 +506,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $payloads->countryLists,
             $payloads->languageLists,
             $payloads->isMdta,
+            $payloads->isMdir,
         );
         $context->qtKeys      = $mergedQtKeys;
         $context->qtDataAtoms = $mergedQtDataAtoms;

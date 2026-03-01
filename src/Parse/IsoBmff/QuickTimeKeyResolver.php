@@ -39,6 +39,16 @@ final readonly class QuickTimeKeyResolver
     public const string QUICKTIME_MDTA = 'mdta';
 
     /**
+     * QuickTime 'mdir' FourCC identifying the iTunes-style metadata handler.
+     *
+     * Used as the handler reference type in the metadata hdlr box for
+     * containers produced by ffmpeg, Premiere, HandBrake, OBS, and most
+     * non-Apple video tools. The ilst entries use direct fourcc keys
+     * (e.g. ©nam, ©ART) instead of a keys→index mapping.
+     */
+    public const string QUICKTIME_MDIR = 'mdir';
+
+    /**
      * FourCC for QuickTime mean payload in free-form metadata.
      */
     private const string FREEFORM_MEAN = 'mean';
@@ -47,6 +57,28 @@ final readonly class QuickTimeKeyResolver
      * FourCC for QuickTime name payload in free-form metadata.
      */
     private const string FREEFORM_NAME = 'name';
+
+    /**
+     * Maps iTunes-style fourcc codes to canonical QuickTime metadata key names.
+     *
+     * When the handler type is 'mdir', ilst entries use direct fourcc keys
+     * instead of 1-based indices into a keys table. These fourchars map to
+     * the same reverse-DNS key names used by the 'mdta' scheme.
+     *
+     * @var array<string, string>
+     */
+    private const array MDIR_KEY_MAP = [
+        "\xA9nam" => 'com.apple.quicktime.title',
+        "\xA9ART" => 'com.apple.quicktime.artist',
+        "\xA9alb" => 'com.apple.quicktime.album',
+        "\xA9cmt" => 'com.apple.quicktime.comment',
+        "\xA9day" => 'com.apple.quicktime.creationDate',
+        "\xA9gen" => 'com.apple.quicktime.genre',
+        "\xA9too" => 'com.apple.quicktime.software',
+        "\xA9wrt" => 'com.apple.quicktime.author',
+        'cprt'    => 'com.apple.quicktime.copyright',
+        'desc'    => 'com.apple.quicktime.description',
+    ];
 
     /**
      * @param BoxNavigator $boxNavigator Shared box navigation infrastructure.
@@ -193,6 +225,18 @@ final readonly class QuickTimeKeyResolver
         }
 
         return $entry['namespace'] . ':' . $entry['name'];
+    }
+
+    /**
+     * Resolves an iTunes-style fourcc code to its canonical QuickTime key name.
+     *
+     * @param string $fourcc Four-character code from an mdir ilst entry.
+     *
+     * @return string|null Canonical key name, or null when the fourcc is unknown.
+     */
+    public function resolveMdirKey(string $fourcc): ?string
+    {
+        return self::MDIR_KEY_MAP[$fourcc] ?? null;
     }
 
     /**
