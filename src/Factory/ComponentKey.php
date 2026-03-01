@@ -31,6 +31,7 @@ enum ComponentKey: string
     case File            = 'file';
     case FlashPix        = 'flashPix';
     case Focus           = 'focus';
+    case HdrGainMap      = 'hdrGainMap';
     case Gps             = 'gps';
     case Image           = 'image';
     case Integrity       = 'integrity';

@@ -41,6 +41,7 @@ use MagicSunday\ImageMeta\Value\File as ValueFile;
 use MagicSunday\ImageMeta\Value\FlashPix;
 use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\HdrGainMap;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
 use MagicSunday\ImageMeta\Value\Interop as ValueInterop;
@@ -72,9 +73,9 @@ use function count;
  * ParsedExif, QuickTimeMeta and MakerNotes sources.
  *
  * @phpstan-type MediaComponents array{audio: ValueAudio, container: Container, embeddedAudio: AudioClips, flashPix: FlashPix, video: Video}
- * @phpstan-type XmpComponents array{depthMap: DepthMap, keywords: Keywords, related: RelatedAssets}
+ * @phpstan-type XmpComponents array{depthMap: DepthMap, hdrGainMap: HdrGainMap, keywords: Keywords, related: RelatedAssets}
  * @phpstan-type CoreComponents array{author: Author, camera: Camera, capture: Capture, colorProfile: ValueColorProfile, composite: CompositeImageInfo, derived: Derived, device: Device, exposure: Exposure, file: ValueFile, focus: Focus, gps: Gps, image: Image, integrity: Integrity, interop: ValueInterop, iptc: ValueIptc, lens: Lens, motion: Motion, multiPicture: MultiPicture, processing: ValueProcessingSettings, regions: RegionCollection, rights: Rights, scene: Scene, sensor: Sensor, standards: ValueStandards, temporal: Temporal, thumbnail: Thumbnail, tiff: TiffData, whiteBalance: WhiteBalanceDetails, xmp: ValueXmp, makerNotesApple: AppleMakerNotes|null}
- * @phpstan-type ValueComponents array{audio: ValueAudio, author: Author, camera: Camera, capture: Capture, colorProfile: ValueColorProfile, composite: CompositeImageInfo, container: Container, derived: Derived, depthMap: DepthMap, device: Device, embeddedAudio: AudioClips, exposure: Exposure, file: ValueFile, flashPix: FlashPix, focus: Focus, gps: Gps, image: Image, integrity: Integrity, interop: ValueInterop, iptc: ValueIptc, keywords: Keywords, lens: Lens, motion: Motion, multiPicture: MultiPicture, processing: ValueProcessingSettings, regions: RegionCollection, related: RelatedAssets, rights: Rights, scene: Scene, sensor: Sensor, standards: ValueStandards, temporal: Temporal, thumbnail: Thumbnail, tiff: TiffData, video: Video, whiteBalance: WhiteBalanceDetails, xmp: ValueXmp, makerNotesApple: AppleMakerNotes|null}
+ * @phpstan-type ValueComponents array{audio: ValueAudio, author: Author, camera: Camera, capture: Capture, colorProfile: ValueColorProfile, composite: CompositeImageInfo, container: Container, derived: Derived, depthMap: DepthMap, device: Device, embeddedAudio: AudioClips, exposure: Exposure, file: ValueFile, flashPix: FlashPix, focus: Focus, gps: Gps, hdrGainMap: HdrGainMap, image: Image, integrity: Integrity, interop: ValueInterop, iptc: ValueIptc, keywords: Keywords, lens: Lens, motion: Motion, multiPicture: MultiPicture, processing: ValueProcessingSettings, regions: RegionCollection, related: RelatedAssets, rights: Rights, scene: Scene, sensor: Sensor, standards: ValueStandards, temporal: Temporal, thumbnail: Thumbnail, tiff: TiffData, video: Video, whiteBalance: WhiteBalanceDetails, xmp: ValueXmp, makerNotesApple: AppleMakerNotes|null}
  */
 final readonly class ValueFactory
 {
@@ -328,7 +329,7 @@ final readonly class ValueFactory
      * @param QuickTimeLookup  $quickTimeLookup QuickTime metadata lookup.
      * @param Metadata         $metadata        Source metadata container.
      *
-     * @return array{keywords: Keywords, related: RelatedAssets, depthMap: DepthMap}
+     * @return array{keywords: Keywords, related: RelatedAssets, depthMap: DepthMap, hdrGainMap: HdrGainMap}
      */
     private function createXmpValues(
         ?XmpDocument $xmpDocument,
@@ -361,10 +362,24 @@ final readonly class ValueFactory
             far: $xmpDocument?->float(XmpNamespace::GOOGLE_DEPTH_MAP->value, 'Far'),
         );
 
+        $hdrGainMap = new HdrGainMap(
+            version: $xmpDocument?->string(XmpNamespace::HDR_GAINMAP->value, 'Version'),
+            baseRenditionIsHdr: $xmpDocument?->bool(XmpNamespace::HDR_GAINMAP->value, 'BaseRenditionIsHDR'),
+            hdrCapacityMin: $xmpDocument?->float(XmpNamespace::HDR_GAINMAP->value, 'HDRCapacityMin'),
+            hdrCapacityMax: $xmpDocument?->float(XmpNamespace::HDR_GAINMAP->value, 'HDRCapacityMax'),
+            gainMapMin: $xmpDocument?->float(XmpNamespace::HDR_GAINMAP->value, 'GainMapMin'),
+            gainMapMax: $xmpDocument?->float(XmpNamespace::HDR_GAINMAP->value, 'GainMapMax'),
+            gamma: $xmpDocument?->float(XmpNamespace::HDR_GAINMAP->value, 'Gamma'),
+            offsetSdr: $xmpDocument?->float(XmpNamespace::HDR_GAINMAP->value, 'OffsetSDR'),
+            offsetHdr: $xmpDocument?->float(XmpNamespace::HDR_GAINMAP->value, 'OffsetHDR'),
+            auxiliaryImageType: $xmpDocument?->string(XmpNamespace::APPLE_PIXELDATA->value, 'AuxiliaryImageType'),
+        );
+
         return [
-            ComponentKey::Keywords->value => $keywords,
-            ComponentKey::Related->value  => $related,
-            ComponentKey::DepthMap->value => $depthMap,
+            ComponentKey::Keywords->value   => $keywords,
+            ComponentKey::Related->value    => $related,
+            ComponentKey::DepthMap->value   => $depthMap,
+            ComponentKey::HdrGainMap->value => $hdrGainMap,
         ];
     }
 

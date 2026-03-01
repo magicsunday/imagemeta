@@ -45,4 +45,10 @@ enum XmpNamespace: string
     case MWG_REGIONS = 'http://www.metadataworkinggroup.com/schemas/regions/';
 
     case APPLE_FACEINFO = 'http://ns.apple.com/faceinfo/1.0/';
+
+    case HDR_GAINMAP = 'http://ns.adobe.com/hdr-gain-map/1.0/';
+
+    case APPLE_GAINMAP = 'http://ns.apple.com/HDRGainMap/1.0/';
+
+    case APPLE_PIXELDATA = 'http://ns.apple.com/pixeldatainfo/1.0/';
 }

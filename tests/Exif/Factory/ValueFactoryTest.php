@@ -26,6 +26,7 @@ use MagicSunday\ImageMeta\Value\CaptureHardware;
 use MagicSunday\ImageMeta\Value\CaptureSettings;
 use MagicSunday\ImageMeta\Value\CreatorContact;
 use MagicSunday\ImageMeta\Value\DepthMap;
+use MagicSunday\ImageMeta\Value\HdrGainMap;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Iptc;
 use MagicSunday\ImageMeta\Value\LocationTime;
@@ -70,6 +71,7 @@ use function strlen;
 #[UsesClass(StructuredMetadata::class)]
 #[UsesClass(TechnicalData::class)]
 #[UsesClass(DepthMap::class)]
+#[UsesClass(HdrGainMap::class)]
 final class ValueFactoryTest extends TestCase
 {
     /**
@@ -105,6 +107,52 @@ XML;
         self::assertSame('image/png', $structured->content->depthMap->mime);
         self::assertSame(0.25, $structured->content->depthMap->near);
         self::assertSame(10.5, $structured->content->depthMap->far);
+    }
+
+    /**
+     * Parses XMP with Adobe hdrgm and Apple apdi namespaces.
+     * Verifies the HdrGainMap value object is created with expected fields.
+     */
+    #[Test]
+    public function assemblesHdrGainMapFromXmpPacket(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:hdrgm="http://ns.adobe.com/hdr-gain-map/1.0/"
+         xmlns:apdi="http://ns.apple.com/pixeldatainfo/1.0/">
+  <rdf:Description
+    hdrgm:Version="1.0"
+    hdrgm:BaseRenditionIsHDR="False"
+    hdrgm:HDRCapacityMin="0"
+    hdrgm:HDRCapacityMax="3.5"
+    hdrgm:GainMapMin="0"
+    hdrgm:GainMapMax="1"
+    hdrgm:Gamma="1"
+    hdrgm:OffsetSDR="0.015625"
+    hdrgm:OffsetHDR="0.015625"
+    apdi:AuxiliaryImageType="urn:com:apple:photo:2020:aux:hdrgainmap"
+  />
+</rdf:RDF>
+XML;
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: (new XmpParser())->parse($xml),
+        );
+
+        $structured = StructuredMetadataBuilder::createDefault()->assemble($metadata);
+
+        self::assertSame('1.0', $structured->content->hdrGainMap->version);
+        self::assertFalse($structured->content->hdrGainMap->baseRenditionIsHdr);
+        self::assertSame(0.0, $structured->content->hdrGainMap->hdrCapacityMin);
+        self::assertSame(3.5, $structured->content->hdrGainMap->hdrCapacityMax);
+        self::assertSame(0.0, $structured->content->hdrGainMap->gainMapMin);
+        self::assertSame(1.0, $structured->content->hdrGainMap->gainMapMax);
+        self::assertSame(1.0, $structured->content->hdrGainMap->gamma);
+        self::assertSame(0.015625, $structured->content->hdrGainMap->offsetSdr);
+        self::assertSame(0.015625, $structured->content->hdrGainMap->offsetHdr);
+        self::assertSame('urn:com:apple:photo:2020:aux:hdrgainmap', $structured->content->hdrGainMap->auxiliaryImageType);
     }
 
     /**

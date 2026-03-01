@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Value;
 
 /**
- * Groups media content metadata: image, audio, video, thumbnail, depth map, multi-picture, and regions.
+ * Groups media content metadata: image, audio, video, thumbnail, depth map, HDR gain map, multi-picture, and regions.
  */
 final readonly class MediaContent
 {
@@ -23,6 +23,7 @@ final readonly class MediaContent
      * @param Video            $video         Video metadata.
      * @param Thumbnail        $thumbnail     Thumbnail metadata.
      * @param DepthMap         $depthMap      Depth map metadata.
+     * @param HdrGainMap       $hdrGainMap    HDR gain map metadata.
      * @param MultiPicture     $multiPicture  Multi-picture metadata.
      * @param RegionCollection $regions       Detected regions (face, object).
      */
@@ -33,6 +34,7 @@ final readonly class MediaContent
         public Video $video,
         public Thumbnail $thumbnail,
         public DepthMap $depthMap,
+        public HdrGainMap $hdrGainMap,
         public MultiPicture $multiPicture,
         public RegionCollection $regions,
     ) {

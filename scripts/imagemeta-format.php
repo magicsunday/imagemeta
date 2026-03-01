@@ -702,6 +702,9 @@ final class MetadataFormatter
             $this->printIccSection($metadata->iccProfile);
         }
 
+        // HDR Gain Map section
+        $this->printHdrGainMapSection($metadata);
+
         // Composite section
         $this->printCompositeSection($metadata);
     }
@@ -2299,6 +2302,59 @@ final class MetadataFormatter
 
         if ($data !== []) {
             $this->printSection('JPEG Details', $data);
+        }
+    }
+
+    /**
+     * Prints HDR Gain Map section from structured metadata.
+     */
+    private function printHdrGainMapSection(Metadata $metadata): void
+    {
+        $hdrGainMap = $metadata->structured()->content->hdrGainMap;
+        $data       = [];
+
+        if ($hdrGainMap->version !== null) {
+            $data['Version'] = $hdrGainMap->version;
+        }
+
+        if ($hdrGainMap->baseRenditionIsHdr !== null) {
+            $data['Base Rendition Is HDR'] = $hdrGainMap->baseRenditionIsHdr ? 'True' : 'False';
+        }
+
+        if ($hdrGainMap->hdrCapacityMin !== null) {
+            $data['HDR Capacity Min'] = $hdrGainMap->hdrCapacityMin;
+        }
+
+        if ($hdrGainMap->hdrCapacityMax !== null) {
+            $data['HDR Capacity Max'] = $hdrGainMap->hdrCapacityMax;
+        }
+
+        if ($hdrGainMap->gainMapMin !== null) {
+            $data['Gain Map Min'] = $hdrGainMap->gainMapMin;
+        }
+
+        if ($hdrGainMap->gainMapMax !== null) {
+            $data['Gain Map Max'] = $hdrGainMap->gainMapMax;
+        }
+
+        if ($hdrGainMap->gamma !== null) {
+            $data['Gamma'] = $hdrGainMap->gamma;
+        }
+
+        if ($hdrGainMap->offsetSdr !== null) {
+            $data['Offset SDR'] = $hdrGainMap->offsetSdr;
+        }
+
+        if ($hdrGainMap->offsetHdr !== null) {
+            $data['Offset HDR'] = $hdrGainMap->offsetHdr;
+        }
+
+        if ($hdrGainMap->auxiliaryImageType !== null) {
+            $data['Auxiliary Image Type'] = $hdrGainMap->auxiliaryImageType;
+        }
+
+        if ($data !== []) {
+            $this->printSection('HDR Gain Map', $data);
         }
     }
 

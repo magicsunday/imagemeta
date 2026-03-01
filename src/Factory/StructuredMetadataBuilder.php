@@ -66,6 +66,7 @@ final readonly class StructuredMetadataBuilder
             video: $components[ComponentKey::Video->value],
             thumbnail: $components[ComponentKey::Thumbnail->value],
             depthMap: $components[ComponentKey::DepthMap->value],
+            hdrGainMap: $components[ComponentKey::HdrGainMap->value],
             multiPicture: $components[ComponentKey::MultiPicture->value],
             regions: $components[ComponentKey::Regions->value],
         );
