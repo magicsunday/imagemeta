@@ -293,27 +293,19 @@ final readonly class MatrixConverter
         }
 
         $offset       = 4;
-        $columnLabels = [];
-        for ($i = 0; $i < $columns; ++$i) {
-            $labelData = $this->consumeSrationalMatrixLabel($payload, $offset, $length);
-            if ($labelData === null) {
-                return null;
-            }
-
-            [$label, $offset] = $labelData;
-            $columnLabels[]   = $label;
+        $columnResult = $this->consumeSrationalMatrixLabels($payload, $offset, $length, $columns);
+        if ($columnResult === null) {
+            return null;
         }
 
-        $rowLabels = [];
-        for ($i = 0; $i < $rows; ++$i) {
-            $labelData = $this->consumeSrationalMatrixLabel($payload, $offset, $length);
-            if ($labelData === null) {
-                return null;
-            }
+        [$columnLabels, $offset] = $columnResult;
 
-            [$label, $offset] = $labelData;
-            $rowLabels[]      = $label;
+        $rowResult = $this->consumeSrationalMatrixLabels($payload, $offset, $length, $rows);
+        if ($rowResult === null) {
+            return null;
         }
+
+        [$rowLabels, $offset] = $rowResult;
 
         $cells = $columns * $rows;
         if ($cells > intdiv(PHP_INT_MAX, self::SRATIONAL_VALUE_SIZE)) {
@@ -366,6 +358,27 @@ final readonly class MatrixConverter
             ],
             'values' => $values,
         ];
+    }
+
+    /**
+     * Consumes multiple null-terminated labels from the SRATIONAL matrix payload.
+     *
+     * @return array{0:list<string>,1:int}|null
+     */
+    private function consumeSrationalMatrixLabels(string $payload, int $offset, int $length, int $count): ?array
+    {
+        $labels = [];
+        for ($i = 0; $i < $count; ++$i) {
+            $labelData = $this->consumeSrationalMatrixLabel($payload, $offset, $length);
+            if ($labelData === null) {
+                return null;
+            }
+
+            [$label, $offset] = $labelData;
+            $labels[]         = $label;
+        }
+
+        return [$labels, $offset];
     }
 
     /**
