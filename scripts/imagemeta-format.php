@@ -78,6 +78,7 @@ use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
 use MagicSunday\ImageMeta\Value\Enum\FlashMode;
 use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 use MagicSunday\ImageMeta\Value\FlashInfo;
+use MagicSunday\ImageMeta\Value\LearningOptOutIn;
 use MagicSunday\ImageMeta\Value\RunTime;
 use ReflectionClass;
 use ReflectionProperty;
@@ -1291,6 +1292,14 @@ final class MetadataFormatter
             ExifTag::XP_KEYWORDS => $exifDoc->xpKeywords(),
             ExifTag::XP_SUBJECT  => $exifDoc->xpSubject(),
 
+            // LearningOptOutIn - Decode pair-based opt-out/opt-in entries
+            // EXIF 3.1 §4.6.5.4
+            ExifTag::LEARNING_OPT_OUT_IN => $this->formatLearningOptOutIn($exifDoc->learningOptOutIn()),
+
+            // DevelopmentType - Decompose packed SHORT into characteristic and default
+            // EXIF 3.1 §4.6.6.7.47
+            ExifTag::DEVELOPMENT_TYPE => $this->formatDevelopmentType($exifDoc),
+
             // No special accessor available
             default => null,
         };
@@ -1333,6 +1342,49 @@ final class MetadataFormatter
         $content = substr($raw, 8);
 
         return trim($content, "\0 ") === '';
+    }
+
+    /**
+     * Formats LearningOptOutIn entries as "Usage: Intention" pairs.
+     */
+    private function formatLearningOptOutIn(?LearningOptOutIn $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $parts = [];
+
+        foreach ($value->entries as $entry) {
+            $parts[] = $entry->usage->name . ': ' . $entry->intention->name;
+        }
+
+        return implode('; ', $parts);
+    }
+
+    /**
+     * Formats DevelopmentType as "Characteristic / Default".
+     */
+    private function formatDevelopmentType(ParsedExif $exifDoc): ?string
+    {
+        $characteristic = $exifDoc->developmentCharacteristic();
+        $default        = $exifDoc->developmentDefault();
+
+        if ($characteristic === null && $default === null) {
+            return null;
+        }
+
+        $parts = [];
+
+        if ($characteristic !== null) {
+            $parts[] = $characteristic->name;
+        }
+
+        if ($default !== null) {
+            $parts[] = $default->name;
+        }
+
+        return implode(' / ', $parts);
     }
 
     /**
@@ -2245,6 +2297,10 @@ final class MetadataFormatter
 
         if ($entry->isDependentChild) {
             $parts[] = 'Child';
+        }
+
+        if ($entry->imageDataFormat !== null) {
+            $parts[] = $entry->imageDataFormat->name;
         }
 
         $parts[] = sprintf('size=%d', $entry->imageSize);
