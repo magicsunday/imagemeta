@@ -1753,23 +1753,45 @@ final class MetadataFormatter
             $data  = [];
             $apple = $makerNotes->apple;
 
-            // Use reflection to get all properties
-            $reflection = new ReflectionClass($apple);
-            $properties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
-
-            foreach ($properties as $property) {
-                $name  = $property->getName();
-                $value = $property->getValue($apple);
-
-                if ($value !== null) {
-                    // Convert property name to title case
-                    $data[$this->propertyNameToDisplayName($name)] = $value;
-                }
-            }
+            $this->flattenObjectProperties($apple, '', $data);
 
             if ($data !== []) {
                 $this->printSection('Apple', $data);
             }
+        }
+    }
+
+    /**
+     * Recursively flattens public properties of value objects into a display-ready array.
+     *
+     * Scalar, enum, and array values are stored directly. Nested objects are expanded
+     * recursively with a prefixed label (e.g. "Identity Content Identifier").
+     *
+     * @param object               $object Value object to extract from.
+     * @param string               $prefix Label prefix for nested objects.
+     * @param array<string, mixed> $data   Accumulator for flattened key/value pairs.
+     */
+    private function flattenObjectProperties(object $object, string $prefix, array &$data): void
+    {
+        $reflection = new ReflectionClass($object);
+        $properties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
+
+        foreach ($properties as $property) {
+            $name  = $property->getName();
+            $value = $property->getValue($object);
+
+            if ($value === null) {
+                continue;
+            }
+
+            $displayName = $prefix . $this->propertyNameToDisplayName($name);
+
+            if (is_object($value) && !($value instanceof BackedEnum) && !($value instanceof DateTimeInterface)) {
+                $this->flattenObjectProperties($value, $displayName . ' ', $data);
+                continue;
+            }
+
+            $data[$displayName] = $value;
         }
     }
 
