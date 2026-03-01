@@ -326,29 +326,17 @@ final readonly class GpsFactory
         ?string $latitudeRef,
         ?string $longitudeRef,
     ): array {
-        $xmpLatRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLatitudeRef'));
-        if ($latitudeRef === null) {
-            $latitudeRef = $xmpLatRef;
-        }
-
-        if ($latitude === null) {
-            $latitude = $this->parseCoordinate(
-                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLatitude'),
-                $xmpLatRef ?? $latitudeRef,
-            );
-        }
-
-        $xmpLonRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLongitudeRef'));
-        if ($longitudeRef === null) {
-            $longitudeRef = $xmpLonRef;
-        }
-
-        if ($longitude === null) {
-            $longitude = $this->parseCoordinate(
-                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSLongitude'),
-                $xmpLonRef ?? $longitudeRef,
-            );
-        }
+        [$latitude, $longitude, $latitudeRef, $longitudeRef] = $this->applyXmpCoordinateFallback(
+            $xmpDocument,
+            $latitude,
+            $longitude,
+            $latitudeRef,
+            $longitudeRef,
+            'GPSLatitudeRef',
+            'GPSLatitude',
+            'GPSLongitudeRef',
+            'GPSLongitude',
+        );
 
         if ($latitude !== null) {
             $latitude = round($latitude, 6);
@@ -356,6 +344,54 @@ final readonly class GpsFactory
 
         if ($longitude !== null) {
             $longitude = round($longitude, 6);
+        }
+
+        return [$latitude, $longitude, $latitudeRef, $longitudeRef];
+    }
+
+    /**
+     * Resolves XMP coordinate fallbacks for a single lat/lon pair.
+     *
+     * @param string $xmpLatRefKey XMP key for latitude reference.
+     * @param string $xmpLatKey    XMP key for latitude value.
+     * @param string $xmpLonRefKey XMP key for longitude reference.
+     * @param string $xmpLonKey    XMP key for longitude value.
+     *
+     * @return array{0:?float,1:?float,2:?string,3:?string}
+     */
+    private function applyXmpCoordinateFallback(
+        ?XmpDocument $xmpDocument,
+        ?float $latitude,
+        ?float $longitude,
+        ?string $latitudeRef,
+        ?string $longitudeRef,
+        string $xmpLatRefKey,
+        string $xmpLatKey,
+        string $xmpLonRefKey,
+        string $xmpLonKey,
+    ): array {
+        $xmpLatRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, $xmpLatRefKey));
+        if ($latitudeRef === null) {
+            $latitudeRef = $xmpLatRef;
+        }
+
+        if ($latitude === null) {
+            $latitude = $this->parseCoordinate(
+                $xmpDocument?->string(XmpNamespace::EXIF->value, $xmpLatKey),
+                $xmpLatRef ?? $latitudeRef,
+            );
+        }
+
+        $xmpLonRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, $xmpLonRefKey));
+        if ($longitudeRef === null) {
+            $longitudeRef = $xmpLonRef;
+        }
+
+        if ($longitude === null) {
+            $longitude = $this->parseCoordinate(
+                $xmpDocument?->string(XmpNamespace::EXIF->value, $xmpLonKey),
+                $xmpLonRef ?? $longitudeRef,
+            );
         }
 
         return [$latitude, $longitude, $latitudeRef, $longitudeRef];
@@ -483,29 +519,17 @@ final readonly class GpsFactory
         ?string $destDistOriginalRef,
         ?float $destDistOriginal,
     ): array {
-        $xmpDestLatRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLatitudeRef'));
-        if ($destLatRef === null) {
-            $destLatRef = $xmpDestLatRef;
-        }
-
-        if ($destLat === null) {
-            $destLat = $this->parseCoordinate(
-                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLatitude'),
-                $xmpDestLatRef ?? $destLatRef,
-            );
-        }
-
-        $xmpDestLonRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLongitudeRef'));
-        if ($destLonRef === null) {
-            $destLonRef = $xmpDestLonRef;
-        }
-
-        if ($destLon === null) {
-            $destLon = $this->parseCoordinate(
-                $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestLongitude'),
-                $xmpDestLonRef ?? $destLonRef,
-            );
-        }
+        [$destLat, $destLon, $destLatRef, $destLonRef] = $this->applyXmpCoordinateFallback(
+            $xmpDocument,
+            $destLat,
+            $destLon,
+            $destLatRef,
+            $destLonRef,
+            'GPSDestLatitudeRef',
+            'GPSDestLatitude',
+            'GPSDestLongitudeRef',
+            'GPSDestLongitude',
+        );
 
         $xmpDestBearRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestBearingRef'));
         if ($destBearRef === null) {
