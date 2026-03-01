@@ -15,7 +15,6 @@ use Closure;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Stream;
-use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemResolveResult;
@@ -380,24 +379,7 @@ final readonly class ItemPayloadResolver
      */
     public function normalizeExifBlob(string $blob): string
     {
-        // Strict 4-byte TIFF-header offset validation
-        PayloadGuard::ensureMinimumLength($blob, 4, 'Exif item payload', 1394);
-
-        // ISO 14496-12: Exif items start with a 4-byte big-endian offset to the TIFF header
-        $offset = Unpack::int('N', substr($blob, 0, 4), 'Exif item TIFF-header offset');
-
-        // Validate the offset does not exceed the payload bounds
-        if ($offset < 0 || (4 + $offset + 2) > strlen($blob)) {
-            throw new ParseError('Exif item TIFF-header offset out of range', 1395);
-        }
-
-        // Validate the data at the pointed offset starts with a valid TIFF header (II or MM)
-        $tiffSig = substr($blob, 4 + $offset, 2);
-        if (($tiffSig !== 'II') && ($tiffSig !== 'MM')) {
-            throw new ParseError('Exif item TIFF-header offset does not point to valid TIFF signature', 1899);
-        }
-
-        return substr($blob, 4 + $offset);
+        return PayloadGuard::normalizeExifBlob($blob, 'Exif item', 1394, 1395, 1899);
     }
 
     /**

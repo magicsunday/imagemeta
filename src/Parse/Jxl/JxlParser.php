@@ -14,13 +14,10 @@ namespace MagicSunday\ImageMeta\Parse\Jxl;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Stream;
-use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
 
 use function in_array;
-use function strlen;
-use function substr;
 
 /**
  * Streaming JPEG XL container reader that extracts EXIF and XMP payloads.
@@ -169,19 +166,6 @@ final readonly class JxlParser implements JxlParserInterface
      */
     private function normalizeExifBlob(string $blob): string
     {
-        PayloadGuard::ensureMinimumLength($blob, 4, 'JXL Exif box payload', 1562);
-
-        $offset = Unpack::int('N', substr($blob, 0, 4), 'JXL Exif TIFF-header offset');
-
-        if ($offset < 0 || (4 + $offset + 2) > strlen($blob)) {
-            throw new ParseError('JXL Exif TIFF-header offset out of range', 1563);
-        }
-
-        $tiffSig = substr($blob, 4 + $offset, 2);
-        if (($tiffSig !== 'II') && ($tiffSig !== 'MM')) {
-            throw new ParseError('JXL Exif TIFF-header offset does not point to valid TIFF signature', 1564);
-        }
-
-        return substr($blob, 4 + $offset);
+        return PayloadGuard::normalizeExifBlob($blob, 'JXL Exif box', 1562, 1563, 1564);
     }
 }
