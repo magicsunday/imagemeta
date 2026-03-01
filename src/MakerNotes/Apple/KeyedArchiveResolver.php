@@ -168,12 +168,7 @@ final readonly class KeyedArchiveResolver
      */
     private function resolveNestedKeyedArchive(array $value): ?array
     {
-        $unarchived = $this->unarchiveKeyedArchive($value);
-        if ($unarchived !== null) {
-            return $unarchived;
-        }
-
-        return $this->resolveNestedCandidateFromEntries($value);
+        return $this->unarchiveKeyedArchive($value) ?? $this->resolveNestedCandidateFromEntries($value);
     }
 
     /**

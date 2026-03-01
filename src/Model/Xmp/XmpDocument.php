@@ -310,16 +310,10 @@ final readonly class XmpDocument
      */
     public function find(string $localName): array|string|XmpLanguageAlternative|XmpStructuredValue|null
     {
-        $value = array_find(
+        return array_find(
             $this->data,
             fn (array|string|XmpLanguageAlternative $value, string $key): bool => $this->matchesLocalName($key, $localName)
-        );
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        return array_find(
+        ) ?? array_find(
             $this->structuredData,
             fn (XmpStructuredValue $entry, string $key): bool => $this->matchesLocalName($key, $localName)
         );

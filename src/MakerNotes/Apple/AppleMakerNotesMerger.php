@@ -252,12 +252,7 @@ final class AppleMakerNotesMerger
      */
     private function preferMakerEnumerated(?string $makerValue, QuickTimeLookup $lookup, array $map, string ...$keys): ?string
     {
-        $normalized = $this->normalizeEnumerated($makerValue, $map);
-        if ($normalized !== null) {
-            return $normalized;
-        }
-
-        return $this->quickTimeEnumerated($lookup, $map, ...$keys);
+        return $this->normalizeEnumerated($makerValue, $map) ?? $this->quickTimeEnumerated($lookup, $map, ...$keys);
     }
 
     /**

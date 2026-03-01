@@ -202,14 +202,8 @@ final readonly class ImageStructureExifReader
      */
     public function xResolution(): ?float
     {
-        $resolution = $this->reader->rational($this->ifd0, ExifTag::X_RESOLUTION);
-
-        if ($resolution !== null) {
-            return $resolution;
-        }
-
-        // JPEG context (no Compression tag) -> EXIF default 72 dpi
-        return $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry ? null : 72.0;
+        return $this->reader->rational($this->ifd0, ExifTag::X_RESOLUTION)
+            ?? ($this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry ? null : 72.0);
     }
 
     /**
@@ -220,13 +214,7 @@ final readonly class ImageStructureExifReader
      */
     public function yResolution(): ?float
     {
-        $resolution = $this->reader->rational($this->ifd0, ExifTag::Y_RESOLUTION);
-
-        if ($resolution !== null) {
-            return $resolution;
-        }
-
-        return $this->xResolution();
+        return $this->reader->rational($this->ifd0, ExifTag::Y_RESOLUTION) ?? $this->xResolution();
     }
 
     /**

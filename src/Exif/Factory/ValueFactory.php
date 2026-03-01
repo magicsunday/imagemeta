@@ -578,11 +578,6 @@ final readonly class ValueFactory
         string $namespace,
         string $localName,
     ): ?string {
-        $directValue = $document?->string($namespace, $localName);
-        if ($directValue !== null) {
-            return $directValue;
-        }
-
-        return $creatorContact?->string($namespace, $localName);
+        return $document?->string($namespace, $localName) ?? $creatorContact?->string($namespace, $localName);
     }
 }

@@ -105,13 +105,7 @@ final readonly class DescriptionExifReader
      */
     public function artist(): ?string
     {
-        $artist = $this->reader->str($this->ifd0, ExifTag::ARTIST);
-
-        if ($artist !== null) {
-            return $artist;
-        }
-
-        return array_find(
+        return $this->reader->str($this->ifd0, ExifTag::ARTIST) ?? array_find(
             [
                 $this->reader->str($this->exifIfd, ExifTag::CAMERA_OWNER_NAME),
                 $this->reader->str($this->ifd0, ExifTag::PHOTOGRAPHER),

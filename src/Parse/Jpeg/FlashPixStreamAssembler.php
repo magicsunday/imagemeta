@@ -494,13 +494,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      */
     private function validateStreamMetadata(array $header): ?array
     {
-        $index = $header['index'];
-
-        if (!array_key_exists($index, $this->contents)) {
-            return null;
-        }
-
-        return $this->contents[$index];
+        return $this->contents[$header['index']] ?? null;
     }
 
     /**
