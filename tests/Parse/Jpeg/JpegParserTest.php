@@ -1361,9 +1361,10 @@ final class JpegParserTest extends TestCase
         self::assertSame(2000, $second->dataOffset);
         self::assertSame(1, $second->dependentImage1);
 
+        self::assertSame(5, $document->totalFrames);
+
         $attributes = $document->attributes;
         self::assertNotNull($attributes);
-        self::assertSame(5, $attributes->totalFrames);
         self::assertSame(1, $attributes->individualImageNumber);
     }
 
@@ -2801,7 +2802,7 @@ final class JpegParserTest extends TestCase
         $imageCount = count($entries);
 
         $header          = 'II' . pack('v', 42) . pack('V', 8);
-        $entryCount      = 3;
+        $entryCount      = 4;
         $indexIfdLength  = 2 + ($entryCount * 12) + 4;
         $mpEntryOffset   = 8 + $indexIfdLength;
         $attributeOffset = $mpEntryOffset + strlen($entryData);
@@ -2810,11 +2811,11 @@ final class JpegParserTest extends TestCase
             . $this->mpfIfdEntry(0xB000, 2, 4, '0100')
             . $this->mpfIfdEntry(0xB001, 4, 1, pack('V', $imageCount))
             . $this->mpfIfdEntry(0xB002, 7, strlen($entryData), offset: $mpEntryOffset)
+            . $this->mpfIfdEntry(0xB004, 4, 1, pack('V', 5))
             . pack('V', $attributeOffset);
 
-        $attributeIfd = pack('v', 2)
-            . $this->mpfIfdEntry(0xB004, 4, 1, pack('V', 5))
-            . $this->mpfIfdEntry(0xB005, 4, 1, pack('V', 1))
+        $attributeIfd = pack('v', 1)
+            . $this->mpfIfdEntry(0xB101, 4, 1, pack('V', 1))
             . pack('V', 0);
 
         return $header . $indexIfd . $entryData . $attributeIfd;

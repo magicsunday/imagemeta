@@ -60,17 +60,11 @@ final class MpfParserTest extends TestCase
 
     private const int TAG_TOTAL_FRAMES = 0xB004;
 
-    private const int TAG_INDIVIDUAL_IMAGE_NUMBER = 0xB005;
-
-    private const int TAG_PANORAMA_ANGLE = 0xB006;
-
-    private const int TAG_PANORAMA_AXIS = 0xB007;
+    private const int TAG_INDIVIDUAL_IMAGE_NUMBER = 0xB101;
 
     private const int TYPE_ASCII = 2;
 
     private const int TYPE_LONG = 4;
-
-    private const int TYPE_RATIONAL = 5;
 
     private const int TYPE_UNDEFINED = 7;
 
@@ -88,23 +82,19 @@ final class MpfParserTest extends TestCase
             [0x44000088, 2_000, 4_096, 0, 2],
         ]);
 
+        $uidList      = str_repeat("\xAB", 33);
+        $extraTagData = pack('C*', 1, 2, 3, 4, 5, 6);
+
         $indexEntries = [
             [self::TAG_MPF_VERSION, self::TYPE_ASCII, 4, '0100'],
             [self::TAG_NUMBER_OF_IMAGES, self::TYPE_LONG, 1, 2],
             [self::TAG_MP_ENTRY, self::TYPE_UNDEFINED, strlen($entriesData), $entriesData],
-        ];
-
-        $panoramaAngleData = pack('V', 1) . pack('V', 2);
-        $panoramaAxisData  = pack('V', 90) . pack('V', 1) . pack('V', 45) . pack('V', 1) . pack('V', 0) . pack('V', 1);
-        $uidList           = str_repeat("\xAB", 33);
-        $extraTagData      = pack('C*', 1, 2, 3, 4, 5, 6);
-
-        $attributeEntries = [
             [self::TAG_IMAGE_UID_LIST, self::TYPE_UNDEFINED, strlen($uidList), $uidList],
             [self::TAG_TOTAL_FRAMES, self::TYPE_LONG, 1, 3],
+        ];
+
+        $attributeEntries = [
             [self::TAG_INDIVIDUAL_IMAGE_NUMBER, self::TYPE_LONG, 1, 2],
-            [self::TAG_PANORAMA_ANGLE, self::TYPE_RATIONAL, 1, $panoramaAngleData],
-            [self::TAG_PANORAMA_AXIS, self::TYPE_RATIONAL, 3, $panoramaAxisData],
             [0xB123, self::TYPE_BYTE, strlen($extraTagData), $extraTagData],
         ];
 
@@ -121,21 +111,13 @@ final class MpfParserTest extends TestCase
                 new MpfEntry(0x44000088, 2_000, 4_096, 0, 2),
             ],
             attributes: new MpfAttributes(
-                imageUidList: $uidList,
-                totalFrames: 3,
                 individualImageNumber: 2,
-                panoramaAngle: [
-                    ['numerator' => 1, 'denominator' => 2],
-                ],
-                panoramaAxis: [
-                    ['numerator' => 90, 'denominator' => 1],
-                    ['numerator' => 45, 'denominator' => 1],
-                    ['numerator' => 0, 'denominator' => 1],
-                ],
                 additionalTags: [
                     0xB123 => [1, 2, 3, 4, 5, 6],
                 ],
             ),
+            imageUidList: str_repeat("\xAB", 33),
+            totalFrames: 3,
         );
 
         self::assertEquals($expected, $document);

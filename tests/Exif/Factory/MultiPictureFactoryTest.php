@@ -57,11 +57,7 @@ final class MultiPictureFactoryTest extends TestCase
         ];
 
         $attributes = new MpfAttributes(
-            imageUidList: 'uid-1,uid-2',
-            totalFrames: 2,
             individualImageNumber: 1,
-            panoramaAngle: [],
-            panoramaAxis: [],
             additionalTags: [],
         );
 
@@ -70,6 +66,8 @@ final class MultiPictureFactoryTest extends TestCase
             imageCount: 2,
             entries: $entries,
             attributes: $attributes,
+            imageUidList: 'uid-1,uid-2',
+            totalFrames: 2,
         );
 
         $metadata = new Metadata(
@@ -179,7 +177,5 @@ final class MultiPictureFactoryTest extends TestCase
         self::assertNull($multiPicture->totalFrames);
         self::assertNull($multiPicture->individualImageNumber);
         self::assertNull($multiPicture->imageUidList);
-        self::assertNull($multiPicture->panoramaAngle);
-        self::assertNull($multiPicture->panoramaAxis);
     }
 }

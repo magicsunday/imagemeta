@@ -19,18 +19,10 @@ final readonly class MultiPicture
     /** @var list<MultiPictureEntry> */
     public array $entries;
 
-    /** @var list<array{numerator:int, denominator:int}>|null */
-    public ?array $panoramaAngle;
-
-    /** @var list<array{numerator:int, denominator:int}>|null */
-    public ?array $panoramaAxis;
-
     /**
      * Creates a multi-picture format metadata value object.
      *
-     * @param list<MultiPictureEntry>                          $entries
-     * @param list<array{numerator:int, denominator:int}>|null $panoramaAngle
-     * @param list<array{numerator:int, denominator:int}>|null $panoramaAxis
+     * @param list<MultiPictureEntry> $entries
      */
     public function __construct(
         public ?string $version,
@@ -39,11 +31,7 @@ final readonly class MultiPicture
         public ?int $totalFrames,
         public ?int $individualImageNumber,
         public ?string $imageUidList,
-        ?array $panoramaAngle,
-        ?array $panoramaAxis,
     ) {
-        $this->entries       = [...$entries];
-        $this->panoramaAngle = $panoramaAngle !== null ? [...$panoramaAngle] : null;
-        $this->panoramaAxis  = $panoramaAxis !== null ? [...$panoramaAxis] : null;
+        $this->entries = [...$entries];
     }
 }

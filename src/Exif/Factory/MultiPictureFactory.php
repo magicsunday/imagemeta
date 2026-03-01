@@ -51,8 +51,6 @@ final readonly class MultiPictureFactory
                 null,
                 null,
                 null,
-                null,
-                null
             );
         }
 
@@ -67,17 +65,13 @@ final readonly class MultiPictureFactory
             $document->entries,
         );
 
-        $attributes = $document->attributes;
-
         return new MultiPicture(
             version: $document->version,
             imageCount: $document->imageCount,
             entries: $entries,
-            totalFrames: $attributes?->totalFrames,
-            individualImageNumber: $attributes?->individualImageNumber,
-            imageUidList: $attributes?->imageUidList,
-            panoramaAngle: $attributes?->panoramaAngle,
-            panoramaAxis: $attributes?->panoramaAxis,
+            totalFrames: $document->totalFrames,
+            individualImageNumber: $document->attributes?->individualImageNumber,
+            imageUidList: $document->imageUidList,
         );
     }
 }

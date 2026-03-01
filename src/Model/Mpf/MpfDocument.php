@@ -27,6 +27,8 @@ final readonly class MpfDocument
         public int $imageCount,
         array $entries,
         public ?MpfAttributes $attributes,
+        public ?string $imageUidList = null,
+        public ?int $totalFrames = null,
     ) {
         $this->entries = [...$entries];
     }

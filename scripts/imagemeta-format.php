@@ -2175,6 +2175,14 @@ final class MetadataFormatter
 
         $data['Image Count'] = $mpfDocument->imageCount;
 
+        if ($mpfDocument->totalFrames !== null) {
+            $data['Total Frames'] = $mpfDocument->totalFrames;
+        }
+
+        if ($mpfDocument->imageUidList !== null) {
+            $data['Image UID List'] = $mpfDocument->imageUidList;
+        }
+
         if ($mpfDocument->attributes instanceof MpfAttributes) {
             $attrs      = $mpfDocument->attributes;
             $reflection = new ReflectionClass($attrs);

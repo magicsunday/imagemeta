@@ -164,25 +164,17 @@ final class DefensiveCopyTest extends TestCase
             null,
             null,
             null,
-            [['numerator' => 1, 'denominator' => 2]],
-            [['numerator' => 3, 'denominator' => 4]],
         );
 
         self::assertCount(1, $obj->entries);
-        self::assertNotNull($obj->panoramaAngle);
-        self::assertCount(1, $obj->panoramaAngle);
-        self::assertNotNull($obj->panoramaAxis);
-        self::assertCount(1, $obj->panoramaAxis);
     }
 
     #[Test]
     public function multiPictureIsolatesNullableArrays(): void
     {
-        $obj = new MultiPicture('0100', 1, [new MultiPictureEntry(0, 0, 0, 0, 0)], null, null, null, null, null);
+        $obj = new MultiPicture('0100', 1, [new MultiPictureEntry(0, 0, 0, 0, 0)], null, null, null);
 
         self::assertCount(1, $obj->entries);
-        self::assertNull($obj->panoramaAngle);
-        self::assertNull($obj->panoramaAxis);
     }
 
     #[Test]
@@ -244,20 +236,13 @@ final class DefensiveCopyTest extends TestCase
     }
 
     #[Test]
-    public function mpfAttributesIsolatesNullableArrays(): void
+    public function mpfAttributesPreservesAdditionalTags(): void
     {
         $obj = new MpfAttributes(
             null,
-            null,
-            null,
-            [['numerator' => 1, 'denominator' => 2]],
-            [['numerator' => 3, 'denominator' => 4]],
-            [],
+            [0xB201 => 1],
         );
 
-        self::assertNotNull($obj->panoramaAngle);
-        self::assertCount(1, $obj->panoramaAngle);
-        self::assertNotNull($obj->panoramaAxis);
-        self::assertCount(1, $obj->panoramaAxis);
+        self::assertSame([0xB201 => 1], $obj->additionalTags);
     }
 }

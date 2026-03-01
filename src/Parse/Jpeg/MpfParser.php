@@ -23,11 +23,7 @@ use MagicSunday\ImageMeta\Parse\ParserLimits;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffFieldType;
 
-use function array_any;
-use function array_is_list;
-use function array_key_exists;
 use function count;
-use function is_array;
 use function is_int;
 use function is_string;
 use function pack;
@@ -49,6 +45,7 @@ final class MpfParser
 {
     private const int TIFF_MAGIC = TiffConst::MAGIC_CLASSIC;
 
+    // ── MP Index IFD tags (CIPA DC-007-2025, Table 3) ────────────────
     private const int TAG_MPF_VERSION = 0xB000;
 
     private const int TAG_NUMBER_OF_IMAGES = 0xB001;
@@ -59,11 +56,34 @@ final class MpfParser
 
     private const int TAG_TOTAL_FRAMES = 0xB004;
 
-    private const int TAG_INDIVIDUAL_IMAGE_NUMBER = 0xB005;
+    // ── MP Attribute IFD tags (CIPA DC-007-2025, Table 5) ──────────
+    private const int TAG_INDIVIDUAL_IMAGE_NUMBER = 0xB101;
 
-    private const int TAG_PANORAMA_ANGLE = 0xB006;
+    private const int TAG_PAN_ORIENTATION = 0xB201;
 
-    private const int TAG_PANORAMA_AXIS = 0xB007;
+    private const int TAG_PAN_OVERLAP_H = 0xB202;
+
+    private const int TAG_PAN_OVERLAP_V = 0xB203;
+
+    private const int TAG_BASE_VIEWPOINT_NUM = 0xB204;
+
+    private const int TAG_CONVERGENCE_ANGLE = 0xB205;
+
+    private const int TAG_BASELINE_LENGTH = 0xB206;
+
+    private const int TAG_VERTICAL_DIVERGENCE = 0xB207;
+
+    private const int TAG_AXIS_DISTANCE_X = 0xB208;
+
+    private const int TAG_AXIS_DISTANCE_Y = 0xB209;
+
+    private const int TAG_AXIS_DISTANCE_Z = 0xB20A;
+
+    private const int TAG_YAW_ANGLE = 0xB20B;
+
+    private const int TAG_PITCH_ANGLE = 0xB20C;
+
+    private const int TAG_ROLL_ANGLE = 0xB20D;
 
     /**
      * Decodes the MPF payload into a structured document model.
@@ -100,7 +120,7 @@ final class MpfParser
             throw new ParseError('MP Index IFD offset outside payload bounds', 1291);
         }
 
-        // MP Index IFD tag type/count constraints per EXIF 3.0 §4.6.2
+        // MP Index IFD tag type/count constraints per CIPA DC-007-2025, Table 3
         $indexConstraints = [
             self::TAG_MPF_VERSION => [
                 'type'    => TiffFieldType::Ascii->value,
@@ -114,12 +134,22 @@ final class MpfParser
                 'type'    => TiffFieldType::Undefined->value,
                 'countFn' => static fn (int $c): bool => $c >= 16 && ($c % 16) === 0,
             ],
+            self::TAG_IMAGE_UID_LIST => [
+                'type'    => TiffFieldType::Undefined->value,
+                'countFn' => static fn (int $c): bool => $c >= 33 && ($c % 33) === 0,
+            ],
+            self::TAG_TOTAL_FRAMES => [
+                'type'    => TiffFieldType::Long->value,
+                'countFn' => static fn (int $c): bool => $c === 1,
+            ],
         ];
 
         [$indexEntries, $nextIfdOffset] = $this->readIfd($buffer, $endian, $firstIfdOffset, $indexConstraints);
 
-        $version    = $this->stringValue($indexEntries[self::TAG_MPF_VERSION] ?? null);
-        $imageCount = $this->intValue($indexEntries[self::TAG_NUMBER_OF_IMAGES] ?? null);
+        $version      = $this->stringValue($indexEntries[self::TAG_MPF_VERSION] ?? null);
+        $imageCount   = $this->intValue($indexEntries[self::TAG_NUMBER_OF_IMAGES] ?? null);
+        $imageUidList = $this->stringValue($indexEntries[self::TAG_IMAGE_UID_LIST] ?? null);
+        $totalFrames  = $this->intValue($indexEntries[self::TAG_TOTAL_FRAMES] ?? null);
 
         $entriesData = $indexEntries[self::TAG_MP_ENTRY] ?? null;
         if (!is_string($entriesData)) {
@@ -147,27 +177,63 @@ final class MpfParser
                 throw new ParseError('MP Attribute IFD offset outside payload bounds', 1294);
             }
 
-            // MP Attribute IFD tag type/count constraints per EXIF 3.0 §4.6.4
+            // MP Attribute IFD tag type/count constraints per CIPA DC-007-2025, Table 5
             $attributeConstraints = [
-                self::TAG_IMAGE_UID_LIST => [
-                    'type'    => TiffFieldType::Undefined->value,
-                    'countFn' => static fn (int $c): bool => $c >= 33 && ($c % 33) === 0,
-                ],
-                self::TAG_TOTAL_FRAMES => [
-                    'type'    => TiffFieldType::Long->value,
-                    'countFn' => static fn (int $c): bool => $c === 1,
-                ],
                 self::TAG_INDIVIDUAL_IMAGE_NUMBER => [
                     'type'    => TiffFieldType::Long->value,
                     'countFn' => static fn (int $c): bool => $c === 1,
                 ],
-                self::TAG_PANORAMA_ANGLE => [
+                self::TAG_PAN_ORIENTATION => [
+                    'type'    => TiffFieldType::Long->value,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_PAN_OVERLAP_H => [
                     'type'    => TiffFieldType::Rational->value,
                     'countFn' => static fn (int $c): bool => $c === 1,
                 ],
-                self::TAG_PANORAMA_AXIS => [
+                self::TAG_PAN_OVERLAP_V => [
                     'type'    => TiffFieldType::Rational->value,
-                    'countFn' => static fn (int $c): bool => $c === 3,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_BASE_VIEWPOINT_NUM => [
+                    'type'    => TiffFieldType::Long->value,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_CONVERGENCE_ANGLE => [
+                    'type'    => TiffFieldType::SRational->value,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_BASELINE_LENGTH => [
+                    'type'    => TiffFieldType::Rational->value,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_VERTICAL_DIVERGENCE => [
+                    'type'    => TiffFieldType::SRational->value,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_AXIS_DISTANCE_X => [
+                    'type'    => TiffFieldType::SRational->value,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_AXIS_DISTANCE_Y => [
+                    'type'    => TiffFieldType::SRational->value,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_AXIS_DISTANCE_Z => [
+                    'type'    => TiffFieldType::SRational->value,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_YAW_ANGLE => [
+                    'type'    => TiffFieldType::SRational->value,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_PITCH_ANGLE => [
+                    'type'    => TiffFieldType::SRational->value,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_ROLL_ANGLE => [
+                    'type'    => TiffFieldType::SRational->value,
+                    'countFn' => static fn (int $c): bool => $c === 1,
                 ],
             ];
 
@@ -186,6 +252,8 @@ final class MpfParser
             imageCount: $imageCount,
             entries: $entries,
             attributes: $attributes,
+            imageUidList: $imageUidList,
+            totalFrames: $totalFrames,
         );
     }
 
@@ -473,29 +541,16 @@ final class MpfParser
      */
     private function buildAttributes(array $entries): MpfAttributes
     {
-        $imageUidList          = $this->stringValue($entries[self::TAG_IMAGE_UID_LIST] ?? null);
-        $totalFrames           = $this->intValue($entries[self::TAG_TOTAL_FRAMES] ?? null);
         $individualImageNumber = $this->intValue($entries[self::TAG_INDIVIDUAL_IMAGE_NUMBER] ?? null);
 
-        $panoramaAngle = $this->rationalListValue($entries[self::TAG_PANORAMA_ANGLE] ?? null);
-        $panoramaAxis  = $this->rationalListValue($entries[self::TAG_PANORAMA_AXIS] ?? null);
-
         $known = [
-            self::TAG_IMAGE_UID_LIST          => true,
-            self::TAG_TOTAL_FRAMES            => true,
             self::TAG_INDIVIDUAL_IMAGE_NUMBER => true,
-            self::TAG_PANORAMA_ANGLE          => true,
-            self::TAG_PANORAMA_AXIS           => true,
         ];
 
         $additional = $this->filterAdditionalTags($entries, $known);
 
         return new MpfAttributes(
-            imageUidList: $imageUidList,
-            totalFrames: $totalFrames,
             individualImageNumber: $individualImageNumber,
-            panoramaAngle: $panoramaAngle,
-            panoramaAxis: $panoramaAxis,
             additionalTags: $additional,
         );
     }
@@ -542,69 +597,6 @@ final class MpfParser
             $entries,
             static fn ($tag): bool => !isset($known[$tag]),
             ARRAY_FILTER_USE_KEY
-        );
-    }
-
-    /**
-     * Extracts a list of rational values from MPF value.
-     *
-     * @param MpfValue|null $value MPF value to extract from.
-     *
-     * @return list<MpfRational>|null List of rational values or null if invalid.
-     */
-    private function rationalListValue(int|string|array|null $value): ?array
-    {
-        if (!is_array($value)) {
-            return null;
-        }
-
-        if ($this->isRational($value)) {
-            return [$value];
-        }
-
-        if ($this->isRationalList($value)) {
-            return $value;
-        }
-
-        return null;
-    }
-
-    /**
-     * Type guard checking if value is an MPF rational structure.
-     *
-     * @param array<int|string, MpfValue> $value Value to check.
-     *
-     * @return bool True if value is MPF rational.
-     *
-     * @phpstan-assert-if-true MpfRational $value
-     */
-    private function isRational(array $value): bool
-    {
-        if (!array_key_exists('numerator', $value) || !array_key_exists('denominator', $value)) {
-            return false;
-        }
-
-        return is_int($value['numerator']) && is_int($value['denominator']);
-    }
-
-    /**
-     * Type guard checking if value is a list of MPF rational structures.
-     *
-     * @param array<int|string, MpfValue> $value Value to check.
-     *
-     * @return bool True if value is list of MPF rationals.
-     *
-     * @phpstan-assert-if-true list<MpfRational> $value
-     */
-    private function isRationalList(array $value): bool
-    {
-        if (!array_is_list($value)) {
-            return false;
-        }
-
-        return !array_any(
-            $value,
-            fn (int|string|array $item): bool => !is_array($item) || !$this->isRational($item)
         );
     }
 
