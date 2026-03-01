@@ -50,8 +50,6 @@ final class TiffExifParser implements TiffExifParserInterface
 
     private int $bigTiffOffsetSize = 8;
 
-    private UInt64 $blobSize;
-
     private ?string $makerNoteRaw = null;
 
     /** @var array<int, Ifd> */
@@ -152,7 +150,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->buffer = $tiffSource;
         $this->buffer->seek(0);
 
-        $this->blobSize = UInt64::fromInt($this->buffer->size());
+        $blobSize = UInt64::fromInt($this->buffer->size());
 
         $this->makerNoteRaw      = null;
         $this->ifdCache          = [];
@@ -182,7 +180,7 @@ final class TiffExifParser implements TiffExifParserInterface
             $this->bigTiff,
             $this->bigTiffOffsetSize,
         );
-        $this->offsetValidator = new TiffOffsetValidator($this->buffer, $this->blobSize);
+        $this->offsetValidator = new TiffOffsetValidator($this->buffer, $blobSize);
         $this->decoder         = new TiffValueDecoder(
             $this->binaryReader,
             $this->offsetValidator,
