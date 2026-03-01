@@ -79,71 +79,10 @@ final readonly class GpsCoordinateConverter
      */
     public function extractFromIfd(Ifd $gps): array
     {
-        $latRefEntry = $gps->get(ExifTag::GPS_LATITUDE_REF);
-        $latValEntry = $gps->get(ExifTag::GPS_LATITUDE);
-        $lonRefEntry = $gps->get(ExifTag::GPS_LONGITUDE_REF);
-        $lonValEntry = $gps->get(ExifTag::GPS_LONGITUDE);
-
-        // Tolerate incomplete coordinate pairs — skip silently.
-        $latIncomplete = $this->isCoordinatePairIncomplete($latRefEntry, $latValEntry);
-        $lonIncomplete = $this->isCoordinatePairIncomplete($lonRefEntry, $lonValEntry);
-
-        $latRefNorm = null;
-        $latPairs   = null;
-        $lonRefNorm = null;
-        $lonPairs   = null;
-
-        if (!$latIncomplete) {
-            $latRef     = $latRefEntry?->value;
-            $latRefNorm = $this->validateGpsRef(
-                is_string($latRef) ? strtoupper(trim($latRef)) : null,
-                self::GPS_LATITUDE_REF_VALUES,
-            );
-            $latPairs = $this->resolveCoordinatePairs($latValEntry?->value);
-        }
-
-        if (!$lonIncomplete) {
-            $lonRef     = $lonRefEntry?->value;
-            $lonRefNorm = $this->validateGpsRef(
-                is_string($lonRef) ? strtoupper(trim($lonRef)) : null,
-                self::GPS_LONGITUDE_REF_VALUES,
-            );
-            $lonPairs = $this->resolveCoordinatePairs($lonValEntry?->value);
-        }
-
-        // Destination coordinates
-        $destLatRefEntry = $gps->get(ExifTag::GPS_DEST_LATITUDE_REF);
-        $destLatEntry    = $gps->get(ExifTag::GPS_DEST_LATITUDE);
-        $destLonRefEntry = $gps->get(ExifTag::GPS_DEST_LONGITUDE_REF);
-        $destLonEntry    = $gps->get(ExifTag::GPS_DEST_LONGITUDE);
-
-        $destLatIncomplete = $this->isCoordinatePairIncomplete($destLatRefEntry, $destLatEntry);
-        $destLonIncomplete = $this->isCoordinatePairIncomplete($destLonRefEntry, $destLonEntry);
-
-        $destLatRefNorm = null;
-        $destLatPairs   = null;
-        $destLonRefNorm = null;
-        $destLonPairs   = null;
-
-        if (!$destLatIncomplete) {
-            $destLatRefValue = $destLatRefEntry?->value;
-            $destLatRefNorm  = $this->validateGpsRef(
-                is_string($destLatRefValue) ? strtoupper(trim($destLatRefValue)) : null,
-                self::GPS_LATITUDE_REF_VALUES,
-            );
-            $destLatVal   = $destLatEntry?->value;
-            $destLatPairs = $destLatVal instanceof ExifRationalList ? $destLatVal : null;
-        }
-
-        if (!$destLonIncomplete) {
-            $destLonRefValue = $destLonRefEntry?->value;
-            $destLonRefNorm  = $this->validateGpsRef(
-                is_string($destLonRefValue) ? strtoupper(trim($destLonRefValue)) : null,
-                self::GPS_LONGITUDE_REF_VALUES,
-            );
-            $destLonVal   = $destLonEntry?->value;
-            $destLonPairs = $destLonVal instanceof ExifRationalList ? $destLonVal : null;
-        }
+        [$latRefNorm, $latPairs]         = $this->resolveAxis($gps, ExifTag::GPS_LATITUDE_REF, ExifTag::GPS_LATITUDE, self::GPS_LATITUDE_REF_VALUES);
+        [$lonRefNorm, $lonPairs]         = $this->resolveAxis($gps, ExifTag::GPS_LONGITUDE_REF, ExifTag::GPS_LONGITUDE, self::GPS_LONGITUDE_REF_VALUES);
+        [$destLatRefNorm, $destLatPairs] = $this->resolveAxis($gps, ExifTag::GPS_DEST_LATITUDE_REF, ExifTag::GPS_DEST_LATITUDE, self::GPS_LATITUDE_REF_VALUES);
+        [$destLonRefNorm, $destLonPairs] = $this->resolveAxis($gps, ExifTag::GPS_DEST_LONGITUDE_REF, ExifTag::GPS_DEST_LONGITUDE, self::GPS_LONGITUDE_REF_VALUES);
 
         return [
             'lat_ref'      => $latRefNorm,
@@ -155,6 +94,35 @@ final readonly class GpsCoordinateConverter
             'dest_lon_ref' => $destLonRefNorm,
             'dest_lon'     => $this->dmsToFloat($destLonRefNorm, $destLonPairs),
         ];
+    }
+
+    /**
+     * Resolves a single coordinate axis (ref + value) from the GPS IFD.
+     *
+     * @param Ifd          $gps              GPS IFD to read from.
+     * @param int          $refTag           Tag constant for the reference direction.
+     * @param int          $valTag           Tag constant for the coordinate value.
+     * @param list<string> $allowedRefValues Permitted reference direction values.
+     *
+     * @return array{0: ?string, 1: ExifRationalList|ExifNumericList|null}
+     */
+    private function resolveAxis(Ifd $gps, int $refTag, int $valTag, array $allowedRefValues): array
+    {
+        $refEntry = $gps->get($refTag);
+        $valEntry = $gps->get($valTag);
+
+        if ($this->isCoordinatePairIncomplete($refEntry, $valEntry)) {
+            return [null, null];
+        }
+
+        $ref     = $refEntry?->value;
+        $refNorm = $this->validateGpsRef(
+            is_string($ref) ? strtoupper(trim($ref)) : null,
+            $allowedRefValues,
+        );
+        $pairs = $this->resolveCoordinatePairs($valEntry?->value);
+
+        return [$refNorm, $pairs];
     }
 
     /**
