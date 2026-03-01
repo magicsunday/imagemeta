@@ -265,43 +265,9 @@ final readonly class TrackMediaParser
      */
     public function parseMvhd(BoxDescriptor $mvhd): void
     {
+        $version = $this->parseTimescaleHeader($mvhd, 100, 112, 1906, 1908, 1407, 1907, 1408);
+
         $win = $mvhd->window;
-        $win->seek(0);
-
-        if ($mvhd->contentSize < 4) {
-            throw new ParseError('mvhd box truncated', 1906);
-        }
-
-        $header = $this->boxNavigator->readFullBoxHeader($win);
-
-        if (($header->version !== 0) && ($header->version !== 1)) {
-            throw new ParseError('unsupported mvhd box version', 1908);
-        }
-
-        if ($header->flags !== 0) {
-            throw new ParseError('unsupported mvhd box flags', 1407);
-        }
-
-        $version = $header->version;
-
-        // version 0: 4+4+4+4 + 76 = 96 after FullBox header (including rate, volume, matrix, etc.)
-        // version 1: 8+8+4+8 + 76 = 108 after FullBox header
-        $minPayload = $version === 1 ? 112 : 100;
-        if ($mvhd->contentSize < $minPayload) {
-            throw new ParseError('mvhd box truncated', 1907);
-        }
-
-        if ($version === 1) {
-            $win->read(8 + 8); // creation_time(64), modification_time(64)
-        } else {
-            $win->read(4 + 4); // creation_time(32), modification_time(32)
-        }
-
-        $timescale = $win->readU32BE();
-
-        if ($timescale === 0) {
-            throw new ParseError('mvhd timescale must not be zero', 1408);
-        }
 
         // Skip duration
         if ($version === 1) {
@@ -467,38 +433,54 @@ final readonly class TrackMediaParser
     }
 
     /**
-     * Validates the media header box (`mdhd`).
+     * Parses a versioned header with creation/modification timestamps and timescale.
      *
-     * ISO/IEC 14496-12 §8.4.2: the mdhd box is a FullBox with version 0 (32-bit
-     * timestamps) or 1 (64-bit timestamps). The timescale field must be non-zero.
+     * Shared structure between mvhd (ISO 14496-12 §8.2.2) and mdhd (§8.4.2).
+     * After this call the box window is positioned immediately after the timescale field.
      *
-     * @param BoxDescriptor $mdhd Media header box descriptor.
+     * @param BoxDescriptor $box           Box descriptor to parse.
+     * @param int           $v0MinPayload  Minimum payload for version 0.
+     * @param int           $v1MinPayload  Minimum payload for version 1.
+     * @param int           $truncatedCode Error code for initial truncation check.
+     * @param int           $versionCode   Error code for unsupported version.
+     * @param int           $flagsCode     Error code for unsupported flags.
+     * @param int           $payloadCode   Error code for version-specific truncation.
+     * @param int           $timescaleCode Error code for zero timescale.
+     *
+     * @return int Parsed FullBox version (0 or 1).
      */
-    private function parseMdhd(BoxDescriptor $mdhd): void
-    {
-        $win = $mdhd->window;
+    private function parseTimescaleHeader(
+        BoxDescriptor $box,
+        int $v0MinPayload,
+        int $v1MinPayload,
+        int $truncatedCode,
+        int $versionCode,
+        int $flagsCode,
+        int $payloadCode,
+        int $timescaleCode,
+    ): int {
+        $win = $box->window;
         $win->seek(0);
 
-        if ($mdhd->contentSize < 4) {
-            throw new ParseError('mdhd box truncated', 1901);
+        if ($box->contentSize < 4) {
+            throw new ParseError('box truncated', $truncatedCode);
         }
 
         $header = $this->boxNavigator->readFullBoxHeader($win);
 
         if (($header->version !== 0) && ($header->version !== 1)) {
-            throw new ParseError('unsupported mdhd box version', 1903);
+            throw new ParseError('unsupported box version', $versionCode);
         }
 
         if ($header->flags !== 0) {
-            throw new ParseError('unsupported mdhd box flags', 1904);
+            throw new ParseError('unsupported box flags', $flagsCode);
         }
 
-        $version = $header->version;
+        $version    = $header->version;
+        $minPayload = $version === 1 ? $v1MinPayload : $v0MinPayload;
 
-        // version 0: 4+4+4+4+2+2 = 20 bytes after header; version 1: 8+8+4+8+2+2 = 32 bytes
-        $minPayload = $version === 1 ? 36 : 24;
-        if ($mdhd->contentSize < $minPayload) {
-            throw new ParseError('mdhd box truncated', 1902);
+        if ($box->contentSize < $minPayload) {
+            throw new ParseError('box truncated', $payloadCode);
         }
 
         if ($version === 1) {
@@ -510,8 +492,23 @@ final readonly class TrackMediaParser
         $timescale = $win->readU32BE();
 
         if ($timescale === 0) {
-            throw new ParseError('mdhd timescale must not be zero', 1905);
+            throw new ParseError('timescale must not be zero', $timescaleCode);
         }
+
+        return $version;
+    }
+
+    /**
+     * Validates the media header box (`mdhd`).
+     *
+     * ISO/IEC 14496-12 §8.4.2: the mdhd box is a FullBox with version 0 (32-bit
+     * timestamps) or 1 (64-bit timestamps). The timescale field must be non-zero.
+     *
+     * @param BoxDescriptor $mdhd Media header box descriptor.
+     */
+    private function parseMdhd(BoxDescriptor $mdhd): void
+    {
+        $this->parseTimescaleHeader($mdhd, 24, 36, 1901, 1903, 1904, 1902, 1905);
     }
 
     /**
