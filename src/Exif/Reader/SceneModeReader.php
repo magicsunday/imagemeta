@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
+use MagicSunday\ImageMeta\Value\Enum\CorrectionApplied;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
@@ -275,6 +276,42 @@ final readonly class SceneModeReader
         $value = $this->reader->enumValue($this->exifIfd, ExifTag::SUBJECT_DISTANCE_RANGE);
 
         return SubjectDistanceRange::fromExifValue($value);
+    }
+
+    /**
+     * Returns whether distortion correction was applied at capture.
+     *
+     * EXIF 3.1 §4.6.6.7.49 (DistortionCorrection): no default value.
+     */
+    public function distortionCorrection(): ?CorrectionApplied
+    {
+        $value = $this->reader->int($this->exifIfd, ExifTag::DISTORTION_CORRECTION);
+
+        return $value !== null ? CorrectionApplied::fromExifValue($value) : null;
+    }
+
+    /**
+     * Returns whether chromatic aberration correction was applied at capture.
+     *
+     * EXIF 3.1 §4.6.6.7.50 (ChromaticAberrationCorrection): no default value.
+     */
+    public function chromaticAberrationCorrection(): ?CorrectionApplied
+    {
+        $value = $this->reader->int($this->exifIfd, ExifTag::CHROMATIC_ABERRATION_CORRECTION);
+
+        return $value !== null ? CorrectionApplied::fromExifValue($value) : null;
+    }
+
+    /**
+     * Returns whether shading correction was applied at capture.
+     *
+     * EXIF 3.1 §4.6.6.7.51 (ShadingCorrection): no default value.
+     */
+    public function shadingCorrection(): ?CorrectionApplied
+    {
+        $value = $this->reader->int($this->exifIfd, ExifTag::SHADING_CORRECTION);
+
+        return $value !== null ? CorrectionApplied::fromExifValue($value) : null;
     }
 
     /**

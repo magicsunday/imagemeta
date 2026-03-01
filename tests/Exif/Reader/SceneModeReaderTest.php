@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\Reader\SceneModeReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
+use MagicSunday\ImageMeta\Value\Enum\CorrectionApplied;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
@@ -156,6 +157,40 @@ final class SceneModeReaderTest extends TestCase
         self::assertNull($reader->flashEnergy());
         self::assertNull($reader->whiteBalance());
         self::assertNull($reader->gainControl());
+    }
+
+    /**
+     * Supplies ExifIFD entries for all three EXIF 3.1 lens correction tags.
+     * EXIF 3.1 §4.6.6.7.49–51: DistortionCorrection, ChromaticAberrationCorrection, ShadingCorrection.
+     */
+    #[Test]
+    public function readsLensCorrectionTags(): void
+    {
+        $exifEntries = [
+            ExifTag::DISTORTION_CORRECTION           => new IfdEntry(ExifTag::DISTORTION_CORRECTION, 3, 1, 1),
+            ExifTag::CHROMATIC_ABERRATION_CORRECTION => new IfdEntry(ExifTag::CHROMATIC_ABERRATION_CORRECTION, 3, 1, 0),
+            ExifTag::SHADING_CORRECTION              => new IfdEntry(ExifTag::SHADING_CORRECTION, 3, 1, 1),
+        ];
+
+        $reader = $this->createReader($exifEntries);
+
+        self::assertSame(CorrectionApplied::Applied, $reader->distortionCorrection());
+        self::assertSame(CorrectionApplied::NotApplied, $reader->chromaticAberrationCorrection());
+        self::assertSame(CorrectionApplied::Applied, $reader->shadingCorrection());
+    }
+
+    /**
+     * Verifies null is returned when lens correction tags are absent.
+     * EXIF 3.1 §4.6.6.7.49–51: no default value defined.
+     */
+    #[Test]
+    public function returnsNullForAbsentLensCorrectionTags(): void
+    {
+        $reader = $this->createReader([]);
+
+        self::assertNull($reader->distortionCorrection());
+        self::assertNull($reader->chromaticAberrationCorrection());
+        self::assertNull($reader->shadingCorrection());
     }
 
     /**

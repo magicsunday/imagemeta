@@ -41,6 +41,7 @@ use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
+use MagicSunday\ImageMeta\Value\Enum\CorrectionApplied;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
@@ -870,6 +871,21 @@ final class ParsedExif implements ExifIfd0DataInterface, ExifIfd1DataInterface, 
     public function subjectDistanceRange(): ?SubjectDistanceRange
     {
         return $this->sceneModeReader()->subjectDistanceRange();
+    }
+
+    public function distortionCorrection(): ?CorrectionApplied
+    {
+        return $this->sceneModeReader()->distortionCorrection();
+    }
+
+    public function chromaticAberrationCorrection(): ?CorrectionApplied
+    {
+        return $this->sceneModeReader()->chromaticAberrationCorrection();
+    }
+
+    public function shadingCorrection(): ?CorrectionApplied
+    {
+        return $this->sceneModeReader()->shadingCorrection();
     }
 
     public function subjectDistance(): ?float

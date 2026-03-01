@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Value\Enum;
 
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
+use MagicSunday\ImageMeta\Value\Enum\CorrectionApplied;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
@@ -62,6 +63,7 @@ use ReflectionMethod;
 #[CoversClass(GpsMeasureMode::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 #[CoversClass(Compression::class)]
+#[CoversClass(CorrectionApplied::class)]
 #[CoversClass(CustomRendered::class)]
 #[CoversClass(SceneCaptureType::class)]
 #[CoversClass(WhiteBalance::class)]
@@ -154,6 +156,32 @@ final class EnumMappingTest extends TestCase
         self::assertSame(SceneCaptureType::Standard, SceneCaptureType::fromExifValue(0));
         self::assertSame(SceneCaptureType::Portrait, SceneCaptureType::fromExifValue(2));
         self::assertNull(SceneCaptureType::fromExifValue(4));
+    }
+
+    /**
+     * Maps CorrectionApplied enum values from integer and string inputs.
+     * EXIF 3.1 §4.6.6.7.49–51: 0 = Not applied, 1 = Applied.
+     */
+    #[Test]
+    public function mapsCorrectionAppliedValues(): void
+    {
+        self::assertSame(CorrectionApplied::NotApplied, CorrectionApplied::fromExifValue(0));
+        self::assertSame(CorrectionApplied::Applied, CorrectionApplied::fromExifValue(1));
+        self::assertSame(CorrectionApplied::NotApplied, CorrectionApplied::fromExifValue('0'));
+        self::assertSame(CorrectionApplied::Applied, CorrectionApplied::fromExifValue('1'));
+    }
+
+    /**
+     * Supplies reserved CorrectionApplied codes outside the defined range.
+     * EXIF 3.1 §4.6.6.7.49–51: values other than 0/1 are reserved.
+     */
+    #[Test]
+    public function returnsNullForReservedCorrectionAppliedCodes(): void
+    {
+        self::assertNull(CorrectionApplied::fromExifValue(2));
+        self::assertNull(CorrectionApplied::fromExifValue('5'));
+        self::assertNull(CorrectionApplied::fromExifValue(null));
+        self::assertNull(CorrectionApplied::fromExifValue(''));
     }
 
     /**

@@ -197,6 +197,9 @@ final readonly class ValueFactory
             clarity: null,
             customRendered: $exifDocument?->customRendered(),
             deviceSettingDescription: $exifDocument?->deviceSettingDescription(),
+            distortionCorrection: $exifDocument?->distortionCorrection(),
+            chromaticAberrationCorrection: $exifDocument?->chromaticAberrationCorrection(),
+            shadingCorrection: $exifDocument?->shadingCorrection(),
         );
 
         $whiteBalanceDetails = new WhiteBalanceDetails(

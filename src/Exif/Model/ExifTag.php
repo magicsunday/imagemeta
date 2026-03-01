@@ -762,6 +762,21 @@ final readonly class ExifTag
     public const int SUBJECT_DISTANCE_RANGE = 0xA40C;
 
     /**
+     * Whether distortion correction was applied at capture; EXIF 3.1 §4.6.6.7.49, SHORT, 0–1.
+     */
+    public const int DISTORTION_CORRECTION = 0xA40F;
+
+    /**
+     * Whether chromatic aberration correction was applied at capture; EXIF 3.1 §4.6.6.7.50, SHORT, 0–1.
+     */
+    public const int CHROMATIC_ABERRATION_CORRECTION = 0xA410;
+
+    /**
+     * Whether shading (vignetting) correction was applied at capture; EXIF 3.1 §4.6.6.7.51, SHORT, 0–1.
+     */
+    public const int SHADING_CORRECTION = 0xA411;
+
+    /**
      * Globally unique identifier assigned to the image.
      */
     public const int IMAGE_UNIQUE_ID = 0xA420;
