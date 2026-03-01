@@ -162,12 +162,8 @@ final readonly class DngVersionValidator
     /**
      * Requires DNGVersion in IFD0 when DNG-specific tags are present.
      */
-    public function validateDngRequiredVersion(Ifd $ifd): void
+    public function validateDngRequiredVersion(): void
     {
-        if ($ifd->get(DngTag::DNG_VERSION) instanceof IfdEntry) {
-            return;
-        }
-
         // DNG 1.7.1.0 requires DNGVersion for DNG files, but many JPEG files
         // carry selected DNG tags without declaring DNGVersion. Reader-side
         // parsing keeps those tags instead of aborting.

@@ -54,7 +54,7 @@ final readonly class DngValidator
      */
     public function validatePreLoop(Ifd $ifd0): void
     {
-        $this->version->validateDngRequiredVersion($ifd0);
+        $this->version->validateDngRequiredVersion();
         $this->structure->validateDngRequiredUniqueCameraModel($ifd0);
     }
 
