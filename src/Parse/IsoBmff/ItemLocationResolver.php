@@ -46,12 +46,13 @@ final readonly class ItemLocationResolver
      * @param array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos     Item information structures.
      * @param int|null                                                                           $primaryItemId Primary item ID if known.
      *
-     * @return array{0: list<int>, 1: list<int>} Tuple of [EXIF item IDs, XMP item IDs].
+     * @return array{0: list<int>, 1: list<int>, 2: list<int>} Tuple of [EXIF item IDs, XMP item IDs, tmap item IDs].
      */
     public function gatherItemIds(array $itemInfos, ?int $primaryItemId): array
     {
         $exifItemIds = [];
         $xmpItemIds  = [];
+        $tmapItemIds = [];
 
         // Collect item IDs that advertise EXIF/XMP payloads via their metadata descriptors.
         // EXIF 3.0 Annex A.2.3 maps item types and MIME hints that flag Exif or XMP payloads,
@@ -64,11 +65,16 @@ final readonly class ItemLocationResolver
             if ($this->payloadResolver->isXmpItem($info)) {
                 $xmpItemIds[] = $info['id'];
             }
+
+            if ($this->payloadResolver->isTmapItem($info)) {
+                $tmapItemIds[] = $info['id'];
+            }
         }
 
         // Deduplicate while preserving encounter order to avoid processing the same item twice.
         $exifItemIds = array_values(array_unique($exifItemIds));
         $xmpItemIds  = array_values(array_unique($xmpItemIds));
+        $tmapItemIds = array_values(array_unique($tmapItemIds));
 
         if (($primaryItemId !== null) && isset($itemInfos[$primaryItemId]) && $this->payloadResolver->isExifItem($itemInfos[$primaryItemId])) {
             // EXIF 3.0 Annex A.2.5: pitm marks the default metadata item; prioritize
@@ -84,7 +90,7 @@ final readonly class ItemLocationResolver
             $xmpItemIds = array_values(array_unique($xmpItemIds));
         }
 
-        return [$exifItemIds, $xmpItemIds];
+        return [$exifItemIds, $xmpItemIds, $tmapItemIds];
     }
 
     /**

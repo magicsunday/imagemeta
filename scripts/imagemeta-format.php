@@ -2313,6 +2313,10 @@ final class MetadataFormatter
         $hdrGainMap = $metadata->structured()->content->hdrGainMap;
         $data       = [];
 
+        if ($hdrGainMap->hasGainMap) {
+            $data['Has Gain Map'] = 'True';
+        }
+
         if ($hdrGainMap->version !== null) {
             $data['Version'] = $hdrGainMap->version;
         }

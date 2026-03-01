@@ -82,6 +82,9 @@ final class MetadataBuilder
 
     private ?int $ispeHeight = null;
 
+    /** @var list<int> */
+    private array $tmapItemIds = [];
+
     /** @var list<string> */
     private array $iptcBlobs = [];
 
@@ -221,6 +224,7 @@ final class MetadataBuilder
      * @param int|null                     $ispeWidth       Image width from ispe box.
      * @param int|null                     $ispeHeight      Image height from ispe box.
      * @param string|null                  $iccProfile      Binary ICC profile from colr box.
+     * @param list<int>                    $tmapItemIds     Tone map item IDs detected in infe entries.
      */
     public function withIsoBmff(
         ?IsoBmffItemReferenceMap $itemReferences = null,
@@ -229,12 +233,14 @@ final class MetadataBuilder
         ?int $ispeWidth = null,
         ?int $ispeHeight = null,
         ?string $iccProfile = null,
+        array $tmapItemIds = [],
     ): self {
         $this->isoBmffItemReferences  = $itemReferences;
         $this->isoBmffDataReferences  = $dataReferences;
         $this->isoBmffUnresolvedItems = $unresolvedItems;
         $this->ispeWidth              = $ispeWidth;
         $this->ispeHeight             = $ispeHeight;
+        $this->tmapItemIds            = $tmapItemIds;
 
         if ($iccProfile !== null) {
             $this->iccProfile = $iccProfile;
@@ -314,6 +320,7 @@ final class MetadataBuilder
             isoBmffUnresolvedItems: $this->isoBmffUnresolvedItems,
             ispeWidth: $this->ispeWidth,
             ispeHeight: $this->ispeHeight,
+            tmapItemIds: $this->tmapItemIds,
             iptcBlobs: $this->iptcBlobs,
             iptcDoc: $this->iptcDoc,
             xmpParser: $this->xmpParser,

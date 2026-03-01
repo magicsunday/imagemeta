@@ -80,6 +80,9 @@ final readonly class Metadata
     /** @var list<IsoBmffUnresolvedItem> ISO BMFF item payloads that could not be resolved. [ISO BMFF only] */
     public array $isoBmffUnresolvedItems;
 
+    /** @var list<int> Tone map item IDs detected in ISO BMFF containers. [ISO BMFF only] */
+    public array $tmapItemIds;
+
     /** @var list<string> IPTC payloads captured from JPEG APP13 segments. [JPEG only] */
     public array $iptcBlobs;
 
@@ -110,6 +113,7 @@ final readonly class Metadata
      * @param list<IsoBmffUnresolvedItem>                          $isoBmffUnresolvedItems    ISO BMFF item payloads that could not be resolved. [ISO BMFF only]
      * @param int|null                                             $ispeWidth                 Image width in pixels from the ispe box. [ISO BMFF only]
      * @param int|null                                             $ispeHeight                Image height in pixels from the ispe box. [ISO BMFF only]
+     * @param list<int>                                            $tmapItemIds               Tone map item IDs detected in ISO BMFF containers. [ISO BMFF only]
      * @param list<string>                                         $iptcBlobs                 IPTC payloads captured from JPEG APP13 segments. [JPEG only]
      * @param IptcDocument|null                                    $iptcDoc                   Parsed IPTC IIM datasets from APP13 payloads. [JPEG only]
      * @param XmpParserInterface|null                              $xmpParser                 Injected XMP parser for selective document creation.
@@ -143,6 +147,7 @@ final readonly class Metadata
         array $isoBmffUnresolvedItems = [],
         public ?int $ispeWidth = null,
         public ?int $ispeHeight = null,
+        array $tmapItemIds = [],
         array $iptcBlobs = [],
         public ?IptcDocument $iptcDoc = null,
         private ?XmpParserInterface $xmpParser = null,
@@ -154,6 +159,7 @@ final readonly class Metadata
         $this->iccSegments            = [...$iccSegments];
         $this->jpegAudioStreams       = [...$jpegAudioStreams];
         $this->isoBmffUnresolvedItems = [...$isoBmffUnresolvedItems];
+        $this->tmapItemIds            = [...$tmapItemIds];
         $this->iptcBlobs              = [...$iptcBlobs];
         $this->structuredCache        = new StructuredMetadataCache(
             $structuredMetadataBuilder ?? StructuredMetadataBuilder::createDefault(),

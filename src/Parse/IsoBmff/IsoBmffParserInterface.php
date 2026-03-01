@@ -24,7 +24,7 @@ use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 interface IsoBmffParserInterface
 {
     /**
-     * @return array{0:list<string>,1:list<string>,2:?QuickTimeMeta,3:?IsoBmffItemReferenceMap,4:?IsoBmffDataReferenceMap,5:list<IsoBmffUnresolvedItem>,6:?int,7:?int,8:?string}
+     * @return array{0:list<string>,1:list<string>,2:?QuickTimeMeta,3:?IsoBmffItemReferenceMap,4:?IsoBmffDataReferenceMap,5:list<IsoBmffUnresolvedItem>,6:?int,7:?int,8:?string,9:list<int>}
      *
      * @throws ParseError
      * @throws BoundsError

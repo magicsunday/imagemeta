@@ -143,6 +143,7 @@ XML;
 
         $structured = StructuredMetadataBuilder::createDefault()->assemble($metadata);
 
+        self::assertFalse($structured->content->hdrGainMap->hasGainMap);
         self::assertSame('1.0', $structured->content->hdrGainMap->version);
         self::assertFalse($structured->content->hdrGainMap->baseRenditionIsHdr);
         self::assertSame(0.0, $structured->content->hdrGainMap->hdrCapacityMin);
@@ -153,6 +154,24 @@ XML;
         self::assertSame(0.015625, $structured->content->hdrGainMap->offsetSdr);
         self::assertSame(0.015625, $structured->content->hdrGainMap->offsetHdr);
         self::assertSame('urn:com:apple:photo:2020:aux:hdrgainmap', $structured->content->hdrGainMap->auxiliaryImageType);
+    }
+
+    /**
+     * Builds Metadata with tmapItemIds populated.
+     * Verifies hasGainMap is true when tmap items are present.
+     */
+    #[Test]
+    public function setsHasGainMapTrueWhenTmapItemsExist(): void
+    {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            tmapItemIds: [2],
+        );
+
+        $structured = StructuredMetadataBuilder::createDefault()->assemble($metadata);
+
+        self::assertTrue($structured->content->hdrGainMap->hasGainMap);
     }
 
     /**

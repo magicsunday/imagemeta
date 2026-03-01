@@ -38,6 +38,9 @@ final class IsoBmffParseContext
     /** @var list<IsoBmffUnresolvedItem> */
     public array $unresolvedItems = [];
 
+    /** @var list<int> */
+    public array $tmapItemIds = [];
+
     /** @var array<string, bool> */
     public array $xmpHashes = [];
 

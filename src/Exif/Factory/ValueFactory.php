@@ -363,6 +363,7 @@ final readonly class ValueFactory
         );
 
         $hdrGainMap = new HdrGainMap(
+            hasGainMap: $metadata->tmapItemIds !== [],
             version: $xmpDocument?->string(XmpNamespace::HDR_GAINMAP->value, 'Version'),
             baseRenditionIsHdr: $xmpDocument?->bool(XmpNamespace::HDR_GAINMAP->value, 'BaseRenditionIsHDR'),
             hdrCapacityMin: $xmpDocument?->float(XmpNamespace::HDR_GAINMAP->value, 'HDRCapacityMin'),

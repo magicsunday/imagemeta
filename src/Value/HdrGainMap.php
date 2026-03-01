@@ -12,13 +12,14 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Value;
 
 /**
- * Represents HDR gain map metadata extracted from Adobe hdrgm and Apple apdi XMP namespaces.
+ * Represents HDR gain map metadata extracted from ISO BMFF tmap items and Adobe hdrgm / Apple apdi XMP namespaces.
  */
 final readonly class HdrGainMap
 {
     /**
      * Creates an HDR gain map metadata value object.
      *
+     * @param bool        $hasGainMap         Whether a gain map item (tmap) was detected in the container.
      * @param string|null $version            Gain map format version (hdrgm:Version).
      * @param bool|null   $baseRenditionIsHdr Whether the base image is the HDR rendition (hdrgm:BaseRenditionIsHDR).
      * @param float|null  $hdrCapacityMin     Minimum HDR capacity in stops (hdrgm:HDRCapacityMin).
@@ -31,6 +32,7 @@ final readonly class HdrGainMap
      * @param string|null $auxiliaryImageType Type of auxiliary image (apdi:AuxiliaryImageType).
      */
     public function __construct(
+        public bool $hasGainMap,
         public ?string $version,
         public ?bool $baseRenditionIsHdr,
         public ?float $hdrCapacityMin,

@@ -456,6 +456,20 @@ final readonly class ItemPayloadResolver
     }
 
     /**
+     * Determines whether the given item descriptor represents a tone map (tmap) item.
+     *
+     * @param array{id: int, itemType: ?string, name: ?string, contentType: ?string} $info Item descriptor to check.
+     *
+     * @return bool True when the descriptor advertises a tmap item, otherwise false.
+     */
+    public function isTmapItem(array $info): bool
+    {
+        $itemType = $info['itemType'] ?? null;
+
+        return is_string($itemType) && (strcasecmp($itemType, 'tmap') === 0);
+    }
+
+    /**
      * Walks extents for construction methods with a fixed-size container (file or idat).
      *
      * Handles implied extent_length semantics, payload size limits, container bounds

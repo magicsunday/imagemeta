@@ -33,6 +33,7 @@ final class HdrGainMapTest extends TestCase
     public function storesAllProperties(): void
     {
         $gainMap = new HdrGainMap(
+            hasGainMap: true,
             version: '1.0',
             baseRenditionIsHdr: false,
             hdrCapacityMin: 0.0,
@@ -45,6 +46,7 @@ final class HdrGainMapTest extends TestCase
             auxiliaryImageType: 'urn:com:apple:photo:2020:aux:hdrgainmap',
         );
 
+        self::assertTrue($gainMap->hasGainMap);
         self::assertSame('1.0', $gainMap->version);
         self::assertFalse($gainMap->baseRenditionIsHdr);
         self::assertSame(0.0, $gainMap->hdrCapacityMin);
@@ -65,6 +67,7 @@ final class HdrGainMapTest extends TestCase
     public function acceptsAllNullProperties(): void
     {
         $gainMap = new HdrGainMap(
+            hasGainMap: false,
             version: null,
             baseRenditionIsHdr: null,
             hdrCapacityMin: null,
@@ -77,6 +80,7 @@ final class HdrGainMapTest extends TestCase
             auxiliaryImageType: null,
         );
 
+        self::assertFalse($gainMap->hasGainMap);
         self::assertNull($gainMap->version);
         self::assertNull($gainMap->baseRenditionIsHdr);
         self::assertNull($gainMap->hdrCapacityMin);

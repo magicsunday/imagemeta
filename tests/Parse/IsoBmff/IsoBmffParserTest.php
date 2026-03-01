@@ -6538,6 +6538,93 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds a synthetic HEIC container with both an Exif and a tmap infe entry.
+     * Verifies that extract() returns the tmap item ID at tuple index 9.
+     */
+    #[Test]
+    public function detectsTmapItemInIsoBmffContainer(): void
+    {
+        $exifBlob = pack('N', 0) . "MM\x00\x2Atmap-exif";
+
+        // infe v2 for Exif item (ID=1)
+        $infeExif = $this->box('infe', "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0");
+
+        // infe v2 for tmap item (ID=2)
+        $infeTmap = $this->box('infe', "\x02\0\0\0" . pack('n', 2) . pack('n', 0) . 'tmap' . "\0\0\0");
+
+        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 2) . $infeExif . $infeTmap);
+
+        // iloc v0 with one entry for Exif item only (tmap needs no payload resolution)
+        $ilocBuilder = function (int $offset, int $length): string {
+            $payload = "\0\0\0\0"; // version=0, flags=0
+            $payload .= "\x44";    // offset_size=4, length_size=4
+            $payload .= "\0";     // base_offset_size=0
+            $payload .= pack('n', 1); // item_count=1
+            $payload .= pack('n', 1); // item_id=1 (Exif)
+            $payload .= pack('n', 0); // data_reference_index=0
+            $payload .= pack('n', 1); // extent_count=1
+            $payload .= pack('N', $offset) . pack('N', $length);
+
+            return $this->box('iloc', $payload);
+        };
+
+        // Build once to compute offsets
+        $meta = $this->fullBox('meta', $iinf . $ilocBuilder(0, strlen($exifBlob)));
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat = $this->box('mdat', $exifBlob);
+
+        $offsetBase = strlen($ftyp) + strlen($meta) + 8; // mdat payload offset
+        $iloc       = $ilocBuilder($offsetBase, strlen($exifBlob));
+        $meta       = $this->fullBox('meta', $iinf . $iloc);
+        $data       = $ftyp . $meta . $mdat;
+
+        $result = $this->createExtractor($data)->extract();
+
+        self::assertSame(["MM\x00\x2Atmap-exif"], $result[0]);
+        self::assertSame([2], $result[9]);
+    }
+
+    /**
+     * Builds a standard HEIC container with only an Exif infe entry (no tmap).
+     * Verifies that extract() returns an empty tmap list at tuple index 9.
+     */
+    #[Test]
+    public function returnsEmptyTmapListWhenNoTmapItem(): void
+    {
+        $exifBlob = pack('N', 0) . "MM\x00\x2Ano-tmap";
+
+        $infeExif = $this->box('infe', "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0");
+        $iinf     = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infeExif);
+
+        $ilocBuilder = function (int $offset, int $length): string {
+            $payload = "\0\0\0\0";
+            $payload .= "\x44";
+            $payload .= "\0";
+            $payload .= pack('n', 1);
+            $payload .= pack('n', 1);
+            $payload .= pack('n', 0);
+            $payload .= pack('n', 1);
+            $payload .= pack('N', $offset) . pack('N', $length);
+
+            return $this->box('iloc', $payload);
+        };
+
+        $meta = $this->fullBox('meta', $iinf . $ilocBuilder(0, strlen($exifBlob)));
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat = $this->box('mdat', $exifBlob);
+
+        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
+        $iloc       = $ilocBuilder($offsetBase, strlen($exifBlob));
+        $meta       = $this->fullBox('meta', $iinf . $iloc);
+        $data       = $ftyp . $meta . $mdat;
+
+        $result = $this->createExtractor($data)->extract();
+
+        self::assertSame(["MM\x00\x2Ano-tmap"], $result[0]);
+        self::assertSame([], $result[9]);
+    }
+
+    /**
      * Creates a QuickTime file with a data atom using a specific type and payload.
      *
      * @param int    $dataType Well-known type code (1=UTF-8, 2=UTF-16BE, etc.).

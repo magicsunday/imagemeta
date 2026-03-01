@@ -228,7 +228,7 @@ final readonly class MetadataReader
         ?string $digestSha1,
         ?string $digestMd5,
     ): Metadata {
-        [$exifBlobs, $xmpBlobs, $qt, $isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems, $ispeWidth, $ispeHeight, $iccProfile] = $this->isoBmffParserFactory->create($stream)->extract();
+        [$exifBlobs, $xmpBlobs, $qt, $isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems, $ispeWidth, $ispeHeight, $iccProfile, $tmapItemIds] = $this->isoBmffParserFactory->create($stream)->extract();
 
         // ISO BMFF containers store image dimensions in the ispe box and
         // image data in mdat — TIFF-level dimension/strip/tile tags are
@@ -244,7 +244,7 @@ final readonly class MetadataReader
             ->withExif($exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($xmpBlobs, $xmpDoc)
             ->withQuickTime($qt)
-            ->withIsoBmff($isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems, $ispeWidth, $ispeHeight, $iccProfile)
+            ->withIsoBmff($isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems, $ispeWidth, $ispeHeight, $iccProfile, $tmapItemIds)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
             ->build();
     }
