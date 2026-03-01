@@ -138,9 +138,7 @@ final readonly class FocalReader
      */
     public function cfaPatternColors(): ?array
     {
-        $pattern = $this->cfaPattern();
-
-        return $pattern?->colors;
+        return $this->cfaPattern()?->colors;
     }
 
     // ========================================================================
