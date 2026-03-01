@@ -219,6 +219,72 @@ final class MpfParserTest extends TestCase
     }
 
     /**
+     * Verifies all MPF 2025 type codes are parsed correctly from single-entry payloads.
+     */
+    #[Test]
+    public function parsesOriginalPreservationImageType(): void
+    {
+        self::assertSame(
+            MpImageType::OriginalPreservationImage,
+            $this->parseSingleEntryType(0x04000000),
+        );
+    }
+
+    #[Test]
+    public function parsesGainMapImageType(): void
+    {
+        self::assertSame(
+            MpImageType::GainMapImage,
+            $this->parseSingleEntryType(0x05000000),
+        );
+    }
+
+    #[Test]
+    public function parsesLargeThumbnailQfhdType(): void
+    {
+        self::assertSame(
+            MpImageType::LargeThumbnailQfhd,
+            $this->parseSingleEntryType(0x01030000),
+        );
+    }
+
+    #[Test]
+    public function parsesLargeThumbnail8kType(): void
+    {
+        self::assertSame(
+            MpImageType::LargeThumbnail8k,
+            $this->parseSingleEntryType(0x01040000),
+        );
+    }
+
+    #[Test]
+    public function parsesLargeThumbnail16kType(): void
+    {
+        self::assertSame(
+            MpImageType::LargeThumbnail16k,
+            $this->parseSingleEntryType(0x01050000),
+        );
+    }
+
+    private function parseSingleEntryType(int $attributes): ?MpImageType
+    {
+        $entriesData = $this->buildMpEntries([
+            [$attributes, 1_024, 0, 0, 0],
+        ]);
+
+        $indexEntries = [
+            [self::TAG_MPF_VERSION, self::TYPE_ASCII, 4, '0100'],
+            [self::TAG_NUMBER_OF_IMAGES, self::TYPE_LONG, 1, 1],
+            [self::TAG_MP_ENTRY, self::TYPE_UNDEFINED, strlen($entriesData), $entriesData],
+        ];
+
+        $parser   = new MpfParser();
+        $document = $parser->parse($this->buildMpfPayload($indexEntries));
+
+        return $document->entries[0]->imageType;
+    }
+
+    /**
      * @param list<array{0:int,1:int,2:int,3:int,4:int}> $entries
      */
     private function buildMpEntries(array $entries): string
