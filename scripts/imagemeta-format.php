@@ -1721,7 +1721,7 @@ final class MetadataFormatter
     private function formatMakerNoteSummary(?MakerNotesRecord $makerNotes, mixed $rawValue): string
     {
         if ($makerNotes instanceof MakerNotesRecord) {
-            return sprintf('(%s, %d bytes)', $makerNotes->vendor, $makerNotes->length);
+            return sprintf('%s (%d bytes)', $makerNotes->vendor, $makerNotes->length);
         }
 
         $length = is_string($rawValue) ? strlen($rawValue) : 0;
