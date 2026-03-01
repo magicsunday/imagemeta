@@ -27,6 +27,7 @@
   <img src="https://img.shields.io/badge/EXIF-2.31-blue" alt="EXIF 2.31">
   <img src="https://img.shields.io/badge/EXIF-2.32-blue" alt="EXIF 2.32">
   <img src="https://img.shields.io/badge/EXIF-3.0-blue" alt="EXIF 3.0">
+  <img src="https://img.shields.io/badge/EXIF-3.1-blue" alt="EXIF 3.1">
 </p>
 
 <!-- Row 4: Project badges -->
@@ -75,7 +76,7 @@ Many PHP applications need one consistent metadata API across modern container f
 |------------------------------------|-------------------------------------------------------------------------|
 | Containers                         | `JPEG`, `ISO BMFF`, `TIFF`, `JXL`                                       |
 | JXL                                | Container parsing: EXIF (`Exif` box) + XMP (`xml ` box) extraction      |
-| EXIF versions (capability mapping) | `1.0`, `1.1`, `2.0`, `2.1`, `2.2`, `2.21`, `2.3`, `2.31`, `2.32`, `3.0` |
+| EXIF versions (capability mapping) | `1.0`, `1.1`, `2.0`, `2.1`, `2.2`, `2.21`, `2.3`, `2.31`, `2.32`, `3.0`, `3.1` |
 | XMP                                | RDF/XML parsing via `XMLReader`                                         |
 | IPTC                               | IIM extraction from JPEG APP13                                          |
 | QuickTime metadata                 | Extracted from ISO BMFF structures                                      |
@@ -177,6 +178,7 @@ Specifications and reference material live in `docs/`.
 
 Primary files used by parser development:
 
+- `docs/EXIF-310.pdf` -- EXIF 3.1 (CIPA DC-008-2026)
 - `docs/EXIF-300.pdf` (plus historical revisions `docs/EXIF-2*.pdf`)
 - `docs/TIFF6.pdf`
 - `docs/ISO_IEC_14496-12_2015.pdf`
