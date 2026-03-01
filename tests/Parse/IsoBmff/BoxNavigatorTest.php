@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
+use MagicSunday\ImageMeta\Parse\IsoBmff\FullBoxHeader;
 use MagicSunday\ImageMeta\Tests\Helpers\IsoBmffBoxTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -45,6 +46,7 @@ use function strlen;
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Unpack::class)]
 #[UsesClass(BoxDescriptor::class)]
+#[UsesClass(FullBoxHeader::class)]
 #[UsesTrait(NormalizesOffsets::class)]
 #[UsesTrait(ReadsBinaryPrimitives::class)]
 final class BoxNavigatorTest extends TestCase
@@ -577,5 +579,83 @@ final class BoxNavigatorTest extends TestCase
         $window    = $stream->window(0, 0);
 
         self::assertSame('', $navigator->readAll($window));
+    }
+
+    // =========================================================================
+    // readFullBoxHeader — positive tests
+    // =========================================================================
+
+    /**
+     * Reads a FullBox header with version 0 and flags 0.
+     *
+     * ISO/IEC 14496-12 §4.2: FullBox = 1-byte version + 3-byte flags.
+     */
+    #[Test]
+    public function readFullBoxHeaderReadsVersionZeroFlagsZero(): void
+    {
+        // version=0, flags=0x000000
+        $data   = "\x00\x00\x00\x00";
+        $window = $this->createIsoBmffTempWindow($data);
+        $window->seek(0);
+
+        $navigator = $this->createDummyNavigator();
+        $header    = $navigator->readFullBoxHeader($window);
+
+        self::assertSame(0, $header->version);
+        self::assertSame(0, $header->flags);
+    }
+
+    /**
+     * Reads a FullBox header with version 1 and flags 0.
+     */
+    #[Test]
+    public function readFullBoxHeaderReadsVersionOneFlags(): void
+    {
+        // version=1, flags=0x000000
+        $data   = "\x01\x00\x00\x00";
+        $window = $this->createIsoBmffTempWindow($data);
+        $window->seek(0);
+
+        $navigator = $this->createDummyNavigator();
+        $header    = $navigator->readFullBoxHeader($window);
+
+        self::assertSame(1, $header->version);
+        self::assertSame(0, $header->flags);
+    }
+
+    /**
+     * Reads a FullBox header with non-zero flags preserving all 24 bits.
+     */
+    #[Test]
+    public function readFullBoxHeaderReadsNonZeroFlags(): void
+    {
+        // version=0, flags=0x010001 (bit 0 and bit 16 set)
+        $data   = "\x00\x01\x00\x01";
+        $window = $this->createIsoBmffTempWindow($data);
+        $window->seek(0);
+
+        $navigator = $this->createDummyNavigator();
+        $header    = $navigator->readFullBoxHeader($window);
+
+        self::assertSame(0, $header->version);
+        self::assertSame(0x010001, $header->flags);
+    }
+
+    /**
+     * Reads a FullBox header with maximum version and all flag bits set.
+     */
+    #[Test]
+    public function readFullBoxHeaderReadsMaxVersionAndFlags(): void
+    {
+        // version=255, flags=0xFFFFFF
+        $data   = "\xFF\xFF\xFF\xFF";
+        $window = $this->createIsoBmffTempWindow($data);
+        $window->seek(0);
+
+        $navigator = $this->createDummyNavigator();
+        $header    = $navigator->readFullBoxHeader($window);
+
+        self::assertSame(255, $header->version);
+        self::assertSame(0xFFFFFF, $header->flags);
     }
 }

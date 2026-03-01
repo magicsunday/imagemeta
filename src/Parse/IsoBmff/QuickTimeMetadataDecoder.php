@@ -472,14 +472,13 @@ final readonly class QuickTimeMetadataDecoder
         $window = $box->window;
         $window->seek(0);
 
-        $version = $window->readU8();
-        $flags   = ($window->readU8() << 16) | ($window->readU8() << 8) | $window->readU8();
+        $header = $this->boxNavigator->readFullBoxHeader($window);
 
-        if ($version !== 0) {
+        if ($header->version !== 0) {
             throw new ParseError(sprintf('%s atom version must be 0', $label), $versionCode);
         }
 
-        if ($flags !== 0) {
+        if ($header->flags !== 0) {
             throw new ParseError(sprintf('%s atom flags must be 0', $label), $flagsCode);
         }
     }

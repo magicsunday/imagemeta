@@ -62,16 +62,17 @@ final readonly class IlocBoxParser
         $win = $iloc->window;
         $win->seek(0);
 
-        $version = $win->readU8();
-        $flags   = $this->boxNavigator->readUInt24($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         // ISO/IEC 14496-12 §8.11.3: only versions 0, 1 and 2 are defined.
         // Skip unsupported versions gracefully instead of failing the
         // entire parse — the spec requires readers to ignore boxes with
         // unrecognized versions.
-        if ($version > 2 || $flags !== 0) {
+        if ($header->version > 2 || $header->flags !== 0) {
             return [];
         }
+
+        $version = $header->version;
 
         // ISO/IEC 14496-12 §8.11.3: offset_size and length_size are packed in 4-bit nibbles
         $offsetLengthSizes = $win->readU8();
@@ -191,16 +192,17 @@ final readonly class IlocBoxParser
             throw new ParseError('iinf box truncated', 1192);
         }
 
-        $version = $win->readU8();
-        $flags   = $this->boxNavigator->readUInt24($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
-        if (($version !== 0) && ($version !== 1)) {
+        if (($header->version !== 0) && ($header->version !== 1)) {
             throw new ParseError('unsupported iinf box version', 1193);
         }
 
-        if ($flags !== 0) {
+        if ($header->flags !== 0) {
             throw new ParseError('unsupported iinf box flags', 1194);
         }
+
+        $version = $header->version;
 
         if (($version === 1) && ($iinf->contentSize < 8)) {
             throw new ParseError('iinf box truncated', 1195);
@@ -268,16 +270,15 @@ final readonly class IlocBoxParser
             throw new ParseError('pitm box truncated', 1210);
         }
 
-        $version = $win->readU8();
-        $flags   = $this->boxNavigator->readUInt24($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         // Skip unsupported versions/flags gracefully — the spec requires
         // readers to ignore boxes with unrecognized versions.
-        if (($version !== 0 && $version !== 1) || $flags !== 0) {
+        if (($header->version !== 0 && $header->version !== 1) || $header->flags !== 0) {
             return null;
         }
 
-        if ($version === 0) {
+        if ($header->version === 0) {
             return $win->readU16BE();
         }
 
@@ -308,12 +309,11 @@ final readonly class IlocBoxParser
             throw new ParseError('iref box truncated', 1214);
         }
 
-        $version = $win->readU8();
-        $flags   = $this->boxNavigator->readUInt24($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         // Skip unsupported versions/flags gracefully — the spec requires
         // readers to ignore boxes with unrecognized versions.
-        if (($version !== 0 && $version !== 1) || $flags !== 0) {
+        if (($header->version !== 0 && $header->version !== 1) || $header->flags !== 0) {
             return [];
         }
 
@@ -328,7 +328,7 @@ final readonly class IlocBoxParser
                 throw new ParseError('iref entry count exceeds maximum allowed', 1412);
             }
 
-            $entry      = $this->parseSingleItemReference($child, $version);
+            $entry      = $this->parseSingleItemReference($child, $header->version);
             $references = ItemLocationResolver::mergeItemReferences($references, [
                 $entry['fromItemId'] => $entry['references'],
             ]);
@@ -389,10 +389,9 @@ final readonly class IlocBoxParser
             throw new ParseError('dref box truncated', 1172);
         }
 
-        $version = $win->readU8();
-        $this->boxNavigator->readUInt24($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
-        if ($version !== 0) {
+        if ($header->version !== 0) {
             throw new ParseError('unsupported dref box version', 1173);
         }
 
@@ -453,16 +452,14 @@ final readonly class IlocBoxParser
             throw new ParseError('dref entry truncated', 1176);
         }
 
-        $version = $win->readU8();
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
-        if ($version !== 0) {
+        if ($header->version !== 0) {
             throw new ParseError('unsupported dref entry version', 1177);
         }
 
-        $flags = $this->boxNavigator->readUInt24($win);
-
         $payloadSize   = $entry->contentSize - 4;
-        $selfContained = ($flags & BitMask::BIT_0) !== 0;
+        $selfContained = ($header->flags & BitMask::BIT_0) !== 0;
         $payload       = $payloadSize > 0 ? $win->read($payloadSize) : '';
         $uri           = null;
         $urlLocation   = null;
@@ -539,21 +536,21 @@ final readonly class IlocBoxParser
             throw new ParseError('infe box truncated', 1198);
         }
 
-        $version = $win->readU8();
-        $flags   = $this->boxNavigator->readUInt24($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
-        if ($version > 3) {
+        if ($header->version > 3) {
             throw new ParseError('unsupported infe box version', 1199);
         }
 
         // Bit 0 is the hidden_item flag (ISO/IEC 14496-12 Amd.2:2018 §8.11.6).
         // Apple HEIC files set this on tile and metadata items that compose a
         // grid image.  Bits 1–23 are reserved and must be zero.
-        if (($flags & ~0x01) !== 0) {
+        if (($header->flags & ~0x01) !== 0) {
             throw new ParseError('unsupported infe box flags', 1200);
         }
 
-        $hidden = ($flags & 0x01) !== 0;
+        $hidden  = ($header->flags & 0x01) !== 0;
+        $version = $header->version;
 
         if ($version === 0 || $version === 1) {
             $itemId = $win->readU16BE();

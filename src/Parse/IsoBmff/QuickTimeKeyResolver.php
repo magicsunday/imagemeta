@@ -79,10 +79,9 @@ final readonly class QuickTimeKeyResolver
         // QuickTime File Format 2012, "Metadata item keys atom": the keys atom
         // is a FullAtom; version must be 0 and flags must be 0 for the defined
         // structure.
-        $version = $win->readU8();
-        $flags   = $this->boxNavigator->readUInt24($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
-        if (($version !== 0) || ($flags !== 0)) {
+        if (($header->version !== 0) || ($header->flags !== 0)) {
             throw new ParseError('keys box version/flags must be 0', 1222);
         }
 
@@ -246,14 +245,13 @@ final readonly class QuickTimeKeyResolver
         $win = $atom->window;
         $win->seek(0);
 
-        $version = $win->readU8();
-        $flags   = $this->boxNavigator->readUInt24($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
-        if ($version !== 0) {
+        if ($header->version !== 0) {
             throw new ParseError($label . ' atom version must be 0', 1430);
         }
 
-        if ($flags !== 0) {
+        if ($header->flags !== 0) {
             throw new ParseError($label . ' atom flags must be 0', 1431);
         }
 

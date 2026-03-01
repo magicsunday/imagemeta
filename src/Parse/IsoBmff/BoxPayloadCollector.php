@@ -556,11 +556,9 @@ final readonly class BoxPayloadCollector
         $win = $ispe->window;
         $win->seek(0);
 
-        $version = ord($win->read(1));
-        // Skip 3 bytes of flags
-        $win->read(3);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
-        if ($version !== 0) {
+        if ($header->version !== 0) {
             return ['width' => null, 'height' => null];
         }
 

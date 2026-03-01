@@ -272,16 +272,17 @@ final readonly class TrackMediaParser
             throw new ParseError('mvhd box truncated', 1906);
         }
 
-        $version = $win->readU8();
-        $flags   = $this->boxNavigator->readUInt24($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
-        if (($version !== 0) && ($version !== 1)) {
+        if (($header->version !== 0) && ($header->version !== 1)) {
             throw new ParseError('unsupported mvhd box version', 1908);
         }
 
-        if ($flags !== 0) {
+        if ($header->flags !== 0) {
             throw new ParseError('unsupported mvhd box flags', 1407);
         }
+
+        $version = $header->version;
 
         // version 0: 4+4+4+4 + 76 = 96 after FullBox header (including rate, volume, matrix, etc.)
         // version 1: 8+8+4+8 + 76 = 108 after FullBox header
@@ -335,15 +336,13 @@ final readonly class TrackMediaParser
             throw new ParseError('hdlr box truncated', 1147);
         }
 
-        $versionFlags = $win->read(4);
-        $version      = ord($versionFlags[0]);
-        $flags        = (ord($versionFlags[1]) << 16) | (ord($versionFlags[2]) << 8) | ord($versionFlags[3]);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
-        if ($version !== 0) {
+        if ($header->version !== 0) {
             throw new ParseError('unsupported hdlr box version', 1148);
         }
 
-        if ($flags !== 0) {
+        if ($header->flags !== 0) {
             throw new ParseError('unsupported hdlr box flags', 1149);
         }
 
@@ -407,12 +406,14 @@ final readonly class TrackMediaParser
             throw new ParseError('tkhd box truncated', 1144);
         }
 
-        $version = $win->readU8();
-        $flags   = $this->boxNavigator->readUInt24($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
-        if (($version !== 0) && ($version !== 1)) {
+        if (($header->version !== 0) && ($header->version !== 1)) {
             throw new ParseError('unsupported tkhd box version', 1145);
         }
+
+        $version = $header->version;
+        $flags   = $header->flags;
 
         // ISO/IEC 14496-12 §8.3.2: version 0 uses 32-bit timestamps, version 1 uses 64-bit
         if ($version === 1) {
@@ -482,16 +483,17 @@ final readonly class TrackMediaParser
             throw new ParseError('mdhd box truncated', 1901);
         }
 
-        $version = $win->readU8();
-        $flags   = $this->boxNavigator->readUInt24($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
-        if (($version !== 0) && ($version !== 1)) {
+        if (($header->version !== 0) && ($header->version !== 1)) {
             throw new ParseError('unsupported mdhd box version', 1903);
         }
 
-        if ($flags !== 0) {
+        if ($header->flags !== 0) {
             throw new ParseError('unsupported mdhd box flags', 1904);
         }
+
+        $version = $header->version;
 
         // version 0: 4+4+4+4+2+2 = 20 bytes after header; version 1: 8+8+4+8+2+2 = 32 bytes
         $minPayload = $version === 1 ? 36 : 24;
@@ -763,24 +765,23 @@ final readonly class TrackMediaParser
             throw new ParseError('stsd box truncated', 1153);
         }
 
-        $versionFlags = $win->read(4);
-        $version      = ord($versionFlags[0]);
-        $flags        = (ord($versionFlags[1]) << 16) | (ord($versionFlags[2]) << 8) | ord($versionFlags[3]);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         // ISO/IEC 14496-12 §8.5.2.2/§8.5.2.3: stsd is a FullBox with flags=0.
         // Version 1 is only valid in audio sample-description context.
-        if (($version !== 0) && ($version !== 1)) {
+        if (($header->version !== 0) && ($header->version !== 1)) {
             throw new ParseError('unsupported stsd box version', 1154);
         }
 
-        if ($flags !== 0) {
+        if ($header->flags !== 0) {
             throw new ParseError('unsupported stsd box flags', 1155);
         }
 
-        if (($version === 1) && ($handlerType !== 'soun')) {
+        if (($header->version === 1) && ($handlerType !== 'soun')) {
             throw new ParseError('stsd version 1 requires audio handler context', 1925);
         }
 
+        $version    = $header->version;
         $entryCount = $win->readU32BE();
 
         // ISO/IEC 14496-12 §8.5.2: Sample Description Box must contain at least one entry.

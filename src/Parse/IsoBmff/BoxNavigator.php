@@ -162,6 +162,19 @@ final readonly class BoxNavigator
     }
 
     /**
+     * Reads a FullBox header (ISO/IEC 14496-12 §4.2): 1-byte version + 3-byte flags.
+     *
+     * @param StreamWindow $window Window positioned at the start of the version/flags fields.
+     */
+    public function readFullBoxHeader(StreamWindow $window): FullBoxHeader
+    {
+        $version = $window->readU8();
+        $flags   = $this->readUInt24($window);
+
+        return new FullBoxHeader($version, $flags);
+    }
+
+    /**
      * Reads an unsigned integer using the specified byte width.
      *
      * @param StreamWindow $window Window to read from.
