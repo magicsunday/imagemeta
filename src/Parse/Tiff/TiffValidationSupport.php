@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
+use function count;
 use function is_float;
 use function is_int;
 use function sprintf;
@@ -204,5 +205,44 @@ final readonly class TiffValidationSupport
         }
 
         return $uniformBitDepth;
+    }
+
+    /**
+     * Extracts and validates a SHORT[2] tag from an IFD.
+     *
+     * @param int    $tag       Tag constant to extract.
+     * @param string $tagName   Human-readable tag name for error messages.
+     * @param int    $typeCode  Error code for type/count mismatch.
+     * @param int    $countCode Error code for decoded component count mismatch.
+     *
+     * @return array{0: int, 1: int}|null The two integer components, or null if absent.
+     */
+    public function extractShortPair(
+        Ifd $ifd,
+        int $tag,
+        string $tagName,
+        int $typeCode,
+        int $countCode,
+    ): ?array {
+        $entry = $ifd->get($tag);
+
+        if (!$entry instanceof IfdEntry) {
+            return null;
+        }
+
+        if (($entry->type !== TiffConst::TYPE_SHORT) || ($entry->count !== 2)) {
+            throw new ParseError(sprintf('%s must be SHORT[2].', $tagName), $typeCode);
+        }
+
+        $components = $this->extractIntegerTagComponents($entry, $tagName);
+
+        if (count($components) !== 2) {
+            throw new ParseError(
+                sprintf('%s expected 2 components, decoded %d.', $tagName, count($components)),
+                $countCode,
+            );
+        }
+
+        return [$components[0], $components[1]];
     }
 }

@@ -599,27 +599,13 @@ final readonly class TiffTagConstraintValidator
      */
     private function validatePageNumberEntry(Ifd $ifd): void
     {
-        $pageNumberEntry = $ifd->get(TiffTag::PAGE_NUMBER);
+        $pageComponents = $this->support->extractShortPair($ifd, TiffTag::PAGE_NUMBER, 'PageNumber', 1794, 1795);
 
-        if (!$pageNumberEntry instanceof IfdEntry) {
+        if ($pageComponents === null) {
             return;
         }
 
-        if (($pageNumberEntry->type !== TiffConst::TYPE_SHORT) || ($pageNumberEntry->count !== 2)) {
-            throw new ParseError('PageNumber must be SHORT[2].', 1794);
-        }
-
-        $pageComponents = $this->support->extractIntegerTagComponents($pageNumberEntry, 'PageNumber');
-
-        if (count($pageComponents) !== 2) {
-            throw new ParseError(
-                sprintf('PageNumber expected 2 components, decoded %d.', count($pageComponents)),
-                1795,
-            );
-        }
-
-        $pageIndex  = $pageComponents[0];
-        $totalPages = $pageComponents[1];
+        [$pageIndex, $totalPages] = $pageComponents;
 
         if ($pageIndex < 0) {
             throw new ParseError(

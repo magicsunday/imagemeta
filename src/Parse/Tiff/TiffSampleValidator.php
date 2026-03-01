@@ -496,23 +496,10 @@ final readonly class TiffSampleValidator
      */
     public function validateHalftoneHintsTag(Ifd $ifd): void
     {
-        $halftoneHintsEntry = $ifd->get(TiffTag::HALFTONE_HINTS);
+        $components = $this->support->extractShortPair($ifd, TiffTag::HALFTONE_HINTS, 'HalftoneHints', 1779, 1780);
 
-        if (!$halftoneHintsEntry instanceof IfdEntry) {
+        if ($components === null) {
             return;
-        }
-
-        if (($halftoneHintsEntry->type !== TiffConst::TYPE_SHORT) || ($halftoneHintsEntry->count !== 2)) {
-            throw new ParseError('HalftoneHints must be SHORT[2].', 1779);
-        }
-
-        $components = $this->support->extractIntegerTagComponents($halftoneHintsEntry, 'HalftoneHints');
-
-        if (count($components) !== 2) {
-            throw new ParseError(
-                sprintf('HalftoneHints expected 2 components, decoded %d.', count($components)),
-                1780,
-            );
         }
 
         $bitsPerSample = $this->support->resolveUniformBitsPerSample($ifd, 'HalftoneHints', 1782);
