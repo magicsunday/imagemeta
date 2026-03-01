@@ -646,7 +646,7 @@ final class MetadataFormatter
 
         // ExifIFD section
         if ($metadata->exifDoc instanceof ParsedExif && $metadata->exifDoc->exifIfd instanceof Ifd) {
-            $this->printExifIfdSection($metadata->exifDoc->exifIfd, $metadata->exifDoc);
+            $this->printExifIfdSection($metadata->exifDoc->exifIfd, $metadata->exifDoc, $metadata->makerNotes);
         }
 
         // MakerNotes section
@@ -1685,13 +1685,19 @@ final class MetadataFormatter
     /**
      * Prints the ExifIFD section.
      */
-    private function printExifIfdSection(?Ifd $exifIfd, ?ParsedExif $exifDoc = null): void
+    private function printExifIfdSection(?Ifd $exifIfd, ?ParsedExif $exifDoc = null, ?MakerNotesRecord $makerNotes = null): void
     {
         $data = [];
 
         // Collect ExifIFD tags
         if (($exifIfd instanceof Ifd) && isset($exifIfd->entries)) {
             foreach ($exifIfd->entries as $tagId => $entry) {
+                // MakerNote: show vendor summary instead of raw binary blob
+                if ($tagId === ExifTag::MAKER_NOTE) {
+                    $data[$tagId] = $this->formatMakerNoteSummary($makerNotes, $entry->value);
+                    continue;
+                }
+
                 // Use ParsedExif accessor methods for tags with special decoding
                 $value = $this->getDecodedValueFromParsedExif($tagId, $entry->value, $exifDoc);
 
@@ -1707,6 +1713,20 @@ final class MetadataFormatter
         if ($data !== []) {
             $this->printSection('ExifIFD', $data, showHex: true);
         }
+    }
+
+    /**
+     * Returns a human-readable MakerNote summary line.
+     */
+    private function formatMakerNoteSummary(?MakerNotesRecord $makerNotes, mixed $rawValue): string
+    {
+        if ($makerNotes instanceof MakerNotesRecord) {
+            return sprintf('(%s, %d bytes)', $makerNotes->vendor, $makerNotes->length);
+        }
+
+        $length = is_string($rawValue) ? strlen($rawValue) : 0;
+
+        return sprintf('(Binary data, %d bytes)', $length);
     }
 
     /**
