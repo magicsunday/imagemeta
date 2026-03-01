@@ -16,9 +16,14 @@ use function array_keys;
 
 /**
  * Holds ISO BMFF data references keyed by metadata context and index.
+ *
+ * @uses UnambiguousReferenceResolver<IsoBmffDataReference>
  */
 final readonly class IsoBmffDataReferenceMap
 {
+    /** @use UnambiguousReferenceResolver<IsoBmffDataReference> */
+    use UnambiguousReferenceResolver;
+
     /**
      * Legacy unambiguous lookup table keyed by index.
      *
@@ -101,36 +106,5 @@ final readonly class IsoBmffDataReferenceMap
     public function isEmpty(): bool
     {
         return $this->referencesByContext === [];
-    }
-
-    /**
-     * Flattens references into a legacy index map where each index is unique across contexts.
-     *
-     * @param array<int, array<int, IsoBmffDataReference>> $referencesByContext
-     *
-     * @return array<int, IsoBmffDataReference>
-     */
-    private function buildUnambiguousReferenceIndex(array $referencesByContext): array
-    {
-        $resolvedReferences = [];
-        $ambiguousIndexes   = [];
-
-        foreach ($referencesByContext as $contextReferences) {
-            foreach ($contextReferences as $index => $reference) {
-                if (array_key_exists($index, $ambiguousIndexes)) {
-                    continue;
-                }
-
-                if (array_key_exists($index, $resolvedReferences)) {
-                    unset($resolvedReferences[$index]);
-                    $ambiguousIndexes[$index] = true;
-                    continue;
-                }
-
-                $resolvedReferences[$index] = $reference;
-            }
-        }
-
-        return $resolvedReferences;
     }
 }

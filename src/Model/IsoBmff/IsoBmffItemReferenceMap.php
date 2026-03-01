@@ -16,9 +16,14 @@ use function array_keys;
 
 /**
  * Holds ISO BMFF item references keyed by metadata context and source item id.
+ *
+ * @uses UnambiguousReferenceResolver<list<IsoBmffItemReference>>
  */
 final readonly class IsoBmffItemReferenceMap
 {
+    /** @use UnambiguousReferenceResolver<list<IsoBmffItemReference>> */
+    use UnambiguousReferenceResolver;
+
     /**
      * Legacy unambiguous lookup table keyed by source item id.
      *
@@ -95,36 +100,5 @@ final readonly class IsoBmffItemReferenceMap
     public function isEmpty(): bool
     {
         return $this->referencesByContext === [];
-    }
-
-    /**
-     * Flattens references into a legacy map where each source item id is unique across contexts.
-     *
-     * @param array<int, array<int, list<IsoBmffItemReference>>> $referencesByContext
-     *
-     * @return array<int, list<IsoBmffItemReference>>
-     */
-    private function buildUnambiguousReferenceIndex(array $referencesByContext): array
-    {
-        $resolvedReferences = [];
-        $ambiguousFromIds   = [];
-
-        foreach ($referencesByContext as $contextReferences) {
-            foreach ($contextReferences as $fromItemId => $references) {
-                if (array_key_exists($fromItemId, $ambiguousFromIds)) {
-                    continue;
-                }
-
-                if (array_key_exists($fromItemId, $resolvedReferences)) {
-                    unset($resolvedReferences[$fromItemId]);
-                    $ambiguousFromIds[$fromItemId] = true;
-                    continue;
-                }
-
-                $resolvedReferences[$fromItemId] = $references;
-            }
-        }
-
-        return $resolvedReferences;
     }
 }
