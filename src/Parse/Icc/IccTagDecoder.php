@@ -428,20 +428,7 @@ final readonly class IccTagDecoder
 
         $text = substr($data, 8);
 
-        // ICC.1:2022 §10.24: textType must end with a NUL byte
-        if ($text === '' || $text[-1] !== "\0") {
-            return null;
-        }
-
-        // ICC.1:2022 §10.24: textType must contain only 7-bit ASCII (bytes <= 0x7F)
-        // Validate all non-NUL bytes are 7-bit ASCII
-        for ($i = 0, $len = strlen($text) - 1; $i < $len; ++$i) {
-            if (ord($text[$i]) > 0x7F) {
-                return null;
-            }
-        }
-
-        return rtrim($text, "\0");
+        return $this->validateNulTerminatedAscii($text);
     }
 
     /**
@@ -481,13 +468,23 @@ final readonly class IccTagDecoder
 
         $text = substr($data, 12, $asciiLength);
 
-        // ICC spec: desc ASCII string must be NUL-terminated
+        return $this->validateNulTerminatedAscii($text);
+    }
+
+    /**
+     * Validates a NUL-terminated 7-bit ASCII string and strips trailing NUL bytes.
+     *
+     * ICC.1:2022 §10.24 and ICC.1:2001 §6.5.17 both require:
+     * - The string must not be empty
+     * - The string must end with a NUL byte
+     * - All non-NUL bytes must be 7-bit ASCII (≤ 0x7F)
+     */
+    private function validateNulTerminatedAscii(string $text): ?string
+    {
         if ($text === '' || $text[-1] !== "\0") {
             return null;
         }
 
-        // ICC spec: desc ASCII string must contain only 7-bit ASCII (bytes <= 0x7F)
-        // Validate all non-NUL bytes are 7-bit ASCII
         for ($i = 0, $len = strlen($text) - 1; $i < $len; ++$i) {
             if (ord($text[$i]) > 0x7F) {
                 return null;
