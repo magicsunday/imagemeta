@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Value;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CorrectionApplied;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\NoiseReduction;
 use MagicSunday\ImageMeta\Value\Enum\Saturation;
 use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 
@@ -35,6 +36,7 @@ final readonly class ProcessingSettings
      * @param CorrectionApplied|null        $distortionCorrection          Whether distortion correction was applied; EXIF 3.1 §4.6.6.7.49.
      * @param CorrectionApplied|null        $chromaticAberrationCorrection Whether chromatic aberration correction was applied; EXIF 3.1 §4.6.6.7.50.
      * @param CorrectionApplied|null        $shadingCorrection             Whether shading correction was applied; EXIF 3.1 §4.6.6.7.51.
+     * @param NoiseReduction|null           $noiseReduction                Noise reduction tendency; EXIF 3.1 §4.6.6.7.52.
      */
     public function __construct(
         public ?Sharpness $sharpness,
@@ -47,6 +49,7 @@ final readonly class ProcessingSettings
         public ?CorrectionApplied $distortionCorrection = null,
         public ?CorrectionApplied $chromaticAberrationCorrection = null,
         public ?CorrectionApplied $shadingCorrection = null,
+        public ?NoiseReduction $noiseReduction = null,
     ) {
     }
 }

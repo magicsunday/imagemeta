@@ -49,6 +49,7 @@ use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
+use MagicSunday\ImageMeta\Value\Enum\NoiseReduction;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
@@ -886,6 +887,11 @@ final class ParsedExif implements ExifIfd0DataInterface, ExifIfd1DataInterface, 
     public function shadingCorrection(): ?CorrectionApplied
     {
         return $this->sceneModeReader()->shadingCorrection();
+    }
+
+    public function noiseReduction(): ?NoiseReduction
+    {
+        return $this->sceneModeReader()->noiseReduction();
     }
 
     public function subjectDistance(): ?float

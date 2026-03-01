@@ -26,6 +26,7 @@ use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
+use MagicSunday\ImageMeta\Value\Enum\NoiseReduction;
 use MagicSunday\ImageMeta\Value\Enum\Saturation;
 use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
@@ -312,6 +313,18 @@ final readonly class SceneModeReader
         $value = $this->reader->int($this->exifIfd, ExifTag::SHADING_CORRECTION);
 
         return $value !== null ? CorrectionApplied::fromExifValue($value) : null;
+    }
+
+    /**
+     * Returns the noise reduction tendency applied at capture.
+     *
+     * EXIF 3.1 §4.6.6.7.52 (NoiseReduction): no default value.
+     */
+    public function noiseReduction(): ?NoiseReduction
+    {
+        $value = $this->reader->int($this->exifIfd, ExifTag::NOISE_REDUCTION);
+
+        return $value !== null ? NoiseReduction::fromExifValue($value) : null;
     }
 
     /**

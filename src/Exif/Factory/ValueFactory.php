@@ -200,6 +200,7 @@ final readonly class ValueFactory
             distortionCorrection: $exifDocument?->distortionCorrection(),
             chromaticAberrationCorrection: $exifDocument?->chromaticAberrationCorrection(),
             shadingCorrection: $exifDocument?->shadingCorrection(),
+            noiseReduction: $exifDocument?->noiseReduction(),
         );
 
         $whiteBalanceDetails = new WhiteBalanceDetails(

@@ -26,6 +26,7 @@ use MagicSunday\ImageMeta\Value\Enum\GpsSpeedRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsStatus;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
+use MagicSunday\ImageMeta\Value\Enum\NoiseReduction;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
@@ -65,6 +66,7 @@ use ReflectionMethod;
 #[CoversClass(Compression::class)]
 #[CoversClass(CorrectionApplied::class)]
 #[CoversClass(CustomRendered::class)]
+#[CoversClass(NoiseReduction::class)]
 #[CoversClass(SceneCaptureType::class)]
 #[CoversClass(WhiteBalance::class)]
 final class EnumMappingTest extends TestCase
@@ -182,6 +184,32 @@ final class EnumMappingTest extends TestCase
         self::assertNull(CorrectionApplied::fromExifValue('5'));
         self::assertNull(CorrectionApplied::fromExifValue(null));
         self::assertNull(CorrectionApplied::fromExifValue(''));
+    }
+
+    /**
+     * Maps NoiseReduction enum values from integer and string inputs.
+     * EXIF 3.1 §4.6.6.7.52: 0–3 defined.
+     */
+    #[Test]
+    public function mapsNoiseReductionValues(): void
+    {
+        self::assertSame(NoiseReduction::NotApplied, NoiseReduction::fromExifValue(0));
+        self::assertSame(NoiseReduction::LowStrength, NoiseReduction::fromExifValue(1));
+        self::assertSame(NoiseReduction::NormalStrength, NoiseReduction::fromExifValue(2));
+        self::assertSame(NoiseReduction::HighStrength, NoiseReduction::fromExifValue(3));
+        self::assertSame(NoiseReduction::LowStrength, NoiseReduction::fromExifValue('1'));
+    }
+
+    /**
+     * Supplies reserved NoiseReduction codes outside the defined range.
+     * EXIF 3.1 §4.6.6.7.52: values other than 0–3 are reserved.
+     */
+    #[Test]
+    public function returnsNullForReservedNoiseReductionCodes(): void
+    {
+        self::assertNull(NoiseReduction::fromExifValue(4));
+        self::assertNull(NoiseReduction::fromExifValue('10'));
+        self::assertNull(NoiseReduction::fromExifValue(null));
     }
 
     /**

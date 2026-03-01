@@ -777,6 +777,11 @@ final readonly class ExifTag
     public const int SHADING_CORRECTION = 0xA411;
 
     /**
+     * Noise reduction tendency at capture; EXIF 3.1 §4.6.6.7.52, SHORT, 0–3.
+     */
+    public const int NOISE_REDUCTION = 0xA412;
+
+    /**
      * Globally unique identifier assigned to the image.
      */
     public const int IMAGE_UNIQUE_ID = 0xA420;

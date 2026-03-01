@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Value\Enum\CorrectionApplied;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
+use MagicSunday\ImageMeta\Value\Enum\NoiseReduction;
 use MagicSunday\ImageMeta\Value\Enum\Saturation;
 use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
@@ -191,6 +192,34 @@ final class SceneModeReaderTest extends TestCase
         self::assertNull($reader->distortionCorrection());
         self::assertNull($reader->chromaticAberrationCorrection());
         self::assertNull($reader->shadingCorrection());
+    }
+
+    /**
+     * Supplies an ExifIFD entry for the NoiseReduction tag.
+     * EXIF 3.1 §4.6.6.7.52: 0–3 defined.
+     */
+    #[Test]
+    public function readsNoiseReductionTag(): void
+    {
+        $exifEntries = [
+            ExifTag::NOISE_REDUCTION => new IfdEntry(ExifTag::NOISE_REDUCTION, 3, 1, 2),
+        ];
+
+        $reader = $this->createReader($exifEntries);
+
+        self::assertSame(NoiseReduction::NormalStrength, $reader->noiseReduction());
+    }
+
+    /**
+     * Verifies null is returned when the NoiseReduction tag is absent.
+     * EXIF 3.1 §4.6.6.7.52: no default value defined.
+     */
+    #[Test]
+    public function returnsNullForAbsentNoiseReductionTag(): void
+    {
+        $reader = $this->createReader([]);
+
+        self::assertNull($reader->noiseReduction());
     }
 
     /**

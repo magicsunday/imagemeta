@@ -54,6 +54,7 @@ use MagicSunday\ImageMeta\Value\Enum\GpsSpeedRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsStatus;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
+use MagicSunday\ImageMeta\Value\Enum\NoiseReduction;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
@@ -305,6 +306,7 @@ final class MetadataFormatter
             ExifTag::DISTORTION_CORRECTION          => CorrectionApplied::class,
             ExifTag::CHROMATIC_ABERRATION_CORRECTION => CorrectionApplied::class,
             ExifTag::SHADING_CORRECTION             => CorrectionApplied::class,
+            ExifTag::NOISE_REDUCTION                => NoiseReduction::class,
 
             // GPS tags - EXIF 3.0 §4.6.6 Table 27
             ExifTag::GPS_LATITUDE_REF       => GpsLatLonRef::class,
