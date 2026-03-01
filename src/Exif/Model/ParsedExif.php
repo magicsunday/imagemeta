@@ -83,8 +83,6 @@ use MagicSunday\ImageMeta\Value\SubjectArea;
  */
 final class ParsedExif implements ExifIfd0DataInterface, ExifIfd1DataInterface, ExifSubIfdDataInterface, ExifGpsDataInterface, ExifInteropDataInterface
 {
-    private readonly ?string $exifVersion;
-
     private readonly string $exifProfile;
 
     private readonly Endian $byteOrder;
@@ -149,8 +147,8 @@ final class ParsedExif implements ExifIfd0DataInterface, ExifIfd1DataInterface, 
         private readonly ValueConverters $converters = new ValueConverters(),
     ) {
         $rawVersion        = $this->reader()->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
-        $this->exifVersion = $this->converters->toExifVersion($rawVersion);
-        $this->exifProfile = ExifCapabilities::fromVersion($this->exifVersion);
+        $exifVersion       = $this->converters->toExifVersion($rawVersion);
+        $this->exifProfile = ExifCapabilities::fromVersion($exifVersion);
         $this->byteOrder   = $byteOrder ?? Endian::Little;
     }
 

@@ -46,13 +46,9 @@ final readonly class ConverterFactory
 
     private ComponentsConverter $componentsConverter;
 
-    private GpsCoordinateConverter $gpsCoordinateConverter;
-
     private GpsUnitConverter $gpsUnitConverter;
 
     private GpsDirectionConverter $gpsDirectionConverter;
-
-    private GpsTimestampConverter $gpsTimestampConverter;
 
     private GpsConverter $gpsConverter;
 
@@ -91,17 +87,17 @@ final readonly class ConverterFactory
         $this->componentsConverter = new ComponentsConverter($this->numericConverter);
 
         // Create GPS sub-converters
-        $this->gpsCoordinateConverter = new GpsCoordinateConverter($this->rationalConverter, $this->numericConverter);
-        $this->gpsUnitConverter       = new GpsUnitConverter($this->rationalConverter);
-        $this->gpsDirectionConverter  = new GpsDirectionConverter($this->rationalConverter);
-        $this->gpsTimestampConverter  = new GpsTimestampConverter($this->rationalConverter, $this->stringConverter);
+        $gpsCoordinateConverter      = new GpsCoordinateConverter($this->rationalConverter, $this->numericConverter);
+        $this->gpsUnitConverter      = new GpsUnitConverter($this->rationalConverter);
+        $this->gpsDirectionConverter = new GpsDirectionConverter($this->rationalConverter);
+        $gpsTimestampConverter       = new GpsTimestampConverter($this->rationalConverter, $this->stringConverter);
 
         // Create GpsConverter orchestrator (depends on sub-converters)
         $this->gpsConverter = new GpsConverter(
-            $this->gpsCoordinateConverter,
+            $gpsCoordinateConverter,
             $this->gpsUnitConverter,
             $this->gpsDirectionConverter,
-            $this->gpsTimestampConverter,
+            $gpsTimestampConverter,
             $this->rationalConverter,
             $this->stringConverter,
         );

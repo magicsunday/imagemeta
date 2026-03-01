@@ -53,11 +53,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
     private BoxNavigator $boxNavigator;
 
-    private IlocBoxParser $ilocBoxParser;
-
     private ItemPayloadResolver $itemPayloadResolver;
-
-    private QuickTimeKeyResolver $quickTimeKeyResolver;
 
     private QuickTimeMetadataDecoder $quickTimeDecoder;
 
@@ -83,28 +79,28 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
         $this->boxNavigator = $boxNavigator;
 
-        $this->quickTimeKeyResolver = new QuickTimeKeyResolver($boxNavigator);
-        $this->ilocBoxParser        = new IlocBoxParser($boxNavigator);
+        $quickTimeKeyResolver       = new QuickTimeKeyResolver($boxNavigator);
+        $ilocBoxParser              = new IlocBoxParser($boxNavigator);
         $this->itemPayloadResolver  = new ItemPayloadResolver($stream, $boxNavigator, $this->config->maxItemPayloadSize);
         $this->itemLocationResolver = new ItemLocationResolver($this->itemPayloadResolver);
 
         $this->quickTimeDecoder = new QuickTimeMetadataDecoder(
             $boxNavigator,
-            $this->quickTimeKeyResolver,
+            $quickTimeKeyResolver,
             new QuickTimeValueDecoder($this->parseNestedMetadataPayload(...)),
         );
         $this->trackMediaParser = new TrackMediaParser(
             $boxNavigator,
             $this->parseUdtaBox(...),
-            $this->ilocBoxParser->parseDinf(...),
+            $ilocBoxParser->parseDinf(...),
         );
 
         $this->boxPayloadCollector = new BoxPayloadCollector(
             $boxNavigator,
             $this->trackMediaParser,
-            $this->ilocBoxParser,
+            $ilocBoxParser,
             $this->quickTimeDecoder,
-            $this->quickTimeKeyResolver,
+            $quickTimeKeyResolver,
             $this->itemPayloadResolver,
             $this->config->maxItemPayloadSize,
         );
