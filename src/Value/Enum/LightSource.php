@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
 
 /**
  * Enumerates the light source identifiers assigned to the LightSource tag in
- * EXIF 3.0 §4.6.6.7.20 (LightSource).
+ * EXIF 3.1 §4.6.6.5.2, Table 9 (LightSource).
  */
 enum LightSource: int
 {
@@ -33,7 +33,6 @@ enum LightSource: int
     case DayWhiteFluorescent  = 13;
     case CoolWhiteFluorescent = 14;
     case WhiteFluorescent     = 15;
-
     case WarmWhiteFluorescent = 16;
     case StandardLightA       = 17;
     case StandardLightB       = 18;
@@ -43,5 +42,20 @@ enum LightSource: int
     case D75                  = 22;
     case D50                  = 23;
     case IsoStudioTungsten    = 24;
-    case Other                = 255;
+
+    // EXIF 3.1 §4.6.6.5.2: non-fluorescent sources
+    case DaylightLightSource  = 25;
+    case DayWhiteLightSource  = 26;
+    case CoolWhiteLightSource = 27;
+    case WhiteLightSource     = 28;
+    case WarmWhiteLightSource = 29;
+
+    // EXIF 3.1 §4.6.6.5.2: LED sources
+    case DaylightLed  = 30;
+    case DayWhiteLed  = 31;
+    case CoolWhiteLed = 32;
+    case WhiteLed     = 33;
+    case WarmWhiteLed = 34;
+
+    case Other = 255;
 }

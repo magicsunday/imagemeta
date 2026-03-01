@@ -99,6 +99,14 @@ final class EnumMappingTest extends TestCase
         self::assertSame(SensingMethod::ColorSequentialLinear, SensingMethod::fromExifValue(8));
         self::assertSame(CompositeImage::CapturedWhileShooting, CompositeImage::fromExifValue(3));
         self::assertSame(LightSource::WarmWhiteFluorescent, LightSource::fromExifValue(16));
+
+        // EXIF 3.1 §4.6.6.5.2: non-fluorescent sources
+        self::assertSame(LightSource::DaylightLightSource, LightSource::fromExifValue(25));
+        self::assertSame(LightSource::WarmWhiteLightSource, LightSource::fromExifValue(29));
+
+        // EXIF 3.1 §4.6.6.5.2: LED sources
+        self::assertSame(LightSource::DaylightLed, LightSource::fromExifValue(30));
+        self::assertSame(LightSource::WarmWhiteLed, LightSource::fromExifValue(34));
     }
 
     /**
