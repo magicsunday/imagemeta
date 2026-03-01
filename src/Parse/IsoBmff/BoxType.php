@@ -165,4 +165,7 @@ enum BoxType: string
 
     /** Image spatial extents property box. */
     case ISPE = 'ispe';
+
+    /** Colour information box. */
+    case COLR = 'colr';
 }

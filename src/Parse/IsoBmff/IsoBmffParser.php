@@ -113,7 +113,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
     /**
      * Extracts EXIF blobs, XMP packets, and QuickTime metadata from the stream.
      *
-     * @return array{0: list<string>, 1: list<string>, 2: ?QuickTimeMeta, 3: ?IsoBmffItemReferenceMap, 4: ?IsoBmffDataReferenceMap, 5: list<IsoBmffUnresolvedItem>, 6: ?int, 7: ?int}
+     * @return array{0: list<string>, 1: list<string>, 2: ?QuickTimeMeta, 3: ?IsoBmffItemReferenceMap, 4: ?IsoBmffDataReferenceMap, 5: list<IsoBmffUnresolvedItem>, 6: ?int, 7: ?int, 8: ?string}
      */
     public function extract(): array
     {
@@ -159,7 +159,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $itemReferenceMap = $context->itemReferences === [] ? null : new IsoBmffItemReferenceMap($context->itemReferences);
         $dataReferenceMap = $context->dataReferences === [] ? null : new IsoBmffDataReferenceMap($context->dataReferences);
 
-        return [$context->exifBlobs, $context->xmpBlobs, $qt, $itemReferenceMap, $dataReferenceMap, $context->unresolvedItems, $context->ispeWidth, $context->ispeHeight];
+        return [$context->exifBlobs, $context->xmpBlobs, $qt, $itemReferenceMap, $dataReferenceMap, $context->unresolvedItems, $context->ispeWidth, $context->ispeHeight, $context->iccProfile];
     }
 
     /**
@@ -509,6 +509,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         if (($context->ispeWidth === null) && ($payloads->ispeWidth !== null)) {
             $context->ispeWidth  = $payloads->ispeWidth;
             $context->ispeHeight = $payloads->ispeHeight;
+        }
+
+        if (($context->iccProfile === null) && ($payloads->iccProfile !== null)) {
+            $context->iccProfile = $payloads->iccProfile;
         }
     }
 

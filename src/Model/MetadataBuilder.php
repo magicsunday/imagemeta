@@ -220,6 +220,7 @@ final class MetadataBuilder
      * @param list<IsoBmffUnresolvedItem>  $unresolvedItems Item payloads that could not be resolved.
      * @param int|null                     $ispeWidth       Image width from ispe box.
      * @param int|null                     $ispeHeight      Image height from ispe box.
+     * @param string|null                  $iccProfile      Binary ICC profile from colr box.
      */
     public function withIsoBmff(
         ?IsoBmffItemReferenceMap $itemReferences = null,
@@ -227,12 +228,17 @@ final class MetadataBuilder
         array $unresolvedItems = [],
         ?int $ispeWidth = null,
         ?int $ispeHeight = null,
+        ?string $iccProfile = null,
     ): self {
         $this->isoBmffItemReferences  = $itemReferences;
         $this->isoBmffDataReferences  = $dataReferences;
         $this->isoBmffUnresolvedItems = $unresolvedItems;
         $this->ispeWidth              = $ispeWidth;
         $this->ispeHeight             = $ispeHeight;
+
+        if ($iccProfile !== null) {
+            $this->iccProfile = $iccProfile;
+        }
 
         return $this;
     }

@@ -63,4 +63,9 @@ final class IsoBmffParseContext
      * Image height in pixels extracted from the first ispe box.
      */
     public ?int $ispeHeight = null;
+
+    /**
+     * Binary ICC profile extracted from the first colr box.
+     */
+    public ?string $iccProfile = null;
 }

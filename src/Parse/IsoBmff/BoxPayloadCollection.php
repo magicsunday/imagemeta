@@ -40,6 +40,7 @@ final readonly class BoxPayloadCollection
      * @param bool                                                                                                                                                                          $isMdta         Whether the handler type is mdta.
      * @param ?int                                                                                                                                                                          $ispeWidth      Image spatial extents width.
      * @param ?int                                                                                                                                                                          $ispeHeight     Image spatial extents height.
+     * @param ?string                                                                                                                                                                       $iccProfile     Binary ICC profile from colr box.
      */
     public function __construct(
         public array $itemInfos,
@@ -59,6 +60,7 @@ final readonly class BoxPayloadCollection
         public bool $isMdta,
         public ?int $ispeWidth = null,
         public ?int $ispeHeight = null,
+        public ?string $iccProfile = null,
     ) {
     }
 }

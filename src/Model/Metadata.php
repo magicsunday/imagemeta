@@ -42,9 +42,10 @@ use MagicSunday\ImageMeta\Value\StructuredMetadata;
  * |   makerNotes)                      |  Y   |    Y     |  Y   |
  * | XMP (xmpBlobs, xmpDoc)             |  Y   |    Y     |  --  |
  * | QuickTime (quickTime)              |  --  |    Y     |  --  |
- * | JPEG segments (iccProfile,         |      |          |      |
- * |   iccSegments, flashPixStreams,     |      |          |      |
- * |   mpfDocument, jpegAudioStreams)    |  Y   |    --    |  --  |
+ * | ICC profile (iccProfile)            |  Y   |    Y     |  --  |
+ * | JPEG segments (iccSegments,        |      |          |      |
+ * |   flashPixStreams, mpfDocument,     |      |          |      |
+ * |   jpegAudioStreams)                 |  Y   |    --    |  --  |
  * | JPEG frame (jpegBitsPerSample,     |      |          |      |
  * |   jpegFrameSamplingFactors,         |      |          |      |
  * |   jpegYCbCrSubSampling,            |      |          |      |
@@ -89,7 +90,7 @@ final readonly class Metadata
      * @param list<string>                                         $xmpBlobs                  XMP packets (RDF/XML), first is primary. [JPEG, ISO BMFF]
      * @param XmpDocument|null                                     $xmpDoc                    Parsed representation of the primary XMP packet. [JPEG, ISO BMFF]
      * @param MakerNotesRecord|null                                $makerNotes                Decoded maker notes metadata for the primary EXIF blob. [JPEG, ISO BMFF, TIFF]
-     * @param string|null                                          $iccProfile                Binary ICC profile when available. [JPEG only]
+     * @param string|null                                          $iccProfile                Binary ICC profile when available. [JPEG, ISO BMFF]
      * @param list<string>                                         $iccSegments               Raw ICC APP2 segments in encounter order. [JPEG only]
      * @param array<int, string>                                   $flashPixStreams           Concatenated FlashPix extension streams keyed by FPXR contents-list index. [JPEG only]
      * @param MpfDocument|null                                     $mpfDocument               Parsed MPF document derived from APP2 segments. [JPEG only]

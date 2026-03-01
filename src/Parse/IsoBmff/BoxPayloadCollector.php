@@ -101,6 +101,7 @@ final readonly class BoxPayloadCollector
         $languageLists = [];
         $ispeWidth     = null;
         $ispeHeight    = null;
+        $iccProfile    = null;
 
         $childOffset = $this->detectMetaChildOffset($meta, $allowQuickTimeMetaWithoutFullBox);
         foreach ($this->boxNavigator->walkChildren($meta, $childOffset) as $child) {
@@ -158,11 +159,16 @@ final readonly class BoxPayloadCollector
                     $this->collectLocaleListAtom($child, 'lang', 1960, $requiresHdlr, $languageLists);
                     break;
                 case BoxType::IPRP->value:
-                    if ($ispeWidth === null) {
-                        ['width' => $parsedWidth, 'height' => $parsedHeight] = $this->parseIprp($child);
-                        if ($parsedWidth !== null) {
-                            $ispeWidth  = $parsedWidth;
-                            $ispeHeight = $parsedHeight;
+                    if (($ispeWidth === null) || ($iccProfile === null)) {
+                        $iprpResult = $this->parseIprp($child);
+
+                        if (($ispeWidth === null) && ($iprpResult['width'] !== null)) {
+                            $ispeWidth  = $iprpResult['width'];
+                            $ispeHeight = $iprpResult['height'];
+                        }
+
+                        if (($iccProfile === null) && ($iprpResult['iccProfile'] !== null)) {
+                            $iccProfile = $iprpResult['iccProfile'];
                         }
                     }
 
@@ -220,6 +226,7 @@ final readonly class BoxPayloadCollector
             $handlerType === QuickTimeKeyResolver::QUICKTIME_MDTA,
             $ispeWidth,
             $ispeHeight,
+            $iccProfile,
         );
     }
 
@@ -502,38 +509,41 @@ final readonly class BoxPayloadCollector
      *
      * @param BoxDescriptor $iprp Box descriptor for the item properties box.
      *
-     * @return array{width: ?int, height: ?int} Width/height from the first ispe box, or null pair.
+     * @return array{width: ?int, height: ?int, iccProfile: ?string} Properties from ipco, or null values.
      */
     private function parseIprp(BoxDescriptor $iprp): array
     {
         foreach ($this->boxNavigator->walkChildren($iprp) as $child) {
             if ($child->type === BoxType::IPCO->value) {
-                $dimensions = $this->parseIpco($child);
-                if ($dimensions['width'] !== null) {
-                    return $dimensions;
-                }
+                return $this->parseIpco($child);
             }
         }
 
-        return ['width' => null, 'height' => null];
+        return ['width' => null, 'height' => null, 'iccProfile' => null];
     }
 
     /**
-     * Walks the item property container (`ipco`) looking for the first `ispe` box.
+     * Walks the item property container (`ipco`) looking for `ispe` and `colr` boxes.
      *
      * @param BoxDescriptor $ipco Box descriptor for the item property container box.
      *
-     * @return array{width: ?int, height: ?int} Width/height from the first ispe box, or null pair.
+     * @return array{width: ?int, height: ?int, iccProfile: ?string} Extracted properties, or null values.
      */
     private function parseIpco(BoxDescriptor $ipco): array
     {
+        $width      = null;
+        $height     = null;
+        $iccProfile = null;
+
         foreach ($this->boxNavigator->walkChildren($ipco) as $child) {
-            if ($child->type === BoxType::ISPE->value) {
-                return $this->parseIspe($child);
+            if (($child->type === BoxType::ISPE->value) && ($width === null)) {
+                ['width' => $width, 'height' => $height] = $this->parseIspe($child);
+            } elseif (($child->type === BoxType::COLR->value) && ($iccProfile === null)) {
+                $iccProfile = $this->parseColr($child);
             }
         }
 
-        return ['width' => null, 'height' => null];
+        return ['width' => $width, 'height' => $height, 'iccProfile' => $iccProfile];
     }
 
     /**
@@ -566,6 +576,41 @@ final readonly class BoxPayloadCollector
         $height = $this->readU32FromBytes($win->read(4), 0, 'ispe display_height');
 
         return ['width' => $width, 'height' => $height];
+    }
+
+    /**
+     * Parses a Colour Information (`colr`) box and returns the ICC profile when present.
+     *
+     * ISO/IEC 14496-12 §12.1.5: the colr box starts with a 4-byte colour_type FourCC.
+     * For 'prof' (unrestricted) or 'rICC' (restricted), the remaining bytes are the
+     * ICC profile. For 'nclx' or unknown types, no ICC profile is extracted.
+     *
+     * @param BoxDescriptor $colr Box descriptor for the colour information box.
+     *
+     * @return string|null Binary ICC profile or null when unavailable.
+     */
+    private function parseColr(BoxDescriptor $colr): ?string
+    {
+        // 4 bytes minimum for colour_type
+        if ($colr->contentSize < 4) {
+            return null;
+        }
+
+        $win = $colr->window;
+        $win->seek(0);
+
+        $colourType  = $win->read(4);
+        $profileSize = $colr->contentSize - 4;
+
+        if (($colourType !== 'prof') && ($colourType !== 'rICC')) {
+            return null;
+        }
+
+        if ($profileSize < 1) {
+            return null;
+        }
+
+        return $win->read($profileSize);
     }
 
     /**
