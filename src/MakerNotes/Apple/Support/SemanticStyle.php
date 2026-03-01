@@ -49,7 +49,7 @@ final class SemanticStyle
     /**
      * Extracts semantic style values from QuickTime metadata payloads.
      *
-     * @return array{0:?string,1:?float,2:?float}|null
+     * @phpstan-return array{0:?string,1:?float,2:?float}|null
      */
     public static function fromQuickTime(?QuickTimeMeta $quickTime): ?array
     {
@@ -67,9 +67,7 @@ final class SemanticStyle
      *
      * @param SemanticStyleDictionary $dictionary
      *
-     * @phpstan-param SemanticStyleDictionary $dictionary
-     *
-     * @return array{0:?string,1:?float,2:?float}|null
+     * @phpstan-return array{0:?string,1:?float,2:?float}|null
      */
     public static function fromDictionary(array $dictionary): ?array
     {
@@ -97,7 +95,7 @@ final class SemanticStyle
      *
      * @phpstan-param SemanticStyleValue $value
      *
-     * @return array{0:?string,1:?float,2:?float}|null
+     * @phpstan-return array{0:?string,1:?float,2:?float}|null
      */
     public static function fromValue(array|string|int|float|bool|null $value): ?array
     {

@@ -38,7 +38,7 @@ trait EnumFromIntStringNullable
      *
      * @param int|string|null $value Raw EXIF value as delivered by the decoder.
      *
-     * @return self|null Normalized enum value or null when the payload is invalid.
+     * @return static|null Normalized enum value or null when the payload is invalid.
      */
     public static function fromExifValue(int|string|null $value): ?self
     {

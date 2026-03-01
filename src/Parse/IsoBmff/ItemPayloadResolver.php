@@ -475,14 +475,17 @@ final readonly class ItemPayloadResolver
      * Handles implied extent_length semantics, payload size limits, container bounds
      * validation, and safe offset arithmetic per ISO/IEC 14496-12 §8.11.3.
      *
-     * @param list<array{offset:int,length:int,index:?int}> $extents        Extent definitions from the iloc entry.
-     * @param int                                           $baseOffset     Base offset from the iloc entry.
-     * @param int                                           $originOffset   File offset origin for the extent calculations.
-     * @param int                                           $containerSize  Total size of the data container in bytes.
-     * @param Closure(int, int): string                     $readData       Reads $length bytes at $offset from the container.
-     * @param string                                        $outsideMessage Error message when an extent falls outside the container.
-     * @param string                                        $lengthMessage  Error message when extent length exceeds container size.
-     * @param ExtentErrorCodes                              $errorCodes     Per-construction-method error codes for each validation step.
+     * @param array<int, array<string, int|null>> $extents        Extent definitions from the iloc entry.
+     * @param int                                 $baseOffset     Base offset from the iloc entry.
+     * @param int                                 $originOffset   File offset origin for the extent calculations.
+     * @param int                                 $containerSize  Total size of the data container in bytes.
+     * @param Closure(int, int): string           $readData       Reads $length bytes at $offset from the container.
+     * @param string                              $outsideMessage Error message when an extent falls outside the container.
+     * @param string                              $lengthMessage  Error message when extent length exceeds container size.
+     * @param array<string, int>                  $errorCodes     Per-construction-method error codes for each validation step.
+     *
+     * @phpstan-param list<array{offset:int,length:int,index:?int}> $extents
+     * @phpstan-param ExtentErrorCodes                              $errorCodes
      *
      * @return string Concatenated extent data read from the container.
      */
