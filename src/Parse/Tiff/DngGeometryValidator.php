@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -371,10 +372,10 @@ final readonly class DngGeometryValidator
             return;
         }
 
-        $top    = $value->values[0]->denominator !== 0 ? $value->values[0]->numerator / $value->values[0]->denominator : -1.0;
-        $left   = $value->values[1]->denominator !== 0 ? $value->values[1]->numerator / $value->values[1]->denominator : -1.0;
-        $bottom = $value->values[2]->denominator !== 0 ? $value->values[2]->numerator / $value->values[2]->denominator : -1.0;
-        $right  = $value->values[3]->denominator !== 0 ? $value->values[3]->numerator / $value->values[3]->denominator : -1.0;
+        $top    = $this->rationalToFloat($value->values[0]);
+        $left   = $this->rationalToFloat($value->values[1]);
+        $bottom = $this->rationalToFloat($value->values[2]);
+        $right  = $this->rationalToFloat($value->values[3]);
 
         if ($top < 0.0 || $left < 0.0 || $bottom > 1.0 || $right > 1.0) {
             throw new ParseError(
@@ -944,5 +945,15 @@ final readonly class DngGeometryValidator
                 1580,
             );
         }
+    }
+
+    /**
+     * Converts an EXIF RATIONAL to a float, returning a sentinel on zero denominator.
+     */
+    private function rationalToFloat(ExifRational $rational, float $sentinel = -1.0): float
+    {
+        return $rational->denominator !== 0
+            ? $rational->numerator / $rational->denominator
+            : $sentinel;
     }
 }
