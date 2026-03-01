@@ -457,6 +457,7 @@ final class JpegParser implements JpegParserInterface
             new FlashPixHandler(function (string $payload, int $offset): void {
                 $this->flashPixAssembler->handleSegment($payload, $offset);
             }),
+            /** @noinspection PhpUnusedParameterInspection — required by handler signature */
             new IptcSegmentHandler(function (string $payload, int $_offset): void {
                 $this->iptcPayloads[] = $payload;
             }),
