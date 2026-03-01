@@ -617,7 +617,7 @@ final readonly class ExifTag
     public const int WATER_DEPTH = 0x9403;
 
     /**
-     * Linear acceleration experienced during capture; EXIF 3.0 §4.6.6.8.6, SRATIONAL mGal, 0xFFFFFFFF denominator = unknown.
+     * Linear acceleration experienced during capture; EXIF 3.0 §4.6.6.8.6, RATIONAL mGal, 0xFFFFFFFF denominator = unknown.
      */
     public const int ACCELERATION = 0x9404;
 
