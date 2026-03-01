@@ -286,4 +286,58 @@ final readonly class DescriptionExifReader
 
         return new LearningOptOutIn($entries);
     }
+
+    // ========================================================================
+    // Windows XP tags
+    // ========================================================================
+
+    /**
+     * Returns the Windows XP title decoded from UTF-16LE.
+     */
+    public function xpTitle(): ?string
+    {
+        $raw = $this->reader->rawString($this->ifd0, ExifTag::XP_TITLE);
+
+        return $raw !== null ? $this->reader->decodeUtf16Le($raw) : null;
+    }
+
+    /**
+     * Returns the Windows XP comment decoded from UTF-16LE.
+     */
+    public function xpComment(): ?string
+    {
+        $raw = $this->reader->rawString($this->ifd0, ExifTag::XP_COMMENT);
+
+        return $raw !== null ? $this->reader->decodeUtf16Le($raw) : null;
+    }
+
+    /**
+     * Returns the Windows XP author decoded from UTF-16LE.
+     */
+    public function xpAuthor(): ?string
+    {
+        $raw = $this->reader->rawString($this->ifd0, ExifTag::XP_AUTHOR);
+
+        return $raw !== null ? $this->reader->decodeUtf16Le($raw) : null;
+    }
+
+    /**
+     * Returns the Windows XP keywords decoded from UTF-16LE.
+     */
+    public function xpKeywords(): ?string
+    {
+        $raw = $this->reader->rawString($this->ifd0, ExifTag::XP_KEYWORDS);
+
+        return $raw !== null ? $this->reader->decodeUtf16Le($raw) : null;
+    }
+
+    /**
+     * Returns the Windows XP subject decoded from UTF-16LE.
+     */
+    public function xpSubject(): ?string
+    {
+        $raw = $this->reader->rawString($this->ifd0, ExifTag::XP_SUBJECT);
+
+        return $raw !== null ? $this->reader->decodeUtf16Le($raw) : null;
+    }
 }

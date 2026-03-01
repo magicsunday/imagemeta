@@ -615,6 +615,30 @@ final readonly class IfdValueReader
     }
 
     /**
+     * Decodes a BOM-less UTF-16LE byte payload into a UTF-8 string.
+     *
+     * Windows XP tags (XPTitle, XPComment, XPAuthor, XPKeywords, XPSubject) store
+     * text as UTF-16LE encoded BYTE arrays without a byte order mark.
+     * Returns null when the payload is empty, has odd length, or cannot be converted.
+     */
+    public function decodeUtf16Le(string $bytes): ?string
+    {
+        if (($bytes === '') || (strlen($bytes) % 2 !== 0)) {
+            return null;
+        }
+
+        $converted = $this->convertTextToUtf8('UTF-16LE', $bytes);
+
+        if ($converted === null) {
+            return null;
+        }
+
+        $result = trim($converted, "\0 ");
+
+        return $result === '' ? null : $result;
+    }
+
+    /**
      * Converts text to UTF-8 while handling iconv failures explicitly.
      */
     private function convertTextToUtf8(string $sourceEncoding, string $payload): ?string

@@ -49,6 +49,19 @@ final readonly class TiffValueDecoder
     ];
 
     /**
+     * Windows XP tags that store UCS-2 (UTF-16LE) text as BYTE arrays.
+     *
+     * @var list<int>
+     */
+    private const array XP_TAGS = [
+        ExifTag::XP_TITLE,
+        ExifTag::XP_COMMENT,
+        ExifTag::XP_AUTHOR,
+        ExifTag::XP_KEYWORDS,
+        ExifTag::XP_SUBJECT,
+    ];
+
+    /**
      * EXIF 3.0 text tags that allow UTF-8 in addition to ASCII.
      *
      * @var list<int>
@@ -174,6 +187,11 @@ final readonly class TiffValueDecoder
         // ASCII
         if ($type === TiffFieldType::Ascii->value) {
             return $this->tagDecoder->decodeAscii($tag, $count, $bytes, self::EXIF_30_UTF8_TAGS);
+        }
+
+        // XP tags store UCS-2 text as BYTE arrays — preserve raw bytes for UTF-16LE decoding
+        if (($type === TiffFieldType::Byte->value) && in_array($tag, self::XP_TAGS, true)) {
+            return $bytes;
         }
 
         if ($type === TiffFieldType::Undefined->value) {

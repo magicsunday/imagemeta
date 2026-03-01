@@ -425,6 +425,11 @@ final class MetadataFormatter
             'COMPOSITE_IMAGE'           => 'Composite Image',
             'GPS_IFD_POINTER'           => 'GPS IFD Pointer',
             'EXIF_IFD_POINTER'          => 'Exif IFD Pointer',
+            'XP_TITLE'                  => 'XP Title',
+            'XP_COMMENT'                => 'XP Comment',
+            'XP_AUTHOR'                 => 'XP Author',
+            'XP_KEYWORDS'               => 'XP Keywords',
+            'XP_SUBJECT'                => 'XP Subject',
         ];
 
         if (isset($specialCases[$constantName])) {
@@ -1278,6 +1283,13 @@ final class MetadataFormatter
             // UserComment - Decode multicode prefix and payload
             // EXIF 3.0 §4.6.6.4.2
             ExifTag::USER_COMMENT => $this->formatUserCommentValue($rawValue, $exifDoc),
+
+            // Windows XP tags - Decode UCS-2 (UTF-16LE) to UTF-8
+            ExifTag::XP_TITLE    => $exifDoc->xpTitle(),
+            ExifTag::XP_COMMENT  => $exifDoc->xpComment(),
+            ExifTag::XP_AUTHOR   => $exifDoc->xpAuthor(),
+            ExifTag::XP_KEYWORDS => $exifDoc->xpKeywords(),
+            ExifTag::XP_SUBJECT  => $exifDoc->xpSubject(),
 
             // No special accessor available
             default => null,

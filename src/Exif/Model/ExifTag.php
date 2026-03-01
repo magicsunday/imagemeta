@@ -612,6 +612,31 @@ final readonly class ExifTag
     public const int CAMERA_ELEVATION_ANGLE = 0x9405;
 
     /**
+     * Windows XP image title stored as UCS-2 (UTF-16LE) encoded BYTE array.
+     */
+    public const int XP_TITLE = 0x9C9B;
+
+    /**
+     * Windows XP image comment stored as UCS-2 (UTF-16LE) encoded BYTE array.
+     */
+    public const int XP_COMMENT = 0x9C9C;
+
+    /**
+     * Windows XP image author stored as UCS-2 (UTF-16LE) encoded BYTE array.
+     */
+    public const int XP_AUTHOR = 0x9C9D;
+
+    /**
+     * Windows XP semicolon-separated keywords stored as UCS-2 (UTF-16LE) encoded BYTE array.
+     */
+    public const int XP_KEYWORDS = 0x9C9E;
+
+    /**
+     * Windows XP image subject stored as UCS-2 (UTF-16LE) encoded BYTE array.
+     */
+    public const int XP_SUBJECT = 0x9C9F;
+
+    /**
      * FlashPix format version used for the metadata.
      */
     public const int FLASHPIX_VERSION = 0xA000;

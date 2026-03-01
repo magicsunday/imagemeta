@@ -530,6 +530,33 @@ final class ParsedExif implements ExifIfd0DataInterface, ExifIfd1DataInterface, 
         return $this->descriptionReader()->flashpixVersion();
     }
 
+    // ── Windows XP tags ───────────────────────────────────────
+
+    public function xpTitle(): ?string
+    {
+        return $this->descriptionReader()->xpTitle();
+    }
+
+    public function xpComment(): ?string
+    {
+        return $this->descriptionReader()->xpComment();
+    }
+
+    public function xpAuthor(): ?string
+    {
+        return $this->descriptionReader()->xpAuthor();
+    }
+
+    public function xpKeywords(): ?string
+    {
+        return $this->descriptionReader()->xpKeywords();
+    }
+
+    public function xpSubject(): ?string
+    {
+        return $this->descriptionReader()->xpSubject();
+    }
+
     // ── User comment domain ────────────────────────────────────
 
     public function userComment(): ?string
