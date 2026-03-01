@@ -108,12 +108,14 @@ final readonly class RegionsFactory
         $displayNames = $this->stringValues($document, XmpNamespace::MWG_REGIONS->value, 'PersonDisplayName');
         $confidences  = $this->floatValues($document, XmpNamespace::MWG_REGIONS->value, 'Confidence');
         $rotations    = $this->floatValues($document, XmpNamespace::MWG_REGIONS->value, 'Rotation');
-        $centersX     = $this->floatValues($document, XmpNamespace::ST_AREA->value, 'x');
-        $centersY     = $this->floatValues($document, XmpNamespace::ST_AREA->value, 'y');
-        $widths       = $this->floatValues($document, XmpNamespace::ST_AREA->value, 'w');
-        $heights      = $this->floatValues($document, XmpNamespace::ST_AREA->value, 'h');
-        $regionCount  = max(count($centersX), count($centersY), count($widths), count($heights));
-        $resolved     = [];
+
+        $geometry    = $this->extractGeometryArrays($document, XmpNamespace::ST_AREA->value, 'x', 'y', 'w', 'h');
+        $centersX    = $geometry['centersX'];
+        $centersY    = $geometry['centersY'];
+        $widths      = $geometry['widths'];
+        $heights     = $geometry['heights'];
+        $regionCount = $geometry['count'];
+        $resolved    = [];
 
         for ($index = 0; $index < $regionCount; ++$index) {
             $centerX = $centersX[$index] ?? null;
@@ -192,10 +194,11 @@ final readonly class RegionsFactory
      */
     private function appleFaceEntries(XmpDocument $document, ?array $dimensions): array
     {
-        $centersX         = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'CenterX');
-        $centersY         = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'CenterY');
-        $widths           = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Width');
-        $heights          = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Height');
+        $geometry         = $this->extractGeometryArrays($document, XmpNamespace::APPLE_FACEINFO->value, 'CenterX', 'CenterY', 'Width', 'Height');
+        $centersX         = $geometry['centersX'];
+        $centersY         = $geometry['centersY'];
+        $widths           = $geometry['widths'];
+        $heights          = $geometry['heights'];
         $confidenceLevels = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'ConfidenceLevel');
         $confidences      = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Confidence');
         $angleInfoRolls   = $this->floatValues($document, XmpNamespace::APPLE_FACEINFO->value, 'AngleInfoRoll');
@@ -214,8 +217,8 @@ final readonly class RegionsFactory
             $faceIds = $this->stringValues($document, XmpNamespace::APPLE_FACEINFO->value, 'FaceUUID');
         }
 
-        $count = 0;
-        foreach ([$centersX, $centersY, $widths, $heights, $confidenceLevels, $confidences, $angleInfoRolls, $rolls, $yaws, $names, $faceIds] as $values) {
+        $count = $geometry['count'];
+        foreach ([$confidenceLevels, $confidences, $angleInfoRolls, $rolls, $yaws, $names, $faceIds] as $values) {
             $valueCount = count($values);
             if ($valueCount > $count) {
                 $count = $valueCount;
@@ -624,6 +627,34 @@ final readonly class RegionsFactory
         }
 
         return array_values(array_map(XmpDocument::parseNumericValue(...), $raw));
+    }
+
+    /**
+     * Extracts geometry arrays (centerX, centerY, width, height) and their count from XMP.
+     *
+     * @return array{centersX: list<float|null>, centersY: list<float|null>, widths: list<float|null>, heights: list<float|null>, count: int}
+     */
+    private function extractGeometryArrays(
+        XmpDocument $document,
+        string $namespace,
+        string $xKey,
+        string $yKey,
+        string $wKey,
+        string $hKey,
+    ): array {
+        $centersX = $this->floatValues($document, $namespace, $xKey);
+        $centersY = $this->floatValues($document, $namespace, $yKey);
+        $widths   = $this->floatValues($document, $namespace, $wKey);
+        $heights  = $this->floatValues($document, $namespace, $hKey);
+        $count    = max(count($centersX), count($centersY), count($widths), count($heights));
+
+        return [
+            'centersX' => $centersX,
+            'centersY' => $centersY,
+            'widths'   => $widths,
+            'heights'  => $heights,
+            'count'    => $count,
+        ];
     }
 
     /**
