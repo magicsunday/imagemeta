@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 
 use function array_map;
+use function assert;
 use function count;
 use function implode;
 use function in_array;
@@ -275,23 +276,7 @@ final readonly class DngValidationSupport
             );
         }
 
-        $values = [];
-        foreach ($entry->value->values as $index => $component) {
-            if ($component instanceof UInt64) {
-                $values[] = $component->toInt(sprintf('%s component %d', $tagName, $index));
-            } elseif (is_int($component)) {
-                $values[] = $component;
-            } else {
-                if ((float) (int) $component !== $component) {
-                    throw new ParseError(
-                        sprintf('%s contains a non-integer rectangle component at index %d.', $tagName, $index),
-                        1609,
-                    );
-                }
-
-                $values[] = (int) $component;
-            }
-        }
+        $values = $this->coerceToIntegerComponents($entry, $tagName, 1609);
 
         if (count($values) !== $entry->count) {
             throw new ParseError(
@@ -377,23 +362,7 @@ final readonly class DngValidationSupport
             );
         }
 
-        $components = [];
-        foreach ($entry->value->values as $index => $value) {
-            if ($value instanceof UInt64) {
-                $components[] = $value->toInt(sprintf('%s component %d', $tagName, $index));
-            } elseif (is_int($value)) {
-                $components[] = $value;
-            } else {
-                if ((float) (int) $value !== $value) {
-                    throw new ParseError(
-                        sprintf('%s component %d must be an integer value.', $tagName, $index),
-                        1624,
-                    );
-                }
-
-                $components[] = (int) $value;
-            }
-        }
+        $components = $this->coerceToIntegerComponents($entry, $tagName, 1624);
 
         if (($components[0] <= 0) || ($components[1] <= 0)) {
             throw new ParseError(
@@ -527,5 +496,38 @@ final readonly class DngValidationSupport
             },
             $types,
         ));
+    }
+
+    /**
+     * Coerces all components of a numeric list to integers.
+     *
+     * Handles UInt64, int, and float (with integer-exactness check).
+     *
+     * @return list<int>
+     */
+    private function coerceToIntegerComponents(IfdEntry $entry, string $tagName, int $errorCode): array
+    {
+        assert($entry->value instanceof ExifNumericList);
+
+        $result = [];
+
+        foreach ($entry->value->values as $index => $component) {
+            if ($component instanceof UInt64) {
+                $result[] = $component->toInt(sprintf('%s component %d', $tagName, $index));
+            } elseif (is_int($component)) {
+                $result[] = $component;
+            } else {
+                if ((float) (int) $component !== $component) {
+                    throw new ParseError(
+                        sprintf('%s component %d must be an integer value.', $tagName, $index),
+                        $errorCode,
+                    );
+                }
+
+                $result[] = (int) $component;
+            }
+        }
+
+        return $result;
     }
 }
