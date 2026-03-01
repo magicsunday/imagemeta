@@ -206,38 +206,13 @@ final readonly class DngProfileValidator
             return;
         }
 
-        $dimsValue = $dimsEntry->value;
+        $dims = $this->extractHsvDimensions($dimsEntry, 'ProfileHueSatMapData', 2089, 2090, 2091);
 
-        if (!$dimsValue instanceof ExifNumericList || count($dimsValue->values) !== 3) {
+        if ($dims === null) {
             return;
         }
 
-        $hueDivs = $dimsValue->values[0];
-        $satDivs = $dimsValue->values[1];
-        $valDivs = $dimsValue->values[2];
-
-        if (!is_int($hueDivs) || !is_int($satDivs) || !is_int($valDivs)) {
-            return;
-        }
-
-        $hs = $this->checkedMultiply(
-            $hueDivs,
-            $satDivs,
-            'ProfileHueSatMapData size overflow (H*S).',
-            2089,
-        );
-        $hsv = $this->checkedMultiply(
-            $hs,
-            $valDivs,
-            'ProfileHueSatMapData size overflow (H*S*V).',
-            2090,
-        );
-        $expectedCount = $this->checkedMultiply(
-            $hsv,
-            3,
-            'ProfileHueSatMapData size overflow (H*S*V*3).',
-            2091,
-        );
+        ['hueDivs' => $hueDivs, 'satDivs' => $satDivs, 'valDivs' => $valDivs, 'expectedCount' => $expectedCount] = $dims;
 
         foreach (self::HUE_SAT_MAP_DATA_TAGS as $tag) {
             $dataEntry = $ifd->get($tag);
@@ -455,38 +430,13 @@ final readonly class DngProfileValidator
             );
         }
 
-        $dimsValue = $dimsEntry->value;
+        $dims = $this->extractHsvDimensions($dimsEntry, 'ProfileLookTableData', 2092, 2093, 2094);
 
-        if (!$dimsValue instanceof ExifNumericList || count($dimsValue->values) !== 3) {
+        if ($dims === null) {
             return;
         }
 
-        $hueDivs = $dimsValue->values[0];
-        $satDivs = $dimsValue->values[1];
-        $valDivs = $dimsValue->values[2];
-
-        if (!is_int($hueDivs) || !is_int($satDivs) || !is_int($valDivs)) {
-            return;
-        }
-
-        $hs = $this->checkedMultiply(
-            $hueDivs,
-            $satDivs,
-            'ProfileLookTableData size overflow (H*S).',
-            2092,
-        );
-        $hsv = $this->checkedMultiply(
-            $hs,
-            $valDivs,
-            'ProfileLookTableData size overflow (H*S*V).',
-            2093,
-        );
-        $expectedCount = $this->checkedMultiply(
-            $hsv,
-            3,
-            'ProfileLookTableData size overflow (H*S*V*3).',
-            2094,
-        );
+        ['hueDivs' => $hueDivs, 'satDivs' => $satDivs, 'valDivs' => $valDivs, 'expectedCount' => $expectedCount] = $dims;
 
         if ($dataEntry->count !== $expectedCount) {
             throw new ParseError(
@@ -929,6 +879,44 @@ final readonly class DngProfileValidator
                 );
             }
         }
+    }
+
+    /**
+     * Extracts H/S/V dimension values and computes the expected data count (H*S*V*3).
+     *
+     * @return array{hueDivs: int, satDivs: int, valDivs: int, expectedCount: int}|null
+     */
+    private function extractHsvDimensions(
+        IfdEntry $dimsEntry,
+        string $tagName,
+        int $hsCode,
+        int $hsvCode,
+        int $hsv3Code,
+    ): ?array {
+        $dimsValue = $dimsEntry->value;
+
+        if (!$dimsValue instanceof ExifNumericList || count($dimsValue->values) !== 3) {
+            return null;
+        }
+
+        $hueDivs = $dimsValue->values[0];
+        $satDivs = $dimsValue->values[1];
+        $valDivs = $dimsValue->values[2];
+
+        if (!is_int($hueDivs) || !is_int($satDivs) || !is_int($valDivs)) {
+            return null;
+        }
+
+        $hs            = $this->checkedMultiply($hueDivs, $satDivs, $tagName . ' size overflow (H*S).', $hsCode);
+        $hsv           = $this->checkedMultiply($hs, $valDivs, $tagName . ' size overflow (H*S*V).', $hsvCode);
+        $expectedCount = $this->checkedMultiply($hsv, 3, $tagName . ' size overflow (H*S*V*3).', $hsv3Code);
+
+        return [
+            'hueDivs'       => $hueDivs,
+            'satDivs'       => $satDivs,
+            'valDivs'       => $valDivs,
+            'expectedCount' => $expectedCount,
+        ];
     }
 
     /**
