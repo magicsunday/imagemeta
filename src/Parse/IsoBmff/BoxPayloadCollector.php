@@ -412,7 +412,7 @@ final readonly class BoxPayloadCollector
         $peekSize   = strlen($peek);
 
         if ($peekSize >= 12) {
-            $size = $this->readU32FromBytes($peek, 4, 'meta child size');
+            $this->readU32FromBytes($peek, 4, 'meta child size');
             $type = substr($peek, 8, 4);
 
             if ($this->boxNavigator->isPrintableFourcc($type) && $this->isPlausibleBoxSize($peek, 4, $meta->contentSize - 4)) {
@@ -423,7 +423,7 @@ final readonly class BoxPayloadCollector
         }
 
         if ($peekSize >= 8) {
-            $size = $this->readU32FromBytes($peek, 0, 'meta child size');
+            $this->readU32FromBytes($peek, 0, 'meta child size');
             $type = substr($peek, 4, 4);
 
             if ($this->boxNavigator->isPrintableFourcc($type) && $this->isPlausibleBoxSize($peek, 0, $meta->contentSize)) {

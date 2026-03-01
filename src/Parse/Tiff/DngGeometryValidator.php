@@ -113,7 +113,7 @@ final readonly class DngGeometryValidator
             $samplesPerPixel = $samplesEntry->value;
         }
 
-        [$repeatRows, $repeatCols] = $this->validateDngBlackLevelRepeatDimAndLevel(
+        $this->validateDngBlackLevelRepeatDimAndLevel(
             $ifd,
             $samplesPerPixel,
         );
