@@ -34,26 +34,27 @@ use MagicSunday\ImageMeta\Value\StructuredMetadata;
  * shows which groups of properties are available per container format detected
  * by {@see \MagicSunday\ImageMeta\MetadataReader::read()}.
  *
- * | Property group                     | JPEG | ISO BMFF | TIFF |
- * |------------------------------------|:----:|:--------:|:----:|
- * | File identity (mimeType, fileSize, |      |          |      |
- * |   extension, digestSha1, digestMd5)|  Y   |    Y     |  Y   |
- * | EXIF (exifBlobs, exifDoc,          |      |          |      |
- * |   makerNotes)                      |  Y   |    Y     |  Y   |
- * | XMP (xmpBlobs, xmpDoc)             |  Y   |    Y     |  --  |
- * | QuickTime (quickTime)              |  --  |    Y     |  --  |
- * | ICC profile (iccProfile)            |  Y   |    Y     |  --  |
- * | JPEG segments (iccSegments,        |      |          |      |
- * |   flashPixStreams, mpfDocument,     |      |          |      |
- * |   jpegAudioStreams)                 |  Y   |    --    |  --  |
- * | JPEG frame (jpegBitsPerSample,     |      |          |      |
- * |   jpegFrameSamplingFactors,         |      |          |      |
- * |   jpegYCbCrSubSampling,            |      |          |      |
- * |   jpegFrameWidth, jpegFrameHeight)  |  Y   |    --    |  --  |
- * | ISO BMFF (isoBmffItemReferences,   |      |          |      |
- * |   isoBmffDataReferences,            |      |          |      |
- * |   isoBmffUnresolvedItems)           |  --  |    Y     |  --  |
- * | IPTC (iptcBlobs, iptcDoc)           |  Y   |    --    |  --  |
+ * | Property group                     | JPEG | ISO BMFF | TIFF | JXL  |
+ * |------------------------------------|:----:|:--------:|:----:|:----:|
+ * | File identity (mimeType, fileSize, |      |          |      |      |
+ * |   extension, digestSha1, digestMd5)|  Y   |    Y     |  Y   |  Y   |
+ * | EXIF (exifBlobs, exifDoc,          |      |          |      |      |
+ * |   makerNotes)                      |  Y   |    Y     |  Y   |  Y   |
+ * | XMP (xmpBlobs, xmpDoc)             |  Y   |    Y     |  --  |  Y   |
+ * | QuickTime (quickTime)              |  --  |    Y     |  --  |  --  |
+ * | ICC profile (iccProfile)            |  Y   |    Y     |  --  |  --  |
+ * | JPEG segments (iccSegments,        |      |          |      |      |
+ * |   flashPixStreams, mpfDocument,     |      |          |      |      |
+ * |   jpegAudioStreams)                 |  Y   |    --    |  --  |  --  |
+ * | JPEG frame (jpegBitsPerSample,     |      |          |      |      |
+ * |   jpegFrameSamplingFactors,         |      |          |      |      |
+ * |   jpegYCbCrSubSampling,            |      |          |      |      |
+ * |   jpegFrameWidth, jpegFrameHeight)  |  Y   |    --    |  --  |  --  |
+ * | ISO BMFF (isoBmffItemReferences,   |      |          |      |      |
+ * |   isoBmffDataReferences,            |      |          |      |      |
+ * |   isoBmffUnresolvedItems)           |  --  |    Y     |  --  |  --  |
+ * | HDR gain map (gainMapBlob)          |  --  |    --    |  --  |  Y   |
+ * | IPTC (iptcBlobs, iptcDoc)           |  Y   |    --    |  --  |  --  |
  *
  * Properties outside their supported container group remain at their default
  * value (null for scalars/objects, empty array for list types).
@@ -116,6 +117,7 @@ final readonly class Metadata
      * @param list<int>                                            $tmapItemIds               Tone map item IDs detected in ISO BMFF containers. [ISO BMFF only]
      * @param list<string>                                         $iptcBlobs                 IPTC payloads captured from JPEG APP13 segments. [JPEG only]
      * @param IptcDocument|null                                    $iptcDoc                   Parsed IPTC IIM datasets from APP13 payloads. [JPEG only]
+     * @param string|null                                          $gainMapBlob               Raw HDR gain map image from a JXL hrgm box. [JXL only]
      * @param XmpParserInterface|null                              $xmpParser                 Injected XMP parser for selective document creation.
      * @param IptcParserInterface|null                             $iptcParser                Injected IPTC parser for selective document creation.
      * @param StructuredMetadataBuilder|null                       $structuredMetadataBuilder Injected builder for structured metadata assembly.
@@ -150,6 +152,7 @@ final readonly class Metadata
         array $tmapItemIds = [],
         array $iptcBlobs = [],
         public ?IptcDocument $iptcDoc = null,
+        public ?string $gainMapBlob = null,
         private ?XmpParserInterface $xmpParser = null,
         private ?IptcParserInterface $iptcParser = null,
         ?StructuredMetadataBuilder $structuredMetadataBuilder = null,

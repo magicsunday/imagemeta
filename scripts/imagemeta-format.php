@@ -2357,6 +2357,10 @@ final class MetadataFormatter
             $data['Auxiliary Image Type'] = $hdrGainMap->auxiliaryImageType;
         }
 
+        if ($metadata->gainMapBlob !== null) {
+            $data['Gain Map Size'] = strlen($metadata->gainMapBlob) . ' bytes';
+        }
+
         if ($data !== []) {
             $this->printSection('HDR Gain Map', $data);
         }

@@ -90,6 +90,8 @@ final class MetadataBuilder
 
     private ?IptcDocument $iptcDoc = null;
 
+    private ?string $gainMapBlob = null;
+
     private ?string $mimeType = null;
 
     private ?int $fileSize = null;
@@ -264,6 +266,18 @@ final class MetadataBuilder
     }
 
     /**
+     * Configures the raw HDR gain map blob from a JXL hrgm box.
+     *
+     * @param string|null $blob Raw gain map image data.
+     */
+    public function withGainMapBlob(?string $blob): self
+    {
+        $this->gainMapBlob = $blob;
+
+        return $this;
+    }
+
+    /**
      * Configures file-level identity and integrity fields.
      *
      * @param string|null $mimeType  Detected MIME type for the source file.
@@ -323,6 +337,7 @@ final class MetadataBuilder
             tmapItemIds: $this->tmapItemIds,
             iptcBlobs: $this->iptcBlobs,
             iptcDoc: $this->iptcDoc,
+            gainMapBlob: $this->gainMapBlob,
             xmpParser: $this->xmpParser,
             iptcParser: $this->iptcParser,
             structuredMetadataBuilder: $this->structuredMetadataBuilder,

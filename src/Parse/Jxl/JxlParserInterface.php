@@ -20,9 +20,9 @@ use MagicSunday\ImageMeta\Core\ParseError;
 interface JxlParserInterface
 {
     /**
-     * Extracts EXIF blobs and XMP packets from the JXL container.
+     * Extracts EXIF blobs, XMP packets, and the gain map blob from the JXL container.
      *
-     * @return array{0: list<string>, 1: list<string>} Tuple of [EXIF blobs, XMP packets].
+     * @return array{0: list<string>, 1: list<string>, 2: ?string} Tuple of [EXIF blobs, XMP packets, gain map blob].
      *
      * @throws ParseError
      * @throws BoundsError

@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
 
+use function in_array;
 use function strlen;
 use function substr;
 
@@ -41,6 +42,11 @@ final readonly class JxlParser implements JxlParserInterface
      * ISO/IEC 18181-2 §A.3.3 uses lowercase `xml ` (with trailing space).
      */
     private const string BOX_XML = 'xml ';
+
+    /**
+     * Four-character code for the HDR gain map box.
+     */
+    private const string BOX_HRGM = 'hrgm';
 
     /**
      * Maximum allowed size for a single metadata payload in bytes (16 MiB).
@@ -75,9 +81,9 @@ final readonly class JxlParser implements JxlParserInterface
     }
 
     /**
-     * Extracts EXIF blobs and XMP packets from the JXL container.
+     * Extracts EXIF blobs, XMP packets, and the gain map blob from the JXL container.
      *
-     * @return array{0: list<string>, 1: list<string>} Tuple of [EXIF blobs, XMP packets].
+     * @return array{0: list<string>, 1: list<string>, 2: ?string} Tuple of [EXIF blobs, XMP packets, gain map blob].
      */
     public function extract(): array
     {
@@ -85,20 +91,21 @@ final readonly class JxlParser implements JxlParserInterface
         $exifBlobs = [];
         /** @var list<string> $xmpBlobs */
         $xmpBlobs           = [];
+        $hrgmBlob           = null;
         $totalMetadataBytes = 0;
         $metadataBoxCount   = 0;
 
         foreach ($this->walkTopLevelBoxes() as $box) {
-            if (($box->type !== self::BOX_EXIF) && ($box->type !== self::BOX_XML)) {
+            if (!in_array($box->type, [self::BOX_EXIF, self::BOX_XML, self::BOX_HRGM], true)) {
                 continue;
             }
 
             if ($box->contentSize > $this->maxPayloadSize) {
-                if ($box->type === self::BOX_EXIF) {
-                    throw new ParseError('JXL Exif box payload exceeds maximum allowed size', 1560);
-                }
-
-                throw new ParseError('JXL xml box payload exceeds maximum allowed size', 1561);
+                throw match ($box->type) {
+                    self::BOX_EXIF => new ParseError('JXL Exif box payload exceeds maximum allowed size', 1560),
+                    self::BOX_XML  => new ParseError('JXL xml box payload exceeds maximum allowed size', 1561),
+                    default        => new ParseError('JXL hrgm box payload exceeds maximum allowed size', 2085),
+                };
             }
 
             // AGENTS.md §4 requires explicit limits for metadata boxes and packets.
@@ -113,15 +120,23 @@ final readonly class JxlParser implements JxlParserInterface
             ++$metadataBoxCount;
             $totalMetadataBytes += $box->contentSize;
 
-            if ($box->type === self::BOX_EXIF) {
-                $blob        = $this->boxNavigator->readAll($box->window);
-                $exifBlobs[] = $this->normalizeExifBlob($blob);
-            } else {
-                $xmpBlobs[] = $this->boxNavigator->readAll($box->window);
+            switch ($box->type) {
+                case self::BOX_EXIF:
+                    $blob        = $this->boxNavigator->readAll($box->window);
+                    $exifBlobs[] = $this->normalizeExifBlob($blob);
+                    break;
+
+                case self::BOX_XML:
+                    $xmpBlobs[] = $this->boxNavigator->readAll($box->window);
+                    break;
+
+                case self::BOX_HRGM:
+                    $hrgmBlob ??= $this->boxNavigator->readAll($box->window);
+                    break;
             }
         }
 
-        return [$exifBlobs, $xmpBlobs];
+        return [$exifBlobs, $xmpBlobs, $hrgmBlob];
     }
 
     /**

@@ -337,7 +337,80 @@ final class JxlParserTest extends TestCase
     }
 
     /**
-     * @return array{0: list<string>, 1: list<string>}
+     * Extracts the gain map blob from a JXL container with a top-level hrgm box.
+     */
+    #[Test]
+    public function extractsHrgmFromTopLevelBox(): void
+    {
+        $gainMapPayload = 'gain-map-image-data';
+
+        $jxl = self::JXL_SIGNATURE
+            . $this->box('ftyp', 'jxl ' . pack('N', 0))
+            . $this->box('hrgm', $gainMapPayload)
+            . $this->box('jxlc', 'codestream-data');
+
+        [, , $hrgmBlob] = $this->extractFromJxl($jxl);
+
+        self::assertSame($gainMapPayload, $hrgmBlob);
+    }
+
+    /**
+     * Returns null gain map blob when no hrgm box is present in the container.
+     */
+    #[Test]
+    public function returnsNullHrgmWhenAbsent(): void
+    {
+        $jxl = self::JXL_SIGNATURE
+            . $this->box('ftyp', 'jxl ' . pack('N', 0))
+            . $this->box('jxlc', 'codestream-data');
+
+        [, , $hrgmBlob] = $this->extractFromJxl($jxl);
+
+        self::assertNull($hrgmBlob);
+    }
+
+    /**
+     * Throws ParseError when hrgm box payload exceeds the maximum payload size.
+     */
+    #[Test]
+    public function throwsForOversizedHrgmPayload(): void
+    {
+        $jxl = self::JXL_SIGNATURE
+            . $this->box('hrgm', 'large-gain-map-data');
+
+        $stream = $this->streamFromString($jxl);
+        $parser = new JxlParser($stream, maxPayloadSize: 4);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(2085);
+
+        $parser->extract();
+    }
+
+    /**
+     * Counts the hrgm box toward the aggregate metadata box count limit.
+     */
+    #[Test]
+    public function countsHrgmBoxInAggregateLimit(): void
+    {
+        $xmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
+
+        $jxl = self::JXL_SIGNATURE
+            . $this->box('xml ', $xmp)
+            . $this->box('hrgm', 'gain-map')
+            . $this->box('xml ', $xmp);
+
+        $stream = $this->streamFromString($jxl);
+        $parser = new JxlParser($stream, maxMetadataBoxCount: 2);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(2084);
+
+        $parser->extract();
+    }
+
+    /**
+     * @return array{0: list<string>, 1: list<string>, 2: ?string}
      */
     private function extractFromJxl(string $jxl): array
     {

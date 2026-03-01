@@ -318,7 +318,7 @@ final readonly class MetadataReader
         ?string $digestSha1,
         ?string $digestMd5,
     ): Metadata {
-        [$exifBlobs, $xmpBlobs] = $this->jxlParserFactory->create($stream)->extract();
+        [$exifBlobs, $xmpBlobs, $hrgmBlob] = $this->jxlParserFactory->create($stream)->extract();
 
         [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($exifBlobs, embeddedContext: true);
 
@@ -329,6 +329,7 @@ final readonly class MetadataReader
             ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif($exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($xmpBlobs, $xmpDoc)
+            ->withGainMapBlob($hrgmBlob)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
             ->build();
     }

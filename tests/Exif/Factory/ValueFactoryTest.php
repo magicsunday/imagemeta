@@ -175,6 +175,24 @@ XML;
     }
 
     /**
+     * Builds Metadata with gainMapBlob populated (JXL hrgm box).
+     * Verifies hasGainMap is true when a gain map blob is present.
+     */
+    #[Test]
+    public function setsHasGainMapTrueWhenGainMapBlobExists(): void
+    {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            gainMapBlob: 'gain-map-image-data',
+        );
+
+        $structured = StructuredMetadataBuilder::createDefault()->assemble($metadata);
+
+        self::assertTrue($structured->content->hdrGainMap->hasGainMap);
+    }
+
+    /**
      * Supplies XMP title/description along with creator contact information fields.
      * Confirms the assembler maps these fields into image and author metadata.
      */
