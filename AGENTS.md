@@ -1,4 +1,8 @@
+<!-- Managed by agent: keep sections and order; edit content, not structure. Last updated: 2026-03-02 -->
+
 # AGENTS.md — MagicSunday/ImageMeta
+
+**Precedence:** The **closest `AGENTS.md`** to the files you're changing wins. This root file holds global defaults. Explicit user prompts override all files.
 
 **Purpose:** Deterministic, minimal, and safe code changes by LLM agents.
 **Scope:** This file defines **hard technical rules**. It is not process documentation.
@@ -90,10 +94,45 @@ No follow-up commits, no deferred closure, no “left open for review”.
 * **Domain:** Streaming metadata parser (JPEG, TIFF/EXIF, ISOBMFF/QuickTime, XMP)
 * **Parser type:** Reader-only (Postel’s Law applies)
 * **Structure:** exactly **one class per file**
-* **Style:** PSR-12
+* **Style:** PSR-12 + `@Symfony` ruleset (php-cs-fixer)
 * **Forbidden:** `mixed`, `empty()`, nested ternaries
 * **Docs:** English PHPDoc + English inline comments at complex logic
-* **Static:** PHPStan max level, PHPCS
+* **Static:** PHPStan max level (strict-rules, deprecation-rules, phpunit extensions)
+
+### 2.1 Code Style Details (Enforced by Tooling)
+
+* `use function` imports for all PHP built-in function calls (not inline `\strlen()`)
+* `++$i` pre-increment style (enforced by php-cs-fixer `increment_style`)
+* `final readonly class` for value objects
+* Binary operators `=`/`=>` use `align_single_space_minimal`
+* Non-Yoda comparisons: `$x === null` (not `null === $x`)
+* `phpdoc_align`: `@param`/`@return` type and name columns must align
+* No magic number literals — use named constants
+* No `GH-XXXX` references in code comments — only in commit messages
+* No `Co-Authored-By` trailers in commit messages
+* In compound conditions (`&&`/`||`), wrap comparison operands in parentheses: `if (($x <= 0.0) || !is_finite($x))`
+
+### 2.2 PHPUnit Conventions
+
+* PHPUnit 12 with attribute-based configuration
+* Use `#[Test]`, `#[CoversClass]`, `#[UsesClass]`, `#[UsesTrait]` attributes
+* CamelCase test method names — no underscores (see `tests/AGENTS.md §4.2`)
+* Prefer synthetic binary data; build box structures with `box()`/`fullBox()` helpers
+
+### 2.3 CI Execution
+
+CI runs via Docker buildbox:
+
+```bash
+cd /volume2/docker/webtrees && docker compose run --rm -e COMPOSER_AUTH buildbox composer -d /var/docker/imagemeta ci:test
+```
+
+Pipeline order: phplint → php-cs-fixer (dry-run) → rector (dry-run) → phpstan → phpunit → jscpd
+
+Common CI pitfalls:
+* **php-cs-fixer:** import ordering, `phpdoc_align` column alignment, `no_useless_concat_operator`
+* **Rector:** `SimplifyQuoteEscapeRector` (e.g. `"\x22"` → `’"’`), `FlipTypeControlToUseExclusiveTypeRector`, `RemoveUnusedPrivateMethodParameterRector`
+* **PHPStan:** nullsafe `?->` with `??` — use `instanceof` checks instead when PHPStan flags `nullsafe.neverNull`
 
 ---
 
@@ -186,7 +225,7 @@ Codes are assigned per module in these ranges:
 | 1943–1951 | Assembler limits & config validation | various (added by GH-1621, GH-1626) |
 
 **Rules:**
-* New codes: use `max + 1` (currently **2082**).
+* New codes: use `max + 1` (currently **2100**).
 * Each code must be globally unique across all `src/` files.
 * Overlapping ranges are historical; do not extend them further.
 
@@ -236,8 +275,10 @@ $parser->getStream()->getBuffer()->seek()
 
 ### 5.7 Separation of Concerns
 
-* Detect ≠ Parse ≠ Model ≠ Convenience
+* Detect ≠ Parse ≠ Model ≠ Convenience ≠ Value
 * No EXIF logic inside container detection
+* Vendor-specific logic (DJI, Apple, Samsung) belongs in dedicated classes under `MakerNotes/` or `Model/<Vendor>/`, not in general parsers like `IsoBmffParser`
+* General parsers (`IsoBmffParser`, `JpegParser`) must remain format-agnostic; vendor enrichment happens in `MetadataReader` or dedicated scanners
 
 ### 5.8 Convention over Configuration
 
@@ -269,6 +310,12 @@ The following topics are reference-only and do not override the rules above:
 * XMP handling rules
 * Enums & constants guidance
 * Postel’s Law (reader robustness with documented deviations)
+
+---
+
+## Index of scoped AGENTS.md
+
+- `./tests/AGENTS.md` — Test-only rules: synthetic data, positive+negative coverage, CamelCase naming, no `src/` changes
 
 ---
 

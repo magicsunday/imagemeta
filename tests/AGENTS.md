@@ -1,12 +1,14 @@
+<!-- Managed by agent: keep sections and order; edit content, not structure. Last updated: 2026-03-02 -->
+
 # AGENTS.md — MagicSunday/ImageMeta (tests)
 
-**Location:** `tests/`
-**Purpose:** Deterministic, high-signal tests for a streaming metadata parser.
-**Scope:** This file governs **tests only**. It does not permit production code changes.
+## Overview
+
+Test-only agent rules for a streaming metadata parser library. Governs `tests/` exclusively. Does not permit `src/` changes.
 
 This `tests/AGENTS.md` applies only to work under `tests/` and **overrides** the root `AGENTS.md` where rules differ.
 
-Task mode gate: this file applies only to **test-only tasks**. If a requested change requires `src/**` modifications, STOP and hand off to the root scope (`AGENTS.md`) instead of forcing a test-only path.
+Task mode gate: this file applies only to **test-only tasks**. If a requested change requires `src/**` modifications, STOP and hand off to the root scope (`AGENTS.md`).
 
 ---
 
@@ -233,3 +235,51 @@ Reference-only reminders (do not override rules above):
 * ISOBMFF: box header/size validation, iloc extent sum, skip `data_reference_index != 0`
 * XMP: strict non-network XML parsing, tolerate broken XML with partial results when safe
 * Security: bounds checks are part of correctness; tests must cover DoS-style inputs (huge lengths, deep nesting) via small synthetic buffers
+
+---
+
+## Setup
+
+See root `AGENTS.md §2.3` for CI execution. No additional setup beyond `composer install`.
+
+## Build & Tests
+
+```bash
+cd /volume2/docker/webtrees && docker compose run --rm -e COMPOSER_AUTH buildbox composer -d /var/docker/imagemeta ci:test
+```
+
+Run only PHPUnit: `composer ci:test:php:unit`
+
+## Code style
+
+* PHPUnit 12 attributes: `#[Test]`, `#[CoversClass]`, `#[UsesClass]`, `#[UsesTrait]`
+* CamelCase test method names (see §4.2)
+* `declare(strict_types=1)` in all test files
+* `use function` imports for PHP built-ins
+
+## Security
+
+* Tests must cover DoS-style inputs (huge lengths, deep nesting) via small synthetic buffers
+* Bounds checks are part of correctness — never weaken guards to make tests pass
+* No network, no filesystem state beyond temp directories
+
+## Checklist
+
+- [ ] At least 1 positive + 1 negative test per behavior (`ParseError`/`BoundsError`)
+- [ ] Synthetic data, not real-world fixtures (unless justified)
+- [ ] Spec references where relevant (`EXIF 3.0 §4.6.4`)
+- [ ] CamelCase test method names
+- [ ] `ci:test` fully green
+
+## Examples
+
+**Good test name:** `throwsBoundsErrorOnTruncatedIfdEntry`
+**Bad test name:** `it_throws_bounds_error_on_truncated_ifd_entry`
+
+See existing tests in the same subtree for patterns to follow.
+
+## When stuck
+
+* Check specs in `docs/` (HTML for search, PDF for authoritative wording)
+* Review existing tests in the same subtree for patterns
+* If spec is ambiguous → **STOP and ask**
