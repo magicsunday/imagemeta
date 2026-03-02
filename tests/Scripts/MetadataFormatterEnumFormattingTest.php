@@ -241,8 +241,8 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
         self::assertStringContainsString('Thumbnail Offset', $output);
         self::assertStringContainsString('Thumbnail Length', $output);
-        self::assertStringContainsString('Compression                     : JPEG (old-style)', $output);
-        self::assertStringContainsString('Thumbnail Image                 : (Binary data 7456 bytes)', $output);
+        self::assertStringContainsString('Compression                        : JPEG (old-style)', $output);
+        self::assertStringContainsString('Thumbnail Image                    : (Binary data 7456 bytes)', $output);
     }
 
     #[Test]

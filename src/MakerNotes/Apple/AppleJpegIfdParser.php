@@ -44,8 +44,8 @@ final readonly class AppleJpegIfdParser
 
     private const int IFD_ENTRY_SIZE = 12;
 
-    /** Signature(10) + version(2) + byte order(2) + magic(2) + IFD offset(4) */
-    private const int MIN_PAYLOAD_LENGTH = 20;
+    /** Signature(10) + version(2) + byte order(2) + entry count(2) */
+    private const int MIN_PAYLOAD_LENGTH = 16;
 
     private const int TIFF_TYPE_ASCII = 2;
 
@@ -124,8 +124,7 @@ final readonly class AppleJpegIfdParser
             return null;
         }
 
-        $tiffBase  = self::TIFF_HEADER_OFFSET;
-        $byteOrder = substr($raw, $tiffBase, 2);
+        $byteOrder = substr($raw, self::TIFF_HEADER_OFFSET, 2);
 
         if ($byteOrder === 'MM') {
             $u16Fmt = 'n';
@@ -137,20 +136,12 @@ final readonly class AppleJpegIfdParser
             return null;
         }
 
-        $magic = Unpack::int($u16Fmt, substr($raw, $tiffBase + 2, 2), 'Apple IFD TIFF magic');
+        // IFD entry count follows the byte order marker at offset 14; out-of-line
+        // value offsets are relative to the start of the raw payload (offset 0).
+        $offsetBase  = 0;
+        $ifdAbsolute = self::TIFF_HEADER_OFFSET + 2;
 
-        if ($magic !== 0x002A) {
-            return null;
-        }
-
-        $ifdOffset   = Unpack::int($u32Fmt, substr($raw, $tiffBase + 4, 4), 'Apple IFD offset');
-        $ifdAbsolute = $tiffBase + $ifdOffset;
-
-        if (($ifdAbsolute + 2) > $length) {
-            return null;
-        }
-
-        return $this->readIfd($raw, $tiffBase, $ifdAbsolute, $u16Fmt, $u32Fmt);
+        return $this->readIfd($raw, $offsetBase, $ifdAbsolute, $u16Fmt, $u32Fmt);
     }
 
     /**

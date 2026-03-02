@@ -821,20 +821,20 @@ final class MetadataFormatter
             if ($showHex && is_numeric($key)) {
                 $hexKey  = sprintf('0x%04x', (int) $key);
                 $tagName = $this->getTagName((int) $key, $ifdContext);
-                // Format with exactly 40 characters before the colon
-                // hex(6) + space(1) + tag name (padded to fill remaining 33 chars) = 40 total
+                // Format with exactly 42 characters before the colon
+                // hex(6) + space(1) + tag name (padded to fill remaining 35 chars) = 42 total
                 $label = sprintf('%s %s', $hexKey, $tagName);
             } elseif (!$showHex && is_string($key) && preg_match('/^0x[0-9a-fA-F]{4}\\s/', $key) === 1) {
                 $label = $key;
             } elseif (!$showHex && is_string($key) && preg_match('/^[a-z0-9]{4}\\s/', $key) === 1) {
                 $label = $key;
             } else {
-                // Format with exactly 40 characters before the colon
-                // "     - " (7 chars) + key name (padded to fill remaining 33 chars) = 40 total
+                // Format with exactly 42 characters before the colon
+                // "     - " (7 chars) + key name (padded to fill remaining 35 chars) = 42 total
                 $label = sprintf('     - %s', $key);
             }
 
-            printf("%-39s: %s\n", $label, $formattedValue);
+            printf("%-42s: %s\n", $label, $formattedValue);
         }
     }
 
@@ -2803,10 +2803,11 @@ final class MetadataFormatter
      */
     private function formatDuration(float $totalSeconds): string
     {
-        $days    = (int) ($totalSeconds / 86400);
-        $hours   = (int) (($totalSeconds % 86400) / 3600);
-        $minutes = (int) (($totalSeconds % 3600) / 60);
-        $seconds = $totalSeconds % 60;
+        $intSeconds = (int) $totalSeconds;
+        $days       = (int) ($intSeconds / 86400);
+        $hours      = (int) (($intSeconds % 86400) / 3600);
+        $minutes    = (int) (($intSeconds % 3600) / 60);
+        $seconds    = $intSeconds % 60;
 
         if ($days > 0) {
             return sprintf('%d days %d:%02d:%02d', $days, $hours, $minutes, $seconds);
