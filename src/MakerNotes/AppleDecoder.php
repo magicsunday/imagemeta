@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes;
 
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleJpegIfdParser;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveResolver;
@@ -32,6 +33,8 @@ use function strlen;
  */
 final readonly class AppleDecoder implements MakerNotesDecoderInterface
 {
+    private AppleJpegIfdParser $ifdParser;
+
     private PlistTextParser $textParser;
 
     private KeyedArchiveResolver $archiveResolver;
@@ -40,6 +43,7 @@ final readonly class AppleDecoder implements MakerNotesDecoderInterface
 
     public function __construct()
     {
+        $this->ifdParser       = new AppleJpegIfdParser();
         $this->textParser      = new PlistTextParser();
         $this->archiveResolver = new KeyedArchiveResolver();
         $this->builder         = new AppleMakerNotesBuilder();
@@ -73,6 +77,11 @@ final readonly class AppleDecoder implements MakerNotesDecoderInterface
      */
     private function parseAppleData(string $raw): ?AppleMakerNotes
     {
+        $ifdDictionary = $this->ifdParser->parse($raw);
+        if (is_array($ifdDictionary)) {
+            return $this->builder->build($ifdDictionary); // @phpstan-ignore argument.type (IFD values are builder-compatible)
+        }
+
         $decoded = $this->archiveResolver->decodeBinaryPropertyList($raw);
         if ($decoded === null) {
             $decoded = $this->textParser->parse($raw);
