@@ -133,6 +133,7 @@ final class ParsedExif implements ExifIfd0DataInterface, ExifIfd1DataInterface, 
      * @param list<Ifd>             $subsequentIfds Additional linked IFDs discovered via the next-pointer chain.
      * @param array<int, Ifd>       $subIfds        Parsed SubIFDs indexed by their file offsets.
      * @param string|null           $xmpPacketRaw   Raw UTF-8 XMP/RDF XML from TIFF tag 700 (0x02BC).
+     * @param string|null           $iccProfileRaw  Raw ICC profile binary from TIFF tag 34675 (0x8773).
      * @param ValueConverters       $converters     Value converter facade for EXIF type normalization.
      */
     public function __construct(
@@ -145,6 +146,7 @@ final class ParsedExif implements ExifIfd0DataInterface, ExifIfd1DataInterface, 
         public readonly array $subsequentIfds = [],
         public readonly array $subIfds = [],
         public readonly ?string $xmpPacketRaw = null,
+        public readonly ?string $iccProfileRaw = null,
         ?Endian $byteOrder = null,
         private readonly ValueConverters $converters = new ValueConverters(),
     ) {

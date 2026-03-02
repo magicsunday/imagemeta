@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Adobe\AdobeTag;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
+use MagicSunday\ImageMeta\Model\Tiff\TiffItTag;
 use MagicSunday\ImageMeta\Parse\ParserLimits;
 
 use function count;
@@ -54,6 +55,8 @@ final class TiffExifParser implements TiffExifParserInterface
     private ?string $makerNoteRaw = null;
 
     private ?string $xmpPacketRaw = null;
+
+    private ?string $iccProfileRaw = null;
 
     /** @var array<int, Ifd> */
     private array $ifdCache = [];
@@ -157,6 +160,7 @@ final class TiffExifParser implements TiffExifParserInterface
 
         $this->makerNoteRaw      = null;
         $this->xmpPacketRaw      = null;
+        $this->iccProfileRaw     = null;
         $this->ifdCache          = [];
         $this->bigTiffOffsetSize = 8;
         $this->ifdParser ??= new IfdParser();
@@ -345,6 +349,7 @@ final class TiffExifParser implements TiffExifParserInterface
             $additionalIfds,
             $subIfds,
             xmpPacketRaw: $this->xmpPacketRaw,
+            iccProfileRaw: $this->iccProfileRaw,
         );
     }
 
@@ -657,6 +662,11 @@ final class TiffExifParser implements TiffExifParserInterface
         // Adobe XMP Part 3 — tag 700 (0x02BC) carries a UTF-8 XMP/RDF packet
         if ($tag === AdobeTag::XMP_PACKET) {
             $this->xmpPacketRaw = $rawBytes;
+        }
+
+        // TIFF 6.0 §Appendix (TIFF/IT); ICC.1 — tag 34675 (0x8773) carries an ICC profile
+        if ($tag === TiffItTag::ICC_PROFILE) {
+            $this->iccProfileRaw = $rawBytes;
         }
 
         // DNGPrivateData validation skipped — non-DNG RAW formats (ARW, NEF, CR2)

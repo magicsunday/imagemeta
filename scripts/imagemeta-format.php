@@ -33,6 +33,7 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
+use MagicSunday\ImageMeta\Model\Tiff\TiffItTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Exif\Text\UndefinedTextMarker;
@@ -213,6 +214,13 @@ final class MetadataFormatter
     private array $adobeTagNames = [];
 
     /**
+     * Maps tag IDs to their human-readable names for TIFF/IT tags.
+     *
+     * @var array<int, string>
+     */
+    private array $tiffItTagNames = [];
+
+    /**
      * Maps tag IDs to their human-readable names for GPS IFD tags.
      *
      * @var array<int, string>
@@ -305,6 +313,14 @@ final class MetadataFormatter
         foreach ($adobeReflection->getConstants() as $name => $value) {
             if (is_int($value)) {
                 $this->adobeTagNames[$value] = $this->constantNameToTagName($name);
+            }
+        }
+
+        // Build TIFF/IT tag map
+        $tiffItReflection = new ReflectionClass(TiffItTag::class);
+        foreach ($tiffItReflection->getConstants() as $name => $value) {
+            if (is_int($value)) {
+                $this->tiffItTagNames[$value] = $this->constantNameToTagName($name);
             }
         }
 
@@ -833,11 +849,12 @@ final class MetadataFormatter
             }
         }
 
-        // Fall back to general TIFF, EXIF, DNG and Adobe tag maps
+        // Fall back to general TIFF, EXIF, DNG, Adobe and TIFF/IT tag maps
         return $this->tiffTagNames[$tagId]
             ?? $this->exifTagNames[$tagId]
             ?? $this->dngTagNames[$tagId]
             ?? $this->adobeTagNames[$tagId]
+            ?? $this->tiffItTagNames[$tagId]
             ?? sprintf('Unknown 0x%04x', $tagId);
     }
 
@@ -1731,8 +1748,16 @@ final class MetadataFormatter
 
             // XMP Packet: show size summary instead of raw byte data
             if ($tagId === AdobeTag::XMP_PACKET) {
-                $length         = is_string($entry->value) ? strlen($entry->value) : 0;
-                $data[$tagId]   = sprintf('(%d bytes)', $length);
+                $length       = is_string($entry->value) ? strlen($entry->value) : 0;
+                $data[$tagId] = sprintf('(%d bytes)', $length);
+
+                continue;
+            }
+
+            // ICC Profile: show size summary instead of raw binary
+            if ($tagId === TiffItTag::ICC_PROFILE) {
+                $length       = is_string($entry->value) ? strlen($entry->value) : 0;
+                $data[$tagId] = sprintf('(%d bytes)', $length);
 
                 continue;
             }

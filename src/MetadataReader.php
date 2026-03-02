@@ -298,6 +298,7 @@ final readonly class MetadataReader
             ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif($exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($xmpBlobs, $xmpDoc)
+            ->withIccProfile($exifDoc->iccProfileRaw)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
             ->build();
     }

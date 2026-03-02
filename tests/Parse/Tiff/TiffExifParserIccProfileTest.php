@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Model\Tiff\TiffItTag;
 use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
@@ -39,6 +40,7 @@ use function strlen;
  * capture the raw ICC binary and expose it via ParsedExif.
  */
 #[CoversClass(TiffExifParser::class)]
+#[UsesClass(TiffItTag::class)]
 #[UsesClass(DngValueNormalizer::class)]
 #[UsesClass(MakerNoteDispatcher::class)]
 #[UsesClass(TiffBinaryReader::class)]
@@ -142,7 +144,7 @@ final class TiffExifParserIccProfileTest extends TestCase
             . pack('v', 100) . pack('v', 0);
 
         // Tag 0x8773 — ICC Profile, type UNDEFINED, external offset
-        $blob .= pack('v', 0x8773)
+        $blob .= pack('v', TiffItTag::ICC_PROFILE)
             . pack('v', TiffConst::TYPE_UNDEFINED)
             . pack('V', strlen($iccPayload))
             . pack('V', $iccOffset);
@@ -175,9 +177,7 @@ final class TiffExifParserIccProfileTest extends TestCase
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
 
-        $blob .= pack('V', 0);
-
-        return $blob;
+        return $blob . pack('V', 0);
     }
 
     /**
@@ -202,13 +202,11 @@ final class TiffExifParserIccProfileTest extends TestCase
             . pack('v', 100) . pack('v', 0);
 
         // Tag 0x8773 pointing to offset 9999, count 200
-        $blob .= pack('v', 0x8773)
+        $blob .= pack('v', TiffItTag::ICC_PROFILE)
             . pack('v', TiffConst::TYPE_UNDEFINED)
             . pack('V', 200)
             . pack('V', 9999);
 
-        $blob .= pack('V', 0);
-
-        return $blob;
+        return $blob . pack('V', 0);
     }
 }

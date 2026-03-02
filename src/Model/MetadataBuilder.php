@@ -168,6 +168,20 @@ final class MetadataBuilder
     }
 
     /**
+     * Configures a standalone ICC color profile (e.g. from TIFF tag 34675).
+     *
+     * @param string|null $iccProfile Binary ICC profile data.
+     */
+    public function withIccProfile(?string $iccProfile): self
+    {
+        if ($iccProfile !== null) {
+            $this->iccProfile = $iccProfile;
+        }
+
+        return $this;
+    }
+
+    /**
      * Configures JPEG segment payloads (ICC, FlashPix, MPF, audio).
      *
      * @param string|null           $iccProfile       Binary ICC profile.
