@@ -294,11 +294,21 @@ final readonly class MetadataReader
         $xmpBlobs = $exifDoc->xmpPacketRaw !== null ? [$exifDoc->xmpPacketRaw] : [];
         $xmpDoc   = $this->parseXmpBlobs($xmpBlobs);
 
+        // IPTC-IIM — tag 33723 (0x83BB) embeds IPTC/NAA in TIFF IFD0
+        $iptcBlobs = $exifDoc->iptcNaaRaw !== null ? [$exifDoc->iptcNaaRaw] : [];
+        $iptcDoc   = null;
+
+        if ($iptcBlobs !== []) {
+            $documents = array_map($this->iptcParser->parse(...), $iptcBlobs);
+            $iptcDoc   = IptcDocument::merge(...$documents);
+        }
+
         return (new MetadataBuilder())
             ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif($exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($xmpBlobs, $xmpDoc)
             ->withIccProfile($exifDoc->iccProfileRaw)
+            ->withIptc($iptcBlobs, $iptcDoc)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
             ->build();
     }

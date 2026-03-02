@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Adobe\AdobeTag;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
+use MagicSunday\ImageMeta\Model\Iptc\IptcTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffItTag;
 use MagicSunday\ImageMeta\Parse\ParserLimits;
 
@@ -57,6 +58,8 @@ final class TiffExifParser implements TiffExifParserInterface
     private ?string $xmpPacketRaw = null;
 
     private ?string $iccProfileRaw = null;
+
+    private ?string $iptcNaaRaw = null;
 
     /** @var array<int, Ifd> */
     private array $ifdCache = [];
@@ -161,6 +164,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->makerNoteRaw      = null;
         $this->xmpPacketRaw      = null;
         $this->iccProfileRaw     = null;
+        $this->iptcNaaRaw        = null;
         $this->ifdCache          = [];
         $this->bigTiffOffsetSize = 8;
         $this->ifdParser ??= new IfdParser();
@@ -350,6 +354,7 @@ final class TiffExifParser implements TiffExifParserInterface
             $subIfds,
             xmpPacketRaw: $this->xmpPacketRaw,
             iccProfileRaw: $this->iccProfileRaw,
+            iptcNaaRaw: $this->iptcNaaRaw,
         );
     }
 
@@ -667,6 +672,11 @@ final class TiffExifParser implements TiffExifParserInterface
         // TIFF 6.0 §Appendix (TIFF/IT); ICC.1 — tag 34675 (0x8773) carries an ICC profile
         if ($tag === TiffItTag::ICC_PROFILE) {
             $this->iccProfileRaw = $rawBytes;
+        }
+
+        // IPTC-IIM — tag 33723 (0x83BB) carries IPTC/NAA metadata
+        if ($tag === IptcTag::IPTC_NAA) {
+            $this->iptcNaaRaw = $rawBytes;
         }
 
         // DNGPrivateData validation skipped — non-DNG RAW formats (ARW, NEF, CR2)

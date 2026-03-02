@@ -28,6 +28,7 @@ use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Adobe\AdobeTag;
 use MagicSunday\ImageMeta\Model\Icc\IccTag;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
+use MagicSunday\ImageMeta\Model\Iptc\IptcTag;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
@@ -221,6 +222,13 @@ final class MetadataFormatter
     private array $tiffItTagNames = [];
 
     /**
+     * Maps tag IDs to their human-readable names for IPTC tags.
+     *
+     * @var array<int, string>
+     */
+    private array $iptcTagNames = [];
+
+    /**
      * Maps tag IDs to their human-readable names for GPS IFD tags.
      *
      * @var array<int, string>
@@ -321,6 +329,14 @@ final class MetadataFormatter
         foreach ($tiffItReflection->getConstants() as $name => $value) {
             if (is_int($value)) {
                 $this->tiffItTagNames[$value] = $this->constantNameToTagName($name);
+            }
+        }
+
+        // Build IPTC tag map
+        $iptcReflection = new ReflectionClass(IptcTag::class);
+        foreach ($iptcReflection->getConstants() as $name => $value) {
+            if (is_int($value)) {
+                $this->iptcTagNames[$value] = $this->constantNameToTagName($name);
             }
         }
 
@@ -849,12 +865,13 @@ final class MetadataFormatter
             }
         }
 
-        // Fall back to general TIFF, EXIF, DNG, Adobe and TIFF/IT tag maps
+        // Fall back to general TIFF, EXIF, DNG, Adobe, TIFF/IT and IPTC tag maps
         return $this->tiffTagNames[$tagId]
             ?? $this->exifTagNames[$tagId]
             ?? $this->dngTagNames[$tagId]
             ?? $this->adobeTagNames[$tagId]
             ?? $this->tiffItTagNames[$tagId]
+            ?? $this->iptcTagNames[$tagId]
             ?? sprintf('Unknown 0x%04x', $tagId);
     }
 
@@ -1756,6 +1773,14 @@ final class MetadataFormatter
 
             // ICC Profile: show size summary instead of raw binary
             if ($tagId === TiffItTag::ICC_PROFILE) {
+                $length       = is_string($entry->value) ? strlen($entry->value) : 0;
+                $data[$tagId] = sprintf('(%d bytes)', $length);
+
+                continue;
+            }
+
+            // IPTC/NAA: show size summary instead of raw binary
+            if ($tagId === IptcTag::IPTC_NAA) {
                 $length       = is_string($entry->value) ? strlen($entry->value) : 0;
                 $data[$tagId] = sprintf('(%d bytes)', $length);
 
