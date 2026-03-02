@@ -191,6 +191,18 @@ final class MetadataFormatter
     ];
 
     /**
+     * QuickTime metadata keys injected by DJI telemetry scanning.
+     *
+     * @var list<string>
+     */
+    private const array DJI_TELEMETRY_KEYS = [
+        'com.apple.quicktime.make',
+        'com.apple.quicktime.model',
+        'com.apple.quicktime.location.latitude',
+        'com.apple.quicktime.location.longitude',
+    ];
+
+    /**
      * Maps tag IDs to their human-readable names for EXIF tags.
      *
      * @var array<int, string>
@@ -818,6 +830,7 @@ final class MetadataFormatter
         // QuickTime section
         if ($metadata->quickTime instanceof QuickTimeMeta) {
             $this->printQuickTimeSection($metadata->quickTime);
+            $this->printDjiTelemetrySection($metadata->quickTime);
         }
 
         // MPF section
@@ -2336,14 +2349,54 @@ final class MetadataFormatter
             return;
         }
 
-        $data = [];
+        $hasDji = ($quickTime->stringValue('com.apple.quicktime.make') === 'DJI');
+        $data   = [];
 
         foreach ($quickTime->keys as $key => $value) {
+            // DJI telemetry keys are shown in their own dedicated section
+            if ($hasDji && in_array($key, self::DJI_TELEMETRY_KEYS, true)) {
+                continue;
+            }
+
             $label        = $this->formatQuickTimeLabel($key);
             $data[$label] = $value;
         }
 
-        $this->printSection('QuickTime', $data);
+        if ($data !== []) {
+            $this->printSection('QuickTime', $data);
+        }
+    }
+
+    /**
+     * Prints DJI Telemetry section when DJI drone metadata is present.
+     */
+    private function printDjiTelemetrySection(QuickTimeMeta $quickTime): void
+    {
+        if ($quickTime->stringValue('com.apple.quicktime.make') !== 'DJI') {
+            return;
+        }
+
+        $data = [];
+
+        $model = $quickTime->stringValue('com.apple.quicktime.model');
+        if ($model !== null) {
+            $data['Model'] = $model;
+        }
+
+        $lat = $quickTime->floatValue('com.apple.quicktime.location.latitude');
+        $lon = $quickTime->floatValue('com.apple.quicktime.location.longitude');
+
+        if (($lat !== null) && ($lon !== null)) {
+            $data['GPS Latitude']  = $this->formatGpsCoordinate($lat, $lat >= 0 ? 'N' : 'S');
+            $data['GPS Longitude'] = $this->formatGpsCoordinate($lon, $lon >= 0 ? 'E' : 'W');
+            $data['GPS Position']  = sprintf(
+                '%s, %s',
+                $this->formatGpsCoordinate($lat, $lat >= 0 ? 'N' : 'S'),
+                $this->formatGpsCoordinate($lon, $lon >= 0 ? 'E' : 'W'),
+            );
+        }
+
+        $this->printSection('DJI Telemetry', $data);
     }
 
     /**
