@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Parse\Jpeg\ExifSegmentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\FlashPixHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\IccProfileHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\IptcSegmentHandler;
+use MagicSunday\ImageMeta\Parse\Jpeg\JfifSegmentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfDocumentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\XmpSegmentHandler;
 use MagicSunday\ImageMeta\Tests\Core\CreatesTempStream;
@@ -37,6 +38,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(MpfDocumentHandler::class)]
 #[CoversClass(FlashPixHandler::class)]
 #[CoversClass(IptcSegmentHandler::class)]
+#[CoversClass(JfifSegmentHandler::class)]
 #[UsesClass(Stream::class)]
 #[UsesClass(Marker::class)]
 #[UsesTrait(CreatesTempStream::class)]
@@ -144,6 +146,28 @@ final class SegmentHandlersTest extends TestCase
         $handler->handle($stream, 'not-iptc', 41);
 
         self::assertTrue($handler->canHandle(Marker::APP13));
+        self::assertSame(1, $hits);
+    }
+
+    /**
+     * Verifies APP0 JFIF routing by signature.
+     */
+    #[Test]
+    public function jfifHandlerFiltersByMarkerAndSignature(): void
+    {
+        $stream  = new Stream($this->createTempStream('JPEG'), 4);
+        $hits    = 0;
+        $handler = new JfifSegmentHandler(function (string $_payload, int $_offset) use (&$hits): void {
+            ++$hits;
+        });
+
+        $handler->handle($stream, "JFIF\0payload", 5);
+        $handler->handle($stream, "JFXX\0payload", 6);
+        $handler->handle($stream, "Exif\0\0payload", 7);
+
+        self::assertTrue($handler->canHandle(Marker::APP0));
+        self::assertFalse($handler->canHandle(Marker::APP1));
+        self::assertFalse($handler->canHandle(Marker::APP2));
         self::assertSame(1, $hits);
     }
 }

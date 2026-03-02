@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
@@ -28,6 +29,7 @@ use MagicSunday\ImageMeta\Parse\Jpeg\JpegApp1Handler;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegAudioSegmentParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegFrameValidator;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegMarkerScanner;
+use MagicSunday\ImageMeta\Parse\Jpeg\JfifSegmentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserConfig;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfParser;
@@ -86,6 +88,8 @@ use function unlink;
 #[UsesClass(FlashPixStreamAssembler::class)]
 #[UsesClass(JpegAudioSegmentParser::class)]
 #[UsesClass(JpegApp1Handler::class)]
+#[UsesClass(JfifSegment::class)]
+#[UsesClass(JfifSegmentHandler::class)]
 final class JpegParserTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";
@@ -107,6 +111,10 @@ final class JpegParserTest extends TestCase
     private const string FPXR_SIGNATURE = 'FPXR';
 
     private const string AUDIO_SIGNATURE = "Exif\0\0Audio";
+
+    private const string JFIF_SIGNATURE = "JFIF\0";
+
+    private const int MARKER_APP0 = 0xE0;
 
     private const int MARKER_APP1 = 0xE1;
 
@@ -3248,6 +3256,132 @@ final class JpegParserTest extends TestCase
         self::assertContains('validateSequenceMetadata', $methods);
         self::assertContains('validateRangeAndOverlap', $methods);
         self::assertContains('commitStreamChunk', $methods);
+    }
+
+    // ── JFIF APP0 segment tests ────────────────────────────────
+
+    /**
+     * A standard JFIF APP0 with version 1.02, 72 DPI is parsed correctly.
+     */
+    #[Test]
+    public function jfifApp0SegmentIsParsed(): void
+    {
+        $payload = self::JFIF_SIGNATURE
+            . "\x01\x02"       // version 1.02
+            . "\x01"           // units = inches
+            . pack('n', 72)    // Xdensity
+            . pack('n', 72)    // Ydensity
+            . "\x00\x00";     // no thumbnail
+
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_APP0, $payload));
+        $extractor = $this->createExtractor($jpeg);
+        $jfif      = $extractor->getJfifSegment();
+
+        self::assertNotNull($jfif);
+        self::assertSame(1, $jfif->versionMajor);
+        self::assertSame(2, $jfif->versionMinor);
+        self::assertSame(1, $jfif->densityUnits);
+        self::assertSame(72, $jfif->xDensity);
+        self::assertSame(72, $jfif->yDensity);
+        self::assertSame(0, $jfif->xThumbnail);
+        self::assertSame(0, $jfif->yThumbnail);
+    }
+
+    /**
+     * When no APP0 segment is present, getJfifSegment() returns null.
+     */
+    #[Test]
+    public function jfifApp0AbsentReturnsNull(): void
+    {
+        $jpeg      = $this->jpeg();
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertNull($extractor->getJfifSegment());
+    }
+
+    /**
+     * A JFXX extension APP0 does not produce a JfifSegment.
+     */
+    #[Test]
+    public function jfxxApp0SignatureDoesNotProduceJfifSegment(): void
+    {
+        $payload   = "JFXX\0\x10some-extension-data";
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_APP0, $payload));
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertNull($extractor->getJfifSegment());
+    }
+
+    /**
+     * Only the first JFIF APP0 is retained when multiple are present.
+     */
+    #[Test]
+    public function onlyFirstJfifApp0IsRetained(): void
+    {
+        $first  = self::JFIF_SIGNATURE . "\x01\x01\x01" . pack('n', 96) . pack('n', 96) . "\x00\x00";
+        $second = self::JFIF_SIGNATURE . "\x01\x02\x00" . pack('n', 72) . pack('n', 72) . "\x00\x00";
+
+        $jpeg      = $this->jpeg(
+            self::segment(self::MARKER_APP0, $first),
+            self::segment(self::MARKER_APP0, $second),
+        );
+        $extractor = $this->createExtractor($jpeg);
+        $jfif      = $extractor->getJfifSegment();
+
+        self::assertNotNull($jfif);
+        self::assertSame(96, $jfif->xDensity);
+    }
+
+    /**
+     * JFIF APP0 captures thumbnail dimensions when present.
+     */
+    #[Test]
+    public function jfifApp0CapturesThumbnailDimensions(): void
+    {
+        $payload = self::JFIF_SIGNATURE . "\x01\x02\x01" . pack('n', 72) . pack('n', 72) . "\x10\x10";
+
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_APP0, $payload));
+        $extractor = $this->createExtractor($jpeg);
+        $jfif      = $extractor->getJfifSegment();
+
+        self::assertNotNull($jfif);
+        self::assertSame(16, $jfif->xThumbnail);
+        self::assertSame(16, $jfif->yThumbnail);
+    }
+
+    /**
+     * JFIF APP0 with units=0 (aspect ratio only) is parsed correctly.
+     */
+    #[Test]
+    public function jfifApp0WithNoUnitsHasZeroDensityUnit(): void
+    {
+        $payload = self::JFIF_SIGNATURE . "\x01\x00\x00" . pack('n', 1) . pack('n', 1) . "\x00\x00";
+
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_APP0, $payload));
+        $extractor = $this->createExtractor($jpeg);
+        $jfif      = $extractor->getJfifSegment();
+
+        self::assertNotNull($jfif);
+        self::assertSame(0, $jfif->densityUnits);
+        self::assertSame(1, $jfif->xDensity);
+        self::assertSame(1, $jfif->yDensity);
+    }
+
+    /**
+     * A truncated JFIF APP0 payload throws ParseError with code 2110.
+     */
+    #[Test]
+    public function jfifApp0TooShortThrows(): void
+    {
+        $payload = self::JFIF_SIGNATURE . "\x01\x02\x01"; // only 8 bytes — below minimum 14
+
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_APP0, $payload));
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(2110);
+
+        $extractor->getJfifSegment();
     }
 
     /**
