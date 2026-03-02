@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Model;
 
-use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
@@ -21,6 +20,7 @@ use MagicSunday\ImageMeta\Exif\Reader\DescriptionExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\DngMetadataExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\ImageStructureExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\UserCommentExifReader;
+use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftTag;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -51,7 +51,7 @@ final class ParsedExifWindowsXpTagsTest extends TestCase
     public function xpTitleDecodesAsciiUtf16Le(): void
     {
         $parsedExif = $this->parsedExifFromIfd0Entries([
-            ExifTag::XP_TITLE => new IfdEntry(ExifTag::XP_TITLE, 1, 12, $this->toUtf16Le('Hello') . "\x00\x00"),
+            MicrosoftTag::XP_TITLE => new IfdEntry(MicrosoftTag::XP_TITLE, 1, 12, $this->toUtf16Le('Hello') . "\x00\x00"),
         ]);
 
         self::assertSame('Hello', $parsedExif->xpTitle());
@@ -65,7 +65,7 @@ final class ParsedExifWindowsXpTagsTest extends TestCase
     {
         $text       = 'Ünïcödé';
         $parsedExif = $this->parsedExifFromIfd0Entries([
-            ExifTag::XP_TITLE => new IfdEntry(ExifTag::XP_TITLE, 1, 16, $this->toUtf16Le($text) . "\x00\x00"),
+            MicrosoftTag::XP_TITLE => new IfdEntry(MicrosoftTag::XP_TITLE, 1, 16, $this->toUtf16Le($text) . "\x00\x00"),
         ]);
 
         self::assertSame($text, $parsedExif->xpTitle());
@@ -90,7 +90,7 @@ final class ParsedExifWindowsXpTagsTest extends TestCase
     {
         $text       = 'sunset;beach';
         $parsedExif = $this->parsedExifFromIfd0Entries([
-            ExifTag::XP_KEYWORDS => new IfdEntry(ExifTag::XP_KEYWORDS, 1, 26, $this->toUtf16Le($text) . "\x00\x00"),
+            MicrosoftTag::XP_KEYWORDS => new IfdEntry(MicrosoftTag::XP_KEYWORDS, 1, 26, $this->toUtf16Le($text) . "\x00\x00"),
         ]);
 
         self::assertSame($text, $parsedExif->xpKeywords());
@@ -103,7 +103,7 @@ final class ParsedExifWindowsXpTagsTest extends TestCase
     public function xpAuthorReturnsNullForEmptyPayload(): void
     {
         $parsedExif = $this->parsedExifFromIfd0Entries([
-            ExifTag::XP_AUTHOR => new IfdEntry(ExifTag::XP_AUTHOR, 1, 2, "\x00\x00"),
+            MicrosoftTag::XP_AUTHOR => new IfdEntry(MicrosoftTag::XP_AUTHOR, 1, 2, "\x00\x00"),
         ]);
 
         self::assertNull($parsedExif->xpAuthor());
@@ -116,11 +116,11 @@ final class ParsedExifWindowsXpTagsTest extends TestCase
     public function allFiveXpTagsDecodeCorrectly(): void
     {
         $parsedExif = $this->parsedExifFromIfd0Entries([
-            ExifTag::XP_TITLE    => new IfdEntry(ExifTag::XP_TITLE, 1, 12, $this->toUtf16Le('Title') . "\x00\x00"),
-            ExifTag::XP_COMMENT  => new IfdEntry(ExifTag::XP_COMMENT, 1, 16, $this->toUtf16Le('Comment') . "\x00\x00"),
-            ExifTag::XP_AUTHOR   => new IfdEntry(ExifTag::XP_AUTHOR, 1, 14, $this->toUtf16Le('Author') . "\x00\x00"),
-            ExifTag::XP_KEYWORDS => new IfdEntry(ExifTag::XP_KEYWORDS, 1, 18, $this->toUtf16Le('Keywords') . "\x00\x00"),
-            ExifTag::XP_SUBJECT  => new IfdEntry(ExifTag::XP_SUBJECT, 1, 16, $this->toUtf16Le('Subject') . "\x00\x00"),
+            MicrosoftTag::XP_TITLE    => new IfdEntry(MicrosoftTag::XP_TITLE, 1, 12, $this->toUtf16Le('Title') . "\x00\x00"),
+            MicrosoftTag::XP_COMMENT  => new IfdEntry(MicrosoftTag::XP_COMMENT, 1, 16, $this->toUtf16Le('Comment') . "\x00\x00"),
+            MicrosoftTag::XP_AUTHOR   => new IfdEntry(MicrosoftTag::XP_AUTHOR, 1, 14, $this->toUtf16Le('Author') . "\x00\x00"),
+            MicrosoftTag::XP_KEYWORDS => new IfdEntry(MicrosoftTag::XP_KEYWORDS, 1, 18, $this->toUtf16Le('Keywords') . "\x00\x00"),
+            MicrosoftTag::XP_SUBJECT  => new IfdEntry(MicrosoftTag::XP_SUBJECT, 1, 16, $this->toUtf16Le('Subject') . "\x00\x00"),
         ]);
 
         self::assertSame('Title', $parsedExif->xpTitle());
@@ -137,7 +137,7 @@ final class ParsedExifWindowsXpTagsTest extends TestCase
     public function xpSubjectReturnsNullForOddLengthPayload(): void
     {
         $parsedExif = $this->parsedExifFromIfd0Entries([
-            ExifTag::XP_SUBJECT => new IfdEntry(ExifTag::XP_SUBJECT, 1, 3, 'abc'),
+            MicrosoftTag::XP_SUBJECT => new IfdEntry(MicrosoftTag::XP_SUBJECT, 1, 3, 'abc'),
         ]);
 
         self::assertNull($parsedExif->xpSubject());

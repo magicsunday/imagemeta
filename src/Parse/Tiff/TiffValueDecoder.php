@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
+use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftTag;
 
 use function assert;
 use function in_array;
@@ -55,11 +56,11 @@ final readonly class TiffValueDecoder
      * @var list<int>
      */
     private const array XP_TAGS = [
-        ExifTag::XP_TITLE,
-        ExifTag::XP_COMMENT,
-        ExifTag::XP_AUTHOR,
-        ExifTag::XP_KEYWORDS,
-        ExifTag::XP_SUBJECT,
+        MicrosoftTag::XP_TITLE,
+        MicrosoftTag::XP_COMMENT,
+        MicrosoftTag::XP_AUTHOR,
+        MicrosoftTag::XP_KEYWORDS,
+        MicrosoftTag::XP_SUBJECT,
     ];
 
     /**

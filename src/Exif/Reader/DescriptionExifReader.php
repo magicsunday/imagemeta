@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Value\Enum\LearningIntention;
 use MagicSunday\ImageMeta\Value\Enum\LearningUsage;
@@ -290,7 +291,7 @@ final readonly class DescriptionExifReader
      */
     public function xpTitle(): ?string
     {
-        $raw = $this->reader->rawString($this->ifd0, ExifTag::XP_TITLE);
+        $raw = $this->reader->rawString($this->ifd0, MicrosoftTag::XP_TITLE);
 
         return $raw !== null ? $this->reader->decodeUtf16Le($raw) : null;
     }
@@ -300,7 +301,7 @@ final readonly class DescriptionExifReader
      */
     public function xpComment(): ?string
     {
-        $raw = $this->reader->rawString($this->ifd0, ExifTag::XP_COMMENT);
+        $raw = $this->reader->rawString($this->ifd0, MicrosoftTag::XP_COMMENT);
 
         return $raw !== null ? $this->reader->decodeUtf16Le($raw) : null;
     }
@@ -310,7 +311,7 @@ final readonly class DescriptionExifReader
      */
     public function xpAuthor(): ?string
     {
-        $raw = $this->reader->rawString($this->ifd0, ExifTag::XP_AUTHOR);
+        $raw = $this->reader->rawString($this->ifd0, MicrosoftTag::XP_AUTHOR);
 
         return $raw !== null ? $this->reader->decodeUtf16Le($raw) : null;
     }
@@ -320,7 +321,7 @@ final readonly class DescriptionExifReader
      */
     public function xpKeywords(): ?string
     {
-        $raw = $this->reader->rawString($this->ifd0, ExifTag::XP_KEYWORDS);
+        $raw = $this->reader->rawString($this->ifd0, MicrosoftTag::XP_KEYWORDS);
 
         return $raw !== null ? $this->reader->decodeUtf16Le($raw) : null;
     }
@@ -330,7 +331,7 @@ final readonly class DescriptionExifReader
      */
     public function xpSubject(): ?string
     {
-        $raw = $this->reader->rawString($this->ifd0, ExifTag::XP_SUBJECT);
+        $raw = $this->reader->rawString($this->ifd0, MicrosoftTag::XP_SUBJECT);
 
         return $raw !== null ? $this->reader->decodeUtf16Le($raw) : null;
     }

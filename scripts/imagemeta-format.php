@@ -35,8 +35,11 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
+use MagicSunday\ImageMeta\Model\Epson\EpsonTag;
+use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffItTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Model\TiffEp\TiffEpTag;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Exif\Text\UndefinedTextMarker;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
@@ -230,6 +233,27 @@ final class MetadataFormatter
     private array $iptcTagNames = [];
 
     /**
+     * Maps tag IDs to their human-readable names for Microsoft tags.
+     *
+     * @var array<int, string>
+     */
+    private array $microsoftTagNames = [];
+
+    /**
+     * Maps tag IDs to their human-readable names for Epson tags.
+     *
+     * @var array<int, string>
+     */
+    private array $epsonTagNames = [];
+
+    /**
+     * Maps tag IDs to their human-readable names for TIFF/EP tags.
+     *
+     * @var array<int, string>
+     */
+    private array $tiffEpTagNames = [];
+
+    /**
      * Maps tag IDs to their human-readable names for GPS IFD tags.
      *
      * @var array<int, string>
@@ -338,6 +362,30 @@ final class MetadataFormatter
         foreach ($iptcReflection->getConstants() as $name => $value) {
             if (is_int($value)) {
                 $this->iptcTagNames[$value] = $this->constantNameToTagName($name);
+            }
+        }
+
+        // Build Microsoft tag map
+        $microsoftReflection = new ReflectionClass(MicrosoftTag::class);
+        foreach ($microsoftReflection->getConstants() as $name => $value) {
+            if (is_int($value)) {
+                $this->microsoftTagNames[$value] = $this->constantNameToTagName($name);
+            }
+        }
+
+        // Build Epson tag map
+        $epsonReflection = new ReflectionClass(EpsonTag::class);
+        foreach ($epsonReflection->getConstants() as $name => $value) {
+            if (is_int($value)) {
+                $this->epsonTagNames[$value] = $this->constantNameToTagName($name);
+            }
+        }
+
+        // Build TIFF/EP tag map
+        $tiffEpReflection = new ReflectionClass(TiffEpTag::class);
+        foreach ($tiffEpReflection->getConstants() as $name => $value) {
+            if (is_int($value)) {
+                $this->tiffEpTagNames[$value] = $this->constantNameToTagName($name);
             }
         }
 
@@ -865,13 +913,16 @@ final class MetadataFormatter
             }
         }
 
-        // Fall back to general TIFF, EXIF, DNG, Adobe, TIFF/IT and IPTC tag maps
+        // Fall back to general TIFF, EXIF, DNG, Adobe, TIFF/IT, IPTC, Microsoft, Epson, TIFF/EP tag maps
         return $this->tiffTagNames[$tagId]
             ?? $this->exifTagNames[$tagId]
             ?? $this->dngTagNames[$tagId]
             ?? $this->adobeTagNames[$tagId]
             ?? $this->tiffItTagNames[$tagId]
             ?? $this->iptcTagNames[$tagId]
+            ?? $this->microsoftTagNames[$tagId]
+            ?? $this->epsonTagNames[$tagId]
+            ?? $this->tiffEpTagNames[$tagId]
             ?? sprintf('Unknown 0x%04x', $tagId);
     }
 
@@ -1369,19 +1420,19 @@ final class MetadataFormatter
             ExifTag::USER_COMMENT => $this->formatUserCommentValue($rawValue, $exifDoc),
 
             // Windows XP tags - Decode UCS-2 (UTF-16LE) to UTF-8
-            ExifTag::XP_TITLE    => $exifDoc->xpTitle(),
-            ExifTag::XP_COMMENT  => $exifDoc->xpComment(),
-            ExifTag::XP_AUTHOR   => $exifDoc->xpAuthor(),
-            ExifTag::XP_KEYWORDS => $exifDoc->xpKeywords(),
-            ExifTag::XP_SUBJECT  => $exifDoc->xpSubject(),
+            MicrosoftTag::XP_TITLE    => $exifDoc->xpTitle(),
+            MicrosoftTag::XP_COMMENT  => $exifDoc->xpComment(),
+            MicrosoftTag::XP_AUTHOR   => $exifDoc->xpAuthor(),
+            MicrosoftTag::XP_KEYWORDS => $exifDoc->xpKeywords(),
+            MicrosoftTag::XP_SUBJECT  => $exifDoc->xpSubject(),
 
             // PrintImageMatching - Binary Epson PIM data, show summary only
-            ExifTag::PRINT_IMAGE_MATCHING => is_string($rawValue)
+            EpsonTag::PRINT_IMAGE_MATCHING => is_string($rawValue)
                 ? sprintf('(PIM data, %d bytes)', strlen($rawValue))
                 : null,
 
             // Padding - Microsoft filler bytes, show summary only
-            ExifTag::PADDING => is_string($rawValue)
+            MicrosoftTag::PADDING => is_string($rawValue)
                 ? sprintf('(%d bytes)', strlen($rawValue))
                 : null,
 
