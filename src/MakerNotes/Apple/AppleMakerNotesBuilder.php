@@ -51,15 +51,15 @@ final readonly class AppleMakerNotesBuilder
         $styleData            = $this->loadStyleSection($dictionary, $semanticStyleCompact);
         $cameraData           = $this->loadCameraSection($dictionary);
 
-        $snr                     = $this->extractor->floatValue($dictionary, 'SNRSetting', 'SNR');
-        $aeStable                = $this->extractor->boolDictionaryValue($dictionary, 'AEStable');
-        $aeTarget                = $this->extractor->rationalFloatValue($dictionary, 'AETarget');
-        $aeAverage               = $this->extractor->rationalFloatValue($dictionary, 'AEAverage');
-        $signalToNoiseRatioType  = $this->extractor->stringOrIntValue($dictionary, 'SignalToNoiseRatioType');
-        $luminanceNoiseAmplitude = $this->extractor->rationalFloatValue($dictionary, 'LuminanceNoiseAmplitude');
-        $runTime                 = $this->extractor->runTimeValue($dictionary, 'RunTime');
-        $livePhotoIndex          = $this->extractor->intValue($dictionary, ...AppleMaps::LIVE_PHOTO_INDEX_KEYS);
-        $livePhotoTime           = null;
+        $snr                    = $this->extractor->floatValue($dictionary, 'SNRSetting', 'SNR');
+        $aeStable               = $this->extractor->boolDictionaryValue($dictionary, 'AEStable');
+        $aeTarget               = $this->extractor->rationalFloatValue($dictionary, 'AETarget');
+        $aeAverage              = $this->extractor->rationalFloatValue($dictionary, 'AEAverage');
+        $signalToNoiseRatioType = $this->extractor->stringOrIntValue($dictionary, 'SignalToNoiseRatioType');
+        $luminanceAmplitude     = $this->extractor->rationalFloatValue($dictionary, 'LuminanceNoiseAmplitude');
+        $runTime                = $this->extractor->runTimeValue($dictionary, 'RunTime');
+        $livePhotoIndex         = $this->extractor->intValue($dictionary, ...AppleMaps::LIVE_PHOTO_INDEX_KEYS);
+        $livePhotoTime          = null;
         if (($livePhotoIndex !== null) && ($runTime instanceof RunTime)) {
             $timescale = $runTime->timescale;
             if (($timescale !== null) && ($timescale > 0)) {
@@ -100,8 +100,8 @@ final readonly class AppleMakerNotesBuilder
             )
             : null;
 
-        $noise = ($snr !== null || $signalToNoiseRatioType !== null || $luminanceNoiseAmplitude !== null)
-            ? new AppleNoise($snr, $signalToNoiseRatioType, $luminanceNoiseAmplitude)
+        $noise = ($snr !== null || $signalToNoiseRatioType !== null || $luminanceAmplitude !== null)
+            ? new AppleNoise($snr, $signalToNoiseRatioType, $luminanceAmplitude)
             : null;
 
         $style = ($styleData['semanticStylePreset'] !== null || $styleData['semanticStyleWarmth'] !== null || $styleData['semanticStyleTone'] !== null)
@@ -118,12 +118,12 @@ final readonly class AppleMakerNotesBuilder
             : null;
 
         $camera = (
-            $identityData['cameraType'] !== null || $cameraData['imageCaptureType'] !== null || $cameraData['makerNoteVersion'] !== null
+            $identityData['type'] !== null || $cameraData['imageCaptureType'] !== null || $cameraData['makerNoteVersion'] !== null
             || $cameraData['qualityHint'] !== null || $cameraData['oisMode'] !== null
             || $cameraData['colorTemperature'] !== null || $cameraData['colorCorrectionMatrix'] !== null
         )
             ? new AppleCameraCapture(
-                $identityData['cameraType'],
+                $identityData['type'],
                 $cameraData['imageCaptureType'],
                 $cameraData['makerNoteVersion'],
                 $cameraData['qualityHint'],
@@ -192,7 +192,7 @@ final readonly class AppleMakerNotesBuilder
      *
      * @return array{
      *     contentIdentifier:?string,
-     *     cameraType:string|int|null,
+     *     type:string|int|null,
      *     imageCaptureRequestId:string|int|null,
      *     burstUuid:?string,
      *     imageUniqueId:?string,
@@ -217,7 +217,7 @@ final readonly class AppleMakerNotesBuilder
 
         return [
             'contentIdentifier'     => $contentIdentifier,
-            'cameraType'            => $cameraType,
+            'type'                  => $cameraType,
             'imageCaptureRequestId' => $this->extractor->identifierValue($dictionary, 'ImageCaptureRequestID'),
             'burstUuid'             => $this->extractor->stringValue($dictionary, 'BurstUUID'),
             'imageUniqueId'         => $this->extractor->stringValue($dictionary, 'ImageUniqueID'),

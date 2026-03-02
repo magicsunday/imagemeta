@@ -118,7 +118,7 @@ final class AppleDecoderTest extends TestCase
         $raw   = (string) hex2bin($hex);
         $apple = $this->decodeAppleMakerNotes($raw);
         self::assertSame('archived-photo-uuid', $apple->identity?->contentIdentifier);
-        self::assertSame('Front', $apple->camera?->cameraType);
+        self::assertSame('Front', $apple->camera?->type);
     }
 
     /**
@@ -188,7 +188,7 @@ final class AppleDecoderTest extends TestCase
 
         $apple = $this->decodeAppleMakerNotes($raw);
         self::assertSame('photo-uuid', $apple->identity?->contentIdentifier);
-        self::assertSame('Tele', $apple->camera?->cameraType);
+        self::assertSame('Tele', $apple->camera?->type);
         self::assertEqualsWithDelta(2.5, $apple->hdr?->headroom, 1e-12);
         self::assertSame([1.0, 1.2, 1.3], $apple->hdr?->gain);
         self::assertEqualsWithDelta(24.5, $apple->noise?->snr, 1e-12);
@@ -545,8 +545,8 @@ final class AppleDecoderTest extends TestCase
 
         self::assertInstanceOf(AppleMakerNotes::class, $mapped);
         self::assertInstanceOf(AppleMakerNotes::class, $unknown);
-        self::assertSame('Back Wide Angle', $mapped->camera?->cameraType);
-        self::assertSame(42, $unknown->camera?->cameraType);
+        self::assertSame('Back Wide Angle', $mapped->camera?->type);
+        self::assertSame(42, $unknown->camera?->type);
     }
 
     /**
@@ -639,7 +639,7 @@ final class AppleDecoderTest extends TestCase
         self::assertFalse($notes->autoFocus?->stable);
         self::assertEqualsWithDelta(1.5, $notes->autoFocus->performance, 1e-12);
         self::assertSame(2, $notes->noise?->signalToNoiseRatioType);
-        self::assertEqualsWithDelta(2.5, $notes->noise->luminanceNoiseAmplitude, 1e-12);
+        self::assertEqualsWithDelta(2.5, $notes->noise->luminanceAmplitude, 1e-12);
         self::assertSame('REQ-12345', $notes->identity?->imageCaptureRequestId);
         self::assertSame('LowLight', $notes->camera?->qualityHint);
         self::assertSame([1.0, 0.5, 0.25], $notes->camera->colorCorrectionMatrix);

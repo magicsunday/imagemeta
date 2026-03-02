@@ -116,7 +116,7 @@ final class AppleMakerNotesMerger
 
         $accelerationVector = $this->preferMakerFloatList($makerNotes?->livePhoto?->accelerationVector, $lookup, 'AccelerationVector');
 
-        $cameraType            = $this->preferMakerStringOrInt($makerNotes?->camera?->cameraType, $lookup, 'CameraType');
+        $cameraType            = $this->preferMakerStringOrInt($makerNotes?->camera?->type, $lookup, 'CameraType');
         $colorTemperature      = $this->preferMakerInt($makerNotes?->camera?->colorTemperature, $lookup, 'ColorTemperature');
         $qualityHint           = $this->preferMakerStringOrNumeric($makerNotes?->camera?->qualityHint, $lookup, 'QualityHint');
         $colorCorrectionMatrix = $this->preferMakerFloatList($makerNotes?->camera?->colorCorrectionMatrix, $lookup, 'ColorCorrectionMatrix');
@@ -151,8 +151,8 @@ final class AppleMakerNotesMerger
             : null;
 
         $noise = ($snr !== null || $makerNotes?->noise?->signalToNoiseRatioType !== null
-            || $makerNotes?->noise?->luminanceNoiseAmplitude !== null)
-            ? new AppleNoise($snr, $makerNotes?->noise?->signalToNoiseRatioType, $makerNotes?->noise?->luminanceNoiseAmplitude)
+            || $makerNotes?->noise?->luminanceAmplitude !== null)
+            ? new AppleNoise($snr, $makerNotes?->noise?->signalToNoiseRatioType, $makerNotes?->noise?->luminanceAmplitude)
             : null;
 
         $style = ($semanticPreset !== null || $semanticWarmth !== null || $semanticTone !== null)

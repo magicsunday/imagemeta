@@ -17,7 +17,7 @@ namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 final readonly class AppleCameraCapture
 {
     /**
-     * @param string|int|null  $cameraType            Describes the hardware camera (e.g. "Wide", "Tele").
+     * @param string|int|null  $type                  Describes the hardware camera (e.g. "Wide", "Tele").
      * @param string|null      $imageCaptureType      Capture type enumeration label.
      * @param string|null      $makerNoteVersion      Normalized maker note version string reported by the device.
      * @param string|null      $qualityHint           Quality hint reported by the processing pipeline.
@@ -26,7 +26,7 @@ final readonly class AppleCameraCapture
      * @param list<float>|null $colorCorrectionMatrix Color correction matrix components in row-major order.
      */
     public function __construct(
-        public string|int|null $cameraType,
+        public string|int|null $type,
         public ?string $imageCaptureType,
         public ?string $makerNoteVersion,
         public ?string $qualityHint,

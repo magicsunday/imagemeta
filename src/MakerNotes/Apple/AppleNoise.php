@@ -17,14 +17,14 @@ namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 final readonly class AppleNoise
 {
     /**
-     * @param float|null      $snr                     Signal-to-noise ratio setting.
-     * @param string|int|null $signalToNoiseRatioType  Signal-to-noise ratio measurement type identifier.
-     * @param float|null      $luminanceNoiseAmplitude Luminance noise amplitude measured for the capture.
+     * @param float|null      $snr                    Signal-to-noise ratio setting.
+     * @param string|int|null $signalToNoiseRatioType Signal-to-noise ratio measurement type identifier.
+     * @param float|null      $luminanceAmplitude     Luminance noise amplitude measured for the capture.
      */
     public function __construct(
         public ?float $snr,
         public string|int|null $signalToNoiseRatioType,
-        public ?float $luminanceNoiseAmplitude,
+        public ?float $luminanceAmplitude,
     ) {
     }
 }

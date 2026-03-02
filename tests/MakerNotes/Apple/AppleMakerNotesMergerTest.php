@@ -112,7 +112,7 @@ final class AppleMakerNotesMergerTest extends TestCase
 
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('maker-note', $apple->identity?->contentIdentifier);
-        self::assertSame('Maker Camera', $apple->camera?->cameraType);
+        self::assertSame('Maker Camera', $apple->camera?->type);
         self::assertSame([1.1, 1.2, 1.3], $apple->hdr?->gain);
         self::assertSame('MakerPreset', $apple->semanticStyle?->preset);
         self::assertSame('Portrait', $apple->camera->imageCaptureType);
@@ -181,7 +181,7 @@ final class AppleMakerNotesMergerTest extends TestCase
 
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('qt-content', $apple->identity?->contentIdentifier);
-        self::assertSame('Quick Camera', $apple->camera?->cameraType);
+        self::assertSame('Quick Camera', $apple->camera?->type);
         self::assertSame([0.9, 1.0, 1.1], $apple->hdr?->gain);
         self::assertSame(1.25, $apple->hdr->headroom);
         self::assertSame(9.5, $apple->noise?->snr);

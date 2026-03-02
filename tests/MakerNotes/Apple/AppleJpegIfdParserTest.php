@@ -432,7 +432,7 @@ final class AppleJpegIfdParserTest extends TestCase
 
         $apple = $record->apple;
         self::assertSame('photo-uuid-123', $apple->identity?->contentIdentifier);
-        self::assertSame('Back Wide Angle', $apple->camera?->cameraType);
+        self::assertSame('Back Wide Angle', $apple->camera?->type);
         self::assertTrue($apple->autoExposure?->stable);
         self::assertEqualsWithDelta(200.0, $apple->autoExposure->target, 1e-12);
         self::assertEqualsWithDelta(180.0, $apple->autoExposure->average, 1e-12);
