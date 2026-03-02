@@ -25,11 +25,11 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Parse\Jpeg\FlashPixStreamAssembler;
 use MagicSunday\ImageMeta\Parse\Jpeg\IccProfileAssembler;
+use MagicSunday\ImageMeta\Parse\Jpeg\JfifSegmentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegApp1Handler;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegAudioSegmentParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegFrameValidator;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegMarkerScanner;
-use MagicSunday\ImageMeta\Parse\Jpeg\JfifSegmentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserConfig;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfParser;
@@ -3321,7 +3321,7 @@ final class JpegParserTest extends TestCase
         $first  = self::JFIF_SIGNATURE . "\x01\x01\x01" . pack('n', 96) . pack('n', 96) . "\x00\x00";
         $second = self::JFIF_SIGNATURE . "\x01\x02\x00" . pack('n', 72) . pack('n', 72) . "\x00\x00";
 
-        $jpeg      = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP0, $first),
             self::segment(self::MARKER_APP0, $second),
         );

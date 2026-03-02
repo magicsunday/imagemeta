@@ -179,6 +179,7 @@ final readonly class MetadataReader
         $audioStreams    = $jpeg->getAudioStreams();
         $mpfDocument     = $jpeg->getMpfDocument();
         $iptcBlobs       = $jpeg->getIptcPayloads();
+        $jfifSegment     = $jpeg->getJfifSegment();
         $bitsPerSample   = $jpeg->getFrameSamplePrecision();
         $frameHeight     = $jpeg->getFrameHeight();
         $frameWidth      = $jpeg->getFrameWidth();
@@ -203,7 +204,7 @@ final readonly class MetadataReader
             ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif($exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($xmpBlobs, $xmpDoc)
-            ->withJpegSegments($iccProfile, $iccSegments, $flashPixStreams, $mpfDocument, $audioStreams)
+            ->withJpegSegments($iccProfile, $iccSegments, $flashPixStreams, $mpfDocument, $audioStreams, $jfifSegment)
             ->withJpegFrame($frameWidth, $frameHeight, $bitsPerSample, $sampling, $subSampling)
             ->withIptc($iptcBlobs, $iptcDoc)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)

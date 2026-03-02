@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
+use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
@@ -58,6 +59,8 @@ final class MetadataBuilder
 
     /** @var list<JpegAudioStream> */
     private array $jpegAudioStreams = [];
+
+    private ?JfifSegment $jfifSegment = null;
 
     private ?int $jpegBitsPerSample = null;
 
@@ -182,13 +185,14 @@ final class MetadataBuilder
     }
 
     /**
-     * Configures JPEG segment payloads (ICC, FlashPix, MPF, audio).
+     * Configures JPEG segment payloads (ICC, FlashPix, MPF, audio, JFIF).
      *
      * @param string|null           $iccProfile       Binary ICC profile.
      * @param list<string>          $iccSegments      Raw ICC APP2 segments in encounter order.
      * @param array<int, string>    $flashPixStreams  Concatenated FlashPix extension streams.
      * @param MpfDocument|null      $mpfDocument      Parsed MPF document.
      * @param list<JpegAudioStream> $jpegAudioStreams EXIF audio streams embedded in JPEG APP2 markers.
+     * @param JfifSegment|null      $jfifSegment      Parsed JFIF APP0 segment.
      */
     public function withJpegSegments(
         ?string $iccProfile = null,
@@ -196,12 +200,14 @@ final class MetadataBuilder
         array $flashPixStreams = [],
         ?MpfDocument $mpfDocument = null,
         array $jpegAudioStreams = [],
+        ?JfifSegment $jfifSegment = null,
     ): self {
         $this->iccProfile       = $iccProfile;
         $this->iccSegments      = $iccSegments;
         $this->flashPixStreams  = $flashPixStreams;
         $this->mpfDocument      = $mpfDocument;
         $this->jpegAudioStreams = $jpegAudioStreams;
+        $this->jfifSegment      = $jfifSegment;
 
         return $this;
     }
@@ -352,6 +358,7 @@ final class MetadataBuilder
             iptcBlobs: $this->iptcBlobs,
             iptcDoc: $this->iptcDoc,
             gainMapBlob: $this->gainMapBlob,
+            jfifSegment: $this->jfifSegment,
             xmpParser: $this->xmpParser,
             iptcParser: $this->iptcParser,
             structuredMetadataBuilder: $this->structuredMetadataBuilder,

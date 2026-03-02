@@ -14,6 +14,8 @@ namespace MagicSunday\ImageMeta\Parse\Jpeg;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Jpeg\Marker;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
@@ -49,6 +51,13 @@ final class JpegParser implements JpegParserInterface
      */
     private const int ADOBE_APP14_MIN_LENGTH = 12;
 
+    /**
+     * Minimum payload length for a valid JFIF APP0 segment:
+     * 5-byte "JFIF\0" + 1 major + 1 minor + 1 units + 2 Xdensity + 2 Ydensity
+     * + 1 Xthumbnail + 1 Ythumbnail = 14 bytes total.
+     */
+    private const int JFIF_MIN_LENGTH = 14;
+
     private bool $parsed = false;
 
     /** @var array<int, string> */
@@ -63,6 +72,8 @@ final class JpegParser implements JpegParserInterface
     private array $iptcPayloads = [];
 
     private ?int $adobeApp14ColorTransform = null;
+
+    private ?JfifSegment $jfifSegment = null;
 
     private readonly MarkerHandlerRegistry $markerHandlerRegistry;
 
@@ -213,6 +224,16 @@ final class JpegParser implements JpegParserInterface
     }
 
     /**
+     * Returns the parsed JFIF APP0 segment when a JFIF marker was encountered.
+     */
+    public function getJfifSegment(): ?JfifSegment
+    {
+        $this->parseIfNeeded();
+
+        return $this->jfifSegment;
+    }
+
+    /**
      * Returns the precision in bits reported by the primary start of frame segment.
      */
     public function getFrameSamplePrecision(): ?int
@@ -323,6 +344,7 @@ final class JpegParser implements JpegParserInterface
         $this->mpfDocument              = null;
         $this->iptcPayloads             = [];
         $this->adobeApp14ColorTransform = null;
+        $this->jfifSegment              = null;
         $this->firstSofOffset           = null;
     }
 
@@ -449,6 +471,7 @@ final class JpegParser implements JpegParserInterface
     private function createDefaultMarkerHandlerRegistry(): MarkerHandlerRegistry
     {
         return new MarkerHandlerRegistry([
+            new JfifSegmentHandler($this->handleJfifSegment(...)),
             new ExifSegmentHandler($this->app1Handler->handleApp1(...)),
             new XmpSegmentHandler($this->app1Handler->handleApp1(...)),
             new IccProfileHandler($this->iccAssembler->handleSegment(...)),
@@ -476,6 +499,35 @@ final class JpegParser implements JpegParserInterface
         }
 
         $this->mpfSegments[] = substr($payload, $signatureLength);
+    }
+
+    /**
+     * Parses the JFIF APP0 segment payload and stores the first valid instance.
+     *
+     * JFIF 1.02 (2009) §3 defines the payload layout immediately following the "JFIF\0" identifier.
+     */
+    private function handleJfifSegment(string $payload, int $offset): void
+    {
+        if ($this->jfifSegment instanceof JfifSegment) {
+            return;
+        }
+
+        if (strlen($payload) < self::JFIF_MIN_LENGTH) {
+            throw new ParseError(
+                sprintf('JFIF APP0 segment at offset %d is too short to contain required fields', $offset),
+                2110,
+            );
+        }
+
+        $this->jfifSegment = new JfifSegment(
+            versionMajor: ord($payload[5]),
+            versionMinor: ord($payload[6]),
+            densityUnits: ord($payload[7]),
+            xDensity: Unpack::int('n', substr($payload, 8, 2), 'JFIF Xdensity'),
+            yDensity: Unpack::int('n', substr($payload, 10, 2), 'JFIF Ydensity'),
+            xThumbnail: ord($payload[12]),
+            yThumbnail: ord($payload[13]),
+        );
     }
 
     /**

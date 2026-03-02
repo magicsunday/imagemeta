@@ -57,6 +57,7 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
+use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
@@ -513,6 +514,11 @@ final class MetadataReaderTest extends TestCase
                     }
 
                     public function getFrameYCbCrSubSampling(): ?array
+                    {
+                        return null;
+                    }
+
+                    public function getJfifSegment(): ?JfifSegment
                     {
                         return null;
                     }

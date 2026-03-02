@@ -29,6 +29,7 @@ use MagicSunday\ImageMeta\Model\Adobe\AdobeTag;
 use MagicSunday\ImageMeta\Model\Icc\IccTag;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Iptc\IptcTag;
+use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
@@ -723,9 +724,8 @@ final class MetadataFormatter
         // File section
         $this->printFileSection($metadata, $filePath);
 
-        $jfifData = $this->readJfifData($filePath);
-        if ($jfifData !== null) {
-            $this->printJfifSection($jfifData);
+        if ($metadata->jfifSegment instanceof JfifSegment) {
+            $this->printJfifSection($metadata->jfifSegment);
         }
 
         // IFD0 section
@@ -1636,100 +1636,22 @@ final class MetadataFormatter
      *
      * @param array{version:string,unit:string,xResolution:int,yResolution:int} $jfifData
      */
-    private function printJfifSection(array $jfifData): void
+    private function printJfifSection(JfifSegment $jfif): void
     {
+        $unit = match ($jfif->densityUnits) {
+            1       => 'inches',
+            2       => 'cm',
+            default => 'None',
+        };
+
         $data = [
-            '0x0000 JFIF Version' => $jfifData['version'],
-            '0x0002 Resolution Unit' => $jfifData['unit'],
-            '0x0003 X Resolution' => $jfifData['xResolution'],
-            '0x0005 Y Resolution' => $jfifData['yResolution'],
+            '0x0000 JFIF Version'    => sprintf('%d.%02d', $jfif->versionMajor, $jfif->versionMinor),
+            '0x0002 Resolution Unit' => $unit,
+            '0x0003 X Resolution'    => $jfif->xDensity,
+            '0x0005 Y Resolution'    => $jfif->yDensity,
         ];
 
         $this->printSection('JFIF', $data);
-    }
-
-    /**
-     * Attempts to read JFIF APP0 metadata from a JPEG file.
-     *
-     * @return array{version:string,unit:string,xResolution:int,yResolution:int}|null
-     */
-    private function readJfifData(string $filePath): ?array
-    {
-        $handle = @fopen($filePath, 'rb');
-        if ($handle === false) {
-            return null;
-        }
-
-        $start = fread($handle, 2);
-        if ($start !== "\xFF\xD8") {
-            fclose($handle);
-            return null;
-        }
-
-        while (!feof($handle)) {
-            $markerStart = fread($handle, 1);
-            if ($markerStart === '' || $markerStart === false) {
-                break;
-            }
-
-            if ($markerStart !== "\xFF") {
-                continue;
-            }
-
-            $marker = fread($handle, 1);
-            if ($marker === '' || $marker === false) {
-                break;
-            }
-
-            $markerByte = ord($marker);
-            if ($markerByte === 0xD9 || $markerByte === 0xDA) {
-                break;
-            }
-
-            $lengthBytes = fread($handle, 2);
-            if ($lengthBytes === '' || $lengthBytes === false || strlen($lengthBytes) !== 2) {
-                break;
-            }
-
-            $length = unpack('nlen', $lengthBytes)['len'] ?? 0;
-            if ($length < 2) {
-                break;
-            }
-
-            $payloadLength = $length - 2;
-            $payload       = $payloadLength > 0 ? fread($handle, $payloadLength) : '';
-
-            if ($markerByte === 0xE0 && is_string($payload) && str_starts_with($payload, "JFIF\0")) {
-                if (strlen($payload) < 14) {
-                    break;
-                }
-
-                $major = ord($payload[5]);
-                $minor = ord($payload[6]);
-                $unitCode = ord($payload[7]);
-                $xDensity = unpack('n', substr($payload, 8, 2))[1] ?? 0;
-                $yDensity = unpack('n', substr($payload, 10, 2))[1] ?? 0;
-
-                $unit = match ($unitCode) {
-                    1 => 'inches',
-                    2 => 'cm',
-                    default => 'None',
-                };
-
-                fclose($handle);
-
-                return [
-                    'version' => sprintf('%d.%02d', $major, $minor),
-                    'unit' => $unit,
-                    'xResolution' => $xDensity,
-                    'yResolution' => $yDensity,
-                ];
-            }
-        }
-
-        fclose($handle);
-
-        return null;
     }
 
     /**

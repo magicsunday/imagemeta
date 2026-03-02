@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
+use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
@@ -153,6 +154,7 @@ final readonly class Metadata
         array $iptcBlobs = [],
         public ?IptcDocument $iptcDoc = null,
         public ?string $gainMapBlob = null,
+        public ?JfifSegment $jfifSegment = null,
         private ?XmpParserInterface $xmpParser = null,
         private ?IptcParserInterface $iptcParser = null,
         ?StructuredMetadataBuilder $structuredMetadataBuilder = null,

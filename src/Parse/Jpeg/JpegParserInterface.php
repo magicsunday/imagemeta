@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 
@@ -71,6 +72,11 @@ interface JpegParserInterface
      * @throws ParseError
      */
     public function getMpfDocument(): ?MpfDocument;
+
+    /**
+     * @throws ParseError
+     */
+    public function getJfifSegment(): ?JfifSegment;
 
     /**
      * @throws ParseError
