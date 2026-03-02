@@ -290,9 +290,14 @@ final readonly class MetadataReader
 
         $makerNotes = $this->appleMerger->merge($exifDoc->makerNotes(), null);
 
+        // Adobe XMP Part 3 — tag 700 (0x02BC) embeds XMP in TIFF IFD0
+        $xmpBlobs = $exifDoc->xmpPacketRaw !== null ? [$exifDoc->xmpPacketRaw] : [];
+        $xmpDoc   = $this->parseXmpBlobs($xmpBlobs);
+
         return (new MetadataBuilder())
             ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif($exifBlobs, $exifDoc, $makerNotes)
+            ->withXmp($xmpBlobs, $xmpDoc)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
             ->build();
     }

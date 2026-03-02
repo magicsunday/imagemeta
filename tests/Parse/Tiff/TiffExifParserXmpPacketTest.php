@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
-use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Model\Adobe\AdobeTag;
 use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
@@ -130,7 +130,7 @@ final class TiffExifParserXmpPacketTest extends TestCase
             . pack('v', 100) . pack('v', 0);
 
         // Tag 700 (0x02BC) — XMP Packet, type UNDEFINED, external offset
-        $blob .= pack('v', 0x02BC)
+        $blob .= pack('v', AdobeTag::XMP_PACKET)
             . pack('v', TiffConst::TYPE_UNDEFINED)
             . pack('V', strlen($xmpPayload))
             . pack('V', $xmpOffset);
@@ -205,7 +205,7 @@ final class TiffExifParserXmpPacketTest extends TestCase
             . pack('v', 100) . pack('v', 0);
 
         // Tag 700 pointing to offset 9999 (well beyond buffer end), count 50
-        $blob .= pack('v', 0x02BC)
+        $blob .= pack('v', AdobeTag::XMP_PACKET)
             . pack('v', TiffConst::TYPE_UNDEFINED)
             . pack('V', 50)
             . pack('V', 9999);

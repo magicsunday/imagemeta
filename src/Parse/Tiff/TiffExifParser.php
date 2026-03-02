@@ -23,6 +23,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
+use MagicSunday\ImageMeta\Model\Adobe\AdobeTag;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Parse\ParserLimits;
 
@@ -51,6 +52,8 @@ final class TiffExifParser implements TiffExifParserInterface
     private int $bigTiffOffsetSize = 8;
 
     private ?string $makerNoteRaw = null;
+
+    private ?string $xmpPacketRaw = null;
 
     /** @var array<int, Ifd> */
     private array $ifdCache = [];
@@ -153,6 +156,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $blobSize = UInt64::fromInt($this->buffer->size());
 
         $this->makerNoteRaw      = null;
+        $this->xmpPacketRaw      = null;
         $this->ifdCache          = [];
         $this->bigTiffOffsetSize = 8;
         $this->ifdParser ??= new IfdParser();
@@ -340,6 +344,7 @@ final class TiffExifParser implements TiffExifParserInterface
             $makerNotes,
             $additionalIfds,
             $subIfds,
+            xmpPacketRaw: $this->xmpPacketRaw,
         );
     }
 
@@ -647,6 +652,11 @@ final class TiffExifParser implements TiffExifParserInterface
 
         if ($tag === ExifTag::MAKER_NOTE) {
             $this->makerNoteRaw = $rawBytes;
+        }
+
+        // Adobe XMP Part 3 — tag 700 (0x02BC) carries a UTF-8 XMP/RDF packet
+        if ($tag === AdobeTag::XMP_PACKET) {
+            $this->xmpPacketRaw = $rawBytes;
         }
 
         // DNGPrivateData validation skipped — non-DNG RAW formats (ARW, NEF, CR2)

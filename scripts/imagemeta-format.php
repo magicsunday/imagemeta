@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Model\Adobe\AdobeTag;
 use MagicSunday\ImageMeta\Model\Icc\IccTag;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -205,6 +206,13 @@ final class MetadataFormatter
     private array $dngTagNames = [];
 
     /**
+     * Maps tag IDs to their human-readable names for Adobe-defined tags.
+     *
+     * @var array<int, string>
+     */
+    private array $adobeTagNames = [];
+
+    /**
      * Maps tag IDs to their human-readable names for GPS IFD tags.
      *
      * @var array<int, string>
@@ -289,6 +297,14 @@ final class MetadataFormatter
         foreach ($dngReflection->getConstants() as $name => $value) {
             if (is_int($value)) {
                 $this->dngTagNames[$value] = $this->constantNameToTagName($name);
+            }
+        }
+
+        // Build Adobe tag map
+        $adobeReflection = new ReflectionClass(AdobeTag::class);
+        foreach ($adobeReflection->getConstants() as $name => $value) {
+            if (is_int($value)) {
+                $this->adobeTagNames[$value] = $this->constantNameToTagName($name);
             }
         }
 
@@ -817,10 +833,11 @@ final class MetadataFormatter
             }
         }
 
-        // Fall back to general TIFF, EXIF and DNG tag maps
+        // Fall back to general TIFF, EXIF, DNG and Adobe tag maps
         return $this->tiffTagNames[$tagId]
             ?? $this->exifTagNames[$tagId]
             ?? $this->dngTagNames[$tagId]
+            ?? $this->adobeTagNames[$tagId]
             ?? sprintf('Unknown 0x%04x', $tagId);
     }
 
@@ -1709,6 +1726,14 @@ final class MetadataFormatter
         // Collect IFD0 tags from the ifd0 entries
         foreach ($exif->ifd0->entries as $tagId => $entry) {
             if ($this->isIfdPointerTag($tagId)) {
+                continue;
+            }
+
+            // XMP Packet: show size summary instead of raw byte data
+            if ($tagId === AdobeTag::XMP_PACKET) {
+                $length         = is_string($entry->value) ? strlen($entry->value) : 0;
+                $data[$tagId]   = sprintf('(%d bytes)', $length);
+
                 continue;
             }
 
