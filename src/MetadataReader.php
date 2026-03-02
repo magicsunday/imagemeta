@@ -25,11 +25,14 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
+use MagicSunday\ImageMeta\Model\Dji\DjiTelemetry;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\DjiMdatTelemetryScanner;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactory;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
@@ -231,6 +234,13 @@ final readonly class MetadataReader
     ): Metadata {
         [$exifBlobs, $xmpBlobs, $qt, $isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems, $ispeWidth, $ispeHeight, $iccProfile, $tmapItemIds] = $this->isoBmffParserFactory->create($stream)->extract();
 
+        // Truncated DJI drone recordings lack a moov box. When the parser
+        // found no EXIF/XMP payloads, scan the stream tail for DJI protobuf
+        // telemetry and inject model/GPS data into QuickTime keys.
+        if (($exifBlobs === []) && ($xmpBlobs === [])) {
+            $qt = $this->enrichWithDjiTelemetry($stream, $qt);
+        }
+
         // ISO BMFF containers store image dimensions in the ispe box and
         // image data in mdat — TIFF-level dimension/strip/tile tags are
         // not required.  Unlike JPEG context, JPEG-prohibited tags
@@ -349,6 +359,43 @@ final readonly class MetadataReader
             ->withGainMapBlob($hrgmBlob)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
             ->build();
+    }
+
+    /**
+     * Scans the stream tail for DJI protobuf telemetry and injects model/GPS into QuickTime metadata.
+     *
+     * DJI drone video recordings embed per-frame telemetry as protobuf records in the
+     * mdat stream. Truncated recordings (no moov box) lack conventional metadata, but
+     * the telemetry stream still contains the drone model and GPS coordinates.
+     *
+     * @param Stream             $stream Source stream to scan.
+     * @param QuickTimeMeta|null $qt     Existing QuickTime metadata from the parser.
+     */
+    private function enrichWithDjiTelemetry(Stream $stream, ?QuickTimeMeta $qt): ?QuickTimeMeta
+    {
+        $telemetry = (new DjiMdatTelemetryScanner())->scanStream($stream);
+
+        if (!$telemetry instanceof DjiTelemetry) {
+            return $qt;
+        }
+
+        $keys      = $qt instanceof QuickTimeMeta ? $qt->keys : [];
+        $dataAtoms = $qt instanceof QuickTimeMeta ? $qt->dataAtoms : [];
+
+        if ($telemetry->model !== null) {
+            $keys['com.apple.quicktime.make']  = 'DJI';
+            $keys['com.apple.quicktime.model'] = $telemetry->model;
+        }
+
+        if ($telemetry->latitude !== null) {
+            $keys['com.apple.quicktime.location.latitude'] = $telemetry->latitude;
+        }
+
+        if ($telemetry->longitude !== null) {
+            $keys['com.apple.quicktime.location.longitude'] = $telemetry->longitude;
+        }
+
+        return new QuickTimeMeta($keys, $dataAtoms);
     }
 
     /**
