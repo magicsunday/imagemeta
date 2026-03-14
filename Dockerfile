@@ -1,6 +1,7 @@
 FROM php:8.4-cli-alpine
 
 RUN apk add --no-cache \
+    bash \
     git \
     libxml2-dev \
     nodejs \
