@@ -21,6 +21,9 @@ namespace MagicSunday\ImageMeta\Exif\Model;
  *
  * @see \MagicSunday\ImageMeta\Model\Tiff\TiffTag for TIFF 6.0 baseline tags
  * @see \MagicSunday\ImageMeta\Model\Dng\DngTag for Adobe DNG RAW format tags
+ * @see \MagicSunday\ImageMeta\Model\Microsoft\MicrosoftTag for Microsoft EXIF extensions
+ * @see \MagicSunday\ImageMeta\Model\Epson\EpsonTag for Epson proprietary tags
+ * @see \MagicSunday\ImageMeta\Model\TiffEp\TiffEpTag for TIFF/EP and deprecated tags
  */
 final readonly class ExifTag
 {
