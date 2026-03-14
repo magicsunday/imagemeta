@@ -6,30 +6,12 @@
     "reporters": [
         "consoleFull"
     ],
-    "minTokens": 70,
+    "minTokens": 100,
     "minLines": 5,
     "path": [
         "src/"
     ],
     "ignore": [
-        "**/MetadataBuilder.php",
-        "**/IfdValueReader.php",
-        "**/ExposureParameterReader.php",
-        "**/SceneModeReader.php",
-        "**/GpsCoordinateConverter.php",
-        "**/GpsConverter.php",
-        "**/GpsUnitConverter.php",
-        "**/GpsTimestampConverter.php",
-        "**/DngGeometryValidator.php",
-        "**/TiffTagConstraintValidator.php",
-        "**/TiffJpegValidator.php",
-        "**/TiffSampleValidator.php",
-        "**/TiffColorInkValidator.php",
-        "**/TiffImageDataValidator.php",
-        "**/AppleDictionaryValueExtractor.php",
-        "**/AppleRationalNormalizer.php",
-        "**/TiffBinaryReader.php",
-        "**/DngValueNormalizer.php"
     ],
     "exitCode": true
 }
