@@ -100,6 +100,7 @@ final class MakerNoteDispatcher
             $metadata->sha1,
             $metadata->apple,
             $metadata->samsung,
+            $metadata->dji,
             $safe,
         );
     }

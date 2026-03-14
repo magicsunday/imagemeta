@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\MakerNotes;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Dji\DjiMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Samsung\SamsungMakerNotes;
 
 use function preg_match;
@@ -28,6 +29,7 @@ final readonly class MakerNotesRecord
      * @param string                 $sha1    Lowercase hexadecimal SHA-1 digest of the payload. Must be 40 characters long.
      * @param AppleMakerNotes|null   $apple   Additional Apple specific maker note data.
      * @param SamsungMakerNotes|null $samsung Additional Samsung specific maker note data.
+     * @param DjiMakerNotes|null     $dji     Additional DJI specific maker note data.
      * @param bool|null              $safe    DNG MakerNoteSafety flag (true=safe, false=unsafe, null=absent).
      */
     public function __construct(
@@ -36,6 +38,7 @@ final readonly class MakerNotesRecord
         public string $sha1,
         public ?AppleMakerNotes $apple = null,
         public ?SamsungMakerNotes $samsung = null,
+        public ?DjiMakerNotes $dji = null,
         public ?bool $safe = null,
     ) {
         if ($this->vendor === '') {

@@ -80,6 +80,7 @@ use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Dji\DjiMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
@@ -1887,13 +1888,21 @@ final class MetadataFormatter
     {
         // For Apple maker notes, extract detailed information
         if ($makerNotes->apple instanceof AppleMakerNotes) {
-            $data  = [];
-            $apple = $makerNotes->apple;
-
-            $this->flattenObjectProperties($apple, '', $data);
+            $data = [];
+            $this->flattenObjectProperties($makerNotes->apple, '', $data);
 
             if ($data !== []) {
                 $this->printSection('Apple', $data);
+            }
+        }
+
+        // For DJI maker notes, extract gimbal angles, speeds, compass
+        if ($makerNotes->dji instanceof DjiMakerNotes) {
+            $data = [];
+            $this->flattenObjectProperties($makerNotes->dji, '', $data);
+
+            if ($data !== []) {
+                $this->printSection('DJI', $data);
             }
         }
     }
