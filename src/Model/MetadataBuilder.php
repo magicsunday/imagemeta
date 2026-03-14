@@ -11,10 +11,11 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model;
 
+// jscpd:ignore-start
 use MagicSunday\ImageMeta\Contract\IptcParserInterface;
 use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder as StructuredMetadataAssemblyBuilder;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
@@ -25,6 +26,8 @@ use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+
+// jscpd:ignore-end
 
 /**
  * Fluent builder for assembling {@see Metadata} aggregates from domain-specific groups.
@@ -109,11 +112,11 @@ final class MetadataBuilder
 
     private ?IptcParserInterface $iptcParser = null;
 
-    private readonly StructuredMetadataAssemblyBuilder $structuredMetadataBuilder;
+    private readonly StructuredMetadataBuilder $structuredMetadataBuilder;
 
     public function __construct()
     {
-        $this->structuredMetadataBuilder = StructuredMetadataAssemblyBuilder::createDefault();
+        $this->structuredMetadataBuilder = StructuredMetadataBuilder::createDefault();
     }
 
     /**

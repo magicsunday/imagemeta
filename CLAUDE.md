@@ -10,25 +10,24 @@ PHP library (`magicsunday/imagemeta`) for read-only metadata extraction from JPE
 
 ## Running CI
 
-This project uses a Docker buildbox from the webtrees project:
+This project has its own Docker buildbox (`Dockerfile` + `compose.yaml`). All commands are available via `make`:
 
 ```bash
-# Full CI (mandatory gate before any commit)
-cd /volume2/docker/webtrees && docker compose run --rm -e COMPOSER_AUTH buildbox composer -d /var/docker/imagemeta ci:test
-
-# Individual steps
-cd /volume2/docker/webtrees && docker compose run --rm -e COMPOSER_AUTH buildbox composer -d /var/docker/imagemeta ci:test:php:lint
-cd /volume2/docker/webtrees && docker compose run --rm -e COMPOSER_AUTH buildbox composer -d /var/docker/imagemeta ci:test:php:cgl
-cd /volume2/docker/webtrees && docker compose run --rm -e COMPOSER_AUTH buildbox composer -d /var/docker/imagemeta ci:test:php:rector
-cd /volume2/docker/webtrees && docker compose run --rm -e COMPOSER_AUTH buildbox composer -d /var/docker/imagemeta ci:test:php:phpstan
-cd /volume2/docker/webtrees && docker compose run --rm -e COMPOSER_AUTH buildbox composer -d /var/docker/imagemeta ci:test:php:unit
-
-# Dependency management
-cd /volume2/docker/webtrees && docker compose run --rm -e COMPOSER_AUTH buildbox composer -d /var/docker/imagemeta install
-cd /volume2/docker/webtrees && docker compose run --rm -e COMPOSER_AUTH buildbox composer -d /var/docker/imagemeta update
-
-# Run format script
-cd /volume2/docker/webtrees && docker compose run --rm buildbox php /var/docker/imagemeta/scripts/imagemeta-format.php <file>
+make test           # Full CI (mandatory gate before any commit)
+make lint           # PHP linter
+make cgl-check      # Code style check (dry-run)
+make rector-check   # Rector check (dry-run)
+make stan           # PHPStan analysis
+make unit           # PHPUnit tests
+make cpd            # Copy-paste detection (jscpd)
+make cgl            # Fix code style
+make rector         # Apply rector rules
+make install        # Install composer dependencies
+make update         # Update composer dependencies
+make format FILE=<path>  # Run format script
+make build          # Build Docker image
+make bash           # Open a shell in the buildbox container
+make help           # Show all available targets
 ```
 
 CI pipeline order: phplint -> php-cs-fixer (dry-run) -> rector (dry-run) -> phpstan -> phpunit -> jscpd

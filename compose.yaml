@@ -1,0 +1,7 @@
+services:
+    buildbox:
+        build: .
+        volumes:
+            - .:/app
+        environment:
+            - COMPOSER_AUTH

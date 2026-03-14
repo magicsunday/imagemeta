@@ -1,0 +1,7 @@
+.build/
+.git/
+.idea/
+coverage/
+docs/
+node_modules/
+test-images/
