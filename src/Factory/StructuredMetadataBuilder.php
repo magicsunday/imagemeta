@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Factory;
 
 use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
 use MagicSunday\ImageMeta\Value\CaptureHardware;
 use MagicSunday\ImageMeta\Value\CaptureSettings;
@@ -39,7 +40,7 @@ final readonly class StructuredMetadataBuilder
      */
     public static function createDefault(): self
     {
-        return new self(new ValueFactory(new IccParser()));
+        return new self(new ValueFactory(new IccParser(), new FlashPixParser()));
     }
 
     /**

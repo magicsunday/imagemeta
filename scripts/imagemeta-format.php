@@ -81,6 +81,7 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Dji\DjiMakerNotes;
+use MagicSunday\ImageMeta\Value\FlashPixSummaryInfo;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
@@ -841,7 +842,10 @@ final class MetadataFormatter
 
         // FlashPix section
         if ($metadata->flashPixStreams !== []) {
-            $this->printFlashPixSection($metadata->flashPixStreams);
+            $this->printFlashPixSection(
+                $metadata->flashPixStreams,
+                $metadata->structured()->technical->flashPix->summaryInfo,
+            );
         }
 
         // JPEG Audio section
@@ -2519,9 +2523,13 @@ final class MetadataFormatter
     /**
      * Prints FlashPix streams section.
      */
-    private function printFlashPixSection(array $flashPixStreams): void
+    private function printFlashPixSection(array $flashPixStreams, ?FlashPixSummaryInfo $summaryInfo): void
     {
         $data = [];
+
+        if ($summaryInfo instanceof FlashPixSummaryInfo) {
+            $this->flattenObjectProperties($summaryInfo, '', $data);
+        }
 
         foreach ($flashPixStreams as $identifier => $stream) {
             $data['Stream ' . $identifier] = sprintf('(Binary data %d bytes)', strlen((string) $stream));

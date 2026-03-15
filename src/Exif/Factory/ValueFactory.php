@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Factory;
 
+use MagicSunday\ImageMeta\Contract\FlashPixParserInterface;
 use MagicSunday\ImageMeta\Contract\IccParserInterface;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
@@ -99,6 +100,7 @@ final readonly class ValueFactory
      */
     public function __construct(
         private IccParserInterface $iccParser,
+        private ?FlashPixParserInterface $flashPixParser = null,
         private CameraFactory $cameraFactory = new CameraFactory(),
         private LensFactory $lensFactory = new LensFactory(),
         private ExposureFactory $exposureFactory = new ExposureFactory(),
@@ -310,7 +312,7 @@ final readonly class ValueFactory
         );
 
         $embeddedAudio = AudioClips::fromJpegAudioStreams($metadata->jpegAudioStreams);
-        $flashPix      = new FlashPix($metadata->flashPixStreams);
+        $flashPix      = $this->createFlashPix($metadata->flashPixStreams);
 
         return [
             ComponentKey::Container->value     => $container,
@@ -579,5 +581,24 @@ final readonly class ValueFactory
         string $localName,
     ): ?string {
         return $document?->string($namespace, $localName) ?? $creatorContact?->string($namespace, $localName);
+    }
+
+    /**
+     * Creates a FlashPix value object, parsing OLE property sets from assembled streams.
+     *
+     * @param array<int, string> $streams Assembled FlashPix extension streams.
+     */
+    /**
+     * Creates a FlashPix value object, delegating OLE property set parsing to the injected parser.
+     *
+     * @param array<int, string> $streams Assembled FlashPix extension streams.
+     */
+    private function createFlashPix(array $streams): FlashPix
+    {
+        if ($this->flashPixParser instanceof FlashPixParserInterface) {
+            return $this->flashPixParser->parse($streams);
+        }
+
+        return new FlashPix($streams);
     }
 }

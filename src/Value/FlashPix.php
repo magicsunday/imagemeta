@@ -19,9 +19,12 @@ final readonly class FlashPix
     /**
      * Creates a FlashPix extension streams value object.
      *
-     * @param array<int, string> $streams Concatenated FlashPix extension streams keyed by FPXR contents-list index.
+     * @param array<int, string>       $streams     Concatenated FlashPix extension streams keyed by FPXR contents-list index.
+     * @param FlashPixSummaryInfo|null $summaryInfo Extracted OLE Summary Information properties.
      */
-    public function __construct(public array $streams)
-    {
+    public function __construct(
+        public array $streams,
+        public ?FlashPixSummaryInfo $summaryInfo = null,
+    ) {
     }
 }
