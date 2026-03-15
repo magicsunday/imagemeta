@@ -12,18 +12,23 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Factory;
 
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\ExposureAdjustments;
 use MagicSunday\ImageMeta\Value\ExposureSettings;
 
 /**
- * Factory for creating Exposure value objects from EXIF metadata.
+ * Factory for creating Exposure value objects from EXIF metadata with XMP fallback.
+ *
+ * Falls back to XMP properties per CIPA DC-X010-2017 Table 13 when EXIF tags are absent.
  */
 final readonly class ExposureFactory
 {
     /**
-     * Creates an Exposure value object from EXIF metadata.
+     * Creates an Exposure value object from EXIF metadata with XMP fallback.
      *
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
@@ -32,6 +37,8 @@ final readonly class ExposureFactory
     public function create(Metadata $metadata): Exposure
     {
         $exifDocument = $metadata->exifDoc;
+        $xmpDocument  = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $resolver     = $xmpDocument instanceof XmpDocument ? XmpFallbackResolver::fromDocument($xmpDocument) : null;
 
         $exposureProgram = $exifDocument?->exposureProgram();
         $meteringMode    = $exifDocument?->meteringMode();
@@ -39,16 +46,16 @@ final readonly class ExposureFactory
         $flashInfo       = $exifDocument?->flashInfo() ?? ExifFlash::fromExifValue(0);
 
         $settings = new ExposureSettings(
-            iso: $exifDocument?->isoBestEffort(),
-            exposureIndex: $exifDocument?->exposureIndex(),
-            isoLatitudeYyy: $exifDocument?->isoLatitudeYyy(),
-            isoLatitudeZzz: $exifDocument?->isoLatitudeZzz(),
-            exposureTimeSec: $exifDocument?->exposureTime(),
-            shutterSpeedEv: $exifDocument?->shutterSpeedEv(),
-            fNumber: $exifDocument?->fNumber(),
-            apertureEv: $exifDocument?->apertureEv(),
-            exposureBiasEv: $exifDocument?->exposureBias(),
-            brightnessEv: $exifDocument?->brightnessValue(),
+            iso: $exifDocument?->isoBestEffort() ?? $resolver?->int(ExifTag::PHOTOGRAPHIC_SENSITIVITY),
+            exposureIndex: $exifDocument?->exposureIndex() ?? $resolver?->float(ExifTag::EXPOSURE_INDEX),
+            isoLatitudeYyy: $exifDocument?->isoLatitudeYyy() ?? $resolver?->int(ExifTag::ISO_SPEED_LATITUDE_YYY),
+            isoLatitudeZzz: $exifDocument?->isoLatitudeZzz() ?? $resolver?->int(ExifTag::ISO_SPEED_LATITUDE_ZZZ),
+            exposureTimeSec: $exifDocument?->exposureTime() ?? $resolver?->float(ExifTag::EXPOSURE_TIME),
+            shutterSpeedEv: $exifDocument?->shutterSpeedEv() ?? $resolver?->float(ExifTag::SHUTTER_SPEED_VALUE),
+            fNumber: $exifDocument?->fNumber() ?? $resolver?->float(ExifTag::F_NUMBER),
+            apertureEv: $exifDocument?->apertureEv() ?? $resolver?->float(ExifTag::APERTURE_VALUE),
+            exposureBiasEv: $exifDocument?->exposureBias() ?? $resolver?->float(ExifTag::EXPOSURE_BIAS_VALUE),
+            brightnessEv: $exifDocument?->brightnessValue() ?? $resolver?->float(ExifTag::BRIGHTNESS_VALUE),
         );
 
         $adjustments = new ExposureAdjustments(
@@ -56,7 +63,7 @@ final readonly class ExposureFactory
             contrast: $exifDocument?->contrast(),
             saturation: $exifDocument?->saturation(),
             sharpness: $exifDocument?->sharpness(),
-            digitalZoomRatio: $exifDocument?->digitalZoomRatio(),
+            digitalZoomRatio: $exifDocument?->digitalZoomRatio() ?? $resolver?->float(ExifTag::DIGITAL_ZOOM_RATIO),
             gainControl: $exifDocument?->gainControl(),
         );
 
@@ -67,7 +74,7 @@ final readonly class ExposureFactory
             exposureMode: $exifDocument?->exposureMode(),
             meteringMode: $meteringMode,
             flash: $flashInfo,
-            flashEnergy: $exifDocument?->flashEnergy(),
+            flashEnergy: $exifDocument?->flashEnergy() ?? $resolver?->float(ExifTag::FLASH_ENERGY),
         );
     }
 }
