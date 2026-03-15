@@ -24,6 +24,7 @@ use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 use function array_filter;
 use function array_values;
 use function count;
+use function implode;
 use function in_array;
 use function is_string;
 use function rtrim;
@@ -490,7 +491,7 @@ final readonly class ItemPayloadResolver
         string $lengthMessage,
         array $errorCodes,
     ): string {
-        $blob        = '';
+        $parts       = [];
         $total       = 0;
         $extentCount = count($extents);
 
@@ -532,10 +533,10 @@ final readonly class ItemPayloadResolver
                 throw new ParseError($outsideMessage, $errorCodes['extentOutside']);
             }
 
-            $blob .= $readData($offset, $length);
+            $parts[] = $readData($offset, $length);
         }
 
-        return $blob;
+        return implode('', $parts);
     }
 
     /**
