@@ -2986,15 +2986,15 @@ final class MetadataFormatter
 
 // Main execution
 if ((PHP_SAPI === 'cli') && (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__)) {
-    $options     = getopt('', ['digests']);
-    $withDigest = isset($options['digests']);
+    $options    = getopt('', ['digest']);
+    $withDigest = isset($options['digest']);
     $args        = array_values(array_filter($argv, fn ($a) => !str_starts_with($a, '--')));
 
     if (count($args) < 2) {
-        echo "Usage: php scripts/imagemeta-format.php [--digests] <image-file>\n";
+        echo "Usage: php scripts/imagemeta-format.php [--digest] <image-file>\n";
         echo "\n";
         echo "Options:\n";
-        echo "  --digests  Compute SHA-256 file digest (slow for large files)\n";
+        echo "  --digest  Compute SHA-256 file digest (slow for large files)\n";
         echo "\n";
         echo "Example:\n";
         echo "  php scripts/imagemeta-format.php photo.jpg\n";
