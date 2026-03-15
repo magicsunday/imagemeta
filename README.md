@@ -144,6 +144,15 @@ $xmp = $metadata->xmpDoc;
 - **Not guaranteed:**
   - Full coverage of all proprietary maker-note formats.
 
+## 🧱 Important missing functions (current gaps)
+
+The project is intentionally read-only and metadata-focused. The following capabilities are currently missing or only partially implemented:
+
+- **Metadata write/edit support:** no API to modify and persist EXIF/XMP/IPTC/QuickTime metadata.
+- **Maker-note depth for major vendors:** Apple, Samsung, and DJI have dedicated decoders; Canon/Nikon/Sony currently use generic/simple decoding.
+- **JPEG XL metadata breadth:** JXL extraction currently covers EXIF + XMP (+ HDR gain map box payload), but no IPTC/QuickTime extraction path.
+- **Full proprietary format coverage:** some vendor/private metadata dialects remain unsupported by design.
+
 ## 🛠️ Development
 
 Prerequisites:
