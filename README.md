@@ -143,7 +143,6 @@ $xmp = $metadata->xmpDoc;
   - The library is read-only and does not modify input files.
 - **Not guaranteed:**
   - Full coverage of all proprietary maker-note formats.
-  - Fully streaming behavior in every path (standalone TIFF is currently materialized before EXIF parsing).
 
 ## 🛠️ Development
 
