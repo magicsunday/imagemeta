@@ -11,11 +11,11 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model;
 
+use Closure;
+use LogicException;
 use MagicSunday\ImageMeta\Contract\IptcParserInterface;
 use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
@@ -63,9 +63,11 @@ use MagicSunday\ImageMeta\Value\StructuredMetadata;
 final readonly class Metadata
 {
     /**
-     * Lazily assembled structured metadata cache.
+     * Memoizing resolver that lazily assembles structured metadata on first access.
+     *
+     * @var Closure(self): StructuredMetadata
      */
-    private StructuredMetadataCache $structuredCache;
+    private Closure $structuredResolver;
 
     /** @var list<string> TIFF-EXIF blobs (first is primary). [JPEG, ISO BMFF, TIFF] */
     public array $exifBlobs;
@@ -89,38 +91,38 @@ final readonly class Metadata
     public array $iptcBlobs;
 
     /**
-     * @param list<string>                                         $exifBlobs                 TIFF-EXIF blobs (first is primary). [JPEG, ISO BMFF, TIFF]
-     * @param QuickTimeMeta|null                                   $quickTime                 QuickTime metadata extracted from ISO BMFF containers. [ISO BMFF only]
-     * @param ParsedExif|null                                      $exifDoc                   Parsed representation of the primary EXIF document. [JPEG, ISO BMFF, TIFF]
-     * @param list<string>                                         $xmpBlobs                  XMP packets (RDF/XML), first is primary. [JPEG, ISO BMFF]
-     * @param XmpDocument|null                                     $xmpDoc                    Parsed representation of the primary XMP packet. [JPEG, ISO BMFF]
-     * @param MakerNotesRecord|null                                $makerNotes                Decoded maker notes metadata for the primary EXIF blob. [JPEG, ISO BMFF, TIFF]
-     * @param string|null                                          $iccProfile                Binary ICC profile when available. [JPEG, ISO BMFF]
-     * @param list<string>                                         $iccSegments               Raw ICC APP2 segments in encounter order. [JPEG only]
-     * @param array<int, string>                                   $flashPixStreams           Concatenated FlashPix extension streams keyed by FPXR contents-list index. [JPEG only]
-     * @param MpfDocument|null                                     $mpfDocument               Parsed MPF document derived from APP2 segments. [JPEG only]
-     * @param list<JpegAudioStream>                                $jpegAudioStreams          EXIF audio streams embedded in JPEG APP2 markers. [JPEG only]
-     * @param int|null                                             $jpegBitsPerSample         Sample precision reported by the JPEG frame header. [JPEG only]
-     * @param array<int, array{horizontal:int, vertical:int}>|null $jpegFrameSamplingFactors  Component sampling factors by identifier. [JPEG only]
-     * @param array{0:int,1:int}|null                              $jpegYCbCrSubSampling      Derived YCbCr subsampling from the JPEG frame header. [JPEG only]
-     * @param int|null                                             $jpegFrameWidth            Frame width reported by the JPEG start of frame marker. [JPEG only]
-     * @param int|null                                             $jpegFrameHeight           Frame height reported by the JPEG start of frame marker. [JPEG only]
-     * @param string|null                                          $mimeType                  Detected mime type for the source file. [JPEG, ISO BMFF, TIFF]
-     * @param int|null                                             $fileSize                  Size of the source file in bytes. [JPEG, ISO BMFF, TIFF]
-     * @param string|null                                          $extension                 Lowercase file extension extracted from the path. [JPEG, ISO BMFF, TIFF]
-     * @param string|null                                          $digestSha256              Lowercase hexadecimal SHA-256 digest of the payload. [JPEG, ISO BMFF, TIFF]
-     * @param IsoBmffItemReferenceMap|null                         $isoBmffItemReferences     ISO BMFF item references extracted from metadata boxes. [ISO BMFF only]
-     * @param IsoBmffDataReferenceMap|null                         $isoBmffDataReferences     ISO BMFF data references extracted from metadata boxes. [ISO BMFF only]
-     * @param list<IsoBmffUnresolvedItem>                          $isoBmffUnresolvedItems    ISO BMFF item payloads that could not be resolved. [ISO BMFF only]
-     * @param int|null                                             $ispeWidth                 Image width in pixels from the ispe box. [ISO BMFF only]
-     * @param int|null                                             $ispeHeight                Image height in pixels from the ispe box. [ISO BMFF only]
-     * @param list<int>                                            $tmapItemIds               Tone map item IDs detected in ISO BMFF containers. [ISO BMFF only]
-     * @param list<string>                                         $iptcBlobs                 IPTC payloads captured from JPEG APP13 segments. [JPEG only]
-     * @param IptcDocument|null                                    $iptcDoc                   Parsed IPTC IIM datasets from APP13 payloads. [JPEG only]
-     * @param string|null                                          $gainMapBlob               Raw HDR gain map image from a JXL hrgm box. [JXL only]
-     * @param XmpParserInterface|null                              $xmpParser                 Injected XMP parser for selective document creation.
-     * @param IptcParserInterface|null                             $iptcParser                Injected IPTC parser for selective document creation.
-     * @param StructuredMetadataBuilder|null                       $structuredMetadataBuilder Injected builder for structured metadata assembly.
+     * @param list<string>                                         $exifBlobs                TIFF-EXIF blobs (first is primary). [JPEG, ISO BMFF, TIFF]
+     * @param QuickTimeMeta|null                                   $quickTime                QuickTime metadata extracted from ISO BMFF containers. [ISO BMFF only]
+     * @param ParsedExif|null                                      $exifDoc                  Parsed representation of the primary EXIF document. [JPEG, ISO BMFF, TIFF]
+     * @param list<string>                                         $xmpBlobs                 XMP packets (RDF/XML), first is primary. [JPEG, ISO BMFF]
+     * @param XmpDocument|null                                     $xmpDoc                   Parsed representation of the primary XMP packet. [JPEG, ISO BMFF]
+     * @param MakerNotesRecord|null                                $makerNotes               Decoded maker notes metadata for the primary EXIF blob. [JPEG, ISO BMFF, TIFF]
+     * @param string|null                                          $iccProfile               Binary ICC profile when available. [JPEG, ISO BMFF]
+     * @param list<string>                                         $iccSegments              Raw ICC APP2 segments in encounter order. [JPEG only]
+     * @param array<int, string>                                   $flashPixStreams          Concatenated FlashPix extension streams keyed by FPXR contents-list index. [JPEG only]
+     * @param MpfDocument|null                                     $mpfDocument              Parsed MPF document derived from APP2 segments. [JPEG only]
+     * @param list<JpegAudioStream>                                $jpegAudioStreams         EXIF audio streams embedded in JPEG APP2 markers. [JPEG only]
+     * @param int|null                                             $jpegBitsPerSample        Sample precision reported by the JPEG frame header. [JPEG only]
+     * @param array<int, array{horizontal:int, vertical:int}>|null $jpegFrameSamplingFactors Component sampling factors by identifier. [JPEG only]
+     * @param array{0:int,1:int}|null                              $jpegYCbCrSubSampling     Derived YCbCr subsampling from the JPEG frame header. [JPEG only]
+     * @param int|null                                             $jpegFrameWidth           Frame width reported by the JPEG start of frame marker. [JPEG only]
+     * @param int|null                                             $jpegFrameHeight          Frame height reported by the JPEG start of frame marker. [JPEG only]
+     * @param string|null                                          $mimeType                 Detected mime type for the source file. [JPEG, ISO BMFF, TIFF]
+     * @param int|null                                             $fileSize                 Size of the source file in bytes. [JPEG, ISO BMFF, TIFF]
+     * @param string|null                                          $extension                Lowercase file extension extracted from the path. [JPEG, ISO BMFF, TIFF]
+     * @param string|null                                          $digestSha256             Lowercase hexadecimal SHA-256 digest of the payload. [JPEG, ISO BMFF, TIFF]
+     * @param IsoBmffItemReferenceMap|null                         $isoBmffItemReferences    ISO BMFF item references extracted from metadata boxes. [ISO BMFF only]
+     * @param IsoBmffDataReferenceMap|null                         $isoBmffDataReferences    ISO BMFF data references extracted from metadata boxes. [ISO BMFF only]
+     * @param list<IsoBmffUnresolvedItem>                          $isoBmffUnresolvedItems   ISO BMFF item payloads that could not be resolved. [ISO BMFF only]
+     * @param int|null                                             $ispeWidth                Image width in pixels from the ispe box. [ISO BMFF only]
+     * @param int|null                                             $ispeHeight               Image height in pixels from the ispe box. [ISO BMFF only]
+     * @param list<int>                                            $tmapItemIds              Tone map item IDs detected in ISO BMFF containers. [ISO BMFF only]
+     * @param list<string>                                         $iptcBlobs                IPTC payloads captured from JPEG APP13 segments. [JPEG only]
+     * @param IptcDocument|null                                    $iptcDoc                  Parsed IPTC IIM datasets from APP13 payloads. [JPEG only]
+     * @param string|null                                          $gainMapBlob              Raw HDR gain map image from a JXL hrgm box. [JXL only]
+     * @param XmpParserInterface|null                              $xmpParser                Injected XMP parser for selective document creation.
+     * @param IptcParserInterface|null                             $iptcParser               Injected IPTC parser for selective document creation.
+     * @param (Closure(self): StructuredMetadata)|null             $structuredResolver       Memoizing resolver for structured metadata assembly.
      */
     public function __construct(
         array $exifBlobs,
@@ -155,7 +157,7 @@ final readonly class Metadata
         public ?JfifSegment $jfifSegment = null,
         private ?XmpParserInterface $xmpParser = null,
         private ?IptcParserInterface $iptcParser = null,
-        ?StructuredMetadataBuilder $structuredMetadataBuilder = null,
+        ?Closure $structuredResolver = null,
     ) {
         $this->exifBlobs              = [...$exifBlobs];
         $this->xmpBlobs               = [...$xmpBlobs];
@@ -164,9 +166,16 @@ final readonly class Metadata
         $this->isoBmffUnresolvedItems = [...$isoBmffUnresolvedItems];
         $this->tmapItemIds            = [...$tmapItemIds];
         $this->iptcBlobs              = [...$iptcBlobs];
-        $this->structuredCache        = new StructuredMetadataCache(
-            $structuredMetadataBuilder ?? StructuredMetadataBuilder::createDefault(),
-        );
+
+        $cached                   = null;
+        $resolver                 = $structuredResolver;
+        $this->structuredResolver = static function (self $metadata) use ($resolver, &$cached): StructuredMetadata {
+            if (!$resolver instanceof Closure) {
+                throw new LogicException('No structured metadata resolver configured; use MetadataBuilder to construct Metadata instances');
+            }
+
+            return $cached ??= $resolver($metadata);
+        };
     }
 
     /**
@@ -215,6 +224,6 @@ final readonly class Metadata
      */
     public function structured(): StructuredMetadata
     {
-        return $this->structuredCache->resolve($this);
+        return ($this->structuredResolver)($this);
     }
 }

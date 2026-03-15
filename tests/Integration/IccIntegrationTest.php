@@ -24,16 +24,13 @@ use MagicSunday\ImageMeta\Exif\Factory\TiffDataFactory;
 use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
-use MagicSunday\ImageMeta\MakerNotes\CanonDecoder;
-use MagicSunday\ImageMeta\MakerNotes\NikonDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
-use MagicSunday\ImageMeta\MakerNotes\SonyDecoder;
+use MagicSunday\ImageMeta\MakerNotes\SimpleDecoder;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Parse\Icc\IccBinaryReader;
@@ -147,7 +144,6 @@ use function unlink;
 #[UsesClass(BitMask::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Camera::class)]
-#[UsesClass(CanonDecoder::class)]
 #[UsesClass(Capture::class)]
 #[UsesClass(CaptureHardware::class)]
 #[UsesClass(CaptureSettings::class)]
@@ -203,7 +199,6 @@ use function unlink;
 #[UsesClass(Metadata::class)]
 #[UsesClass(Motion::class)]
 #[UsesClass(MultiPicture::class)]
-#[UsesClass(NikonDecoder::class)]
 #[UsesClass(PayloadGuard::class)]
 #[UsesClass(ProcessingSettings::class)]
 #[UsesClass(Provenance::class)]
@@ -216,13 +211,12 @@ use function unlink;
 #[UsesClass(Scene::class)]
 #[UsesClass(SemanticStyle::class)]
 #[UsesClass(Sensor::class)]
-#[UsesClass(SonyDecoder::class)]
+#[UsesClass(SimpleDecoder::class)]
 #[UsesClass(Standards::class)]
 #[UsesClass(Stream::class)]
 #[UsesClass(StreamWindow::class)]
 #[UsesClass(StructuredMetadata::class)]
 #[UsesClass(StructuredMetadataBuilder::class)]
-#[UsesClass(StructuredMetadataCache::class)]
 #[UsesClass(TechnicalData::class)]
 #[UsesClass(Temporal::class)]
 #[UsesClass(Thumbnail::class)]

@@ -20,7 +20,6 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
@@ -140,7 +139,6 @@ use function strlen;
 #[UsesClass(WhiteBalanceDetails::class)]
 #[UsesClass(Xmp::class)]
 #[UsesClass(StructuredMetadataBuilder::class)]
-#[UsesClass(StructuredMetadataCache::class)]
 #[CoversClass(Metadata::class)]
 final class MetadataTest extends TestCase
 {
@@ -445,7 +443,9 @@ XML;
     #[Test]
     public function cachesStructuredAggregate(): void
     {
-        $metadata = new Metadata([], null);
+        $builder  = StructuredMetadataBuilder::createDefault();
+        $resolver = static fn (Metadata $m): StructuredMetadata => $builder->assemble($m);
+        $metadata = new Metadata([], null, structuredResolver: $resolver);
 
         $first  = $metadata->structured();
         $second = $metadata->structured();

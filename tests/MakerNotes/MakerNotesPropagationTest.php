@@ -16,7 +16,6 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -41,7 +40,6 @@ use function str_repeat;
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(Metadata::class)]
-#[UsesClass(StructuredMetadataCache::class)]
 final class MakerNotesPropagationTest extends TestCase
 {
     /**

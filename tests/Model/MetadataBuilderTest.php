@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Model;
 
+use Closure;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -27,31 +27,22 @@ use ReflectionProperty;
 #[CoversClass(MetadataBuilder::class)]
 #[UsesClass(Metadata::class)]
 #[UsesClass(StructuredMetadataBuilder::class)]
-#[UsesClass(StructuredMetadataCache::class)]
 final class MetadataBuilderTest extends TestCase
 {
     #[Test]
-    public function reusesStructuredMetadataBuilderAcrossBuildCalls(): void
+    public function injectsStructuredResolverIntoBuiltMetadata(): void
     {
         $builder = new MetadataBuilder();
         $first   = $builder->withFileIdentity(extension: 'jpg')->build();
         $second  = $builder->withFileIdentity(extension: 'heic')->build();
 
-        $cacheProperty = new ReflectionProperty(Metadata::class, 'structuredCache');
-        $firstCache    = $cacheProperty->getValue($first);
-        $secondCache   = $cacheProperty->getValue($second);
+        $resolverProperty = new ReflectionProperty(Metadata::class, 'structuredResolver');
+        $firstResolver    = $resolverProperty->getValue($first);
+        $secondResolver   = $resolverProperty->getValue($second);
 
-        self::assertInstanceOf(StructuredMetadataCache::class, $firstCache);
-        self::assertInstanceOf(StructuredMetadataCache::class, $secondCache);
-        self::assertNotSame($firstCache, $secondCache);
-
-        $builderProperty         = new ReflectionProperty(StructuredMetadataCache::class, 'builder');
-        $firstStructuredBuilder  = $builderProperty->getValue($firstCache);
-        $secondStructuredBuilder = $builderProperty->getValue($secondCache);
-
-        self::assertInstanceOf(StructuredMetadataBuilder::class, $firstStructuredBuilder);
-        self::assertInstanceOf(StructuredMetadataBuilder::class, $secondStructuredBuilder);
-        self::assertSame($firstStructuredBuilder, $secondStructuredBuilder);
+        self::assertInstanceOf(Closure::class, $firstResolver);
+        self::assertInstanceOf(Closure::class, $secondResolver);
+        self::assertNotSame($firstResolver, $secondResolver);
     }
 
     #[Test]

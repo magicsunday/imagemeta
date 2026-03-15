@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Model;
 
 // jscpd:ignore-start
+use Closure;
 use MagicSunday\ImageMeta\Contract\IptcParserInterface;
 use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
@@ -26,6 +27,7 @@ use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Value\StructuredMetadata;
 
 // jscpd:ignore-end
 
@@ -110,11 +112,13 @@ final class MetadataBuilder
 
     private ?IptcParserInterface $iptcParser = null;
 
-    private readonly StructuredMetadataBuilder $structuredMetadataBuilder;
+    /** @var Closure(Metadata):StructuredMetadata */
+    private readonly Closure $structuredResolver;
 
     public function __construct()
     {
-        $this->structuredMetadataBuilder = StructuredMetadataBuilder::createDefault();
+        $builder                  = StructuredMetadataBuilder::createDefault();
+        $this->structuredResolver = static fn (Metadata $metadata): StructuredMetadata => $builder->assemble($metadata);
     }
 
     /**
@@ -358,7 +362,7 @@ final class MetadataBuilder
             jfifSegment: $this->jfifSegment,
             xmpParser: $this->xmpParser,
             iptcParser: $this->iptcParser,
-            structuredMetadataBuilder: $this->structuredMetadataBuilder,
+            structuredResolver: $this->structuredResolver,
         );
     }
 }

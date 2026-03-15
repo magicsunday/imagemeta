@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Integration;
 
+use Closure;
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Convenience\CaptureDateResolver;
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
@@ -24,7 +25,6 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -126,7 +126,6 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Sensor::class)]
 #[UsesClass(Standards::class)]
 #[UsesClass(StructuredMetadata::class)]
-#[UsesClass(StructuredMetadataCache::class)]
 #[UsesClass(Temporal::class)]
 #[UsesClass(TiffData::class)]
 #[UsesClass(ValueConverters::class)]
@@ -218,6 +217,7 @@ final class CaptureDateResolverTest extends TestCase
             quickTime: null,
             exifDoc: $exifDoc,
             xmpBlobs: [],
+            structuredResolver: $this->createStructuredResolver(),
         );
 
         $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
@@ -318,6 +318,7 @@ final class CaptureDateResolverTest extends TestCase
             quickTime: null,
             exifDoc: new ParsedExif(new Ifd([]), null, $gpsIfd, null, null),
             xmpBlobs: [],
+            structuredResolver: $this->createStructuredResolver(),
         );
 
         $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
@@ -339,6 +340,17 @@ final class CaptureDateResolverTest extends TestCase
             xmpDoc: new XmpDocument([
                 '{' . self::XMP_NAMESPACE . '}CreateDate' => $createDate,
             ]),
+            structuredResolver: $this->createStructuredResolver(),
         );
+    }
+
+    /**
+     * @return Closure(Metadata): StructuredMetadata
+     */
+    private function createStructuredResolver(): Closure
+    {
+        $builder = StructuredMetadataBuilder::createDefault();
+
+        return $builder->assemble(...);
     }
 }
