@@ -220,8 +220,8 @@ final readonly class AppleJpegIfdParser
         string $u32Fmt,
     ): int|float|string|array|null {
         return match ($type) {
-            self::TIFF_TYPE_SLONG,
-            self::TIFF_TYPE_LONG8     => $this->decodeSLongTag($tag, $count, $valueField, $u32Fmt),
+            self::TIFF_TYPE_SLONG     => $this->decodeSLongTag($tag, $count, $valueField, $u32Fmt),
+            self::TIFF_TYPE_LONG8     => $this->decodeLong8Tag($raw, $tiffBase, $count, $valueField, $u32Fmt),
             self::TIFF_TYPE_SRATIONAL => $this->decodeSRationalTag($raw, $tiffBase, $count, $valueField, $u32Fmt),
             self::TIFF_TYPE_ASCII     => $this->decodeAsciiTag($raw, $tiffBase, $count, $valueField, $u32Fmt),
             self::TIFF_TYPE_UNDEFINED => $this->decodeUndefinedTag($raw, $tiffBase, $count, $valueField, $u32Fmt),
@@ -245,6 +245,29 @@ final readonly class AppleJpegIfdParser
         }
 
         return $signed;
+    }
+
+    /**
+     * Decodes a LONG8 tag (type 16, 8 bytes per component, count=1 expected).
+     *
+     * The 4-byte value field contains an offset to the 8-byte value.
+     */
+    private function decodeLong8Tag(string $raw, int $tiffBase, int $count, string $valueField, string $u32Fmt): ?int
+    {
+        if ($count !== 1) {
+            return null;
+        }
+
+        $data = $this->resolveData($raw, $tiffBase, 8, $valueField, $u32Fmt);
+
+        if ($data === null) {
+            return null;
+        }
+
+        $hi = Unpack::int($u32Fmt, substr($data, 0, 4), 'Apple IFD LONG8 hi');
+        $lo = Unpack::int($u32Fmt, substr($data, 4, 4), 'Apple IFD LONG8 lo');
+
+        return ($hi << 32) | $lo;
     }
 
     /**
