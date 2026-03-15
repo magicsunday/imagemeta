@@ -231,13 +231,13 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
             }
 
             if ($offset + $boxLength > $length) {
-                throw new ParseError(sprintf('APP11 segment at offset %d has truncated JUMBF box', $segmentOffset), 1334);
+                throw new ParseError(sprintf('APP11 segment at offset %d has truncated JUMBF box', $segmentOffset), 1900);
             }
 
             return substr($payload, $offset, $boxLength);
         }
 
-        throw new ParseError(sprintf('APP11 segment at offset %d does not contain a JUMBF superbox', $segmentOffset), 1333);
+        throw new ParseError(sprintf('APP11 segment at offset %d does not contain a JUMBF superbox', $segmentOffset), 1901);
     }
 
     /**

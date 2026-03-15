@@ -377,7 +377,7 @@ final readonly class IccParser implements IccParserInterface
             $sequenceCount  = ord($payload[strlen(self::ICC_SIGNATURE) + 1]);
 
             if ($sequenceCount === 0) {
-                throw new ParseError('ICC chunk assembly: sequence count is zero', 1126);
+                throw new ParseError('ICC chunk assembly: sequence count is zero', 1800);
             }
 
             if ($expectedCount === null) {
