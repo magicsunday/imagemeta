@@ -16,7 +16,7 @@ use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function array_key_exists;
-use function sha1;
+use function hash;
 use function str_starts_with;
 use function strlen;
 use function substr;
@@ -108,7 +108,7 @@ final class JpegApp1Handler
      */
     public function appendXmpPacket(string $packet): void
     {
-        $hash = sha1($packet);
+        $hash = hash('xxh128', $packet);
 
         if (!array_key_exists($hash, $this->xmpPacketHashes)) {
             $this->xmpPacketHashes[$hash] = true;
