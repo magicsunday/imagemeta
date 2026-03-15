@@ -15,14 +15,17 @@ use function sha1;
 use function strlen;
 
 /**
- * Shared decoder base for maker note vendors that only expose payload identity metadata.
+ * Decoder for maker note vendors that only expose payload identity metadata.
  */
-abstract class AbstractSimpleDecoder implements MakerNotesDecoderInterface
+final readonly class SimpleDecoder implements MakerNotesDecoderInterface
 {
     /**
-     * Returns the vendor name assigned to decoded maker note records.
+     * @param string $vendorName Vendor name assigned to decoded maker note records.
      */
-    abstract protected function getVendorName(): string;
+    public function __construct(
+        private string $vendorName,
+    ) {
+    }
 
     /**
      * Creates a metadata record containing vendor, payload length, and SHA-1 digest.
@@ -34,7 +37,7 @@ abstract class AbstractSimpleDecoder implements MakerNotesDecoderInterface
     public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
     {
         return new MakerNotesRecord(
-            $this->getVendorName(),
+            $this->vendorName,
             strlen($raw),
             sha1($raw),
         );

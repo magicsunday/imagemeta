@@ -24,11 +24,11 @@ final class RegistryFactory
         $registry = new Registry();
 
         $appleDecoder   = new AppleDecoder();
-        $canonDecoder   = new CanonDecoder();
+        $canonDecoder   = new SimpleDecoder('Canon');
         $djiDecoder     = new DjiDecoder();
-        $nikonDecoder   = new NikonDecoder();
+        $nikonDecoder   = new SimpleDecoder('Nikon');
         $samsungDecoder = new SamsungDecoder();
-        $sonyDecoder    = new SonyDecoder();
+        $sonyDecoder    = new SimpleDecoder('Sony');
 
         $registry->register('Apple', $appleDecoder);
         $registry->register('Canon', $canonDecoder);
