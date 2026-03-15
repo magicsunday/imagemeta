@@ -21,7 +21,7 @@ use function array_key_exists;
 use function array_unique;
 use function array_unshift;
 use function array_values;
-use function sha1;
+use function hash;
 
 /**
  * Orchestrates item location resolution within ISO BMFF metadata containers.
@@ -135,11 +135,11 @@ final readonly class ItemLocationResolver
      * @param array<string, bool> $xmpHashes Previously seen hashes.
      * @param string              $blob      XMP payload to hash.
      *
-     * @return string|null SHA-1 hash when the blob is unique, null when already seen.
+     * @return string|null Hash when the blob is unique, null when already seen.
      */
     public function uniqueXmpHash(array $xmpHashes, string $blob): ?string
     {
-        $hash = sha1($blob);
+        $hash = hash('xxh128', $blob);
 
         return array_key_exists($hash, $xmpHashes) ? null : $hash;
     }
