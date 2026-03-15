@@ -93,7 +93,12 @@ final class StreamWindow implements BinaryReadAccessInterface
             throw new BoundsError('window read out of range', 1016);
         }
 
-        $this->base->seek($this->offset + $this->cursor);
+        $targetPos = $this->offset + $this->cursor;
+
+        if ($this->base->tell() !== $targetPos) {
+            $this->base->seek($targetPos);
+        }
+
         $data = $this->base->read($len);
         $this->cursor += $len;
 
