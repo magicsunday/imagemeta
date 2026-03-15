@@ -30,6 +30,7 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\BoxPayloadCollector;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserConfig;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParseResult;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemLocationResolver;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemPayloadResolver;
 use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeKeyResolver;
@@ -79,6 +80,7 @@ use function substr;
 #[UsesClass(QuickTimeDataAtom::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(ConstructionMethod::class)]
+#[UsesClass(IsoBmffParseResult::class)]
 #[UsesClass(IlocBoxParser::class)]
 #[UsesClass(ItemLocationResolver::class)]
 #[UsesClass(ItemPayloadResolver::class)]
@@ -103,8 +105,11 @@ final class IsoBmffParserTest extends TestCase
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
         $data        = $ftyp . $meta;
 
-        $extractor           = $this->createExtractor($data);
-        [$exifs, $xmps, $qt] = $extractor->extract();
+        $extractor = $this->createExtractor($data);
+        $result    = $extractor->extract();
+        $exifs     = $result->exifBlobs;
+        $xmps      = $result->xmpBlobs;
+        $qt        = $result->quickTimeMeta;
 
         self::assertSame(["MM\x00\x2Aprimary-exif"], $exifs);
         self::assertSame([], $xmps);
@@ -123,8 +128,11 @@ final class IsoBmffParserTest extends TestCase
         $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
         $data        = $ftyp . $meta;
 
-        $extractor           = $this->createExtractor($data);
-        [$exifs, $xmps, $qt] = $extractor->extract();
+        $extractor = $this->createExtractor($data);
+        $result    = $extractor->extract();
+        $exifs     = $result->exifBlobs;
+        $xmps      = $result->xmpBlobs;
+        $qt        = $result->quickTimeMeta;
 
         self::assertSame(["MM\x00\x2Aquicktime-exif"], $exifs);
         self::assertSame([], $xmps);
@@ -143,8 +151,11 @@ final class IsoBmffParserTest extends TestCase
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
         $data        = $ftyp . $meta;
 
-        $extractor           = $this->createExtractor($data);
-        [$exifs, $xmps, $qt] = $extractor->extract();
+        $extractor = $this->createExtractor($data);
+        $result    = $extractor->extract();
+        $exifs     = $result->exifBlobs;
+        $xmps      = $result->xmpBlobs;
+        $qt        = $result->quickTimeMeta;
 
         self::assertSame(["MM\x00\x2Aisom-exif"], $exifs);
         self::assertSame([], $xmps);
@@ -232,7 +243,8 @@ final class IsoBmffParserTest extends TestCase
 
         self::assertNotNull($collector);
 
-        [$exifs, $xmps, $qt] = $parser->extract();
+        $result = $parser->extract();
+        $exifs  = $result->exifBlobs;
 
         self::assertSame(["MM\x00\x2Adelegation-test"], $exifs);
     }
@@ -247,8 +259,8 @@ final class IsoBmffParserTest extends TestCase
         $keyName = 'com.apple.quicktime.live-photo.auto';
         $file    = $this->createQuickTimeKeysFileWithCustomKey($keyName, 0x16, "\x01");
 
-        $extractor       = $this->createExtractor($file);
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertArrayHasKey($keyName, $quickTime->keys);
@@ -265,9 +277,9 @@ final class IsoBmffParserTest extends TestCase
         $payload = hex2bin('FF');
         self::assertIsString($payload);
 
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(255, $qtMeta->keys[$key]);
@@ -283,8 +295,8 @@ final class IsoBmffParserTest extends TestCase
         $keyName = 'com.apple.quicktime.live-photo.auto';
         $file    = $this->createQuickTimeKeysFileWithCustomKey($keyName, 0x15, "\x01");
 
-        $extractor       = $this->createExtractor($file);
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertArrayHasKey($keyName, $quickTime->keys);
@@ -300,9 +312,9 @@ final class IsoBmffParserTest extends TestCase
         $key     = 'com.apple.quicktime.test';
         $payload = pack('N2', 0, 42);
 
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(42, $qtMeta->keys[$key]);
@@ -318,9 +330,9 @@ final class IsoBmffParserTest extends TestCase
         $payload = hex2bin('FFFFFFFFFFFFFFFE');
         self::assertIsString($payload);
 
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(-2, $qtMeta->keys[$key]);
@@ -370,7 +382,7 @@ final class IsoBmffParserTest extends TestCase
         $data       = $ftyp . $meta . $mdat;
 
         $extractor = $this->createExtractor($data);
-        [$exifs]   = $extractor->extract();
+        $exifs     = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Asegment-onesegment-two"], $exifs);
     }
@@ -421,7 +433,7 @@ final class IsoBmffParserTest extends TestCase
         $data       = $ftyp . $meta . $mdat;
 
         $extractor = $this->createExtractor($data);
-        [$exifs]   = $extractor->extract();
+        $exifs     = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Aversion-one-data"], $exifs);
     }
@@ -468,7 +480,7 @@ final class IsoBmffParserTest extends TestCase
         $data       = $ftyp . $meta . $mdat;
 
         $extractor = $this->createExtractor($data);
-        [$exifs]   = $extractor->extract();
+        $exifs     = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Aversion-two-data"], $exifs);
     }
@@ -515,7 +527,7 @@ final class IsoBmffParserTest extends TestCase
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moof);
-        [, $xmps]  = $extractor->extract();
+        $xmps      = $extractor->extract()->xmpBlobs;
 
         self::assertSame([$xmp], $xmps);
     }
@@ -560,7 +572,7 @@ final class IsoBmffParserTest extends TestCase
         $moof = $this->box('moof', $meta);
 
         $extractor = $this->createExtractor($ftyp . $moof . $mdat);
-        [$exifs]   = $extractor->extract();
+        $exifs     = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Amoof-origin"], $exifs);
     }
@@ -742,8 +754,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeIlocVersion2ConstructionMethodFromLowNibble(): void
     {
-        $extractor                   = $this->createExtractor($this->createFileWithSingleExifIlocItem(2, 0x0001));
-        [, , , , , $unresolvedItems] = $extractor->extract();
+        $extractor       = $this->createExtractor($this->createFileWithSingleExifIlocItem(2, 0x0001));
+        $unresolvedItems = $extractor->extract()->unresolvedItems;
 
         self::assertCount(1, $unresolvedItems);
         self::assertSame(ConstructionMethod::IdatOffset, $unresolvedItems[0]->constructionMethod);
@@ -755,8 +767,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function mapIlocConstructionMethodZeroToFileOffset(): void
     {
-        $extractor                   = $this->createExtractor($this->createFileWithSingleExifIlocItem(1, 0x0000));
-        [, , , , , $unresolvedItems] = $extractor->extract();
+        $extractor       = $this->createExtractor($this->createFileWithSingleExifIlocItem(1, 0x0000));
+        $unresolvedItems = $extractor->extract()->unresolvedItems;
 
         self::assertCount(1, $unresolvedItems);
         self::assertSame(ConstructionMethod::FileOffset, $unresolvedItems[0]->constructionMethod);
@@ -768,8 +780,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function mapIlocConstructionMethodOneToIdatOffset(): void
     {
-        $extractor                   = $this->createExtractor($this->createFileWithSingleExifIlocItem(1, 0x0001));
-        [, , , , , $unresolvedItems] = $extractor->extract();
+        $extractor       = $this->createExtractor($this->createFileWithSingleExifIlocItem(1, 0x0001));
+        $unresolvedItems = $extractor->extract()->unresolvedItems;
 
         self::assertCount(1, $unresolvedItems);
         self::assertSame(ConstructionMethod::IdatOffset, $unresolvedItems[0]->constructionMethod);
@@ -781,8 +793,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function mapIlocConstructionMethodTwoToItemOffset(): void
     {
-        $extractor                   = $this->createExtractor($this->createFileWithSingleExifIlocItem(1, 0x0002));
-        [, , , , , $unresolvedItems] = $extractor->extract();
+        $extractor       = $this->createExtractor($this->createFileWithSingleExifIlocItem(1, 0x0002));
+        $unresolvedItems = $extractor->extract()->unresolvedItems;
 
         self::assertCount(1, $unresolvedItems);
         self::assertSame(ConstructionMethod::ItemOffset, $unresolvedItems[0]->constructionMethod);
@@ -869,7 +881,7 @@ final class IsoBmffParserTest extends TestCase
         $data       = $ftyp . $uuidBox . $meta . $mdat;
 
         $extractor = $this->createExtractor($data);
-        [, $xmps]  = $extractor->extract();
+        $xmps      = $extractor->extract()->xmpBlobs;
 
         self::assertSame([$itemXmp, $directXmp, $uuidXmp], $xmps);
     }
@@ -892,7 +904,7 @@ final class IsoBmffParserTest extends TestCase
         );
 
         $extractor = $this->createExtractor($data);
-        [, $xmps]  = $extractor->extract();
+        $xmps      = $extractor->extract()->xmpBlobs;
 
         self::assertSame([$xmpPayload], $xmps);
     }
@@ -915,7 +927,7 @@ final class IsoBmffParserTest extends TestCase
         );
 
         $extractor = $this->createExtractor($data);
-        [, $xmps]  = $extractor->extract();
+        $xmps      = $extractor->extract()->xmpBlobs;
 
         self::assertSame([$xmpSecond, $xmpFirst], $xmps);
     }
@@ -938,7 +950,7 @@ final class IsoBmffParserTest extends TestCase
         );
 
         $extractor = $this->createExtractor($data);
-        [, $xmps]  = $extractor->extract();
+        $xmps      = $extractor->extract()->xmpBlobs;
 
         self::assertSame([$xmpFirst, $xmpSecond], $xmps);
     }
@@ -962,8 +974,8 @@ final class IsoBmffParserTest extends TestCase
             2,
         );
 
-        $extractor   = $this->createExtractor($data);
-        [$exifBlobs] = $extractor->extract();
+        $extractor = $this->createExtractor($data);
+        $exifBlobs = $extractor->extract()->exifBlobs;
 
         self::assertSame([$exifPrimary, $exifFirst], $exifBlobs);
     }
@@ -980,8 +992,8 @@ final class IsoBmffParserTest extends TestCase
 
         $data = $this->createMetaFileWithDirectAndItemExif($itemExifRaw, $directExif, 1);
 
-        $extractor   = $this->createExtractor($data);
-        [$exifBlobs] = $extractor->extract();
+        $extractor = $this->createExtractor($data);
+        $exifBlobs = $extractor->extract()->exifBlobs;
 
         self::assertSame([$itemExif, $directExif], $exifBlobs);
     }
@@ -1005,8 +1017,8 @@ final class IsoBmffParserTest extends TestCase
             null,
         );
 
-        $extractor   = $this->createExtractor($data);
-        [$exifBlobs] = $extractor->extract();
+        $extractor = $this->createExtractor($data);
+        $exifBlobs = $extractor->extract()->exifBlobs;
 
         self::assertSame([$exifFirst, $exifSecond], $exifBlobs);
     }
@@ -1021,16 +1033,16 @@ final class IsoBmffParserTest extends TestCase
         $keysValue = 'id-from-keys';
         $mdtaValue = 'id-from-mdta';
 
-        $keysFile       = $this->createFileWithQuickTimeKeys($keysValue);
-        $keysExtractor  = $this->createExtractor($keysFile);
-        [, , $keysMeta] = $keysExtractor->extract();
+        $keysFile      = $this->createFileWithQuickTimeKeys($keysValue);
+        $keysExtractor = $this->createExtractor($keysFile);
+        $keysMeta      = $keysExtractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $keysMeta);
         self::assertSame($keysValue, $keysMeta->contentIdentifier());
 
-        $mdtaFile       = $this->createFileWithMdtaIdentifier($mdtaValue);
-        $mdtaExtractor  = $this->createExtractor($mdtaFile);
-        [, , $mdtaMeta] = $mdtaExtractor->extract();
+        $mdtaFile      = $this->createFileWithMdtaIdentifier($mdtaValue);
+        $mdtaExtractor = $this->createExtractor($mdtaFile);
+        $mdtaMeta      = $mdtaExtractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $mdtaMeta);
         self::assertSame($mdtaValue, $mdtaMeta->contentIdentifier());
@@ -1052,8 +1064,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($meta);
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('short-name-value', $qtMeta->keys['com.apple.quicktime.abc']);
@@ -1141,7 +1153,7 @@ final class IsoBmffParserTest extends TestCase
         $utf16Payload = $encoded . "\0\0";
         $file         = $this->createQuickTimeKeysFileWithData(2, $utf16Payload);
         $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $qtMeta       = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame($value, $qtMeta->contentIdentifier());
@@ -1154,11 +1166,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeMacRomanDataBoxToUtf8(): void
     {
-        $value        = 'Café Society';
-        $macPayload   = 'Caf' . chr(0x8E) . ' Society' . "\0";
-        $file         = $this->createQuickTimeKeysFileWithData(7, $macPayload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $value      = 'Café Society';
+        $macPayload = 'Caf' . chr(0x8E) . ' Society' . "\0";
+        $file       = $this->createQuickTimeKeysFileWithData(7, $macPayload);
+        $extractor  = $this->createExtractor($file);
+        $qtMeta     = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame($value, $qtMeta->contentIdentifier());
@@ -1173,9 +1185,9 @@ final class IsoBmffParserTest extends TestCase
         $value    = '東京';
         $shiftJis = iconv('UTF-8', 'SJIS', $value);
         self::assertIsString($shiftJis);
-        $file       = $this->createQuickTimeKeysFileWithData(3, $shiftJis);
-        $extractor  = $this->createExtractor($file);
-        [, , $meta] = $extractor->extract();
+        $file      = $this->createQuickTimeKeysFileWithData(3, $shiftJis);
+        $extractor = $this->createExtractor($file);
+        $meta      = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $meta);
         self::assertSame($value, $meta->contentIdentifier());
@@ -1187,10 +1199,10 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeUtf8SortDataBoxTypeToUtf8(): void
     {
-        $value      = 'Sort UTF8';
-        $file       = $this->createQuickTimeKeysFileWithData(4, $value);
-        $extractor  = $this->createExtractor($file);
-        [, , $meta] = $extractor->extract();
+        $value     = 'Sort UTF8';
+        $file      = $this->createQuickTimeKeysFileWithData(4, $value);
+        $extractor = $this->createExtractor($file);
+        $meta      = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $meta);
         self::assertSame($value, $meta->contentIdentifier());
@@ -1205,9 +1217,9 @@ final class IsoBmffParserTest extends TestCase
         $value = 'Sort UTF16';
         $utf16 = iconv('UTF-8', 'UTF-16BE', $value);
         self::assertIsString($utf16);
-        $file       = $this->createQuickTimeKeysFileWithData(5, $utf16);
-        $extractor  = $this->createExtractor($file);
-        [, , $meta] = $extractor->extract();
+        $file      = $this->createQuickTimeKeysFileWithData(5, $utf16);
+        $extractor = $this->createExtractor($file);
+        $meta      = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $meta);
         self::assertSame($value, $meta->contentIdentifier());
@@ -1264,9 +1276,9 @@ final class IsoBmffParserTest extends TestCase
         $utf16File    = $this->createQuickTimeKeysFileWithData(2, $utf16Payload);
         $macRomanFile = $this->createQuickTimeKeysFileWithData(7, 'Caf' . chr(0x8E) . ' Legacy' . "\0");
 
-        [, , $utf8Meta]  = $this->createExtractor($utf8File)->extract();
-        [, , $utf16Meta] = $this->createExtractor($utf16File)->extract();
-        [, , $macMeta]   = $this->createExtractor($macRomanFile)->extract();
+        $utf8Meta  = $this->createExtractor($utf8File)->extract()->quickTimeMeta;
+        $utf16Meta = $this->createExtractor($utf16File)->extract()->quickTimeMeta;
+        $macMeta   = $this->createExtractor($macRomanFile)->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $utf8Meta);
         self::assertInstanceOf(QuickTimeMeta::class, $utf16Meta);
@@ -1292,8 +1304,8 @@ final class IsoBmffParserTest extends TestCase
         $moov      = $this->moov($meta);
         $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor           = $this->createExtractor($ftyp . $moov);
-        [, , $quickTimeMeta] = $extractor->extract();
+        $extractor     = $this->createExtractor($ftyp . $moov);
+        $quickTimeMeta = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $quickTimeMeta);
         self::assertSame($value, $quickTimeMeta->keys[$legacyKey]);
@@ -1325,8 +1337,8 @@ final class IsoBmffParserTest extends TestCase
         $moov        = $this->moov($udta);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('udta-terminator-value', $qtMeta->keys[$key]);
@@ -1357,8 +1369,8 @@ final class IsoBmffParserTest extends TestCase
         $moov        = $this->moov($this->box('udta', $meta));
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         // With keys/ilst discarded due to non-mdta handler, only ftyp-derived
         // metadata is produced (majorBrand, minorVersion, compatibleBrands).
@@ -1389,8 +1401,8 @@ final class IsoBmffParserTest extends TestCase
         $moov        = $this->moov($this->box('udta', $meta));
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($qtMeta);
         self::assertArrayHasKey('com.apple.quicktime.title', $qtMeta->keys);
@@ -1425,8 +1437,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($this->box('udta', $meta));
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($qtMeta);
         self::assertSame($title, $qtMeta->keys['com.apple.quicktime.title']);
@@ -1452,8 +1464,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($this->box('udta', $meta));
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($qtMeta);
         self::assertSame('software-name', $qtMeta->keys['com.apple.quicktime.software']);
@@ -1535,8 +1547,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($this->box('udta', $meta));
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
 
@@ -1569,8 +1581,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($this->box('udta', $meta));
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertArrayHasKey($mdtaKey, $qtMeta->keys);
@@ -1598,8 +1610,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($this->box('udta', $meta));
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertArrayHasKey($mdtaKey, $qtMeta->keys);
@@ -1632,11 +1644,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeInt32DataBoxPayload(): void
     {
-        $key          = 'com.apple.quicktime.videoOrientation';
-        $payload      = pack('N', 90);
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $key       = 'com.apple.quicktime.videoOrientation';
+        $payload   = pack('N', 90);
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(90, $qtMeta->keys[$key]);
@@ -1649,11 +1661,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeUnsignedIntDataBoxPayload(): void
     {
-        $key          = 'com.apple.quicktime.videoOrientation';
-        $payload      = pack('N', 0xFFFFFFFF);
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $key       = 'com.apple.quicktime.videoOrientation';
+        $payload   = pack('N', 0xFFFFFFFF);
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(0xFFFFFFFF, $qtMeta->keys[$key]);
@@ -1665,11 +1677,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeTwoByteSignedIntPayload(): void
     {
-        $key          = 'com.apple.quicktime.test';
-        $payload      = "\xFF\xFE"; // -2 as signed 16-bit BE
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $key       = 'com.apple.quicktime.test';
+        $payload   = "\xFF\xFE"; // -2 as signed 16-bit BE
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(-2, $qtMeta->keys[$key]);
@@ -1685,9 +1697,9 @@ final class IsoBmffParserTest extends TestCase
         $payload = hex2bin('FF'); // -1 as signed 8-bit
         self::assertIsString($payload);
 
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(-1, $qtMeta->keys[$key]);
@@ -1703,9 +1715,9 @@ final class IsoBmffParserTest extends TestCase
         $payload = hex2bin('8000'); // -32768 as signed 16-bit BE
         self::assertIsString($payload);
 
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(-32768, $qtMeta->keys[$key]);
@@ -1717,11 +1729,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeThreeByteSignedIntPayload(): void
     {
-        $key          = 'com.apple.quicktime.test';
-        $payload      = "\x00\x01\x00"; // 256 as 3-byte BE
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $key       = 'com.apple.quicktime.test';
+        $payload   = "\x00\x01\x00"; // 256 as 3-byte BE
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(256, $qtMeta->keys[$key]);
@@ -1737,9 +1749,9 @@ final class IsoBmffParserTest extends TestCase
         $payload = hex2bin('FF0000'); // -65536 as signed 24-bit BE
         self::assertIsString($payload);
 
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(-65536, $qtMeta->keys[$key]);
@@ -1751,11 +1763,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeTwoByteUnsignedIntPayload(): void
     {
-        $key          = 'com.apple.quicktime.test';
-        $payload      = "\xFF\xFE"; // 65534 as unsigned 16-bit BE
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $key       = 'com.apple.quicktime.test';
+        $payload   = "\xFF\xFE"; // 65534 as unsigned 16-bit BE
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(65534, $qtMeta->keys[$key]);
@@ -1771,9 +1783,9 @@ final class IsoBmffParserTest extends TestCase
         $payload = hex2bin('FFFF');
         self::assertIsString($payload);
 
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(65535, $qtMeta->keys[$key]);
@@ -1789,9 +1801,9 @@ final class IsoBmffParserTest extends TestCase
         $payload = hex2bin('FFFFFF');
         self::assertIsString($payload);
 
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(16777215, $qtMeta->keys[$key]);
@@ -1862,11 +1874,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeFloat32DataBoxPayload(): void
     {
-        $key          = 'com.apple.quicktime.videoOrientation';
-        $payload      = pack('G', 3.14);
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x17, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $key       = 'com.apple.quicktime.videoOrientation';
+        $payload   = pack('G', 3.14);
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x17, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertEqualsWithDelta(3.14, $qtMeta->keys[$key], 0.001);
@@ -1879,11 +1891,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeFloat64DataBoxPayload(): void
     {
-        $key          = 'com.apple.quicktime.videoOrientation';
-        $payload      = pack('E', 2.718281828);
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x18, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $key       = 'com.apple.quicktime.videoOrientation';
+        $payload   = pack('E', 2.718281828);
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x18, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertEqualsWithDelta(2.718281828, $qtMeta->keys[$key], 0.000001);
@@ -1956,11 +1968,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function coerceQuickTimeStringValuesToInt(): void
     {
-        $key          = 'com.apple.quicktime.videoOrientation';
-        $payload      = '180';
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 1, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $key       = 'com.apple.quicktime.videoOrientation';
+        $payload   = '180';
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 1, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(180, $qtMeta->keys[$key]);
@@ -1973,11 +1985,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function coerceQuickTimeStringValuesToFloat(): void
     {
-        $key          = 'com.apple.quicktime.location.accuracy.horizontal';
-        $payload      = '12.5';
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 1, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $key       = 'com.apple.quicktime.location.accuracy.horizontal';
+        $payload   = '12.5';
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 1, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(12.5, $qtMeta->keys[$key]);
@@ -1990,11 +2002,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function coerceQuickTimeStringValuesToBool(): void
     {
-        $key          = 'com.apple.quicktime.isHDRVideo';
-        $payload      = 'true';
-        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 1, $payload);
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $key       = 'com.apple.quicktime.isHDRVideo';
+        $payload   = 'true';
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 1, $payload);
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertTrue($qtMeta->keys[$key]);
@@ -2052,8 +2064,11 @@ final class IsoBmffParserTest extends TestCase
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
         $data = $ftyp . $meta;
 
-        $extractor                                        = $this->createExtractor($data);
-        [$exifs, , , , $dataReferences, $unresolvedItems] = $extractor->extract();
+        $extractor       = $this->createExtractor($data);
+        $result          = $extractor->extract();
+        $exifs           = $result->exifBlobs;
+        $dataReferences  = $result->dataReferences;
+        $unresolvedItems = $result->unresolvedItems;
 
         self::assertSame([], $exifs);
         self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
@@ -2121,8 +2136,8 @@ final class IsoBmffParserTest extends TestCase
         $meta         = $this->fullBox('meta', $iref);
         $ftyp         = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor              = $this->createExtractor($ftyp . $meta);
-        [, , , $itemReferences] = $extractor->extract();
+        $extractor      = $this->createExtractor($ftyp . $meta);
+        $itemReferences = $extractor->extract()->itemReferences;
 
         self::assertInstanceOf(IsoBmffItemReferenceMap::class, $itemReferences);
         self::assertSame([1], $itemReferences->fromItemIds());
@@ -2151,8 +2166,8 @@ final class IsoBmffParserTest extends TestCase
         $meta         = $this->fullBox('meta', $iref);
         $ftyp         = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor              = $this->createExtractor($ftyp . $meta);
-        [, , , $itemReferences] = $extractor->extract();
+        $extractor      = $this->createExtractor($ftyp . $meta);
+        $itemReferences = $extractor->extract()->itemReferences;
 
         self::assertInstanceOf(IsoBmffItemReferenceMap::class, $itemReferences);
         self::assertSame([$fromItemId], $itemReferences->fromItemIds());
@@ -2194,8 +2209,10 @@ final class IsoBmffParserTest extends TestCase
         $meta    = $this->fullBox('meta', $prefix . $padding . $idat);
         $ftyp    = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor                         = $this->createExtractor($ftyp . $meta);
-        [$exifs, , , , , $unresolvedItems] = $extractor->extract();
+        $extractor       = $this->createExtractor($ftyp . $meta);
+        $result          = $extractor->extract();
+        $exifs           = $result->exifBlobs;
+        $unresolvedItems = $result->unresolvedItems;
 
         self::assertSame(["MM\x00\x2Aidat-exif"], $exifs);
         self::assertSame([], $unresolvedItems);
@@ -2308,7 +2325,7 @@ final class IsoBmffParserTest extends TestCase
         $meta       = $this->fullBox('meta', $iinf . $iref . $iloc);
 
         $extractor = $this->createExtractor($ftyp . $meta . $mdat);
-        [$exifs]   = $extractor->extract();
+        $exifs     = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Aitem-ref"], $exifs);
     }
@@ -2320,7 +2337,7 @@ final class IsoBmffParserTest extends TestCase
     public function resolveIlocItemOffsetExtentIndexOneUsesFirstReference(): void
     {
         $extractor = $this->createExtractor($this->createFileWithIlocItemOffsetReferenceTargets(1, 4));
-        [$exifs]   = $extractor->extract();
+        $exifs     = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Aitem-ref-one"], $exifs);
     }
@@ -2332,7 +2349,7 @@ final class IsoBmffParserTest extends TestCase
     public function resolveIlocItemOffsetExtentIndexTwoUsesSecondReference(): void
     {
         $extractor = $this->createExtractor($this->createFileWithIlocItemOffsetReferenceTargets(2, 4));
-        [$exifs]   = $extractor->extract();
+        $exifs     = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Aitem-ref-two"], $exifs);
     }
@@ -2344,7 +2361,7 @@ final class IsoBmffParserTest extends TestCase
     public function resolveIlocItemOffsetWithZeroIndexSizeUsesFirstReference(): void
     {
         $extractor = $this->createExtractor($this->createFileWithIlocItemOffsetReferenceTargets(null, 0));
-        [$exifs]   = $extractor->extract();
+        $exifs     = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Aitem-ref-one"], $exifs);
     }
@@ -2460,8 +2477,11 @@ final class IsoBmffParserTest extends TestCase
         $meta = $this->fullBox('meta', $iinf . $iloc . $dinf);
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor                                        = $this->createExtractor($ftyp . $meta);
-        [$exifs, , , , $dataReferences, $unresolvedItems] = $extractor->extract();
+        $extractor       = $this->createExtractor($ftyp . $meta);
+        $result          = $extractor->extract();
+        $exifs           = $result->exifBlobs;
+        $dataReferences  = $result->dataReferences;
+        $unresolvedItems = $result->unresolvedItems;
 
         self::assertSame([], $exifs);
         self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
@@ -2507,7 +2527,7 @@ final class IsoBmffParserTest extends TestCase
             'https://example.test/meta-b',
         ));
 
-        [, , , , $dataReferences] = $extractor->extract();
+        $dataReferences = $extractor->extract()->dataReferences;
 
         self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
         self::assertCount(2, $dataReferences->contextOffsets());
@@ -2540,7 +2560,7 @@ final class IsoBmffParserTest extends TestCase
             'https://example.test/meta-b',
         ));
 
-        [, , , , , $unresolvedItems] = $extractor->extract();
+        $unresolvedItems = $extractor->extract()->unresolvedItems;
 
         self::assertCount(2, $unresolvedItems);
 
@@ -2577,7 +2597,7 @@ final class IsoBmffParserTest extends TestCase
             ['relation' => 'thmb', 'toItemId' => 3],
         ));
 
-        [, , , $itemReferences] = $extractor->extract();
+        $itemReferences = $extractor->extract()->itemReferences;
 
         self::assertInstanceOf(IsoBmffItemReferenceMap::class, $itemReferences);
         self::assertCount(2, $itemReferences->contextOffsets());
@@ -2644,8 +2664,8 @@ final class IsoBmffParserTest extends TestCase
         $meta = $this->fullBox('meta', $hdlr . $keys . $ilst);
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor       = $this->createExtractor($ftyp . $meta);
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
 
@@ -2700,8 +2720,8 @@ final class IsoBmffParserTest extends TestCase
         $meta = $this->fullBox('meta', $hdlr . $keys . $ilst);
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor       = $this->createExtractor($ftyp . $meta);
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(2, $quickTime->keys[$keyName]);
@@ -3102,8 +3122,8 @@ final class IsoBmffParserTest extends TestCase
             dataSize: 0,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
@@ -3125,8 +3145,8 @@ final class IsoBmffParserTest extends TestCase
             frameCount: 1,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
@@ -3171,8 +3191,8 @@ final class IsoBmffParserTest extends TestCase
             frameCount: 3,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
@@ -3197,8 +3217,8 @@ final class IsoBmffParserTest extends TestCase
             verticalResolution: 0x003A0000,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
@@ -3316,8 +3336,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->box('moov', $this->minimalMvhd() . $trak);
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor       = $this->createExtractor($ftyp . $moov);
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
@@ -3464,8 +3484,8 @@ final class IsoBmffParserTest extends TestCase
             trailingPayload: $ctab,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
@@ -3488,8 +3508,8 @@ final class IsoBmffParserTest extends TestCase
             trailingPayload: $pasp,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
@@ -3511,8 +3531,8 @@ final class IsoBmffParserTest extends TestCase
             trailingPayload: "\0\0\0\0",
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithVideoStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
@@ -3642,8 +3662,8 @@ final class IsoBmffParserTest extends TestCase
             sampleRate: 44100,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame('raw', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
@@ -3783,8 +3803,8 @@ final class IsoBmffParserTest extends TestCase
             sampleRate: 44100,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame('mp4a', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
@@ -3807,8 +3827,8 @@ final class IsoBmffParserTest extends TestCase
             bytesPerSample: 0,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1, 48000));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1, 48000));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame('mp4a', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
@@ -3858,8 +3878,8 @@ final class IsoBmffParserTest extends TestCase
         );
         $entry = $this->box('mp4a', substr($entry, 8) . $this->fullBox('srat', pack('N', 96000)));
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1, 48000));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1, 48000));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(96000, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
@@ -3898,8 +3918,8 @@ final class IsoBmffParserTest extends TestCase
             sampleRate: 48000,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, mdhdTimescale: 48000));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, mdhdTimescale: 48000));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(48000, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
@@ -3918,8 +3938,8 @@ final class IsoBmffParserTest extends TestCase
             sampleRate: 24000,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, mdhdTimescale: 48000));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, mdhdTimescale: 48000));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(24000, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
@@ -3939,8 +3959,8 @@ final class IsoBmffParserTest extends TestCase
         );
         $entry = substr($entry, 0, -4) . pack('N', (44100 << 16) + 1);
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertIsFloat($quickTime->keys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY]);
@@ -3961,8 +3981,8 @@ final class IsoBmffParserTest extends TestCase
         );
         $entry = substr($entry, 0, -4) . pack('N', 0x56EE8BA3);
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertEqualsWithDelta(22254.545455932617, $quickTime->floatValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY), 0.0000000001);
@@ -4021,8 +4041,8 @@ final class IsoBmffParserTest extends TestCase
             sampleRate: 44100,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, mdhdTimescale: 48000));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, mdhdTimescale: 48000));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(44100, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
@@ -4045,8 +4065,8 @@ final class IsoBmffParserTest extends TestCase
             bytesPerSample: 0,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame('mp4a', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
@@ -4066,8 +4086,8 @@ final class IsoBmffParserTest extends TestCase
             bitsPerChannel: 24,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame('lpcm', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
@@ -4092,8 +4112,8 @@ final class IsoBmffParserTest extends TestCase
             constLpcmFramesPerAudioPacket: 1,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, mdhdTimescale: 48000));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, mdhdTimescale: 48000));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame('integer', $quickTime->stringValue(QuickTimeMeta::AUDIO_LPCM_NUMERIC_FORMAT_KEY));
@@ -4147,8 +4167,8 @@ final class IsoBmffParserTest extends TestCase
             constLpcmFramesPerAudioPacket: 1,
         );
 
-        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
-        [, , $quickTime] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame('mp4a', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
@@ -4286,7 +4306,7 @@ final class IsoBmffParserTest extends TestCase
         $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
 
         $extractor = $this->createExtractor($ftyp . $meta . $mdat);
-        [$exifs]   = $extractor->extract();
+        $exifs     = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Ainfe-v3"], $exifs);
     }
@@ -4328,7 +4348,7 @@ final class IsoBmffParserTest extends TestCase
         $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
 
         $extractor = $this->createExtractor($ftyp . $meta . $mdat);
-        [, $xmps]  = $extractor->extract();
+        $xmps      = $extractor->extract()->xmpBlobs;
 
         self::assertSame([$xmpData], $xmps);
     }
@@ -4366,7 +4386,7 @@ final class IsoBmffParserTest extends TestCase
         $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
 
         $extractor = $this->createExtractor($ftyp . $meta . $mdat);
-        [, $xmps]  = $extractor->extract();
+        $xmps      = $extractor->extract()->xmpBlobs;
 
         self::assertSame([$xmpData], $xmps);
     }
@@ -4505,7 +4525,7 @@ final class IsoBmffParserTest extends TestCase
         $meta       = $this->fullBox('meta', $pitm . $iinf . $iloc);
 
         $extractor = $this->createExtractor($ftyp . $meta . $mdat);
-        [$exifs]   = $extractor->extract();
+        $exifs     = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Apitm-v1-primary"], $exifs);
     }
@@ -4590,9 +4610,12 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parseDrefWithExactDeclaredEntryCount(): void
     {
-        $urlEntry                                         = $this->fullBox('url ', "https://example.test/exif\0");
-        $extractor                                        = $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $urlEntry));
-        [$exifs, , , , $dataReferences, $unresolvedItems] = $extractor->extract();
+        $urlEntry        = $this->fullBox('url ', "https://example.test/exif\0");
+        $extractor       = $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $urlEntry));
+        $result          = $extractor->extract();
+        $exifs           = $result->exifBlobs;
+        $dataReferences  = $result->dataReferences;
+        $unresolvedItems = $result->unresolvedItems;
 
         self::assertSame([], $exifs);
         self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
@@ -4616,9 +4639,12 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parseDrefWithUrnEntryOnly(): void
     {
-        $urnEntry                                         = $this->fullBox('urn ', "name\0urn:example:test\0");
-        $extractor                                        = $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $urnEntry));
-        [$exifs, , , , $dataReferences, $unresolvedItems] = $extractor->extract();
+        $urnEntry        = $this->fullBox('urn ', "name\0urn:example:test\0");
+        $extractor       = $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $urnEntry));
+        $result          = $extractor->extract();
+        $exifs           = $result->exifBlobs;
+        $dataReferences  = $result->dataReferences;
+        $unresolvedItems = $result->unresolvedItems;
 
         self::assertSame([], $exifs);
         self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
@@ -4641,9 +4667,12 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parseDrefWithUrnNameOnly(): void
     {
-        $urnEntry                                         = $this->fullBox('urn ', "name\0");
-        $extractor                                        = $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $urnEntry));
-        [$exifs, , , , $dataReferences, $unresolvedItems] = $extractor->extract();
+        $urnEntry        = $this->fullBox('urn ', "name\0");
+        $extractor       = $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $urnEntry));
+        $result          = $extractor->extract();
+        $exifs           = $result->exifBlobs;
+        $dataReferences  = $result->dataReferences;
+        $unresolvedItems = $result->unresolvedItems;
 
         self::assertSame([], $exifs);
         self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
@@ -4719,9 +4748,12 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function toleratesUnknownDrefEntryType(): void
     {
-        $alisEntry                                        = $this->fullBox('alis', "\x00\x01\x02\x03");
-        $extractor                                        = $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $alisEntry));
-        [$exifs, , , , $dataReferences, $unresolvedItems] = $extractor->extract();
+        $alisEntry       = $this->fullBox('alis', "\x00\x01\x02\x03");
+        $extractor       = $this->createExtractor($this->createFileWithIlocExternalReferenceAndDref(1, $alisEntry));
+        $result          = $extractor->extract();
+        $exifs           = $result->exifBlobs;
+        $dataReferences  = $result->dataReferences;
+        $unresolvedItems = $result->unresolvedItems;
 
         self::assertSame([], $exifs);
         self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
@@ -4903,8 +4935,8 @@ final class IsoBmffParserTest extends TestCase
     {
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 512) . 'mif1heic');
 
-        $extractor           = $this->createExtractor($ftyp);
-        [, , $quickTimeMeta] = $extractor->extract();
+        $extractor     = $this->createExtractor($ftyp);
+        $quickTimeMeta = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $quickTimeMeta);
         self::assertSame('isom', $quickTimeMeta->keys[QuickTimeMeta::MAJOR_BRAND_KEY]);
@@ -4935,8 +4967,8 @@ final class IsoBmffParserTest extends TestCase
     {
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0) . 'mif1' . "\x00\x00\x00\x01");
 
-        $extractor    = $this->createExtractor($ftyp);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('mif1', $qtMeta->keys[QuickTimeMeta::COMPATIBLE_BRANDS_KEY]);
@@ -4990,7 +5022,7 @@ final class IsoBmffParserTest extends TestCase
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
-        [, $xmps]  = $extractor->extract();
+        $xmps      = $extractor->extract()->xmpBlobs;
 
         self::assertSame([], $xmps);
     }
@@ -5053,7 +5085,7 @@ final class IsoBmffParserTest extends TestCase
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
-        [, $xmps]  = $extractor->extract();
+        $xmps      = $extractor->extract()->xmpBlobs;
 
         self::assertSame([], $xmps);
     }
@@ -5179,8 +5211,8 @@ final class IsoBmffParserTest extends TestCase
         $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('track-meta-value', $qtMeta->keys[$key]);
@@ -5196,8 +5228,8 @@ final class IsoBmffParserTest extends TestCase
         $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('Test Track Name', $qtMeta->keys[QuickTimeMeta::TRACK_NAME_KEY]);
@@ -5213,8 +5245,8 @@ final class IsoBmffParserTest extends TestCase
         $moov      = $this->moov($this->box('udta', $titleAtom));
         $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('Movie Title', $qtMeta->keys['com.apple.quicktime.title']);
@@ -5240,8 +5272,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($udta);
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('Movie Title', $qtMeta->keys['com.apple.quicktime.title']);
@@ -5258,8 +5290,8 @@ final class IsoBmffParserTest extends TestCase
         $moov    = $this->moov($this->box('udta', $unknown));
         $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertArrayNotHasKey('com.apple.quicktime.title', $qtMeta->keys);
@@ -5277,8 +5309,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($this->box('udta', $this->box("\xA9xyz", $gps)));
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('+48.1234+011.5678+500.000/', $qtMeta->keys['com.apple.quicktime.location.ISO6709']);
@@ -5293,8 +5325,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($this->box('udta', $this->box("\xA9too", "HandBrake 1.8.0\0")));
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('HandBrake 1.8.0', $qtMeta->keys['com.apple.quicktime.software']);
@@ -5310,8 +5342,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($udta);
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('Apple', $qtMeta->keys['com.apple.quicktime.make']);
@@ -5329,8 +5361,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($udta);
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, $xmpBlobs] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $xmpBlobs  = $extractor->extract()->xmpBlobs;
 
         self::assertCount(1, $xmpBlobs);
         self::assertSame($xmp, $xmpBlobs[0]);
@@ -5384,8 +5416,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->box('moov', $this->minimalMvhd() . $movieUdta . $trak);
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         // Track-level overwrites movie-level via mergeAssociative (last wins)
@@ -5403,8 +5435,8 @@ final class IsoBmffParserTest extends TestCase
         $moov      = $this->moov($this->box('udta', $titleAtom));
         $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('Movie Title', $qtMeta->keys['com.apple.quicktime.title']);
@@ -5462,8 +5494,8 @@ final class IsoBmffParserTest extends TestCase
         $moov      = $this->box('moov', $this->minimalMvhd() . $trak);
         $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('Media Title', $qtMeta->keys['com.apple.quicktime.title']);
@@ -5492,8 +5524,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->box('moov', $this->minimalMvhd() . $moovUdta . $trak);
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('Movie Title', $qtMeta->keys['com.apple.quicktime.title']);
@@ -5514,8 +5546,8 @@ final class IsoBmffParserTest extends TestCase
         $moov    = $this->box('moov', $this->minimalMvhd() . $trak);
         $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         // Parsing completes without error; no spurious keys from unknown atom
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
@@ -5554,8 +5586,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->box('moov', $this->minimalMvhd() . $trak);
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
     }
@@ -5656,8 +5688,8 @@ final class IsoBmffParserTest extends TestCase
             'height' => 2160,
         ];
 
-        $extractor    = $this->createExtractor($this->createFileWithVideoTracks($videoOne, $videoTwo));
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithVideoTracks($videoOne, $videoTwo));
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(1920, $qtMeta->keys[QuickTimeMeta::VIDEO_WIDTH_KEY]);
@@ -5684,8 +5716,8 @@ final class IsoBmffParserTest extends TestCase
             'tkhdFlags' => 0x000003,
         ];
 
-        $extractor    = $this->createExtractor($this->createFileWithVideoTrackDescriptors($disabled, $enabledInMovie));
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithVideoTrackDescriptors($disabled, $enabledInMovie));
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(1920, $qtMeta->keys[QuickTimeMeta::VIDEO_WIDTH_KEY]);
@@ -5712,8 +5744,8 @@ final class IsoBmffParserTest extends TestCase
             'tkhdFlags' => 0x000003,
         ];
 
-        $extractor    = $this->createExtractor($this->createFileWithVideoTrackDescriptors($enabledOnly, $inMovie));
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithVideoTrackDescriptors($enabledOnly, $inMovie));
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(1920, $qtMeta->keys[QuickTimeMeta::VIDEO_WIDTH_KEY]);
@@ -5734,8 +5766,8 @@ final class IsoBmffParserTest extends TestCase
             'tkhdFlags' => 0x000000,
         ];
 
-        $extractor    = $this->createExtractor($this->createFileWithVideoTrackDescriptors($track));
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithVideoTrackDescriptors($track));
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(1920, $qtMeta->keys[QuickTimeMeta::VIDEO_WIDTH_KEY]);
@@ -5762,8 +5794,8 @@ final class IsoBmffParserTest extends TestCase
             'tkhdFlags' => 0x000003,
         ];
 
-        $extractor    = $this->createExtractor($this->createFileWithVideoTrackDescriptors($firstEligible, $secondEligible));
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithVideoTrackDescriptors($firstEligible, $secondEligible));
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(1920, $qtMeta->keys[QuickTimeMeta::VIDEO_WIDTH_KEY]);
@@ -5781,8 +5813,8 @@ final class IsoBmffParserTest extends TestCase
         $audioOne = $this->audioSampleEntryVersion0('raw ', 2, 16, 44_100);
         $audioTwo = $this->audioSampleEntryVersion0('twos', 1, 8, 22_050);
 
-        $extractor    = $this->createExtractor($this->createFileWithAudioTracks($audioOne, $audioTwo));
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioTracks($audioOne, $audioTwo));
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('raw ', $qtMeta->keys[QuickTimeMeta::AUDIO_FORMAT_KEY]);
@@ -5811,8 +5843,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($udta);
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('name-fallback-value', $qtMeta->keys['custom.metadata.key']);
@@ -5884,8 +5916,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($udta);
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('itif-test-value', $qtMeta->keys[$key]);
@@ -5999,8 +6031,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($meta);
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('mhdr-test-value', $qtMeta->keys[$key]);
@@ -6067,8 +6099,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($meta);
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('no-itif-value', $qtMeta->keys[$key]);
@@ -6086,8 +6118,8 @@ final class IsoBmffParserTest extends TestCase
             (1 << 16) | 1,
         );
 
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('locale-test', $qtMeta->keys['com.apple.quicktime.content.identifier']);
@@ -6156,8 +6188,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->box('moov', $this->minimalMvhd() . $trak);
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('VideoHandler', $qtMeta->stringValue('HandlerDescription'));
@@ -6183,8 +6215,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($meta);
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('test', $qtMeta->stringValue($key));
@@ -6225,8 +6257,8 @@ final class IsoBmffParserTest extends TestCase
         $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
         $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('VideoHandler', $qtMeta->stringValue('HandlerDescription'));
@@ -6241,8 +6273,8 @@ final class IsoBmffParserTest extends TestCase
         $value = 'Ünïcödé Tëxt';
         $file  = $this->createQuickTimeMetaWithDataPayload(1, $value);
 
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame($value, $qtMeta->stringValue('com.apple.quicktime.content.identifier'));
@@ -6259,8 +6291,8 @@ final class IsoBmffParserTest extends TestCase
 
         $file = $this->createQuickTimeMetaWithDataPayload(1, $payload);
 
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame($payload, $qtMeta->keys['com.apple.quicktime.content.identifier']);
@@ -6277,8 +6309,8 @@ final class IsoBmffParserTest extends TestCase
 
         $file = $this->createQuickTimeMetaWithDataPayload(1, $payload);
 
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame($payload, $qtMeta->keys['com.apple.quicktime.content.identifier']);
@@ -6309,8 +6341,8 @@ final class IsoBmffParserTest extends TestCase
 
         $file = $this->createQuickTimeMetaWithDataPayload(2, $utf16);
 
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('Hello', $qtMeta->stringValue('com.apple.quicktime.content.identifier'));
@@ -6339,8 +6371,8 @@ final class IsoBmffParserTest extends TestCase
         $payload = chr(0xFF) . chr(0xD8) . chr(0xFF) . chr(0xE0) . 'JFIF' . chr(0) . 'payload';
         $file    = $this->createQuickTimeMetaWithDataPayload(13, $payload);
 
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame($payload, $qtMeta->dataAtoms['com.apple.quicktime.content.identifier'][0]->value);
@@ -6356,8 +6388,8 @@ final class IsoBmffParserTest extends TestCase
 
         $file = $this->createQuickTimeMetaWithDataPayload(14, $payload);
 
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame($payload, $qtMeta->dataAtoms['com.apple.quicktime.content.identifier'][0]->value);
@@ -6372,8 +6404,8 @@ final class IsoBmffParserTest extends TestCase
         $payload = 'BM' . chr(0x36) . chr(0) . chr(0) . chr(0) . 'payload';
         $file    = $this->createQuickTimeMetaWithDataPayload(27, $payload);
 
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame($payload, $qtMeta->dataAtoms['com.apple.quicktime.content.identifier'][0]->value);
@@ -6425,8 +6457,8 @@ final class IsoBmffParserTest extends TestCase
         $payload = chr(0) . 'BIN' . chr(0xFF);
         $file    = $this->createQuickTimeMetaWithDataPayload(99, $payload);
 
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame($payload, $qtMeta->dataAtoms['com.apple.quicktime.content.identifier'][0]->value);
@@ -6445,8 +6477,8 @@ final class IsoBmffParserTest extends TestCase
         );
         $file = $this->createQuickTimeMetaWithDataPayload(28, $nestedPayload);
 
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(
@@ -6467,8 +6499,8 @@ final class IsoBmffParserTest extends TestCase
         ]);
         $file = $this->createQuickTimeMetaWithDataPayload(28, $nestedPayload);
 
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('A', $qtMeta->stringValue('com.apple.quicktime.content.identifier.com.apple.quicktime.alpha'));
@@ -6518,8 +6550,8 @@ final class IsoBmffParserTest extends TestCase
     {
         $file = $this->createQuickTimeMetaWithDataPayload(1, 'Plain Scalar Value');
 
-        $extractor    = $this->createExtractor($file);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('Plain Scalar Value', $qtMeta->contentIdentifier());
@@ -6677,8 +6709,8 @@ final class IsoBmffParserTest extends TestCase
         // 4 trailing bytes that don't form a valid box (< 8 bytes)
         $data = $ftyp . "\xFF\xFF\xFF\xFF";
 
-        $extractor    = $this->createExtractor($data);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($data);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('isom', $qtMeta->keys[QuickTimeMeta::MAJOR_BRAND_KEY]);
@@ -6703,8 +6735,8 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->moov($meta);
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor    = $this->createExtractor($ftyp . $moov);
-        [, , $qtMeta] = $extractor->extract();
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
     }
@@ -6767,8 +6799,8 @@ final class IsoBmffParserTest extends TestCase
 
         $result = $this->createExtractor($data)->extract();
 
-        self::assertSame(["MM\x00\x2Atmap-exif"], $result[0]);
-        self::assertSame([2], $result[9]);
+        self::assertSame(["MM\x00\x2Atmap-exif"], $result->exifBlobs);
+        self::assertSame([2], $result->tmapItemIds);
     }
 
     /**
@@ -6807,8 +6839,8 @@ final class IsoBmffParserTest extends TestCase
 
         $result = $this->createExtractor($data)->extract();
 
-        self::assertSame(["MM\x00\x2Ano-tmap"], $result[0]);
-        self::assertSame([], $result[9]);
+        self::assertSame(["MM\x00\x2Ano-tmap"], $result->exifBlobs);
+        self::assertSame([], $result->tmapItemIds);
     }
 
     /**

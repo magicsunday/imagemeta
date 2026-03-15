@@ -28,6 +28,7 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\BoxPayloadCollection;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxPayloadCollector;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParseResult;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemLocationResolver;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemPayloadResolver;
 use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeKeyResolver;
@@ -70,6 +71,7 @@ use function pack;
 #[UsesClass(QuickTimeDataAtom::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(ConstructionMethod::class)]
+#[UsesClass(IsoBmffParseResult::class)]
 #[UsesClass(IlocBoxParser::class)]
 #[UsesClass(ItemLocationResolver::class)]
 #[UsesClass(ItemPayloadResolver::class)]
@@ -93,8 +95,8 @@ final class IspeBoxParsingTest extends TestCase
         $extractor = $this->createExtractor($data);
         $result    = $extractor->extract();
 
-        self::assertSame(4032, $result[6]);
-        self::assertSame(3024, $result[7]);
+        self::assertSame(4032, $result->ispeWidth);
+        self::assertSame(3024, $result->ispeHeight);
     }
 
     /**
@@ -112,8 +114,8 @@ final class IspeBoxParsingTest extends TestCase
         $extractor = $this->createExtractor($data);
         $result    = $extractor->extract();
 
-        self::assertNull($result[6]);
-        self::assertNull($result[7]);
+        self::assertNull($result->ispeWidth);
+        self::assertNull($result->ispeHeight);
     }
 
     /**
@@ -127,8 +129,8 @@ final class IspeBoxParsingTest extends TestCase
         $extractor = $this->createExtractor($data);
         $result    = $extractor->extract();
 
-        self::assertNull($result[6]);
-        self::assertNull($result[7]);
+        self::assertNull($result->ispeWidth);
+        self::assertNull($result->ispeHeight);
     }
 
     /**
@@ -142,8 +144,8 @@ final class IspeBoxParsingTest extends TestCase
         $extractor = $this->createExtractor($data);
         $result    = $extractor->extract();
 
-        self::assertSame(1920, $result[6]);
-        self::assertSame(1080, $result[7]);
+        self::assertSame(1920, $result->ispeWidth);
+        self::assertSame(1080, $result->ispeHeight);
     }
 
     /**

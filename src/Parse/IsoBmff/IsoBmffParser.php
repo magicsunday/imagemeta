@@ -15,7 +15,6 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
-use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 
@@ -108,10 +107,8 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
     /**
      * Extracts EXIF blobs, XMP packets, and QuickTime metadata from the stream.
-     *
-     * @return array{0: list<string>, 1: list<string>, 2: ?QuickTimeMeta, 3: ?IsoBmffItemReferenceMap, 4: ?IsoBmffDataReferenceMap, 5: list<IsoBmffUnresolvedItem>, 6: ?int, 7: ?int, 8: ?string, 9: list<int>}
      */
-    public function extract(): array
+    public function extract(): IsoBmffParseResult
     {
         $context = new IsoBmffParseContext();
 
@@ -156,7 +153,18 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $itemReferenceMap = $context->itemReferences === [] ? null : new IsoBmffItemReferenceMap($context->itemReferences);
         $dataReferenceMap = $context->dataReferences === [] ? null : new IsoBmffDataReferenceMap($context->dataReferences);
 
-        return [$context->exifBlobs, $context->xmpBlobs, $qt, $itemReferenceMap, $dataReferenceMap, $context->unresolvedItems, $context->ispeWidth, $context->ispeHeight, $context->iccProfile, $context->tmapItemIds];
+        return new IsoBmffParseResult(
+            $context->exifBlobs,
+            $context->xmpBlobs,
+            $qt,
+            $itemReferenceMap,
+            $dataReferenceMap,
+            $context->unresolvedItems,
+            $context->ispeWidth,
+            $context->ispeHeight,
+            $context->iccProfile,
+            $context->tmapItemIds,
+        );
     }
 
     /**

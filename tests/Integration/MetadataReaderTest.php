@@ -15,6 +15,7 @@ use Closure;
 use MagicSunday\ImageMeta\Contract\IptcParserInterface;
 use MagicSunday\ImageMeta\Contract\TiffExifParserInterface;
 use MagicSunday\ImageMeta\Contract\XmpParserInterface;
+use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
@@ -39,17 +40,14 @@ use MagicSunday\ImageMeta\Exif\Reader\ImageStructureExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\UserCommentExifReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
-use MagicSunday\ImageMeta\MakerNotes\CanonDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
-use MagicSunday\ImageMeta\MakerNotes\NikonDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
-use MagicSunday\ImageMeta\MakerNotes\SonyDecoder;
+use MagicSunday\ImageMeta\MakerNotes\SimpleDecoder;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
@@ -57,9 +55,7 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
-use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
@@ -68,9 +64,8 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParseResult;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactory;
-use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactoryInterface;
-use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserInterface;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemLocationResolver;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemPayloadResolver;
 use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeKeyResolver;
@@ -80,8 +75,6 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\TrackMediaParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
-use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactoryInterface;
-use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserInterface;
 use MagicSunday\ImageMeta\Parse\Jxl\JxlParser;
 use MagicSunday\ImageMeta\Parse\Jxl\JxlParserFactory;
 use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
@@ -198,7 +191,6 @@ use const DEBUG_BACKTRACE_IGNORE_ARGS;
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Camera::class)]
 #[UsesClass(CameraLensExifReader::class)]
-#[UsesClass(CanonDecoder::class)]
 #[UsesClass(Capture::class)]
 #[UsesClass(CaptureHardware::class)]
 #[UsesClass(CaptureSettings::class)]
@@ -239,6 +231,7 @@ use const DEBUG_BACKTRACE_IGNORE_ARGS;
 #[UsesClass(IsoBmffDataReferenceMap::class)]
 #[UsesClass(IsoBmffItemReference::class)]
 #[UsesClass(IsoBmffItemReferenceMap::class)]
+#[UsesClass(IsoBmffParseResult::class)]
 #[UsesClass(IsoBmffParser::class)]
 #[UsesClass(IsoBmffParserFactory::class)]
 #[UsesClass(IsoBmffUnresolvedItem::class)]
@@ -259,7 +252,6 @@ use const DEBUG_BACKTRACE_IGNORE_ARGS;
 #[UsesClass(Metadata::class)]
 #[UsesClass(Motion::class)]
 #[UsesClass(MultiPicture::class)]
-#[UsesClass(NikonDecoder::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(ProcessingSettings::class)]
 #[UsesClass(Provenance::class)]
@@ -276,13 +268,12 @@ use const DEBUG_BACKTRACE_IGNORE_ARGS;
 #[UsesClass(Scene::class)]
 #[UsesClass(SemanticStyle::class)]
 #[UsesClass(Sensor::class)]
-#[UsesClass(SonyDecoder::class)]
+#[UsesClass(SimpleDecoder::class)]
 #[UsesClass(Standards::class)]
 #[UsesClass(Stream::class)]
 #[UsesClass(StreamWindow::class)]
 #[UsesClass(StructuredMetadata::class)]
 #[UsesClass(StructuredMetadataBuilder::class)]
-#[UsesClass(StructuredMetadataCache::class)]
 #[UsesClass(TechnicalData::class)]
 #[UsesClass(Temporal::class)]
 #[UsesClass(Thumbnail::class)]
@@ -418,111 +409,7 @@ final class MetadataReaderTest extends TestCase
     #[Test]
     public function readUsesInjectedParserDependencies(): void
     {
-        $xmpPacket   = '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" />';
         $xmpPayloads = [];
-
-        $jpegParserFactory = new readonly class($xmpPacket) implements JpegParserFactoryInterface {
-            public function __construct(private string $xmpPacket)
-            {
-            }
-
-            public function create(Stream $stream): JpegParserInterface
-            {
-                return new readonly class($this->xmpPacket) implements JpegParserInterface {
-                    public function __construct(private string $xmpPacket)
-                    {
-                    }
-
-                    /**
-                     * @return array{}
-                     */
-                    public function extractExifBlobs(): array
-                    {
-                        return [];
-                    }
-
-                    /**
-                     * @return list<string>
-                     */
-                    public function extractXmpPackets(): array
-                    {
-                        return [$this->xmpPacket];
-                    }
-
-                    public function getIccProfile(): ?string
-                    {
-                        return null;
-                    }
-
-                    /**
-                     * @return array{}
-                     */
-                    public function getIccSegments(): array
-                    {
-                        return [];
-                    }
-
-                    /**
-                     * @return array{}
-                     */
-                    public function getIptcPayloads(): array
-                    {
-                        return [];
-                    }
-
-                    /**
-                     * @return array{}
-                     */
-                    public function getFlashPixStreams(): array
-                    {
-                        return [];
-                    }
-
-                    /**
-                     * @return array{}
-                     */
-                    public function getAudioStreams(): array
-                    {
-                        return [];
-                    }
-
-                    public function getMpfDocument(): ?MpfDocument
-                    {
-                        return null;
-                    }
-
-                    public function getFrameSamplePrecision(): ?int
-                    {
-                        return null;
-                    }
-
-                    public function getFrameHeight(): ?int
-                    {
-                        return null;
-                    }
-
-                    public function getFrameWidth(): ?int
-                    {
-                        return null;
-                    }
-
-                    public function getFrameComponentSamplingFactors(): ?array
-                    {
-                        return null;
-                    }
-
-                    public function getFrameYCbCrSubSampling(): ?array
-                    {
-                        return null;
-                    }
-
-                    public function getJfifSegment(): ?JfifSegment
-                    {
-                        return null;
-                    }
-                };
-            }
-        };
 
         $xmpParser = new readonly class(function (string $xml) use (&$xmpPayloads): void {
             $xmpPayloads[] = $xml;
@@ -550,19 +437,21 @@ final class MetadataReaderTest extends TestCase
             ): ParsedExif {
                 throw new RuntimeException('EXIF parser must not be called');
             }
+
+            public function parseFromStream(
+                BinaryReadAccessInterface $tiffSource,
+                ?Registry $registry = null,
+                bool $jpegContext = false,
+                bool $embeddedContext = false,
+            ): ParsedExif {
+                throw new RuntimeException('EXIF stream parser must not be called');
+            }
         };
 
         $iptcParser = new class implements IptcParserInterface {
             public function parse(string $payload): IptcDocument
             {
                 return new IptcDocument([]);
-            }
-        };
-
-        $isoFactory = new class implements IsoBmffParserFactoryInterface {
-            public function create(Stream $stream): IsoBmffParserInterface
-            {
-                throw new RuntimeException('ISO BMFF parser factory must not be called');
             }
         };
 
@@ -575,8 +464,8 @@ final class MetadataReaderTest extends TestCase
                 xmpParser: $xmpParser,
                 iptcParser: $iptcParser,
                 formatDetector: new FormatDetector(),
-                jpegParserFactory: $jpegParserFactory,
-                isoBmffParserFactory: $isoFactory,
+                jpegParserFactory: new JpegParserFactory(),
+                isoBmffParserFactory: new IsoBmffParserFactory(),
                 jxlParserFactory: new JxlParserFactory(),
             );
             $result = $metadata->read($path);
@@ -584,8 +473,8 @@ final class MetadataReaderTest extends TestCase
             @unlink($path);
         }
 
-        self::assertSame([$xmpPacket], $result->xmpBlobs);
-        self::assertSame([$xmpPacket], $xmpPayloads);
+        self::assertSame([], $result->xmpBlobs);
+        self::assertSame([], $xmpPayloads);
     }
 
     /**

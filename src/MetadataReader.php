@@ -34,11 +34,8 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\DjiMdatTelemetryScanner;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactory;
-use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
-use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Jxl\JxlParserFactory;
-use MagicSunday\ImageMeta\Parse\Jxl\JxlParserFactoryInterface;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use ValueError;
@@ -68,15 +65,15 @@ final readonly class MetadataReader
     private const int MAX_TIFF_SIZE = 256 * 1024 * 1024;
 
     /**
-     * @param TiffExifParserInterface       $tiffReader           TIFF/EXIF parser instance.
-     * @param AppleMakerNotesMerger         $appleMerger          Apple maker notes merger.
-     * @param XmpParserInterface            $xmpParser            XMP parser instance.
-     * @param IptcParserInterface           $iptcParser           IPTC parser instance.
-     * @param FormatDetector                $formatDetector       Container format detector.
-     * @param JpegParserFactoryInterface    $jpegParserFactory    Factory creating JPEG parser instances.
-     * @param IsoBmffParserFactoryInterface $isoBmffParserFactory Factory creating ISO BMFF parser instances.
-     * @param JxlParserFactoryInterface     $jxlParserFactory     Factory creating JPEG XL parser instances.
-     * @param int                           $maxTiffSize          Maximum stream size in bytes before TIFF materialisation is rejected.
+     * @param TiffExifParserInterface $tiffReader           TIFF/EXIF parser instance.
+     * @param AppleMakerNotesMerger   $appleMerger          Apple maker notes merger.
+     * @param XmpParserInterface      $xmpParser            XMP parser instance.
+     * @param IptcParserInterface     $iptcParser           IPTC parser instance.
+     * @param FormatDetector          $formatDetector       Container format detector.
+     * @param JpegParserFactory       $jpegParserFactory    Factory creating JPEG parser instances.
+     * @param IsoBmffParserFactory    $isoBmffParserFactory Factory creating ISO BMFF parser instances.
+     * @param JxlParserFactory        $jxlParserFactory     Factory creating JPEG XL parser instances.
+     * @param int                     $maxTiffSize          Maximum stream size in bytes before TIFF materialisation is rejected.
      */
     public function __construct(
         private TiffExifParserInterface $tiffReader,
@@ -84,9 +81,9 @@ final readonly class MetadataReader
         private XmpParserInterface $xmpParser,
         private IptcParserInterface $iptcParser,
         private FormatDetector $formatDetector,
-        private JpegParserFactoryInterface $jpegParserFactory,
-        private IsoBmffParserFactoryInterface $isoBmffParserFactory,
-        private JxlParserFactoryInterface $jxlParserFactory,
+        private JpegParserFactory $jpegParserFactory,
+        private IsoBmffParserFactory $isoBmffParserFactory,
+        private JxlParserFactory $jxlParserFactory,
         private int $maxTiffSize = self::MAX_TIFF_SIZE,
     ) {
     }
@@ -230,12 +227,14 @@ final readonly class MetadataReader
         ?string $extension,
         ?string $digestSha256,
     ): Metadata {
-        [$exifBlobs, $xmpBlobs, $qt, $isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems, $ispeWidth, $ispeHeight, $iccProfile, $tmapItemIds] = $this->isoBmffParserFactory->create($stream)->extract();
+        $result = $this->isoBmffParserFactory->create($stream)->extract();
+
+        $qt = $result->quickTimeMeta;
 
         // Truncated DJI drone recordings lack a moov box. When the parser
         // found no EXIF/XMP payloads, scan the stream tail for DJI protobuf
         // telemetry and inject model/GPS data into QuickTime keys.
-        if (($exifBlobs === []) && ($xmpBlobs === [])) {
+        if (($result->exifBlobs === []) && ($result->xmpBlobs === [])) {
             $qt = $this->enrichWithDjiTelemetry($stream, $qt);
         }
 
@@ -243,17 +242,17 @@ final readonly class MetadataReader
         // image data in mdat — TIFF-level dimension/strip/tile tags are
         // not required.  Unlike JPEG context, JPEG-prohibited tags
         // (ImageWidth etc.) may legitimately appear in the EXIF blob.
-        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($exifBlobs, embeddedContext: true);
+        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($result->exifBlobs, embeddedContext: true);
 
         $makerNotes = $this->appleMerger->merge($makerNotes, $qt);
-        $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
+        $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs);
 
         return (new MetadataBuilder())
             ->withParsers($this->xmpParser, $this->iptcParser)
-            ->withExif($exifBlobs, $exifDoc, $makerNotes)
-            ->withXmp($xmpBlobs, $xmpDoc)
+            ->withExif($result->exifBlobs, $exifDoc, $makerNotes)
+            ->withXmp($result->xmpBlobs, $xmpDoc)
             ->withQuickTime($qt)
-            ->withIsoBmff($isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems, $ispeWidth, $ispeHeight, $iccProfile, $tmapItemIds)
+            ->withIsoBmff($result->itemReferences, $result->dataReferences, $result->unresolvedItems, $result->ispeWidth, $result->ispeHeight, $result->iccProfile, $result->tmapItemIds)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
             ->build();
     }
@@ -285,15 +284,7 @@ final readonly class MetadataReader
         $exifBlobs = [];
 
         $stream->seek(0);
-
-        if ($this->tiffReader instanceof TiffExifParser) {
-            $exifDoc = $this->tiffReader->parseFromStream($stream, $registry);
-        } else {
-            // Compatibility fallback for custom parsers implementing only the blob contract.
-            $tiffBlob  = $stream->read($stream->size());
-            $exifDoc   = $this->tiffReader->parseFromBlob($tiffBlob, $registry);
-            $exifBlobs = [$tiffBlob];
-        }
+        $exifDoc = $this->tiffReader->parseFromStream($stream, $registry);
 
         $makerNotes = $this->appleMerger->merge($exifDoc->makerNotes(), null);
 

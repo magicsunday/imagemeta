@@ -29,6 +29,7 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\BoxPayloadCollector;
 use MagicSunday\ImageMeta\Parse\IsoBmff\FullBoxHeader;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParseResult;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemLocationResolver;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemPayloadResolver;
 use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeKeyResolver;
@@ -74,6 +75,7 @@ use function str_repeat;
 #[UsesClass(QuickTimeDataAtom::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(ConstructionMethod::class)]
+#[UsesClass(IsoBmffParseResult::class)]
 #[UsesClass(IlocBoxParser::class)]
 #[UsesClass(ItemLocationResolver::class)]
 #[UsesClass(ItemPayloadResolver::class)]
@@ -100,7 +102,7 @@ final class ColrBoxParsingTest extends TestCase
 
         $result = $this->createExtractor($data)->extract();
 
-        self::assertSame($iccBlob, $result[8]);
+        self::assertSame($iccBlob, $result->iccProfile);
     }
 
     /**
@@ -116,7 +118,7 @@ final class ColrBoxParsingTest extends TestCase
 
         $result = $this->createExtractor($data)->extract();
 
-        self::assertSame($iccBlob, $result[8]);
+        self::assertSame($iccBlob, $result->iccProfile);
     }
 
     /**
@@ -131,7 +133,7 @@ final class ColrBoxParsingTest extends TestCase
 
         $result = $this->createExtractor($data)->extract();
 
-        self::assertNull($result[8]);
+        self::assertNull($result->iccProfile);
     }
 
     /**
@@ -150,7 +152,7 @@ final class ColrBoxParsingTest extends TestCase
 
         $result = $this->createExtractor($data)->extract();
 
-        self::assertNull($result[8]);
+        self::assertNull($result->iccProfile);
     }
 
     /**
@@ -163,7 +165,7 @@ final class ColrBoxParsingTest extends TestCase
 
         $result = $this->createExtractor($data)->extract();
 
-        self::assertNull($result[8]);
+        self::assertNull($result->iccProfile);
     }
 
     /**
