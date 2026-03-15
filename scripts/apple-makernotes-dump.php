@@ -260,6 +260,13 @@ function formatValue(mixed $value, int $indent = 0): string
             }
         }
 
+        // Try known binary formats before falling back to hex dump
+        $structuredBinary = tryDecodeBinaryStructure($value);
+
+        if ($structuredBinary !== null) {
+            return $structuredBinary;
+        }
+
         if (!mb_check_encoding($value, 'UTF-8') || preg_match('/[\x00-\x08\x0E-\x1F]/', $value)) {
             return sprintf('(binary %d bytes) %s', strlen($value), strtoupper(bin2hex(substr($value, 0, 32))));
         }
@@ -325,4 +332,70 @@ function sanitizeForJson(array $data): array
     }
 
     return $result;
+}
+
+/**
+ * Attempts to decode known Apple binary structures into human-readable format.
+ */
+function tryDecodeBinaryStructure(string $data): ?string
+{
+    $len = strlen($data);
+
+    // AE Metering Matrix: 512 bytes = 256 × uint16 big-endian → 16×16 grid
+    if ($len === 512) {
+        return decodeAeMatrix($data);
+    }
+
+    // Color Correction Matrix: header(8 bytes) + 9 × float32 LE = 44 bytes
+    if ($len === 44 && unpack('V', $data, 0)[1] === 1) {
+        return decodeColorMatrix($data);
+    }
+
+    return null;
+}
+
+function decodeAeMatrix(string $data): string
+{
+    $values = [];
+
+    for ($i = 0; $i < 512; $i += 2) {
+        $values[] = unpack('n', $data, $i)[1];
+    }
+
+    $rows = [];
+
+    for ($row = 0; $row < 16; ++$row) {
+        $cols = [];
+
+        for ($col = 0; $col < 16; ++$col) {
+            $cols[] = sprintf('%5d', $values[$row * 16 + $col]);
+        }
+
+        $rows[] = '    ' . implode(' ', $cols);
+    }
+
+    return sprintf(
+        "(16x16 AE metering matrix, min=%d, max=%d, avg=%d)\n%s",
+        min($values),
+        max($values),
+        (int) round(array_sum($values) / count($values)),
+        implode("\n", $rows),
+    );
+}
+
+function decodeColorMatrix(string $data): string
+{
+    $floats = [];
+
+    for ($i = 8; $i < 44; $i += 4) {
+        $floats[] = unpack('g', $data, $i)[1];
+    }
+
+    return sprintf(
+        "(3x3 color correction matrix)\n"
+        . "    [%10.6f %10.6f %10.6f]\n"
+        . "    [%10.6f %10.6f %10.6f]\n"
+        . "    [%10.6f %10.6f %10.6f]",
+        ...$floats,
+    );
 }
