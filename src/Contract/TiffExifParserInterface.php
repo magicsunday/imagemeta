@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Contract;
 
+use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
@@ -28,4 +29,12 @@ interface TiffExifParserInterface
      * @throws BoundsError
      */
     public function parseFromBlob(string $tiffBlob, ?Registry $registry = null, bool $jpegContext = false, bool $embeddedContext = false): ParsedExif;
+
+    /**
+     * Parses EXIF from a seekable TIFF data source without pre-materializing a full blob.
+     *
+     * @throws ParseError
+     * @throws BoundsError
+     */
+    public function parseFromStream(BinaryReadAccessInterface $tiffSource, ?Registry $registry = null, bool $jpegContext = false, bool $embeddedContext = false): ParsedExif;
 }
