@@ -1927,11 +1927,13 @@ final class MetadataFormatter
                 $data   = [];
 
                 foreach ($rawDict as $key => $value) {
-                    $tagId       = $tagMap[$key] ?? null;
+                    $tagId        = $tagMap[$key] ?? null;
                     $displayValue = $this->formatAppleMakerNoteValue($value);
 
                     if ($tagId !== null) {
                         $data[$tagId] = $displayValue;
+                    } elseif (preg_match('/^Apple_0x([0-9A-Fa-f]{4})$/', $key, $m) === 1) {
+                        $data[hexdec($m[1])] = $displayValue;
                     } else {
                         $data[$key] = $displayValue;
                     }
