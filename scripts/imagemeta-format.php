@@ -924,7 +924,7 @@ final class MetadataFormatter
         }
 
         if ($ifdContext === 'Apple') {
-            return AppleJpegIfdParser::TAG_MAP[$tagId] ?? sprintf('Apple_0x%04X', $tagId);
+            return AppleJpegIfdParser::TAG_MAP[$tagId] ?? sprintf('Apple 0x%04x', $tagId);
         }
 
         if ($ifdContext === 'IFD1') {
@@ -1932,7 +1932,7 @@ final class MetadataFormatter
 
                     if ($tagId !== null) {
                         $data[$tagId] = $displayValue;
-                    } elseif (preg_match('/^Apple_0x([0-9A-Fa-f]{4})$/', $key, $m) === 1) {
+                    } elseif (preg_match('/^Apple[ _]0x([0-9A-Fa-f]{4})$/', $key, $m) === 1) {
                         $data[hexdec($m[1])] = $displayValue;
                     } else {
                         $data[$key] = $displayValue;

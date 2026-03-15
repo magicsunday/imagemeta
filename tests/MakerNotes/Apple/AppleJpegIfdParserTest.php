@@ -346,8 +346,8 @@ final class AppleJpegIfdParserTest extends TestCase
 
         self::assertIsArray($result);
         self::assertArrayHasKey('AEStable', $result);
-        self::assertArrayHasKey('Apple_0xFFFF', $result);
-        self::assertSame(99, $result['Apple_0xFFFF']);
+        self::assertArrayHasKey('Apple 0xffff', $result);
+        self::assertSame(99, $result['Apple 0xffff']);
     }
 
     #[Test]

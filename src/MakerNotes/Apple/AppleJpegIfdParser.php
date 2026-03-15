@@ -193,7 +193,7 @@ final readonly class AppleJpegIfdParser
         $type = Unpack::int($u16Fmt, substr($raw, $offset + 2, 2), 'Apple IFD type');
         $cnt  = Unpack::int($u32Fmt, substr($raw, $offset + 4, 4), 'Apple IFD count');
 
-        $key        = self::TAG_MAP[$tag] ?? sprintf('Apple_0x%04X', $tag);
+        $key        = self::TAG_MAP[$tag] ?? sprintf('Apple 0x%04x', $tag);
         $valueField = substr($raw, $offset + 8, 4);
 
         $value = $this->decodeTagValue($raw, $tiffBase, $tag, $type, $cnt, $valueField, $u32Fmt);
