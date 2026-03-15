@@ -81,7 +81,7 @@ use MagicSunday\ImageMeta\Value\SubjectArea;
  *
  * @phpstan-import-type GpsFieldMap from GpsConverter
  */
-final class ParsedExif implements ExifIfd0DataInterface, ExifIfd1DataInterface, ExifSubIfdDataInterface, ExifGpsDataInterface, ExifInteropDataInterface
+final class ParsedExif
 {
     private readonly string $exifProfile;
 
@@ -981,43 +981,6 @@ final class ParsedExif implements ExifIfd0DataInterface, ExifIfd1DataInterface, 
     public function interopIndex(): ?string
     {
         return $this->focalReader()->interopIndex();
-    }
-
-    // ── Exposure aliases ────────────────────────────────────────
-
-    public function isoLatitudeYyy(): ?int
-    {
-        return $this->isoSensitivityReader()->isoLatitudeYyy();
-    }
-
-    public function isoLatitudeZzz(): ?int
-    {
-        return $this->isoSensitivityReader()->isoLatitudeZzz();
-    }
-
-    public function shutterSpeedEv(): ?float
-    {
-        return $this->exposureParameterReader()->shutterSpeedEv();
-    }
-
-    public function apertureEv(): ?float
-    {
-        return $this->exposureParameterReader()->apertureEv();
-    }
-
-    public function photographicSensitivity(): ?int
-    {
-        return $this->isoSensitivityReader()->photographicSensitivity();
-    }
-
-    public function iSOSpeed(): ?int
-    {
-        return $this->isoSensitivityReader()->iSOSpeed();
-    }
-
-    public function focalLengthIn35mmFilm(): ?int
-    {
-        return $this->focalReader()->focalLengthIn35mmFilm();
     }
 
     // ── Device domain ───────────────────────────────────────────
