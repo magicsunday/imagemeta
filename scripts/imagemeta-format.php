@@ -757,7 +757,7 @@ final class MetadataFormatter
     /**
      * Formats the output for a given image file.
      */
-    public function format(string $filePath): void
+    public function format(string $filePath, bool $withDigests = false): void
     {
         if (!file_exists($filePath)) {
             echo sprintf('Error: File not found: %s%s', $filePath, PHP_EOL);
@@ -771,7 +771,7 @@ final class MetadataFormatter
 
         $reader   = MetadataReader::createDefault();
         $start    = hrtime(true);
-        $metadata = $reader->read($filePath, withDigests: true);
+        $metadata = $reader->read($filePath, withDigests: $withDigests);
         $parseMs  = (hrtime(true) - $start) / 1e6;
 
         // ImageMeta section
@@ -1688,13 +1688,9 @@ final class MetadataFormatter
             $data['ICC Segment Count'] = count($metadata->iccSegments);
         }
 
-        // Add file digests if available
-        if ($metadata->digestSha1 !== null) {
-            $data['SHA1 Digest'] = $metadata->digestSha1;
-        }
-
-        if ($metadata->digestMd5 !== null) {
-            $data['MD5 Digest'] = $metadata->digestMd5;
+        // Add file digest if available
+        if ($metadata->digestSha256 !== null) {
+            $data['SHA256 Digest'] = $metadata->digestSha256;
         }
 
         $this->printSection('File', $data);
@@ -2990,19 +2986,26 @@ final class MetadataFormatter
 
 // Main execution
 if ((PHP_SAPI === 'cli') && (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__)) {
-    if ($argc < 2) {
-        echo "Usage: php scripts/exiftool-format.php <image-file>\n";
+    $options     = getopt('', ['digests']);
+    $withDigests = isset($options['digests']);
+    $args        = array_values(array_filter($argv, fn ($a) => !str_starts_with($a, '--')));
+
+    if (count($args) < 2) {
+        echo "Usage: php scripts/imagemeta-format.php [--digests] <image-file>\n";
+        echo "\n";
+        echo "Options:\n";
+        echo "  --digests  Compute SHA-256 file digest (slow for large files)\n";
         echo "\n";
         echo "Example:\n";
-        echo "  php scripts/exiftool-format.php photo.jpg\n";
+        echo "  php scripts/imagemeta-format.php photo.jpg\n";
         exit(1);
     }
 
-    $filePath = $argv[1];
+    $filePath = $args[1];
 
     try {
         $formatter = new MetadataFormatter();
-        $formatter->format($filePath);
+        $formatter->format($filePath, $withDigests);
     } catch (Throwable $e) {
         echo 'ERROR: ' . $e->getMessage() . "\n";
         echo $e->getTraceAsString() . "\n";

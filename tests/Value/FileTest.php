@@ -36,8 +36,6 @@ final class FileTest extends TestCase
             mimeType: 'image/jpeg',
             fileSize: 1024,
             extension: 'jpg',
-            digestSha1: null,
-            digestMd5: null,
         );
 
         self::assertSame('image/jpeg', $file->mimeType);
@@ -56,8 +54,6 @@ final class FileTest extends TestCase
             mimeType: null,
             fileSize: null,
             extension: null,
-            digestSha1: null,
-            digestMd5: null,
         );
 
         self::assertNull($file->mimeType);
@@ -76,8 +72,6 @@ final class FileTest extends TestCase
             mimeType: 'image/heic',
             fileSize: 2048,
             extension: 'heic',
-            digestSha1: null,
-            digestMd5: null,
         );
 
         self::assertSame('image/heic', $file->mimeType);

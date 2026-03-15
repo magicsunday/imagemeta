@@ -373,8 +373,7 @@ final class MetadataReaderTest extends TestCase
         self::assertSame('image/jpeg', $metadata->mimeType);
         self::assertSame(strlen($jpeg), $metadata->fileSize);
         self::assertSame('jpg', $metadata->extension);
-        self::assertNull($metadata->digestSha1);
-        self::assertNull($metadata->digestMd5);
+        self::assertNull($metadata->digestSha256);
 
         $structured = $metadata->structured();
 
@@ -410,8 +409,7 @@ final class MetadataReaderTest extends TestCase
         self::assertSame('image/jpeg', $structured->provenance->file->mimeType);
         self::assertSame(strlen($jpeg), $structured->provenance->file->fileSize);
         self::assertSame('jpg', $structured->provenance->file->extension);
-        self::assertNull($structured->provenance->file->digestSha1);
-        self::assertNull($structured->provenance->file->digestMd5);
+        self::assertNull($structured->provenance->file->digestSha256);
     }
 
     /**
@@ -618,15 +616,12 @@ final class MetadataReaderTest extends TestCase
             @unlink($path);
         }
 
-        $expectedSha1 = sha1($jpeg);
-        $expectedMd5  = md5($jpeg);
+        $expectedHash = hash('sha256', $jpeg);
 
-        self::assertSame($expectedSha1, $metadata->digestSha1);
-        self::assertSame($expectedMd5, $metadata->digestMd5);
+        self::assertSame($expectedHash, $metadata->digestSha256);
 
         $structured = $metadata->structured();
-        self::assertSame($expectedSha1, $structured->provenance->file->digestSha1);
-        self::assertSame($expectedMd5, $structured->provenance->file->digestMd5);
+        self::assertSame($expectedHash, $structured->provenance->file->digestSha256);
     }
 
     /**
@@ -718,8 +713,7 @@ final class MetadataReaderTest extends TestCase
             MetadataReaderDigestSwapStreamWrapper::reset();
         }
 
-        self::assertSame(sha1($jpegA), $metadata->digestSha1);
-        self::assertSame(md5($jpegA), $metadata->digestMd5);
+        self::assertSame(hash('sha256', $jpegA), $metadata->digestSha256);
         self::assertSame([$tiffA], $metadata->exifBlobs);
         self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
         self::assertSame(sha1($makerNoteA), $metadata->makerNotes->sha1);

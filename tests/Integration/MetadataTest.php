@@ -233,8 +233,7 @@ final class MetadataTest extends TestCase
             mimeType: 'image/heic',
             fileSize: 987_654,
             extension: 'heic',
-            digestSha1: 'abc123',
-            digestMd5: 'def456',
+            digestSha256: 'abc123',
             jpegFrameWidth: 4096,
             jpegFrameHeight: 2730,
             isoBmffItemReferences: $itemReferences,
@@ -253,8 +252,7 @@ final class MetadataTest extends TestCase
         self::assertSame('image/heic', $metadata->mimeType);
         self::assertSame(987_654, $metadata->fileSize);
         self::assertSame('heic', $metadata->extension);
-        self::assertSame('abc123', $metadata->digestSha1);
-        self::assertSame('def456', $metadata->digestMd5);
+        self::assertSame('abc123', $metadata->digestSha256);
         self::assertSame(4096, $metadata->jpegFrameWidth);
         self::assertSame(2730, $metadata->jpegFrameHeight);
         self::assertSame($itemReferences, $metadata->isoBmffItemReferences);
@@ -283,8 +281,7 @@ final class MetadataTest extends TestCase
         self::assertNull($metadata->mimeType);
         self::assertNull($metadata->fileSize);
         self::assertNull($metadata->extension);
-        self::assertNull($metadata->digestSha1);
-        self::assertNull($metadata->digestMd5);
+        self::assertNull($metadata->digestSha256);
     }
 
     /**

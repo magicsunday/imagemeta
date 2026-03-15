@@ -38,7 +38,7 @@ use MagicSunday\ImageMeta\Value\StructuredMetadata;
  * | Property group                     | JPEG | ISO BMFF | TIFF | JXL  |
  * |------------------------------------|:----:|:--------:|:----:|:----:|
  * | File identity (mimeType, fileSize, |      |          |      |      |
- * |   extension, digestSha1, digestMd5)|  Y   |    Y     |  Y   |  Y   |
+ * |   extension, digestSha256)|  Y   |    Y     |  Y   |  Y   |
  * | EXIF (exifBlobs, exifDoc,          |      |          |      |      |
  * |   makerNotes)                      |  Y   |    Y     |  Y   |  Y   |
  * | XMP (xmpBlobs, xmpDoc)             |  Y   |    Y     |  --  |  Y   |
@@ -108,8 +108,7 @@ final readonly class Metadata
      * @param string|null                                          $mimeType                  Detected mime type for the source file. [JPEG, ISO BMFF, TIFF]
      * @param int|null                                             $fileSize                  Size of the source file in bytes. [JPEG, ISO BMFF, TIFF]
      * @param string|null                                          $extension                 Lowercase file extension extracted from the path. [JPEG, ISO BMFF, TIFF]
-     * @param string|null                                          $digestSha1                Lowercase hexadecimal SHA-1 digest of the payload. [JPEG, ISO BMFF, TIFF]
-     * @param string|null                                          $digestMd5                 Lowercase hexadecimal MD5 digest of the payload. [JPEG, ISO BMFF, TIFF]
+     * @param string|null                                          $digestSha256              Lowercase hexadecimal SHA-256 digest of the payload. [JPEG, ISO BMFF, TIFF]
      * @param IsoBmffItemReferenceMap|null                         $isoBmffItemReferences     ISO BMFF item references extracted from metadata boxes. [ISO BMFF only]
      * @param IsoBmffDataReferenceMap|null                         $isoBmffDataReferences     ISO BMFF data references extracted from metadata boxes. [ISO BMFF only]
      * @param list<IsoBmffUnresolvedItem>                          $isoBmffUnresolvedItems    ISO BMFF item payloads that could not be resolved. [ISO BMFF only]
@@ -141,8 +140,7 @@ final readonly class Metadata
         public ?string $mimeType = null,
         public ?int $fileSize = null,
         public ?string $extension = null,
-        public ?string $digestSha1 = null,
-        public ?string $digestMd5 = null,
+        public ?string $digestSha256 = null,
         public ?int $jpegFrameWidth = null,
         public ?int $jpegFrameHeight = null,
         public ?IsoBmffItemReferenceMap $isoBmffItemReferences = null,

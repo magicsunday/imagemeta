@@ -186,8 +186,7 @@ final readonly class ValueFactory
             $metadata->mimeType,
             $metadata->fileSize,
             $metadata->extension,
-            $metadata->digestSha1,
-            $metadata->digestMd5,
+            $metadata->digestSha256,
         );
 
         $media = $this->createContainerMedia($quickTimeLookup, $metadata);

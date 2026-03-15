@@ -99,8 +99,6 @@ final class ImageFactoryTest extends TestCase
             mimeType: null,
             fileSize: null,
             extension: null,
-            digestSha1: null,
-            digestMd5: null,
             jpegFrameWidth: 1920,
             jpegFrameHeight: 1080,
         );

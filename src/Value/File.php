@@ -19,18 +19,16 @@ final readonly class File
     /**
      * Creates a file metadata value object.
      *
-     * @param string|null $mimeType   Detected mime type of the original file.
-     * @param int|null    $fileSize   File size in bytes when known.
-     * @param string|null $extension  File extension derived from the container.
-     * @param string|null $digestSha1 Lowercase hexadecimal SHA-1 digest of the payload.
-     * @param string|null $digestMd5  Lowercase hexadecimal MD5 digest of the payload.
+     * @param string|null $mimeType     Detected mime type of the original file.
+     * @param int|null    $fileSize     File size in bytes when known.
+     * @param string|null $extension    File extension derived from the container.
+     * @param string|null $digestSha256 Lowercase hexadecimal SHA-256 digest of the payload.
      */
     public function __construct(
         public ?string $mimeType,
         public ?int $fileSize,
         public ?string $extension,
-        public ?string $digestSha1,
-        public ?string $digestMd5,
+        public ?string $digestSha256 = null,
     ) {
     }
 }

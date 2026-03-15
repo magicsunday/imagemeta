@@ -104,9 +104,7 @@ final class MetadataBuilder
 
     private ?string $extension = null;
 
-    private ?string $digestSha1 = null;
-
-    private ?string $digestMd5 = null;
+    private ?string $digestSha256 = null;
 
     private ?XmpParserInterface $xmpParser = null;
 
@@ -306,21 +304,18 @@ final class MetadataBuilder
      * @param string|null $mimeType  Detected MIME type for the source file.
      * @param int|null    $fileSize  Size of the source file in bytes.
      * @param string|null $extension Lowercase file extension extracted from the path.
-     * @param string|null $sha1      Lowercase hexadecimal SHA-1 digest.
-     * @param string|null $md5       Lowercase hexadecimal MD5 digest.
+     * @param string|null $sha256    Lowercase hexadecimal SHA-256 digest.
      */
     public function withFileIdentity(
         ?string $mimeType = null,
         ?int $fileSize = null,
         ?string $extension = null,
-        ?string $sha1 = null,
-        ?string $md5 = null,
+        ?string $sha256 = null,
     ): self {
-        $this->mimeType   = $mimeType;
-        $this->fileSize   = $fileSize;
-        $this->extension  = $extension;
-        $this->digestSha1 = $sha1;
-        $this->digestMd5  = $md5;
+        $this->mimeType     = $mimeType;
+        $this->fileSize     = $fileSize;
+        $this->extension    = $extension;
+        $this->digestSha256 = $sha256;
 
         return $this;
     }
@@ -348,8 +343,7 @@ final class MetadataBuilder
             mimeType: $this->mimeType,
             fileSize: $this->fileSize,
             extension: $this->extension,
-            digestSha1: $this->digestSha1,
-            digestMd5: $this->digestMd5,
+            digestSha256: $this->digestSha256,
             jpegFrameWidth: $this->jpegFrameWidth,
             jpegFrameHeight: $this->jpegFrameHeight,
             isoBmffItemReferences: $this->isoBmffItemReferences,

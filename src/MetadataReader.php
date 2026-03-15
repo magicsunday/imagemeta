@@ -113,7 +113,7 @@ final readonly class MetadataReader
      * When digests are requested, metadata parsing and digest computation use the same opened stream snapshot.
      *
      * @param string $path        Path to the image or media file being inspected.
-     * @param bool   $withDigests When true the SHA-1 and MD5 digests are calculated as part of the
+     * @param bool   $withDigests When true the SHA-256 digest is calculated as part of the
      *                            returned metadata aggregate.
      *
      * @throws ParseError
@@ -130,7 +130,7 @@ final readonly class MetadataReader
         $fileSize  = $stream->size();
         $extension = $this->detectExtension($path);
 
-        [$sha1, $md5] = $withDigests ? $this->calculateDigests($stream) : [null, null];
+        $sha256 = $withDigests ? $this->calculateDigest($stream) : null;
 
         try {
             $type = $this->formatDetector->detect($stream);
@@ -140,7 +140,7 @@ final readonly class MetadataReader
                 // return empty metadata instead of aborting the whole read.
                 return (new MetadataBuilder())
                     ->withParsers($this->xmpParser, $this->iptcParser)
-                    ->withFileIdentity($mimeType, $fileSize, $extension, $sha1, $md5)
+                    ->withFileIdentity($mimeType, $fileSize, $extension, $sha256)
                     ->build();
             }
 
@@ -148,30 +148,28 @@ final readonly class MetadataReader
         }
 
         return match ($type) {
-            ContainerType::JPEG    => $this->fromJpeg($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
-            ContainerType::ISOBMFF => $this->fromIsoBmff($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
-            ContainerType::TIFF    => $this->fromTiff($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
-            ContainerType::JXL     => $this->fromJxl($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
+            ContainerType::JPEG    => $this->fromJpeg($stream, $mimeType, $fileSize, $extension, $sha256),
+            ContainerType::ISOBMFF => $this->fromIsoBmff($stream, $mimeType, $fileSize, $extension, $sha256),
+            ContainerType::TIFF    => $this->fromTiff($stream, $mimeType, $fileSize, $extension, $sha256),
+            ContainerType::JXL     => $this->fromJxl($stream, $mimeType, $fileSize, $extension, $sha256),
         };
     }
 
     /**
      * Extracts metadata from a JPEG container.
      *
-     * @param Stream  $stream     Source stream positioned at the start of the file.
-     * @param ?string $mimeType   MIME type associated with the inspected file.
-     * @param ?int    $fileSize   File size in bytes if it could be determined.
-     * @param ?string $extension  File extension detected from the path or stream.
-     * @param ?string $digestSha1 Pre-computed SHA-1 digest for the stream contents.
-     * @param ?string $digestMd5  Pre-computed MD5 digest for the stream contents.
+     * @param Stream  $stream       Source stream positioned at the start of the file.
+     * @param ?string $mimeType     MIME type associated with the inspected file.
+     * @param ?int    $fileSize     File size in bytes if it could be determined.
+     * @param ?string $extension    File extension detected from the path or stream.
+     * @param ?string $digestSha256 Pre-computed SHA-256 digest for the stream contents.
      */
     private function fromJpeg(
         Stream $stream,
         ?string $mimeType,
         ?int $fileSize,
         ?string $extension,
-        ?string $digestSha1,
-        ?string $digestMd5,
+        ?string $digestSha256,
     ): Metadata {
         $jpeg = $this->jpegParserFactory->create($stream);
         // Extract the JPEG segments along with frame and auxiliary stream data.
@@ -212,27 +210,25 @@ final readonly class MetadataReader
             ->withJpegSegments($iccProfile, $iccSegments, $flashPixStreams, $mpfDocument, $audioStreams, $jfifSegment)
             ->withJpegFrame($frameWidth, $frameHeight, $bitsPerSample, $sampling, $subSampling)
             ->withIptc($iptcBlobs, $iptcDoc)
-            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
+            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
             ->build();
     }
 
     /**
      * Extracts metadata from an ISO Base Media File Format container.
      *
-     * @param Stream  $stream     Source stream positioned at the start of the file.
-     * @param ?string $mimeType   MIME type associated with the inspected file.
-     * @param ?int    $fileSize   File size in bytes if it could be determined.
-     * @param ?string $extension  File extension detected from the path or stream.
-     * @param ?string $digestSha1 Pre-computed SHA-1 digest for the stream contents.
-     * @param ?string $digestMd5  Pre-computed MD5 digest for the stream contents.
+     * @param Stream  $stream       Source stream positioned at the start of the file.
+     * @param ?string $mimeType     MIME type associated with the inspected file.
+     * @param ?int    $fileSize     File size in bytes if it could be determined.
+     * @param ?string $extension    File extension detected from the path or stream.
+     * @param ?string $digestSha256 Pre-computed SHA-256 digest for the stream contents.
      */
     private function fromIsoBmff(
         Stream $stream,
         ?string $mimeType,
         ?int $fileSize,
         ?string $extension,
-        ?string $digestSha1,
-        ?string $digestMd5,
+        ?string $digestSha256,
     ): Metadata {
         [$exifBlobs, $xmpBlobs, $qt, $isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems, $ispeWidth, $ispeHeight, $iccProfile, $tmapItemIds] = $this->isoBmffParserFactory->create($stream)->extract();
 
@@ -258,27 +254,25 @@ final readonly class MetadataReader
             ->withXmp($xmpBlobs, $xmpDoc)
             ->withQuickTime($qt)
             ->withIsoBmff($isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems, $ispeWidth, $ispeHeight, $iccProfile, $tmapItemIds)
-            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
+            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
             ->build();
     }
 
     /**
      * Extracts metadata from a standalone TIFF-based container (TIFF, DNG, NEF, ARW).
      *
-     * @param Stream  $stream     Source stream positioned at the start of the file.
-     * @param ?string $mimeType   MIME type associated with the inspected file.
-     * @param ?int    $fileSize   File size in bytes if it could be determined.
-     * @param ?string $extension  File extension detected from the path or stream.
-     * @param ?string $digestSha1 Pre-computed SHA-1 digest for the stream contents.
-     * @param ?string $digestMd5  Pre-computed MD5 digest for the stream contents.
+     * @param Stream  $stream       Source stream positioned at the start of the file.
+     * @param ?string $mimeType     MIME type associated with the inspected file.
+     * @param ?int    $fileSize     File size in bytes if it could be determined.
+     * @param ?string $extension    File extension detected from the path or stream.
+     * @param ?string $digestSha256 Pre-computed SHA-256 digest for the stream contents.
      */
     private function fromTiff(
         Stream $stream,
         ?string $mimeType,
         ?int $fileSize,
         ?string $extension,
-        ?string $digestSha1,
-        ?string $digestMd5,
+        ?string $digestSha256,
     ): Metadata {
         if ($stream->size() > $this->maxTiffSize) {
             throw new ParseError(
@@ -322,7 +316,7 @@ final readonly class MetadataReader
             ->withXmp($xmpBlobs, $xmpDoc)
             ->withIccProfile($exifDoc->iccProfileRaw)
             ->withIptc($iptcBlobs, $iptcDoc)
-            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
+            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
             ->build();
     }
 
@@ -332,20 +326,18 @@ final readonly class MetadataReader
      * ISO/IEC 18181-2 defines JXL containers as ISO BMFF-compatible with top-level
      * `Exif` and `xml ` boxes for EXIF and XMP metadata respectively.
      *
-     * @param Stream  $stream     Source stream positioned at the start of the file.
-     * @param ?string $mimeType   MIME type associated with the inspected file.
-     * @param ?int    $fileSize   File size in bytes if it could be determined.
-     * @param ?string $extension  File extension detected from the path or stream.
-     * @param ?string $digestSha1 Pre-computed SHA-1 digest for the stream contents.
-     * @param ?string $digestMd5  Pre-computed MD5 digest for the stream contents.
+     * @param Stream  $stream       Source stream positioned at the start of the file.
+     * @param ?string $mimeType     MIME type associated with the inspected file.
+     * @param ?int    $fileSize     File size in bytes if it could be determined.
+     * @param ?string $extension    File extension detected from the path or stream.
+     * @param ?string $digestSha256 Pre-computed SHA-256 digest for the stream contents.
      */
     private function fromJxl(
         Stream $stream,
         ?string $mimeType,
         ?int $fileSize,
         ?string $extension,
-        ?string $digestSha1,
-        ?string $digestMd5,
+        ?string $digestSha256,
     ): Metadata {
         [$exifBlobs, $xmpBlobs, $hrgmBlob] = $this->jxlParserFactory->create($stream)->extract();
 
@@ -359,7 +351,7 @@ final readonly class MetadataReader
             ->withExif($exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($xmpBlobs, $xmpDoc)
             ->withGainMapBlob($hrgmBlob)
-            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha1, $digestMd5)
+            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
             ->build();
     }
 
@@ -476,14 +468,11 @@ final readonly class MetadataReader
     }
 
     /**
-     * Calculates SHA-1 and MD5 digests by reading the opened stream once.
-     *
-     * @return array{0:?string,1:?string}
+     * Calculates a SHA-256 digest by reading the opened stream once.
      */
-    private function calculateDigests(Stream $stream): array
+    private function calculateDigest(Stream $stream): string
     {
-        $sha1Context = hash_init('sha1');
-        $md5Context  = hash_init('md5');
+        $context = hash_init('sha256');
 
         $stream->seek(0);
 
@@ -492,14 +481,13 @@ final readonly class MetadataReader
         while ($remaining > 0) {
             $chunkLength = min($remaining, 8192);
             $chunk       = $stream->read($chunkLength);
-            hash_update($sha1Context, $chunk);
-            hash_update($md5Context, $chunk);
+            hash_update($context, $chunk);
             $remaining -= $chunkLength;
         }
 
         $stream->seek(0);
 
-        return [hash_final($sha1Context), hash_final($md5Context)];
+        return hash_final($context);
     }
 
     /**

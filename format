@@ -2,8 +2,8 @@
 set -euo pipefail
 
 if [[ $# -eq 0 ]]; then
-    echo "Usage: ./format <file>" >&2
+    echo "Usage: ./format [--digests] <file>" >&2
     exit 1
 fi
 
-make format FILE="$1"
+make format FILE="$*"
