@@ -53,7 +53,6 @@ final class FocalReaderTest extends TestCase
 
         self::assertEqualsWithDelta(50.0, $reader->focalLengthMm(), 0.001);
         self::assertSame(75, $reader->focalLength35Mm());
-        self::assertSame(75, $reader->focalLengthIn35mmFilm());
     }
 
     /**

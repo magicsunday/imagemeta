@@ -48,12 +48,12 @@ final readonly class ExposureFactory
         $settings = new ExposureSettings(
             iso: $exifDocument?->isoBestEffort() ?? $resolver?->int(ExifTag::PHOTOGRAPHIC_SENSITIVITY),
             exposureIndex: $exifDocument?->exposureIndex() ?? $resolver?->float(ExifTag::EXPOSURE_INDEX),
-            isoLatitudeYyy: $exifDocument?->isoLatitudeYyy() ?? $resolver?->int(ExifTag::ISO_SPEED_LATITUDE_YYY),
-            isoLatitudeZzz: $exifDocument?->isoLatitudeZzz() ?? $resolver?->int(ExifTag::ISO_SPEED_LATITUDE_ZZZ),
+            isoLatitudeYyy: $exifDocument?->isoSpeedLatitudeYyy() ?? $resolver?->int(ExifTag::ISO_SPEED_LATITUDE_YYY),
+            isoLatitudeZzz: $exifDocument?->isoSpeedLatitudeZzz() ?? $resolver?->int(ExifTag::ISO_SPEED_LATITUDE_ZZZ),
             exposureTimeSec: $exifDocument?->exposureTime() ?? $resolver?->float(ExifTag::EXPOSURE_TIME),
-            shutterSpeedEv: $exifDocument?->shutterSpeedEv() ?? $resolver?->float(ExifTag::SHUTTER_SPEED_VALUE),
+            shutterSpeedEv: $exifDocument?->shutterSpeedValue() ?? $resolver?->float(ExifTag::SHUTTER_SPEED_VALUE),
             fNumber: $exifDocument?->fNumber() ?? $resolver?->float(ExifTag::F_NUMBER),
-            apertureEv: $exifDocument?->apertureEv() ?? $resolver?->float(ExifTag::APERTURE_VALUE),
+            apertureEv: $exifDocument?->apertureValue() ?? $resolver?->float(ExifTag::APERTURE_VALUE),
             exposureBiasEv: $exifDocument?->exposureBias() ?? $resolver?->float(ExifTag::EXPOSURE_BIAS_VALUE),
             brightnessEv: $exifDocument?->brightnessValue() ?? $resolver?->float(ExifTag::BRIGHTNESS_VALUE),
         );

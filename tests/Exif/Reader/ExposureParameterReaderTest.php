@@ -153,23 +153,6 @@ final class ExposureParameterReaderTest extends TestCase
     }
 
     /**
-     * Verifies alias methods shutterSpeedEv() and apertureEv() delegate correctly.
-     */
-    #[Test]
-    public function aliasMethodsDelegate(): void
-    {
-        $exifEntries = [
-            ExifTag::SHUTTER_SPEED_VALUE => new IfdEntry(ExifTag::SHUTTER_SPEED_VALUE, 10, 1, [6, 1]),
-            ExifTag::APERTURE_VALUE      => new IfdEntry(ExifTag::APERTURE_VALUE, 5, 1, [3, 1]),
-        ];
-
-        $reader = $this->createReader($exifEntries);
-
-        self::assertSame($reader->shutterSpeedValue(), $reader->shutterSpeedEv());
-        self::assertSame($reader->apertureValue(), $reader->apertureEv());
-    }
-
-    /**
      * Supplies a BrightnessValue with numerator -1 (unknown sentinel).
      * Verifies the reader returns null for unknown brightness.
      */

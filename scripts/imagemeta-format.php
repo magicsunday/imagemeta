@@ -2841,7 +2841,7 @@ final class MetadataFormatter
         $data       = [];
 
         $focalLengthMm = $structured->hardware->lens?->focalLengthMm ?? $exifDoc?->focalLengthMm();
-        $focalLength35 = $structured->hardware->lens?->focalLengthIn35mm ?? $exifDoc?->focalLengthIn35mmFilm();
+        $focalLength35 = $structured->hardware->lens?->focalLengthIn35mm ?? $exifDoc?->focalLength35Mm();
         $focalPlaneXResolution = $structured->hardware->sensor?->focalPlaneXResolution ?? $exifDoc?->focalPlaneXResolution();
         $focalPlaneResolutionUnit = $structured->hardware->sensor?->focalPlaneResolutionUnit?->value
             ?? $exifDoc?->focalPlaneResolutionUnit();

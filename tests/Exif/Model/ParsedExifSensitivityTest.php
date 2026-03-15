@@ -180,8 +180,6 @@ final class ParsedExifSensitivityTest extends TestCase
 
         self::assertSame(90, $parsedExif->isoSpeedLatitudeYyy());
         self::assertSame(100, $parsedExif->isoSpeedLatitudeZzz());
-        self::assertSame(90, $parsedExif->isoLatitudeYyy());
-        self::assertSame(100, $parsedExif->isoLatitudeZzz());
     }
 
     /**

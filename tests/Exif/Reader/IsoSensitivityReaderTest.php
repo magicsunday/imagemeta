@@ -89,7 +89,6 @@ final class IsoSensitivityReaderTest extends TestCase
         $reader = $this->createReader([], $exifEntries);
 
         self::assertSame(800, $reader->isoSpeedValue());
-        self::assertSame(800, $reader->iSOSpeed());
         self::assertSame('400-700nm', $reader->spectralSensitivity());
     }
 
@@ -109,25 +108,6 @@ final class IsoSensitivityReaderTest extends TestCase
         self::assertNull($reader->spectralSensitivity());
         self::assertNull($reader->isoSpeedLatitudeYyy());
         self::assertNull($reader->isoSpeedLatitudeZzz());
-    }
-
-    /**
-     * Verifies alias methods photographicSensitivity(), iSOSpeed(),
-     * isoLatitudeYyy(), and isoLatitudeZzz() delegate correctly.
-     */
-    #[Test]
-    public function aliasMethodsDelegate(): void
-    {
-        $exifEntries = [
-            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 100),
-        ];
-
-        $reader = $this->createReader([], $exifEntries);
-
-        self::assertSame($reader->iso(), $reader->photographicSensitivity());
-        self::assertSame($reader->isoSpeedValue(), $reader->iSOSpeed());
-        self::assertSame($reader->isoSpeedLatitudeYyy(), $reader->isoLatitudeYyy());
-        self::assertSame($reader->isoSpeedLatitudeZzz(), $reader->isoLatitudeZzz());
     }
 
     /**

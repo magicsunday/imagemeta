@@ -202,19 +202,4 @@ final readonly class FocalReader
 
         return $this->reader->str($this->interopIfd, ExifTag::INTEROPERABILITY_INDEX);
     }
-
-    // ========================================================================
-    // Alias methods
-    // ========================================================================
-
-    /**
-     * Alias for focalLength35Mm() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 -- Tag 0xA405 FocalLengthIn35mmFilm.
-     *
-     * @return int|null Focal length in 35mm equivalent
-     */
-    public function focalLengthIn35mmFilm(): ?int
-    {
-        return $this->focalLength35Mm();
-    }
 }

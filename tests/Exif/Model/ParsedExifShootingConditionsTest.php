@@ -185,20 +185,6 @@ final class ParsedExifShootingConditionsTest extends TestCase
     }
 
     /**
-     * Exposes the photographic sensitivity alias value.
-     * It exercises the scenario described by the test name.
-     */
-    #[Test]
-    public function returnsPhotographicSensitivityViaAlias(): void
-    {
-        $parsedExif = $this->parsedExifFromExifEntries([
-            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 640),
-        ]);
-
-        self::assertSame(640, $parsedExif->photographicSensitivity());
-    }
-
-    /**
      * Converts exposure index rationals to floating-point values.
      * It exercises the scenario described by the test name.
      */

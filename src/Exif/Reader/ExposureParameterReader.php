@@ -251,24 +251,6 @@ final readonly class ExposureParameterReader
         return $this->reader->rational($this->exifIfd, ExifTag::EXPOSURE_INDEX);
     }
 
-    // ── Alias methods ───────────────────────────────────────────
-
-    /**
-     * Returns the shutter speed APEX value.
-     */
-    public function shutterSpeedEv(): ?float
-    {
-        return $this->shutterSpeedValue();
-    }
-
-    /**
-     * Returns the aperture APEX value.
-     */
-    public function apertureEv(): ?float
-    {
-        return $this->apertureValue();
-    }
-
     // ── Private helpers ─────────────────────────────────────────
 
     /**

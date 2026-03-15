@@ -241,46 +241,6 @@ final readonly class IsoSensitivityReader
         return $this->reader->str($this->exifIfd, ExifTag::SPECTRAL_SENSITIVITY);
     }
 
-    // ── Alias methods ───────────────────────────────────────────
-
-    /**
-     * Returns the ISO latitude yyy value when available.
-     */
-    public function isoLatitudeYyy(): ?int
-    {
-        return $this->isoSpeedLatitudeYyy();
-    }
-
-    /**
-     * Returns the ISO latitude zzz value when available.
-     */
-    public function isoLatitudeZzz(): ?int
-    {
-        return $this->isoSpeedLatitudeZzz();
-    }
-
-    /**
-     * Alias for iso() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.6.7.5 (PhotographicSensitivity).
-     *
-     * @return int|null ISO sensitivity value
-     */
-    public function photographicSensitivity(): ?int
-    {
-        return $this->iso();
-    }
-
-    /**
-     * Alias for isoSpeedValue() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 -- Tag 0x8833 ISOSpeed.
-     *
-     * @return int|null ISO speed value
-     */
-    public function iSOSpeed(): ?int
-    {
-        return $this->isoSpeedValue();
-    }
-
     // ── Private helpers ─────────────────────────────────────────
 
     /**
