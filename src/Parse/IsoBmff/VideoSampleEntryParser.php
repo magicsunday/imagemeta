@@ -47,6 +47,14 @@ final readonly class VideoSampleEntryParser
     private const array QUICKTIME_VIDEO_NO_COLOR_TABLE_DEPTHS = [16, 24, 32];
 
     /**
+     * Bit mask for the full_range_flag in the nclx ColourInformationBox.
+     *
+     * ISO/IEC 14496-12 §12.1.5.2: the full_range_flag occupies bit 7 (MSB)
+     * of the byte that follows matrix_coefficients.
+     */
+    private const int COLR_FULL_RANGE_BIT_MASK = 0x80;
+
+    /**
      * Parses a video sample entry from `stsd`, extracting resolution, compressor,
      * depth, and codec metadata.
      *
@@ -245,7 +253,7 @@ final readonly class VideoSampleEntryParser
                         $result['colorPrimaries']          = $win->readU16BE();
                         $result['transferCharacteristics'] = $win->readU16BE();
                         $result['matrixCoefficients']      = $win->readU16BE();
-                        $result['fullRangeFlag']           = ($win->readU8() & 0x80) !== 0;
+                        $result['fullRangeFlag']           = ($win->readU8() & self::COLR_FULL_RANGE_BIT_MASK) !== 0;
                     }
                 }
             }

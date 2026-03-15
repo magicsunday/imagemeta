@@ -1620,7 +1620,9 @@ final class TrackMediaParserTest extends TestCase
 
         $result = $parser->parseTrak($descriptor, $context);
 
-        self::assertEqualsWithDelta(200000.0 / 6700.0, $result['keys']['com.apple.quicktime.videoFrameRate'], 0.001);
+        $expectedFrameRate = 200000.0 / 6700.0;
+
+        self::assertEqualsWithDelta($expectedFrameRate, $result['keys']['com.apple.quicktime.videoFrameRate'], 0.001);
     }
 
     /**

@@ -59,6 +59,22 @@ final readonly class TrackMediaParser
     private const int MAC_EPOCH_OFFSET = 2_082_844_800;
 
     /**
+     * Divisor for decoding ISO 14496-12 16.16 fixed-point rate values.
+     *
+     * The integer part occupies the upper 16 bits, so dividing by 65536
+     * yields the floating-point equivalent.
+     */
+    private const float FIXED_POINT_16_16_DIVISOR = 65536.0;
+
+    /**
+     * Divisor for decoding ISO 14496-12 8.8 fixed-point volume values.
+     *
+     * The integer part occupies the upper 8 bits, so dividing by 256
+     * yields the floating-point equivalent.
+     */
+    private const float FIXED_POINT_8_8_DIVISOR = 256.0;
+
+    /**
      * Maximum number of entries accepted from an stts (TimeToSampleBox).
      *
      * Prevents resource exhaustion from artificially large entry counts.
@@ -324,8 +340,14 @@ final readonly class TrackMediaParser
      */
     private function buildMetaTrackKeys(array $sampleInfo, IsoBmffParseContext $context): array
     {
-        if (isset($sampleInfo['metaFormat']) && ($sampleInfo['metaFormat'] !== '') && !array_key_exists(QuickTimeMeta::META_FORMAT_KEY, $context->qtKeys)) {
-            $context->qtKeys[QuickTimeMeta::META_FORMAT_KEY] = $sampleInfo['metaFormat'];
+        if (!isset($sampleInfo['metaFormat'])) {
+            return [];
+        }
+
+        $format = $sampleInfo['metaFormat'];
+
+        if (($format !== '') && !array_key_exists(QuickTimeMeta::META_FORMAT_KEY, $context->qtKeys)) {
+            $context->qtKeys[QuickTimeMeta::META_FORMAT_KEY] = $format;
         }
 
         return [];
@@ -389,11 +411,11 @@ final readonly class TrackMediaParser
         }
 
         if ($rateRaw > 0) {
-            $keys[QuickTimeMeta::PREFERRED_RATE_KEY] = $rateRaw === 0x00010000 ? 1.0 : ($rateRaw / 65536.0);
+            $keys[QuickTimeMeta::PREFERRED_RATE_KEY] = $rateRaw === 0x00010000 ? 1.0 : ($rateRaw / self::FIXED_POINT_16_16_DIVISOR);
         }
 
         if ($volumeRaw > 0) {
-            $keys[QuickTimeMeta::PREFERRED_VOLUME_KEY] = $volumeRaw === 0x0100 ? 1.0 : ($volumeRaw / 256.0);
+            $keys[QuickTimeMeta::PREFERRED_VOLUME_KEY] = $volumeRaw === 0x0100 ? 1.0 : ($volumeRaw / self::FIXED_POINT_8_8_DIVISOR);
         }
 
         return $keys;
@@ -1052,7 +1074,7 @@ final readonly class TrackMediaParser
             return null;
         }
 
-        $fps = ((float) $totalSamples * $mediaTimescale) / $totalTicks;
+        $fps = ($totalSamples * (float) $mediaTimescale) / $totalTicks;
 
         if (($fps <= 0.0) || !is_finite($fps)) {
             return null;
