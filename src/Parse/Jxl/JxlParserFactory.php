@@ -16,7 +16,7 @@ use MagicSunday\ImageMeta\Core\Stream;
 /**
  * Default JPEG XL parser factory creating the built-in parser implementation.
  */
-final readonly class JxlParserFactory implements JxlParserFactoryInterface
+final readonly class JxlParserFactory
 {
     /**
      * Creates the built-in JPEG XL parser for the supplied stream.

@@ -16,7 +16,7 @@ use MagicSunday\ImageMeta\Core\Stream;
 /**
  * Default JPEG parser factory creating the built-in parser implementation.
  */
-final readonly class JpegParserFactory implements JpegParserFactoryInterface
+final readonly class JpegParserFactory
 {
     /**
      * Initialises the factory with an optional JPEG parser configuration.
