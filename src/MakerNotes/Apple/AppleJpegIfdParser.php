@@ -13,7 +13,6 @@ namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
-use function array_key_exists;
 use function is_array;
 use function rtrim;
 use function strlen;
@@ -55,6 +54,8 @@ final readonly class AppleJpegIfdParser
 
     private const int TIFF_TYPE_SRATIONAL = 10;
 
+    private const int TIFF_TYPE_LONG8 = 16;
+
     /**
      * Maps Apple JPEG MakerNote IFD tag numbers to builder-compatible dictionary keys.
      *
@@ -62,6 +63,7 @@ final readonly class AppleJpegIfdParser
      */
     private const array TAG_MAP = [
         0x0001 => 'MakerNoteVersion',
+        0x0002 => 'AEMatrix',
         0x0003 => 'RunTime',
         0x0004 => 'AEStable',
         0x0005 => 'AETarget',
@@ -72,31 +74,32 @@ final readonly class AppleJpegIfdParser
         0x000B => 'BurstUUID',
         0x000C => 'FocusDistanceRange',
         0x000D => 'OISMode',
-        0x000F => 'FocusPosition',
         0x0011 => 'ContentIdentifier',
         0x0014 => 'ImageCaptureType',
-        0x0015 => 'ImageUniqueID',
         0x0017 => 'LivePhotoVideoIndex',
         0x0019 => 'ImageProcessingFlags',
         0x001A => 'QualityHint',
-        0x0020 => 'CameraType',
-        0x0021 => 'AFPerformance',
-        0x0023 => 'SceneFlags',
-        0x0025 => 'SNR',
-        0x0026 => 'PhotoIdentifier',
-        0x0027 => 'PhotosAppFeatureFlags',
-        0x002B => 'AFMeasuredDepth',
-        0x002C => 'AFConfidence',
-        0x002F => 'ColorTemperature',
-        0x0031 => 'ImageCaptureRequestID',
-        0x0033 => 'HDRHeadroom',
-        0x0038 => 'SemanticStylePreset',
-        0x003A => 'LuminanceNoiseAmplitude',
-        0x003B => 'MediaGroupUUID',
+        0x001D => 'LuminanceNoiseAmplitude',
+        0x001F => 'PhotosAppFeatureFlags',
+        0x0020 => 'ImageCaptureRequestID',
+        0x0021 => 'HDRHeadroom',
+        0x0023 => 'AFPerformance',
+        0x0025 => 'SignalToNoiseRatioType',
+        0x0026 => 'SNR',
+        0x0027 => 'PhotoIdentifier',
+        0x002B => 'ColorTemperature',
+        0x002D => 'CameraType',
+        0x002E => 'FocusPosition',
+        0x002F => 'HDRGain',
+        0x0033 => 'AFMeasuredDepth',
+        0x003F => 'GreenGhostMitigationStatus',
+        0x0040 => 'SemanticStylePreset',
+        0x0041 => 'SemanticStyleRenderingVer',
+        0x004E => 'SemanticStyleData',
     ];
 
     /** Tags whose SLONG value should be stored as a string for builder compatibility. */
-    private const array STRING_CAST_TAGS = [0x0038];
+    private const array STRING_CAST_TAGS = [0x0040];
 
     private KeyedArchiveResolver $archiveResolver;
 
@@ -190,11 +193,7 @@ final readonly class AppleJpegIfdParser
         $type = Unpack::int($u16Fmt, substr($raw, $offset + 2, 2), 'Apple IFD type');
         $cnt  = Unpack::int($u32Fmt, substr($raw, $offset + 4, 4), 'Apple IFD count');
 
-        if (!array_key_exists($tag, self::TAG_MAP)) {
-            return null;
-        }
-
-        $key        = self::TAG_MAP[$tag];
+        $key        = self::TAG_MAP[$tag] ?? sprintf('Apple_0x%04X', $tag);
         $valueField = substr($raw, $offset + 8, 4);
 
         $value = $this->decodeTagValue($raw, $tiffBase, $tag, $type, $cnt, $valueField, $u32Fmt);
@@ -221,7 +220,8 @@ final readonly class AppleJpegIfdParser
         string $u32Fmt,
     ): int|float|string|array|null {
         return match ($type) {
-            self::TIFF_TYPE_SLONG     => $this->decodeSLongTag($tag, $count, $valueField, $u32Fmt),
+            self::TIFF_TYPE_SLONG,
+            self::TIFF_TYPE_LONG8     => $this->decodeSLongTag($tag, $count, $valueField, $u32Fmt),
             self::TIFF_TYPE_SRATIONAL => $this->decodeSRationalTag($raw, $tiffBase, $count, $valueField, $u32Fmt),
             self::TIFF_TYPE_ASCII     => $this->decodeAsciiTag($raw, $tiffBase, $count, $valueField, $u32Fmt),
             self::TIFF_TYPE_UNDEFINED => $this->decodeUndefinedTag($raw, $tiffBase, $count, $valueField, $u32Fmt),

@@ -251,14 +251,14 @@ final class AppleJpegIfdParserTest extends TestCase
         $extraData = $this->sRational(true, 3, 2);
 
         $payload = $this->buildPayload(true, [
-            ['tag' => 0x000F, 'type' => self::TIFF_TYPE_SRATIONAL, 'count' => 1, 'value' => $this->offsetField(true, 32)],
+            ['tag' => 0x001D, 'type' => self::TIFF_TYPE_SRATIONAL, 'count' => 1, 'value' => $this->offsetField(true, 32)],
         ], $extraData);
 
         $result = $parser->parse($payload);
 
         self::assertIsArray($result);
-        self::assertArrayHasKey('FocusPosition', $result);
-        self::assertEqualsWithDelta(1.5, $result['FocusPosition'], 1e-12);
+        self::assertArrayHasKey('LuminanceNoiseAmplitude', $result);
+        self::assertEqualsWithDelta(1.5, $result['LuminanceNoiseAmplitude'], 1e-12);
     }
 
     #[Test]
@@ -300,14 +300,14 @@ final class AppleJpegIfdParserTest extends TestCase
 
         $payload = $this->buildPayload(true, [
             ['tag' => 0x0004, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 1)],
-            ['tag' => 0x000F, 'type' => self::TIFF_TYPE_SRATIONAL, 'count' => 1, 'value' => $this->offsetField(true, 44)],
+            ['tag' => 0x001D, 'type' => self::TIFF_TYPE_SRATIONAL, 'count' => 1, 'value' => $this->offsetField(true, 44)],
         ], $extraData);
 
         $result = $parser->parse($payload);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('AEStable', $result);
-        self::assertArrayNotHasKey('FocusPosition', $result);
+        self::assertArrayNotHasKey('LuminanceNoiseAmplitude', $result);
     }
 
     #[Test]
@@ -346,7 +346,8 @@ final class AppleJpegIfdParserTest extends TestCase
 
         self::assertIsArray($result);
         self::assertArrayHasKey('AEStable', $result);
-        self::assertCount(1, $result);
+        self::assertArrayHasKey('Apple_0xFFFF', $result);
+        self::assertSame(99, $result['Apple_0xFFFF']);
     }
 
     #[Test]
@@ -366,7 +367,7 @@ final class AppleJpegIfdParserTest extends TestCase
         $parser = new AppleJpegIfdParser();
 
         $payload = $this->buildPayload(true, [
-            ['tag' => 0x0038, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 4)],
+            ['tag' => 0x0040, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 4)],
         ]);
 
         $result = $parser->parse($payload);
@@ -387,7 +388,7 @@ final class AppleJpegIfdParserTest extends TestCase
             ['tag' => 0x0005, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 220)],
             ['tag' => 0x0006, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 199)],
             ['tag' => 0x000A, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 4)],
-            ['tag' => 0x0020, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 1)],
+            ['tag' => 0x002D, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 1)],
         ]);
 
         $result = $parser->parse($payload);
@@ -421,7 +422,7 @@ final class AppleJpegIfdParserTest extends TestCase
             ['tag' => 0x0006, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 180)],
             ['tag' => 0x000A, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 3)],
             ['tag' => 0x0011, 'type' => self::TIFF_TYPE_ASCII, 'count' => strlen($contentId), 'value' => $this->offsetField(true, 92)],
-            ['tag' => 0x0020, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 0)],
+            ['tag' => 0x002D, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 0)],
         ], $extraData);
 
         $decoder = new AppleDecoder();
