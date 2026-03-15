@@ -28,7 +28,7 @@ use RuntimeException;
  *   1700–1799  TIFF JPEG, byte-order, offset validators
  *   1800–1899  EXIF model classes, IPTC, ICC parsers
  *   1900–1999  JPEG parser, MPF, FlashPix, JUMBF, audio, frame validators
- *   2000–2099  Reserved (future expansion)
+ *   2000–2099  XMP parser (depth limits, structural checks)
  *
  * Legacy codes allocated before this convention exist outside these ranges.
  * Each code MUST be globally unique — use `grep -rn` to verify before adding.

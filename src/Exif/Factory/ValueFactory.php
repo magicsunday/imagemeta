@@ -589,11 +589,6 @@ final readonly class ValueFactory
     }
 
     /**
-     * Creates a FlashPix value object, parsing OLE property sets from assembled streams.
-     *
-     * @param array<int, string> $streams Assembled FlashPix extension streams.
-     */
-    /**
      * Creates a FlashPix value object, delegating OLE property set parsing to the injected parser.
      *
      * @param array<int, string> $streams Assembled FlashPix extension streams.
