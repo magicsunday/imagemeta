@@ -29,7 +29,7 @@ use function substr;
  * @phpstan-type NativePlistScalar bool|float|int|string|null
  * @phpstan-type NativePlistValue NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar>>>>>>>
  * @phpstan-type NativePlistDictionary array<string, NativePlistValue>
- * @phpstan-type IfdTagValue int|float|string|NativePlistDictionary|list<float>
+ * @phpstan-type IfdTagValue int|float|string|NativePlistDictionary|list<float>|list<int>
  */
 final readonly class AppleJpegIfdParser
 {
@@ -220,7 +220,7 @@ final readonly class AppleJpegIfdParser
         string $u32Fmt,
     ): int|float|string|array|null {
         return match ($type) {
-            self::TIFF_TYPE_SLONG     => $this->decodeSLongTag($tag, $count, $valueField, $u32Fmt),
+            self::TIFF_TYPE_SLONG     => $this->decodeSLongTag($raw, $tiffBase, $tag, $count, $valueField, $u32Fmt),
             self::TIFF_TYPE_LONG8     => $this->decodeLong8Tag($raw, $tiffBase, $count, $valueField, $u32Fmt),
             self::TIFF_TYPE_SRATIONAL => $this->decodeSRationalTag($raw, $tiffBase, $count, $valueField, $u32Fmt),
             self::TIFF_TYPE_ASCII     => $this->decodeAsciiTag($raw, $tiffBase, $count, $valueField, $u32Fmt),
@@ -230,21 +230,44 @@ final readonly class AppleJpegIfdParser
     }
 
     /**
-     * Decodes an SLONG tag (type 9, 4 bytes per component, count=1 expected).
+     * Decodes an SLONG tag (type 9, 4 bytes per component).
+     *
+     * For count=1 the inline value field is used directly.
+     * For count>1 the value field is an offset to out-of-line data.
+     *
+     * @return int|string|list<int>|null
      */
-    private function decodeSLongTag(int $tag, int $count, string $valueField, string $u32Fmt): int|string|null
-    {
-        if ($count !== 1) {
+    private function decodeSLongTag(
+        string $raw,
+        int $tiffBase,
+        int $tag,
+        int $count,
+        string $valueField,
+        string $u32Fmt,
+    ): int|string|array|null {
+        if ($count === 1) {
+            $signed = $this->toSigned32(Unpack::int($u32Fmt, $valueField, 'Apple IFD SLONG'));
+
+            if (in_array($tag, self::STRING_CAST_TAGS, true)) {
+                return (string) $signed;
+            }
+
+            return $signed;
+        }
+
+        $data = $this->resolveData($raw, $tiffBase, $count * 4, $valueField, $u32Fmt);
+
+        if ($data === null) {
             return null;
         }
 
-        $signed = $this->toSigned32(Unpack::int($u32Fmt, $valueField, 'Apple IFD SLONG'));
+        $values = [];
 
-        if (in_array($tag, self::STRING_CAST_TAGS, true)) {
-            return (string) $signed;
+        for ($i = 0; $i < $count; ++$i) {
+            $values[] = $this->toSigned32(Unpack::int($u32Fmt, substr($data, $i * 4, 4), 'Apple IFD SLONG[]'));
         }
 
-        return $signed;
+        return $values;
     }
 
     /**
