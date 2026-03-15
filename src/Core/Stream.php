@@ -24,6 +24,7 @@ use function fstat;
 use function is_array;
 use function is_readable;
 use function is_resource;
+use function preg_match;
 use function str_contains;
 use function strlen;
 
@@ -51,6 +52,10 @@ final class Stream implements BinaryReadAccessInterface
      */
     public static function fromPath(string $path): self
     {
+        if (str_contains($path, '://') && preg_match('#^(phar|expect|data|php|glob|zlib|zip|rar|ssh2|ogg)://#i', $path) === 1) {
+            throw new ParseError('Unsupported stream wrapper in path.', 1036);
+        }
+
         $fh = !str_contains($path, '://') && (!file_exists($path) || !is_readable($path)) ? false : fopen($path, 'rb');
 
         if ($fh === false) {
