@@ -63,6 +63,7 @@ final readonly class ImageStructureExifReader
 
         if (!$explicitlyUncompressed) {
             $pixelWidth = $this->reader->int($this->exifIfd, ExifTag::PIXEL_X_DIMENSION);
+
             if ($pixelWidth !== null) {
                 return $pixelWidth;
             }
@@ -84,6 +85,7 @@ final readonly class ImageStructureExifReader
 
         if (!$explicitlyUncompressed) {
             $pixelHeight = $this->reader->int($this->exifIfd, ExifTag::PIXEL_Y_DIMENSION);
+
             if ($pixelHeight !== null) {
                 return $pixelHeight;
             }

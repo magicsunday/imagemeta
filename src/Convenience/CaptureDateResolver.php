@@ -51,6 +51,7 @@ final readonly class CaptureDateResolver
         }
 
         $xmpDocument = $metadata->xmpDoc;
+
         if (!$xmpDocument instanceof XmpDocument) {
             $xmpDocument = $metadata->selectiveXmpDocument();
         }

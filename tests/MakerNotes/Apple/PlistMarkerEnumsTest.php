@@ -25,6 +25,7 @@ final class PlistMarkerEnumsTest extends TestCase
     public function plistMarkerTypeEnumExistsWithExpectedCases(): void
     {
         $actual = [];
+
         foreach (PlistMarkerType::cases() as $case) {
             $actual[$case->name] = $case->value;
         }
@@ -52,6 +53,7 @@ final class PlistMarkerEnumsTest extends TestCase
     public function plistSimpleMarkerEnumExistsWithExpectedCases(): void
     {
         $actual = [];
+
         foreach (PlistSimpleMarker::cases() as $case) {
             $actual[$case->name] = $case->value;
         }

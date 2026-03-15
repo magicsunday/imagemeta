@@ -211,13 +211,16 @@ final class TiffExifParserMinMaxSampleValueTest extends TestCase
 
         foreach ($entries as $tag => $prefix) {
             $payload = $payloadByTag[$tag] ?? null;
+
             if (!is_string($payload)) {
                 $ifdEntries .= $prefix;
+
                 continue;
             }
 
             if (strlen($payload) <= 4) {
                 $ifdEntries .= $prefix . str_pad($payload, 4, "\0");
+
                 continue;
             }
 

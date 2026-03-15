@@ -54,6 +54,7 @@ final readonly class AppleFlagExtractor
     public function extractFlags(array $dictionary): array
     {
         $flags = [];
+
         foreach (AppleMaps::FLAG_MAP as $makerKey => $normalized) {
             if (!array_key_exists($makerKey, $dictionary)) {
                 continue;
@@ -62,6 +63,7 @@ final readonly class AppleFlagExtractor
             /** @var NativePlistValue $candidate */
             $candidate = $dictionary[$makerKey];
             $bool      = $this->boolValue($candidate);
+
             if ($bool === null) {
                 continue;
             }
@@ -81,6 +83,7 @@ final readonly class AppleFlagExtractor
 
             foreach ($bitMap as $bitPosition => $normalized) {
                 $hasExisting = array_key_exists($normalized, $flags);
+
                 if (!$hasExisting) {
                     $flags[$normalized] = false;
                 }
@@ -125,12 +128,14 @@ final readonly class AppleFlagExtractor
 
         if (is_string($value)) {
             $normalized = trim($value);
+
             if ($normalized === '') {
                 return null;
             }
 
             if (str_starts_with($normalized, '0x') || str_starts_with($normalized, '0X')) {
                 $hex = substr($normalized, 2);
+
                 if ($hex === '' || !ctype_xdigit($hex)) {
                     return null;
                 }
@@ -158,6 +163,7 @@ final readonly class AppleFlagExtractor
                 ['flags', 'Flags', 'value', 'Value', 'mask', 'Mask', 'bitPositions', 'BitPositions'],
                 static fn (string $key): bool => array_key_exists($key, $value),
             );
+
             if ($candidateKey !== null) {
                 /** @var NativePlistValue $candidate */
                 $candidate = $value[$candidateKey];
@@ -177,19 +183,23 @@ final readonly class AppleFlagExtractor
 
         $positions = [];
         $hasEntry  = false;
+
         foreach ($value as $entry) {
             /** @var NativePlistValue $entry */
             if (is_int($entry) || is_float($entry) || (is_string($entry) && is_numeric($entry))) {
                 $position = (int) $entry;
+
                 if ($position >= 0) {
                     $positions[] = $position;
                 }
 
                 $hasEntry = true;
+
                 continue;
             }
 
             $nested = $this->bitPositions($entry);
+
             if ($nested === null) {
                 continue;
             }
@@ -230,6 +240,7 @@ final readonly class AppleFlagExtractor
 
         $positions = [];
         $bitIndex  = 0;
+
         while ($mask !== 0) {
             if (($mask & 1) === 1) {
                 $positions[] = $bitIndex;
@@ -267,6 +278,7 @@ final readonly class AppleFlagExtractor
 
         if (is_string($value)) {
             $normalized = trim($value);
+
             if ($normalized === '') {
                 return null;
             }

@@ -61,6 +61,7 @@ final readonly class IccTagDecoder
     public function extractTag(string $data, int $profileSize, string $tagSignature, int $majorVersion): ?string
     {
         $tagData = $this->findTagData($data, $profileSize, $tagSignature);
+
         if ($tagData === null) {
             return null;
         }
@@ -119,11 +120,13 @@ final readonly class IccTagDecoder
     public function extractXyzTag(string $data, int $profileSize, string $tagSignature): ?array
     {
         $tagData = $this->findTagData($data, $profileSize, $tagSignature);
+
         if ($tagData === null || strlen($tagData) < 20) {
             return null;
         }
 
         $type = substr($tagData, 0, 4);
+
         if ($type !== 'XYZ ') {
             return null;
         }
@@ -159,6 +162,7 @@ final readonly class IccTagDecoder
     public function extractViewingConditions(string $data, int $profileSize): ?array
     {
         $tagData = $this->findTagData($data, $profileSize, 'view');
+
         if ($tagData === null || strlen($tagData) < 36) {
             return null;
         }
@@ -198,6 +202,7 @@ final readonly class IccTagDecoder
     public function extractMeasurement(string $data, int $profileSize): ?array
     {
         $tagData = $this->findTagData($data, $profileSize, 'meas');
+
         if ($tagData === null || strlen($tagData) < 36) {
             return null;
         }
@@ -238,6 +243,7 @@ final readonly class IccTagDecoder
     public function extractTrcTag(string $data, int $profileSize, string $tagSignature): ?array
     {
         $tagData = $this->findTagData($data, $profileSize, $tagSignature);
+
         if ($tagData === null || strlen($tagData) < 8) {
             return null;
         }
@@ -270,11 +276,13 @@ final readonly class IccTagDecoder
     public function extractSignatureTag(string $data, int $profileSize, string $tagSignature): ?string
     {
         $tagData = $this->findTagData($data, $profileSize, $tagSignature);
+
         if ($tagData === null || strlen($tagData) < 12) {
             return null;
         }
 
         $type = substr($tagData, 0, 4);
+
         if ($type !== 'sig ') {
             return null;
         }
@@ -285,6 +293,7 @@ final readonly class IccTagDecoder
         }
 
         $signature = substr($tagData, 8, 4);
+
         if ($signature === "\0\0\0\0") {
             return null;
         }
@@ -309,6 +318,7 @@ final readonly class IccTagDecoder
 
         $length         = min(strlen($data), $profileSize);
         $tagCountOffset = self::HEADER_LENGTH;
+
         if ($tagCountOffset + 4 > $length) {
             return null;
         }
@@ -330,6 +340,7 @@ final readonly class IccTagDecoder
         }
 
         $tableEnd = $tagCountOffset + 4 + ($tagCount * self::TAG_RECORD_LENGTH);
+
         if ($tableEnd > $length) {
             throw new ParseError(
                 sprintf(
@@ -457,11 +468,13 @@ final readonly class IccTagDecoder
         }
 
         $asciiLength = $this->reader->uInt32Be(substr($data, 8, 4));
+
         if ($asciiLength === 0) {
             return null;
         }
 
         $available = strlen($data) - 12;
+
         if ($asciiLength > $available) {
             return null;
         }
@@ -510,6 +523,7 @@ final readonly class IccTagDecoder
     private function parseMlucTag(string $data): ?string
     {
         $length = strlen($data);
+
         if ($length < 16) {
             return null;
         }
@@ -530,6 +544,7 @@ final readonly class IccTagDecoder
 
         // Record table must fit within payload
         $tableEnd = 16 + ($recordCount * $recordSize);
+
         if ($tableEnd > $length) {
             throw new ParseError('ICC mluc record table exceeds payload bounds', 1139);
         }
@@ -540,6 +555,7 @@ final readonly class IccTagDecoder
         $enUs          = null;
 
         $cursor = 16;
+
         for ($i = 0; $i < $recordCount; ++$i) {
             $lang         = substr($data, $cursor, 2);
             $country      = substr($data, $cursor + 2, 2);
@@ -582,6 +598,7 @@ final readonly class IccTagDecoder
 
             $raw = substr($data, $stringOffset, $stringLength);
             $utf = $this->reader->decodeUtf16Be($raw);
+
             if ($utf === null) {
                 continue;
             }
@@ -685,11 +702,13 @@ final readonly class IccTagDecoder
 
         // Lookup table: count x uInt16Number entries
         $needed = 12 + ($count * 2);
+
         if (strlen($data) < $needed) {
             return null;
         }
 
         $table = [];
+
         for ($i = 0; $i < $count; ++$i) {
             $table[] = $this->reader->uInt16Be(substr($data, 12 + ($i * 2), 2));
         }

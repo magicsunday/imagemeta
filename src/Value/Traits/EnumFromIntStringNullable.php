@@ -47,6 +47,7 @@ trait EnumFromIntStringNullable
         }
 
         $backingTypeName = self::exifBackingTypeName();
+
         if ($backingTypeName === '') {
             return null;
         }
@@ -71,6 +72,7 @@ trait EnumFromIntStringNullable
         static $backingTypeCache = [];
 
         $class = self::class;
+
         if (!isset($backingTypeCache[$class])) {
             $reflection = new ReflectionEnum($class);
             $backing    = $reflection->getBackingType();

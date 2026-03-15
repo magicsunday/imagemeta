@@ -80,6 +80,7 @@ final class PayloadGuard
         }
 
         $tiffSig = substr($blob, 4 + $offset, 2);
+
         if (($tiffSig !== 'II') && ($tiffSig !== 'MM')) {
             throw new ParseError($contextName . ' TIFF-header offset does not point to valid TIFF signature', $sigCode);
         }

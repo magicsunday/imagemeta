@@ -122,6 +122,7 @@ final readonly class RationalConverter
                 if ((is_int($numComponent) || is_float($numComponent) || is_string($numComponent)) && (is_int($denComponent) || is_float($denComponent) || is_string($denComponent))) {
                     $numVal = $this->numericConverter->normalizeComponent($numComponent);
                     $denVal = $this->numericConverter->normalizeComponent($denComponent);
+
                     if (($numVal === null) || ($denVal === null) || ($denVal === 0.0)) {
                         return null;
                     }
@@ -164,8 +165,10 @@ final readonly class RationalConverter
         }
 
         $result = [];
+
         foreach ($value->values as $rational) {
             $floatVal = $this->toFloat($rational);
+
             if ($floatVal === null) {
                 return null;
             }

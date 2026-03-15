@@ -69,11 +69,13 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
     private function parseSamsungData(string $raw): ?SamsungMakerNotes
     {
         $length = strlen($raw);
+
         if ($length < 8) {
             return null;
         }
 
         $headerOffset = 0;
+
         if (str_starts_with($raw, self::SAMSUNG_SIGNATURE)) {
             $headerOffset = strlen(self::SAMSUNG_SIGNATURE);
         }
@@ -83,12 +85,14 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
         }
 
         $endian = $this->resolveEndian(substr($raw, $headerOffset, 2));
+
         if (!$endian instanceof Endian) {
             return null;
         }
 
         try {
             $magic = $this->readU16($raw, $headerOffset + 2, $endian, 'Samsung TIFF magic');
+
             if ($magic !== self::TIFF_MAGIC) {
                 return null;
             }
@@ -132,6 +136,7 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
                 }
 
                 $handler = $handlers[$tag] ?? null;
+
                 if ($handler !== null) {
                     $results[$tag] = $handler($valueBytes, $type);
                 }
@@ -214,16 +219,19 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
         int $length,
     ): ?string {
         $typeSize = $this->typeSize($type);
+
         if ($typeSize === 0 || $count < 1) {
             return null;
         }
 
         $dataSize = $typeSize * $count;
+
         if ($dataSize <= 4) {
             return substr($raw, $inlineOffset, $dataSize);
         }
 
         $dataOffset = $headerOffset + $valueOffset;
+
         if (($dataOffset < 0) || (($dataOffset + $dataSize) > $length)) {
             return null;
         }

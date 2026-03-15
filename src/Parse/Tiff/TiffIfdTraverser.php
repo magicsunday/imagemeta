@@ -91,6 +91,7 @@ final class TiffIfdTraverser
 
             if ($value instanceof ExifNumericList) {
                 $first = $value->values[0] ?? null;
+
                 if (is_int($first)) {
                     return $this->validatePointerOffset($first, $entry->tag);
                 }
@@ -171,11 +172,13 @@ final class TiffIfdTraverser
                 }
 
                 $entry = $ifd->get(ExifTag::INTEROPERABILITY_IFD_POINTER);
+
                 if (!$entry instanceof IfdEntry) {
                     continue;
                 }
 
                 $offset = $this->pointerOffset($entry);
+
                 if ($offset === null) {
                     continue;
                 }
@@ -282,6 +285,7 @@ final class TiffIfdTraverser
 
         if ($value instanceof ExifNumericList) {
             $offsets = [];
+
             foreach ($value->values as $component) {
                 if (is_int($component)) {
                     try {

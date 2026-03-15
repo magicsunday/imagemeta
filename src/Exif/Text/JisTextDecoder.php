@@ -45,11 +45,13 @@ final class JisTextDecoder
 
         foreach ($sources as $source) {
             $converted = self::convertToUtf8($source, $payload);
+
             if ($converted === null) {
                 continue;
             }
 
             $trimmed = trim($converted, "\0 ");
+
             if ($trimmed === '') {
                 continue;
             }

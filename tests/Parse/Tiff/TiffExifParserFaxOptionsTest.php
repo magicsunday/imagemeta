@@ -204,6 +204,7 @@ final class TiffExifParserFaxOptionsTest extends TestCase
             . pack('V', $ifd2Offset);
 
         $ifd2 = pack('v', $ifd2Count);
+
         foreach ($ifd2Entries as $entry) {
             $ifd2 .= $entry;
         }

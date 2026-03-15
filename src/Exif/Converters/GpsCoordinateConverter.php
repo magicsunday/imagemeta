@@ -142,6 +142,7 @@ final readonly class GpsCoordinateConverter
 
         $isLatitudeRef  = ($ref === 'N') || ($ref === 'S');
         $isLongitudeRef = ($ref === 'E') || ($ref === 'W');
+
         if (!$isLatitudeRef && !$isLongitudeRef) {
             return null;
         }
@@ -159,6 +160,7 @@ final readonly class GpsCoordinateConverter
             );
 
         $components = $this->validateDmsComponents($numericValues);
+
         if ($components === null) {
             return null;
         }

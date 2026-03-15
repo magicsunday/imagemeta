@@ -637,6 +637,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $valOffset  = $ifdOffset + $ifdSize;
 
         $cfaValues = '';
+
         for ($i = 0; $i < $colorPlanes; ++$i) {
             $cfaValues .= pack('C', $i);
         }
@@ -700,6 +701,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         // CfaPlaneColor: BYTE[colorPlanes] — fits inline for colorPlanes ≤ 4
         $cfaValues = '';
+
         for ($i = 0; $i < $colorPlanes; ++$i) {
             $cfaValues .= pack('C', $i);
         }
@@ -873,6 +875,7 @@ final class TiffExifParserDngTagTest extends TestCase
         ksort($tags);
 
         $ifdData = pack('v', $entryCount);
+
         foreach ($tags as $entry) {
             $ifdData .= $entry;
         }
@@ -1112,6 +1115,7 @@ final class TiffExifParserDngTagTest extends TestCase
         unset($data);
 
         $ifdData = pack('v', $entryCount);
+
         foreach ($tags as $entry) {
             $ifdData .= $entry;
         }
@@ -1241,6 +1245,7 @@ final class TiffExifParserDngTagTest extends TestCase
         unset($data);
 
         $ifdData = pack('v', $entryCount);
+
         foreach ($tags as $entry) {
             $ifdData .= $entry;
         }
@@ -1806,6 +1811,7 @@ final class TiffExifParserDngTagTest extends TestCase
         ksort($tags);
 
         $ifdData = pack('v', $entryCount);
+
         foreach ($tags as $entry) {
             $ifdData .= $entry;
         }
@@ -4034,6 +4040,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $nameOffset     = $matrixOffset + strlen($matrixData);
 
         $afterIfd0Data = $uniqueCameraModel . $matrixData;
+
         if ($includeNames) {
             $afterIfd0Data .= $profileName;
         }
@@ -5779,21 +5786,25 @@ final class TiffExifParserDngTagTest extends TestCase
                 'count'   => 1,
                 'payload' => pack('V', 1),
             ];
+
             if (isset($tags[$tag])) {
                 $baseTag = $tags[$tag];
             }
 
             $type = $baseTag['type'];
+
             if (isset($override['type'])) {
                 $type = $override['type'];
             }
 
             $count = $baseTag['count'];
+
             if (isset($override['count'])) {
                 $count = $override['count'];
             }
 
             $payload = $baseTag['payload'];
+
             if (isset($override['payload'])) {
                 $payload = $override['payload'];
             }
@@ -6354,6 +6365,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $cropOffset        = $modelOffset + strlen($uniqueCameraModel);
 
         $cropData = '';
+
         foreach ($rationals as [$num, $den]) {
             $cropData .= pack('V', $num) . pack('V', $den);
         }
@@ -6618,6 +6630,7 @@ final class TiffExifParserDngTagTest extends TestCase
         ksort($entries);
 
         $ifdData = pack('v', $entryCount);
+
         foreach ($entries as $entry) {
             $ifdData .= $entry;
         }
@@ -9253,9 +9266,11 @@ final class TiffExifParserDngTagTest extends TestCase
         $payloadOffset = $modelOffset + strlen($uniqueCameraModel);
 
         $ifdEntries = '';
+
         foreach ($tags as $tag => $entryPrefix) {
             if ($tag === DngTag::UNIQUE_CAMERA_MODEL) {
                 $ifdEntries .= $entryPrefix . pack('V', $modelOffset);
+
                 continue;
             }
 
@@ -9264,6 +9279,7 @@ final class TiffExifParserDngTagTest extends TestCase
                     . ($payloadInline
                         ? str_pad($payload, 4, "\0")
                         : pack('V', $payloadOffset));
+
                 continue;
             }
 
@@ -9358,12 +9374,14 @@ final class TiffExifParserDngTagTest extends TestCase
 
                 if (strlen($payload) <= 4) {
                     $ifdEntries .= $entryPrefix . str_pad($payload, 4, "\0");
+
                     continue;
                 }
 
                 $ifdEntries .= $entryPrefix . pack('V', $nextOffset);
                 $tailData .= $payload;
                 $nextOffset += strlen($payload);
+
                 continue;
             }
 

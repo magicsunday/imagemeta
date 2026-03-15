@@ -78,11 +78,13 @@ final readonly class AppleDecoder implements MakerNotesDecoderInterface
     private function parseAppleData(string $raw): ?AppleMakerNotes
     {
         $ifdDictionary = $this->ifdParser->parse($raw);
+
         if (is_array($ifdDictionary)) {
             return $this->builder->build($ifdDictionary); // @phpstan-ignore argument.type (IFD values are builder-compatible)
         }
 
         $decoded = $this->archiveResolver->decodeBinaryPropertyList($raw);
+
         if ($decoded === null) {
             $decoded = $this->textParser->parse($raw);
         }
@@ -95,6 +97,7 @@ final readonly class AppleDecoder implements MakerNotesDecoderInterface
         $dictionary = $decoded;
 
         $decoded = $this->archiveResolver->resolveKeyedArchiveDictionary($dictionary);
+
         if ($decoded === null || !KeyedArchiveResolver::isStringKeyedDictionary($decoded)) {
             return null;
         }

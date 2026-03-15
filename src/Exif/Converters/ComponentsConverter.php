@@ -58,6 +58,7 @@ final readonly class ComponentsConverter
         array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
     ): ?array {
         $components = $this->numericConverter->toIntList($value);
+
         if ($components === null) {
             return null;
         }
@@ -80,11 +81,13 @@ final readonly class ComponentsConverter
         array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
     ): ?array {
         $components = $this->numericConverter->toIntList($value);
+
         if ($components === null || $components === []) {
             return null;
         }
 
         $labels = [];
+
         foreach ($components as $component) {
             $label = match ($component) {
                 0       => '-',
@@ -138,6 +141,7 @@ final readonly class ComponentsConverter
             explode(' ', str_replace([',', ';'], ' ', $val)),
             static fn (string $part): bool => $part !== '',
         ));
+
         if (count($parts) !== 2) {
             return null;
         }

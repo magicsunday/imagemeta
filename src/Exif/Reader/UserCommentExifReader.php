@@ -70,11 +70,13 @@ final readonly class UserCommentExifReader
     public function userCommentEncoding(): ?string
     {
         $raw = $this->rawUserComment();
+
         if ($raw === null) {
             return null;
         }
 
         $parsed = $this->parseUserCommentPrefix($raw);
+
         if ($parsed === null) {
             return null;
         }
@@ -94,16 +96,19 @@ final readonly class UserCommentExifReader
     public function userCommentEncodingBestEffort(): ?string
     {
         $encoding = $this->userCommentEncoding();
+
         if ($encoding !== null) {
             return $encoding;
         }
 
         $raw = $this->rawUserComment();
+
         if ($raw === null) {
             return null;
         }
 
         $parsed = $this->parseUserCommentPrefix($raw);
+
         if ($parsed === null) {
             return null;
         }
@@ -123,12 +128,14 @@ final readonly class UserCommentExifReader
     private function rawUserComment(): ?string
     {
         $raw = $this->reader->rawString($this->exifIfd, ExifTag::USER_COMMENT);
+
         if ($raw !== null) {
             return $raw;
         }
 
         foreach ($this->fallbackIfds->resolve(includeIfd0: true) as $ifd) {
             $candidate = $this->reader->rawString($ifd, ExifTag::USER_COMMENT);
+
             if ($candidate !== null) {
                 return $candidate;
             }
@@ -147,6 +154,7 @@ final readonly class UserCommentExifReader
     private function decodeUserComment(string $raw): ?string
     {
         $parsed = $this->parseUserCommentPrefix($raw);
+
         if ($parsed === null) {
             return null;
         }
@@ -231,6 +239,7 @@ final readonly class UserCommentExifReader
     private function inferUserCommentEncoding(string $content): ?string
     {
         $trimmed = trim($content, "\0 ");
+
         if ($trimmed === '') {
             return null;
         }
@@ -252,8 +261,10 @@ final readonly class UserCommentExifReader
     private function looksPrintableAscii(string $content): bool
     {
         $length = strlen($content);
+
         for ($i = 0; $i < $length; ++$i) {
             $byte = ord($content[$i]);
+
             if (($byte < 0x20) && !in_array($byte, [0x09, 0x0A, 0x0D], true)) {
                 return false;
             }
@@ -272,16 +283,19 @@ final readonly class UserCommentExifReader
     private function looksLikeUtf16(string $content): bool
     {
         $length = strlen($content);
+
         if ($length < 2) {
             return false;
         }
 
         $bom = substr($content, 0, 2);
+
         if ($bom === "\xFF\xFE" || $bom === "\xFE\xFF") {
             return true;
         }
 
         $nullCount = substr_count($content, "\x00");
+
         if ($nullCount < 2) {
             return false;
         }
@@ -293,6 +307,7 @@ final readonly class UserCommentExifReader
         $nullsOnOdd  = 0;
 
         $sampleSize = strlen($sample);
+
         for ($i = 0; $i < $sampleSize; ++$i) {
             if ($sample[$i] === "\x00") {
                 if (($i % 2) === 0) {

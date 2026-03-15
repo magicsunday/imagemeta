@@ -77,6 +77,7 @@ final readonly class TiffSampleValidator
 
         foreach ($minSampleValues as $componentIndex => $minSampleValue) {
             $maxSampleValue = $maxSampleValues[$componentIndex] ?? null;
+
             if ($maxSampleValue === null) {
                 continue;
             }
@@ -104,17 +105,20 @@ final readonly class TiffSampleValidator
     private function validateMinMaxValueRangeAgainstBitsPerSample(Ifd $ifd, string $tagName, array $values): void
     {
         $bitsPerSampleEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
+
         if (!$bitsPerSampleEntry instanceof IfdEntry || ($bitsPerSampleEntry->type !== TiffConst::TYPE_SHORT)) {
             return;
         }
 
         $bitsPerSampleValues = $this->support->extractIntegerTagComponents($bitsPerSampleEntry, 'BitsPerSample');
+
         if ($bitsPerSampleValues === []) {
             return;
         }
 
         foreach ($values as $componentIndex => $value) {
             $bitsPerSample = $bitsPerSampleValues[0];
+
             if (count($bitsPerSampleValues) > 1) {
                 if (!isset($bitsPerSampleValues[$componentIndex])) {
                     continue;
@@ -139,6 +143,7 @@ final readonly class TiffSampleValidator
             }
 
             $maxValue = (1 << $bitsPerSample) - 1;
+
             if ($value <= $maxValue) {
                 continue;
             }
@@ -225,6 +230,7 @@ final readonly class TiffSampleValidator
     {
         $samplesPerPixel = 1;
         $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+
         if (($samplesEntry instanceof IfdEntry) && is_int($samplesEntry->value) && ($samplesEntry->value > 0)) {
             return $samplesEntry->value;
         }
@@ -328,6 +334,7 @@ final readonly class TiffSampleValidator
 
         foreach ($sMinValues as $componentIndex => $sMinValue) {
             $sMaxValue = $sMaxValues[$componentIndex] ?? null;
+
             if ($sMaxValue === null) {
                 continue;
             }

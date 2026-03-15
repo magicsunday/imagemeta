@@ -435,6 +435,7 @@ final class BinaryPlistDecoderTest extends TestCase
 
         $offsets = [];
         $cursor  = strlen($header);
+
         foreach ($objects as $bytes) {
             $offsets[] = $cursor;
             $cursor += strlen($bytes);
@@ -448,6 +449,7 @@ final class BinaryPlistDecoderTest extends TestCase
         $numObjects    = count($objects);
 
         $offsetTable = '';
+
         foreach ($offsets as $off) {
             // Tests are designed to keep offsets < 256
             $offsetTable .= chr($off);
@@ -488,6 +490,7 @@ final class BinaryPlistDecoderTest extends TestCase
     {
         // Build 65 array objects: each references the next, the last references a scalar
         $objects = [];
+
         for ($i = 0; $i < 65; ++$i) {
             $objects[] = $this->buildArrayObject([$i + 1]);
         }

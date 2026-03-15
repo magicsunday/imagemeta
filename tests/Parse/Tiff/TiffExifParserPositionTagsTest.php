@@ -185,6 +185,7 @@ final class TiffExifParserPositionTagsTest extends TestCase
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {
                 $ifdEntries .= $prefix;
+
                 continue;
             }
 

@@ -75,6 +75,7 @@ final readonly class SpatialFrequencyResponse
     public static function fromMatrix(?array $matrix): ?self
     {
         $parts = MatrixValidator::validateMatrix($matrix, false, false);
+
         if (!$parts instanceof MatrixParts) {
             return null;
         }

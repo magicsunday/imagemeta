@@ -47,6 +47,7 @@ final readonly class KeyedArchiveResolver
     public function decodeBinaryPropertyList(string $raw): array|string|int|float|bool|null
     {
         $signatureOffset = strpos($raw, 'bplist00');
+
         if ($signatureOffset === false) {
             return null;
         }
@@ -75,11 +76,13 @@ final readonly class KeyedArchiveResolver
     public function resolveKeyedArchiveDictionary(array $dictionary): ?array
     {
         $unarchived = $this->unarchiveKeyedArchive($dictionary);
+
         if ($unarchived !== null) {
             return $unarchived;
         }
 
         $candidate = $this->resolveNestedCandidateFromEntries($dictionary);
+
         if ($candidate !== null) {
             return $candidate;
         }
@@ -146,6 +149,7 @@ final readonly class KeyedArchiveResolver
         }
 
         $entries = [];
+
         foreach ($value as $key => $entry) {
             if (!is_string($key)) {
                 throw new ParseError('Property list dictionaries must use string keys.', 1119);
@@ -188,6 +192,7 @@ final readonly class KeyedArchiveResolver
             }
 
             $candidate = $this->resolveNestedKeyedArchive($entry);
+
             if ($candidate !== null) {
                 return $candidate;
             }
@@ -232,6 +237,7 @@ final readonly class KeyedArchiveResolver
         try {
             /** @phpstan-ignore-next-line */
             $plist = $this->nativeToPlistValue($dictionary);
+
             if (!$plist instanceof ApplePlistDictionary) {
                 return null;
             }
@@ -305,11 +311,13 @@ final readonly class KeyedArchiveResolver
     private function normalizeKeyedArchive(array $dictionary): ?array
     {
         $objectsKey = $this->firstExistingKey($dictionary, '$objects', 'objects');
+
         if ($objectsKey === null) {
             return null;
         }
 
         $topKey = $this->firstExistingKey($dictionary, '$top', 'top');
+
         if ($topKey === null) {
             return null;
         }
@@ -331,6 +339,7 @@ final readonly class KeyedArchiveResolver
 
         if (!array_key_exists('$archiver', $normalized)) {
             $archiverKey = $this->firstExistingKey($dictionary, '$archiver', 'archiver');
+
             if ($archiverKey !== null) {
                 $normalized['$archiver'] = $dictionary[$archiverKey];
             }
@@ -338,6 +347,7 @@ final readonly class KeyedArchiveResolver
 
         if (!array_key_exists('$version', $normalized)) {
             $versionKey = $this->firstExistingKey($dictionary, '$version', 'version');
+
             if ($versionKey !== null) {
                 $normalized['$version'] = $dictionary[$versionKey];
             }

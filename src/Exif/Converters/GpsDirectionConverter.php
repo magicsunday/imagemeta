@@ -127,6 +127,7 @@ final readonly class GpsDirectionConverter
         // Tolerate out-of-range bearings — normalize via modular arithmetic.
         if ($bearing < 0.0 || $bearing >= 360.0) {
             $bearing = fmod($bearing, 360.0);
+
             if ($bearing < 0.0) {
                 $bearing += 360.0;
             }

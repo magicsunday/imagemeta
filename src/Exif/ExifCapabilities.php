@@ -42,6 +42,7 @@ final class ExifCapabilities
         }
 
         $trimmed = trim($exifVersion);
+
         if ($trimmed === '') {
             return 'unknown';
         }
@@ -67,6 +68,7 @@ final class ExifCapabilities
         }
 
         $digits = preg_replace('/\D/', '', $trimmed);
+
         if ($digits === null || $digits === '') {
             $digits = $trimmed;
         }

@@ -39,6 +39,7 @@ final readonly class ExifTagDecoder
         // legacy cameras omit the terminator.  Accept as-is when missing.
 
         $firstHighByteOffset = -1;
+
         for ($i = 0; $i < $count; ++$i) {
             if (ord($bytes[$i]) > 0x7F) {
                 $firstHighByteOffset = $i;
@@ -49,6 +50,7 @@ final readonly class ExifTagDecoder
 
         if ($firstHighByteOffset >= 0) {
             $text = rtrim($bytes, "\0");
+
             if (mb_check_encoding($text, 'UTF-8')) {
                 return $text;
             }

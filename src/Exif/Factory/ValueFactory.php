@@ -276,15 +276,18 @@ final readonly class ValueFactory
     {
         $container = new Container(
             format: $quickTimeLookup->string(QuickTimeMeta::MAJOR_BRAND_KEY),
-            encoder: $quickTimeLookup->string('com.apple.quicktime.encoder',
+            encoder: $quickTimeLookup->string(
+                'com.apple.quicktime.encoder',
                 'Encoder',
             ),
             bitrate: $quickTimeLookup->int('AvgBitrate', 'Bitrate'),
-            videoCodec: $quickTimeLookup->string(QuickTimeMeta::COMPRESSOR_NAME_KEY,
+            videoCodec: $quickTimeLookup->string(
+                QuickTimeMeta::COMPRESSOR_NAME_KEY,
                 QuickTimeMeta::VIDEO_CODEC_KEY,
                 QuickTimeMeta::HANDLER_DESCRIPTION_KEY,
             ),
-            audioCodec: $quickTimeLookup->string(QuickTimeMeta::AUDIO_FORMAT_KEY,
+            audioCodec: $quickTimeLookup->string(
+                QuickTimeMeta::AUDIO_FORMAT_KEY,
                 QuickTimeMeta::AUDIO_CODEC_KEY,
             ),
         );
@@ -294,7 +297,8 @@ final readonly class ValueFactory
             frameRate: $quickTimeLookup->float('com.apple.quicktime.videoFrameRate'),
             width: $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY),
             height: $quickTimeLookup->int(QuickTimeMeta::VIDEO_HEIGHT_KEY),
-            codec: $quickTimeLookup->string(QuickTimeMeta::COMPRESSOR_NAME_KEY,
+            codec: $quickTimeLookup->string(
+                QuickTimeMeta::COMPRESSOR_NAME_KEY,
                 QuickTimeMeta::VIDEO_CODEC_KEY,
             ),
             hdr: $quickTimeLookup->bool('com.apple.quicktime.hdrFormat') ?? false,
@@ -305,7 +309,8 @@ final readonly class ValueFactory
         $audio = new ValueAudio(
             channels: $quickTimeLookup->int(QuickTimeMeta::AUDIO_CHANNELS_KEY),
             sampleRate: $quickTimeLookup->int(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY),
-            codec: $quickTimeLookup->string(QuickTimeMeta::AUDIO_FORMAT_KEY,
+            codec: $quickTimeLookup->string(
+                QuickTimeMeta::AUDIO_FORMAT_KEY,
                 QuickTimeMeta::AUDIO_CODEC_KEY,
             ),
             bitDepth: $quickTimeLookup->int(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY),
@@ -416,6 +421,7 @@ final readonly class ValueFactory
     private function createColorProfile(Metadata $metadata, ?ParsedExif $exifDocument): ValueColorProfile
     {
         $iccData = null;
+
         if ($metadata->iccProfile !== null || $metadata->iccSegments !== []) {
             try {
                 $iccData = $this->iccParser->decode($metadata->iccProfile, $metadata->iccSegments);

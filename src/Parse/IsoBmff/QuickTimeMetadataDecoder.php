@@ -182,6 +182,7 @@ final readonly class QuickTimeMetadataDecoder
     public function parseUdtaTextAtom(BoxDescriptor $atom, IsoBmffParseContext $context): void
     {
         $key = self::UDTA_TEXT_KEYS[$atom->type] ?? null;
+
         if ($key === null || $atom->contentSize < 1) {
             return;
         }
@@ -253,11 +254,13 @@ final readonly class QuickTimeMetadataDecoder
             $consumed += 2;
 
             $needed = $itemCount * 2;
+
             if ($consumed + $needed > $box->contentSize) {
                 throw new ParseError(sprintf('%s atom entry %d truncated (expected %d codes, only %d bytes remain)', $label, $i + 1, $itemCount, $box->contentSize - $consumed), 1245);
             }
 
             $codes = [];
+
             for ($j = 0; $j < $itemCount; ++$j) {
                 $codes[] = $win->readU16BE();
             }
@@ -354,6 +357,7 @@ final readonly class QuickTimeMetadataDecoder
                     $entryAtoms[] = $structured;
 
                     $effectiveKey = $keyName ?? $itemName;
+
                     if ($effectiveKey === null) {
                         continue;
                     }
@@ -421,6 +425,7 @@ final readonly class QuickTimeMetadataDecoder
         $win = $name->window;
 
         $payloadSize = $name->contentSize - 4;
+
         if ($payloadSize < 1) {
             throw new ParseError('ilst name atom has empty payload', 1230);
         }

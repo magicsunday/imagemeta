@@ -50,6 +50,7 @@ final readonly class TiffTagConstraintValidator
     public function validateEnhancedIfd(Ifd $ifd): void
     {
         $entry = $ifd->get(TiffTag::NEW_SUBFILE_TYPE);
+
         if (!$entry instanceof IfdEntry || !is_int($entry->value)) {
             return;
         }
@@ -59,6 +60,7 @@ final readonly class TiffTagConstraintValidator
         }
 
         $enhance = $ifd->get(DngTag::ENHANCE_PARAMS);
+
         if (!$enhance instanceof IfdEntry || !is_string($enhance->value)) {
             throw new ParseError('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag per DNG 1.5.', 1976);
         }
@@ -139,6 +141,7 @@ final readonly class TiffTagConstraintValidator
             $t4OptionsValue = $this->requireSingleIntEntryValue($t4Options, TiffConst::TYPE_LONG, 'T4Options must be LONG[1].', 2077);
 
             $compression = $ifd->get(ExifTag::COMPRESSION);
+
             if (!($compression instanceof IfdEntry) || ($compression->value !== 3)) {
                 throw new ParseError('T4Options is only valid when Compression = 3 (CCITT Group 3).', 1703);
             }
@@ -160,6 +163,7 @@ final readonly class TiffTagConstraintValidator
         $t6OptionsValue = $this->requireSingleIntEntryValue($t6Options, TiffConst::TYPE_LONG, 'T6Options must be LONG[1].', 1705);
 
         $compression = $ifd->get(ExifTag::COMPRESSION);
+
         if (!($compression instanceof IfdEntry) || ($compression->value !== 4)) {
             throw new ParseError('T6Options is only valid when Compression = 4 (CCITT Group 4).', 1706);
         }
@@ -220,6 +224,7 @@ final readonly class TiffTagConstraintValidator
             $bitDepth = $bitsPerSampleEntry->value;
         } elseif ($bitsPerSampleEntry->value instanceof ExifNumericList) {
             $firstComponent = $bitsPerSampleEntry->value->values[0] ?? null;
+
             if (is_int($firstComponent)) {
                 $bitDepth = $firstComponent;
             }
@@ -234,6 +239,7 @@ final readonly class TiffTagConstraintValidator
 
         $compressionCode  = 1;
         $compressionEntry = $ifd->get(ExifTag::COMPRESSION);
+
         if (($compressionEntry instanceof IfdEntry) && is_int($compressionEntry->value)) {
             $compressionCode = $compressionEntry->value;
         }
@@ -448,11 +454,13 @@ final readonly class TiffTagConstraintValidator
     public function validatePredictorTag(Ifd $ifd): void
     {
         $predictor = $ifd->get(TiffTag::PREDICTOR);
+
         if (!($predictor instanceof IfdEntry) || ($predictor->value !== 2)) {
             return;
         }
 
         $compression = $ifd->get(ExifTag::COMPRESSION);
+
         if (($compression instanceof IfdEntry) && is_int($compression->value) && in_array($compression->value, [Compression::Lzw->value, Compression::AdobeDeflate->value], true)) {
             return;
         }

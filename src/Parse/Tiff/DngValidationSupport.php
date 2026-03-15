@@ -119,16 +119,19 @@ final readonly class DngValidationSupport
     public function extractDngVersionTuple(Ifd $ifd, int $tag): ?array
     {
         $entry = $ifd->get($tag);
+
         if (!$entry instanceof IfdEntry) {
             return null;
         }
 
         $value = $entry->value;
+
         if (!$value instanceof ExifNumericList || count($value->values) !== 4) {
             return null;
         }
 
         $tuple = [];
+
         foreach ($value->values as $c) {
             if (!is_int($c)) {
                 return null;
@@ -255,6 +258,7 @@ final readonly class DngValidationSupport
         }
 
         $denominator = $value->denominator;
+
         if ($requirePositiveDenominator ? ($denominator <= 0) : ($denominator === 0)) {
             throw new ParseError(sprintf('%s denominator must %s.', $tagName, $denominatorCondition), $denominatorErrCode);
         }
@@ -392,6 +396,7 @@ final readonly class DngValidationSupport
             }
 
             $values = [];
+
             foreach ($value->values as $rational) {
                 if ($rational->denominator <= 0) {
                     throw new ParseError(
@@ -415,6 +420,7 @@ final readonly class DngValidationSupport
             }
 
             $values = [];
+
             foreach ($value->values as $component) {
                 if ($component instanceof UInt64) {
                     $values[] = (float) $component->toInt(sprintf('%s component', $tagName));
@@ -465,6 +471,7 @@ final readonly class DngValidationSupport
         }
 
         [$width, $length] = $this->extractDngCropScalePair($entry, $tagName);
+
         if (($width <= 0.0) || ($length <= 0.0)) {
             throw new ParseError(
                 sprintf(

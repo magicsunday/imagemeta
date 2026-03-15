@@ -104,6 +104,7 @@ final readonly class TrackMediaParser
                 [$handler, $handlerName, $sampleInfo] = $this->parseMdia($child, $context);
             } elseif ($child->type === BoxType::UDTA->value) {
                 ++$udtaCount;
+
                 if ($udtaCount > 1) {
                     throw new ParseError('duplicate udta box in trak', 1912);
                 }
@@ -814,6 +815,7 @@ final readonly class TrackMediaParser
 
             // ISO 14496-12 §8.5.2.2: data_reference_index is 1-based
             $dataRefIndex = $win->readU16BE();
+
             if ($dataRefIndex === 0) {
                 throw new ParseError('stsd sample entry data_reference_index must be >= 1', 1399);
             }

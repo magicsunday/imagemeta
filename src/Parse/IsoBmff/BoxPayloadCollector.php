@@ -105,13 +105,16 @@ final readonly class BoxPayloadCollector
         $iccProfile    = null;
 
         $childOffset = $this->detectMetaChildOffset($meta, $allowQuickTimeMetaWithoutFullBox);
+
         foreach ($this->boxNavigator->walkChildren($meta, $childOffset) as $child) {
             switch ($child->type) {
                 case BoxType::HDLR->value:
                     $this->collectHdlr($child, $hdlrCount, $handlerType);
+
                     break;
                 case BoxType::EXIF->value:
                     $this->collectDirectExifPayload($child, $directExif);
+
                     break;
                 case BoxType::IINF->value:
                     foreach ($this->ilocBoxParser->parseIinf($child) as $info) {
@@ -125,39 +128,51 @@ final readonly class BoxPayloadCollector
                     }
 
                     $locations = $this->ilocBoxParser->parseIloc($child, $fileOffsetOrigin);
+
                     break;
                 case BoxType::IDAT->value:
                     $this->collectIdatPayload($child, $idatPayload);
+
                     break;
                 case BoxType::PITM->value:
                     $primaryItemId = $this->ilocBoxParser->parsePitm($child);
+
                     break;
                 case BoxType::IREF->value:
                     $itemReferences = ItemLocationResolver::mergeItemReferences($itemReferences, $this->ilocBoxParser->parseIref($child));
+
                     break;
                 case BoxType::DINF->value:
                     $dataReferences = ItemLocationResolver::mergeDataReferences($dataReferences, $this->ilocBoxParser->parseDinf($child));
+
                     break;
                 case BoxType::XMP->value:
                     $this->collectDirectXmpPayload($child, $directXmp);
+
                     break;
                 case BoxType::UUID->value:
                     $this->collectUuidXmpPayload($child, $uuidXmp);
+
                     break;
                 case BoxType::MHDR->value:
                     $this->collectMhdr($child, $requiresHdlr, $hasMhdr);
+
                     break;
                 case BoxType::KEYS->value:
                     $this->collectKeysAtom($child, $requiresHdlr, $keysMaps);
+
                     break;
                 case BoxType::ILST->value:
                     $this->collectIlstAtom($child, $ilstBoxes);
+
                     break;
                 case BoxType::CTRY->value:
                     $this->collectLocaleListAtom($child, 'ctry', 1959, $requiresHdlr, $countryLists);
+
                     break;
                 case BoxType::LANG->value:
                     $this->collectLocaleListAtom($child, 'lang', 1960, $requiresHdlr, $languageLists);
+
                     break;
                 case BoxType::IPRP->value:
                     if (($ispeWidth === null) || ($iccProfile === null)) {
@@ -238,6 +253,7 @@ final readonly class BoxPayloadCollector
     private function collectHdlr(BoxDescriptor $child, int &$hdlrCount, ?string &$handlerType): void
     {
         ++$hdlrCount;
+
         if ($hdlrCount > 1) {
             throw new ParseError('meta must contain exactly one hdlr box', 1478);
         }
@@ -634,6 +650,7 @@ final readonly class BoxPayloadCollector
 
         if ($size === 1) {
             $largeSizeOffset = $offset + 8;
+
             if (($largeSizeOffset + 8) > strlen($peek)) {
                 return false;
             }

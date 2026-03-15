@@ -241,11 +241,13 @@ final class TiffExifParser implements TiffExifParserInterface
     private function resolveExifIfd(Ifd $ifd0): ?Ifd
     {
         $exifPointer = $ifd0->get(ExifTag::EXIF_IFD_POINTER);
+
         if (!$exifPointer instanceof IfdEntry) {
             return null;
         }
 
         $offset = $this->traverser->pointerOffset($exifPointer);
+
         if ($offset === null) {
             return null;
         }
@@ -259,11 +261,13 @@ final class TiffExifParser implements TiffExifParserInterface
     private function resolveGpsIfd(Ifd $ifd0): ?Ifd
     {
         $gpsPointer = $ifd0->get(ExifTag::GPS_IFD_POINTER);
+
         if (!$gpsPointer instanceof IfdEntry) {
             return null;
         }
 
         $offset = $this->traverser->pointerOffset($gpsPointer);
+
         if ($offset === null) {
             return null;
         }
@@ -383,6 +387,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->dngValidator->validatePreLoop($ifd0);
 
         $this->structuralValidator->validateEnhancedIfd($ifd0);
+
         foreach ($additionalIfds as $additionalIfd) {
             $this->structuralValidator->validateEnhancedIfd($additionalIfd);
             $this->structuralValidator->validatePerIfd($additionalIfd, !$isDngContainer);
@@ -548,6 +553,7 @@ final class TiffExifParser implements TiffExifParserInterface
         // EXIF 3.0 §4.5.2 and TIFF 6.0 §8 prescribe 12-byte (classic) and 20-byte
         // (BigTIFF) directory entries and the unsigned entry count preceding them.
         $entries = [];
+
         for ($i = 0; $i < $entryCount; ++$i) {
             try {
                 $entry = $this->readDirEntry();

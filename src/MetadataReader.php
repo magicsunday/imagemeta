@@ -131,6 +131,7 @@ final readonly class MetadataReader
         $extension = $this->detectExtension($path);
 
         [$sha1, $md5] = $withDigests ? $this->calculateDigests($stream) : [null, null];
+
         try {
             $type = $this->formatDetector->detect($stream);
         } catch (ParseError $exception) {
@@ -196,6 +197,7 @@ final readonly class MetadataReader
         $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
 
         $iptcDoc = null;
+
         if ($iptcBlobs !== []) {
             $documents = array_map($this->iptcParser->parse(...), $iptcBlobs);
 
@@ -426,6 +428,7 @@ final readonly class MetadataReader
         $probeLength = min($stream->size(), 8192);
 
         $probe = '';
+
         try {
             $stream->seek(0);
             $probe = $probeLength === 0 ? '' : $stream->read($probeLength);
@@ -440,6 +443,7 @@ final readonly class MetadataReader
         }
 
         $finfo = new finfo(FILEINFO_MIME_TYPE);
+
         try {
             $mime = $finfo->buffer($probe);
         } catch (ValueError) {
@@ -480,6 +484,7 @@ final readonly class MetadataReader
         $stream->seek(0);
 
         $remaining = $stream->size();
+
         while ($remaining > 0) {
             $chunkLength = min($remaining, 8192);
             $chunk       = $stream->read($chunkLength);

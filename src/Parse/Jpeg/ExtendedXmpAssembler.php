@@ -258,6 +258,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
         }
 
         $requiredGuids = [];
+
         foreach ($this->basePackets as $basePacket) {
             $requiredGuids[$basePacket['guid']] = true;
         }
@@ -279,6 +280,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
 
         /** @var array<string, string> $assembledPayloads */
         $assembledPayloads = [];
+
         foreach ($this->basePackets as $basePacket) {
             $guid = $basePacket['guid'];
 
@@ -288,6 +290,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
                 // incomplete extension payloads in real-world files.
                 // CIPA DC-X 008-Translation-2023-E A.2.3.3 (GUID).
                 ($this->appendXmpPacket)($basePacket['packet']);
+
                 continue;
             }
 

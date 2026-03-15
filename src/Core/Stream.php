@@ -133,6 +133,7 @@ final class Stream implements BinaryReadAccessInterface
         }
 
         $data = fread($this->fh, $len);
+
         if ($data === false || strlen($data) !== $len) {
             throw new ParseError('short read', 1013);
         }

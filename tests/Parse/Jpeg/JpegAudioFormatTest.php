@@ -24,6 +24,7 @@ final class JpegAudioFormatTest extends TestCase
     public function enumExistsAndExposesExpectedAudioFormatValues(): void
     {
         $actual = [];
+
         foreach (JpegAudioFormat::cases() as $case) {
             $actual[$case->name] = $case->value;
         }

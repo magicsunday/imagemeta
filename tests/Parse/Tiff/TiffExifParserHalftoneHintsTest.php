@@ -167,6 +167,7 @@ final class TiffExifParserHalftoneHintsTest extends TestCase
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {
                 $ifdEntries .= $prefix;
+
                 continue;
             }
 
@@ -174,6 +175,7 @@ final class TiffExifParserHalftoneHintsTest extends TestCase
 
             if (strlen($payload) <= 4) {
                 $ifdEntries .= $prefix . str_pad($payload, 4, "\0");
+
                 continue;
             }
 

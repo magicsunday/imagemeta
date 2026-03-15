@@ -121,6 +121,7 @@ final readonly class FocalReader
     public function cfaPattern(): ?CfaPattern
     {
         $components = $this->reader->numericList($this->exifIfd, ExifTag::CFA_PATTERN);
+
         if ($components === null || count($components) < 3) {
             return null;
         }
@@ -190,6 +191,7 @@ final readonly class FocalReader
     public function interopIndex(): ?string
     {
         $entry = $this->interopIfd?->get(ExifTag::INTEROPERABILITY_INDEX);
+
         if (!$entry instanceof IfdEntry) {
             return null;
         }

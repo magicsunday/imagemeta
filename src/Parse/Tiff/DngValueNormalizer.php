@@ -236,6 +236,7 @@ final readonly class DngValueNormalizer
         }
 
         $components = [$horizontalRepeatPixelUnit, $verticalRepeatPixelUnit];
+
         for ($index = 0; $index < $expectedPatternValues; ++$index) {
             $components[] = ord($bytes[4 + $index]);
         }

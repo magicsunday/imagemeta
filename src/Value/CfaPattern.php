@@ -57,13 +57,16 @@ final readonly class CfaPattern
         }
 
         $expected = $horizontalRepeatPixelUnit * $verticalRepeatPixelUnit;
+
         if (count($componentIdentifiers) < $expected) {
             return null;
         }
 
         $colors = [];
+
         for ($index = 0; $index < $expected; ++$index) {
             $color = CfaPatternColor::fromExifValue($componentIdentifiers[$index]);
+
             if (!$color instanceof CfaPatternColor) {
                 return null;
             }

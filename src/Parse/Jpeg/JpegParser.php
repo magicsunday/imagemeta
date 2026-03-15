@@ -302,6 +302,7 @@ final class JpegParser implements JpegParserInterface
         }
 
         $this->stream->seek(0);
+
         if ($this->stream->read(2) !== "\xFF\xD8") {
             throw new ParseError('Not a JPEG (missing SOI marker)', 1263);
         }
@@ -494,6 +495,7 @@ final class JpegParser implements JpegParserInterface
     private function handleMpfSegment(string $payload, int $offset): void
     {
         $signatureLength = strlen(self::MPF_SIGNATURE);
+
         if (strlen($payload) <= $signatureLength) {
             throw new ParseError(sprintf('MPF segment at offset %d is too short', $offset), 1280);
         }

@@ -418,6 +418,7 @@ final class IptcIntegrationTest extends TestCase
     private function writeTempFile(string $payload, ?string $extension = null): string
     {
         $path = tempnam(sys_get_temp_dir(), 'meta');
+
         if ($path === false) {
             self::fail('Unable to allocate temporary file');
         }
@@ -427,6 +428,7 @@ final class IptcIntegrationTest extends TestCase
         if ($extension !== null) {
             $suffix = ltrim($extension, '.');
             $target = $path . '.' . $suffix;
+
             if (!rename($path, $target)) {
                 @unlink($path);
                 self::fail('Unable to rename temporary file');

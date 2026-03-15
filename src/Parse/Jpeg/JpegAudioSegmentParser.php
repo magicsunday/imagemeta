@@ -78,6 +78,7 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
         }
 
         $format = JpegAudioFormat::tryFrom($formatCode);
+
         if (!$format instanceof JpegAudioFormat) {
             throw new ParseError(sprintf('Audio segment at offset %d uses unknown format %d', $offset, $formatCode), 1275);
         }
@@ -106,8 +107,10 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
 
         if ($format !== JpegAudioFormat::ImaAdpcm) {
             $bytesPerSample = (int) (($bitDepth / 8) * $channels);
+
             if ($bytesPerSample > 0) {
                 $expectedLength = $sampleCount * $bytesPerSample;
+
                 if ($expectedLength !== strlen($data)) {
                     throw new ParseError(sprintf('Audio segment at offset %d has inconsistent data length', $offset), 1279);
                 }

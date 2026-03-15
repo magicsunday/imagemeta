@@ -178,6 +178,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
         $identifier = substr($payload, 0, 4);
 
         $instanceNumber = Unpack::int('n', substr($payload, 4, 2), 'APP11 instance number');
+
         if ($instanceNumber === 0) {
             throw new ParseError(
                 sprintf('APP11 segment at offset %d has out-of-range instance number %d', $segmentOffset, $instanceNumber),
@@ -186,6 +187,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
         }
 
         $sequenceNumber = Unpack::int('N', substr($payload, 6, 4), 'APP11 sequence number');
+
         if (($sequenceNumber === 0) || ($sequenceNumber > self::MAX_SEQUENCE_NUMBER)) {
             throw new ParseError(
                 sprintf('APP11 segment at offset %d has out-of-range sequence number %d', $segmentOffset, $sequenceNumber),
@@ -220,6 +222,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
             }
 
             $boxLength = Unpack::int('N', substr($payload, $offset, 4), 'JUMBF superbox size');
+
             if ($boxLength < 8) {
                 throw new ParseError(
                     sprintf('APP11 segment at offset %d has invalid JUMBF box length %d', $segmentOffset, $boxLength),
@@ -250,6 +253,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
 
         while ($offset + 8 <= $length) {
             $boxLength = Unpack::int('N', substr($boxStream, $offset, 4), 'JUMBF child box size');
+
             if ($boxLength < 8) {
                 throw new ParseError(
                     sprintf('APP11 segment at offset %d has invalid JUMBF child box length %d', $segmentOffset, $boxLength),
@@ -268,6 +272,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
                 $this->collectXmlPacketsFromBoxes($boxPayload, $segmentOffset);
             } elseif ($boxType === 'xml ' || $boxType === 'bidb') {
                 $candidate = $this->extractXmlPacketCandidate($boxPayload);
+
                 if ($candidate !== null) {
                     ($this->appendXmpPacket)($candidate);
                 }
@@ -303,6 +308,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
         }
 
         $start = strpos($payload, '<');
+
         if ($start === false) {
             return null;
         }

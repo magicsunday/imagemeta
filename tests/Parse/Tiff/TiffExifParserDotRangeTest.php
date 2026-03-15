@@ -154,11 +154,13 @@ final class TiffExifParserDotRangeTest extends TestCase
         array $dotRangeValues,
     ): string {
         $bitsPayload = '';
+
         foreach ($bitsPerSample as $value) {
             $bitsPayload .= pack('v', $value);
         }
 
         $dotRangePayload = '';
+
         foreach ($dotRangeValues as $value) {
             $dotRangePayload .= pack('v', $value);
         }
@@ -205,6 +207,7 @@ final class TiffExifParserDotRangeTest extends TestCase
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {
                 $ifdEntries .= $prefix;
+
                 continue;
             }
 
@@ -212,6 +215,7 @@ final class TiffExifParserDotRangeTest extends TestCase
 
             if (strlen($payload) <= 4) {
                 $ifdEntries .= $prefix . str_pad($payload, 4, "\0");
+
                 continue;
             }
 

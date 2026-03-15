@@ -84,6 +84,7 @@ final class AppleJpegIfdParserTest extends TestCase
         $entryCount = $bigEndian ? pack('n', count($entries)) : pack('v', count($entries));
 
         $entryData = '';
+
         foreach ($entries as $entry) {
             $entryData .= $bigEndian
                 ? pack('n', $entry['tag']) . pack('n', $entry['type']) . pack('N', $entry['count'])

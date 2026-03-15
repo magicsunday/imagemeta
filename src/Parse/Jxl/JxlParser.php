@@ -121,14 +121,17 @@ final readonly class JxlParser implements JxlParserInterface
                 case self::BOX_EXIF:
                     $blob        = $this->boxNavigator->readAll($box->window);
                     $exifBlobs[] = $this->normalizeExifBlob($blob);
+
                     break;
 
                 case self::BOX_XML:
                     $xmpBlobs[] = $this->boxNavigator->readAll($box->window);
+
                     break;
 
                 case self::BOX_HRGM:
                     $hrgmBlob ??= $this->boxNavigator->readAll($box->window);
+
                     break;
             }
         }

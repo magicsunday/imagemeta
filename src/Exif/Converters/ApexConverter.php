@@ -54,6 +54,7 @@ final readonly class ApexConverter
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
         $apex = $this->rationalConverter->toFloat($value);
+
         if ($apex === null) {
             return null;
         }
@@ -75,6 +76,7 @@ final readonly class ApexConverter
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
         $apex = $this->rationalConverter->toFloat($value);
+
         if ($apex === null) {
             return null;
         }
@@ -127,6 +129,7 @@ final readonly class ApexConverter
 
         // For shorter exposures, show as fraction 1/x
         $denominator = round(1 / $seconds);
+
         if ($denominator > 0) {
             return sprintf('1/%d', (int) $denominator);
         }
@@ -187,6 +190,7 @@ final readonly class ApexConverter
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?string {
         $brightness = $this->rationalConverter->toFloat($value);
+
         if ($brightness === null) {
             return null;
         }

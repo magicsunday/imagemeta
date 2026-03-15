@@ -24,6 +24,7 @@ final class QuickTimeDataTypeTest extends TestCase
     public function enumExistsAndExposesExpectedQuickTimeDataTypeValues(): void
     {
         $actual = [];
+
         foreach (QuickTimeDataType::cases() as $case) {
             $actual[$case->name] = $case->value;
         }

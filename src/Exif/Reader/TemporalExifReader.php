@@ -91,6 +91,7 @@ final readonly class TemporalExifReader
         }
 
         $digitized = $this->dateTimeDigitized();
+
         if ($digitized instanceof DateTimeImmutable) {
             return $digitized;
         }
@@ -104,11 +105,13 @@ final readonly class TemporalExifReader
     public function dateTimeOriginalBestEffort(): ?DateTimeImmutable
     {
         $original = $this->dateTimeOriginal();
+
         if ($original instanceof DateTimeImmutable) {
             return $original;
         }
 
         $digitized = $this->dateTimeDigitized();
+
         if ($digitized instanceof DateTimeImmutable) {
             return $digitized;
         }
@@ -225,6 +228,7 @@ final readonly class TemporalExifReader
 
         foreach ($attempts as [$raw, $rawOffset, $subSeconds]) {
             $dateTime = $this->parseExifDateTime($raw, $rawOffset, $subSeconds);
+
             if ($dateTime instanceof DateTimeImmutable) {
                 return $dateTime;
             }
@@ -289,6 +293,7 @@ final readonly class TemporalExifReader
         }
 
         $timeZone = $this->converters->parseOffset($rawOffset);
+
         if (!$timeZone instanceof DateTimeZone) {
             return null;
         }
@@ -298,6 +303,7 @@ final readonly class TemporalExifReader
 
         if (($subSeconds !== null) && ($subSeconds !== '')) {
             $digits = preg_replace('/\D/', '', $subSeconds);
+
             if (($digits !== null) && ($digits !== '')) {
                 $digits = substr($digits, 0, 6);
                 $digits = str_pad($digits, 6, '0');
@@ -313,6 +319,7 @@ final readonly class TemporalExifReader
         }
 
         $lastErrors = DateTimeImmutable::getLastErrors();
+
         if (is_array($lastErrors) && (
             $lastErrors['warning_count'] > 0
             || $lastErrors['error_count'] > 0
@@ -356,12 +363,14 @@ final readonly class TemporalExifReader
     private function resolveWithFallback(Closure $extractor, int $tag): ?string
     {
         $value = $extractor($this->exifIfd, $tag);
+
         if ($value !== null) {
             return $value;
         }
 
         foreach ($this->fallbackIfds->resolve(includeIfd0: true) as $ifd) {
             $candidate = $extractor($ifd, $tag);
+
             if ($candidate !== null) {
                 return $candidate;
             }
@@ -393,6 +402,7 @@ final readonly class TemporalExifReader
 
         if (is_string($value)) {
             $trimmed = rtrim(trim($value), "\0");
+
             if ($trimmed === '') {
                 return null;
             }

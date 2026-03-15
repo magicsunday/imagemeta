@@ -24,6 +24,7 @@ final class TiffFieldTypeTest extends TestCase
     public function enumExistsAndExposesExpectedFieldTypeValues(): void
     {
         $actual = [];
+
         foreach (TiffFieldType::cases() as $case) {
             $actual[$case->name] = $case->value;
         }

@@ -114,6 +114,7 @@ final readonly class PlistTextParser
 
             if ($char === '}') {
                 $cursor->advance();
+
                 break;
             }
 
@@ -259,6 +260,7 @@ final readonly class PlistTextParser
 
             if ($cursor->peek() === ')') {
                 $cursor->advance();
+
                 break;
             }
 
@@ -391,6 +393,7 @@ final readonly class PlistTextParser
 
             if ($char === "\0") {
                 $cursor->advance();
+
                 continue;
             }
 

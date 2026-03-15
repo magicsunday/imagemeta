@@ -182,6 +182,7 @@ final class TiffExifParserFreeSpaceTagsTest extends TestCase
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {
                 $ifdEntries .= $prefix;
+
                 continue;
             }
 
@@ -189,6 +190,7 @@ final class TiffExifParserFreeSpaceTagsTest extends TestCase
 
             if (strlen($payload) <= 4) {
                 $ifdEntries .= $prefix . $payload . str_repeat("\0", 4 - strlen($payload));
+
                 continue;
             }
 
@@ -209,6 +211,7 @@ final class TiffExifParserFreeSpaceTagsTest extends TestCase
             $requiredSize = 0;
 
             $limit = min(count($freeOffsets), count($freeByteCounts));
+
             for ($index = 0; $index < $limit; ++$index) {
                 $requiredSize = max($requiredSize, $freeOffsets[$index] + $freeByteCounts[$index]);
             }

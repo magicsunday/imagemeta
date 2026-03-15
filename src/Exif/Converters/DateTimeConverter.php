@@ -59,6 +59,7 @@ final readonly class DateTimeConverter
         }
 
         $trimmed = trim($offset);
+
         if ($trimmed === '') {
             return null;
         }
@@ -114,6 +115,7 @@ final readonly class DateTimeConverter
         }
 
         $trimmed = trim($value);
+
         if ($trimmed === '') {
             return null;
         }

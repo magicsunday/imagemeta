@@ -144,6 +144,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             }
 
             $chunks = $this->chunks[$index];
+
             if ($chunks === []) {
                 continue;
             }
@@ -227,6 +228,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
         }
 
         $version = ord($payload[$signatureLength + 1]);
+
         if ($version !== 0) {
             throw new ParseError(
                 sprintf(
@@ -288,6 +290,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             $cursor += 5;
 
             $name = $this->parseName($body, $cursor);
+
             if ($name === null) {
                 // Postel's Law: tolerate unterminated names and skip the
                 // malformed entry tail instead of aborting the whole file.
@@ -361,11 +364,13 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
         // Reader tolerance: drop isolated surrogate code units and decode
         // the remaining valid UTF-16LE sequence without emitting notices.
         $sanitizedNameBytes = $this->sanitizeUtf16LeNameBytes($nameBytes);
+
         if ($sanitizedNameBytes === '') {
             return ['', $cursor];
         }
 
         $decoded = iconv('UTF-16LE', 'UTF-8//IGNORE', $sanitizedNameBytes);
+
         if ($decoded === false || $decoded === '') {
             return ['', $cursor];
         }
@@ -392,6 +397,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             if (($codeUnit >= 0xD800) && ($codeUnit <= 0xDBFF)) {
                 if (($length - $cursor) >= 4) {
                     $nextCodeUnit = ord($nameBytes[$cursor + 2]) | (ord($nameBytes[$cursor + 3]) << 8);
+
                     if (($nextCodeUnit >= 0xDC00) && ($nextCodeUnit <= 0xDFFF)) {
                         $sanitized .= substr($nameBytes, $cursor, 4);
                         $cursor += 4;
@@ -440,6 +446,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
 
         $header = $this->decodeStreamDataHeader($body);
         $entry  = $this->validateStreamMetadata($header);
+
         if ($entry === null) {
             // EXIF 3.0 §4.7.3.5 defines the stream-data index as a contents-list
             // entry order reference. Reader tolerance: ignore out-of-bounds
@@ -457,6 +464,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
         $this->validateSequenceMetadata($header, $offset);
 
         $range = $this->validateRangeAndOverlap($header, $entry, $offset);
+
         if ($range === null) {
             return;
         }
@@ -605,6 +613,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
         $this->lastStreamIndex = $index;
 
         $chunkLength = strlen($data);
+
         if ($chunkLength === 0) {
             return null;
         }

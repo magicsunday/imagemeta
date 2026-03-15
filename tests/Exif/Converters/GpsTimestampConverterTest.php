@@ -16,19 +16,15 @@ use MagicSunday\ImageMeta\Exif\Converters\GpsTimestampConverter;
 use MagicSunday\ImageMeta\Exif\Converters\NumericConverter;
 use MagicSunday\ImageMeta\Exif\Converters\RationalConverter;
 use MagicSunday\ImageMeta\Exif\Converters\StringConverter;
-use MagicSunday\ImageMeta\Exif\Model\{
-    ExifRational,
-    ExifRationalList,
-    ExifTag,
-    Ifd,
-    IfdEntry,
-};
-use PHPUnit\Framework\Attributes\{
-    CoversClass,
-    DataProvider,
-    Test,
-    UsesClass,
-};
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
+use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
@@ -205,6 +201,7 @@ final class GpsTimestampConverterTest extends TestCase
     private function buildIfd(string $date, array $timeRationals): Ifd
     {
         $timeValues = [];
+
         foreach ($timeRationals as [$num, $den]) {
             $timeValues[] = new ExifRational($num, $den);
         }

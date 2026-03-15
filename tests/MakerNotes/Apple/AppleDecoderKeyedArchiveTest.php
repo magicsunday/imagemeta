@@ -300,6 +300,7 @@ final class BinaryPlistEncoder
         $nodes         = $this->nodes;
         $objectCount   = count($nodes);
         $objectRefSize = 1;
+
         while ($objectCount > (1 << (8 * $objectRefSize))) {
             ++$objectRefSize;
         }
@@ -307,12 +308,14 @@ final class BinaryPlistEncoder
         $header  = 'bplist00';
         $objects = '';
         $offsets = [];
+
         foreach ($nodes as $index => $node) {
             $offsets[$index] = strlen($header) + strlen($objects);
             $objects .= $this->encodeNode($node, $objectRefSize);
         }
 
         $maxOffset = 0;
+
         foreach ($offsets as $offset) {
             if ($offset > $maxOffset) {
                 $maxOffset = $offset;
@@ -320,11 +323,13 @@ final class BinaryPlistEncoder
         }
 
         $offsetIntSize = 1;
+
         while ($maxOffset >= (1 << (8 * $offsetIntSize))) {
             ++$offsetIntSize;
         }
 
         $offsetTable = '';
+
         foreach ($offsets as $offset) {
             $offsetTable .= $this->packInt($offset, $offsetIntSize);
         }
@@ -377,6 +382,7 @@ final class BinaryPlistEncoder
     private function encodeInteger(int $value): string
     {
         $size = 1;
+
         if ($value > 0xFF) {
             $size = 2;
         }
@@ -430,6 +436,7 @@ final class BinaryPlistEncoder
         [$marker, $lengthBytes] = $this->encodeLength($count, 0xA0);
 
         $references = '';
+
         foreach ($children as $child) {
             $references .= $this->packInt($child, $objectRefSize);
         }
@@ -446,6 +453,7 @@ final class BinaryPlistEncoder
         [$marker, $lengthBytes] = $this->encodeLength($count, 0xD0);
 
         $references = '';
+
         foreach ($dictionary['keys'] as $keyRef) {
             $references .= $this->packInt($keyRef, $objectRefSize);
         }
@@ -476,6 +484,7 @@ final class BinaryPlistEncoder
     private function extractBool(BinaryPlistNode $node): bool
     {
         $value = $node->value;
+
         if (!is_bool($value)) {
             throw new LogicException('Expected boolean plist node value, got ' . get_debug_type($value));
         }
@@ -486,6 +495,7 @@ final class BinaryPlistEncoder
     private function extractInt(BinaryPlistNode $node): int
     {
         $value = $node->value;
+
         if (!is_int($value)) {
             throw new LogicException('Expected integer plist node value, got ' . get_debug_type($value));
         }
@@ -496,6 +506,7 @@ final class BinaryPlistEncoder
     private function extractFloat(BinaryPlistNode $node): float
     {
         $value = $node->value;
+
         if (!is_float($value)) {
             throw new LogicException('Expected float plist node value, got ' . get_debug_type($value));
         }
@@ -506,6 +517,7 @@ final class BinaryPlistEncoder
     private function extractString(BinaryPlistNode $node): string
     {
         $value = $node->value;
+
         if (!is_string($value)) {
             throw new LogicException('Expected string plist node value, got ' . get_debug_type($value));
         }
@@ -519,6 +531,7 @@ final class BinaryPlistEncoder
     private function extractReferenceList(BinaryPlistNode $node): array
     {
         $value = $node->value;
+
         if (!is_array($value) || !array_is_list($value)) {
             throw new LogicException('Expected reference list plist node value, got ' . get_debug_type($value));
         }
@@ -539,6 +552,7 @@ final class BinaryPlistEncoder
     private function extractDictionary(BinaryPlistNode $node): array
     {
         $value = $node->value;
+
         if (!is_array($value) || !isset($value['keys'], $value['values'])) {
             throw new LogicException('Expected dictionary plist node value, got ' . get_debug_type($value));
         }
@@ -605,6 +619,7 @@ final readonly class BinaryPlistArrayValue implements BinaryPlistValue
     public function collect(BinaryPlistEncoder $encoder): int
     {
         $references = [];
+
         foreach ($this->values as $value) {
             $references[] = $encoder->collectValue($value);
         }

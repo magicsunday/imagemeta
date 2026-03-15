@@ -91,10 +91,13 @@ final class ParseErrorCodeUniquenessTest extends TestCase
             }
 
             $j = $i + 1;
+
             while ($j < $n) {
                 $t = $tokens[$j];
+
                 if (is_array($t) && in_array($t[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
                     ++$j;
+
                     continue;
                 }
 
@@ -107,17 +110,21 @@ final class ParseErrorCodeUniquenessTest extends TestCase
 
             $nameParts = [];
             $k         = $j;
+
             while ($k < $n) {
                 $t = $tokens[$k];
+
                 if (is_array($t)) {
                     if (in_array($t[0], [T_STRING, T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED, T_NS_SEPARATOR], true)) {
                         $nameParts[] = $t[1];
                         ++$k;
+
                         continue;
                     }
 
                     if (in_array($t[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
                         ++$k;
+
                         continue;
                     }
                 }
@@ -130,14 +137,17 @@ final class ParseErrorCodeUniquenessTest extends TestCase
             }
 
             $name = ltrim(implode('', $nameParts), '\\');
+
             if (strtolower(substr($name, -10)) !== 'parseerror') {
                 continue;
             }
 
             while ($k < $n) {
                 $t = $tokens[$k];
+
                 if (is_array($t) && in_array($t[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
                     ++$k;
+
                     continue;
                 }
 
@@ -163,11 +173,13 @@ final class ParseErrorCodeUniquenessTest extends TestCase
 
                 if ($text === '(') {
                     ++$depth;
+
                     continue;
                 }
 
                 if ($text === ')') {
                     --$depth;
+
                     if ($depth === 0) {
                         break;
                     }
@@ -175,6 +187,7 @@ final class ParseErrorCodeUniquenessTest extends TestCase
 
                 if (($depth === 1) && ($text === ',')) {
                     ++$argIndex;
+
                     continue;
                 }
 
@@ -196,11 +209,13 @@ final class ParseErrorCodeUniquenessTest extends TestCase
             }
 
             $argText = '';
+
             foreach ($argTokens as $tt) {
                 $argText .= is_array($tt) ? $tt[1] : $tt;
             }
 
             $trimmed = trim($argText);
+
             if (preg_match('/^\d+$/', $trimmed) !== 1) {
                 continue;
             }
@@ -227,6 +242,7 @@ final class ParseErrorCodeUniquenessTest extends TestCase
 
             foreach ($this->parseErrorCodeLiterals($filePath) as $hit) {
                 $code = $hit['code'];
+
                 if (!isset($locationsByCode[$code])) {
                     $locationsByCode[$code] = [];
                 }

@@ -653,6 +653,7 @@ final class MetadataReaderTest extends TestCase
 
         MetadataReaderMimeProbeFailureStreamWrapper::configure($jpeg);
         $registered = stream_wrapper_register($scheme, MetadataReaderMimeProbeFailureStreamWrapper::class);
+
         if (!$registered) {
             self::fail('Unable to register mime probe failure stream wrapper');
         }
@@ -705,6 +706,7 @@ final class MetadataReaderTest extends TestCase
 
         MetadataReaderDigestSwapStreamWrapper::configure($jpegA, $jpegB);
         $registered = stream_wrapper_register($scheme, MetadataReaderDigestSwapStreamWrapper::class);
+
         if (!$registered) {
             self::fail('Unable to register swap stream wrapper');
         }
@@ -965,6 +967,7 @@ final class MetadataReaderTest extends TestCase
 
         MetadataReaderRejectWholeReadStreamWrapper::configure($payload);
         $registered = stream_wrapper_register($scheme, MetadataReaderRejectWholeReadStreamWrapper::class);
+
         if (!$registered) {
             self::fail('Unable to register TIFF whole-read guard stream wrapper');
         }
@@ -1146,6 +1149,7 @@ final class MetadataReaderTest extends TestCase
         $path   = $scheme . '://fixture.jpg';
 
         $registered = stream_wrapper_register($scheme, MetadataReaderStatFailureStreamWrapper::class);
+
         if (!$registered) {
             self::fail('Unable to register stat failure stream wrapper');
         }
@@ -1256,6 +1260,7 @@ final class MetadataReaderTest extends TestCase
     private function fixturePath(string $relativePath): string
     {
         $path = __DIR__ . '/../../' . ltrim($relativePath, '/');
+
         if (!is_file($path)) {
             self::markTestSkipped(sprintf('Required fixture missing: %s', $relativePath));
         }
@@ -1274,6 +1279,7 @@ final class MetadataReaderTest extends TestCase
     private function writeTempFile(string $payload, ?string $extension = null): string
     {
         $path = tempnam(sys_get_temp_dir(), 'meta');
+
         if ($path === false) {
             self::fail('Unable to allocate temporary file');
         }
@@ -1283,6 +1289,7 @@ final class MetadataReaderTest extends TestCase
         if ($extension !== null) {
             $suffix = ltrim($extension, '.');
             $target = $path . '.' . $suffix;
+
             if (!rename($path, $target)) {
                 @unlink($path);
                 self::fail('Unable to rename temporary file');

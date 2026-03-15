@@ -178,6 +178,7 @@ final readonly class DngCalibrationValidator
 
         foreach (self::DNG_CALIBRATION_ILLUMINANT_TAGS as $tag) {
             $entry = $ifd->get($tag);
+
             if (!$entry instanceof IfdEntry) {
                 continue;
             }
@@ -225,6 +226,7 @@ final readonly class DngCalibrationValidator
     {
         foreach (self::DNG_ILLUMINANT_DATA_DEPS as $illuminantTag => $dataTag) {
             $entry = $ifd->get($illuminantTag);
+
             if (!$entry instanceof IfdEntry) {
                 continue;
             }
@@ -284,6 +286,7 @@ final readonly class DngCalibrationValidator
         // All-or-none tag sets
         foreach (self::DNG_TRIPLE_ALL_OR_NONE_SETS as $set) {
             $present = 0;
+
             foreach ($set as $tag) {
                 if ($ifd->get($tag) instanceof IfdEntry) {
                     ++$present;

@@ -199,6 +199,7 @@ final class TiffExifParserSubIfdTest extends TestCase
         // Build SubIFD blobs — each has 1 entry (ImageWidth) + next=0
         for ($i = 0; $i < $subIfdCount; ++$i) {
             $offset = $subIfdDataStart;
+
             foreach ($subIfdBlobs as $blob) {
                 $offset += strlen($blob);
             }
@@ -236,6 +237,7 @@ final class TiffExifParserSubIfdTest extends TestCase
 
         // External SubIFD offset array
         $externalOffsets = '';
+
         if ($needsExternal) {
             foreach ($subIfdOffsets as $offset) {
                 $externalOffsets .= pack('V', $offset);

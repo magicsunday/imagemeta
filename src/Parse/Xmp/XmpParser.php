@@ -53,11 +53,13 @@ final class XmpParser implements XmpParserInterface
     public function parse(string $xml): XmpDocument
     {
         $xmlOptions = LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING;
+
         if (defined('LIBXML_NO_XXE')) {
             $xmlOptions |= LIBXML_NO_XXE;
         }
 
         $reader = XMLReader::XML($xml, null, $xmlOptions);
+
         if (!$reader instanceof XMLReader) {
             return new XmpDocument([], [], []);
         }
@@ -72,16 +74,19 @@ final class XmpParser implements XmpParserInterface
             switch ($reader->nodeType) {
                 case XMLReader::ELEMENT:
                     $this->handleElementNode($reader, $state);
+
                     break;
 
                 case XMLReader::TEXT:
                 case XMLReader::SIGNIFICANT_WHITESPACE:
                 case XMLReader::CDATA:
                     $this->handleTextLikeNode($reader, $state);
+
                     break;
 
                 case XMLReader::END_ELEMENT:
                     $this->handleEndElementNode($state, $reader->depth);
+
                     break;
             }
         }
@@ -97,6 +102,7 @@ final class XmpParser implements XmpParserInterface
     private function handleElementNode(XMLReader $reader, XmpParseState $state): void
     {
         $depth = $reader->depth;
+
         if ($depth > self::MAX_XML_DEPTH) {
             throw new ParseError(
                 sprintf('XMP XML nesting depth %d exceeds maximum allowed %d', $depth, self::MAX_XML_DEPTH),
@@ -130,6 +136,7 @@ final class XmpParser implements XmpParserInterface
             for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
                 if (isset($state->listBuffers[$parentDepth])) {
                     $state->listKinds[$parentDepth] = $localName;
+
                     break;
                 }
             }
@@ -171,6 +178,7 @@ final class XmpParser implements XmpParserInterface
     private function handleTextLikeNode(XMLReader $reader, XmpParseState $state): void
     {
         $depth = $reader->depth - 1;
+
         if (($depth >= 0) && array_key_exists($depth, $state->textBuffers)) {
             $state->textBuffers[$depth] .= $reader->value;
         }
@@ -182,6 +190,7 @@ final class XmpParser implements XmpParserInterface
     private function handleEndElementNode(XmpParseState $state, int $depth): void
     {
         $info = $state->elementPath[$depth] ?? null;
+
         if ($info === null) {
             return;
         }
@@ -212,6 +221,7 @@ final class XmpParser implements XmpParserInterface
         $lang             = $state->languageBuffers[$depth] ?? '';
         $fields           = $state->structuredBuffers[$depth] ?? [];
         $parentListBuffer = $this->findParentListBuffer($state, $depth, $lang);
+
         if ($parentListBuffer === null) {
             return;
         }
@@ -244,8 +254,10 @@ final class XmpParser implements XmpParserInterface
     {
         // XMP Specification Part 1 §7.9.3: Qualified properties encode their primary value via rdf:value.
         $text = trim($state->textBuffers[$depth] ?? '');
+
         for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
             $parentInfo = $state->elementPath[$parentDepth] ?? null;
+
             if ($parentInfo === null) {
                 continue;
             }
@@ -254,11 +266,13 @@ final class XmpParser implements XmpParserInterface
 
             if (($parentNamespace === self::RDF_NAMESPACE) && ($parentLocalName === 'li')) {
                 $state->textBuffers[$parentDepth] = $text;
+
                 break;
             }
 
             if ($parentNamespace !== self::RDF_NAMESPACE) {
                 $state->textBuffers[$parentDepth] = $text;
+
                 break;
             }
         }
@@ -373,6 +387,7 @@ final class XmpParser implements XmpParserInterface
         do {
             if (($reader->namespaceURI === self::RDF_NAMESPACE) && ($reader->localName === 'parseType') && (trim($reader->value) === 'Resource')) {
                 $isResource = true;
+
                 break;
             }
         } while ($reader->moveToNextAttribute());
@@ -396,6 +411,7 @@ final class XmpParser implements XmpParserInterface
         $containerKind = XmpContainer::fromRdfContainerName($state->listKinds[$depth] ?? '');
 
         $parentStructuredDepth = $this->findStructuredParentDepth($depth - 1, $state);
+
         if ($parentStructuredDepth !== null) {
             $this->appendStructuredFieldValue($state, $parentStructuredDepth, $key, $value);
 
@@ -449,6 +465,7 @@ final class XmpParser implements XmpParserInterface
             // XMP §7.9.3: When rdf:value promoted text to the parent, include it
             // in the structured value so qualified-property semantics are preserved.
             $trimmedText = trim($text);
+
             if ($trimmedText !== '') {
                 $rdfValueKey          = sprintf('{%s}value', self::RDF_NAMESPACE);
                 $fields[$rdfValueKey] = $trimmedText;
@@ -552,6 +569,7 @@ final class XmpParser implements XmpParserInterface
         do {
             if (($reader->namespaceURI === 'http://www.w3.org/XML/1998/namespace') && ($reader->localName === 'lang')) {
                 $language = $reader->value;
+
                 break;
             }
         } while ($reader->moveToNextAttribute());

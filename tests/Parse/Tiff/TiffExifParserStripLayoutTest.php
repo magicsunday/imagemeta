@@ -337,8 +337,10 @@ final class TiffExifParserStripLayoutTest extends TestCase
 
         if ($padToStorageRanges) {
             $requiredLength = 0;
+
             foreach ($stripOffsets as $index => $offset) {
                 $byteCount = $stripByteCounts[$index] ?? 0;
+
                 if ($offset < 0) {
                     continue;
                 }

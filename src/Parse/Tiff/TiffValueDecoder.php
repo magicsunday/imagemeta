@@ -203,6 +203,7 @@ final readonly class TiffValueDecoder
         // RATIONAL / SRATIONAL
         if ($type === TiffFieldType::Rational->value || $type === TiffFieldType::SRational->value) {
             $rationalValues = [];
+
             for ($i = 0; $i < $count; ++$i) {
                 $num              = $this->binaryReader->read32FromBytes($bytes, $i * 8, $type === TiffFieldType::SRational->value);
                 $den              = $this->binaryReader->read32FromBytes($bytes, $i * 8 + 4, $type === TiffFieldType::SRational->value);
@@ -216,6 +217,7 @@ final readonly class TiffValueDecoder
 
         $vals   = [];
         $cursor = 0;
+
         for ($i = 0; $i < $count; ++$i) {
             $componentBytes = $this->sliceBytes($bytes, $cursor, $componentSize);
             $vals[]         = match ($type) {
@@ -254,6 +256,7 @@ final readonly class TiffValueDecoder
         if ($value instanceof ExifNumericList) {
             $converted       = [];
             $needsConversion = false;
+
             foreach ($value->values as $component) {
                 if ($component instanceof UInt64) {
                     $converted[]     = $this->normalizeScalarUInt64($tag, $component);

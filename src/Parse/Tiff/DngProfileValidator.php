@@ -274,6 +274,7 @@ final readonly class DngProfileValidator
     {
         foreach (self::ILLUMINANT_DATA_TAGS as $tag) {
             $entry = $ifd->get($tag);
+
             if (!$entry instanceof IfdEntry) {
                 continue;
             }
@@ -999,6 +1000,7 @@ final readonly class DngProfileValidator
     public function validateDngExtraCameraProfiles(Ifd $ifd): void
     {
         $entry = $ifd->get(DngTag::EXTRA_CAMERA_PROFILES);
+
         if (!$entry instanceof IfdEntry) {
             return;
         }
@@ -1006,6 +1008,7 @@ final readonly class DngProfileValidator
         $this->validateExtraCameraProfilesEntry($entry);
 
         $profileOffsets = $this->extractDngExtraCameraProfileOffsets($entry);
+
         if (count($profileOffsets) !== $entry->count) {
             throw new ParseError(
                 'ExtraCameraProfiles count does not match the number of decoded offsets.',
@@ -1064,6 +1067,7 @@ final readonly class DngProfileValidator
         $buffer->seek($cursorBeforeRead);
 
         $byteOrderMarker = substr($profileHeader, 0, 2);
+
         if ($byteOrderMarker === 'II') {
             $profileIsLittleEndian = true;
         } elseif ($byteOrderMarker === 'MM') {
@@ -1082,6 +1086,7 @@ final readonly class DngProfileValidator
 
         $magicFormat = $profileIsLittleEndian ? 'v' : 'n';
         $magicValue  = Unpack::int($magicFormat, substr($profileHeader, 2, 2), 'ExtraCameraProfiles magic');
+
         if ($magicValue !== 0x4352) {
             throw new ParseError(
                 sprintf(
@@ -1112,6 +1117,7 @@ final readonly class DngProfileValidator
         }
 
         $absoluteInnerIfdOffset = $profileOffset + $innerIfdOffset;
+
         if ($absoluteInnerIfdOffset > ($blobSize - 2)) {
             throw new ParseError(
                 sprintf(

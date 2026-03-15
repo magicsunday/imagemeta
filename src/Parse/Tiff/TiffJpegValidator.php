@@ -86,12 +86,14 @@ final readonly class TiffJpegValidator
         [$jpegProc, $samplesPerPixel] = $this->resolveJpegProcAndSamplesPerPixel($ifd);
 
         $losslessPredictorsEntry = $ifd->get(TiffTag::JPEG_LOSSLESS_PREDICTORS);
+
         if ($losslessPredictorsEntry instanceof IfdEntry) {
             if (($losslessPredictorsEntry->type !== TiffConst::TYPE_SHORT) || ($losslessPredictorsEntry->count !== $samplesPerPixel)) {
                 throw new ParseError('JPEGLosslessPredictors must be SHORT[SamplesPerPixel].', 1836);
             }
 
             $predictorValues = $this->support->extractIntegerTagComponents($losslessPredictorsEntry, 'JPEGLosslessPredictors');
+
             foreach ($predictorValues as $componentIndex => $predictorValue) {
                 if (($predictorValue >= 1) && ($predictorValue <= 7)) {
                     continue;
@@ -109,6 +111,7 @@ final readonly class TiffJpegValidator
         }
 
         $pointTransformsEntry = $ifd->get(TiffTag::JPEG_POINT_TRANSFORMS);
+
         if ($pointTransformsEntry instanceof IfdEntry) {
             if (($pointTransformsEntry->type !== TiffConst::TYPE_SHORT) || ($pointTransformsEntry->count !== $samplesPerPixel)) {
                 throw new ParseError('JPEGPointTransforms must be SHORT[SamplesPerPixel].', 1838);
@@ -143,6 +146,7 @@ final readonly class TiffJpegValidator
     public function validateJpegRestartIntervalTag(Ifd $ifd): void
     {
         $restartIntervalEntry = $ifd->get(TiffTag::JPEG_RESTART_INTERVAL);
+
         if (!$restartIntervalEntry instanceof IfdEntry) {
             return;
         }
@@ -162,6 +166,7 @@ final readonly class TiffJpegValidator
 
         // JPEGProc may be absent when Compression=6 — see validateJpegProcTag().
         $jpegProcEntry = $ifd->get(TiffTag::JPEG_PROC);
+
         if (($jpegProcEntry instanceof IfdEntry) && !in_array($jpegProcEntry->value, [1, 14], true)) {
             throw new ParseError('JPEGRestartInterval requires valid JPEGProc metadata.', 1853);
         }

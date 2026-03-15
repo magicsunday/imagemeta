@@ -101,14 +101,17 @@ final readonly class NumericConverter
             }
 
             $ints = [];
+
             foreach ($value->values as $component) {
                 if ($component instanceof UInt64) {
                     $intComponent = $this->uint64ToInt($component, 'EXIF numeric component');
+
                     if ($intComponent === null) {
                         return null;
                     }
 
                     $ints[] = $intComponent;
+
                     continue;
                 }
 
@@ -124,8 +127,10 @@ final readonly class NumericConverter
             }
 
             $ints = [];
+
             foreach ($value->values as $component) {
                 $numeric = $this->rationalToFloat instanceof Closure ? ($this->rationalToFloat)($component) : null;
+
                 if ($numeric === null || fmod($numeric, 1.0) !== 0.0) {
                     return null;
                 }
@@ -138,6 +143,7 @@ final readonly class NumericConverter
 
         if ($value instanceof ExifRational) {
             $numeric = $this->rationalToFloat instanceof Closure ? ($this->rationalToFloat)($value) : null;
+
             if ($numeric === null || fmod($numeric, 1.0) !== 0.0) {
                 return null;
             }
@@ -147,6 +153,7 @@ final readonly class NumericConverter
 
         if ($value instanceof UInt64) {
             $intValue = $this->uint64ToInt($value, 'EXIF numeric value');
+
             if ($intValue === null) {
                 return null;
             }
@@ -160,14 +167,17 @@ final readonly class NumericConverter
             }
 
             $ints = [];
+
             foreach ($value as $component) {
                 if ($component instanceof UInt64) {
                     $intComponent = $this->uint64ToInt($component, 'EXIF numeric array component');
+
                     if ($intComponent === null) {
                         return null;
                     }
 
                     $ints[] = $intComponent;
+
                     continue;
                 }
 
@@ -199,6 +209,7 @@ final readonly class NumericConverter
 
         $length = strlen($value);
         $ints   = [];
+
         for ($i = 0; $i < $length; ++$i) {
             $ints[] = ord($value[$i]);
         }

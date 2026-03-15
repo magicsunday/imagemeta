@@ -71,6 +71,7 @@ final class NoMixedTypeUsageInSrcTest extends TestCase
     private function mixedTypeViolations(string $filePath, string $repoRoot): array
     {
         $contents = file_get_contents($filePath);
+
         if (!is_string($contents)) {
             return [];
         }
@@ -90,6 +91,7 @@ final class NoMixedTypeUsageInSrcTest extends TestCase
 
             if (($id === T_STRING) && (strtolower($text) === 'mixed')) {
                 $violations[] = $relative . ':' . $line . ' runtime type declaration';
+
                 continue;
             }
 
@@ -122,6 +124,7 @@ final class NoMixedTypeUsageInSrcTest extends TestCase
         $srcRoot  = $repoRoot . '/src';
 
         $violations = [];
+
         foreach ($this->phpSourceFiles($srcRoot) as $filePath) {
             foreach ($this->mixedTypeViolations($filePath, $repoRoot) as $violation) {
                 $violations[] = $violation;

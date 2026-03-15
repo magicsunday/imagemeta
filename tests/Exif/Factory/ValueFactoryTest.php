@@ -436,6 +436,7 @@ XML;
     {
         $nameLength = strlen($name);
         $nameField  = chr($nameLength) . $name;
+
         if ((strlen($nameField) % 2) !== 0) {
             $nameField .= "\0";
         }

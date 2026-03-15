@@ -332,6 +332,7 @@ final class IptcParserTest extends TestCase
     ): string {
         $nameLength = strlen($name);
         $nameField  = chr($nameLength) . $name;
+
         if ((strlen($nameField) % 2) !== 0) {
             $nameField .= $namePaddingByte;
         }
@@ -359,6 +360,7 @@ final class IptcParserTest extends TestCase
         $length           = strlen($value);
         $lengthField      = 0x8000 | $lengthBytes;
         $lengthBytesValue = '';
+
         for ($index = $lengthBytes - 1; $index >= 0; --$index) {
             $shift = $index * 8;
             $lengthBytesValue .= chr(($length >> $shift) & 0xFF);

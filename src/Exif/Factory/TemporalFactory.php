@@ -95,6 +95,7 @@ final readonly class TemporalFactory
         [$original, $tz, $subOriginalRaw] = $this->originalTimestampComponents($exifDocument);
 
         $originalWithTz = $original;
+
         if (($original instanceof DateTimeImmutable) && ($tz instanceof DateTimeZone)) {
             $originalWithTz = $original->setTimezone($tz);
         }
@@ -243,6 +244,7 @@ final readonly class TemporalFactory
     {
         foreach ($values as $value) {
             $parsed = $this->parseFlexibleDate($value);
+
             if ($parsed instanceof DateTimeImmutable) {
                 return $parsed;
             }

@@ -48,6 +48,7 @@ final readonly class QuickTimeLookup
 
         foreach ($keys as $key) {
             $value = $this->quickTime->stringValue($key);
+
             if (($value !== null) && ($value !== '')) {
                 return $value;
             }
@@ -75,6 +76,7 @@ final readonly class QuickTimeLookup
 
         foreach ($keys as $key) {
             $value = $this->quickTime->floatValue($key);
+
             if ($value !== null) {
                 return $value;
             }
@@ -102,6 +104,7 @@ final readonly class QuickTimeLookup
 
         foreach ($keys as $key) {
             $value = $this->quickTime->intValue($key);
+
             if ($value !== null) {
                 return $value;
             }
@@ -129,6 +132,7 @@ final readonly class QuickTimeLookup
 
         foreach ($keys as $key) {
             $value = $this->quickTime->boolValue($key);
+
             if ($value !== null) {
                 return $value;
             }

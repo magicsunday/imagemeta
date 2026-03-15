@@ -106,6 +106,7 @@ final readonly class IfdEntry
         }
 
         $rationals = [];
+
         foreach ($value as $component) {
             $pair = $this->extractRationalPair($component);
 

@@ -11,15 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
-use MagicSunday\ImageMeta\Exif\Model\{
-    ExifNumericList,
-    ExifRational,
-    ExifRationalList,
-    ExifTag,
-    Ifd,
-    IfdEntry,
-    IfdValueReader,
-};
+use MagicSunday\ImageMeta\Exif\Model\{ExifNumericList, ExifRational, ExifRationalList, ExifTag, Ifd, IfdEntry, IfdValueReader};
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
 use function count;

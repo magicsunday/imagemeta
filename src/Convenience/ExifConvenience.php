@@ -83,6 +83,7 @@ final readonly class ExifConvenience
         $lensLabel = $this->normalize($lens?->lensModel);
 
         $parts = [];
+
         if ($cameraLabel !== null) {
             $parts[] = $cameraLabel;
         }
@@ -106,26 +107,31 @@ final readonly class ExifConvenience
         $parts = [];
 
         $seconds = $exposure->settings?->exposureTimeSec;
+
         if ($seconds !== null) {
             $parts[] = $this->formatExposureTime($seconds);
         }
 
         $fNumber = $exposure->settings?->fNumber;
+
         if ($fNumber !== null) {
             $parts[] = $this->formatFNumber($fNumber);
         }
 
         $iso = $exposure->settings?->iso;
+
         if ($iso !== null) {
             $parts[] = $this->formatIso($iso);
         }
 
         $focalLength = $lens?->focalLengthMm;
+
         if ($focalLength !== null) {
             $parts[] = $this->formatFocalLength($focalLength);
         }
 
         $equivalent = $derived?->equivalent35mm;
+
         if (($equivalent !== null) && !$this->containsEquivalent($parts, $equivalent)) {
             $parts[] = sprintf('%d mm eq', $equivalent);
         }
@@ -174,6 +180,7 @@ final readonly class ExifConvenience
 
         if ($includeAltitude) {
             $altitude = $this->resolveAltitude($gps);
+
             if ($altitude !== null) {
                 $result .= ' (' . $this->formatNumber($altitude, 1) . ' m)';
             }
@@ -261,8 +268,10 @@ final readonly class ExifConvenience
         }
 
         $denominator = (int) round(1.0 / $seconds);
+
         if ($denominator > 0) {
             $approximation = 1.0 / $denominator;
+
             if (abs($approximation - $seconds) < 0.0001) {
                 return '1/' . $denominator . ' s';
             }
@@ -373,6 +382,7 @@ final readonly class ExifConvenience
     private function startsWithCaseInsensitive(string $haystack, string $needle): bool
     {
         $needleLength = strlen($needle);
+
         if ($needleLength === 0) {
             return true;
         }
@@ -428,11 +438,13 @@ final readonly class ExifConvenience
     private function resolveAltitude(Gps $gps): ?float
     {
         $position = $gps->position;
+
         if (!$position instanceof GpsPosition) {
             return null;
         }
 
         $altitude = $position->altitude;
+
         if ($altitude === null) {
             return null;
         }

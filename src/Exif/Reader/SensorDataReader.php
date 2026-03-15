@@ -127,6 +127,7 @@ final readonly class SensorDataReader
     public function oecf(): ?Oecf
     {
         $payload = $this->oecfPayload();
+
         if ($payload === null) {
             return null;
         }
@@ -173,12 +174,14 @@ final readonly class SensorDataReader
         $offset        = 0;
 
         $summary = [];
+
         for ($i = 0; $i < 8; ++$i) {
             if (($offset + IfdValueReader::RATIONAL_BYTE_LENGTH) > $payloadLength) {
                 return null;
             }
 
             $summaryValue = $this->decodeRationalFromBytes(substr($payload, $offset, IfdValueReader::RATIONAL_BYTE_LENGTH));
+
             if ($summaryValue === null) {
                 return null;
             }
@@ -188,6 +191,7 @@ final readonly class SensorDataReader
         }
 
         $sequenceCount = $this->decodeShort($payload, $offset);
+
         if ($sequenceCount === null) {
             return null;
         }
@@ -198,6 +202,7 @@ final readonly class SensorDataReader
 
         for ($i = 0; $i < $sequenceCount; ++$i) {
             $imageCount = $this->decodeShort($payload, $offset);
+
             if ($imageCount === null) {
                 return null;
             }
@@ -205,12 +210,14 @@ final readonly class SensorDataReader
             $offset += IfdValueReader::SHORT_BYTE_LENGTH;
 
             $sequence = [];
+
             for ($image = 0; $image < $imageCount; ++$image) {
                 if (($offset + IfdValueReader::RATIONAL_BYTE_LENGTH) > $payloadLength) {
                     return null;
                 }
 
                 $value = $this->decodeRationalFromBytes(substr($payload, $offset, IfdValueReader::RATIONAL_BYTE_LENGTH));
+
                 if ($value === null) {
                     return null;
                 }

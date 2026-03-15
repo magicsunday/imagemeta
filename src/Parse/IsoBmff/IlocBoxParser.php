@@ -107,6 +107,7 @@ final readonly class IlocBoxParser
             $itemId = $version < 2 ? $win->readU16BE() : $win->readU32BE();
 
             $constructionMethod = ConstructionMethod::FileOffset;
+
             if ($version === 1 || $version === 2) {
                 // ISO/IEC 14496-12 §8.11.3: 12-bit reserved (must be 0) followed by 4-bit construction_method
                 $tmp = $win->readU16BE();
@@ -134,6 +135,7 @@ final readonly class IlocBoxParser
 
             for ($j = 0; $j < $extentCount; ++$j) {
                 $extentIndex = null;
+
                 if ($indexSize > 0) {
                     $extentIndex = $this->boxNavigator->readUInt($win, $indexSize);
 
@@ -238,6 +240,7 @@ final readonly class IlocBoxParser
 
         // Reject duplicate item_ID values across infe entries
         $seenIds = [];
+
         foreach ($items as $item) {
             if (isset($seenIds[$item['id']])) {
                 throw new ParseError(sprintf('duplicate infe item_ID %d', $item['id']), 1415);
@@ -580,6 +583,7 @@ final readonly class IlocBoxParser
         // v2: 4 header + 2 item_ID + 2 protection_index + 4 item_type = 12
         // v3: 4 header + 4 item_ID + 2 protection_index + 4 item_type = 14
         $minSize = $version === 3 ? 14 : 12;
+
         if ($infe->contentSize < $minSize) {
             throw new ParseError('infe box truncated', 1201);
         }
@@ -626,6 +630,7 @@ final readonly class IlocBoxParser
         // ISO 14496-12: if item_type == 'mime' and 4+ bytes remain after the
         // NUL-terminated strings, a 4-byte extension_type follows
         $extensionType = null;
+
         if (($itemType === 'mime') && ((strlen($payload) - $offset) >= 4)) {
             $extensionType = substr($payload, $offset, 4);
         }
@@ -675,12 +680,14 @@ final readonly class IlocBoxParser
 
         $remaining = $entry->contentSize - $win->tell();
         $expected  = $referenceCount * $idSize;
+
         if ($remaining < $expected) {
             throw new ParseError('iref entry truncated', 1219);
         }
 
         $relation   = $this->boxNavigator->normalizeFourcc($entry->type);
         $references = [];
+
         for ($i = 0; $i < $referenceCount; ++$i) {
             $toItemId     = $idSize === 2 ? $win->readU16BE() : $win->readU32BE();
             $references[] = new IsoBmffItemReference($relation, $toItemId);
@@ -732,6 +739,7 @@ final readonly class IlocBoxParser
         }
 
         $nul = strpos($payload, "\0", $offset);
+
         if ($nul === false) {
             $value  = substr($payload, $offset);
             $offset = strlen($payload);

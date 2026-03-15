@@ -227,6 +227,7 @@ final readonly class GpsConverter
         // Differential
         $diffEntry = $gps->get(ExifTag::GPS_DIFFERENTIAL);
         $diffValue = $diffEntry?->value;
+
         if ($diffValue instanceof ExifNumericList) {
             $diffValue = $diffValue->values[0] ?? null;
         }
@@ -269,6 +270,7 @@ final readonly class GpsConverter
 
         if ($value instanceof ExifNumericList) {
             $components = [];
+
             foreach ($value->values as $component) {
                 if ($component instanceof UInt64) {
                     $components[] = $component->toInt('GPSVersionID component');
@@ -278,6 +280,7 @@ final readonly class GpsConverter
             }
 
             $normalized = implode('.', $components);
+
             if ($normalized === '') {
                 $normalized = self::DEFAULT_GPS_VERSION;
             }
@@ -290,6 +293,7 @@ final readonly class GpsConverter
 
         if (is_string($value)) {
             $clean = trim(str_replace("\0", '', $value));
+
             if ($clean !== '') {
                 return [
                     'normalized' => $clean,

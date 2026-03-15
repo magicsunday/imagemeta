@@ -241,8 +241,10 @@ final readonly class ColorSpaceExifReader
 
         if ($value instanceof ExifRationalList) {
             $coeffs = [];
+
             foreach ($value->values as $component) {
                 $float = $this->converters->rationalToFloat($component);
+
                 if ($float === null) {
                     return null;
                 }

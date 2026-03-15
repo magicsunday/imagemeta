@@ -104,6 +104,7 @@ final readonly class IccHeaderDecoder
     {
         for ($i = 0; $i < 4; ++$i) {
             $byte = ord($signature[$i]);
+
             if ($byte < 0x20 || $byte > 0x7E) {
                 return false;
             }
@@ -154,6 +155,7 @@ final readonly class IccHeaderDecoder
     public function extractProfileId(string $data): ?string
     {
         $profileId = substr($data, IccTag::PROFILE_ID, 16);
+
         if ($profileId === str_repeat("\0", 16)) {
             return null;
         }
@@ -270,6 +272,7 @@ final readonly class IccHeaderDecoder
         }
 
         $bytes = substr($data, $offset, $length);
+
         if (!$allowZero && ($bytes === str_repeat("\0", $length))) {
             return null;
         }

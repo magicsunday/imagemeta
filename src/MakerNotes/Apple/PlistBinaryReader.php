@@ -89,6 +89,7 @@ final class PlistBinaryReader
         }
 
         $value = 0;
+
         for ($idx = 0; $idx < $length; ++$idx) {
             $value = ($value << 8) | ord($this->data[$offset + $idx]);
         }
@@ -107,11 +108,13 @@ final class PlistBinaryReader
     public function readUint64(string $data, int $offset): int
     {
         $slice = substr($data, $offset, 8);
+
         if (strlen($slice) !== 8) {
             throw new ParseError('Failed to read 64-bit integer.', 1088);
         }
 
         $parts = unpack('Nhigh/Nlow', $slice);
+
         if ($parts === false || !array_key_exists('high', $parts) || !array_key_exists('low', $parts)) {
             throw new ParseError('Failed to unpack 64-bit integer.', 1089);
         }
@@ -143,6 +146,7 @@ final class PlistBinaryReader
         }
 
         $sizeMarkerOffset = $offset + 1;
+
         if ($sizeMarkerOffset >= $this->length) {
             throw new ParseError('The property list size marker exceeds the payload.', 1084);
         }
@@ -150,6 +154,7 @@ final class PlistBinaryReader
         $marker    = ord($this->data[$sizeMarkerOffset]);
         $type      = $marker >> 4;
         $innerInfo = $marker & self::MARKER_INFO_MASK;
+
         if ($type !== PlistMarkerType::Integer->value) {
             throw new ParseError('Size marker does not encode an integer.', 1085);
         }

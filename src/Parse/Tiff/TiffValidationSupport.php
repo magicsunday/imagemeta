@@ -76,6 +76,7 @@ final readonly class TiffValidationSupport
             foreach ($entry->value->values as $component) {
                 if (is_int($component) || is_float($component)) {
                     $components[] = (float) $component;
+
                     continue;
                 }
 
@@ -150,6 +151,7 @@ final readonly class TiffValidationSupport
             foreach ($bitsEntry->value->values as $component) {
                 if (!is_int($component)) {
                     $invalidComponentType = true;
+
                     break;
                 }
 

@@ -68,6 +68,7 @@ final readonly class StringConverter
         }
 
         $trimmed = trim($bytes, " \t\n\r");
+
         if ($trimmed === '') {
             return null;
         }

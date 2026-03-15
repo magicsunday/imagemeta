@@ -77,6 +77,7 @@ final readonly class ProtobufDecoder
 
         while ($offset < $len) {
             $tagResult = self::readVarint($data, $offset);
+
             if ($tagResult === null) {
                 break;
             }
@@ -152,6 +153,7 @@ final readonly class ProtobufDecoder
     private static function consumeVarint(string $data, int $offset): ?array
     {
         $result = self::readVarint($data, $offset);
+
         if ($result === null) {
             return null;
         }
@@ -177,6 +179,7 @@ final readonly class ProtobufDecoder
     private static function consumeLengthDelimited(string $data, int $offset, int $len): ?array
     {
         $lenResult = self::readVarint($data, $offset);
+
         if ($lenResult === null) {
             return null;
         }

@@ -285,6 +285,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {
                 $ifdEntries .= $prefix;
+
                 continue;
             }
 
@@ -292,6 +293,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
 
             if (strlen($payload) <= 4) {
                 $ifdEntries .= $prefix . str_pad($payload, 4, "\0");
+
                 continue;
             }
 
@@ -311,9 +313,11 @@ final class TiffExifParserTiledLayoutTest extends TestCase
         if ($padToStorageRanges) {
             $requiredLength = 0;
             $pairCount      = min($tileOffsetsCount, $tileByteCountsCount);
+
             for ($i = 0; $i < $pairCount; ++$i) {
                 $offset    = $tileOffsetsBase + $i;
                 $byteCount = $tileByteCountsBase + $i;
+
                 if ($offset < 0) {
                     continue;
                 }

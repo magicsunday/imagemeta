@@ -63,6 +63,7 @@ final readonly class AppleDictionaryValueExtractor
         }
 
         $value = $dictionary[$key];
+
         if (!is_array($value)) {
             return null;
         }
@@ -93,6 +94,7 @@ final readonly class AppleDictionaryValueExtractor
     {
         foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
             $value = $this->flagExtractor->boolValue($candidate);
+
             if ($value !== null) {
                 return $value;
             }
@@ -115,6 +117,7 @@ final readonly class AppleDictionaryValueExtractor
     {
         foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
             $float = $this->rationalNormalizer->normalizeRationalFloat($candidate);
+
             if ($float !== null) {
                 return $float;
             }
@@ -142,6 +145,7 @@ final readonly class AppleDictionaryValueExtractor
 
             if (is_string($candidate)) {
                 $trimmed = trim($candidate);
+
                 if ($trimmed === '') {
                     continue;
                 }
@@ -226,6 +230,7 @@ final readonly class AppleDictionaryValueExtractor
         }
 
         $comparison = strcmp($digits, $maxDigits);
+
         if ($comparison > 0) {
             return false;
         }
@@ -254,6 +259,7 @@ final readonly class AppleDictionaryValueExtractor
         }
 
         $value = $dictionary[$key];
+
         if (!is_string($value)) {
             return null;
         }
@@ -352,6 +358,7 @@ final readonly class AppleDictionaryValueExtractor
             }
 
             $result = [];
+
             foreach ($candidate as $entry) {
                 if (is_float($entry)) {
                     $result[] = $entry;
@@ -381,6 +388,7 @@ final readonly class AppleDictionaryValueExtractor
     public function focusDistanceRangeValue(array $dictionary): ?array
     {
         $range = $this->floatList($dictionary, 'FocusDistanceRange');
+
         if ($range !== null) {
             return $range;
         }
@@ -399,6 +407,7 @@ final readonly class AppleDictionaryValueExtractor
         );
 
         $values = [];
+
         if ($near !== null) {
             $values[] = $near;
         }
@@ -427,11 +436,13 @@ final readonly class AppleDictionaryValueExtractor
         }
 
         $scalar = $this->stringOrNumericValue($dictionary, $key);
+
         if ($scalar !== null) {
             return $scalar;
         }
 
         $value = $dictionary[$key];
+
         if (!is_array($value)) {
             return null;
         }
@@ -445,14 +456,17 @@ final readonly class AppleDictionaryValueExtractor
         }
 
         $components = [];
+
         foreach ($value as $entry) {
             if (is_int($entry)) {
                 $components[] = (string) $entry;
+
                 continue;
             }
 
             if (is_string($entry)) {
                 $trimmed = trim($entry);
+
                 if ($trimmed === '') {
                     continue;
                 }
@@ -462,6 +476,7 @@ final readonly class AppleDictionaryValueExtractor
                 }
 
                 $components[] = (string) (int) $trimmed;
+
                 continue;
             }
 
@@ -492,6 +507,7 @@ final readonly class AppleDictionaryValueExtractor
         foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
             if (is_string($candidate)) {
                 $trimmed = trim($candidate);
+
                 if ($trimmed !== '') {
                     return $trimmed;
                 }
@@ -519,6 +535,7 @@ final readonly class AppleDictionaryValueExtractor
         foreach ($this->valuesForKeys($dictionary, ...$keys) as $candidate) {
             if (is_string($candidate)) {
                 $trimmed = trim($candidate);
+
                 if ($trimmed === '') {
                     continue;
                 }
@@ -560,6 +577,7 @@ final readonly class AppleDictionaryValueExtractor
     private function valuesForKeys(array $dictionary, string ...$keys): array
     {
         $values = [];
+
         foreach ($keys as $key) {
             if (!array_key_exists($key, $dictionary)) {
                 continue;
@@ -583,6 +601,7 @@ final readonly class AppleDictionaryValueExtractor
         }
 
         $intValue = (int) $value;
+
         if ((float) $intValue === $value) {
             return $intValue;
         }

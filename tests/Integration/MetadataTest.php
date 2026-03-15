@@ -421,6 +421,7 @@ XML;
             . $nameField
             . pack('N', strlen($iimData))
             . $iimData;
+
         if ((strlen($iimData) % 2) !== 0) {
             $resourceBlock .= "\0";
         }

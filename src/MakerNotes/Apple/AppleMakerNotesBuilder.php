@@ -60,8 +60,10 @@ final readonly class AppleMakerNotesBuilder
         $runTime                = $this->extractor->runTimeValue($dictionary, 'RunTime');
         $livePhotoIndex         = $this->extractor->intValue($dictionary, ...AppleMaps::LIVE_PHOTO_INDEX_KEYS);
         $livePhotoTime          = null;
+
         if (($livePhotoIndex !== null) && ($runTime instanceof RunTime)) {
             $timescale = $runTime->timescale;
+
             if (($timescale !== null) && ($timescale > 0)) {
                 $livePhotoTime = $livePhotoIndex / $timescale;
             }
@@ -163,6 +165,7 @@ final readonly class AppleMakerNotesBuilder
     {
         if (!array_key_exists('SemanticStylePreset', $dictionary) && !array_key_exists('SemanticStyleWarmth', $dictionary) && !array_key_exists('SemanticStyleTone', $dictionary)) {
             $semanticStyleCompact = SemanticStyle::fromDictionary($dictionary);
+
             if ($semanticStyleCompact !== null) {
                 [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
 

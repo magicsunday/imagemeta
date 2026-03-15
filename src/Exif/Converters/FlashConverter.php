@@ -41,6 +41,7 @@ final readonly class FlashConverter
     ): ?FlashInfo {
         if ($value instanceof ExifNumericList) {
             $first = $value->values[0] ?? null;
+
             if (!is_int($first) && !is_float($first)) {
                 return null;
             }

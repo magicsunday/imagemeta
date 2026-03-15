@@ -60,6 +60,7 @@ final readonly class EnumConverter
         }
 
         $value = $raw;
+
         if (is_string($raw) && ctype_digit($raw)) {
             $value = (int) $raw;
         }
@@ -88,6 +89,7 @@ final readonly class EnumConverter
     ): ?bool {
         if ($value instanceof ExifNumericList) {
             $first = $value->values[0] ?? null;
+
             if (!is_int($first) && !is_float($first)) {
                 return null;
             }

@@ -99,6 +99,7 @@ final class MpfParser
     public function parse(string $payload): MpfDocument
     {
         $buffer = new MemoryBuffer($payload);
+
         if ($buffer->size() < 8) {
             throw new ParseError('MPF payload shorter than TIFF header', 1288);
         }
@@ -112,11 +113,13 @@ final class MpfParser
         };
 
         $magic = $this->readU16($buffer, $endian);
+
         if ($magic !== self::TIFF_MAGIC) {
             throw new ParseError('MPF payload missing TIFF magic', 1290);
         }
 
         $firstIfdOffset = $this->readU32($buffer, $endian);
+
         // The MP Index IFD offset is stored as a 32-bit value relative to the TIFF header (EXIF 3.0 §4.6.2).
         if ($firstIfdOffset < 8 || $firstIfdOffset >= $buffer->size()) {
             throw new ParseError('MP Index IFD offset outside payload bounds', 1291);
@@ -154,11 +157,13 @@ final class MpfParser
         $totalFrames  = $this->intValue($indexEntries[self::TAG_TOTAL_FRAMES] ?? null);
 
         $entriesData = $indexEntries[self::TAG_MP_ENTRY] ?? null;
+
         if (!is_string($entriesData)) {
             throw new ParseError('MP Index IFD missing MPEntry data', 1292);
         }
 
         $entries = $this->parseEntries($entriesData, $endian);
+
         if ($imageCount === null) {
             $imageCount = count($entries);
         }
@@ -168,6 +173,7 @@ final class MpfParser
         }
 
         $attributes = null;
+
         if ($nextIfdOffset !== 0) {
             // Non-zero next-IFD offsets must not point into the TIFF header (bytes 0..7).
             if ($nextIfdOffset < 8) {
@@ -273,12 +279,14 @@ final class MpfParser
         $buffer->seek($offset);
 
         $entryCount = $this->readU16($buffer, $endian);
+
         if ($entryCount < 0 || $entryCount > ParserLimits::MAX_MPF_IFD_ENTRIES) {
             throw new ParseError('MPF IFD entry count outside supported range', 1295);
         }
 
         $entries     = [];
         $previousTag = -1;
+
         for ($i = 0; $i < $entryCount; ++$i) {
             $tag            = $this->readU16($buffer, $endian);
             $type           = $this->readU16($buffer, $endian);
@@ -305,6 +313,7 @@ final class MpfParser
             // Enforce per-tag type/count constraints
             if (isset($constraints[$tag])) {
                 $constraint = $constraints[$tag];
+
                 if ($type !== $constraint['type']) {
                     throw new ParseError(
                         sprintf(
@@ -351,11 +360,13 @@ final class MpfParser
         int $valueOrOffset,
     ): string {
         $typeSize = $this->typeSize($type);
+
         if ($typeSize === null) {
             throw new ParseError('Unsupported MPF field type ' . $type, 1297);
         }
 
         $byteCount = $componentCount * $typeSize;
+
         if ($byteCount === 0) {
             return '';
         }
@@ -445,6 +456,7 @@ final class MpfParser
                 for ($i = 0; $i < $componentCount; ++$i) {
                     $numerator   = $this->readU32($buffer, $endian);
                     $denominator = $this->readU32($buffer, $endian);
+
                     if ($type === TiffConst::TYPE_SRATIONAL) {
                         $numerator   = $this->toSigned32($numerator);
                         $denominator = $this->toSigned32($denominator);
@@ -493,6 +505,7 @@ final class MpfParser
     {
         $entrySize = 16;
         $length    = strlen($data);
+
         if (($length === 0) || (($length % $entrySize) !== 0)) {
             throw new ParseError('MPEntry data length is not a multiple of 16 bytes', 1300);
         }
@@ -501,6 +514,7 @@ final class MpfParser
 
         $entries = [];
         $count   = (int) ($length / $entrySize);
+
         for ($i = 0; $i < $count; ++$i) {
             $attributes = $this->readU32($buffer, $endian);
             $size       = $this->readU32($buffer, $endian);
@@ -511,6 +525,7 @@ final class MpfParser
             // Validate Individual Image Attribute bitfield per MPF spec
             // Bits 27..28 must be zero (reserved); CIPA DC-007-2025, §5.2.3.3, Figure 8
             $reservedBits = ($attributes >> 27) & 0x03;
+
             if ($reservedBits !== 0) {
                 throw new ParseError(
                     sprintf('MPEntry %d has non-zero reserved bits 27..28: 0x%08X', $i, $attributes),
@@ -520,6 +535,7 @@ final class MpfParser
 
             // Bits 24..26 encode type info; value 7 is reserved and must not be used
             $typeInfo = ($attributes >> 24) & 0x07;
+
             if ($typeInfo === 7) {
                 throw new ParseError(
                     sprintf('MPEntry %d has reserved type info value 7: 0x%08X', $i, $attributes),

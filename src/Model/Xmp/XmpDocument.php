@@ -386,6 +386,7 @@ final readonly class XmpDocument
             }
 
             $trimmed = trim($element);
+
             if ($trimmed !== '') {
                 return $trimmed;
             }
@@ -400,6 +401,7 @@ final readonly class XmpDocument
     public static function parseNumericValue(string $value): ?float
     {
         $trimmed = trim($value);
+
         if ($trimmed === '') {
             return null;
         }
@@ -415,6 +417,7 @@ final readonly class XmpDocument
 
             if (is_numeric($numerator) && is_numeric($denominator)) {
                 $denominatorValue = (float) $denominator;
+
                 if ($denominatorValue === 0.0) {
                     return null;
                 }
@@ -457,6 +460,7 @@ final readonly class XmpDocument
 
         if (($clark !== '') && ($clark[0] === '{')) {
             $pos = strpos($clark, '}');
+
             if ($pos !== false) {
                 return substr($clark, $pos + 1) === $localName;
             }

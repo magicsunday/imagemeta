@@ -58,21 +58,25 @@ final class OlePropertySetParser
     public function parse(string $raw): ?OlePropertySet
     {
         $length = strlen($raw);
+
         if ($length < self::MIN_HEADER_SIZE) {
             return null;
         }
 
         $byteOrder = $this->u16($raw, 0);
+
         if ($byteOrder !== self::BYTE_ORDER_LE) {
             return null;
         }
 
         $sectionCount = $this->u32($raw, 24);
+
         if (($sectionCount < 1) || ($length < self::MIN_HEADER_SIZE + self::SECTION_ENTRY_SIZE)) {
             return null;
         }
 
         $sectionOffset = $this->u32($raw, self::MIN_HEADER_SIZE + 16);
+
         if (($sectionOffset < self::MIN_HEADER_SIZE + self::SECTION_ENTRY_SIZE) || (($sectionOffset + 8) > $length)) {
             return null;
         }
@@ -205,6 +209,7 @@ final class OlePropertySetParser
         }
 
         $size = $this->u32($raw, $offset);
+
         if (($size < 1) || (($offset + 4 + $size) > $length)) {
             return null;
         }
@@ -253,6 +258,7 @@ final class OlePropertySetParser
         $hi = $this->u32($raw, $offset + 4);
 
         $filetime = ($hi << 32) | $lo;
+
         if ($filetime <= self::FILETIME_EPOCH_OFFSET) {
             return null;
         }

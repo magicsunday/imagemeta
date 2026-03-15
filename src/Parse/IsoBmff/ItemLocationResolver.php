@@ -170,6 +170,7 @@ final readonly class ItemLocationResolver
         foreach ($incoming as $fromItemId => $references) {
             if (!isset($existing[$contextOffset][$fromItemId])) {
                 $existing[$contextOffset][$fromItemId] = $references;
+
                 continue;
             }
 
@@ -224,6 +225,7 @@ final readonly class ItemLocationResolver
         foreach ($incoming as $fromId => $references) {
             if (!isset($existing[$fromId])) {
                 $existing[$fromId] = $references;
+
                 continue;
             }
 

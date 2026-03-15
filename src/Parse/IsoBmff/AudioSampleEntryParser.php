@@ -125,6 +125,7 @@ final readonly class AudioSampleEntryParser
             $result = $this->parseSoundSampleEntryVersion2($win, $entryStart, $entryEnd, $entrySize, $normalizedFormat);
 
             $samplingRateOverride = $this->parseAudioSampleEntrySamplingRateBox($win, $entryEnd, false);
+
             if ($samplingRateOverride !== null) {
                 $result['sampleRate'] = $samplingRateOverride;
             }
@@ -164,6 +165,7 @@ final readonly class AudioSampleEntryParser
         }
 
         $sampleRateRaw = $win->readU32BE();
+
         if (($version === 0) && ($sampleRateRaw > self::VERSION_0_SAMPLE_RATE_MAX_16_16)) {
             throw new ParseError('audio sample entry version 0 sampleRate must be <= 65535', 1508);
         }
@@ -184,6 +186,7 @@ final readonly class AudioSampleEntryParser
         }
 
         $samplingRateOverride = $this->parseAudioSampleEntrySamplingRateBox($win, $entryEnd, $version === 1);
+
         if ($samplingRateOverride !== null) {
             if ($samplingRateOverride <= 0) {
                 throw new ParseError('audio sample rate must be positive', 1485);
@@ -250,6 +253,7 @@ final readonly class AudioSampleEntryParser
         }
 
         $entryBodySize = $entryEnd - $entryStart;
+
         if ($sizeOfStructOnly - 8 > $entryBodySize) {
             throw new ParseError('audio sample entry version 2 sizeOfStructOnly exceeds entry bounds', 1462);
         }
@@ -263,6 +267,7 @@ final readonly class AudioSampleEntryParser
         }
 
         $sampleRate = (int) round($audioSampleRate);
+
         if ($sampleRate <= 0) {
             throw new ParseError('audio sample entry version 2 sample rate must be positive', 1930);
         }
@@ -339,6 +344,7 @@ final readonly class AudioSampleEntryParser
     private function parseAudioSampleEntrySamplingRateBox(StreamWindow $win, int $entryEnd, bool $allowSamplingRateBox): ?int
     {
         $remaining = $entryEnd - $win->tell();
+
         if ($remaining <= 0) {
             return null;
         }
@@ -356,6 +362,7 @@ final readonly class AudioSampleEntryParser
             }
 
             $boxType = substr($tail, $offset + 4, 4);
+
             if ($boxType === BoxType::SRAT->value) {
                 if (!$allowSamplingRateBox) {
                     throw new ParseError('sampling rate box is only allowed in audio sample entry version 1', 1473);
@@ -386,11 +393,13 @@ final readonly class AudioSampleEntryParser
         }
 
         $integerPart = $sampleRateRaw >> 16;
+
         if ($integerPart <= 0) {
             throw new ParseError('audio sample rate must be positive', 1929);
         }
 
         $fractionalPart = $sampleRateRaw & 0xFFFF;
+
         if ($fractionalPart === 0) {
             return $integerPart;
         }

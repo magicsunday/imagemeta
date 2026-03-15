@@ -154,6 +154,7 @@ final readonly class RegionCoordinateNormalizer
                 }
 
                 $absolute = abs($value);
+
                 if ($absolute > $maxConfidence) {
                     $maxConfidence = $absolute;
                 }

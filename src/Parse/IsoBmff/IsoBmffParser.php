@@ -145,6 +145,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
         /** @var array<string, list<QuickTimeDataAtom>> $dataAtomVOs */
         $dataAtomVOs = [];
+
         foreach ($context->qtDataAtoms as $key => $rawAtoms) {
             foreach ($rawAtoms as $raw) {
                 $dataAtomVOs[$key][] = new QuickTimeDataAtom($raw['type'], $raw['locale'], $raw['value']);
@@ -203,6 +204,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 $this->parseMetaBox($child, $context);
             } elseif ($child->type === BoxType::UDTA->value) {
                 ++$udtaCount;
+
                 if ($udtaCount > 1) {
                     throw new ParseError('duplicate udta box in moov', 1417);
                 }
@@ -303,6 +305,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         $majorBrandRaw = $win->read(4);
+
         if (!$this->boxNavigator->isPrintableFourcc($majorBrandRaw)) {
             throw new ParseError('ftyp major_brand must be a printable 4CC', 1476);
         }
@@ -315,8 +318,10 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         $brands = [];
+
         while ($win->tell() + 4 <= $ftyp->contentSize) {
             $brandRaw = $win->read(4);
+
             if (!$this->boxNavigator->isPrintableFourcc($brandRaw)) {
                 continue;
             }
@@ -555,11 +560,13 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $metaSize = 8 + strlen($payload);
 
         $handle = fopen('php://temp', 'w+b');
+
         if ($handle === false) {
             throw new ParseError('unable to create nested metadata stream.', 1992);
         }
 
         $written = fwrite($handle, pack('N', $metaSize) . BoxType::META->value . $payload);
+
         if (!is_int($written) || ($written !== $metaSize)) {
             throw new ParseError('unable to write nested metadata payload.', 1465);
         }
@@ -571,6 +578,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $context      = new IsoBmffParseContext();
 
         $meta = $nestedParser->boxNavigator->readBoxAt(0, $metaSize);
+
         if ($meta->type !== BoxType::META->value) {
             throw new ParseError('nested metadata payload is not a valid meta atom.', 1466);
         }

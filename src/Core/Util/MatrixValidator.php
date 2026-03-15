@@ -54,11 +54,13 @@ final class MatrixValidator
         }
 
         $columnLabels = $labels['columns'] ?? null;
+
         if (!is_array($columnLabels)) {
             return null;
         }
 
         $rowLabels = $labels['rows'] ?? null;
+
         if (($rowLabels === null) && $requireRowLabels) {
             return null;
         }
@@ -68,13 +70,16 @@ final class MatrixValidator
         }
 
         $normalizedColumnLabels = self::normalizeLabelList($columnLabels, $columns);
+
         if ($normalizedColumnLabels === null) {
             return null;
         }
 
         $normalizedRowLabels = null;
+
         if ($rowLabels !== null) {
             $normalizedRowLabels = self::normalizeLabelList($rowLabels, $rows);
+
             if ($normalizedRowLabels === null) {
                 return null;
             }
@@ -85,16 +90,19 @@ final class MatrixValidator
         }
 
         $normalizedValues = [];
+
         foreach ($values as $row) {
             if (!is_array($row)) {
                 return null;
             }
 
             $normalizedRow = [];
+
             foreach ($row as $cell) {
                 if (!is_float($cell)) {
                     if ($allowNullValues && ($cell === null)) {
                         $normalizedRow[] = null;
+
                         continue;
                     }
 
@@ -130,6 +138,7 @@ final class MatrixValidator
     private static function normalizeLabelList(array $labels, int $expectedCount): ?array
     {
         $normalizedLabels = [];
+
         foreach ($labels as $label) {
             if (!is_string($label)) {
                 return null;

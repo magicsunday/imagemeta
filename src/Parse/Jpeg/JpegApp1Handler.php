@@ -182,6 +182,7 @@ final class JpegApp1Handler
         PayloadGuard::ensureMinimumLength($tiffData, 4, 'APP1 Exif payload', 1400);
 
         $byteOrder = substr($tiffData, 0, 2);
+
         if (($byteOrder !== 'II') && ($byteOrder !== 'MM')) {
             throw new ParseError('APP1 Exif TIFF header has invalid byte order', 1401);
         }

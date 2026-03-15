@@ -169,6 +169,7 @@ final readonly class TiffOffsetValidator
 
         if ($length > 0) {
             $limit = $size - $length;
+
             if ($this->compareDecimalStringToInt($normalized, $limit) > 0) {
                 throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context), 1346);
             }

@@ -59,11 +59,13 @@ final readonly class TiffImageDataValidator
             || ($ifd0->get(TiffTag::TILE_LENGTH) instanceof IfdEntry)
             || ($ifd0->get(TiffTag::TILE_OFFSETS) instanceof IfdEntry)
             || ($ifd0->get(TiffTag::TILE_BYTE_COUNTS) instanceof IfdEntry);
+
         if ($hasTileFields) {
             return;
         }
 
         $rowsPerStripEntry = $ifd0->get(ExifTag::ROWS_PER_STRIP);
+
         if (!$rowsPerStripEntry instanceof IfdEntry || !is_int($rowsPerStripEntry->value) || $rowsPerStripEntry->value <= 0) {
             throw new ParseError(
                 'RowsPerStrip must be a positive integer when strip tags are present per EXIF 3.0 §4.6.5.2.2.',
@@ -72,6 +74,7 @@ final readonly class TiffImageDataValidator
         }
 
         $imageLengthEntry = $ifd0->get(ExifTag::IMAGE_LENGTH);
+
         if (!$imageLengthEntry instanceof IfdEntry || !is_int($imageLengthEntry->value) || $imageLengthEntry->value <= 0) {
             return;
         }
@@ -82,6 +85,7 @@ final readonly class TiffImageDataValidator
 
         if ($stripOffsetsEntry instanceof IfdEntry) {
             $offsetCount = $this->countStripFieldValues($stripOffsetsEntry);
+
             if ($offsetCount !== $expectedCount) {
                 throw new ParseError(sprintf(
                     'StripOffsets count %d does not match expected strip count %d per EXIF 3.0 §4.6.5.2.1/§4.6.5.2.2.',
@@ -93,6 +97,7 @@ final readonly class TiffImageDataValidator
 
         if ($stripByteCountsEntry instanceof IfdEntry) {
             $byteCountCount = $this->countStripFieldValues($stripByteCountsEntry);
+
             if ($byteCountCount !== $expectedCount) {
                 throw new ParseError(sprintf(
                     'StripByteCounts count %d does not match expected strip count %d per EXIF 3.0 §4.6.5.2.3/§4.6.5.2.2.',
@@ -220,6 +225,7 @@ final readonly class TiffImageDataValidator
     ): void {
         $imageWidthEntry  = $ifd0->get(ExifTag::IMAGE_WIDTH);
         $imageLengthEntry = $ifd0->get(ExifTag::IMAGE_LENGTH);
+
         if (!$imageWidthEntry instanceof IfdEntry || !is_int($imageWidthEntry->value) || ($imageWidthEntry->value <= 0) || !$imageLengthEntry instanceof IfdEntry || !is_int($imageLengthEntry->value) || ($imageLengthEntry->value <= 0)) {
             return;
         }
@@ -256,6 +262,7 @@ final readonly class TiffImageDataValidator
         int $planarConfiguration,
     ): void {
         $offsetCount = $this->countStripFieldValues($tileOffsetsEntry);
+
         if ($offsetCount !== $expectedCount) {
             throw new ParseError(
                 sprintf(
@@ -271,6 +278,7 @@ final readonly class TiffImageDataValidator
         }
 
         $byteCountCount = $this->countStripFieldValues($tileByteCountsEntry);
+
         if ($byteCountCount !== $expectedCount) {
             throw new ParseError(
                 sprintf(
@@ -305,17 +313,20 @@ final readonly class TiffImageDataValidator
     {
         $planarConfiguration = 1;
         $planarEntry         = $ifd->get(ExifTag::PLANAR_CONFIGURATION);
+
         if (($planarEntry instanceof IfdEntry) && is_int($planarEntry->value)) {
             $planarConfiguration = $planarEntry->value;
         }
 
         $samplesPerPixel = 1;
         $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+
         if (($samplesEntry instanceof IfdEntry) && is_int($samplesEntry->value) && ($samplesEntry->value > 0)) {
             $samplesPerPixel = $samplesEntry->value;
         }
 
         $expectedCount = $baseCount;
+
         if ($planarConfiguration === 2) {
             $expectedCount *= $samplesPerPixel;
         }
@@ -352,6 +363,7 @@ final readonly class TiffImageDataValidator
 
         if ($entry->value instanceof ExifNumericList) {
             $values = [];
+
             foreach ($entry->value->values as $index => $component) {
                 if (!is_int($component)) {
                     throw new ParseError(sprintf(

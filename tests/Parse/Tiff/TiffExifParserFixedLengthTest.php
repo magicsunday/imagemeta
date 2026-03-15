@@ -1088,6 +1088,7 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
         // Requested tag — offset placeholder if out-of-line
         $outOfLine = $dataSize > 4;
+
         if ($outOfLine) {
             $valueOffset   = $ifdOffset + 2 + ($entryCount * 12) + 4;
             $entries[$tag] = pack('v', $tag) . pack('v', $type) . pack('V', $count) . pack('V', $valueOffset);

@@ -136,6 +136,7 @@ final class IccProfileAssembler implements SegmentAssemblerInterface
             $expectedSequence = range(1, $this->expectedCount);
             $presentSequence  = array_keys($this->sequence);
             sort($presentSequence);
+
             if ($presentSequence === $expectedSequence) {
                 ksort($this->sequence);
                 $assembled = implode('', $this->sequence);

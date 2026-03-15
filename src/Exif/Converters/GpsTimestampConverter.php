@@ -108,11 +108,13 @@ final readonly class GpsTimestampConverter
         string|int|float|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): array {
         $raw = is_string($value) ? $value : null;
+
         if (!is_string($value)) {
             return $this->invalidDateResult($raw);
         }
 
         $clean = trim(str_replace("\0", '', $value));
+
         if ($clean === '') {
             return $this->invalidDateResult($raw);
         }
@@ -124,6 +126,7 @@ final readonly class GpsTimestampConverter
         $year  = (int) substr($clean, 0, 4);
         $month = (int) substr($clean, 5, 2);
         $day   = (int) substr($clean, 8, 2);
+
         if (!checkdate($month, $day, $year)) {
             return $this->invalidDateResult($raw);
         }
@@ -213,6 +216,7 @@ final readonly class GpsTimestampConverter
 
         if ($microseconds > 0) {
             $micro = rtrim(sprintf('%06d', $microseconds), '0');
+
             if ($micro === '') {
                 $micro = '0';
             }
@@ -322,11 +326,13 @@ final readonly class GpsTimestampConverter
         $prefixBytes = substr($value, 0, 8);
         $payload     = substr($value, 8);
         $marker      = UndefinedTextMarker::canonicalMarkerFromPrefix($prefixBytes);
+
         if ($marker === '') {
             return null;
         }
 
         $encoding = UndefinedTextMarker::encodingForMarker($marker);
+
         if (!$encoding instanceof CharacterEncoding) {
             return null;
         }

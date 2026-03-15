@@ -90,11 +90,13 @@ final readonly class GpsUnitConverter
         $altRefEntry = $gps->get(ExifTag::GPS_ALTITUDE_REF);
         $altRefValue = $altRefEntry?->value;
         $altRef      = $this->normalizeAltitudeRef($altRefValue);
+
         if ($altRef !== null) {
             $result['alt_ref'] = $altRef;
         }
 
         $altEntry = $gps->get(ExifTag::GPS_ALTITUDE);
+
         if ($altEntry instanceof IfdEntry) {
             // EXIF 3.0 §4.6.7.1.6: default GPSAltitudeRef is 0 when tag is missing
             if ($result['alt_ref'] === null) {
@@ -131,6 +133,7 @@ final readonly class GpsUnitConverter
             is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null,
             self::GPS_SPEED_REF_VALUES,
         );
+
         if (($speedRef === null) && (!$speedRefEntry instanceof IfdEntry) && ($speedEntry instanceof IfdEntry)) {
             $speedRef = 'K';
         }
@@ -153,6 +156,7 @@ final readonly class GpsUnitConverter
             is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null,
             self::GPS_DISTANCE_REF_VALUES,
         );
+
         if (($result['dest_distance_ref'] === null) && (!$destDistRefEntry instanceof IfdEntry) && ($destDistEntry instanceof IfdEntry)) {
             $result['dest_distance_ref'] = 'K';
         }
@@ -227,6 +231,7 @@ final readonly class GpsUnitConverter
 
         if ($value instanceof ExifRational) {
             $numeric = $this->rationalConverter->toFloat($value);
+
             if (($numeric === null) || !$this->isWholeNumber($numeric)) {
                 return null;
             }
@@ -236,6 +241,7 @@ final readonly class GpsUnitConverter
 
         if (is_string($value)) {
             $clean = trim($value);
+
             if ($clean === '' || !is_numeric($clean)) {
                 return null;
             }
@@ -293,11 +299,13 @@ final readonly class GpsUnitConverter
         }
 
         $numeric = $this->rationalConverter->toFloat($value);
+
         if ($numeric === null) {
             return null;
         }
 
         $normalizedRef = strtoupper(trim($ref));
+
         if ($normalizedRef === '') {
             return null;
         }
@@ -323,11 +331,13 @@ final readonly class GpsUnitConverter
         array $conversions,
     ): ?float {
         $resolved = $this->resolveNumericReference($ref, $value);
+
         if ($resolved === null) {
             return null;
         }
 
         $conversion = $conversions[$resolved['ref']] ?? null;
+
         if (!is_callable($conversion)) {
             return null;
         }

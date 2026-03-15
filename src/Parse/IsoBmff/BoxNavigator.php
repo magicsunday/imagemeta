@@ -76,6 +76,7 @@ final readonly class BoxNavigator
             // list may optionally end with a 32-bit zero terminator.
             if ($allowTrailingTerminator && (($end - $cursor) === 4)) {
                 $this->stream->seek($cursor);
+
                 if ($this->stream->readU32BE() === 0) {
                     return;
                 }
@@ -118,6 +119,7 @@ final readonly class BoxNavigator
         }
 
         $userType = null;
+
         if ($type === BoxType::UUID->value) {
             // uuid box must be at least 24 bytes (8-byte header + 16-byte userType)
             if ($size < 24) {
@@ -142,7 +144,9 @@ final readonly class BoxNavigator
                 $size = $limit - $offset;
             } else {
                 throw new ParseError(
-                    sprintf('box %s exceeds container bounds', $type), 1262);
+                    sprintf('box %s exceeds container bounds', $type),
+                    1262
+                );
             }
         }
 

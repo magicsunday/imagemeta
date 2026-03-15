@@ -69,6 +69,7 @@ final class Unpack
     public static function uint64(string $bytes, bool $littleEndian, string $context): UInt64
     {
         $format = $littleEndian ? 'V2' : 'N2';
+
         if (strlen($bytes) !== 8) {
             $parts = false;
         } else {
@@ -121,6 +122,7 @@ final class Unpack
         }
 
         $value = $result[1];
+
         if (!is_int($value) && !is_float($value)) {
             throw new ParseError('Unpacked ' . $context . ' is not numeric.', 1030);
         }

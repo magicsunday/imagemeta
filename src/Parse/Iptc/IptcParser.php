@@ -85,6 +85,7 @@ final class IptcParser implements IptcParserInterface
 
         while ($offset < $length) {
             $remaining = $length - $offset;
+
             if ($remaining < 4) {
                 throw new BoundsError('APP13 resource block header exceeds payload length.', 1126);
             }
@@ -117,6 +118,7 @@ final class IptcParser implements IptcParserInterface
             $offset += $nameLength;
 
             $nameFieldLength = 1 + $nameLength;
+
             if (($nameFieldLength % 2) !== 0) {
                 if (($length - $offset) < 1) {
                     throw new BoundsError('APP13 resource name padding exceeds payload length.', 1131);
@@ -186,6 +188,7 @@ final class IptcParser implements IptcParserInterface
             $offset += 5;
 
             $valueLength = $lengthField;
+
             if (($lengthField & self::IIM_EXTENDED_LENGTH_FLAG) !== 0) {
                 $lengthBytes = $lengthField & self::IIM_EXTENDED_LENGTH_BYTE_COUNT_MASK;
 
@@ -209,6 +212,7 @@ final class IptcParser implements IptcParserInterface
                 }
 
                 $valueLength = 0;
+
                 for ($index = 0; $index < $lengthBytes; ++$index) {
                     $valueLength = ($valueLength << 8) | ord($data[$offset + $index]);
                 }
@@ -224,6 +228,7 @@ final class IptcParser implements IptcParserInterface
             $offset += $valueLength;
 
             $key = $recordNumber . ':' . $datasetNumber;
+
             if (!array_key_exists($key, $datasets)) {
                 $datasets[$key] = [];
             }

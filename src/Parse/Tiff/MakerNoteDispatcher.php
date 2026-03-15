@@ -118,11 +118,13 @@ final class MakerNoteDispatcher
         }
 
         $entry = $ifd->get($tag);
+
         if (!$entry instanceof IfdEntry) {
             return null;
         }
 
         $value = $entry->value;
+
         if (!is_string($value)) {
             return null;
         }

@@ -39,6 +39,7 @@ final readonly class TiffDataFactory
         $ycbcrSubSampling = $exifDocument?->ycbcrSubSampling() ?? $metadata->jpegYCbCrSubSampling;
 
         $referenceBlackWhite = $exifDocument?->referenceBlackWhite();
+
         if ($referenceBlackWhite !== null) {
             if (count($referenceBlackWhite) === 6) {
                 /** @var array{0: float, 1: float, 2: float, 3: float, 4: float, 5: float} $referenceBlackWhite */

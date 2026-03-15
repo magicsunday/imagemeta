@@ -45,6 +45,7 @@ trait UnambiguousReferenceResolver
                 if (array_key_exists($key, $resolved)) {
                     unset($resolved[$key]);
                     $ambiguous[$key] = true;
+
                     continue;
                 }
 

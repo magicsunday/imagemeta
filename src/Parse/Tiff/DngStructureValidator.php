@@ -978,6 +978,7 @@ final readonly class DngStructureValidator
         $offset      = 4;
 
         $maxOpcodeCount = intdiv($length - 4, 16);
+
         if ($opcodeCount > $maxOpcodeCount) {
             throw new ParseError(
                 sprintf(
@@ -1098,6 +1099,7 @@ final readonly class DngStructureValidator
         }
 
         $forkEnd = $forkStart + $forkDataEnd;
+
         if ($forkEnd > $payloadLength) {
             throw new ParseError(
                 sprintf('OriginalRawFileData is truncated in %s compressed data.', $blockName),

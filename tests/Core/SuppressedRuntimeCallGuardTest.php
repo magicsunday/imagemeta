@@ -83,6 +83,7 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
             }
 
             $cursor = $index + 1;
+
             while (array_key_exists($cursor, $tokens) && $this->isIgnorableToken($tokens[$cursor])) {
                 ++$cursor;
             }
@@ -92,11 +93,13 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
             }
 
             $first = $tokens[$cursor];
+
             if (!$this->isSuppressedCallStartToken($first)) {
                 continue;
             }
 
             $line = $this->tokenLine($tokens, $cursor);
+
             if ($line === null) {
                 continue;
             }
@@ -106,11 +109,13 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
 
                 if ($candidate === '(') {
                     $lines[] = $line;
+
                     break;
                 }
 
                 if ($this->isIgnorableToken($candidate) || $this->isSuppressedCallBodyToken($candidate)) {
                     ++$cursor;
+
                     continue;
                 }
 
@@ -127,8 +132,10 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
     private function tokenLine(array $tokens, int $index): ?int
     {
         $counter = count($tokens);
+
         for ($cursor = $index; $cursor < $counter; ++$cursor) {
             $token = $tokens[$cursor];
+
             if (is_array($token)) {
                 return $token[2];
             }
@@ -192,8 +199,10 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
 
         /** @var list<string> $violations */
         $violations = [];
+
         foreach ($this->phpSourceFiles($srcRoot) as $filePath) {
             $contents = file_get_contents($filePath);
+
             if (!is_string($contents)) {
                 continue;
             }

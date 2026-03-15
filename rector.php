@@ -9,10 +9,8 @@
 
 declare(strict_types=1);
 
-use Rector\CodeQuality\Rector\FunctionLike\SimplifyUselessVariableRector;
 use Rector\CodingStyle\Rector\Catch_\CatchExceptionNameMatchingTypeRector;
 use Rector\Config\RectorConfig;
-use Rector\DeadCode\Rector\Assign\RemoveUnusedVariableAssignRector;
 use Rector\DeadCode\Rector\Plus\RemoveDeadZeroAndOneOperationRector;
 use Rector\DeadCode\Rector\Stmt\RemoveUnreachableStatementRector;
 use Rector\Php84\Rector\MethodCall\NewMethodCallWithoutParenthesesRector;
@@ -51,6 +49,7 @@ return static function (RectorConfig $rectorConfig): void {
         );
     }
 
+    $rectorConfig->phpVersion(80400);
     $rectorConfig->phpstanConfig(__DIR__ . '/phpstan.neon');
     $rectorConfig->importNames();
     $rectorConfig->removeUnusedImports();

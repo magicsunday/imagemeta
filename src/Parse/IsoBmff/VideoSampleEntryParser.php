@@ -88,11 +88,13 @@ final readonly class VideoSampleEntryParser
         $verticalResolution   = $this->decodeVideoResolution16_16($win->readU32BE(), 'vertical');
 
         $dataSize = $win->readU32BE();
+
         if ($dataSize !== 0) {
             throw new ParseError('video sample entry data size must be 0', 2051);
         }
 
         $frameCount = $win->readU16BE();
+
         if ($frameCount === 0) {
             throw new ParseError('video sample entry frame count must be > 0', 1606);
         }
@@ -180,6 +182,7 @@ final readonly class VideoSampleEntryParser
 
             if ($remaining === 4) {
                 $win->seek($offset);
+
                 if ($win->read(4) !== pack('N', 0)) {
                     throw new ParseError('video sample entry trailing payload is malformed', 1932);
                 }
@@ -219,11 +222,13 @@ final readonly class VideoSampleEntryParser
         }
 
         $integerPart = $resolutionRaw >> 16;
+
         if ($integerPart <= 0) {
             throw new ParseError(sprintf('video sample entry %s resolution must be > 0', $axis), 1938);
         }
 
         $fractionalPart = $resolutionRaw & 0xFFFF;
+
         if ($fractionalPart === 0) {
             return $integerPart;
         }

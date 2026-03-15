@@ -38,6 +38,7 @@ enum RegionType: string
         }
 
         $normalized = strtolower(trim($label));
+
         if ($normalized === '') {
             return null;
         }

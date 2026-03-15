@@ -71,6 +71,7 @@ final readonly class Oecf
     public static function fromMatrix(?array $matrix): ?self
     {
         $parts = MatrixValidator::validateMatrix($matrix, true, true);
+
         if (!$parts instanceof MatrixParts) {
             return null;
         }

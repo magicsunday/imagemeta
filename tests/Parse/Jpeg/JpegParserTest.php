@@ -1669,6 +1669,7 @@ final class JpegParserTest extends TestCase
         );
 
         $path = tempnam(sys_get_temp_dir(), 'imagemeta-jpeg-');
+
         if ($path === false) {
             self::fail('Unable to allocate temporary path for JPEG extractor regression test.');
         }
@@ -2773,6 +2774,7 @@ final class JpegParserTest extends TestCase
     {
         $nameLength = strlen($name);
         $nameField  = chr($nameLength) . $name;
+
         if ((strlen($nameField) % 2) !== 0) {
             $nameField .= "\0";
         }
@@ -2900,6 +2902,7 @@ final class JpegParserTest extends TestCase
     private function utf16LeNullTerminated(string $text): string
     {
         $encoded = iconv('UTF-8', 'UTF-16LE', $text);
+
         if ($encoded === false) {
             self::fail('Unable to encode UTF-16LE FlashPix test path.');
         }
@@ -2914,8 +2917,10 @@ final class JpegParserTest extends TestCase
     private function audioPayload(int $format, int $channels, int $sampleRate, int $bitDepth, string $data, ?int $sampleCountOverride = null): string
     {
         $sampleCount = 0;
+
         if ($format !== 2) {
             $bytesPerSample = (int) (($bitDepth / 8) * $channels);
+
             if ($bytesPerSample > 0) {
                 $sampleCount = (int) (strlen($data) / $bytesPerSample);
             }
@@ -3391,6 +3396,7 @@ final class JpegParserTest extends TestCase
     private function createExtractor(string $jpeg, ?JpegParserConfig $config = null): JpegParser
     {
         $fh = fopen('php://temp', 'wb+');
+
         if ($fh === false) {
             self::fail('Unable to open temporary stream for JPEG test data.');
         }

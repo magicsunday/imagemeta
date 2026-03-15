@@ -54,6 +54,7 @@ final readonly class FallbackIfdSet
             }
 
             $id = spl_object_id($candidate);
+
             if (isset($seen[$id])) {
                 return;
             }

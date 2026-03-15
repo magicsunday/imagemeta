@@ -2514,6 +2514,7 @@ final class IsoBmffParserTest extends TestCase
         self::assertNull($dataReferences->referenceForIndex(1));
 
         $uris = [];
+
         foreach ($dataReferences->contextOffsets() as $contextOffset) {
             $reference = $dataReferences->referenceForContextIndex($contextOffset, 1);
             self::assertNotNull($reference);
@@ -2545,6 +2546,7 @@ final class IsoBmffParserTest extends TestCase
 
         $uris           = [];
         $contextOffsets = [];
+
         foreach ($unresolvedItems as $unresolvedItem) {
             self::assertSame(1, $unresolvedItem->itemId);
             self::assertGreaterThanOrEqual(0, $unresolvedItem->metaContextOffset);
@@ -2582,6 +2584,7 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame([], $itemReferences->referencesFor(1));
 
         $relationTargets = [];
+
         foreach ($itemReferences->contextOffsets() as $contextOffset) {
             $references = $itemReferences->referencesForContext($contextOffset, 1);
             self::assertCount(1, $references);
@@ -6916,6 +6919,7 @@ final class IsoBmffParserTest extends TestCase
         $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
 
         $extras = '';
+
         if ($ctryPayload !== null) {
             $extras .= $this->fullBox('ctry', $ctryPayload);
         }
@@ -6938,8 +6942,10 @@ final class IsoBmffParserTest extends TestCase
     private function buildLocaleListPayload(array $lists): string
     {
         $payload = pack('N', count($lists));
+
         foreach ($lists as $codes) {
             $payload .= pack('n', count($codes));
+
             foreach ($codes as $code) {
                 $payload .= pack('n', $code);
             }
@@ -7333,6 +7339,7 @@ final class IsoBmffParserTest extends TestCase
     private function createItemBasedMetaFile(array $items, ?int $primaryItemId): string
     {
         $infeBoxes = '';
+
         foreach ($items as $item) {
             $infeBoxes .= $this->buildInfeMimeBox($item['id'], $item['name'], $item['contentType']);
         }
@@ -7349,6 +7356,7 @@ final class IsoBmffParserTest extends TestCase
         $meta       = $this->fullBox('meta', $pitm . $iinf . $iloc);
 
         $mdatPayload = '';
+
         foreach ($items as $item) {
             $mdatPayload .= $item['payload'];
         }
@@ -7385,6 +7393,7 @@ final class IsoBmffParserTest extends TestCase
             $payload .= pack('n', 0x0002); // construction_method=2 (item_offset)
             $payload .= pack('n', 0); // data_reference_index = 0
             $payload .= pack('n', 1); // extent_count = 1
+
             if ($indexSize > 0) {
                 $payload .= pack('N', $extentIndex ?? 1); // explicit 1-based extent_index
             }
@@ -7396,6 +7405,7 @@ final class IsoBmffParserTest extends TestCase
             $payload .= pack('n', 0x0000); // construction_method=0 (file_offset)
             $payload .= pack('n', 0); // data_reference_index = 0
             $payload .= pack('n', 1); // extent_count = 1
+
             if ($indexSize > 0) {
                 $payload .= pack('N', 0); // unused for method 0
             }
@@ -7407,6 +7417,7 @@ final class IsoBmffParserTest extends TestCase
             $payload .= pack('n', 0x0000); // construction_method=0
             $payload .= pack('n', 0); // data_reference_index = 0
             $payload .= pack('n', 1); // extent_count = 1
+
             if ($indexSize > 0) {
                 $payload .= pack('N', 0); // unused for method 0
             }
@@ -7554,6 +7565,7 @@ final class IsoBmffParserTest extends TestCase
         $payload .= pack('n', count($items));
 
         $cursor = 0;
+
         foreach ($items as $item) {
             $payloadLength = strlen($item['payload']);
 
@@ -7602,6 +7614,7 @@ final class IsoBmffParserTest extends TestCase
         $detect = new ReflectionMethod(BoxPayloadCollector::class, 'detectMetaChildOffset');
 
         $detectedOffset = $detect->invoke($collector, $metaBox, $allowQuickTimeMetaWithoutFullBox);
+
         if (!is_int($detectedOffset)) {
             throw new ParseError('detectMetaChildOffset() must return int.', 1453);
         }

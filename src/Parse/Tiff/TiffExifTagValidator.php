@@ -148,16 +148,19 @@ final readonly class TiffExifTagValidator
         }
 
         $thumbCompression = $ifd1->get(ExifTag::COMPRESSION);
+
         if (!($thumbCompression instanceof IfdEntry) || ($thumbCompression->value !== 6)) {
             return;
         }
 
         $primaryCompression = $ifd0->get(ExifTag::COMPRESSION);
+
         if (!($primaryCompression instanceof IfdEntry) || ($primaryCompression->value !== 1)) {
             return;
         }
 
         $photometric = $ifd0->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+
         if (!($photometric instanceof IfdEntry) || !is_int($photometric->value)) {
             return;
         }
@@ -191,6 +194,7 @@ final readonly class TiffExifTagValidator
         }
 
         $entry = $exifIfd->get(ExifTag::FLASH);
+
         if (!($entry instanceof IfdEntry) || !is_int($entry->value)) {
             return;
         }

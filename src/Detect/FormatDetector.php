@@ -131,6 +131,7 @@ final readonly class FormatDetector
 
         // Skip 0xFF fill bytes (ITU-T T.81 §B.1.1.2) until a non-0xFF byte is found
         $code = 0xFF;
+
         while ($code === 0xFF) {
             try {
                 $code = ord($stream->read(1));
@@ -236,6 +237,7 @@ final readonly class FormatDetector
             if ($size !== 0) {
                 $boxStart           = $stream->tell() - $headerSize;
                 $remainingBoxStream = $stream->size() - $boxStart;
+
                 if ($size > $remainingBoxStream) {
                     return false;
                 }
@@ -251,6 +253,7 @@ final readonly class FormatDetector
                 // ftyp/styp require at least 8 payload bytes (major_brand + minor_version)
                 if ($boxType === 'ftyp' || $boxType === 'styp') {
                     $payload = $size - $headerSize;
+
                     if ($payload < 8) {
                         return false;
                     }
@@ -270,6 +273,7 @@ final readonly class FormatDetector
             }
 
             $skip = $size - $headerSize;
+
             if ($skip > 0) {
                 try {
                     $stream->seek($skip, SEEK_CUR);

@@ -74,6 +74,7 @@ final readonly class DjiMdatTelemetryScanner
     public function scanBytes(string $data): ?DjiTelemetry
     {
         $length = strlen($data);
+
         if ($length === 0) {
             return null;
         }
@@ -93,6 +94,7 @@ final readonly class DjiMdatTelemetryScanner
             if (($lat !== null) && ($lon !== null)) {
                 $latitude  = $lat;
                 $longitude = $lon;
+
                 break;
             }
 
@@ -129,6 +131,7 @@ final readonly class DjiMdatTelemetryScanner
 
                     if (($byte < 0x20) || ($byte > 0x7E)) {
                         $valid = false;
+
                         break;
                     }
                 }
@@ -171,6 +174,7 @@ final readonly class DjiMdatTelemetryScanner
 
         for ($i = 0; $i < ($chunkLen - 16); ++$i) {
             $val1 = $this->tryDecodeGpsRadians(substr($chunk, $i, 8));
+
             if ($val1 === null) {
                 continue;
             }
@@ -182,6 +186,7 @@ final readonly class DjiMdatTelemetryScanner
                 }
 
                 $val2 = $this->tryDecodeGpsRadians(substr($chunk, $i + $gap, 8));
+
                 if ($val2 === null) {
                     continue;
                 }

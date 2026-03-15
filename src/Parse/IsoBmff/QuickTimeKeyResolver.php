@@ -134,6 +134,7 @@ final readonly class QuickTimeKeyResolver
             $win->seek($pos);
             $size      = $win->readU32BE();
             $namespace = $win->read(4);
+
             if (($size < 8) || (($pos + $size) > $keys->contentSize)) {
                 throw new ParseError('invalid keys entry size', 1225);
             }
@@ -194,6 +195,7 @@ final readonly class QuickTimeKeyResolver
     {
         $mean = null;
         $name = null;
+
         foreach ($this->boxNavigator->walkChildren($entry) as $child) {
             if ($child->type === self::FREEFORM_MEAN) {
                 $mean = $this->parseFreeformMean($child);
@@ -300,6 +302,7 @@ final readonly class QuickTimeKeyResolver
         }
 
         $payloadSize = $atom->contentSize - 4;
+
         if ($payloadSize < 1) {
             throw new ParseError($label . ' atom has empty payload', 1432);
         }

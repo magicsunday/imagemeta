@@ -80,11 +80,13 @@ final class AppleMakerNotesMerger
         $lookup = new QuickTimeLookup($quickTime);
 
         $contentIdentifier = $makerNotes?->identity?->contentIdentifier;
+
         if (($contentIdentifier === null) && ($quickTime instanceof QuickTimeMeta)) {
             $contentIdentifier = $quickTime->contentIdentifier();
         }
 
         $imageCaptureRequestId = $makerNotes?->identity?->imageCaptureRequestId;
+
         if ($imageCaptureRequestId === null) {
             $imageCaptureRequestId = $lookup->string('ImageCaptureRequestID');
         }
@@ -103,6 +105,7 @@ final class AppleMakerNotesMerger
         $focusPosition = $this->preferMakerFloat($makerNotes?->autoFocus?->focusPosition, $lookup, 'FocusPosition');
 
         $focusDistanceRange = $makerNotes?->autoFocus?->focusDistanceRange;
+
         if ($focusDistanceRange === null) {
             $focusDistanceRange = $this->quickTimeFocusDistanceRange($lookup);
         }
@@ -129,6 +132,7 @@ final class AppleMakerNotesMerger
         $semanticTone   = $this->preferMakerFloat($makerNotes?->semanticStyle?->tone, $lookup, 'SemanticStyleTone');
 
         $semanticStyleComposite = SemanticStyle::fromQuickTime($quickTime);
+
         if ($semanticStyleComposite !== null) {
             [
                 'preset' => $semanticPreset,
@@ -258,6 +262,7 @@ final class AppleMakerNotesMerger
     private function normalizeFlags(?array $makerFlags, array $quickFlags): array
     {
         $flags = $makerFlags ?? [];
+
         foreach ($quickFlags as $key => $value) {
             if (!array_key_exists($key, $flags)) {
                 $flags[$key] = $value;
@@ -304,16 +309,19 @@ final class AppleMakerNotesMerger
     {
         foreach ($keys as $key) {
             $raw = $lookup->string($key);
+
             if ($raw === null) {
                 continue;
             }
 
             $parts = preg_split('/[ ,]+/', trim($raw));
+
             if (!is_array($parts)) {
                 continue;
             }
 
             $values = [];
+
             foreach ($parts as $part) {
                 if ($part === '') {
                     continue;
@@ -342,6 +350,7 @@ final class AppleMakerNotesMerger
     private function quickTimeFocusDistanceRange(QuickTimeLookup $lookup): ?array
     {
         $range = $this->quickTimeFloatList($lookup, 'FocusDistanceRange');
+
         if ($range !== null) {
             return $range;
         }
@@ -350,6 +359,7 @@ final class AppleMakerNotesMerger
         $far  = $lookup->float('FocusDistanceRangeFar', 'FocusDistanceFar');
 
         $values = [];
+
         if ($near !== null) {
             $values[] = $near;
         }
@@ -373,16 +383,19 @@ final class AppleMakerNotesMerger
     {
         foreach ($keys as $key) {
             $value = $lookup->string($key);
+
             if ($value !== null) {
                 return $value;
             }
 
             $intValue = $lookup->int($key);
+
             if ($intValue !== null) {
                 return (string) $intValue;
             }
 
             $floatValue = $lookup->float($key);
+
             if ($floatValue !== null) {
                 return (string) $floatValue;
             }
@@ -406,6 +419,7 @@ final class AppleMakerNotesMerger
         }
 
         $trimmed = trim($value);
+
         if ($trimmed === '') {
             return null;
         }
@@ -432,6 +446,7 @@ final class AppleMakerNotesMerger
     {
         foreach ($keys as $key) {
             $string = $lookup->string($key);
+
             if ($string !== null) {
                 if (is_numeric($string)) {
                     $code = (int) $string;
@@ -443,6 +458,7 @@ final class AppleMakerNotesMerger
             }
 
             $code = $lookup->int($key);
+
             if ($code !== null) {
                 return $map[$code] ?? (string) $code;
             }
@@ -465,8 +481,10 @@ final class AppleMakerNotesMerger
         }
 
         $flags = [];
+
         foreach (AppleMaps::FLAG_MAP as $key => $normalized) {
             $value = $quickTime->boolValue($key);
+
             if ($value !== null) {
                 $flags[$normalized] = $value;
             }

@@ -32,11 +32,13 @@ trait IsoBmffBoxTrait
     private function createIsoBmffTempStream(string $data): Stream
     {
         $handle = fopen('php://temp', 'wb+');
+
         if ($handle === false) {
             self::fail('Unable to create temporary stream handle.');
         }
 
         $bytesWritten = fwrite($handle, $data);
+
         if ($bytesWritten !== strlen($data)) {
             self::fail('Unable to populate temporary stream data.');
         }

@@ -104,6 +104,7 @@ final class SemanticStyle
         }
 
         $entries = self::normalizeEntries($value);
+
         if ($entries === null) {
             return null;
         }
@@ -182,6 +183,7 @@ final class SemanticStyle
             }
 
             $scalar = self::extractScalar($entry);
+
             if (($scalar === null) && ($entry !== null)) {
                 continue;
             }
@@ -260,12 +262,14 @@ final class SemanticStyle
     {
         foreach ($indexes as $index) {
             $candidates = [$index, (string) $index, '_' . $index];
+
             foreach ($candidates as $key) {
                 if (!array_key_exists($key, $entries)) {
                     continue;
                 }
 
                 $value = $entries[$key];
+
                 if (is_string($value) || is_int($value) || is_float($value) || is_bool($value)) {
                     return $value;
                 }
@@ -279,6 +283,7 @@ final class SemanticStyle
     {
         if (is_string($value)) {
             $trimmed = trim($value);
+
             if ($trimmed !== '') {
                 return $trimmed;
             }

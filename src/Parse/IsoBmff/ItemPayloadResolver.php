@@ -83,6 +83,7 @@ final readonly class ItemPayloadResolver
         }
 
         $location = $locations[$itemId];
+
         if (in_array($itemId, $visitedItemIds, true)) {
             return new IsoBmffItemResolveResult(null, [$this->createUnresolvedItem($itemId, $location, $dataReferences, $metaContextOffset)]);
         }
@@ -228,6 +229,7 @@ final readonly class ItemPayloadResolver
         $total           = 0;
         $unresolvedItems = [];
         $extentCount     = count($location['extents']);
+
         foreach ($location['extents'] as $extent) {
             $length = $extent['length'];
 
@@ -324,6 +326,7 @@ final readonly class ItemPayloadResolver
     ): IsoBmffItemResolveResult {
         $nextVisited   = $visitedItemIds;
         $nextVisited[] = $itemId;
+
         if (in_array($referenceItemId, $nextVisited, true)) {
             return new IsoBmffItemResolveResult(null, [$this->createUnresolvedItem($itemId, $location, $dataReferences, $metaContextOffset)]);
         }
@@ -392,16 +395,19 @@ final readonly class ItemPayloadResolver
     public function isExifItem(array $info): bool
     {
         $itemType = $info['itemType'] ?? null;
+
         if (is_string($itemType) && (strcasecmp($itemType, BoxType::EXIF->value) === 0)) {
             return true;
         }
 
         $name = $info['name'] ?? null;
+
         if (is_string($name) && (strcasecmp($name, BoxType::EXIF->value) === 0)) {
             return true;
         }
 
         $contentType = $info['contentType'] ?? null;
+
         if (is_string($contentType)) {
             $ct = strtolower($contentType);
 
@@ -421,15 +427,18 @@ final readonly class ItemPayloadResolver
     public function isXmpItem(array $info): bool
     {
         $itemType = $info['itemType'] ?? null;
+
         if (is_string($itemType)) {
             // EXIF 3.0 Annex A.2.3 allows explicit XMP item typing in the item_type field.
             $normalizedType = strtolower(rtrim($itemType, " \0"));
+
             if ($normalizedType === 'xmp') {
                 return true;
             }
         }
 
         $contentType = $info['contentType'] ?? null;
+
         if (!is_string($contentType)) {
             return false;
         }
@@ -587,6 +596,7 @@ final readonly class ItemPayloadResolver
     {
         $dataReference      = null;
         $dataReferenceIndex = $location['dataReferenceIndex'];
+
         if ($dataReferenceIndex > 0) {
             if (!isset($dataReferences[$dataReferenceIndex])) {
                 throw new ParseError(sprintf('iloc data_reference_index %d out of range', $dataReferenceIndex), 1497);

@@ -91,6 +91,7 @@ final readonly class QuickTimeValueDecoder
     {
         $win = $data->window;
         $win->seek(0);
+
         if ($data->contentSize < 8) {
             throw new ParseError('data box too small', 1251);
         }
@@ -156,6 +157,7 @@ final readonly class QuickTimeValueDecoder
             }
 
             $converted = iconv('SJIS', 'UTF-8', $payload);
+
             if ($converted === false) {
                 throw new ParseError('data box Shift-JIS payload contains malformed sequence.', 1919);
             }
@@ -263,6 +265,7 @@ final readonly class QuickTimeValueDecoder
     {
         /** @var 'int'|'float'|'bool'|'string'|null $targetType */
         $targetType = self::QUICKTIME_KEY_TYPES[$key] ?? null;
+
         if ($targetType === null) {
             return $value;
         }
@@ -373,6 +376,7 @@ final readonly class QuickTimeValueDecoder
     {
         if ($payloadSize === 8) {
             $parts = unpack('Nhigh/Nlow', $payload);
+
             if ($parts === false || !isset($parts['high'], $parts['low']) || !is_int($parts['high']) || !is_int($parts['low'])) {
                 throw new ParseError('Failed to decode QuickTime signed integer payload.', 2095);
             }
@@ -430,8 +434,10 @@ final readonly class QuickTimeValueDecoder
         }
 
         $value = 0;
+
         for ($i = 0; $i < $payloadSize; ++$i) {
             $byte = ord($payload[$i]);
+
             if ($value > intdiv(PHP_INT_MAX - $byte, 256)) {
                 throw new ParseError('QuickTime integer payload exceeds supported integer range.', 2096);
             }

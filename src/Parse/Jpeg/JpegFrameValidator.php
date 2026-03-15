@@ -118,6 +118,7 @@ final class JpegFrameValidator
         PayloadGuard::ensureMinimumLength($payload, 6, sprintf('SOF marker 0x%02X at offset %d', $marker, $offset), 1283);
 
         $componentCount = ord($payload[5]);
+
         if ($componentCount === 0) {
             throw new ParseError(sprintf('SOF marker 0x%02X at offset %d reports zero components', $marker, $offset), 1284);
         }
@@ -198,6 +199,7 @@ final class JpegFrameValidator
     public function validateSosHeader(string $payload, int $sosOffset): void
     {
         $payloadLength = strlen($payload);
+
         if ($payloadLength < 6) {
             throw new ParseError(
                 sprintf('SOS marker at offset %d is too short', $sosOffset),
@@ -206,6 +208,7 @@ final class JpegFrameValidator
         }
 
         $componentCount = ord($payload[0]);
+
         if ($componentCount === 0) {
             throw new ParseError(
                 sprintf('SOS marker at offset %d declares zero components', $sosOffset),
@@ -214,6 +217,7 @@ final class JpegFrameValidator
         }
 
         $expectedLength = 1 + ($componentCount * 2) + 3;
+
         if ($payloadLength !== $expectedLength) {
             throw new ParseError(
                 sprintf(
@@ -267,6 +271,7 @@ final class JpegFrameValidator
 
         for ($i = 0; $i < $componentCount; ++$i) {
             $componentSelector = ord($payload[$index]);
+
             if (isset($seenSelectors[$componentSelector])) {
                 throw new ParseError(
                     sprintf(
@@ -351,11 +356,13 @@ final class JpegFrameValidator
     private function deriveYCbCrSubSampling(array $components): ?array
     {
         $luma = $components[1] ?? null;
+
         if ($luma === null) {
             return null;
         }
 
         $chromas = [];
+
         foreach ($components as $id => $component) {
             if ($id !== 1) {
                 $chromas[] = $component;
@@ -374,6 +381,7 @@ final class JpegFrameValidator
         }
 
         $count = count($chromas);
+
         for ($i = 1; $i < $count; ++$i) {
             $component  = $chromas[$i];
             $horizontal = min($horizontal, $component['horizontal']);

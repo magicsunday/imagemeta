@@ -16,17 +16,13 @@ use MagicSunday\ImageMeta\Exif\Converters\FlashConverter;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
-use MagicSunday\ImageMeta\Value\Enum\{
-    FlashFunction,
-    FlashMode,
-    FlashReturn,
-};
+use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
+use MagicSunday\ImageMeta\Value\Enum\FlashMode;
+use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 use MagicSunday\ImageMeta\Value\FlashInfo;
-use PHPUnit\Framework\Attributes\{
-    CoversClass,
-    Test,
-    UsesClass,
-};
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**

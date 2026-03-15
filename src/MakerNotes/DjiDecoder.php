@@ -87,11 +87,13 @@ final class DjiDecoder implements MakerNotesDecoderInterface
     private function parseDjiData(string $raw): ?DjiMakerNotes
     {
         $length = strlen($raw);
+
         if ($length < 2) {
             return null;
         }
 
         $endian = $this->detectEndian($raw, $length);
+
         if (!$endian instanceof Endian) {
             return null;
         }
@@ -127,6 +129,7 @@ final class DjiDecoder implements MakerNotesDecoderInterface
                 }
 
                 $valueBytes = $this->resolveInlineValue($raw, $entryOffset + 8, $type, $count);
+
                 if ($valueBytes === null) {
                     continue;
                 }
@@ -238,11 +241,13 @@ final class DjiDecoder implements MakerNotesDecoderInterface
     private function resolveInlineValue(string $raw, int $inlineOffset, int $type, int $count): ?string
     {
         $typeSize = $this->typeSize($type);
+
         if (($typeSize === 0) || ($count < 1)) {
             return null;
         }
 
         $dataSize = $typeSize * $count;
+
         if ($dataSize > 4) {
             return null;
         }

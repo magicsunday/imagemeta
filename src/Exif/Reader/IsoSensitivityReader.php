@@ -96,9 +96,11 @@ final readonly class IsoSensitivityReader
     public function iso(): ?int
     {
         $sensitivityType = $this->sensitivityType();
+
         if ($sensitivityType instanceof SensitivityType) {
             foreach ($this->sensitivityTagPriority($sensitivityType) as $tag) {
                 $value = $this->reader->int($this->exifIfd, $tag);
+
                 if ($value !== null) {
                     return $value;
                 }
@@ -117,6 +119,7 @@ final readonly class IsoSensitivityReader
 
         foreach ($candidates as [$ifd, $tag]) {
             $value = $this->reader->int($ifd, $tag);
+
             if ($value !== null) {
                 return $value;
             }
@@ -133,6 +136,7 @@ final readonly class IsoSensitivityReader
         foreach ($this->fallbackIfds->resolve(includeIfd0: true) as $ifd) {
             foreach ($fallbackTags as $tag) {
                 $value = $this->reader->int($ifd, $tag);
+
                 if ($value !== null) {
                     return $value;
                 }
@@ -148,6 +152,7 @@ final readonly class IsoSensitivityReader
     public function isoBestEffort(): ?int
     {
         $iso = $this->iso();
+
         if ($iso !== null) {
             return $iso;
         }
@@ -165,6 +170,7 @@ final readonly class IsoSensitivityReader
 
         foreach ($fallbacks as [$ifd, $tag]) {
             $value = $this->reader->coerceIntValue($this->reader->value($ifd, $tag));
+
             if ($value !== null) {
                 return $value;
             }
@@ -181,6 +187,7 @@ final readonly class IsoSensitivityReader
         foreach ($this->fallbackIfds->resolve() as $ifd) {
             foreach ($tagPriority as $tag) {
                 $value = $this->reader->coerceIntValue($this->reader->value($ifd, $tag));
+
                 if ($value !== null) {
                     return $value;
                 }

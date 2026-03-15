@@ -51,6 +51,7 @@ final readonly class DngGeometryValidator
     public function validateDngActiveAndMaskedAreas(Ifd $ifd): void
     {
         $activeArea = $ifd->get(DngTag::ACTIVE_AREA);
+
         if ($activeArea instanceof IfdEntry) {
             if (($activeArea->count !== 4) || !in_array($activeArea->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)) {
                 throw new ParseError(
@@ -67,6 +68,7 @@ final readonly class DngGeometryValidator
         }
 
         $maskedAreas = $ifd->get(DngTag::MASKED_AREAS);
+
         if ($maskedAreas instanceof IfdEntry) {
             if (($maskedAreas->count < 4) || ($maskedAreas->count % 4 !== 0) || !in_array($maskedAreas->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)) {
                 throw new ParseError(
@@ -136,6 +138,7 @@ final readonly class DngGeometryValidator
     public function validateDngDefaultCropScaleGeometry(Ifd $ifd): void
     {
         $defaultScale = $ifd->get(DngTag::DEFAULT_SCALE);
+
         if ($defaultScale instanceof IfdEntry) {
             if (($defaultScale->type !== TiffConst::TYPE_RATIONAL) || ($defaultScale->count !== 2)) {
                 throw new ParseError(
@@ -149,6 +152,7 @@ final readonly class DngGeometryValidator
             }
 
             [$scaleH, $scaleV] = $this->support->extractDngCropScalePair($defaultScale, 'DefaultScale');
+
             if (($scaleH <= 0.0) || ($scaleV <= 0.0)) {
                 throw new ParseError(
                     sprintf(
@@ -162,6 +166,7 @@ final readonly class DngGeometryValidator
         }
 
         $defaultCropOrigin = $ifd->get(DngTag::DEFAULT_CROP_ORIGIN);
+
         if ($defaultCropOrigin instanceof IfdEntry) {
             if (($defaultCropOrigin->count !== 2) || !in_array(
                 $defaultCropOrigin->type,
@@ -179,6 +184,7 @@ final readonly class DngGeometryValidator
             }
 
             [$originH, $originV] = $this->support->extractDngCropScalePair($defaultCropOrigin, 'DefaultCropOrigin');
+
             if (($originH < 0.0) || ($originV < 0.0)) {
                 throw new ParseError(
                     sprintf(
@@ -192,6 +198,7 @@ final readonly class DngGeometryValidator
         }
 
         $defaultCropSize = $ifd->get(DngTag::DEFAULT_CROP_SIZE);
+
         if ($defaultCropSize instanceof IfdEntry) {
             if (($defaultCropSize->count !== 2) || !in_array(
                 $defaultCropSize->type,
@@ -209,6 +216,7 @@ final readonly class DngGeometryValidator
             }
 
             [$sizeH, $sizeV] = $this->support->extractDngCropScalePair($defaultCropSize, 'DefaultCropSize');
+
             if (($sizeH <= 0.0) || ($sizeV <= 0.0)) {
                 throw new ParseError(
                     sprintf(
@@ -549,16 +557,20 @@ final readonly class DngGeometryValidator
         }
 
         $value = $entry->value;
+
         if (!$value instanceof ExifRationalList || count($value->values) !== 4) {
             throw new ParseError('LensInfo must decode to four rational components.', 1650);
         }
 
         $components = [];
+
         foreach ($value->values as $index => $component) {
             if ($component->denominator === 0) {
                 $isApertureField = $index >= 2;
+
                 if ($isApertureField && ($component->numerator === 0)) {
                     $components[] = null;
+
                     continue;
                 }
 
@@ -706,6 +718,7 @@ final readonly class DngGeometryValidator
         ?int $samplesPerPixel,
     ): void {
         $blackLevel = $ifd->get(DngTag::BLACK_LEVEL);
+
         if (!$blackLevel instanceof IfdEntry) {
             return;
         }
@@ -728,6 +741,7 @@ final readonly class DngGeometryValidator
 
         if (($repeatRows !== null) && ($repeatCols !== null) && ($samplesPerPixel !== null)) {
             $expectedCount = $repeatRows * $repeatCols * $samplesPerPixel;
+
             if ($blackLevel->count !== $expectedCount) {
                 throw new ParseError(
                     sprintf(
@@ -760,6 +774,7 @@ final readonly class DngGeometryValidator
 
         if (($activeArea instanceof IfdEntry) && ($activeArea->count === 4) && in_array($activeArea->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)) {
             $rectangles = $this->support->extractDngRectangles($activeArea, 'ActiveArea');
+
             if (count($rectangles) === 1) {
                 $activeWidth  = $rectangles[0]['right'] - $rectangles[0]['left'];
                 $activeLength = $rectangles[0]['bottom'] - $rectangles[0]['top'];
@@ -782,6 +797,7 @@ final readonly class DngGeometryValidator
         ?int $activeLength,
     ): void {
         $blackLevelDeltaH = $ifd->get(DngTag::BLACK_LEVEL_DELTA_H);
+
         if ($blackLevelDeltaH instanceof IfdEntry) {
             $this->validateDngBlackLevelDeltaEntry(
                 $blackLevelDeltaH,
@@ -794,6 +810,7 @@ final readonly class DngGeometryValidator
         }
 
         $blackLevelDeltaV = $ifd->get(DngTag::BLACK_LEVEL_DELTA_V);
+
         if ($blackLevelDeltaV instanceof IfdEntry) {
             $this->validateDngBlackLevelDeltaEntry(
                 $blackLevelDeltaV,
@@ -854,6 +871,7 @@ final readonly class DngGeometryValidator
     private function validateDngWhiteLevel(Ifd $ifd, ?int $samplesPerPixel): void
     {
         $whiteLevel = $ifd->get(DngTag::WHITE_LEVEL);
+
         if (!$whiteLevel instanceof IfdEntry) {
             return;
         }

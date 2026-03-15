@@ -254,6 +254,7 @@ final readonly class IfdValueReader
 
         if (is_string($value)) {
             $trimmed = trim($value);
+
             if ($trimmed === '') {
                 return null;
             }
@@ -297,6 +298,7 @@ final readonly class IfdValueReader
         if (is_string($value) && ($value !== '')) {
             $length = strlen($value);
             $bytes  = [];
+
             for ($i = 0; $i < $length; ++$i) {
                 $bytes[] = ord($value[$i]);
             }
@@ -318,8 +320,10 @@ final readonly class IfdValueReader
 
         if ($value instanceof ExifRationalList) {
             $result = [];
+
             foreach ($value->values as $item) {
                 $float = $this->converters->rationalToFloat($item);
+
                 if ($float === null) {
                     return null;
                 }
@@ -405,6 +409,7 @@ final readonly class IfdValueReader
 
         if (is_string($value)) {
             $trimmed = trim($value);
+
             if ($trimmed === '') {
                 return null;
             }
@@ -532,6 +537,7 @@ final readonly class IfdValueReader
     public function rawOffset(?Ifd $ifd, int $tag): ?string
     {
         $value = $this->value($ifd, $tag);
+
         if (!is_string($value)) {
             return null;
         }
@@ -605,6 +611,7 @@ final readonly class IfdValueReader
         }
 
         $converted = $this->convertTextToUtf8($encoding, $payload);
+
         if ($converted === null) {
             return null;
         }

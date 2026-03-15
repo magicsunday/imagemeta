@@ -336,6 +336,7 @@ final class TiffExifParserFuzzTest extends TestCase
         $offset = $nextOffset;
 
         $ifdSize = 2 + 12 + 4;
+
         for ($i = 1; $i < 5; ++$i) {
             $blob .= pack('v', 1);
             $blob .= pack('v', 0xFF00 + $i) . pack('v', TiffConst::TYPE_LONG) . pack('V', 1) . pack('V', 1);

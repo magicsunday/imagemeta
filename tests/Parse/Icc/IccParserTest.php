@@ -1665,6 +1665,7 @@ final class IccParserTest extends TestCase
 
         $encodeS15 = static function (float $v): string {
             $raw = (int) round($v * 65536.0);
+
             if ($raw < 0) {
                 $raw += 0x100000000;
             }
@@ -1692,6 +1693,7 @@ final class IccParserTest extends TestCase
         // mluc text helper for dmnd/dmdd
         $buildMluc = static function (string $text): string {
             $utf16 = '';
+
             for ($i = 0, $len = strlen($text); $i < $len; ++$i) {
                 $utf16 .= "\x00" . $text[$i];
             }

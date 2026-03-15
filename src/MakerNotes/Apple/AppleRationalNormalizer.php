@@ -51,6 +51,7 @@ final readonly class AppleRationalNormalizer
 
         if (is_string($value)) {
             $normalized = trim($value);
+
             if ($normalized === '') {
                 return null;
             }
@@ -65,6 +66,7 @@ final readonly class AppleRationalNormalizer
                 }
 
                 $denominatorFloat = (float) $denominator;
+
                 if ($denominatorFloat === 0.0) {
                     return null;
                 }
@@ -73,11 +75,13 @@ final readonly class AppleRationalNormalizer
             }
 
             $components = preg_split('/\s+/', $normalized);
+
             if (($components !== false) && (count($components) === 2)) {
                 [$numerator, $denominator] = $components;
 
                 if (($numerator !== '') && ($denominator !== '') && is_numeric($numerator) && is_numeric($denominator)) {
                     $denominatorFloat = (float) $denominator;
+
                     if ($denominatorFloat === 0.0) {
                         return null;
                     }
@@ -101,6 +105,7 @@ final readonly class AppleRationalNormalizer
             if (array_key_exists($key, $value)) {
                 $candidate = $value[$key];
                 $nested    = $this->normalizeRationalFloat($candidate);
+
                 if ($nested !== null) {
                     return $nested;
                 }
@@ -110,6 +115,7 @@ final readonly class AppleRationalNormalizer
         if (array_key_exists('values', $value) && is_array($value['values'])) {
             $candidate = $value['values'];
             $nested    = $this->normalizeRationalFloat($candidate);
+
             if ($nested !== null) {
                 return $nested;
             }
@@ -117,6 +123,7 @@ final readonly class AppleRationalNormalizer
 
         $numerator   = $this->numericComponentFromArray($value, 'numerator', 'Numerator', 'num', 'Num', 'numer');
         $denominator = $this->numericComponentFromArray($value, 'denominator', 'Denominator', 'den', 'Den', 'denom', 'Denom');
+
         if (($numerator !== null) && ($denominator !== null)) {
             if ($denominator === 0.0) {
                 return null;
@@ -130,6 +137,7 @@ final readonly class AppleRationalNormalizer
         }
 
         $count = count($value);
+
         if ($count >= 2) {
             /** @var NativePlistValue $component */
             $component = $value[0];
@@ -138,6 +146,7 @@ final readonly class AppleRationalNormalizer
             /** @var NativePlistValue $component */
             $component = $value[1];
             $den       = $this->numericScalarValue($component);
+
             if (($num !== null) && ($den !== null) && ($den !== 0.0)) {
                 return $num / $den;
             }
@@ -147,6 +156,7 @@ final readonly class AppleRationalNormalizer
             /** @var NativePlistValue $entryValue */
             $entryValue = $entry;
             $float      = $this->normalizeRationalFloat($entryValue);
+
             if ($float !== null) {
                 return $float;
             }
@@ -175,6 +185,7 @@ final readonly class AppleRationalNormalizer
             /** @var NativePlistValue $candidate */
             $candidate = $value[$key];
             $numeric   = $this->numericScalarValue($candidate);
+
             if ($numeric !== null) {
                 return $numeric;
             }
@@ -202,6 +213,7 @@ final readonly class AppleRationalNormalizer
 
         if (is_string($value)) {
             $normalized = trim($value);
+
             if ($normalized === '') {
                 return null;
             }

@@ -48,6 +48,7 @@ final readonly class TiffColorInkValidator
 
         $inkSet      = 1;
         $inkSetEntry = $ifd->get(TiffTag::INK_SET);
+
         if ($inkSetEntry instanceof IfdEntry) {
             if (($inkSetEntry->type !== TiffConst::TYPE_SHORT) || ($inkSetEntry->count !== 1) || !is_int($inkSetEntry->value)) {
                 throw new ParseError('InkSet must be SHORT[1] for separated images.', 1709);
@@ -65,6 +66,7 @@ final readonly class TiffColorInkValidator
 
         $numberOfInks      = 4;
         $numberOfInksEntry = $ifd->get(TiffTag::NUMBER_OF_INKS);
+
         if ($numberOfInksEntry instanceof IfdEntry) {
             if (($numberOfInksEntry->type !== TiffConst::TYPE_SHORT) || ($numberOfInksEntry->count !== 1) || !is_int($numberOfInksEntry->value)) {
                 throw new ParseError('NumberOfInks must be SHORT[1] when present.', 1711);
@@ -81,6 +83,7 @@ final readonly class TiffColorInkValidator
         }
 
         $inkNamesEntry = $ifd->get(TiffTag::INK_NAMES);
+
         if ($inkSet === 1) {
             if ($inkNamesEntry instanceof IfdEntry) {
                 throw new ParseError('InkNames must not be present when InkSet=1 (CMYK).', 1713);
@@ -165,6 +168,7 @@ final readonly class TiffColorInkValidator
 
         $photometricValue = null;
         $photometricEntry = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+
         if (($photometricEntry instanceof IfdEntry) && is_int($photometricEntry->value)) {
             $photometricValue = $photometricEntry->value;
         }
@@ -351,6 +355,7 @@ final readonly class TiffColorInkValidator
 
         $samplesPerPixel = 1;
         $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+
         if ($samplesEntry instanceof IfdEntry) {
             if (!is_int($samplesEntry->value) || ($samplesEntry->value <= 0)) {
                 throw new ParseError('DotRange requires SamplesPerPixel as a positive integer.', 1718);
@@ -426,6 +431,7 @@ final readonly class TiffColorInkValidator
     private function extractDotRangeBitDepths(Ifd $ifd, int $samplesPerPixel): array
     {
         $bitsEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
+
         if (!$bitsEntry instanceof IfdEntry) {
             throw new ParseError('DotRange validation requires BitsPerSample to be present.', 1722);
         }
@@ -477,6 +483,7 @@ final readonly class TiffColorInkValidator
     private function validateDotRangePairs(int $dotRangeCount, array $dotRangeValues, array $bitDepths): void
     {
         $pairCount = intdiv($dotRangeCount, 2);
+
         for ($pairIndex = 0; $pairIndex < $pairCount; ++$pairIndex) {
             $componentIndex = $dotRangeCount === 2 ? 0 : $pairIndex;
             $bitDepth       = $bitDepths[$componentIndex];

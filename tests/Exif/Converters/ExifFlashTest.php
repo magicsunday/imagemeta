@@ -12,17 +12,13 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Exif\Converters;
 
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
-use MagicSunday\ImageMeta\Value\Enum\{
-    FlashFunction,
-    FlashMode,
-    FlashReturn,
-};
+use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
+use MagicSunday\ImageMeta\Value\Enum\FlashMode;
+use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 use MagicSunday\ImageMeta\Value\FlashInfo;
-use PHPUnit\Framework\Attributes\{
-    CoversClass,
-    Test,
-    UsesClass,
-};
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**

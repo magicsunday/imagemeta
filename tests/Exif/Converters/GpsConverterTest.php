@@ -27,13 +27,11 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
-use PHPUnit\Framework\Attributes\{
-    CoversClass,
-    DataProvider,
-    Test,
-    UsesClass,
-    UsesTrait,
-};
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 use function sprintf;
@@ -948,6 +946,7 @@ final class GpsConverterTest extends TestCase
     private function buildIfdWithDateAndTime(string $dateStamp, array $timeRationals): Ifd
     {
         $timeValues = [];
+
         foreach ($timeRationals as [$numerator, $denominator]) {
             $timeValues[] = new ExifRational($numerator, $denominator);
         }

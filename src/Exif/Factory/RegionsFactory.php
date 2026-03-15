@@ -79,6 +79,7 @@ final readonly class RegionsFactory
 
         foreach ($appleRegions as $appleRegion) {
             $matchIndex = $this->findMatchingRegionIndex($mwgRegions, $appleRegion);
+
             if ($matchIndex !== null) {
                 $mwgRegions[$matchIndex] = $this->mergeRegion($mwgRegions[$matchIndex], $appleRegion);
             } else {
@@ -122,6 +123,7 @@ final readonly class RegionsFactory
             $centerY = $centersY[$index] ?? null;
             $width   = $widths[$index] ?? null;
             $height  = $heights[$index] ?? null;
+
             if ($centerX === null) {
                 continue;
             }
@@ -139,6 +141,7 @@ final readonly class RegionsFactory
             }
 
             $normalized = $this->normalizer->normalizedBox($centerX, $centerY, $width, $height, $dimensions);
+
             if ($normalized === null) {
                 continue;
             }
@@ -208,18 +211,22 @@ final readonly class RegionsFactory
         $confidenceScale = $this->normalizer->confidenceScale($confidenceLevels, $confidences);
 
         $names = $this->stringValues($document, XmpNamespace::APPLE_FACEINFO->value, 'Name');
+
         if ($names === []) {
             $names = $this->stringValues($document, XmpNamespace::APPLE_FACEINFO->value, 'FullName');
         }
 
         $faceIds = $this->stringValues($document, XmpNamespace::APPLE_FACEINFO->value, 'FaceID');
+
         if ($faceIds === []) {
             $faceIds = $this->stringValues($document, XmpNamespace::APPLE_FACEINFO->value, 'FaceUUID');
         }
 
         $count = $geometry['count'];
+
         foreach ([$confidenceLevels, $confidences, $angleInfoRolls, $rolls, $yaws, $names, $faceIds] as $values) {
             $valueCount = count($values);
+
             if ($valueCount > $count) {
                 $count = $valueCount;
             }
@@ -238,11 +245,13 @@ final readonly class RegionsFactory
             $height  = $heights[$index] ?? null;
 
             $geometry = null;
+
             if (($centerX !== null) && ($centerY !== null) && ($width !== null) && ($height !== null)) {
                 $geometry = $this->normalizer->normalizedBox($centerX, $centerY, $width, $height, $dimensions);
             }
 
             $confidence = $this->normalizer->normalizedConfidence($confidenceLevels[$index] ?? null, $confidenceScale);
+
             if ($confidence === null) {
                 $confidence = $this->normalizer->normalizedConfidence($confidences[$index] ?? null, $confidenceScale);
             }
@@ -274,6 +283,7 @@ final readonly class RegionsFactory
 
         foreach ($entries as $entry) {
             $geometry = $entry['geometry'];
+
             if ($geometry !== null) {
                 $regions[] = new Region(
                     RegionType::Face,
@@ -308,6 +318,7 @@ final readonly class RegionsFactory
 
         foreach ($supplemental as $index => $supplement) {
             $baseRegion = $regions[$index] ?? null;
+
             if (!$baseRegion instanceof Region) {
                 continue;
             }
@@ -334,6 +345,7 @@ final readonly class RegionsFactory
 
         // Collect indices of MWG face regions eligible for supplemental Apple metadata.
         $faceIndices = [];
+
         foreach ($mwgRegions as $index => $region) {
             if ($region->type === RegionType::Face) {
                 $faceIndices[] = $index;
@@ -351,6 +363,7 @@ final readonly class RegionsFactory
         foreach ($entries as $entry) {
             // Align geometry-bearing Apple entries with MWG faces based on their shared shape.
             $matchIndex = $this->matchAppleEntryToMwgRegion($mwgRegions, $entry);
+
             if ($matchIndex === null) {
                 continue;
             }
@@ -376,6 +389,7 @@ final readonly class RegionsFactory
             }
 
             $nextIndex = array_shift($unmatchedIndices);
+
             if ($nextIndex === null) {
                 break;
             }
@@ -404,6 +418,7 @@ final readonly class RegionsFactory
     private function matchAppleEntryToMwgRegion(array $mwgRegions, array $entry): ?int
     {
         $geometry = $entry['geometry'];
+
         if ($geometry === null) {
             return null;
         }
@@ -436,6 +451,7 @@ final readonly class RegionsFactory
         foreach ($indices as $position => $index) {
             if ($index === $match) {
                 unset($indices[$position]);
+
                 break;
             }
         }
@@ -503,12 +519,14 @@ final readonly class RegionsFactory
 
             [$cx, $cy] = $this->normalizer->regionCenter($region);
             $distance  = abs($cx - $targetCx) + abs($cy - $targetCy);
+
             if ($distance > self::MATCH_THRESHOLD) {
                 continue;
             }
 
             $sizeDiff = abs($region->w - $candidate->w) + abs($region->h - $candidate->h);
             $score    = $distance + $sizeDiff;
+
             if ($bestScore === null || $score < $bestScore) {
                 $bestScore = $score;
                 $bestIndex = $index;
@@ -530,6 +548,7 @@ final readonly class RegionsFactory
     {
         $person     = $base->personName ?? $supplement->personName;
         $confidence = $base->confidence;
+
         if ($confidence === null) {
             $confidence = $supplement->confidence;
         } elseif ($supplement->confidence !== null) {
@@ -564,6 +583,7 @@ final readonly class RegionsFactory
     private function stringAt(array $values, int $index): ?string
     {
         $value = $values[$index] ?? null;
+
         if ($value === null) {
             return null;
         }

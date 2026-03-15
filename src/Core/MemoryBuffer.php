@@ -231,6 +231,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
             }
 
             $intValue = $this->normalizeUInt64($length, 0, 'MemoryBuffer read length out of range');
+
             if ($intValue <= 0) {
                 throw new BoundsError('MemoryBuffer read length out of range: ' . $length->toHex(), 1006);
             }

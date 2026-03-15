@@ -146,6 +146,7 @@ final readonly class DeviceExifReader
         }
 
         $vector = $this->converters->srationalTripletToFloatVector($value);
+
         if ($vector === null) {
             return null;
         }
@@ -175,6 +176,7 @@ final readonly class DeviceExifReader
 
         if ($value instanceof ExifRationalList) {
             $vector = $this->converters->srationalTripletToFloatVector($value);
+
             if ($vector === null) {
                 return null;
             }
@@ -188,6 +190,7 @@ final readonly class DeviceExifReader
         }
 
         $scalar = $this->converters->rationalToFloat($value);
+
         if ($scalar === null) {
             return null;
         }

@@ -819,6 +819,7 @@ final class TiffExifParserNegativeTest extends TestCase
                     . pack('v', $type)
                     . pack('V', $count)
                     . str_pad(substr($value, 0, $size), 4, "\0");
+
                 continue;
             }
 
@@ -1500,6 +1501,7 @@ final class TiffExifParserNegativeTest extends TestCase
 
         // IFD0
         $blob .= pack('v', $ifd0Count);
+
         foreach ($ifd0Tags as [$tag, $value]) {
             $blob .= pack('v', $tag)
                 . pack('v', TiffConst::TYPE_SHORT)
@@ -1511,6 +1513,7 @@ final class TiffExifParserNegativeTest extends TestCase
 
         // IFD1
         $blob .= pack('v', $ifd1Count);
+
         foreach ($ifd1Tags as [$tag, $value]) {
             $blob .= pack('v', $tag)
                 . pack('v', TiffConst::TYPE_SHORT)

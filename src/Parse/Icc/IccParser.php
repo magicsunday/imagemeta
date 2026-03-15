@@ -141,8 +141,10 @@ final readonly class IccParser implements IccParserInterface
     private function selectDecodeInput(?string $profileData, array $segments): ?string
     {
         $data = $profileData;
+
         if ($data === null || strlen($data) < self::HEADER_LENGTH) {
             $combined = $this->combineSegments($segments);
+
             if ($combined !== null) {
                 $data = $combined;
             }
@@ -182,6 +184,7 @@ final readonly class IccParser implements IccParserInterface
 
         // ICC.1:2022 §7.2.9: Validate 'acsp' signature at bytes 36-39.
         $signature = substr($data, 36, 4);
+
         if ($signature !== self::PROFILE_SIGNATURE) {
             throw new ParseError(
                 sprintf('ICC profile signature "%s" at offset 36 is not the required "acsp"', $signature),
@@ -361,6 +364,7 @@ final readonly class IccParser implements IccParserInterface
             }
 
             $minLength = strlen(self::ICC_SIGNATURE) + 2;
+
             if (strlen($payload) <= $minLength) {
                 continue;
             }

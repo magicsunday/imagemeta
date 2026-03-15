@@ -84,6 +84,7 @@ final class IccBinaryReader
     public function s15Fixed16(string $data, int $offset): float
     {
         $bytes = substr($data, $offset, 4);
+
         if (strlen($bytes) < 4) {
             throw new ParseError(
                 sprintf('ICC s15Fixed16 field truncated at offset %d: expected 4 bytes, got %d', $offset, strlen($bytes)),
@@ -93,6 +94,7 @@ final class IccBinaryReader
 
         // Unpack as unsigned 32-bit big-endian
         $unpacked = unpack('Nvalue', $bytes);
+
         if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
             throw new ParseError(
                 sprintf('ICC s15Fixed16 unpack failed at offset %d', $offset),
@@ -101,6 +103,7 @@ final class IccBinaryReader
         }
 
         $unsigned = $unpacked['value'];
+
         if (!is_int($unsigned)) {
             throw new ParseError(
                 sprintf('ICC s15Fixed16 unpack returned non-integer at offset %d', $offset),
