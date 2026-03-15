@@ -26,6 +26,8 @@ enum XmpNamespace: string
 
     case EXIF = 'http://ns.adobe.com/exif/1.0/';
 
+    case EXIFEX = 'http://cipa.jp/exif/1.0/';
+
     case TIFF = 'http://ns.adobe.com/tiff/1.0/';
 
     case PHOTOSHOP = 'http://ns.adobe.com/photoshop/1.0/';
