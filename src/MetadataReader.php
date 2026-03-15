@@ -112,14 +112,14 @@ final readonly class MetadataReader
      * Reads metadata from the given file path by delegating to the appropriate parser.
      * When digests are requested, metadata parsing and digest computation use the same opened stream snapshot.
      *
-     * @param string $path        Path to the image or media file being inspected.
-     * @param bool   $withDigests When true the SHA-256 digest is calculated as part of the
-     *                            returned metadata aggregate.
+     * @param string $path       Path to the image or media file being inspected.
+     * @param bool   $withDigest When true the SHA-256 digest is calculated as part of the
+     *                           returned metadata aggregate.
      *
      * @throws ParseError
      * @throws BoundsError
      */
-    public function read(string $path, bool $withDigests = false): Metadata
+    public function read(string $path, bool $withDigest = false): Metadata
     {
         if (is_dir($path)) {
             throw new ParseError(sprintf('Path is a directory, not a file: %s', $path), 1120);
@@ -130,7 +130,7 @@ final readonly class MetadataReader
         $fileSize  = $stream->size();
         $extension = $this->detectExtension($path);
 
-        $sha256 = $withDigests ? $this->calculateDigest($stream) : null;
+        $sha256 = $withDigest ? $this->calculateDigest($stream) : null;
 
         try {
             $type = $this->formatDetector->detect($stream);
@@ -479,7 +479,7 @@ final readonly class MetadataReader
         $remaining = $stream->size();
 
         while ($remaining > 0) {
-            $chunkLength = min($remaining, 8192);
+            $chunkLength = min($remaining, 1_048_576);
             $chunk       = $stream->read($chunkLength);
             hash_update($context, $chunk);
             $remaining -= $chunkLength;

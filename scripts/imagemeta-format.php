@@ -757,7 +757,7 @@ final class MetadataFormatter
     /**
      * Formats the output for a given image file.
      */
-    public function format(string $filePath, bool $withDigests = false): void
+    public function format(string $filePath, bool $withDigest = false): void
     {
         if (!file_exists($filePath)) {
             echo sprintf('Error: File not found: %s%s', $filePath, PHP_EOL);
@@ -771,7 +771,7 @@ final class MetadataFormatter
 
         $reader   = MetadataReader::createDefault();
         $start    = hrtime(true);
-        $metadata = $reader->read($filePath, withDigests: $withDigests);
+        $metadata = $reader->read($filePath, withDigest: $withDigest);
         $parseMs  = (hrtime(true) - $start) / 1e6;
 
         // ImageMeta section
@@ -2987,7 +2987,7 @@ final class MetadataFormatter
 // Main execution
 if ((PHP_SAPI === 'cli') && (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__)) {
     $options     = getopt('', ['digests']);
-    $withDigests = isset($options['digests']);
+    $withDigest = isset($options['digests']);
     $args        = array_values(array_filter($argv, fn ($a) => !str_starts_with($a, '--')));
 
     if (count($args) < 2) {
@@ -3005,7 +3005,7 @@ if ((PHP_SAPI === 'cli') && (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __F
 
     try {
         $formatter = new MetadataFormatter();
-        $formatter->format($filePath, $withDigests);
+        $formatter->format($filePath, $withDigest);
     } catch (Throwable $e) {
         echo 'ERROR: ' . $e->getMessage() . "\n";
         echo $e->getTraceAsString() . "\n";
