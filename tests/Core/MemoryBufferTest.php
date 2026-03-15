@@ -162,7 +162,7 @@ namespace MagicSunday\ImageMeta\Tests\Core {
             $buffer->read(1);
 
             $this->expectException(BoundsError::class);
-            $this->expectExceptionCode(1031);
+            $this->expectExceptionCode(1025);
             $buffer->read(PHP_INT_MAX);
         }
 
