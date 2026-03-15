@@ -24,5 +24,8 @@ package-lock.json
 .phpunit.result.cache
 .phpunit.cache
 
+# Docker
+compose.override.yaml
+
 # Custom
 test-images/
