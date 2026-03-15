@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Icc;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 
+use function array_key_exists;
 use function intdiv;
 use function min;
 use function ord;
@@ -28,6 +29,9 @@ use function substr;
  * ICC.1:2022 §7.3 defines the tag table layout. §9 defines common tags
  * (copyrightTag, profileDescriptionTag, mediaWhitePointTag). §10 defines
  * tag types (textType, descType, multiLocalizedUnicodeType, XYZType).
+ *
+ * @phpstan-type TagOffsetEntry array{offset: int, size: int}
+ * @phpstan-type TagOffsetMap   array<string, TagOffsetEntry>
  */
 final readonly class IccTagDecoder
 {
@@ -44,6 +48,103 @@ final readonly class IccTagDecoder
     }
 
     /**
+     * Parses the ICC tag table once and returns a map keyed by 4-byte tag signature.
+     *
+     * Each entry holds the validated offset and size for the tag's data within
+     * the ICC profile. Tags with invalid alignment, out-of-bounds offsets,
+     * or zero sizes are silently skipped — matching the behaviour of the
+     * per-tag linear scan in {@see findTagData()}.
+     *
+     * ICC.1:2022 §7.3 defines the tag table layout: a 4-byte tag count at
+     * offset 128, followed by 12-byte tag records (signature + offset + size).
+     *
+     * @param string $data        Raw ICC profile payload.
+     * @param int    $profileSize Declared profile size limiting the accessible range.
+     *
+     * @return TagOffsetMap Tag offset map keyed by 4-byte tag signature.
+     */
+    public function buildTagOffsetMap(string $data, int $profileSize): array
+    {
+        if ($profileSize < self::HEADER_LENGTH + 4) {
+            return [];
+        }
+
+        $length         = min(strlen($data), $profileSize);
+        $tagCountOffset = self::HEADER_LENGTH;
+
+        if ($tagCountOffset + 4 > $length) {
+            return [];
+        }
+
+        $tagCount = $this->reader->uInt32Be(substr($data, $tagCountOffset, 4));
+        $cursor   = $tagCountOffset + 4;
+
+        // Guard against integer overflow before multiplying tag count by entry size.
+        // On 32-bit PHP, large uint32 tag counts would overflow PHP_INT_MAX.
+        if ($tagCount > intdiv(PHP_INT_MAX, self::TAG_RECORD_LENGTH)) {
+            throw new ParseError(
+                sprintf(
+                    'ICC tag table count %d would overflow when multiplied by entry size %d',
+                    $tagCount,
+                    self::TAG_RECORD_LENGTH,
+                ),
+                1808,
+            );
+        }
+
+        $tableEnd = $tagCountOffset + 4 + ($tagCount * self::TAG_RECORD_LENGTH);
+
+        if ($tableEnd > $length) {
+            throw new ParseError(
+                sprintf(
+                    'ICC tag table count %d requires %d bytes but only %d bytes are available',
+                    $tagCount,
+                    $tableEnd - $tagCountOffset,
+                    $length - $tagCountOffset,
+                ),
+                2080,
+            );
+        }
+
+        $map = [];
+
+        for ($i = 0; $i < $tagCount; ++$i) {
+            if ($cursor + self::TAG_RECORD_LENGTH > $length) {
+                break;
+            }
+
+            $signature = substr($data, $cursor, 4);
+            $offset    = $this->reader->uInt32Be(substr($data, $cursor + 4, 4));
+            $size      = $this->reader->uInt32Be(substr($data, $cursor + 8, 4));
+            $cursor += self::TAG_RECORD_LENGTH;
+
+            // ICC.1:2022 §7.3 — tag offsets must be 4-byte aligned
+            if (($offset % 4) !== 0) {
+                continue;
+            }
+
+            if ($offset < $tableEnd) {
+                continue;
+            }
+
+            if ($size === 0) {
+                continue;
+            }
+
+            if (($offset + $size) > $length) {
+                continue;
+            }
+
+            // First occurrence wins — ICC profiles should not contain duplicate tags
+            if (!array_key_exists($signature, $map)) {
+                $map[$signature] = ['offset' => $offset, 'size' => $size];
+            }
+        }
+
+        return $map;
+    }
+
+    /**
      * Extracts a text tag (desc, cprt) from the tag table.
      *
      * ICC.1:2022 §9.2.22 (copyrightTag) and §9.2.43 (profileDescriptionTag):
@@ -51,16 +152,17 @@ final readonly class IccTagDecoder
      * Legacy profiles (major version < 4) may use descType or textType as
      * fallback per ICC.1:2001 §6.5.17 and §6.5.22.
      *
-     * @param string $data         Raw ICC profile payload.
-     * @param int    $profileSize  Declared profile size limiting the accessible range.
-     * @param string $tagSignature Tag signature to search for ('desc' or 'cprt').
-     * @param int    $majorVersion Profile major version for tag-type conformance gating.
+     * @param string       $data         Raw ICC profile payload.
+     * @param int          $profileSize  Declared profile size limiting the accessible range.
+     * @param string       $tagSignature Tag signature to search for ('desc' or 'cprt').
+     * @param int          $majorVersion Profile major version for tag-type conformance gating.
+     * @param TagOffsetMap $tagMap       Pre-built tag offset map from {@see buildTagOffsetMap()}.
      *
      * @return string|null Tag text or null when not available.
      */
-    public function extractTag(string $data, int $profileSize, string $tagSignature, int $majorVersion): ?string
+    public function extractTag(string $data, int $profileSize, string $tagSignature, int $majorVersion, array $tagMap = []): ?string
     {
-        $tagData = $this->findTagData($data, $profileSize, $tagSignature);
+        $tagData = $this->findTagData($data, $profileSize, $tagSignature, $tagMap);
 
         if ($tagData === null) {
             return null;
@@ -95,14 +197,15 @@ final readonly class IccTagDecoder
      *
      * ICC.1:2022 §9.2.34 (mediaWhitePointTag) uses XYZType (§10.31).
      *
-     * @param string $data        Raw ICC profile payload.
-     * @param int    $profileSize Declared profile size limiting the accessible range.
+     * @param string       $data        Raw ICC profile payload.
+     * @param int          $profileSize Declared profile size limiting the accessible range.
+     * @param TagOffsetMap $tagMap      Pre-built tag offset map from {@see buildTagOffsetMap()}.
      *
      * @return array{x: float, y: float, z: float}|null XYZ tristimulus values or null when not available.
      */
-    public function extractWhitePoint(string $data, int $profileSize): ?array
+    public function extractWhitePoint(string $data, int $profileSize, array $tagMap = []): ?array
     {
-        return $this->extractXyzTag($data, $profileSize, 'wtpt');
+        return $this->extractXyzTag($data, $profileSize, 'wtpt', $tagMap);
     }
 
     /**
@@ -111,15 +214,16 @@ final readonly class IccTagDecoder
      * ICC.1:2022 §10.31: XYZType contains one or more XYZNumber values.
      * This method extracts the first XYZNumber (3 x s15Fixed16Number at offset 8).
      *
-     * @param string $data         Raw ICC profile payload.
-     * @param int    $profileSize  Declared profile size limiting the accessible range.
-     * @param string $tagSignature 4-byte tag signature to search for.
+     * @param string       $data         Raw ICC profile payload.
+     * @param int          $profileSize  Declared profile size limiting the accessible range.
+     * @param string       $tagSignature 4-byte tag signature to search for.
+     * @param TagOffsetMap $tagMap       Pre-built tag offset map from {@see buildTagOffsetMap()}.
      *
      * @return array{x: float, y: float, z: float}|null XYZ tristimulus values or null when not available.
      */
-    public function extractXyzTag(string $data, int $profileSize, string $tagSignature): ?array
+    public function extractXyzTag(string $data, int $profileSize, string $tagSignature, array $tagMap = []): ?array
     {
-        $tagData = $this->findTagData($data, $profileSize, $tagSignature);
+        $tagData = $this->findTagData($data, $profileSize, $tagSignature, $tagMap);
 
         if ($tagData === null || strlen($tagData) < 20) {
             return null;
@@ -150,8 +254,9 @@ final readonly class IccTagDecoder
      * ICC.1:2022 §9.2.51 and §10.30 define viewingConditionsType as:
      * signature + reserved + illuminant XYZ + surround XYZ + illuminant type.
      *
-     * @param string $data        Raw ICC profile payload.
-     * @param int    $profileSize Declared profile size limiting the accessible range.
+     * @param string       $data        Raw ICC profile payload.
+     * @param int          $profileSize Declared profile size limiting the accessible range.
+     * @param TagOffsetMap $tagMap      Pre-built tag offset map from {@see buildTagOffsetMap()}.
      *
      * @return array{
      *   illuminant: array{x: float, y: float, z: float},
@@ -159,9 +264,9 @@ final readonly class IccTagDecoder
      *   illuminantType: int
      * }|null
      */
-    public function extractViewingConditions(string $data, int $profileSize): ?array
+    public function extractViewingConditions(string $data, int $profileSize, array $tagMap = []): ?array
     {
-        $tagData = $this->findTagData($data, $profileSize, 'view');
+        $tagData = $this->findTagData($data, $profileSize, 'view', $tagMap);
 
         if ($tagData === null || strlen($tagData) < 36) {
             return null;
@@ -188,8 +293,9 @@ final readonly class IccTagDecoder
      * ICC.1:2022 §9.2.34 and §10.14 define measurementType as:
      * signature + reserved + observer + backing XYZ + geometry + flare + illuminant.
      *
-     * @param string $data        Raw ICC profile payload.
-     * @param int    $profileSize Declared profile size limiting the accessible range.
+     * @param string       $data        Raw ICC profile payload.
+     * @param int          $profileSize Declared profile size limiting the accessible range.
+     * @param TagOffsetMap $tagMap      Pre-built tag offset map from {@see buildTagOffsetMap()}.
      *
      * @return array{
      *   observer: int,
@@ -199,9 +305,9 @@ final readonly class IccTagDecoder
      *   illuminant: int
      * }|null
      */
-    public function extractMeasurement(string $data, int $profileSize): ?array
+    public function extractMeasurement(string $data, int $profileSize, array $tagMap = []): ?array
     {
-        $tagData = $this->findTagData($data, $profileSize, 'meas');
+        $tagData = $this->findTagData($data, $profileSize, 'meas', $tagMap);
 
         if ($tagData === null || strlen($tagData) < 36) {
             return null;
@@ -234,15 +340,16 @@ final readonly class IccTagDecoder
      * For curveType (§10.6): a count of 0 means identity (gamma 1.0), a count of 1
      * stores gamma as uInt8Fixed8Number, otherwise a lookup table is present.
      *
-     * @param string $data         Raw ICC profile payload.
-     * @param int    $profileSize  Declared profile size limiting the accessible range.
-     * @param string $tagSignature Tag signature to search for ('rTRC', 'gTRC', 'bTRC').
+     * @param string       $data         Raw ICC profile payload.
+     * @param int          $profileSize  Declared profile size limiting the accessible range.
+     * @param string       $tagSignature Tag signature to search for ('rTRC', 'gTRC', 'bTRC').
+     * @param TagOffsetMap $tagMap       Pre-built tag offset map from {@see buildTagOffsetMap()}.
      *
      * @return array{gamma: float}|array{table: list<int>}|null Curve data or null when not available.
      */
-    public function extractTrcTag(string $data, int $profileSize, string $tagSignature): ?array
+    public function extractTrcTag(string $data, int $profileSize, string $tagSignature, array $tagMap = []): ?array
     {
-        $tagData = $this->findTagData($data, $profileSize, $tagSignature);
+        $tagData = $this->findTagData($data, $profileSize, $tagSignature, $tagMap);
 
         if ($tagData === null || strlen($tagData) < 8) {
             return null;
@@ -267,15 +374,16 @@ final readonly class IccTagDecoder
      * ICC.1:2022 §10.22: signatureType stores a 4-byte signature after the
      * type header (signature + reserved = 8 bytes).
      *
-     * @param string $data         Raw ICC profile payload.
-     * @param int    $profileSize  Declared profile size limiting the accessible range.
-     * @param string $tagSignature Tag signature to search for.
+     * @param string       $data         Raw ICC profile payload.
+     * @param int          $profileSize  Declared profile size limiting the accessible range.
+     * @param string       $tagSignature Tag signature to search for.
+     * @param TagOffsetMap $tagMap       Pre-built tag offset map from {@see buildTagOffsetMap()}.
      *
      * @return string|null 4-byte signature value or null when not available.
      */
-    public function extractSignatureTag(string $data, int $profileSize, string $tagSignature): ?string
+    public function extractSignatureTag(string $data, int $profileSize, string $tagSignature, array $tagMap = []): ?string
     {
-        $tagData = $this->findTagData($data, $profileSize, $tagSignature);
+        $tagData = $this->findTagData($data, $profileSize, $tagSignature, $tagMap);
 
         if ($tagData === null || strlen($tagData) < 12) {
             return null;
@@ -302,7 +410,51 @@ final readonly class IccTagDecoder
     }
 
     /**
-     * Finds tag data by signature in the tag table.
+     * Finds tag data by signature, using the pre-built offset map for O(1) lookup
+     * when available, or falling back to a linear scan of the tag table.
+     *
+     * @param string       $data         Raw ICC profile payload.
+     * @param int          $profileSize  Declared profile size limiting the accessible range.
+     * @param string       $tagSignature 4-byte tag signature to search for.
+     * @param TagOffsetMap $tagMap       Pre-built tag offset map from {@see buildTagOffsetMap()}.
+     *
+     * @return string|null Raw tag data or null when not found.
+     */
+    private function findTagData(string $data, int $profileSize, string $tagSignature, array $tagMap = []): ?string
+    {
+        if ($tagMap !== []) {
+            return $this->findTagDataFromMap($data, $tagSignature, $tagMap);
+        }
+
+        return $this->findTagDataByScan($data, $profileSize, $tagSignature);
+    }
+
+    /**
+     * Retrieves tag data using a pre-built offset map for O(1) lookup.
+     *
+     * @param string       $data         Raw ICC profile payload.
+     * @param string       $tagSignature 4-byte tag signature to search for.
+     * @param TagOffsetMap $tagMap       Pre-built tag offset map.
+     *
+     * @return string|null Raw tag data or null when not found.
+     */
+    private function findTagDataFromMap(string $data, string $tagSignature, array $tagMap): ?string
+    {
+        if (!array_key_exists($tagSignature, $tagMap)) {
+            return null;
+        }
+
+        $entry = $tagMap[$tagSignature];
+
+        return substr($data, $entry['offset'], $entry['size']);
+    }
+
+    /**
+     * Finds tag data by building the offset map on-the-fly and looking up the signature.
+     *
+     * This is the fallback strategy when no pre-built offset map is available.
+     * It delegates to {@see buildTagOffsetMap()} so that validation logic and
+     * error codes are not duplicated.
      *
      * @param string $data         Raw ICC profile payload.
      * @param int    $profileSize  Declared profile size limiting the accessible range.
@@ -310,84 +462,11 @@ final readonly class IccTagDecoder
      *
      * @return string|null Raw tag data or null when not found.
      */
-    private function findTagData(string $data, int $profileSize, string $tagSignature): ?string
+    private function findTagDataByScan(string $data, int $profileSize, string $tagSignature): ?string
     {
-        if ($profileSize < self::HEADER_LENGTH + 4) {
-            return null;
-        }
+        $map = $this->buildTagOffsetMap($data, $profileSize);
 
-        $length         = min(strlen($data), $profileSize);
-        $tagCountOffset = self::HEADER_LENGTH;
-
-        if ($tagCountOffset + 4 > $length) {
-            return null;
-        }
-
-        $tagCount = $this->reader->uInt32Be(substr($data, $tagCountOffset, 4));
-        $cursor   = $tagCountOffset + 4;
-
-        // Guard against integer overflow before multiplying tag count by entry size.
-        // On 32-bit PHP, large uint32 tag counts would overflow PHP_INT_MAX.
-        if ($tagCount > intdiv(PHP_INT_MAX, self::TAG_RECORD_LENGTH)) {
-            throw new ParseError(
-                sprintf(
-                    'ICC tag table count %d would overflow when multiplied by entry size %d',
-                    $tagCount,
-                    self::TAG_RECORD_LENGTH,
-                ),
-                1808,
-            );
-        }
-
-        $tableEnd = $tagCountOffset + 4 + ($tagCount * self::TAG_RECORD_LENGTH);
-
-        if ($tableEnd > $length) {
-            throw new ParseError(
-                sprintf(
-                    'ICC tag table count %d requires %d bytes but only %d bytes are available',
-                    $tagCount,
-                    $tableEnd - $tagCountOffset,
-                    $length - $tagCountOffset,
-                ),
-                2080,
-            );
-        }
-
-        for ($i = 0; $i < $tagCount; ++$i) {
-            if ($cursor + self::TAG_RECORD_LENGTH > $length) {
-                break;
-            }
-
-            $signature = substr($data, $cursor, 4);
-            $offset    = $this->reader->uInt32Be(substr($data, $cursor + 4, 4));
-            $size      = $this->reader->uInt32Be(substr($data, $cursor + 8, 4));
-            $cursor += self::TAG_RECORD_LENGTH;
-
-            if ($signature !== $tagSignature) {
-                continue;
-            }
-
-            // ICC.1:2022 §7.3 — tag offsets must be 4-byte aligned
-            if (($offset % 4) !== 0) {
-                continue;
-            }
-
-            if ($offset < $tableEnd) {
-                continue;
-            }
-
-            if ($size === 0) {
-                continue;
-            }
-
-            if (($offset + $size) > $length) {
-                continue;
-            }
-
-            return substr($data, $offset, $size);
-        }
-
-        return null;
+        return $this->findTagDataFromMap($data, $tagSignature, $map);
     }
 
     /**

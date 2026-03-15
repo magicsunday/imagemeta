@@ -307,22 +307,26 @@ final readonly class IccParser implements IccParserInterface
      */
     private function decodeTagFields(string $data, int $profileSize, int $majorVersion): array
     {
-        $description       = $this->tagDecoder->extractTag($data, $profileSize, 'desc', $majorVersion);
-        $copyright         = $this->tagDecoder->extractTag($data, $profileSize, 'cprt', $majorVersion);
-        $whitePoint        = $this->tagDecoder->extractWhitePoint($data, $profileSize);
-        $blackPoint        = $this->tagDecoder->extractXyzTag($data, $profileSize, 'bkpt');
-        $redMatrixColumn   = $this->tagDecoder->extractXyzTag($data, $profileSize, 'rXYZ');
-        $greenMatrixColumn = $this->tagDecoder->extractXyzTag($data, $profileSize, 'gXYZ');
-        $blueMatrixColumn  = $this->tagDecoder->extractXyzTag($data, $profileSize, 'bXYZ');
-        $luminance         = $this->tagDecoder->extractXyzTag($data, $profileSize, 'lumi');
-        $redTRC            = $this->tagDecoder->extractTrcTag($data, $profileSize, 'rTRC');
-        $greenTRC          = $this->tagDecoder->extractTrcTag($data, $profileSize, 'gTRC');
-        $blueTRC           = $this->tagDecoder->extractTrcTag($data, $profileSize, 'bTRC');
-        $deviceMfgDesc     = $this->tagDecoder->extractTag($data, $profileSize, 'dmnd', $majorVersion);
-        $deviceModelDesc   = $this->tagDecoder->extractTag($data, $profileSize, 'dmdd', $majorVersion);
-        $technology        = $this->tagDecoder->extractSignatureTag($data, $profileSize, 'tech');
-        $viewingConditions = $this->tagDecoder->extractViewingConditions($data, $profileSize);
-        $measurement       = $this->tagDecoder->extractMeasurement($data, $profileSize);
+        // Build the tag offset map once so each extraction method performs
+        // an O(1) lookup instead of re-scanning the entire tag table.
+        $tagMap = $this->tagDecoder->buildTagOffsetMap($data, $profileSize);
+
+        $description       = $this->tagDecoder->extractTag($data, $profileSize, 'desc', $majorVersion, $tagMap);
+        $copyright         = $this->tagDecoder->extractTag($data, $profileSize, 'cprt', $majorVersion, $tagMap);
+        $whitePoint        = $this->tagDecoder->extractWhitePoint($data, $profileSize, $tagMap);
+        $blackPoint        = $this->tagDecoder->extractXyzTag($data, $profileSize, 'bkpt', $tagMap);
+        $redMatrixColumn   = $this->tagDecoder->extractXyzTag($data, $profileSize, 'rXYZ', $tagMap);
+        $greenMatrixColumn = $this->tagDecoder->extractXyzTag($data, $profileSize, 'gXYZ', $tagMap);
+        $blueMatrixColumn  = $this->tagDecoder->extractXyzTag($data, $profileSize, 'bXYZ', $tagMap);
+        $luminance         = $this->tagDecoder->extractXyzTag($data, $profileSize, 'lumi', $tagMap);
+        $redTRC            = $this->tagDecoder->extractTrcTag($data, $profileSize, 'rTRC', $tagMap);
+        $greenTRC          = $this->tagDecoder->extractTrcTag($data, $profileSize, 'gTRC', $tagMap);
+        $blueTRC           = $this->tagDecoder->extractTrcTag($data, $profileSize, 'bTRC', $tagMap);
+        $deviceMfgDesc     = $this->tagDecoder->extractTag($data, $profileSize, 'dmnd', $majorVersion, $tagMap);
+        $deviceModelDesc   = $this->tagDecoder->extractTag($data, $profileSize, 'dmdd', $majorVersion, $tagMap);
+        $technology        = $this->tagDecoder->extractSignatureTag($data, $profileSize, 'tech', $tagMap);
+        $viewingConditions = $this->tagDecoder->extractViewingConditions($data, $profileSize, $tagMap);
+        $measurement       = $this->tagDecoder->extractMeasurement($data, $profileSize, $tagMap);
 
         return [
             'description'       => $description,
