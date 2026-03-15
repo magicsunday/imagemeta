@@ -61,7 +61,7 @@ final readonly class AppleJpegIfdParser
      *
      * @var array<int, string>
      */
-    private const array TAG_MAP = [
+    public const array TAG_MAP = [
         0x0001 => 'MakerNoteVersion',
         0x0002 => 'AEMatrix',
         0x0003 => 'RunTime',

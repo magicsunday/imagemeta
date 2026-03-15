@@ -79,7 +79,9 @@ use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleJpegIfdParser;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveResolver;
 use MagicSunday\ImageMeta\MakerNotes\Dji\DjiMakerNotes;
 use MagicSunday\ImageMeta\Value\FlashPixSummaryInfo;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
@@ -802,7 +804,7 @@ final class MetadataFormatter
 
         // MakerNotes section
         if ($metadata->makerNotes instanceof MakerNotesRecord) {
-            $this->printMakerNotesSection($metadata->makerNotes);
+            $this->printMakerNotesSection($metadata->makerNotes, $metadata->exifBlobs);
         }
 
         // GPS section
@@ -919,6 +921,10 @@ final class MetadataFormatter
 
         if ($ifdContext === 'InteropIFD' && isset($this->interopTagNames[$tagId])) {
             return $this->interopTagNames[$tagId];
+        }
+
+        if ($ifdContext === 'Apple') {
+            return AppleJpegIfdParser::TAG_MAP[$tagId] ?? sprintf('Apple_0x%04X', $tagId);
         }
 
         if ($ifdContext === 'IFD1') {
@@ -1884,16 +1890,14 @@ final class MetadataFormatter
     /**
      * Prints MakerNotes sections.
      */
-    private function printMakerNotesSection(MakerNotesRecord $makerNotes): void
+    /**
+     * @param list<string> $exifBlobs Raw EXIF blobs for re-parsing MakerNote IFD.
+     */
+    private function printMakerNotesSection(MakerNotesRecord $makerNotes, array $exifBlobs = []): void
     {
-        // For Apple maker notes, extract detailed information
+        // For Apple maker notes, show raw IFD tags with tag IDs
         if ($makerNotes->apple instanceof AppleMakerNotes) {
-            $data = [];
-            $this->flattenObjectProperties($makerNotes->apple, '', $data);
-
-            if ($data !== []) {
-                $this->printSection('Apple', $data);
-            }
+            $this->printAppleMakerNotesWithTagIds($makerNotes->apple, $exifBlobs);
         }
 
         // For DJI maker notes, extract gimbal angles, speeds, compass
@@ -1905,6 +1909,162 @@ final class MetadataFormatter
                 $this->printSection('DJI', $data);
             }
         }
+    }
+
+    /**
+     * Prints Apple MakerNotes with IFD tag IDs, falling back to structured output.
+     *
+     * @param list<string> $exifBlobs Raw EXIF blobs.
+     */
+    private function printAppleMakerNotesWithTagIds(AppleMakerNotes $apple, array $exifBlobs): void
+    {
+        // Try to get raw IFD dictionary with tag IDs
+        if ($exifBlobs !== []) {
+            $rawDict = $this->parseAppleIfdDictionary($exifBlobs[0]);
+
+            if ($rawDict !== null) {
+                $tagMap = array_flip(AppleJpegIfdParser::TAG_MAP);
+                $data   = [];
+
+                foreach ($rawDict as $key => $value) {
+                    $tagId       = $tagMap[$key] ?? null;
+                    $displayValue = $this->formatAppleMakerNoteValue($value);
+
+                    if ($tagId !== null) {
+                        $data[$tagId] = $displayValue;
+                    } else {
+                        $data[$key] = $displayValue;
+                    }
+                }
+
+                ksort($data);
+
+                if ($data !== []) {
+                    $this->printSection('Apple', $data, showHex: true, ifdContext: 'Apple');
+                }
+
+                return;
+            }
+        }
+
+        // Fallback: structured output without tag IDs
+        $data = [];
+        $this->flattenObjectProperties($apple, '', $data);
+
+        if ($data !== []) {
+            $this->printSection('Apple', $data);
+        }
+    }
+
+    /**
+     * Extracts the raw MakerNote from an EXIF blob and parses it as Apple IFD.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function parseAppleIfdDictionary(string $tiffBlob): ?array
+    {
+        if (strlen($tiffBlob) < 8) {
+            return null;
+        }
+
+        $bo  = substr($tiffBlob, 0, 2) === 'II' ? 'v' : 'n';
+        $u16 = fn (int $off): int => unpack($bo, $tiffBlob, $off)[1];
+        $u32 = fn (int $off): int => unpack($bo === 'v' ? 'V' : 'N', $tiffBlob, $off)[1];
+
+        // Navigate IFD0 → ExifIFD → MakerNote
+        $ifd0Offset = $u32(4);
+        $count      = $u16($ifd0Offset);
+        $exifOffset = null;
+
+        for ($i = 0; $i < $count; ++$i) {
+            $entry = $ifd0Offset + 2 + ($i * 12);
+
+            if ($u16($entry) === ExifTag::EXIF_IFD_POINTER) {
+                $exifOffset = $u32($entry + 8);
+
+                break;
+            }
+        }
+
+        if ($exifOffset === null) {
+            return null;
+        }
+
+        $count       = $u16($exifOffset);
+        $makerOffset = null;
+        $makerCount  = 0;
+
+        for ($i = 0; $i < $count; ++$i) {
+            $entry = $exifOffset + 2 + ($i * 12);
+
+            if ($u16($entry) === ExifTag::MAKER_NOTE) {
+                $makerCount  = $u32($entry + 4);
+                $makerOffset = $u32($entry + 8);
+
+                break;
+            }
+        }
+
+        if ($makerOffset === null || ($makerOffset + $makerCount) > strlen($tiffBlob)) {
+            return null;
+        }
+
+        $raw    = substr($tiffBlob, $makerOffset, $makerCount);
+        $parser = new AppleJpegIfdParser();
+
+        return $parser->parse($raw);
+    }
+
+    private function formatAppleMakerNoteValue(mixed $value): string
+    {
+        if ($value === null) {
+            return '(null)';
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'Yes' : 'No';
+        }
+
+        if (is_int($value)) {
+            return (string) $value;
+        }
+
+        if (is_float($value)) {
+            return sprintf('%g', $value);
+        }
+
+        if (is_string($value)) {
+            if (str_starts_with($value, 'bplist00')) {
+                try {
+                    $resolver = new KeyedArchiveResolver();
+                    $decoded  = $resolver->decodeBinaryPropertyList($value);
+
+                    if (is_array($decoded)) {
+                        $resolved = $resolver->resolveKeyedArchiveDictionary($decoded);
+
+                        return json_encode($resolved ?? $decoded, JSON_UNESCAPED_UNICODE) ?: '(decode error)';
+                    }
+                } catch (Throwable) {
+                    // Fall through
+                }
+            }
+
+            if (!mb_check_encoding($value, 'UTF-8') || preg_match('/[\x00-\x08\x0E-\x1F]/', $value)) {
+                return sprintf('(Binary data %d bytes): %s', strlen($value), implode(' ', str_split(bin2hex(substr($value, 0, 32)), 2)));
+            }
+
+            return $value;
+        }
+
+        if (is_array($value)) {
+            if (array_is_list($value)) {
+                return implode(' ', array_map(fn ($v) => is_float($v) ? sprintf('%g', $v) : (string) $v, $value));
+            }
+
+            return json_encode($value, JSON_UNESCAPED_UNICODE) ?: '(encode error)';
+        }
+
+        return '(unknown)';
     }
 
     /**
