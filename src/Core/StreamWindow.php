@@ -86,7 +86,7 @@ final class StreamWindow implements BinaryReadAccessInterface
         $len = $this->normalizeReadLength($length, 'window read length out of range');
 
         if ($len > PHP_INT_MAX - $this->cursor) {
-            throw new BoundsError('window read offset overflow', 1031);
+            throw new BoundsError('window read offset overflow', 1060);
         }
 
         if (($this->cursor + $len) > $this->length) {

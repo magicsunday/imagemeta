@@ -106,7 +106,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
         $len = $this->normalizeLength($length);
 
         if ($len > ($this->size() - $this->pos)) {
-            throw new BoundsError('MemoryBuffer read out of range: ' . $this->pos . '+' . $len, 1025);
+            throw new BoundsError('MemoryBuffer read out of range: ' . $this->pos . '+' . $len, 1048);
         }
 
         $chunk = substr($this->data, $this->pos, $len);

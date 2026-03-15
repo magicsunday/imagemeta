@@ -236,7 +236,7 @@ final class StreamWindowTest extends TestCase
         $window->seek(PHP_INT_MAX - 1);
 
         $this->expectException(BoundsError::class);
-        $this->expectExceptionCode(1031);
+        $this->expectExceptionCode(1060);
         $window->read(2);
     }
 
