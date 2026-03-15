@@ -379,7 +379,7 @@ final readonly class QuickTimeMeta
         'PreferredVolume'                         => ['PreferredVolume', self::PREFERRED_VOLUME_KEY],
         self::META_FORMAT_KEY                     => [self::META_FORMAT_KEY, 'MetaFormat'],
         'MetaFormat'                              => ['MetaFormat', self::META_FORMAT_KEY],
-        'Encoder'                                 => ['Encoder', 'com.apple.quicktime.encoder'],
+        'Encoder'                                 => ['Encoder', 'com.apple.quicktime.encoder', 'com.apple.quicktime.software'],
         'AvgBitrate'                              => ['AvgBitrate', 'com.apple.quicktime.avgBitrate'],
         'Bitrate'                                 => ['Bitrate', 'com.apple.quicktime.bitrate', 'com.apple.quicktime.dataRate'],
         'HDRFormat'                               => ['HDRFormat', 'com.apple.quicktime.hdrFormat'],
