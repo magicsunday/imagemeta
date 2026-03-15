@@ -397,6 +397,10 @@ final readonly class MetadataReader
             $keys['com.apple.quicktime.location.longitude'] = $telemetry->longitude;
         }
 
+        if ($telemetry->altitude !== null) {
+            $keys['com.apple.quicktime.location.altitude'] = $telemetry->altitude;
+        }
+
         return new QuickTimeMeta($keys, $dataAtoms);
     }
 

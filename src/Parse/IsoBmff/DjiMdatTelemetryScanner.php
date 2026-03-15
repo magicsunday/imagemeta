@@ -89,11 +89,12 @@ final readonly class DjiMdatTelemetryScanner
         while (($pos = strpos($data, self::DJI_SIGNATURE, $offset)) !== false) {
             $model = $this->extractModelAt($data, $pos);
 
-            [$lat, $lon] = $this->searchGpsNear($data, $pos);
+            [$lat, $lon, $alt] = $this->searchGpsNear($data, $pos);
 
             if (($lat !== null) && ($lon !== null)) {
                 $latitude  = $lat;
                 $longitude = $lon;
+                $altitude  = $alt;
 
                 break;
             }
@@ -159,9 +160,9 @@ final readonly class DjiMdatTelemetryScanner
     }
 
     /**
-     * Searches for GPS coordinates (f64 radians) in protobuf records near a DJI signature.
+     * Searches for GPS coordinates (f64 radians) and altitude in protobuf records near a DJI signature.
      *
-     * @return array{0: float|null, 1: float|null} [latitude, longitude] in degrees.
+     * @return array{0: float|null, 1: float|null, 2: float|null} [latitude, longitude, altitude] in degrees/meters.
      */
     private function searchGpsNear(string $data, int $djiPos): array
     {
@@ -196,16 +197,53 @@ final readonly class DjiMdatTelemetryScanner
                 $deg2 = $val2 * 180.0 / M_PI;
 
                 if ((abs($deg1) <= 90.0) && (abs($deg2) <= 180.0)) {
-                    return [$deg1, $deg2];
+                    $alt = $this->tryDecodeAltitude($chunk, $i + $gap + 8, $chunkLen);
+
+                    return [$deg1, $deg2, $alt];
                 }
 
                 if ((abs($deg2) <= 90.0) && (abs($deg1) <= 180.0)) {
-                    return [$deg2, $deg1];
+                    $alt = $this->tryDecodeAltitude($chunk, $i + $gap + 8, $chunkLen);
+
+                    return [$deg2, $deg1, $alt];
                 }
             }
         }
 
-        return [null, null];
+        return [null, null, null];
+    }
+
+    /**
+     * Attempts to decode an altitude value from bytes following the GPS coordinate pair.
+     *
+     * DJI telemetry stores altitude as an f64 immediately after or near the GPS lat/lon pair.
+     * The value is in meters above sea level (typically 0–10000m for drones).
+     */
+    private function tryDecodeAltitude(string $chunk, int $offset, int $chunkLen): ?float
+    {
+        // Try f64 at various small gaps (0, 1, 8, 9 bytes after lon)
+        foreach ([0, 1, 8, 9] as $gap) {
+            $altOffset = $offset + $gap;
+
+            if (($altOffset + 8) > $chunkLen) {
+                continue;
+            }
+
+            /** @var array{1: float} $unpacked */
+            $unpacked = unpack('e', substr($chunk, $altOffset, 8));
+            $val      = $unpacked[1];
+
+            if (!is_finite($val)) {
+                continue;
+            }
+
+            // Altitude range: -500m (Dead Sea) to 10000m (drone ceiling)
+            if (($val >= -500.0) && ($val <= 10000.0) && ($val !== 0.0)) {
+                return $val;
+            }
+        }
+
+        return null;
     }
 
     /**

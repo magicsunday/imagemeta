@@ -2409,6 +2409,12 @@ final class MetadataFormatter
             );
         }
 
+        $alt = $quickTime->floatValue('com.apple.quicktime.location.altitude');
+
+        if ($alt !== null) {
+            $data['GPS Altitude'] = sprintf('%.1f m', $alt);
+        }
+
         $this->printSection('DJI Telemetry', $data);
     }
 
