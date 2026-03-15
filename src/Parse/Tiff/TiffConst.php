@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
+
 /**
  * Shared constants describing TIFF headers and data types.
  *

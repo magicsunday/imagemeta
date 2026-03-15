@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
-use MagicSunday\ImageMeta\Parse\Tiff\TiffFieldType;
+use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

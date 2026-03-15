@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Parse\Tiff;
+namespace MagicSunday\ImageMeta\Model\Tiff;
 
 /**
  * TIFF field type codes (TIFF 6.0 §2.2 / EXIF 3.0 §4.5.2 Table 3).

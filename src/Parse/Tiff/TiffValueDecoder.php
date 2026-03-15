@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftTag;
+use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
 
 use function assert;
 use function in_array;

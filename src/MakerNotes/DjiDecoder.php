@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\Dji\DjiMakerNotes;
-use MagicSunday\ImageMeta\Parse\Tiff\TiffFieldType;
+use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
 
 use function rtrim;
 use function sha1;
@@ -31,7 +31,7 @@ use function trim;
  * interface does not provide the parent byte order, byte order is inferred by
  * testing both endianness variants for plausible IFD entry counts.
  */
-final class DjiDecoder implements MakerNotesDecoderInterface
+final readonly class DjiDecoder implements MakerNotesDecoderInterface
 {
     private const int TAG_MAKER_NOTE_VERSION = 0x0001;
 

@@ -19,9 +19,9 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
+use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
 use MagicSunday\ImageMeta\Parse\ParserLimits;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
-use MagicSunday\ImageMeta\Parse\Tiff\TiffFieldType;
 use MagicSunday\ImageMeta\Value\Enum\MpImageDataFormat;
 use MagicSunday\ImageMeta\Value\Enum\MpImageType;
 
