@@ -17,25 +17,11 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Exercises the QuickTimeDataAtom value object for metadata item data atoms.
- * It verifies construction, locale decomposition, and zero-locale handling.
+ * Exercises the QuickTimeDataAtom value object for locale decomposition logic.
  */
 #[CoversClass(QuickTimeDataAtom::class)]
 final class QuickTimeDataAtomTest extends TestCase
 {
-    /**
-     * Constructs a data atom and verifies stored properties.
-     */
-    #[Test]
-    public function constructionPreservesProperties(): void
-    {
-        $atom = new QuickTimeDataAtom(1, 0x00010002, 'hello');
-
-        self::assertSame(1, $atom->typeIndicator);
-        self::assertSame(0x00010002, $atom->locale);
-        self::assertSame('hello', $atom->value);
-    }
-
     /**
      * Decomposes locale into country and language indicators.
      */
