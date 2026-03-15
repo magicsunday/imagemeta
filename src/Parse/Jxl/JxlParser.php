@@ -79,10 +79,8 @@ final readonly class JxlParser implements JxlParserInterface
 
     /**
      * Extracts EXIF blobs, XMP packets, and the gain map blob from the JXL container.
-     *
-     * @return array{0: list<string>, 1: list<string>, 2: ?string} Tuple of [EXIF blobs, XMP packets, gain map blob].
      */
-    public function extract(): array
+    public function extract(): JxlParseResult
     {
         /** @var list<string> $exifBlobs */
         $exifBlobs = [];
@@ -101,7 +99,7 @@ final readonly class JxlParser implements JxlParserInterface
                 throw match ($box->type) {
                     self::BOX_EXIF => new ParseError('JXL Exif box payload exceeds maximum allowed size', 1560),
                     self::BOX_XML  => new ParseError('JXL xml box payload exceeds maximum allowed size', 1561),
-                    default        => new ParseError('JXL hrgm box payload exceeds maximum allowed size', 2085),
+                    default        => new ParseError('JXL hrgm box payload exceeds maximum allowed size', 1563),
                 };
             }
 
@@ -136,7 +134,7 @@ final readonly class JxlParser implements JxlParserInterface
             }
         }
 
-        return [$exifBlobs, $xmpBlobs, $hrgmBlob];
+        return new JxlParseResult($exifBlobs, $xmpBlobs, $hrgmBlob);
     }
 
     /**
