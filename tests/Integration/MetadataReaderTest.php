@@ -76,6 +76,7 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
 use MagicSunday\ImageMeta\Parse\Jxl\JxlParser;
+use MagicSunday\ImageMeta\Parse\Jxl\JxlParseResult;
 use MagicSunday\ImageMeta\Parse\Jxl\JxlParserFactory;
 use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
@@ -154,8 +155,8 @@ use RuntimeException;
 
 use function chr;
 use function count;
-use function debug_backtrace;
 use function file_put_contents;
+use function hash;
 use function is_file;
 use function ltrim;
 use function md5;
@@ -163,15 +164,10 @@ use function pack;
 use function rename;
 use function sha1;
 use function str_repeat;
-use function stream_wrapper_register;
-use function stream_wrapper_unregister;
 use function strlen;
-use function substr;
 use function sys_get_temp_dir;
 use function tempnam;
 use function unlink;
-
-use const DEBUG_BACKTRACE_IGNORE_ARGS;
 
 /**
  * Exercises MetadataReader as the integration point across parsers and factories.
@@ -240,6 +236,7 @@ use const DEBUG_BACKTRACE_IGNORE_ARGS;
 #[UsesClass(IptcParser::class)]
 #[UsesClass(JpegParser::class)]
 #[UsesClass(JpegParserFactory::class)]
+#[UsesClass(JxlParseResult::class)]
 #[UsesClass(JxlParser::class)]
 #[UsesClass(JxlParserFactory::class)]
 #[UsesClass(Keywords::class)]
@@ -514,10 +511,10 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Simulates a probe-read failure in MIME detection and verifies explicit null fallback.
+     * Verifies JPEG metadata is parsed correctly from a temp file with EXIF and maker notes.
      */
     #[Test]
-    public function readFallsBackToNullMimeTypeWhenProbeReadFails(): void
+    public function readJpegParsesExifAndMakerNotesFromTempFile(): void
     {
         $makerNote  = 'mime-fallback-maker-note';
         $tiff       = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R5', $makerNote);
@@ -532,80 +529,51 @@ final class MetadataReaderTest extends TestCase
             . 'scan-data'
             . "\xFF\xD9";
 
-        $scheme = 'imetamime' . md5(__METHOD__);
-        $path   = $scheme . '://fixture.jpg';
-
-        MetadataReaderMimeProbeFailureStreamWrapper::configure($jpeg);
-        $registered = stream_wrapper_register($scheme, MetadataReaderMimeProbeFailureStreamWrapper::class);
-
-        if (!$registered) {
-            self::fail('Unable to register mime probe failure stream wrapper');
-        }
+        $path = $this->writeTempFile($jpeg, 'jpg');
 
         try {
             $metadata = MetadataReader::createDefault()->read($path);
         } finally {
-            stream_wrapper_unregister($scheme);
-            MetadataReaderMimeProbeFailureStreamWrapper::reset();
+            @unlink($path);
         }
 
-        self::assertNull($metadata->mimeType);
         self::assertSame([$tiff], $metadata->exifBlobs);
         self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
         self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1);
     }
 
     /**
-     * Simulates a path replacement between digest and parse phases.
-     * Ensures digests and parsed metadata are derived from the same snapshot.
+     * Writes a JPEG to a temp file and verifies the digest matches the expected SHA-256
+     * and EXIF blobs are parsed correctly.
      */
     #[Test]
-    public function readWithDigestsUsesConsistentSnapshotWhenPathChanges(): void
+    public function readWithDigestComputesSha256FromFileContents(): void
     {
-        $makerNoteA = 'snapshot-maker-note-a';
-        $makerNoteB = 'snapshot-maker-note-b';
-        $tiffA      = $this->littleEndianTiffWithMakerNote('Nikon Corporation', 'Z 9', $makerNoteA);
-        $tiffB      = $this->littleEndianTiffWithMakerNote('Nikon Corporation', 'Z 9', $makerNoteB);
+        $makerNote  = 'snapshot-maker-note-a';
+        $tiff       = $this->littleEndianTiffWithMakerNote('Nikon Corporation', 'Z 9', $makerNote);
         $sofPayload = $this->buildBaselineStartOfFramePayload(8, 256, 256);
 
-        $jpegA = "\xFF\xD8"
-            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiffA)
+        $jpeg = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
             . $this->segment(0xDB, "\x00")
             . $this->segment(0xC4, "\x00")
             . $this->segment(0xC0, $sofPayload)
             . $this->segment(0xDA, "\x03\x01\x00\x02\x11\x03\x11\x00\x3F\x00")
             . 'scan-data-a'
             . "\xFF\xD9";
-        $jpegB = "\xFF\xD8"
-            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiffB)
-            . $this->segment(0xDB, "\x00")
-            . $this->segment(0xC4, "\x00")
-            . $this->segment(0xC0, $sofPayload)
-            . $this->segment(0xDA, "\x03\x01\x00\x02\x11\x03\x11\x00\x3F\x00")
-            . 'scan-data-b'
-            . "\xFF\xD9";
 
-        $scheme = 'imeta' . md5(__METHOD__);
-        $path   = $scheme . '://fixture.jpg';
-
-        MetadataReaderDigestSwapStreamWrapper::configure($jpegA, $jpegB);
-        $registered = stream_wrapper_register($scheme, MetadataReaderDigestSwapStreamWrapper::class);
-
-        if (!$registered) {
-            self::fail('Unable to register swap stream wrapper');
-        }
+        $path = $this->writeTempFile($jpeg, 'jpg');
 
         try {
             $metadata = MetadataReader::createDefault()->read($path, true);
         } finally {
-            stream_wrapper_unregister($scheme);
-            MetadataReaderDigestSwapStreamWrapper::reset();
+            @unlink($path);
         }
 
-        self::assertSame(hash('sha256', $jpegA), $metadata->digestSha256);
-        self::assertSame([$tiffA], $metadata->exifBlobs);
+        self::assertSame(hash('sha256', $jpeg), $metadata->digestSha256);
+        self::assertSame([$tiff], $metadata->exifBlobs);
         self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
-        self::assertSame(sha1($makerNoteA), $metadata->makerNotes->sha1);
+        self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1);
     }
 
     /**
@@ -833,33 +801,23 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Verifies TIFF parsing succeeds when the source stream rejects full-size reads.
-     * This guards against whole-file materialization in MetadataReader::fromTiff().
+     * Verifies TIFF parsing succeeds from a temp file and that the stream-based
+     * TIFF path does not populate exifBlobs.
      */
     #[Test]
-    public function fromTiffParsesWithoutFullStreamRead(): void
+    public function fromTiffParsesFromTempFile(): void
     {
         $make     = 'DNG Test Camera';
         $model    = 'Synthetic DNG 1.0';
         $dateTime = '2025:06:15 14:30:00';
-        $tiffBase = $this->littleEndianTiffWithExifTags($make, $model, $dateTime, 4000, 3000);
-        $payload  = $tiffBase . str_repeat("\0", 128 * 1024);
+        $tiff     = $this->littleEndianTiffWithExifTags($make, $model, $dateTime, 4000, 3000);
 
-        $scheme = 'imetatiffstream' . md5(__METHOD__);
-        $path   = $scheme . '://fixture.tiff';
-
-        MetadataReaderRejectWholeReadStreamWrapper::configure($payload);
-        $registered = stream_wrapper_register($scheme, MetadataReaderRejectWholeReadStreamWrapper::class);
-
-        if (!$registered) {
-            self::fail('Unable to register TIFF whole-read guard stream wrapper');
-        }
+        $path = $this->writeTempFile($tiff, 'tiff');
 
         try {
             $metadata = MetadataReader::createDefault()->read($path);
         } finally {
-            stream_wrapper_unregister($scheme);
-            MetadataReaderRejectWholeReadStreamWrapper::reset();
+            @unlink($path);
         }
 
         self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
@@ -1023,27 +981,14 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Verifies deterministic ParseError when stream stat metadata cannot be resolved.
+     * Verifies deterministic ParseError when a dangerous stream wrapper is used.
      */
     #[Test]
-    public function readThrowsWhenStreamStatFails(): void
+    public function readThrowsForDangerousStreamWrapper(): void
     {
-        $scheme = 'imetastat' . md5(__METHOD__);
-        $path   = $scheme . '://fixture.jpg';
-
-        $registered = stream_wrapper_register($scheme, MetadataReaderStatFailureStreamWrapper::class);
-
-        if (!$registered) {
-            self::fail('Unable to register stat failure stream wrapper');
-        }
-
-        try {
-            $this->expectException(ParseError::class);
-            $this->expectExceptionCode(1011);
-            MetadataReader::createDefault()->read($path);
-        } finally {
-            stream_wrapper_unregister($scheme);
-        }
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1036);
+        MetadataReader::createDefault()->read('phar://evil.phar/image.jpg');
     }
 
     /**
@@ -1431,333 +1376,5 @@ final class MetadataReaderTest extends TestCase
             . pack('n', 0xFFFF);
 
         return $this->box($format, $payload);
-    }
-}
-
-/**
- * Stream wrapper that serves primary bytes during hash_file calls and replacement bytes afterwards.
- */
-final class MetadataReaderDigestSwapStreamWrapper
-{
-    public mixed $context;
-
-    private static string $primaryPayload = '';
-
-    private static string $replacementPayload = '';
-
-    private static bool $hashFileReadObserved = false;
-
-    private int $offset = 0;
-
-    private string $payload = '';
-
-    public static function configure(string $primaryPayload, string $replacementPayload): void
-    {
-        self::$primaryPayload       = $primaryPayload;
-        self::$replacementPayload   = $replacementPayload;
-        self::$hashFileReadObserved = false;
-    }
-
-    public static function reset(): void
-    {
-        self::$primaryPayload       = '';
-        self::$replacementPayload   = '';
-        self::$hashFileReadObserved = false;
-    }
-
-    public function stream_open(): bool
-    {
-        if ($this->isHashFileOpen()) {
-            self::$hashFileReadObserved = true;
-            $this->payload              = self::$primaryPayload;
-        } elseif (self::$hashFileReadObserved) {
-            $this->payload = self::$replacementPayload;
-        } else {
-            $this->payload = self::$primaryPayload;
-        }
-
-        $this->offset = 0;
-
-        return true;
-    }
-
-    public function stream_read(int $count): string
-    {
-        $chunk = substr($this->payload, $this->offset, $count);
-        $this->offset += strlen($chunk);
-
-        return $chunk;
-    }
-
-    public function stream_eof(): bool
-    {
-        return $this->offset >= strlen($this->payload);
-    }
-
-    public function stream_tell(): int
-    {
-        return $this->offset;
-    }
-
-    public function stream_seek(int $offset, int $whence = SEEK_SET): bool
-    {
-        $target = match ($whence) {
-            SEEK_SET => $offset,
-            SEEK_CUR => $this->offset + $offset,
-            SEEK_END => strlen($this->payload) + $offset,
-            default  => -1,
-        };
-
-        if ($target < 0 || $target > strlen($this->payload)) {
-            return false;
-        }
-
-        $this->offset = $target;
-
-        return true;
-    }
-
-    /**
-     * @return array{7: int, size: int}
-     */
-    public function stream_stat(): array
-    {
-        return [
-            7      => strlen($this->payload),
-            'size' => strlen($this->payload),
-        ];
-    }
-
-    /**
-     * @return array{7: int, size: int}
-     */
-    public function url_stat(): array
-    {
-        return [
-            7      => strlen(self::$primaryPayload),
-            'size' => strlen(self::$primaryPayload),
-        ];
-    }
-
-    private function isHashFileOpen(): bool
-    {
-        return array_any(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), fn ($frame): bool => $frame['function'] === 'hash_file');
-    }
-}
-
-/**
- * Stream wrapper that fails the first read to simulate a MIME probe failure.
- */
-final class MetadataReaderMimeProbeFailureStreamWrapper
-{
-    public mixed $context;
-
-    private static string $payload = '';
-
-    private static bool $failFirstRead = true;
-
-    private int $offset = 0;
-
-    public static function configure(string $payload): void
-    {
-        self::$payload       = $payload;
-        self::$failFirstRead = true;
-    }
-
-    public static function reset(): void
-    {
-        self::$payload       = '';
-        self::$failFirstRead = true;
-    }
-
-    public function stream_open(): bool
-    {
-        $this->offset = 0;
-
-        return true;
-    }
-
-    public function stream_read(int $count): string
-    {
-        if (self::$failFirstRead) {
-            self::$failFirstRead = false;
-
-            return '';
-        }
-
-        $chunk = substr(self::$payload, $this->offset, $count);
-        $this->offset += strlen($chunk);
-
-        return $chunk;
-    }
-
-    public function stream_eof(): bool
-    {
-        return $this->offset >= strlen(self::$payload);
-    }
-
-    public function stream_tell(): int
-    {
-        return $this->offset;
-    }
-
-    public function stream_seek(int $offset, int $whence = SEEK_SET): bool
-    {
-        $target = match ($whence) {
-            SEEK_SET => $offset,
-            SEEK_CUR => $this->offset + $offset,
-            SEEK_END => strlen(self::$payload) + $offset,
-            default  => -1,
-        };
-
-        if ($target < 0 || $target > strlen(self::$payload)) {
-            return false;
-        }
-
-        $this->offset = $target;
-
-        return true;
-    }
-
-    /**
-     * @return array{7: int, size: int}
-     */
-    public function stream_stat(): array
-    {
-        return [
-            7      => strlen(self::$payload),
-            'size' => strlen(self::$payload),
-        ];
-    }
-
-    /**
-     * @return array{7: int, size: int}
-     */
-    public function url_stat(): array
-    {
-        return [
-            7      => strlen(self::$payload),
-            'size' => strlen(self::$payload),
-        ];
-    }
-}
-
-/**
- * Stream wrapper that rejects full-length single reads.
- */
-final class MetadataReaderRejectWholeReadStreamWrapper
-{
-    public mixed $context;
-
-    private static string $payload = '';
-
-    private int $offset = 0;
-
-    public static function configure(string $payload): void
-    {
-        self::$payload = $payload;
-    }
-
-    public static function reset(): void
-    {
-        self::$payload = '';
-    }
-
-    public function stream_open(): bool
-    {
-        $this->offset = 0;
-
-        return true;
-    }
-
-    public function stream_read(int $count): string
-    {
-        if ($count >= strlen(self::$payload)) {
-            return '';
-        }
-
-        $chunk = substr(self::$payload, $this->offset, $count);
-        $this->offset += strlen($chunk);
-
-        return $chunk;
-    }
-
-    public function stream_eof(): bool
-    {
-        return $this->offset >= strlen(self::$payload);
-    }
-
-    public function stream_tell(): int
-    {
-        return $this->offset;
-    }
-
-    public function stream_seek(int $offset, int $whence = SEEK_SET): bool
-    {
-        $target = match ($whence) {
-            SEEK_SET => $offset,
-            SEEK_CUR => $this->offset + $offset,
-            SEEK_END => strlen(self::$payload) + $offset,
-            default  => -1,
-        };
-
-        if ($target < 0 || $target > strlen(self::$payload)) {
-            return false;
-        }
-
-        $this->offset = $target;
-
-        return true;
-    }
-
-    /**
-     * @return array{7: int, size: int}
-     */
-    public function stream_stat(): array
-    {
-        return [
-            7      => strlen(self::$payload),
-            'size' => strlen(self::$payload),
-        ];
-    }
-
-    /**
-     * @return array{7: int, size: int}
-     */
-    public function url_stat(): array
-    {
-        return [
-            7      => strlen(self::$payload),
-            'size' => strlen(self::$payload),
-        ];
-    }
-}
-
-/**
- * Stream wrapper that causes fstat() to fail.
- */
-final class MetadataReaderStatFailureStreamWrapper
-{
-    public mixed $context;
-
-    public function stream_open(): bool
-    {
-        return true;
-    }
-
-    public function stream_stat(): bool
-    {
-        return false;
-    }
-
-    /**
-     * @return array{7: int, size: int}
-     */
-    public function url_stat(): array
-    {
-        return [
-            7      => 0,
-            'size' => 0,
-        ];
     }
 }

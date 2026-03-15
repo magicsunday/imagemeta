@@ -52,7 +52,7 @@ final class Stream implements BinaryReadAccessInterface
      */
     public static function fromPath(string $path): self
     {
-        if (str_contains($path, '://') && preg_match('#^(phar|expect|data|php|glob|zlib|zip|rar|ssh2|ogg)://#i', $path) === 1) {
+        if (str_contains($path, '://') && preg_match('#^file://#i', $path) !== 1) {
             throw new ParseError('Unsupported stream wrapper in path.', 1036);
         }
 
