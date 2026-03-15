@@ -330,18 +330,18 @@ final readonly class MetadataReader
         ?string $extension,
         ?string $digestSha256,
     ): Metadata {
-        [$exifBlobs, $xmpBlobs, $hrgmBlob] = $this->jxlParserFactory->create($stream)->extract();
+        $result = $this->jxlParserFactory->create($stream)->extract();
 
-        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($exifBlobs, embeddedContext: true);
+        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($result->exifBlobs, embeddedContext: true);
 
         $makerNotes = $this->appleMerger->merge($makerNotes, null);
-        $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
+        $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs);
 
         return (new MetadataBuilder())
             ->withParsers($this->xmpParser, $this->iptcParser)
-            ->withExif($exifBlobs, $exifDoc, $makerNotes)
-            ->withXmp($xmpBlobs, $xmpDoc)
-            ->withGainMapBlob($hrgmBlob)
+            ->withExif($result->exifBlobs, $exifDoc, $makerNotes)
+            ->withXmp($result->xmpBlobs, $xmpDoc)
+            ->withGainMapBlob($result->gainMapBlob)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
             ->build();
     }
