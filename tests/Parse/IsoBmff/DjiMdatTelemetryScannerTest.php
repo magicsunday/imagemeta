@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Core\Stream;
-use MagicSunday\ImageMeta\Core\Util\ProtobufDecoder;
 use MagicSunday\ImageMeta\Model\Dji\DjiTelemetry;
 use MagicSunday\ImageMeta\Parse\IsoBmff\DjiMdatTelemetryScanner;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -32,7 +31,6 @@ use function strlen;
  */
 #[CoversClass(DjiMdatTelemetryScanner::class)]
 #[UsesClass(DjiTelemetry::class)]
-#[UsesClass(ProtobufDecoder::class)]
 #[UsesClass(Stream::class)]
 final class DjiMdatTelemetryScannerTest extends TestCase
 {
