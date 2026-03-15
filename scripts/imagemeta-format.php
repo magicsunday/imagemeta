@@ -2028,6 +2028,10 @@ final class MetadataFormatter
         }
 
         if (is_int($value)) {
+            if (($value > 65535) || ($value < -65535)) {
+                return sprintf('%d (0x%x)', $value, $value);
+            }
+
             return (string) $value;
         }
 
@@ -2060,13 +2064,26 @@ final class MetadataFormatter
 
         if (is_array($value)) {
             if (array_is_list($value)) {
-                return implode(' ', array_map(fn ($v) => is_float($v) ? sprintf('%g', $v) : (string) $v, $value));
+                return implode(' ', array_map(fn ($v) => $this->formatAppleScalar($v), $value));
             }
 
             return json_encode($value, JSON_UNESCAPED_UNICODE) ?: '(encode error)';
         }
 
         return '(unknown)';
+    }
+
+    private function formatAppleScalar(int|float|string $v): string
+    {
+        if (is_float($v)) {
+            return sprintf('%g', $v);
+        }
+
+        if (is_int($v) && (($v > 65535) || ($v < -65535))) {
+            return sprintf('%d (0x%x)', $v, $v);
+        }
+
+        return (string) $v;
     }
 
     /**
