@@ -244,6 +244,22 @@ function formatValue(mixed $value, int $indent = 0): string
     }
 
     if (is_string($value)) {
+        // Try decoding binary plists
+        if (str_starts_with($value, 'bplist00')) {
+            try {
+                $resolver = new KeyedArchiveResolver();
+                $decoded  = $resolver->decodeBinaryPropertyList($value);
+
+                if (is_array($decoded)) {
+                    $resolved = $resolver->resolveKeyedArchiveDictionary($decoded);
+
+                    return formatValue($resolved ?? $decoded, $indent);
+                }
+            } catch (Throwable) {
+                // Fall through to binary display
+            }
+        }
+
         if (!mb_check_encoding($value, 'UTF-8') || preg_match('/[\x00-\x08\x0E-\x1F]/', $value)) {
             return sprintf('(binary %d bytes) %s', strlen($value), strtoupper(bin2hex(substr($value, 0, 32))));
         }
@@ -287,6 +303,20 @@ function sanitizeForJson(array $data): array
     foreach ($data as $key => $value) {
         if (is_array($value)) {
             $result[$key] = sanitizeForJson($value);
+        } elseif (is_string($value) && str_starts_with($value, 'bplist00')) {
+            try {
+                $decoded = (new BinaryPlistDecoder())->decode($value);
+
+                if (is_array($decoded)) {
+                    $result[$key] = sanitizeForJson($decoded);
+
+                    continue;
+                }
+            } catch (Throwable) {
+                // Fall through
+            }
+
+            $result[$key] = '(binary) ' . bin2hex($value);
         } elseif (is_string($value) && (!mb_check_encoding($value, 'UTF-8') || preg_match('/[\x00-\x08\x0E-\x1F]/', $value))) {
             $result[$key] = '(binary) ' . bin2hex($value);
         } else {
