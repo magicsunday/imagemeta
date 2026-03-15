@@ -16,7 +16,7 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\Samsung\SamsungMakerNotes;
-use MagicSunday\ImageMeta\Parse\Tiff\TiffFieldType;
+use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
 
 use function rtrim;
 use function sha1;
@@ -31,7 +31,7 @@ use function trim;
  * Samsung maker note tags are documented by ExifTool and stored as a TIFF-style
  * IFD payload, optionally prefixed with the ASCII string "SAMSUNG\\0".
  */
-final class SamsungDecoder implements MakerNotesDecoderInterface
+final readonly class SamsungDecoder implements MakerNotesDecoderInterface
 {
     private const int TIFF_MAGIC = 0x2A;
 
@@ -105,6 +105,11 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
             }
 
             $entryCount = $this->readU16($raw, $ifdStart, $endian, 'Samsung IFD entry count');
+
+            if ($entryCount > 10_000) {
+                return null;
+            }
+
             $entriesEnd = $ifdStart + 2 + ($entryCount * 12);
 
             if ($entriesEnd > $length) {
@@ -220,7 +225,11 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
     ): ?string {
         $typeSize = $this->typeSize($type);
 
-        if ($typeSize === 0 || $count < 1) {
+        if (($typeSize === 0) || ($count < 1)) {
+            return null;
+        }
+
+        if ($count > intdiv($length, $typeSize)) {
             return null;
         }
 

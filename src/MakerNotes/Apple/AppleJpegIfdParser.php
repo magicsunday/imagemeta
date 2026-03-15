@@ -157,6 +157,10 @@ final readonly class AppleJpegIfdParser
         $length     = strlen($raw);
         $entryCount = Unpack::int($u16Fmt, substr($raw, $ifdStart, 2), 'Apple IFD entry count');
 
+        if ($entryCount > 10_000) {
+            return null;
+        }
+
         $entriesStart = $ifdStart + 2;
         $entriesEnd   = $entriesStart + ($entryCount * self::IFD_ENTRY_SIZE);
 
