@@ -168,4 +168,7 @@ enum BoxType: string
 
     /** Colour information box. */
     case COLR = 'colr';
+
+    /** Bitrate information box. */
+    case BTRT = 'btrt';
 }

@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function in_array;
+use function array_merge;
 use function pack;
 use function sprintf;
 use function substr;
@@ -25,7 +26,7 @@ use function substr;
  * description boxes (stsd), extracting resolution, compressor, and
  * depth metadata per ISO/IEC 14496-12 §8.5.2.
  *
- * @phpstan-type VideoSampleEntryMap = array<string, int|float|string>
+ * @phpstan-type VideoSampleEntryMap = array<string, int|float|string|bool>
  */
 final readonly class VideoSampleEntryParser
 {
@@ -111,9 +112,9 @@ final readonly class VideoSampleEntryParser
 
         $depth        = $win->readU16BE();
         $colorTableId = $this->decodeSigned16($win->readU16BE());
-        $this->validateVideoSampleEntryDepthAndColorTable($depth, $colorTableId, $win, $entryEnd);
+        $childData    = $this->validateVideoSampleEntryDepthAndColorTable($depth, $colorTableId, $win, $entryEnd);
 
-        return [
+        return array_merge([
             'format'               => $normalizedFormat,
             'width'                => $width,
             'height'               => $height,
@@ -121,18 +122,21 @@ final readonly class VideoSampleEntryParser
             'verticalResolution'   => $verticalResolution,
             'frameCount'           => $frameCount,
             'compressorName'       => $compressor,
-        ];
+        ], $childData);
     }
 
     /**
-     * Validates QuickTime visual sample-entry depth and color-table semantics.
+     * Validates QuickTime visual sample-entry depth and color-table semantics,
+     * then scans and extracts data from trailing child boxes.
      *
      * @param int          $depth        Visual sample-entry depth field.
      * @param int          $colorTableId Signed color-table identifier field.
      * @param StreamWindow $win          Reader positioned at trailing sample-entry payload.
      * @param int          $entryEnd     Absolute sample-entry end offset.
+     *
+     * @return VideoSampleEntryMap Extracted data from trailing child boxes.
      */
-    private function validateVideoSampleEntryDepthAndColorTable(int $depth, int $colorTableId, StreamWindow $win, int $entryEnd): void
+    private function validateVideoSampleEntryDepthAndColorTable(int $depth, int $colorTableId, StreamWindow $win, int $entryEnd): array
     {
         if (!in_array($depth, self::QUICKTIME_VIDEO_DEPTH_VALUES, true)) {
             throw new ParseError('video sample entry depth is not allowed by QuickTime domain', 1494);
@@ -164,22 +168,32 @@ final readonly class VideoSampleEntryParser
             $win->seek($tailOffset + $colorTableSize);
         }
 
-        $this->validateVideoSampleEntryTrailingPayload($win, $entryEnd);
+        return $this->parseVideoSampleEntryChildBoxes($win, $entryEnd);
     }
 
     /**
-     * Validates trailing bytes in visual sample entries.
+     * Scans trailing child boxes in a visual sample entry, validates structure,
+     * and extracts data from recognised box types.
      *
-     * Accepts empty tails, coherent child-box sequences, and an optional final
-     * 4-byte zero terminator documented by QuickTime.
+     * Recognised box types:
+     * - btrt (BitRateBox, ISO/IEC 14496-12 §8.5.2.2): maxBitrate, avgBitrate
+     * - colr with nclx colour type (ISO/IEC 14496-12 §12.1.5.2): colorPrimaries,
+     *   transferCharacteristics, matrixCoefficients, fullRangeFlag
+     *
+     * @param StreamWindow $win      Reader positioned at the start of the trailing child area.
+     * @param int          $entryEnd Absolute offset where the sample entry ends.
+     *
+     * @return VideoSampleEntryMap Extracted values; unknown boxes are silently skipped.
      */
-    private function validateVideoSampleEntryTrailingPayload(StreamWindow $win, int $entryEnd): void
+    private function parseVideoSampleEntryChildBoxes(StreamWindow $win, int $entryEnd): array
     {
+        $result = [];
         $offset = $win->tell();
 
         while ($offset < $entryEnd) {
             $remaining = $entryEnd - $offset;
 
+            // Allow optional 4-byte zero terminator documented by QuickTime.
             if ($remaining === 4) {
                 $win->seek($offset);
 
@@ -187,7 +201,7 @@ final readonly class VideoSampleEntryParser
                     throw new ParseError('video sample entry trailing payload is malformed', 1932);
                 }
 
-                return;
+                return $result;
             }
 
             if ($remaining < 8) {
@@ -196,13 +210,50 @@ final readonly class VideoSampleEntryParser
 
             $win->seek($offset);
             $boxSize = $win->readU32BE();
+            $boxType = $win->read(4);
 
             if ($boxSize < 8 || $boxSize > $remaining) {
                 throw new ParseError('video sample entry trailing payload is malformed', 1934);
             }
 
+            $payloadSize = $boxSize - 8;
+
+            if ($boxType === BoxType::BTRT->value) {
+                // ISO/IEC 14496-12 §8.5.2.2: BitRateBox
+                // bufferSizeDB(4) + maxBitrate(4) + avgBitrate(4) = 12 bytes payload
+                if ($payloadSize >= 12) {
+                    $win->readU32BE(); // bufferSizeDB: not exposed
+                    $maxBitrate = $win->readU32BE();
+                    $avgBitrate = $win->readU32BE();
+
+                    if ($maxBitrate > 0) {
+                        $result['maxBitrate'] = $maxBitrate;
+                    }
+
+                    if ($avgBitrate > 0) {
+                        $result['avgBitrate'] = $avgBitrate;
+                    }
+                }
+            } elseif ($boxType === BoxType::COLR->value) {
+                // ISO/IEC 14496-12 §12.1.5.2: ColourInformationBox nclx colour type
+                // colour_type(4) + colour_primaries(2) + transfer_characteristics(2)
+                // + matrix_coefficients(2) + full_range_flag+reserved(1) = 11 bytes
+                if ($payloadSize >= 11) {
+                    $colourType = $win->read(4);
+
+                    if ($colourType === 'nclx') {
+                        $result['colorPrimaries']          = $win->readU16BE();
+                        $result['transferCharacteristics'] = $win->readU16BE();
+                        $result['matrixCoefficients']      = $win->readU16BE();
+                        $result['fullRangeFlag']           = ($win->readU8() & 0x80) !== 0;
+                    }
+                }
+            }
+
             $offset += $boxSize;
         }
+
+        return $result;
     }
 
     /**

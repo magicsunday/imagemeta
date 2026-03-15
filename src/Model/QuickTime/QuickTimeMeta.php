@@ -173,78 +173,220 @@ final readonly class QuickTimeMeta
     public const string TRACK_NAME_KEY = 'com.apple.quicktime.trackName';
 
     /**
+     * QuickTime metadata key exposing the movie creation date from the mvhd box.
+     *
+     * ISO/IEC 14496-12 §8.2.2: creation_time as a formatted UTC date string.
+     */
+    public const string CREATE_DATE_KEY = 'com.apple.quicktime.creationDate';
+
+    /**
+     * QuickTime metadata key exposing the movie modification date from the mvhd box.
+     *
+     * ISO/IEC 14496-12 §8.2.2: modification_time as a formatted UTC date string.
+     */
+    public const string MODIFY_DATE_KEY = 'com.apple.quicktime.modificationDate';
+
+    /**
+     * QuickTime metadata key exposing the movie duration in seconds from the mvhd box.
+     *
+     * ISO/IEC 14496-12 §8.2.2: duration / timescale expressed as a float.
+     */
+    public const string DURATION_KEY = 'com.apple.quicktime.duration';
+
+    /**
+     * QuickTime metadata key exposing the movie timescale from the mvhd box.
+     *
+     * ISO/IEC 14496-12 §8.2.2: number of time units per second.
+     */
+    public const string TIME_SCALE_KEY = 'com.apple.quicktime.timeScale';
+
+    /**
+     * QuickTime metadata key exposing the preferred playback rate from the mvhd box.
+     *
+     * ISO/IEC 14496-12 §8.2.2: rate decoded from 16.16 fixed-point (1.0 = normal speed).
+     */
+    public const string PREFERRED_RATE_KEY = 'com.apple.quicktime.preferredRate';
+
+    /**
+     * QuickTime metadata key exposing the preferred playback volume from the mvhd box.
+     *
+     * ISO/IEC 14496-12 §8.2.2: volume decoded from 8.8 fixed-point (1.0 = full volume).
+     */
+    public const string PREFERRED_VOLUME_KEY = 'com.apple.quicktime.preferredVolume';
+
+    /**
+     * QuickTime metadata key exposing the computed video frame rate.
+     *
+     * Derived from the stts (time-to-sample) box and the media timescale.
+     */
+    public const string VIDEO_FRAME_RATE_KEY = 'com.apple.quicktime.videoFrameRate';
+
+    /**
+     * QuickTime metadata key exposing the maximum video bitrate in bits per second.
+     *
+     * ISO/IEC 14496-12 §8.5.2.2: maxBitrate from the BitRateBox (btrt).
+     */
+    public const string VIDEO_MAX_BITRATE_KEY = 'com.apple.quicktime.videoMaxBitrate';
+
+    /**
+     * QuickTime metadata key exposing the average video bitrate in bits per second.
+     *
+     * ISO/IEC 14496-12 §8.5.2.2: avgBitrate from the BitRateBox (btrt).
+     */
+    public const string VIDEO_AVG_BITRATE_KEY = 'com.apple.quicktime.videoAvgBitrate';
+
+    /**
+     * QuickTime metadata key exposing the maximum audio bitrate in bits per second.
+     *
+     * ISO/IEC 14496-12 §8.5.2.2: maxBitrate from the BitRateBox (btrt).
+     */
+    public const string AUDIO_MAX_BITRATE_KEY = 'com.apple.quicktime.audioMaxBitrate';
+
+    /**
+     * QuickTime metadata key exposing the average audio bitrate in bits per second.
+     *
+     * ISO/IEC 14496-12 §8.5.2.2: avgBitrate from the BitRateBox (btrt).
+     */
+    public const string AUDIO_AVG_BITRATE_KEY = 'com.apple.quicktime.audioAvgBitrate';
+
+    /**
+     * QuickTime metadata key exposing the colour primaries code from the colr/nclx box.
+     *
+     * ISO/IEC 14496-12 §12.1.5.2: colour_primaries field of the nclx ColourInformationBox.
+     */
+    public const string COLOR_PRIMARIES_KEY = 'com.apple.quicktime.colorPrimaries';
+
+    /**
+     * QuickTime metadata key exposing the transfer characteristics code from the colr/nclx box.
+     *
+     * ISO/IEC 14496-12 §12.1.5.2: transfer_characteristics field of the nclx ColourInformationBox.
+     */
+    public const string TRANSFER_CHARACTERISTICS_KEY = 'com.apple.quicktime.transferCharacteristics';
+
+    /**
+     * QuickTime metadata key exposing the matrix coefficients code from the colr/nclx box.
+     *
+     * ISO/IEC 14496-12 §12.1.5.2: matrix_coefficients field of the nclx ColourInformationBox.
+     */
+    public const string MATRIX_COEFFICIENTS_KEY = 'com.apple.quicktime.matrixCoefficients';
+
+    /**
+     * QuickTime metadata key exposing the video full-range flag from the colr/nclx box.
+     *
+     * ISO/IEC 14496-12 §12.1.5.2: full_range_flag (bit 7) of the nclx ColourInformationBox.
+     */
+    public const string VIDEO_FULL_RANGE_FLAG_KEY = 'com.apple.quicktime.videoFullRangeFlag';
+
+    /**
+     * QuickTime metadata key exposing the metadata format code from a metadata handler track.
+     *
+     * Derived from the stsd sample-entry fourcc when the track handler type is 'meta'
+     * (e.g. 'djmd' for DJI telemetry tracks).
+     */
+    public const string META_FORMAT_KEY = 'com.apple.quicktime.metaFormat';
+
+    /**
      * Mapping of shorthand lookup keys to canonical QuickTime metadata identifiers.
      *
      * @var array<string, list<string>>
      */
     private const array KEY_ALIASES = [
-        self::MAJOR_BRAND_KEY                  => [self::MAJOR_BRAND_KEY, 'MajorBrand'],
-        'MajorBrand'                           => ['MajorBrand', self::MAJOR_BRAND_KEY],
-        self::MINOR_VERSION_KEY                => [self::MINOR_VERSION_KEY, 'MinorVersion'],
-        'MinorVersion'                         => ['MinorVersion', self::MINOR_VERSION_KEY],
-        self::COMPATIBLE_BRANDS_KEY            => [self::COMPATIBLE_BRANDS_KEY, 'CompatibleBrands'],
-        'CompatibleBrands'                     => ['CompatibleBrands', self::COMPATIBLE_BRANDS_KEY],
-        self::HANDLER_DESCRIPTION_KEY          => [self::HANDLER_DESCRIPTION_KEY, 'HandlerDescription'],
-        'HandlerDescription'                   => ['HandlerDescription', self::HANDLER_DESCRIPTION_KEY],
-        self::VIDEO_WIDTH_KEY                  => [self::VIDEO_WIDTH_KEY, 'ImageWidth', 'VideoWidth'],
-        'ImageWidth'                           => ['ImageWidth', self::VIDEO_WIDTH_KEY, 'VideoWidth'],
-        self::VIDEO_HEIGHT_KEY                 => [self::VIDEO_HEIGHT_KEY, 'ImageHeight', 'VideoHeight'],
-        'ImageHeight'                          => ['ImageHeight', self::VIDEO_HEIGHT_KEY, 'VideoHeight'],
-        self::VIDEO_HORIZONTAL_RESOLUTION_KEY  => [self::VIDEO_HORIZONTAL_RESOLUTION_KEY, 'VideoHorizontalResolution', 'HorizontalResolution'],
-        'VideoHorizontalResolution'            => ['VideoHorizontalResolution', self::VIDEO_HORIZONTAL_RESOLUTION_KEY, 'HorizontalResolution'],
-        'HorizontalResolution'                 => ['HorizontalResolution', self::VIDEO_HORIZONTAL_RESOLUTION_KEY, 'VideoHorizontalResolution'],
-        self::VIDEO_VERTICAL_RESOLUTION_KEY    => [self::VIDEO_VERTICAL_RESOLUTION_KEY, 'VideoVerticalResolution', 'VerticalResolution'],
-        'VideoVerticalResolution'              => ['VideoVerticalResolution', self::VIDEO_VERTICAL_RESOLUTION_KEY, 'VerticalResolution'],
-        'VerticalResolution'                   => ['VerticalResolution', self::VIDEO_VERTICAL_RESOLUTION_KEY, 'VideoVerticalResolution'],
-        self::VIDEO_FRAME_COUNT_KEY            => [self::VIDEO_FRAME_COUNT_KEY, 'VideoFrameCount'],
-        'VideoFrameCount'                      => ['VideoFrameCount', self::VIDEO_FRAME_COUNT_KEY],
-        self::VIDEO_CODEC_KEY                  => [self::VIDEO_CODEC_KEY, 'CompressorID', 'VideoCodecID'],
-        'CompressorID'                         => ['CompressorID', self::VIDEO_CODEC_KEY, 'VideoCodecID'],
-        self::COMPRESSOR_NAME_KEY              => [self::COMPRESSOR_NAME_KEY, 'CompressorName'],
-        'CompressorName'                       => ['CompressorName', self::COMPRESSOR_NAME_KEY],
-        self::AUDIO_FORMAT_KEY                 => [self::AUDIO_FORMAT_KEY, self::AUDIO_CODEC_KEY, 'AudioFormat', 'AudioCodecID'],
-        self::AUDIO_CODEC_KEY                  => [self::AUDIO_CODEC_KEY, self::AUDIO_FORMAT_KEY, 'AudioCodecID', 'AudioFormat'],
-        'AudioFormat'                          => ['AudioFormat', self::AUDIO_FORMAT_KEY, self::AUDIO_CODEC_KEY, 'AudioCodecID'],
-        'AudioCodecID'                         => ['AudioCodecID', self::AUDIO_CODEC_KEY, self::AUDIO_FORMAT_KEY, 'AudioFormat'],
-        self::AUDIO_CHANNELS_KEY               => [self::AUDIO_CHANNELS_KEY, 'AudioChannels'],
-        'AudioChannels'                        => ['AudioChannels', self::AUDIO_CHANNELS_KEY],
-        self::AUDIO_SAMPLE_RATE_KEY            => [self::AUDIO_SAMPLE_RATE_KEY, 'AudioSampleRate'],
-        'AudioSampleRate'                      => ['AudioSampleRate', self::AUDIO_SAMPLE_RATE_KEY],
-        self::AUDIO_BITS_PER_SAMPLE_KEY        => [self::AUDIO_BITS_PER_SAMPLE_KEY, 'AudioBitsPerSample'],
-        'AudioBitsPerSample'                   => ['AudioBitsPerSample', self::AUDIO_BITS_PER_SAMPLE_KEY],
-        self::AUDIO_LPCM_FORMAT_FLAGS_KEY      => [self::AUDIO_LPCM_FORMAT_FLAGS_KEY, 'AudioLpcmFormatFlags'],
-        'AudioLpcmFormatFlags'                 => ['AudioLpcmFormatFlags', self::AUDIO_LPCM_FORMAT_FLAGS_KEY],
-        self::AUDIO_LPCM_NUMERIC_FORMAT_KEY    => [self::AUDIO_LPCM_NUMERIC_FORMAT_KEY, 'AudioLpcmNumericFormat'],
-        'AudioLpcmNumericFormat'               => ['AudioLpcmNumericFormat', self::AUDIO_LPCM_NUMERIC_FORMAT_KEY],
-        self::AUDIO_LPCM_ENDIANNESS_KEY        => [self::AUDIO_LPCM_ENDIANNESS_KEY, 'AudioLpcmEndianness'],
-        'AudioLpcmEndianness'                  => ['AudioLpcmEndianness', self::AUDIO_LPCM_ENDIANNESS_KEY],
-        self::AUDIO_LPCM_PACKING_KEY           => [self::AUDIO_LPCM_PACKING_KEY, 'AudioLpcmPacking'],
-        'AudioLpcmPacking'                     => ['AudioLpcmPacking', self::AUDIO_LPCM_PACKING_KEY],
-        self::AUDIO_LPCM_IS_FLOAT_KEY          => [self::AUDIO_LPCM_IS_FLOAT_KEY, 'AudioLpcmIsFloat'],
-        'AudioLpcmIsFloat'                     => ['AudioLpcmIsFloat', self::AUDIO_LPCM_IS_FLOAT_KEY],
-        self::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY => [self::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY, 'AudioLpcmIsSignedInteger'],
-        'AudioLpcmIsSignedInteger'             => ['AudioLpcmIsSignedInteger', self::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY],
-        self::AUDIO_LPCM_IS_BIG_ENDIAN_KEY     => [self::AUDIO_LPCM_IS_BIG_ENDIAN_KEY, 'AudioLpcmIsBigEndian'],
-        'AudioLpcmIsBigEndian'                 => ['AudioLpcmIsBigEndian', self::AUDIO_LPCM_IS_BIG_ENDIAN_KEY],
-        self::AUDIO_LPCM_IS_PACKED_KEY         => [self::AUDIO_LPCM_IS_PACKED_KEY, 'AudioLpcmIsPacked'],
-        'AudioLpcmIsPacked'                    => ['AudioLpcmIsPacked', self::AUDIO_LPCM_IS_PACKED_KEY],
-        self::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY   => [self::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY, 'AudioLpcmIsAlignedHigh'],
-        'AudioLpcmIsAlignedHigh'               => ['AudioLpcmIsAlignedHigh', self::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY],
-        self::AUDIO_LPCM_BYTES_PER_PACKET_KEY  => [self::AUDIO_LPCM_BYTES_PER_PACKET_KEY, 'AudioLpcmBytesPerPacket'],
-        'AudioLpcmBytesPerPacket'              => ['AudioLpcmBytesPerPacket', self::AUDIO_LPCM_BYTES_PER_PACKET_KEY],
-        self::AUDIO_LPCM_FRAMES_PER_PACKET_KEY => [self::AUDIO_LPCM_FRAMES_PER_PACKET_KEY, 'AudioLpcmFramesPerPacket'],
-        'AudioLpcmFramesPerPacket'             => ['AudioLpcmFramesPerPacket', self::AUDIO_LPCM_FRAMES_PER_PACKET_KEY],
-        'Encoder'                              => ['Encoder', 'com.apple.quicktime.encoder'],
-        'AvgBitrate'                           => ['AvgBitrate', 'com.apple.quicktime.avgBitrate'],
-        'Bitrate'                              => ['Bitrate', 'com.apple.quicktime.bitrate', 'com.apple.quicktime.dataRate'],
-        'Duration'                             => ['Duration', 'com.apple.quicktime.duration'],
-        'VideoFrameRate'                       => ['VideoFrameRate', 'com.apple.quicktime.videoFrameRate'],
-        'HDRFormat'                            => ['HDRFormat', 'com.apple.quicktime.hdrFormat'],
-        'TransferFunction'                     => ['TransferFunction', 'com.apple.quicktime.transferFunction'],
-        'ColorPrimaries'                       => ['ColorPrimaries', 'com.apple.quicktime.colorPrimaries'],
-        'AudioBitsPerChannel'                  => ['AudioBitsPerChannel', self::AUDIO_BITS_PER_SAMPLE_KEY],
-        self::TRACK_NAME_KEY                   => [self::TRACK_NAME_KEY, 'TrackName'],
-        'TrackName'                            => ['TrackName', self::TRACK_NAME_KEY],
+        self::MAJOR_BRAND_KEY                     => [self::MAJOR_BRAND_KEY, 'MajorBrand'],
+        'MajorBrand'                              => ['MajorBrand', self::MAJOR_BRAND_KEY],
+        self::MINOR_VERSION_KEY                   => [self::MINOR_VERSION_KEY, 'MinorVersion'],
+        'MinorVersion'                            => ['MinorVersion', self::MINOR_VERSION_KEY],
+        self::COMPATIBLE_BRANDS_KEY               => [self::COMPATIBLE_BRANDS_KEY, 'CompatibleBrands'],
+        'CompatibleBrands'                        => ['CompatibleBrands', self::COMPATIBLE_BRANDS_KEY],
+        self::HANDLER_DESCRIPTION_KEY             => [self::HANDLER_DESCRIPTION_KEY, 'HandlerDescription'],
+        'HandlerDescription'                      => ['HandlerDescription', self::HANDLER_DESCRIPTION_KEY],
+        self::VIDEO_WIDTH_KEY                     => [self::VIDEO_WIDTH_KEY, 'ImageWidth', 'VideoWidth'],
+        'ImageWidth'                              => ['ImageWidth', self::VIDEO_WIDTH_KEY, 'VideoWidth'],
+        self::VIDEO_HEIGHT_KEY                    => [self::VIDEO_HEIGHT_KEY, 'ImageHeight', 'VideoHeight'],
+        'ImageHeight'                             => ['ImageHeight', self::VIDEO_HEIGHT_KEY, 'VideoHeight'],
+        self::VIDEO_HORIZONTAL_RESOLUTION_KEY     => [self::VIDEO_HORIZONTAL_RESOLUTION_KEY, 'VideoHorizontalResolution', 'HorizontalResolution'],
+        'VideoHorizontalResolution'               => ['VideoHorizontalResolution', self::VIDEO_HORIZONTAL_RESOLUTION_KEY, 'HorizontalResolution'],
+        'HorizontalResolution'                    => ['HorizontalResolution', self::VIDEO_HORIZONTAL_RESOLUTION_KEY, 'VideoHorizontalResolution'],
+        self::VIDEO_VERTICAL_RESOLUTION_KEY       => [self::VIDEO_VERTICAL_RESOLUTION_KEY, 'VideoVerticalResolution', 'VerticalResolution'],
+        'VideoVerticalResolution'                 => ['VideoVerticalResolution', self::VIDEO_VERTICAL_RESOLUTION_KEY, 'VerticalResolution'],
+        'VerticalResolution'                      => ['VerticalResolution', self::VIDEO_VERTICAL_RESOLUTION_KEY, 'VideoVerticalResolution'],
+        self::VIDEO_FRAME_COUNT_KEY               => [self::VIDEO_FRAME_COUNT_KEY, 'VideoFrameCount'],
+        'VideoFrameCount'                         => ['VideoFrameCount', self::VIDEO_FRAME_COUNT_KEY],
+        self::VIDEO_CODEC_KEY                     => [self::VIDEO_CODEC_KEY, 'CompressorID', 'VideoCodecID'],
+        'CompressorID'                            => ['CompressorID', self::VIDEO_CODEC_KEY, 'VideoCodecID'],
+        self::COMPRESSOR_NAME_KEY                 => [self::COMPRESSOR_NAME_KEY, 'CompressorName'],
+        'CompressorName'                          => ['CompressorName', self::COMPRESSOR_NAME_KEY],
+        self::VIDEO_FRAME_RATE_KEY                => [self::VIDEO_FRAME_RATE_KEY, 'VideoFrameRate'],
+        'VideoFrameRate'                          => ['VideoFrameRate', self::VIDEO_FRAME_RATE_KEY],
+        self::VIDEO_MAX_BITRATE_KEY               => [self::VIDEO_MAX_BITRATE_KEY, 'VideoMaxBitrate'],
+        'VideoMaxBitrate'                         => ['VideoMaxBitrate', self::VIDEO_MAX_BITRATE_KEY],
+        self::VIDEO_AVG_BITRATE_KEY               => [self::VIDEO_AVG_BITRATE_KEY, 'VideoAvgBitrate'],
+        'VideoAvgBitrate'                         => ['VideoAvgBitrate', self::VIDEO_AVG_BITRATE_KEY],
+        self::COLOR_PRIMARIES_KEY                 => [self::COLOR_PRIMARIES_KEY, 'ColorPrimaries'],
+        'ColorPrimaries'                          => ['ColorPrimaries', self::COLOR_PRIMARIES_KEY],
+        self::TRANSFER_CHARACTERISTICS_KEY        => [self::TRANSFER_CHARACTERISTICS_KEY, 'TransferCharacteristics'],
+        'TransferCharacteristics'                 => ['TransferCharacteristics', self::TRANSFER_CHARACTERISTICS_KEY],
+        self::MATRIX_COEFFICIENTS_KEY             => [self::MATRIX_COEFFICIENTS_KEY, 'MatrixCoefficients'],
+        'MatrixCoefficients'                      => ['MatrixCoefficients', self::MATRIX_COEFFICIENTS_KEY],
+        self::VIDEO_FULL_RANGE_FLAG_KEY           => [self::VIDEO_FULL_RANGE_FLAG_KEY, 'VideoFullRangeFlag'],
+        'VideoFullRangeFlag'                      => ['VideoFullRangeFlag', self::VIDEO_FULL_RANGE_FLAG_KEY],
+        self::AUDIO_FORMAT_KEY                    => [self::AUDIO_FORMAT_KEY, self::AUDIO_CODEC_KEY, 'AudioFormat', 'AudioCodecID'],
+        self::AUDIO_CODEC_KEY                     => [self::AUDIO_CODEC_KEY, self::AUDIO_FORMAT_KEY, 'AudioCodecID', 'AudioFormat'],
+        'AudioFormat'                             => ['AudioFormat', self::AUDIO_FORMAT_KEY, self::AUDIO_CODEC_KEY, 'AudioCodecID'],
+        'AudioCodecID'                            => ['AudioCodecID', self::AUDIO_CODEC_KEY, self::AUDIO_FORMAT_KEY, 'AudioFormat'],
+        self::AUDIO_CHANNELS_KEY                  => [self::AUDIO_CHANNELS_KEY, 'AudioChannels'],
+        'AudioChannels'                           => ['AudioChannels', self::AUDIO_CHANNELS_KEY],
+        self::AUDIO_SAMPLE_RATE_KEY               => [self::AUDIO_SAMPLE_RATE_KEY, 'AudioSampleRate'],
+        'AudioSampleRate'                         => ['AudioSampleRate', self::AUDIO_SAMPLE_RATE_KEY],
+        self::AUDIO_BITS_PER_SAMPLE_KEY           => [self::AUDIO_BITS_PER_SAMPLE_KEY, 'AudioBitsPerSample'],
+        'AudioBitsPerSample'                      => ['AudioBitsPerSample', self::AUDIO_BITS_PER_SAMPLE_KEY],
+        self::AUDIO_MAX_BITRATE_KEY               => [self::AUDIO_MAX_BITRATE_KEY, 'AudioMaxBitrate'],
+        'AudioMaxBitrate'                         => ['AudioMaxBitrate', self::AUDIO_MAX_BITRATE_KEY],
+        self::AUDIO_AVG_BITRATE_KEY               => [self::AUDIO_AVG_BITRATE_KEY, 'AudioAvgBitrate'],
+        'AudioAvgBitrate'                         => ['AudioAvgBitrate', self::AUDIO_AVG_BITRATE_KEY],
+        self::AUDIO_LPCM_FORMAT_FLAGS_KEY         => [self::AUDIO_LPCM_FORMAT_FLAGS_KEY, 'AudioLpcmFormatFlags'],
+        'AudioLpcmFormatFlags'                    => ['AudioLpcmFormatFlags', self::AUDIO_LPCM_FORMAT_FLAGS_KEY],
+        self::AUDIO_LPCM_NUMERIC_FORMAT_KEY       => [self::AUDIO_LPCM_NUMERIC_FORMAT_KEY, 'AudioLpcmNumericFormat'],
+        'AudioLpcmNumericFormat'                  => ['AudioLpcmNumericFormat', self::AUDIO_LPCM_NUMERIC_FORMAT_KEY],
+        self::AUDIO_LPCM_ENDIANNESS_KEY           => [self::AUDIO_LPCM_ENDIANNESS_KEY, 'AudioLpcmEndianness'],
+        'AudioLpcmEndianness'                     => ['AudioLpcmEndianness', self::AUDIO_LPCM_ENDIANNESS_KEY],
+        self::AUDIO_LPCM_PACKING_KEY              => [self::AUDIO_LPCM_PACKING_KEY, 'AudioLpcmPacking'],
+        'AudioLpcmPacking'                        => ['AudioLpcmPacking', self::AUDIO_LPCM_PACKING_KEY],
+        self::AUDIO_LPCM_IS_FLOAT_KEY             => [self::AUDIO_LPCM_IS_FLOAT_KEY, 'AudioLpcmIsFloat'],
+        'AudioLpcmIsFloat'                        => ['AudioLpcmIsFloat', self::AUDIO_LPCM_IS_FLOAT_KEY],
+        self::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY    => [self::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY, 'AudioLpcmIsSignedInteger'],
+        'AudioLpcmIsSignedInteger'                => ['AudioLpcmIsSignedInteger', self::AUDIO_LPCM_IS_SIGNED_INTEGER_KEY],
+        self::AUDIO_LPCM_IS_BIG_ENDIAN_KEY        => [self::AUDIO_LPCM_IS_BIG_ENDIAN_KEY, 'AudioLpcmIsBigEndian'],
+        'AudioLpcmIsBigEndian'                    => ['AudioLpcmIsBigEndian', self::AUDIO_LPCM_IS_BIG_ENDIAN_KEY],
+        self::AUDIO_LPCM_IS_PACKED_KEY            => [self::AUDIO_LPCM_IS_PACKED_KEY, 'AudioLpcmIsPacked'],
+        'AudioLpcmIsPacked'                       => ['AudioLpcmIsPacked', self::AUDIO_LPCM_IS_PACKED_KEY],
+        self::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY      => [self::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY, 'AudioLpcmIsAlignedHigh'],
+        'AudioLpcmIsAlignedHigh'                  => ['AudioLpcmIsAlignedHigh', self::AUDIO_LPCM_IS_ALIGNED_HIGH_KEY],
+        self::AUDIO_LPCM_BYTES_PER_PACKET_KEY     => [self::AUDIO_LPCM_BYTES_PER_PACKET_KEY, 'AudioLpcmBytesPerPacket'],
+        'AudioLpcmBytesPerPacket'                 => ['AudioLpcmBytesPerPacket', self::AUDIO_LPCM_BYTES_PER_PACKET_KEY],
+        self::AUDIO_LPCM_FRAMES_PER_PACKET_KEY    => [self::AUDIO_LPCM_FRAMES_PER_PACKET_KEY, 'AudioLpcmFramesPerPacket'],
+        'AudioLpcmFramesPerPacket'                => ['AudioLpcmFramesPerPacket', self::AUDIO_LPCM_FRAMES_PER_PACKET_KEY],
+        self::CREATE_DATE_KEY                     => [self::CREATE_DATE_KEY, 'CreateDate'],
+        'CreateDate'                              => ['CreateDate', self::CREATE_DATE_KEY],
+        self::MODIFY_DATE_KEY                     => [self::MODIFY_DATE_KEY, 'ModifyDate'],
+        'ModifyDate'                              => ['ModifyDate', self::MODIFY_DATE_KEY],
+        self::DURATION_KEY                        => [self::DURATION_KEY, 'Duration'],
+        'Duration'                                => ['Duration', self::DURATION_KEY],
+        self::TIME_SCALE_KEY                      => [self::TIME_SCALE_KEY, 'TimeScale'],
+        'TimeScale'                               => ['TimeScale', self::TIME_SCALE_KEY],
+        self::PREFERRED_RATE_KEY                  => [self::PREFERRED_RATE_KEY, 'PreferredRate'],
+        'PreferredRate'                           => ['PreferredRate', self::PREFERRED_RATE_KEY],
+        self::PREFERRED_VOLUME_KEY                => [self::PREFERRED_VOLUME_KEY, 'PreferredVolume'],
+        'PreferredVolume'                         => ['PreferredVolume', self::PREFERRED_VOLUME_KEY],
+        self::META_FORMAT_KEY                     => [self::META_FORMAT_KEY, 'MetaFormat'],
+        'MetaFormat'                              => ['MetaFormat', self::META_FORMAT_KEY],
+        'Encoder'                                 => ['Encoder', 'com.apple.quicktime.encoder'],
+        'AvgBitrate'                              => ['AvgBitrate', 'com.apple.quicktime.avgBitrate'],
+        'Bitrate'                                 => ['Bitrate', 'com.apple.quicktime.bitrate', 'com.apple.quicktime.dataRate'],
+        'HDRFormat'                               => ['HDRFormat', 'com.apple.quicktime.hdrFormat'],
+        'TransferFunction'                        => ['TransferFunction', 'com.apple.quicktime.transferFunction'],
+        'AudioBitsPerChannel'                     => ['AudioBitsPerChannel', self::AUDIO_BITS_PER_SAMPLE_KEY],
+        self::TRACK_NAME_KEY                      => [self::TRACK_NAME_KEY, 'TrackName'],
+        'TrackName'                               => ['TrackName', self::TRACK_NAME_KEY],
     ];
 
     /** @var array<string, string|int|float|bool> Map of QuickTime metadata keys and their values (first value per key). */

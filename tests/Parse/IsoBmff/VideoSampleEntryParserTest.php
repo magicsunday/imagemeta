@@ -540,4 +540,149 @@ final class VideoSampleEntryParserTest extends TestCase
 
         self::assertSame(1920, $result['width']);
     }
+
+    /**
+     * Extracts maxBitrate and avgBitrate from a trailing btrt (BitRateBox).
+     *
+     * ISO/IEC 14496-12 §8.5.2.2: btrt contains bufferSizeDB(4) + maxBitrate(4) + avgBitrate(4).
+     */
+    #[Test]
+    public function extractsBitrateFromBtrtBox(): void
+    {
+        // ISO/IEC 14496-12 §8.5.2.2: btrt box = size(4) + 'btrt'(4) + bufferSizeDB(4) + maxBitrate(4) + avgBitrate(4)
+        $btrt = pack('N', 20) . 'btrt'
+            . pack('N', 1_000_000)   // bufferSizeDB
+            . pack('N', 8_000_000)   // maxBitrate
+            . pack('N', 5_000_000);  // avgBitrate
+
+        $data = $this->buildVideoSampleData() . $btrt;
+
+        $win    = $this->createWindow($data);
+        $parser = new VideoSampleEntryParser();
+
+        $result = $parser->parseVideoSampleEntry($win, strlen($data), 'hvc1');
+
+        self::assertSame(8_000_000, $result['maxBitrate']);
+        self::assertSame(5_000_000, $result['avgBitrate']);
+    }
+
+    /**
+     * Does not add maxBitrate/avgBitrate when btrt values are zero.
+     *
+     * ISO/IEC 14496-12 §8.5.2.2: zero bitrate fields are skipped.
+     */
+    #[Test]
+    public function omitsBitrateKeysWhenBtrtValuesAreZero(): void
+    {
+        // btrt with all-zero values
+        $btrt = pack('N', 20) . 'btrt' . pack('N', 0) . pack('N', 0) . pack('N', 0);
+        $data = $this->buildVideoSampleData() . $btrt;
+
+        $win    = $this->createWindow($data);
+        $parser = new VideoSampleEntryParser();
+
+        $result = $parser->parseVideoSampleEntry($win, strlen($data), 'hvc1');
+
+        self::assertArrayNotHasKey('maxBitrate', $result);
+        self::assertArrayNotHasKey('avgBitrate', $result);
+    }
+
+    /**
+     * Extracts color metadata from a trailing colr box with nclx colour type.
+     *
+     * ISO/IEC 14496-12 §12.1.5.2: colr/nclx contains colour_primaries(2),
+     * transfer_characteristics(2), matrix_coefficients(2), full_range_flag(bit7 of 1 byte).
+     */
+    #[Test]
+    public function extractsColorMetadataFromColrNclxBox(): void
+    {
+        // ISO/IEC 14496-12 §12.1.5.2: colr box = size(4) + 'colr'(4) + 'nclx'(4) +
+        // colour_primaries(2) + transfer_characteristics(2) + matrix_coefficients(2) +
+        // full_range_flag(1 byte, bit7)
+        $colr = pack('N', 19) . 'colr' . 'nclx'
+            . pack('n', 1)      // colour_primaries = 1 (BT.709)
+            . pack('n', 13)     // transfer_characteristics = 13 (sRGB)
+            . pack('n', 6)      // matrix_coefficients = 6 (BT.601)
+            . "\x80";           // full_range_flag = 1 (bit 7 set)
+
+        $data = $this->buildVideoSampleData() . $colr;
+
+        $win    = $this->createWindow($data);
+        $parser = new VideoSampleEntryParser();
+
+        $result = $parser->parseVideoSampleEntry($win, strlen($data), 'hvc1');
+
+        self::assertSame(1, $result['colorPrimaries']);
+        self::assertSame(13, $result['transferCharacteristics']);
+        self::assertSame(6, $result['matrixCoefficients']);
+        self::assertTrue($result['fullRangeFlag']);
+    }
+
+    /**
+     * Reports fullRangeFlag=false when the flag bit is not set in the colr/nclx box.
+     *
+     * ISO/IEC 14496-12 §12.1.5.2: bit 7 of the last byte is the full_range_flag.
+     */
+    #[Test]
+    public function reportsFullRangeFlagFalseWhenBitNotSet(): void
+    {
+        $colr = pack('N', 19) . 'colr' . 'nclx'
+            . pack('n', 9)   // colour_primaries
+            . pack('n', 16)  // transfer_characteristics
+            . pack('n', 9)   // matrix_coefficients
+            . "\x00";        // full_range_flag = 0 (bit 7 not set)
+
+        $data = $this->buildVideoSampleData() . $colr;
+
+        $win    = $this->createWindow($data);
+        $parser = new VideoSampleEntryParser();
+
+        $result = $parser->parseVideoSampleEntry($win, strlen($data), 'av01');
+
+        self::assertFalse($result['fullRangeFlag']);
+    }
+
+    /**
+     * Silently skips colr box when colour_type is not nclx.
+     *
+     * ISO/IEC 14496-12 §12.1.5: supports rICC, prof, and nclx colour types;
+     * this parser only extracts nclx fields.
+     */
+    #[Test]
+    public function silentlySkipsColrBoxWithNonNclxColourType(): void
+    {
+        $colr = pack('N', 12) . 'colr' . 'rICC'; // rICC type, no nclx fields
+
+        $data = $this->buildVideoSampleData() . $colr;
+
+        $win    = $this->createWindow($data);
+        $parser = new VideoSampleEntryParser();
+
+        $result = $parser->parseVideoSampleEntry($win, strlen($data), 'hvc1');
+
+        self::assertArrayNotHasKey('colorPrimaries', $result);
+        self::assertArrayNotHasKey('fullRangeFlag', $result);
+    }
+
+    /**
+     * Extracts both btrt and colr/nclx from a single sample entry with both child boxes.
+     */
+    #[Test]
+    public function extractsBitrateAndColorMetadataFromSameEntry(): void
+    {
+        $btrt = pack('N', 20) . 'btrt' . pack('N', 500_000) . pack('N', 10_000_000) . pack('N', 7_000_000);
+        $colr = pack('N', 19) . 'colr' . 'nclx'
+            . pack('n', 1) . pack('n', 1) . pack('n', 1) . "\x00";
+
+        $data = $this->buildVideoSampleData() . $btrt . $colr;
+
+        $win    = $this->createWindow($data);
+        $parser = new VideoSampleEntryParser();
+
+        $result = $parser->parseVideoSampleEntry($win, strlen($data), 'avc1');
+
+        self::assertSame(10_000_000, $result['maxBitrate']);
+        self::assertSame(7_000_000, $result['avgBitrate']);
+        self::assertSame(1, $result['colorPrimaries']);
+    }
 }

@@ -254,7 +254,8 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('moov must contain exactly one mvhd box', 1374);
                 }
 
-                $this->trackMediaParser->parseMvhd($child);
+                $mvhdKeys = $this->trackMediaParser->parseMvhd($child);
+                $this->mergeTrackKeysIfMissing($context->qtKeys, $mvhdKeys);
             }
         }
 

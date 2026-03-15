@@ -18,7 +18,9 @@ use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\ParserLimits;
 
 use function array_key_exists;
+use function gmdate;
 use function in_array;
+use function is_finite;
 use function mb_check_encoding;
 use function ord;
 use function round;
@@ -46,6 +48,23 @@ final readonly class TrackMediaParser
      * Track-header flag indicating whether a track participates in movie presentation.
      */
     private const int TKHD_FLAG_TRACK_IN_MOVIE = 0x000002;
+
+    /**
+     * Seconds between the Mac OS epoch (1904-01-01 00:00:00 UTC) and
+     * the Unix epoch (1970-01-01 00:00:00 UTC).
+     *
+     * ISO/IEC 14496-12 §8.2.2: creation_time and modification_time are
+     * measured in seconds since Jan 1, 1904.
+     */
+    private const int MAC_EPOCH_OFFSET = 2_082_844_800;
+
+    /**
+     * Maximum number of entries accepted from an stts (TimeToSampleBox).
+     *
+     * Prevents resource exhaustion from artificially large entry counts.
+     * ISO/IEC 14496-12 §8.6.1.
+     */
+    private const int MAX_STTS_ENTRIES = 16_384;
 
     private VideoSampleEntryParser $videoParser;
 
@@ -136,6 +155,7 @@ final readonly class TrackMediaParser
         $trackKeys = match ($handler) {
             'vide'  => $this->buildVideoTrackKeys($sampleInfo, $tkhdWidth, $tkhdHeight),
             'soun'  => $this->buildAudioTrackKeys($sampleInfo),
+            'meta'  => $this->buildMetaTrackKeys($sampleInfo, $context),
             default => [],
         };
 
@@ -189,6 +209,34 @@ final readonly class TrackMediaParser
             $trackKeys[QuickTimeMeta::VIDEO_FRAME_COUNT_KEY] = $sampleInfo['frameCount'];
         }
 
+        if (isset($sampleInfo['frameRate'])) {
+            $trackKeys[QuickTimeMeta::VIDEO_FRAME_RATE_KEY] = $sampleInfo['frameRate'];
+        }
+
+        if (isset($sampleInfo['maxBitrate'])) {
+            $trackKeys[QuickTimeMeta::VIDEO_MAX_BITRATE_KEY] = $sampleInfo['maxBitrate'];
+        }
+
+        if (isset($sampleInfo['avgBitrate'])) {
+            $trackKeys[QuickTimeMeta::VIDEO_AVG_BITRATE_KEY] = $sampleInfo['avgBitrate'];
+        }
+
+        if (isset($sampleInfo['colorPrimaries'])) {
+            $trackKeys[QuickTimeMeta::COLOR_PRIMARIES_KEY] = $sampleInfo['colorPrimaries'];
+        }
+
+        if (isset($sampleInfo['transferCharacteristics'])) {
+            $trackKeys[QuickTimeMeta::TRANSFER_CHARACTERISTICS_KEY] = $sampleInfo['transferCharacteristics'];
+        }
+
+        if (isset($sampleInfo['matrixCoefficients'])) {
+            $trackKeys[QuickTimeMeta::MATRIX_COEFFICIENTS_KEY] = $sampleInfo['matrixCoefficients'];
+        }
+
+        if (isset($sampleInfo['fullRangeFlag'])) {
+            $trackKeys[QuickTimeMeta::VIDEO_FULL_RANGE_FLAG_KEY] = $sampleInfo['fullRangeFlag'];
+        }
+
         return $trackKeys;
     }
 
@@ -219,6 +267,14 @@ final readonly class TrackMediaParser
 
         if (isset($sampleInfo['sampleRate'])) {
             $trackKeys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY] = $sampleInfo['sampleRate'];
+        }
+
+        if (isset($sampleInfo['maxBitrate'])) {
+            $trackKeys[QuickTimeMeta::AUDIO_MAX_BITRATE_KEY] = $sampleInfo['maxBitrate'];
+        }
+
+        if (isset($sampleInfo['avgBitrate'])) {
+            $trackKeys[QuickTimeMeta::AUDIO_AVG_BITRATE_KEY] = $sampleInfo['avgBitrate'];
         }
 
         $this->copyLpcmSampleInfoKeys($sampleInfo, $trackKeys);
@@ -256,35 +312,91 @@ final readonly class TrackMediaParser
     }
 
     /**
-     * Validates the movie header box (`mvhd`).
+     * Builds QuickTime keys for metadata handler tracks (e.g. DJI telemetry).
+     *
+     * Captures the sample-entry format code as the MetaFormat key and stores
+     * it directly in the shared context when not already set.
+     *
+     * @param SampleEntryMap     $sampleInfo
+     * @param IsoBmffParseContext $context
+     *
+     * @return QuickTimeKeyMap Always empty — context is updated directly.
+     */
+    private function buildMetaTrackKeys(array $sampleInfo, IsoBmffParseContext $context): array
+    {
+        if (isset($sampleInfo['metaFormat']) && ($sampleInfo['metaFormat'] !== '') && !array_key_exists(QuickTimeMeta::META_FORMAT_KEY, $context->qtKeys)) {
+            $context->qtKeys[QuickTimeMeta::META_FORMAT_KEY] = $sampleInfo['metaFormat'];
+        }
+
+        return [];
+    }
+
+    /**
+     * Parses the movie header box (`mvhd`) and returns extracted container metadata.
      *
      * ISO/IEC 14496-12 §8.2.2: the mvhd box is a FullBox with version 0 (32-bit
      * timestamps) or 1 (64-bit timestamps). The timescale and next_track_ID fields
      * must be non-zero.
      *
      * @param BoxDescriptor $mvhd Movie header box descriptor.
+     *
+     * @return QuickTimeKeyMap Extracted mvhd fields (CreateDate, ModifyDate, Duration, etc.).
      */
-    public function parseMvhd(BoxDescriptor $mvhd): void
+    public function parseMvhd(BoxDescriptor $mvhd): array
     {
-        $version = $this->parseTimescaleHeader($mvhd, 100, 112, 1906, 1908, 1407, 1907, 1408);
+        $header    = $this->parseTimescaleHeader($mvhd, 100, 112, 1906, 1908, 1407, 1907, 1408);
+        $version   = $header['version'];
+        $timescale = $header['timescale'];
 
         $win = $mvhd->window;
 
-        // Skip duration
+        // ISO/IEC 14496-12 §8.2.2: duration in timescale units
         if ($version === 1) {
-            $win->read(8); // duration(64)
+            $durationUnits = $win->readU64BE()->toInt('mvhd duration');
         } else {
-            $win->read(4); // duration(32)
+            $durationUnits = $win->readU32BE();
         }
 
-        // Skip rate(4), volume(2), reserved(10), matrix(36), pre_defined(24) = 76 bytes
-        $win->read(76);
+        // rate: 16.16 fixed-point, default 0x00010000 = 1.0 (normal playback)
+        $rateRaw = $win->readU32BE();
+        // volume: 8.8 fixed-point, default 0x0100 = 1.0 (full volume)
+        $volumeRaw = $win->readU16BE();
+
+        // Skip reserved(2) + reserved(8) + matrix(36) + pre_defined(24) = 70 bytes
+        $win->read(70);
 
         $nextTrackId = $win->readU32BE();
 
         if ($nextTrackId === 0) {
             throw new ParseError('mvhd next_track_ID must not be zero', 1409);
         }
+
+        /** @var QuickTimeKeyMap $keys */
+        $keys = [];
+
+        if ($header['creationTime'] > 0) {
+            $keys[QuickTimeMeta::CREATE_DATE_KEY] = $this->formatMacTimestamp($header['creationTime']);
+        }
+
+        if ($header['modificationTime'] > 0) {
+            $keys[QuickTimeMeta::MODIFY_DATE_KEY] = $this->formatMacTimestamp($header['modificationTime']);
+        }
+
+        $keys[QuickTimeMeta::TIME_SCALE_KEY] = $timescale;
+
+        if (($durationUnits > 0) && ($timescale > 0)) {
+            $keys[QuickTimeMeta::DURATION_KEY] = (float) $durationUnits / $timescale;
+        }
+
+        if ($rateRaw > 0) {
+            $keys[QuickTimeMeta::PREFERRED_RATE_KEY] = $rateRaw === 0x00010000 ? 1.0 : ($rateRaw / 65536.0);
+        }
+
+        if ($volumeRaw > 0) {
+            $keys[QuickTimeMeta::PREFERRED_VOLUME_KEY] = $volumeRaw === 0x0100 ? 1.0 : ($volumeRaw / 256.0);
+        }
+
+        return $keys;
     }
 
     /**
@@ -448,7 +560,7 @@ final readonly class TrackMediaParser
      * @param int           $payloadCode   Error code for version-specific truncation.
      * @param int           $timescaleCode Error code for zero timescale.
      *
-     * @return int Parsed FullBox version (0 or 1).
+     * @return array{version:int, creationTime:int, modificationTime:int, timescale:int}
      */
     private function parseTimescaleHeader(
         BoxDescriptor $box,
@@ -459,7 +571,7 @@ final readonly class TrackMediaParser
         int $flagsCode,
         int $payloadCode,
         int $timescaleCode,
-    ): int {
+    ): array {
         $win = $box->window;
         $win->seek(0);
 
@@ -485,9 +597,11 @@ final readonly class TrackMediaParser
         }
 
         if ($version === 1) {
-            $win->read(8 + 8); // creation_time(64), modification_time(64)
+            $creationTime     = $win->readU64BE()->toInt('creation_time');
+            $modificationTime = $win->readU64BE()->toInt('modification_time');
         } else {
-            $win->read(4 + 4); // creation_time(32), modification_time(32)
+            $creationTime     = $win->readU32BE();
+            $modificationTime = $win->readU32BE();
         }
 
         $timescale = $win->readU32BE();
@@ -496,20 +610,29 @@ final readonly class TrackMediaParser
             throw new ParseError('timescale must not be zero', $timescaleCode);
         }
 
-        return $version;
+        return [
+            'version'          => $version,
+            'creationTime'     => $creationTime,
+            'modificationTime' => $modificationTime,
+            'timescale'        => $timescale,
+        ];
     }
 
     /**
-     * Validates the media header box (`mdhd`).
+     * Parses the media header box (`mdhd`) and returns the media timescale.
      *
      * ISO/IEC 14496-12 §8.4.2: the mdhd box is a FullBox with version 0 (32-bit
      * timestamps) or 1 (64-bit timestamps). The timescale field must be non-zero.
      *
      * @param BoxDescriptor $mdhd Media header box descriptor.
+     *
+     * @return int Media timescale in units per second.
      */
-    private function parseMdhd(BoxDescriptor $mdhd): void
+    private function parseMdhd(BoxDescriptor $mdhd): int
     {
-        $this->parseTimescaleHeader($mdhd, 24, 36, 1901, 1903, 1904, 1902, 1905);
+        $header = $this->parseTimescaleHeader($mdhd, 24, 36, 1901, 1903, 1904, 1902, 1905);
+
+        return $header['timescale'];
     }
 
     /**
@@ -526,13 +649,14 @@ final readonly class TrackMediaParser
      */
     private function parseMdia(BoxDescriptor $mdia, IsoBmffParseContext $context): array
     {
-        $handler     = null;
-        $handlerName = null;
-        $sampleInfo  = [];
-        $hdlrCount   = 0;
-        $minfCount   = 0;
-        $mdhdCount   = 0;
-        $udtaCount   = 0;
+        $handler        = null;
+        $handlerName    = null;
+        $sampleInfo     = [];
+        $hdlrCount      = 0;
+        $minfCount      = 0;
+        $mdhdCount      = 0;
+        $udtaCount      = 0;
+        $mediaTimescale = 0;
 
         // Collect children first so hdlr/minf order does not matter
         $children = [];
@@ -561,7 +685,7 @@ final readonly class TrackMediaParser
                     throw new ParseError('mdia must contain exactly one mdhd box', 1380);
                 }
 
-                $this->parseMdhd($child);
+                $mediaTimescale = $this->parseMdhd($child);
             } elseif ($child->type === BoxType::UDTA->value) {
                 ++$udtaCount;
 
@@ -587,7 +711,7 @@ final readonly class TrackMediaParser
 
         // Parse minf after hdlr so handler type is always available
         foreach ($children as $child) {
-            $sampleInfo = $this->parseMinf($child, $handler);
+            $sampleInfo = $this->parseMinf($child, $handler, $mediaTimescale);
         }
 
         return [$handler, $handlerName, $sampleInfo];
@@ -596,12 +720,13 @@ final readonly class TrackMediaParser
     /**
      * Parses the media information box (`minf`) to find sample table details.
      *
-     * @param BoxDescriptor $minf        Media information descriptor.
-     * @param string|null   $handlerType Declared handler type for the media.
+     * @param BoxDescriptor $minf           Media information descriptor.
+     * @param string|null   $handlerType    Declared handler type for the media.
+     * @param int           $mediaTimescale Media timescale from mdhd, used for frame-rate computation.
      *
      * @return SampleEntryMap
      */
-    private function parseMinf(BoxDescriptor $minf, ?string $handlerType): array
+    private function parseMinf(BoxDescriptor $minf, ?string $handlerType, int $mediaTimescale = 0): array
     {
         if ($handlerType === null) {
             return [];
@@ -627,7 +752,7 @@ final readonly class TrackMediaParser
                     throw new ParseError('minf must contain exactly one stbl box', 1381);
                 }
 
-                $result = $this->parseStbl($child, $handlerType);
+                $result = $this->parseStbl($child, $handlerType, $mediaTimescale);
             } elseif ($child->type === BoxType::DINF->value) {
                 ++$dinfCount;
 
@@ -672,19 +797,21 @@ final readonly class TrackMediaParser
     /**
      * Parses the sample table box (`stbl`).
      *
-     * @param BoxDescriptor $stbl        Sample table descriptor.
-     * @param string        $handlerType Media handler type.
+     * @param BoxDescriptor $stbl           Sample table descriptor.
+     * @param string        $handlerType    Media handler type.
+     * @param int           $mediaTimescale Media timescale for frame-rate computation (0 = skip).
      *
      * @return SampleEntryMap
      */
-    private function parseStbl(BoxDescriptor $stbl, string $handlerType): array
+    private function parseStbl(BoxDescriptor $stbl, string $handlerType, int $mediaTimescale = 0): array
     {
-        $stsdCount = 0;
-        $sttsCount = 0;
-        $stscCount = 0;
-        $stszCount = 0;
-        $stcoCount = 0;
-        $result    = [];
+        $stsdCount      = 0;
+        $sttsCount      = 0;
+        $stscCount      = 0;
+        $stszCount      = 0;
+        $stcoCount      = 0;
+        $result         = [];
+        $sttsDescriptor = null;
 
         foreach ($this->boxNavigator->walkChildren($stbl) as $child) {
             if ($child->type === BoxType::STSD->value) {
@@ -701,6 +828,8 @@ final readonly class TrackMediaParser
                 if ($sttsCount > 1) {
                     throw new ParseError('stbl must contain exactly one stts box', 1424);
                 }
+
+                $sttsDescriptor = $child;
             } elseif ($child->type === BoxType::STSC->value) {
                 ++$stscCount;
 
@@ -741,6 +870,15 @@ final readonly class TrackMediaParser
 
         if ($stcoCount === 0) {
             throw new ParseError('stbl must contain exactly one stco or co64 box', 1917);
+        }
+
+        // ISO/IEC 14496-12 §8.6.1: compute video frame rate from stts when media timescale is available
+        if (($handlerType === 'vide') && ($sttsDescriptor !== null) && ($mediaTimescale > 0)) {
+            $frameRate = $this->computeFrameRateFromStts($sttsDescriptor, $mediaTimescale);
+
+            if ($frameRate !== null) {
+                $result['frameRate'] = $frameRate;
+            }
         }
 
         return $result;
@@ -828,6 +966,14 @@ final readonly class TrackMediaParser
             } elseif (($result === []) && ($handlerType === 'soun')) {
                 $normalizedFormat = $this->boxNavigator->normalizeFourcc($format);
                 $result           = $this->audioParser->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $normalizedFormat, $version);
+            } elseif (($result === []) && ($handlerType === 'meta')) {
+                // Capture the sample-entry format code for metadata handler tracks
+                // (e.g. 'djmd' for DJI telemetry tracks).
+                $normalizedFormat = $this->boxNavigator->normalizeFourcc($format);
+
+                if ($normalizedFormat !== '') {
+                    $result = ['metaFormat' => $normalizedFormat];
+                }
             }
 
             $pos += $entrySize;
@@ -838,5 +984,97 @@ final readonly class TrackMediaParser
         }
 
         return $result;
+    }
+
+    /**
+     * Computes video frame rate from the stts (TimeToSampleBox).
+     *
+     * ISO/IEC 14496-12 §8.6.1: the stts box maps decoding time to sample
+     * numbers via run-length encoded (sample_count, sample_delta) pairs.
+     * Frame rate = (sum of sample counts) × timescale / (sum of sample_count × sample_delta).
+     *
+     * @param BoxDescriptor $stts           Time-to-sample box descriptor.
+     * @param int           $mediaTimescale Media timescale from the mdhd box.
+     *
+     * @return float|null Computed frame rate in frames per second, or null when undetermined.
+     */
+    private function computeFrameRateFromStts(BoxDescriptor $stts, int $mediaTimescale): ?float
+    {
+        $win = $stts->window;
+        $win->seek(0);
+
+        if ($stts->contentSize < 8) {
+            throw new ParseError('stts box truncated', 2101);
+        }
+
+        $header = $this->boxNavigator->readFullBoxHeader($win);
+
+        if ($header->version !== 0) {
+            throw new ParseError('unsupported stts box version', 2102);
+        }
+
+        if ($header->flags !== 0) {
+            throw new ParseError('unsupported stts box flags', 2103);
+        }
+
+        $entryCount = $win->readU32BE();
+
+        if ($entryCount === 0) {
+            return null;
+        }
+
+        if ($entryCount > self::MAX_STTS_ENTRIES) {
+            throw new ParseError('stts entry count exceeds maximum allowed', 2104);
+        }
+
+        $expectedSize = 8 + ($entryCount * 8);
+
+        if ($stts->contentSize < $expectedSize) {
+            throw new ParseError('stts entries truncated', 2105);
+        }
+
+        $totalSamples = 0;
+        $totalTicks   = 0.0;
+
+        for ($i = 0; $i < $entryCount; ++$i) {
+            $sampleCount = $win->readU32BE();
+            $sampleDelta = $win->readU32BE();
+
+            if ($sampleDelta === 0) {
+                return null;
+            }
+
+            $totalSamples += $sampleCount;
+            $totalTicks   += (float) $sampleCount * $sampleDelta;
+        }
+
+        if (($totalTicks <= 0.0) || ($totalSamples <= 0)) {
+            return null;
+        }
+
+        $fps = ((float) $totalSamples * $mediaTimescale) / $totalTicks;
+
+        if (($fps <= 0.0) || !is_finite($fps)) {
+            return null;
+        }
+
+        return $fps;
+    }
+
+    /**
+     * Converts a Mac OS epoch timestamp to a formatted UTC date string.
+     *
+     * ISO/IEC 14496-12 §8.2.2: creation_time and modification_time are measured
+     * in seconds since Jan 1, 1904. A value of 0 means "undefined".
+     *
+     * @param int $macTimestamp Seconds since 1904-01-01 00:00:00 UTC.
+     *
+     * @return string Formatted date string in 'Y:m:d H:i:s' format (UTC).
+     */
+    private function formatMacTimestamp(int $macTimestamp): string
+    {
+        $unixTimestamp = $macTimestamp - self::MAC_EPOCH_OFFSET;
+
+        return gmdate('Y:m:d H:i:s', $unixTimestamp);
     }
 }

@@ -334,16 +334,17 @@ final class TrackMediaParserTest extends TestCase
     // =========================================================================
 
     /**
-     * Accepts valid version 0 mvhd box.
+     * Accepts valid version 0 mvhd box and returns extracted metadata keys.
      */
     #[Test]
     public function parseMvhdAcceptsValidV0(): void
     {
         [$parser, $descriptor] = $this->createParserWithDescriptor('mvhd', $this->validMvhdContent());
 
-        $parser->parseMvhd($descriptor);
+        $result = $parser->parseMvhd($descriptor);
 
-        $this->addToAssertionCount(1);
+        // ISO/IEC 14496-12 §8.2.2: timescale must be returned
+        self::assertSame(1000, $result['com.apple.quicktime.timeScale']);
     }
 
     /**
@@ -354,9 +355,119 @@ final class TrackMediaParserTest extends TestCase
     {
         [$parser, $descriptor] = $this->createParserWithDescriptor('mvhd', $this->validMvhdV1Content());
 
-        $parser->parseMvhd($descriptor);
+        $result = $parser->parseMvhd($descriptor);
 
-        $this->addToAssertionCount(1);
+        self::assertSame(1000, $result['com.apple.quicktime.timeScale']);
+    }
+
+    /**
+     * Extracts duration in seconds from the mvhd box.
+     *
+     * ISO/IEC 14496-12 §8.2.2: duration / timescale gives elapsed time in seconds.
+     */
+    #[Test]
+    public function parseMvhdExtractsDurationInSeconds(): void
+    {
+        $content = "\x00\x00\x00\x00"        // version=0, flags=0
+            . str_repeat("\x00", 8)          // creation_time(4) + modification_time(4)
+            . pack('N', 1000)                // timescale = 1000
+            . pack('N', 5000)                // duration = 5000 units → 5.0 seconds
+            . str_repeat("\x00", 76)         // rate + volume + reserved + matrix + pre_defined
+            . pack('N', 1);                  // next_track_ID
+
+        [$parser, $descriptor] = $this->createParserWithDescriptor('mvhd', $content);
+
+        $result = $parser->parseMvhd($descriptor);
+
+        self::assertSame(5.0, $result['com.apple.quicktime.duration']);
+    }
+
+    /**
+     * Extracts preferredRate decoded from 16.16 fixed-point in the mvhd box.
+     *
+     * ISO/IEC 14496-12 §8.2.2: rate = 0x00010000 is normal playback speed (1.0).
+     */
+    #[Test]
+    public function parseMvhdExtractsPreferredRate(): void
+    {
+        $content = "\x00\x00\x00\x00"        // version=0, flags=0
+            . str_repeat("\x00", 8)          // creation/modification
+            . pack('N', 1000)                // timescale
+            . pack('N', 0)                   // duration
+            . pack('N', 0x00010000)          // rate = 1.0 (normal playback)
+            . str_repeat("\x00", 72)         // volume + reserved + matrix + pre_defined
+            . pack('N', 1);
+
+        [$parser, $descriptor] = $this->createParserWithDescriptor('mvhd', $content);
+
+        $result = $parser->parseMvhd($descriptor);
+
+        self::assertSame(1.0, $result['com.apple.quicktime.preferredRate']);
+    }
+
+    /**
+     * Extracts preferredVolume decoded from 8.8 fixed-point in the mvhd box.
+     *
+     * ISO/IEC 14496-12 §8.2.2: volume = 0x0100 is full volume (1.0).
+     */
+    #[Test]
+    public function parseMvhdExtractsPreferredVolume(): void
+    {
+        $content = "\x00\x00\x00\x00"        // version=0, flags=0
+            . str_repeat("\x00", 8)          // creation/modification
+            . pack('N', 1000)                // timescale
+            . pack('N', 0)                   // duration
+            . pack('N', 0x00010000)          // rate = 1.0
+            . pack('n', 0x0100)              // volume = 1.0 (full volume)
+            . str_repeat("\x00", 70)         // reserved + matrix + pre_defined
+            . pack('N', 1);
+
+        [$parser, $descriptor] = $this->createParserWithDescriptor('mvhd', $content);
+
+        $result = $parser->parseMvhd($descriptor);
+
+        self::assertSame(1.0, $result['com.apple.quicktime.preferredVolume']);
+    }
+
+    /**
+     * Extracts formatted creation date from the mvhd box.
+     *
+     * ISO/IEC 14496-12 §8.2.2: creation_time is seconds since 1904-01-01 00:00:00 UTC.
+     */
+    #[Test]
+    public function parseMvhdExtractsFormattedCreationDate(): void
+    {
+        // 2025-06-14 09:48:44 UTC in Mac epoch (= Unix 1749894524 + 2082844800)
+        $macTs = 1749894524 + 2082844800;
+
+        $content = "\x00\x00\x00\x00"        // version=0, flags=0
+            . pack('N', $macTs)              // creation_time
+            . pack('N', 0)                   // modification_time
+            . pack('N', 1000)                // timescale
+            . pack('N', 0)                   // duration
+            . str_repeat("\x00", 76)         // rate + volume + reserved + matrix + pre_defined
+            . pack('N', 1);
+
+        [$parser, $descriptor] = $this->createParserWithDescriptor('mvhd', $content);
+
+        $result = $parser->parseMvhd($descriptor);
+
+        self::assertSame('2025:06:14 09:48:44', $result['com.apple.quicktime.creationDate']);
+    }
+
+    /**
+     * Does not include creation date key when creation_time is zero (undefined).
+     *
+     * ISO/IEC 14496-12 §8.2.2: a value of 0 means "undefined".
+     */
+    #[Test]
+    public function parseMvhdOmitsCreationDateWhenZero(): void
+    {
+        [$parser, $descriptor] = $this->createParserWithDescriptor('mvhd', $this->validMvhdContent());
+
+        $result = $parser->parseMvhd($descriptor);
+
+        self::assertArrayNotHasKey('com.apple.quicktime.creationDate', $result);
     }
 
     /**
@@ -1430,5 +1541,295 @@ final class TrackMediaParserTest extends TestCase
         self::assertContains('buildVideoTrackKeys', $methods);
         self::assertContains('buildAudioTrackKeys', $methods);
         self::assertContains('copyLpcmSampleInfoKeys', $methods);
+        self::assertContains('buildMetaTrackKeys', $methods);
+    }
+
+    // =========================================================================
+    // stts frame-rate tests
+    // =========================================================================
+
+    /**
+     * Builds a valid stts box with the given entries.
+     *
+     * @param list<array{int, int}> $entries List of [sample_count, sample_delta] pairs.
+     */
+    private function buildSttsBox(array $entries): string
+    {
+        $payload = pack('N', count($entries));
+
+        foreach ($entries as [$sampleCount, $sampleDelta]) {
+            $payload .= pack('N', $sampleCount) . pack('N', $sampleDelta);
+        }
+
+        return $this->fullBox('stts', $payload, 0, 0);
+    }
+
+    /**
+     * Builds a video trak that includes a custom stts box.
+     */
+    private function buildVideoTrakWithStts(string $sttsBox): string
+    {
+        $minfContent = $this->validDinfBox()
+            . $this->validVmhdBox()
+            . $this->box('stbl', $this->validStsdBox() . $sttsBox . $this->validStscBox() . $this->validStszBox() . $this->validStcoBox());
+
+        $mdiaContent = $this->validHdlrBox()
+            . $this->validMdhdBox()
+            . $this->box('minf', $minfContent);
+
+        return $this->validTkhdBox() . $this->box('mdia', $mdiaContent);
+    }
+
+    /**
+     * Computes frame rate from a constant-rate stts (single entry).
+     *
+     * ISO/IEC 14496-12 §8.6.1: fps = timescale / sample_delta when all deltas are equal.
+     * validMdhdBox uses timescale=1000, so fps = 1000/40 = 25.0.
+     */
+    #[Test]
+    public function parseTrakExtractsFrameRateFromConstantRateStts(): void
+    {
+        // 300 frames at sample_delta=40 ticks each, timescale=1000 → 25 fps
+        $stts = $this->buildSttsBox([[300, 40]]);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildVideoTrakWithStts($stts),
+        );
+
+        $result = $parser->parseTrak($descriptor, $context);
+
+        self::assertSame(25.0, $result['keys']['com.apple.quicktime.videoFrameRate']);
+    }
+
+    /**
+     * Computes frame rate from a variable-rate stts (multiple entries with different deltas).
+     *
+     * ISO/IEC 14496-12 §8.6.1: fps = total_samples × timescale / total_ticks.
+     * timescale=1000, entries: 100@33 + 100@34 → total_samples=200, total_ticks=6700 → fps≈29.85.
+     */
+    #[Test]
+    public function parseTrakExtractsFrameRateFromVariableRateStts(): void
+    {
+        // timescale=1000, 100 frames at delta=33 + 100 frames at delta=34
+        // fps = 200 × 1000 / (100×33 + 100×34) = 200000 / 6700 ≈ 29.85
+        $stts = $this->buildSttsBox([[100, 33], [100, 34]]);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildVideoTrakWithStts($stts),
+        );
+
+        $result = $parser->parseTrak($descriptor, $context);
+
+        self::assertEqualsWithDelta(200000.0 / 6700.0, $result['keys']['com.apple.quicktime.videoFrameRate'], 0.001);
+    }
+
+    /**
+     * Returns no frame rate key when stts entry_count is zero.
+     *
+     * ISO/IEC 14496-12 §8.6.1: an empty stts cannot produce a frame rate.
+     */
+    #[Test]
+    public function parseTrakOmitsFrameRateKeyWhenSttsHasNoEntries(): void
+    {
+        $stts = $this->buildSttsBox([]);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildVideoTrakWithStts($stts),
+        );
+
+        $result = $parser->parseTrak($descriptor, $context);
+
+        self::assertArrayNotHasKey('com.apple.quicktime.videoFrameRate', $result['keys']);
+    }
+
+    /**
+     * Rejects stts box that is truncated (code 2101).
+     */
+    #[Test]
+    public function parseTrakRejectsTruncatedStts(): void
+    {
+        // Build a deliberately truncated stts: only 3 bytes instead of minimum 8
+        $stts = $this->box('stts', str_repeat("\x00", 3));
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildVideoTrakWithStts($stts),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(2101);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stts box with unsupported version (code 2102).
+     *
+     * ISO/IEC 14496-12 §8.6.1: stts must have version = 0.
+     */
+    #[Test]
+    public function parseTrakRejectsUnsupportedSttsVersion(): void
+    {
+        $payload = "\x01\x00\x00\x00" . pack('N', 0); // version=1 (invalid)
+        $stts    = $this->box('stts', $payload);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildVideoTrakWithStts($stts),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(2102);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stts box with non-zero flags (code 2103).
+     */
+    #[Test]
+    public function parseTrakRejectsNonZeroSttsFlags(): void
+    {
+        $payload = "\x00\x00\x00\x01" . pack('N', 0); // version=0, flags=1 (invalid)
+        $stts    = $this->box('stts', $payload);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildVideoTrakWithStts($stts),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(2103);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stts box with entry_count exceeding limit (code 2104).
+     */
+    #[Test]
+    public function parseTrakRejectsSttsEntryCountExceedingLimit(): void
+    {
+        // entry_count = 16385 > MAX_STTS_ENTRIES(16384)
+        $payload = "\x00\x00\x00\x00" . pack('N', 16385);
+        $stts    = $this->box('stts', $payload);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildVideoTrakWithStts($stts),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(2104);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    /**
+     * Rejects stts box whose declared entry_count exceeds available bytes (code 2105).
+     */
+    #[Test]
+    public function parseTrakRejectsTruncatedSttsEntries(): void
+    {
+        // Declares 5 entries but only provides 2 complete entries (16 bytes of data)
+        $payload = "\x00\x00\x00\x00" . pack('N', 5) . str_repeat("\x00", 16);
+        $stts    = $this->box('stts', $payload);
+
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildVideoTrakWithStts($stts),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(2105);
+
+        $parser->parseTrak($descriptor, $context);
+    }
+
+    // =========================================================================
+    // meta handler track tests
+    // =========================================================================
+
+    /**
+     * Builds a valid stsd box for a meta handler track with the given format.
+     */
+    private function validMetaStsdBox(string $format): string
+    {
+        $entry   = pack('N', 16) . $format . str_repeat("\x00", 6) . pack('n', 1);
+        $payload = pack('N', 1) . $entry;
+
+        return $this->fullBox('stsd', $payload, 0, 0);
+    }
+
+    /**
+     * Builds a valid stbl box for a meta handler track.
+     */
+    private function validMetaStblContent(string $format): string
+    {
+        return $this->validMetaStsdBox($format)
+            . $this->validSttsBox()
+            . $this->validStscBox()
+            . $this->validStszBox()
+            . $this->validStcoBox();
+    }
+
+    /**
+     * Builds a valid minf box for a meta handler track.
+     */
+    private function validMetaMinfBox(string $format): string
+    {
+        return $this->box('minf',
+            $this->validDinfBox()
+            . $this->validNmhdBox()
+            . $this->box('stbl', $this->validMetaStblContent($format)));
+    }
+
+    /**
+     * Builds a valid trak for a meta handler track.
+     */
+    private function buildMetaTrakContent(string $format, string $handlerName = ''): string
+    {
+        $hdlrPayload = str_repeat("\x00", 4) . 'meta' . str_repeat("\x00", 12);
+
+        if ($handlerName !== '') {
+            $hdlrPayload .= chr(strlen($handlerName)) . $handlerName;
+        }
+
+        $hdlr = $this->fullBox('hdlr', $hdlrPayload, 0, 0);
+        $mdia = $this->box('mdia', $hdlr . $this->validMdhdBox() . $this->validMetaMinfBox($format));
+
+        return $this->validTkhdBox() . $mdia;
+    }
+
+    /**
+     * Extracts MetaFormat from a DJI metadata track (handler='meta', format='djmd').
+     *
+     * DJI NEO and other DJI cameras include a dedicated metadata track with handler
+     * type 'meta' and sample-entry format 'djmd' for per-frame telemetry data.
+     */
+    #[Test]
+    public function parseTrakExtractsMetaFormatFromDjiMetadataTrack(): void
+    {
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildMetaTrakContent('djmd', 'DJI meta'),
+        );
+
+        $parser->parseTrak($descriptor, $context);
+
+        self::assertSame('djmd', $context->qtKeys['com.apple.quicktime.metaFormat']);
+    }
+
+    /**
+     * Does not overwrite MetaFormat when it was already set by a previous track.
+     *
+     * First-wins semantics: only the first meta track's format is recorded.
+     */
+    #[Test]
+    public function parseTrakDoesNotOverwriteExistingMetaFormat(): void
+    {
+        [$parser, $descriptor, $context] = $this->createParseTrakSetup(
+            $this->buildMetaTrakContent('djmd'),
+        );
+
+        $context->qtKeys['com.apple.quicktime.metaFormat'] = 'prev';
+
+        $parser->parseTrak($descriptor, $context);
+
+        self::assertSame('prev', $context->qtKeys['com.apple.quicktime.metaFormat']);
     }
 }

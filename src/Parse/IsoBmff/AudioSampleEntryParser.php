@@ -124,10 +124,18 @@ final readonly class AudioSampleEntryParser
         if ($version === 2) {
             $result = $this->parseSoundSampleEntryVersion2($win, $entryStart, $entryEnd, $entrySize, $normalizedFormat);
 
-            $samplingRateOverride = $this->parseAudioSampleEntrySamplingRateBox($win, $entryEnd, false);
+            $childBoxData = $this->parseAudioSampleEntryChildBoxes($win, $entryEnd, false);
 
-            if ($samplingRateOverride !== null) {
-                $result['sampleRate'] = $samplingRateOverride;
+            if ($childBoxData['sampleRate'] !== null) {
+                $result['sampleRate'] = $childBoxData['sampleRate'];
+            }
+
+            if ($childBoxData['maxBitrate'] !== null) {
+                $result['maxBitrate'] = $childBoxData['maxBitrate'];
+            }
+
+            if ($childBoxData['avgBitrate'] !== null) {
+                $result['avgBitrate'] = $childBoxData['avgBitrate'];
             }
 
             return $result;
@@ -185,22 +193,32 @@ final readonly class AudioSampleEntryParser
             $win->readU32BE();
         }
 
-        $samplingRateOverride = $this->parseAudioSampleEntrySamplingRateBox($win, $entryEnd, $version === 1);
+        $childBoxData = $this->parseAudioSampleEntryChildBoxes($win, $entryEnd, $version === 1);
 
-        if ($samplingRateOverride !== null) {
-            if ($samplingRateOverride <= 0) {
+        if ($childBoxData['sampleRate'] !== null) {
+            if ($childBoxData['sampleRate'] <= 0) {
                 throw new ParseError('audio sample rate must be positive', 1485);
             }
 
-            $sampleRate = $samplingRateOverride;
+            $sampleRate = $childBoxData['sampleRate'];
         }
 
-        return [
+        $result = [
             'format'        => $normalizedFormat,
             'channels'      => $channels,
             'bitsPerSample' => $sampleSize,
             'sampleRate'    => $sampleRate,
         ];
+
+        if ($childBoxData['maxBitrate'] !== null) {
+            $result['maxBitrate'] = $childBoxData['maxBitrate'];
+        }
+
+        if ($childBoxData['avgBitrate'] !== null) {
+            $result['avgBitrate'] = $childBoxData['avgBitrate'];
+        }
+
+        return $result;
     }
 
     /**
@@ -335,24 +353,34 @@ final readonly class AudioSampleEntryParser
     }
 
     /**
-     * Parses trailing AudioSampleEntry child boxes and extracts Sampling Rate box overrides.
+     * Scans trailing AudioSampleEntry child boxes, extracting sampling rate overrides
+     * and bitrate data from recognised box types.
+     *
+     * Recognised box types:
+     * - srat (SamplingRateBox, QuickTime File Format): sample rate override
+     * - btrt (BitRateBox, ISO/IEC 14496-12 §8.5.2.2): maxBitrate, avgBitrate
      *
      * @param StreamWindow $win                  Reader positioned at the start of trailing child bytes.
      * @param int          $entryEnd             Absolute offset where this sample entry ends.
      * @param bool         $allowSamplingRateBox Whether a `srat` box is allowed in this entry version.
+     *
+     * @return array{sampleRate:?int, maxBitrate:?int, avgBitrate:?int}
      */
-    private function parseAudioSampleEntrySamplingRateBox(StreamWindow $win, int $entryEnd, bool $allowSamplingRateBox): ?int
+    private function parseAudioSampleEntryChildBoxes(StreamWindow $win, int $entryEnd, bool $allowSamplingRateBox): array
     {
         $remaining = $entryEnd - $win->tell();
 
         if ($remaining <= 0) {
-            return null;
+            return ['sampleRate' => null, 'maxBitrate' => null, 'avgBitrate' => null];
         }
 
         $tail     = $win->read($remaining);
         $tailSize = strlen($tail);
         $offset   = 0;
-        $override = null;
+
+        $sampleRate = null;
+        $maxBitrate = null;
+        $avgBitrate = null;
 
         while ($offset + 8 <= $tailSize) {
             $boxSize = Unpack::int('N', substr($tail, $offset, 4), 'audio sample entry child box size');
@@ -372,13 +400,28 @@ final readonly class AudioSampleEntryParser
                     throw new ParseError('sampling rate box truncated', 1474);
                 }
 
-                $override = Unpack::int('N', substr($tail, $offset + 12, 4), 'sampling rate box sample rate');
+                $sampleRate = Unpack::int('N', substr($tail, $offset + 12, 4), 'sampling rate box sample rate');
+            } elseif ($boxType === BoxType::BTRT->value) {
+                // ISO/IEC 14496-12 §8.5.2.2: BitRateBox
+                // bufferSizeDB(4) + maxBitrate(4) + avgBitrate(4) = 12 bytes payload
+                if ($boxSize >= 20) {
+                    $max = Unpack::int('N', substr($tail, $offset + 12, 4), 'audio btrt maxBitrate');
+                    $avg = Unpack::int('N', substr($tail, $offset + 16, 4), 'audio btrt avgBitrate');
+
+                    if ($max > 0) {
+                        $maxBitrate = $max;
+                    }
+
+                    if ($avg > 0) {
+                        $avgBitrate = $avg;
+                    }
+                }
             }
 
             $offset += $boxSize;
         }
 
-        return $override;
+        return ['sampleRate' => $sampleRate, 'maxBitrate' => $maxBitrate, 'avgBitrate' => $avgBitrate];
     }
 
     /**
