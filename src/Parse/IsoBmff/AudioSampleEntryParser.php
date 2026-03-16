@@ -89,7 +89,6 @@ final readonly class AudioSampleEntryParser
      * @param int          $entryEnd         Absolute offset where this sample entry ends.
      * @param int          $entrySize        Declared sample entry size (including size+type header).
      * @param string       $normalizedFormat Pre-normalized fourcc format string.
-     * @param int          $stsdVersion      FullBox version of the enclosing stsd.
      *
      * @return AudioSampleEntryMap
      */
@@ -99,7 +98,6 @@ final readonly class AudioSampleEntryParser
         int $entryEnd,
         int $entrySize,
         string $normalizedFormat,
-        int $stsdVersion,
     ): array {
         if ($win->tell() + 8 > $entryEnd) {
             throw new ParseError('audio sample entry truncated', 1160);
@@ -115,10 +113,6 @@ final readonly class AudioSampleEntryParser
 
         if ($vendor !== 0) {
             throw new ParseError('audio sample entry vendor must be 0', 1921);
-        }
-
-        if (($version === 1) && ($stsdVersion !== 1)) {
-            throw new ParseError('audio sample entry version 1 requires stsd version 1', 1472);
         }
 
         if ($version === 2) {

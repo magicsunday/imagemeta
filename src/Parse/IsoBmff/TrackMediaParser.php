@@ -779,7 +779,6 @@ final readonly class TrackMediaParser
             throw new ParseError('stsd version 1 requires audio handler context', 1925);
         }
 
-        $version    = $header->version;
         $entryCount = $win->readU32BE();
 
         // ISO/IEC 14496-12 §8.5.2: Sample Description Box must contain at least one entry.
@@ -827,7 +826,7 @@ final readonly class TrackMediaParser
                 $result           = $this->videoParser->parseVideoSampleEntry($win, $entryEnd, $normalizedFormat);
             } elseif (($result === []) && ($handlerType === 'soun')) {
                 $normalizedFormat = $this->boxNavigator->normalizeFourcc($format);
-                $result           = $this->audioParser->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $normalizedFormat, $version);
+                $result           = $this->audioParser->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $normalizedFormat);
             }
 
             $pos += $entrySize;

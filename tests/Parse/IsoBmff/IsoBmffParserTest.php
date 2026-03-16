@@ -3838,14 +3838,11 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects version 1 audio sample entries when stsd FullBox version is 0.
+     * Accepts version 1 audio sample entries inside stsd version 0 (Apple QuickTime convention).
      */
     #[Test]
-    public function rejectsAudioStsdVersion1EntryInStsdVersion0(): void
+    public function acceptsAudioStsdVersion1EntryInStsdVersion0(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample entry version 1 requires stsd version 1');
-
         $entry = $this->audioSampleEntryVersion1(
             format: 'mp4a',
             channels: 2,
@@ -3857,7 +3854,11 @@ final class IsoBmffParserTest extends TestCase
             bytesPerSample: 0,
         );
 
-        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+        $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        $quickTime = $extractor->extract()->quickTimeMeta;
+
+        self::assertNotNull($quickTime);
+        self::assertSame(48000, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
     }
 
     /**
