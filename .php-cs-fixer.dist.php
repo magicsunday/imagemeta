@@ -37,7 +37,7 @@ LICENSE file that was distributed with this source code.
 EOF;
 
 return (new PhpCsFixer\Config())
-    ->setCacheFile(__DIR__ . '/cache/.php-cs-fixer.cache')
+    ->setCacheFile(__DIR__ . '/.build/cache/.php-cs-fixer.cache')
     ->setRiskyAllowed(true)
     ->setParallelConfig(new PhpCsFixer\Runner\Parallel\ParallelConfig(4, 8))
     ->setRules([
