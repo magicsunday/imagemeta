@@ -304,19 +304,19 @@ final class VideoSampleEntryParserTest extends TestCase
     }
 
     /**
-     * Rejects compressor name pascal string length exceeding 31 (code 1428).
+     * Clamps compressor name length exceeding 31 to the available 31 bytes.
      */
     #[Test]
-    public function rejectsCompressorNameLengthExceeding31(): void
+    public function clampsCompressorNameLengthExceeding31(): void
     {
-        $data   = $this->buildVideoSampleData(nameLength: 32);
+        $name   = str_repeat('X', 31);
+        $data   = $this->buildVideoSampleData(nameLength: 32, nameData: $name);
         $win    = $this->createWindow($data);
         $parser = new VideoSampleEntryParser();
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1428);
+        $result = $parser->parseVideoSampleEntry($win, 70, 'avc1');
 
-        $parser->parseVideoSampleEntry($win, 70, 'avc1');
+        self::assertSame($name, $result['compressorName']);
     }
 
     /**

@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function in_array;
+use function min;
 use function pack;
 use function sprintf;
 use function substr;
@@ -99,19 +100,19 @@ final readonly class VideoSampleEntryParser
             throw new ParseError('video sample entry frame count must be > 0', 1606);
         }
 
-        // Decode compressorName as strict 32-byte Pascal string
-        $nameLength = $win->readU8();
-        $nameData   = $win->read(31);
-
-        if ($nameLength > 31) {
-            throw new ParseError('compressorName Pascal string length exceeds 31', 1428);
-        }
-
-        $compressor = $nameLength > 0 ? substr($nameData, 0, $nameLength) : '';
-
+        // Decode compressorName as 32-byte Pascal string; clamp length to 31
+        $nameLength   = min($win->readU8(), 31);
+        $nameData     = $win->read(31);
+        $compressor   = $nameLength > 0 ? substr($nameData, 0, $nameLength) : '';
         $depth        = $win->readU16BE();
         $colorTableId = $this->decodeSigned16($win->readU16BE());
-        $this->validateVideoSampleEntryDepthAndColorTable($depth, $colorTableId, $win, $entryEnd);
+
+        $this->validateVideoSampleEntryDepthAndColorTable(
+            $depth,
+            $colorTableId,
+            $win,
+            $entryEnd
+        );
 
         return [
             'format'               => $normalizedFormat,
