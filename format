@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+cd "$(dirname "$0")"
+
 if [[ $# -eq 0 ]]; then
     echo "Usage: ./format [--digests] <file>" >&2
     exit 1
