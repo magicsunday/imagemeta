@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Model;
 
+use DateTimeImmutable;
 use DateTimeInterface;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -181,26 +182,26 @@ final class ParsedExifOffsetTimeTest extends TestCase
 
     /**
      * Supplies DateTimeOriginal with a timezone identifier in OffsetTimeOriginal.
-     * Verifies identifier-based offsets are rejected in the datetime parsing path.
+     * Verifies the timestamp is still emitted as local time when the offset is non-conformant.
      */
     #[Test]
-    public function rejectsTimezoneIdentifierForDateTimeParsing(): void
+    public function emitsLocalTimeWhenTimezoneIdentifierUsedForOffset(): void
     {
         $parsedExif = $this->parsedExifWithDateTimeAndOffset("2024:06:01 12:34:56\0", "Europe/Berlin\0");
 
-        self::assertNull($parsedExif->dateTimeOriginal());
+        self::assertEquals(new DateTimeImmutable('2024-06-01 12:34:56'), $parsedExif->dateTimeOriginal());
     }
 
     /**
      * Supplies DateTimeOriginal with malformed OffsetTimeOriginal syntax.
-     * Verifies malformed offsets do not bypass EXIF datetime offset validation.
+     * Verifies the timestamp is still emitted as local time when the offset is malformed.
      */
     #[Test]
-    public function rejectsMalformedOffsetForDateTimeParsing(): void
+    public function emitsLocalTimeWhenOffsetIsMalformed(): void
     {
         $parsedExif = $this->parsedExifWithDateTimeAndOffset("2024:06:01 12:34:56\0", "+0100\0");
 
-        self::assertNull($parsedExif->dateTimeOriginal());
+        self::assertEquals(new DateTimeImmutable('2024-06-01 12:34:56'), $parsedExif->dateTimeOriginal());
     }
 
     /**

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
+use DateTimeImmutable;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
@@ -135,7 +136,7 @@ final class TiffExifParserExamplesTest extends TestCase
         self::assertEqualsWithDelta(50.0, $result->focalLengthMm(), 0.000001);
         self::assertEqualsWithDelta(6.5, $result->flashEnergy(), 0.000001);
         self::assertSame(200, $result->iso());
-        self::assertNull($result->dateTimeOriginal());
+        self::assertEquals(new DateTimeImmutable('2024-01-02 03:04:05'), $result->dateTimeOriginal());
         self::assertSame('2024:01:02 03:04:05', $result->dateTimeOriginalRaw());
         self::assertSame('Sample EXIF 3.0', $result->userComment());
     }
