@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Model;
 
+use DateTimeImmutable;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
@@ -47,17 +48,20 @@ final class ParsedExifDateTimeFormatTest extends TestCase
 {
     /**
      * Supplies a valid "YYYY:MM:DD HH:MM:SS" DateTimeOriginal without OffsetTimeOriginal.
-     * Confirms no absolute timestamp is emitted when offset certainty is missing.
+     * Confirms a local timestamp is emitted without timezone when offset is missing.
+     * Pre-EXIF 2.31 files lack OffsetTime* tags but still carry valid date/time values.
      */
     #[Test]
-    public function doesNotAssumeUtcWhenOffsetMissing(): void
+    public function emitsLocalTimestampWhenOffsetMissing(): void
     {
         $parsedExif = $this->parsedExifWithDateTime(
             ExifTag::DATETIME_ORIGINAL,
             "2023:06:15 14:30:00\0",
         );
 
-        self::assertNull($parsedExif->dateTimeOriginal());
+        $dt = $parsedExif->dateTimeOriginal();
+        self::assertInstanceOf(DateTimeImmutable::class, $dt);
+        self::assertSame('2023-06-15 14:30:00', $dt->format('Y-m-d H:i:s'));
     }
 
     /**

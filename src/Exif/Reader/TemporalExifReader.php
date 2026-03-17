@@ -286,16 +286,13 @@ final readonly class TemporalExifReader
             return null;
         }
 
-        // EXIF DateTime* tags are local date/time values; without OffsetTime*
-        // the absolute instant is undefined and is intentionally not inferred.
-        if ($rawOffset === null || trim($rawOffset) === '') {
-            return null;
-        }
+        // Resolve timezone from offset when available. Pre-EXIF 2.31 files (before ~2016)
+        // typically lack OffsetTime* tags; in that case the timestamp is treated as local
+        // time without timezone information, preserving subsecond precision.
+        $timeZone = null;
 
-        $timeZone = $this->converters->parseOffset($rawOffset);
-
-        if (!$timeZone instanceof DateTimeZone) {
-            return null;
+        if ($rawOffset !== null && trim($rawOffset) !== '') {
+            $timeZone = $this->converters->parseOffset($rawOffset);
         }
 
         $normalized = str_replace(':', '-', substr($rawDateTime, 0, 10)) . substr($rawDateTime, 10);
@@ -312,7 +309,9 @@ final readonly class TemporalExifReader
             }
         }
 
-        $dt = DateTimeImmutable::createFromFormat($format, $normalized, $timeZone);
+        $dt = $timeZone instanceof DateTimeZone
+            ? DateTimeImmutable::createFromFormat($format, $normalized, $timeZone)
+            : DateTimeImmutable::createFromFormat($format, $normalized);
 
         if ($dt === false) {
             return null;
