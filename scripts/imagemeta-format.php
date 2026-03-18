@@ -190,9 +190,9 @@ final class MetadataFormatter
      * @var array<string, string>
      */
     private const array QUICKTIME_KEY_LABELS = [
-        QuickTimeMeta::MAJOR_BRAND_KEY            => '0x0000 Major Brand',
-        QuickTimeMeta::MINOR_VERSION_KEY          => '0x0001 Minor Version',
-        QuickTimeMeta::COMPATIBLE_BRANDS_KEY      => '0x0002 Compatible Brands',
+        QuickTimeMeta::MAJOR_BRAND_KEY            => 'Major Brand',
+        QuickTimeMeta::MINOR_VERSION_KEY          => 'Minor Version',
+        QuickTimeMeta::COMPATIBLE_BRANDS_KEY      => 'Compatible Brands',
 
         // mvhd fields
         QuickTimeMeta::CREATE_DATE_KEY            => 'Create Date',
