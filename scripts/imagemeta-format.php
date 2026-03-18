@@ -3047,11 +3047,6 @@ final class MetadataFormatter
             );
         }
 
-        // Circle Of Confusion
-        if ($circleOfConfusionMm !== null) {
-            $data['Circle Of Confusion'] = sprintf('%.3f mm', $circleOfConfusionMm);
-        }
-
         // Field Of View
         if ($fieldOfViewHorizontalDeg !== null) {
             $data['Field Of View'] = sprintf('%.1f deg', $fieldOfViewHorizontalDeg);
