@@ -126,53 +126,53 @@ final readonly class ValueFactory
      */
     public function createComponents(Metadata $metadata): array
     {
-        $xmpDocument     = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
-        $iptcDocument    = $metadata->iptcDoc ?? $metadata->selectiveIptcDocument();
-        $exifDocument    = $metadata->exifDoc;
-        $quickTimeLookup = new QuickTimeLookup($metadata->quickTime);
-        $appleMakerNotes = $metadata->makerNotes?->apple;
-        $apple           = $appleMakerNotes ?? AppleMakerNotes::empty();
+        $xmpDocument         = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $iptcDocument        = $metadata->iptcDoc ?? $metadata->selectiveIptcDocument();
+        $exifDocument        = $metadata->exifDoc;
+        $quickTimeLookup     = new QuickTimeLookup($metadata->quickTime);
+        $appleMakerNotes     = $metadata->makerNotes?->apple;
+        $apple               = $appleMakerNotes ?? AppleMakerNotes::empty();
 
         // Sub-factory delegation
-        $gps          = $this->gpsFactory->create($metadata);
-        $camera       = $this->cameraFactory->create($metadata);
-        $lens         = $this->lensFactory->create($metadata);
-        $exposure     = $this->exposureFactory->create($metadata);
-        $sensor       = $this->sensorFactory->create($metadata);
-        $device       = $this->deviceFactory->create($metadata);
-        $image        = $this->imageFactory->create($metadata, $xmpDocument);
-        $motion       = $this->motionFactory->create($metadata);
-        $temporal     = $this->temporalFactory->create($metadata);
-        $regions      = $this->regionsFactory->create($metadata);
-        $multiPicture = $this->multiPictureFactory->create($metadata);
-        $scene        = $this->sceneFactory->create($metadata, $this->countFaceRegions($regions));
+        $gps                 = $this->gpsFactory->create($metadata);
+        $camera              = $this->cameraFactory->create($metadata);
+        $lens                = $this->lensFactory->create($metadata);
+        $exposure            = $this->exposureFactory->create($metadata);
+        $sensor              = $this->sensorFactory->create($metadata);
+        $device              = $this->deviceFactory->create($metadata);
+        $image               = $this->imageFactory->create($metadata, $xmpDocument);
+        $motion              = $this->motionFactory->create($metadata);
+        $temporal            = $this->temporalFactory->create($metadata);
+        $regions             = $this->regionsFactory->create($metadata);
+        $multiPicture        = $this->multiPictureFactory->create($metadata);
+        $scene               = $this->sceneFactory->create($metadata, $this->countFaceRegions($regions));
 
         // Cohesive private methods for complex value-object creation
-        $tiff         = (new TiffDataFactory())->create($metadata);
-        $thumbnail    = $this->createThumbnail($exifDocument);
-        $colorProfile = $this->createColorProfile($metadata, $exifDocument);
-        $author       = $this->createAuthor($exifDocument, $xmpDocument);
-        $rights       = $this->createRights($exifDocument, $xmpDocument);
-        $derived      = $this->createDerived($lens, $exposure);
-        $integrity    = $this->createIntegrity($xmpDocument);
+        $tiff                = (new TiffDataFactory())->create($metadata);
+        $thumbnail           = $this->createThumbnail($exifDocument);
+        $colorProfile        = $this->createColorProfile($metadata, $exifDocument);
+        $author              = $this->createAuthor($exifDocument, $xmpDocument);
+        $rights              = $this->createRights($exifDocument, $xmpDocument);
+        $derived             = $this->createDerived($lens, $exposure);
+        $integrity           = $this->createIntegrity($xmpDocument);
 
-        $interop = new ValueInterop(
+        $interop             = new ValueInterop(
             index: $exifDocument?->interopIndex(),
         );
 
-        $composite = new CompositeImageInfo(
+        $composite           = new CompositeImageInfo(
             type: $exifDocument?->compositeImage(),
             counts: $exifDocument?->sourceImageNumberOfCompositeImage(),
             sourceExposureTimes: $exifDocument?->sourceExposureTimesOfCompositeImage(),
         );
 
-        $standards = new ValueStandards(
+        $standards           = new ValueStandards(
             exifVersion: $exifDocument?->exifVersion(),
             profile: $exifDocument?->exifProfile() ?? 'unknown',
             flashpixVersion: $exifDocument?->flashpixVersion(),
         );
 
-        $capture = new Capture(
+        $capture             = new Capture(
             dateTime: $exifDocument?->captureDateTime(),
             temperatureC: $exifDocument?->temperatureCelsius(),
             humidityPercent: $exifDocument?->humidityPercent(),
@@ -182,16 +182,16 @@ final readonly class ValueFactory
             cameraElevationAngleDeg: $exifDocument?->cameraElevationAngleDeg(),
         );
 
-        $file = new ValueFile(
+        $file                = new ValueFile(
             $metadata->mimeType,
             $metadata->fileSize,
             $metadata->extension,
             $metadata->digestSha256,
         );
 
-        $media = $this->createContainerMedia($quickTimeLookup, $metadata);
+        $media               = $this->createContainerMedia($quickTimeLookup, $metadata);
 
-        $processing = new ValueProcessingSettings(
+        $processing          = new ValueProcessingSettings(
             sharpness: $exifDocument?->sharpness(),
             contrast: $exifDocument?->contrast(),
             saturation: $exifDocument?->saturation(),
@@ -215,16 +215,16 @@ final readonly class ValueFactory
             bgGain: null,
         );
 
-        $focus = new Focus(
+        $focus               = new Focus(
             subjectDistanceM: $exifDocument?->subjectDistance(),
             subjectArea: $exifDocument?->subjectArea(),
             afMode: null,
         );
 
-        $xmpValues = $this->createXmpValues($xmpDocument, $exifDocument, $quickTimeLookup, $metadata);
+        $xmpValues           = $this->createXmpValues($xmpDocument, $exifDocument, $quickTimeLookup, $metadata);
 
         /** @var CoreComponents $coreComponents */
-        $coreComponents = [
+        $coreComponents      = [
             ComponentKey::Author->value          => $author,
             ComponentKey::Camera->value          => $camera,
             ComponentKey::Capture->value         => $capture,
@@ -258,7 +258,7 @@ final readonly class ValueFactory
         ];
 
         /** @var ValueComponents $components */
-        $components = [...$coreComponents, ...$media, ...$xmpValues];
+        $components          = [...$coreComponents, ...$media, ...$xmpValues];
 
         return $components;
     }
@@ -273,7 +273,7 @@ final readonly class ValueFactory
      */
     private function createContainerMedia(QuickTimeLookup $quickTimeLookup, Metadata $metadata): array
     {
-        $container = new Container(
+        $container     = new Container(
             format: $quickTimeLookup->string(QuickTimeMeta::MAJOR_BRAND_KEY),
             encoder: $quickTimeLookup->string(
                 'com.apple.quicktime.encoder',
@@ -291,7 +291,7 @@ final readonly class ValueFactory
             ),
         );
 
-        $video = new Video(
+        $video         = new Video(
             durationSec: $quickTimeLookup->float('com.apple.quicktime.duration'),
             frameRate: $quickTimeLookup->float('com.apple.quicktime.videoFrameRate'),
             width: $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY),
@@ -305,7 +305,7 @@ final readonly class ValueFactory
             colorPrimaries: $quickTimeLookup->string('com.apple.quicktime.colorPrimaries'),
         );
 
-        $audio = new ValueAudio(
+        $audio         = new ValueAudio(
             channels: $quickTimeLookup->int(QuickTimeMeta::AUDIO_CHANNELS_KEY),
             sampleRate: $quickTimeLookup->int(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY),
             codec: $quickTimeLookup->string(
@@ -346,13 +346,13 @@ final readonly class ValueFactory
         $flatKeywords         = $xmpDocument?->stringList(XmpNamespace::DC->value, 'subject') ?? [];
         $hierarchicalKeywords = $xmpDocument?->stringList(XmpNamespace::LIGHTROOM->value, 'hierarchicalSubject') ?? [];
 
-        $keywords = new Keywords(
+        $keywords             = new Keywords(
             flat: $flatKeywords,
             hierarchical: $hierarchicalKeywords !== [] ? $hierarchicalKeywords : null,
         );
 
-        $panoramaFlag = $xmpDocument?->bool(XmpNamespace::GOOGLE_PANORAMA->value, 'UsePanoramaViewer');
-        $related      = new RelatedAssets(
+        $panoramaFlag         = $xmpDocument?->bool(XmpNamespace::GOOGLE_PANORAMA->value, 'UsePanoramaViewer');
+        $related              = new RelatedAssets(
             livePhotoPairId: $metadata->quickTime?->contentIdentifier(),
             burstId: $quickTimeLookup->string('BurstUUID'),
             isPrimaryInBurst: $quickTimeLookup->bool('BurstSelected') ?? false,
@@ -361,14 +361,14 @@ final readonly class ValueFactory
             relatedSoundFile: $exifDocument?->relatedSoundFile(),
         );
 
-        $depthMap = new DepthMap(
+        $depthMap             = new DepthMap(
             data: $xmpDocument?->string(XmpNamespace::GOOGLE_DEPTH_MAP->value, 'Data'),
             mime: $xmpDocument?->string(XmpNamespace::GOOGLE_DEPTH_MAP->value, 'Mime'),
             near: $xmpDocument?->float(XmpNamespace::GOOGLE_DEPTH_MAP->value, 'Near'),
             far: $xmpDocument?->float(XmpNamespace::GOOGLE_DEPTH_MAP->value, 'Far'),
         );
 
-        $hdrGainMap = new HdrGainMap(
+        $hdrGainMap           = new HdrGainMap(
             hasGainMap: ($metadata->tmapItemIds !== []) || ($metadata->gainMapBlob !== null),
             version: $xmpDocument?->string(XmpNamespace::HDR_GAINMAP->value, 'Version'),
             baseRenditionIsHdr: $xmpDocument?->bool(XmpNamespace::HDR_GAINMAP->value, 'BaseRenditionIsHDR'),
@@ -452,7 +452,7 @@ final readonly class ValueFactory
         $iptcNamespace      = XmpNamespace::IPTC_CORE->value;
         $creatorContactInfo = $xmpDocument?->structured($iptcNamespace, 'CreatorContactInfo');
 
-        $contact = new CreatorContact(
+        $contact            = new CreatorContact(
             email: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiEmailWork'),
             phone: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiTelWork'),
             address: $this->resolveCreatorContactValue($xmpDocument, $creatorContactInfo, $iptcNamespace, 'CiAdrExtadr'),

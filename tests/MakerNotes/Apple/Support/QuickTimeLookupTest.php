@@ -37,7 +37,7 @@ final class QuickTimeLookupTest extends TestCase
     #[Test]
     public function stringReturnsFirstNonEmptyCandidate(): void
     {
-        $meta = new QuickTimeMeta([
+        $meta   = new QuickTimeMeta([
             'Primary'   => '',
             'Secondary' => '  value  ',
         ]);
@@ -54,7 +54,7 @@ final class QuickTimeLookupTest extends TestCase
     #[Test]
     public function stringReturnsNullWhenCandidatesAreEmpty(): void
     {
-        $meta = new QuickTimeMeta([
+        $meta   = new QuickTimeMeta([
             'Primary'   => '',
             'Secondary' => '   ',
         ]);
@@ -71,7 +71,7 @@ final class QuickTimeLookupTest extends TestCase
     #[Test]
     public function floatFallsBackToNumericString(): void
     {
-        $meta = new QuickTimeMeta([
+        $meta   = new QuickTimeMeta([
             'First'  => 'not-a-number',
             'Second' => '42.5',
         ]);
@@ -100,7 +100,7 @@ final class QuickTimeLookupTest extends TestCase
     #[Test]
     public function boolReturnsFirstResolvableValue(): void
     {
-        $meta = new QuickTimeMeta([
+        $meta   = new QuickTimeMeta([
             'Primary'   => 'false',
             'Secondary' => true,
         ]);

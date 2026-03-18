@@ -52,7 +52,7 @@ final class TemporalExifReaderTest extends TestCase
             ],
         );
 
-        $dt = $reader->dateTime();
+        $dt     = $reader->dateTime();
 
         self::assertInstanceOf(DateTimeImmutable::class, $dt);
         self::assertSame('2024-01-15 10:30:00', $dt->format('Y-m-d H:i:s'));
@@ -73,7 +73,7 @@ final class TemporalExifReaderTest extends TestCase
             ],
         );
 
-        $dt = $reader->dateTime();
+        $dt     = $reader->dateTime();
 
         self::assertInstanceOf(DateTimeImmutable::class, $dt);
         self::assertSame('2024-01-15 10:30:00', $dt->format('Y-m-d H:i:s'));
@@ -95,7 +95,7 @@ final class TemporalExifReaderTest extends TestCase
             ],
         );
 
-        $dt = $reader->dateTime();
+        $dt     = $reader->dateTime();
 
         self::assertInstanceOf(DateTimeImmutable::class, $dt);
         self::assertSame('123000', $dt->format('u'));
@@ -117,7 +117,7 @@ final class TemporalExifReaderTest extends TestCase
             ],
         );
 
-        $dt = $reader->dateTime();
+        $dt     = $reader->dateTime();
 
         self::assertInstanceOf(DateTimeImmutable::class, $dt);
         self::assertSame('2024-01-15 10:30:00', $dt->format('Y-m-d H:i:s'));

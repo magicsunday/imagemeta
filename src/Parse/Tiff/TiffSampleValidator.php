@@ -44,10 +44,10 @@ final readonly class TiffSampleValidator
             return;
         }
 
-        $samplesPerPixel = $this->resolveSamplesPerPixel($ifd);
+        $samplesPerPixel     = $this->resolveSamplesPerPixel($ifd);
 
-        $minSampleValues = null;
-        $maxSampleValues = null;
+        $minSampleValues     = null;
+        $maxSampleValues     = null;
 
         if ($minSampleValueEntry instanceof IfdEntry) {
             $minSampleValues = $this->validateMinOrMaxSampleValueEntry(
@@ -104,7 +104,7 @@ final readonly class TiffSampleValidator
      */
     private function validateMinMaxValueRangeAgainstBitsPerSample(Ifd $ifd, string $tagName, array $values): void
     {
-        $bitsPerSampleEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
+        $bitsPerSampleEntry  = $ifd->get(ExifTag::BITS_PER_SAMPLE);
 
         if (!$bitsPerSampleEntry instanceof IfdEntry || ($bitsPerSampleEntry->type !== TiffConst::TYPE_SHORT)) {
             return;
@@ -142,7 +142,7 @@ final readonly class TiffSampleValidator
                 );
             }
 
-            $maxValue = (1 << $bitsPerSample) - 1;
+            $maxValue      = (1 << $bitsPerSample) - 1;
 
             if ($value <= $maxValue) {
                 continue;
@@ -172,17 +172,17 @@ final readonly class TiffSampleValidator
             return;
         }
 
-        $samplesPerPixel = $this->resolveSamplesPerPixel($ifd);
+        $samplesPerPixel   = $this->resolveSamplesPerPixel($ifd);
 
-        $sampleFormats = ($sampleFormatEntry instanceof IfdEntry)
+        $sampleFormats     = ($sampleFormatEntry instanceof IfdEntry)
             ? $this->validateSampleFormatEntry($sampleFormatEntry, $samplesPerPixel)
             : null;
 
-        $sMinValues = ($sMinEntry instanceof IfdEntry)
+        $sMinValues        = ($sMinEntry instanceof IfdEntry)
             ? $this->validateSampleBoundEntry($sMinEntry, 'SMinSampleValue', $samplesPerPixel, 1759)
             : null;
 
-        $sMaxValues = ($sMaxEntry instanceof IfdEntry)
+        $sMaxValues        = ($sMaxEntry instanceof IfdEntry)
             ? $this->validateSampleBoundEntry($sMaxEntry, 'SMaxSampleValue', $samplesPerPixel, 1760)
             : null;
 
@@ -437,8 +437,8 @@ final readonly class TiffSampleValidator
             return;
         }
 
-        $photometricEntry = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
-        $photometricCode  = (($photometricEntry instanceof IfdEntry) && is_int($photometricEntry->value))
+        $photometricEntry  = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $photometricCode   = (($photometricEntry instanceof IfdEntry) && is_int($photometricEntry->value))
             ? $photometricEntry->value
             : null;
 
@@ -479,8 +479,8 @@ final readonly class TiffSampleValidator
             );
         }
 
-        $bitsPerSample = $this->support->resolveUniformBitsPerSample($ifd, 'GrayResponseCurve', 1773);
-        $expectedCount = 2 ** $bitsPerSample;
+        $bitsPerSample     = $this->support->resolveUniformBitsPerSample($ifd, 'GrayResponseCurve', 1773);
+        $expectedCount     = 2 ** $bitsPerSample;
 
         if ($grayResponseCurve->count !== $expectedCount) {
             throw new ParseError(
@@ -503,7 +503,7 @@ final readonly class TiffSampleValidator
      */
     public function validateHalftoneHintsTag(Ifd $ifd): void
     {
-        $components = $this->support->extractShortPair($ifd, TiffTag::HALFTONE_HINTS, 'HalftoneHints', 1779, 1780);
+        $components    = $this->support->extractShortPair($ifd, TiffTag::HALFTONE_HINTS, 'HalftoneHints', 1779, 1780);
 
         if ($components === null) {
             return;

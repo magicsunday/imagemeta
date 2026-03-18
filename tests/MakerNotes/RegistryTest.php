@@ -40,14 +40,14 @@ final class RegistryTest extends TestCase
 {
     private function readMethodBody(string $class, string $methodName): string
     {
-        $method   = new ReflectionMethod($class, $methodName);
-        $fileName = $method->getFileName();
+        $method      = new ReflectionMethod($class, $methodName);
+        $fileName    = $method->getFileName();
         self::assertIsString($fileName);
 
         $sourceLines = file($fileName);
         self::assertIsArray($sourceLines);
-        $startLine = $method->getStartLine();
-        $endLine   = $method->getEndLine();
+        $startLine   = $method->getStartLine();
+        $endLine     = $method->getEndLine();
         self::assertIsInt($startLine);
         self::assertIsInt($endLine);
 
@@ -84,7 +84,7 @@ final class RegistryTest extends TestCase
     #[DataProvider('matchingMakeProvider')]
     public function findsDecoderForRegisteredPrefix(string $make): void
     {
-        $decoder = new class implements MakerNotesDecoderInterface {
+        $decoder  = new class implements MakerNotesDecoderInterface {
             /**
              * Decodes the maker notes payload for the registered Apple decoder in this test.
              * This checks the behavior for the specific inputs used in the test.

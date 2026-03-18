@@ -45,7 +45,7 @@ final class AppleDecoderSemanticStyleTest extends TestCase
     #[Test]
     public function buildAppleMakerNotesExtractsSemanticStyleDictionary(): void
     {
-        $builder = new AppleMakerNotesBuilder();
+        $builder    = new AppleMakerNotesBuilder();
 
         $dictionary = [
             'SemanticStyle' => [

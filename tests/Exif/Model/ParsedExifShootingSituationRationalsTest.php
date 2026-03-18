@@ -47,7 +47,7 @@ final class ParsedExifShootingSituationRationalsTest extends TestCase
     #[Test]
     public function returnsNullForTemperatureWithUnsignedUnknownDenominator(): void
     {
-        $exifIfd = new Ifd([
+        $exifIfd    = new Ifd([
             ExifTag::TEMPERATURE => new IfdEntry(
                 ExifTag::TEMPERATURE,
                 10,
@@ -67,7 +67,7 @@ final class ParsedExifShootingSituationRationalsTest extends TestCase
     #[Test]
     public function returnsNullForTemperatureWithSignedUnknownDenominator(): void
     {
-        $exifIfd = new Ifd([
+        $exifIfd    = new Ifd([
             ExifTag::TEMPERATURE => new IfdEntry(
                 ExifTag::TEMPERATURE,
                 10,

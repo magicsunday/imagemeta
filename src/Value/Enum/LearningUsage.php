@@ -22,17 +22,17 @@ enum LearningUsage: int
     use EnumFromIntStringNullable;
 
     /** All / Individual usage is not specified. */
-    case All = 0;
+    case All                   = 0;
 
     /** Non-Generative AI/ML Training. */
     case NonGenerativeTraining = 1;
 
     /** Generative AI/ML Training. */
-    case GenerativeTraining = 2;
+    case GenerativeTraining    = 2;
 
     /** Data Mining. */
-    case DataMining = 3;
+    case DataMining            = 3;
 
     /** Input to Foundation Model (purpose of inferring a result). */
-    case FoundationModelInput = 4;
+    case FoundationModelInput  = 4;
 }

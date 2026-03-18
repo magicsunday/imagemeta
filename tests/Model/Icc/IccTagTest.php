@@ -34,7 +34,7 @@ final class IccTagTest extends TestCase
         $reflection = new ReflectionClass(IccTag::class);
 
         // ICC.1:2022 §7.2.2–§7.2.19
-        $expected = [
+        $expected   = [
             'PROFILE_SIZE'                => 0x0000,
             'CMM_TYPE'                    => 0x0004,
             'PROFILE_VERSION'             => 0x0008,

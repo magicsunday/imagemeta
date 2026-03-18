@@ -62,7 +62,7 @@ final class JpegFrameValidatorTest extends TestCase
     #[Test]
     public function acceptsFewerSosComponentsThanSofForProgressiveJpeg(): void
     {
-        $validator = $this->createValidator();
+        $validator  = $this->createValidator();
 
         $validator->handleStartOfFrame(Marker::SOF2, $this->buildYCbCr420SofPayload(100, 100), 0);
 
@@ -85,7 +85,7 @@ final class JpegFrameValidatorTest extends TestCase
     #[Test]
     public function throwsWhenBaselineSosComponentCountMismatchesSof(): void
     {
-        $validator = $this->createValidator();
+        $validator  = $this->createValidator();
 
         $validator->handleStartOfFrame(Marker::SOF0, $this->buildYCbCr420SofPayload(100, 100), 0);
 
@@ -112,7 +112,7 @@ final class JpegFrameValidatorTest extends TestCase
         self::assertSame(480, $validator->getFrameLines());
         self::assertSame(640, $validator->getFrameSamplesPerLine());
 
-        $sampling = $validator->getFrameComponentSampling();
+        $sampling  = $validator->getFrameComponentSampling();
         self::assertNotNull($sampling);
         self::assertSame(['horizontal' => 2, 'vertical' => 2], $sampling[1]);
         self::assertSame(['horizontal' => 1, 'vertical' => 1], $sampling[2]);
@@ -127,7 +127,7 @@ final class JpegFrameValidatorTest extends TestCase
     #[Test]
     public function derivesYCbCr422SubSampling(): void
     {
-        $validator = $this->createValidator();
+        $validator  = $this->createValidator();
 
         $sofPayload = chr(8)
             . pack('n', 100)
@@ -148,7 +148,7 @@ final class JpegFrameValidatorTest extends TestCase
     #[Test]
     public function derivesYCbCr444SubSampling(): void
     {
-        $validator = $this->createValidator();
+        $validator  = $this->createValidator();
 
         $sofPayload = chr(8)
             . pack('n', 100)
@@ -169,7 +169,7 @@ final class JpegFrameValidatorTest extends TestCase
     #[Test]
     public function throwsWhenSofPayloadTooShort(): void
     {
-        $validator = $this->createValidator();
+        $validator  = $this->createValidator();
 
         // Only 5 bytes, need at least 6
         $sofPayload = chr(8) . pack('n', 100) . pack('n', 100);
@@ -186,7 +186,7 @@ final class JpegFrameValidatorTest extends TestCase
     #[Test]
     public function throwsWhenSofReportsZeroComponents(): void
     {
-        $validator = $this->createValidator();
+        $validator  = $this->createValidator();
 
         $sofPayload = chr(8)
             . pack('n', 100)
@@ -205,7 +205,7 @@ final class JpegFrameValidatorTest extends TestCase
     #[Test]
     public function throwsWhenSofContainsDuplicateComponentIds(): void
     {
-        $validator = $this->createValidator();
+        $validator  = $this->createValidator();
 
         $sofPayload = chr(8)
             . pack('n', 100)
@@ -226,7 +226,7 @@ final class JpegFrameValidatorTest extends TestCase
     #[Test]
     public function throwsWhenSofContainsZeroSamplingFactor(): void
     {
-        $validator = $this->createValidator();
+        $validator  = $this->createValidator();
 
         $sofPayload = chr(8)
             . pack('n', 100)
@@ -248,7 +248,7 @@ final class JpegFrameValidatorTest extends TestCase
     {
         $validator = $this->createValidator();
 
-        $firstSof = chr(8)
+        $firstSof  = chr(8)
             . pack('n', 480)
             . pack('n', 640)
             . chr(1)
@@ -288,7 +288,7 @@ final class JpegFrameValidatorTest extends TestCase
     #[Test]
     public function throwsWhenSosDeclaresZeroComponents(): void
     {
-        $validator = $this->createValidator();
+        $validator  = $this->createValidator();
 
         // Zero components + 3 trailing bytes = 4 bytes, but still <6
         $sosPayload = chr(0)
@@ -307,7 +307,7 @@ final class JpegFrameValidatorTest extends TestCase
     #[Test]
     public function throwsWhenSosReferencesUnknownComponent(): void
     {
-        $validator = $this->createValidator();
+        $validator  = $this->createValidator();
 
         $sofPayload = chr(8)
             . pack('n', 100)
@@ -334,7 +334,7 @@ final class JpegFrameValidatorTest extends TestCase
     #[Test]
     public function throwsWhenSosContainsDuplicateComponentSelector(): void
     {
-        $validator = $this->createValidator();
+        $validator  = $this->createValidator();
 
         $sofPayload = chr(8)
             . pack('n', 100)
@@ -363,7 +363,7 @@ final class JpegFrameValidatorTest extends TestCase
     #[Test]
     public function identifiesAllSofMarkerCodes(): void
     {
-        $validator = $this->createValidator();
+        $validator  = $this->createValidator();
 
         $sofMarkers = [
             Marker::SOF0, Marker::SOF1, Marker::SOF2, Marker::SOF3,
@@ -417,16 +417,16 @@ final class JpegFrameValidatorTest extends TestCase
 
         $sosSegment = pack('n', strlen($sosPayload) + 2) . $sosPayload;
 
-        $fh = fopen('php://memory', 'rb+');
+        $fh         = fopen('php://memory', 'rb+');
         self::assertIsResource($fh);
 
         fwrite($fh, $sosSegment);
         rewind($fh);
 
-        $stream    = new Stream($fh, strlen($sosSegment));
-        $config    = new JpegParserConfig();
-        $scanner   = new JpegMarkerScanner($stream, $config);
-        $validator = new JpegFrameValidator($scanner);
+        $stream     = new Stream($fh, strlen($sosSegment));
+        $config     = new JpegParserConfig();
+        $scanner    = new JpegMarkerScanner($stream, $config);
+        $validator  = new JpegFrameValidator($scanner);
 
         // Set up SOF state so SOS validation can check component selectors
         $validator->handleStartOfFrame(Marker::SOF0, $this->buildYCbCr420SofPayload(100, 100), 0);
@@ -452,7 +452,7 @@ final class JpegFrameValidatorTest extends TestCase
 
     private function createValidator(): JpegFrameValidator
     {
-        $fh = fopen('php://memory', 'rb+');
+        $fh      = fopen('php://memory', 'rb+');
         self::assertIsResource($fh);
 
         fwrite($fh, "\xFF\xD8");

@@ -62,7 +62,7 @@ final readonly class AppleDictionaryValueExtractor
             return null;
         }
 
-        $value = $dictionary[$key];
+        $value     = $dictionary[$key];
 
         if (!is_array($value)) {
             return null;
@@ -209,14 +209,14 @@ final readonly class AppleDictionaryValueExtractor
      */
     public function stringWithinIntRange(string $value): bool
     {
-        $negative = $value !== '' && $value[0] === '-';
-        $digits   = $negative ? substr($value, 1) : $value;
+        $negative    = $value !== '' && $value[0] === '-';
+        $digits      = $negative ? substr($value, 1) : $value;
 
         if ($digits === '') {
             return false;
         }
 
-        $maxDigits = (string) PHP_INT_MAX;
+        $maxDigits   = (string) PHP_INT_MAX;
 
         $digitLength = strlen($digits);
         $maxLength   = strlen($maxDigits);
@@ -229,7 +229,7 @@ final readonly class AppleDictionaryValueExtractor
             return false;
         }
 
-        $comparison = strcmp($digits, $maxDigits);
+        $comparison  = strcmp($digits, $maxDigits);
 
         if ($comparison > 0) {
             return false;
@@ -258,7 +258,7 @@ final readonly class AppleDictionaryValueExtractor
             return null;
         }
 
-        $value = $dictionary[$key];
+        $value   = $dictionary[$key];
 
         if (!is_string($value)) {
             return null;
@@ -387,19 +387,19 @@ final readonly class AppleDictionaryValueExtractor
      */
     public function focusDistanceRangeValue(array $dictionary): ?array
     {
-        $range = $this->floatList($dictionary, 'FocusDistanceRange');
+        $range  = $this->floatList($dictionary, 'FocusDistanceRange');
 
         if ($range !== null) {
             return $range;
         }
 
-        $near = $this->floatValue(
+        $near   = $this->floatValue(
             $dictionary,
             'FocusDistanceRangeNear',
             'FocusDistanceRangeMin',
             'FocusDistanceNear',
         );
-        $far = $this->floatValue(
+        $far    = $this->floatValue(
             $dictionary,
             'FocusDistanceRangeFar',
             'FocusDistanceRangeMax',
@@ -435,13 +435,13 @@ final readonly class AppleDictionaryValueExtractor
             return null;
         }
 
-        $scalar = $this->stringOrNumericValue($dictionary, $key);
+        $scalar     = $this->stringOrNumericValue($dictionary, $key);
 
         if ($scalar !== null) {
             return $scalar;
         }
 
-        $value = $dictionary[$key];
+        $value      = $dictionary[$key];
 
         if (!is_array($value)) {
             return null;
@@ -465,7 +465,7 @@ final readonly class AppleDictionaryValueExtractor
             }
 
             if (is_string($entry)) {
-                $trimmed = trim($entry);
+                $trimmed      = trim($entry);
 
                 if ($trimmed === '') {
                     continue;

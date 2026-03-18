@@ -21,36 +21,36 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 final class IsoBmffParseContext
 {
     /** @var list<string> */
-    public array $exifBlobs = [];
+    public array $exifBlobs                       = [];
 
     /** @var list<string> */
-    public array $xmpBlobs = [];
+    public array $xmpBlobs                        = [];
 
     /** @var array<string, string|int|float|bool> */
-    public array $qtKeys = [];
+    public array $qtKeys                          = [];
 
     /** @var array<int, array<int, list<IsoBmffItemReference>>> */
-    public array $itemReferences = [];
+    public array $itemReferences                  = [];
 
     /** @var array<int, array<int, IsoBmffDataReference>> */
-    public array $dataReferences = [];
+    public array $dataReferences                  = [];
 
     /** @var list<IsoBmffUnresolvedItem> */
-    public array $unresolvedItems = [];
+    public array $unresolvedItems                 = [];
 
     /** @var list<int> */
-    public array $tmapItemIds = [];
+    public array $tmapItemIds                     = [];
 
     /** @var array<string, bool> */
-    public array $xmpHashes = [];
+    public array $xmpHashes                       = [];
 
     /** @var array<string, list<array{type: int, locale: int, value: string|int|float|bool}>> */
-    public array $qtDataAtoms = [];
+    public array $qtDataAtoms                     = [];
 
     /** @var list<string> */
-    public array $queuedUuidXmp = [];
+    public array $queuedUuidXmp                   = [];
 
-    public int $moovCount = 0;
+    public int $moovCount                         = 0;
 
     /**
      * True when the parsed ftyp brands explicitly allow QuickTime compatibility parsing.
@@ -60,15 +60,15 @@ final class IsoBmffParseContext
     /**
      * Image width in pixels extracted from the first ispe box.
      */
-    public ?int $ispeWidth = null;
+    public ?int $ispeWidth                        = null;
 
     /**
      * Image height in pixels extracted from the first ispe box.
      */
-    public ?int $ispeHeight = null;
+    public ?int $ispeHeight                       = null;
 
     /**
      * Binary ICC profile extracted from the first colr box.
      */
-    public ?string $iccProfile = null;
+    public ?string $iccProfile                    = null;
 }

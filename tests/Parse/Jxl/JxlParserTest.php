@@ -61,7 +61,7 @@ final class JxlParserTest extends TestCase
     /**
      * 12-byte JXL signature box per ISO/IEC 18181-2 §A.2.1.
      */
-    private const string JXL_SIGNATURE = "\x00\x00\x00\x0C\x4A\x58\x4C\x20\x0D\x0A\x87\x0A";
+    private const string JXL_SIGNATURE  = "\x00\x00\x00\x0C\x4A\x58\x4C\x20\x0D\x0A\x87\x0A";
 
     /**
      * Minimal little-endian TIFF header (byte order marker + magic + IFD offset 0).
@@ -78,12 +78,12 @@ final class JxlParserTest extends TestCase
         $tiff     = self::TIFF_LE_HEADER;
         $exifBlob = pack('N', 0) . $tiff;
 
-        $jxl = self::JXL_SIGNATURE
+        $jxl      = self::JXL_SIGNATURE
             . $this->box('ftyp', 'jxl ' . pack('N', 0))
             . $this->box('Exif', $exifBlob)
             . $this->box('jxlc', 'codestream-data');
 
-        $result = $this->extractFromJxl($jxl);
+        $result   = $this->extractFromJxl($jxl);
 
         self::assertCount(1, $result->exifBlobs);
         self::assertSame($tiff, $result->exifBlobs[0]);
@@ -96,13 +96,13 @@ final class JxlParserTest extends TestCase
     #[Test]
     public function extractsXmpFromTopLevelXmlBox(): void
     {
-        $xmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+        $xmp    = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
             . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:creator="Agent" />'
             . '</rdf:RDF>'
             . '</x:xmpmeta>';
 
-        $jxl = self::JXL_SIGNATURE
+        $jxl    = self::JXL_SIGNATURE
             . $this->box('ftyp', 'jxl ' . pack('N', 0))
             . $this->box('xml ', $xmp)
             . $this->box('jxlc', 'codestream-data');
@@ -124,13 +124,13 @@ final class JxlParserTest extends TestCase
         $exifBlob = pack('N', 0) . $tiff;
         $xmp      = '<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" /></x:xmpmeta>';
 
-        $jxl = self::JXL_SIGNATURE
+        $jxl      = self::JXL_SIGNATURE
             . $this->box('ftyp', 'jxl ' . pack('N', 0))
             . $this->box('Exif', $exifBlob)
             . $this->box('xml ', $xmp)
             . $this->box('jxlc', 'codestream-data');
 
-        $result = $this->extractFromJxl($jxl);
+        $result   = $this->extractFromJxl($jxl);
 
         self::assertCount(1, $result->exifBlobs);
         self::assertSame($tiff, $result->exifBlobs[0]);
@@ -144,7 +144,7 @@ final class JxlParserTest extends TestCase
     #[Test]
     public function returnsEmptyForJxlWithoutMetadata(): void
     {
-        $jxl = self::JXL_SIGNATURE
+        $jxl    = self::JXL_SIGNATURE
             . $this->box('ftyp', 'jxl ' . pack('N', 0))
             . $this->box('jxlc', 'codestream-data');
 
@@ -163,10 +163,10 @@ final class JxlParserTest extends TestCase
         $tiff     = self::TIFF_LE_HEADER;
         $exifBlob = pack('N', 6) . "Exif\x00\x00" . $tiff;
 
-        $jxl = self::JXL_SIGNATURE
+        $jxl      = self::JXL_SIGNATURE
             . $this->box('Exif', $exifBlob);
 
-        $result = $this->extractFromJxl($jxl);
+        $result   = $this->extractFromJxl($jxl);
 
         self::assertCount(1, $result->exifBlobs);
         self::assertSame($tiff, $result->exifBlobs[0]);
@@ -227,11 +227,11 @@ final class JxlParserTest extends TestCase
         $tiff     = self::TIFF_LE_HEADER;
         $exifBlob = pack('N', 0) . $tiff;
 
-        $jxl = self::JXL_SIGNATURE
+        $jxl      = self::JXL_SIGNATURE
             . $this->box('Exif', $exifBlob);
 
-        $stream = $this->streamFromString($jxl);
-        $parser = new JxlParser($stream, maxPayloadSize: 4);
+        $stream   = $this->streamFromString($jxl);
+        $parser   = new JxlParser($stream, maxPayloadSize: 4);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1560);
@@ -245,9 +245,9 @@ final class JxlParserTest extends TestCase
     #[Test]
     public function throwsForOversizedXmlPayload(): void
     {
-        $xmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
+        $xmp    = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
 
-        $jxl = self::JXL_SIGNATURE
+        $jxl    = self::JXL_SIGNATURE
             . $this->box('xml ', $xmp);
 
         $stream = $this->streamFromString($jxl);
@@ -265,9 +265,9 @@ final class JxlParserTest extends TestCase
     #[Test]
     public function throwsWhenMetadataBoxCountExceedsAggregateLimit(): void
     {
-        $xmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
+        $xmp    = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
 
-        $jxl = self::JXL_SIGNATURE
+        $jxl    = self::JXL_SIGNATURE
             . $this->box('xml ', $xmp)
             . $this->box('xml ', $xmp)
             . $this->box('xml ', $xmp);
@@ -287,20 +287,20 @@ final class JxlParserTest extends TestCase
     #[Test]
     public function acceptsMetadataWhenAggregateSizeMatchesLimit(): void
     {
-        $xmp      = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
-        $tiff     = self::TIFF_LE_HEADER;
-        $exifBlob = pack('N', 0) . $tiff;
+        $xmp            = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
+        $tiff           = self::TIFF_LE_HEADER;
+        $exifBlob       = pack('N', 0) . $tiff;
 
-        $jxl = self::JXL_SIGNATURE
+        $jxl            = self::JXL_SIGNATURE
             . $this->box('Exif', $exifBlob)
             . $this->box('xml ', $xmp);
 
         $aggregateLimit = strlen($exifBlob) + strlen($xmp);
 
-        $stream = $this->streamFromString($jxl);
-        $parser = new JxlParser($stream, maxTotalMetadataBytes: $aggregateLimit);
+        $stream         = $this->streamFromString($jxl);
+        $parser         = new JxlParser($stream, maxTotalMetadataBytes: $aggregateLimit);
 
-        $result = $parser->extract();
+        $result         = $parser->extract();
 
         self::assertCount(1, $result->exifBlobs);
         self::assertSame($tiff, $result->exifBlobs[0]);
@@ -314,7 +314,7 @@ final class JxlParserTest extends TestCase
     #[Test]
     public function ignoresUnknownBoxTypes(): void
     {
-        $jxl = self::JXL_SIGNATURE
+        $jxl    = self::JXL_SIGNATURE
             . $this->box('ftyp', 'jxl ' . pack('N', 0))
             . $this->box('jxlc', 'codestream-data')
             . $this->box('jxlp', 'partial-codestream')
@@ -346,12 +346,12 @@ final class JxlParserTest extends TestCase
     {
         $gainMapPayload = 'gain-map-image-data';
 
-        $jxl = self::JXL_SIGNATURE
+        $jxl            = self::JXL_SIGNATURE
             . $this->box('ftyp', 'jxl ' . pack('N', 0))
             . $this->box('hrgm', $gainMapPayload)
             . $this->box('jxlc', 'codestream-data');
 
-        $result = $this->extractFromJxl($jxl);
+        $result         = $this->extractFromJxl($jxl);
 
         self::assertSame($gainMapPayload, $result->gainMapBlob);
     }
@@ -362,7 +362,7 @@ final class JxlParserTest extends TestCase
     #[Test]
     public function returnsNullHrgmWhenAbsent(): void
     {
-        $jxl = self::JXL_SIGNATURE
+        $jxl    = self::JXL_SIGNATURE
             . $this->box('ftyp', 'jxl ' . pack('N', 0))
             . $this->box('jxlc', 'codestream-data');
 
@@ -377,7 +377,7 @@ final class JxlParserTest extends TestCase
     #[Test]
     public function throwsForOversizedHrgmPayload(): void
     {
-        $jxl = self::JXL_SIGNATURE
+        $jxl    = self::JXL_SIGNATURE
             . $this->box('hrgm', 'large-gain-map-data');
 
         $stream = $this->streamFromString($jxl);
@@ -395,9 +395,9 @@ final class JxlParserTest extends TestCase
     #[Test]
     public function countsHrgmBoxInAggregateLimit(): void
     {
-        $xmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
+        $xmp    = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
 
-        $jxl = self::JXL_SIGNATURE
+        $jxl    = self::JXL_SIGNATURE
             . $this->box('xml ', $xmp)
             . $this->box('hrgm', 'gain-map')
             . $this->box('xml ', $xmp);

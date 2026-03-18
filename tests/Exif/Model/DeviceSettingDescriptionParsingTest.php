@@ -223,7 +223,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         string $data,
         Endian $byteOrder = Endian::Little,
     ): ?DeviceSettingDescription {
-        $entry = new IfdEntry(
+        $entry      = new IfdEntry(
             tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
             type: 7,
             count: strlen($data),

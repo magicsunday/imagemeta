@@ -78,7 +78,7 @@ final readonly class TemporalExifReader
      */
     public function dateTimeOriginal(): ?DateTimeImmutable
     {
-        $dateTime = $this->parseExifDateTime(
+        $dateTime  = $this->parseExifDateTime(
             $this->dateTimeOriginalRaw(),
             $this->offsetTimeOriginalRaw(),
             $this->subSecTimeOriginal(),
@@ -102,7 +102,7 @@ final readonly class TemporalExifReader
      */
     public function dateTimeOriginalBestEffort(): ?DateTimeImmutable
     {
-        $original = $this->dateTimeOriginal();
+        $original  = $this->dateTimeOriginal();
 
         if ($original instanceof DateTimeImmutable) {
             return $original;
@@ -206,7 +206,7 @@ final readonly class TemporalExifReader
         $offsetDigitized = $this->offsetTimeDigitizedRaw();
         $offset          = $this->offsetTimeRaw();
 
-        $attempts = [
+        $attempts        = [
             [
                 $this->dateTimeOriginalRaw(),
                 $offsetOriginal,
@@ -287,13 +287,13 @@ final readonly class TemporalExifReader
         // Resolve timezone from offset when available. Pre-EXIF 2.31 files (before ~2016)
         // typically lack OffsetTime* tags; in that case the timestamp is treated as local
         // time without timezone information, preserving subsecond precision.
-        $timeZone = null;
+        $timeZone    = null;
 
         if ($rawOffset !== null && trim($rawOffset) !== '') {
             $timeZone = $this->converters->parseOffset($rawOffset);
         }
 
-        $format = 'Y:m:d H:i:s';
+        $format      = 'Y:m:d H:i:s';
 
         if (($subSeconds !== null) && ($subSeconds !== '')) {
             $digits = preg_replace('/\D/', '', $subSeconds);
@@ -306,13 +306,13 @@ final readonly class TemporalExifReader
             }
         }
 
-        $dt = DateTimeImmutable::createFromFormat($format, $rawDateTime, $timeZone);
+        $dt          = DateTimeImmutable::createFromFormat($format, $rawDateTime, $timeZone);
 
         if ($dt === false) {
             return null;
         }
 
-        $lastErrors = DateTimeImmutable::getLastErrors();
+        $lastErrors  = DateTimeImmutable::getLastErrors();
 
         if (is_array($lastErrors) && (
             $lastErrors['warning_count'] > 0
@@ -407,7 +407,7 @@ final readonly class TemporalExifReader
                 return null;
             }
 
-            $value = $trimmed;
+            $value   = $trimmed;
         }
 
         if (!is_int($value) && !is_float($value) && !is_string($value)) {

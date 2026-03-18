@@ -42,38 +42,38 @@ final readonly class AudioSampleEntryParser
      * Version-2 constant field: "alwaysMinus2" stored as unsigned 16-bit (two's complement of −2).
      * QuickTime File Format 2012, "Sound Sample Description (Version 2)".
      */
-    private const int VERSION_2_ALWAYS_MINUS_2 = 0xFFFE;
+    private const int VERSION_2_ALWAYS_MINUS_2        = 0xFFFE;
 
     /**
      * Version-2 constant field "always7F000000".
      * QuickTime File Format 2012, "Sound Sample Description (Version 2)".
      */
-    private const int VERSION_2_ALWAYS_7F000000 = 0x7F000000;
+    private const int VERSION_2_ALWAYS_7F000000       = 0x7F000000;
 
     /**
      * LPCM flag: payload stores IEEE floating-point samples.
      */
-    private const int LPCM_FLAG_IS_FLOAT = 1 << 0;
+    private const int LPCM_FLAG_IS_FLOAT              = 1 << 0;
 
     /**
      * LPCM flag: payload uses big-endian byte order.
      */
-    private const int LPCM_FLAG_IS_BIG_ENDIAN = 1 << 1;
+    private const int LPCM_FLAG_IS_BIG_ENDIAN         = 1 << 1;
 
     /**
      * LPCM flag: integer payload uses signed samples.
      */
-    private const int LPCM_FLAG_IS_SIGNED_INTEGER = 1 << 2;
+    private const int LPCM_FLAG_IS_SIGNED_INTEGER     = 1 << 2;
 
     /**
      * LPCM flag: samples are tightly packed.
      */
-    private const int LPCM_FLAG_IS_PACKED = 1 << 3;
+    private const int LPCM_FLAG_IS_PACKED             = 1 << 3;
 
     /**
      * LPCM flag: aligned samples are high-aligned.
      */
-    private const int LPCM_FLAG_IS_ALIGNED_HIGH = 1 << 4;
+    private const int LPCM_FLAG_IS_ALIGNED_HIGH       = 1 << 4;
 
     /**
      * Parses an audio sample entry from `stsd`, handling sound description versions 0, 1, and 2.
@@ -103,9 +103,9 @@ final readonly class AudioSampleEntryParser
             throw new ParseError('audio sample entry truncated', 1160);
         }
 
-        $version       = $win->readU16BE();
-        $revisionLevel = $win->readU16BE();
-        $vendor        = $win->readU32BE();
+        $version              = $win->readU16BE();
+        $revisionLevel        = $win->readU16BE();
+        $vendor               = $win->readU32BE();
 
         if ($revisionLevel !== 0) {
             throw new ParseError('audio sample entry revision level must be 0', 1920);
@@ -116,7 +116,7 @@ final readonly class AudioSampleEntryParser
         }
 
         if ($version === 2) {
-            $result = $this->parseSoundSampleEntryVersion2($win, $entryStart, $entryEnd, $entrySize, $normalizedFormat);
+            $result               = $this->parseSoundSampleEntryVersion2($win, $entryStart, $entryEnd, $entrySize, $normalizedFormat);
 
             $samplingRateOverride = $this->parseAudioSampleEntrySamplingRateBox($win, $entryEnd, false);
 
@@ -135,10 +135,10 @@ final readonly class AudioSampleEntryParser
             throw new ParseError('audio sample entry truncated', 1871);
         }
 
-        $channels      = $win->readU16BE();
-        $sampleSize    = $win->readU16BE();
-        $compressionId = $win->readU16BE();
-        $packetSize    = $win->readU16BE();
+        $channels             = $win->readU16BE();
+        $sampleSize           = $win->readU16BE();
+        $compressionId        = $win->readU16BE();
+        $packetSize           = $win->readU16BE();
 
         if ($version === 0) {
             if (($channels !== 1) && ($channels !== 2)) {
@@ -158,13 +158,13 @@ final readonly class AudioSampleEntryParser
             }
         }
 
-        $sampleRateRaw = $win->readU32BE();
+        $sampleRateRaw        = $win->readU32BE();
 
         if (($version === 0) && ($sampleRateRaw > self::VERSION_0_SAMPLE_RATE_MAX_16_16)) {
             throw new ParseError('audio sample entry version 0 sampleRate must be <= 65535', 1508);
         }
 
-        $sampleRate = $this->decodeAudioSampleRate16_16($sampleRateRaw);
+        $sampleRate           = $this->decodeAudioSampleRate16_16($sampleRateRaw);
 
         if ($version === 1) {
             if ($win->tell() + 16 > $entryEnd) {
@@ -223,19 +223,19 @@ final readonly class AudioSampleEntryParser
             throw new ParseError('audio sample entry version 2 truncated', 1924);
         }
 
-        $always3                       = $win->readU16BE();
-        $always16                      = $win->readU16BE();
-        $alwaysMinus2                  = $win->readU16BE();
-        $always0                       = $win->readU16BE();
-        $always65536                   = $win->readU32BE();
-        $sizeOfStructOnly              = $win->readU32BE();
-        $audioSampleRate               = Unpack::float('E', $win->read(8), 'audio sample entry version 2 sample rate');
-        $numChannels                   = $win->readU32BE();
-        $always7F000000                = $win->readU32BE();
-        $bitsPerChannel                = $win->readU32BE();
-        $formatSpecificFlags           = $win->readU32BE();
-        $constBytesPerAudioPacket      = $win->readU32BE();
-        $constLpcmFramesPerAudioPacket = $win->readU32BE();
+        $always3                                                 = $win->readU16BE();
+        $always16                                                = $win->readU16BE();
+        $alwaysMinus2                                            = $win->readU16BE();
+        $always0                                                 = $win->readU16BE();
+        $always65536                                             = $win->readU32BE();
+        $sizeOfStructOnly                                        = $win->readU32BE();
+        $audioSampleRate                                         = Unpack::float('E', $win->read(8), 'audio sample entry version 2 sample rate');
+        $numChannels                                             = $win->readU32BE();
+        $always7F000000                                          = $win->readU32BE();
+        $bitsPerChannel                                          = $win->readU32BE();
+        $formatSpecificFlags                                     = $win->readU32BE();
+        $constBytesPerAudioPacket                                = $win->readU32BE();
+        $constLpcmFramesPerAudioPacket                           = $win->readU32BE();
 
         if ($always3 !== 3 || $always16 !== 16 || $alwaysMinus2 !== self::VERSION_2_ALWAYS_MINUS_2 || $always0 !== 0 || $always65536 !== 65536 || $always7F000000 !== self::VERSION_2_ALWAYS_7F000000) {
             throw new ParseError('audio sample entry version 2 constants are invalid', 1460);
@@ -246,7 +246,7 @@ final readonly class AudioSampleEntryParser
             throw new ParseError('audio sample entry version 2 sizeOfStructOnly is invalid', 1461);
         }
 
-        $entryBodySize = $entryEnd - $entryStart;
+        $entryBodySize                                           = $entryEnd - $entryStart;
 
         if ($sizeOfStructOnly - 8 > $entryBodySize) {
             throw new ParseError('audio sample entry version 2 sizeOfStructOnly exceeds entry bounds', 1462);
@@ -260,13 +260,13 @@ final readonly class AudioSampleEntryParser
             throw new ParseError('audio sample entry version 2 sample rate must be positive', 1487);
         }
 
-        $sampleRate = (int) round($audioSampleRate);
+        $sampleRate                                              = (int) round($audioSampleRate);
 
         if ($sampleRate <= 0) {
             throw new ParseError('audio sample entry version 2 sample rate must be positive', 1930);
         }
 
-        $result = [
+        $result                                                  = [
             'format'        => $normalizedFormat,
             'channels'      => $numChannels,
             'bitsPerSample' => $bitsPerChannel > 0 ? $bitsPerChannel : $always16,
@@ -289,17 +289,17 @@ final readonly class AudioSampleEntryParser
             throw new ParseError('lpcm constLPCMFramesPerAudioPacket must be positive', 1490);
         }
 
-        $isFloat         = ($formatSpecificFlags & self::LPCM_FLAG_IS_FLOAT) !== 0;
-        $isBigEndian     = ($formatSpecificFlags & self::LPCM_FLAG_IS_BIG_ENDIAN) !== 0;
-        $isSignedInteger = ($formatSpecificFlags & self::LPCM_FLAG_IS_SIGNED_INTEGER) !== 0;
-        $isPacked        = ($formatSpecificFlags & self::LPCM_FLAG_IS_PACKED) !== 0;
-        $isAlignedHigh   = ($formatSpecificFlags & self::LPCM_FLAG_IS_ALIGNED_HIGH) !== 0;
+        $isFloat                                                 = ($formatSpecificFlags & self::LPCM_FLAG_IS_FLOAT) !== 0;
+        $isBigEndian                                             = ($formatSpecificFlags & self::LPCM_FLAG_IS_BIG_ENDIAN) !== 0;
+        $isSignedInteger                                         = ($formatSpecificFlags & self::LPCM_FLAG_IS_SIGNED_INTEGER) !== 0;
+        $isPacked                                                = ($formatSpecificFlags & self::LPCM_FLAG_IS_PACKED) !== 0;
+        $isAlignedHigh                                           = ($formatSpecificFlags & self::LPCM_FLAG_IS_ALIGNED_HIGH) !== 0;
 
         if ($isFloat && $isSignedInteger) {
             throw new ParseError('lpcm format flags cannot set both float and signed-integer bits', 1491);
         }
 
-        $minBytesPerAudioPacket = $this->calculateLpcmMinBytesPerAudioPacket(
+        $minBytesPerAudioPacket                                  = $this->calculateLpcmMinBytesPerAudioPacket(
             $bitsPerChannel,
             $numChannels,
             $constLpcmFramesPerAudioPacket,
@@ -343,10 +343,10 @@ final readonly class AudioSampleEntryParser
             return null;
         }
 
-        $tail     = $win->read($remaining);
-        $tailSize = strlen($tail);
-        $offset   = 0;
-        $override = null;
+        $tail      = $win->read($remaining);
+        $tailSize  = strlen($tail);
+        $offset    = 0;
+        $override  = null;
 
         while ($offset + 8 <= $tailSize) {
             $boxSize = Unpack::int('N', substr($tail, $offset, 4), 'audio sample entry child box size');
@@ -386,7 +386,7 @@ final readonly class AudioSampleEntryParser
             throw new ParseError('audio sample rate must be positive', 1928);
         }
 
-        $integerPart = $sampleRateRaw >> 16;
+        $integerPart    = $sampleRateRaw >> 16;
 
         if ($integerPart <= 0) {
             throw new ParseError('audio sample rate must be positive', 1929);

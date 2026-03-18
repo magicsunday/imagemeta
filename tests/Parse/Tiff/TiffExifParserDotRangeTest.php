@@ -63,7 +63,7 @@ final class TiffExifParserDotRangeTest extends TestCase
             ),
         );
 
-        $entry = $parsed->ifd0->get(TiffTag::DOT_RANGE);
+        $entry  = $parsed->ifd0->get(TiffTag::DOT_RANGE);
         self::assertNotNull($entry);
         self::assertSame(2, $entry->count);
     }
@@ -74,7 +74,7 @@ final class TiffExifParserDotRangeTest extends TestCase
     #[Test]
     public function acceptsPerComponentDotRange(): void
     {
-        $parsed = (new TiffExifParser())->parseFromBlob(
+        $parsed   = (new TiffExifParser())->parseFromBlob(
             $this->buildDotRangeTiff(
                 samplesPerPixel: 3,
                 bitsPerSample: [8, 8, 8],
@@ -153,7 +153,7 @@ final class TiffExifParserDotRangeTest extends TestCase
         array $bitsPerSample,
         array $dotRangeValues,
     ): string {
-        $bitsPayload = '';
+        $bitsPayload     = '';
 
         foreach ($bitsPerSample as $value) {
             $bitsPayload .= pack('v', $value);
@@ -165,7 +165,7 @@ final class TiffExifParserDotRangeTest extends TestCase
             $dotRangePayload .= pack('v', $value);
         }
 
-        $entries = [
+        $entries         = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -190,19 +190,19 @@ final class TiffExifParserDotRangeTest extends TestCase
                 . pack('V', count($dotRangeValues)),
         ];
 
-        $payloadByTag = [
+        $payloadByTag    = [
             ExifTag::BITS_PER_SAMPLE => $bitsPayload,
             TiffTag::DOT_RANGE       => $dotRangePayload,
         ];
 
         ksort($entries);
 
-        $ifdOffset   = 8;
-        $entryCount  = count($entries);
-        $ifdSize     = 2 + (12 * $entryCount) + 4;
-        $nextOffset  = $ifdOffset + $ifdSize;
-        $ifdEntries  = '';
-        $payloadTail = '';
+        $ifdOffset       = 8;
+        $entryCount      = count($entries);
+        $ifdSize         = 2 + (12 * $entryCount) + 4;
+        $nextOffset      = $ifdOffset + $ifdSize;
+        $ifdEntries      = '';
+        $payloadTail     = '';
 
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {
@@ -219,7 +219,7 @@ final class TiffExifParserDotRangeTest extends TestCase
                 continue;
             }
 
-            $ifdEntries .= $prefix . pack('V', $nextOffset);
+            $ifdEntries  .= $prefix . pack('V', $nextOffset);
             $payloadTail .= $payload;
             $nextOffset += strlen($payload);
         }

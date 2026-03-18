@@ -57,13 +57,13 @@ final class AppleDecoderNumericValueTest extends TestCase
     #[Test]
     public function rationalFloatValueNormalizesWhitespaceSeparatedPairs(): void
     {
-        $extractor = new AppleDictionaryValueExtractor();
+        $extractor  = new AppleDictionaryValueExtractor();
 
         $dictionary = [
             'AFPerformance' => '44 1610612736',
         ];
 
-        $result = $extractor->rationalFloatValue($dictionary, 'AFPerformance');
+        $result     = $extractor->rationalFloatValue($dictionary, 'AFPerformance');
 
         self::assertNotNull($result);
         self::assertEqualsWithDelta(44 / 1610612736, $result, 1e-12);
@@ -78,7 +78,7 @@ final class AppleDecoderNumericValueTest extends TestCase
     {
         $normalizer = new AppleRationalNormalizer();
 
-        $result = $normalizer->numericScalarValue('44 1610612736');
+        $result     = $normalizer->numericScalarValue('44 1610612736');
 
         self::assertNotNull($result);
         self::assertEqualsWithDelta(44 / 1610612736, $result, 1e-12);

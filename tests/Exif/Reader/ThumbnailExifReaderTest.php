@@ -49,7 +49,7 @@ final class ThumbnailExifReaderTest extends TestCase
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 8192),
         ];
 
-        $reader = $this->createReader($ifd1Entries);
+        $reader      = $this->createReader($ifd1Entries);
 
         self::assertTrue($reader->hasThumbnail());
         self::assertSame(Compression::Jpeg, $reader->thumbnailCompression());
@@ -87,7 +87,7 @@ final class ThumbnailExifReaderTest extends TestCase
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 8192),
         ];
 
-        $reader = $this->createReader($ifd1Entries);
+        $reader      = $this->createReader($ifd1Entries);
 
         self::assertFalse($reader->hasThumbnail());
     }
@@ -105,7 +105,7 @@ final class ThumbnailExifReaderTest extends TestCase
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 0),
         ];
 
-        $reader = $this->createReader($ifd1Entries);
+        $reader      = $this->createReader($ifd1Entries);
 
         self::assertFalse($reader->hasThumbnail());
     }
@@ -120,7 +120,7 @@ final class ThumbnailExifReaderTest extends TestCase
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
         ];
 
-        $reader = $this->createReader($ifd1Entries);
+        $reader      = $this->createReader($ifd1Entries);
 
         self::assertNull($reader->thumbnailStripOffsets());
         self::assertNull($reader->thumbnailStripByteCounts());

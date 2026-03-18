@@ -36,7 +36,7 @@ final class ExtendedXmpAssemblerTest extends TestCase
     #[Test]
     public function rejectsTotalLengthExceedingLimit(): void
     {
-        $assembler = new ExtendedXmpAssembler(
+        $assembler   = new ExtendedXmpAssembler(
             32,
             static function (string $packet): void {},
             maxExtendedXmpSize: 100,
@@ -65,9 +65,9 @@ final class ExtendedXmpAssemblerTest extends TestCase
             static function (string $packet): void {},
         );
 
-        $packet = '<x:xmpmeta><rdf:RDF xmpNote:HasExtendedXMP="NOT-A-VALID-GUID"/></rdf:RDF></x:xmpmeta>';
+        $packet    = '<x:xmpmeta><rdf:RDF xmpNote:HasExtendedXMP="NOT-A-VALID-GUID"/></rdf:RDF></x:xmpmeta>';
 
-        $result = $assembler->extractGuidFromPacket($packet);
+        $result    = $assembler->extractGuidFromPacket($packet);
         self::assertNull($result);
     }
 
@@ -81,7 +81,7 @@ final class ExtendedXmpAssemblerTest extends TestCase
     #[Test]
     public function rejectsCumulativeChunkSizeExceedingLimit(): void
     {
-        $assembler = new ExtendedXmpAssembler(
+        $assembler   = new ExtendedXmpAssembler(
             32,
             static function (string $packet): void {},
             maxExtendedXmpSize: 100,
@@ -91,13 +91,13 @@ final class ExtendedXmpAssemblerTest extends TestCase
         $totalLength = 100;
 
         // First chunk: 60 bytes at offset 0 — cumulative 60
-        $chunk1  = str_repeat('X', 60);
-        $payload = self::SIGNATURE . $guid . pack('N', $totalLength) . pack('N', 0) . $chunk1;
+        $chunk1      = str_repeat('X', 60);
+        $payload     = self::SIGNATURE . $guid . pack('N', $totalLength) . pack('N', 0) . $chunk1;
         $assembler->handleSegment($payload, 0);
 
         // Second chunk: 60 bytes at offset 30 (overlapping) — cumulative 120 > limit 100
-        $chunk2  = str_repeat('Y', 60);
-        $payload = self::SIGNATURE . $guid . pack('N', $totalLength) . pack('N', 30) . $chunk2;
+        $chunk2      = str_repeat('Y', 60);
+        $payload     = self::SIGNATURE . $guid . pack('N', $totalLength) . pack('N', 30) . $chunk2;
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1947);

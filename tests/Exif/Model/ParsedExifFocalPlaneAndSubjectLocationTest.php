@@ -84,7 +84,7 @@ final class ParsedExifFocalPlaneAndSubjectLocationTest extends TestCase
     #[Test]
     public function subjectLocationRequiresTwoCoordinates(): void
     {
-        $parsedExif = $this->parsedExifFromExifEntries([
+        $parsedExif    = $this->parsedExifFromExifEntries([
             ExifTag::SUBJECT_LOCATION => new IfdEntry(
                 ExifTag::SUBJECT_LOCATION,
                 TiffConst::TYPE_SHORT,

@@ -75,11 +75,11 @@ final readonly class GpsTimestampConverter
         $processEntry = $gps->get(ExifTag::GPS_PROCESSING_METHOD);
         $areaEntry    = $gps->get(ExifTag::GPS_AREA_INFORMATION);
 
-        $dateParts = $this->normalizeDate($dateEntry?->value);
+        $dateParts    = $this->normalizeDate($dateEntry?->value);
 
         // Tolerate malformed GPS date stamps — skip silently.
 
-        $timeParts = $timeEntry instanceof IfdEntry && $timeEntry->value instanceof ExifRationalList
+        $timeParts    = $timeEntry instanceof IfdEntry && $timeEntry->value instanceof ExifRationalList
             ? $this->parseTime($timeEntry->value)
             : null;
 
@@ -107,7 +107,7 @@ final readonly class GpsTimestampConverter
     private function normalizeDate(
         string|int|float|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): array {
-        $raw = is_string($value) ? $value : null;
+        $raw   = is_string($value) ? $value : null;
 
         if (!is_string($value)) {
             return $this->invalidDateResult($raw);
@@ -164,9 +164,9 @@ final readonly class GpsTimestampConverter
             return null;
         }
 
-        $hours   = $this->rationalConverter->toFloat($value->values[0]);
-        $minutes = $this->rationalConverter->toFloat($value->values[1]);
-        $seconds = $this->rationalConverter->toFloat($value->values[2]);
+        $hours      = $this->rationalConverter->toFloat($value->values[0]);
+        $minutes    = $this->rationalConverter->toFloat($value->values[1]);
+        $seconds    = $this->rationalConverter->toFloat($value->values[2]);
 
         if ($hours === null || $minutes === null || $seconds === null) {
             return null;
@@ -212,7 +212,7 @@ final readonly class GpsTimestampConverter
 
         [$hours, $minutes, $secondsInt, $microseconds] = $this->decomposeTime($timeParts);
 
-        $time = sprintf('%02d:%02d:%02d', $hours, $minutes, $secondsInt);
+        $time                                          = sprintf('%02d:%02d:%02d', $hours, $minutes, $secondsInt);
 
         if ($microseconds > 0) {
             $micro = rtrim(sprintf('%06d', $microseconds), '0');
@@ -240,15 +240,15 @@ final readonly class GpsTimestampConverter
 
         [$hours, $minutes, $secondsInt, $microseconds] = $this->decomposeTime($timeParts);
 
-        $timeString = sprintf('%02d:%02d:%02d', $hours, $minutes, $secondsInt);
-        $format     = 'Y-m-d H:i:s';
+        $timeString                                    = sprintf('%02d:%02d:%02d', $hours, $minutes, $secondsInt);
+        $format                                        = 'Y-m-d H:i:s';
 
         if ($microseconds > 0) {
             $timeString .= sprintf('.%06d', $microseconds);
-            $format .= '.u';
+            $format     .= '.u';
         }
 
-        $dateTime = DateTimeImmutable::createFromFormat(
+        $dateTime                                      = DateTimeImmutable::createFromFormat(
             $format,
             $date . ' ' . $timeString,
             new DateTimeZone('UTC'),
@@ -273,8 +273,8 @@ final readonly class GpsTimestampConverter
      */
     private function decomposeTime(array $timeParts): array
     {
-        $hours   = $timeParts['hours'];
-        $minutes = $timeParts['minutes'];
+        $hours        = $timeParts['hours'];
+        $minutes      = $timeParts['minutes'];
 
         $secondsFloat = $timeParts['seconds'];
         $secondsInt   = (int) floor($secondsFloat);
@@ -331,7 +331,7 @@ final readonly class GpsTimestampConverter
             return null;
         }
 
-        $encoding = UndefinedTextMarker::encodingForMarker($marker);
+        $encoding    = UndefinedTextMarker::encodingForMarker($marker);
 
         if (!$encoding instanceof CharacterEncoding) {
             return null;
@@ -377,7 +377,7 @@ final readonly class GpsTimestampConverter
         $byteOrderMark = substr($payload, 0, 2);
         $content       = substr($payload, 2);
 
-        $encoding = match ($byteOrderMark) {
+        $encoding      = match ($byteOrderMark) {
             "\xFF\xFE" => CharacterEncoding::Utf16le,
             "\xFE\xFF" => CharacterEncoding::Utf16be,
             default    => null,

@@ -23,7 +23,7 @@ final readonly class MicrosoftTag
     /**
      * Windows XP rating stored by Windows Explorer (0–5 stars); Microsoft EXIF extension.
      */
-    public const int RATING = 0x4746;
+    public const int RATING         = 0x4746;
 
     /**
      * Windows XP rating as a percentage (0–100); Microsoft EXIF extension.
@@ -33,37 +33,37 @@ final readonly class MicrosoftTag
     /**
      * Windows XP image title stored as UCS-2 (UTF-16LE) encoded BYTE array.
      */
-    public const int XP_TITLE = 0x9C9B;
+    public const int XP_TITLE       = 0x9C9B;
 
     /**
      * Windows XP image comment stored as UCS-2 (UTF-16LE) encoded BYTE array.
      */
-    public const int XP_COMMENT = 0x9C9C;
+    public const int XP_COMMENT     = 0x9C9C;
 
     /**
      * Windows XP image author stored as UCS-2 (UTF-16LE) encoded BYTE array.
      */
-    public const int XP_AUTHOR = 0x9C9D;
+    public const int XP_AUTHOR      = 0x9C9D;
 
     /**
      * Windows XP semicolon-separated keywords stored as UCS-2 (UTF-16LE) encoded BYTE array.
      */
-    public const int XP_KEYWORDS = 0x9C9E;
+    public const int XP_KEYWORDS    = 0x9C9E;
 
     /**
      * Windows XP image subject stored as UCS-2 (UTF-16LE) encoded BYTE array.
      */
-    public const int XP_SUBJECT = 0x9C9F;
+    public const int XP_SUBJECT     = 0x9C9F;
 
     /**
      * Microsoft padding for in-place EXIF editing; content is filler bytes.
      */
-    public const int PADDING = 0xEA1C;
+    public const int PADDING        = 0xEA1C;
 
     /**
      * Microsoft offset adjustment when EXIF block has been relocated.
      */
-    public const int OFFSET_SCHEMA = 0xEA1D;
+    public const int OFFSET_SCHEMA  = 0xEA1D;
 
     /**
      * Prevent instantiation of this constants-only utility class.

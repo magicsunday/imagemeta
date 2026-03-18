@@ -49,7 +49,7 @@ final class FocalReaderTest extends TestCase
             ExifTag::FOCAL_LENGTH_IN_35MM_FILM => new IfdEntry(ExifTag::FOCAL_LENGTH_IN_35MM_FILM, 3, 1, 75),
         ];
 
-        $reader = $this->createReader($exifEntries, []);
+        $reader      = $this->createReader($exifEntries, []);
 
         self::assertEqualsWithDelta(50.0, $reader->focalLengthMm(), 0.001);
         self::assertSame(75, $reader->focalLength35Mm());
@@ -68,7 +68,7 @@ final class FocalReaderTest extends TestCase
             ExifTag::FOCAL_PLANE_RESOLUTION_UNIT => new IfdEntry(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 3, 1, 3),
         ];
 
-        $reader = $this->createReader($exifEntries, []);
+        $reader      = $this->createReader($exifEntries, []);
 
         self::assertEqualsWithDelta(8000.0, $reader->focalPlaneXResolution(), 0.001);
         self::assertEqualsWithDelta(8000.0, $reader->focalPlaneYResolution(), 0.001);
@@ -108,7 +108,7 @@ final class FocalReaderTest extends TestCase
             ExifTag::FILE_SOURCE => new IfdEntry(ExifTag::FILE_SOURCE, 7, 1, FileSource::TransparencyScanner->value),
         ];
 
-        $reader = $this->createReader($exifEntries, []);
+        $reader      = $this->createReader($exifEntries, []);
 
         self::assertSame(FileSource::TransparencyScanner, $reader->fileSource());
     }
@@ -124,7 +124,7 @@ final class FocalReaderTest extends TestCase
             ExifTag::INTEROPERABILITY_INDEX => new IfdEntry(ExifTag::INTEROPERABILITY_INDEX, ExifConst::TYPE_ASCII, 4, 'R98'),
         ];
 
-        $reader = $this->createReader([], [], $interopEntries);
+        $reader         = $this->createReader([], [], $interopEntries);
 
         self::assertSame('R98', $reader->interopIndex());
     }

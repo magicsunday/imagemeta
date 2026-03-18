@@ -143,7 +143,7 @@ final class TiffExifParserFreeSpaceTagsTest extends TestCase
      */
     private function buildFreeSpaceTiff(?array $freeOffsets, ?array $freeByteCounts, bool $padToRequiredSize = true): string
     {
-        $entries = [
+        $entries      = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -157,14 +157,14 @@ final class TiffExifParserFreeSpaceTagsTest extends TestCase
         $payloadByTag = [];
 
         if (is_array($freeOffsets)) {
-            $entries[TiffTag::FREE_OFFSETS] = pack('v', TiffTag::FREE_OFFSETS)
+            $entries[TiffTag::FREE_OFFSETS]      = pack('v', TiffTag::FREE_OFFSETS)
                 . pack('v', TiffConst::TYPE_LONG)
                 . pack('V', count($freeOffsets));
             $payloadByTag[TiffTag::FREE_OFFSETS] = $this->packLongArray($freeOffsets);
         }
 
         if (is_array($freeByteCounts)) {
-            $entries[TiffTag::FREE_BYTE_COUNTS] = pack('v', TiffTag::FREE_BYTE_COUNTS)
+            $entries[TiffTag::FREE_BYTE_COUNTS]      = pack('v', TiffTag::FREE_BYTE_COUNTS)
                 . pack('v', TiffConst::TYPE_LONG)
                 . pack('V', count($freeByteCounts));
             $payloadByTag[TiffTag::FREE_BYTE_COUNTS] = $this->packLongArray($freeByteCounts);
@@ -172,12 +172,12 @@ final class TiffExifParserFreeSpaceTagsTest extends TestCase
 
         ksort($entries);
 
-        $ifdOffset   = 8;
-        $entryCount  = count($entries);
-        $ifdSize     = 2 + (12 * $entryCount) + 4;
-        $nextOffset  = $ifdOffset + $ifdSize;
-        $ifdEntries  = '';
-        $payloadTail = '';
+        $ifdOffset    = 8;
+        $entryCount   = count($entries);
+        $ifdSize      = 2 + (12 * $entryCount) + 4;
+        $nextOffset   = $ifdOffset + $ifdSize;
+        $ifdEntries   = '';
+        $payloadTail  = '';
 
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {
@@ -194,12 +194,12 @@ final class TiffExifParserFreeSpaceTagsTest extends TestCase
                 continue;
             }
 
-            $ifdEntries .= $prefix . pack('V', $nextOffset);
+            $ifdEntries  .= $prefix . pack('V', $nextOffset);
             $payloadTail .= $payload;
             $nextOffset += strlen($payload);
         }
 
-        $blob = 'II'
+        $blob         = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . pack('v', $entryCount)
@@ -210,7 +210,7 @@ final class TiffExifParserFreeSpaceTagsTest extends TestCase
         if ($padToRequiredSize && is_array($freeOffsets) && is_array($freeByteCounts) && ($freeOffsets !== []) && ($freeByteCounts !== [])) {
             $requiredSize = 0;
 
-            $limit = min(count($freeOffsets), count($freeByteCounts));
+            $limit        = min(count($freeOffsets), count($freeByteCounts));
 
             for ($index = 0; $index < $limit; ++$index) {
                 $requiredSize = max($requiredSize, $freeOffsets[$index] + $freeByteCounts[$index]);

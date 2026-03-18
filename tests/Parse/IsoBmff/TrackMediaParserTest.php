@@ -71,15 +71,15 @@ final class TrackMediaParserTest extends TestCase
         $stream        = $this->createIsoBmffTempStream($content);
         $navigator     = new BoxNavigator($stream);
 
-        $parser = new TrackMediaParser(
+        $parser        = new TrackMediaParser(
             $navigator,
             static function (BoxDescriptor $box, IsoBmffParseContext $ctx): void {},
             static fn (BoxDescriptor $box): array => [],
         );
 
-        $window = $stream->window(0, $contentLength);
+        $window        = $stream->window(0, $contentLength);
 
-        $descriptor = new BoxDescriptor(
+        $descriptor    = new BoxDescriptor(
             type: $type,
             size: 8 + $contentLength,
             offset: 0,
@@ -430,14 +430,14 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseHdlrParsesCountedStringName(): void
     {
-        $payload = str_repeat("\x00", 4)    // pre_defined
+        $payload               = str_repeat("\x00", 4)    // pre_defined
             . 'vide'                        // handler_type
             . str_repeat("\x00", 12)        // reserved
             . "\x05Hello";                  // counted string: length=5, "Hello"
 
         [$parser, $descriptor] = $this->createParserWithDescriptor('hdlr', "\x00\x00\x00\x00" . $payload);
 
-        $result = $parser->parseHdlr($descriptor);
+        $result                = $parser->parseHdlr($descriptor);
 
         self::assertSame('vide', $result[0]);
         self::assertSame('Hello', $result[1]);
@@ -450,14 +450,14 @@ final class TrackMediaParserTest extends TestCase
     public function parseHdlrParsesNulTerminatedName(): void
     {
         // countedLen = ord('V') = 86, which exceeds remaining-1, triggering NUL path
-        $payload = str_repeat("\x00", 4)    // pre_defined
+        $payload               = str_repeat("\x00", 4)    // pre_defined
             . 'vide'                        // handler_type
             . str_repeat("\x00", 12)        // reserved
             . "VideoHandler\x00";           // NUL-terminated
 
         [$parser, $descriptor] = $this->createParserWithDescriptor('hdlr', "\x00\x00\x00\x00" . $payload);
 
-        $result = $parser->parseHdlr($descriptor);
+        $result                = $parser->parseHdlr($descriptor);
 
         self::assertSame('vide', $result[0]);
         self::assertSame('VideoHandler', $result[1]);
@@ -469,13 +469,13 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseHdlrParsesMinimalBoxWithoutName(): void
     {
-        $payload = str_repeat("\x00", 4)    // pre_defined
+        $payload               = str_repeat("\x00", 4)    // pre_defined
             . 'vide'                        // handler_type
             . str_repeat("\x00", 12);       // reserved
 
         [$parser, $descriptor] = $this->createParserWithDescriptor('hdlr', "\x00\x00\x00\x00" . $payload);
 
-        $result = $parser->parseHdlr($descriptor);
+        $result                = $parser->parseHdlr($descriptor);
 
         self::assertSame('vide', $result[0]);
         self::assertNull($result[1]);
@@ -539,7 +539,7 @@ final class TrackMediaParserTest extends TestCase
     {
         [$parser, $descriptor, $context] = $this->createParseTrakSetup($this->validTrakContent());
 
-        $result = $parser->parseTrak($descriptor, $context);
+        $result                          = $parser->parseTrak($descriptor, $context);
 
         self::assertSame('vide', $result['handler']);
         self::assertTrue($result['isEnabledInMovie']);
@@ -615,7 +615,7 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsDuplicateUdta(): void
     {
-        $udta = $this->box('udta', str_repeat("\x00", 8));
+        $udta                            = $this->box('udta', str_repeat("\x00", 8));
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $this->validMdiaBox() . $udta . $udta,
@@ -668,7 +668,7 @@ final class TrackMediaParserTest extends TestCase
     #[DataProvider('tkhdErrorProvider')]
     public function parseTrakRejectsInvalidTkhd(string $tkhdContent, int $expectedCode): void
     {
-        $tkhd = $this->box('tkhd', $tkhdContent);
+        $tkhd                            = $this->box('tkhd', $tkhdContent);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $tkhd . $this->validMdiaBox(),
@@ -726,7 +726,7 @@ final class TrackMediaParserTest extends TestCase
     #[DataProvider('tkhdToleratedReservedProvider')]
     public function parseTrakToleratesTkhdReservedFields(string $tkhdContent): void
     {
-        $tkhd = $this->box('tkhd', $tkhdContent);
+        $tkhd                            = $this->box('tkhd', $tkhdContent);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $tkhd . $this->validMdiaBox(),
@@ -746,7 +746,7 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsMdiaMissingHdlr(): void
     {
-        $mdia = $this->box('mdia', $this->validMdhdBox() . $this->validMinfBox());
+        $mdia                            = $this->box('mdia', $this->validMdhdBox() . $this->validMinfBox());
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -764,7 +764,7 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsMdiaMissingMinf(): void
     {
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox());
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox());
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -782,7 +782,7 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsMdiaMissingMdhd(): void
     {
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMinfBox());
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $this->validMinfBox());
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -800,7 +800,7 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsMdiaDuplicateHdlr(): void
     {
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validHdlrBox() . $this->validMdhdBox() . $this->validMinfBox());
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $this->validHdlrBox() . $this->validMdhdBox() . $this->validMinfBox());
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -818,7 +818,7 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsMdiaDuplicateMinf(): void
     {
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $this->validMinfBox() . $this->validMinfBox());
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $this->validMinfBox() . $this->validMinfBox());
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -836,7 +836,7 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsMdiaDuplicateMdhd(): void
     {
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $this->validMdhdBox() . $this->validMinfBox());
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $this->validMdhdBox() . $this->validMinfBox());
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -854,8 +854,8 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsMdiaDuplicateUdta(): void
     {
-        $udta = $this->box('udta', str_repeat("\x00", 8));
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $this->validMinfBox() . $udta . $udta);
+        $udta                            = $this->box('udta', str_repeat("\x00", 8));
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $this->validMinfBox() . $udta . $udta);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -916,8 +916,8 @@ final class TrackMediaParserTest extends TestCase
     #[DataProvider('mdhdErrorProvider')]
     public function parseTrakRejectsInvalidMdhd(string $mdhdContent, int $expectedCode): void
     {
-        $mdhd = $this->box('mdhd', $mdhdContent);
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $mdhd . $this->validMinfBox());
+        $mdhd                            = $this->box('mdhd', $mdhdContent);
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $mdhd . $this->validMinfBox());
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -939,8 +939,8 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsMinfMissingStbl(): void
     {
-        $minf = $this->box('minf', $this->validDinfBox() . $this->validVmhdBox());
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
+        $minf                            = $this->box('minf', $this->validDinfBox() . $this->validVmhdBox());
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -958,8 +958,8 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsMinfMissingDinf(): void
     {
-        $minf = $this->box('minf', $this->validVmhdBox() . $this->box('stbl', $this->validStblContent()));
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
+        $minf                            = $this->box('minf', $this->validVmhdBox() . $this->box('stbl', $this->validStblContent()));
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -977,9 +977,9 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsMinfDuplicateStbl(): void
     {
-        $stbl = $this->box('stbl', $this->validStblContent());
-        $minf = $this->box('minf', $this->validDinfBox() . $this->validVmhdBox() . $stbl . $stbl);
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
+        $stbl                            = $this->box('stbl', $this->validStblContent());
+        $minf                            = $this->box('minf', $this->validDinfBox() . $this->validVmhdBox() . $stbl . $stbl);
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -997,8 +997,8 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsMinfDuplicateDinf(): void
     {
-        $minf = $this->box('minf', $this->validDinfBox() . $this->validDinfBox() . $this->validVmhdBox() . $this->box('stbl', $this->validStblContent()));
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
+        $minf                            = $this->box('minf', $this->validDinfBox() . $this->validDinfBox() . $this->validVmhdBox() . $this->box('stbl', $this->validStblContent()));
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -1016,8 +1016,8 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsMinfDuplicateMediaHeader(): void
     {
-        $minf = $this->box('minf', $this->validDinfBox() . $this->validVmhdBox() . $this->validVmhdBox() . $this->box('stbl', $this->validStblContent()));
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
+        $minf                            = $this->box('minf', $this->validDinfBox() . $this->validVmhdBox() . $this->validVmhdBox() . $this->box('stbl', $this->validStblContent()));
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -1035,8 +1035,8 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsMinfMissingMediaHeader(): void
     {
-        $minf = $this->box('minf', $this->validDinfBox() . $this->box('stbl', $this->validStblContent()));
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
+        $minf                            = $this->box('minf', $this->validDinfBox() . $this->box('stbl', $this->validStblContent()));
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -1054,8 +1054,8 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function itToleratesMissingNmhdBoxInMetadataTrack(): void
     {
-        $minf = $this->box('minf', $this->validDinfBox() . $this->box('stbl', $this->validStblContent('meta')));
-        $mdia = $this->box('mdia', $this->validHdlrBox('meta') . $this->validMdhdBox() . $minf);
+        $minf                            = $this->box('minf', $this->validDinfBox() . $this->box('stbl', $this->validStblContent('meta')));
+        $mdia                            = $this->box('mdia', $this->validHdlrBox('meta') . $this->validMdhdBox() . $minf);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -1073,8 +1073,8 @@ final class TrackMediaParserTest extends TestCase
     public function parseTrakToleratesMinfMismatchedMediaHeader(): void
     {
         // Handler is 'vide' but media header is 'smhd' (expected 'vmhd')
-        $minf = $this->box('minf', $this->validDinfBox() . $this->validSmhdBox() . $this->box('stbl', $this->validStblContent()));
-        $mdia = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
+        $minf                            = $this->box('minf', $this->validDinfBox() . $this->validSmhdBox() . $this->box('stbl', $this->validStblContent()));
+        $mdia                            = $this->box('mdia', $this->validHdlrBox() . $this->validMdhdBox() . $minf);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->validTkhdBox() . $mdia,
@@ -1100,8 +1100,8 @@ final class TrackMediaParserTest extends TestCase
             default => $this->validNmhdBox(),
         };
 
-        $minf = $this->box('minf', $this->validDinfBox() . $mediaHeader . $this->box('stbl', $stblContent));
-        $mdia = $this->box('mdia', $this->validHdlrBox($handler) . $this->validMdhdBox() . $minf);
+        $minf        = $this->box('minf', $this->validDinfBox() . $mediaHeader . $this->box('stbl', $stblContent));
+        $mdia        = $this->box('mdia', $this->validHdlrBox($handler) . $this->validMdhdBox() . $minf);
 
         return $this->validTkhdBox() . $mdia;
     }
@@ -1129,7 +1129,7 @@ final class TrackMediaParserTest extends TestCase
     #[DataProvider('stblDuplicateErrorProvider')]
     public function parseTrakRejectsStblDuplicateBox(string $boxType, int $expectedCode): void
     {
-        $extra = match ($boxType) {
+        $extra                           = match ($boxType) {
             'stsd'  => $this->validStsdBox('meta'),
             'stts'  => $this->validSttsBox(),
             'stsc'  => $this->validStscBox(),
@@ -1137,7 +1137,7 @@ final class TrackMediaParserTest extends TestCase
             default => $this->validStcoBox(),
         };
 
-        $stblContent = $this->validStblContent('meta') . $extra;
+        $stblContent                     = $this->validStblContent('meta') . $extra;
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->buildTrakWithStbl($stblContent),
@@ -1172,7 +1172,7 @@ final class TrackMediaParserTest extends TestCase
     #[DataProvider('stblMissingErrorProvider')]
     public function parseTrakRejectsStblMissingBox(string $missingType, int $expectedCode): void
     {
-        $boxes = [
+        $boxes                           = [
             'stsd' => $this->validStsdBox('meta'),
             'stts' => $this->validSttsBox(),
             'stsc' => $this->validStscBox(),
@@ -1182,7 +1182,7 @@ final class TrackMediaParserTest extends TestCase
 
         unset($boxes[$missingType]);
 
-        $stblContent = implode('', $boxes);
+        $stblContent                     = implode('', $boxes);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->buildTrakWithStbl($stblContent),
@@ -1218,7 +1218,7 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsStsdTruncated(): void
     {
-        $stsd = $this->box('stsd', str_repeat("\x00", 3));
+        $stsd                            = $this->box('stsd', str_repeat("\x00", 3));
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->buildTrakWithStsd($stsd),
@@ -1236,7 +1236,7 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsStsdUnsupportedVersion(): void
     {
-        $stsd = $this->fullBox('stsd', pack('N', 1) . pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 1), 2, 0);
+        $stsd                            = $this->fullBox('stsd', pack('N', 1) . pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 1), 2, 0);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->buildTrakWithStsd($stsd),
@@ -1254,7 +1254,7 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsStsdNonZeroFlags(): void
     {
-        $stsd = $this->fullBox('stsd', pack('N', 1) . pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 1), 0, 1);
+        $stsd                            = $this->fullBox('stsd', pack('N', 1) . pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 1), 0, 1);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->buildTrakWithStsd($stsd),
@@ -1272,7 +1272,7 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsStsdV1NonAudioHandler(): void
     {
-        $stsd = $this->fullBox('stsd', pack('N', 1) . pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 1), 1, 0);
+        $stsd                            = $this->fullBox('stsd', pack('N', 1) . pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 1), 1, 0);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->buildTrakWithStsd($stsd, 'vide'),
@@ -1290,7 +1290,7 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsStsdZeroEntryCount(): void
     {
-        $stsd = $this->fullBox('stsd', pack('N', 0), 0, 0);
+        $stsd                            = $this->fullBox('stsd', pack('N', 0), 0, 0);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->buildTrakWithStsd($stsd),
@@ -1308,7 +1308,7 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsStsdExcessiveEntryCount(): void
     {
-        $stsd = $this->fullBox('stsd', pack('N', 101) . str_repeat("\x00", 16), 0, 0);
+        $stsd                            = $this->fullBox('stsd', pack('N', 101) . str_repeat("\x00", 16), 0, 0);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->buildTrakWithStsd($stsd),
@@ -1327,7 +1327,7 @@ final class TrackMediaParserTest extends TestCase
     public function parseTrakRejectsStsdTruncatedEntry(): void
     {
         // entry count = 1 but only 4 bytes of entry (need 8 for size+type)
-        $stsd = $this->fullBox('stsd', pack('N', 1) . str_repeat("\x00", 4), 0, 0);
+        $stsd                            = $this->fullBox('stsd', pack('N', 1) . str_repeat("\x00", 4), 0, 0);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->buildTrakWithStsd($stsd),
@@ -1346,7 +1346,7 @@ final class TrackMediaParserTest extends TestCase
     public function parseTrakRejectsStsdInvalidEntrySize(): void
     {
         // entry size = 8 (< 16 minimum)
-        $stsd = $this->fullBox('stsd', pack('N', 1) . pack('N', 8) . 'genr', 0, 0);
+        $stsd                            = $this->fullBox('stsd', pack('N', 1) . pack('N', 8) . 'genr', 0, 0);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->buildTrakWithStsd($stsd),
@@ -1364,8 +1364,8 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakToleratesStsdNonZeroReserved(): void
     {
-        $entry = pack('N', 16) . 'genr' . "\x00\x00\x00\x00\x00\x01" . pack('n', 1);
-        $stsd  = $this->fullBox('stsd', pack('N', 1) . $entry, 0, 0);
+        $entry                           = pack('N', 16) . 'genr' . "\x00\x00\x00\x00\x00\x01" . pack('n', 1);
+        $stsd                            = $this->fullBox('stsd', pack('N', 1) . $entry, 0, 0);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->buildTrakWithStsd($stsd),
@@ -1382,8 +1382,8 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsStsdZeroDataRefIndex(): void
     {
-        $entry = pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 0);
-        $stsd  = $this->fullBox('stsd', pack('N', 1) . $entry, 0, 0);
+        $entry                           = pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 0);
+        $stsd                            = $this->fullBox('stsd', pack('N', 1) . $entry, 0, 0);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->buildTrakWithStsd($stsd),
@@ -1401,9 +1401,9 @@ final class TrackMediaParserTest extends TestCase
     #[Test]
     public function parseTrakRejectsStsdEntriesNotFillingContainer(): void
     {
-        $entry   = pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 1);
-        $payload = pack('N', 1) . $entry . str_repeat("\x00", 4);
-        $stsd    = $this->fullBox('stsd', $payload, 0, 0);
+        $entry                           = pack('N', 16) . 'genr' . str_repeat("\x00", 6) . pack('n', 1);
+        $payload                         = pack('N', 1) . $entry . str_repeat("\x00", 4);
+        $stsd                            = $this->fullBox('stsd', $payload, 0, 0);
 
         [$parser, $descriptor, $context] = $this->createParseTrakSetup(
             $this->buildTrakWithStsd($stsd),

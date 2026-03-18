@@ -37,24 +37,24 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
     /**
      * Signature identifying ExtendedXMP APP1 segments.
      */
-    public const string SIGNATURE = "http://ns.adobe.com/xmp/extension/\0";
+    public const string SIGNATURE      = "http://ns.adobe.com/xmp/extension/\0";
 
     /**
      * Byte length of the full-length and chunk-offset header fields combined.
      */
-    private const int HEADER_LENGTH = 8;
+    private const int HEADER_LENGTH    = 8;
 
     /** @var list<array{packet:string, guid:string, offset:int}> */
-    private array $basePackets = [];
+    private array $basePackets         = [];
 
     /** @var array<string, list<array{offset:int, length:int, data:string, segmentOffset:int}>> */
-    private array $chunks = [];
+    private array $chunks              = [];
 
     /** @var array<string, int> */
-    private array $totalLength = [];
+    private array $totalLength         = [];
 
     /** @var array<string, int> */
-    private array $firstOffset = [];
+    private array $firstOffset         = [];
 
     /** @var array<string, int> */
     private array $cumulativeChunkSize = [];
@@ -82,14 +82,14 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
      */
     public function handleSegment(string $payload, int $offset): void
     {
-        $signatureLength = strlen(self::SIGNATURE);
-        $guidLength      = $this->guidLength;
-        $minimumLength   = $signatureLength + $guidLength + self::HEADER_LENGTH;
+        $signatureLength                  = strlen(self::SIGNATURE);
+        $guidLength                       = $this->guidLength;
+        $minimumLength                    = $signatureLength + $guidLength + self::HEADER_LENGTH;
 
         PayloadGuard::ensureMinimumLength($payload, $minimumLength, sprintf('ExtendedXMP APP1 segment at offset %d', $offset), 1470);
 
-        $guidRaw     = substr($payload, $signatureLength, $guidLength);
-        $guidPattern = '/^[0-9A-Fa-f]{' . $guidLength . '}$/';
+        $guidRaw                          = substr($payload, $signatureLength, $guidLength);
+        $guidPattern                      = '/^[0-9A-Fa-f]{' . $guidLength . '}$/';
 
         if (preg_match($guidPattern, $guidRaw) !== 1) {
             throw new ParseError(
@@ -98,12 +98,12 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
             );
         }
 
-        $guid = strtoupper($guidRaw);
+        $guid                             = strtoupper($guidRaw);
 
-        $lengthOffset  = $signatureLength + $guidLength;
-        $totalLength   = Unpack::int('N', substr($payload, $lengthOffset, 4), 'ExtendedXMP full length');
-        $chunkOffset   = Unpack::int('N', substr($payload, $lengthOffset + 4, 4), 'ExtendedXMP chunk offset');
-        $extendedChunk = substr($payload, $lengthOffset + self::HEADER_LENGTH);
+        $lengthOffset                     = $signatureLength + $guidLength;
+        $totalLength                      = Unpack::int('N', substr($payload, $lengthOffset, 4), 'ExtendedXMP full length');
+        $chunkOffset                      = Unpack::int('N', substr($payload, $lengthOffset + 4, 4), 'ExtendedXMP chunk offset');
+        $extendedChunk                    = substr($payload, $lengthOffset + self::HEADER_LENGTH);
 
         if ($totalLength <= 0) {
             throw new ParseError(
@@ -124,7 +124,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
             );
         }
 
-        $chunkLength = strlen($extendedChunk);
+        $chunkLength                      = strlen($extendedChunk);
 
         if ($chunkLength === 0) {
             throw new ParseError(
@@ -179,7 +179,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
             );
         }
 
-        $newCumulativeSize = $this->cumulativeChunkSize[$guid] + $chunkLength;
+        $newCumulativeSize                = $this->cumulativeChunkSize[$guid] + $chunkLength;
 
         if ($newCumulativeSize > $this->maxExtendedXmpSize) {
             throw new ParseError(
@@ -196,7 +196,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
 
         $this->cumulativeChunkSize[$guid] = $newCumulativeSize;
 
-        $this->chunks[$guid][] = [
+        $this->chunks[$guid][]            = [
             'offset'        => $chunkOffset,
             'length'        => $chunkLength,
             'data'          => $extendedChunk,
@@ -223,7 +223,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
             return strtoupper($matches[1]);
         }
 
-        $elementMatch = preg_match('/<xmpNote:HasExtendedXMP>\s*([0-9A-Fa-f]{32})\s*<\/xmpNote:HasExtendedXMP>/', $packet, $matches);
+        $elementMatch   = preg_match('/<xmpNote:HasExtendedXMP>\s*([0-9A-Fa-f]{32})\s*<\/xmpNote:HasExtendedXMP>/', $packet, $matches);
 
         if ($elementMatch === 1) {
             return strtoupper($matches[1]);
@@ -257,7 +257,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
             return;
         }
 
-        $requiredGuids = [];
+        $requiredGuids     = [];
 
         foreach ($this->basePackets as $basePacket) {
             $requiredGuids[$basePacket['guid']] = true;
@@ -325,8 +325,8 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
             static fn (array $left, array $right): int => $left['offset'] <=> $right['offset'],
         );
 
-        $cursor    = 0;
-        $assembled = '';
+        $cursor      = 0;
+        $assembled   = '';
 
         foreach ($chunks as $chunk) {
             if ($chunk['offset'] > $cursor) {

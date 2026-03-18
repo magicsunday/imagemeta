@@ -46,8 +46,8 @@ final readonly class TiffColorInkValidator
             return;
         }
 
-        $inkSet      = 1;
-        $inkSetEntry = $ifd->get(TiffTag::INK_SET);
+        $inkSet            = 1;
+        $inkSetEntry       = $ifd->get(TiffTag::INK_SET);
 
         if ($inkSetEntry instanceof IfdEntry) {
             if (($inkSetEntry->type !== TiffConst::TYPE_SHORT) || ($inkSetEntry->count !== 1) || !is_int($inkSetEntry->value)) {
@@ -82,7 +82,7 @@ final readonly class TiffColorInkValidator
             $numberOfInks = $numberOfInksEntry->value;
         }
 
-        $inkNamesEntry = $ifd->get(TiffTag::INK_NAMES);
+        $inkNamesEntry     = $ifd->get(TiffTag::INK_NAMES);
 
         if ($inkSet === 1) {
             if ($inkNamesEntry instanceof IfdEntry) {
@@ -100,7 +100,7 @@ final readonly class TiffColorInkValidator
             throw new ParseError('InkNames must use ASCII field type.', 1940);
         }
 
-        $names = explode("\0", $inkNamesEntry->value);
+        $names             = explode("\0", $inkNamesEntry->value);
 
         foreach ($names as $index => $name) {
             if ($name === '') {
@@ -130,7 +130,7 @@ final readonly class TiffColorInkValidator
      */
     public function validateSeparatedImageDotRange(Ifd $ifd): void
     {
-        $dotRangeEntry = $ifd->get(TiffTag::DOT_RANGE);
+        $dotRangeEntry   = $ifd->get(TiffTag::DOT_RANGE);
 
         if (!$dotRangeEntry instanceof IfdEntry) {
             return;
@@ -353,8 +353,8 @@ final readonly class TiffColorInkValidator
             );
         }
 
-        $samplesPerPixel = 1;
-        $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+        $samplesPerPixel           = 1;
+        $samplesEntry              = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
 
         if ($samplesEntry instanceof IfdEntry) {
             if (!is_int($samplesEntry->value) || ($samplesEntry->value <= 0)) {

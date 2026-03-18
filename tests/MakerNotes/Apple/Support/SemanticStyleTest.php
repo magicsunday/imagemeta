@@ -159,8 +159,8 @@ final class SemanticStyleTest extends TestCase
         $reflector = new ReflectionClass(QuickTimeMeta::class);
 
         /** @var QuickTimeMeta $meta */
-        $meta     = $reflector->newInstanceWithoutConstructor();
-        $property = $reflector->getProperty('keys');
+        $meta      = $reflector->newInstanceWithoutConstructor();
+        $property  = $reflector->getProperty('keys');
         $property->setValue($meta, ['SemanticStyle' => $semanticStyle]);
 
         return $meta;

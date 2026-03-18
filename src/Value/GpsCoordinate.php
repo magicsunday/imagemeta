@@ -59,7 +59,7 @@ final readonly class GpsCoordinate implements Stringable
      */
     public function __toString(): string
     {
-        $signed = $this->signed;
+        $signed         = $this->signed;
 
         if ($this->reference === null) {
             return sprintf('%s°', $this->formatDecimal($signed));

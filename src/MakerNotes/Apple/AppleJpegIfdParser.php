@@ -33,35 +33,35 @@ use function substr;
  */
 final readonly class AppleJpegIfdParser
 {
-    private const string SIGNATURE = "Apple iOS\x00";
+    private const string SIGNATURE        = "Apple iOS\x00";
 
-    private const int SIGNATURE_LENGTH = 10;
+    private const int SIGNATURE_LENGTH    = 10;
 
-    private const int VERSION_LENGTH = 2;
+    private const int VERSION_LENGTH      = 2;
 
-    private const int TIFF_HEADER_OFFSET = self::SIGNATURE_LENGTH + self::VERSION_LENGTH;
+    private const int TIFF_HEADER_OFFSET  = self::SIGNATURE_LENGTH + self::VERSION_LENGTH;
 
-    private const int IFD_ENTRY_SIZE = 12;
+    private const int IFD_ENTRY_SIZE      = 12;
 
     /** Signature(10) + version(2) + byte order(2) + entry count(2) */
-    private const int MIN_PAYLOAD_LENGTH = 16;
+    private const int MIN_PAYLOAD_LENGTH  = 16;
 
-    private const int TIFF_TYPE_ASCII = 2;
+    private const int TIFF_TYPE_ASCII     = 2;
 
     private const int TIFF_TYPE_UNDEFINED = 7;
 
-    private const int TIFF_TYPE_SLONG = 9;
+    private const int TIFF_TYPE_SLONG     = 9;
 
     private const int TIFF_TYPE_SRATIONAL = 10;
 
-    private const int TIFF_TYPE_LONG8 = 16;
+    private const int TIFF_TYPE_LONG8     = 16;
 
     /**
      * Maps Apple JPEG MakerNote IFD tag numbers to builder-compatible dictionary keys.
      *
      * @var array<int, string>
      */
-    public const array TAG_MAP = [
+    public const array TAG_MAP            = [
         0x0001 => 'MakerNoteVersion',
         0x0002 => 'AEMatrix',
         0x0003 => 'RunTime',
@@ -99,7 +99,7 @@ final readonly class AppleJpegIfdParser
     ];
 
     /** Tags whose SLONG value should be stored as a string for builder compatibility. */
-    private const array STRING_CAST_TAGS = [0x0040];
+    private const array STRING_CAST_TAGS  = [0x0040];
 
     private KeyedArchiveResolver $archiveResolver;
 
@@ -117,7 +117,7 @@ final readonly class AppleJpegIfdParser
      */
     public function parse(string $raw): ?array
     {
-        $length = strlen($raw);
+        $length      = strlen($raw);
 
         if ($length < self::MIN_PAYLOAD_LENGTH) {
             return null;
@@ -127,7 +127,7 @@ final readonly class AppleJpegIfdParser
             return null;
         }
 
-        $byteOrder = substr($raw, self::TIFF_HEADER_OFFSET, 2);
+        $byteOrder   = substr($raw, self::TIFF_HEADER_OFFSET, 2);
 
         if ($byteOrder === 'MM') {
             $u16Fmt = 'n';
@@ -154,8 +154,8 @@ final readonly class AppleJpegIfdParser
      */
     private function readIfd(string $raw, int $tiffBase, int $ifdStart, string $u16Fmt, string $u32Fmt): ?array
     {
-        $length     = strlen($raw);
-        $entryCount = Unpack::int($u16Fmt, substr($raw, $ifdStart, 2), 'Apple IFD entry count');
+        $length       = strlen($raw);
+        $entryCount   = Unpack::int($u16Fmt, substr($raw, $ifdStart, 2), 'Apple IFD entry count');
 
         if ($entryCount > 10_000) {
             return null;
@@ -169,11 +169,11 @@ final readonly class AppleJpegIfdParser
         }
 
         /** @var array<string, IfdTagValue> $dictionary */
-        $dictionary = [];
+        $dictionary   = [];
 
         for ($i = 0; $i < $entryCount; ++$i) {
-            $entryOffset = $entriesStart + ($i * self::IFD_ENTRY_SIZE);
-            $entry       = $this->convertEntry($raw, $tiffBase, $entryOffset, $u16Fmt, $u32Fmt);
+            $entryOffset      = $entriesStart + ($i * self::IFD_ENTRY_SIZE);
+            $entry            = $this->convertEntry($raw, $tiffBase, $entryOffset, $u16Fmt, $u32Fmt);
 
             if ($entry === null) {
                 continue;
@@ -193,14 +193,14 @@ final readonly class AppleJpegIfdParser
      */
     private function convertEntry(string $raw, int $tiffBase, int $offset, string $u16Fmt, string $u32Fmt): ?array
     {
-        $tag  = Unpack::int($u16Fmt, substr($raw, $offset, 2), 'Apple IFD tag');
-        $type = Unpack::int($u16Fmt, substr($raw, $offset + 2, 2), 'Apple IFD type');
-        $cnt  = Unpack::int($u32Fmt, substr($raw, $offset + 4, 4), 'Apple IFD count');
+        $tag        = Unpack::int($u16Fmt, substr($raw, $offset, 2), 'Apple IFD tag');
+        $type       = Unpack::int($u16Fmt, substr($raw, $offset + 2, 2), 'Apple IFD type');
+        $cnt        = Unpack::int($u32Fmt, substr($raw, $offset + 4, 4), 'Apple IFD count');
 
         $key        = self::TAG_MAP[$tag] ?? sprintf('Apple 0x%04x', $tag);
         $valueField = substr($raw, $offset + 8, 4);
 
-        $value = $this->decodeTagValue($raw, $tiffBase, $tag, $type, $cnt, $valueField, $u32Fmt);
+        $value      = $this->decodeTagValue($raw, $tiffBase, $tag, $type, $cnt, $valueField, $u32Fmt);
 
         if ($value === null) {
             return null;
@@ -259,7 +259,7 @@ final readonly class AppleJpegIfdParser
             return $signed;
         }
 
-        $data = $this->resolveData($raw, $tiffBase, $count * 4, $valueField, $u32Fmt);
+        $data   = $this->resolveData($raw, $tiffBase, $count * 4, $valueField, $u32Fmt);
 
         if ($data === null) {
             return null;
@@ -291,8 +291,8 @@ final readonly class AppleJpegIfdParser
             return null;
         }
 
-        $hi = Unpack::int($u32Fmt, substr($data, 0, 4), 'Apple IFD LONG8 hi');
-        $lo = Unpack::int($u32Fmt, substr($data, 4, 4), 'Apple IFD LONG8 lo');
+        $hi   = Unpack::int($u32Fmt, substr($data, 0, 4), 'Apple IFD LONG8 hi');
+        $lo   = Unpack::int($u32Fmt, substr($data, 4, 4), 'Apple IFD LONG8 lo');
 
         return ($hi << 32) | $lo;
     }
@@ -429,9 +429,9 @@ final readonly class AppleJpegIfdParser
         $result = [];
 
         for ($i = 0; $i < $count; ++$i) {
-            $pos = $i * 8;
-            $num = $this->toSigned32(Unpack::int($u32Fmt, substr($data, $pos, 4), 'Apple IFD SRATIONAL num'));
-            $den = $this->toSigned32(Unpack::int($u32Fmt, substr($data, $pos + 4, 4), 'Apple IFD SRATIONAL den'));
+            $pos      = $i * 8;
+            $num      = $this->toSigned32(Unpack::int($u32Fmt, substr($data, $pos, 4), 'Apple IFD SRATIONAL num'));
+            $den      = $this->toSigned32(Unpack::int($u32Fmt, substr($data, $pos + 4, 4), 'Apple IFD SRATIONAL den'));
 
             if ($den === 0) {
                 continue;

@@ -95,7 +95,7 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
     #[Test]
     public function decodeResolvesNsKeyedArchivePayload(): void
     {
-        $blob = $this->createKeyedArchiveBlob();
+        $blob     = $this->createKeyedArchiveBlob();
 
         $decoder  = new AppleDecoder();
         $metadata = $decoder->decode($blob, 'Apple', 'UnitTestDevice');
@@ -111,7 +111,7 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
         self::assertEqualsWithDelta(0.5, $apple->livePhoto->time, 1e-12);
         self::assertSame(6500, $apple->camera?->colorTemperature);
         self::assertSame([0.1, 0.2, 0.3], $apple->livePhoto->accelerationVector);
-        $runTime = $apple->livePhoto->runTime;
+        $runTime  = $apple->livePhoto->runTime;
         self::assertInstanceOf(RunTime::class, $runTime);
         self::assertSame(1, $runTime->epoch);
         self::assertSame(10, $runTime->timescale);
@@ -126,12 +126,12 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
     #[Test]
     public function decodeBinaryPropertyListSkipsLeadingPadding(): void
     {
-        $blob = $this->createKeyedArchiveBlob();
-        $raw  = "\x00\xFF" . $blob;
+        $blob     = $this->createKeyedArchiveBlob();
+        $raw      = "\x00\xFF" . $blob;
 
         $resolver = new KeyedArchiveResolver();
 
-        $result = $resolver->decodeBinaryPropertyList($raw);
+        $result   = $resolver->decodeBinaryPropertyList($raw);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('archiver', $result);
@@ -146,7 +146,7 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
     {
         $resolver = new KeyedArchiveResolver();
 
-        $archive = [
+        $archive  = [
             'archiver' => 'NSKeyedArchiver',
             'objects'  => [
                 null,
@@ -166,12 +166,12 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
             'version' => 100000,
         ];
 
-        $wrapper = [
+        $wrapper  = [
             'MakerNote'      => $archive,
             'PayloadVersion' => 1,
         ];
 
-        $result = $resolver->resolveKeyedArchiveDictionary($wrapper);
+        $result   = $resolver->resolveKeyedArchiveDictionary($wrapper);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('ContentIdentifier', $result);
@@ -292,29 +292,29 @@ final class BinaryPlistEncoder
 
     public function encode(BinaryPlistValue $value): string
     {
-        $this->nodes = [];
+        $this->nodes      = [];
 
-        $rootIndex = $this->collectValue($value);
+        $rootIndex        = $this->collectValue($value);
 
         /** @var non-empty-list<BinaryPlistNode> $nodes */
-        $nodes         = $this->nodes;
-        $objectCount   = count($nodes);
-        $objectRefSize = 1;
+        $nodes            = $this->nodes;
+        $objectCount      = count($nodes);
+        $objectRefSize    = 1;
 
         while ($objectCount > (1 << (8 * $objectRefSize))) {
             ++$objectRefSize;
         }
 
-        $header  = 'bplist00';
-        $objects = '';
-        $offsets = [];
+        $header           = 'bplist00';
+        $objects          = '';
+        $offsets          = [];
 
         foreach ($nodes as $index => $node) {
             $offsets[$index] = strlen($header) + strlen($objects);
             $objects .= $this->encodeNode($node, $objectRefSize);
         }
 
-        $maxOffset = 0;
+        $maxOffset        = 0;
 
         foreach ($offsets as $offset) {
             if ($offset > $maxOffset) {
@@ -322,13 +322,13 @@ final class BinaryPlistEncoder
             }
         }
 
-        $offsetIntSize = 1;
+        $offsetIntSize    = 1;
 
         while ($maxOffset >= (1 << (8 * $offsetIntSize))) {
             ++$offsetIntSize;
         }
 
-        $offsetTable = '';
+        $offsetTable      = '';
 
         foreach ($offsets as $offset) {
             $offsetTable .= $this->packInt($offset, $offsetIntSize);
@@ -336,7 +336,7 @@ final class BinaryPlistEncoder
 
         $offsetTableStart = strlen($header) + strlen($objects);
 
-        $trailer = str_repeat("\x00", 6)
+        $trailer          = str_repeat("\x00", 6)
             . chr($offsetIntSize)
             . chr($objectRefSize)
             . $this->packUint64($objectCount)
@@ -381,7 +381,7 @@ final class BinaryPlistEncoder
 
     private function encodeInteger(int $value): string
     {
-        $size = 1;
+        $size   = 1;
 
         if ($value > 0xFF) {
             $size = 2;
@@ -435,7 +435,7 @@ final class BinaryPlistEncoder
         $count                  = count($children);
         [$marker, $lengthBytes] = $this->encodeLength($count, 0xA0);
 
-        $references = '';
+        $references             = '';
 
         foreach ($children as $child) {
             $references .= $this->packInt($child, $objectRefSize);
@@ -452,7 +452,7 @@ final class BinaryPlistEncoder
         $count                  = count($dictionary['keys']);
         [$marker, $lengthBytes] = $this->encodeLength($count, 0xD0);
 
-        $references = '';
+        $references             = '';
 
         foreach ($dictionary['keys'] as $keyRef) {
             $references .= $this->packInt($keyRef, $objectRefSize);

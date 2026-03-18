@@ -44,7 +44,7 @@ final readonly class DngValueNormalizer
      *
      * @var list<int>
      */
-    private const array COUNTED_IMAGE_DATA_TAGS = [
+    private const array COUNTED_IMAGE_DATA_TAGS          = [
         ExifTag::STRIP_OFFSETS,
         ExifTag::STRIP_BYTE_COUNTS,
         TiffTag::TILE_OFFSETS,
@@ -67,7 +67,7 @@ final readonly class DngValueNormalizer
      *
      * @var list<int>
      */
-    private const array DNG_UTF8_STRING_TAGS = [
+    private const array DNG_UTF8_STRING_TAGS             = [
         DngTag::CAMERA_CALIBRATION_SIGNATURE,
         DngTag::PROFILE_CALIBRATION_SIGNATURE,
         DngTag::AS_SHOT_PROFILE_NAME,
@@ -194,9 +194,9 @@ final readonly class DngValueNormalizer
         $horizontalRepeatPixelUnit = $this->binaryReader->unpackU16(substr($bytes, 0, 2));
         $verticalRepeatPixelUnit   = $this->binaryReader->unpackU16(substr($bytes, 2, 2));
 
-        $payloadLen            = strlen($bytes);
-        $expectedPatternValues = $horizontalRepeatPixelUnit * $verticalRepeatPixelUnit;
-        $expectedSize          = 4 + $expectedPatternValues;
+        $payloadLen                = strlen($bytes);
+        $expectedPatternValues     = $horizontalRepeatPixelUnit * $verticalRepeatPixelUnit;
+        $expectedSize              = 4 + $expectedPatternValues;
 
         if (($expectedSize !== $payloadLen) && ($horizontalRepeatPixelUnit > 0 && $verticalRepeatPixelUnit > 0)) {
             if ($this->binaryReader->byteOrder() === Endian::Little) {
@@ -236,7 +236,7 @@ final readonly class DngValueNormalizer
             $expectedPatternValues = $payloadLen - 4;
         }
 
-        $components = [$horizontalRepeatPixelUnit, $verticalRepeatPixelUnit];
+        $components                = [$horizontalRepeatPixelUnit, $verticalRepeatPixelUnit];
 
         for ($index = 0; $index < $expectedPatternValues; ++$index) {
             $components[] = ord($bytes[4 + $index]);
@@ -305,12 +305,12 @@ final readonly class DngValueNormalizer
             throw new ParseError('Truncated numeric components for TIFF entry.', 1326);
         }
 
-        $components = [];
+        $components      = [];
 
         for ($i = 0; $i < $count; ++$i) {
-            $chunk = substr($rawBytes, $i * $componentSize, $componentSize);
+            $chunk        = substr($rawBytes, $i * $componentSize, $componentSize);
 
-            $value = match ($type) {
+            $value        = match ($type) {
                 TiffFieldType::Short->value => $this->binaryReader->unpackU16($chunk),
                 TiffFieldType::Long->value  => $this->binaryReader->unpackU32($chunk),
                 TiffFieldType::Long8->value => $this->binaryReader->unpackU64($chunk),

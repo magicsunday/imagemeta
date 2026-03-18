@@ -92,7 +92,7 @@ final class GpsUndefinedStringTest extends TestCase
     #[Test]
     public function rejectsAreaInformationShorterThanEightBytes(): void
     {
-        $gps = new Ifd([
+        $gps    = new Ifd([
             ExifTag::GPS_AREA_INFORMATION => new IfdEntry(
                 ExifTag::GPS_AREA_INFORMATION,
                 7,

@@ -74,8 +74,8 @@ final class TiffExifParserUserCommentTest extends TestCase
         $comment = "ASCII\0\0\0Hello World";
         $blob    = $this->buildTiffWithUserComment($comment);
 
-        $reader = new TiffExifParser();
-        $result = $reader->parseFromBlob($blob);
+        $reader  = new TiffExifParser();
+        $result  = $reader->parseFromBlob($blob);
 
         self::assertNotNull($result->exifIfd);
     }
@@ -90,8 +90,8 @@ final class TiffExifParserUserCommentTest extends TestCase
         $comment = "JIS\0\0\0\0\0Some text";
         $blob    = $this->buildTiffWithUserComment($comment);
 
-        $reader = new TiffExifParser();
-        $result = $reader->parseFromBlob($blob);
+        $reader  = new TiffExifParser();
+        $result  = $reader->parseFromBlob($blob);
 
         self::assertNotNull($result->exifIfd);
     }
@@ -106,8 +106,8 @@ final class TiffExifParserUserCommentTest extends TestCase
         $comment = "UNICODE\0Test";
         $blob    = $this->buildTiffWithUserComment($comment);
 
-        $reader = new TiffExifParser();
-        $result = $reader->parseFromBlob($blob);
+        $reader  = new TiffExifParser();
+        $result  = $reader->parseFromBlob($blob);
 
         self::assertNotNull($result->exifIfd);
     }
@@ -122,8 +122,8 @@ final class TiffExifParserUserCommentTest extends TestCase
         $comment = "\0\0\0\0\0\0\0\0Plain text";
         $blob    = $this->buildTiffWithUserComment($comment);
 
-        $reader = new TiffExifParser();
-        $result = $reader->parseFromBlob($blob);
+        $reader  = new TiffExifParser();
+        $result  = $reader->parseFromBlob($blob);
 
         self::assertNotNull($result->exifIfd);
     }
@@ -139,8 +139,8 @@ final class TiffExifParserUserCommentTest extends TestCase
         $comment = 'ASC';  // Truncated "ASCII\0\0\0"
         $blob    = $this->buildTiffWithUserComment($comment);
 
-        $reader = new TiffExifParser();
-        $result = $reader->parseFromBlob($blob);
+        $reader  = new TiffExifParser();
+        $result  = $reader->parseFromBlob($blob);
 
         self::assertNotNull($result->exifIfd);
     }
@@ -155,8 +155,8 @@ final class TiffExifParserUserCommentTest extends TestCase
         $comment = "INVALID\0Data";
         $blob    = $this->buildTiffWithUserComment($comment);
 
-        $reader = new TiffExifParser();
-        $result = $reader->parseFromBlob($blob);
+        $reader  = new TiffExifParser();
+        $result  = $reader->parseFromBlob($blob);
 
         self::assertNotNull($result->exifIfd);
     }
@@ -168,7 +168,7 @@ final class TiffExifParserUserCommentTest extends TestCase
     #[Test]
     public function handlesEmptyUserComment(): void
     {
-        $blob = $this->buildTiffWithUserComment('');
+        $blob   = $this->buildTiffWithUserComment('');
 
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob($blob);
@@ -186,8 +186,8 @@ final class TiffExifParserUserCommentTest extends TestCase
         $comment = "ASCII\0\0\0";
         $blob    = $this->buildTiffWithUserComment($comment);
 
-        $reader = new TiffExifParser();
-        $result = $reader->parseFromBlob($blob);
+        $reader  = new TiffExifParser();
+        $result  = $reader->parseFromBlob($blob);
 
         self::assertNotNull($result->exifIfd);
     }
@@ -202,8 +202,8 @@ final class TiffExifParserUserCommentTest extends TestCase
         $comment = "ASCII\0\0\0\x01\x02\x03\x04\x05";
         $blob    = $this->buildTiffWithUserComment($comment);
 
-        $reader = new TiffExifParser();
-        $result = $reader->parseFromBlob($blob);
+        $reader  = new TiffExifParser();
+        $result  = $reader->parseFromBlob($blob);
 
         self::assertNotNull($result->exifIfd);
     }
@@ -219,8 +219,8 @@ final class TiffExifParserUserCommentTest extends TestCase
         $comment = "ASCII\0\0\0" . str_repeat('A', 1000);
         $blob    = $this->buildTiffWithUserComment($comment);
 
-        $reader = new TiffExifParser();
-        $result = $reader->parseFromBlob($blob);
+        $reader  = new TiffExifParser();
+        $result  = $reader->parseFromBlob($blob);
 
         self::assertNotNull($result->exifIfd);
     }
@@ -235,8 +235,8 @@ final class TiffExifParserUserCommentTest extends TestCase
         $makerNoteData = "Canon\0\0\0Some proprietary data";
         $blob          = $this->buildTiffWithMakerNote($makerNoteData);
 
-        $reader = new TiffExifParser();
-        $result = $reader->parseFromBlob($blob);
+        $reader        = new TiffExifParser();
+        $result        = $reader->parseFromBlob($blob);
 
         self::assertNotNull($result->exifIfd);
     }
@@ -248,7 +248,7 @@ final class TiffExifParserUserCommentTest extends TestCase
     #[Test]
     public function handlesEmptyMakerNote(): void
     {
-        $blob = $this->buildTiffWithMakerNote('');
+        $blob   = $this->buildTiffWithMakerNote('');
 
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob($blob);
@@ -267,7 +267,7 @@ final class TiffExifParserUserCommentTest extends TestCase
     private function buildTiffWithUserComment(string $commentData): string
     {
         // TIFF header
-        $blob = 'II'
+        $blob              = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);  // IFD0 at offset 8
 
@@ -286,7 +286,7 @@ final class TiffExifParserUserCommentTest extends TestCase
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
 
-        $exifIfdOffset = 8 + 2 + (3 * 12) + 4;  // header + count + entries + next
+        $exifIfdOffset     = 8 + 2 + (3 * 12) + 4;  // header + count + entries + next
 
         $blob .= pack('v', 0x8769)                    // ExifIFDPointer
             . pack('v', TiffConst::TYPE_LONG)
@@ -296,7 +296,7 @@ final class TiffExifParserUserCommentTest extends TestCase
         $blob .= pack('V', 0);  // Next IFD
 
         // ExifIFD
-        $exifIfdStart = strlen($blob);
+        $exifIfdStart      = strlen($blob);
         $blob .= pack('v', 1);  // 1 entry
 
         $userCommentOffset = $exifIfdStart + 14;  // After IFD entry + next offset
@@ -325,7 +325,7 @@ final class TiffExifParserUserCommentTest extends TestCase
     private function buildTiffWithMakerNote(string $makerNoteData): string
     {
         // TIFF header
-        $blob = 'II'
+        $blob            = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
@@ -344,7 +344,7 @@ final class TiffExifParserUserCommentTest extends TestCase
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
 
-        $exifIfdOffset = 8 + 2 + (3 * 12) + 4;
+        $exifIfdOffset   = 8 + 2 + (3 * 12) + 4;
 
         $blob .= pack('v', 0x8769)
             . pack('v', TiffConst::TYPE_LONG)
@@ -354,7 +354,7 @@ final class TiffExifParserUserCommentTest extends TestCase
         $blob .= pack('V', 0);
 
         // ExifIFD
-        $exifIfdStart = strlen($blob);
+        $exifIfdStart    = strlen($blob);
         $blob .= pack('v', 1);
 
         $makerNoteOffset = $exifIfdStart + 14;

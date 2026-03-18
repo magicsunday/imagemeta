@@ -67,7 +67,7 @@ final class ExifCapabilities
             return $profile;
         }
 
-        $digits = preg_replace('/\D/', '', $trimmed);
+        $digits  = preg_replace('/\D/', '', $trimmed);
 
         if ($digits === null || $digits === '') {
             $digits = $trimmed;

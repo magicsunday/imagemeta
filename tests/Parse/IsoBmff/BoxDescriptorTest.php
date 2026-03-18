@@ -42,7 +42,7 @@ final class BoxDescriptorTest extends TestCase
     #[Test]
     public function constructorAssignsValuesVerbatim(): void
     {
-        $window = $this->createWindow('0123456789abcdef', 4, 8);
+        $window     = $this->createWindow('0123456789abcdef', 4, 8);
 
         $descriptor = new BoxDescriptor(
             type: 'test',
@@ -73,8 +73,8 @@ final class BoxDescriptorTest extends TestCase
         $windowA = $this->createWindow('abcdefghij', 2, 4);
         $windowB = $this->createWindow('abcdefghij', 5, 3);
 
-        $first  = new BoxDescriptor('aaaa', 16, 2, 6, 8, $windowA, null);
-        $second = new BoxDescriptor('bbbb', 24, 3, 7, 6, $windowB, '00112233445566778899aabbccddeeff');
+        $first   = new BoxDescriptor('aaaa', 16, 2, 6, 8, $windowA, null);
+        $second  = new BoxDescriptor('bbbb', 24, 3, 7, 6, $windowB, '00112233445566778899aabbccddeeff');
 
         self::assertNotSame($first->window, $second->window);
         self::assertNotSame($first->type, $second->type);

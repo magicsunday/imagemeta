@@ -65,7 +65,7 @@ final class MatrixValidatorTest extends TestCase
             ],
         ];
 
-        $parts = MatrixValidator::validateMatrix($matrix, true, true);
+        $parts  = MatrixValidator::validateMatrix($matrix, true, true);
 
         self::assertNotNull($parts);
         self::assertSame(2, $parts->columns);
@@ -100,7 +100,7 @@ final class MatrixValidatorTest extends TestCase
             ],
         ];
 
-        $parts = MatrixValidator::validateMatrix($matrix, false, false);
+        $parts  = MatrixValidator::validateMatrix($matrix, false, false);
 
         self::assertNotNull($parts);
         self::assertNull($parts->rowLabels);
@@ -147,7 +147,7 @@ final class MatrixValidatorTest extends TestCase
             ],
         ];
 
-        $parts = MatrixValidator::validateMatrix($matrix, true, true);
+        $parts  = MatrixValidator::validateMatrix($matrix, true, true);
 
         self::assertNotNull($parts);
         self::assertSame([[null]], $parts->values);

@@ -44,11 +44,11 @@ enum GpsLatLonRef: string
      * East longitude.
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case East = 'E';
+    case East  = 'E';
 
     /**
      * West longitude.
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case West = 'W';
+    case West  = 'W';
 }

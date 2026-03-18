@@ -23,7 +23,7 @@ final class ExifConst
      * 8-bit byte containing 7-bit ASCII code; last byte NUL.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_ASCII = 2;
+    public const int TYPE_ASCII               = 2;
 
     /**
      * EXIF 3.0 §4.6.6.8 — sentinel denominator value indicating an unknown measurement.

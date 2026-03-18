@@ -158,7 +158,7 @@ final class TiffExifParserGrayResponseTest extends TestCase
         ?int $grayResponseCurveType = null,
         ?array $grayResponseCurveValues = null,
     ): string {
-        $entries = [
+        $entries      = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -180,7 +180,7 @@ final class TiffExifParserGrayResponseTest extends TestCase
         $payloadByTag = [];
 
         if (($grayResponseUnitType !== null) && is_array($grayResponseUnitValues)) {
-            $entries[TiffTag::GRAY_RESPONSE_UNIT] = pack('v', TiffTag::GRAY_RESPONSE_UNIT)
+            $entries[TiffTag::GRAY_RESPONSE_UNIT]      = pack('v', TiffTag::GRAY_RESPONSE_UNIT)
                 . pack('v', $grayResponseUnitType)
                 . pack('V', count($grayResponseUnitValues));
             $payloadByTag[TiffTag::GRAY_RESPONSE_UNIT] = $this->packNumericPayload(
@@ -190,7 +190,7 @@ final class TiffExifParserGrayResponseTest extends TestCase
         }
 
         if (($grayResponseCurveType !== null) && is_array($grayResponseCurveValues)) {
-            $entries[TiffTag::GRAY_RESPONSE_CURVE] = pack('v', TiffTag::GRAY_RESPONSE_CURVE)
+            $entries[TiffTag::GRAY_RESPONSE_CURVE]      = pack('v', TiffTag::GRAY_RESPONSE_CURVE)
                 . pack('v', $grayResponseCurveType)
                 . pack('V', count($grayResponseCurveValues));
             $payloadByTag[TiffTag::GRAY_RESPONSE_CURVE] = $this->packNumericPayload(
@@ -201,12 +201,12 @@ final class TiffExifParserGrayResponseTest extends TestCase
 
         ksort($entries);
 
-        $ifdOffset   = 8;
-        $entryCount  = count($entries);
-        $ifdSize     = 2 + (12 * $entryCount) + 4;
-        $nextOffset  = $ifdOffset + $ifdSize;
-        $ifdEntries  = '';
-        $payloadTail = '';
+        $ifdOffset    = 8;
+        $entryCount   = count($entries);
+        $ifdSize      = 2 + (12 * $entryCount) + 4;
+        $nextOffset   = $ifdOffset + $ifdSize;
+        $ifdEntries   = '';
+        $payloadTail  = '';
 
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {
@@ -223,7 +223,7 @@ final class TiffExifParserGrayResponseTest extends TestCase
                 continue;
             }
 
-            $ifdEntries .= $prefix . pack('V', $nextOffset);
+            $ifdEntries  .= $prefix . pack('V', $nextOffset);
             $payloadTail .= $payload;
             $nextOffset += strlen($payload);
         }

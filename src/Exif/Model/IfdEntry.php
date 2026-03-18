@@ -69,7 +69,7 @@ final readonly class IfdEntry
         }
 
         /** @var array<int, int|float|array<int, int|float>> $arrayValue */
-        $arrayValue = array_values($value);
+        $arrayValue    = array_values($value);
 
         if ($type === 5 || $type === 10) {
             $rationals = $this->normalizeRationalList($arrayValue);
@@ -99,7 +99,7 @@ final readonly class IfdEntry
      */
     private function normalizeRationalList(array $value): array
     {
-        $pair = $this->extractRationalPair($value);
+        $pair      = $this->extractRationalPair($value);
 
         if ($pair !== null) {
             return [$this->pairToRational($pair[0], $pair[1])];
@@ -108,7 +108,7 @@ final readonly class IfdEntry
         $rationals = [];
 
         foreach ($value as $component) {
-            $pair = $this->extractRationalPair($component);
+            $pair        = $this->extractRationalPair($component);
 
             if ($pair === null) {
                 continue;
@@ -150,7 +150,7 @@ final readonly class IfdEntry
             return null;
         }
 
-        $components = array_values($value);
+        $components  = array_values($value);
 
         if (!isset($components[0], $components[1])) {
             return null;

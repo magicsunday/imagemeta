@@ -66,7 +66,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
     #[Test]
     public function acceptsValidStripLayoutWithChunkyPlanarConfiguration(): void
     {
-        $blob = $this->buildStripLayoutTiff(
+        $blob   = $this->buildStripLayoutTiff(
             imageLength: 10,
             rowsPerStrip: 4,
             stripOffsets: [512, 768, 1024],
@@ -89,7 +89,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
     #[Test]
     public function acceptsValidStripLayoutWithSeparatePlanarConfiguration(): void
     {
-        $blob = $this->buildStripLayoutTiff(
+        $blob   = $this->buildStripLayoutTiff(
             imageLength: 10,
             rowsPerStrip: 4,
             stripOffsets: [100, 200, 300, 400, 500, 600, 700, 800, 900],
@@ -333,13 +333,13 @@ final class TiffExifParserStripLayoutTest extends TestCase
             static fn (array $left, array $right): int => $left['tag'] <=> $right['tag'],
         );
 
-        $blob = $this->buildClassicTiff($entries);
+        $blob    = $this->buildClassicTiff($entries);
 
         if ($padToStorageRanges) {
             $requiredLength = 0;
 
             foreach ($stripOffsets as $index => $offset) {
-                $byteCount = $stripByteCounts[$index] ?? 0;
+                $byteCount      = $stripByteCounts[$index] ?? 0;
 
                 if ($offset < 0) {
                     continue;

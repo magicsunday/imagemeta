@@ -308,9 +308,9 @@ final class MetadataReaderTest extends TestCase
 
     private const string EXIF_SIGNATURE = "Exif\0\0";
 
-    private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
+    private const string XMP_SIGNATURE  = "http://ns.adobe.com/xap/1.0/\0";
 
-    private const int MARKER_APP1 = 0xE1;
+    private const int MARKER_APP1       = 0xE1;
 
     /**
      * Builds a JPEG containing EXIF and XMP APP1 segments plus a Nikon maker note.
@@ -319,16 +319,16 @@ final class MetadataReaderTest extends TestCase
     #[Test]
     public function readJpegPopulatesMetadata(): void
     {
-        $makerNote = 'synthetic-nikon-maker-note';
-        $tiff      = $this->littleEndianTiffWithMakerNote('Nikon Corporation', 'Z 9', $makerNote);
-        $xmp       = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+        $makerNote          = 'synthetic-nikon-maker-note';
+        $tiff               = $this->littleEndianTiffWithMakerNote('Nikon Corporation', 'Z 9', $makerNote);
+        $xmp                = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
             . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:title="Synthetic" />'
             . '</rdf:RDF>'
             . '</x:xmpmeta>';
-        $sofPayload = $this->buildBaselineStartOfFramePayload(8, 256, 256);
+        $sofPayload         = $this->buildBaselineStartOfFramePayload(8, 256, 256);
 
-        $jpeg = "\xFF\xD8"
+        $jpeg               = "\xFF\xD8"
             . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
             . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
             . $this->segment(0xDB, "\x00")
@@ -338,7 +338,7 @@ final class MetadataReaderTest extends TestCase
             . 'scan-data'
             . "\xFF\xD9";
 
-        $path = $this->writeTempFile($jpeg, 'jpg');
+        $path               = $this->writeTempFile($jpeg, 'jpg');
 
         try {
             $metadata = MetadataReader::createDefault()->read($path);
@@ -363,7 +363,7 @@ final class MetadataReaderTest extends TestCase
         self::assertSame('jpg', $metadata->extension);
         self::assertNull($metadata->digestSha256);
 
-        $structured = $metadata->structured();
+        $structured         = $metadata->structured();
 
         /** @var array{file: callable(): FileValue, container: callable(): Container, camera: callable(): Camera, lens: callable(): Lens, derived: callable(): Derived, exposure: callable(): Exposure, thumbnail: callable(): Thumbnail, rights: callable(): Rights} $componentAccessors */
         $componentAccessors = [
@@ -377,7 +377,7 @@ final class MetadataReaderTest extends TestCase
             'rights'    => static fn (): Rights => $structured->provenance->rights,
         ];
 
-        $expectedClasses = [
+        $expectedClasses    = [
             'file'      => FileValue::class,
             'container' => Container::class,
             'camera'    => Camera::class,
@@ -408,7 +408,7 @@ final class MetadataReaderTest extends TestCase
     {
         $xmpPayloads = [];
 
-        $xmpParser = new readonly class(function (string $xml) use (&$xmpPayloads): void {
+        $xmpParser   = new readonly class(function (string $xml) use (&$xmpPayloads): void {
             $xmpPayloads[] = $xml;
         }) implements XmpParserInterface {
             public function __construct(
@@ -425,7 +425,7 @@ final class MetadataReaderTest extends TestCase
             }
         };
 
-        $tiffParser = new class implements TiffExifParserInterface {
+        $tiffParser  = new class implements TiffExifParserInterface {
             public function parseFromBlob(
                 string $tiffBlob,
                 ?Registry $registry = null,
@@ -445,14 +445,14 @@ final class MetadataReaderTest extends TestCase
             }
         };
 
-        $iptcParser = new class implements IptcParserInterface {
+        $iptcParser  = new class implements IptcParserInterface {
             public function parse(string $payload): IptcDocument
             {
                 return new IptcDocument([]);
             }
         };
 
-        $path = $this->writeTempFile("\xFF\xD8\xFF\xD9", 'jpg');
+        $path        = $this->writeTempFile("\xFF\xD8\xFF\xD9", 'jpg');
 
         try {
             $metadata = new MetadataReader(
@@ -465,7 +465,7 @@ final class MetadataReaderTest extends TestCase
                 isoBmffParserFactory: new IsoBmffParserFactory(),
                 jxlParserFactory: new JxlParserFactory(),
             );
-            $result = $metadata->read($path);
+            $result   = $metadata->read($path);
         } finally {
             @unlink($path);
         }
@@ -481,11 +481,11 @@ final class MetadataReaderTest extends TestCase
     #[Test]
     public function readJpegWithDigestsPopulatesChecksums(): void
     {
-        $makerNote  = 'digest-maker-note';
-        $tiff       = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R6', $makerNote);
-        $sofPayload = $this->buildBaselineStartOfFramePayload(8, 256, 256);
+        $makerNote    = 'digest-maker-note';
+        $tiff         = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R6', $makerNote);
+        $sofPayload   = $this->buildBaselineStartOfFramePayload(8, 256, 256);
 
-        $jpeg = "\xFF\xD8"
+        $jpeg         = "\xFF\xD8"
             . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
             . $this->segment(0xDB, "\x00")
             . $this->segment(0xC4, "\x00")
@@ -494,7 +494,7 @@ final class MetadataReaderTest extends TestCase
             . 'scan-data'
             . "\xFF\xD9";
 
-        $path = $this->writeTempFile($jpeg, 'jpeg');
+        $path         = $this->writeTempFile($jpeg, 'jpeg');
 
         try {
             $metadata = MetadataReader::createDefault()->read($path, true);
@@ -506,7 +506,7 @@ final class MetadataReaderTest extends TestCase
 
         self::assertSame($expectedHash, $metadata->digestSha256);
 
-        $structured = $metadata->structured();
+        $structured   = $metadata->structured();
         self::assertSame($expectedHash, $structured->provenance->file->digestSha256);
     }
 
@@ -520,7 +520,7 @@ final class MetadataReaderTest extends TestCase
         $tiff       = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R5', $makerNote);
         $sofPayload = $this->buildBaselineStartOfFramePayload(8, 256, 256);
 
-        $jpeg = "\xFF\xD8"
+        $jpeg       = "\xFF\xD8"
             . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
             . $this->segment(0xDB, "\x00")
             . $this->segment(0xC4, "\x00")
@@ -529,7 +529,7 @@ final class MetadataReaderTest extends TestCase
             . 'scan-data'
             . "\xFF\xD9";
 
-        $path = $this->writeTempFile($jpeg, 'jpg');
+        $path       = $this->writeTempFile($jpeg, 'jpg');
 
         try {
             $metadata = MetadataReader::createDefault()->read($path);
@@ -553,7 +553,7 @@ final class MetadataReaderTest extends TestCase
         $tiff       = $this->littleEndianTiffWithMakerNote('Nikon Corporation', 'Z 9', $makerNote);
         $sofPayload = $this->buildBaselineStartOfFramePayload(8, 256, 256);
 
-        $jpeg = "\xFF\xD8"
+        $jpeg       = "\xFF\xD8"
             . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
             . $this->segment(0xDB, "\x00")
             . $this->segment(0xC4, "\x00")
@@ -562,7 +562,7 @@ final class MetadataReaderTest extends TestCase
             . 'scan-data-a'
             . "\xFF\xD9";
 
-        $path = $this->writeTempFile($jpeg, 'jpg');
+        $path       = $this->writeTempFile($jpeg, 'jpg');
 
         try {
             $metadata = MetadataReader::createDefault()->read($path, true);
@@ -585,11 +585,11 @@ final class MetadataReaderTest extends TestCase
     {
         $sofPayload = $this->buildBaselineStartOfFramePayload(8, 672, 448);
 
-        $jpeg = "\xFF\xD8"
+        $jpeg       = "\xFF\xD8"
             . $this->segment(0xC0, $sofPayload)
             . "\xFF\xD9";
 
-        $path = $this->writeTempFile($jpeg, 'jpg');
+        $path       = $this->writeTempFile($jpeg, 'jpg');
 
         try {
             $metadata = MetadataReader::createDefault()->read($path);
@@ -599,7 +599,7 @@ final class MetadataReaderTest extends TestCase
 
         self::assertSame(8, $metadata->jpegBitsPerSample);
 
-        $image = $metadata->structured()->content->image;
+        $image      = $metadata->structured()->content->image;
 
         self::assertSame(8, $image->bitsPerSample);
         self::assertSame(448, $image->width);
@@ -613,24 +613,24 @@ final class MetadataReaderTest extends TestCase
     #[Test]
     public function readIsoBmffPopulatesMetadata(): void
     {
-        $makerNote = 'synthetic-sony-maker-note';
-        $tiff      = $this->littleEndianTiffWithMakerNote('Sony Corporation', 'ILCE-1', $makerNote, true);
-        $xmp       = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+        $makerNote      = 'synthetic-sony-maker-note';
+        $tiff           = $this->littleEndianTiffWithMakerNote('Sony Corporation', 'ILCE-1', $makerNote, true);
+        $xmp            = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
             . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:creator="Agent" />'
             . '</rdf:RDF>'
             . '</x:xmpmeta>';
-        $identifier = 'qt-meta-identifier';
+        $identifier     = 'qt-meta-identifier';
 
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $ftyp           = $this->box('ftyp', 'isom' . pack('N', 0));
         // SingleItemTypeReferenceBox is a plain Box, not a FullBox
-        $irefEntry  = $this->box('cdsc', pack('n', 2) . pack('n', 1) . pack('n', 3));
-        $iref       = $this->fullBox('iref', $irefEntry);
-        $meta       = $this->fullBox('meta', $this->box('Exif', pack('N', 0) . $tiff) . $this->box('XMP ', $xmp) . $iref);
-        $moov       = $this->quickTimeMoov($identifier);
-        $isoPayload = $ftyp . $meta . $moov;
+        $irefEntry      = $this->box('cdsc', pack('n', 2) . pack('n', 1) . pack('n', 3));
+        $iref           = $this->fullBox('iref', $irefEntry);
+        $meta           = $this->fullBox('meta', $this->box('Exif', pack('N', 0) . $tiff) . $this->box('XMP ', $xmp) . $iref);
+        $moov           = $this->quickTimeMoov($identifier);
+        $isoPayload     = $ftyp . $meta . $moov;
 
-        $path = $this->writeTempFile($isoPayload);
+        $path           = $this->writeTempFile($isoPayload);
 
         try {
             $metadata = MetadataReader::createDefault()->read($path);
@@ -666,7 +666,7 @@ final class MetadataReaderTest extends TestCase
     #[Test]
     public function deduplicatesXmpPacketsByHash(): void
     {
-        $xmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" /></x:xmpmeta>';
+        $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" /></x:xmpmeta>';
 
         $jpeg = "\xFF\xD8"
             . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
@@ -692,12 +692,12 @@ final class MetadataReaderTest extends TestCase
     #[Test]
     public function readTiffPopulatesMetadata(): void
     {
-        $make     = 'DNG Test Camera';
-        $model    = 'Synthetic DNG 1.0';
-        $dateTime = '2025:06:15 14:30:00';
-        $tiff     = $this->littleEndianTiffWithExifTags($make, $model, $dateTime, 4000, 3000);
+        $make          = 'DNG Test Camera';
+        $model         = 'Synthetic DNG 1.0';
+        $dateTime      = '2025:06:15 14:30:00';
+        $tiff          = $this->littleEndianTiffWithExifTags($make, $model, $dateTime, 4000, 3000);
 
-        $path = $this->writeTempFile($tiff, 'tiff');
+        $path          = $this->writeTempFile($tiff, 'tiff');
 
         try {
             $metadata = MetadataReader::createDefault()->read($path);
@@ -720,11 +720,11 @@ final class MetadataReaderTest extends TestCase
 
         self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
 
-        $makeEntry = $metadata->exifDoc->ifd0->get(ExifTag::MAKE);
+        $makeEntry     = $metadata->exifDoc->ifd0->get(ExifTag::MAKE);
         self::assertNotNull($makeEntry);
         self::assertSame($make, $makeEntry->value);
 
-        $modelEntry = $metadata->exifDoc->ifd0->get(ExifTag::MODEL);
+        $modelEntry    = $metadata->exifDoc->ifd0->get(ExifTag::MODEL);
         self::assertNotNull($modelEntry);
         self::assertSame($model, $modelEntry->value);
 
@@ -732,7 +732,7 @@ final class MetadataReaderTest extends TestCase
         self::assertNotNull($dateTimeEntry);
         self::assertSame($dateTime, $dateTimeEntry->value);
 
-        $structured = $metadata->structured();
+        $structured    = $metadata->structured();
         self::assertSame($make, $structured->hardware->camera->make);
         self::assertSame($model, $structured->hardware->camera->model);
         self::assertSame('tiff', $structured->provenance->file->extension);
@@ -780,7 +780,7 @@ final class MetadataReaderTest extends TestCase
         $path = $this->writeTempFile($tiff, 'tiff');
 
         try {
-            $reader = new MetadataReader(
+            $reader   = new MetadataReader(
                 tiffReader: new TiffExifParser(),
                 appleMerger: new AppleMakerNotesMerger(),
                 xmpParser: new XmpParser(),
@@ -812,7 +812,7 @@ final class MetadataReaderTest extends TestCase
         $dateTime = '2025:06:15 14:30:00';
         $tiff     = $this->littleEndianTiffWithExifTags($make, $model, $dateTime, 4000, 3000);
 
-        $path = $this->writeTempFile($tiff, 'tiff');
+        $path     = $this->writeTempFile($tiff, 'tiff');
 
         try {
             $metadata = MetadataReader::createDefault()->read($path);
@@ -833,8 +833,8 @@ final class MetadataReaderTest extends TestCase
     #[Test]
     public function readJxlPopulatesExifAndXmp(): void
     {
-        $tiff = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R5', 'synthetic-canon-maker-note', true);
-        $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+        $tiff         = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R5', 'synthetic-canon-maker-note', true);
+        $xmp          = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
             . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:title="JXL Test" />'
             . '</rdf:RDF>'
@@ -846,7 +846,7 @@ final class MetadataReaderTest extends TestCase
         $xmlBox       = $this->box('xml ', $xmp);
         $jxlPayload   = $jxlSignature . $ftyp . $exifBox . $xmlBox;
 
-        $path = $this->writeTempFile($jxlPayload, 'jxl');
+        $path         = $this->writeTempFile($jxlPayload, 'jxl');
 
         try {
             $metadata = MetadataReader::createDefault()->read($path);
@@ -881,7 +881,7 @@ final class MetadataReaderTest extends TestCase
         $ftyp         = $this->box('ftyp', 'jxl ' . pack('N', 0));
         $jxlPayload   = $jxlSignature . $ftyp . $this->box('jxlc', 'codestream-data');
 
-        $path = $this->writeTempFile($jxlPayload, 'jxl');
+        $path         = $this->writeTempFile($jxlPayload, 'jxl');
 
         try {
             $metadata = MetadataReader::createDefault()->read($path);
@@ -904,7 +904,7 @@ final class MetadataReaderTest extends TestCase
     #[Test]
     public function readJxlWithOnlyXmpPopulatesXmp(): void
     {
-        $xmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+        $xmp          = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
             . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:creator="Agent" />'
             . '</rdf:RDF>'
@@ -914,7 +914,7 @@ final class MetadataReaderTest extends TestCase
         $ftyp         = $this->box('ftyp', 'jxl ' . pack('N', 0));
         $jxlPayload   = $jxlSignature . $ftyp . $this->box('xml ', $xmp);
 
-        $path = $this->writeTempFile($jxlPayload, 'jxl');
+        $path         = $this->writeTempFile($jxlPayload, 'jxl');
 
         try {
             $metadata = MetadataReader::createDefault()->read($path);
@@ -1123,7 +1123,7 @@ final class MetadataReaderTest extends TestCase
                 self::fail('Unable to rename temporary file');
             }
 
-            $path = $target;
+            $path   = $target;
         }
 
         return $path;
@@ -1134,30 +1134,30 @@ final class MetadataReaderTest extends TestCase
      */
     private function littleEndianTiffWithMakerNote(string $make, string $model, string $makerNote, bool $includeImageDimensions = false): string
     {
-        $makeData  = $make . "\0";
-        $modelData = $model . "\0";
+        $makeData         = $make . "\0";
+        $modelData        = $model . "\0";
 
         // Pad values to even length for TIFF 6.0 word-alignment
-        $makePad  = strlen($makeData) % 2 !== 0 ? "\0" : '';
-        $modelPad = strlen($modelData) % 2 !== 0 ? "\0" : '';
-        $notePad  = strlen($makerNote) % 2 !== 0 ? "\0" : '';
+        $makePad          = strlen($makeData) % 2 !== 0 ? "\0" : '';
+        $modelPad         = strlen($modelData) % 2 !== 0 ? "\0" : '';
+        $notePad          = strlen($makerNote) % 2 !== 0 ? "\0" : '';
 
-        $ifd0Offset = 8;
-        $ifd0Count  = $includeImageDimensions ? 5 : 3;
-        $ifd0Size   = 2 + ($ifd0Count * 12) + 4;
+        $ifd0Offset       = 8;
+        $ifd0Count        = $includeImageDimensions ? 5 : 3;
+        $ifd0Size         = 2 + ($ifd0Count * 12) + 4;
 
-        $currentOffset = $ifd0Offset + $ifd0Size;
+        $currentOffset    = $ifd0Offset + $ifd0Size;
 
-        $makeOffset = $currentOffset;
+        $makeOffset       = $currentOffset;
         $currentOffset += strlen($makeData) + strlen($makePad);
 
-        $modelOffset = $currentOffset;
+        $modelOffset      = $currentOffset;
         $currentOffset += strlen($modelData) + strlen($modelPad);
 
-        $exifIfdOffset = $currentOffset;
-        $exifIfdSize   = 2 + 12 + 4;
+        $exifIfdOffset    = $currentOffset;
+        $exifIfdSize      = 2 + 12 + 4;
 
-        $makerNoteOffset = $exifIfdOffset + $exifIfdSize;
+        $makerNoteOffset  = $exifIfdOffset + $exifIfdSize;
 
         $dimensionEntries = $includeImageDimensions
             ? pack('v', ExifTag::IMAGE_WIDTH)
@@ -1170,7 +1170,7 @@ final class MetadataReaderTest extends TestCase
                 . pack('v', 100) . pack('v', 0)
             : '';
 
-        $ifd0 = pack('v', $ifd0Count)
+        $ifd0             = pack('v', $ifd0Count)
             . $dimensionEntries
             . pack('v', ExifTag::MAKE)
             . pack('v', 2)
@@ -1186,7 +1186,7 @@ final class MetadataReaderTest extends TestCase
             . pack('V', $exifIfdOffset)
             . pack('V', 0);
 
-        $exifIfd = pack('v', 1)
+        $exifIfd          = pack('v', 1)
             . pack('v', ExifTag::MAKER_NOTE)
             . pack('v', 7)
             . pack('V', strlen($makerNote))
@@ -1208,31 +1208,31 @@ final class MetadataReaderTest extends TestCase
      */
     private function littleEndianTiffWithExifTags(string $make, string $model, string $dateTime, int $width, int $height): string
     {
-        $makeData     = $make . "\0";
-        $modelData    = $model . "\0";
-        $dateTimeData = $dateTime . "\0";
+        $makeData       = $make . "\0";
+        $modelData      = $model . "\0";
+        $dateTimeData   = $dateTime . "\0";
 
         // Pad values to even length for TIFF 6.0 word-alignment
-        $makePad     = strlen($makeData) % 2 !== 0 ? "\0" : '';
-        $modelPad    = strlen($modelData) % 2 !== 0 ? "\0" : '';
-        $dateTimePad = strlen($dateTimeData) % 2 !== 0 ? "\0" : '';
+        $makePad        = strlen($makeData) % 2 !== 0 ? "\0" : '';
+        $modelPad       = strlen($modelData) % 2 !== 0 ? "\0" : '';
+        $dateTimePad    = strlen($dateTimeData) % 2 !== 0 ? "\0" : '';
 
-        $ifd0Offset = 8;
-        $ifd0Count  = 5;
-        $ifd0Size   = 2 + ($ifd0Count * 12) + 4;
+        $ifd0Offset     = 8;
+        $ifd0Count      = 5;
+        $ifd0Size       = 2 + ($ifd0Count * 12) + 4;
 
-        $currentOffset = $ifd0Offset + $ifd0Size;
+        $currentOffset  = $ifd0Offset + $ifd0Size;
 
-        $makeOffset = $currentOffset;
+        $makeOffset     = $currentOffset;
         $currentOffset += strlen($makeData) + strlen($makePad);
 
-        $modelOffset = $currentOffset;
+        $modelOffset    = $currentOffset;
         $currentOffset += strlen($modelData) + strlen($modelPad);
 
         $dateTimeOffset = $currentOffset;
 
         // Tags must appear in ascending order per TIFF 6.0 section 2
-        $ifd0 = pack('v', $ifd0Count)
+        $ifd0           = pack('v', $ifd0Count)
             . pack('v', ExifTag::IMAGE_WIDTH)       // 0x0100
             . pack('v', 3)
             . pack('V', 1)
@@ -1282,7 +1282,7 @@ final class MetadataReaderTest extends TestCase
             [3, 0x11, 1],
         ];
 
-        $payload = pack('CnnC', $precision, $height, $width, count($components));
+        $payload    = pack('CnnC', $precision, $height, $width, count($components));
 
         foreach ($components as [$id, $sampling, $table]) {
             $payload .= pack('CCC', $id, $sampling, $table);
@@ -1315,23 +1315,23 @@ final class MetadataReaderTest extends TestCase
      */
     private function quickTimeMoov(string $value): string
     {
-        $keysEntry = pack('N', 9 + strlen('com.apple.quicktime.content.identifier'))
+        $keysEntry   = pack('N', 9 + strlen('com.apple.quicktime.content.identifier'))
             . 'mdta'
             . 'com.apple.quicktime.content.identifier'
             . "\0";
-        $keys = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keysEntry);
+        $keys        = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keysEntry);
 
-        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . $value);
-        $ilstEntry = $this->box(pack('N', 1), $dataBox);
-        $ilst      = $this->box('ilst', $ilstEntry);
+        $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . $value);
+        $ilstEntry   = $this->box(pack('N', 1), $dataBox);
+        $ilst        = $this->box('ilst', $ilstEntry);
 
         $hdlr        = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
         $metaPayload = "\0\0\0\0" . $hdlr . $keys . $ilst;
         $meta        = $this->box('meta', $metaPayload);
         $udta        = $this->box('udta', $meta);
 
-        $mvhd = $this->fullBox('mvhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 80) . pack('N', 1));
-        $trak = $this->minimalTrak();
+        $mvhd        = $this->fullBox('mvhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 80) . pack('N', 1));
+        $trak        = $this->minimalTrak();
 
         return $this->box('moov', $mvhd . $trak . $udta);
     }
@@ -1361,7 +1361,7 @@ final class MetadataReaderTest extends TestCase
     {
         $compressor = str_pad('', 31, "\0");
 
-        $payload = str_repeat("\0", 6)
+        $payload    = str_repeat("\0", 6)
             . pack('n', 1)
             . str_repeat("\0", 16)
             . pack('n', $width)

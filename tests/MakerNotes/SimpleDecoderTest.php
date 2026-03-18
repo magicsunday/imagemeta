@@ -39,11 +39,11 @@ final class SimpleDecoderTest extends TestCase
     #[Test]
     public function decodeComputesRecordFromPayloadUsingVendorName(): void
     {
-        $raw = "test\0payload";
+        $raw     = "test\0payload";
 
         $decoder = new SimpleDecoder('Acme');
 
-        $record = $decoder->decode($raw, 'Acme Camera Co', 'Model 1');
+        $record  = $decoder->decode($raw, 'Acme Camera Co', 'Model 1');
 
         self::assertSame('Acme', $record->vendor);
         self::assertSame(strlen($raw), $record->length);
@@ -76,7 +76,7 @@ final class SimpleDecoderTest extends TestCase
     #[Test]
     public function decodeReturnsCanonVendorWithPayloadMetadata(): void
     {
-        $raw = "Canon\x00MakerNote\x00payload\x01\x02\x03";
+        $raw     = "Canon\x00MakerNote\x00payload\x01\x02\x03";
 
         $decoder = new SimpleDecoder('Canon');
         $record  = $decoder->decode($raw, 'Canon', 'EOS R5');
@@ -95,7 +95,7 @@ final class SimpleDecoderTest extends TestCase
     #[Test]
     public function decodeUsesFixedVendorNameRegardlessOfMakeString(): void
     {
-        $raw = "\x00\x01\x02\x03\x04\x05\x06\x07";
+        $raw     = "\x00\x01\x02\x03\x04\x05\x06\x07";
 
         $decoder = new SimpleDecoder('Canon');
         $record  = $decoder->decode($raw, 'Canon Inc.', null);
@@ -112,7 +112,7 @@ final class SimpleDecoderTest extends TestCase
     #[Test]
     public function decodeReturnsNikonVendorWithPayloadMetadata(): void
     {
-        $raw = "Nikon\x00\x02\x10\x00\x00MakerNote\x00payload";
+        $raw     = "Nikon\x00\x02\x10\x00\x00MakerNote\x00payload";
 
         $decoder = new SimpleDecoder('Nikon');
         $record  = $decoder->decode($raw, 'Nikon Corporation', 'D850');
@@ -131,7 +131,7 @@ final class SimpleDecoderTest extends TestCase
     #[Test]
     public function decodeReturnsSonyVendorWithPayloadMetadata(): void
     {
-        $raw = "SONY DSC \x00\x01\x02MakerNote\x00payload";
+        $raw     = "SONY DSC \x00\x01\x02MakerNote\x00payload";
 
         $decoder = new SimpleDecoder('Sony');
         $record  = $decoder->decode($raw, 'Sony Corporation', 'ILCE-7RM5');
@@ -150,7 +150,7 @@ final class SimpleDecoderTest extends TestCase
     #[Test]
     public function decodeHandlesMinimalPayload(): void
     {
-        $raw = "\x00";
+        $raw     = "\x00";
 
         $decoder = new SimpleDecoder('Canon');
         $record  = $decoder->decode($raw, 'Canon', null);

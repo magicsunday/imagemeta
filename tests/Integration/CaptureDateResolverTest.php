@@ -148,7 +148,7 @@ final class CaptureDateResolverTest extends TestCase
     {
         $metadata = $this->metadataWithXmpCreateDate('2024-03-30T12:34:56Z');
 
-        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
+        $result   = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-03-30T12:34:56+00:00', $result->format(DATE_ATOM));
@@ -178,7 +178,7 @@ final class CaptureDateResolverTest extends TestCase
             '2024-03-30T12:34:56+01:00',
         ]);
 
-        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
+        $result   = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-03-30T12:34:56+00:00', $result->format(DATE_ATOM));
@@ -191,7 +191,7 @@ final class CaptureDateResolverTest extends TestCase
     #[Test]
     public function prefersExifCaptureDateWhenAvailable(): void
     {
-        $exifDoc = new ParsedExif(
+        $exifDoc  = new ParsedExif(
             new Ifd([]),
             new Ifd([
                 ExifTag::DATETIME_DIGITIZED => new IfdEntry(
@@ -220,7 +220,7 @@ final class CaptureDateResolverTest extends TestCase
             structuredResolver: $this->createStructuredResolver(),
         );
 
-        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
+        $result   = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-04-05T01:02:03+01:00', $result->format(DATE_ATOM));
@@ -235,7 +235,7 @@ final class CaptureDateResolverTest extends TestCase
     {
         $metadata = $this->metadataWithXmpCreateDate('2024-01-15T10:30:00');
 
-        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
+        $result   = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-01-15', $result->format('Y-m-d'));
@@ -251,7 +251,7 @@ final class CaptureDateResolverTest extends TestCase
     {
         $metadata = $this->metadataWithXmpCreateDate('2024-01-15T10:30:00.123');
 
-        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
+        $result   = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-01-15', $result->format('Y-m-d'));
@@ -267,7 +267,7 @@ final class CaptureDateResolverTest extends TestCase
     {
         $metadata = $this->metadataWithXmpCreateDate('2024-01-15T10:30:00+05');
 
-        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
+        $result   = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-01-15T10:30:00+05:00', $result->format(DATE_ATOM));
@@ -286,7 +286,7 @@ final class CaptureDateResolverTest extends TestCase
             new ExifRational(56, 1),
         ]);
 
-        $gpsIfd = new Ifd([
+        $gpsIfd    = new Ifd([
             ExifTag::GPS_DATE_STAMP   => new IfdEntry(ExifTag::GPS_DATE_STAMP, 2, 11, '2024:05:01'),
             ExifTag::GPS_TIME_STAMP   => new IfdEntry(ExifTag::GPS_TIME_STAMP, 5, 3, $timeStamp),
             ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
@@ -313,7 +313,7 @@ final class CaptureDateResolverTest extends TestCase
             ),
         ]);
 
-        $metadata = new Metadata(
+        $metadata  = new Metadata(
             exifBlobs: [],
             quickTime: null,
             exifDoc: new ParsedExif(new Ifd([]), null, $gpsIfd, null, null),
@@ -321,7 +321,7 @@ final class CaptureDateResolverTest extends TestCase
             structuredResolver: $this->createStructuredResolver(),
         );
 
-        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
+        $result    = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-05-01T12:34:56+00:00', $result->format(DATE_ATOM));

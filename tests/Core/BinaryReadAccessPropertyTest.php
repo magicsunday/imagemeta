@@ -57,8 +57,8 @@ final class BinaryReadAccessPropertyTest extends TestCase
             $length  = random_int(64, 256);
             $payload = random_bytes($length);
 
-            $buffer = new MemoryBuffer($payload);
-            $stream = new Stream($this->createTempStream($payload), $length);
+            $buffer  = new MemoryBuffer($payload);
+            $stream  = new Stream($this->createTempStream($payload), $length);
 
             self::assertSame(
                 $this->consumeReader($buffer),
@@ -75,15 +75,15 @@ final class BinaryReadAccessPropertyTest extends TestCase
     public function streamWindowMatchesBufferViewForRandomSlices(): void
     {
         for ($iteration = 0; $iteration < 25; ++$iteration) {
-            $length  = random_int(128, 256);
-            $payload = random_bytes($length);
+            $length       = random_int(128, 256);
+            $payload      = random_bytes($length);
 
-            $stream = new Stream($this->createTempStream($payload), $length);
+            $stream       = new Stream($this->createTempStream($payload), $length);
 
-            $maxOffset = $length - 64;
-            $offset    = random_int(0, $maxOffset);
-            $minWindow = 64;
-            $maxWindow = $length - $offset;
+            $maxOffset    = $length - 64;
+            $offset       = random_int(0, $maxOffset);
+            $minWindow    = 64;
+            $maxWindow    = $length - $offset;
 
             if ($maxWindow < $minWindow) {
                 $maxWindow = $minWindow;
@@ -91,8 +91,8 @@ final class BinaryReadAccessPropertyTest extends TestCase
 
             $windowLength = $minWindow === $maxWindow ? $minWindow : random_int($minWindow, $maxWindow);
 
-            $window = new StreamWindow($stream, $offset, $windowLength);
-            $buffer = new MemoryBuffer(substr($payload, $offset, $windowLength));
+            $window       = new StreamWindow($stream, $offset, $windowLength);
+            $buffer       = new MemoryBuffer(substr($payload, $offset, $windowLength));
 
             self::assertSame(
                 $this->consumeReader($buffer),

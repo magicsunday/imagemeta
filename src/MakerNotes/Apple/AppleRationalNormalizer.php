@@ -65,7 +65,7 @@ final readonly class AppleRationalNormalizer
                     return null;
                 }
 
-                $denominatorFloat = (float) $denominator;
+                $denominatorFloat                = (float) $denominator;
 
                 if ($denominatorFloat === 0.0) {
                     return null;
@@ -136,7 +136,7 @@ final readonly class AppleRationalNormalizer
             return null;
         }
 
-        $count = count($value);
+        $count       = count($value);
 
         if ($count >= 2) {
             /** @var NativePlistValue $component */

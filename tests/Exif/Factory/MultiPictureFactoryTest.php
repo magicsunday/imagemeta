@@ -44,7 +44,7 @@ final class MultiPictureFactoryTest extends TestCase
     #[Test]
     public function createsFromMpfDocument(): void
     {
-        $entries = [
+        $entries      = [
             new MpfEntry(
                 attributes: 1,
                 imageSize: 1024,
@@ -71,12 +71,12 @@ final class MultiPictureFactoryTest extends TestCase
             ),
         ];
 
-        $attributes = new MpfAttributes(
+        $attributes   = new MpfAttributes(
             individualImageNumber: 1,
             additionalTags: [],
         );
 
-        $mpfDocument = new MpfDocument(
+        $mpfDocument  = new MpfDocument(
             version: '0100',
             imageCount: 2,
             entries: $entries,
@@ -85,7 +85,7 @@ final class MultiPictureFactoryTest extends TestCase
             totalFrames: 2,
         );
 
-        $metadata = new Metadata(
+        $metadata     = new Metadata(
             exifBlobs: [],
             quickTime: null,
             mpfDocument: $mpfDocument,
@@ -102,7 +102,7 @@ final class MultiPictureFactoryTest extends TestCase
         self::assertSame(1, $multiPicture->individualImageNumber);
         self::assertSame('uid-1,uid-2', $multiPicture->imageUidList);
 
-        $first = $multiPicture->entries[0];
+        $first        = $multiPicture->entries[0];
         self::assertSame(MpImageType::Undefined, $first->imageType);
         self::assertFalse($first->isDependentParent);
     }
@@ -114,14 +114,14 @@ final class MultiPictureFactoryTest extends TestCase
     #[Test]
     public function handlesZeroImageCountDocument(): void
     {
-        $mpfDocument = new MpfDocument(
+        $mpfDocument  = new MpfDocument(
             version: '0100',
             imageCount: 0,
             entries: [],
             attributes: null,
         );
 
-        $metadata = new Metadata(
+        $metadata     = new Metadata(
             exifBlobs: [],
             quickTime: null,
             mpfDocument: $mpfDocument,
@@ -144,7 +144,7 @@ final class MultiPictureFactoryTest extends TestCase
     #[Test]
     public function handlesEntryWithZeroImageSize(): void
     {
-        $entries = [
+        $entries      = [
             new MpfEntry(
                 attributes: 0,
                 imageSize: 0,
@@ -159,14 +159,14 @@ final class MultiPictureFactoryTest extends TestCase
             ),
         ];
 
-        $mpfDocument = new MpfDocument(
+        $mpfDocument  = new MpfDocument(
             version: '0100',
             imageCount: 1,
             entries: $entries,
             attributes: null,
         );
 
-        $metadata = new Metadata(
+        $metadata     = new Metadata(
             exifBlobs: [],
             quickTime: null,
             mpfDocument: $mpfDocument,
@@ -187,7 +187,7 @@ final class MultiPictureFactoryTest extends TestCase
     #[Test]
     public function createsWithNullMpfDocument(): void
     {
-        $metadata = new Metadata(
+        $metadata     = new Metadata(
             exifBlobs: [],
             quickTime: null,
         );

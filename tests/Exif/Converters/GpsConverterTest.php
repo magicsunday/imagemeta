@@ -66,16 +66,16 @@ final class GpsConverterTest extends TestCase
     {
         parent::setUp();
 
-        $numericConverter  = new NumericConverter();
-        $rationalConverter = new RationalConverter($numericConverter);
-        $stringConverter   = new StringConverter();
+        $numericConverter    = new NumericConverter();
+        $rationalConverter   = new RationalConverter($numericConverter);
+        $stringConverter     = new StringConverter();
 
         $coordinateConverter = new GpsCoordinateConverter($rationalConverter, $numericConverter);
         $this->unitConverter = new GpsUnitConverter($rationalConverter);
         $directionConverter  = new GpsDirectionConverter($rationalConverter);
         $timestampConverter  = new GpsTimestampConverter($rationalConverter, $stringConverter);
 
-        $this->converter = new GpsConverter(
+        $this->converter     = new GpsConverter(
             $coordinateConverter,
             $this->unitConverter,
             $directionConverter,
@@ -396,7 +396,7 @@ final class GpsConverterTest extends TestCase
             ExifTag::GPS_DEST_LONGITUDE     => new IfdEntry(ExifTag::GPS_DEST_LONGITUDE, 10, 3, [[180, 1], [0, 1], [0, 1]]),
         ];
 
-        $result = $this->converter->fromIfd(new Ifd($entries));
+        $result  = $this->converter->fromIfd(new Ifd($entries));
 
         self::assertSame(90.0, $result['lat']);
         self::assertSame(-180.0, $result['lon']);
@@ -542,7 +542,7 @@ final class GpsConverterTest extends TestCase
             $valueTag => new IfdEntry($valueTag, 10, 3, $dms),
         ];
 
-        $result = $this->converter->fromIfd(new Ifd($entries));
+        $result  = $this->converter->fromIfd(new Ifd($entries));
 
         self::assertEqualsWithDelta($expected, $result[$coordKey], 0.000001);
     }
@@ -580,7 +580,7 @@ final class GpsConverterTest extends TestCase
             $valueTag => new IfdEntry($valueTag, 5, 1, $value),
         ];
 
-        $result = $this->converter->fromIfd(new Ifd($entries));
+        $result  = $this->converter->fromIfd(new Ifd($entries));
 
         self::assertEqualsWithDelta($expected, $result[$bearingKey], 0.000001);
     }
@@ -624,7 +624,7 @@ final class GpsConverterTest extends TestCase
     #[Test]
     public function acceptsGpsTimeStampWithFractionalSeconds(): void
     {
-        $result = $this->converter->fromIfd(
+        $result    = $this->converter->fromIfd(
             $this->buildIfdWithDateAndTime('2025:03:01', [[10, 1], [20, 1], [12345, 1000]]),
         );
         $timestamp = $result['timestamp'];
@@ -759,7 +759,7 @@ final class GpsConverterTest extends TestCase
             ),
         ];
 
-        $result = $this->converter->fromIfd(new Ifd($entries));
+        $result  = $this->converter->fromIfd(new Ifd($entries));
 
         self::assertSame($ref, $result['alt_ref']);
         self::assertEqualsWithDelta($expectedAlt, $result['alt'], 0.000001);
@@ -791,7 +791,7 @@ final class GpsConverterTest extends TestCase
             ),
         ];
 
-        $result = $this->converter->fromIfd(new Ifd($entries));
+        $result  = $this->converter->fromIfd(new Ifd($entries));
 
         self::assertSame(0, $result['alt_ref']);
         self::assertEqualsWithDelta(250.0, $result['alt'], 0.000001);
@@ -808,7 +808,7 @@ final class GpsConverterTest extends TestCase
             ExifTag::GPS_DIFFERENTIAL => new IfdEntry(ExifTag::GPS_DIFFERENTIAL, 3, 1, $input),
         ];
 
-        $result = $this->converter->fromIfd(new Ifd($entries));
+        $result  = $this->converter->fromIfd(new Ifd($entries));
 
         self::assertSame($expected, $result['differential']);
     }
@@ -935,7 +935,7 @@ final class GpsConverterTest extends TestCase
             ),
         ];
 
-        $result = $this->converter->fromIfd(new Ifd($entries));
+        $result  = $this->converter->fromIfd(new Ifd($entries));
 
         self::assertEqualsWithDelta(1.5, $result['h_positioning_error'], 0.000001);
     }

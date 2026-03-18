@@ -52,7 +52,7 @@ final readonly class DngCalibrationValidator
      *
      * @var array<int, 'colorTimesThree'|'colorSquared'>
      */
-    private const array DNG_MATRIX_COUNT_RULES = [
+    private const array DNG_MATRIX_COUNT_RULES          = [
         DngTag::COLOR_MATRIX_1       => 'colorTimesThree',
         DngTag::COLOR_MATRIX_2       => 'colorTimesThree',
         DngTag::COLOR_MATRIX_3       => 'colorTimesThree',
@@ -86,7 +86,7 @@ final readonly class DngCalibrationValidator
      *
      * @var array<int, int>
      */
-    private const array DNG_ILLUMINANT_DATA_DEPS = [
+    private const array DNG_ILLUMINANT_DATA_DEPS        = [
         DngTag::CALIBRATION_ILLUMINANT_1 => DngTag::ILLUMINANT_DATA_1,
         DngTag::CALIBRATION_ILLUMINANT_2 => DngTag::ILLUMINANT_DATA_2,
         DngTag::CALIBRATION_ILLUMINANT_3 => DngTag::ILLUMINANT_DATA_3,
@@ -101,7 +101,7 @@ final readonly class DngCalibrationValidator
      *
      * @var list<array{int, int, int}>
      */
-    private const array DNG_TRIPLE_ALL_OR_NONE_SETS = [
+    private const array DNG_TRIPLE_ALL_OR_NONE_SETS     = [
         [DngTag::FORWARD_MATRIX_1, DngTag::FORWARD_MATRIX_2, DngTag::FORWARD_MATRIX_3],
         [DngTag::REDUCTION_MATRIX_1, DngTag::REDUCTION_MATRIX_2, DngTag::REDUCTION_MATRIX_3],
     ];
@@ -115,7 +115,7 @@ final readonly class DngCalibrationValidator
      */
     public function validateDngMatrixTags(Ifd $ifd): void
     {
-        $cfaEntry = $ifd->get(DngTag::CFA_PLANE_COLOR);
+        $cfaEntry    = $ifd->get(DngTag::CFA_PLANE_COLOR);
 
         if (!$cfaEntry instanceof IfdEntry) {
             return;
@@ -132,7 +132,7 @@ final readonly class DngCalibrationValidator
         }
 
         foreach (self::DNG_MATRIX_COUNT_RULES as $tag => $formula) {
-            $entry = $ifd->get($tag);
+            $entry    = $ifd->get($tag);
 
             if (!$entry instanceof IfdEntry) {
                 continue;
@@ -347,7 +347,7 @@ final readonly class DngCalibrationValidator
         $cfaEntry    = $ifd->get(DngTag::CFA_PLANE_COLOR);
         $colorPlanes = $cfaEntry instanceof IfdEntry ? $cfaEntry->count : null;
 
-        $neutral = $ifd->get(DngTag::AS_SHOT_NEUTRAL);
+        $neutral     = $ifd->get(DngTag::AS_SHOT_NEUTRAL);
 
         if ($neutral instanceof IfdEntry) {
             $validType = $neutral->type === TiffConst::TYPE_SHORT
@@ -366,7 +366,7 @@ final readonly class DngCalibrationValidator
             }
         }
 
-        $whiteXY = $ifd->get(DngTag::AS_SHOT_WHITE_XY);
+        $whiteXY     = $ifd->get(DngTag::AS_SHOT_WHITE_XY);
 
         if (($whiteXY instanceof IfdEntry) && ($whiteXY->type !== TiffConst::TYPE_RATIONAL || $whiteXY->count !== 2)) {
             throw new ParseError(
@@ -388,7 +388,7 @@ final readonly class DngCalibrationValidator
      */
     public function validateDngAnalogBalance(Ifd $ifd): void
     {
-        $entry = $ifd->get(DngTag::ANALOG_BALANCE);
+        $entry       = $ifd->get(DngTag::ANALOG_BALANCE);
 
         if (!$entry instanceof IfdEntry) {
             return;
@@ -509,7 +509,7 @@ final readonly class DngCalibrationValidator
     public function validateDngIccProfilePairs(Ifd $ifd): void
     {
         /** @var list<array{iccTag: int, iccName: string, matrixTag: int, matrixName: string}> $pairs */
-        $pairs = [
+        $pairs       = [
             [
                 'iccTag'     => DngTag::AS_SHOT_ICC_PROFILE,
                 'iccName'    => 'AsShotICCProfile',

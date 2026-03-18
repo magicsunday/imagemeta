@@ -35,30 +35,30 @@ final readonly class DjiDecoder implements MakerNotesDecoderInterface
 {
     private const int TAG_MAKER_NOTE_VERSION = 0x0001;
 
-    private const int TAG_SPEED_X = 0x0003;
+    private const int TAG_SPEED_X            = 0x0003;
 
-    private const int TAG_SPEED_Y = 0x0004;
+    private const int TAG_SPEED_Y            = 0x0004;
 
-    private const int TAG_SPEED_Z = 0x0005;
+    private const int TAG_SPEED_Z            = 0x0005;
 
-    private const int TAG_PITCH = 0x0006;
+    private const int TAG_PITCH              = 0x0006;
 
-    private const int TAG_YAW = 0x0007;
+    private const int TAG_YAW                = 0x0007;
 
-    private const int TAG_ROLL = 0x0008;
+    private const int TAG_ROLL               = 0x0008;
 
-    private const int TAG_CAMERA_PITCH = 0x0009;
+    private const int TAG_CAMERA_PITCH       = 0x0009;
 
-    private const int TAG_CAMERA_YAW = 0x000A;
+    private const int TAG_CAMERA_YAW         = 0x000A;
 
-    private const int TAG_CAMERA_ROLL = 0x000B;
+    private const int TAG_CAMERA_ROLL        = 0x000B;
 
-    private const int TAG_COMPASS = 0x000E;
+    private const int TAG_COMPASS            = 0x000E;
 
     /**
      * Maximum known DJI tag ID below the vendor-specific calibration range.
      */
-    private const int MAX_KNOWN_TAG = 0x000E;
+    private const int MAX_KNOWN_TAG          = 0x000E;
 
     /**
      * Creates a metadata value object describing the DJI maker note payload.
@@ -99,8 +99,8 @@ final readonly class DjiDecoder implements MakerNotesDecoderInterface
         }
 
         try {
-            $entryCount = $this->readU16($raw, 0, $endian, 'DJI IFD entry count');
-            $entriesEnd = 2 + ($entryCount * 12);
+            $entryCount  = $this->readU16($raw, 0, $endian, 'DJI IFD entry count');
+            $entriesEnd  = 2 + ($entryCount * 12);
 
             if (($entryCount < 1) || ($entriesEnd > $length)) {
                 return null;
@@ -128,7 +128,7 @@ final readonly class DjiDecoder implements MakerNotesDecoderInterface
                     continue;
                 }
 
-                $valueBytes = $this->resolveInlineValue($raw, $entryOffset + 8, $type, $count);
+                $valueBytes  = $this->resolveInlineValue($raw, $entryOffset + 8, $type, $count);
 
                 if ($valueBytes === null) {
                     continue;
@@ -186,8 +186,8 @@ final readonly class DjiDecoder implements MakerNotesDecoderInterface
      */
     private function detectEndian(string $raw, int $length): ?Endian
     {
-        $le = Unpack::int('v', substr($raw, 0, 2), 'DJI endian LE');
-        $be = Unpack::int('n', substr($raw, 0, 2), 'DJI endian BE');
+        $le      = Unpack::int('v', substr($raw, 0, 2), 'DJI endian LE');
+        $be      = Unpack::int('n', substr($raw, 0, 2), 'DJI endian BE');
 
         $leValid = ($le >= 1) && ($le <= 100) && ((2 + ($le * 12)) <= $length);
         $beValid = ($be >= 1) && ($be <= 100) && ((2 + ($be * 12)) <= $length);

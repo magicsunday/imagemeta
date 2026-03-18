@@ -74,13 +74,13 @@ final readonly class XmpDocument
         }
 
         /** @var array<string, string|array<int, string>|XmpLanguageAlternative> $data */
-        $data = [];
+        $data              = [];
         /** @var array<string, string> $namespacePrefixes */
         $namespacePrefixes = [];
         /** @var array<string, XmpStructuredValue> $structuredData */
-        $structuredData = [];
+        $structuredData    = [];
         /** @var array<string, XmpContainer> $containerKinds */
-        $containerKinds = [];
+        $containerKinds    = [];
 
         foreach ($documents as $document) {
             foreach ($document->data as $key => $value) {
@@ -365,7 +365,7 @@ final readonly class XmpDocument
         }
 
         if ($value instanceof XmpLanguageAlternative) {
-            $text = $value->defaultValue();
+            $text    = $value->defaultValue();
 
             if ($text === null) {
                 return null;

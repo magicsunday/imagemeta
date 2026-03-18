@@ -73,7 +73,7 @@ final class TiffExifParserPredictorTest extends TestCase
     #[Test]
     public function acceptsPredictorTwoWithLzwCompression(): void
     {
-        $parsed = (new TiffExifParser())->parseFromBlob($this->buildThreeIfdBlobWithLzwPredictor());
+        $parsed         = (new TiffExifParser())->parseFromBlob($this->buildThreeIfdBlobWithLzwPredictor());
 
         $subsequentIfds = $parsed->subsequentIfds();
 
@@ -182,7 +182,7 @@ final class TiffExifParserPredictorTest extends TestCase
         array $predictorValues,
         ?int $compression = null,
     ): string {
-        $entries = [
+        $entries   = [
             ExifTag::IMAGE_WIDTH  => $this->shortEntry(ExifTag::IMAGE_WIDTH, 64),
             ExifTag::IMAGE_LENGTH => $this->shortEntry(ExifTag::IMAGE_LENGTH, 64),
             TiffTag::PREDICTOR    => $this->numericEntry(TiffTag::PREDICTOR, $predictorType, $predictorCount, $predictorValues),
@@ -228,11 +228,11 @@ final class TiffExifParserPredictorTest extends TestCase
         ksort($ifd1Entries);
         ksort($ifd2Entries);
 
-        $ifdOffset = 8;
-        $ifd0Size  = $this->ifdSize($ifd0Entries);
-        $ifd1Off   = $ifdOffset + $ifd0Size;
-        $ifd1Size  = $this->ifdSize($ifd1Entries);
-        $ifd2Off   = $ifd1Off + $ifd1Size;
+        $ifdOffset   = 8;
+        $ifd0Size    = $this->ifdSize($ifd0Entries);
+        $ifd1Off     = $ifdOffset + $ifd0Size;
+        $ifd1Size    = $this->ifdSize($ifd1Entries);
+        $ifd2Off     = $ifd1Off + $ifd1Size;
 
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)

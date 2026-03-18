@@ -58,16 +58,16 @@ final readonly class ConverterFactory
     public function __construct()
     {
         // Create converters without dependencies first
-        $this->stringConverter      = new StringConverter();
-        $this->dateTimeConverter    = new DateTimeConverter();
-        $this->photoCalculator      = new PhotoCalculator();
-        $this->subjectAreaConverter = new SubjectAreaConverter();
-        $this->flashConverter       = new FlashConverter();
+        $this->stringConverter       = new StringConverter();
+        $this->dateTimeConverter     = new DateTimeConverter();
+        $this->photoCalculator       = new PhotoCalculator();
+        $this->subjectAreaConverter  = new SubjectAreaConverter();
+        $this->flashConverter        = new FlashConverter();
 
         // Break circular dependency via lazy closure: NumericConverter receives
         // a callback that delegates to RationalConverter once the graph is complete.
-        $rationalRef            = null;
-        $this->numericConverter = new NumericConverter(
+        $rationalRef                 = null;
+        $this->numericConverter      = new NumericConverter(
             static function (
                 int|float|string|array|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
             ) use (&$rationalRef): ?float {
@@ -75,16 +75,16 @@ final readonly class ConverterFactory
                 return $rationalRef->toFloat($value);
             },
         );
-        $this->rationalConverter = new RationalConverter($this->numericConverter);
-        $rationalRef             = $this->rationalConverter;
+        $this->rationalConverter     = new RationalConverter($this->numericConverter);
+        $rationalRef                 = $this->rationalConverter;
 
         // Create converters that depend on RationalConverter
-        $this->apexConverter   = new ApexConverter($this->rationalConverter);
-        $this->enumConverter   = new EnumConverter($this->rationalConverter);
-        $this->matrixConverter = new MatrixConverter($this->rationalConverter);
+        $this->apexConverter         = new ApexConverter($this->rationalConverter);
+        $this->enumConverter         = new EnumConverter($this->rationalConverter);
+        $this->matrixConverter       = new MatrixConverter($this->rationalConverter);
 
         // Create ComponentsConverter (depends on NumericConverter)
-        $this->componentsConverter = new ComponentsConverter($this->numericConverter);
+        $this->componentsConverter   = new ComponentsConverter($this->numericConverter);
 
         // Create GPS sub-converters
         $gpsCoordinateConverter      = new GpsCoordinateConverter($this->rationalConverter, $this->numericConverter);
@@ -93,7 +93,7 @@ final readonly class ConverterFactory
         $gpsTimestampConverter       = new GpsTimestampConverter($this->rationalConverter, $this->stringConverter);
 
         // Create GpsConverter orchestrator (depends on sub-converters)
-        $this->gpsConverter = new GpsConverter(
+        $this->gpsConverter          = new GpsConverter(
             $gpsCoordinateConverter,
             $this->gpsUnitConverter,
             $this->gpsDirectionConverter,

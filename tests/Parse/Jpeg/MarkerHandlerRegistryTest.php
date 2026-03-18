@@ -35,8 +35,8 @@ final class MarkerHandlerRegistryTest extends TestCase
     #[Test]
     public function dispatchesOnlyMatchingHandlers(): void
     {
-        $stream  = new Stream($this->createTempStream('JPEG'), 4);
-        $handled = 0;
+        $stream      = new Stream($this->createTempStream('JPEG'), 4);
+        $handled     = 0;
 
         $app1Handler = new readonly class(function () use (&$handled): void {
             ++$handled;
@@ -76,7 +76,7 @@ final class MarkerHandlerRegistryTest extends TestCase
             }
         };
 
-        $registry = new MarkerHandlerRegistry([$app1Handler, $app2Handler]);
+        $registry    = new MarkerHandlerRegistry([$app1Handler, $app2Handler]);
 
         $registry->dispatch(Marker::APP2, $stream, 'payload', 12);
 

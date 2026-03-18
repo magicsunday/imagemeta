@@ -115,7 +115,7 @@ final class TiffExifParserNegativeTest extends TestCase
     #[Test]
     public function rejectsInvalidByteOrderMarker(): void
     {
-        $blob = 'XX' . pack('n', TiffConst::MAGIC_CLASSIC) . pack('N', 8);
+        $blob   = 'XX' . pack('n', TiffConst::MAGIC_CLASSIC) . pack('N', 8);
 
         $reader = new TiffExifParser();
 
@@ -132,7 +132,7 @@ final class TiffExifParserNegativeTest extends TestCase
     #[Test]
     public function rejectsInvalidMagicNumber(): void
     {
-        $blob = 'II' . pack('v', 0x9999) . pack('V', 8);
+        $blob   = 'II' . pack('v', 0x9999) . pack('V', 8);
 
         $reader = new TiffExifParser();
 
@@ -150,7 +150,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function rejectsIfdOffsetBeyondBlobSize(): void
     {
         // Classic TIFF with first IFD offset pointing way beyond blob
-        $blob = 'II' . pack('v', TiffConst::MAGIC_CLASSIC) . pack('V', 0xFFFFFF);
+        $blob   = 'II' . pack('v', TiffConst::MAGIC_CLASSIC) . pack('V', 0xFFFFFF);
 
         $reader = new TiffExifParser();
 
@@ -167,7 +167,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function rejectsTruncatedIfdHeader(): void
     {
         // Header points to offset 8, but no data there
-        $blob = 'II' . pack('v', TiffConst::MAGIC_CLASSIC) . pack('V', 8);
+        $blob   = 'II' . pack('v', TiffConst::MAGIC_CLASSIC) . pack('V', 8);
 
         $reader = new TiffExifParser();
 
@@ -184,7 +184,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function rejectsBigTiffWithInvalidOffsetSize(): void
     {
         // BigTIFF magic (0x002B) with invalid offset size (4 instead of 8 or 16)
-        $blob = 'II'
+        $blob   = 'II'
             . pack('v', TiffConst::MAGIC_BIG)
             . pack('v', 4)      // Invalid offset size
             . pack('v', 0)      // Reserved
@@ -206,7 +206,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function rejectsBigTiffWithNonZeroReserved(): void
     {
         // BigTIFF with reserved field != 0
-        $blob = 'II'
+        $blob   = 'II'
             . pack('v', TiffConst::MAGIC_BIG)
             . pack('v', 8)      // Offset size
             . pack('v', 42)     // Reserved (should be 0)
@@ -228,7 +228,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function handlesRationalWithZeroDenominator(): void
     {
         // Create a minimal valid TIFF with one IFD entry containing a RATIONAL with denominator = 0
-        $blob = $this->buildMinimalTiffWithRational(100, 0);
+        $blob   = $this->buildMinimalTiffWithRational(100, 0);
 
         $reader = new TiffExifParser();
         $reader->parseFromBlob($blob);
@@ -244,7 +244,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function handlesSrationalWithExtremeValues(): void
     {
         // SRATIONAL with INT_MIN and INT_MAX
-        $blob = $this->buildMinimalTiffWithSRational(-2147483648, 2147483647);
+        $blob   = $this->buildMinimalTiffWithSRational(-2147483648, 2147483647);
 
         $reader = new TiffExifParser();
         $reader->parseFromBlob($blob);
@@ -260,7 +260,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function itToleratesExcessiveIfdEntryCount(): void
     {
         // Classic TIFF with IFD at offset 8, claiming 65535 entries (would overflow)
-        $blob = 'II'
+        $blob   = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)      // First IFD offset
             . pack('v', 65535); // Huge entry count
@@ -286,8 +286,8 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('v', ExifTag::IMAGE_LENGTH) . pack('v', TiffConst::TYPE_SHORT) . pack('V', 1) . pack('v', 100) . pack('v', 0)
             . pack('V', $ifdOffset); // Next IFD points back to offset 8 (cycle)
 
-        $reader = new TiffExifParser();
-        $parsed = $reader->parseFromBlob($blob);
+        $reader    = new TiffExifParser();
+        $parsed    = $reader->parseFromBlob($blob);
 
         self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
     }
@@ -303,7 +303,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function toleratesUnsupportedTiffType(): void
     {
         // Build TIFF with an entry using invalid type code (99)
-        $blob = $this->buildTiffWithInvalidType(99);
+        $blob   = $this->buildTiffWithInvalidType(99);
 
         $reader = new TiffExifParser();
         $parsed = $reader->parseFromBlob($blob);
@@ -321,7 +321,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function rejectsTruncatedIfdEntry(): void
     {
         // IFD claiming 1 entry but data is truncated
-        $blob = 'II'
+        $blob   = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)          // IFD at offset 8
             . pack('v', 1)          // 1 entry
@@ -351,7 +351,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $ifdSize     = 2 + ($entryCount * 12) + 4; // count + entries + next-IFD
         $valueOffset = $ifdOffset + $ifdSize;       // would be here if data existed
 
-        $blob = 'II'
+        $blob        = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             // IFD
@@ -369,10 +369,10 @@ final class TiffExifParserNegativeTest extends TestCase
             // Next IFD
             . pack('V', 0);
 
-        $parsed = (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
+        $parsed      = (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
 
         // The valid first entry survives
-        $widthEntry = $parsed->ifd0->get(ExifTag::IMAGE_WIDTH);
+        $widthEntry  = $parsed->ifd0->get(ExifTag::IMAGE_WIDTH);
         self::assertNotNull($widthEntry);
         self::assertSame(640, $widthEntry->value);
 
@@ -390,8 +390,8 @@ final class TiffExifParserNegativeTest extends TestCase
     {
         // Build a valid IFD0 whose next-IFD pointer references offset
         // beyond the buffer end.
-        $ifdOffset = 8;
-        $blob      = 'II'
+        $ifdOffset  = 8;
+        $blob       = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             // IFD0: 1 entry
@@ -403,7 +403,7 @@ final class TiffExifParserNegativeTest extends TestCase
             // Next IFD offset points beyond the buffer
             . pack('V', 0xFFFF);
 
-        $parsed = (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
+        $parsed     = (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
 
         // IFD0 data is preserved despite the broken chain
         $widthEntry = $parsed->ifd0->get(ExifTag::IMAGE_WIDTH);
@@ -421,7 +421,7 @@ final class TiffExifParserNegativeTest extends TestCase
     #[Test]
     public function acceptsAsciiValueWithoutNullTerminator(): void
     {
-        $blob = 'II'
+        $blob   = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
             . pack('v', 1)
@@ -522,7 +522,7 @@ final class TiffExifParserNegativeTest extends TestCase
     #[Test]
     public function toleratesGpsIfdPointerWithBadType(): void
     {
-        $blob = $this->buildTiffWithIfd0Pointer(ExifTag::GPS_IFD_POINTER, TiffConst::TYPE_ASCII, 1);
+        $blob   = $this->buildTiffWithIfd0Pointer(ExifTag::GPS_IFD_POINTER, TiffConst::TYPE_ASCII, 1);
 
         $parsed = (new TiffExifParser())->parseFromBlob($blob);
 
@@ -589,7 +589,7 @@ final class TiffExifParserNegativeTest extends TestCase
     #[Test]
     public function toleratesLong8InClassicTiff(): void
     {
-        $blob = $this->buildTiffWithIfd0Pointer(0x0100, TiffConst::TYPE_LONG8, 1);
+        $blob   = $this->buildTiffWithIfd0Pointer(0x0100, TiffConst::TYPE_LONG8, 1);
 
         $reader = new TiffExifParser();
         $parsed = $reader->parseFromBlob($blob);
@@ -603,7 +603,7 @@ final class TiffExifParserNegativeTest extends TestCase
     #[Test]
     public function toleratesSlong8InClassicTiff(): void
     {
-        $blob = $this->buildTiffWithIfd0Pointer(0x0100, TiffConst::TYPE_SLONG8, 1);
+        $blob   = $this->buildTiffWithIfd0Pointer(0x0100, TiffConst::TYPE_SLONG8, 1);
 
         $reader = new TiffExifParser();
         $parsed = $reader->parseFromBlob($blob);
@@ -617,7 +617,7 @@ final class TiffExifParserNegativeTest extends TestCase
     #[Test]
     public function toleratesIfd8InClassicTiff(): void
     {
-        $blob = $this->buildTiffWithIfd0Pointer(0x0100, TiffConst::TYPE_IFD8, 1);
+        $blob   = $this->buildTiffWithIfd0Pointer(0x0100, TiffConst::TYPE_IFD8, 1);
 
         $reader = new TiffExifParser();
         $parsed = $reader->parseFromBlob($blob);
@@ -641,7 +641,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $valOffset  = $ifdOffset + 2 + (12 * $entryCount) + 4;
 
         // TIFF header
-        $blob = 'II'  // Little-endian
+        $blob       = 'II'  // Little-endian
             . pack('v', TiffConst::MAGIC_CLASSIC)  // Classic TIFF magic
             . pack('V', $ifdOffset);  // First IFD at offset 8
 
@@ -688,7 +688,7 @@ final class TiffExifParserNegativeTest extends TestCase
     {
         $ifd0Offset = 8;
 
-        $blob = 'II'
+        $blob       = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset);
 
@@ -716,7 +716,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $ifd0Size       = 2 + ($ifd0EntryCount * 12) + 4;
         $exifIfdOffset  = $ifd0Offset + $ifd0Size;
 
-        $blob = 'II'
+        $blob           = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset);
 
@@ -750,12 +750,12 @@ final class TiffExifParserNegativeTest extends TestCase
         ?array $sourceImageNumber,
         ?string $sourceExposureTimes,
     ): string {
-        $ifd0Offset     = 8;
-        $ifd0EntryCount = 3;
-        $ifd0Size       = 2 + ($ifd0EntryCount * 12) + 4;
-        $exifIfdOffset  = $ifd0Offset + $ifd0Size;
+        $ifd0Offset        = 8;
+        $ifd0EntryCount    = 3;
+        $ifd0Size          = 2 + ($ifd0EntryCount * 12) + 4;
+        $exifIfdOffset     = $ifd0Offset + $ifd0Size;
 
-        $entries = [
+        $entries           = [
             [
                 'tag'   => ExifTag::COMPOSITE_IMAGE,
                 'type'  => TiffConst::TYPE_SHORT,
@@ -782,7 +782,7 @@ final class TiffExifParserNegativeTest extends TestCase
             ];
         }
 
-        $blob = 'II'
+        $blob              = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset);
 
@@ -908,7 +908,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $valOffset  = $ifdOffset + 2 + (12 * $entryCount) + 4;
 
         // TIFF header
-        $blob = 'II'  // Little-endian
+        $blob       = 'II'  // Little-endian
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset);
 
@@ -1103,8 +1103,8 @@ final class TiffExifParserNegativeTest extends TestCase
 
     private function buildClassicTiffWithEntry(int $tag, int $type, int $count, string $valueBytes): string
     {
-        $ifdOffset = 8;
-        $blob      = 'II'
+        $ifdOffset     = 8;
+        $blob          = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset);
 
@@ -1123,7 +1123,7 @@ final class TiffExifParserNegativeTest extends TestCase
             return $blob . (pack('v', $tag) . pack('v', $type) . pack('V', $count) . $inlineBytes . pack('V', 0));
         }
 
-        $valueOffset = $ifdOffset + 2 + 12 + 4;
+        $valueOffset   = $ifdOffset + 2 + 12 + 4;
 
         $blob .= pack('v', $tag)
             . pack('v', $type)
@@ -1146,7 +1146,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $ifdSize   = 2 + ($ifdCount * 12) + 4;
         $valOffset = $ifdOffset + $ifdSize;
 
-        $blob = 'II'
+        $blob      = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . pack('v', $ifdCount)
@@ -1166,7 +1166,7 @@ final class TiffExifParserNegativeTest extends TestCase
             // YResolution value: 96/1
             . pack('V', 96) . pack('V', 1);
 
-        $parsed = (new TiffExifParser())->parseFromBlob($blob);
+        $parsed    = (new TiffExifParser())->parseFromBlob($blob);
 
         self::assertNotNull($parsed->ifd0->get(ExifTag::X_RESOLUTION));
         self::assertNotNull($parsed->ifd0->get(ExifTag::Y_RESOLUTION));
@@ -1243,7 +1243,7 @@ final class TiffExifParserNegativeTest extends TestCase
     #[Test]
     public function toleratesOrientationValueNine(): void
     {
-        $blob = 'II'
+        $blob   = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
             . pack('v', 1)
@@ -1317,7 +1317,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $ifdSize     = 2 + (12 * $entryCount) + 4;
         $valueOffset = $ifdOffset + $ifdSize;
 
-        $blob = 'II'
+        $blob        = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . pack('v', $entryCount)
@@ -1330,7 +1330,7 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('V', 0)
             . $cameraOwner;
 
-        $parsed = (new TiffExifParser())->parseFromBlob($blob);
+        $parsed      = (new TiffExifParser())->parseFromBlob($blob);
 
         self::assertSame('Agent', $parsed->ifd0->get(ExifTag::CAMERA_OWNER_NAME)?->value);
     }
@@ -1348,7 +1348,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $ifdSize   = 2 + 12 + 4;
         $valOffset = $ifdOffset + $ifdSize;
 
-        $blob = 'II'
+        $blob      = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . pack('v', 1)
@@ -1403,7 +1403,7 @@ final class TiffExifParserNegativeTest extends TestCase
     #[Test]
     public function returnsEmptyIfdForZeroEntries(): void
     {
-        $blob = 'II'
+        $blob   = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
             . pack('v', 0)
@@ -1495,7 +1495,7 @@ final class TiffExifParserNegativeTest extends TestCase
 
         $ifd1Count = count($ifd1Tags);
 
-        $blob = 'II'
+        $blob      = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
@@ -1539,7 +1539,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $thumbOffset    = $ifd1Offset + $ifd1Size;
         $thumbLength    = strlen($thumbnailStream);
 
-        $blob = 'II'
+        $blob           = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
@@ -1680,7 +1680,7 @@ final class TiffExifParserNegativeTest extends TestCase
     #[Test]
     public function itToleratesNonStandardCompressionValue(): void
     {
-        $ifd0Group4 = (new TiffExifParser())->parseFromBlob(
+        $ifd0Group4       = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithShortTag(ExifTag::COMPRESSION, 4),
             jpegContext: true,
         );
@@ -1692,7 +1692,7 @@ final class TiffExifParserNegativeTest extends TestCase
         );
         self::assertSame(7, $ifd0JpegNewStyle->ifd0->get(ExifTag::COMPRESSION)?->value);
 
-        $ifd1Zero = (new TiffExifParser())->parseFromBlob(
+        $ifd1Zero         = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTwoIfds(
                 [[ExifTag::IMAGE_WIDTH, 100], [ExifTag::IMAGE_LENGTH, 100]],
                 [[ExifTag::COMPRESSION, 0]],
@@ -1836,7 +1836,7 @@ final class TiffExifParserNegativeTest extends TestCase
             . "\xFF\xDB\x00\x04\x00\x00"
             . "\xFF\xD9";
 
-        $result = (new TiffExifParser())->parseFromBlob(
+        $result          = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithJpegThumbnailStream($thumbnailStream),
         );
 
@@ -2121,7 +2121,7 @@ final class TiffExifParserNegativeTest extends TestCase
     #[Test]
     public function acceptCompositeImageCapturedWithRequiredCompanionTags(): void
     {
-        $result = (new TiffExifParser())->parseFromBlob(
+        $result        = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCompositeExifTags(
                 3,
                 [5, 3],
@@ -2219,7 +2219,7 @@ final class TiffExifParserNegativeTest extends TestCase
     #[Test]
     public function acceptValidSourceExposureTimesPayload(): void
     {
-        $result = (new TiffExifParser())->parseFromBlob(
+        $result        = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCompositeExifTags(0, null, $this->buildValidCompositeExposurePayload()),
         );
 
@@ -2415,7 +2415,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function toleratesDuplicateTagIdInIfd(): void
     {
         // Build a TIFF with two entries having the same tag ID (0x0100 = ImageWidth)
-        $blob = 'II'
+        $blob   = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)          // First IFD at offset 8
             . pack('v', 2)          // 2 entries in IFD
@@ -2433,7 +2433,7 @@ final class TiffExifParserNegativeTest extends TestCase
         $parsed = $reader->parseFromBlob($blob);
 
         // First occurrence (value=100) wins
-        $entry = $parsed->ifd0->get(ExifTag::IMAGE_WIDTH);
+        $entry  = $parsed->ifd0->get(ExifTag::IMAGE_WIDTH);
         self::assertNotNull($entry);
         self::assertSame(100, $entry->value);
     }
@@ -2446,7 +2446,7 @@ final class TiffExifParserNegativeTest extends TestCase
     public function rejectsOverflowingCountTimesComponentSize(): void
     {
         // BigTIFF header: II + magic 0x002B + offsetSize 8 + reserved 0 + first IFD offset (16)
-        $header = 'II'
+        $header    = 'II'
             . pack('v', TiffConst::MAGIC_BIG)
             . pack('v', 8)
             . pack('v', 0)

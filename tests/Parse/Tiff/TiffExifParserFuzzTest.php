@@ -96,7 +96,7 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function rejectsTooShortBlob(): void
     {
-        $blob = 'II';  // Only byte order marker
+        $blob   = 'II';  // Only byte order marker
 
         $reader = new TiffExifParser();
 
@@ -112,7 +112,7 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function rejectsRandomGarbage(): void
     {
-        $blob = str_repeat("\xFF", 100);
+        $blob   = str_repeat("\xFF", 100);
 
         $reader = new TiffExifParser();
 
@@ -128,7 +128,7 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function rejectsNullBytes(): void
     {
-        $blob = str_repeat("\x00", 100);
+        $blob   = str_repeat("\x00", 100);
 
         $reader = new TiffExifParser();
 
@@ -144,7 +144,7 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function rejectsHeaderOnlyBlob(): void
     {
-        $blob = 'II' . pack('v', TiffConst::MAGIC_CLASSIC);
+        $blob   = 'II' . pack('v', TiffConst::MAGIC_CLASSIC);
         // Missing first IFD offset
 
         $reader = new TiffExifParser();
@@ -162,7 +162,7 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function skipsEntryWithOverflowCount(): void
     {
-        $blob = 'II'
+        $blob   = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
@@ -189,7 +189,7 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function handlesOverlappingEntryData(): void
     {
-        $blob = 'II'
+        $blob   = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
@@ -239,7 +239,7 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function handlesRationalBothZero(): void
     {
-        $blob = $this->buildTiffWithRational(0, 0);
+        $blob   = $this->buildTiffWithRational(0, 0);
 
         $reader = new TiffExifParser();
         $reader->parseFromBlob($blob);
@@ -254,7 +254,7 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function handlesRationalMaxValues(): void
     {
-        $blob = $this->buildTiffWithRational(0xFFFFFFFF, 0xFFFFFFFF);
+        $blob   = $this->buildTiffWithRational(0xFFFFFFFF, 0xFFFFFFFF);
 
         $reader = new TiffExifParser();
         $reader->parseFromBlob($blob);
@@ -269,7 +269,7 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function handlesSrationalNegativeNumerator(): void
     {
-        $blob = $this->buildTiffWithSRational(-12345, 67890);
+        $blob   = $this->buildTiffWithSRational(-12345, 67890);
 
         $reader = new TiffExifParser();
         $reader->parseFromBlob($blob);
@@ -284,7 +284,7 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function handlesSrationalNegativeDenominator(): void
     {
-        $blob = $this->buildTiffWithSRational(12345, -67890);
+        $blob   = $this->buildTiffWithSRational(12345, -67890);
 
         $reader = new TiffExifParser();
         $reader->parseFromBlob($blob);
@@ -299,7 +299,7 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function handlesSrationalBothNegative(): void
     {
-        $blob = $this->buildTiffWithSRational(-12345, -67890);
+        $blob   = $this->buildTiffWithSRational(-12345, -67890);
 
         $reader = new TiffExifParser();
         $reader->parseFromBlob($blob);
@@ -315,13 +315,13 @@ final class TiffExifParserFuzzTest extends TestCase
     public function handlesDeepIfdChain(): void
     {
         // Create a chain of 5 IFDs; IFD0 gets ImageWidth+ImageLength+dummy, rest have 1 dummy
-        $blob = 'II'
+        $blob       = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);  // First IFD at 8
 
         // IFD0: 3 entries
-        $ifd0Size = 2 + (3 * 12) + 4;
-        $offset   = 8;
+        $ifd0Size   = 2 + (3 * 12) + 4;
+        $offset     = 8;
 
         $blob .= pack('v', 3);
         // ImageWidth SHORT[1] = 100
@@ -333,20 +333,20 @@ final class TiffExifParserFuzzTest extends TestCase
 
         $nextOffset = $offset + $ifd0Size;
         $blob .= pack('V', $nextOffset);
-        $offset = $nextOffset;
+        $offset     = $nextOffset;
 
-        $ifdSize = 2 + 12 + 4;
+        $ifdSize    = 2 + 12 + 4;
 
         for ($i = 1; $i < 5; ++$i) {
             $blob .= pack('v', 1);
             $blob .= pack('v', 0xFF00 + $i) . pack('v', TiffConst::TYPE_LONG) . pack('V', 1) . pack('V', 1);
             $nextOffset = $offset + $ifdSize;
             $blob .= pack('V', $i < 4 ? $nextOffset : 0);
-            $offset = $nextOffset;
+            $offset     = $nextOffset;
         }
 
-        $reader = new TiffExifParser();
-        $result = $reader->parseFromBlob($blob);
+        $reader     = new TiffExifParser();
+        $result     = $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
 
@@ -364,7 +364,7 @@ final class TiffExifParserFuzzTest extends TestCase
         $ifdOffset  = 8;
         $valOffset  = $ifdOffset + 2 + (12 * $entryCount) + 4;
 
-        $blob = 'II'
+        $blob       = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset);
 
@@ -382,7 +382,7 @@ final class TiffExifParserFuzzTest extends TestCase
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
 
-        $asciiData = "Test\x00String\x00";
+        $asciiData  = "Test\x00String\x00";
 
         $blob .= pack('v', 0x010F)                 // Manufacturer
             . pack('v', TiffConst::TYPE_ASCII)
@@ -392,7 +392,7 @@ final class TiffExifParserFuzzTest extends TestCase
         $blob .= pack('V', 0);
         $blob .= $asciiData;
 
-        $reader = new TiffExifParser();
+        $reader     = new TiffExifParser();
         $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
@@ -405,7 +405,7 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function handlesEntryWithZeroCount(): void
     {
-        $blob = 'II'
+        $blob   = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
@@ -444,7 +444,7 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function parsesMixedEndianness(): void
     {
-        $blob = 'II'  // Little-endian marker
+        $blob   = 'II'  // Little-endian marker
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
@@ -478,7 +478,7 @@ final class TiffExifParserFuzzTest extends TestCase
     public function parsesBigEndianInlineShortValue(): void
     {
         // Big-endian TIFF with ImageWidth + ImageLength + Orientation
-        $blob = 'MM'
+        $blob   = 'MM'
             . pack('n', TiffConst::MAGIC_CLASSIC)
             . pack('N', 8)
             . pack('n', 3)
@@ -503,7 +503,7 @@ final class TiffExifParserFuzzTest extends TestCase
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob($blob);
 
-        $entry = $result->ifd0->get(ExifTag::ORIENTATION);
+        $entry  = $result->ifd0->get(ExifTag::ORIENTATION);
         self::assertNotNull($entry);
         self::assertSame(6, $entry->value);
     }
@@ -515,11 +515,11 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function handlesUndefinedTypeWithRandomBytes(): void
     {
-        $entryCount = 3;
-        $ifdOffset  = 8;
-        $valOffset  = $ifdOffset + 2 + (12 * $entryCount) + 4;
+        $entryCount    = 3;
+        $ifdOffset     = 8;
+        $valOffset     = $ifdOffset + 2 + (12 * $entryCount) + 4;
 
-        $blob = 'II'
+        $blob          = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset);
 
@@ -547,7 +547,7 @@ final class TiffExifParserFuzzTest extends TestCase
         $blob .= pack('V', 0);
         $blob .= $undefinedData;
 
-        $reader = new TiffExifParser();
+        $reader        = new TiffExifParser();
         $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
@@ -568,7 +568,7 @@ final class TiffExifParserFuzzTest extends TestCase
         $ifdOffset  = 8;
         $valOffset  = $ifdOffset + 2 + (12 * $entryCount) + 4;
 
-        $blob = 'II'
+        $blob       = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset);
 
@@ -611,7 +611,7 @@ final class TiffExifParserFuzzTest extends TestCase
         $ifdOffset  = 8;
         $valOffset  = $ifdOffset + 2 + (12 * $entryCount) + 4;
 
-        $blob = 'II'
+        $blob       = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset);
 

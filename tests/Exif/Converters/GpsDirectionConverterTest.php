@@ -47,7 +47,7 @@ final class GpsDirectionConverterTest extends TestCase
         $numericConverter  = new NumericConverter();
         $rationalConverter = new RationalConverter($numericConverter);
 
-        $this->converter = new GpsDirectionConverter($rationalConverter);
+        $this->converter   = new GpsDirectionConverter($rationalConverter);
     }
 
     /**

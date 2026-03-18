@@ -96,8 +96,8 @@ final readonly class RationalConverter
 
             // Handle nested arrays like [[1,2], [3,4]]
             if (is_array($first)) {
-                $num = $first[0] ?? null;
-                $den = $first[1] ?? null;
+                $num    = $first[0] ?? null;
+                $den    = $first[1] ?? null;
 
                 if (($num === null) || ($den === null)) {
                     return null;

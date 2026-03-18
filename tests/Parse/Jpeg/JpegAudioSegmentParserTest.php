@@ -74,12 +74,12 @@ final class JpegAudioSegmentParserTest extends TestCase
         $sampleCount = 4;
         $audioData   = str_repeat("\x00\x01", $sampleCount);
 
-        $payload = $this->buildAudioPayload(sampleCount: $sampleCount, audioData: $audioData);
+        $payload     = $this->buildAudioPayload(sampleCount: $sampleCount, audioData: $audioData);
 
-        $parser = new JpegAudioSegmentParser();
+        $parser      = new JpegAudioSegmentParser();
         $parser->handleSegment($payload, 0);
 
-        $streams = $parser->getStreams();
+        $streams     = $parser->getStreams();
         self::assertCount(1, $streams);
         self::assertSame('PCM', $streams[0]->format);
         self::assertSame(1, $streams[0]->channels);
@@ -98,12 +98,12 @@ final class JpegAudioSegmentParserTest extends TestCase
         $sampleCount = 8;
         $audioData   = str_repeat("\x7F", $sampleCount);
 
-        $payload = $this->buildAudioPayload(format: 1, bitDepth: 8, sampleCount: $sampleCount, audioData: $audioData);
+        $payload     = $this->buildAudioPayload(format: 1, bitDepth: 8, sampleCount: $sampleCount, audioData: $audioData);
 
-        $parser = new JpegAudioSegmentParser();
+        $parser      = new JpegAudioSegmentParser();
         $parser->handleSegment($payload, 0);
 
-        $streams = $parser->getStreams();
+        $streams     = $parser->getStreams();
         self::assertCount(1, $streams);
         self::assertSame('MU_LAW_PCM', $streams[0]->format);
         self::assertSame(8, $streams[0]->bitDepth);
@@ -117,7 +117,7 @@ final class JpegAudioSegmentParserTest extends TestCase
     {
         $payload = self::AUDIO_SIGNATURE . chr(1);
 
-        $parser = new JpegAudioSegmentParser();
+        $parser  = new JpegAudioSegmentParser();
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1269);
@@ -133,7 +133,7 @@ final class JpegAudioSegmentParserTest extends TestCase
     {
         $payload = $this->buildAudioPayload(majorVersion: 2);
 
-        $parser = new JpegAudioSegmentParser();
+        $parser  = new JpegAudioSegmentParser();
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1452);
@@ -149,7 +149,7 @@ final class JpegAudioSegmentParserTest extends TestCase
     {
         $payload = $this->buildAudioPayload(channels: 0);
 
-        $parser = new JpegAudioSegmentParser();
+        $parser  = new JpegAudioSegmentParser();
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1272);
@@ -165,7 +165,7 @@ final class JpegAudioSegmentParserTest extends TestCase
     {
         $payload = $this->buildAudioPayload(sampleRate: 7777);
 
-        $parser = new JpegAudioSegmentParser();
+        $parser  = new JpegAudioSegmentParser();
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1273);
@@ -181,7 +181,7 @@ final class JpegAudioSegmentParserTest extends TestCase
     {
         $payload = $this->buildAudioPayload(bitDepth: 32);
 
-        $parser = new JpegAudioSegmentParser();
+        $parser  = new JpegAudioSegmentParser();
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1276);
@@ -197,7 +197,7 @@ final class JpegAudioSegmentParserTest extends TestCase
     {
         $payload = $this->buildAudioPayload(sampleCount: 4, audioData: "\x00\x01\x02");
 
-        $parser = new JpegAudioSegmentParser();
+        $parser  = new JpegAudioSegmentParser();
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1279);
@@ -214,9 +214,9 @@ final class JpegAudioSegmentParserTest extends TestCase
         $sampleCount = 2;
         $audioData   = str_repeat("\x00\x01", $sampleCount);
 
-        $payload = $this->buildAudioPayload(sampleCount: $sampleCount, audioData: $audioData);
+        $payload     = $this->buildAudioPayload(sampleCount: $sampleCount, audioData: $audioData);
 
-        $parser = new JpegAudioSegmentParser();
+        $parser      = new JpegAudioSegmentParser();
         $parser->handleSegment($payload, 0);
 
         self::assertCount(1, $parser->getStreams());

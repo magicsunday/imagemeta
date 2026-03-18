@@ -48,7 +48,7 @@ final class GpsCoordinateConverterTest extends TestCase
         $numericConverter  = new NumericConverter();
         $rationalConverter = new RationalConverter($numericConverter);
 
-        $this->converter = new GpsCoordinateConverter($rationalConverter, $numericConverter);
+        $this->converter   = new GpsCoordinateConverter($rationalConverter, $numericConverter);
     }
 
     /**
@@ -70,7 +70,7 @@ final class GpsCoordinateConverterTest extends TestCase
     public static function provideValidDmsConversions(): iterable
     {
         // 52°31'12.0" = 52 + 31/60 + 12/3600 = 52.52
-        $dms = new ExifRationalList([
+        $dms    = new ExifRationalList([
             new ExifRational(52, 1),
             new ExifRational(31, 1),
             new ExifRational(12000, 1000),
@@ -138,7 +138,7 @@ final class GpsCoordinateConverterTest extends TestCase
     public function toleratesMinutesAtOrAbove60(): void
     {
         // 12° 75' 0" → carry: 13° 15' 0" = 13.25
-        $val = new ExifRationalList([
+        $val    = new ExifRationalList([
             new ExifRational(12, 1),
             new ExifRational(75, 1),
             new ExifRational(0, 1),
@@ -157,7 +157,7 @@ final class GpsCoordinateConverterTest extends TestCase
     public function toleratesSecondsAtOrAbove60(): void
     {
         // 12° 30' 75" → carry: 12° 31' 15" = 12 + 31/60 + 15/3600 = 12.520833...
-        $val = new ExifRationalList([
+        $val    = new ExifRationalList([
             new ExifRational(12, 1),
             new ExifRational(30, 1),
             new ExifRational(75, 1),

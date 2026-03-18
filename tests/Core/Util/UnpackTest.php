@@ -38,7 +38,7 @@ final class UnpackTest extends TestCase
     #[Test]
     public function unpacksIntegerValue(): void
     {
-        $bytes = chr(0x12) . chr(0x34);
+        $bytes  = chr(0x12) . chr(0x34);
 
         $result = Unpack::int('n', $bytes, 'test');
 
@@ -52,7 +52,7 @@ final class UnpackTest extends TestCase
     #[Test]
     public function unpacksFloatValue(): void
     {
-        $bytes = pack('f', 3.14);
+        $bytes  = pack('f', 3.14);
 
         $result = Unpack::float('f', $bytes, 'test');
 
@@ -92,7 +92,7 @@ final class UnpackTest extends TestCase
     #[Test]
     public function unpacksUint64BigEndian(): void
     {
-        $bytes = pack('N', 0x12345678) . pack('N', 0x9ABCDEF0);
+        $bytes  = pack('N', 0x12345678) . pack('N', 0x9ABCDEF0);
 
         $result = Unpack::uint64($bytes, false, 'test');
 
@@ -107,7 +107,7 @@ final class UnpackTest extends TestCase
     #[Test]
     public function unpacksUint64LittleEndian(): void
     {
-        $bytes = pack('V', 0x9ABCDEF0) . pack('V', 0x12345678);
+        $bytes  = pack('V', 0x9ABCDEF0) . pack('V', 0x12345678);
 
         $result = Unpack::uint64($bytes, true, 'test');
 

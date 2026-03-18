@@ -110,7 +110,7 @@ final readonly class NumericConverter
                         return null;
                     }
 
-                    $ints[] = $intComponent;
+                    $ints[]       = $intComponent;
 
                     continue;
                 }
@@ -135,7 +135,7 @@ final readonly class NumericConverter
                     return null;
                 }
 
-                $ints[] = (int) $numeric;
+                $ints[]  = (int) $numeric;
             }
 
             return $ints;
@@ -176,7 +176,7 @@ final readonly class NumericConverter
                         return null;
                     }
 
-                    $ints[] = $intComponent;
+                    $ints[]       = $intComponent;
 
                     continue;
                 }

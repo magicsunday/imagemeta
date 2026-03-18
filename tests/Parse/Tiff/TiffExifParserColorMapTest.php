@@ -151,7 +151,7 @@ final class TiffExifParserColorMapTest extends TestCase
         ?int $colorMapType = null,
         ?array $colorMapValues = null,
     ): string {
-        $entries = [
+        $entries      = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -173,7 +173,7 @@ final class TiffExifParserColorMapTest extends TestCase
         $payloadByTag = [];
 
         if (($colorMapType !== null) && is_array($colorMapValues)) {
-            $entries[TiffTag::COLOR_MAP] = pack('v', TiffTag::COLOR_MAP)
+            $entries[TiffTag::COLOR_MAP]      = pack('v', TiffTag::COLOR_MAP)
                 . pack('v', $colorMapType)
                 . pack('V', count($colorMapValues));
             $payloadByTag[TiffTag::COLOR_MAP] = $this->packNumericPayload($colorMapType, $colorMapValues);
@@ -181,12 +181,12 @@ final class TiffExifParserColorMapTest extends TestCase
 
         ksort($entries);
 
-        $ifdOffset   = 8;
-        $entryCount  = count($entries);
-        $ifdSize     = 2 + (12 * $entryCount) + 4;
-        $nextOffset  = $ifdOffset + $ifdSize;
-        $ifdEntries  = '';
-        $payloadTail = '';
+        $ifdOffset    = 8;
+        $entryCount   = count($entries);
+        $ifdSize      = 2 + (12 * $entryCount) + 4;
+        $nextOffset   = $ifdOffset + $ifdSize;
+        $ifdEntries   = '';
+        $payloadTail  = '';
 
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {
@@ -203,7 +203,7 @@ final class TiffExifParserColorMapTest extends TestCase
                 continue;
             }
 
-            $ifdEntries .= $prefix . pack('V', $nextOffset);
+            $ifdEntries  .= $prefix . pack('V', $nextOffset);
             $payloadTail .= $payload;
             $nextOffset += strlen($payload);
         }

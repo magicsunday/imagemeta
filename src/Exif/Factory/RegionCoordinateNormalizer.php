@@ -63,8 +63,8 @@ final readonly class RegionCoordinateNormalizer
             $scaledHeight /= 100.0;
         }
 
-        $halfWidth  = $scaledWidth / 2.0;
-        $halfHeight = $scaledHeight / 2.0;
+        $halfWidth     = $scaledWidth / 2.0;
+        $halfHeight    = $scaledHeight / 2.0;
 
         return [
             'x' => $this->clamp($scaledCenterX - $halfWidth),
@@ -165,7 +165,7 @@ final readonly class RegionCoordinateNormalizer
             return 1.0;
         }
 
-        $scale = 10.0 ** ceil(log10($maxConfidence));
+        $scale         = 10.0 ** ceil(log10($maxConfidence));
 
         if ($scale <= 0.0) {
             return 1.0;

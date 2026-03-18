@@ -59,9 +59,9 @@ use function strlen;
 #[UsesClass(Unpack::class)]
 final class AppleJpegIfdParserTest extends TestCase
 {
-    private const int TIFF_TYPE_ASCII = 2;
+    private const int TIFF_TYPE_ASCII     = 2;
 
-    private const int TIFF_TYPE_SLONG = 9;
+    private const int TIFF_TYPE_SLONG     = 9;
 
     private const int TIFF_TYPE_SRATIONAL = 10;
 
@@ -77,13 +77,13 @@ final class AppleJpegIfdParserTest extends TestCase
      */
     private function buildPayload(bool $bigEndian, array $entries, string $extraData = ''): string
     {
-        $signature = "Apple iOS\x00";
-        $version   = "\x00\x01";
-        $bo        = $bigEndian ? 'MM' : 'II';
+        $signature  = "Apple iOS\x00";
+        $version    = "\x00\x01";
+        $bo         = $bigEndian ? 'MM' : 'II';
 
         $entryCount = $bigEndian ? pack('n', count($entries)) : pack('v', count($entries));
 
-        $entryData = '';
+        $entryData  = '';
 
         foreach ($entries as $entry) {
             $entryData .= $bigEndian
@@ -94,7 +94,7 @@ final class AppleJpegIfdParserTest extends TestCase
         }
 
         // Next IFD offset (0 = no next IFD)
-        $nextIfd = pack('N', 0);
+        $nextIfd    = pack('N', 0);
 
         return $signature . $version . $bo
             . $entryCount . $entryData . $nextIfd . $extraData;
@@ -146,7 +146,7 @@ final class AppleJpegIfdParserTest extends TestCase
         $parser = new AppleJpegIfdParser();
 
         // Something that's long enough but not "Apple iOS\0"
-        $raw = str_repeat("\x00", 40);
+        $raw    = str_repeat("\x00", 40);
 
         self::assertNull($parser->parse($raw));
     }
@@ -157,7 +157,7 @@ final class AppleJpegIfdParserTest extends TestCase
         $parser = new AppleJpegIfdParser();
 
         // Valid signature + version but invalid byte order "XX"
-        $raw = "Apple iOS\x00\x00\x01XX" . pack('n', 0) . pack('N', 0);
+        $raw    = "Apple iOS\x00\x00\x01XX" . pack('n', 0) . pack('N', 0);
 
         self::assertNull($parser->parse($raw));
     }
@@ -168,7 +168,7 @@ final class AppleJpegIfdParserTest extends TestCase
         $parser = new AppleJpegIfdParser();
 
         // Valid signature + version but too short to contain byte order
-        $raw = "Apple iOS\x00\x00\x01";
+        $raw    = "Apple iOS\x00\x00\x01";
 
         self::assertNull($parser->parse($raw));
     }
@@ -176,13 +176,13 @@ final class AppleJpegIfdParserTest extends TestCase
     #[Test]
     public function parseBigEndianSLongEntry(): void
     {
-        $parser = new AppleJpegIfdParser();
+        $parser  = new AppleJpegIfdParser();
 
         $payload = $this->buildPayload(true, [
             ['tag' => 0x0004, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 1)],
         ]);
 
-        $result = $parser->parse($payload);
+        $result  = $parser->parse($payload);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('AEStable', $result);
@@ -192,13 +192,13 @@ final class AppleJpegIfdParserTest extends TestCase
     #[Test]
     public function parseLittleEndianSLongEntry(): void
     {
-        $parser = new AppleJpegIfdParser();
+        $parser  = new AppleJpegIfdParser();
 
         $payload = $this->buildPayload(false, [
             ['tag' => 0x0005, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(false, 220)],
         ]);
 
-        $result = $parser->parse($payload);
+        $result  = $parser->parse($payload);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('AETarget', $result);
@@ -208,13 +208,13 @@ final class AppleJpegIfdParserTest extends TestCase
     #[Test]
     public function parseHandlesNegativeSLongValues(): void
     {
-        $parser = new AppleJpegIfdParser();
+        $parser  = new AppleJpegIfdParser();
 
         $payload = $this->buildPayload(true, [
             ['tag' => 0x0006, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, -1)],
         ]);
 
-        $result = $parser->parse($payload);
+        $result  = $parser->parse($payload);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('AEAverage', $result);
@@ -224,16 +224,16 @@ final class AppleJpegIfdParserTest extends TestCase
     #[Test]
     public function parseAsciiStringTag(): void
     {
-        $parser = new AppleJpegIfdParser();
+        $parser     = new AppleJpegIfdParser();
 
         // "AB\0" is 3 bytes, fits inline (padded to 4 bytes)
         $asciiValue = "AB\x00\x00";
 
-        $payload = $this->buildPayload(true, [
+        $payload    = $this->buildPayload(true, [
             ['tag' => 0x000B, 'type' => self::TIFF_TYPE_ASCII, 'count' => 3, 'value' => $asciiValue],
         ]);
 
-        $result = $parser->parse($payload);
+        $result     = $parser->parse($payload);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('BurstUUID', $result);
@@ -243,18 +243,18 @@ final class AppleJpegIfdParserTest extends TestCase
     #[Test]
     public function parseSRationalAsFloat(): void
     {
-        $parser = new AppleJpegIfdParser();
+        $parser    = new AppleJpegIfdParser();
 
         // SRATIONAL is 8 bytes -> out-of-line
         // Extra data starts after: sig(10)+ver(2)+BO(2)+count(2)+1*entry(12)+nextIFD(4) = 32
         // Offsets are relative to position 0
         $extraData = $this->sRational(true, 3, 2);
 
-        $payload = $this->buildPayload(true, [
+        $payload   = $this->buildPayload(true, [
             ['tag' => 0x001D, 'type' => self::TIFF_TYPE_SRATIONAL, 'count' => 1, 'value' => $this->offsetField(true, 32)],
         ], $extraData);
 
-        $result = $parser->parse($payload);
+        $result    = $parser->parse($payload);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('LuminanceNoiseAmplitude', $result);
@@ -264,23 +264,23 @@ final class AppleJpegIfdParserTest extends TestCase
     #[Test]
     public function parseSRationalListForMultipleEntries(): void
     {
-        $parser = new AppleJpegIfdParser();
+        $parser    = new AppleJpegIfdParser();
 
         // 3 SRATIONALs = 24 bytes -> out-of-line at offset 32 from start
         $extraData = $this->sRational(true, 1, 4)
             . $this->sRational(true, -1, 2)
             . $this->sRational(true, 5, 10);
 
-        $payload = $this->buildPayload(true, [
+        $payload   = $this->buildPayload(true, [
             ['tag' => 0x0008, 'type' => self::TIFF_TYPE_SRATIONAL, 'count' => 3, 'value' => $this->offsetField(true, 32)],
         ], $extraData);
 
-        $result = $parser->parse($payload);
+        $result    = $parser->parse($payload);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('AccelerationVector', $result);
 
-        $vector = $result['AccelerationVector'];
+        $vector    = $result['AccelerationVector'];
         self::assertIsArray($vector);
         self::assertCount(3, $vector);
         self::assertEqualsWithDelta(0.25, $vector[0], 1e-12);
@@ -291,19 +291,19 @@ final class AppleJpegIfdParserTest extends TestCase
     #[Test]
     public function parseSkipsZeroDenominatorSRational(): void
     {
-        $parser = new AppleJpegIfdParser();
+        $parser    = new AppleJpegIfdParser();
 
         // SRATIONAL with denominator = 0 plus a valid SLONG tag to keep dictionary non-empty
         // After 2 entries: sig(10)+ver(2)+BO(2)+count(2)+2*entry(24)+nextIFD(4) = 44
         // Offsets are relative to position 0
         $extraData = $this->sRational(true, 1, 0);
 
-        $payload = $this->buildPayload(true, [
+        $payload   = $this->buildPayload(true, [
             ['tag' => 0x0004, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 1)],
             ['tag' => 0x001D, 'type' => self::TIFF_TYPE_SRATIONAL, 'count' => 1, 'value' => $this->offsetField(true, 44)],
         ], $extraData);
 
-        $result = $parser->parse($payload);
+        $result    = $parser->parse($payload);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('AEStable', $result);
@@ -313,17 +313,17 @@ final class AppleJpegIfdParserTest extends TestCase
     #[Test]
     public function parseHandlesOutOfLineAsciiData(): void
     {
-        $parser = new AppleJpegIfdParser();
+        $parser      = new AppleJpegIfdParser();
 
         // "ABCDE\0" is 6 bytes -> out-of-line at offset 32 from start
         $asciiString = "ABCDE\x00";
         $extraData   = $asciiString;
 
-        $payload = $this->buildPayload(true, [
+        $payload     = $this->buildPayload(true, [
             ['tag' => 0x0011, 'type' => self::TIFF_TYPE_ASCII, 'count' => 6, 'value' => $this->offsetField(true, 32)],
         ], $extraData);
 
-        $result = $parser->parse($payload);
+        $result      = $parser->parse($payload);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('ContentIdentifier', $result);
@@ -333,7 +333,7 @@ final class AppleJpegIfdParserTest extends TestCase
     #[Test]
     public function parseSkipsUnknownTags(): void
     {
-        $parser = new AppleJpegIfdParser();
+        $parser  = new AppleJpegIfdParser();
 
         $payload = $this->buildPayload(true, [
             // Known tag
@@ -342,7 +342,7 @@ final class AppleJpegIfdParserTest extends TestCase
             ['tag' => 0xFFFF, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 99)],
         ]);
 
-        $result = $parser->parse($payload);
+        $result  = $parser->parse($payload);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('AEStable', $result);
@@ -356,7 +356,7 @@ final class AppleJpegIfdParserTest extends TestCase
         $parser = new AppleJpegIfdParser();
 
         // Valid header but entry count claims 9999 entries which exceed payload length
-        $raw = "Apple iOS\x00\x00\x01MM" . pack('n', 9999);
+        $raw    = "Apple iOS\x00\x00\x01MM" . pack('n', 9999);
 
         self::assertNull($parser->parse($raw));
     }
@@ -364,13 +364,13 @@ final class AppleJpegIfdParserTest extends TestCase
     #[Test]
     public function parseStoresSemanticStylePresetAsString(): void
     {
-        $parser = new AppleJpegIfdParser();
+        $parser  = new AppleJpegIfdParser();
 
         $payload = $this->buildPayload(true, [
             ['tag' => 0x0040, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 4)],
         ]);
 
-        $result = $parser->parse($payload);
+        $result  = $parser->parse($payload);
 
         self::assertIsArray($result);
         self::assertArrayHasKey('SemanticStylePreset', $result);
@@ -380,7 +380,7 @@ final class AppleJpegIfdParserTest extends TestCase
     #[Test]
     public function parseDecodesMultipleTags(): void
     {
-        $parser = new AppleJpegIfdParser();
+        $parser  = new AppleJpegIfdParser();
 
         $payload = $this->buildPayload(true, [
             ['tag' => 0x0001, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 15)],
@@ -391,7 +391,7 @@ final class AppleJpegIfdParserTest extends TestCase
             ['tag' => 0x002E, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 1)],
         ]);
 
-        $result = $parser->parse($payload);
+        $result  = $parser->parse($payload);
 
         self::assertIsArray($result);
         self::assertSame(15, $result['MakerNoteVersion']);
@@ -416,7 +416,7 @@ final class AppleJpegIfdParserTest extends TestCase
 
         // After 6 entries: sig(10)+ver(2)+BO(2)+count(2)+6*entry(72)+nextIFD(4) = 92
         // Offsets are relative to position 0
-        $payload = $this->buildPayload(true, [
+        $payload   = $this->buildPayload(true, [
             ['tag' => 0x0004, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 1)],
             ['tag' => 0x0005, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 200)],
             ['tag' => 0x0006, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 180)],
@@ -425,14 +425,14 @@ final class AppleJpegIfdParserTest extends TestCase
             ['tag' => 0x002E, 'type' => self::TIFF_TYPE_SLONG, 'count' => 1, 'value' => $this->inlineSLong(true, 0)],
         ], $extraData);
 
-        $decoder = new AppleDecoder();
-        $record  = $decoder->decode($payload, 'Apple', 'iPhone 15');
+        $decoder   = new AppleDecoder();
+        $record    = $decoder->decode($payload, 'Apple', 'iPhone 15');
 
         self::assertSame('Apple', $record->vendor);
         self::assertSame(strlen($payload), $record->length);
         self::assertInstanceOf(AppleMakerNotes::class, $record->apple);
 
-        $apple = $record->apple;
+        $apple     = $record->apple;
         self::assertSame('photo-uuid-123', $apple->identity?->contentIdentifier);
         self::assertSame('Back Wide Angle', $apple->camera?->type);
         self::assertTrue($apple->autoExposure?->stable);

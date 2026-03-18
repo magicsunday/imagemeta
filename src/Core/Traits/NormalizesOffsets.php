@@ -70,8 +70,8 @@ trait NormalizesOffsets
      */
     private function normalizeRelativeOffset(int|UInt64 $offset, int $base, string $message): int
     {
-        $limit = $this->offsetLimit();
-        $delta = $this->resolveOffsetValue($offset, $message);
+        $limit  = $this->offsetLimit();
+        $delta  = $this->resolveOffsetValue($offset, $message);
 
         if (($delta > 0) && ($delta > PHP_INT_MAX - $base)) {
             throw new BoundsError($message . ': ' . $this->formatOffset($offset), 1097);

@@ -55,7 +55,7 @@ final class DngValueNormalizerTest extends TestCase
     {
         $normalizer = $this->createNormalizer();
 
-        $value = $normalizer->normalizeCountedImageDataField(
+        $value      = $normalizer->normalizeCountedImageDataField(
             ExifTag::STRIP_BYTE_COUNTS,
             TiffConst::TYPE_SHORT,
             2,

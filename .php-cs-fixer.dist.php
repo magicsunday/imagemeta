@@ -39,7 +39,7 @@ EOF;
 return (new PhpCsFixer\Config())
     ->setCacheFile(__DIR__ . '/.build/cache/.php-cs-fixer.cache')
     ->setRiskyAllowed(true)
-    ->setParallelConfig(new PhpCsFixer\Runner\Parallel\ParallelConfig(4, 8))
+    ->setParallelConfig(new PhpCsFixer\Runner\Parallel\ParallelConfig(4))
     ->setRules([
         '@PER-CS2x0'                      => true,
         '@Symfony'                        => true,
@@ -81,8 +81,11 @@ return (new PhpCsFixer\Config())
         ],
         'binary_operator_spaces'          => [
             'operators' => [
-                '='  => 'align_single_space_minimal',
+                '='  => 'align_single_space_minimal', //align_by_scope',
                 '=>' => 'align_single_space_minimal',
+                '+=' => 'align_single_space_minimal',
+                '-=' => 'align_single_space_minimal',
+                '.=' => 'align_single_space_minimal',
             ],
         ],
         'yoda_style'                      => [

@@ -123,60 +123,60 @@ final readonly class GpsFactory
          *     h_positioning_error: float|null,
          * } $gpsData
          */
-        $gpsData = $exifDocument?->gps() ?? $this->converters->emptyGpsResult();
+        $gpsData                                                                                                                                       = $exifDocument?->gps() ?? $this->converters->emptyGpsResult();
 
-        $latitude     = $this->floatValue($gpsData['lat']);
-        $longitude    = $this->floatValue($gpsData['lon']);
-        $latitudeRef  = $this->uppercase($gpsData['lat_ref']);
-        $longitudeRef = $this->uppercase($gpsData['lon_ref']);
-        $altitude     = $this->floatValue($gpsData['alt']);
-        $altitudeRef  = $this->intValue($gpsData['alt_ref']);
+        $latitude                                                                                                                                      = $this->floatValue($gpsData['lat']);
+        $longitude                                                                                                                                     = $this->floatValue($gpsData['lon']);
+        $latitudeRef                                                                                                                                   = $this->uppercase($gpsData['lat_ref']);
+        $longitudeRef                                                                                                                                  = $this->uppercase($gpsData['lon_ref']);
+        $altitude                                                                                                                                      = $this->floatValue($gpsData['alt']);
+        $altitudeRef                                                                                                                                   = $this->intValue($gpsData['alt_ref']);
 
-        $version    = $this->stringValue($gpsData['version']);
-        $versionRaw = $gpsData['version_raw'];
+        $version                                                                                                                                       = $this->stringValue($gpsData['version']);
+        $versionRaw                                                                                                                                    = $gpsData['version_raw'];
 
         if (!is_string($versionRaw)) {
             $versionRaw = null;
         }
 
-        $satellites       = $this->stringValue($gpsData['satellites']);
-        $status           = $this->stringValue($gpsData['status']);
-        $measureMode      = $this->stringValue($gpsData['measure_mode']);
-        $dop              = $this->floatValue($gpsData['dop']);
-        $speedRef         = $this->uppercase($gpsData['speed_ref']);
-        $speedMs          = $this->floatValue($gpsData['speed_ms']);
-        $speedOriginalRef = $this->stringValue($gpsData['speed_original_ref']);
-        $speedOriginal    = $this->floatValue($gpsData['speed_original']);
-        $trackRef         = $this->uppercase($gpsData['track_ref']);
-        $track            = $this->floatValue($gpsData['track']);
-        $imgDirRef        = $this->uppercase($gpsData['img_direction_ref']);
-        $imgDir           = $this->floatValue($gpsData['img_direction']);
-        $mapDatum         = $this->stringValue($gpsData['map_datum']);
+        $satellites                                                                                                                                    = $this->stringValue($gpsData['satellites']);
+        $status                                                                                                                                        = $this->stringValue($gpsData['status']);
+        $measureMode                                                                                                                                   = $this->stringValue($gpsData['measure_mode']);
+        $dop                                                                                                                                           = $this->floatValue($gpsData['dop']);
+        $speedRef                                                                                                                                      = $this->uppercase($gpsData['speed_ref']);
+        $speedMs                                                                                                                                       = $this->floatValue($gpsData['speed_ms']);
+        $speedOriginalRef                                                                                                                              = $this->stringValue($gpsData['speed_original_ref']);
+        $speedOriginal                                                                                                                                 = $this->floatValue($gpsData['speed_original']);
+        $trackRef                                                                                                                                      = $this->uppercase($gpsData['track_ref']);
+        $track                                                                                                                                         = $this->floatValue($gpsData['track']);
+        $imgDirRef                                                                                                                                     = $this->uppercase($gpsData['img_direction_ref']);
+        $imgDir                                                                                                                                        = $this->floatValue($gpsData['img_direction']);
+        $mapDatum                                                                                                                                      = $this->stringValue($gpsData['map_datum']);
 
-        $destLatRef          = $this->uppercase($gpsData['dest_lat_ref']);
-        $destLat             = $this->floatValue($gpsData['dest_lat']);
-        $destLonRef          = $this->uppercase($gpsData['dest_lon_ref']);
-        $destLon             = $this->floatValue($gpsData['dest_lon']);
-        $destBearRef         = $this->uppercase($gpsData['dest_bearing_ref']);
-        $destBear            = $this->floatValue($gpsData['dest_bearing']);
-        $destDistRef         = $this->uppercase($gpsData['dest_distance_ref']);
-        $destDistMetre       = $this->floatValue($gpsData['dest_distance_m']);
-        $destDistOriginalRef = $this->stringValue($gpsData['dest_distance_original_ref']);
-        $destDistOriginal    = $this->floatValue($gpsData['dest_distance_original']);
+        $destLatRef                                                                                                                                    = $this->uppercase($gpsData['dest_lat_ref']);
+        $destLat                                                                                                                                       = $this->floatValue($gpsData['dest_lat']);
+        $destLonRef                                                                                                                                    = $this->uppercase($gpsData['dest_lon_ref']);
+        $destLon                                                                                                                                       = $this->floatValue($gpsData['dest_lon']);
+        $destBearRef                                                                                                                                   = $this->uppercase($gpsData['dest_bearing_ref']);
+        $destBear                                                                                                                                      = $this->floatValue($gpsData['dest_bearing']);
+        $destDistRef                                                                                                                                   = $this->uppercase($gpsData['dest_distance_ref']);
+        $destDistMetre                                                                                                                                 = $this->floatValue($gpsData['dest_distance_m']);
+        $destDistOriginalRef                                                                                                                           = $this->stringValue($gpsData['dest_distance_original_ref']);
+        $destDistOriginal                                                                                                                              = $this->floatValue($gpsData['dest_distance_original']);
 
-        $processingMethod = $this->stringValue($gpsData['processing_method']);
-        $areaInformation  = $this->stringValue($gpsData['area_information']);
+        $processingMethod                                                                                                                              = $this->stringValue($gpsData['processing_method']);
+        $areaInformation                                                                                                                               = $this->stringValue($gpsData['area_information']);
 
-        $date    = $this->normalizeDate($this->stringValue($gpsData['date']));
-        $dateRaw = $gpsData['date_raw'];
+        $date                                                                                                                                          = $this->normalizeDate($this->stringValue($gpsData['date']));
+        $dateRaw                                                                                                                                       = $gpsData['date_raw'];
 
         if (!is_string($dateRaw)) {
             $dateRaw = null;
         }
 
-        $time = $this->stringValue($gpsData['time']);
+        $time                                                                                                                                          = $this->stringValue($gpsData['time']);
 
-        $timestamp = $exifDocument?->gpsTimestamp();
+        $timestamp                                                                                                                                     = $exifDocument?->gpsTimestamp();
 
         if (!$timestamp instanceof DateTimeImmutable) {
             $timestamp = null;
@@ -190,7 +190,7 @@ final readonly class GpsFactory
             $time = $this->stringValue($exifDocument?->gpsTimeStampString());
         }
 
-        [$latitude, $longitude, $latitudeRef, $longitudeRef] = $this->applyCoordinateFallbacks(
+        [$latitude, $longitude, $latitudeRef, $longitudeRef]                                                                                           = $this->applyCoordinateFallbacks(
             $xmpDocument,
             $latitude,
             $longitude,
@@ -198,13 +198,13 @@ final readonly class GpsFactory
             $longitudeRef,
         );
 
-        [$altitude, $altitudeRef] = $this->applyAltitudeFallbacks(
+        [$altitude, $altitudeRef]                                                                                                                      = $this->applyAltitudeFallbacks(
             $xmpDocument,
             $altitude,
             $altitudeRef,
         );
 
-        [$status, $measureMode, $dop, $speedRef, $speedMs, $speedOriginalRef, $speedOriginal, $trackRef, $track, $imgDirRef, $imgDir, $mapDatum] = $this->applyMovementFallbacks(
+        [$status, $measureMode, $dop, $speedRef, $speedMs, $speedOriginalRef, $speedOriginal, $trackRef, $track, $imgDirRef, $imgDir, $mapDatum]       = $this->applyMovementFallbacks(
             $xmpDocument,
             $status,
             $measureMode,
@@ -234,15 +234,15 @@ final readonly class GpsFactory
             $destDistOriginal,
         );
 
-        [$date, $time, $timestamp] = $this->applyTimingFallbacks(
+        [$date, $time, $timestamp]                                                                                                                     = $this->applyTimingFallbacks(
             $xmpDocument,
             $date,
             $time,
             $timestamp,
         );
 
-        $differential = $this->intValue($gpsData['differential'] ?? null);
-        $hError       = $this->floatValue($gpsData['h_positioning_error'] ?? null);
+        $differential                                                                                                                                  = $this->intValue($gpsData['differential'] ?? null);
+        $hError                                                                                                                                        = $this->floatValue($gpsData['h_positioning_error'] ?? null);
 
         if (!$this->hasAnyGpsData(
             [$latitude, $longitude, $altitude, $altitudeRef, $mapDatum],
@@ -255,7 +255,7 @@ final readonly class GpsFactory
             return null;
         }
 
-        $position = new GpsPosition(
+        $position                                                                                                                                      = new GpsPosition(
             latitude: $latitude,
             longitude: $longitude,
             latitudeRef: $this->toGpsLatLonRef($latitudeRef),
@@ -265,7 +265,7 @@ final readonly class GpsFactory
             mapDatum: $mapDatum,
         );
 
-        $destination = new GpsDestination(
+        $destination                                                                                                                                   = new GpsDestination(
             latitude: $destLat,
             latitudeRef: $this->toGpsLatLonRef($destLatRef),
             longitude: $destLon,
@@ -278,7 +278,7 @@ final readonly class GpsFactory
             distanceOriginal: $destDistOriginal,
         );
 
-        $movement = new GpsMovement(
+        $movement                                                                                                                                      = new GpsMovement(
             speedRef: $this->toGpsSpeedRef($speedRef),
             speedMs: $speedMs,
             speedOriginalRef: $this->toGpsSpeedRef($speedOriginalRef),
@@ -289,14 +289,14 @@ final readonly class GpsFactory
             imageDirection: $imgDir,
         );
 
-        $timing = new GpsTiming(
+        $timing                                                                                                                                        = new GpsTiming(
             date: $date,
             dateRaw: $dateRaw,
             time: $time,
             timestamp: $timestamp,
         );
 
-        $measurement = new GpsMeasurement(
+        $measurement                                                                                                                                   = new GpsMeasurement(
             satellites: $satellites,
             status: $this->toGpsStatus($status),
             measureMode: $this->toGpsMeasureMode($measureMode),
@@ -424,7 +424,7 @@ final readonly class GpsFactory
                     $altitudeXmp = -$altitudeXmp;
                 }
 
-                $altitude = $altitudeXmp;
+                $altitude  = $altitudeXmp;
 
                 $altitudeRef ??= $altRefXmp;
             }
@@ -495,7 +495,7 @@ final readonly class GpsFactory
             $speedOriginalRef = $this->stringValue($xmpSpeedRef);
         }
 
-        $speedValue = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSSpeed');
+        $speedValue  = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSSpeed');
 
         if ($speedValue !== null) {
             if (($speedMs === null) && ($speedRef !== null)) {
@@ -540,7 +540,7 @@ final readonly class GpsFactory
             'GPSDestLongitude',
         );
 
-        $xmpDestBearRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestBearingRef'));
+        $xmpDestBearRef                                = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestBearingRef'));
 
         if ($destBearRef === null) {
             $destBearRef = $xmpDestBearRef;
@@ -554,7 +554,7 @@ final readonly class GpsFactory
             }
         }
 
-        $xmpDestDistRef = $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestDistanceRef');
+        $xmpDestDistRef                                = $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestDistanceRef');
 
         if ($destDistRef === null) {
             $destDistRef = $this->uppercase($xmpDestDistRef);
@@ -564,7 +564,7 @@ final readonly class GpsFactory
             $destDistOriginalRef = $this->stringValue($xmpDestDistRef);
         }
 
-        $destDistValue = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSDestDistance');
+        $destDistValue                                 = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSDestDistance');
 
         if ($destDistValue !== null) {
             if (($destDistMetre === null) && ($destDistRef !== null)) {
@@ -632,19 +632,19 @@ final readonly class GpsFactory
             return null;
         }
 
-        $value = trim($value);
+        $value      = trim($value);
 
         if ($value === '') {
             return null;
         }
 
-        $parts = preg_split('/[\\s,]+/', $value, -1, PREG_SPLIT_NO_EMPTY);
+        $parts      = preg_split('/[\\s,]+/', $value, -1, PREG_SPLIT_NO_EMPTY);
 
         if ($parts === false) {
             return null;
         }
 
-        $parts = array_map(
+        $parts      = array_map(
             trim(...),
             $parts,
         );
@@ -663,7 +663,7 @@ final readonly class GpsFactory
                     return null;
                 }
 
-                $sign = $this->coordinateSign($ref);
+                $sign       = $this->coordinateSign($ref);
 
                 if ($sign === null) {
                     return null;
@@ -679,13 +679,13 @@ final readonly class GpsFactory
             return null;
         }
 
-        $numeric = XmpDocument::parseNumericValue($parts[0]);
+        $numeric    = XmpDocument::parseNumericValue($parts[0]);
 
         if ($numeric === null || $numeric < 0.0) {
             return null;
         }
 
-        $sign = $this->coordinateSign($ref);
+        $sign       = $this->coordinateSign($ref);
 
         if ($sign === null) {
             return null;
@@ -849,7 +849,7 @@ final readonly class GpsFactory
             return null;
         }
 
-        $time = trim($time);
+        $time           = trim($time);
 
         if ($time === '') {
             return null;

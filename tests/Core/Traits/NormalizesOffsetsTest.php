@@ -88,13 +88,13 @@ final class NormalizesOffsetsTest extends TestCase
 
     private function methodBody(ReflectionMethod $method): string
     {
-        $fileName = $method->getFileName();
+        $fileName    = $method->getFileName();
         self::assertIsString($fileName);
 
         $sourceLines = file($fileName);
         self::assertIsArray($sourceLines);
-        $startLine = $method->getStartLine();
-        $endLine   = $method->getEndLine();
+        $startLine   = $method->getStartLine();
+        $endLine     = $method->getEndLine();
         self::assertIsInt($startLine);
         self::assertIsInt($endLine);
 

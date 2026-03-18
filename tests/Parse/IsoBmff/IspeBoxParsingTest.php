@@ -111,8 +111,8 @@ final class IspeBoxParsingTest extends TestCase
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
         $data        = $ftyp . $meta;
 
-        $extractor = $this->createExtractor($data);
-        $result    = $extractor->extract();
+        $extractor   = $this->createExtractor($data);
+        $result      = $extractor->extract();
 
         self::assertNull($result->ispeWidth);
         self::assertNull($result->ispeHeight);

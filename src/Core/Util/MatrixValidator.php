@@ -40,10 +40,10 @@ final class MatrixValidator
             return null;
         }
 
-        $columns = $matrix['columns'] ?? null;
-        $rows    = $matrix['rows'] ?? null;
-        $labels  = $matrix['labels'] ?? null;
-        $values  = $matrix['values'] ?? null;
+        $columns                = $matrix['columns'] ?? null;
+        $rows                   = $matrix['rows'] ?? null;
+        $labels                 = $matrix['labels'] ?? null;
+        $values                 = $matrix['values'] ?? null;
 
         if (!is_int($columns) || !is_int($rows) || !is_array($labels) || !is_array($values)) {
             return null;
@@ -53,13 +53,13 @@ final class MatrixValidator
             return null;
         }
 
-        $columnLabels = $labels['columns'] ?? null;
+        $columnLabels           = $labels['columns'] ?? null;
 
         if (!is_array($columnLabels)) {
             return null;
         }
 
-        $rowLabels = $labels['rows'] ?? null;
+        $rowLabels              = $labels['rows'] ?? null;
 
         if (($rowLabels === null) && $requireRowLabels) {
             return null;
@@ -75,7 +75,7 @@ final class MatrixValidator
             return null;
         }
 
-        $normalizedRowLabels = null;
+        $normalizedRowLabels    = null;
 
         if ($rowLabels !== null) {
             $normalizedRowLabels = self::normalizeLabelList($rowLabels, $rows);
@@ -89,14 +89,14 @@ final class MatrixValidator
             return null;
         }
 
-        $normalizedValues = [];
+        $normalizedValues       = [];
 
         foreach ($values as $row) {
             if (!is_array($row)) {
                 return null;
             }
 
-            $normalizedRow = [];
+            $normalizedRow      = [];
 
             foreach ($row as $cell) {
                 if (!is_float($cell)) {

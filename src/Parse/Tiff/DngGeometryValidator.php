@@ -50,7 +50,7 @@ final readonly class DngGeometryValidator
      */
     public function validateDngActiveAndMaskedAreas(Ifd $ifd): void
     {
-        $activeArea = $ifd->get(DngTag::ACTIVE_AREA);
+        $activeArea  = $ifd->get(DngTag::ACTIVE_AREA);
 
         if ($activeArea instanceof IfdEntry) {
             if (($activeArea->count !== 4) || !in_array($activeArea->type, [TiffConst::TYPE_SHORT, TiffConst::TYPE_LONG], true)) {
@@ -109,8 +109,8 @@ final readonly class DngGeometryValidator
      */
     public function validateDngBlackWhiteLevelFamily(Ifd $ifd): void
     {
-        $samplesPerPixel = null;
-        $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+        $samplesPerPixel              = null;
+        $samplesEntry                 = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
 
         if (($samplesEntry instanceof IfdEntry) && is_int($samplesEntry->value) && ($samplesEntry->value > 0)) {
             $samplesPerPixel = $samplesEntry->value;
@@ -137,7 +137,7 @@ final readonly class DngGeometryValidator
      */
     public function validateDngDefaultCropScaleGeometry(Ifd $ifd): void
     {
-        $defaultScale = $ifd->get(DngTag::DEFAULT_SCALE);
+        $defaultScale      = $ifd->get(DngTag::DEFAULT_SCALE);
 
         if ($defaultScale instanceof IfdEntry) {
             if (($defaultScale->type !== TiffConst::TYPE_RATIONAL) || ($defaultScale->count !== 2)) {
@@ -197,7 +197,7 @@ final readonly class DngGeometryValidator
             }
         }
 
-        $defaultCropSize = $ifd->get(DngTag::DEFAULT_CROP_SIZE);
+        $defaultCropSize   = $ifd->get(DngTag::DEFAULT_CROP_SIZE);
 
         if ($defaultCropSize instanceof IfdEntry) {
             if (($defaultCropSize->count !== 2) || !in_array(
@@ -361,7 +361,7 @@ final readonly class DngGeometryValidator
      */
     public function validateDngDefaultUserCrop(Ifd $ifd): void
     {
-        $entry = $ifd->get(DngTag::DEFAULT_USER_CROP);
+        $entry  = $ifd->get(DngTag::DEFAULT_USER_CROP);
 
         if (!$entry instanceof IfdEntry) {
             return;
@@ -374,7 +374,7 @@ final readonly class DngGeometryValidator
             );
         }
 
-        $value = $entry->value;
+        $value  = $entry->value;
 
         if (!$value instanceof ExifRationalList || count($value->values) !== 4) {
             return;
@@ -539,7 +539,7 @@ final readonly class DngGeometryValidator
      */
     public function validateDngLensInfo(Ifd $ifd): void
     {
-        $entry = $ifd->get(DngTag::LENS_INFO);
+        $entry      = $ifd->get(DngTag::LENS_INFO);
 
         if (!$entry instanceof IfdEntry) {
             return;
@@ -556,7 +556,7 @@ final readonly class DngGeometryValidator
             );
         }
 
-        $value = $entry->value;
+        $value      = $entry->value;
 
         if (!$value instanceof ExifRationalList || count($value->values) !== 4) {
             throw new ParseError('LensInfo must decode to four rational components.', 1650);
@@ -583,8 +583,8 @@ final readonly class DngGeometryValidator
             $components[] = $component->numerator / $component->denominator;
         }
 
-        $minFocal = (float) $components[0];
-        $maxFocal = (float) $components[1];
+        $minFocal   = (float) $components[0];
+        $maxFocal   = (float) $components[1];
 
         if ($minFocal > $maxFocal) {
             throw new ParseError(
@@ -610,7 +610,7 @@ final readonly class DngGeometryValidator
      */
     public function validateDngBayerGreenSplit(Ifd $ifd): void
     {
-        $entry = $ifd->get(DngTag::BAYER_GREEN_SPLIT);
+        $entry  = $ifd->get(DngTag::BAYER_GREEN_SPLIT);
 
         if (!$entry instanceof IfdEntry) {
             return;
@@ -634,7 +634,7 @@ final readonly class DngGeometryValidator
             );
         }
 
-        $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $photo  = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
 
         if (($photo instanceof IfdEntry) && is_int($photo->value) && ($photo->value !== Photometric::Cfa->value)) {
             throw new ParseError(
@@ -653,8 +653,8 @@ final readonly class DngGeometryValidator
             return;
         }
 
-        $rows = $repeat->value->values[0];
-        $cols = $repeat->value->values[1];
+        $rows   = $repeat->value->values[0];
+        $cols   = $repeat->value->values[1];
 
         if (!is_int($rows) || !is_int($cols)) {
             return;
@@ -922,8 +922,8 @@ final readonly class DngGeometryValidator
             return;
         }
 
-        $rows = $entry->value->values[0];
-        $cols = $entry->value->values[1];
+        $rows  = $entry->value->values[0];
+        $cols  = $entry->value->values[1];
 
         if (!is_int($rows) || !is_int($cols)) {
             return;

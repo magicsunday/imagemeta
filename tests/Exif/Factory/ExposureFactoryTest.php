@@ -43,7 +43,7 @@ final class ExposureFactoryTest extends TestCase
     {
         $parsedExif = $this->parsedExifWithIsoAndFlash(100, 0x0001);
 
-        $exposure = $this->createExposure($parsedExif);
+        $exposure   = $this->createExposure($parsedExif);
 
         self::assertNotNull($exposure->settings);
         self::assertSame(100, $exposure->settings->iso);
@@ -75,7 +75,7 @@ final class ExposureFactoryTest extends TestCase
     {
         $parsedExif = $this->parsedExifWithIsoAndFlash(null, 0x0019);
 
-        $exposure = $this->createExposure($parsedExif);
+        $exposure   = $this->createExposure($parsedExif);
 
         self::assertNotNull($exposure->settings);
         self::assertNull($exposure->settings->iso);
@@ -90,7 +90,7 @@ final class ExposureFactoryTest extends TestCase
     #[Test]
     public function returnsNullIsoWhenTagHasWrongType(): void
     {
-        $entries = [
+        $entries    = [
             ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 2,

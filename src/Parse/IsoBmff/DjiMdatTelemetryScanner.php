@@ -33,9 +33,9 @@ use const M_PI;
  */
 final readonly class DjiMdatTelemetryScanner
 {
-    private const string DJI_SIGNATURE = 'DJI ';
+    private const string DJI_SIGNATURE     = 'DJI ';
 
-    public const int SCAN_WINDOW = 131072;
+    public const int SCAN_WINDOW           = 131072;
 
     private const int RECORD_CONTEXT_BYTES = 300;
 
@@ -73,7 +73,7 @@ final readonly class DjiMdatTelemetryScanner
      */
     public function scanBytes(string $data): ?DjiTelemetry
     {
-        $length = strlen($data);
+        $length    = strlen($data);
 
         if ($length === 0) {
             return null;
@@ -84,10 +84,10 @@ final readonly class DjiMdatTelemetryScanner
         $longitude = null;
         $altitude  = null;
 
-        $offset = 0;
+        $offset    = 0;
 
         while (($pos = strpos($data, self::DJI_SIGNATURE, $offset)) !== false) {
-            $model = $this->extractModelAt($data, $pos);
+            $model             = $this->extractModelAt($data, $pos);
 
             [$lat, $lon, $alt] = $this->searchGpsNear($data, $pos);
 
@@ -99,7 +99,7 @@ final readonly class DjiMdatTelemetryScanner
                 break;
             }
 
-            $offset = $pos + 1;
+            $offset            = $pos + 1;
         }
 
         if ($model === null) {
@@ -171,7 +171,7 @@ final readonly class DjiMdatTelemetryScanner
         $chunk       = substr($data, $searchStart, $searchEnd - $searchStart);
 
         // Search for f64 pairs that decode to valid GPS coordinates in radians
-        $chunkLen = strlen($chunk);
+        $chunkLen    = strlen($chunk);
 
         for ($i = 0; $i < ($chunkLen - 16); ++$i) {
             $val1 = $this->tryDecodeGpsRadians(substr($chunk, $i, 8));
@@ -230,8 +230,8 @@ final readonly class DjiMdatTelemetryScanner
             }
 
             /** @var array{1: float} $unpacked */
-            $unpacked = unpack('e', substr($chunk, $altOffset, 8));
-            $val      = $unpacked[1];
+            $unpacked  = unpack('e', substr($chunk, $altOffset, 8));
+            $val       = $unpacked[1];
 
             if (!is_finite($val)) {
                 continue;

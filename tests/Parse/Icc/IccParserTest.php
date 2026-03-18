@@ -79,7 +79,7 @@ final class IccParserTest extends TestCase
     #[Test]
     public function decodeReassemblesSegments(): void
     {
-        $profile = IccFixtures::minimalProfile();
+        $profile  = IccFixtures::minimalProfile();
 
         $half     = intdiv(strlen($profile) + 1, 2);
         $segments = [
@@ -87,8 +87,8 @@ final class IccParserTest extends TestCase
             $this->createSegment(2, 2, substr($profile, $half)),
         ];
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode(null, $segments);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode(null, $segments);
 
         self::assertNotNull($result);
         self::assertSame('Test Profile', $result->description);
@@ -206,7 +206,7 @@ final class IccParserTest extends TestCase
     #[Test]
     public function decodeHandlesOutOfOrderSegments(): void
     {
-        $profile = IccFixtures::minimalProfile();
+        $profile  = IccFixtures::minimalProfile();
 
         $half     = intdiv(strlen($profile) + 1, 2);
         $segments = [
@@ -214,8 +214,8 @@ final class IccParserTest extends TestCase
             $this->createSegment(1, 2, substr($profile, 0, $half)),
         ];
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode(null, $segments);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode(null, $segments);
 
         self::assertNotNull($result);
         self::assertSame('Test Profile', $result->description);
@@ -229,7 +229,7 @@ final class IccParserTest extends TestCase
     #[Test]
     public function decodeRejectsIncompleteSegmentSequences(): void
     {
-        $profile = IccFixtures::minimalProfile();
+        $profile  = IccFixtures::minimalProfile();
 
         $third    = intdiv(strlen($profile), 3);
         $segments = [
@@ -237,7 +237,7 @@ final class IccParserTest extends TestCase
             $this->createSegment(3, 3, substr($profile, $third * 2)),
         ];
 
-        $decoder = new IccParser();
+        $decoder  = new IccParser();
 
         $this->expectException(ParseError::class);
         $decoder->decode(null, $segments);
@@ -382,8 +382,8 @@ final class IccParserTest extends TestCase
         $dateTime = pack('nnnnnn', 2024, 6, 15, 12, 30, 45);
         $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertSame('2024:06:15 12:30:45', $result->profileDateTime);
@@ -401,8 +401,8 @@ final class IccParserTest extends TestCase
         $dateTime = pack('nnnnnn', 0, 6, 15, 12, 0, 0);
         $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertNull($result->profileDateTime);
@@ -420,8 +420,8 @@ final class IccParserTest extends TestCase
         $dateTime = pack('nnnnnn', 2024, 1, 1, 0, 0, 0);
         $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertSame('2024:01:01 00:00:00', $result->profileDateTime);
@@ -439,8 +439,8 @@ final class IccParserTest extends TestCase
         $dateTime = pack('nnnnnn', 2024, 12, 31, 23, 59, 59);
         $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertSame('2024:12:31 23:59:59', $result->profileDateTime);
@@ -458,8 +458,8 @@ final class IccParserTest extends TestCase
         $dateTime = pack('nnnnnn', 2024, 0, 15, 12, 0, 0);
         $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertNull($result->profileDateTime);
@@ -477,8 +477,8 @@ final class IccParserTest extends TestCase
         $dateTime = pack('nnnnnn', 2024, 13, 15, 12, 0, 0);
         $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertNull($result->profileDateTime);
@@ -496,8 +496,8 @@ final class IccParserTest extends TestCase
         $dateTime = pack('nnnnnn', 2024, 6, 0, 10, 0, 0);
         $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertNull($result->profileDateTime);
@@ -515,8 +515,8 @@ final class IccParserTest extends TestCase
         $dateTime = pack('nnnnnn', 2024, 6, 32, 10, 0, 0);
         $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertNull($result->profileDateTime);
@@ -534,8 +534,8 @@ final class IccParserTest extends TestCase
         $dateTime = pack('nnnnnn', 2024, 6, 15, 24, 0, 0);
         $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertNull($result->profileDateTime);
@@ -553,8 +553,8 @@ final class IccParserTest extends TestCase
         $dateTime = pack('nnnnnn', 2024, 6, 15, 10, 60, 0);
         $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertNull($result->profileDateTime);
@@ -572,8 +572,8 @@ final class IccParserTest extends TestCase
         $dateTime = pack('nnnnnn', 2024, 6, 15, 10, 0, 60);
         $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertNull($result->profileDateTime);
@@ -591,8 +591,8 @@ final class IccParserTest extends TestCase
         $dateTime = pack('nnnnnn', 2024, 2, 29, 10, 0, 0);
         $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder  = new IccParser();
+        $result   = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertSame('2024:02:29 10:00:00', $result->profileDateTime);
@@ -624,7 +624,7 @@ final class IccParserTest extends TestCase
     public function parsesValidMlucDescription(): void
     {
         // "Hi" in UTF-16BE
-        $utf16 = "\x00\x48\x00\x69";
+        $utf16   = "\x00\x48\x00\x69";
 
         $profile = $this->buildMlucProfile($utf16);
 
@@ -641,13 +641,13 @@ final class IccParserTest extends TestCase
     #[Test]
     public function toleratesMlucTagWithNonZeroTypeReservedBytes(): void
     {
-        $profile = $this->buildMlucProfile("\x00\x48\x00\x69");
+        $profile       = $this->buildMlucProfile("\x00\x48\x00\x69");
 
         $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
         $profile       = substr_replace($profile, "\0\0\0\x01", $tagDataOffset + 4, 4);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder       = new IccParser();
+        $result        = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertSame('Hi', $result->description);
@@ -659,13 +659,13 @@ final class IccParserTest extends TestCase
     #[Test]
     public function toleratesMlucTagWithLargerRecordSize(): void
     {
-        $profile = $this->buildMlucProfile("\x00\x48\x00\x69");
+        $profile       = $this->buildMlucProfile("\x00\x48\x00\x69");
 
         $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
         $profile       = substr_replace($profile, pack('N', 16), $tagDataOffset + 12, 4);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder       = new IccParser();
+        $result        = $decoder->decode($profile);
 
         self::assertNotNull($result);
     }
@@ -677,12 +677,12 @@ final class IccParserTest extends TestCase
     #[Test]
     public function rejectsMlucTagWithTruncatedRecordTable(): void
     {
-        $profile = $this->buildMlucProfile("\x00\x48\x00\x69");
+        $profile       = $this->buildMlucProfile("\x00\x48\x00\x69");
 
         $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
         $profile       = substr_replace($profile, pack('N', 2), $tagDataOffset + 8, 4);
 
-        $decoder = new IccParser();
+        $decoder       = new IccParser();
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('record table exceeds payload bounds');
@@ -697,12 +697,12 @@ final class IccParserTest extends TestCase
     #[Test]
     public function rejectsMlucTagWithOutOfBoundsStringRange(): void
     {
-        $profile = $this->buildMlucProfile("\x00\x48\x00\x69");
+        $profile       = $this->buildMlucProfile("\x00\x48\x00\x69");
 
         $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
         $profile       = substr_replace($profile, pack('N', 100), $tagDataOffset + 20, 4);
 
-        $decoder = new IccParser();
+        $decoder       = new IccParser();
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('string range');
@@ -721,14 +721,14 @@ final class IccParserTest extends TestCase
     #[Test]
     public function rejectsMlucTagWithStringRangeOverflow(): void
     {
-        $profile = $this->buildMlucProfile("\x00\x48\x00\x69");
+        $profile       = $this->buildMlucProfile("\x00\x48\x00\x69");
 
         $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
         // Set string offset to 0xFFFFFFFF — a near-maximum uint32 value that would cause
         // integer overflow on 32-bit platforms when added to any non-zero string length.
-        $profile = substr_replace($profile, pack('N', 0xFFFFFFFF), $tagDataOffset + 24, 4);
+        $profile       = substr_replace($profile, pack('N', 0xFFFFFFFF), $tagDataOffset + 24, 4);
 
-        $decoder = new IccParser();
+        $decoder       = new IccParser();
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1890);
@@ -755,9 +755,9 @@ final class IccParserTest extends TestCase
             ['lang' => 'de', 'country' => 'DE', 'text' => "\x00\x48\x00\x61\x00\x6c\x00\x6c\x00\x6f"],
         ]);
 
-        $decoder = new IccParser();
-        $resultA = $decoder->decode($profileA);
-        $resultB = $decoder->decode($profileB);
+        $decoder  = new IccParser();
+        $resultA  = $decoder->decode($profileA);
+        $resultB  = $decoder->decode($profileB);
 
         self::assertNotNull($resultA);
         self::assertNotNull($resultB);
@@ -807,7 +807,7 @@ final class IccParserTest extends TestCase
     private function buildMlucProfile(string $utf16String): string
     {
         // ICC header (128 bytes)
-        $header = pack('N', 0)           // Profile size (placeholder, patched below)
+        $header       = pack('N', 0)           // Profile size (placeholder, patched below)
             . str_repeat("\0", 4)        // Preferred CMM type
             . pack('N', 0x04200000)      // Version 4.2.0
             . str_repeat("\0", 4)        // Device class
@@ -825,7 +825,7 @@ final class IccParserTest extends TestCase
             . str_repeat("\0", 28);      // Reserved
 
         // Pad header to exactly 128 bytes
-        $header = str_pad($header, 128, "\0");
+        $header       = str_pad($header, 128, "\0");
 
         // mluc tag data: signature + reserved + recordCount + recordSize + record + string
         $stringOffset = 16 + 12; // after mluc header (16) + 1 record (12)
@@ -839,17 +839,17 @@ final class IccParserTest extends TestCase
             . $utf16String;
 
         // ICC.1:2022 §7.3: tag size must be 4-byte aligned
-        $paddedSize = (int) (ceil(strlen($mlucTag) / 4) * 4);
-        $mlucTag    = str_pad($mlucTag, $paddedSize, "\0");
+        $paddedSize   = (int) (ceil(strlen($mlucTag) / 4) * 4);
+        $mlucTag      = str_pad($mlucTag, $paddedSize, "\0");
 
         // Tag table: 1 entry (desc)
-        $tagOffset = 128 + 4 + 12; // header + tagCount(4) + 1 tag entry(12)
-        $tagTable  = pack('N', 1)        // Tag count
+        $tagOffset    = 128 + 4 + 12; // header + tagCount(4) + 1 tag entry(12)
+        $tagTable     = pack('N', 1)        // Tag count
             . 'desc'                     // Tag signature
             . pack('N', $tagOffset)      // Offset to tag data
             . pack('N', $paddedSize);    // Tag size (4-byte aligned)
 
-        $profile = $header . $tagTable . $mlucTag;
+        $profile      = $header . $tagTable . $mlucTag;
 
         // Patch profile size
         return pack('N', strlen($profile)) . substr($profile, 4);
@@ -862,7 +862,7 @@ final class IccParserTest extends TestCase
      */
     private function buildMultiRecordMlucProfile(array $records): string
     {
-        $header = pack('N', 0)
+        $header         = pack('N', 0)
             . str_repeat("\0", 4)
             . pack('N', 0x04200000)      // Version 4.2.0
             . str_repeat("\0", 4)
@@ -879,15 +879,15 @@ final class IccParserTest extends TestCase
             . str_repeat("\0", 16)
             . str_repeat("\0", 28);
 
-        $header = str_pad($header, 128, "\0");
+        $header         = str_pad($header, 128, "\0");
 
         $recordCount    = count($records);
         $recordSize     = 12;
         $stringAreaBase = 16 + ($recordCount * $recordSize);
 
-        $recordBytes = '';
-        $stringBytes = '';
-        $stringPos   = $stringAreaBase;
+        $recordBytes    = '';
+        $stringBytes    = '';
+        $stringPos      = $stringAreaBase;
 
         foreach ($records as $record) {
             $recordBytes .= $record['lang']
@@ -898,23 +898,23 @@ final class IccParserTest extends TestCase
             $stringPos += strlen($record['text']);
         }
 
-        $mlucTag = 'mluc'
+        $mlucTag        = 'mluc'
             . pack('N', 0)
             . pack('N', $recordCount)
             . pack('N', $recordSize)
             . $recordBytes
             . $stringBytes;
 
-        $paddedSize = (int) (ceil(strlen($mlucTag) / 4) * 4);
-        $mlucTag    = str_pad($mlucTag, $paddedSize, "\0");
+        $paddedSize     = (int) (ceil(strlen($mlucTag) / 4) * 4);
+        $mlucTag        = str_pad($mlucTag, $paddedSize, "\0");
 
-        $tagOffset = 128 + 4 + 12;
-        $tagTable  = pack('N', 1)
+        $tagOffset      = 128 + 4 + 12;
+        $tagTable       = pack('N', 1)
             . 'desc'
             . pack('N', $tagOffset)
             . pack('N', $paddedSize);
 
-        $profile = $header . $tagTable . $mlucTag;
+        $profile        = $header . $tagTable . $mlucTag;
 
         return pack('N', strlen($profile)) . substr($profile, 4);
     }
@@ -1041,13 +1041,13 @@ final class IccParserTest extends TestCase
     #[Test]
     public function decodeRejectsTextTypeWithNonZeroReservedBytes(): void
     {
-        $profile = $this->buildTextTypeProfile("Valid ASCII Text\0", 0x02400000);
+        $profile       = $this->buildTextTypeProfile("Valid ASCII Text\0", 0x02400000);
 
         $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
         $profile       = substr_replace($profile, "\0\0\0\x01", $tagDataOffset + 4, 4);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder       = new IccParser();
+        $result        = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertNull($result->copyright);
@@ -1059,7 +1059,7 @@ final class IccParserTest extends TestCase
     private function buildTextTypeProfile(string $text, int $versionBytes = 0x04210000): string
     {
         // ICC header (128 bytes)
-        $header = pack('N', 0)           // Profile size (placeholder, patched below)
+        $header     = pack('N', 0)           // Profile size (placeholder, patched below)
             . str_repeat("\0", 4)        // Preferred CMM type
             . pack('N', $versionBytes)   // Version
             . str_repeat("\0", 4)        // Device class
@@ -1077,10 +1077,10 @@ final class IccParserTest extends TestCase
             . str_repeat("\0", 28);      // Reserved
 
         // Pad header to exactly 128 bytes
-        $header = str_pad($header, 128, "\0");
+        $header     = str_pad($header, 128, "\0");
 
         // textType tag data: signature + reserved + ASCII text
-        $textTag = 'text'
+        $textTag    = 'text'
             . pack('N', 0)               // Reserved
             . $text;
 
@@ -1089,13 +1089,13 @@ final class IccParserTest extends TestCase
         $textTag    = str_pad($textTag, $paddedSize, "\0");
 
         // Tag table: 1 entry (cprt)
-        $tagOffset = 128 + 4 + 12; // header + tagCount(4) + 1 tag entry(12)
-        $tagTable  = pack('N', 1)        // Tag count
+        $tagOffset  = 128 + 4 + 12; // header + tagCount(4) + 1 tag entry(12)
+        $tagTable   = pack('N', 1)        // Tag count
             . 'cprt'                     // Tag signature
             . pack('N', $tagOffset)      // Offset to tag data
             . pack('N', $paddedSize);    // Tag size (4-byte aligned)
 
-        $profile = $header . $tagTable . $textTag;
+        $profile    = $header . $tagTable . $textTag;
 
         // Patch profile size
         return pack('N', strlen($profile)) . substr($profile, 4);
@@ -1178,13 +1178,13 @@ final class IccParserTest extends TestCase
     #[Test]
     public function decodeRejectsDescTagWithNonZeroReservedBytes(): void
     {
-        $profile = $this->buildDescTypeProfile("Valid ASCII\0", 0x02400000);
+        $profile       = $this->buildDescTypeProfile("Valid ASCII\0", 0x02400000);
 
         $tagDataOffset = 128 + 4 + 12; // header + tagCount + one tag record
         $profile       = substr_replace($profile, "\0\0\0\x01", $tagDataOffset + 4, 4);
 
-        $decoder = new IccParser();
-        $result  = $decoder->decode($profile);
+        $decoder       = new IccParser();
+        $result        = $decoder->decode($profile);
 
         self::assertNotNull($result);
         self::assertNull($result->description);
@@ -1238,7 +1238,7 @@ final class IccParserTest extends TestCase
     private function buildDescTypeProfileWithLength(string $text, int $asciiLength, int $versionBytes = 0x04210000): string
     {
         // ICC header (128 bytes)
-        $header = pack('N', 0)           // Profile size (placeholder, patched below)
+        $header     = pack('N', 0)           // Profile size (placeholder, patched below)
             . str_repeat("\0", 4)        // Preferred CMM type
             . pack('N', $versionBytes)   // Version
             . str_repeat("\0", 4)        // Device class
@@ -1256,10 +1256,10 @@ final class IccParserTest extends TestCase
             . str_repeat("\0", 28);      // Reserved
 
         // Pad header to exactly 128 bytes
-        $header = str_pad($header, 128, "\0");
+        $header     = str_pad($header, 128, "\0");
 
         // descType tag data: signature + reserved + ASCII length + ASCII text
-        $descTag = 'desc'
+        $descTag    = 'desc'
             . pack('N', 0)               // Reserved
             . pack('N', $asciiLength)    // ASCII length (custom value)
             . $text;
@@ -1269,13 +1269,13 @@ final class IccParserTest extends TestCase
         $descTag    = str_pad($descTag, $paddedSize, "\0");
 
         // Tag table: 1 entry (desc)
-        $tagOffset = 128 + 4 + 12; // header + tagCount(4) + 1 tag entry(12)
-        $tagTable  = pack('N', 1)        // Tag count
+        $tagOffset  = 128 + 4 + 12; // header + tagCount(4) + 1 tag entry(12)
+        $tagTable   = pack('N', 1)        // Tag count
             . 'desc'                     // Tag signature
             . pack('N', $tagOffset)      // Offset to tag data
             . pack('N', $paddedSize);    // Tag size (4-byte aligned)
 
-        $profile = $header . $tagTable . $descTag;
+        $profile    = $header . $tagTable . $descTag;
 
         // Patch profile size
         return pack('N', strlen($profile)) . substr($profile, 4);
@@ -1297,7 +1297,7 @@ final class IccParserTest extends TestCase
                 . pack('N', $record['size']);
         }
 
-        $profile = $header . $tagTable . $payload;
+        $profile  = $header . $tagTable . $payload;
 
         return pack('N', strlen($profile)) . substr($profile, 4);
     }
@@ -1509,7 +1509,7 @@ final class IccParserTest extends TestCase
     #[Test]
     public function rejectsTagCountThatOverflowsWhenMultipliedByEntrySize(): void
     {
-        $header = str_pad(
+        $header  = str_pad(
             pack('N', 0)               // Profile size (placeholder, patched below)
                 . str_repeat("\0", 4)  // Preferred CMM type
                 . pack('N', 0x02400000) // Version 2.4.0
@@ -1539,15 +1539,15 @@ final class IccParserTest extends TestCase
     #[Test]
     public function rejectsCombinedSegmentsExceedingMaxIccProfileSize(): void
     {
-        $chunkA = str_repeat('A', 60);
-        $chunkB = str_repeat('B', 60);
+        $chunkA   = str_repeat('A', 60);
+        $chunkB   = str_repeat('B', 60);
 
         $segments = [
             $this->createSegment(1, 2, $chunkA),
             $this->createSegment(2, 2, $chunkB),
         ];
 
-        $decoder = new IccParser(maxIccProfileSize: 100);
+        $decoder  = new IccParser(maxIccProfileSize: 100);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1949);
@@ -1642,7 +1642,7 @@ final class IccParserTest extends TestCase
      */
     private function buildExpandedProfile(): string
     {
-        $header = pack('N', 0)
+        $header     = pack('N', 0)
             . str_repeat("\0", 4)
             . pack('N', 0x04200000)      // Version 4.2.0
             . str_repeat("\0", 4)
@@ -1659,11 +1659,11 @@ final class IccParserTest extends TestCase
             . str_repeat("\0", 16)
             . str_repeat("\0", 28);
 
-        $header = str_pad($header, 128, "\0");
+        $header     = str_pad($header, 128, "\0");
 
         // Build tag payloads
 
-        $encodeS15 = static function (float $v): string {
+        $encodeS15  = static function (float $v): string {
             $raw = (int) round($v * 65536.0);
 
             if ($raw < 0) {
@@ -1674,25 +1674,25 @@ final class IccParserTest extends TestCase
         };
 
         // XYZ tag helper: 'XYZ ' + reserved(4) + 3 x s15Fixed16Number
-        $buildXyz = (static fn (float $x, float $y, float $z): string => "XYZ \0\0\0\0" . $encodeS15($x) . $encodeS15($y) . $encodeS15($z));
+        $buildXyz   = (static fn (float $x, float $y, float $z): string => "XYZ \0\0\0\0" . $encodeS15($x) . $encodeS15($y) . $encodeS15($z));
 
-        $bkptData = $buildXyz(0.0, 0.0, 0.0);
-        $rXyzData = $buildXyz(0.4361, 0.2225, 0.0139);
-        $gXyzData = $buildXyz(0.3851, 0.7169, 0.0971);
-        $bXyzData = $buildXyz(0.1431, 0.0606, 0.7141);
-        $lumiData = $buildXyz(76.0365, 80.0, 87.1246);
+        $bkptData   = $buildXyz(0.0, 0.0, 0.0);
+        $rXyzData   = $buildXyz(0.4361, 0.2225, 0.0139);
+        $gXyzData   = $buildXyz(0.3851, 0.7169, 0.0971);
+        $bXyzData   = $buildXyz(0.1431, 0.0606, 0.7141);
+        $lumiData   = $buildXyz(76.0365, 80.0, 87.1246);
 
         // Parametric curve type 0: Y = X^gamma
         // 'para' + reserved(4) + functionType(2) + reserved(2) + gamma s15Fixed16
-        $gamma22  = (int) round(2.2 * 65536.0);
-        $paraData = "para\0\0\0\0" . pack('n', 0) . "\0\0" . pack('N', $gamma22);
-        $rTrcData = $paraData;
-        $gTrcData = $paraData;
-        $bTrcData = $paraData;
+        $gamma22    = (int) round(2.2 * 65536.0);
+        $paraData   = "para\0\0\0\0" . pack('n', 0) . "\0\0" . pack('N', $gamma22);
+        $rTrcData   = $paraData;
+        $gTrcData   = $paraData;
+        $bTrcData   = $paraData;
 
         // mluc text helper for dmnd/dmdd
-        $buildMluc = static function (string $text): string {
-            $utf16 = '';
+        $buildMluc  = static function (string $text): string {
+            $utf16        = '';
 
             for ($i = 0, $len = strlen($text); $i < $len; ++$i) {
                 $utf16 .= "\x00" . $text[$i];
@@ -1708,25 +1708,25 @@ final class IccParserTest extends TestCase
                 . pack('N', $stringOffset)
                 . $utf16;
 
-            $padded = (int) (ceil(strlen($mluc) / 4) * 4);
+            $padded       = (int) (ceil(strlen($mluc) / 4) * 4);
 
             return str_pad($mluc, $padded, "\0");
         };
 
-        $dmndData = $buildMluc('Test Manufacturer');
-        $dmddData = $buildMluc('Test Model');
+        $dmndData   = $buildMluc('Test Manufacturer');
+        $dmddData   = $buildMluc('Test Model');
 
         // Technology signature: 'sig ' + reserved(4) + 4-byte signature
-        $techData = "sig \0\0\0\0CRT ";
+        $techData   = "sig \0\0\0\0CRT ";
 
         // Viewing conditions: 'view' + reserved + illuminant XYZ + surround XYZ + illuminantType
-        $viewData = "view\0\0\0\0"
+        $viewData   = "view\0\0\0\0"
             . $encodeS15(19.6445) . $encodeS15(20.0) . $encodeS15(16.5330)
             . $encodeS15(0.3457) . $encodeS15(0.3585) . $encodeS15(0.2958)
             . pack('N', 1);
 
         // Measurement: 'meas' + reserved + observer + backing XYZ + geometry + flare(u16Fixed16) + illuminant
-        $measData = "meas\0\0\0\0"
+        $measData   = "meas\0\0\0\0"
             . pack('N', 1)
             . $encodeS15(0.9642) . $encodeS15(1.0) . $encodeS15(0.8249)
             . pack('N', 1)
@@ -1734,10 +1734,10 @@ final class IccParserTest extends TestCase
             . pack('N', 1);
 
         // Description tag (mluc)
-        $descData = $buildMluc('Expanded Test Profile');
+        $descData   = $buildMluc('Expanded Test Profile');
 
         // Collect all tags
-        $tags = [
+        $tags       = [
             ['sig' => 'desc', 'data' => $descData],
             ['sig' => 'bkpt', 'data' => $bkptData],
             ['sig' => 'rXYZ', 'data' => $rXyzData],
@@ -1754,16 +1754,16 @@ final class IccParserTest extends TestCase
             ['sig' => 'meas', 'data' => $measData],
         ];
 
-        $tagCount  = count($tags);
-        $tableSize = 4 + ($tagCount * 12);
+        $tagCount   = count($tags);
+        $tableSize  = 4 + ($tagCount * 12);
 
         // Tag data starts right after header + tag table (always 4-byte aligned)
         $dataOffset = 128 + $tableSize;
 
         // Build tag table and concatenate data
-        $tagTable = pack('N', $tagCount);
-        $tagData  = '';
-        $cursor   = $dataOffset;
+        $tagTable   = pack('N', $tagCount);
+        $tagData    = '';
+        $cursor     = $dataOffset;
 
         foreach ($tags as $tag) {
             $paddedSize = (int) (ceil(strlen($tag['data']) / 4) * 4);
@@ -1778,8 +1778,8 @@ final class IccParserTest extends TestCase
         }
 
         // Pad between header+tagTable and tag data if needed
-        $padding = $dataOffset - (128 + $tableSize);
-        $profile = $header . $tagTable . str_repeat("\0", $padding) . $tagData;
+        $padding    = $dataOffset - (128 + $tableSize);
+        $profile    = $header . $tagTable . str_repeat("\0", $padding) . $tagData;
 
         return pack('N', strlen($profile)) . substr($profile, 4);
     }

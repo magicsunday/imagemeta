@@ -33,7 +33,7 @@ final class FlashPixPropertyExtractorTest extends TestCase
     #[Test]
     public function extractsSummaryInfoProperties(): void
     {
-        $set = new OlePropertySet(1252, [
+        $set       = new OlePropertySet(1252, [
             1  => 1252,
             2  => 'Photo Title',
             4  => 'John Doe',
@@ -61,8 +61,8 @@ final class FlashPixPropertyExtractorTest extends TestCase
             2  => 'Title',
             12 => $createTime,
         ]);
-        $extractor = new FlashPixPropertyExtractor();
-        $info      = $extractor->extractSummaryInfo($set);
+        $extractor  = new FlashPixPropertyExtractor();
+        $info       = $extractor->extractSummaryInfo($set);
 
         self::assertInstanceOf(FlashPixSummaryInfo::class, $info);
         self::assertSame($createTime, $info->createTime);

@@ -111,7 +111,7 @@ final class TiffExifParserExtraSamplesTest extends TestCase
             ),
         );
 
-        $entry = $parsed->ifd0->get(TiffTag::EXTRA_SAMPLES);
+        $entry  = $parsed->ifd0->get(TiffTag::EXTRA_SAMPLES);
         self::assertNotNull($entry);
         self::assertSame(2, $entry->value);
     }
@@ -129,7 +129,7 @@ final class TiffExifParserExtraSamplesTest extends TestCase
             ),
         );
 
-        $entry = $parsed->ifd0->get(TiffTag::EXTRA_SAMPLES);
+        $entry  = $parsed->ifd0->get(TiffTag::EXTRA_SAMPLES);
         self::assertNotNull($entry);
         self::assertSame(0, $entry->value);
     }
@@ -141,7 +141,7 @@ final class TiffExifParserExtraSamplesTest extends TestCase
      */
     private function buildExtraSamplesTiff(int $extraSamplesType, array $extraSamplesValues): string
     {
-        $entries = [
+        $entries      = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -167,12 +167,12 @@ final class TiffExifParserExtraSamplesTest extends TestCase
 
         ksort($entries);
 
-        $ifdOffset   = 8;
-        $entryCount  = count($entries);
-        $ifdSize     = 2 + (12 * $entryCount) + 4;
-        $nextOffset  = $ifdOffset + $ifdSize;
-        $ifdEntries  = '';
-        $payloadTail = '';
+        $ifdOffset    = 8;
+        $entryCount   = count($entries);
+        $ifdSize      = 2 + (12 * $entryCount) + 4;
+        $nextOffset   = $ifdOffset + $ifdSize;
+        $ifdEntries   = '';
+        $payloadTail  = '';
 
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {
@@ -189,7 +189,7 @@ final class TiffExifParserExtraSamplesTest extends TestCase
                 continue;
             }
 
-            $ifdEntries .= $prefix . pack('V', $nextOffset);
+            $ifdEntries  .= $prefix . pack('V', $nextOffset);
             $payloadTail .= $payload;
             $nextOffset += strlen($payload);
         }

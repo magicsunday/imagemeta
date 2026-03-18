@@ -43,7 +43,7 @@ final class ExifRationalListTest extends TestCase
             new ExifRational(3, 4),
         ];
 
-        $list = new ExifRationalList($values);
+        $list   = new ExifRationalList($values);
 
         self::assertSame($values, $list->toArray());
     }

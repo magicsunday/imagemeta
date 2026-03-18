@@ -62,7 +62,7 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
         $payload = "ASCII\x00\x00";
         $parsed  = $this->parseWithExifUndefinedTag(ExifTag::MAKER_NOTE, $payload);
 
-        $entry = $parsed->exifIfd?->get(ExifTag::MAKER_NOTE);
+        $entry   = $parsed->exifIfd?->get(ExifTag::MAKER_NOTE);
         self::assertNotNull($entry);
         self::assertSame($payload, $entry->value);
     }
@@ -76,7 +76,7 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
         $payload = "\x41\x00\x42\x00\x43\x00";
         $parsed  = $this->parseWithExifUndefinedTag(ExifTag::MAKER_NOTE, $payload);
 
-        $entry = $parsed->exifIfd?->get(ExifTag::MAKER_NOTE);
+        $entry   = $parsed->exifIfd?->get(ExifTag::MAKER_NOTE);
         self::assertNotNull($entry);
         self::assertSame($payload, $entry->value);
     }
@@ -90,7 +90,7 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
         $payload = "\xFF\x00\x7F\x80\x41\x00\xFE";
         $parsed  = $this->parseWithExifUndefinedTag(ExifTag::MAKER_NOTE, $payload);
 
-        $entry = $parsed->exifIfd?->get(ExifTag::MAKER_NOTE);
+        $entry   = $parsed->exifIfd?->get(ExifTag::MAKER_NOTE);
         self::assertNotNull($entry);
         self::assertSame($payload, $entry->value);
     }
@@ -106,7 +106,7 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
         $payload = pack('H*', '415343494900000048656C6C6F20576F726C6400');
         $parsed  = $this->parseWithExifUndefinedTag(ExifTag::USER_COMMENT, $payload);
 
-        $entry = $parsed->exifIfd?->get(ExifTag::USER_COMMENT);
+        $entry   = $parsed->exifIfd?->get(ExifTag::USER_COMMENT);
         self::assertNotNull($entry);
         self::assertSame($payload, $entry->value);
         self::assertSame('Hello World', $parsed->userComment());
@@ -121,7 +121,7 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
         $payload = "ASCII\0\0\0GPS";
         $parsed  = $this->parseWithGpsUndefinedTag(ExifTag::GPS_PROCESSING_METHOD, $payload);
 
-        $entry = $parsed->gpsIfd?->get(ExifTag::GPS_PROCESSING_METHOD);
+        $entry   = $parsed->gpsIfd?->get(ExifTag::GPS_PROCESSING_METHOD);
         self::assertNotNull($entry);
         self::assertSame($payload, $entry->value);
         self::assertSame('GPS', $parsed->gps()['processing_method']);
@@ -135,7 +135,7 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
     {
         $parsed = $this->parseWithIfd0AsciiTag(ExifTag::MAKE, 'Canon');
 
-        $entry = $parsed->ifd0->get(ExifTag::MAKE);
+        $entry  = $parsed->ifd0->get(ExifTag::MAKE);
         self::assertNotNull($entry);
         self::assertSame('Canon', $entry->value);
     }
@@ -157,7 +157,7 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
         $payloadOffset   = $gpsIfdOffset + $gpsIfdSize;
         $payloadByteSize = strlen($payload);
 
-        $ifd0 = pack('v', $ifd0EntryCount)
+        $ifd0            = pack('v', $ifd0EntryCount)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -172,14 +172,14 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
             . pack('V', $gpsIfdOffset)
             . pack('V', 0);
 
-        $gpsIfd = pack('v', $gpsEntryCount)
+        $gpsIfd          = pack('v', $gpsEntryCount)
             . pack('v', $tag)
             . pack('v', TiffConst::TYPE_UNDEFINED)
             . pack('V', $payloadByteSize)
             . pack('V', $payloadOffset)
             . pack('V', 0);
 
-        $blob = 'II'
+        $blob            = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset)
             . $ifd0
@@ -203,7 +203,7 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
         $asciiPayload   = $value . "\0";
         $payloadOffset  = $ifd0Offset + $ifd0Size;
 
-        $ifd0 = pack('v', $ifd0EntryCount)
+        $ifd0           = pack('v', $ifd0EntryCount)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -218,7 +218,7 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
             . pack('V', $payloadOffset)
             . pack('V', 0);
 
-        $blob = 'II'
+        $blob           = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset)
             . $ifd0
@@ -244,7 +244,7 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
         $payloadOffset   = $exifIfdOffset + $exifIfdSize;
         $payloadByteSize = strlen($payload);
 
-        $ifd0 = pack('v', $ifd0EntryCount)
+        $ifd0            = pack('v', $ifd0EntryCount)
             // ImageWidth SHORT[1] = 100
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
@@ -262,14 +262,14 @@ final class TiffExifParserUndefinedTypeTest extends TestCase
             . pack('V', $exifIfdOffset)
             . pack('V', 0);
 
-        $exifIfd = pack('v', $exifEntryCount)
+        $exifIfd         = pack('v', $exifEntryCount)
             . pack('v', $tag)
             . pack('v', TiffConst::TYPE_UNDEFINED)
             . pack('V', $payloadByteSize)
             . pack('V', $payloadOffset)
             . pack('V', 0);
 
-        $blob = 'II'
+        $blob            = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset)
             . $ifd0

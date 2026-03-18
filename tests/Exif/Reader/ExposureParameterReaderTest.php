@@ -51,7 +51,7 @@ final class ExposureParameterReaderTest extends TestCase
             ExifTag::F_NUMBER      => new IfdEntry(ExifTag::F_NUMBER, 5, 1, [28, 10]),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
         self::assertEqualsWithDelta(1.0 / 200.0, $reader->exposureTime(), 0.00001);
         self::assertEqualsWithDelta(2.8, $reader->fNumber(), 0.001);
@@ -68,7 +68,7 @@ final class ExposureParameterReaderTest extends TestCase
             ExifTag::EXPOSURE_PROGRAM => new IfdEntry(ExifTag::EXPOSURE_PROGRAM, 3, 1, ExposureProgram::Normal->value),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
         self::assertSame(ExposureProgram::Normal, $reader->exposureProgram());
     }
@@ -95,7 +95,7 @@ final class ExposureParameterReaderTest extends TestCase
             ExifTag::EXPOSURE_MODE => new IfdEntry(ExifTag::EXPOSURE_MODE, 3, 1, ExposureMode::Manual->value),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
         self::assertSame(ExposureMode::Manual, $reader->exposureMode());
     }
@@ -111,7 +111,7 @@ final class ExposureParameterReaderTest extends TestCase
             ExifTag::EXPOSURE_BIAS_VALUE => new IfdEntry(ExifTag::EXPOSURE_BIAS_VALUE, 10, 1, [-1, 3]),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
         self::assertEqualsWithDelta(-1.0 / 3.0, $reader->exposureBias(), 0.001);
     }
@@ -147,7 +147,7 @@ final class ExposureParameterReaderTest extends TestCase
             ExifTag::DIGITAL_ZOOM_RATIO => new IfdEntry(ExifTag::DIGITAL_ZOOM_RATIO, 5, 1, [0, 1]),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
         self::assertNull($reader->digitalZoomRatio());
     }
@@ -163,7 +163,7 @@ final class ExposureParameterReaderTest extends TestCase
             ExifTag::BRIGHTNESS_VALUE => new IfdEntry(ExifTag::BRIGHTNESS_VALUE, 10, 1, [-1, 1]),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
         self::assertNull($reader->brightnessValue());
     }

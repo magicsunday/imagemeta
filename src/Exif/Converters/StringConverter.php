@@ -81,7 +81,7 @@ final readonly class StringConverter
             return null;
         }
 
-        $known = [
+        $known   = [
             '0100',
             '0110',
             '0200',
@@ -98,8 +98,8 @@ final readonly class StringConverter
             return null;
         }
 
-        $major = (int) substr($trimmed, 0, 2);
-        $minor = substr($trimmed, 2, 2);
+        $major   = (int) substr($trimmed, 0, 2);
+        $minor   = substr($trimmed, 2, 2);
 
         return sprintf('%d.%s', $major, $minor);
     }

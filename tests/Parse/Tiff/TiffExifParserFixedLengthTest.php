@@ -91,7 +91,7 @@ final class TiffExifParserFixedLengthTest extends TestCase
         int $count,
         string $valueBytes,
     ): void {
-        $blob = $this->buildClassicTiffWithEntry($tag, $type, $count, $valueBytes);
+        $blob   = $this->buildClassicTiffWithEntry($tag, $type, $count, $valueBytes);
 
         $reader = new TiffExifParser();
 
@@ -1062,20 +1062,20 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     private function buildClassicTiffWithEntry(int $tag, int $type, int $count, string $valueBytes): string
     {
-        $ifdOffset     = 8;
-        $entryCount    = 3; // ImageWidth + ImageLength + the requested tag
-        $componentSize = $this->bytesPerComponent($type);
-        $dataSize      = $componentSize * $count;
+        $ifdOffset                      = 8;
+        $entryCount                     = 3; // ImageWidth + ImageLength + the requested tag
+        $componentSize                  = $this->bytesPerComponent($type);
+        $dataSize                       = $componentSize * $count;
 
         if (strlen($valueBytes) < $dataSize) {
             $valueBytes = str_pad($valueBytes, $dataSize, "\0");
         }
 
         // Build entries as [tag => binary] sorted ascending by tag ID
-        $entries = [];
+        $entries                        = [];
 
         // ImageWidth SHORT[1] = 100
-        $entries[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
+        $entries[ExifTag::IMAGE_WIDTH]  = pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
@@ -1087,7 +1087,7 @@ final class TiffExifParserFixedLengthTest extends TestCase
             . pack('v', 100) . pack('v', 0);
 
         // Requested tag — offset placeholder if out-of-line
-        $outOfLine = $dataSize > 4;
+        $outOfLine                      = $dataSize > 4;
 
         if ($outOfLine) {
             $valueOffset   = $ifdOffset + 2 + ($entryCount * 12) + 4;
@@ -1099,7 +1099,7 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
         ksort($entries);
 
-        $blob = 'II'
+        $blob                           = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . pack('v', $entryCount);

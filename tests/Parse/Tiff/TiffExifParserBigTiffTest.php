@@ -90,7 +90,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function rejectsBigTiffWithOffsetSize12(): void
     {
-        $blob = $this->buildBigTiffHeader(12, 0, 16);
+        $blob   = $this->buildBigTiffHeader(12, 0, 16);
 
         $reader = new TiffExifParser();
 
@@ -110,7 +110,7 @@ final class TiffExifParserBigTiffTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('missing 0th IFD offset');
 
-        $blob = $this->buildBigTiffHeader(8, 0, 0);
+        $blob   = $this->buildBigTiffHeader(8, 0, 0);
 
         $reader = new TiffExifParser();
         $reader->parseFromBlob($blob);
@@ -123,7 +123,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function parsesBigTiffWithLargeEntryCount(): void
     {
-        $blob = $this->buildStandardBigTiffHeader();
+        $blob   = $this->buildStandardBigTiffHeader();
 
         // IFD with 64-bit entry count (4 entries)
         $blob .= pack('P', 4);  // Entry count (64-bit)
@@ -158,7 +158,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function parsesBigTiffWithLong8Type(): void
     {
-        $blob = $this->buildStandardBigTiffHeader();
+        $blob   = $this->buildStandardBigTiffHeader();
 
         // IFD with 2 entries
         $blob .= pack('P', 2);
@@ -190,7 +190,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function parsesBigTiffWithSlong8Type(): void
     {
-        $blob = $this->buildStandardBigTiffHeader();
+        $blob   = $this->buildStandardBigTiffHeader();
 
         $blob .= pack('P', 3);  // 3 entries
 
@@ -217,7 +217,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function parsesBigTiffWithIfd8PointerType(): void
     {
-        $blob = $this->buildStandardBigTiffHeader();
+        $blob   = $this->buildStandardBigTiffHeader();
 
         $blob .= pack('P', 3);
 
@@ -245,7 +245,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     public function rejectsBigTiffOffsetBeyondBlob(): void
     {
         // First IFD offset points to 0xFFFFFFFFFFFFFFFF (way beyond any real file)
-        $blob = 'II'
+        $blob   = 'II'
             . pack('v', TiffConst::MAGIC_BIG)
             . pack('v', 8)
             . pack('v', 0)
@@ -265,7 +265,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function skipsBigTiffValueOffsetBeyond4GB(): void
     {
-        $blob = $this->buildStandardBigTiffHeader();
+        $blob   = $this->buildStandardBigTiffHeader();
 
         $blob .= pack('P', 1);  // 1 entry
 
@@ -292,7 +292,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function rejectsBigTiffTruncatedEntry(): void
     {
-        $blob = $this->buildStandardBigTiffHeader();
+        $blob   = $this->buildStandardBigTiffHeader();
 
         $blob .= pack('P', 1);     // Claim 1 entry
         $blob .= pack('v', 0x010F); // Tag only (incomplete entry)
@@ -312,7 +312,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function rejectsBigTiffWithHugeEntryCount(): void
     {
-        $blob = $this->buildStandardBigTiffHeader();
+        $blob   = $this->buildStandardBigTiffHeader();
 
         // Claim absurdly high entry count (would require terabytes)
         $blob .= pack('P', 0xFFFFFFFFFFFF);
@@ -364,7 +364,7 @@ final class TiffExifParserBigTiffTest extends TestCase
     private function buildBigTiffHeader(int $offsetSize, int $reserved, int $firstIfd): string
     {
         // BigTIFF header: byte-order(2) + magic(2) + offsetSize(2) + reserved(2) + firstIfd($offsetSize)
-        $blob = 'II'
+        $blob       = 'II'
             . pack('v', TiffConst::MAGIC_BIG)
             . pack('v', $offsetSize)
             . pack('v', $reserved)

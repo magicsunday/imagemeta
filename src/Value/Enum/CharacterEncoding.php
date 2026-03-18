@@ -24,32 +24,32 @@ enum CharacterEncoding: string
      * 7-bit ASCII encoding.
      * EXIF 3.0 §4.6.4 Table 4; character code "ASCII\0\0\0".
      */
-    case Ascii = 'ASCII';
+    case Ascii     = 'ASCII';
 
     /**
      * UTF-8 variable-width Unicode encoding.
      * Used for modern text fields requiring full Unicode support.
      */
-    case Utf8 = 'UTF-8';
+    case Utf8      = 'UTF-8';
 
     /**
      * UTF-16 little-endian encoding.
      * EXIF 3.0 §4.6.3 Table 2 documents UTF-16LE usage in Microsoft XP tags
      * (XPTitle, XPComment, XPAuthor, XPKeywords, XPSubject).
      */
-    case Utf16le = 'UTF-16LE';
+    case Utf16le   = 'UTF-16LE';
 
     /**
      * UTF-16 big-endian encoding.
      * Alternative UTF-16 byte order for Unicode text fields.
      */
-    case Utf16be = 'UTF-16BE';
+    case Utf16be   = 'UTF-16BE';
 
     /**
      * JIS X0208-1990 Japanese character set.
      * EXIF 3.0 §4.6.4 Table 4; character code "JIS\0\0\0\0\0".
      */
-    case Jis = 'JIS';
+    case Jis       = 'JIS';
 
     /**
      * Undefined/unknown encoding.

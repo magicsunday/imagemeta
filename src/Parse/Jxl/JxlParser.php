@@ -31,24 +31,24 @@ final readonly class JxlParser implements JxlParserInterface
     /**
      * Four-character code for the Exif box.
      */
-    private const string BOX_EXIF = 'Exif';
+    private const string BOX_EXIF              = 'Exif';
 
     /**
      * Four-character code for the XMP box in JXL containers.
      *
      * ISO/IEC 18181-2 §A.3.3 uses lowercase `xml ` (with trailing space).
      */
-    private const string BOX_XML = 'xml ';
+    private const string BOX_XML               = 'xml ';
 
     /**
      * Four-character code for the HDR gain map box.
      */
-    private const string BOX_HRGM = 'hrgm';
+    private const string BOX_HRGM              = 'hrgm';
 
     /**
      * Maximum allowed size for a single metadata payload in bytes (16 MiB).
      */
-    private const int MAX_PAYLOAD_SIZE = 16 * 1024 * 1024;
+    private const int MAX_PAYLOAD_SIZE         = 16 * 1024 * 1024;
 
     /**
      * Maximum combined size of all extracted metadata payloads in bytes (64 MiB).
@@ -58,7 +58,7 @@ final readonly class JxlParser implements JxlParserInterface
     /**
      * Maximum number of metadata boxes (`Exif` + `xml `) extracted from one JXL container.
      */
-    private const int MAX_METADATA_BOX_COUNT = 64;
+    private const int MAX_METADATA_BOX_COUNT   = 64;
 
     private BoxNavigator $boxNavigator;
 
@@ -83,7 +83,7 @@ final readonly class JxlParser implements JxlParserInterface
     public function extract(): JxlParseResult
     {
         /** @var list<string> $exifBlobs */
-        $exifBlobs = [];
+        $exifBlobs          = [];
         /** @var list<string> $xmpBlobs */
         $xmpBlobs           = [];
         $hrgmBlob           = null;
@@ -123,7 +123,7 @@ final readonly class JxlParser implements JxlParserInterface
                     break;
 
                 case self::BOX_XML:
-                    $xmpBlobs[] = $this->boxNavigator->readAll($box->window);
+                    $xmpBlobs[]  = $this->boxNavigator->readAll($box->window);
 
                     break;
 

@@ -77,7 +77,7 @@ final readonly class SensorDataReader
      */
     public function sourceImageNumberOfCompositeImage(): ?array
     {
-        $values = $this->reader->numericList($this->exifIfd, ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE);
+        $values                      = $this->reader->numericList($this->exifIfd, ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE);
 
         if (($values === null) || (count($values) !== 2)) {
             return null;
@@ -132,7 +132,7 @@ final readonly class SensorDataReader
             return null;
         }
 
-        $matrix = $this->converters->decodeOecf($payload, $this->byteOrder);
+        $matrix  = $this->converters->decodeOecf($payload, $this->byteOrder);
 
         return Oecf::fromMatrix($matrix);
     }
@@ -173,7 +173,7 @@ final readonly class SensorDataReader
         $payloadLength = strlen($payload);
         $offset        = 0;
 
-        $summary = [];
+        $summary       = [];
 
         for ($i = 0; $i < 8; ++$i) {
             if (($offset + IfdValueReader::RATIONAL_BYTE_LENGTH) > $payloadLength) {
@@ -186,7 +186,7 @@ final readonly class SensorDataReader
                 return null;
             }
 
-            $summary[] = $summaryValue;
+            $summary[]    = $summaryValue;
             $offset += IfdValueReader::RATIONAL_BYTE_LENGTH;
         }
 
@@ -198,10 +198,10 @@ final readonly class SensorDataReader
 
         $offset += IfdValueReader::SHORT_BYTE_LENGTH;
 
-        $sequences = [];
+        $sequences     = [];
 
         for ($i = 0; $i < $sequenceCount; ++$i) {
-            $imageCount = $this->decodeShort($payload, $offset);
+            $imageCount  = $this->decodeShort($payload, $offset);
 
             if ($imageCount === null) {
                 return null;
@@ -209,14 +209,14 @@ final readonly class SensorDataReader
 
             $offset += IfdValueReader::SHORT_BYTE_LENGTH;
 
-            $sequence = [];
+            $sequence    = [];
 
             for ($image = 0; $image < $imageCount; ++$image) {
                 if (($offset + IfdValueReader::RATIONAL_BYTE_LENGTH) > $payloadLength) {
                     return null;
                 }
 
-                $value = $this->decodeRationalFromBytes(substr($payload, $offset, IfdValueReader::RATIONAL_BYTE_LENGTH));
+                $value      = $this->decodeRationalFromBytes(substr($payload, $offset, IfdValueReader::RATIONAL_BYTE_LENGTH));
 
                 if ($value === null) {
                     return null;

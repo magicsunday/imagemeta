@@ -47,7 +47,7 @@ final class TiffIfdTraverser
      *
      * @var array<int, bool>
      */
-    private array $subIfdVisitedOffsets = [];
+    private array $subIfdVisitedOffsets  = [];
 
     /**
      * @param TiffOffsetValidator             $offsetValidator Offset bounds checking.
@@ -124,7 +124,7 @@ final class TiffIfdTraverser
      */
     public function resolveSubIfds(Ifd $parentIfd): array
     {
-        $entry = $parentIfd->get(TiffTag::SUB_IFDS);
+        $entry   = $parentIfd->get(TiffTag::SUB_IFDS);
 
         if (!$entry instanceof IfdEntry) {
             return [];
@@ -171,13 +171,13 @@ final class TiffIfdTraverser
                     return $ifd;
                 }
 
-                $entry = $ifd->get(ExifTag::INTEROPERABILITY_IFD_POINTER);
+                $entry                                = $ifd->get(ExifTag::INTEROPERABILITY_IFD_POINTER);
 
                 if (!$entry instanceof IfdEntry) {
                     continue;
                 }
 
-                $offset = $this->pointerOffset($entry);
+                $offset                               = $this->pointerOffset($entry);
 
                 if ($offset === null) {
                     continue;
@@ -202,7 +202,7 @@ final class TiffIfdTraverser
                     return $candidate;
                 }
 
-                $queue[] = $candidate;
+                $queue[]                              = $candidate;
             }
         }
 

@@ -50,7 +50,7 @@ final class ParsedExifStringTagsTest extends TestCase
     #[Test]
     public function dateTimeTreatsBlankPlaceholderAsUnknown(): void
     {
-        $ifd0 = new Ifd([
+        $ifd0       = new Ifd([
             ExifTag::DATETIME => new IfdEntry(
                 ExifTag::DATETIME,
                 2,
@@ -71,7 +71,7 @@ final class ParsedExifStringTagsTest extends TestCase
     #[Test]
     public function artistFallsBackToRelatedAttributionTags(): void
     {
-        $ifd0 = new Ifd([
+        $ifd0       = new Ifd([
             ExifTag::PHOTOGRAPHER => new IfdEntry(
                 ExifTag::PHOTOGRAPHER,
                 2,
@@ -80,7 +80,7 @@ final class ParsedExifStringTagsTest extends TestCase
             ),
         ]);
 
-        $exifIfd = new Ifd([
+        $exifIfd    = new Ifd([
             ExifTag::CAMERA_OWNER_NAME => new IfdEntry(
                 ExifTag::CAMERA_OWNER_NAME,
                 2,
@@ -107,7 +107,7 @@ final class ParsedExifStringTagsTest extends TestCase
     #[Test]
     public function copyrightTreatsBlankFilledFieldAsUnknown(): void
     {
-        $ifd0 = new Ifd([
+        $ifd0       = new Ifd([
             ExifTag::COPYRIGHT => new IfdEntry(
                 ExifTag::COPYRIGHT,
                 2,

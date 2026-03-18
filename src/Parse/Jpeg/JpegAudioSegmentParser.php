@@ -33,12 +33,12 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
     /**
      * Header prefix for Exif audio APP2 payloads (EXIF 3.0 §4.7.3).
      */
-    public const string AUDIO_SIGNATURE = "Exif\0\0Audio";
+    public const string AUDIO_SIGNATURE   = "Exif\0\0Audio";
 
     private const int AUDIO_HEADER_LENGTH = 24;
 
     /** @var list<JpegAudioStream> */
-    private array $streams = [];
+    private array $streams                = [];
 
     /**
      * Processes one Exif audio APP2 segment.
@@ -52,9 +52,9 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
     {
         PayloadGuard::ensureMinimumLength($payload, self::AUDIO_HEADER_LENGTH, sprintf('Audio segment at offset %d', $offset), 1269);
 
-        $signatureLength = strlen(self::AUDIO_SIGNATURE);
-        $major           = ord($payload[$signatureLength]);
-        $minor           = ord($payload[$signatureLength + 1]);
+        $signatureLength    = strlen(self::AUDIO_SIGNATURE);
+        $major              = ord($payload[$signatureLength]);
+        $minor              = ord($payload[$signatureLength + 1]);
 
         // Validate audio version compatibility per EXIF 3.0 §5.2
         if ($major !== 1) {
@@ -64,20 +64,20 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
             );
         }
 
-        $formatCode = ord($payload[$signatureLength + 2]);
-        $channels   = ord($payload[$signatureLength + 3]);
+        $formatCode         = ord($payload[$signatureLength + 2]);
+        $channels           = ord($payload[$signatureLength + 3]);
 
-        $sampleRate = Unpack::int('N', substr($payload, $signatureLength + 4, 4), 'audio sample rate');
-        $bitDepth   = ord($payload[$signatureLength + 8]);
+        $sampleRate         = Unpack::int('N', substr($payload, $signatureLength + 4, 4), 'audio sample rate');
+        $bitDepth           = ord($payload[$signatureLength + 8]);
 
-        $sampleCount = Unpack::int('N', substr($payload, $signatureLength + 9, 4), 'audio sample count');
-        $data        = substr($payload, self::AUDIO_HEADER_LENGTH);
+        $sampleCount        = Unpack::int('N', substr($payload, $signatureLength + 9, 4), 'audio sample count');
+        $data               = substr($payload, self::AUDIO_HEADER_LENGTH);
 
         if (($channels === 0) || ($channels > 2)) {
             throw new ParseError(sprintf('Audio segment at offset %d has unsupported channel count %d', $offset, $channels), 1272);
         }
 
-        $format = JpegAudioFormat::tryFrom($formatCode);
+        $format             = JpegAudioFormat::tryFrom($formatCode);
 
         if (!$format instanceof JpegAudioFormat) {
             throw new ParseError(sprintf('Audio segment at offset %d uses unknown format %d', $offset, $formatCode), 1275);
@@ -90,7 +90,7 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
             throw new ParseError(sprintf('Audio segment at offset %d uses unsupported sample rate %d', $offset, $sampleRate), 1273);
         }
 
-        $formatName = $format->label();
+        $formatName         = $format->label();
 
         // Allow PCM 24-bit sample size per EXIF 3.0 §5.4.2
         if (($format === JpegAudioFormat::Pcm) && (!in_array($bitDepth, [8, 16, 24], true))) {
@@ -122,9 +122,9 @@ final class JpegAudioSegmentParser implements SegmentAssemblerInterface
             throw new ParseError(sprintf('Audio segment at offset %d has non-empty IMA-ADPCM payload with zero sample count', $offset), 1883);
         }
 
-        $version = sprintf('%d.%02d', $major, $minor);
+        $version            = sprintf('%d.%02d', $major, $minor);
 
-        $this->streams[] = new JpegAudioStream(
+        $this->streams[]    = new JpegAudioStream(
             $formatName,
             $channels,
             $sampleRate,

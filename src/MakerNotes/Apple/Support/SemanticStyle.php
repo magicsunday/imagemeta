@@ -103,7 +103,7 @@ final class SemanticStyle
             return null;
         }
 
-        $entries = self::normalizeEntries($value);
+        $entries       = self::normalizeEntries($value);
 
         if ($entries === null) {
             return null;
@@ -117,9 +117,9 @@ final class SemanticStyle
         $toneRawModern = $legacyWarmth === null ? self::entry($entries, 3, 2) : null;
         $toneRaw       = $toneRawLegacy ?? $toneRawModern;
 
-        $preset = self::preset($presetRaw);
-        $warmth = self::float($warmthRaw);
-        $tone   = self::float($toneRaw);
+        $preset        = self::preset($presetRaw);
+        $warmth        = self::float($warmthRaw);
+        $tone          = self::float($toneRaw);
 
         if (($preset === null) && ($warmth === null) && ($tone === null)) {
             return null;
@@ -182,7 +182,7 @@ final class SemanticStyle
                 continue;
             }
 
-            $scalar = self::extractScalar($entry);
+            $scalar       = self::extractScalar($entry);
 
             if (($scalar === null) && ($entry !== null)) {
                 continue;

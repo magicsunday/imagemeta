@@ -251,12 +251,12 @@ final class IptcIntegrationTest extends TestCase
     #[Test]
     public function readJpegWithApp13PopulatesIptcMetadata(): void
     {
-        $caption  = 'A synthetic test caption';
-        $byLine   = 'Test Author';
-        $keyword1 = 'landscape';
-        $keyword2 = 'sunset';
+        $caption      = 'A synthetic test caption';
+        $byLine       = 'Test Author';
+        $keyword1     = 'landscape';
+        $keyword2     = 'sunset';
 
-        $iptcData = $this->buildIptcIimData([
+        $iptcData     = $this->buildIptcIimData([
             [2, 120, $caption],
             [2, 80, $byLine],
             [2, 25, $keyword1],
@@ -265,7 +265,7 @@ final class IptcIntegrationTest extends TestCase
 
         $app13Payload = $this->buildPhotoshopApp13Payload($iptcData);
 
-        $metadata = $this->readMetadataFromJpeg(
+        $metadata     = $this->readMetadataFromJpeg(
             $this->buildJpeg(
                 $this->segment(self::MARKER_APP13, $app13Payload),
             ),
@@ -279,7 +279,7 @@ final class IptcIntegrationTest extends TestCase
         self::assertSame($byLine, $metadata->iptcDoc->first(2, 80));
         self::assertSame([$keyword1, $keyword2], $metadata->iptcDoc->values(2, 25));
 
-        $structured = $metadata->structured();
+        $structured   = $metadata->structured();
         self::assertInstanceOf(IptcDocument::class, $structured->provenance->iptc->document);
         self::assertSame($caption, $structured->provenance->iptc->document->first(2, 120));
         self::assertSame($byLine, $structured->provenance->iptc->document->first(2, 80));
@@ -292,21 +292,21 @@ final class IptcIntegrationTest extends TestCase
     #[Test]
     public function readJpegWithMultipleApp13SegmentsMergesIptcData(): void
     {
-        $caption    = 'Caption from first segment';
-        $objectName = 'Object from second segment';
+        $caption       = 'Caption from first segment';
+        $objectName    = 'Object from second segment';
 
-        $iptcData1 = $this->buildIptcIimData([
+        $iptcData1     = $this->buildIptcIimData([
             [2, 120, $caption],
         ]);
 
-        $iptcData2 = $this->buildIptcIimData([
+        $iptcData2     = $this->buildIptcIimData([
             [2, 5, $objectName],
         ]);
 
         $app13Payload1 = $this->buildPhotoshopApp13Payload($iptcData1);
         $app13Payload2 = $this->buildPhotoshopApp13Payload($iptcData2);
 
-        $metadata = $this->readMetadataFromJpeg(
+        $metadata      = $this->readMetadataFromJpeg(
             $this->buildJpeg(
                 $this->segment(self::MARKER_APP13, $app13Payload1),
                 $this->segment(self::MARKER_APP13, $app13Payload2),
@@ -373,7 +373,7 @@ final class IptcIntegrationTest extends TestCase
         $signature = "Photoshop 3.0\0";
 
         // 8BIM resource block: signature(4) + resourceId(2) + nameLength(1) + padding(1) + dataSize(4) + data
-        $resource = '8BIM'
+        $resource  = '8BIM'
             . pack('n', 0x0404)
             . "\x00"
             . "\x00"
@@ -428,7 +428,7 @@ final class IptcIntegrationTest extends TestCase
                 self::fail('Unable to rename temporary file');
             }
 
-            $path = $target;
+            $path   = $target;
         }
 
         return $path;

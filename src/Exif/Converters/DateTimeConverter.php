@@ -44,7 +44,7 @@ final readonly class DateTimeConverter
             return null;
         }
 
-        $sign = $components['sign'] < 0 ? '-' : '+';
+        $sign       = $components['sign'] < 0 ? '-' : '+';
 
         return sprintf('%s%02d:%02d', $sign, $components['hours'], $components['minutes']);
     }
@@ -96,7 +96,7 @@ final readonly class DateTimeConverter
             return null;
         }
 
-        $minutes = $components['hours'] * 60 + $components['minutes'];
+        $minutes    = $components['hours'] * 60 + $components['minutes'];
 
         return $components['sign'] < 0 ? -$minutes : $minutes;
     }

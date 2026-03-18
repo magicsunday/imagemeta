@@ -56,8 +56,8 @@ final readonly class LensFactory
             );
         }
 
-        $maxApex = $exifDocument->maxApertureApex();
-        $maxF    = $maxApex !== null ? $this->converters->apexToFNumber($maxApex) : null;
+        $maxApex      = $exifDocument->maxApertureApex();
+        $maxF         = $maxApex !== null ? $this->converters->apexToFNumber($maxApex) : null;
 
         return new Lens(
             lensMake: $exifDocument->lensMake() ?? $resolver?->string(ExifTag::LENS_MAKE),

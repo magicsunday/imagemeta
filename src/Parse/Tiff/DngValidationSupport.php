@@ -160,7 +160,7 @@ final readonly class DngValidationSupport
             return $explicit;
         }
 
-        $dngVer = $this->extractDngVersionTuple($ifd, DngTag::DNG_VERSION);
+        $dngVer   = $this->extractDngVersionTuple($ifd, DngTag::DNG_VERSION);
 
         if ($dngVer === null) {
             return null;
@@ -199,7 +199,7 @@ final readonly class DngValidationSupport
      */
     public function resolveDngColorPlanes(Ifd $ifd): ?int
     {
-        $cfaEntry = $ifd->get(DngTag::CFA_PLANE_COLOR);
+        $cfaEntry        = $ifd->get(DngTag::CFA_PLANE_COLOR);
 
         if (($cfaEntry instanceof IfdEntry) && ($cfaEntry->count > 0)) {
             return $cfaEntry->count;
@@ -232,7 +232,7 @@ final readonly class DngValidationSupport
         string $denominatorCondition,
         bool $requirePositiveDenominator = true,
     ): ?float {
-        $entry = $ifd->get($tag);
+        $entry       = $ifd->get($tag);
 
         if (!$entry instanceof IfdEntry) {
             return null;
@@ -251,7 +251,7 @@ final readonly class DngValidationSupport
             );
         }
 
-        $value = $entry->value;
+        $value       = $entry->value;
 
         if (!$value instanceof ExifRationalScalar) {
             throw new ParseError(sprintf('%s must decode to one rational component.', $tagName), $decodeErrCode);
@@ -280,7 +280,7 @@ final readonly class DngValidationSupport
             );
         }
 
-        $values = $this->coerceToIntegerComponents($entry, $tagName, 1609);
+        $values     = $this->coerceToIntegerComponents($entry, $tagName, 1609);
 
         if (count($values) !== $entry->count) {
             throw new ParseError(
@@ -300,10 +300,10 @@ final readonly class DngValidationSupport
         $counter    = count($values);
 
         for ($index = 0; $index < $counter; $index += 4) {
-            $top    = $values[$index];
-            $left   = $values[$index + 1];
-            $bottom = $values[$index + 2];
-            $right  = $values[$index + 3];
+            $top          = $values[$index];
+            $left         = $values[$index + 1];
+            $bottom       = $values[$index + 2];
+            $right        = $values[$index + 3];
 
             if (($top < 0) || ($left < 0) || ($bottom < 0) || ($right < 0)) {
                 throw new ParseError(
@@ -451,7 +451,7 @@ final readonly class DngValidationSupport
         string $tagName,
         array $allowedTypes,
     ): ?array {
-        $entry = $ifd->get($tag);
+        $entry            = $ifd->get($tag);
 
         if (!$entry instanceof IfdEntry) {
             return null;

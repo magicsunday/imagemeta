@@ -175,7 +175,7 @@ final class TiffExifParserTransferTagsTest extends TestCase
         $transferValues = $this->buildShortRamp(256);
         $payload        = $this->packNumericPayload(TiffConst::TYPE_SHORT, $transferValues);
 
-        $entries = [
+        $entries        = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -192,19 +192,19 @@ final class TiffExifParserTransferTagsTest extends TestCase
 
         ksort($entries);
 
-        $entryCount = count($entries) + 1;
-        $ifdOffset  = 8;
-        $ifdSize    = 2 + (12 * $entryCount) + 4;
-        $dataOffset = $ifdOffset + $ifdSize;
+        $entryCount     = count($entries) + 1;
+        $ifdOffset      = 8;
+        $ifdSize        = 2 + (12 * $entryCount) + 4;
+        $dataOffset     = $ifdOffset + $ifdSize;
 
-        $ifdEntries = implode('', $entries);
+        $ifdEntries     = implode('', $entries);
 
         $ifdEntries .= pack('v', ExifTag::TRANSFER_FUNCTION)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', count($transferValues))
             . pack('V', $dataOffset);
 
-        $blob = 'II'
+        $blob           = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . pack('v', $entryCount)
@@ -234,7 +234,7 @@ final class TiffExifParserTransferTagsTest extends TestCase
         ?int $referenceBlackWhiteType = null,
         ?array $referenceBlackWhiteValues = null,
     ): string {
-        $entries = [
+        $entries      = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -256,7 +256,7 @@ final class TiffExifParserTransferTagsTest extends TestCase
         $payloadByTag = [];
 
         if (($transferFunctionType !== null) && is_array($transferFunctionValues)) {
-            $entries[ExifTag::TRANSFER_FUNCTION] = pack('v', ExifTag::TRANSFER_FUNCTION)
+            $entries[ExifTag::TRANSFER_FUNCTION]      = pack('v', ExifTag::TRANSFER_FUNCTION)
                 . pack('v', $transferFunctionType)
                 . pack('V', count($transferFunctionValues));
             $payloadByTag[ExifTag::TRANSFER_FUNCTION] = $this->packNumericPayload(
@@ -266,14 +266,14 @@ final class TiffExifParserTransferTagsTest extends TestCase
         }
 
         if (($transferRangeType !== null) && is_array($transferRangeValues)) {
-            $entries[TiffTag::TRANSFER_RANGE] = pack('v', TiffTag::TRANSFER_RANGE)
+            $entries[TiffTag::TRANSFER_RANGE]      = pack('v', TiffTag::TRANSFER_RANGE)
                 . pack('v', $transferRangeType)
                 . pack('V', count($transferRangeValues));
             $payloadByTag[TiffTag::TRANSFER_RANGE] = $this->packNumericPayload($transferRangeType, $transferRangeValues);
         }
 
         if (($referenceBlackWhiteType !== null) && is_array($referenceBlackWhiteValues)) {
-            $entries[ExifTag::REFERENCE_BLACK_WHITE] = pack('v', ExifTag::REFERENCE_BLACK_WHITE)
+            $entries[ExifTag::REFERENCE_BLACK_WHITE]      = pack('v', ExifTag::REFERENCE_BLACK_WHITE)
                 . pack('v', $referenceBlackWhiteType)
                 . pack('V', count($referenceBlackWhiteValues));
             $payloadByTag[ExifTag::REFERENCE_BLACK_WHITE] = $referenceBlackWhiteType === TiffConst::TYPE_RATIONAL
@@ -283,12 +283,12 @@ final class TiffExifParserTransferTagsTest extends TestCase
 
         ksort($entries);
 
-        $ifdOffset   = 8;
-        $entryCount  = count($entries);
-        $ifdSize     = 2 + (12 * $entryCount) + 4;
-        $nextOffset  = $ifdOffset + $ifdSize;
-        $ifdEntries  = '';
-        $payloadTail = '';
+        $ifdOffset    = 8;
+        $entryCount   = count($entries);
+        $ifdSize      = 2 + (12 * $entryCount) + 4;
+        $nextOffset   = $ifdOffset + $ifdSize;
+        $ifdEntries   = '';
+        $payloadTail  = '';
 
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {
@@ -305,7 +305,7 @@ final class TiffExifParserTransferTagsTest extends TestCase
                 continue;
             }
 
-            $ifdEntries .= $prefix . pack('V', $nextOffset);
+            $ifdEntries  .= $prefix . pack('V', $nextOffset);
             $payloadTail .= $payload;
             $nextOffset += strlen($payload);
         }

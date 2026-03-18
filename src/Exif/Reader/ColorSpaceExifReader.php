@@ -146,7 +146,7 @@ final readonly class ColorSpaceExifReader
      */
     public function samplesPerPixel(): int
     {
-        $explicit = $this->reader->int($this->ifd0, ExifTag::SAMPLES_PER_PIXEL);
+        $explicit    = $this->reader->int($this->ifd0, ExifTag::SAMPLES_PER_PIXEL);
 
         if ($explicit !== null) {
             return $explicit;
@@ -204,7 +204,7 @@ final readonly class ColorSpaceExifReader
         }
 
         // TIFF context: default 8 per component, replicated per SamplesPerPixel
-        $spp = $this->samplesPerPixel();
+        $spp    = $this->samplesPerPixel();
 
         return array_fill(0, $spp, 8);
     }
@@ -243,7 +243,7 @@ final readonly class ColorSpaceExifReader
             $coeffs = [];
 
             foreach ($value->values as $component) {
-                $float = $this->converters->rationalToFloat($component);
+                $float    = $this->converters->rationalToFloat($component);
 
                 if ($float === null) {
                     return null;
@@ -284,7 +284,7 @@ final readonly class ColorSpaceExifReader
             return null;
         }
 
-        $raw = $this->reader->rawString($this->ifd0, ExifTag::YCBCR_SUB_SAMPLING);
+        $raw    = $this->reader->rawString($this->ifd0, ExifTag::YCBCR_SUB_SAMPLING);
 
         if ($raw !== null) {
             $pair = $this->converters->ycbcrSubSamplingToPair($raw);
@@ -318,7 +318,7 @@ final readonly class ColorSpaceExifReader
                 : null;
         }
 
-        $value = $this->reader->normalizeEnumScalar($rawValue);
+        $value    = $this->reader->normalizeEnumScalar($rawValue);
 
         return YCbCrPositioning::fromExifValue($value);
     }

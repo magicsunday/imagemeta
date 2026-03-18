@@ -77,7 +77,7 @@ final readonly class XmpLanguageAlternative
             return $default['value'];
         }
 
-        $first = $this->entries[0] ?? null;
+        $first   = $this->entries[0] ?? null;
 
         return $first['value'] ?? null;
     }
@@ -179,9 +179,9 @@ final readonly class XmpLanguageAlternative
             return $entries;
         }
 
-        $default = $entries[$defaultIndex];
+        $default      = $entries[$defaultIndex];
 
-        $normalized = [$default];
+        $normalized   = [$default];
 
         foreach ($entries as $index => $entry) {
             if ($index === $defaultIndex) {

@@ -65,7 +65,7 @@ final class ImageFactoryTest extends TestCase
             userCommentEncoding: CharacterEncoding::Ascii->value,
         );
 
-        $image = $this->createImageFromParsedExif($parsedExif);
+        $image      = $this->createImageFromParsedExif($parsedExif);
 
         self::assertSame(6000, $image->width);
         self::assertSame(4000, $image->height);
@@ -103,8 +103,8 @@ final class ImageFactoryTest extends TestCase
             jpegFrameHeight: 1080,
         );
 
-        $factory = new ImageFactory();
-        $image   = $factory->create($metadata);
+        $factory  = new ImageFactory();
+        $image    = $factory->create($metadata);
 
         self::assertSame(1920, $image->width);
         self::assertSame(1080, $image->height);
@@ -137,7 +137,7 @@ final class ImageFactoryTest extends TestCase
             userCommentEncoding: null,
         );
 
-        $image = $this->createImageFromParsedExif($parsedExif);
+        $image      = $this->createImageFromParsedExif($parsedExif);
 
         self::assertSame(ColorSpace::Srgb, $image->colorSpace);
     }
@@ -166,7 +166,7 @@ final class ImageFactoryTest extends TestCase
             userCommentEncoding: null,
         );
 
-        $image = $this->createImageFromParsedExif($parsedExif);
+        $image      = $this->createImageFromParsedExif($parsedExif);
 
         self::assertSame(ColorSpace::Uncalibrated, $image->colorSpace);
     }
@@ -195,7 +195,7 @@ final class ImageFactoryTest extends TestCase
     public function returnsNullDimensionsWhenIfdEntriesHaveWrongTypes(): void
     {
         // Put ASCII strings where LONG integers are expected for width/height
-        $ifd0Entries = [
+        $ifd0Entries                       = [
             ExifTag::IMAGE_WIDTH => new IfdEntry(
                 ExifTag::IMAGE_WIDTH,
                 TiffConst::TYPE_ASCII,
@@ -218,8 +218,8 @@ final class ImageFactoryTest extends TestCase
             255,
         );
 
-        $parsedExif = $this->createParsedExifFromEntries($ifd0Entries, [], []);
-        $image      = $this->createImageFromParsedExif($parsedExif);
+        $parsedExif                        = $this->createParsedExifFromEntries($ifd0Entries, [], []);
+        $image                             = $this->createImageFromParsedExif($parsedExif);
 
         self::assertNull($image->width);
         self::assertNull($image->height);
@@ -243,8 +243,8 @@ final class ImageFactoryTest extends TestCase
             ),
         ];
 
-        $parsedExif = $this->createParsedExifFromEntries([], $exifEntries, []);
-        $image      = $this->createImageFromParsedExif($parsedExif);
+        $parsedExif  = $this->createParsedExifFromEntries([], $exifEntries, []);
+        $image       = $this->createImageFromParsedExif($parsedExif);
 
         self::assertNull($image->colorSpace);
     }
@@ -372,11 +372,11 @@ final class ImageFactoryTest extends TestCase
         }
 
         if ($userComment !== null) {
-            $prefix = $userCommentEncoding !== null
+            $prefix                             = $userCommentEncoding !== null
                 ? str_pad($userCommentEncoding, 8, '\0')
                 : '        ';
 
-            $rawComment = $prefix . $userComment;
+            $rawComment                         = $prefix . $userComment;
 
             $exifEntries[ExifTag::USER_COMMENT] = new IfdEntry(
                 ExifTag::USER_COMMENT,

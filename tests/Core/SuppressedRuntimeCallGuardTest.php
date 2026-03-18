@@ -75,7 +75,7 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
         $tokens = token_get_all($contents);
 
         /** @var list<int> $lines */
-        $lines = [];
+        $lines  = [];
 
         foreach ($tokens as $index => $token) {
             if ($token !== '@') {
@@ -92,13 +92,13 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
                 continue;
             }
 
-            $first = $tokens[$cursor];
+            $first  = $tokens[$cursor];
 
             if (!$this->isSuppressedCallStartToken($first)) {
                 continue;
             }
 
-            $line = $this->tokenLine($tokens, $cursor);
+            $line   = $this->tokenLine($tokens, $cursor);
 
             if ($line === null) {
                 continue;
@@ -194,8 +194,8 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
     #[Test]
     public function srcDoesNotUseSuppressedRuntimeCalls(): void
     {
-        $repoRoot = dirname(__DIR__, 2);
-        $srcRoot  = $repoRoot . '/src';
+        $repoRoot   = dirname(__DIR__, 2);
+        $srcRoot    = $repoRoot . '/src';
 
         /** @var list<string> $violations */
         $violations = [];
@@ -239,7 +239,7 @@ function keepDocAnnotations(string $value): string
 $text = '@iconv(value)';
 PHP;
 
-        $lines = $this->suppressedRuntimeCallLines($fixture);
+        $lines   = $this->suppressedRuntimeCallLines($fixture);
 
         self::assertCount(2, $lines);
         self::assertSame([12, 13], $lines);

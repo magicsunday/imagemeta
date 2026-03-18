@@ -59,7 +59,7 @@ final class GpsTimestampConverterTest extends TestCase
         $rationalConverter = new RationalConverter($numericConverter);
         $stringConverter   = new StringConverter();
 
-        $this->converter = new GpsTimestampConverter($rationalConverter, $stringConverter);
+        $this->converter   = new GpsTimestampConverter($rationalConverter, $stringConverter);
     }
 
     /**
@@ -183,7 +183,7 @@ final class GpsTimestampConverterTest extends TestCase
     #[Test]
     public function extractsDateOnlyWithoutTimeEntry(): void
     {
-        $gps = new Ifd([
+        $gps    = new Ifd([
             ExifTag::GPS_DATE_STAMP => new IfdEntry(ExifTag::GPS_DATE_STAMP, 2, 11, '2025:03:15'),
         ]);
 

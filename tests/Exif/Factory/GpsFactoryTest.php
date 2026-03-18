@@ -79,14 +79,14 @@ final class GpsFactoryTest extends TestCase
             hPositioningError: 3.0,
         );
 
-        $metadata = new Metadata(
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             exifDoc: $parsedExif,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory    = new GpsFactory();
+        $gps        = $factory->create($metadata);
 
         self::assertNotNull($gps->position);
         self::assertNotNull($gps->measurement);
@@ -129,8 +129,8 @@ final class GpsFactoryTest extends TestCase
             quickTime: null,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNull($gps->position);
     }
@@ -166,14 +166,14 @@ final class GpsFactoryTest extends TestCase
             hPositioningError: null,
         );
 
-        $metadata = new Metadata(
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             exifDoc: $parsedExif,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory    = new GpsFactory();
+        $gps        = $factory->create($metadata);
 
         self::assertNotNull($gps->movement);
 
@@ -212,14 +212,14 @@ final class GpsFactoryTest extends TestCase
             hPositioningError: null,
         );
 
-        $metadata = new Metadata(
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             exifDoc: $parsedExif,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory    = new GpsFactory();
+        $gps        = $factory->create($metadata);
 
         self::assertNotNull($gps->movement);
 
@@ -258,14 +258,14 @@ final class GpsFactoryTest extends TestCase
             hPositioningError: null,
         );
 
-        $metadata = new Metadata(
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             exifDoc: $parsedExif,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory    = new GpsFactory();
+        $gps        = $factory->create($metadata);
 
         self::assertNotNull($gps->movement);
 
@@ -304,14 +304,14 @@ final class GpsFactoryTest extends TestCase
             hPositioningError: null,
         );
 
-        $metadata = new Metadata(
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             exifDoc: $parsedExif,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory    = new GpsFactory();
+        $gps        = $factory->create($metadata);
 
         self::assertNotNull($gps->timing);
 
@@ -349,14 +349,14 @@ final class GpsFactoryTest extends TestCase
             hPositioningError: null,
         );
 
-        $metadata = new Metadata(
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             exifDoc: $parsedExif,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory    = new GpsFactory();
+        $gps        = $factory->create($metadata);
 
         self::assertNotNull($gps->timing);
 
@@ -394,14 +394,14 @@ final class GpsFactoryTest extends TestCase
             hPositioningError: null,
         );
 
-        $metadata = new Metadata(
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             exifDoc: $parsedExif,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory    = new GpsFactory();
+        $gps        = $factory->create($metadata);
 
         self::assertNotNull($gps->timing);
 
@@ -417,7 +417,7 @@ final class GpsFactoryTest extends TestCase
     #[DataProvider('provideXmpNegativeAltitudeRefs')]
     public function xmpAltitudeWithBelowRefYieldsNegative(int $ref): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSAltitude', self::NS_EXIF)    => '100.0',
             sprintf('{%s}GPSAltitudeRef', self::NS_EXIF) => (string) $ref,
         ]);
@@ -428,8 +428,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNotNull($gps->position);
 
@@ -452,7 +452,7 @@ final class GpsFactoryTest extends TestCase
     #[DataProvider('provideXmpPositiveAltitudeRefs')]
     public function xmpAltitudeWithAboveRefYieldsPositive(int $ref): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSAltitude', self::NS_EXIF)    => '100.0',
             sprintf('{%s}GPSAltitudeRef', self::NS_EXIF) => (string) $ref,
         ]);
@@ -463,8 +463,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNotNull($gps->position);
 
@@ -486,7 +486,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpSpeedWithInvalidRefYieldsNullSpeed(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSSpeed', self::NS_EXIF)    => '50.0',
             sprintf('{%s}GPSSpeedRef', self::NS_EXIF) => 'X',
         ]);
@@ -497,8 +497,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNotNull($gps->movement);
         self::assertNull($gps->movement->speedMs);
@@ -510,7 +510,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpSpeedWithKilometresRefYieldsMetresPerSecond(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSSpeed', self::NS_EXIF)    => '36.0',
             sprintf('{%s}GPSSpeedRef', self::NS_EXIF) => 'K',
         ]);
@@ -521,8 +521,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNotNull($gps->movement);
 
@@ -535,7 +535,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpCoordinateWithMissingRefYieldsNull(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSLatitude', self::NS_EXIF) => '52,31,15',
         ]);
 
@@ -545,8 +545,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNull($gps->position);
     }
@@ -557,7 +557,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpCoordinateWithInvalidRefYieldsNull(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52,31,15',
             sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'X',
         ]);
@@ -568,8 +568,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNull($gps->position);
     }
@@ -580,7 +580,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpCoordinateWithValidRefParsesCorrectly(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52,31,15',
             sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
         ]);
@@ -591,8 +591,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNotNull($gps->position);
 
@@ -605,7 +605,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpDmsWithMinutesOutOfRangeYieldsNull(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52,61,15',
             sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
         ]);
@@ -616,8 +616,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNull($gps->position);
     }
@@ -628,7 +628,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpDmsWithSecondsOutOfRangeYieldsNull(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52,31,60',
             sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
         ]);
@@ -639,8 +639,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNull($gps->position);
     }
@@ -651,7 +651,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpNegativeDecimalMagnitudeYieldsNull(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '-52.5',
             sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'S',
         ]);
@@ -662,8 +662,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNull($gps->position);
     }
@@ -674,7 +674,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpNegativeDmsDegreeComponentYieldsNull(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '-10,30,0',
             sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
         ]);
@@ -685,8 +685,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNull($gps->position);
     }
@@ -697,7 +697,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpCoordinateWithTwoTokensYieldsNull(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52 31',
             sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
         ]);
@@ -708,8 +708,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNull($gps->position);
     }
@@ -720,7 +720,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpCoordinateWithFourTokensYieldsNull(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '12 34 56 78',
             sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
         ]);
@@ -731,8 +731,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNull($gps->position);
     }
@@ -743,7 +743,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpLatitudeAboveNinetyYieldsNull(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '91.0',
             sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
         ]);
@@ -754,8 +754,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNull($gps->position);
     }
@@ -766,7 +766,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpLongitudeAboveOneEightyYieldsNull(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSLongitude', self::NS_EXIF)    => '181.0',
             sprintf('{%s}GPSLongitudeRef', self::NS_EXIF) => 'E',
         ]);
@@ -777,8 +777,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNull($gps->position);
     }
@@ -789,7 +789,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpGpsDateTimeWithValidIsoParses(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSDateTime', self::NS_EXIF) => '2023-06-15T14:30:00Z',
         ]);
 
@@ -799,8 +799,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNotNull($gps->timing);
 
@@ -814,7 +814,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpGpsDateTimeWithFreeFormStringYieldsNull(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSDateTime', self::NS_EXIF) => 'June 15, 2023 2:30 PM',
         ]);
 
@@ -824,8 +824,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNull($gps->timing);
     }
@@ -840,7 +840,7 @@ final class GpsFactoryTest extends TestCase
         date_default_timezone_set('America/New_York');
 
         try {
-            $xmpDoc = new XmpDocument([
+            $xmpDoc   = new XmpDocument([
                 sprintf('{%s}GPSDateTime', self::NS_EXIF) => '2023-06-15T14:30:00',
             ]);
 
@@ -850,8 +850,8 @@ final class GpsFactoryTest extends TestCase
                 xmpDoc: $xmpDoc,
             );
 
-            $factory = new GpsFactory();
-            $gps     = $factory->create($metadata);
+            $factory  = new GpsFactory();
+            $gps      = $factory->create($metadata);
 
             self::assertNotNull($gps->timing);
 
@@ -868,7 +868,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpNonConformantDateYieldsNull(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSDateStamp', self::NS_EXIF) => 'June 15, 2023',
         ]);
 
@@ -878,8 +878,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNull($gps->timing);
     }
@@ -890,7 +890,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpConformantDateIsNormalized(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSDateStamp', self::NS_EXIF) => '2023:06:15',
         ]);
 
@@ -900,8 +900,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNotNull($gps->timing);
 
@@ -914,7 +914,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpDestinationLatitudeIsMapped(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSDestLatitude', self::NS_EXIF)    => '48,51,24',
             sprintf('{%s}GPSDestLatitudeRef', self::NS_EXIF) => 'N',
         ]);
@@ -925,8 +925,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNotNull($gps->destination);
 
@@ -940,7 +940,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpDestinationBearingIsMapped(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSDestBearing', self::NS_EXIF)    => '120.5',
             sprintf('{%s}GPSDestBearingRef', self::NS_EXIF) => 'T',
         ]);
@@ -951,8 +951,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNotNull($gps->destination);
 
@@ -965,7 +965,7 @@ final class GpsFactoryTest extends TestCase
     #[Test]
     public function xmpNavigationContextFieldsAreMapped(): void
     {
-        $xmpDoc = new XmpDocument([
+        $xmpDoc   = new XmpDocument([
             sprintf('{%s}GPSStatus', self::NS_EXIF)          => 'A',
             sprintf('{%s}GPSMeasureMode', self::NS_EXIF)     => '3',
             sprintf('{%s}GPSDOP', self::NS_EXIF)             => '1.5',
@@ -982,8 +982,8 @@ final class GpsFactoryTest extends TestCase
             xmpDoc: $xmpDoc,
         );
 
-        $factory = new GpsFactory();
-        $gps     = $factory->create($metadata);
+        $factory  = new GpsFactory();
+        $gps      = $factory->create($metadata);
 
         self::assertNotNull($gps->measurement);
         self::assertNotNull($gps->movement);
@@ -1052,12 +1052,12 @@ final class GpsFactoryTest extends TestCase
 
         if ($lat !== null) {
             // Store as three SRATIONALs: deg, min, sec*1000
-            $deg      = floor($lat);
-            $minFloat = ($lat - $deg) * 60.0;
-            $min      = floor($minFloat);
-            $sec      = ($minFloat - $min) * 60.0;
+            $deg                               = floor($lat);
+            $minFloat                          = ($lat - $deg) * 60.0;
+            $min                               = floor($minFloat);
+            $sec                               = ($minFloat - $min) * 60.0;
 
-            $pairs = [
+            $pairs                             = [
                 [$deg, 1],
                 [$min, 1],
                 [$sec * 1000, 1000],
@@ -1081,12 +1081,12 @@ final class GpsFactoryTest extends TestCase
         }
 
         if ($lon !== null) {
-            $deg      = floor($lon);
-            $minFloat = ($lon - $deg) * 60.0;
-            $min      = floor($minFloat);
-            $sec      = ($minFloat - $min) * 60.0;
+            $deg                                = floor($lon);
+            $minFloat                           = ($lon - $deg) * 60.0;
+            $min                                = floor($minFloat);
+            $sec                                = ($minFloat - $min) * 60.0;
 
-            $pairs = [
+            $pairs                              = [
                 [$deg, 1],
                 [$min, 1],
                 [$sec * 1000, 1000],
@@ -1220,7 +1220,7 @@ final class GpsFactoryTest extends TestCase
         }
 
         if ($date !== null) {
-            $dateStamp = str_replace('-', ':', $date);
+            $dateStamp                           = str_replace('-', ':', $date);
 
             $gpsEntries[ExifTag::GPS_DATE_STAMP] = new IfdEntry(
                 ExifTag::GPS_DATE_STAMP,
@@ -1231,7 +1231,7 @@ final class GpsFactoryTest extends TestCase
         }
 
         if ($time !== null) {
-            $parts = explode(':', $time);
+            $parts                               = explode(':', $time);
 
             $gpsEntries[ExifTag::GPS_TIME_STAMP] = new IfdEntry(
                 ExifTag::GPS_TIME_STAMP,
@@ -1263,8 +1263,8 @@ final class GpsFactoryTest extends TestCase
             );
         }
 
-        $ifd0   = new Ifd([]);
-        $gpsIfd = new Ifd($gpsEntries);
+        $ifd0       = new Ifd([]);
+        $gpsIfd     = new Ifd($gpsEntries);
 
         return new ParsedExif(
             ifd0: $ifd0,

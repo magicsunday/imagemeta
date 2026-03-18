@@ -41,7 +41,7 @@ final readonly class DeviceExifReader
     /**
      * EXIF Acceleration is specified in mGal (10^-5 m/s²).
      */
-    private const float ACCELERATION_MGAL_TO_MS2 = 1.0e-5;
+    private const float ACCELERATION_MGAL_TO_MS2      = 1.0e-5;
 
     /**
      * EXIF tags that define unknown rational denominators in EXIF 3.0 §4.6.6.8.
@@ -135,7 +135,7 @@ final readonly class DeviceExifReader
      */
     public function accelerationVector(): ?array
     {
-        $value = $this->valueFromGpsOrExif(ExifTag::ACCELERATION);
+        $value  = $this->valueFromGpsOrExif(ExifTag::ACCELERATION);
 
         if (!$value instanceof ExifRationalList) {
             return null;
@@ -168,7 +168,7 @@ final readonly class DeviceExifReader
      */
     public function accelerationMs2(): ?float
     {
-        $value = $this->valueFromGpsOrExif(ExifTag::ACCELERATION);
+        $value  = $this->valueFromGpsOrExif(ExifTag::ACCELERATION);
 
         if ($this->containsExifUnknownDenominator($value)) {
             return null;
@@ -325,7 +325,7 @@ final readonly class DeviceExifReader
 
     private function parseDeviceSettingDescription(): ?DeviceSettingDescription
     {
-        $raw = $this->reader->rawString($this->exifIfd, ExifTag::DEVICE_SETTING_DESCRIPTION);
+        $raw           = $this->reader->rawString($this->exifIfd, ExifTag::DEVICE_SETTING_DESCRIPTION);
 
         if (($raw === null) || (strlen($raw) < 4)) {
             return null;
@@ -333,15 +333,15 @@ final readonly class DeviceExifReader
 
         // EXIF 3.0 §4.6.6.7.45: columns/rows are TIFF SHORT fields —
         // decode using the EXIF/TIFF byte order context.
-        $format   = $this->byteOrder === Endian::Little ? 'v2' : 'n2';
-        $unpacked = unpack($format, substr($raw, 0, 4));
+        $format        = $this->byteOrder === Endian::Little ? 'v2' : 'n2';
+        $unpacked      = unpack($format, substr($raw, 0, 4));
 
         if ($unpacked === false) {
             return null;
         }
 
-        $columns = $unpacked[1] ?? null;
-        $rows    = $unpacked[2] ?? null;
+        $columns       = $unpacked[1] ?? null;
+        $rows          = $unpacked[2] ?? null;
 
         if (!is_int($columns) || !is_int($rows)) {
             return null;
@@ -372,7 +372,7 @@ final readonly class DeviceExifReader
      */
     private function parseDeviceSettingStrings(string $payload): array
     {
-        $length = strlen($payload);
+        $length   = strlen($payload);
 
         // EXIF 3.0 §4.6.6.7.45: UTF-16 encoded strings require even byte
         // length for code-unit alignment.  Odd-length payloads are malformed.
@@ -384,7 +384,7 @@ final readonly class DeviceExifReader
         $offset   = 0;
 
         while (($offset + 4) <= $length) {
-            $bom = substr($payload, $offset, 2);
+            $bom       = substr($payload, $offset, 2);
 
             if (($bom !== "\xFF\xFE") && ($bom !== "\xFE\xFF")) {
                 break;
@@ -412,7 +412,7 @@ final readonly class DeviceExifReader
                 $offset  = $length;
             }
 
-            $decoded = $this->reader->decodeLegacyUnicodeFromBom($segment);
+            $decoded   = $this->reader->decodeLegacyUnicodeFromBom($segment);
 
             if ($decoded !== null) {
                 $settings[] = $decoded;

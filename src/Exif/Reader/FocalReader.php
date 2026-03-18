@@ -120,7 +120,7 @@ final readonly class FocalReader
      */
     public function cfaPattern(): ?CfaPattern
     {
-        $components = $this->reader->numericList($this->exifIfd, ExifTag::CFA_PATTERN);
+        $components                = $this->reader->numericList($this->exifIfd, ExifTag::CFA_PATTERN);
 
         if ($components === null || count($components) < 3) {
             return null;

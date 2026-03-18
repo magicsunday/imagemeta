@@ -44,7 +44,7 @@ final class ExifNumericListTest extends TestCase
             UInt64::fromInt(3),
         ];
 
-        $list = new ExifNumericList($values);
+        $list   = new ExifNumericList($values);
 
         self::assertSame($values, $list->toArray());
     }

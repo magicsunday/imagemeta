@@ -96,7 +96,7 @@ final class IsoBmffParseContextTest extends TestCase
     #[Test]
     public function parserPrivateParseMethodsAcceptSharedContextParameter(): void
     {
-        $parserClass = new ReflectionClass(IsoBmffParser::class);
+        $parserClass               = new ReflectionClass(IsoBmffParser::class);
 
         $parserTwoParameterMethods = [
             'parseMoovBox',
@@ -109,22 +109,22 @@ final class IsoBmffParseContextTest extends TestCase
             self::assertSame(IsoBmffParseContext::class, (string) $method->getParameters()[1]->getType());
         }
 
-        $metaMethod = $parserClass->getMethod('parseMetaBox');
+        $metaMethod                = $parserClass->getMethod('parseMetaBox');
         self::assertCount(3, $metaMethod->getParameters());
         self::assertSame(IsoBmffParseContext::class, (string) $metaMethod->getParameters()[1]->getType());
 
-        $udtaMethod = $parserClass->getMethod('parseUdtaBox');
+        $udtaMethod                = $parserClass->getMethod('parseUdtaBox');
         self::assertCount(3, $udtaMethod->getParameters());
         self::assertSame(IsoBmffParseContext::class, (string) $udtaMethod->getParameters()[1]->getType());
 
         // parseTrak and parseMdia now live on TrackMediaParser
-        $trackClass = new ReflectionClass(TrackMediaParser::class);
+        $trackClass                = new ReflectionClass(TrackMediaParser::class);
 
-        $trackMethod = $trackClass->getMethod('parseTrak');
+        $trackMethod               = $trackClass->getMethod('parseTrak');
         self::assertCount(2, $trackMethod->getParameters());
         self::assertSame(IsoBmffParseContext::class, (string) $trackMethod->getParameters()[1]->getType());
 
-        $mdiaMethod = $trackClass->getMethod('parseMdia');
+        $mdiaMethod                = $trackClass->getMethod('parseMdia');
         self::assertCount(2, $mdiaMethod->getParameters());
         self::assertSame(IsoBmffParseContext::class, (string) $mdiaMethod->getParameters()[1]->getType());
     }

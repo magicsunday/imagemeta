@@ -33,10 +33,10 @@ final readonly class TiffDataFactory
      */
     public function create(Metadata $metadata): TiffData
     {
-        $exifDocument = $metadata->exifDoc;
+        $exifDocument        = $metadata->exifDoc;
 
-        $bitsPerSample    = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
-        $ycbcrSubSampling = $exifDocument?->ycbcrSubSampling() ?? $metadata->jpegYCbCrSubSampling;
+        $bitsPerSample       = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
+        $ycbcrSubSampling    = $exifDocument?->ycbcrSubSampling() ?? $metadata->jpegYCbCrSubSampling;
 
         $referenceBlackWhite = $exifDocument?->referenceBlackWhite();
 
@@ -56,7 +56,7 @@ final readonly class TiffDataFactory
             }
         }
 
-        $structure = new TiffStructure(
+        $structure           = new TiffStructure(
             samplesPerPixel: $exifDocument?->samplesPerPixel(),
             bitsPerSample: $bitsPerSample,
             compression: $exifDocument?->compression(),
@@ -64,7 +64,7 @@ final readonly class TiffDataFactory
             planar: $exifDocument?->planarConfiguration(),
         );
 
-        $color = new TiffColorRef(
+        $color               = new TiffColorRef(
             ycbcrPos: $exifDocument?->ycbcrPositioning(),
             ycbcrSubSampling: $ycbcrSubSampling,
             ycbcrCoefficients: $exifDocument?->ycbcrCoefficients(),
@@ -74,7 +74,7 @@ final readonly class TiffDataFactory
             transferFunction: $exifDocument?->transferFunction(),
         );
 
-        $layout = new TiffLayout(
+        $layout              = new TiffLayout(
             rowsPerStrip: $exifDocument?->rowsPerStrip(),
             stripOffsets: $exifDocument?->stripOffsets(),
             stripByteCounts: $exifDocument?->stripByteCounts(),

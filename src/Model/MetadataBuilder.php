@@ -39,78 +39,78 @@ use MagicSunday\ImageMeta\Value\StructuredMetadata;
 final class MetadataBuilder
 {
     /** @var list<string> */
-    private array $exifBlobs = [];
+    private array $exifBlobs                                = [];
 
-    private ?ParsedExif $exifDoc = null;
+    private ?ParsedExif $exifDoc                            = null;
 
-    private ?MakerNotesRecord $makerNotes = null;
-
-    /** @var list<string> */
-    private array $xmpBlobs = [];
-
-    private ?XmpDocument $xmpDoc = null;
-
-    private ?QuickTimeMeta $quickTime = null;
-
-    private ?string $iccProfile = null;
+    private ?MakerNotesRecord $makerNotes                   = null;
 
     /** @var list<string> */
-    private array $iccSegments = [];
+    private array $xmpBlobs                                 = [];
+
+    private ?XmpDocument $xmpDoc                            = null;
+
+    private ?QuickTimeMeta $quickTime                       = null;
+
+    private ?string $iccProfile                             = null;
+
+    /** @var list<string> */
+    private array $iccSegments                              = [];
 
     /** @var array<int, string> */
-    private array $flashPixStreams = [];
+    private array $flashPixStreams                          = [];
 
-    private ?MpfDocument $mpfDocument = null;
+    private ?MpfDocument $mpfDocument                       = null;
 
     /** @var list<JpegAudioStream> */
-    private array $jpegAudioStreams = [];
+    private array $jpegAudioStreams                         = [];
 
-    private ?JfifSegment $jfifSegment = null;
+    private ?JfifSegment $jfifSegment                       = null;
 
-    private ?int $jpegBitsPerSample = null;
+    private ?int $jpegBitsPerSample                         = null;
 
     /** @var SamplingFactors|null */
-    private ?array $jpegFrameSamplingFactors = null;
+    private ?array $jpegFrameSamplingFactors                = null;
 
     /** @var array{0:int,1:int}|null */
-    private ?array $jpegYCbCrSubSampling = null;
+    private ?array $jpegYCbCrSubSampling                    = null;
 
-    private ?int $jpegFrameWidth = null;
+    private ?int $jpegFrameWidth                            = null;
 
-    private ?int $jpegFrameHeight = null;
+    private ?int $jpegFrameHeight                           = null;
 
     private ?IsoBmffItemReferenceMap $isoBmffItemReferences = null;
 
     private ?IsoBmffDataReferenceMap $isoBmffDataReferences = null;
 
     /** @var list<IsoBmffUnresolvedItem> */
-    private array $isoBmffUnresolvedItems = [];
+    private array $isoBmffUnresolvedItems                   = [];
 
-    private ?int $ispeWidth = null;
+    private ?int $ispeWidth                                 = null;
 
-    private ?int $ispeHeight = null;
+    private ?int $ispeHeight                                = null;
 
     /** @var list<int> */
-    private array $tmapItemIds = [];
+    private array $tmapItemIds                              = [];
 
     /** @var list<string> */
-    private array $iptcBlobs = [];
+    private array $iptcBlobs                                = [];
 
-    private ?IptcDocument $iptcDoc = null;
+    private ?IptcDocument $iptcDoc                          = null;
 
-    private ?string $gainMapBlob = null;
+    private ?string $gainMapBlob                            = null;
 
-    private ?string $mimeType = null;
+    private ?string $mimeType                               = null;
 
-    private ?int $fileSize = null;
+    private ?int $fileSize                                  = null;
 
-    private ?string $extension = null;
+    private ?string $extension                              = null;
 
-    private ?string $digestSha256 = null;
+    private ?string $digestSha256                           = null;
 
-    private ?XmpParserInterface $xmpParser = null;
+    private ?XmpParserInterface $xmpParser                  = null;
 
-    private ?IptcParserInterface $iptcParser = null;
+    private ?IptcParserInterface $iptcParser                = null;
 
     /** @var Closure(Metadata):StructuredMetadata */
     private readonly Closure $structuredResolver;

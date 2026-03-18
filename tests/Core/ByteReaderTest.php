@@ -152,7 +152,7 @@ final class ByteReaderTest extends TestCase
     #[Test]
     public function readsUnsigned64BitBigEndianInteger(): void
     {
-        $data = chr(0x00) . chr(0x00) . chr(0x00) . chr(0x01) .
+        $data   = chr(0x00) . chr(0x00) . chr(0x00) . chr(0x01) .
                 chr(0x23) . chr(0x45) . chr(0x67) . chr(0x89);
         $reader = $this->createReader($data);
 
@@ -169,7 +169,7 @@ final class ByteReaderTest extends TestCase
     #[Test]
     public function readsUnsigned64BitLittleEndianInteger(): void
     {
-        $data = chr(0x89) . chr(0x67) . chr(0x45) . chr(0x23) .
+        $data   = chr(0x89) . chr(0x67) . chr(0x45) . chr(0x23) .
                 chr(0x01) . chr(0x00) . chr(0x00) . chr(0x00);
         $reader = $this->createReader($data);
 

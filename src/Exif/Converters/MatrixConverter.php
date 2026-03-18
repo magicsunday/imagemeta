@@ -76,8 +76,8 @@ final readonly class MatrixConverter
             return null;
         }
 
-        $x = $this->rationalConverter->toFloat($values[0]);
-        $y = $this->rationalConverter->toFloat($values[1]);
+        $x      = $this->rationalConverter->toFloat($values[0]);
+        $y      = $this->rationalConverter->toFloat($values[1]);
 
         if ($x === null || $y === null) {
             return null;
@@ -107,7 +107,7 @@ final readonly class MatrixConverter
         $result = [];
 
         foreach (array_slice($values, 0, 6) as $component) {
-            $float = $this->rationalConverter->toFloat($component);
+            $float    = $this->rationalConverter->toFloat($component);
 
             if ($float === null) {
                 return null;
@@ -209,7 +209,7 @@ final readonly class MatrixConverter
         $values = [];
 
         foreach ($raw as $component) {
-            $float = $this->rationalConverter->toFloat($component);
+            $float    = $this->rationalConverter->toFloat($component);
 
             if ($float === null) {
                 return null;
@@ -268,7 +268,7 @@ final readonly class MatrixConverter
             return null;
         }
 
-        $length = strlen($payload);
+        $length                  = strlen($payload);
 
         if ($length < 4) {
             return null;
@@ -276,22 +276,22 @@ final readonly class MatrixConverter
 
         // Decode header using the TIFF byte order of the enclosing
         // EXIF document instead of hardcoded big-endian.
-        $shortFmt = $endian === Endian::Little ? 'vcolumns/vrows' : 'ncolumns/nrows';
-        $header   = unpack($shortFmt, substr($payload, 0, 4));
+        $shortFmt                = $endian === Endian::Little ? 'vcolumns/vrows' : 'ncolumns/nrows';
+        $header                  = unpack($shortFmt, substr($payload, 0, 4));
 
         if (!is_array($header)) {
             return null;
         }
 
-        $columnsRaw = $header['columns'] ?? null;
-        $rowsRaw    = $header['rows'] ?? null;
+        $columnsRaw              = $header['columns'] ?? null;
+        $rowsRaw                 = $header['rows'] ?? null;
 
         if (!is_int($columnsRaw) || !is_int($rowsRaw)) {
             return null;
         }
 
-        $columns = $columnsRaw;
-        $rows    = $rowsRaw;
+        $columns                 = $columnsRaw;
+        $rows                    = $rowsRaw;
 
         if ($columns <= 0 || $rows <= 0) {
             return null;
@@ -303,8 +303,8 @@ final readonly class MatrixConverter
             return null;
         }
 
-        $offset       = 4;
-        $columnResult = $this->consumeSrationalMatrixLabels($payload, $offset, $length, $columns);
+        $offset                  = 4;
+        $columnResult            = $this->consumeSrationalMatrixLabels($payload, $offset, $length, $columns);
 
         if ($columnResult === null) {
             return null;
@@ -312,27 +312,27 @@ final readonly class MatrixConverter
 
         [$columnLabels, $offset] = $columnResult;
 
-        $rowResult = $this->consumeSrationalMatrixLabels($payload, $offset, $length, $rows);
+        $rowResult               = $this->consumeSrationalMatrixLabels($payload, $offset, $length, $rows);
 
         if ($rowResult === null) {
             return null;
         }
 
-        [$rowLabels, $offset] = $rowResult;
+        [$rowLabels, $offset]    = $rowResult;
 
-        $cells = $columns * $rows;
+        $cells                   = $columns * $rows;
 
         if ($cells > intdiv(PHP_INT_MAX, self::SRATIONAL_VALUE_SIZE)) {
             return null;
         }
 
-        $required = $cells * self::SRATIONAL_VALUE_SIZE;
+        $required                = $cells * self::SRATIONAL_VALUE_SIZE;
 
         if ($required > ($length - $offset)) {
             return null;
         }
 
-        $values = [];
+        $values                  = [];
 
         for ($rowIndex = 0; $rowIndex < $rows; ++$rowIndex) {
             $rowValues = [];
@@ -357,7 +357,7 @@ final readonly class MatrixConverter
                 $rowValues[] = (float) $numerator / (float) $denominator;
             }
 
-            $values[] = $rowValues;
+            $values[]  = $rowValues;
         }
 
         // EXIF 3.0 §4.6.6.7.6/§4.6.6.7.24: the structured payload must be
@@ -387,7 +387,7 @@ final readonly class MatrixConverter
         $labels = [];
 
         for ($i = 0; $i < $count; ++$i) {
-            $labelData = $this->consumeSrationalMatrixLabel($payload, $offset, $length);
+            $labelData        = $this->consumeSrationalMatrixLabel($payload, $offset, $length);
 
             if ($labelData === null) {
                 return null;
@@ -413,7 +413,7 @@ final readonly class MatrixConverter
 
         // No spec-mandated per-label cap — rely on NUL-terminator
         // presence within payload bounds as the only length constraint.
-        $end = strpos($payload, "\0", $offset);
+        $end         = strpos($payload, "\0", $offset);
 
         if ($end === false) {
             return null;
@@ -427,8 +427,8 @@ final readonly class MatrixConverter
 
         // Preserve label bytes faithfully; the EXIF layout defines
         // binary representation, not semantic trimming.
-        $label  = substr($payload, $offset, $labelLength);
-        $offset = $end + 1;
+        $label       = substr($payload, $offset, $labelLength);
+        $offset      = $end + 1;
 
         return [$label, $offset];
     }
@@ -451,13 +451,13 @@ final readonly class MatrixConverter
             return null;
         }
 
-        $raw = $value[1] ?? null;
+        $raw   = $value[1] ?? null;
 
         if (!is_int($raw)) {
             return null;
         }
 
-        $int = $raw;
+        $int   = $raw;
 
         if ($int >= BitMask::SIGN_BIT_32) {
             $int -= BitMask::UINT32_BASE;

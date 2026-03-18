@@ -23,19 +23,19 @@ use function is_int;
  */
 final class ExifFlash
 {
-    private const int FIRED_MASK = 0x01;
+    private const int FIRED_MASK     = 0x01;
 
-    private const int RETURN_SHIFT = 1;
+    private const int RETURN_SHIFT   = 1;
 
-    private const int MODE_SHIFT = 3;
+    private const int MODE_SHIFT     = 3;
 
     private const int FUNCTION_SHIFT = 5;
 
-    private const int TWO_BIT_MASK = 0x03;
+    private const int TWO_BIT_MASK   = 0x03;
 
-    private const int ONE_BIT_MASK = 0x01;
+    private const int ONE_BIT_MASK   = 0x01;
 
-    private const int RED_EYE_MASK = 0x40;
+    private const int RED_EYE_MASK   = 0x40;
 
     /**
      * Prevents instantiation of the utility class.
@@ -61,7 +61,7 @@ final class ExifFlash
             return null;
         }
 
-        $flashBits = is_int($value) ? $value : (int) $value;
+        $flashBits   = is_int($value) ? $value : (int) $value;
 
         // EXIF 3.0 §4.6.6.7.21 defines the grouped Flash tag bit layout decoded below.
         $returnBits  = ($flashBits >> self::RETURN_SHIFT) & self::TWO_BIT_MASK;

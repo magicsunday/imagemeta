@@ -83,7 +83,7 @@ final class ExifTagDecoderTest extends TestCase
 
         // \xC3 alone is a truncated 2-byte UTF-8 sequence followed by ASCII 'X'.
         // The decoder should replace the orphan lead byte with U+FFFD.
-        $result = $decoder->decodeAscii(700, 4, "\xC3X\0\0", [700]);
+        $result  = $decoder->decodeAscii(700, 4, "\xC3X\0\0", [700]);
 
         self::assertSame("\u{FFFD}X", $result);
     }

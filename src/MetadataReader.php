@@ -127,7 +127,7 @@ final readonly class MetadataReader
         $fileSize  = $stream->size();
         $extension = $this->detectExtension($path);
 
-        $sha256 = $withDigest ? $this->calculateDigest($stream) : null;
+        $sha256    = $withDigest ? $this->calculateDigest($stream) : null;
 
         try {
             $type = $this->formatDetector->detect($stream);
@@ -168,35 +168,35 @@ final readonly class MetadataReader
         ?string $extension,
         ?string $digestSha256,
     ): Metadata {
-        $jpeg = $this->jpegParserFactory->create($stream);
+        $jpeg                   = $this->jpegParserFactory->create($stream);
         // Extract the JPEG segments along with frame and auxiliary stream data.
-        $exifBlobs       = $jpeg->extractExifBlobs();
-        $xmpBlobs        = $jpeg->extractXmpPackets();
-        $iccProfile      = $jpeg->getIccProfile();
-        $iccSegments     = $jpeg->getIccSegments();
-        $flashPixStreams = $jpeg->getFlashPixStreams();
-        $audioStreams    = $jpeg->getAudioStreams();
-        $mpfDocument     = $jpeg->getMpfDocument();
-        $iptcBlobs       = $jpeg->getIptcPayloads();
-        $jfifSegment     = $jpeg->getJfifSegment();
-        $bitsPerSample   = $jpeg->getFrameSamplePrecision();
-        $frameHeight     = $jpeg->getFrameHeight();
-        $frameWidth      = $jpeg->getFrameWidth();
-        $sampling        = $jpeg->getFrameComponentSamplingFactors();
-        $subSampling     = $jpeg->getFrameYCbCrSubSampling();
+        $exifBlobs              = $jpeg->extractExifBlobs();
+        $xmpBlobs               = $jpeg->extractXmpPackets();
+        $iccProfile             = $jpeg->getIccProfile();
+        $iccSegments            = $jpeg->getIccSegments();
+        $flashPixStreams        = $jpeg->getFlashPixStreams();
+        $audioStreams           = $jpeg->getAudioStreams();
+        $mpfDocument            = $jpeg->getMpfDocument();
+        $iptcBlobs              = $jpeg->getIptcPayloads();
+        $jfifSegment            = $jpeg->getJfifSegment();
+        $bitsPerSample          = $jpeg->getFrameSamplePrecision();
+        $frameHeight            = $jpeg->getFrameHeight();
+        $frameWidth             = $jpeg->getFrameWidth();
+        $sampling               = $jpeg->getFrameComponentSamplingFactors();
+        $subSampling            = $jpeg->getFrameYCbCrSubSampling();
 
         // Parse the primary EXIF blob and map vendor-specific maker notes.
         [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($exifBlobs, jpegContext: true);
 
-        $makerNotes = $this->appleMerger->merge($makerNotes, null);
-        $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
+        $makerNotes             = $this->appleMerger->merge($makerNotes, null);
+        $xmpDoc                 = $this->parseXmpBlobs($xmpBlobs);
 
-        $iptcDoc = null;
+        $iptcDoc                = null;
 
         if ($iptcBlobs !== []) {
             $documents = array_map($this->iptcParser->parse(...), $iptcBlobs);
 
-            $iptcDoc = IptcDocument::merge(...$documents);
+            $iptcDoc   = IptcDocument::merge(...$documents);
         }
 
         // Assemble the final metadata aggregate with container context.
@@ -227,9 +227,9 @@ final readonly class MetadataReader
         ?string $extension,
         ?string $digestSha256,
     ): Metadata {
-        $result = $this->isoBmffParserFactory->create($stream)->extract();
+        $result                 = $this->isoBmffParserFactory->create($stream)->extract();
 
-        $qt = $result->quickTimeMeta;
+        $qt                     = $result->quickTimeMeta;
 
         // Truncated DJI drone recordings lack a moov box. When the parser
         // found no EXIF/XMP payloads, scan the stream tail for DJI protobuf
@@ -244,8 +244,8 @@ final readonly class MetadataReader
         // (ImageWidth etc.) may legitimately appear in the EXIF blob.
         [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($result->exifBlobs, embeddedContext: true);
 
-        $makerNotes = $this->appleMerger->merge($makerNotes, $qt);
-        $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs);
+        $makerNotes             = $this->appleMerger->merge($makerNotes, $qt);
+        $xmpDoc                 = $this->parseXmpBlobs($result->xmpBlobs);
 
         return (new MetadataBuilder())
             ->withParsers($this->xmpParser, $this->iptcParser)
@@ -280,21 +280,21 @@ final readonly class MetadataReader
             );
         }
 
-        $registry  = $this->createMakerNotesRegistry();
-        $exifBlobs = [];
+        $registry   = $this->createMakerNotesRegistry();
+        $exifBlobs  = [];
 
         $stream->seek(0);
-        $exifDoc = $this->tiffReader->parseFromStream($stream, $registry);
+        $exifDoc    = $this->tiffReader->parseFromStream($stream, $registry);
 
         $makerNotes = $this->appleMerger->merge($exifDoc->makerNotes(), null);
 
         // Adobe XMP Part 3 — tag 700 (0x02BC) embeds XMP in TIFF IFD0
-        $xmpBlobs = $exifDoc->xmpPacketRaw !== null ? [$exifDoc->xmpPacketRaw] : [];
-        $xmpDoc   = $this->parseXmpBlobs($xmpBlobs);
+        $xmpBlobs   = $exifDoc->xmpPacketRaw !== null ? [$exifDoc->xmpPacketRaw] : [];
+        $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
 
         // IPTC-IIM — tag 33723 (0x83BB) embeds IPTC/NAA in TIFF IFD0
-        $iptcBlobs = $exifDoc->iptcNaaRaw !== null ? [$exifDoc->iptcNaaRaw] : [];
-        $iptcDoc   = null;
+        $iptcBlobs  = $exifDoc->iptcNaaRaw !== null ? [$exifDoc->iptcNaaRaw] : [];
+        $iptcDoc    = null;
 
         if ($iptcBlobs !== []) {
             $documents = array_map($this->iptcParser->parse(...), $iptcBlobs);
@@ -330,12 +330,12 @@ final readonly class MetadataReader
         ?string $extension,
         ?string $digestSha256,
     ): Metadata {
-        $result = $this->jxlParserFactory->create($stream)->extract();
+        $result                 = $this->jxlParserFactory->create($stream)->extract();
 
         [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($result->exifBlobs, embeddedContext: true);
 
-        $makerNotes = $this->appleMerger->merge($makerNotes, null);
-        $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs);
+        $makerNotes             = $this->appleMerger->merge($makerNotes, null);
+        $xmpDoc                 = $this->parseXmpBlobs($result->xmpBlobs);
 
         return (new MetadataBuilder())
             ->withParsers($this->xmpParser, $this->iptcParser)
@@ -414,7 +414,7 @@ final readonly class MetadataReader
 
         $probeLength = min($stream->size(), 8192);
 
-        $probe = '';
+        $probe       = '';
 
         try {
             $stream->seek(0);
@@ -429,7 +429,7 @@ final readonly class MetadataReader
             }
         }
 
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $finfo       = new finfo(FILEINFO_MIME_TYPE);
 
         try {
             $mime = $finfo->buffer($probe);
@@ -463,7 +463,7 @@ final readonly class MetadataReader
      */
     private function calculateDigest(Stream $stream): string
     {
-        $context = hash_init('sha256');
+        $context   = hash_init('sha256');
 
         $stream->seek(0);
 

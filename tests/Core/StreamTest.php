@@ -51,7 +51,7 @@ final class StreamTest extends TestCase
             . pack('N', 0x10203040)
             . pack('N2', 0x01234567, 0x89ABCDEF);
 
-        $stream = $this->createStream($payload);
+        $stream  = $this->createStream($payload);
 
         self::assertSame(0, $stream->tell());
         self::assertSame(0xBEEF, $stream->readU16BE());
@@ -71,9 +71,9 @@ final class StreamTest extends TestCase
     {
         $payload = 'MagicSunday';
 
-        $stream = $this->createStream($payload);
+        $stream  = $this->createStream($payload);
 
-        $chunk = $stream->read(5);
+        $chunk   = $stream->read(5);
 
         self::assertSame('Magic', $chunk);
         self::assertSame(5, $stream->tell());
@@ -92,7 +92,7 @@ final class StreamTest extends TestCase
     {
         $payload = 'Image';
 
-        $stream = $this->createStream($payload);
+        $stream  = $this->createStream($payload);
 
         $stream->read(5);
 
@@ -109,7 +109,7 @@ final class StreamTest extends TestCase
     {
         $payload = 'Meta';
 
-        $stream = $this->createStream($payload);
+        $stream  = $this->createStream($payload);
 
         $this->expectException(BoundsError::class);
         $stream->seek(8);
@@ -124,7 +124,7 @@ final class StreamTest extends TestCase
     {
         $payload = 'X';
 
-        $stream = new Stream($this->createTempStream($payload), PHP_INT_MAX);
+        $stream  = new Stream($this->createTempStream($payload), PHP_INT_MAX);
 
         $this->expectException(BoundsError::class);
         $stream->window(PHP_INT_MAX, 1);

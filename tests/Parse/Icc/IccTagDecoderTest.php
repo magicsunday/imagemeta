@@ -50,10 +50,10 @@ final class IccTagDecoderTest extends TestCase
             . "Hello\x00";                      // ASCII text with NUL terminator
 
         // tagPayload is 14 bytes (not a multiple of 4)
-        $profile = $this->buildProfile('cprt', $tagPayload);
+        $profile    = $this->buildProfile('cprt', $tagPayload);
 
-        $decoder = new IccTagDecoder(new IccBinaryReader());
-        $result  = $decoder->extractTag($profile, strlen($profile), 'cprt', 2);
+        $decoder    = new IccTagDecoder(new IccBinaryReader());
+        $result     = $decoder->extractTag($profile, strlen($profile), 'cprt', 2);
 
         self::assertSame('Hello', $result);
     }
@@ -71,10 +71,10 @@ final class IccTagDecoderTest extends TestCase
             . "OK!\x00";                        // 4 bytes: ASCII text with NUL
 
         // tagPayload is 12 bytes (multiple of 4)
-        $profile = $this->buildProfile('cprt', $tagPayload);
+        $profile    = $this->buildProfile('cprt', $tagPayload);
 
-        $decoder = new IccTagDecoder(new IccBinaryReader());
-        $result  = $decoder->extractTag($profile, strlen($profile), 'cprt', 2);
+        $decoder    = new IccTagDecoder(new IccBinaryReader());
+        $result     = $decoder->extractTag($profile, strlen($profile), 'cprt', 2);
 
         self::assertSame('OK!', $result);
     }
@@ -88,19 +88,19 @@ final class IccTagDecoderTest extends TestCase
     private function buildProfile(string $signature, string $tagPayload): string
     {
         // 128-byte header (mostly zeroes)
-        $header = str_pad('', 128, "\x00");
+        $header      = str_pad('', 128, "\x00");
 
         // Tag count = 1
-        $tagCount = pack('N', 1);
+        $tagCount    = pack('N', 1);
 
         // Tag table entry: signature (4) + offset (4) + size (4)
         // Offset = 128 (header) + 4 (tag count) + 12 (one tag record) = 144
-        $tagOffset = 128 + 4 + 12;
-        $tagSize   = strlen($tagPayload);
-        $tagRecord = $signature . pack('N', $tagOffset) . pack('N', $tagSize);
+        $tagOffset   = 128 + 4 + 12;
+        $tagSize     = strlen($tagPayload);
+        $tagRecord   = $signature . pack('N', $tagOffset) . pack('N', $tagSize);
 
         // Pad tag offset to 4-byte alignment (offset 144 is already aligned)
-        $profile = $header . $tagCount . $tagRecord . $tagPayload;
+        $profile     = $header . $tagCount . $tagRecord . $tagPayload;
 
         // Overwrite profile size field at offset 0 (4 bytes BE)
         $profileSize = strlen($profile);

@@ -86,7 +86,7 @@ final class BoundsErrorTest extends TestCase
      */
     private static function createTempStreamStatic(string $payload)
     {
-        $handle = fopen('php://temp', 'r+b');
+        $handle  = fopen('php://temp', 'r+b');
 
         if ($handle === false) {
             Assert::fail('Unable to create temporary stream.');

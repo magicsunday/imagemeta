@@ -22,11 +22,11 @@ use function rad2deg;
  */
 final readonly class PhotoCalculator
 {
-    private const float FULL_FRAME_WIDTH_MM = 36.0;
+    private const float FULL_FRAME_WIDTH_MM               = 36.0;
 
-    private const float FULL_FRAME_HEIGHT_MM = 24.0;
+    private const float FULL_FRAME_HEIGHT_MM              = 24.0;
 
-    private const float FULL_FRAME_DIAGONAL_MM = 43.2666153056;
+    private const float FULL_FRAME_DIAGONAL_MM            = 43.2666153056;
 
     private const float FULL_FRAME_CIRCLE_OF_CONFUSION_MM = 0.030;
 

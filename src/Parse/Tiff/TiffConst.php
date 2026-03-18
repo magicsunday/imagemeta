@@ -27,127 +27,127 @@ final class TiffConst
      * Classic TIFF magic number (42 decimal).
      * TIFF 6.0 §2.1; EXIF 3.0 §4.5.1.
      */
-    public const int MAGIC_CLASSIC = 0x002A;
+    public const int MAGIC_CLASSIC            = 0x002A;
 
     /**
      * BigTIFF magic number (43 decimal).
      * BigTIFF specification; EXIF 3.0 §4.5.1.
      */
-    public const int MAGIC_BIG = 0x002B;
+    public const int MAGIC_BIG                = 0x002B;
 
     /**
      * Alias for the BigTIFF magic number for compatibility with legacy helpers.
      * BigTIFF specification; EXIF 3.0 §4.5.1.
      */
-    public const int MAGIC_BIG_TIFF = self::MAGIC_BIG;
+    public const int MAGIC_BIG_TIFF           = self::MAGIC_BIG;
 
     /**
      * Size in bytes of the classic TIFF file header (byte order + magic + IFD offset).
      * TIFF 6.0 §2.1; EXIF 3.0 §4.5.1.
      */
-    public const int HEADER_SIZE_CLASSIC = 8;
+    public const int HEADER_SIZE_CLASSIC      = 8;
 
     /**
      * Size in bytes of the BigTIFF file header (byte order + magic + offset size + reserved + IFD offset).
      * BigTIFF specification; EXIF 3.0 §4.5.1.
      */
-    public const int HEADER_SIZE_BIG = 16;
+    public const int HEADER_SIZE_BIG          = 16;
 
     /**
      * 8-bit unsigned integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_BYTE = TiffFieldType::Byte->value;
+    public const int TYPE_BYTE                = TiffFieldType::Byte->value;
 
     /**
      * 8-bit byte containing 7-bit ASCII code; last byte NUL.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_ASCII = TiffFieldType::Ascii->value;
+    public const int TYPE_ASCII               = TiffFieldType::Ascii->value;
 
     /**
      * 16-bit unsigned integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_SHORT = TiffFieldType::Short->value;
+    public const int TYPE_SHORT               = TiffFieldType::Short->value;
 
     /**
      * 32-bit unsigned integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_LONG = TiffFieldType::Long->value;
+    public const int TYPE_LONG                = TiffFieldType::Long->value;
 
     /**
      * Two LONGs: numerator and denominator.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_RATIONAL = TiffFieldType::Rational->value;
+    public const int TYPE_RATIONAL            = TiffFieldType::Rational->value;
 
     /**
      * 8-bit signed (two's complement) integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_SBYTE = TiffFieldType::SByte->value;
+    public const int TYPE_SBYTE               = TiffFieldType::SByte->value;
 
     /**
      * 8-bit byte that may contain anything; interpretation depends on field definition.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_UNDEFINED = TiffFieldType::Undefined->value;
+    public const int TYPE_UNDEFINED           = TiffFieldType::Undefined->value;
 
     /**
      * 16-bit signed (two's complement) integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_SSHORT = TiffFieldType::SShort->value;
+    public const int TYPE_SSHORT              = TiffFieldType::SShort->value;
 
     /**
      * 32-bit signed (two's complement) integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_SLONG = TiffFieldType::SLong->value;
+    public const int TYPE_SLONG               = TiffFieldType::SLong->value;
 
     /**
      * Two SLONGs: signed numerator and denominator.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_SRATIONAL = TiffFieldType::SRational->value;
+    public const int TYPE_SRATIONAL           = TiffFieldType::SRational->value;
 
     /**
      * 4-byte IEEE floating point value.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_FLOAT = TiffFieldType::Float->value;
+    public const int TYPE_FLOAT               = TiffFieldType::Float->value;
 
     /**
      * 8-byte IEEE double precision floating point value.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_DOUBLE = TiffFieldType::Double->value;
+    public const int TYPE_DOUBLE              = TiffFieldType::Double->value;
 
     /**
      * 32-bit unsigned offset to IFD (TIFF Technical Note 1).
      * BigTIFF specification; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_IFD = TiffFieldType::Ifd->value;
+    public const int TYPE_IFD                 = TiffFieldType::Ifd->value;
 
     /**
      * 64-bit unsigned integer (BigTIFF).
      * BigTIFF specification; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_LONG8 = TiffFieldType::Long8->value;
+    public const int TYPE_LONG8               = TiffFieldType::Long8->value;
 
     /**
      * 64-bit signed (two's complement) integer (BigTIFF).
      * BigTIFF specification; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_SLONG8 = TiffFieldType::SLong8->value;
+    public const int TYPE_SLONG8              = TiffFieldType::SLong8->value;
 
     /**
      * 64-bit unsigned offset to IFD (BigTIFF).
      * BigTIFF specification; EXIF 3.0 §4.5.2 Table 3.
      */
-    public const int TYPE_IFD8 = TiffFieldType::Ifd8->value;
+    public const int TYPE_IFD8                = TiffFieldType::Ifd8->value;
 
     /**
      * EXIF 3.0 §4.6.6.8 — sentinel denominator value indicating an unknown measurement.

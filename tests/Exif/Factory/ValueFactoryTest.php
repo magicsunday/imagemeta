@@ -81,7 +81,7 @@ final class ValueFactoryTest extends TestCase
     #[Test]
     public function assemblesDepthMapFromXmpPacket(): void
     {
-        $xml = <<<XML
+        $xml        = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:GDepth="http://ns.google.com/photos/1.0/depthmap/">
   <rdf:Description
@@ -93,7 +93,7 @@ final class ValueFactoryTest extends TestCase
 </rdf:RDF>
 XML;
 
-        $metadata = new Metadata(
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             xmpDoc: (new XmpParser())->parse($xml),
@@ -116,7 +116,7 @@ XML;
     #[Test]
     public function assemblesHdrGainMapFromXmpPacket(): void
     {
-        $xml = <<<XML
+        $xml        = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:hdrgm="http://ns.adobe.com/hdr-gain-map/1.0/"
          xmlns:apdi="http://ns.apple.com/pixeldatainfo/1.0/">
@@ -135,7 +135,7 @@ XML;
 </rdf:RDF>
 XML;
 
-        $metadata = new Metadata(
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             xmpDoc: (new XmpParser())->parse($xml),
@@ -163,7 +163,7 @@ XML;
     #[Test]
     public function setsHasGainMapTrueWhenTmapItemsExist(): void
     {
-        $metadata = new Metadata(
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             tmapItemIds: [2],
@@ -181,7 +181,7 @@ XML;
     #[Test]
     public function setsHasGainMapTrueWhenGainMapBlobExists(): void
     {
-        $metadata = new Metadata(
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             gainMapBlob: 'gain-map-image-data',
@@ -199,7 +199,7 @@ XML;
     #[Test]
     public function mapsXmpCreatorContactInfoAndTitles(): void
     {
-        $xml = <<<XML
+        $xml        = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/"
          xmlns:photoshop="http://ns.adobe.com/photoshop/1.0/"
@@ -230,7 +230,7 @@ XML;
 </rdf:RDF>
 XML;
 
-        $metadata = new Metadata(
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             xmpDoc: (new XmpParser())->parse($xml),
@@ -258,10 +258,10 @@ XML;
     #[Test]
     public function exposesParsedIptcDatasets(): void
     {
-        $iimData = $this->iimDataset(2, 5, 'Object Name');
-        $payload = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
+        $iimData    = $this->iimDataset(2, 5, 'Object Name');
+        $payload    = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
 
-        $metadata = new Metadata(
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             iptcBlobs: [$payload],
@@ -279,10 +279,10 @@ XML;
     #[Test]
     public function usesInjectedIccParserDependency(): void
     {
-        $called  = false;
-        $profile = $this->createIccProfile(description: 'Injected ICC', version: '4.4');
+        $called     = false;
+        $profile    = $this->createIccProfile(description: 'Injected ICC', version: '4.4');
 
-        $iccParser = new readonly class(function () use (&$called): void {
+        $iccParser  = new readonly class(function () use (&$called): void {
             $called = true;
         }, $profile) implements IccParserInterface {
             public function __construct(
@@ -300,8 +300,8 @@ XML;
             }
         };
 
-        $factory  = new ValueFactory(iccParser: $iccParser);
-        $metadata = new Metadata(
+        $factory    = new ValueFactory(iccParser: $iccParser);
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             iccProfile: 'mock-profile',
@@ -321,8 +321,8 @@ XML;
     #[Test]
     public function producesCompleteComponentArrayFromEmptyMetadata(): void
     {
-        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
-        $metadata = new Metadata(
+        $factory    = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
         );
@@ -343,8 +343,8 @@ XML;
     #[Test]
     public function handlesNonXmlXmpGracefully(): void
     {
-        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
-        $metadata = new Metadata(
+        $factory    = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata   = new Metadata(
             exifBlobs: [],
             quickTime: null,
             xmpDoc: null,
@@ -441,7 +441,7 @@ XML;
             $nameField .= "\0";
         }
 
-        $block = '8BIM'
+        $block      = '8BIM'
             . pack('n', $resourceId)
             . $nameField
             . pack('N', strlen($data))

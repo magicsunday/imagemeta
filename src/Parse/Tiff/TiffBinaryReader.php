@@ -103,7 +103,7 @@ final readonly class TiffBinaryReader
     {
         $current = $this->buffer->tell();
         $this->buffer->seek($offset);
-        $bytes = $this->buffer->read($length);
+        $bytes   = $this->buffer->read($length);
         $this->buffer->seek($current);
 
         return $bytes;
@@ -206,9 +206,9 @@ final readonly class TiffBinaryReader
      */
     public function unpackS64(string $b): int
     {
-        $unsigned = $this->unpackU64($b);
-        $hi       = $unsigned->high();
-        $lo       = $unsigned->low();
+        $unsigned     = $this->unpackU64($b);
+        $hi           = $unsigned->high();
+        $lo           = $unsigned->low();
 
         if (($hi & BitMask::SIGN_BIT_32) === 0) {
             return $unsigned->toInt('Signed 64-bit integer');
@@ -217,7 +217,7 @@ final readonly class TiffBinaryReader
         $hiComplement = (~$hi) & BitMask::UINT32_MAX;
         $loComplement = (~$lo) & BitMask::UINT32_MAX;
 
-        $magnitude = Unpack::combineUint32($hiComplement, $loComplement)
+        $magnitude    = Unpack::combineUint32($hiComplement, $loComplement)
             ->addSmall(1)
             ->toInt('Signed 64-bit integer magnitude');
 

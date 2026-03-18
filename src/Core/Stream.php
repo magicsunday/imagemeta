@@ -56,7 +56,7 @@ final class Stream implements BinaryReadAccessInterface
             throw new ParseError('Unsupported stream wrapper in path.', 1036);
         }
 
-        $fh = !str_contains($path, '://') && (!file_exists($path) || !is_readable($path)) ? false : fopen($path, 'rb');
+        $fh   = !str_contains($path, '://') && (!file_exists($path) || !is_readable($path)) ? false : fopen($path, 'rb');
 
         if ($fh === false) {
             throw new ParseError('Cannot open the provided file path.', 1010);
@@ -131,7 +131,7 @@ final class Stream implements BinaryReadAccessInterface
             return '';
         }
 
-        $len = $this->normalizeReadLength($length, 'stream read length out of range');
+        $len  = $this->normalizeReadLength($length, 'stream read length out of range');
 
         if (($this->pos + $len) > $this->size) {
             throw new BoundsError('read beyond EOF: ' . $this->pos . '+' . $len . ' > ' . $this->size, 1012);
@@ -186,7 +186,7 @@ final class Stream implements BinaryReadAccessInterface
      */
     private function seekInternal(int|UInt64 $offset, int $whence): void
     {
-        $target = match ($whence) {
+        $target    = match ($whence) {
             SEEK_SET => $this->normalizeAbsoluteOffset($offset, 'seek out of range'),
             SEEK_CUR => $this->normalizeRelativeOffset($offset, $this->pos, 'seek out of range'),
             SEEK_END => $this->normalizeRelativeOffset($offset, $this->size, 'seek out of range'),

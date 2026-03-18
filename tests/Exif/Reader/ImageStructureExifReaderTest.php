@@ -52,7 +52,7 @@ final class ImageStructureExifReaderTest extends TestCase
             ExifTag::PIXEL_Y_DIMENSION => new IfdEntry(ExifTag::PIXEL_Y_DIMENSION, 3, 1, 3000),
         ];
 
-        $reader = $this->createReader([], $exifEntries);
+        $reader      = $this->createReader([], $exifEntries);
 
         self::assertSame(4000, $reader->imageWidth());
         self::assertSame(3000, $reader->imageHeight());
@@ -71,7 +71,7 @@ final class ImageStructureExifReaderTest extends TestCase
             ExifTag::COMPRESSION  => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
         ];
 
-        $reader = $this->createReader($ifd0Entries, []);
+        $reader      = $this->createReader($ifd0Entries, []);
 
         self::assertSame(5000, $reader->imageWidth());
         self::assertSame(4000, $reader->imageHeight());
@@ -89,7 +89,7 @@ final class ImageStructureExifReaderTest extends TestCase
             ExifTag::PIXEL_Y_DIMENSION => new IfdEntry(ExifTag::PIXEL_Y_DIMENSION, 3, 1, 1080),
         ];
 
-        $reader = $this->createReader([], $exifEntries);
+        $reader      = $this->createReader([], $exifEntries);
 
         self::assertSame($reader->imageWidth(), $reader->pixelXDimension());
         self::assertSame($reader->imageHeight(), $reader->pixelYDimension());
@@ -119,7 +119,7 @@ final class ImageStructureExifReaderTest extends TestCase
             ExifTag::ORIENTATION => new IfdEntry(ExifTag::ORIENTATION, 3, 1, Orientation::BottomRight->value),
         ];
 
-        $reader = $this->createReader($ifd0Entries, []);
+        $reader      = $this->createReader($ifd0Entries, []);
 
         self::assertSame(Orientation::BottomRight, $reader->orientation());
         self::assertSame('Rotate 180', $reader->orientationDescription());
@@ -148,7 +148,7 @@ final class ImageStructureExifReaderTest extends TestCase
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
         ];
 
-        $reader = $this->createReader($ifd0Entries, []);
+        $reader      = $this->createReader($ifd0Entries, []);
 
         self::assertSame(Compression::Jpeg, $reader->compression());
     }
@@ -177,7 +177,7 @@ final class ImageStructureExifReaderTest extends TestCase
             ExifTag::Y_RESOLUTION => new IfdEntry(ExifTag::Y_RESOLUTION, 5, 1, [600, 1]),
         ];
 
-        $reader = $this->createReader($ifd0Entries, []);
+        $reader      = $this->createReader($ifd0Entries, []);
 
         self::assertSame(300.0, $reader->xResolution());
         self::assertSame(600.0, $reader->yResolution());
@@ -193,7 +193,7 @@ final class ImageStructureExifReaderTest extends TestCase
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
         ];
 
-        $reader = $this->createReader($ifd0Entries, []);
+        $reader      = $this->createReader($ifd0Entries, []);
 
         self::assertNull($reader->rowsPerStrip());
         self::assertNull($reader->stripOffsets());
@@ -212,7 +212,7 @@ final class ImageStructureExifReaderTest extends TestCase
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
         ];
 
-        $reader = $this->createReader($ifd0Entries, []);
+        $reader      = $this->createReader($ifd0Entries, []);
 
         self::assertNull($reader->imageWidth());
         self::assertNull($reader->imageHeight());

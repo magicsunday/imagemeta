@@ -268,7 +268,7 @@ final class TiffExifParserJpegProcTest extends TestCase
             ]),
         );
 
-        $ifd1 = $parsed->ifd1;
+        $ifd1   = $parsed->ifd1;
         self::assertInstanceOf(Ifd::class, $ifd1);
         self::assertSame(4, $ifd1->get(TiffTag::JPEG_LOSSLESS_PREDICTORS)?->value);
         self::assertSame(0, $ifd1->get(TiffTag::JPEG_POINT_TRANSFORMS)?->value);
@@ -390,7 +390,7 @@ final class TiffExifParserJpegProcTest extends TestCase
             ]),
         );
 
-        $ifd1 = $parsed->ifd1;
+        $ifd1   = $parsed->ifd1;
         self::assertInstanceOf(Ifd::class, $ifd1);
         self::assertSame(8, $ifd1->get(TiffTag::JPEG_Q_TABLES)?->value);
         self::assertSame(8, $ifd1->get(TiffTag::JPEG_DC_TABLES)?->value);
@@ -544,7 +544,7 @@ final class TiffExifParserJpegProcTest extends TestCase
         ksort($ifd0Entries);
         ksort($ifd1Entries);
 
-        $ifd1Offset = 8 + $this->ifdSize($ifd0Entries);
+        $ifd1Offset  = 8 + $this->ifdSize($ifd0Entries);
 
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)

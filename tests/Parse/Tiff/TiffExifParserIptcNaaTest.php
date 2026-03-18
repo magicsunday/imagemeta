@@ -61,7 +61,7 @@ final class TiffExifParserIptcNaaTest extends TestCase
         $iptcPayload = "\x1C\x02\x78\x00\x05Hello";
         $blob        = $this->buildTiffWithIptcNaa($iptcPayload);
 
-        $result = (new TiffExifParser())->parseFromBlob($blob);
+        $result      = (new TiffExifParser())->parseFromBlob($blob);
 
         self::assertSame($iptcPayload, $result->iptcNaaRaw);
     }
@@ -72,7 +72,7 @@ final class TiffExifParserIptcNaaTest extends TestCase
     #[Test]
     public function returnsNullWhenNoIptcNaaPresent(): void
     {
-        $blob = $this->buildMinimalTiffWithoutIptc();
+        $blob   = $this->buildMinimalTiffWithoutIptc();
 
         $result = (new TiffExifParser())->parseFromBlob($blob);
 
@@ -86,7 +86,7 @@ final class TiffExifParserIptcNaaTest extends TestCase
     #[Test]
     public function toleratesTruncatedIptcNaaData(): void
     {
-        $blob = $this->buildTiffWithTruncatedIptcNaa();
+        $blob   = $this->buildTiffWithTruncatedIptcNaa();
 
         $result = (new TiffExifParser())->parseFromBlob($blob);
 
@@ -103,7 +103,7 @@ final class TiffExifParserIptcNaaTest extends TestCase
         $ifd0Size       = 2 + ($ifd0EntryCount * 12) + 4;
         $iptcOffset     = $ifd0Offset + $ifd0Size;
 
-        $blob = 'II'
+        $blob           = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset);
 

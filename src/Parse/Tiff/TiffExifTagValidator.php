@@ -63,7 +63,7 @@ final readonly class TiffExifTagValidator
      *
      * @var list<array{int, string, string}>
      */
-    private const array EXIF_IFD_ONLY_TAGS = [
+    private const array EXIF_IFD_ONLY_TAGS   = [
         [ExifTag::PHOTOGRAPHER, 'Photographer', '§4.6.6.9.9'],
         [ExifTag::IMAGE_EDITOR, 'ImageEditor', '§4.6.6.9.10'],
         [ExifTag::CAMERA_FIRMWARE, 'CameraFirmware', '§4.6.6.9.11'],
@@ -147,7 +147,7 @@ final readonly class TiffExifTagValidator
             return;
         }
 
-        $thumbCompression = $ifd1->get(ExifTag::COMPRESSION);
+        $thumbCompression   = $ifd1->get(ExifTag::COMPRESSION);
 
         if (!($thumbCompression instanceof IfdEntry) || ($thumbCompression->value !== 6)) {
             return;
@@ -159,7 +159,7 @@ final readonly class TiffExifTagValidator
             return;
         }
 
-        $photometric = $ifd0->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $photometric        = $ifd0->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
 
         if (!($photometric instanceof IfdEntry) || !is_int($photometric->value)) {
             return;
@@ -193,14 +193,14 @@ final readonly class TiffExifTagValidator
             return;
         }
 
-        $entry = $exifIfd->get(ExifTag::FLASH);
+        $entry      = $exifIfd->get(ExifTag::FLASH);
 
         if (!($entry instanceof IfdEntry) || !is_int($entry->value)) {
             return;
         }
 
         // Mask to bits 0–6; ignore reserved high-order bits (Postel's Law).
-        $flashBits = $entry->value & 0x7F;
+        $flashBits  = $entry->value & 0x7F;
 
         // Postel's Law: accept reserved return-status bits.
         $fired      = ($flashBits & 0x01) !== 0;

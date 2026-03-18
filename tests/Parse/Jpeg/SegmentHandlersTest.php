@@ -91,19 +91,19 @@ final class SegmentHandlersTest extends TestCase
     #[Test]
     public function app2HandlersFilterByDedicatedSignatures(): void
     {
-        $stream = new Stream($this->createTempStream('JPEG'), 4);
-        $icc    = 0;
-        $audio  = 0;
-        $mpf    = 0;
-        $fpx    = 0;
+        $stream          = new Stream($this->createTempStream('JPEG'), 4);
+        $icc             = 0;
+        $audio           = 0;
+        $mpf             = 0;
+        $fpx             = 0;
 
-        $iccHandler = new IccProfileHandler(function (string $_payload, int $_offset) use (&$icc): void {
+        $iccHandler      = new IccProfileHandler(function (string $_payload, int $_offset) use (&$icc): void {
             ++$icc;
         });
-        $audioHandler = new AudioStreamHandler(function (string $_payload, int $_offset) use (&$audio): void {
+        $audioHandler    = new AudioStreamHandler(function (string $_payload, int $_offset) use (&$audio): void {
             ++$audio;
         });
-        $mpfHandler = new MpfDocumentHandler(function (string $_payload, int $_offset) use (&$mpf): void {
+        $mpfHandler      = new MpfDocumentHandler(function (string $_payload, int $_offset) use (&$mpf): void {
             ++$mpf;
         });
         $flashPixHandler = new FlashPixHandler(function (string $_payload, int $_offset) use (&$fpx): void {

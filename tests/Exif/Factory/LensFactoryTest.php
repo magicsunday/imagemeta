@@ -145,7 +145,7 @@ final class LensFactoryTest extends TestCase
             ),
         ];
 
-        $lens = $this->createLens($this->parsedExifFromEntries($exifEntries));
+        $lens        = $this->createLens($this->parsedExifFromEntries($exifEntries));
 
         self::assertNull($lens->lensMake);
         self::assertNull($lens->lensModel);
@@ -246,7 +246,7 @@ final class LensFactoryTest extends TestCase
         }
 
         if ($lensSpecification !== null) {
-            $pairs = [
+            $pairs                                    = [
                 [$lensSpecification[0], 1],
                 [$lensSpecification[1], 1],
                 [$lensSpecification[2] * 10, 10],

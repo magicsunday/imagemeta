@@ -125,7 +125,7 @@ final readonly class IccHeaderDecoder
      */
     public function extractRenderingIntent(string $data): string
     {
-        $raw = $this->reader->uInt32Be(substr($data, IccTag::RENDERING_INTENT, 4));
+        $raw    = $this->reader->uInt32Be(substr($data, IccTag::RENDERING_INTENT, 4));
 
         // Mask off upper 16 bits — tolerate non-zero reserved bits.
         $lower  = $raw & 0xFFFF;

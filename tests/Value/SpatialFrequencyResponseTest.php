@@ -44,7 +44,7 @@ final class SpatialFrequencyResponseTest extends TestCase
             ],
         ];
 
-        $sfr = SpatialFrequencyResponse::fromMatrix($matrix);
+        $sfr    = SpatialFrequencyResponse::fromMatrix($matrix);
 
         self::assertNotNull($sfr);
         self::assertSame(3, $sfr->columns);

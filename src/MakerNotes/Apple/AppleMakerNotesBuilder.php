@@ -44,12 +44,12 @@ final readonly class AppleMakerNotesBuilder
      */
     public function build(array $dictionary): ?AppleMakerNotes
     {
-        $semanticStyleCompact = $this->seedSemanticStyleKeys($dictionary);
-        $identityData         = $this->loadIdentitySection($dictionary);
-        $hdrData              = $this->loadHdrSection($dictionary);
-        $focusData            = $this->loadFocusSection($dictionary);
-        $styleData            = $this->loadStyleSection($dictionary, $semanticStyleCompact);
-        $cameraData           = $this->loadCameraSection($dictionary);
+        $semanticStyleCompact   = $this->seedSemanticStyleKeys($dictionary);
+        $identityData           = $this->loadIdentitySection($dictionary);
+        $hdrData                = $this->loadHdrSection($dictionary);
+        $focusData              = $this->loadFocusSection($dictionary);
+        $styleData              = $this->loadStyleSection($dictionary, $semanticStyleCompact);
+        $cameraData             = $this->loadCameraSection($dictionary);
 
         $snr                    = $this->extractor->floatValue($dictionary, 'SNRSetting', 'SNR');
         $aeStable               = $this->extractor->boolDictionaryValue($dictionary, 'AEStable');
@@ -69,9 +69,9 @@ final readonly class AppleMakerNotesBuilder
             }
         }
 
-        $accelerationVector = $this->extractor->floatList($dictionary, 'AccelerationVector');
-        $flags              = $this->extractor->extractFlags($dictionary);
-        $identity           = AppleCaptureIdentity::createIfPresent(
+        $accelerationVector     = $this->extractor->floatList($dictionary, 'AccelerationVector');
+        $flags                  = $this->extractor->extractFlags($dictionary);
+        $identity               = AppleCaptureIdentity::createIfPresent(
             $identityData['contentIdentifier'],
             $identityData['imageCaptureRequestId'],
             $identityData['burstUuid'],
@@ -80,17 +80,17 @@ final readonly class AppleMakerNotesBuilder
             $identityData['mediaGroupUuid'],
         );
 
-        $hdr = AppleHdr::createIfPresent(
+        $hdr                    = AppleHdr::createIfPresent(
             $hdrData['hdrHeadroom'],
             $hdrData['hdrGain'],
             $hdrData['hdrImageType'],
         );
 
-        $autoExposure = ($aeStable !== null || $aeTarget !== null || $aeAverage !== null)
+        $autoExposure           = ($aeStable !== null || $aeTarget !== null || $aeAverage !== null)
             ? new AppleAutoExposure($aeStable, $aeTarget, $aeAverage)
             : null;
 
-        $autoFocus = ($focusData['afStable'] !== null || $focusData['afPerformance'] !== null || $focusData['afMeasuredDepth'] !== null
+        $autoFocus              = ($focusData['afStable'] !== null || $focusData['afPerformance'] !== null || $focusData['afMeasuredDepth'] !== null
             || $focusData['afConfidence'] !== null || $focusData['focusPosition'] !== null || $focusData['focusDistanceRange'] !== null)
             ? new AppleAutoFocus(
                 $focusData['afStable'],
@@ -102,11 +102,11 @@ final readonly class AppleMakerNotesBuilder
             )
             : null;
 
-        $noise = ($snr !== null || $signalToNoiseRatioType !== null || $luminanceAmplitude !== null)
+        $noise                  = ($snr !== null || $signalToNoiseRatioType !== null || $luminanceAmplitude !== null)
             ? new AppleNoise($snr, $signalToNoiseRatioType, $luminanceAmplitude)
             : null;
 
-        $style = ($styleData['semanticStylePreset'] !== null || $styleData['semanticStyleWarmth'] !== null || $styleData['semanticStyleTone'] !== null)
+        $style                  = ($styleData['semanticStylePreset'] !== null || $styleData['semanticStyleWarmth'] !== null || $styleData['semanticStyleTone'] !== null)
             ? new AppleSemanticStyle(
                 $styleData['semanticStylePreset'],
                 $styleData['semanticStyleWarmth'],
@@ -114,12 +114,12 @@ final readonly class AppleMakerNotesBuilder
             )
             : null;
 
-        $livePhoto = ($livePhotoIndex !== null || $livePhotoTime !== null
+        $livePhoto              = ($livePhotoIndex !== null || $livePhotoTime !== null
             || $runTime instanceof RunTime || $accelerationVector !== null)
             ? new AppleLivePhoto($livePhotoIndex, $livePhotoTime, $runTime, $accelerationVector)
             : null;
 
-        $camera = (
+        $camera                 = (
             $identityData['type'] !== null || $cameraData['imageCaptureType'] !== null || $cameraData['makerNoteVersion'] !== null
             || $cameraData['qualityHint'] !== null || $cameraData['oisMode'] !== null
             || $cameraData['colorTemperature'] !== null || $cameraData['colorCorrectionMatrix'] !== null

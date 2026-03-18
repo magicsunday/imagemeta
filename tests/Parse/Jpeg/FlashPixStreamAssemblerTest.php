@@ -43,7 +43,7 @@ final class FlashPixStreamAssemblerTest extends TestCase
     #[Test]
     public function rejectsCumulativeStreamSizeExceedingLimit(): void
     {
-        $assembler = new FlashPixStreamAssembler(
+        $assembler    = new FlashPixStreamAssembler(
             maxContentEntries: 10,
             maxStreamSize: 1_000_000,
             maxFlashPixTotalSize: 100,
@@ -54,11 +54,11 @@ final class FlashPixStreamAssemblerTest extends TestCase
         $assembler->handleSegment($contentsList, 0);
 
         // First stream data chunk: 60 bytes at offset 0 — cumulative 60
-        $streamData1 = $this->buildStreamDataPayload(0, 1, 2, 0, str_repeat('A', 60));
+        $streamData1  = $this->buildStreamDataPayload(0, 1, 2, 0, str_repeat('A', 60));
         $assembler->handleSegment($streamData1, 100);
 
         // Second stream data chunk: 60 bytes at offset 60 — cumulative 120 > limit 100
-        $streamData2 = $this->buildStreamDataPayload(0, 2, 2, 60, str_repeat('B', 60));
+        $streamData2  = $this->buildStreamDataPayload(0, 2, 2, 60, str_repeat('B', 60));
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1948);
@@ -72,7 +72,7 @@ final class FlashPixStreamAssemblerTest extends TestCase
     #[Test]
     public function toleratesTrailingBytesInContentsList(): void
     {
-        $assembler = new FlashPixStreamAssembler(
+        $assembler    = new FlashPixStreamAssembler(
             maxContentEntries: 10,
             maxStreamSize: 1_000_000,
             maxFlashPixTotalSize: 100_000,
@@ -94,7 +94,7 @@ final class FlashPixStreamAssemblerTest extends TestCase
     #[Test]
     public function itToleratesInvalidNamePrefix(): void
     {
-        $assembler = new FlashPixStreamAssembler(
+        $assembler    = new FlashPixStreamAssembler(
             maxContentEntries: 10,
             maxStreamSize: 1_000_000,
             maxFlashPixTotalSize: 100_000,
@@ -105,7 +105,7 @@ final class FlashPixStreamAssemblerTest extends TestCase
         $assembler->handleSegment($contentsList, 0);
 
         // Stream data for the entry should be accepted
-        $streamData = $this->buildStreamDataPayload(0, 1, 1, 0, str_repeat('X', 10));
+        $streamData   = $this->buildStreamDataPayload(0, 1, 1, 0, str_repeat('X', 10));
         $assembler->handleSegment($streamData, 100);
 
         $assembler->finalise();
@@ -118,7 +118,7 @@ final class FlashPixStreamAssemblerTest extends TestCase
     #[Test]
     public function itToleratesEmptyEntryName(): void
     {
-        $assembler = new FlashPixStreamAssembler(
+        $assembler    = new FlashPixStreamAssembler(
             maxContentEntries: 10,
             maxStreamSize: 1_000_000,
             maxFlashPixTotalSize: 100_000,
@@ -129,7 +129,7 @@ final class FlashPixStreamAssemblerTest extends TestCase
         $assembler->handleSegment($contentsList, 0);
 
         // Stream data for the entry should be accepted
-        $streamData = $this->buildStreamDataPayload(0, 1, 1, 0, str_repeat('Y', 10));
+        $streamData   = $this->buildStreamDataPayload(0, 1, 1, 0, str_repeat('Y', 10));
         $assembler->handleSegment($streamData, 100);
 
         $assembler->finalise();
@@ -142,7 +142,7 @@ final class FlashPixStreamAssemblerTest extends TestCase
     #[Test]
     public function itToleratesFlashPixStreamEntryExceedingMaximumSize(): void
     {
-        $assembler = new FlashPixStreamAssembler(
+        $assembler    = new FlashPixStreamAssembler(
             maxContentEntries: 10,
             maxStreamSize: 100,
             maxFlashPixTotalSize: 100_000,
@@ -198,7 +198,7 @@ final class FlashPixStreamAssemblerTest extends TestCase
             maxFlashPixTotalSize: 100_000,
         );
 
-        $payload = "FPXR\x00\x00"
+        $payload   = "FPXR\x00\x00"
             . pack('n', 1)
             . "\x00\x00\x00\x10";
 
@@ -223,7 +223,7 @@ final class FlashPixStreamAssemblerTest extends TestCase
         $nameUtf16 = iconv('UTF-8', 'UTF-16LE', '/unterminated');
         assert($nameUtf16 !== false);
 
-        $payload = "FPXR\x00\x00"
+        $payload   = "FPXR\x00\x00"
             . pack('n', 1)
             . pack('N', 32)
             . chr(0)
@@ -241,14 +241,14 @@ final class FlashPixStreamAssemblerTest extends TestCase
     #[Test]
     public function itSalvagesValidFlashPixNamePortionsWithoutIconvNotice(): void
     {
-        $assembler = new FlashPixStreamAssembler(
+        $assembler      = new FlashPixStreamAssembler(
             maxContentEntries: 10,
             maxStreamSize: 1_000_000,
             maxFlashPixTotalSize: 100_000,
         );
-        $method = new ReflectionMethod(FlashPixStreamAssembler::class, 'parseName');
+        $method         = new ReflectionMethod(FlashPixStreamAssembler::class, 'parseName');
 
-        $validUtf16 = iconv('UTF-8', 'UTF-16LE', '/ok/after');
+        $validUtf16     = iconv('UTF-8', 'UTF-16LE', '/ok/after');
         assert($validUtf16 !== false);
 
         // Insert an unpaired high surrogate between valid UTF-16LE spans.
@@ -301,12 +301,12 @@ final class FlashPixStreamAssemblerTest extends TestCase
         $nameUtf16 = iconv('UTF-8', 'UTF-16LE', $name);
         assert($nameUtf16 !== false);
 
-        $entry = pack('N', $entitySize)  // entity size (4 bytes BE)
+        $entry     = pack('N', $entitySize)  // entity size (4 bytes BE)
             . chr(0)                     // default byte
             . $nameUtf16                 // UTF-16LE name
             . "\x00\x00";               // NUL terminator (UTF-16LE)
 
-        $body = pack('n', 1) . $entry;  // entry count = 1
+        $body      = pack('n', 1) . $entry;  // entry count = 1
 
         return "FPXR\x00\x00" . $body;
     }
@@ -346,7 +346,7 @@ final class FlashPixStreamAssemblerTest extends TestCase
             . chr(0)                     // default byte
             . "\x00\x00";               // NUL terminator only (empty name)
 
-        $body = pack('n', 1) . $entry;  // entry count = 1
+        $body  = pack('n', 1) . $entry;  // entry count = 1
 
         return "FPXR\x00\x00" . $body;
     }

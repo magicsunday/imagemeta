@@ -77,59 +77,59 @@ final class AppleMakerNotesMerger
         ?AppleMakerNotes $makerNotes,
         ?QuickTimeMeta $quickTime,
     ): AppleMakerNotes {
-        $lookup = new QuickTimeLookup($quickTime);
+        $lookup                 = new QuickTimeLookup($quickTime);
 
-        $contentIdentifier = $makerNotes?->identity?->contentIdentifier;
+        $contentIdentifier      = $makerNotes?->identity?->contentIdentifier;
 
         if (($contentIdentifier === null) && ($quickTime instanceof QuickTimeMeta)) {
             $contentIdentifier = $quickTime->contentIdentifier();
         }
 
-        $imageCaptureRequestId = $makerNotes?->identity?->imageCaptureRequestId;
+        $imageCaptureRequestId  = $makerNotes?->identity?->imageCaptureRequestId;
 
         if ($imageCaptureRequestId === null) {
             $imageCaptureRequestId = $lookup->string('ImageCaptureRequestID');
         }
 
-        $burstUuid       = $this->preferMakerString($makerNotes?->identity?->burstUuid, $lookup, 'BurstUUID');
-        $imageUniqueId   = $this->preferMakerString($makerNotes?->identity?->imageUniqueId, $lookup, 'ImageUniqueID');
-        $photoIdentifier = $this->preferMakerString($makerNotes?->identity?->photoIdentifier, $lookup, 'PhotoIdentifier');
-        $mediaGroupUuid  = $this->preferMakerString($makerNotes?->identity?->mediaGroupUuid, $lookup, 'MediaGroupUUID');
+        $burstUuid              = $this->preferMakerString($makerNotes?->identity?->burstUuid, $lookup, 'BurstUUID');
+        $imageUniqueId          = $this->preferMakerString($makerNotes?->identity?->imageUniqueId, $lookup, 'ImageUniqueID');
+        $photoIdentifier        = $this->preferMakerString($makerNotes?->identity?->photoIdentifier, $lookup, 'PhotoIdentifier');
+        $mediaGroupUuid         = $this->preferMakerString($makerNotes?->identity?->mediaGroupUuid, $lookup, 'MediaGroupUUID');
 
-        $hdrHeadroom  = $this->preferMakerFloat($makerNotes?->hdr?->headroom, $lookup, 'HdrHeadroom', 'HDRHeadroom');
-        $hdrGain      = $this->preferMakerFloatList($makerNotes?->hdr?->gain, $lookup, 'HdrGain', 'HDRGain');
-        $hdrImageType = $this->preferMakerEnumerated($makerNotes?->hdr?->imageType, $lookup, AppleMaps::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
+        $hdrHeadroom            = $this->preferMakerFloat($makerNotes?->hdr?->headroom, $lookup, 'HdrHeadroom', 'HDRHeadroom');
+        $hdrGain                = $this->preferMakerFloatList($makerNotes?->hdr?->gain, $lookup, 'HdrGain', 'HDRGain');
+        $hdrImageType           = $this->preferMakerEnumerated($makerNotes?->hdr?->imageType, $lookup, AppleMaps::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
 
-        $snr = $this->preferMakerFloat($makerNotes?->noise?->snr, $lookup, 'SNRSetting', 'SNR');
+        $snr                    = $this->preferMakerFloat($makerNotes?->noise?->snr, $lookup, 'SNRSetting', 'SNR');
 
-        $focusPosition = $this->preferMakerFloat($makerNotes?->autoFocus?->focusPosition, $lookup, 'FocusPosition');
+        $focusPosition          = $this->preferMakerFloat($makerNotes?->autoFocus?->focusPosition, $lookup, 'FocusPosition');
 
-        $focusDistanceRange = $makerNotes?->autoFocus?->focusDistanceRange;
+        $focusDistanceRange     = $makerNotes?->autoFocus?->focusDistanceRange;
 
         if ($focusDistanceRange === null) {
             $focusDistanceRange = $this->quickTimeFocusDistanceRange($lookup);
         }
 
-        $afMeasuredDepth = $this->preferMakerFloat($makerNotes?->autoFocus?->measuredDepth, $lookup, 'AFMeasuredDepth');
-        $afConfidence    = $this->preferMakerFloat($makerNotes?->autoFocus?->confidence, $lookup, 'AFConfidence');
+        $afMeasuredDepth        = $this->preferMakerFloat($makerNotes?->autoFocus?->measuredDepth, $lookup, 'AFMeasuredDepth');
+        $afConfidence           = $this->preferMakerFloat($makerNotes?->autoFocus?->confidence, $lookup, 'AFConfidence');
 
-        $livePhotoIndex = $this->preferMakerInt($makerNotes?->livePhoto?->index, $lookup, 'LivePhotoVideoIndex', 'LivePhotoMovieIndex');
+        $livePhotoIndex         = $this->preferMakerInt($makerNotes?->livePhoto?->index, $lookup, 'LivePhotoVideoIndex', 'LivePhotoMovieIndex');
 
-        $livePhotoTime = $makerNotes?->livePhoto?->time;
+        $livePhotoTime          = $makerNotes?->livePhoto?->time;
 
-        $accelerationVector = $this->preferMakerFloatList($makerNotes?->livePhoto?->accelerationVector, $lookup, 'AccelerationVector');
+        $accelerationVector     = $this->preferMakerFloatList($makerNotes?->livePhoto?->accelerationVector, $lookup, 'AccelerationVector');
 
-        $cameraType            = $this->preferMakerStringOrInt($makerNotes?->camera?->type, $lookup, 'CameraType');
-        $colorTemperature      = $this->preferMakerInt($makerNotes?->camera?->colorTemperature, $lookup, 'ColorTemperature');
-        $qualityHint           = $this->preferMakerStringOrNumeric($makerNotes?->camera?->qualityHint, $lookup, 'QualityHint');
-        $colorCorrectionMatrix = $this->preferMakerFloatList($makerNotes?->camera?->colorCorrectionMatrix, $lookup, 'ColorCorrectionMatrix');
-        $makerNoteVersion      = $this->preferMakerString($makerNotes?->camera?->makerNoteVersion, $lookup, 'MakerNoteVersion');
-        $oisMode               = $this->preferMakerStringOrNumeric($makerNotes?->camera?->oisMode, $lookup, 'OISMode');
-        $imageCaptureType      = $this->preferMakerEnumerated($makerNotes?->camera?->imageCaptureType, $lookup, AppleMaps::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
+        $cameraType             = $this->preferMakerStringOrInt($makerNotes?->camera?->type, $lookup, 'CameraType');
+        $colorTemperature       = $this->preferMakerInt($makerNotes?->camera?->colorTemperature, $lookup, 'ColorTemperature');
+        $qualityHint            = $this->preferMakerStringOrNumeric($makerNotes?->camera?->qualityHint, $lookup, 'QualityHint');
+        $colorCorrectionMatrix  = $this->preferMakerFloatList($makerNotes?->camera?->colorCorrectionMatrix, $lookup, 'ColorCorrectionMatrix');
+        $makerNoteVersion       = $this->preferMakerString($makerNotes?->camera?->makerNoteVersion, $lookup, 'MakerNoteVersion');
+        $oisMode                = $this->preferMakerStringOrNumeric($makerNotes?->camera?->oisMode, $lookup, 'OISMode');
+        $imageCaptureType       = $this->preferMakerEnumerated($makerNotes?->camera?->imageCaptureType, $lookup, AppleMaps::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
 
-        $semanticPreset = $this->preferMakerString($makerNotes?->semanticStyle?->preset, $lookup, 'SemanticStylePreset');
-        $semanticWarmth = $this->preferMakerFloat($makerNotes?->semanticStyle?->warmth, $lookup, 'SemanticStyleWarmth');
-        $semanticTone   = $this->preferMakerFloat($makerNotes?->semanticStyle?->tone, $lookup, 'SemanticStyleTone');
+        $semanticPreset         = $this->preferMakerString($makerNotes?->semanticStyle?->preset, $lookup, 'SemanticStylePreset');
+        $semanticWarmth         = $this->preferMakerFloat($makerNotes?->semanticStyle?->warmth, $lookup, 'SemanticStyleWarmth');
+        $semanticTone           = $this->preferMakerFloat($makerNotes?->semanticStyle?->tone, $lookup, 'SemanticStyleTone');
 
         $semanticStyleComposite = SemanticStyle::fromQuickTime($quickTime);
 
@@ -141,34 +141,34 @@ final class AppleMakerNotesMerger
             ] = SemanticStyle::mergeIntoFields($semanticPreset, $semanticWarmth, $semanticTone, $semanticStyleComposite);
         }
 
-        $flags = $this->normalizeFlags($makerNotes?->flags, $this->quickTimeFlags($quickTime));
+        $flags                  = $this->normalizeFlags($makerNotes?->flags, $this->quickTimeFlags($quickTime));
 
-        $identity = AppleCaptureIdentity::createIfPresent($contentIdentifier, $imageCaptureRequestId, $burstUuid, $imageUniqueId, $photoIdentifier, $mediaGroupUuid);
+        $identity               = AppleCaptureIdentity::createIfPresent($contentIdentifier, $imageCaptureRequestId, $burstUuid, $imageUniqueId, $photoIdentifier, $mediaGroupUuid);
 
-        $hdr = AppleHdr::createIfPresent($hdrHeadroom, $hdrGain, $hdrImageType);
+        $hdr                    = AppleHdr::createIfPresent($hdrHeadroom, $hdrGain, $hdrImageType);
 
-        $autoExposure = $makerNotes?->autoExposure;
+        $autoExposure           = $makerNotes?->autoExposure;
 
-        $autoFocus = ($makerNotes?->autoFocus?->stable !== null || $makerNotes?->autoFocus?->performance !== null
+        $autoFocus              = ($makerNotes?->autoFocus?->stable !== null || $makerNotes?->autoFocus?->performance !== null
             || $afMeasuredDepth !== null || $afConfidence !== null || $focusPosition !== null || $focusDistanceRange !== null)
             ? new AppleAutoFocus($makerNotes?->autoFocus?->stable, $makerNotes?->autoFocus?->performance, $afMeasuredDepth, $afConfidence, $focusPosition, $focusDistanceRange)
             : null;
 
-        $noise = ($snr !== null || $makerNotes?->noise?->signalToNoiseRatioType !== null
+        $noise                  = ($snr !== null || $makerNotes?->noise?->signalToNoiseRatioType !== null
             || $makerNotes?->noise?->luminanceAmplitude !== null)
             ? new AppleNoise($snr, $makerNotes?->noise?->signalToNoiseRatioType, $makerNotes?->noise?->luminanceAmplitude)
             : null;
 
-        $style = ($semanticPreset !== null || $semanticWarmth !== null || $semanticTone !== null)
+        $style                  = ($semanticPreset !== null || $semanticWarmth !== null || $semanticTone !== null)
             ? new AppleSemanticStyle($semanticPreset, $semanticWarmth, $semanticTone)
             : null;
 
-        $livePhoto = ($livePhotoIndex !== null || $livePhotoTime !== null
+        $livePhoto              = ($livePhotoIndex !== null || $livePhotoTime !== null
             || $makerNotes?->livePhoto?->runTime instanceof RunTime || $accelerationVector !== null)
             ? new AppleLivePhoto($livePhotoIndex, $livePhotoTime, $makerNotes?->livePhoto?->runTime, $accelerationVector)
             : null;
 
-        $camera = ($cameraType !== null || $imageCaptureType !== null || $makerNoteVersion !== null
+        $camera                 = ($cameraType !== null || $imageCaptureType !== null || $makerNoteVersion !== null
             || $qualityHint !== null || $oisMode !== null || $colorTemperature !== null || $colorCorrectionMatrix !== null)
             ? new AppleCameraCapture($cameraType, $imageCaptureType, $makerNoteVersion, $qualityHint, $oisMode, $colorTemperature, $colorCorrectionMatrix)
             : null;
@@ -308,13 +308,13 @@ final class AppleMakerNotesMerger
     private function quickTimeFloatList(QuickTimeLookup $lookup, string ...$keys): ?array
     {
         foreach ($keys as $key) {
-            $raw = $lookup->string($key);
+            $raw    = $lookup->string($key);
 
             if ($raw === null) {
                 continue;
             }
 
-            $parts = preg_split('/[ ,]+/', trim($raw));
+            $parts  = preg_split('/[ ,]+/', trim($raw));
 
             if (!is_array($parts)) {
                 continue;
@@ -349,14 +349,14 @@ final class AppleMakerNotesMerger
      */
     private function quickTimeFocusDistanceRange(QuickTimeLookup $lookup): ?array
     {
-        $range = $this->quickTimeFloatList($lookup, 'FocusDistanceRange');
+        $range  = $this->quickTimeFloatList($lookup, 'FocusDistanceRange');
 
         if ($range !== null) {
             return $range;
         }
 
-        $near = $lookup->float('FocusDistanceRangeNear', 'FocusDistanceNear');
-        $far  = $lookup->float('FocusDistanceRangeFar', 'FocusDistanceFar');
+        $near   = $lookup->float('FocusDistanceRangeNear', 'FocusDistanceNear');
+        $far    = $lookup->float('FocusDistanceRangeFar', 'FocusDistanceFar');
 
         $values = [];
 
@@ -382,13 +382,13 @@ final class AppleMakerNotesMerger
     private function quickTimeStringOrNumeric(QuickTimeLookup $lookup, string ...$keys): ?string
     {
         foreach ($keys as $key) {
-            $value = $lookup->string($key);
+            $value      = $lookup->string($key);
 
             if ($value !== null) {
                 return $value;
             }
 
-            $intValue = $lookup->int($key);
+            $intValue   = $lookup->int($key);
 
             if ($intValue !== null) {
                 return (string) $intValue;
@@ -457,7 +457,7 @@ final class AppleMakerNotesMerger
                 return $string;
             }
 
-            $code = $lookup->int($key);
+            $code   = $lookup->int($key);
 
             if ($code !== null) {
                 return $map[$code] ?? (string) $code;

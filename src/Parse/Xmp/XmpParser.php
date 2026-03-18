@@ -37,7 +37,7 @@ final class XmpParser implements XmpParserInterface
 {
     private const string RDF_NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
 
-    private const int MAX_XML_DEPTH = 240;
+    private const int MAX_XML_DEPTH    = 240;
 
     /**
      * Parses an XMP packet and returns a document containing discovered properties.
@@ -58,13 +58,13 @@ final class XmpParser implements XmpParserInterface
             $xmlOptions |= LIBXML_NO_XXE;
         }
 
-        $reader = XMLReader::XML($xml, null, $xmlOptions);
+        $reader     = XMLReader::XML($xml, null, $xmlOptions);
 
         if (!$reader instanceof XMLReader) {
             return new XmpDocument([], [], []);
         }
 
-        $state = new XmpParseState();
+        $state      = new XmpParseState();
 
         // ISO 16684-1: XMP properties are expressed within an rdf:RDF graph.
         // Elements outside the graph (x:xmpmeta wrapper, packet PI, etc.) are
@@ -101,7 +101,7 @@ final class XmpParser implements XmpParserInterface
      */
     private function handleElementNode(XMLReader $reader, XmpParseState $state): void
     {
-        $depth = $reader->depth;
+        $depth                      = $reader->depth;
 
         if ($depth > self::MAX_XML_DEPTH) {
             throw new ParseError(
@@ -110,8 +110,8 @@ final class XmpParser implements XmpParserInterface
             );
         }
 
-        $namespace = $reader->namespaceURI;
-        $localName = $reader->localName;
+        $namespace                  = $reader->namespaceURI;
+        $localName                  = $reader->localName;
 
         $state->elementPath[$depth] = [$namespace, $localName];
         $state->textBuffers[$depth] = '';
@@ -189,7 +189,7 @@ final class XmpParser implements XmpParserInterface
      */
     private function handleEndElementNode(XmpParseState $state, int $depth): void
     {
-        $info = $state->elementPath[$depth] ?? null;
+        $info                    = $state->elementPath[$depth] ?? null;
 
         if ($info === null) {
             return;
@@ -217,17 +217,17 @@ final class XmpParser implements XmpParserInterface
      */
     private function finalizeRdfListItem(XmpParseState $state, int $depth): void
     {
-        $text             = trim($state->textBuffers[$depth] ?? '');
-        $lang             = $state->languageBuffers[$depth] ?? '';
-        $fields           = $state->structuredBuffers[$depth] ?? [];
-        $parentListBuffer = $this->findParentListBuffer($state, $depth, $lang);
+        $text                               = trim($state->textBuffers[$depth] ?? '');
+        $lang                               = $state->languageBuffers[$depth] ?? '';
+        $fields                             = $state->structuredBuffers[$depth] ?? [];
+        $parentListBuffer                   = $this->findParentListBuffer($state, $depth, $lang);
 
         if ($parentListBuffer === null) {
             return;
         }
 
-        $parentDepth = $parentListBuffer['depth'];
-        $kind        = $parentListBuffer['kind'];
+        $parentDepth                        = $parentListBuffer['depth'];
+        $kind                               = $parentListBuffer['kind'];
 
         if ($kind === 'Alt') {
             $state->altBuffers[$parentDepth][] = [
@@ -256,7 +256,7 @@ final class XmpParser implements XmpParserInterface
         $text = trim($state->textBuffers[$depth] ?? '');
 
         for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
-            $parentInfo = $state->elementPath[$parentDepth] ?? null;
+            $parentInfo                          = $state->elementPath[$parentDepth] ?? null;
 
             if ($parentInfo === null) {
                 continue;
@@ -338,9 +338,9 @@ final class XmpParser implements XmpParserInterface
             }
 
             // Capture the attribute value as a property
-            $value = $reader->value;
+            $value         = $reader->value;
 
-            $key = $this->buildClarkName($attrNamespace, $attrLocalName);
+            $key           = $this->buildClarkName($attrNamespace, $attrLocalName);
             $this->storeValue($state, $key, $value);
         } while ($reader->moveToNextAttribute());
 
@@ -406,9 +406,9 @@ final class XmpParser implements XmpParserInterface
         string $namespace,
         string $localName,
     ): void {
-        $value         = $this->finalizeElementValue($state, $depth);
-        $key           = $this->buildClarkName($namespace, $localName);
-        $containerKind = XmpContainer::fromRdfContainerName($state->listKinds[$depth] ?? '');
+        $value                 = $this->finalizeElementValue($state, $depth);
+        $key                   = $this->buildClarkName($namespace, $localName);
+        $containerKind         = XmpContainer::fromRdfContainerName($state->listKinds[$depth] ?? '');
 
         $parentStructuredDepth = $this->findStructuredParentDepth($depth - 1, $state);
 
@@ -455,7 +455,7 @@ final class XmpParser implements XmpParserInterface
         int $depth,
     ): array|string|XmpLanguageAlternative|XmpStructuredValue {
         /** @var list<string|XmpStructuredValue> $items */
-        $items = $state->listBuffers[$depth] ?? [];
+        $items    = $state->listBuffers[$depth] ?? [];
         /** @var list<array{lang: string, value: string}> $altItems */
         $altItems = $state->altBuffers[$depth] ?? [];
         $text     = $state->textBuffers[$depth] ?? '';
@@ -503,7 +503,7 @@ final class XmpParser implements XmpParserInterface
             return;
         }
 
-        $existing = $state->structuredBuffers[$parentDepth][$key];
+        $existing                                     = $state->structuredBuffers[$parentDepth][$key];
 
         if (($existing instanceof XmpStructuredValue) && ($value instanceof XmpStructuredValue)) {
             $state->structuredBuffers[$parentDepth][$key] = XmpStructuredValue::merge($existing, $value);
@@ -525,9 +525,9 @@ final class XmpParser implements XmpParserInterface
         }
 
         /** @var array<string, string|XmpLanguageAlternative> $temporary */
-        $temporary = ['value' => $existing];
+        $temporary                                    = ['value' => $existing];
 
-        $temporary = XmpValueAccumulator::merge($temporary, 'value', $value);
+        $temporary                                    = XmpValueAccumulator::merge($temporary, 'value', $value);
 
         $state->structuredBuffers[$parentDepth][$key] = $temporary['value'];
     }

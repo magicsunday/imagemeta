@@ -37,11 +37,11 @@ enum GpsSpeedRef: string
      * Miles per hour.
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case MilesPerHour = 'M';
+    case MilesPerHour      = 'M';
 
     /**
      * Knots (nautical miles per hour).
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case Knots = 'N';
+    case Knots             = 'N';
 }

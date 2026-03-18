@@ -87,41 +87,41 @@ final class ParsedExif
 
     private readonly Endian $byteOrder;
 
-    private ?IfdValueReader $cachedReader = null;
+    private ?IfdValueReader $cachedReader                           = null;
 
-    private ?FallbackIfdSet $cachedFallbackIfdSet = null;
+    private ?FallbackIfdSet $cachedFallbackIfdSet                   = null;
 
-    private ?GpsExifReader $cachedGpsReader = null;
+    private ?GpsExifReader $cachedGpsReader                         = null;
 
-    private ?TemporalExifReader $cachedTemporalReader = null;
+    private ?TemporalExifReader $cachedTemporalReader               = null;
 
     private ?ExposureParameterReader $cachedExposureParameterReader = null;
 
-    private ?IsoSensitivityReader $cachedIsoSensitivityReader = null;
+    private ?IsoSensitivityReader $cachedIsoSensitivityReader       = null;
 
-    private ?SceneModeReader $cachedSceneModeReader = null;
+    private ?SceneModeReader $cachedSceneModeReader                 = null;
 
-    private ?FocalReader $cachedFocalReader = null;
+    private ?FocalReader $cachedFocalReader                         = null;
 
-    private ?SensorDataReader $cachedSensorDataReader = null;
+    private ?SensorDataReader $cachedSensorDataReader               = null;
 
-    private ?CameraLensExifReader $cachedCameraLensReader = null;
+    private ?CameraLensExifReader $cachedCameraLensReader           = null;
 
-    private ?ImageStructureExifReader $cachedImageStructureReader = null;
+    private ?ImageStructureExifReader $cachedImageStructureReader   = null;
 
-    private ?ColorSpaceExifReader $cachedColorSpaceReader = null;
+    private ?ColorSpaceExifReader $cachedColorSpaceReader           = null;
 
-    private ?DngMetadataExifReader $cachedDngMetadataReader = null;
+    private ?DngMetadataExifReader $cachedDngMetadataReader         = null;
 
-    private ?UserCommentExifReader $cachedUserCommentReader = null;
+    private ?UserCommentExifReader $cachedUserCommentReader         = null;
 
-    private ?DescriptionExifReader $cachedDescriptionReader = null;
+    private ?DescriptionExifReader $cachedDescriptionReader         = null;
 
-    private ?DeviceExifReader $cachedDeviceReader = null;
+    private ?DeviceExifReader $cachedDeviceReader                   = null;
 
-    private ?ThumbnailExifReader $cachedThumbnailReader = null;
+    private ?ThumbnailExifReader $cachedThumbnailReader             = null;
 
-    private ?TiffBaselineExifReader $cachedTiffBaselineReader = null;
+    private ?TiffBaselineExifReader $cachedTiffBaselineReader       = null;
 
     /**
      * @param Ifd                   $ifd0           Root IFD of the TIFF structure.

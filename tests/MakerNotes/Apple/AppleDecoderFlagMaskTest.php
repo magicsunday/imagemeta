@@ -34,7 +34,7 @@ final class AppleDecoderFlagMaskTest extends TestCase
     #[Test]
     public function extractFlagsDerivesNormalizedFlagsFromBitMasks(): void
     {
-        $extractor = new AppleFlagExtractor();
+        $extractor  = new AppleFlagExtractor();
 
         $dictionary = [
             'SceneFlags'            => 0b11,
@@ -44,10 +44,10 @@ final class AppleDecoderFlagMaskTest extends TestCase
             ],
         ];
 
-        $result = $extractor->extractFlags($dictionary);
+        $result     = $extractor->extractFlags($dictionary);
         ksort($result);
 
-        $expected = [
+        $expected   = [
             'hdrAuto'       => true,
             'hdrEnabled'    => true,
             'longExposure'  => true,
@@ -67,7 +67,7 @@ final class AppleDecoderFlagMaskTest extends TestCase
     #[Test]
     public function extractFlagsAssignsFalseDefaultsWhenNoMappedBitsEnabled(): void
     {
-        $extractor = new AppleFlagExtractor();
+        $extractor  = new AppleFlagExtractor();
 
         $dictionary = [
             'SceneFlags'            => 0b100000,
@@ -77,10 +77,10 @@ final class AppleDecoderFlagMaskTest extends TestCase
             'ImageProcessingFlags' => 0,
         ];
 
-        $result = $extractor->extractFlags($dictionary);
+        $result     = $extractor->extractFlags($dictionary);
         ksort($result);
 
-        $expected = [
+        $expected   = [
             'hdrAuto'       => false,
             'hdrEnabled'    => false,
             'longExposure'  => false,

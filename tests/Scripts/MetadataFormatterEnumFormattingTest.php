@@ -75,8 +75,8 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
         require_once __DIR__ . '/../../scripts/imagemeta-format.php';
 
-        $formatterReflection = new ReflectionMethod('MagicSunday\\ImageMeta\\Scripts\\MetadataFormatter', 'format');
-        $this->formatter     = $formatterReflection->getDeclaringClass()->newInstance();
+        $formatterReflection                         = new ReflectionMethod('MagicSunday\\ImageMeta\\Scripts\\MetadataFormatter', 'format');
+        $this->formatter                             = $formatterReflection->getDeclaringClass()->newInstance();
 
         $this->formatEnumNameMethod                  = new ReflectionMethod($this->formatter, 'formatEnumName');
         $this->formatComponentsConfigurationMethod   = new ReflectionMethod($this->formatter, 'formatComponentsConfiguration');
@@ -210,7 +210,7 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
 
         ob_start();
         $this->printIccSectionMethod->invoke($this->formatter, $profileA . $profileB);
-        $output = (string) ob_get_clean();
+        $output   = (string) ob_get_clean();
 
         self::assertStringContainsString('---- ICC-header ----', $output);
         self::assertStringContainsString('---- ICC_Profile ----', $output);
@@ -229,7 +229,7 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
     #[Test]
     public function printsThumbnailImageSummaryFromIfd1LengthTag(): void
     {
-        $ifd1 = new Ifd([
+        $ifd1   = new Ifd([
             ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Jpeg->value),
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 10600),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 7456),
@@ -407,17 +407,17 @@ final class MetadataFormatterEnumFormattingTest extends TestCase
         $descTagData     = 'desc' . pack('N', 0) . pack('N', strlen($descriptionText)) . $descriptionText;
         $descTagData     = str_pad($descTagData, (int) (((strlen($descTagData) + 3) / 4) * 4), "\0");
 
-        $tagDataOffset = 128 + 4 + 12;
-        $profileSize   = $tagDataOffset + strlen($descTagData);
+        $tagDataOffset   = 128 + 4 + 12;
+        $profileSize     = $tagDataOffset + strlen($descTagData);
 
-        $header = str_repeat("\0", 128);
-        $header = substr_replace($header, pack('N', $profileSize), 0, 4);
-        $header = substr_replace($header, pack('N', 0x02400000), 8, 4);
-        $header = substr_replace($header, 'RGB ', 16, 4);
-        $header = substr_replace($header, 'XYZ ', 20, 4);
-        $header = substr_replace($header, 'acsp', 36, 4);
+        $header          = str_repeat("\0", 128);
+        $header          = substr_replace($header, pack('N', $profileSize), 0, 4);
+        $header          = substr_replace($header, pack('N', 0x02400000), 8, 4);
+        $header          = substr_replace($header, 'RGB ', 16, 4);
+        $header          = substr_replace($header, 'XYZ ', 20, 4);
+        $header          = substr_replace($header, 'acsp', 36, 4);
 
-        $tagTable = pack('N', 1)
+        $tagTable        = pack('N', 1)
             . 'desc'
             . pack('N', $tagDataOffset)
             . pack('N', strlen($descTagData));

@@ -78,8 +78,8 @@ final class ParseErrorCodeUniquenessTest extends TestCase
         $content = (string) file_get_contents($filePath);
         $tokens  = token_get_all($content);
 
-        $hits = [];
-        $n    = count($tokens);
+        $hits    = [];
+        $n       = count($tokens);
 
         foreach ($tokens as $i => $token) {
             if (!is_array($token)) {
@@ -90,7 +90,7 @@ final class ParseErrorCodeUniquenessTest extends TestCase
                 continue;
             }
 
-            $j = $i + 1;
+            $j          = $i + 1;
 
             while ($j < $n) {
                 $t = $tokens[$j];
@@ -108,8 +108,8 @@ final class ParseErrorCodeUniquenessTest extends TestCase
                 continue;
             }
 
-            $nameParts = [];
-            $k         = $j;
+            $nameParts  = [];
+            $k          = $j;
 
             while ($k < $n) {
                 $t = $tokens[$k];
@@ -136,7 +136,7 @@ final class ParseErrorCodeUniquenessTest extends TestCase
                 continue;
             }
 
-            $name = ltrim(implode('', $nameParts), '\\');
+            $name       = ltrim(implode('', $nameParts), '\\');
 
             if (strtolower(substr($name, -10)) !== 'parseerror') {
                 continue;
@@ -208,19 +208,19 @@ final class ParseErrorCodeUniquenessTest extends TestCase
                 continue;
             }
 
-            $argText = '';
+            $argText    = '';
 
             foreach ($argTokens as $tt) {
                 $argText .= is_array($tt) ? $tt[1] : $tt;
             }
 
-            $trimmed = trim($argText);
+            $trimmed    = trim($argText);
 
             if (preg_match('/^\d+$/', $trimmed) !== 1) {
                 continue;
             }
 
-            $hits[] = [
+            $hits[]     = [
                 'code' => (int) $trimmed,
                 'line' => $numberLine,
             ];
@@ -232,7 +232,7 @@ final class ParseErrorCodeUniquenessTest extends TestCase
     #[Test]
     public function parseErrorCodesAreGloballyUniqueAcrossSrc(): void
     {
-        $srcRoot = dirname(__DIR__, 2) . '/src';
+        $srcRoot         = dirname(__DIR__, 2) . '/src';
 
         /** @var array<int, list<string>> $locationsByCode */
         $locationsByCode = [];
@@ -241,7 +241,7 @@ final class ParseErrorCodeUniquenessTest extends TestCase
             $relativePath = substr($filePath, strlen(dirname(__DIR__, 2)) + 1);
 
             foreach ($this->parseErrorCodeLiterals($filePath) as $hit) {
-                $code = $hit['code'];
+                $code                     = $hit['code'];
 
                 if (!isset($locationsByCode[$code])) {
                     $locationsByCode[$code] = [];
@@ -252,7 +252,7 @@ final class ParseErrorCodeUniquenessTest extends TestCase
         }
 
         /** @var array<int, list<string>> $duplicates */
-        $duplicates = array_filter($locationsByCode, static fn (array $locations): bool => count($locations) > 1);
+        $duplicates      = array_filter($locationsByCode, static fn (array $locations): bool => count($locations) > 1);
 
         ksort($duplicates);
 

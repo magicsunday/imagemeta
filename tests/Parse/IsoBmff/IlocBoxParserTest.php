@@ -80,7 +80,7 @@ final class IlocBoxParserTest extends TestCase
         $parser        = new IlocBoxParser($navigator);
         $window        = $stream->window(0, $contentLength);
 
-        $descriptor = new BoxDescriptor(
+        $descriptor    = new BoxDescriptor(
             type: $type,
             size: 8 + $contentLength,
             offset: 0,
@@ -215,7 +215,7 @@ final class IlocBoxParserTest extends TestCase
     #[Test]
     public function parseIlocVersion0SingleItem(): void
     {
-        $payload = $this->buildIlocV0Payload([
+        $payload               = $this->buildIlocV0Payload([
             [
                 'itemId'       => 1,
                 'dataRefIndex' => 0,
@@ -243,7 +243,7 @@ final class IlocBoxParserTest extends TestCase
     #[Test]
     public function parseIlocVersion0MultipleItems(): void
     {
-        $payload = $this->buildIlocV0Payload([
+        $payload               = $this->buildIlocV0Payload([
             [
                 'itemId'       => 1,
                 'dataRefIndex' => 0,
@@ -281,7 +281,7 @@ final class IlocBoxParserTest extends TestCase
     #[Test]
     public function parseIlocVersion1WithIdatConstruction(): void
     {
-        $payload = $this->buildIlocV1Payload([
+        $payload               = $this->buildIlocV1Payload([
             [
                 'itemId'             => 5,
                 'constructionMethod' => 1,
@@ -308,7 +308,7 @@ final class IlocBoxParserTest extends TestCase
     #[Test]
     public function parseIlocVersion2With32BitIds(): void
     {
-        $payload = $this->buildIlocV2Payload([
+        $payload               = $this->buildIlocV2Payload([
             [
                 'itemId'             => 70000,
                 'constructionMethod' => 0,
@@ -336,7 +336,7 @@ final class IlocBoxParserTest extends TestCase
     public function parseIlocReturnsEmptyForUnsupportedVersion(): void
     {
         // version=3, flags=0
-        $data = chr(3) . chr(0) . chr(0) . chr(0)
+        $data                  = chr(3) . chr(0) . chr(0) . chr(0)
             . chr((4 << 4) | 4) . chr((4 << 4) | 0)
             . pack('n', 0);
 
@@ -353,7 +353,7 @@ final class IlocBoxParserTest extends TestCase
     public function parseIlocReturnsEmptyForNonZeroFlags(): void
     {
         // version=0, flags=1
-        $data = chr(0) . chr(0) . chr(0) . chr(1)
+        $data                  = chr(0) . chr(0) . chr(0) . chr(1)
             . chr((4 << 4) | 4) . chr((4 << 4) | 0)
             . pack('n', 0);
 
@@ -373,7 +373,7 @@ final class IlocBoxParserTest extends TestCase
         $this->expectExceptionMessage('iloc version 0 reserved nibble must be zero');
 
         // version=0, flags=0
-        $data = chr(0) . chr(0) . chr(0) . chr(0)
+        $data                  = chr(0) . chr(0) . chr(0) . chr(0)
             // offset_size=4, length_size=4
             . chr((4 << 4) | 4)
             // base_offset_size=4, reserved=4 (should be 0 for v0)
@@ -394,7 +394,7 @@ final class IlocBoxParserTest extends TestCase
         $this->expectExceptionMessage('invalid length field size');
 
         // version=0, flags=0
-        $data = chr(0) . chr(0) . chr(0) . chr(0)
+        $data                  = chr(0) . chr(0) . chr(0) . chr(0)
             // offset_size=3 (invalid nibble), length_size=4
             . chr((3 << 4) | 4)
             . chr((4 << 4) | 0)
@@ -413,7 +413,7 @@ final class IlocBoxParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('duplicate iloc item_ID 1');
 
-        $payload = $this->buildIlocV0Payload([
+        $payload               = $this->buildIlocV0Payload([
             [
                 'itemId'       => 1,
                 'dataRefIndex' => 0,
@@ -441,7 +441,7 @@ final class IlocBoxParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('iloc payload has trailing bytes after declared items');
 
-        $payload = $this->buildIlocV0Payload([
+        $payload               = $this->buildIlocV0Payload([
             [
                 'itemId'       => 1,
                 'dataRefIndex' => 0,
@@ -465,7 +465,7 @@ final class IlocBoxParserTest extends TestCase
     public function parsePitmVersion0(): void
     {
         // version=0, flags=0, item_ID=42
-        $content = chr(0) . chr(0) . chr(0) . chr(0) . pack('n', 42);
+        $content               = chr(0) . chr(0) . chr(0) . chr(0) . pack('n', 42);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($content, 'pitm');
 
@@ -479,7 +479,7 @@ final class IlocBoxParserTest extends TestCase
     public function parsePitmVersion1(): void
     {
         // version=1, flags=0, item_ID=100000
-        $content = chr(1) . chr(0) . chr(0) . chr(0) . pack('N', 100000);
+        $content               = chr(1) . chr(0) . chr(0) . chr(0) . pack('N', 100000);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($content, 'pitm');
 
@@ -493,7 +493,7 @@ final class IlocBoxParserTest extends TestCase
     public function parsePitmReturnsNullForUnsupportedVersion(): void
     {
         // version=2, flags=0, item_ID=1
-        $content = chr(2) . chr(0) . chr(0) . chr(0) . pack('n', 1);
+        $content               = chr(2) . chr(0) . chr(0) . chr(0) . pack('n', 1);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($content, 'pitm');
 
@@ -510,7 +510,7 @@ final class IlocBoxParserTest extends TestCase
         $this->expectExceptionMessage('pitm box truncated');
 
         // Only 5 bytes (needs at least 6)
-        $content = chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
+        $content               = chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($content, 'pitm');
 
@@ -528,22 +528,22 @@ final class IlocBoxParserTest extends TestCase
     public function parseIinfVersion0WithOneEntry(): void
     {
         // infe v2: version=2, flags=0, item_ID=1 (16-bit), protection_index=0, item_type='Exif', name='exif\0'
-        $infePayload = chr(2) . chr(0) . chr(0) . chr(0)
+        $infePayload           = chr(2) . chr(0) . chr(0) . chr(0)
             . pack('n', 1)
             . pack('n', 0)
             . 'Exif'
             . "exif\0";
 
-        $infeBox = $this->box('infe', $infePayload);
+        $infeBox               = $this->box('infe', $infePayload);
 
         // iinf v0: version=0, flags=0, entry_count=1
-        $iinfPayload = chr(0) . chr(0) . chr(0) . chr(0)
+        $iinfPayload           = chr(0) . chr(0) . chr(0) . chr(0)
             . pack('n', 1)
             . $infeBox;
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($iinfPayload, 'iinf');
 
-        $items = $parser->parseIinf($descriptor);
+        $items                 = $parser->parseIinf($descriptor);
 
         self::assertCount(1, $items);
         self::assertSame(1, $items[0]['id']);
@@ -565,7 +565,7 @@ final class IlocBoxParserTest extends TestCase
         $this->expectExceptionMessage('iinf box truncated');
 
         // Only 5 bytes (needs at least 6)
-        $content = chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
+        $content               = chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($content, 'iinf');
 
@@ -581,7 +581,7 @@ final class IlocBoxParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('unsupported iinf box version');
 
-        $content = chr(2) . chr(0) . chr(0) . chr(0) . pack('n', 0);
+        $content               = chr(2) . chr(0) . chr(0) . chr(0) . pack('n', 0);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($content, 'iinf');
 
@@ -599,15 +599,15 @@ final class IlocBoxParserTest extends TestCase
     public function parseIrefVersion0SingleReference(): void
     {
         // Reference entry: fromItemId=1, referenceCount=1, toItemId=2
-        $entryPayload = pack('n', 1) . pack('n', 1) . pack('n', 2);
-        $entryBox     = $this->box('cdsc', $entryPayload);
+        $entryPayload          = pack('n', 1) . pack('n', 1) . pack('n', 2);
+        $entryBox              = $this->box('cdsc', $entryPayload);
 
         // iref v0: version=0, flags=0
-        $irefPayload = chr(0) . chr(0) . chr(0) . chr(0) . $entryBox;
+        $irefPayload           = chr(0) . chr(0) . chr(0) . chr(0) . $entryBox;
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($irefPayload, 'iref');
 
-        $references = $parser->parseIref($descriptor);
+        $references            = $parser->parseIref($descriptor);
 
         self::assertArrayHasKey(1, $references);
         self::assertCount(1, $references[1]);
@@ -629,7 +629,7 @@ final class IlocBoxParserTest extends TestCase
         $this->expectExceptionMessage('iref box truncated');
 
         // Only 3 bytes
-        $content = chr(0) . chr(0) . chr(0);
+        $content               = chr(0) . chr(0) . chr(0);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($content, 'iref');
 
@@ -643,7 +643,7 @@ final class IlocBoxParserTest extends TestCase
     public function parseIrefReturnsEmptyForUnsupportedVersion(): void
     {
         // version=2, flags=0
-        $content = chr(2) . chr(0) . chr(0) . chr(0);
+        $content               = chr(2) . chr(0) . chr(0) . chr(0);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($content, 'iref');
 
@@ -661,18 +661,18 @@ final class IlocBoxParserTest extends TestCase
     public function parseDinfWithSelfContainedUrl(): void
     {
         // url entry: version=0, flags=1 (self-contained)
-        $urlPayload = chr(0) . chr(0) . chr(0) . chr(1);
-        $urlBox     = $this->box('url ', $urlPayload);
+        $urlPayload            = chr(0) . chr(0) . chr(0) . chr(1);
+        $urlBox                = $this->box('url ', $urlPayload);
 
         // dref: version=0, flags=0, entry_count=1
-        $drefPayload = chr(0) . chr(0) . chr(0) . chr(0) . pack('N', 1) . $urlBox;
-        $drefBox     = $this->box('dref', $drefPayload);
+        $drefPayload           = chr(0) . chr(0) . chr(0) . chr(0) . pack('N', 1) . $urlBox;
+        $drefBox               = $this->box('dref', $drefPayload);
 
-        $dinfPayload = $drefBox;
+        $dinfPayload           = $drefBox;
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($dinfPayload, 'dinf');
 
-        $references = $parser->parseDinf($descriptor);
+        $references            = $parser->parseDinf($descriptor);
 
         self::assertArrayHasKey(1, $references);
         self::assertTrue($references[1]->selfContained);
@@ -693,8 +693,8 @@ final class IlocBoxParserTest extends TestCase
         $this->expectExceptionMessage('dinf must contain exactly one dref box');
 
         // dinf with a non-dref child
-        $fakeChild   = $this->box('fake', 'data');
-        $dinfPayload = $fakeChild;
+        $fakeChild             = $this->box('fake', 'data');
+        $dinfPayload           = $fakeChild;
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($dinfPayload, 'dinf');
 

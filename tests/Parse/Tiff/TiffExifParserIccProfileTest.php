@@ -63,7 +63,7 @@ final class TiffExifParserIccProfileTest extends TestCase
         $iccPayload = $this->buildMinimalIccProfile();
         $blob       = $this->buildTiffWithIccProfile($iccPayload);
 
-        $result = (new TiffExifParser())->parseFromBlob($blob);
+        $result     = (new TiffExifParser())->parseFromBlob($blob);
 
         self::assertSame($iccPayload, $result->iccProfileRaw);
     }
@@ -74,7 +74,7 @@ final class TiffExifParserIccProfileTest extends TestCase
     #[Test]
     public function returnsNullWhenNoIccProfilePresent(): void
     {
-        $blob = $this->buildMinimalTiffWithoutIcc();
+        $blob   = $this->buildMinimalTiffWithoutIcc();
 
         $result = (new TiffExifParser())->parseFromBlob($blob);
 
@@ -88,7 +88,7 @@ final class TiffExifParserIccProfileTest extends TestCase
     #[Test]
     public function toleratesTruncatedIccProfileData(): void
     {
-        $blob = $this->buildTiffWithTruncatedIccProfile();
+        $blob   = $this->buildTiffWithTruncatedIccProfile();
 
         $result = (new TiffExifParser())->parseFromBlob($blob);
 
@@ -125,7 +125,7 @@ final class TiffExifParserIccProfileTest extends TestCase
         $ifd0Size       = 2 + ($ifd0EntryCount * 12) + 4;
         $iccOffset      = $ifd0Offset + $ifd0Size;
 
-        $blob = 'II'
+        $blob           = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset);
 

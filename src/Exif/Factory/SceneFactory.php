@@ -69,7 +69,7 @@ final readonly class SceneFactory
         $nightMode  = null;
 
         if ($quickTime instanceof QuickTimeMeta) {
-            $lookup = new QuickTimeLookup($quickTime);
+            $lookup    = new QuickTimeLookup($quickTime);
 
             if ($hdrLabel === null) {
                 $hdrLabel = $lookup->string('HDRImageType');
@@ -82,7 +82,7 @@ final readonly class SceneFactory
             $nightMode = $this->appleFlag($appleFlags, 'nightMode');
         }
 
-        $hdrScene = null;
+        $hdrScene   = null;
 
         if (($hdrLabel !== null) && $this->isHdrSceneLabel($hdrLabel)) {
             $hdrScene = true;

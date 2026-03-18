@@ -33,15 +33,15 @@ use function trim;
  */
 final readonly class SamsungDecoder implements MakerNotesDecoderInterface
 {
-    private const int TIFF_MAGIC = 0x2A;
+    private const int TIFF_MAGIC             = 0x2A;
 
-    private const string SAMSUNG_SIGNATURE = "SAMSUNG\0";
+    private const string SAMSUNG_SIGNATURE   = "SAMSUNG\0";
 
     private const int TAG_MAKER_NOTE_VERSION = 0x0001;
 
-    private const int TAG_DEVICE_TYPE = 0x0002;
+    private const int TAG_DEVICE_TYPE        = 0x0002;
 
-    private const int TAG_MODEL_ID = 0x0003;
+    private const int TAG_MODEL_ID           = 0x0003;
 
     /**
      * Creates a metadata value object describing the Samsung maker note payload.
@@ -68,7 +68,7 @@ final readonly class SamsungDecoder implements MakerNotesDecoderInterface
      */
     private function parseSamsungData(string $raw): ?SamsungMakerNotes
     {
-        $length = strlen($raw);
+        $length       = strlen($raw);
 
         if ($length < 8) {
             return null;
@@ -84,40 +84,40 @@ final readonly class SamsungDecoder implements MakerNotesDecoderInterface
             return null;
         }
 
-        $endian = $this->resolveEndian(substr($raw, $headerOffset, 2));
+        $endian       = $this->resolveEndian(substr($raw, $headerOffset, 2));
 
         if (!$endian instanceof Endian) {
             return null;
         }
 
         try {
-            $magic = $this->readU16($raw, $headerOffset + 2, $endian, 'Samsung TIFF magic');
+            $magic            = $this->readU16($raw, $headerOffset + 2, $endian, 'Samsung TIFF magic');
 
             if ($magic !== self::TIFF_MAGIC) {
                 return null;
             }
 
-            $ifdOffset = $this->readU32($raw, $headerOffset + 4, $endian, 'Samsung IFD offset');
-            $ifdStart  = $headerOffset + $ifdOffset;
+            $ifdOffset        = $this->readU32($raw, $headerOffset + 4, $endian, 'Samsung IFD offset');
+            $ifdStart         = $headerOffset + $ifdOffset;
 
             if (($ifdOffset < 8) || (($ifdStart + 2) > $length)) {
                 return null;
             }
 
-            $entryCount = $this->readU16($raw, $ifdStart, $endian, 'Samsung IFD entry count');
+            $entryCount       = $this->readU16($raw, $ifdStart, $endian, 'Samsung IFD entry count');
 
             if ($entryCount > 10_000) {
                 return null;
             }
 
-            $entriesEnd = $ifdStart + 2 + ($entryCount * 12);
+            $entriesEnd       = $ifdStart + 2 + ($entryCount * 12);
 
             if ($entriesEnd > $length) {
                 return null;
             }
 
-            $handlers = $this->tagHandlers($endian);
-            $results  = [];
+            $handlers         = $this->tagHandlers($endian);
+            $results          = [];
 
             for ($index = 0; $index < $entryCount; ++$index) {
                 $entryOffset = $ifdStart + 2 + ($index * 12);
@@ -126,7 +126,7 @@ final readonly class SamsungDecoder implements MakerNotesDecoderInterface
                 $count       = $this->readU32($raw, $entryOffset + 4, $endian, 'Samsung IFD count');
                 $valueOffset = $this->readU32($raw, $entryOffset + 8, $endian, 'Samsung IFD value offset');
 
-                $valueBytes = $this->resolveValueBytes(
+                $valueBytes  = $this->resolveValueBytes(
                     $raw,
                     $headerOffset,
                     $entryOffset + 8,
@@ -140,7 +140,7 @@ final readonly class SamsungDecoder implements MakerNotesDecoderInterface
                     continue;
                 }
 
-                $handler = $handlers[$tag] ?? null;
+                $handler     = $handlers[$tag] ?? null;
 
                 if ($handler !== null) {
                     $results[$tag] = $handler($valueBytes, $type);
@@ -150,9 +150,9 @@ final readonly class SamsungDecoder implements MakerNotesDecoderInterface
             /** @var string|null $makerNoteVersion */
             $makerNoteVersion = $results[self::TAG_MAKER_NOTE_VERSION] ?? null;
             /** @var string|null $deviceType */
-            $deviceType = $results[self::TAG_DEVICE_TYPE] ?? null;
+            $deviceType       = $results[self::TAG_DEVICE_TYPE] ?? null;
             /** @var int|null $modelId */
-            $modelId = $results[self::TAG_MODEL_ID] ?? null;
+            $modelId          = $results[self::TAG_MODEL_ID] ?? null;
         } catch (ParseError) {
             // Samsung maker notes may use non-standard IFD layouts; parse failures yield null.
             return null;
@@ -223,7 +223,7 @@ final readonly class SamsungDecoder implements MakerNotesDecoderInterface
         int $valueOffset,
         int $length,
     ): ?string {
-        $typeSize = $this->typeSize($type);
+        $typeSize   = $this->typeSize($type);
 
         if (($typeSize === 0) || ($count < 1)) {
             return null;
@@ -233,7 +233,7 @@ final readonly class SamsungDecoder implements MakerNotesDecoderInterface
             return null;
         }
 
-        $dataSize = $typeSize * $count;
+        $dataSize   = $typeSize * $count;
 
         if ($dataSize <= 4) {
             return substr($raw, $inlineOffset, $dataSize);

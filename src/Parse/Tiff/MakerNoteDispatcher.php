@@ -51,13 +51,13 @@ final class MakerNoteDispatcher
             return $this->applySafety($this->digest($raw), $ifd0);
         }
 
-        $make = $this->stringFromIfd($ifd0, ExifTag::MAKE);
+        $make     = $this->stringFromIfd($ifd0, ExifTag::MAKE);
 
         if ($make === null || $make === '') {
             return $this->applySafety($this->digest($raw), $ifd0);
         }
 
-        $decoder = $registry->find($make);
+        $decoder  = $registry->find($make);
 
         if (!$decoder instanceof MakerNotesDecoderInterface) {
             return $this->applySafety($this->digest($raw), $ifd0);

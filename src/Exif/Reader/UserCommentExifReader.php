@@ -69,13 +69,13 @@ final readonly class UserCommentExifReader
      */
     public function userCommentEncoding(): ?string
     {
-        $raw = $this->rawUserComment();
+        $raw                  = $this->rawUserComment();
 
         if ($raw === null) {
             return null;
         }
 
-        $parsed = $this->parseUserCommentPrefix($raw);
+        $parsed               = $this->parseUserCommentPrefix($raw);
 
         if ($parsed === null) {
             return null;
@@ -95,19 +95,19 @@ final readonly class UserCommentExifReader
      */
     public function userCommentEncodingBestEffort(): ?string
     {
-        $encoding = $this->userCommentEncoding();
+        $encoding    = $this->userCommentEncoding();
 
         if ($encoding !== null) {
             return $encoding;
         }
 
-        $raw = $this->rawUserComment();
+        $raw         = $this->rawUserComment();
 
         if ($raw === null) {
             return null;
         }
 
-        $parsed = $this->parseUserCommentPrefix($raw);
+        $parsed      = $this->parseUserCommentPrefix($raw);
 
         if ($parsed === null) {
             return null;
@@ -153,7 +153,7 @@ final readonly class UserCommentExifReader
      */
     private function decodeUserComment(string $raw): ?string
     {
-        $parsed = $this->parseUserCommentPrefix($raw);
+        $parsed               = $this->parseUserCommentPrefix($raw);
 
         if ($parsed === null) {
             return null;
@@ -282,19 +282,19 @@ final readonly class UserCommentExifReader
      */
     private function looksLikeUtf16(string $content): bool
     {
-        $length = strlen($content);
+        $length       = strlen($content);
 
         if ($length < 2) {
             return false;
         }
 
-        $bom = substr($content, 0, 2);
+        $bom          = substr($content, 0, 2);
 
         if ($bom === "\xFF\xFE" || $bom === "\xFE\xFF") {
             return true;
         }
 
-        $nullCount = substr_count($content, "\x00");
+        $nullCount    = substr_count($content, "\x00");
 
         if ($nullCount < 2) {
             return false;
@@ -303,10 +303,10 @@ final readonly class UserCommentExifReader
         $sampleLength = min($length, 32);
         $sample       = substr($content, 0, $sampleLength);
 
-        $nullsOnEven = 0;
-        $nullsOnOdd  = 0;
+        $nullsOnEven  = 0;
+        $nullsOnOdd   = 0;
 
-        $sampleSize = strlen($sample);
+        $sampleSize   = strlen($sample);
 
         for ($i = 0; $i < $sampleSize; ++$i) {
             if ($sample[$i] === "\x00") {

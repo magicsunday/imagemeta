@@ -63,7 +63,7 @@ final class TiffExifParserJpegInterchangePairTest extends TestCase
             ),
         );
 
-        $ifd1 = $parsed->ifd1;
+        $ifd1   = $parsed->ifd1;
         self::assertNotNull($ifd1);
         self::assertNotNull($ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT));
         self::assertNotNull($ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH));
@@ -258,11 +258,11 @@ final class TiffExifParserJpegInterchangePairTest extends TestCase
         ksort($ifd0Entries);
         ksort($ifd1Entries);
 
-        $ifd0Offset = 8;
-        $ifd0Size   = $this->ifdSize($ifd0Entries);
-        $ifd1Offset = $ifd0Offset + $ifd0Size;
-        $ifd1Size   = $this->ifdSize($ifd1Entries);
-        $dataOffset = $ifd1Offset + $ifd1Size;
+        $ifd0Offset  = 8;
+        $ifd0Size    = $this->ifdSize($ifd0Entries);
+        $ifd1Offset  = $ifd0Offset + $ifd0Size;
+        $ifd1Size    = $this->ifdSize($ifd1Entries);
+        $dataOffset  = $ifd1Offset + $ifd1Size;
 
         if ($offsetValue !== null) {
             $resolvedOffset                                = $offsetValue === -1 ? $dataOffset : $offsetValue;

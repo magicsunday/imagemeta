@@ -24,7 +24,7 @@ use function str_starts_with;
  */
 final readonly class XmpSegmentHandler implements MarkerHandlerInterface
 {
-    private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
+    private const string XMP_SIGNATURE          = "http://ns.adobe.com/xap/1.0/\0";
 
     private const string EXTENDED_XMP_SIGNATURE = "http://ns.adobe.com/xmp/extension/\0";
 

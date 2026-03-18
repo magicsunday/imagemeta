@@ -35,7 +35,7 @@ final class QuickTimeTagTest extends TestCase
     {
         $reflection = new ReflectionClass(QuickTimeTag::class);
 
-        $expected = [
+        $expected   = [
             'ATOM_FTYP' => 'ftyp',
             'ATOM_MOOV' => 'moov',
             'ATOM_TRAK' => 'trak',

@@ -30,13 +30,13 @@ enum GpsDistanceRef: string
      * Kilometers.
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case Kilometers = 'K';
+    case Kilometers    = 'K';
 
     /**
      * Miles.
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case Miles = 'M';
+    case Miles         = 'M';
 
     /**
      * Nautical miles.

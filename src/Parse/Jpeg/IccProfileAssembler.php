@@ -40,14 +40,14 @@ final class IccProfileAssembler implements SegmentAssemblerInterface
     private const string ICC_SIGNATURE = "ICC_PROFILE\0";
 
     /** @var list<string> */
-    private array $segments = [];
+    private array $segments            = [];
 
     /** @var array<int, string> */
-    private array $sequence = [];
+    private array $sequence            = [];
 
-    private ?int $expectedCount = null;
+    private ?int $expectedCount        = null;
 
-    private ?string $profile = null;
+    private ?string $profile           = null;
 
     /**
      * @param int $maxIccProfileSize Maximum allowed assembled ICC profile size in bytes.
@@ -67,14 +67,14 @@ final class IccProfileAssembler implements SegmentAssemblerInterface
      */
     public function handleSegment(string $payload, int $offset): void
     {
-        $signatureLength = strlen(self::ICC_SIGNATURE);
+        $signatureLength                 = strlen(self::ICC_SIGNATURE);
         PayloadGuard::ensureMinimumLength($payload, $signatureLength + 2, sprintf('ICC segment at offset %d', $offset), 1268);
 
-        $sequenceNumber = ord($payload[$signatureLength]);
-        $sequenceCount  = ord($payload[$signatureLength + 1]);
-        $iccData        = substr($payload, $signatureLength + 2);
+        $sequenceNumber                  = ord($payload[$signatureLength]);
+        $sequenceCount                   = ord($payload[$signatureLength + 1]);
+        $iccData                         = substr($payload, $signatureLength + 2);
 
-        $this->segments[] = $payload;
+        $this->segments[]                = $payload;
 
         // Sequence count must not be zero
         if ($sequenceCount === 0) {
@@ -139,7 +139,7 @@ final class IccProfileAssembler implements SegmentAssemblerInterface
 
             if ($presentSequence === $expectedSequence) {
                 ksort($this->sequence);
-                $assembled = implode('', $this->sequence);
+                $assembled     = implode('', $this->sequence);
 
                 if (strlen($assembled) > $this->maxIccProfileSize) {
                     throw new ParseError(

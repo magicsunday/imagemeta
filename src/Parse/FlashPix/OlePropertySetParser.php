@@ -35,17 +35,17 @@ use function trim;
  */
 final class OlePropertySetParser
 {
-    private const int BYTE_ORDER_LE = 0xFFFE;
+    private const int BYTE_ORDER_LE         = 0xFFFE;
 
     /**
      * Minimum header size: 2 (byteOrder) + 2 (format) + 4 (osVer) + 16 (clsid) + 4 (sectionCount).
      */
-    private const int MIN_HEADER_SIZE = 28;
+    private const int MIN_HEADER_SIZE       = 28;
 
     /**
      * Section table entry size: 16 (formatId) + 4 (offset).
      */
-    private const int SECTION_ENTRY_SIZE = 20;
+    private const int SECTION_ENTRY_SIZE    = 20;
 
     /**
      * Windows FILETIME epoch offset (100-nanosecond intervals from 1601-01-01 to 1970-01-01).
@@ -57,19 +57,19 @@ final class OlePropertySetParser
      */
     public function parse(string $raw): ?OlePropertySet
     {
-        $length = strlen($raw);
+        $length        = strlen($raw);
 
         if ($length < self::MIN_HEADER_SIZE) {
             return null;
         }
 
-        $byteOrder = $this->u16($raw, 0);
+        $byteOrder     = $this->u16($raw, 0);
 
         if ($byteOrder !== self::BYTE_ORDER_LE) {
             return null;
         }
 
-        $sectionCount = $this->u32($raw, 24);
+        $sectionCount  = $this->u32($raw, 24);
 
         if (($sectionCount < 1) || ($length < self::MIN_HEADER_SIZE + self::SECTION_ENTRY_SIZE)) {
             return null;
@@ -105,8 +105,8 @@ final class OlePropertySetParser
             return null;
         }
 
-        $codepage   = 1252;
-        $properties = [];
+        $codepage      = 1252;
+        $properties    = [];
 
         for ($index = 0; $index < $propertyCount; ++$index) {
             $entryOffset    = $sectionOffset + 8 + ($index * 8);
@@ -117,8 +117,8 @@ final class OlePropertySetParser
                 continue;
             }
 
-            $typeCode = $this->u32($raw, $propertyOffset);
-            $value    = $this->readValue($raw, $propertyOffset + 4, $typeCode, $length);
+            $typeCode       = $this->u32($raw, $propertyOffset);
+            $value          = $this->readValue($raw, $propertyOffset + 4, $typeCode, $length);
 
             if ($pid === 1 && is_int($value)) {
                 $codepage = $value;
@@ -208,7 +208,7 @@ final class OlePropertySetParser
             return null;
         }
 
-        $size = $this->u32($raw, $offset);
+        $size  = $this->u32($raw, $offset);
 
         if (($size < 1) || (($offset + 4 + $size) > $length)) {
             return null;
@@ -236,11 +236,11 @@ final class OlePropertySetParser
             return null;
         }
 
-        $utf16 = substr($raw, $offset + 4, $byteCount);
+        $utf16     = substr($raw, $offset + 4, $byteCount);
 
         /** @var string $value */
-        $value = mb_convert_encoding($utf16, 'UTF-8', 'UTF-16LE');
-        $value = trim(rtrim($value, "\0" . chr(0)));
+        $value     = mb_convert_encoding($utf16, 'UTF-8', 'UTF-16LE');
+        $value     = trim(rtrim($value, "\0" . chr(0)));
 
         return $value === '' ? null : $value;
     }
@@ -254,10 +254,10 @@ final class OlePropertySetParser
             return null;
         }
 
-        $lo = $this->u32($raw, $offset);
-        $hi = $this->u32($raw, $offset + 4);
+        $lo        = $this->u32($raw, $offset);
+        $hi        = $this->u32($raw, $offset + 4);
 
-        $filetime = ($hi << 32) | $lo;
+        $filetime  = ($hi << 32) | $lo;
 
         if ($filetime <= self::FILETIME_EPOCH_OFFSET) {
             return null;
@@ -267,7 +267,7 @@ final class OlePropertySetParser
         $seconds   = (int) ($unixMicro / 1_000_000);
         $micro     = $unixMicro % 1_000_000;
 
-        $dateTime = DateTimeImmutable::createFromFormat(
+        $dateTime  = DateTimeImmutable::createFromFormat(
             'U u',
             $seconds . ' ' . $micro,
             new DateTimeZone('UTC'),

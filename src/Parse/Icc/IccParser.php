@@ -32,9 +32,9 @@ use function substr;
  */
 final readonly class IccParser implements IccParserInterface
 {
-    private const int HEADER_LENGTH = 128;
+    private const int HEADER_LENGTH        = 128;
 
-    private const string ICC_SIGNATURE = 'ICC_PROFILE\0';
+    private const string ICC_SIGNATURE     = 'ICC_PROFILE\0';
 
     /**
      * ICC.1:2022 §7.2.9: Profile file signature field must contain 'acsp' (61637370h).
@@ -70,7 +70,7 @@ final readonly class IccParser implements IccParserInterface
      */
     public function decode(?string $profileData, array $segments = []): ?IccProfile
     {
-        $data = $this->selectDecodeInput($profileData, $segments);
+        $data                                            = $this->selectDecodeInput($profileData, $segments);
 
         // No ICC data at all — return null (absence, not error)
         if ($data === null) {
@@ -90,8 +90,8 @@ final readonly class IccParser implements IccParserInterface
         // accessed by their individual offset+size, layout deviations are
         // harmless for data extraction.  Skip the layout check.
 
-        $headerFields = $this->decodeHeaderFields($data);
-        $tagFields    = $this->decodeTagFields($data, $profileSize, $headerFields['majorVersion']);
+        $headerFields                                    = $this->decodeHeaderFields($data);
+        $tagFields                                       = $this->decodeTagFields($data, $profileSize, $headerFields['majorVersion']);
 
         // Tolerate unknown platform and non-printable signature bytes.
 
@@ -183,7 +183,7 @@ final readonly class IccParser implements IccParserInterface
         }
 
         // ICC.1:2022 §7.2.9: Validate 'acsp' signature at bytes 36-39.
-        $signature = substr($data, 36, 4);
+        $signature   = substr($data, 36, 4);
 
         if ($signature !== self::PROFILE_SIGNATURE) {
             throw new ParseError(
@@ -224,11 +224,11 @@ final readonly class IccParser implements IccParserInterface
     private function decodeHeaderFields(string $data): array
     {
         // Tolerate non-zero reserved bytes in version field — extract major.minor only.
-        $version = $this->headerDecoder->extractVersion($data);
+        $version            = $this->headerDecoder->extractVersion($data);
 
-        $profileClass = $this->headerDecoder->extractSignature(substr($data, IccTag::PROFILE_CLASS, 4));
-        $colorSpace   = $this->headerDecoder->extractSignature(substr($data, IccTag::COLOR_SPACE, 4));
-        $pcs          = $this->headerDecoder->extractSignature(substr($data, IccTag::PCS, 4));
+        $profileClass       = $this->headerDecoder->extractSignature(substr($data, IccTag::PROFILE_CLASS, 4));
+        $colorSpace         = $this->headerDecoder->extractSignature(substr($data, IccTag::COLOR_SPACE, 4));
+        $pcs                = $this->headerDecoder->extractSignature(substr($data, IccTag::PCS, 4));
 
         // Tolerate unknown profile class, colour space, and PCS signatures.
 
@@ -309,7 +309,7 @@ final readonly class IccParser implements IccParserInterface
     {
         // Build the tag offset map once so each extraction method performs
         // an O(1) lookup instead of re-scanning the entire tag table.
-        $tagMap = $this->tagDecoder->buildTagOffsetMap($data, $profileSize);
+        $tagMap            = $this->tagDecoder->buildTagOffsetMap($data, $profileSize);
 
         $description       = $this->tagDecoder->extractTag($data, $profileSize, 'desc', $majorVersion, $tagMap);
         $copyright         = $this->tagDecoder->extractTag($data, $profileSize, 'cprt', $majorVersion, $tagMap);
@@ -359,22 +359,22 @@ final readonly class IccParser implements IccParserInterface
             return null;
         }
 
-        $sequence      = [];
-        $expectedCount = null;
+        $sequence       = [];
+        $expectedCount  = null;
 
         foreach ($segments as $payload) {
             if (!str_starts_with($payload, self::ICC_SIGNATURE)) {
                 continue;
             }
 
-            $minLength = strlen(self::ICC_SIGNATURE) + 2;
+            $minLength                 = strlen(self::ICC_SIGNATURE) + 2;
 
             if (strlen($payload) <= $minLength) {
                 continue;
             }
 
-            $sequenceNumber = ord($payload[strlen(self::ICC_SIGNATURE)]);
-            $sequenceCount  = ord($payload[strlen(self::ICC_SIGNATURE) + 1]);
+            $sequenceNumber            = ord($payload[strlen(self::ICC_SIGNATURE)]);
+            $sequenceCount             = ord($payload[strlen(self::ICC_SIGNATURE) + 1]);
 
             if ($sequenceCount === 0) {
                 throw new ParseError('ICC chunk assembly: sequence count is zero', 1800);

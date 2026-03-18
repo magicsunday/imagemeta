@@ -51,8 +51,8 @@ final class JpegMarkerScannerTest extends TestCase
     public function findsNextMarkerAndReturnsCodeWithOffset(): void
     {
         // FF E1 at byte 0 is an APP1 marker
-        $data    = "\xFF\xE1";
-        $scanner = $this->createScanner($data);
+        $data            = "\xFF\xE1";
+        $scanner         = $this->createScanner($data);
 
         [$code, $offset] = $scanner->nextMarkerWithOffset();
 
@@ -70,8 +70,8 @@ final class JpegMarkerScannerTest extends TestCase
     public function skipsFillBytesBeforeMarkerCode(): void
     {
         // FF FF FF DB: three 0xFF bytes before the DQT marker code
-        $data    = "\xFF\xFF\xFF\xDB";
-        $scanner = $this->createScanner($data);
+        $data            = "\xFF\xFF\xFF\xDB";
+        $scanner         = $this->createScanner($data);
 
         [$code, $offset] = $scanner->nextMarkerWithOffset();
 
@@ -89,8 +89,8 @@ final class JpegMarkerScannerTest extends TestCase
     public function skipsStuffedBytesWhenInterveningBytesAllowed(): void
     {
         // FF 00 (stuffed byte) then FF D9 (EOI marker)
-        $data    = "\xFF\x00\xFF\xD9";
-        $scanner = $this->createScanner($data);
+        $data            = "\xFF\x00\xFF\xD9";
+        $scanner         = $this->createScanner($data);
 
         [$code, $offset] = $scanner->nextMarkerWithOffset();
 
@@ -153,7 +153,7 @@ final class JpegMarkerScannerTest extends TestCase
         $data    = pack('n', 16);
         $scanner = $this->createScanner($data);
 
-        $length = $scanner->readSegmentLength(0xE1, 0, false);
+        $length  = $scanner->readSegmentLength(0xE1, 0, false);
 
         self::assertSame(16, $length);
     }
@@ -238,8 +238,8 @@ final class JpegMarkerScannerTest extends TestCase
     public function skipsInterveningNonMarkerBytes(): void
     {
         // Garbage bytes followed by an APP1 marker
-        $data    = "\x01\x02\x03\xFF\xE1";
-        $scanner = $this->createScanner($data);
+        $data            = "\x01\x02\x03\xFF\xE1";
+        $scanner         = $this->createScanner($data);
 
         [$code, $offset] = $scanner->nextMarkerWithOffset(true);
 
@@ -249,7 +249,7 @@ final class JpegMarkerScannerTest extends TestCase
 
     private function createScanner(string $data, ?JpegParserConfig $config = null): JpegMarkerScanner
     {
-        $fh = fopen('php://memory', 'rb+');
+        $fh     = fopen('php://memory', 'rb+');
         self::assertIsResource($fh);
 
         fwrite($fh, $data);

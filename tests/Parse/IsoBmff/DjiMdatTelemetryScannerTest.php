@@ -51,18 +51,18 @@ final class DjiMdatTelemetryScannerTest extends TestCase
         $timestamp  = "\x30\xAC\x02";                        // field 6, wire 0, varint 300
 
         // GPS sub-message: field 2 = f64 lat, field 3 = f64 lon
-        $gpsInner = "\x11" . pack('e', $latRadians)   // field 2, wire 1 (fixed64)
+        $gpsInner   = "\x11" . pack('e', $latRadians)   // field 2, wire 1 (fixed64)
                   . "\x19" . pack('e', $lonRadians);   // field 3, wire 1 (fixed64)
 
         // Wrap GPS in field 1 (length-delimited) of outer GPS message
-        $gpsOuter = "\x0A" . chr(strlen($gpsInner)) . $gpsInner;
+        $gpsOuter   = "\x0A" . chr(strlen($gpsInner)) . $gpsInner;
 
         // Altitude: field 2, varint (in some unit)
-        $altitude = "\x10\x86\xA0\x17"; // varint 380934
+        $altitude   = "\x10\x86\xA0\x17"; // varint 380934
 
         // GPS message wrapped as field 4 (length-delimited) of the second message block
-        $gpsMsg = $gpsOuter . $altitude;
-        $field4 = '"' . chr(strlen($gpsMsg)) . $gpsMsg;
+        $gpsMsg     = $gpsOuter . $altitude;
+        $field4     = '"' . chr(strlen($gpsMsg)) . $gpsMsg;
 
         return $modelBytes . $framerate . $timestamp . $field4;
     }
@@ -70,8 +70,8 @@ final class DjiMdatTelemetryScannerTest extends TestCase
     #[Test]
     public function scanExtractsModelFromMdatWithDjiRecord(): void
     {
-        $record = $this->buildDjiProtobufRecord('DJI FC8671', 0.894425, 0.223173);
-        $mdat   = str_repeat("\x00", 1000) . $record . str_repeat("\x00", 100);
+        $record  = $this->buildDjiProtobufRecord('DJI FC8671', 0.894425, 0.223173);
+        $mdat    = str_repeat("\x00", 1000) . $record . str_repeat("\x00", 100);
 
         $scanner = new DjiMdatTelemetryScanner();
         $result  = $scanner->scanBytes($mdat);
@@ -83,14 +83,14 @@ final class DjiMdatTelemetryScannerTest extends TestCase
     #[Test]
     public function scanExtractsGpsCoordinates(): void
     {
-        $latRad = 0.894425;
-        $lonRad = 0.223173;
+        $latRad      = 0.894425;
+        $lonRad      = 0.223173;
 
-        $record = $this->buildDjiProtobufRecord('DJI FC8671', $latRad, $lonRad);
-        $mdat   = str_repeat("\x00", 500) . $record . str_repeat("\x00", 50);
+        $record      = $this->buildDjiProtobufRecord('DJI FC8671', $latRad, $lonRad);
+        $mdat        = str_repeat("\x00", 500) . $record . str_repeat("\x00", 50);
 
-        $scanner = new DjiMdatTelemetryScanner();
-        $result  = $scanner->scanBytes($mdat);
+        $scanner     = new DjiMdatTelemetryScanner();
+        $result      = $scanner->scanBytes($mdat);
 
         self::assertNotNull($result);
 
@@ -105,7 +105,7 @@ final class DjiMdatTelemetryScannerTest extends TestCase
     #[Test]
     public function scanReturnsNullWhenNoDjiSignaturePresent(): void
     {
-        $mdat = str_repeat("\x00", 2000);
+        $mdat    = str_repeat("\x00", 2000);
 
         $scanner = new DjiMdatTelemetryScanner();
         $result  = $scanner->scanBytes($mdat);
@@ -125,7 +125,7 @@ final class DjiMdatTelemetryScannerTest extends TestCase
     public function scanHandlesDjiStringNotInProtobuf(): void
     {
         // "DJI " appears but not in a valid protobuf context
-        $mdat = str_repeat("\x00", 100) . 'DJI FC8671' . str_repeat("\xFF", 100);
+        $mdat    = str_repeat("\x00", 100) . 'DJI FC8671' . str_repeat("\xFF", 100);
 
         $scanner = new DjiMdatTelemetryScanner();
         $result  = $scanner->scanBytes($mdat);
@@ -138,10 +138,10 @@ final class DjiMdatTelemetryScannerTest extends TestCase
     #[Test]
     public function scanStreamExtractsFromTail(): void
     {
-        $record = $this->buildDjiProtobufRecord('DJI FC8671', 0.894425, 0.223173);
-        $data   = str_repeat("\x00", 500) . $record . str_repeat("\x00", 50);
+        $record  = $this->buildDjiProtobufRecord('DJI FC8671', 0.894425, 0.223173);
+        $data    = str_repeat("\x00", 500) . $record . str_repeat("\x00", 50);
 
-        $handle = fopen('php://temp', 'wb+');
+        $handle  = fopen('php://temp', 'wb+');
         self::assertNotFalse($handle);
 
         fwrite($handle, $data);
@@ -163,7 +163,7 @@ final class DjiMdatTelemetryScannerTest extends TestCase
         $record1 = $this->buildDjiProtobufRecord('DJI FC8671', 0.5, 0.3);
         $record2 = $this->buildDjiProtobufRecord('DJI FC8671', 0.894425, 0.223173);
 
-        $mdat = str_repeat("\x00", 200)
+        $mdat    = str_repeat("\x00", 200)
               . $record1
               . str_repeat("\x00", 50)
               . $record2

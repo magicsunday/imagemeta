@@ -33,7 +33,7 @@ enum SensitivityType: int
      * Unknown sensitivity type.
      * EXIF 3.0 §4.6.6.7.7 Table 14.
      */
-    case Unknown = 0;
+    case Unknown                   = 0;
 
     /**
      * Standard output sensitivity (SOS).
@@ -45,35 +45,35 @@ enum SensitivityType: int
      * Recommended exposure index (REI).
      * EXIF 3.0 §4.6.6.7.7 Table 14.
      */
-    case RecommendedExposureIndex = 2;
+    case RecommendedExposureIndex  = 2;
 
     /**
      * ISO speed.
      * EXIF 3.0 §4.6.6.7.7 Table 14.
      */
-    case IsoSpeed = 3;
+    case IsoSpeed                  = 3;
 
     /**
      * Standard output sensitivity and recommended exposure index.
      * EXIF 3.0 §4.6.6.7.7 Table 14.
      */
-    case SosAndRei = 4;
+    case SosAndRei                 = 4;
 
     /**
      * Standard output sensitivity and ISO speed.
      * EXIF 3.0 §4.6.6.7.7 Table 14.
      */
-    case SosAndIso = 5;
+    case SosAndIso                 = 5;
 
     /**
      * Recommended exposure index and ISO speed.
      * EXIF 3.0 §4.6.6.7.7 Table 14.
      */
-    case ReiAndIso = 6;
+    case ReiAndIso                 = 6;
 
     /**
      * Standard output sensitivity, recommended exposure index, and ISO speed.
      * EXIF 3.0 §4.6.6.7.7 Table 14.
      */
-    case SosAndReiAndIso = 7;
+    case SosAndReiAndIso           = 7;
 }

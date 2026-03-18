@@ -118,8 +118,8 @@ final class OlePropertySetParserTest extends TestCase
     #[Test]
     public function parsesFiletimeProperty(): void
     {
-        $raw    = $this->buildPropertySet(1252, [12 => ['type' => 0x0040, 'value' => '2025-06-15T12:00:00']]);
-        $result = (new OlePropertySetParser())->parse($raw);
+        $raw      = $this->buildPropertySet(1252, [12 => ['type' => 0x0040, 'value' => '2025-06-15T12:00:00']]);
+        $result   = (new OlePropertySetParser())->parse($raw);
 
         $dateTime = $result?->property(12);
         self::assertInstanceOf(DateTimeImmutable::class, $dateTime);
@@ -137,7 +137,7 @@ final class OlePropertySetParserTest extends TestCase
     #[Test]
     public function parsesMultipleProperties(): void
     {
-        $raw = $this->buildPropertySet(1252, [
+        $raw    = $this->buildPropertySet(1252, [
             2 => ['type' => 0x001E, 'value' => 'Title'],
             4 => ['type' => 0x001E, 'value' => 'Author'],
             3 => ['type' => 0x0003, 'value' => 100],
@@ -173,18 +173,18 @@ final class OlePropertySetParserTest extends TestCase
             $valueOffset += strlen($encoded);
         }
 
-        $sectionSize = 8 + ($propertyCount * 8) + strlen($valueBlob);
-        $section     = pack('V', $sectionSize) . pack('V', $propertyCount) . $pidTable . $valueBlob;
+        $sectionSize   = 8 + ($propertyCount * 8) + strlen($valueBlob);
+        $section       = pack('V', $sectionSize) . pack('V', $propertyCount) . $pidTable . $valueBlob;
 
         $sectionOffset = 28 + 20;
 
-        $header = pack('v', 0xFFFE);
+        $header        = pack('v', 0xFFFE);
         $header .= pack('v', 0x0000);
         $header .= pack('V', 0x00020006);
         $header .= str_repeat("\x00", 16);
         $header .= pack('V', 1);
 
-        $fmtEntry = str_repeat("\x00", 16);
+        $fmtEntry      = str_repeat("\x00", 16);
         $fmtEntry .= pack('V', $sectionOffset);
 
         return $header . $fmtEntry . $section;
@@ -195,13 +195,13 @@ final class OlePropertySetParserTest extends TestCase
         $sectionOffset = 28 + 20;
         $section       = pack('V', 8) . pack('V', 0);
 
-        $header = pack('v', 0xFFFE);
+        $header        = pack('v', 0xFFFE);
         $header .= pack('v', 0x0000);
         $header .= pack('V', 0x00020006);
         $header .= str_repeat("\x00", 16);
         $header .= pack('V', 1);
 
-        $fmtEntry = str_repeat("\x00", 16);
+        $fmtEntry      = str_repeat("\x00", 16);
         $fmtEntry .= pack('V', $sectionOffset);
 
         return $header . $fmtEntry . $section;

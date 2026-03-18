@@ -66,7 +66,7 @@ final class CameraLensExifReaderTest extends TestCase
             ]),
         ];
 
-        $reader = $this->createReader($ifd0Entries, $exifEntries);
+        $reader      = $this->createReader($ifd0Entries, $exifEntries);
 
         self::assertSame('Canon', $reader->cameraMake());
         self::assertSame('EOS R5', $reader->cameraModel());
@@ -76,7 +76,7 @@ final class CameraLensExifReaderTest extends TestCase
         self::assertSame('SN12345', $reader->bodySerialNumber());
         self::assertSame('LS67890', $reader->lensSerialNumber());
 
-        $spec = $reader->lensSpecification();
+        $spec        = $reader->lensSpecification();
         self::assertNotNull($spec);
         self::assertSame(24.0, $spec[0]);
         self::assertSame(70.0, $spec[1]);
@@ -115,7 +115,7 @@ final class CameraLensExifReaderTest extends TestCase
             DngTag::CAMERA_SERIAL_NUMBER   => new IfdEntry(DngTag::CAMERA_SERIAL_NUMBER, 2, 1, 'DNG-SN-001'),
         ];
 
-        $reader = $this->createReader($ifd0Entries, []);
+        $reader      = $this->createReader($ifd0Entries, []);
 
         self::assertSame('Leica M10-R', $reader->uniqueCameraModel());
         self::assertSame('Leica M10-R DE', $reader->localizedCameraModel());
@@ -133,7 +133,7 @@ final class CameraLensExifReaderTest extends TestCase
             DngTag::UNIQUE_CAMERA_MODEL => new IfdEntry(DngTag::UNIQUE_CAMERA_MODEL, 2, 1, 'Nikon Z9'),
         ];
 
-        $reader = $this->createReader($ifd0Entries, []);
+        $reader      = $this->createReader($ifd0Entries, []);
 
         self::assertSame('Nikon Z9', $reader->localizedCameraModel());
     }
@@ -152,7 +152,7 @@ final class CameraLensExifReaderTest extends TestCase
             ]),
         ];
 
-        $reader = $this->createReader([], $exifEntries);
+        $reader      = $this->createReader([], $exifEntries);
 
         self::assertNull($reader->lensSpecification());
     }

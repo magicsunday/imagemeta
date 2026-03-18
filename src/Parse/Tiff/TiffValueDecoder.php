@@ -44,7 +44,7 @@ final readonly class TiffValueDecoder
      *
      * @var list<int>
      */
-    private const array POINTER_TAGS = [
+    private const array POINTER_TAGS      = [
         ExifTag::EXIF_IFD_POINTER,
         ExifTag::GPS_IFD_POINTER,
         ExifTag::INTEROPERABILITY_IFD_POINTER,
@@ -56,7 +56,7 @@ final readonly class TiffValueDecoder
      *
      * @var list<int>
      */
-    private const array XP_TAGS = [
+    private const array XP_TAGS           = [
         MicrosoftTag::XP_TITLE,
         MicrosoftTag::XP_COMMENT,
         MicrosoftTag::XP_AUTHOR,
@@ -121,7 +121,7 @@ final readonly class TiffValueDecoder
         ?int $componentSize = null,
         ?int $valueBytes = null,
     ): array {
-        $unitSize = $componentSize ?? $this->bytesPerComponent($type);
+        $unitSize        = $componentSize ?? $this->bytesPerComponent($type);
         assert($unitSize !== null);
 
         $dataSize        = $valueBytes ?? $this->safeValueByteCount($unitSize, $count);
@@ -145,8 +145,8 @@ final readonly class TiffValueDecoder
             return [$this->sliceBytes($raw, 0, $dataSize), null];
         }
 
-        $offset = $this->offsetValidator->ensureOffset($valueOrOffset, sprintf('Value offset for TIFF type %d', $type), $dataSize);
-        $bytes  = $this->binaryReader->readAt($offset, $dataSize);
+        $offset          = $this->offsetValidator->ensureOffset($valueOrOffset, sprintf('Value offset for TIFF type %d', $type), $dataSize);
+        $bytes           = $this->binaryReader->readAt($offset, $dataSize);
 
         return [$bytes, $offset];
     }
@@ -216,8 +216,8 @@ final readonly class TiffValueDecoder
                 : new ExifRationalList($rationalValues);
         }
 
-        $vals   = [];
-        $cursor = 0;
+        $vals           = [];
+        $cursor         = 0;
 
         for ($i = 0; $i < $count; ++$i) {
             $componentBytes = $this->sliceBytes($bytes, $cursor, $componentSize);

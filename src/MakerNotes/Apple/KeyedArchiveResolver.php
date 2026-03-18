@@ -52,7 +52,7 @@ final readonly class KeyedArchiveResolver
             return null;
         }
 
-        $payload = substr($raw, $signatureOffset);
+        $payload         = substr($raw, $signatureOffset);
 
         try {
             $value = (new BinaryPlistDecoder())->decode($payload);
@@ -81,7 +81,7 @@ final readonly class KeyedArchiveResolver
             return $unarchived;
         }
 
-        $candidate = $this->resolveNestedCandidateFromEntries($dictionary);
+        $candidate  = $this->resolveNestedCandidateFromEntries($dictionary);
 
         if ($candidate !== null) {
             return $candidate;
@@ -236,7 +236,7 @@ final readonly class KeyedArchiveResolver
     {
         try {
             /** @phpstan-ignore-next-line */
-            $plist = $this->nativeToPlistValue($dictionary);
+            $plist    = $this->nativeToPlistValue($dictionary);
 
             if (!$plist instanceof ApplePlistDictionary) {
                 return null;
@@ -310,20 +310,20 @@ final readonly class KeyedArchiveResolver
      */
     private function normalizeKeyedArchive(array $dictionary): ?array
     {
-        $objectsKey = $this->firstExistingKey($dictionary, '$objects', 'objects');
+        $objectsKey             = $this->firstExistingKey($dictionary, '$objects', 'objects');
 
         if ($objectsKey === null) {
             return null;
         }
 
-        $topKey = $this->firstExistingKey($dictionary, '$top', 'top');
+        $topKey                 = $this->firstExistingKey($dictionary, '$top', 'top');
 
         if ($topKey === null) {
             return null;
         }
 
-        $objects = $dictionary[$objectsKey];
-        $top     = $dictionary[$topKey];
+        $objects                = $dictionary[$objectsKey];
+        $top                    = $dictionary[$topKey];
 
         if (!is_array($objects) || !is_array($top)) {
             return null;

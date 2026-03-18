@@ -61,8 +61,8 @@ final readonly class AppleFlagExtractor
             }
 
             /** @var NativePlistValue $candidate */
-            $candidate = $dictionary[$makerKey];
-            $bool      = $this->boolValue($candidate);
+            $candidate          = $dictionary[$makerKey];
+            $bool               = $this->boolValue($candidate);
 
             if ($bool === null) {
                 continue;
@@ -176,7 +176,7 @@ final readonly class AppleFlagExtractor
             }
 
             /** @var NativePlistValue $candidate */
-            $candidate = $value['values'];
+            $candidate    = $value['values'];
 
             return $this->bitPositions($candidate);
         }
@@ -198,7 +198,7 @@ final readonly class AppleFlagExtractor
                 continue;
             }
 
-            $nested = $this->bitPositions($entry);
+            $nested   = $this->bitPositions($entry);
 
             if ($nested === null) {
                 continue;

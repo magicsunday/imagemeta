@@ -103,7 +103,7 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function decodeMapsCameraTypeCodeFromKeyedArchive(): void
     {
-        $hex = '62706c6973743030d401020304050622265924617263686976657258246f626a'
+        $hex   = '62706c6973743030d401020304050622265924617263686976657258246f626a'
             . '656374735424746f70582476657273696f6e5f100f4e534b6579656441726368'
             . '69766572a70708191f20211855246e756c6cd3090a0b0c0f145624636c617373'
             . '574e532e6b6579735a4e532e6f626a65637473d10d0e564346245549441002a2'
@@ -128,7 +128,7 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function decodeUnarchivesKeyedArchivePayload(): void
     {
-        $hex = '62706c6973743030d40102030405066e725924617263686976657258246f626a656374735424746f70582476657273696f6e5f100f4e534b65796564'
+        $hex   = '62706c6973743030d40102030405066e725924617263686976657258246f626a656374735424746f70582476657273696f6e5f100f4e534b65796564'
             . '4172636869766572af101f07080f101112131415161718191a1b1c1d1e1f232425262728292d2e2f303155246e756c6cd2090a0b0c5824636c617373'
             . '65735a24636c6173736e616d65a30c0d0e5f10134e534d757461626c6544696374696f6e6172795c4e5344696374696f6e617279584e534f626a6563'
             . '745f1011436f6e74656e744964656e7469666965725b48647248656164726f6f6d574864724761696e5a534e5253657474696e675d466f637573506f'
@@ -186,7 +186,7 @@ final class AppleDecoderTest extends TestCase
         self::assertSame(strlen($raw), $metadata->length);
         self::assertSame(sha1($raw), $metadata->sha1);
 
-        $apple = $this->decodeAppleMakerNotes($raw);
+        $apple    = $this->decodeAppleMakerNotes($raw);
         self::assertSame('photo-uuid', $apple->identity?->contentIdentifier);
         self::assertSame('Tele', $apple->camera?->type);
         self::assertEqualsWithDelta(2.5, $apple->hdr?->headroom, 1e-12);
@@ -212,7 +212,7 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function decodeAcceptsPaddedDictionaryPayload(): void
     {
-        $raw = '{ ContentIdentifier = "padded"; LivePhotoAuto = 1; }' . str_repeat("\0", 8);
+        $raw   = '{ ContentIdentifier = "padded"; LivePhotoAuto = 1; }' . str_repeat("\0", 8);
 
         $apple = $this->decodeAppleMakerNotes($raw);
         self::assertSame('padded', $apple->identity?->contentIdentifier);
@@ -226,7 +226,7 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function decodeRecordsDisabledFlagsFromZeroBitMasks(): void
     {
-        $raw = '{ ContentIdentifier = "flags-zero"; SceneFlags = 0; ImageProcessingFlags = 0; PhotosAppFeatureFlags = 0; }';
+        $raw   = '{ ContentIdentifier = "flags-zero"; SceneFlags = 0; ImageProcessingFlags = 0; PhotosAppFeatureFlags = 0; }';
 
         $apple = $this->decodeAppleMakerNotes($raw);
         self::assertSame('flags-zero', $apple->identity?->contentIdentifier);
@@ -283,7 +283,7 @@ final class AppleDecoderTest extends TestCase
         $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $builder->build([
+        $notes   = $builder->build([
             'ContentIdentifier'  => 'extended',
             'MakerNoteVersion'   => '2.1',
             'HDRImageType'       => 1,
@@ -323,7 +323,7 @@ final class AppleDecoderTest extends TestCase
         $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $builder->build([
+        $notes   = $builder->build([
             'ContentIdentifier' => 'normalized-version',
             'MakerNoteVersion'  => $makerNoteVersion,
         ]);
@@ -352,7 +352,7 @@ final class AppleDecoderTest extends TestCase
         $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $builder->build([
+        $notes   = $builder->build([
             'ContentIdentifier'      => 'focus-range',
             'FocusDistanceRangeNear' => 0.3,
             'FocusDistanceRangeFar'  => 2.8,
@@ -376,7 +376,7 @@ final class AppleDecoderTest extends TestCase
         $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $builder->build([
+        $notes   = $builder->build([
             'ContentIdentifier'      => 'near-only',
             'FocusDistanceRangeNear' => 0.42,
         ]);
@@ -395,7 +395,7 @@ final class AppleDecoderTest extends TestCase
         $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $builder->build([
+        $notes   = $builder->build([
             'ContentIdentifier'     => 'far-only',
             'FocusDistanceRangeFar' => '1.75',
         ]);
@@ -414,7 +414,7 @@ final class AppleDecoderTest extends TestCase
         $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $builder->build([
+        $notes   = $builder->build([
             'ContentIdentifier' => 'unknown',
             'HDRImageType'      => 99,
             'ImageCaptureType'  => 42,
@@ -436,7 +436,7 @@ final class AppleDecoderTest extends TestCase
         $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $builder->build([
+        $notes   = $builder->build([
             'ContentIdentifier' => 'hdr-' . $code,
             'HDRImageType'      => $code,
         ]);
@@ -468,7 +468,7 @@ final class AppleDecoderTest extends TestCase
         $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $builder->build([
+        $notes   = $builder->build([
             'ContentIdentifier' => 'mapped-' . $code,
             'ImageCaptureType'  => $code,
         ]);
@@ -501,12 +501,12 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function decodeParsesAdditionalMakerNoteFields(): void
     {
-        $raw = '{ MakerNoteVersion = "1.4"; HDRImageType = 2; BurstUUID = "text-burst"; '
+        $raw      = '{ MakerNoteVersion = "1.4"; HDRImageType = 2; BurstUUID = "text-burst"; '
             . 'FocusDistanceRange = (0.4, 1.6); OISMode = 5; ImageCaptureType = 4; '
             . 'ImageUniqueID = "text-unique"; PhotoIdentifier = "text-photo"; '
             . 'AFMeasuredDepth = 1.1; AFConfidence = 0.65; ContentIdentifier = "textual"; }';
 
-        $decoder = new AppleDecoder();
+        $decoder  = new AppleDecoder();
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
         $apple    = $metadata->apple;
@@ -533,7 +533,7 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        $mapped = $builder->build([
+        $mapped  = $builder->build([
             'ContentIdentifier' => 'mapped-camera',
             'CameraType'        => 0,
         ]);
@@ -558,7 +558,7 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        $notes = $builder->build([
+        $notes   = $builder->build([
             'ContentIdentifier' => 'dictionary-style',
             'SemanticStyle'     => [
                 'values' => [
@@ -582,7 +582,7 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function buildAppleMakerNotesParsesRunTime(): void
     {
-        $builder = new AppleMakerNotesBuilder();
+        $builder    = new AppleMakerNotesBuilder();
 
         $dictionary = [
             'RunTime' => [
@@ -595,12 +595,12 @@ final class AppleDecoderTest extends TestCase
         ];
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $builder->build($dictionary);
+        $notes      = $builder->build($dictionary);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
         self::assertSame(1200, $notes->livePhoto?->index);
         self::assertEqualsWithDelta(2.0, $notes->livePhoto->time, 1e-12);
-        $runTime = $notes->livePhoto->runTime;
+        $runTime    = $notes->livePhoto->runTime;
         self::assertInstanceOf(RunTime::class, $runTime);
         self::assertSame(2, $runTime->epoch);
         self::assertSame(600, $runTime->timescale);
@@ -618,7 +618,7 @@ final class AppleDecoderTest extends TestCase
         $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $builder->build([
+        $notes   = $builder->build([
             'ContentIdentifier'       => 'extended',
             'AEStable'                => '1',
             'AETarget'                => ['numerator' => 37, 'denominator' => 10],
@@ -656,7 +656,7 @@ final class AppleDecoderTest extends TestCase
         $builder = new AppleMakerNotesBuilder();
 
         /** @var AppleMakerNotes|null $notes */
-        $notes = $builder->build([
+        $notes   = $builder->build([
             'ContentIdentifier' => 'stability',
             $makerKey           => $value,
         ]);
@@ -696,7 +696,7 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function decodeIgnoresUnsupportedPropertyListFormat(): void
     {
-        $decoder = new AppleDecoder();
+        $decoder  = new AppleDecoder();
 
         $metadata = $decoder->decode('Apple iOS' . str_repeat("\x00", 32), 'Apple', 'iPhone');
         self::assertNull($metadata->apple);
@@ -709,7 +709,7 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function flagMasksMirrorScalarInputs(): void
     {
-        $builder = new AppleMakerNotesBuilder();
+        $builder     = new AppleMakerNotesBuilder();
 
         $scalarNotes = $builder->build([
             'ContentIdentifier'     => 'scalar',
@@ -728,7 +728,7 @@ final class AppleDecoderTest extends TestCase
             'AFStable'              => '0',
         ]);
 
-        $maskNotes = $builder->build([
+        $maskNotes   = $builder->build([
             'ContentIdentifier'     => 'mask',
             'SceneFlags'            => (1 << 0) | (1 << 1),
             'ImageProcessingFlags'  => (1 << 0) | (1 << 1),
@@ -778,7 +778,7 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        $notes = $builder->build([
+        $notes   = $builder->build([
             'ContentIdentifier'     => 'override',
             'LivePhotoLongExposure' => false,
             'NightMode'             => false,
@@ -788,7 +788,7 @@ final class AppleDecoderTest extends TestCase
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
-        $flags = $notes->flags;
+        $flags   = $notes->flags;
         ksort($flags);
 
         self::assertSame(
@@ -812,7 +812,7 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        $notes = $builder->build([
+        $notes   = $builder->build([
             'ContentIdentifier'     => 'positions',
             'SceneFlags'            => [0, 1],
             'ImageProcessingFlags'  => ['values' => [0, 1]],
@@ -821,7 +821,7 @@ final class AppleDecoderTest extends TestCase
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
 
-        $flags = $notes->flags;
+        $flags   = $notes->flags;
         ksort($flags);
 
         self::assertSame(

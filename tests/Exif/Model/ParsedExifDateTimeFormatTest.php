@@ -59,7 +59,7 @@ final class ParsedExifDateTimeFormatTest extends TestCase
             "2023:06:15 14:30:00\0",
         );
 
-        $dt = $parsedExif->dateTimeOriginal();
+        $dt         = $parsedExif->dateTimeOriginal();
         self::assertInstanceOf(DateTimeImmutable::class, $dt);
         self::assertSame('2023-06-15 14:30:00', $dt->format('Y-m-d H:i:s'));
     }

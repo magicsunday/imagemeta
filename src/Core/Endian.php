@@ -19,5 +19,5 @@ enum Endian: string
     /** Little-endian ordering ("II"). */
     case Little = 'II';
     /** Big-endian ordering ("MM"). */
-    case Big = 'MM';
+    case Big    = 'MM';
 }

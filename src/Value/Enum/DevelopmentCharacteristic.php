@@ -25,8 +25,8 @@ enum DevelopmentCharacteristic: int
     case FaithfulReproduction = 0x01;
 
     /** Development not for sameness, but which won't make extreme difference. */
-    case ModerateProcessing = 0x02;
+    case ModerateProcessing   = 0x02;
 
     /** Development to make extreme difference (alteration of size/shape/removal of subject). */
-    case ExtremeDifference = 0x04;
+    case ExtremeDifference    = 0x04;
 }

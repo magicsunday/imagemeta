@@ -73,7 +73,7 @@ final class PayloadGuard
     ): string {
         self::ensureMinimumLength($blob, 4, $contextName . ' payload', $lengthCode);
 
-        $offset = Unpack::int('N', substr($blob, 0, 4), $contextName . ' TIFF-header offset');
+        $offset  = Unpack::int('N', substr($blob, 0, 4), $contextName . ' TIFF-header offset');
 
         if (($offset < 0) || ((4 + $offset + 2) > strlen($blob))) {
             throw new ParseError($contextName . ' TIFF-header offset out of range', $rangeCode);

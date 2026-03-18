@@ -43,8 +43,8 @@ final readonly class TiffJpegValidator
      */
     public function validateJpegProcTag(Ifd $ifd): void
     {
-        $jpegProc    = $ifd->get(TiffTag::JPEG_PROC);
-        $compression = $ifd->get(ExifTag::COMPRESSION);
+        $jpegProc          = $ifd->get(TiffTag::JPEG_PROC);
+        $compression       = $ifd->get(ExifTag::COMPRESSION);
 
         $isJpegCompression = ($compression instanceof IfdEntry)
             && is_int($compression->value)
@@ -85,7 +85,7 @@ final readonly class TiffJpegValidator
     {
         [$jpegProc, $samplesPerPixel] = $this->resolveJpegProcAndSamplesPerPixel($ifd);
 
-        $losslessPredictorsEntry = $ifd->get(TiffTag::JPEG_LOSSLESS_PREDICTORS);
+        $losslessPredictorsEntry      = $ifd->get(TiffTag::JPEG_LOSSLESS_PREDICTORS);
 
         if ($losslessPredictorsEntry instanceof IfdEntry) {
             if (($losslessPredictorsEntry->type !== TiffConst::TYPE_SHORT) || ($losslessPredictorsEntry->count !== $samplesPerPixel)) {
@@ -110,7 +110,7 @@ final readonly class TiffJpegValidator
             }
         }
 
-        $pointTransformsEntry = $ifd->get(TiffTag::JPEG_POINT_TRANSFORMS);
+        $pointTransformsEntry         = $ifd->get(TiffTag::JPEG_POINT_TRANSFORMS);
 
         if ($pointTransformsEntry instanceof IfdEntry) {
             if (($pointTransformsEntry->type !== TiffConst::TYPE_SHORT) || ($pointTransformsEntry->count !== $samplesPerPixel)) {
@@ -155,8 +155,8 @@ final readonly class TiffJpegValidator
             throw new ParseError('JPEGRestartInterval must be SHORT[1].', 1851);
         }
 
-        $compressionEntry  = $ifd->get(ExifTag::COMPRESSION);
-        $isJpegCompression = ($compressionEntry instanceof IfdEntry)
+        $compressionEntry     = $ifd->get(ExifTag::COMPRESSION);
+        $isJpegCompression    = ($compressionEntry instanceof IfdEntry)
             && is_int($compressionEntry->value)
             && ($compressionEntry->value === Compression::Jpeg->value);
 
@@ -165,7 +165,7 @@ final readonly class TiffJpegValidator
         }
 
         // JPEGProc may be absent when Compression=6 — see validateJpegProcTag().
-        $jpegProcEntry = $ifd->get(TiffTag::JPEG_PROC);
+        $jpegProcEntry        = $ifd->get(TiffTag::JPEG_PROC);
 
         if (($jpegProcEntry instanceof IfdEntry) && !in_array($jpegProcEntry->value, [1, 14], true)) {
             throw new ParseError('JPEGRestartInterval requires valid JPEGProc metadata.', 1853);
@@ -183,15 +183,15 @@ final readonly class TiffJpegValidator
     {
         [$jpegProc, $samplesPerPixel] = $this->resolveJpegProcAndSamplesPerPixel($ifd);
 
-        $jpegQTablesEntry  = $ifd->get(TiffTag::JPEG_Q_TABLES);
-        $jpegDcTablesEntry = $ifd->get(TiffTag::JPEG_DC_TABLES);
-        $jpegAcTablesEntry = $ifd->get(TiffTag::JPEG_AC_TABLES);
+        $jpegQTablesEntry             = $ifd->get(TiffTag::JPEG_Q_TABLES);
+        $jpegDcTablesEntry            = $ifd->get(TiffTag::JPEG_DC_TABLES);
+        $jpegAcTablesEntry            = $ifd->get(TiffTag::JPEG_AC_TABLES);
 
         $this->validateJpegTableEntry($jpegQTablesEntry, 'JPEGQTables', $samplesPerPixel, 1842);
         $this->validateJpegTableEntry($jpegDcTablesEntry, 'JPEGDCTables', $samplesPerPixel, 1843);
         $this->validateJpegTableEntry($jpegAcTablesEntry, 'JPEGACTables', $samplesPerPixel, 1844);
 
-        $hasJpegTableTags = ($jpegQTablesEntry instanceof IfdEntry)
+        $hasJpegTableTags             = ($jpegQTablesEntry instanceof IfdEntry)
             || ($jpegDcTablesEntry instanceof IfdEntry)
             || ($jpegAcTablesEntry instanceof IfdEntry);
 
@@ -268,8 +268,8 @@ final readonly class TiffJpegValidator
      */
     private function resolveJpegProcAndSamplesPerPixel(Ifd $ifd): array
     {
-        $jpegProcEntry = $ifd->get(TiffTag::JPEG_PROC);
-        $jpegProc      = (($jpegProcEntry instanceof IfdEntry) && is_int($jpegProcEntry->value))
+        $jpegProcEntry        = $ifd->get(TiffTag::JPEG_PROC);
+        $jpegProc             = (($jpegProcEntry instanceof IfdEntry) && is_int($jpegProcEntry->value))
             ? $jpegProcEntry->value
             : null;
 

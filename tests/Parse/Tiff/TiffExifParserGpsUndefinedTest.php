@@ -59,7 +59,7 @@ final class TiffExifParserGpsUndefinedTest extends TestCase
     {
         $payload = "ASCII\0\0\0GPS test";
 
-        $result = (new TiffExifParser())->parseFromBlob(
+        $result  = (new TiffExifParser())->parseFromBlob(
             $this->buildClassicTiffWithSingleGpsEntry(
                 $tag,
                 TiffConst::TYPE_UNDEFINED,
@@ -105,13 +105,13 @@ final class TiffExifParserGpsUndefinedTest extends TestCase
 
     private function buildClassicTiffWithSingleGpsEntry(int $tag, int $type, int $count, string $valueBytes): string
     {
-        $header = Endian::Little->value
+        $header        = Endian::Little->value
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
-        $ifd0Length   = $this->classicIfd0WithGpsPointerLength();
-        $gpsIfdOffset = strlen($header) + $ifd0Length;
-        $ifd0         = $this->buildClassicIfd0WithGpsPointer($gpsIfdOffset);
+        $ifd0Length    = $this->classicIfd0WithGpsPointerLength();
+        $gpsIfdOffset  = strlen($header) + $ifd0Length;
+        $ifd0          = $this->buildClassicIfd0WithGpsPointer($gpsIfdOffset);
 
         $componentSize = $this->bytesPerComponent($type);
         $dataSize      = $componentSize * $count;
@@ -119,10 +119,10 @@ final class TiffExifParserGpsUndefinedTest extends TestCase
             ? substr($valueBytes, 0, $dataSize)
             : str_pad($valueBytes, $dataSize, "\0");
 
-        $gpsIfdLength = 2 + 12 + 4;
-        $dataOffset   = strlen($header . $ifd0) + $gpsIfdLength;
+        $gpsIfdLength  = 2 + 12 + 4;
+        $dataOffset    = strlen($header . $ifd0) + $gpsIfdLength;
 
-        $entry = pack('v', $tag)
+        $entry         = pack('v', $tag)
             . pack('v', $type)
             . pack('V', $count);
 
@@ -134,7 +134,7 @@ final class TiffExifParserGpsUndefinedTest extends TestCase
             $payload = '';
         }
 
-        $gpsIfd = pack('v', 1)
+        $gpsIfd        = pack('v', 1)
             . $entry
             . pack('V', 0);
 

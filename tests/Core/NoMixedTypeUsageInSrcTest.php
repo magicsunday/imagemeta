@@ -70,13 +70,13 @@ final class NoMixedTypeUsageInSrcTest extends TestCase
      */
     private function mixedTypeViolations(string $filePath, string $repoRoot): array
     {
-        $contents = file_get_contents($filePath);
+        $contents   = file_get_contents($filePath);
 
         if (!is_string($contents)) {
             return [];
         }
 
-        $tokens = token_get_all($contents);
+        $tokens     = token_get_all($contents);
 
         /** @var list<string> $violations */
         $violations = [];
@@ -99,7 +99,7 @@ final class NoMixedTypeUsageInSrcTest extends TestCase
                 continue;
             }
 
-            $matches = [];
+            $matches            = [];
             preg_match_all(
                 '/@(?:param|return|var|phpstan-(?:param|return|var|type|import-type|assert|assert-if-true|assert-if-false))\s+[^\n]*\bmixed\b/i',
                 $text,
@@ -120,8 +120,8 @@ final class NoMixedTypeUsageInSrcTest extends TestCase
     #[Test]
     public function srcDoesNotUseMixedTypeDeclarationsOrPhpdocTypes(): void
     {
-        $repoRoot = dirname(__DIR__, 2);
-        $srcRoot  = $repoRoot . '/src';
+        $repoRoot   = dirname(__DIR__, 2);
+        $srcRoot    = $repoRoot . '/src';
 
         $violations = [];
 

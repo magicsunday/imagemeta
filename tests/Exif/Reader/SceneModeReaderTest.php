@@ -63,7 +63,7 @@ final class SceneModeReaderTest extends TestCase
             ExifTag::LIGHT_SOURCE       => new IfdEntry(ExifTag::LIGHT_SOURCE, 3, 1, LightSource::Daylight->value),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
         self::assertSame(0x0F, $reader->flash());
         self::assertSame(MeteringMode::Pattern, $reader->meteringMode());
@@ -85,7 +85,7 @@ final class SceneModeReaderTest extends TestCase
             ExifTag::SHARPNESS  => new IfdEntry(ExifTag::SHARPNESS, 3, 1, Sharpness::Hard->value),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
         self::assertSame(Contrast::Hard, $reader->contrast());
         self::assertSame(Saturation::High, $reader->saturation());
@@ -122,7 +122,7 @@ final class SceneModeReaderTest extends TestCase
             ExifTag::SCENE_TYPE => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, 1),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
         self::assertSame(SceneType::DirectlyPhotographedImage, $reader->sceneType());
     }
@@ -138,9 +138,9 @@ final class SceneModeReaderTest extends TestCase
             ExifTag::SUBJECT_LOCATION => new IfdEntry(ExifTag::SUBJECT_LOCATION, 3, 2, [100, 200]),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
-        $location = $reader->subjectLocation();
+        $location    = $reader->subjectLocation();
         self::assertSame([100, 200], $location);
     }
 
@@ -175,7 +175,7 @@ final class SceneModeReaderTest extends TestCase
             ExifTag::SHADING_CORRECTION              => new IfdEntry(ExifTag::SHADING_CORRECTION, 3, 1, 1),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
         self::assertSame(CorrectionApplied::Applied, $reader->distortionCorrection());
         self::assertSame(CorrectionApplied::NotApplied, $reader->chromaticAberrationCorrection());
@@ -207,7 +207,7 @@ final class SceneModeReaderTest extends TestCase
             ExifTag::NOISE_REDUCTION => new IfdEntry(ExifTag::NOISE_REDUCTION, 3, 1, 2),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
         self::assertSame(NoiseReduction::NormalStrength, $reader->noiseReduction());
     }
@@ -236,7 +236,7 @@ final class SceneModeReaderTest extends TestCase
             ExifTag::DEVELOPMENT_TYPE => new IfdEntry(ExifTag::DEVELOPMENT_TYPE, 3, 1, $packed),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
         self::assertSame(DevelopmentCharacteristic::FaithfulReproduction, $reader->developmentCharacteristic());
         self::assertSame(DevelopmentDefault::Different, $reader->developmentDefault());
@@ -258,7 +258,7 @@ final class SceneModeReaderTest extends TestCase
             ),
         ];
 
-        $reader = $this->createReader($exifEntries);
+        $reader      = $this->createReader($exifEntries);
 
         self::assertSame('Standard process', $reader->developmentTypeDescription());
     }
