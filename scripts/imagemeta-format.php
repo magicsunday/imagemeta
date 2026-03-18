@@ -3330,10 +3330,10 @@ final class MetadataFormatter
      */
     private function formatDuration(float $totalSeconds): string
     {
-        $intSeconds = (int) $totalSeconds;
-        $days       = (int) ($intSeconds / 86400);
-        $hours      = (int) (($intSeconds % 86400) / 3600);
-        $minutes    = (int) (($intSeconds % 3600) / 60);
+        $intSeconds = (int) round($totalSeconds);
+        $days       = intdiv($intSeconds, 86400);
+        $hours      = intdiv($intSeconds % 86400, 3600);
+        $minutes    = intdiv($intSeconds % 3600, 60);
         $seconds    = $intSeconds % 60;
 
         if ($days > 0) {
