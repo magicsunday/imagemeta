@@ -23,16 +23,16 @@ use function trim;
  */
 enum UndefinedTextMarker: string
 {
-    case Ascii                           = 'ASCII';
-    case Unicode                         = 'UNICODE';
-    case Jis                             = 'JIS';
-    case Undefined                       = 'UNDEFINED';
+    case Ascii     = 'ASCII';
+    case Unicode   = 'UNICODE';
+    case Jis       = 'JIS';
+    case Undefined = 'UNDEFINED';
 
-    public const string MARKER_ASCII     = self::Ascii->value;
+    public const string MARKER_ASCII = self::Ascii->value;
 
-    public const string MARKER_UNICODE   = self::Unicode->value;
+    public const string MARKER_UNICODE = self::Unicode->value;
 
-    public const string MARKER_JIS       = self::Jis->value;
+    public const string MARKER_JIS = self::Jis->value;
 
     public const string MARKER_UNDEFINED = self::Undefined->value;
 
@@ -45,7 +45,7 @@ enum UndefinedTextMarker: string
      */
     public static function canonicalMarkerFromPrefix(string $prefix): string
     {
-        $stripped   = trim(str_replace(['\\0', "\0"], '', $prefix));
+        $stripped = trim(str_replace(['\\0', "\0"], '', $prefix));
 
         if ($stripped === '') {
             return self::Undefined->value;

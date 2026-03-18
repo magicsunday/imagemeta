@@ -22,10 +22,10 @@ enum LearningIntention: int
     use EnumFromIntStringNullable;
 
     /** Opt-out of the specified usage. */
-    case OptOut      = 0;
+    case OptOut = 0;
 
     /** Opt-in to the specified usage. */
-    case OptIn       = 1;
+    case OptIn = 1;
 
     /** Intention is unspecified. */
     case Unspecified = 2;

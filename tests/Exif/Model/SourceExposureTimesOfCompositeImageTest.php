@@ -69,12 +69,12 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
             [1, 3],
         ];
 
-        $payload   = $this->buildPayload($summary, $byteOrder, [
+        $payload = $this->buildPayload($summary, $byteOrder, [
             [0.1, 0.2],
             [0.5],
         ]);
 
-        $result    = $this->parseCompositeExposure($payload, $byteOrder);
+        $result = $this->parseCompositeExposure($payload, $byteOrder);
 
         self::assertInstanceOf(SourceExposureTimes::class, $result);
         self::assertSame(5.0, $result->totalExposurePeriod);
@@ -107,11 +107,11 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
             [1, 5],
         ];
 
-        $payload   = $this->buildPayload($summary, $byteOrder, [
+        $payload = $this->buildPayload($summary, $byteOrder, [
             [0.25, 0.5],
         ]);
 
-        $result    = $this->parseCompositeExposure($payload, $byteOrder);
+        $result = $this->parseCompositeExposure($payload, $byteOrder);
 
         self::assertInstanceOf(SourceExposureTimes::class, $result);
         self::assertSame(10.0, $result->totalExposurePeriod);
@@ -134,7 +134,7 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
     #[Test]
     public function returnsNullForTruncatedSequencePayload(): void
     {
-        $summary   = [
+        $summary = [
             [5, 1],
             [3, 1],
             [4, 1],

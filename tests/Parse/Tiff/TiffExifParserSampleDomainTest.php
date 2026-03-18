@@ -187,7 +187,7 @@ final class TiffExifParserSampleDomainTest extends TestCase
         ?int $sMaxType = null,
         ?array $sMaxValues = null,
     ): string {
-        $entries      = [
+        $entries = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -205,21 +205,21 @@ final class TiffExifParserSampleDomainTest extends TestCase
         $payloadByTag = [];
 
         if (($sampleFormatType !== null) && is_array($sampleFormatValues)) {
-            $entries[TiffTag::SAMPLE_FORMAT]      = pack('v', TiffTag::SAMPLE_FORMAT)
+            $entries[TiffTag::SAMPLE_FORMAT] = pack('v', TiffTag::SAMPLE_FORMAT)
                 . pack('v', $sampleFormatType)
                 . pack('V', count($sampleFormatValues));
             $payloadByTag[TiffTag::SAMPLE_FORMAT] = $this->packNumericPayload($sampleFormatType, $sampleFormatValues);
         }
 
         if (($sMinType !== null) && is_array($sMinValues)) {
-            $entries[TiffTag::S_MIN_SAMPLE_VALUE]      = pack('v', TiffTag::S_MIN_SAMPLE_VALUE)
+            $entries[TiffTag::S_MIN_SAMPLE_VALUE] = pack('v', TiffTag::S_MIN_SAMPLE_VALUE)
                 . pack('v', $sMinType)
                 . pack('V', count($sMinValues));
             $payloadByTag[TiffTag::S_MIN_SAMPLE_VALUE] = $this->packNumericPayload($sMinType, $sMinValues);
         }
 
         if (($sMaxType !== null) && is_array($sMaxValues)) {
-            $entries[TiffTag::S_MAX_SAMPLE_VALUE]      = pack('v', TiffTag::S_MAX_SAMPLE_VALUE)
+            $entries[TiffTag::S_MAX_SAMPLE_VALUE] = pack('v', TiffTag::S_MAX_SAMPLE_VALUE)
                 . pack('v', $sMaxType)
                 . pack('V', count($sMaxValues));
             $payloadByTag[TiffTag::S_MAX_SAMPLE_VALUE] = $this->packNumericPayload($sMaxType, $sMaxValues);
@@ -227,12 +227,12 @@ final class TiffExifParserSampleDomainTest extends TestCase
 
         ksort($entries);
 
-        $ifdOffset    = 8;
-        $entryCount   = count($entries);
-        $ifdSize      = 2 + (12 * $entryCount) + 4;
-        $nextOffset   = $ifdOffset + $ifdSize;
-        $ifdEntries   = '';
-        $payloadTail  = '';
+        $ifdOffset   = 8;
+        $entryCount  = count($entries);
+        $ifdSize     = 2 + (12 * $entryCount) + 4;
+        $nextOffset  = $ifdOffset + $ifdSize;
+        $ifdEntries  = '';
+        $payloadTail = '';
 
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {

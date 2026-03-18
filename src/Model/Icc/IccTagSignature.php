@@ -21,57 +21,57 @@ final class IccTagSignature
     /**
      * Profile description tag (desc).
      */
-    public const string PROFILE_DESCRIPTION  = 'desc';
+    public const string PROFILE_DESCRIPTION = 'desc';
 
     /**
      * Profile copyright tag (cprt).
      */
-    public const string PROFILE_COPYRIGHT    = 'cprt';
+    public const string PROFILE_COPYRIGHT = 'cprt';
 
     /**
      * Media white point tag (wtpt).
      */
-    public const string MEDIA_WHITE_POINT    = 'wtpt';
+    public const string MEDIA_WHITE_POINT = 'wtpt';
 
     /**
      * Red matrix column tag (rXYZ).
      */
-    public const string RED_MATRIX_COLUMN    = 'rXYZ';
+    public const string RED_MATRIX_COLUMN = 'rXYZ';
 
     /**
      * Green matrix column tag (gXYZ).
      */
-    public const string GREEN_MATRIX_COLUMN  = 'gXYZ';
+    public const string GREEN_MATRIX_COLUMN = 'gXYZ';
 
     /**
      * Blue matrix column tag (bXYZ).
      */
-    public const string BLUE_MATRIX_COLUMN   = 'bXYZ';
+    public const string BLUE_MATRIX_COLUMN = 'bXYZ';
 
     /**
      * Red tone reproduction curve tag (rTRC).
      */
-    public const string RED_TRC              = 'rTRC';
+    public const string RED_TRC = 'rTRC';
 
     /**
      * Green tone reproduction curve tag (gTRC).
      */
-    public const string GREEN_TRC            = 'gTRC';
+    public const string GREEN_TRC = 'gTRC';
 
     /**
      * Blue tone reproduction curve tag (bTRC).
      */
-    public const string BLUE_TRC             = 'bTRC';
+    public const string BLUE_TRC = 'bTRC';
 
     /**
      * Gray tone reproduction curve tag (kTRC).
      */
-    public const string GRAY_TRC             = 'kTRC';
+    public const string GRAY_TRC = 'kTRC';
 
     /**
      * Luminance tag (lumi).
      */
-    public const string LUMINANCE            = 'lumi';
+    public const string LUMINANCE = 'lumi';
 
     /**
      * Chromatic adaptation matrix tag (chad).
@@ -81,17 +81,17 @@ final class IccTagSignature
     /**
      * Viewing conditions tag (view).
      */
-    public const string VIEWING_CONDITIONS   = 'view';
+    public const string VIEWING_CONDITIONS = 'view';
 
     /**
      * Measurement tag (meas).
      */
-    public const string MEASUREMENT          = 'meas';
+    public const string MEASUREMENT = 'meas';
 
     /**
      * Technology tag (tech).
      */
-    public const string TECHNOLOGY           = 'tech';
+    public const string TECHNOLOGY = 'tech';
 
     private function __construct()
     {

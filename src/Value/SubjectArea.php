@@ -87,8 +87,8 @@ final readonly class SubjectArea
             return null;
         }
 
-        $x      = $values[0];
-        $y      = $values[1];
+        $x = $values[0];
+        $y = $values[1];
 
         return match ($count) {
             2 => new self(SubjectAreaType::Point, $x, $y),

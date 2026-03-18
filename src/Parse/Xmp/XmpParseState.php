@@ -21,39 +21,39 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
 final class XmpParseState
 {
     /** @var array<string, array<int, string>|string|XmpLanguageAlternative> */
-    public array $data              = [];
+    public array $data = [];
 
     /** @var array<string, XmpStructuredValue> */
-    public array $structuredData    = [];
+    public array $structuredData = [];
 
     /** @var array<string, XmpContainer> */
-    public array $containerKinds    = [];
+    public array $containerKinds = [];
 
     /** @var array<string, string> */
     public array $namespacePrefixes = [];
 
     /** @var array<int, array{string, string}> */
-    public array $elementPath       = [];
+    public array $elementPath = [];
 
     /** @var array<int, string> */
-    public array $textBuffers       = [];
+    public array $textBuffers = [];
 
     /** @var array<int, list<string|XmpStructuredValue>> */
-    public array $listBuffers       = [];
+    public array $listBuffers = [];
 
     /** @var array<int, list<array{lang: string, value: string}>> */
-    public array $altBuffers        = [];
+    public array $altBuffers = [];
 
     /** @var array<int, string> */
-    public array $listKinds         = [];
+    public array $listKinds = [];
 
     /** @var array<int, string> */
-    public array $languageBuffers   = [];
+    public array $languageBuffers = [];
 
     /** @var array<int, array<string, array<int, string|XmpStructuredValue>|string|XmpLanguageAlternative|XmpStructuredValue>> */
     public array $structuredBuffers = [];
 
-    public bool $insideRdfGraph     = false;
+    public bool $insideRdfGraph = false;
 
     /**
      * Removes all depth-indexed buffers for the given element depth.

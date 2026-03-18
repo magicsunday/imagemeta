@@ -51,7 +51,7 @@ final class CameraFactoryTest extends TestCase
             sensingMethod: SensingMethod::OneChipColorArea,
         );
 
-        $camera     = $this->createCamera($parsedExif);
+        $camera = $this->createCamera($parsedExif);
 
         self::assertSame('Canon', $camera->make);
         self::assertSame('EOS R6', $camera->model);
@@ -94,7 +94,7 @@ final class CameraFactoryTest extends TestCase
             sensingMethod: null,
         );
 
-        $camera     = $this->createCamera($parsedExif);
+        $camera = $this->createCamera($parsedExif);
 
         self::assertSame('Nikon', $camera->make);
         self::assertNull($camera->model);
@@ -122,8 +122,8 @@ final class CameraFactoryTest extends TestCase
             ExifTag::SENSING_METHOD => new IfdEntry(ExifTag::SENSING_METHOD, 2, 3, 'abc'),
         ];
 
-        $parsedExif  = $this->createParsedExifFromEntries($ifd0Entries, $exifEntries);
-        $camera      = $this->createCamera($parsedExif);
+        $parsedExif = $this->createParsedExifFromEntries($ifd0Entries, $exifEntries);
+        $camera     = $this->createCamera($parsedExif);
 
         // Wrong-typed tags should degrade to null rather than surface garbage values
         self::assertNull($camera->make);
@@ -144,8 +144,8 @@ final class CameraFactoryTest extends TestCase
             ExifTag::FILE_SOURCE => new IfdEntry(ExifTag::FILE_SOURCE, 7, 1, 255),
         ];
 
-        $parsedExif  = $this->createParsedExifFromEntries($ifd0Entries, []);
-        $camera      = $this->createCamera($parsedExif);
+        $parsedExif = $this->createParsedExifFromEntries($ifd0Entries, []);
+        $camera     = $this->createCamera($parsedExif);
 
         // Invalid enum should degrade — either null or the default DigitalCamera
         self::assertTrue(

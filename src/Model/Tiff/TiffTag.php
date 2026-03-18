@@ -30,7 +30,7 @@ final readonly class TiffTag
      * TIFF 6.0 §8 defines this as a 32-bit bitfield indicating the image type.
      * Tag ID: 254 (0x00FE), Type: LONG, Count: 1
      */
-    public const int NEW_SUBFILE_TYPE         = 0x00FE;
+    public const int NEW_SUBFILE_TYPE = 0x00FE;
 
     /**
      * Legacy TIFF 5.0 subfile type value describing the image purpose.
@@ -38,7 +38,7 @@ final readonly class TiffTag
      * Deprecated in TIFF 6.0 but retained for backwards compatibility.
      * Tag ID: 255 (0x00FF), Type: SHORT, Count: 1
      */
-    public const int SUBFILE_TYPE             = 0x00FF;
+    public const int SUBFILE_TYPE = 0x00FF;
 
     /**
      * Thresholding technique applied to image data.
@@ -47,7 +47,7 @@ final readonly class TiffTag
      * Tag ID: 263 (0x0107), Type: SHORT, Count: 1
      * Values: 1 = No dithering/halftoning, 2 = Ordered dither, 3 = Randomized dither
      */
-    public const int THRESHHOLDING            = 0x0107;
+    public const int THRESHHOLDING = 0x0107;
 
     /**
      * Width of a dithering or halftoning matrix cell.
@@ -55,7 +55,7 @@ final readonly class TiffTag
      * Used in conjunction with Threshholding tag for bilevel conversion.
      * Tag ID: 264 (0x0108), Type: SHORT, Count: 1
      */
-    public const int CELL_WIDTH               = 0x0108;
+    public const int CELL_WIDTH = 0x0108;
 
     /**
      * Height of a dithering or halftoning matrix cell.
@@ -63,7 +63,7 @@ final readonly class TiffTag
      * Used in conjunction with Threshholding tag for bilevel conversion.
      * Tag ID: 265 (0x0109), Type: SHORT, Count: 1
      */
-    public const int CELL_LENGTH              = 0x0109;
+    public const int CELL_LENGTH = 0x0109;
 
     /**
      * Logical order of bits within a byte.
@@ -72,7 +72,7 @@ final readonly class TiffTag
      * Tag ID: 266 (0x010A), Type: SHORT, Count: 1
      * Values: 1 = MSB to LSB (default), 2 = LSB to MSB
      */
-    public const int FILL_ORDER               = 0x010A;
+    public const int FILL_ORDER = 0x010A;
 
     /**
      * Name of the scanned document.
@@ -80,7 +80,7 @@ final readonly class TiffTag
      * TIFF 6.0 baseline tag for document imaging applications.
      * Tag ID: 269 (0x010D), Type: ASCII
      */
-    public const int DOCUMENT_NAME            = 0x010D;
+    public const int DOCUMENT_NAME = 0x010D;
 
     /**
      * Minimum component value used in the image.
@@ -88,7 +88,7 @@ final readonly class TiffTag
      * TIFF 6.0 baseline tag for defining data range.
      * Tag ID: 280 (0x0118), Type: SHORT, Count: SamplesPerPixel
      */
-    public const int MIN_SAMPLE_VALUE         = 0x0118;
+    public const int MIN_SAMPLE_VALUE = 0x0118;
 
     /**
      * Maximum component value used in the image.
@@ -96,7 +96,7 @@ final readonly class TiffTag
      * TIFF 6.0 baseline tag for defining data range.
      * Tag ID: 281 (0x0119), Type: SHORT, Count: SamplesPerPixel
      */
-    public const int MAX_SAMPLE_VALUE         = 0x0119;
+    public const int MAX_SAMPLE_VALUE = 0x0119;
 
     /**
      * Name of each page in a multi-page document.
@@ -104,7 +104,7 @@ final readonly class TiffTag
      * TIFF 6.0 baseline tag for multi-page TIFF files.
      * Tag ID: 285 (0x011D), Type: ASCII
      */
-    public const int PAGE_NAME                = 0x011D;
+    public const int PAGE_NAME = 0x011D;
 
     /**
      * X position of the image on the page.
@@ -112,7 +112,7 @@ final readonly class TiffTag
      * TIFF 6.0 baseline tag for page layout control.
      * Tag ID: 286 (0x011E), Type: RATIONAL
      */
-    public const int X_POSITION               = 0x011E;
+    public const int X_POSITION = 0x011E;
 
     /**
      * Y position of the image on the page.
@@ -120,7 +120,7 @@ final readonly class TiffTag
      * TIFF 6.0 baseline tag for page layout control.
      * Tag ID: 287 (0x011F), Type: RATIONAL
      */
-    public const int Y_POSITION               = 0x011F;
+    public const int Y_POSITION = 0x011F;
 
     /**
      * Byte offsets of free memory blocks in the file.
@@ -128,7 +128,7 @@ final readonly class TiffTag
      * TIFF 6.0 baseline tag for memory management (rarely used).
      * Tag ID: 288 (0x0120), Type: LONG
      */
-    public const int FREE_OFFSETS             = 0x0120;
+    public const int FREE_OFFSETS = 0x0120;
 
     /**
      * Sizes of free memory blocks in bytes.
@@ -136,7 +136,7 @@ final readonly class TiffTag
      * TIFF 6.0 baseline tag for memory management (rarely used).
      * Tag ID: 289 (0x0121), Type: LONG
      */
-    public const int FREE_BYTE_COUNTS         = 0x0121;
+    public const int FREE_BYTE_COUNTS = 0x0121;
 
     /**
      * Precision of gray response curve.
@@ -145,7 +145,7 @@ final readonly class TiffTag
      * Tag ID: 290 (0x0122), Type: SHORT, Count: 1
      * Values: 1 = 0.1 units, 2 = 0.001 units, 3 = 0.0001 units, etc.
      */
-    public const int GRAY_RESPONSE_UNIT       = 0x0122;
+    public const int GRAY_RESPONSE_UNIT = 0x0122;
 
     /**
      * Optical density values for each grayscale level.
@@ -153,7 +153,7 @@ final readonly class TiffTag
      * TIFF 6.0 baseline tag for calibrated grayscale imaging.
      * Tag ID: 291 (0x0123), Type: SHORT, Count: 2**BitsPerSample
      */
-    public const int GRAY_RESPONSE_CURVE      = 0x0123;
+    public const int GRAY_RESPONSE_CURVE = 0x0123;
 
     /**
      * Options for Group 3 fax compression.
@@ -162,7 +162,7 @@ final readonly class TiffTag
      * Tag ID: 292 (0x0124), Type: LONG, Count: 1
      * Bit 0: 2D encoding, Bit 1: Uncompressed mode, Bit 2: Fill bits
      */
-    public const int T4_OPTIONS               = 0x0124;
+    public const int T4_OPTIONS = 0x0124;
 
     /**
      * Options for Group 4 fax compression.
@@ -171,7 +171,7 @@ final readonly class TiffTag
      * Tag ID: 293 (0x0125), Type: LONG, Count: 1
      * Bit 0: Uncompressed mode allowed
      */
-    public const int T6_OPTIONS               = 0x0125;
+    public const int T6_OPTIONS = 0x0125;
 
     /**
      * Page number and total pages in a multi-page document.
@@ -179,7 +179,7 @@ final readonly class TiffTag
      * TIFF 6.0 baseline tag. Value[0] = page number, Value[1] = total pages.
      * Tag ID: 297 (0x0129), Type: SHORT, Count: 2
      */
-    public const int PAGE_NUMBER              = 0x0129;
+    public const int PAGE_NUMBER = 0x0129;
 
     /**
      * Host computer name where the image was created.
@@ -187,7 +187,7 @@ final readonly class TiffTag
      * TIFF 6.0 baseline tag. Removed from EXIF 3.0.
      * Tag ID: 316 (0x013C), Type: ASCII
      */
-    public const int HOST_COMPUTER            = 0x013C;
+    public const int HOST_COMPUTER = 0x013C;
 
     /**
      * Mathematical predictor for differencing compression schemes.
@@ -196,7 +196,7 @@ final readonly class TiffTag
      * Tag ID: 317 (0x013D), Type: SHORT, Count: 1
      * Values: 1 = No prediction, 2 = Horizontal differencing
      */
-    public const int PREDICTOR                = 0x013D;
+    public const int PREDICTOR = 0x013D;
 
     /**
      * Color lookup table for palette-color images.
@@ -205,7 +205,7 @@ final readonly class TiffTag
      * Tag ID: 320 (0x0140), Type: SHORT, Count: 3 * (2**BitsPerSample)
      * Structure: Red[0...n-1], Green[0...n-1], Blue[0...n-1]
      */
-    public const int COLOR_MAP                = 0x0140;
+    public const int COLOR_MAP = 0x0140;
 
     /**
      * Range of gray levels for halftone dithering.
@@ -214,7 +214,7 @@ final readonly class TiffTag
      * Tag ID: 321 (0x0141), Type: SHORT, Count: 2
      * Value[0] = highlight gray level, Value[1] = shadow gray level
      */
-    public const int HALFTONE_HINTS           = 0x0141;
+    public const int HALFTONE_HINTS = 0x0141;
 
     /**
      * Width of each image tile in pixels.
@@ -222,7 +222,7 @@ final readonly class TiffTag
      * TIFF 6.0 §15 defines tiled images as an alternative to strip-based storage.
      * Tag ID: 322 (0x0142), Type: SHORT or LONG, Count: 1
      */
-    public const int TILE_WIDTH               = 0x0142;
+    public const int TILE_WIDTH = 0x0142;
 
     /**
      * Height of each image tile in pixels.
@@ -230,7 +230,7 @@ final readonly class TiffTag
      * TIFF 6.0 §15 specifies tile dimensions for tiled image organization.
      * Tag ID: 323 (0x0143), Type: SHORT or LONG, Count: 1
      */
-    public const int TILE_LENGTH              = 0x0143;
+    public const int TILE_LENGTH = 0x0143;
 
     /**
      * Byte offsets to tiled image data blocks.
@@ -238,7 +238,7 @@ final readonly class TiffTag
      * TIFF 6.0 §15 defines tile offsets for random access to tiled images.
      * Tag ID: 324 (0x0144), Type: LONG, Count: TilesPerImage
      */
-    public const int TILE_OFFSETS             = 0x0144;
+    public const int TILE_OFFSETS = 0x0144;
 
     /**
      * Byte counts for each tile.
@@ -246,7 +246,7 @@ final readonly class TiffTag
      * TIFF 6.0 §15 specifies tile byte counts for proper tile data extraction.
      * Tag ID: 325 (0x0145), Type: SHORT or LONG, Count: TilesPerImage
      */
-    public const int TILE_BYTE_COUNTS         = 0x0145;
+    public const int TILE_BYTE_COUNTS = 0x0145;
 
     /**
      * Offsets of child IFDs forming a SubIFD tree.
@@ -255,7 +255,7 @@ final readonly class TiffTag
      * reduced-resolution and alternate representation IFDs below a parent.
      * Tag ID: 330 (0x014A), Type: LONG or IFD8 (BigTIFF), Count: N
      */
-    public const int SUB_IFDS                 = 0x014A;
+    public const int SUB_IFDS = 0x014A;
 
     /**
      * Set of inks used in separated color image.
@@ -264,7 +264,7 @@ final readonly class TiffTag
      * Tag ID: 332 (0x014C), Type: SHORT, Count: 1
      * Values: 1 = CMYK, 2 = Not CMYK (see InkNames)
      */
-    public const int INK_SET                  = 0x014C;
+    public const int INK_SET = 0x014C;
 
     /**
      * Names of each ink used in separated image.
@@ -273,7 +273,7 @@ final readonly class TiffTag
      * Tag ID: 333 (0x014D), Type: ASCII
      * Format: NUL-separated strings, one per ink
      */
-    public const int INK_NAMES                = 0x014D;
+    public const int INK_NAMES = 0x014D;
 
     /**
      * Number of inks in a separated image.
@@ -282,7 +282,7 @@ final readonly class TiffTag
      * Tag ID: 334 (0x014E), Type: SHORT, Count: 1
      * Usually 4 for CMYK, but can be higher for custom inks
      */
-    public const int NUMBER_OF_INKS           = 0x014E;
+    public const int NUMBER_OF_INKS = 0x014E;
 
     /**
      * Component values representing 0% and 100% dot coverage.
@@ -290,7 +290,7 @@ final readonly class TiffTag
      * TIFF 6.0 §16 defines dot range for halftone printing.
      * Tag ID: 336 (0x0150), Type: BYTE or SHORT, Count: 2 or 2*NumberOfInks
      */
-    public const int DOT_RANGE                = 0x0150;
+    public const int DOT_RANGE = 0x0150;
 
     /**
      * Target printer description.
@@ -298,7 +298,7 @@ final readonly class TiffTag
      * TIFF 6.0 §16 defines printer identification for color separations.
      * Tag ID: 337 (0x0151), Type: ASCII
      */
-    public const int TARGET_PRINTER           = 0x0151;
+    public const int TARGET_PRINTER = 0x0151;
 
     /**
      * Description of extra components beyond RGB/CMYK.
@@ -307,7 +307,7 @@ final readonly class TiffTag
      * Tag ID: 338 (0x0152), Type: BYTE, Count: number of extra components
      * Values: 0 = Unspecified, 1 = Associated alpha, 2 = Unassociated alpha
      */
-    public const int EXTRA_SAMPLES            = 0x0152;
+    public const int EXTRA_SAMPLES = 0x0152;
 
     /**
      * Data format of image samples.
@@ -316,7 +316,7 @@ final readonly class TiffTag
      * Tag ID: 339 (0x0153), Type: SHORT, Count: SamplesPerPixel
      * Values: 1 = Unsigned int, 2 = Signed int, 3 = IEEE float, 4 = Undefined
      */
-    public const int SAMPLE_FORMAT            = 0x0153;
+    public const int SAMPLE_FORMAT = 0x0153;
 
     /**
      * Minimum sample value (signed or floating-point).
@@ -324,7 +324,7 @@ final readonly class TiffTag
      * TIFF 6.0 §19 extends MinSampleValue for signed/float data.
      * Tag ID: 340 (0x0154), Type: Any, Count: SamplesPerPixel
      */
-    public const int S_MIN_SAMPLE_VALUE       = 0x0154;
+    public const int S_MIN_SAMPLE_VALUE = 0x0154;
 
     /**
      * Maximum sample value (signed or floating-point).
@@ -332,7 +332,7 @@ final readonly class TiffTag
      * TIFF 6.0 §19 extends MaxSampleValue for signed/float data.
      * Tag ID: 341 (0x0155), Type: Any, Count: SamplesPerPixel
      */
-    public const int S_MAX_SAMPLE_VALUE       = 0x0155;
+    public const int S_MAX_SAMPLE_VALUE = 0x0155;
 
     /**
      * Transfer range for color separation printing.
@@ -341,7 +341,7 @@ final readonly class TiffTag
      * Tag ID: 342 (0x0156), Type: SHORT, Count: 6
      * Structure: BlackMin, WhiteMin, BlackMax, WhiteMax for YCbCr
      */
-    public const int TRANSFER_RANGE           = 0x0156;
+    public const int TRANSFER_RANGE = 0x0156;
 
     /**
      * JPEG coding process used.
@@ -350,7 +350,7 @@ final readonly class TiffTag
      * Tag ID: 512 (0x0200), Type: SHORT, Count: 1
      * Values: 1 = Baseline, 14 = Lossless with Huffman coding
      */
-    public const int JPEG_PROC                = 0x0200;
+    public const int JPEG_PROC = 0x0200;
 
     /**
      * Restart interval for JPEG compression.
@@ -358,7 +358,7 @@ final readonly class TiffTag
      * TIFF 6.0 §22 defines restart marker spacing in JPEG data.
      * Tag ID: 515 (0x0203), Type: SHORT, Count: 1
      */
-    public const int JPEG_RESTART_INTERVAL    = 0x0203;
+    public const int JPEG_RESTART_INTERVAL = 0x0203;
 
     /**
      * Lossless predictor selection values for JPEG.
@@ -374,7 +374,7 @@ final readonly class TiffTag
      * TIFF 6.0 §22 defines bit shift for lossless JPEG precision scaling.
      * Tag ID: 518 (0x0206), Type: SHORT, Count: SamplesPerPixel
      */
-    public const int JPEG_POINT_TRANSFORMS    = 0x0206;
+    public const int JPEG_POINT_TRANSFORMS = 0x0206;
 
     /**
      * Offsets to JPEG quantization tables.
@@ -382,7 +382,7 @@ final readonly class TiffTag
      * TIFF 6.0 §22 points to Q-tables for JPEG decompression.
      * Tag ID: 519 (0x0207), Type: LONG, Count: SamplesPerPixel
      */
-    public const int JPEG_Q_TABLES            = 0x0207;
+    public const int JPEG_Q_TABLES = 0x0207;
 
     /**
      * Offsets to JPEG DC Huffman tables.
@@ -390,7 +390,7 @@ final readonly class TiffTag
      * TIFF 6.0 §22 points to DC Huffman coding tables.
      * Tag ID: 520 (0x0208), Type: LONG, Count: SamplesPerPixel
      */
-    public const int JPEG_DC_TABLES           = 0x0208;
+    public const int JPEG_DC_TABLES = 0x0208;
 
     /**
      * Offsets to JPEG AC Huffman tables.
@@ -398,7 +398,7 @@ final readonly class TiffTag
      * TIFF 6.0 §22 points to AC Huffman coding tables.
      * Tag ID: 521 (0x0209), Type: LONG, Count: SamplesPerPixel
      */
-    public const int JPEG_AC_TABLES           = 0x0209;
+    public const int JPEG_AC_TABLES = 0x0209;
 
     /**
      * Prevent instantiation of this constants-only utility class.

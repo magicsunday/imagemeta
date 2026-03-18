@@ -93,13 +93,13 @@ final class QuickTimeValueDecoderTest extends TestCase
     #[Test]
     public function parseDataBoxStructuredUtf8(): void
     {
-        $decoder    = $this->createDecoder();
-        $text       = 'Hello World';
+        $decoder = $this->createDecoder();
+        $text    = 'Hello World';
         // type=1 (UTF-8), locale=0
         $content    = pack('N', 1) . pack('N', 0) . $text;
         $descriptor = $this->createDataBoxDescriptor($content);
 
-        $result     = $decoder->parseDataBoxStructured($descriptor);
+        $result = $decoder->parseDataBoxStructured($descriptor);
 
         self::assertSame(1, $result['type']);
         self::assertSame(0, $result['locale']);
@@ -112,12 +112,12 @@ final class QuickTimeValueDecoderTest extends TestCase
     #[Test]
     public function parseDataBoxStructuredSignedInt(): void
     {
-        $decoder    = $this->createDecoder();
+        $decoder = $this->createDecoder();
         // type=21 (signed int), locale=0, payload = 1-byte value 200 => signed -56
         $content    = pack('N', 0x15) . pack('N', 0) . pack('C', 200);
         $descriptor = $this->createDataBoxDescriptor($content);
 
-        $result     = $decoder->parseDataBoxStructured($descriptor);
+        $result = $decoder->parseDataBoxStructured($descriptor);
 
         self::assertSame(0x15, $result['type']);
         self::assertSame(-56, $result['value']);
@@ -129,12 +129,12 @@ final class QuickTimeValueDecoderTest extends TestCase
     #[Test]
     public function parseDataBoxStructuredUnsignedInt(): void
     {
-        $decoder    = $this->createDecoder();
+        $decoder = $this->createDecoder();
         // type=22 (unsigned int), locale=0, payload = 2-byte value 0x0102
         $content    = pack('N', 0x16) . pack('N', 0) . pack('n', 0x0102);
         $descriptor = $this->createDataBoxDescriptor($content);
 
-        $result     = $decoder->parseDataBoxStructured($descriptor);
+        $result = $decoder->parseDataBoxStructured($descriptor);
 
         self::assertSame(0x16, $result['type']);
         self::assertSame(258, $result['value']);
@@ -146,8 +146,8 @@ final class QuickTimeValueDecoderTest extends TestCase
     #[Test]
     public function parseDataBoxStructuredUnsignedIntEightBytes(): void
     {
-        $decoder    = $this->createDecoder();
-        $content    = pack('N', 0x16) . pack('N', 0) . pack('N2', 0, 42);
+        $decoder = $this->createDecoder();
+        $content = pack('N', 0x16) . pack('N', 0) . pack('N2', 0, 42);
 
         $descriptor = $this->createDataBoxDescriptor($content);
         $result     = $decoder->parseDataBoxStructured($descriptor);
@@ -162,10 +162,10 @@ final class QuickTimeValueDecoderTest extends TestCase
     #[Test]
     public function parseDataBoxStructuredSignedIntEightBytes(): void
     {
-        $decoder    = $this->createDecoder();
-        $payload    = hex2bin('FFFFFFFFFFFFFFFE');
+        $decoder = $this->createDecoder();
+        $payload = hex2bin('FFFFFFFFFFFFFFFE');
         self::assertIsString($payload);
-        $content    = pack('N', 0x15) . pack('N', 0) . $payload;
+        $content = pack('N', 0x15) . pack('N', 0) . $payload;
 
         $descriptor = $this->createDataBoxDescriptor($content);
         $result     = $decoder->parseDataBoxStructured($descriptor);
@@ -180,12 +180,12 @@ final class QuickTimeValueDecoderTest extends TestCase
     #[Test]
     public function parseDataBoxStructuredFloat32(): void
     {
-        $decoder    = $this->createDecoder();
+        $decoder = $this->createDecoder();
         // type=23 (float32), locale=0
         $content    = pack('N', 0x17) . pack('N', 0) . pack('G', 3.14);
         $descriptor = $this->createDataBoxDescriptor($content);
 
-        $result     = $decoder->parseDataBoxStructured($descriptor);
+        $result = $decoder->parseDataBoxStructured($descriptor);
 
         self::assertSame(0x17, $result['type']);
         self::assertEqualsWithDelta(3.14, $result['value'], 0.001);
@@ -197,12 +197,12 @@ final class QuickTimeValueDecoderTest extends TestCase
     #[Test]
     public function parseDataBoxStructuredFloat64(): void
     {
-        $decoder    = $this->createDecoder();
+        $decoder = $this->createDecoder();
         // type=24 (float64), locale=0
         $content    = pack('N', 0x18) . pack('N', 0) . pack('E', 2.718281828);
         $descriptor = $this->createDataBoxDescriptor($content);
 
-        $result     = $decoder->parseDataBoxStructured($descriptor);
+        $result = $decoder->parseDataBoxStructured($descriptor);
 
         self::assertSame(0x18, $result['type']);
         self::assertEqualsWithDelta(2.718281828, $result['value'], 0.000001);
@@ -214,13 +214,13 @@ final class QuickTimeValueDecoderTest extends TestCase
     #[Test]
     public function parseDataBoxStructuredPreservesLocale(): void
     {
-        $decoder    = $this->createDecoder();
+        $decoder = $this->createDecoder();
         // type=1, locale = country(1) << 16 | language(2)
         $locale     = (1 << 16) | 2;
         $content    = pack('N', 1) . pack('N', $locale) . 'text';
         $descriptor = $this->createDataBoxDescriptor($content);
 
-        $result     = $decoder->parseDataBoxStructured($descriptor);
+        $result = $decoder->parseDataBoxStructured($descriptor);
 
         self::assertSame($locale, $result['locale']);
     }
@@ -254,7 +254,7 @@ final class QuickTimeValueDecoderTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('data box type indicator byte must be 0');
 
-        $decoder    = $this->createDecoder();
+        $decoder = $this->createDecoder();
         // type with non-zero indicator byte (0x01000001)
         $content    = pack('N', 0x01000001) . pack('N', 0) . 'text';
         $descriptor = $this->createDataBoxDescriptor($content);
@@ -357,7 +357,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
 
-        $result  = $decoder->coerceQuickTimeValue('com.apple.quicktime.videoOrientation', '90');
+        $result = $decoder->coerceQuickTimeValue('com.apple.quicktime.videoOrientation', '90');
 
         self::assertSame(90, $result);
     }
@@ -370,7 +370,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
 
-        $result  = $decoder->coerceQuickTimeValue('com.apple.quicktime.location.accuracy.horizontal', '12.5');
+        $result = $decoder->coerceQuickTimeValue('com.apple.quicktime.location.accuracy.horizontal', '12.5');
 
         self::assertSame(12.5, $result);
     }
@@ -383,7 +383,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
 
-        $result  = $decoder->coerceQuickTimeValue('com.apple.quicktime.isHDRVideo', 'true');
+        $result = $decoder->coerceQuickTimeValue('com.apple.quicktime.isHDRVideo', 'true');
 
         self::assertTrue($result);
     }
@@ -396,7 +396,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
 
-        $result  = $decoder->coerceQuickTimeValue('com.apple.quicktime.isHDRVideo', 'false');
+        $result = $decoder->coerceQuickTimeValue('com.apple.quicktime.isHDRVideo', 'false');
 
         self::assertFalse($result);
     }
@@ -409,7 +409,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
 
-        $result  = $decoder->coerceQuickTimeValue('com.example.unknown', 'hello');
+        $result = $decoder->coerceQuickTimeValue('com.example.unknown', 'hello');
 
         self::assertSame('hello', $result);
     }
@@ -422,7 +422,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
 
-        $result  = $decoder->coerceQuickTimeValue('com.apple.quicktime.videoOrientation', 90);
+        $result = $decoder->coerceQuickTimeValue('com.apple.quicktime.videoOrientation', 90);
 
         self::assertSame(90, $result);
     }
@@ -435,7 +435,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
 
-        $result  = $decoder->coerceQuickTimeValue('com.apple.quicktime.videoOrientation', true);
+        $result = $decoder->coerceQuickTimeValue('com.apple.quicktime.videoOrientation', true);
 
         self::assertSame(1, $result);
     }
@@ -448,7 +448,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
 
-        $result  = $decoder->coerceQuickTimeValue('com.apple.quicktime.videoOrientation', 'not-a-number');
+        $result = $decoder->coerceQuickTimeValue('com.apple.quicktime.videoOrientation', 'not-a-number');
 
         self::assertSame('not-a-number', $result);
     }
@@ -461,7 +461,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
 
-        $result  = $decoder->coerceQuickTimeValue('com.apple.quicktime.location.accuracy.horizontal', 'nope');
+        $result = $decoder->coerceQuickTimeValue('com.apple.quicktime.location.accuracy.horizontal', 'nope');
 
         self::assertSame('nope', $result);
     }
@@ -474,7 +474,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
 
-        $result  = $decoder->coerceQuickTimeValue('com.apple.quicktime.isHDRVideo', 'maybe');
+        $result = $decoder->coerceQuickTimeValue('com.apple.quicktime.isHDRVideo', 'maybe');
 
         self::assertSame('maybe', $result);
     }
@@ -491,7 +491,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
 
-        $result  = $decoder->fourccToIndex("\x00\x00\x00\x01");
+        $result = $decoder->fourccToIndex("\x00\x00\x00\x01");
 
         self::assertSame(1, $result);
     }
@@ -532,7 +532,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
         // country=300 (>255), language=400 (>255) — direct codes, no lists needed
-        $locale  = (300 << 16) | 400;
+        $locale = (300 << 16) | 400;
 
         $decoder->validateLocaleIndicator($locale, [], []);
         $this->addToAssertionCount(1);
@@ -593,7 +593,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
 
-        $atoms   = [
+        $atoms = [
             ['type' => 1, 'locale' => (1 << 16) | 1, 'value' => 'specific'],
             ['type' => 1, 'locale' => (1 << 16) | 0, 'value' => 'country-only'],
             ['type' => 1, 'locale' => 0, 'value' => 'default'],
@@ -614,7 +614,7 @@ final class QuickTimeValueDecoderTest extends TestCase
 
         $decoder = $this->createDecoder();
 
-        $atoms   = [
+        $atoms = [
             ['type' => 1, 'locale' => 0, 'value' => 'default'],
             ['type' => 1, 'locale' => (1 << 16) | 1, 'value' => 'specific'],
         ];

@@ -86,10 +86,10 @@ final readonly class ComponentsConverter
             return null;
         }
 
-        $labels     = [];
+        $labels = [];
 
         foreach ($components as $component) {
-            $label    = match ($component) {
+            $label = match ($component) {
                 0       => '-',
                 1       => 'Y',
                 2       => 'Cb',
@@ -137,7 +137,7 @@ final readonly class ComponentsConverter
             return null;
         }
 
-        $parts       = array_values(array_filter(
+        $parts = array_values(array_filter(
             explode(' ', str_replace([',', ';'], ' ', $val)),
             static fn (string $part): bool => $part !== '',
         ));
@@ -150,8 +150,8 @@ final readonly class ComponentsConverter
             return null;
         }
 
-        $horizontal  = (int) $parts[0];
-        $vertical    = (int) $parts[1];
+        $horizontal = (int) $parts[0];
+        $vertical   = (int) $parts[1];
 
         // EXIF 3.0 §4.6.5.1.12: legal values are [2,1] (YCbCr4:2:2) and [2,2] (YCbCr4:2:0)
         $legalValues = [
@@ -159,7 +159,7 @@ final readonly class ComponentsConverter
             [2, 2],
         ];
 
-        $result      = array_any(
+        $result = array_any(
             $legalValues,
             fn ($legal): bool => $horizontal === $legal[0] && $vertical === $legal[1]
         );

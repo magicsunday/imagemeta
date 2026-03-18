@@ -81,7 +81,7 @@ final class ParsedExifCfaPatternTest extends TestCase
      */
     private function parseCfaPattern(array $values): ?CfaPattern
     {
-        $entry      = new IfdEntry(
+        $entry = new IfdEntry(
             ExifTag::CFA_PATTERN,
             7,
             count($values),

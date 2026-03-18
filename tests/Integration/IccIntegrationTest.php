@@ -266,7 +266,7 @@ final class IccIntegrationTest extends TestCase
         $iccProfile  = $this->buildIccProfile($description);
         $iccSegment  = $this->buildIccSegment($iccProfile, sequenceNumber: 1, sequenceCount: 1);
 
-        $metadata    = $this->readMetadataFromJpeg(
+        $metadata = $this->readMetadataFromJpeg(
             $this->buildJpeg(
                 $this->segment(self::MARKER_APP2, $iccSegment),
             ),
@@ -275,7 +275,7 @@ final class IccIntegrationTest extends TestCase
         self::assertCount(1, $metadata->iccSegments);
         self::assertSame($iccProfile, $metadata->iccProfile);
 
-        $structured  = $metadata->structured();
+        $structured = $metadata->structured();
         self::assertSame($description, $structured->technical->colorProfile->profileName);
         self::assertSame('2.4', $structured->technical->colorProfile->profileVersion);
         self::assertSame('XYZ ', $structured->technical->colorProfile->pcs);
@@ -293,14 +293,14 @@ final class IccIntegrationTest extends TestCase
         $iccProfile  = $this->buildIccProfile($description);
 
         // Split the profile into two halves
-        $midpoint    = (int) (strlen($iccProfile) / 2);
-        $chunk1      = substr($iccProfile, 0, $midpoint);
-        $chunk2      = substr($iccProfile, $midpoint);
+        $midpoint = (int) (strlen($iccProfile) / 2);
+        $chunk1   = substr($iccProfile, 0, $midpoint);
+        $chunk2   = substr($iccProfile, $midpoint);
 
-        $segment1    = $this->buildIccSegment($chunk1, sequenceNumber: 1, sequenceCount: 2);
-        $segment2    = $this->buildIccSegment($chunk2, sequenceNumber: 2, sequenceCount: 2);
+        $segment1 = $this->buildIccSegment($chunk1, sequenceNumber: 1, sequenceCount: 2);
+        $segment2 = $this->buildIccSegment($chunk2, sequenceNumber: 2, sequenceCount: 2);
 
-        $metadata    = $this->readMetadataFromJpeg(
+        $metadata = $this->readMetadataFromJpeg(
             $this->buildJpeg(
                 $this->segment(self::MARKER_APP2, $segment1),
                 $this->segment(self::MARKER_APP2, $segment2),
@@ -310,7 +310,7 @@ final class IccIntegrationTest extends TestCase
         self::assertCount(2, $metadata->iccSegments);
         self::assertSame($iccProfile, $metadata->iccProfile);
 
-        $structured  = $metadata->structured();
+        $structured = $metadata->structured();
         self::assertSame($description, $structured->technical->colorProfile->profileName);
         self::assertSame('2.4', $structured->technical->colorProfile->profileVersion);
         self::assertSame('XYZ ', $structured->technical->colorProfile->pcs);
@@ -345,27 +345,27 @@ final class IccIntegrationTest extends TestCase
     private function buildIccProfile(string $description): string
     {
         // Build the desc tag payload: 'desc' + reserved(4) + asciiLength(4) + ascii + NUL
-        $asciiText          = $description . "\0";
-        $asciiLength        = strlen($asciiText);
-        $descPayload        = 'desc'
+        $asciiText   = $description . "\0";
+        $asciiLength = strlen($asciiText);
+        $descPayload = 'desc'
             . "\0\0\0\0"
             . pack('N', $asciiLength)
             . $asciiText;
 
         // Pad desc payload to 4-byte boundary per ICC.1:2022 section 7.3
-        $descPadding        = (4 - (strlen($descPayload) % 4)) % 4;
+        $descPadding = (4 - (strlen($descPayload) % 4)) % 4;
         $descPayload .= str_repeat("\0", $descPadding);
 
         // Tag table: 1 tag entry
-        $tagCount           = 1;
-        $tagTable           = pack('N', $tagCount);
+        $tagCount = 1;
+        $tagTable = pack('N', $tagCount);
 
         // Tag record: signature(4) + offset(4) + size(4)
         // Tag data starts after header(128) + tagCount(4) + tagRecords(12 * tagCount)
-        $tagDataOffset      = 128 + 4 + (12 * $tagCount);
+        $tagDataOffset = 128 + 4 + (12 * $tagCount);
 
         // Align tag data offset to 4-byte boundary
-        $tagDataOffset      = (int) (ceil($tagDataOffset / 4) * 4);
+        $tagDataOffset = (int) (ceil($tagDataOffset / 4) * 4);
 
         $tagTable .= 'desc'
             . pack('N', $tagDataOffset)
@@ -380,10 +380,10 @@ final class IccIntegrationTest extends TestCase
         }
 
         // Total profile size
-        $profileSize        = $tagDataOffset + strlen($descPayload);
+        $profileSize = $tagDataOffset + strlen($descPayload);
 
         // Build the 128-byte header
-        $header             = pack('N', $profileSize);          // 0-3:   Profile size
+        $header = pack('N', $profileSize);          // 0-3:   Profile size
         $header .= 'lcms';                           // 4-7:   CMM type
         $header .= chr(2) . chr(0x40) . "\0\0";     // 8-11:  Version 2.4.0
         $header .= 'mntr';                            // 12-15: Profile class (monitor)
@@ -413,7 +413,7 @@ final class IccIntegrationTest extends TestCase
         $header .= str_repeat("\0", 28);                // 100-127: Reserved
 
         // Ensure header is exactly 128 bytes
-        $header             = str_pad($header, 128, "\0");
+        $header = str_pad($header, 128, "\0");
 
         return $header . $tagTable . str_repeat("\0", $tablePadding) . $descPayload;
     }
@@ -497,7 +497,7 @@ final class IccIntegrationTest extends TestCase
                 self::fail('Unable to rename temporary file');
             }
 
-            $path   = $target;
+            $path = $target;
         }
 
         return $path;

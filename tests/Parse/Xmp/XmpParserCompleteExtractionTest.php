@@ -41,7 +41,7 @@ final class XmpParserCompleteExtractionTest extends TestCase
     #[Test]
     public function parseExtractsAllPropertiesFromMultipleDescriptions(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="XMP Core 4.4.0">
    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
       <rdf:Description rdf:about=""
@@ -111,7 +111,7 @@ XML;
     #[Test]
     public function ignoresXmpMetaWrapperAttributes(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="XMP Core 4.4.0">
    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
       <rdf:Description rdf:about="" xmlns:tiff="http://ns.adobe.com/tiff/1.0/">
@@ -138,7 +138,7 @@ XML;
     #[Test]
     public function parseExtractsDecimalValues(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <rdf:Description xmlns:tiff="http://ns.adobe.com/tiff/1.0/">
       <tiff:XResolution>72.000000</tiff:XResolution>

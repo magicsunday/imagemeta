@@ -59,10 +59,10 @@ final readonly class IlocBoxParser
      */
     public function parseIloc(BoxDescriptor $iloc, int $fileOffsetOrigin = 0): array
     {
-        $win               = $iloc->window;
+        $win = $iloc->window;
         $win->seek(0);
 
-        $header            = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         // ISO/IEC 14496-12 §8.11.3: only versions 0, 1 and 2 are defined.
         // Skip unsupported versions gracefully instead of failing the
@@ -72,7 +72,7 @@ final readonly class IlocBoxParser
             return [];
         }
 
-        $version           = $header->version;
+        $version = $header->version;
 
         // ISO/IEC 14496-12 §8.11.3: offset_size and length_size are packed in 4-bit nibbles
         $offsetLengthSizes = $win->readU8();
@@ -80,9 +80,9 @@ final readonly class IlocBoxParser
         $lengthSize        = $this->validateSizeNibble($offsetLengthSizes & BitMask::LOW_NIBBLE);         // Low nibble
 
         // ISO/IEC 14496-12 §8.11.3: base_offset_size in high nibble, index_size in low nibble (v1/v2)
-        $baseField         = $win->readU8();
-        $baseOffsetSize    = $this->validateSizeNibble(($baseField >> 4) & BitMask::LOW_NIBBLE);
-        $indexSize         = 0;
+        $baseField      = $win->readU8();
+        $baseOffsetSize = $this->validateSizeNibble(($baseField >> 4) & BitMask::LOW_NIBBLE);
+        $indexSize      = 0;
 
         if ($version === 0) {
             // ISO/IEC 14496-12 §8.11.3: for version 0 the low nibble is reserved and must be 0
@@ -93,26 +93,26 @@ final readonly class IlocBoxParser
             $indexSize = $this->validateSizeNibble($baseField & BitMask::LOW_NIBBLE);
         }
 
-        $itemCount         = $version < 2 ? $win->readU16BE() : $win->readU32BE();
+        $itemCount = $version < 2 ? $win->readU16BE() : $win->readU32BE();
 
         if ($itemCount > ParserLimits::MAX_ILOC_ITEMS) {
             throw new ParseError('iloc item count exceeds maximum allowed', 1205);
         }
 
-        $locations         = [];
+        $locations = [];
 
         for ($i = 0; $i < $itemCount; ++$i) {
             // ISO/IEC 14496-12 §8.11.3.2: item_ID is 16-bit for version < 2 and 32-bit for version 2.
             // Note: flags bit 0 indicates hidden_item and does not affect item_ID width.
-            $itemId             = $version < 2 ? $win->readU16BE() : $win->readU32BE();
+            $itemId = $version < 2 ? $win->readU16BE() : $win->readU32BE();
 
             $constructionMethod = ConstructionMethod::FileOffset;
 
             if ($version === 1 || $version === 2) {
                 // ISO/IEC 14496-12 §8.11.3: 12-bit reserved (must be 0) followed by 4-bit construction_method
-                $tmp                = $win->readU16BE();
+                $tmp = $win->readU16BE();
 
-                $method             = ConstructionMethod::tryFrom($tmp & BitMask::LOW_NIBBLE);
+                $method = ConstructionMethod::tryFrom($tmp & BitMask::LOW_NIBBLE);
 
                 if ($method === null) {
                     throw new ParseError('iloc construction_method value out of range', 1207);
@@ -131,10 +131,10 @@ final readonly class IlocBoxParser
             }
 
             /** @var list<array{offset:int,length:int,index:?int}> $extents */
-            $extents            = [];
+            $extents = [];
 
             for ($j = 0; $j < $extentCount; ++$j) {
-                $extentIndex  = null;
+                $extentIndex = null;
 
                 if ($indexSize > 0) {
                     $extentIndex = $this->boxNavigator->readUInt($win, $indexSize);
@@ -186,7 +186,7 @@ final readonly class IlocBoxParser
      */
     public function parseIinf(BoxDescriptor $iinf): array
     {
-        $win        = $iinf->window;
+        $win = $iinf->window;
         $win->seek(0);
 
         // FullBox header (4 bytes) + entry_count (2 for v0, 4 for v1)
@@ -194,7 +194,7 @@ final readonly class IlocBoxParser
             throw new ParseError('iinf box truncated', 1192);
         }
 
-        $header     = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         if (($header->version !== 0) && ($header->version !== 1)) {
             throw new ParseError('unsupported iinf box version', 1193);
@@ -204,7 +204,7 @@ final readonly class IlocBoxParser
             throw new ParseError('unsupported iinf box flags', 1194);
         }
 
-        $version    = $header->version;
+        $version = $header->version;
 
         if (($version === 1) && ($iinf->contentSize < 8)) {
             throw new ParseError('iinf box truncated', 1195);
@@ -216,9 +216,9 @@ final readonly class IlocBoxParser
             throw new ParseError('iinf entry count exceeds maximum allowed', 1196);
         }
 
-        $start      = $win->tell();
-        $items      = [];
-        $index      = 0;
+        $start = $win->tell();
+        $items = [];
+        $index = 0;
 
         foreach ($this->boxNavigator->walkChildren($iinf, $start) as $child) {
             if ($child->type !== BoxType::INFE->value) {
@@ -239,7 +239,7 @@ final readonly class IlocBoxParser
         }
 
         // Reject duplicate item_ID values across infe entries
-        $seenIds    = [];
+        $seenIds = [];
 
         foreach ($items as $item) {
             if (isset($seenIds[$item['id']])) {
@@ -265,7 +265,7 @@ final readonly class IlocBoxParser
      */
     public function parsePitm(BoxDescriptor $pitm): ?int
     {
-        $win    = $pitm->window;
+        $win = $pitm->window;
         $win->seek(0);
 
         // FullBox header (4 bytes) + item_ID (2 for v0, 4 for v1)
@@ -305,14 +305,14 @@ final readonly class IlocBoxParser
      */
     public function parseIref(BoxDescriptor $iref): array
     {
-        $win        = $iref->window;
+        $win = $iref->window;
         $win->seek(0);
 
         if ($iref->contentSize < 4) {
             throw new ParseError('iref box truncated', 1214);
         }
 
-        $header     = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         // Skip unsupported versions/flags gracefully — the spec requires
         // readers to ignore boxes with unrecognized versions.
@@ -385,14 +385,14 @@ final readonly class IlocBoxParser
      */
     private function parseDref(BoxDescriptor $dref): array
     {
-        $win        = $dref->window;
+        $win = $dref->window;
         $win->seek(0);
 
         if ($dref->contentSize < 8) {
             throw new ParseError('dref box truncated', 1172);
         }
 
-        $header     = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         if ($header->version !== 0) {
             throw new ParseError('unsupported dref box version', 1173);
@@ -448,14 +448,14 @@ final readonly class IlocBoxParser
             );
         }
 
-        $win           = $entry->window;
+        $win = $entry->window;
         $win->seek(0);
 
         if ($entry->contentSize < 4) {
             throw new ParseError('dref entry truncated', 1176);
         }
 
-        $header        = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         if ($header->version !== 0) {
             throw new ParseError('unsupported dref entry version', 1177);
@@ -492,9 +492,9 @@ final readonly class IlocBoxParser
             } else {
                 // ISO/IEC 14496-12:2015 §8.7.2.2 (`DataEntryUrnBox`) separates
                 // required `name` and optional `location` string fields.
-                $parts       = explode("\0", $trimmed, 2);
-                $urnName     = $parts[0] !== '' ? $parts[0] : null;
-                $location    = $parts[1] ?? null;
+                $parts    = explode("\0", $trimmed, 2);
+                $urnName  = $parts[0] !== '' ? $parts[0] : null;
+                $location = $parts[1] ?? null;
 
                 if ($urnName === null) {
                     throw new ParseError('dref urn entry requires non-empty name field', 1603);
@@ -532,14 +532,14 @@ final readonly class IlocBoxParser
      */
     private function parseInfe(BoxDescriptor $infe): array
     {
-        $win             = $infe->window;
+        $win = $infe->window;
         $win->seek(0);
 
         if ($infe->contentSize < 8) {
             throw new ParseError('infe box truncated', 1198);
         }
 
-        $header          = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         if ($header->version > 3) {
             throw new ParseError('unsupported infe box version', 1199);
@@ -552,15 +552,15 @@ final readonly class IlocBoxParser
             throw new ParseError('unsupported infe box flags', 1200);
         }
 
-        $hidden          = ($header->flags & 0x01) !== 0;
-        $version         = $header->version;
+        $hidden  = ($header->flags & 0x01) !== 0;
+        $version = $header->version;
 
         if ($version === 0 || $version === 1) {
-            $itemId          = $win->readU16BE();
+            $itemId = $win->readU16BE();
             $win->readU16BE(); // protection index
-            $remaining       = $infe->contentSize - $win->tell();
-            $payload         = $remaining > 0 ? $win->read($remaining) : '';
-            $parts           = $payload === '' ? [] : explode("\0", $payload);
+            $remaining = $infe->contentSize - $win->tell();
+            $payload   = $remaining > 0 ? $win->read($remaining) : '';
+            $parts     = $payload === '' ? [] : explode("\0", $payload);
 
             // ISO/IEC 14496-12 §8.11.6: v0/v1 payload is item_name\0content_type\0[content_encoding\0]
             $name            = $parts[0] ?? null;
@@ -582,17 +582,17 @@ final readonly class IlocBoxParser
         // Note: flags bit 0 indicates hidden_item, not item_ID size.
         // v2: 4 header + 2 item_ID + 2 protection_index + 4 item_type = 12
         // v3: 4 header + 4 item_ID + 2 protection_index + 4 item_type = 14
-        $minSize         = $version === 3 ? 14 : 12;
+        $minSize = $version === 3 ? 14 : 12;
 
         if ($infe->contentSize < $minSize) {
             throw new ParseError('infe box truncated', 1201);
         }
 
-        $id              = $version === 3 ? $win->readU32BE() : $win->readU16BE();
+        $id = $version === 3 ? $win->readU32BE() : $win->readU16BE();
         $win->readU16BE(); // protection index
-        $itemType        = $win->read(4);
-        $remaining       = $infe->contentSize - $win->tell();
-        $payload         = $remaining > 0 ? $win->read($remaining) : '';
+        $itemType  = $win->read(4);
+        $remaining = $infe->contentSize - $win->tell();
+        $payload   = $remaining > 0 ? $win->read($remaining) : '';
 
         // ISO 14496-12: remaining payload is item_name\0content_type\0[content_encoding\0]
         $offset          = 0;
@@ -629,7 +629,7 @@ final readonly class IlocBoxParser
 
         // ISO 14496-12: if item_type == 'mime' and 4+ bytes remain after the
         // NUL-terminated strings, a 4-byte extension_type follows
-        $extensionType   = null;
+        $extensionType = null;
 
         if (($itemType === 'mime') && ((strlen($payload) - $offset) >= 4)) {
             $extensionType = substr($payload, $offset, 4);
@@ -660,12 +660,12 @@ final readonly class IlocBoxParser
      */
     private function parseSingleItemReference(BoxDescriptor $entry, int $irefVersion): array
     {
-        $win            = $entry->window;
+        $win = $entry->window;
         $win->seek(0);
 
         // ID size is determined by iref version, not by each child box
         // iref v0: 16-bit IDs, iref v1: 32-bit IDs
-        $idSize         = $irefVersion === 0 ? 2 : 4;
+        $idSize = $irefVersion === 0 ? 2 : 4;
 
         if ($entry->contentSize < $idSize + 2) {
             throw new ParseError('iref entry truncated', 1217);
@@ -678,15 +678,15 @@ final readonly class IlocBoxParser
             throw new ParseError('iref reference count exceeds maximum allowed', 1218);
         }
 
-        $remaining      = $entry->contentSize - $win->tell();
-        $expected       = $referenceCount * $idSize;
+        $remaining = $entry->contentSize - $win->tell();
+        $expected  = $referenceCount * $idSize;
 
         if ($remaining < $expected) {
             throw new ParseError('iref entry truncated', 1219);
         }
 
-        $relation       = $this->boxNavigator->normalizeFourcc($entry->type);
-        $references     = [];
+        $relation   = $this->boxNavigator->normalizeFourcc($entry->type);
+        $references = [];
 
         for ($i = 0; $i < $referenceCount; ++$i) {
             $toItemId     = $idSize === 2 ? $win->readU16BE() : $win->readU32BE();
@@ -738,7 +738,7 @@ final readonly class IlocBoxParser
             return null;
         }
 
-        $nul    = strpos($payload, "\0", $offset);
+        $nul = strpos($payload, "\0", $offset);
 
         if ($nul === false) {
             $value  = substr($payload, $offset);

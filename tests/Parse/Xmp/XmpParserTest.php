@@ -40,15 +40,15 @@ use ReflectionMethod;
 #[UsesClass(XmpStructuredValue::class)]
 final class XmpParserTest extends TestCase
 {
-    private const string XMP_NS       = 'http://ns.adobe.com/xap/1.0/';
+    private const string XMP_NS = 'http://ns.adobe.com/xap/1.0/';
 
-    private const string DC_NS        = 'http://purl.org/dc/elements/1.1/';
+    private const string DC_NS = 'http://purl.org/dc/elements/1.1/';
 
-    private const string EXIF_NS      = 'http://ns.adobe.com/exif/1.0/';
+    private const string EXIF_NS = 'http://ns.adobe.com/exif/1.0/';
 
-    private const string TIFF_NS      = 'http://ns.adobe.com/tiff/1.0/';
+    private const string TIFF_NS = 'http://ns.adobe.com/tiff/1.0/';
 
-    private const string RDF_NS       = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+    private const string RDF_NS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
 
     private const string IPTC_CORE_NS = 'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/';
 
@@ -59,7 +59,7 @@ final class XmpParserTest extends TestCase
     #[Test]
     public function parseExtractsAttributeProperties(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <x:xmpmeta xmlns:x="adobe:ns:meta/">
   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
@@ -89,7 +89,7 @@ XML;
     #[Test]
     public function parseIgnoresNamespaceDeclarations(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:custom="http://example.com/custom/">
   <rdf:Description custom:property="value" />
@@ -114,7 +114,7 @@ XML;
     #[Test]
     public function parseIgnoresRdfStructuralAttributes(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description rdf:about="Some Resource" dc:title="Test" />
@@ -151,7 +151,7 @@ XML;
     #[Test]
     public function parseIgnoresXmlNamespaceAttributesAsStandaloneProperties(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description xml:lang="en-US" xml:space="preserve" dc:title="Test" />
@@ -171,7 +171,7 @@ XML;
     #[Test]
     public function parsePreservesLanguageAlternatives(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description>
@@ -203,7 +203,7 @@ XML;
     #[Test]
     public function parsePreservesBagContainerKind(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description>
@@ -228,7 +228,7 @@ XML;
     #[Test]
     public function parsePreservesSeqContainerKind(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description>
@@ -253,7 +253,7 @@ XML;
     #[Test]
     public function parsePreservesAltContainerKind(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description>
@@ -278,7 +278,7 @@ XML;
     #[Test]
     public function parseSimpleTextPropertyHasNoContainerKind(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:xmp="http://ns.adobe.com/xap/1.0/">
   <rdf:Description>
@@ -299,7 +299,7 @@ XML;
     #[Test]
     public function parsePreservesSimpleValueWithXmlLangQualifier(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description>
@@ -320,7 +320,7 @@ XML;
     #[Test]
     public function parsePreservesEmptyScalarText(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description>
@@ -341,7 +341,7 @@ XML;
     #[Test]
     public function parsePreservesEmptyElementText(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description>
@@ -362,7 +362,7 @@ XML;
     #[Test]
     public function parsePreservesEmptyAttributeValues(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description dc:title="" />
@@ -381,7 +381,7 @@ XML;
     #[Test]
     public function parseHandlesEmptyAndNonEmptyValuesMixed(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/"
          xmlns:xmp="http://ns.adobe.com/xap/1.0/">
@@ -413,7 +413,7 @@ XML;
     #[Test]
     public function parsePreservesEmptyListItems(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description>
@@ -440,7 +440,7 @@ XML;
     #[Test]
     public function parseExtractsCustomNamespaceAttributes(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:drone-dji="http://www.dji.com/drone-dji/1.0/">
   <rdf:Description
@@ -455,7 +455,7 @@ XML;
         $parser   = new XmpParser();
         $document = $parser->parse($xml);
 
-        $djiNs    = 'http://www.dji.com/drone-dji/1.0/';
+        $djiNs = 'http://www.dji.com/drone-dji/1.0/';
 
         self::assertSame('+51.242990270', $document->get($djiNs, 'GpsLatitude'));
         self::assertSame('+12.794229252', $document->get($djiNs, 'GpsLongitude'));
@@ -470,7 +470,7 @@ XML;
     #[Test]
     public function parseExtractsMixedAttributesAndElements(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:xmp="http://ns.adobe.com/xap/1.0/"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -499,7 +499,7 @@ XML;
     #[Test]
     public function parseExtractsValuesFromRdfValueElements(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <x:xmpmeta xmlns:x="adobe:ns:meta/">
   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
     <rdf:Description rdf:about=""
@@ -537,7 +537,7 @@ XML;
     #[Test]
     public function parseExtractsParseTypeResourceAsStructuredProperty(): void
     {
-        $xml         = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:Iptc4xmpCore="http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/">
   <rdf:Description>
@@ -566,7 +566,7 @@ XML;
     #[Test]
     public function parseExtractsNestedParseTypeResourceStructure(): void
     {
-        $xml         = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:Iptc4xmpCore="http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/">
   <rdf:Description>
@@ -587,7 +587,7 @@ XML;
         self::assertInstanceOf(XmpStructuredValue::class, $contactInfo);
         self::assertSame('Berlin', $contactInfo->get(self::IPTC_CORE_NS, 'CiAdrCity'));
 
-        $address     = $contactInfo->get(self::IPTC_CORE_NS, 'CiAdrExtadr');
+        $address = $contactInfo->get(self::IPTC_CORE_NS, 'CiAdrExtadr');
         self::assertInstanceOf(XmpStructuredValue::class, $address);
         self::assertSame('Main Street 1', $address->get(self::IPTC_CORE_NS, 'Street'));
         self::assertSame('5', $address->get(self::IPTC_CORE_NS, 'HouseNumber'));
@@ -599,7 +599,7 @@ XML;
     #[Test]
     public function parseKeepsSimpleAndContainerPropertiesWhenParseTypeResourceExists(): void
     {
-        $xml         = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/"
          xmlns:tiff="http://ns.adobe.com/tiff/1.0/"
@@ -619,7 +619,7 @@ XML;
 </rdf:RDF>
 XML;
 
-        $document    = (new XmpParser())->parse($xml);
+        $document = (new XmpParser())->parse($xml);
 
         self::assertSame('DJI', $document->get(self::TIFF_NS, 'Make'));
         self::assertSame(['one', 'two'], $document->get(self::DC_NS, 'subject'));
@@ -636,7 +636,7 @@ XML;
     #[Test]
     public function parseExtractsCompleteExifAndTiffSample(): void
     {
-        $xml          = <<<XML
+        $xml = <<<XML
 <x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="XMP Core 4.4.0">
    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
       <rdf:Description rdf:about=""
@@ -675,7 +675,7 @@ XML;
 </x:xmpmeta>
 XML;
 
-        $document     = (new XmpParser())->parse($xml);
+        $document = (new XmpParser())->parse($xml);
 
         $expectedExif = [
             'ExposureTime'      => '0.020000',
@@ -730,7 +730,7 @@ XML;
     #[Test]
     public function parseExtractsScalarAndBagValues(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <x:xmpmeta xmlns:x="adobe:ns:meta/">
   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
@@ -801,7 +801,7 @@ XML;
     #[Test]
     public function parseCapturesValuesFromGenericNamespaces(): void
     {
-        $xml      = '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+        $xml = '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns="urn:example"><value>captured</value></rdf:Description>'
             . '</rdf:RDF>';
 
@@ -816,7 +816,7 @@ XML;
     #[Test]
     public function extractsPrefixedNamespaceMapping(): void
     {
-        $xml      = '<root xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>ok</dc:title></root>';
+        $xml = '<root xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>ok</dc:title></root>';
 
         $document = (new XmpParser())->parse($xml);
 
@@ -830,7 +830,7 @@ XML;
     #[Test]
     public function extractsDefaultNamespaceMappingWithEmptyPrefix(): void
     {
-        $xml      = '<root xmlns="urn:default"><value>ok</value></root>';
+        $xml = '<root xmlns="urn:default"><value>ok</value></root>';
 
         $document = (new XmpParser())->parse($xml);
 
@@ -844,7 +844,7 @@ XML;
     #[Test]
     public function keepsPrefixedMappingsWhenDefaultNamespaceExists(): void
     {
-        $xml      = '<root xmlns="urn:default" xmlns:dc="http://purl.org/dc/elements/1.1/">'
+        $xml = '<root xmlns="urn:default" xmlns:dc="http://purl.org/dc/elements/1.1/">'
             . '<dc:title>ok</dc:title>'
             . '</root>';
 
@@ -863,7 +863,7 @@ XML;
     #[Test]
     public function parsePreservesMixedTextAndCdata(): void
     {
-        $xml      = '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+        $xml = '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/">'
             . '<dc:title>Prefix <![CDATA[<tag> & middle]]> suffix</dc:title>'
             . '</rdf:Description>'
@@ -871,7 +871,7 @@ XML;
 
         $document = (new XmpParser())->parse($xml);
 
-        $key      = '{' . self::DC_NS . '}title';
+        $key = '{' . self::DC_NS . '}title';
         self::assertSame('Prefix <tag> & middle suffix', $document->get(self::DC_NS, 'title'));
         self::assertArrayHasKey($key, $document->data);
         self::assertSame('Prefix <tag> & middle suffix', $document->find('title'));
@@ -884,7 +884,7 @@ XML;
     #[Test]
     public function parseExtractsMultipleCustomNamespaces(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <x:xmpmeta xmlns:x="adobe:ns:meta/">
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 <rdf:Description rdf:about="DJI Meta Data"
@@ -916,7 +916,7 @@ XML;
         $document = $parser->parse($xml);
 
         // Validate DJI drone namespace
-        $djiNs    = 'http://www.dji.com/drone-dji/1.0/';
+        $djiNs = 'http://www.dji.com/drone-dji/1.0/';
         self::assertSame('1.6', $document->get($djiNs, 'Version'));
         self::assertSame('+51.242990270', $document->get($djiNs, 'GpsLatitude'));
         self::assertSame('NEO', $document->get($djiNs, 'ProductName'));
@@ -926,12 +926,12 @@ XML;
         self::assertSame('single', $document->get($cameraNs, 'FileType'));
 
         // Validate Adobe Camera Raw Settings namespace
-        $crsNs    = 'http://ns.adobe.com/camera-raw-settings/1.0/';
+        $crsNs = 'http://ns.adobe.com/camera-raw-settings/1.0/';
         self::assertSame('7.0', $document->get($crsNs, 'Version'));
         self::assertSame('False', $document->get($crsNs, 'HasSettings'));
 
         // Validate Google Panorama namespace
-        $gpanoNs  = 'http://ns.google.com/photos/1.0/panorama/';
+        $gpanoNs = 'http://ns.google.com/photos/1.0/panorama/';
         self::assertSame('equirectangular', $document->get($gpanoNs, 'ProjectionType'));
 
         // Also validate standard namespaces still work
@@ -971,7 +971,7 @@ XML;
     #[Test]
     public function parseExtractsDepthMapProperties(): void
     {
-        $xml      = <<<XML
+        $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:GDepth="http://ns.google.com/photos/1.0/depthmap/">
   <rdf:Description
@@ -986,7 +986,7 @@ XML;
         $parser   = new XmpParser();
         $document = $parser->parse($xml);
 
-        $depthNs  = 'http://ns.google.com/photos/1.0/depthmap/';
+        $depthNs = 'http://ns.google.com/photos/1.0/depthmap/';
 
         self::assertSame('ZGVwdGg=', $document->get($depthNs, 'Data'));
         self::assertSame('image/png', $document->get($depthNs, 'Mime'));
@@ -1000,7 +1000,7 @@ XML;
     #[Test]
     public function parseTrimXmlWhitespaceFromTextValues(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description>
@@ -1021,7 +1021,7 @@ XML;
     #[Test]
     public function parseFiltersRdfResourceAndDatatypeAttributes(): void
     {
-        $xml      = <<<'XML_WRAP'
+        $xml = <<<'XML_WRAP'
             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
                      xmlns:dc="http://purl.org/dc/elements/1.1/">
               <rdf:Description>
@@ -1047,7 +1047,7 @@ XML;
     #[Test]
     public function parsePreservesEmptyRdfLiItems(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description>
@@ -1074,7 +1074,7 @@ XML;
     #[Test]
     public function rejectsDuplicateXmlLangInAlt(): void
     {
-        $xml    = <<<XML
+        $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description>
@@ -1103,7 +1103,7 @@ XML;
     #[Test]
     public function rejectsMissingXmlLangInAlt(): void
     {
-        $xml    = <<<XML
+        $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description>
@@ -1132,7 +1132,7 @@ XML;
         $openLayers   = str_repeat('<xmp:Layer>', $nestingDepth);
         $closeLayers  = str_repeat('</xmp:Layer>', $nestingDepth);
 
-        $xml          = <<<XML
+        $xml = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <x:xmpmeta xmlns:x="adobe:ns:meta/">
   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
@@ -1143,7 +1143,7 @@ XML;
 </x:xmpmeta>
 XML;
 
-        $parser       = new XmpParser();
+        $parser = new XmpParser();
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(ParseError::XMP_XML_DEPTH_LIMIT_EXCEEDED);
@@ -1160,7 +1160,7 @@ XML;
     #[Test]
     public function returnsEmptyDocumentWithoutRdfGraph(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
 <root xmlns:tiff="http://ns.adobe.com/tiff/1.0/">
   <tiff:Make>FakeCamera</tiff:Make>
@@ -1182,7 +1182,7 @@ XML;
     #[Test]
     public function ignoresPropertiesOutsideRdfGraph(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
 <x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="XMP Core 5.0">
   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
@@ -1207,7 +1207,7 @@ XML;
     #[Test]
     public function parsesValidXmpPacketWithXmpmeta(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
 <x:xmpmeta xmlns:x="adobe:ns:meta/">
   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
@@ -1238,8 +1238,8 @@ XML;
         $state->listBuffers = [1 => ['root'], 3 => ['child']];
         $state->listKinds   = [1 => 'Bag', 3 => 'Alt'];
 
-        $method             = new ReflectionMethod(XmpParser::class, 'findParentListBuffer');
-        $result             = $method->invoke(
+        $method = new ReflectionMethod(XmpParser::class, 'findParentListBuffer');
+        $result = $method->invoke(
             new XmpParser(),
             $state,
             5,
@@ -1261,7 +1261,7 @@ XML;
     #[Test]
     public function findParentListBufferReturnsNullWithoutParentList(): void
     {
-        $state  = new XmpParseState();
+        $state = new XmpParseState();
 
         $method = new ReflectionMethod(XmpParser::class, 'findParentListBuffer');
         $result = $method->invoke(
@@ -1282,7 +1282,7 @@ XML;
     #[Test]
     public function qualifiedPropertyPreservesRdfValueAndQualifier(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:tiff="http://ns.adobe.com/tiff/1.0/">
   <rdf:Description>
@@ -1308,7 +1308,7 @@ XML;
     #[Test]
     public function qualifiedPropertyDoesNotLeakQualifierAsTopLevel(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:tiff="http://ns.adobe.com/tiff/1.0/">
   <rdf:Description>
@@ -1353,7 +1353,7 @@ XML;
     #[Test]
     public function parseExtractsMwgRsFaceRegionsFromBag(): void
     {
-        $xml          = <<<'XML'
+        $xml = <<<'XML'
 <x:xmpmeta xmlns:x="adobe:ns:meta/">
   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
     <rdf:Description rdf:about=""
@@ -1398,35 +1398,35 @@ XML;
 </x:xmpmeta>
 XML;
 
-        $mwgRsNs      = 'http://www.metadataworkinggroup.com/schemas/regions/';
-        $stAreaNs     = 'http://ns.adobe.com/xmp/sType/Area#';
-        $stDimNs      = 'http://ns.adobe.com/xmp/sType/Dimensions#';
+        $mwgRsNs  = 'http://www.metadataworkinggroup.com/schemas/regions/';
+        $stAreaNs = 'http://ns.adobe.com/xmp/sType/Area#';
+        $stDimNs  = 'http://ns.adobe.com/xmp/sType/Dimensions#';
 
-        $document     = (new XmpParser())->parse($xml);
+        $document = (new XmpParser())->parse($xml);
 
         // Regions is a structured property
-        $regions      = $document->get($mwgRsNs, 'Regions');
+        $regions = $document->get($mwgRsNs, 'Regions');
         self::assertInstanceOf(XmpStructuredValue::class, $regions);
 
         // AppliedToDimensions is a nested structured value
-        $dimensions   = $regions->get($mwgRsNs, 'AppliedToDimensions');
+        $dimensions = $regions->get($mwgRsNs, 'AppliedToDimensions');
         self::assertInstanceOf(XmpStructuredValue::class, $dimensions);
         self::assertSame('4032', $dimensions->get($stDimNs, 'w'));
         self::assertSame('3024', $dimensions->get($stDimNs, 'h'));
         self::assertSame('pixel', $dimensions->get($stDimNs, 'unit'));
 
         // RegionList is a list of structured values
-        $regionList   = $regions->get($mwgRsNs, 'RegionList');
+        $regionList = $regions->get($mwgRsNs, 'RegionList');
         self::assertIsArray($regionList);
         self::assertCount(2, $regionList);
 
         // First face region
-        $firstRegion  = $regionList[0];
+        $firstRegion = $regionList[0];
         self::assertInstanceOf(XmpStructuredValue::class, $firstRegion);
         self::assertSame('John Doe', $firstRegion->get($mwgRsNs, 'Name'));
         self::assertSame('Face', $firstRegion->get($mwgRsNs, 'Type'));
 
-        $firstArea    = $firstRegion->get($mwgRsNs, 'Area');
+        $firstArea = $firstRegion->get($mwgRsNs, 'Area');
         self::assertInstanceOf(XmpStructuredValue::class, $firstArea);
         self::assertSame('0.4567', $firstArea->get($stAreaNs, 'x'));
         self::assertSame('0.2890', $firstArea->get($stAreaNs, 'y'));
@@ -1440,7 +1440,7 @@ XML;
         self::assertSame('Jane Smith', $secondRegion->get($mwgRsNs, 'Name'));
         self::assertSame('Face', $secondRegion->get($mwgRsNs, 'Type'));
 
-        $secondArea   = $secondRegion->get($mwgRsNs, 'Area');
+        $secondArea = $secondRegion->get($mwgRsNs, 'Area');
         self::assertInstanceOf(XmpStructuredValue::class, $secondArea);
         self::assertSame('0.7123', $secondArea->get($stAreaNs, 'x'));
         self::assertSame('0.3456', $secondArea->get($stAreaNs, 'y'));
@@ -1464,7 +1464,7 @@ XML;
     #[Test]
     public function parseExtractsSingleMwgRsRegionWithExtensions(): void
     {
-        $xml        = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:mwg-rs="http://www.metadataworkinggroup.com/schemas/regions/"
          xmlns:stArea="http://ns.adobe.com/xmp/sType/Area#">
@@ -1491,24 +1491,24 @@ XML;
 </rdf:RDF>
 XML;
 
-        $mwgRsNs    = 'http://www.metadataworkinggroup.com/schemas/regions/';
-        $stAreaNs   = 'http://ns.adobe.com/xmp/sType/Area#';
+        $mwgRsNs  = 'http://www.metadataworkinggroup.com/schemas/regions/';
+        $stAreaNs = 'http://ns.adobe.com/xmp/sType/Area#';
 
-        $document   = (new XmpParser())->parse($xml);
-        $regions    = $document->get($mwgRsNs, 'Regions');
+        $document = (new XmpParser())->parse($xml);
+        $regions  = $document->get($mwgRsNs, 'Regions');
         self::assertInstanceOf(XmpStructuredValue::class, $regions);
 
         $regionList = $regions->get($mwgRsNs, 'RegionList');
         self::assertIsArray($regionList);
         self::assertCount(1, $regionList);
 
-        $region     = $regionList[0];
+        $region = $regionList[0];
         self::assertInstanceOf(XmpStructuredValue::class, $region);
         self::assertSame('Buddy', $region->get($mwgRsNs, 'Name'));
         self::assertSame('Pet', $region->get($mwgRsNs, 'Type'));
         self::assertSame('12.5', $region->get($mwgRsNs, 'Rotation'));
 
-        $area       = $region->get($mwgRsNs, 'Area');
+        $area = $region->get($mwgRsNs, 'Area');
         self::assertInstanceOf(XmpStructuredValue::class, $area);
         self::assertSame('0.5', $area->get($stAreaNs, 'x'));
         self::assertSame('0.5', $area->get($stAreaNs, 'y'));
@@ -1525,7 +1525,7 @@ XML;
     #[Test]
     public function parseHandlesEmptyMwgRsRegionList(): void
     {
-        $xml        = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:mwg-rs="http://www.metadataworkinggroup.com/schemas/regions/">
   <rdf:Description>
@@ -1539,10 +1539,10 @@ XML;
 </rdf:RDF>
 XML;
 
-        $mwgRsNs    = 'http://www.metadataworkinggroup.com/schemas/regions/';
+        $mwgRsNs = 'http://www.metadataworkinggroup.com/schemas/regions/';
 
-        $document   = (new XmpParser())->parse($xml);
-        $regions    = $document->get($mwgRsNs, 'Regions');
+        $document = (new XmpParser())->parse($xml);
+        $regions  = $document->get($mwgRsNs, 'Regions');
         self::assertInstanceOf(XmpStructuredValue::class, $regions);
 
         // Empty RegionList produces an empty string (no list items)
@@ -1557,7 +1557,7 @@ XML;
     #[Test]
     public function parseExtractsStructuredBagItemsInsideStructuredParent(): void
     {
-        $xml       = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:test="http://example.com/test/">
   <rdf:Description>
@@ -1579,22 +1579,22 @@ XML;
 </rdf:RDF>
 XML;
 
-        $testNs    = 'http://example.com/test/';
-        $document  = (new XmpParser())->parse($xml);
+        $testNs   = 'http://example.com/test/';
+        $document = (new XmpParser())->parse($xml);
 
         $container = $document->get($testNs, 'Container');
         self::assertInstanceOf(XmpStructuredValue::class, $container);
 
-        $items     = $container->get($testNs, 'Items');
+        $items = $container->get($testNs, 'Items');
         self::assertIsArray($items);
         self::assertCount(2, $items);
 
-        $first     = $items[0];
+        $first = $items[0];
         self::assertInstanceOf(XmpStructuredValue::class, $first);
         self::assertSame('Alpha', $first->get($testNs, 'Label'));
         self::assertSame('10', $first->get($testNs, 'Score'));
 
-        $second    = $items[1];
+        $second = $items[1];
         self::assertInstanceOf(XmpStructuredValue::class, $second);
         self::assertSame('Beta', $second->get($testNs, 'Label'));
         self::assertSame('20', $second->get($testNs, 'Score'));
@@ -1606,7 +1606,7 @@ XML;
     #[Test]
     public function parseIgnoresStrayRdfLiOutsideContainer(): void
     {
-        $xml      = <<<'XML'
+        $xml = <<<'XML'
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:dc="http://purl.org/dc/elements/1.1/">
   <rdf:Description>

@@ -61,9 +61,9 @@ final class GpsExifReaderTest extends TestCase
             ]),
         ];
 
-        $reader     = $this->createReader($gpsEntries);
+        $reader = $this->createReader($gpsEntries);
 
-        $gps        = $reader->gps();
+        $gps = $reader->gps();
         $this->addToAssertionCount(1);
         self::assertNotNull($gps['lat']);
         self::assertNotNull($gps['lon']);
@@ -116,7 +116,7 @@ final class GpsExifReaderTest extends TestCase
             ]),
         ];
 
-        $reader     = $this->createReader($gpsEntries);
+        $reader = $this->createReader($gpsEntries);
 
         self::assertSame('2024-06-15', $reader->gpsDateStamp());
         self::assertSame('14:30:00', $reader->gpsTimeStampString());

@@ -106,10 +106,10 @@ final class BinaryPlistDecoderTest extends TestCase
     #[Test]
     public function decodeRejectsOffsetTableOverlappingTrailer(): void
     {
-        $decoder        = new BinaryPlistDecoder();
+        $decoder = new BinaryPlistDecoder();
 
-        $object         = chr(0x50 | 0x01) . 'A';
-        $payload        = $this->buildPlistWithSingleObject($object);
+        $object  = chr(0x50 | 0x01) . 'A';
+        $payload = $this->buildPlistWithSingleObject($object);
 
         // Increase the reported object count so the offset table would overlap the trailer.
         $trailerOffset  = strlen($payload) - 32;
@@ -117,7 +117,7 @@ final class BinaryPlistDecoderTest extends TestCase
         $invalidTrailer = substr($trailer, 0, 8)
             . $this->packUint64BE(2)
             . substr($trailer, 16);
-        $payload        = substr($payload, 0, $trailerOffset) . $invalidTrailer;
+        $payload = substr($payload, 0, $trailerOffset) . $invalidTrailer;
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('offset table exceeds payload bounds');
@@ -131,10 +131,10 @@ final class BinaryPlistDecoderTest extends TestCase
     #[Test]
     public function decodeRejectsObjectOffsetOutsideTableRange(): void
     {
-        $decoder          = new BinaryPlistDecoder();
+        $decoder = new BinaryPlistDecoder();
 
-        $object           = chr(0x50 | 0x01) . 'A';
-        $payload          = $this->buildPlistWithSingleObject($object);
+        $object  = chr(0x50 | 0x01) . 'A';
+        $payload = $this->buildPlistWithSingleObject($object);
 
         $offsetTableStart = strlen($payload) - 32 - 1; // single 1-byte entry
         $payload          = substr($payload, 0, $offsetTableStart)
@@ -153,10 +153,10 @@ final class BinaryPlistDecoderTest extends TestCase
     #[Test]
     public function decodeRejectsTopObjectIndexOutOfRange(): void
     {
-        $decoder        = new BinaryPlistDecoder();
+        $decoder = new BinaryPlistDecoder();
 
-        $object         = chr(0x50 | 0x01) . 'A';
-        $payload        = $this->buildPlistWithSingleObject($object);
+        $object  = chr(0x50 | 0x01) . 'A';
+        $payload = $this->buildPlistWithSingleObject($object);
 
         // Set top object index to 1 while only a single object exists.
         $trailerOffset  = strlen($payload) - 32;
@@ -164,7 +164,7 @@ final class BinaryPlistDecoderTest extends TestCase
         $invalidTrailer = substr($trailer, 0, 16)
             . $this->packUint64BE(1)
             . substr($trailer, 24);
-        $payload        = substr($payload, 0, $trailerOffset) . $invalidTrailer;
+        $payload = substr($payload, 0, $trailerOffset) . $invalidTrailer;
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Top level object index is out of range');
@@ -297,7 +297,7 @@ final class BinaryPlistDecoderTest extends TestCase
         $marker   = 0x80 | (9 - 1); // size-1 in info nibble
         $object   = chr($marker) . $uidBytes;
 
-        $result   = $this->decodeSingleObject($object);
+        $result = $this->decodeSingleObject($object);
 
         self::assertInstanceOf(ApplePlistScalar::class, $result);
         self::assertSame('18446744073709551616', $result->value());
@@ -316,18 +316,18 @@ final class BinaryPlistDecoderTest extends TestCase
         // 0: Array [ ref 1, ref 2 ]
         // 1: Integer 1
         // 2: ASCII "Hi"
-        $int1    = chr(0x10) . chr(0x01);
-        $ascii   = chr(0x50 | 0x02) . 'Hi';
-        $array   = $this->buildArrayObject(
+        $int1  = chr(0x10) . chr(0x01);
+        $ascii = chr(0x50 | 0x02) . 'Hi';
+        $array = $this->buildArrayObject(
             [1, 2]
         ); // objectRefSize=1
 
         $payload = $this->buildPlistWithObjects([$array, $int1, $ascii], 0);
 
-        $result  = $decoder->decode($payload);
+        $result = $decoder->decode($payload);
         self::assertInstanceOf(ApplePlistArray::class, $result);
 
-        $values  = $result->values();
+        $values = $result->values();
         self::assertCount(2, $values);
 
         self::assertInstanceOf(ApplePlistScalar::class, $values[0]);
@@ -352,11 +352,11 @@ final class BinaryPlistDecoderTest extends TestCase
         // 2: Key "B"
         // 3: Int 1
         // 4: Int 2
-        $keyA    = chr(0x50 | 0x01) . 'A';
-        $keyB    = chr(0x50 | 0x01) . 'B';
-        $int1    = chr(0x10) . chr(0x01);
-        $int2    = chr(0x10) . chr(0x02);
-        $dict    = $this->buildDictionaryObject(
+        $keyA = chr(0x50 | 0x01) . 'A';
+        $keyB = chr(0x50 | 0x01) . 'B';
+        $int1 = chr(0x10) . chr(0x01);
+        $int2 = chr(0x10) . chr(0x02);
+        $dict = $this->buildDictionaryObject(
             [
                 1,
                 2,
@@ -369,10 +369,10 @@ final class BinaryPlistDecoderTest extends TestCase
 
         $payload = $this->buildPlistWithObjects([$dict, $keyA, $keyB, $int1, $int2], 0);
 
-        $result  = $decoder->decode($payload);
+        $result = $decoder->decode($payload);
         self::assertInstanceOf(ApplePlistDictionary::class, $result);
 
-        $map     = $result->entries();
+        $map = $result->entries();
         self::assertArrayHasKey('A', $map);
         self::assertArrayHasKey('B', $map);
 
@@ -409,10 +409,10 @@ final class BinaryPlistDecoderTest extends TestCase
         $topObjectIdx  = 0;
 
         // Offset table with one entry: start of object (8)
-        $offsetTable   = chr($objectOffset);
+        $offsetTable = chr($objectOffset);
 
         // Trailer (32 bytes)
-        $trailer       = str_repeat("\x00", 6)
+        $trailer = str_repeat("\x00", 6)
             . chr($offsetIntSize)
             . chr($objectRefSize)
             . $this->packUint64BE($numObjects)
@@ -431,10 +431,10 @@ final class BinaryPlistDecoderTest extends TestCase
      */
     private function buildPlistWithObjects(array $objects, int $topIndex): string
     {
-        $header           = 'bplist00';
+        $header = 'bplist00';
 
-        $offsets          = [];
-        $cursor           = strlen($header);
+        $offsets = [];
+        $cursor  = strlen($header);
 
         foreach ($objects as $bytes) {
             $offsets[] = $cursor;
@@ -444,18 +444,18 @@ final class BinaryPlistDecoderTest extends TestCase
         $offsetTableStart = $cursor;
 
         // We only need 1-byte offsets for these tiny payloads.
-        $offsetIntSize    = 1;
-        $objectRefSize    = 1;
-        $numObjects       = count($objects);
+        $offsetIntSize = 1;
+        $objectRefSize = 1;
+        $numObjects    = count($objects);
 
-        $offsetTable      = '';
+        $offsetTable = '';
 
         foreach ($offsets as $off) {
             // Tests are designed to keep offsets < 256
             $offsetTable .= chr($off);
         }
 
-        $trailer          = str_repeat("\x00", 6)
+        $trailer = str_repeat("\x00", 6)
             . chr($offsetIntSize)
             . chr($objectRefSize)
             . $this->packUint64BE($numObjects)
@@ -489,7 +489,7 @@ final class BinaryPlistDecoderTest extends TestCase
     public function rejectsDeepNesting(): void
     {
         // Build 65 array objects: each references the next, the last references a scalar
-        $objects   = [];
+        $objects = [];
 
         for ($i = 0; $i < 65; ++$i) {
             $objects[] = $this->buildArrayObject([$i + 1]);
@@ -498,7 +498,7 @@ final class BinaryPlistDecoderTest extends TestCase
         // Object 65 is a simple integer (value 42)
         $objects[] = "\x10\x2A";
 
-        $plist     = $this->buildPlistWithObjects($objects, 0);
+        $plist = $this->buildPlistWithObjects($objects, 0);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1954);
@@ -556,12 +556,12 @@ final class BinaryPlistDecoderTest extends TestCase
     #[Test]
     public function toleratesPaddingBetweenOffsetTableAndTrailer(): void
     {
-        $header           = 'bplist00';
-        $objectBytes      = "\x08"; // boolean false
-        $objectOffset     = strlen($header); // 8
-        $offsetTable      = chr($objectOffset); // 1 byte: offset to object 0
+        $header       = 'bplist00';
+        $objectBytes  = "\x08"; // boolean false
+        $objectOffset = strlen($header); // 8
+        $offsetTable  = chr($objectOffset); // 1 byte: offset to object 0
 
-        $padding          = "\xFF\xFF"; // 2 bytes of padding
+        $padding = "\xFF\xFF"; // 2 bytes of padding
 
         $offsetTableStart = $objectOffset + strlen($objectBytes); // 9
         $trailer          = str_repeat("\x00", 6)
@@ -571,7 +571,7 @@ final class BinaryPlistDecoderTest extends TestCase
             . $this->packUint64BE(0) // topObjectIndex
             . $this->packUint64BE($offsetTableStart);
 
-        $plist            = $header . $objectBytes . $offsetTable . $padding . $trailer;
+        $plist = $header . $objectBytes . $offsetTable . $padding . $trailer;
 
         $this->expectNotToPerformAssertions();
 

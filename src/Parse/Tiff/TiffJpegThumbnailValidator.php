@@ -56,14 +56,14 @@ final readonly class TiffJpegThumbnailValidator
             return;
         }
 
-        $compression     = $ifd1->get(ExifTag::COMPRESSION);
+        $compression = $ifd1->get(ExifTag::COMPRESSION);
 
         if (!($compression instanceof IfdEntry) || ($compression->value !== 6)) {
             return;
         }
 
-        $offsetEntry     = $ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT);
-        $lengthEntry     = $ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
+        $offsetEntry = $ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT);
+        $lengthEntry = $ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
 
         if (!($offsetEntry instanceof IfdEntry) || !($lengthEntry instanceof IfdEntry)) {
             return;
@@ -82,13 +82,13 @@ final readonly class TiffJpegThumbnailValidator
 
         // Postel's Law: skip thumbnail when the declared range exceeds the TIFF
         // data bounds rather than aborting the entire parse.
-        $blobSize        = $this->buffer->size();
+        $blobSize = $this->buffer->size();
 
         if (($thumbnailOffset < 0) || ($thumbnailOffset > $blobSize) || ($thumbnailLength > $blobSize) || ($thumbnailOffset > ($blobSize - $thumbnailLength))) {
             return;
         }
 
-        $cursor          = $this->buffer->tell();
+        $cursor = $this->buffer->tell();
 
         try {
             $this->buffer->seek($thumbnailOffset);

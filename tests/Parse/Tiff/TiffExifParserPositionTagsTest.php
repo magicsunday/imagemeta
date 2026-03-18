@@ -151,7 +151,7 @@ final class TiffExifParserPositionTagsTest extends TestCase
         int $yPositionNumerator,
         int $yPositionDenominator,
     ): string {
-        $entries      = [
+        $entries = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -175,12 +175,12 @@ final class TiffExifParserPositionTagsTest extends TestCase
 
         ksort($entries);
 
-        $ifdOffset    = 8;
-        $entryCount   = count($entries);
-        $ifdSize      = 2 + (12 * $entryCount) + 4;
-        $nextOffset   = $ifdOffset + $ifdSize;
-        $ifdEntries   = '';
-        $payloadTail  = '';
+        $ifdOffset   = 8;
+        $entryCount  = count($entries);
+        $ifdSize     = 2 + (12 * $entryCount) + 4;
+        $nextOffset  = $ifdOffset + $ifdSize;
+        $ifdEntries  = '';
+        $payloadTail = '';
 
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {

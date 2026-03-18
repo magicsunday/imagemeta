@@ -41,7 +41,7 @@ final class QuickTimeMetaTest extends TestCase
             'com.apple.quicktime.location.ISO6709' => '+12.345-067.890/',
         ];
 
-        $meta       = new QuickTimeMeta($keys);
+        $meta = new QuickTimeMeta($keys);
 
         self::assertSame($identifier, $meta->contentIdentifier());
     }
@@ -104,11 +104,11 @@ final class QuickTimeMetaTest extends TestCase
     #[Test]
     public function allValuesReturnsDataAtomsForKey(): void
     {
-        $key    = QuickTimeMeta::CONTENT_IDENTIFIER_KEY;
-        $atom1  = new QuickTimeDataAtom(1, 0, 'first');
-        $atom2  = new QuickTimeDataAtom(1, 0x00010002, 'second');
+        $key   = QuickTimeMeta::CONTENT_IDENTIFIER_KEY;
+        $atom1 = new QuickTimeDataAtom(1, 0, 'first');
+        $atom2 = new QuickTimeDataAtom(1, 0x00010002, 'second');
 
-        $meta   = new QuickTimeMeta(
+        $meta = new QuickTimeMeta(
             [$key => 'first'],
             [$key => [$atom1, $atom2]],
         );

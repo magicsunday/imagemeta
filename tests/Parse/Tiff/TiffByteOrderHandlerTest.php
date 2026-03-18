@@ -31,24 +31,24 @@ final class TiffByteOrderHandlerTest extends TestCase
     #[Test]
     public function readsUnsignedIntegersForBothByteOrders(): void
     {
-        $handler  = new TiffByteOrderHandler();
+        $handler = new TiffByteOrderHandler();
 
         $little16 = new MemoryBuffer("\x34\x12");
         self::assertSame(0x1234, $handler->readUint16($little16, Endian::Little));
 
-        $big16    = new MemoryBuffer("\x12\x34");
+        $big16 = new MemoryBuffer("\x12\x34");
         self::assertSame(0x1234, $handler->readUint16($big16, Endian::Big));
 
         $little32 = new MemoryBuffer("\x78\x56\x34\x12");
         self::assertSame(0x12345678, $handler->readUint32($little32, Endian::Little));
 
-        $big32    = new MemoryBuffer("\x12\x34\x56\x78");
+        $big32 = new MemoryBuffer("\x12\x34\x56\x78");
         self::assertSame(0x12345678, $handler->readUint32($big32, Endian::Big));
 
         $little64 = new MemoryBuffer("\x08\x07\x06\x05\x04\x03\x02\x01");
         self::assertSame(0x0102030405060708, $handler->readUint64($little64, Endian::Little)->toInt('little 64'));
 
-        $big64    = new MemoryBuffer("\x01\x02\x03\x04\x05\x06\x07\x08");
+        $big64 = new MemoryBuffer("\x01\x02\x03\x04\x05\x06\x07\x08");
         self::assertSame(0x0102030405060708, $handler->readUint64($big64, Endian::Big)->toInt('big 64'));
     }
 

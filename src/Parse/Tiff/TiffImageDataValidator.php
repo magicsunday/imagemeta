@@ -48,14 +48,14 @@ final readonly class TiffImageDataValidator
         $stripOffsetsEntry    = $ifd0->get(ExifTag::STRIP_OFFSETS);
         $stripByteCountsEntry = $ifd0->get(ExifTag::STRIP_BYTE_COUNTS);
 
-        $hasStripFields       = ($stripOffsetsEntry instanceof IfdEntry)
+        $hasStripFields = ($stripOffsetsEntry instanceof IfdEntry)
             || ($stripByteCountsEntry instanceof IfdEntry);
 
         if (!$hasStripFields) {
             return;
         }
 
-        $hasTileFields        = ($ifd0->get(TiffTag::TILE_WIDTH) instanceof IfdEntry)
+        $hasTileFields = ($ifd0->get(TiffTag::TILE_WIDTH) instanceof IfdEntry)
             || ($ifd0->get(TiffTag::TILE_LENGTH) instanceof IfdEntry)
             || ($ifd0->get(TiffTag::TILE_OFFSETS) instanceof IfdEntry)
             || ($ifd0->get(TiffTag::TILE_BYTE_COUNTS) instanceof IfdEntry);
@@ -64,7 +64,7 @@ final readonly class TiffImageDataValidator
             return;
         }
 
-        $rowsPerStripEntry    = $ifd0->get(ExifTag::ROWS_PER_STRIP);
+        $rowsPerStripEntry = $ifd0->get(ExifTag::ROWS_PER_STRIP);
 
         if (!$rowsPerStripEntry instanceof IfdEntry || !is_int($rowsPerStripEntry->value) || $rowsPerStripEntry->value <= 0) {
             throw new ParseError(
@@ -73,15 +73,15 @@ final readonly class TiffImageDataValidator
             );
         }
 
-        $imageLengthEntry     = $ifd0->get(ExifTag::IMAGE_LENGTH);
+        $imageLengthEntry = $ifd0->get(ExifTag::IMAGE_LENGTH);
 
         if (!$imageLengthEntry instanceof IfdEntry || !is_int($imageLengthEntry->value) || $imageLengthEntry->value <= 0) {
             return;
         }
 
-        $stripsPerImage       = intdiv($imageLengthEntry->value + $rowsPerStripEntry->value - 1, $rowsPerStripEntry->value);
+        $stripsPerImage = intdiv($imageLengthEntry->value + $rowsPerStripEntry->value - 1, $rowsPerStripEntry->value);
 
-        [$expectedCount]      = $this->resolvePlanarAdjustedCount($ifd0, $stripsPerImage);
+        [$expectedCount] = $this->resolvePlanarAdjustedCount($ifd0, $stripsPerImage);
 
         if ($stripOffsetsEntry instanceof IfdEntry) {
             $offsetCount = $this->countStripFieldValues($stripOffsetsEntry);
@@ -126,12 +126,12 @@ final readonly class TiffImageDataValidator
      */
     public function validateTileLayoutConsistency(Ifd $ifd0): void
     {
-        $tileWidthEntry           = $ifd0->get(TiffTag::TILE_WIDTH);
-        $tileLengthEntry          = $ifd0->get(TiffTag::TILE_LENGTH);
-        $tileOffsetsEntry         = $ifd0->get(TiffTag::TILE_OFFSETS);
-        $tileByteCountsEntry      = $ifd0->get(TiffTag::TILE_BYTE_COUNTS);
+        $tileWidthEntry      = $ifd0->get(TiffTag::TILE_WIDTH);
+        $tileLengthEntry     = $ifd0->get(TiffTag::TILE_LENGTH);
+        $tileOffsetsEntry    = $ifd0->get(TiffTag::TILE_OFFSETS);
+        $tileByteCountsEntry = $ifd0->get(TiffTag::TILE_BYTE_COUNTS);
 
-        $hasTileFields            = ($tileWidthEntry instanceof IfdEntry)
+        $hasTileFields = ($tileWidthEntry instanceof IfdEntry)
             || ($tileLengthEntry instanceof IfdEntry)
             || ($tileOffsetsEntry instanceof IfdEntry)
             || ($tileByteCountsEntry instanceof IfdEntry);
@@ -223,17 +223,17 @@ final readonly class TiffImageDataValidator
         IfdEntry $tileOffsetsEntry,
         IfdEntry $tileByteCountsEntry,
     ): void {
-        $imageWidthEntry                       = $ifd0->get(ExifTag::IMAGE_WIDTH);
-        $imageLengthEntry                      = $ifd0->get(ExifTag::IMAGE_LENGTH);
+        $imageWidthEntry  = $ifd0->get(ExifTag::IMAGE_WIDTH);
+        $imageLengthEntry = $ifd0->get(ExifTag::IMAGE_LENGTH);
 
         if (!$imageWidthEntry instanceof IfdEntry || !is_int($imageWidthEntry->value) || ($imageWidthEntry->value <= 0) || !$imageLengthEntry instanceof IfdEntry || !is_int($imageLengthEntry->value) || ($imageLengthEntry->value <= 0)) {
             return;
         }
 
-        $tilesAcross                           = intdiv($imageWidthEntry->value + $tileWidth - 1, $tileWidth);
-        $tilesDown                             = intdiv($imageLengthEntry->value + $tileLength - 1, $tileLength);
+        $tilesAcross = intdiv($imageWidthEntry->value + $tileWidth - 1, $tileWidth);
+        $tilesDown   = intdiv($imageLengthEntry->value + $tileLength - 1, $tileLength);
 
-        $tilesPerImage                         = $tilesAcross * $tilesDown;
+        $tilesPerImage = $tilesAcross * $tilesDown;
 
         [$expectedCount, $planarConfiguration] = $this->resolvePlanarAdjustedCount($ifd0, $tilesPerImage);
 
@@ -261,7 +261,7 @@ final readonly class TiffImageDataValidator
         int $tilesDown,
         int $planarConfiguration,
     ): void {
-        $offsetCount    = $this->countStripFieldValues($tileOffsetsEntry);
+        $offsetCount = $this->countStripFieldValues($tileOffsetsEntry);
 
         if ($offsetCount !== $expectedCount) {
             throw new ParseError(
@@ -318,14 +318,14 @@ final readonly class TiffImageDataValidator
             $planarConfiguration = $planarEntry->value;
         }
 
-        $samplesPerPixel     = 1;
-        $samplesEntry        = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+        $samplesPerPixel = 1;
+        $samplesEntry    = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
 
         if (($samplesEntry instanceof IfdEntry) && is_int($samplesEntry->value) && ($samplesEntry->value > 0)) {
             $samplesPerPixel = $samplesEntry->value;
         }
 
-        $expectedCount       = $baseCount;
+        $expectedCount = $baseCount;
 
         if ($planarConfiguration === 2) {
             $expectedCount *= $samplesPerPixel;

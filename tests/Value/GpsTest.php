@@ -40,14 +40,14 @@ final class GpsTest extends TestCase
     #[Test]
     public function calculatesSignedCoordinates(): void
     {
-        $position            = new GpsPosition(
+        $position = new GpsPosition(
             latitude: 12.5,
             longitude: 7.5,
             latitudeRef: GpsLatLonRef::South,
             longitudeRef: GpsLatLonRef::West,
         );
 
-        $gps                 = new Gps(
+        $gps = new Gps(
             position: $position,
         );
 
@@ -76,10 +76,10 @@ final class GpsTest extends TestCase
     #[Test]
     public function returnsUtcTimestamp(): void
     {
-        $timestamp    = new DateTimeImmutable('2024-05-17 12:34:56', new DateTimeZone('Europe/Berlin'));
+        $timestamp = new DateTimeImmutable('2024-05-17 12:34:56', new DateTimeZone('Europe/Berlin'));
 
-        $timing       = new GpsTiming(timestamp: $timestamp);
-        $gps          = new Gps(timing: $timing);
+        $timing = new GpsTiming(timestamp: $timestamp);
+        $gps    = new Gps(timing: $timing);
 
         self::assertNotNull($gps->timing);
 

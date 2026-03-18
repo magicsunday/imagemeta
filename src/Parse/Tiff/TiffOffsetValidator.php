@@ -134,7 +134,7 @@ final readonly class TiffOffsetValidator
             throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context), 1333);
         }
 
-        $size      = $this->buffer->size();
+        $size = $this->buffer->size();
 
         if ($length > $size) {
             throw new BoundsError(sprintf('%s length %d exceeds TIFF data length.', $context, $length), 1334);

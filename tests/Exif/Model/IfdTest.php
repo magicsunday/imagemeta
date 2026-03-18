@@ -66,7 +66,7 @@ final class IfdTest extends TestCase
         $cameraEntry = new IfdEntry(0x0110, 2, 1, 'Camera Model');
         $artistEntry = new IfdEntry(0x013B, 2, 1, 'MagicSunday');
 
-        $ifd         = new Ifd([
+        $ifd = new Ifd([
             $cameraEntry->tag => $cameraEntry,
             $artistEntry->tag => $artistEntry,
         ]);

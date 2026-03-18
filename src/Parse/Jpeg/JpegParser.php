@@ -38,7 +38,7 @@ final class JpegParser implements JpegParserInterface
     /**
      * Signature identifying MP Index payloads inside APP2 markers (EXIF 3.0 §4.6.4).
      */
-    private const string MPF_SIGNATURE         = "MPF\0";
+    private const string MPF_SIGNATURE = "MPF\0";
 
     /**
      * Signature identifying Adobe APP14 payloads.
@@ -49,31 +49,31 @@ final class JpegParser implements JpegParserInterface
      * Minimum payload length for a valid Adobe APP14 segment:
      * 5-byte signature + 2-byte DCTEncodeVersion + 2-byte Flags0 + 2-byte Flags1 + 1-byte ColorTransform.
      */
-    private const int ADOBE_APP14_MIN_LENGTH   = 12;
+    private const int ADOBE_APP14_MIN_LENGTH = 12;
 
     /**
      * Minimum payload length for a valid JFIF APP0 segment:
      * 5-byte "JFIF\0" + 1 major + 1 minor + 1 units + 2 Xdensity + 2 Ydensity
      * + 1 Xthumbnail + 1 Ythumbnail = 14 bytes total.
      */
-    private const int JFIF_MIN_LENGTH          = 14;
+    private const int JFIF_MIN_LENGTH = 14;
 
-    private bool $parsed                       = false;
+    private bool $parsed = false;
 
     /** @var array<int, string> */
-    private array $flashPixStreams             = [];
+    private array $flashPixStreams = [];
 
     /** @var list<string> */
-    private array $mpfSegments                 = [];
+    private array $mpfSegments = [];
 
-    private ?MpfDocument $mpfDocument          = null;
+    private ?MpfDocument $mpfDocument = null;
 
     /** @var list<string> */
-    private array $iptcPayloads                = [];
+    private array $iptcPayloads = [];
 
-    private ?int $adobeApp14ColorTransform     = null;
+    private ?int $adobeApp14ColorTransform = null;
 
-    private ?JfifSegment $jfifSegment          = null;
+    private ?JfifSegment $jfifSegment = null;
 
     private readonly MarkerHandlerRegistry $markerHandlerRegistry;
 
@@ -91,7 +91,7 @@ final class JpegParser implements JpegParserInterface
 
     private JumbfTransportParser $jumbfParser;
 
-    private ?int $firstSofOffset               = null;
+    private ?int $firstSofOffset = null;
 
     /**
      * Initialises the extractor with a seekable stream.
@@ -101,17 +101,17 @@ final class JpegParser implements JpegParserInterface
      */
     public function __construct(private readonly Stream $stream, private readonly JpegParserConfig $config = new JpegParserConfig())
     {
-        $this->scanner               = new JpegMarkerScanner($stream, $config);
-        $this->frameValidator        = new JpegFrameValidator($this->scanner);
-        $this->iccAssembler          = new IccProfileAssembler($config->maxIccProfileSize);
-        $this->audioParser           = new JpegAudioSegmentParser();
-        $this->app1Handler           = new JpegApp1Handler($config->extendedXmpGuidLength, $config->maxExtendedXmpSize);
-        $this->flashPixAssembler     = new FlashPixStreamAssembler(
+        $this->scanner           = new JpegMarkerScanner($stream, $config);
+        $this->frameValidator    = new JpegFrameValidator($this->scanner);
+        $this->iccAssembler      = new IccProfileAssembler($config->maxIccProfileSize);
+        $this->audioParser       = new JpegAudioSegmentParser();
+        $this->app1Handler       = new JpegApp1Handler($config->extendedXmpGuidLength, $config->maxExtendedXmpSize);
+        $this->flashPixAssembler = new FlashPixStreamAssembler(
             $config->flashPixMaxContentEntries,
             $config->flashPixMaxStreamSize,
             $config->maxFlashPixTotalSize,
         );
-        $this->jumbfParser           = new JumbfTransportParser($this->app1Handler->appendXmpPacket(...));
+        $this->jumbfParser = new JumbfTransportParser($this->app1Handler->appendXmpPacket(...));
 
         $this->markerHandlerRegistry = $this->createDefaultMarkerHandlerRegistry();
     }
@@ -334,8 +334,8 @@ final class JpegParser implements JpegParserInterface
         $this->iccAssembler->reset();
         $this->audioParser->reset();
         $this->frameValidator->reset();
-        $this->jumbfParser              = new JumbfTransportParser($this->app1Handler->appendXmpPacket(...));
-        $this->flashPixAssembler        = new FlashPixStreamAssembler(
+        $this->jumbfParser       = new JumbfTransportParser($this->app1Handler->appendXmpPacket(...));
+        $this->flashPixAssembler = new FlashPixStreamAssembler(
             $this->config->flashPixMaxContentEntries,
             $this->config->flashPixMaxStreamSize,
             $this->config->maxFlashPixTotalSize,
@@ -494,7 +494,7 @@ final class JpegParser implements JpegParserInterface
      */
     private function handleMpfSegment(string $payload, int $offset): void
     {
-        $signatureLength     = strlen(self::MPF_SIGNATURE);
+        $signatureLength = strlen(self::MPF_SIGNATURE);
 
         if (strlen($payload) <= $signatureLength) {
             throw new ParseError(sprintf('MPF segment at offset %d is too short', $offset), 1280);

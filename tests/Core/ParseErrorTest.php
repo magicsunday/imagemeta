@@ -65,7 +65,7 @@ final class ParseErrorTest extends TestCase
         return [
             'stream short read' => [
                 static function (): void {
-                    $handle  = fopen('php://temp', 'r+b');
+                    $handle = fopen('php://temp', 'r+b');
 
                     if ($handle === false) {
                         Assert::fail('Unable to create temporary stream.');

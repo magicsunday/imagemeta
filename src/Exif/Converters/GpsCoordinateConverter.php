@@ -44,7 +44,7 @@ final readonly class GpsCoordinateConverter
      *
      * @var list<string>
      */
-    private const array GPS_LATITUDE_REF_VALUES  = ['N', 'S'];
+    private const array GPS_LATITUDE_REF_VALUES = ['N', 'S'];
 
     /**
      * EXIF 3.0 §4.6.7.1.4 GPSLongitudeRef: 'E' (east) or 'W' (west).
@@ -115,12 +115,12 @@ final readonly class GpsCoordinateConverter
             return [null, null];
         }
 
-        $ref      = $refEntry?->value;
-        $refNorm  = $this->validateGpsRef(
+        $ref     = $refEntry?->value;
+        $refNorm = $this->validateGpsRef(
             is_string($ref) ? strtoupper(trim($ref)) : null,
             $allowedRefValues,
         );
-        $pairs    = $this->resolveCoordinatePairs($valEntry?->value);
+        $pairs = $this->resolveCoordinatePairs($valEntry?->value);
 
         return [$refNorm, $pairs];
     }
@@ -149,7 +149,7 @@ final readonly class GpsCoordinateConverter
 
         // EXIF 3.0 §4.6.8: GPSLatitude/GPSLongitude require exactly 3 RATIONAL
         // components (degrees, minutes, seconds). Non-conformant counts are rejected.
-        $numericValues  = $val instanceof ExifRationalList
+        $numericValues = $val instanceof ExifRationalList
             ? array_map(
                 $this->rationalConverter->toFloat(...),
                 $val->values,
@@ -159,15 +159,15 @@ final readonly class GpsCoordinateConverter
                 $val->values,
             );
 
-        $components     = $this->validateDmsComponents($numericValues);
+        $components = $this->validateDmsComponents($numericValues);
 
         if ($components === null) {
             return null;
         }
 
-        $deg            = $components[0];
-        $min            = $components[1];
-        $sec            = $components[2];
+        $deg = $components[0];
+        $min = $components[1];
+        $sec = $components[2];
 
         // Tolerate minutes/seconds >= 60 — carry over into the next component.
         if ($sec >= 60.0) {
@@ -180,7 +180,7 @@ final readonly class GpsCoordinateConverter
             $min = fmod($min, 60.0);
         }
 
-        $sign           = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
+        $sign = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
 
         // EXIF 3.0 §4.6.7.1.3 and §4.6.7.1.5 define nominal latitude/longitude
         // ranges, but reader-side Postel handling keeps out-of-range camera data

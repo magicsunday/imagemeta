@@ -108,7 +108,7 @@ final class DngTagTest extends TestCase
         // Exclude the deprecated alias which intentionally duplicates PROFILE_TONE_CURVE
         unset($constants['PROFILE_HUE_SAT_MAP_DATA_3']);
 
-        $values     = array_values($constants);
+        $values = array_values($constants);
 
         self::assertCount(count($values), array_unique($values));
     }
@@ -126,7 +126,7 @@ final class DngTagTest extends TestCase
             $constant = $reflection->getReflectionConstant($name);
             self::assertInstanceOf(ReflectionClassConstant::class, $constant);
 
-            $doc      = (string) $constant->getDocComment();
+            $doc = (string) $constant->getDocComment();
             self::assertNotSame('', $doc, sprintf('Missing PHPDoc for %s.', $name));
             self::assertTrue(str_contains($doc, 'Legacy tag'), sprintf('Legacy marker missing for %s.', $name));
             self::assertTrue(str_contains($doc, 'DNG Version 1.4.0.0'), sprintf('Historical source missing for %s.', $name));
@@ -152,13 +152,13 @@ final class DngTagTest extends TestCase
                 continue;
             }
 
-            $doc                  = (string) $constant->getDocComment();
+            $doc = (string) $constant->getDocComment();
             self::assertNotSame('', $doc, sprintf('Missing PHPDoc for %s.', $constant->getName()));
 
             $hasVersionProvenance = str_contains($doc, 'DNG Version ')
                 || str_contains($doc, 'DNG 1.');
-            $hasLegacyMarker      = str_contains($doc, 'Legacy tag');
-            $hasAlternateSource   = str_contains($doc, 'TIFF/EP')
+            $hasLegacyMarker    = str_contains($doc, 'Legacy tag');
+            $hasAlternateSource = str_contains($doc, 'TIFF/EP')
                 || str_contains($doc, 'EXIF')
                 || str_contains($doc, 'Alias');
 

@@ -48,7 +48,7 @@ final class TiffImageDataValidatorTest extends TestCase
     {
         $validator = $this->createValidator(2048);
 
-        $ifd       = new Ifd([
+        $ifd = new Ifd([
             ExifTag::IMAGE_WIDTH       => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 64),
             ExifTag::IMAGE_LENGTH      => new IfdEntry(ExifTag::IMAGE_LENGTH, TiffConst::TYPE_SHORT, 1, 64),
             ExifTag::ROWS_PER_STRIP    => new IfdEntry(ExifTag::ROWS_PER_STRIP, TiffConst::TYPE_SHORT, 1, 64),
@@ -69,7 +69,7 @@ final class TiffImageDataValidatorTest extends TestCase
 
         $validator = $this->createValidator();
 
-        $ifd       = new Ifd([
+        $ifd = new Ifd([
             ExifTag::IMAGE_WIDTH       => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 64),
             ExifTag::IMAGE_LENGTH      => new IfdEntry(ExifTag::IMAGE_LENGTH, TiffConst::TYPE_SHORT, 1, 64),
             ExifTag::STRIP_OFFSETS     => new IfdEntry(ExifTag::STRIP_OFFSETS, TiffConst::TYPE_LONG, 1, 0),
@@ -87,7 +87,7 @@ final class TiffImageDataValidatorTest extends TestCase
 
         $validator = $this->createValidator(2048);
 
-        $ifd       = new Ifd([
+        $ifd = new Ifd([
             ExifTag::IMAGE_WIDTH    => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 64),
             ExifTag::IMAGE_LENGTH   => new IfdEntry(ExifTag::IMAGE_LENGTH, TiffConst::TYPE_SHORT, 1, 64),
             ExifTag::ROWS_PER_STRIP => new IfdEntry(ExifTag::ROWS_PER_STRIP, TiffConst::TYPE_SHORT, 1, 64),
@@ -104,7 +104,7 @@ final class TiffImageDataValidatorTest extends TestCase
     {
         $validator = $this->createValidator(65536);
 
-        $ifd       = new Ifd([
+        $ifd = new Ifd([
             ExifTag::IMAGE_WIDTH      => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 64),
             ExifTag::IMAGE_LENGTH     => new IfdEntry(ExifTag::IMAGE_LENGTH, TiffConst::TYPE_SHORT, 1, 64),
             TiffTag::TILE_WIDTH       => new IfdEntry(TiffTag::TILE_WIDTH, TiffConst::TYPE_LONG, 1, 64),
@@ -126,7 +126,7 @@ final class TiffImageDataValidatorTest extends TestCase
 
         $validator = $this->createValidator();
 
-        $ifd       = new Ifd([
+        $ifd = new Ifd([
             TiffTag::TILE_WIDTH       => new IfdEntry(TiffTag::TILE_WIDTH, TiffConst::TYPE_LONG, 1, 15),
             TiffTag::TILE_LENGTH      => new IfdEntry(TiffTag::TILE_LENGTH, TiffConst::TYPE_LONG, 1, 16),
             TiffTag::TILE_OFFSETS     => new IfdEntry(TiffTag::TILE_OFFSETS, TiffConst::TYPE_LONG, 1, 0),
@@ -144,7 +144,7 @@ final class TiffImageDataValidatorTest extends TestCase
 
         $validator = $this->createValidator();
 
-        $ifd       = new Ifd([
+        $ifd = new Ifd([
             ExifTag::ROWS_PER_STRIP   => new IfdEntry(ExifTag::ROWS_PER_STRIP, TiffConst::TYPE_SHORT, 1, 64),
             TiffTag::TILE_WIDTH       => new IfdEntry(TiffTag::TILE_WIDTH, TiffConst::TYPE_LONG, 1, 64),
             TiffTag::TILE_LENGTH      => new IfdEntry(TiffTag::TILE_LENGTH, TiffConst::TYPE_LONG, 1, 64),
@@ -163,7 +163,7 @@ final class TiffImageDataValidatorTest extends TestCase
 
         $validator = $this->createValidator();
 
-        $ifd       = new Ifd([
+        $ifd = new Ifd([
             TiffTag::TILE_WIDTH   => new IfdEntry(TiffTag::TILE_WIDTH, TiffConst::TYPE_LONG, 1, 16),
             TiffTag::TILE_LENGTH  => new IfdEntry(TiffTag::TILE_LENGTH, TiffConst::TYPE_LONG, 1, 16),
             TiffTag::TILE_OFFSETS => new IfdEntry(TiffTag::TILE_OFFSETS, TiffConst::TYPE_LONG, 1, 0),

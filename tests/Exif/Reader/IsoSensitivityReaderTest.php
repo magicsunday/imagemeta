@@ -49,7 +49,7 @@ final class IsoSensitivityReaderTest extends TestCase
             ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 400),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
+        $reader = $this->createReader([], $exifEntries);
 
         self::assertSame(400, $reader->iso());
     }
@@ -67,7 +67,7 @@ final class IsoSensitivityReaderTest extends TestCase
             ExifTag::STANDARD_OUTPUT_SENSITIVITY => new IfdEntry(ExifTag::STANDARD_OUTPUT_SENSITIVITY, 4, 1, 250),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
+        $reader = $this->createReader([], $exifEntries);
 
         self::assertSame(SensitivityType::StandardOutputSensitivity, $reader->sensitivityType());
         // With SensitivityType=SOS, PhotographicSensitivity is prioritized first
@@ -86,7 +86,7 @@ final class IsoSensitivityReaderTest extends TestCase
             ExifTag::SPECTRAL_SENSITIVITY => new IfdEntry(ExifTag::SPECTRAL_SENSITIVITY, 2, 1, '400-700nm'),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
+        $reader = $this->createReader([], $exifEntries);
 
         self::assertSame(800, $reader->isoSpeedValue());
         self::assertSame('400-700nm', $reader->spectralSensitivity());
@@ -122,7 +122,7 @@ final class IsoSensitivityReaderTest extends TestCase
             ExifTag::ISO_SPEED_LATITUDE_ZZZ => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 4, 1, 1000),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
+        $reader = $this->createReader([], $exifEntries);
 
         self::assertNull($reader->isoSpeedLatitudeYyy());
     }

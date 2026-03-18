@@ -135,7 +135,7 @@ final class TiffExifParserThreshholdingCellTagsTest extends TestCase
      */
     private function buildThreshholdingTiff(int $threshholding, ?int $cellWidth = null, ?int $cellLength = null): string
     {
-        $entries    = [
+        $entries = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)

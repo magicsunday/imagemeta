@@ -61,7 +61,7 @@ final readonly class GpsDirectionConverter
     public function extractFromIfd(Ifd $gps): array
     {
         // EXIF 3.0 §4.6.7.1.15 GPSTrackRef: 'T' or 'M'; default 'T'
-        [$trackRef, $track]               = $this->extractBearing($gps, ExifTag::GPS_TRACK_REF, ExifTag::GPS_TRACK);
+        [$trackRef, $track] = $this->extractBearing($gps, ExifTag::GPS_TRACK_REF, ExifTag::GPS_TRACK);
 
         // EXIF 3.0 §4.6.7.1.17 GPSImgDirectionRef: 'T' or 'M'; default 'T'
         [$imgDirectionRef, $imgDirection] = $this->extractBearing(
@@ -71,7 +71,7 @@ final readonly class GpsDirectionConverter
         );
 
         // EXIF 3.0 §4.6.7.1.24 GPSDestBearingRef: 'T' or 'M'; default 'T'
-        [$destBearingRef, $destBearing]   = $this->extractBearing(
+        [$destBearingRef, $destBearing] = $this->extractBearing(
             $gps,
             ExifTag::GPS_DEST_BEARING_REF,
             ExifTag::GPS_DEST_BEARING,
@@ -105,8 +105,8 @@ final readonly class GpsDirectionConverter
             $reference = 'T';
         }
 
-        $bearingValue       = $this->rationalConverter->toFloat($valueEntry?->value);
-        $bearing            = $referenceInvalid ? null : $this->normalizeBearing($bearingValue);
+        $bearingValue = $this->rationalConverter->toFloat($valueEntry?->value);
+        $bearing      = $referenceInvalid ? null : $this->normalizeBearing($bearingValue);
 
         return [$reference, $bearing];
     }

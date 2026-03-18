@@ -257,7 +257,7 @@ final readonly class DescriptionExifReader
      */
     public function learningOptOutIn(): ?LearningOptOutIn
     {
-        $raw     = $this->reader->rawString($this->exifIfd, ExifTag::LEARNING_OPT_OUT_IN);
+        $raw = $this->reader->rawString($this->exifIfd, ExifTag::LEARNING_OPT_OUT_IN);
 
         if ($raw === null || strlen($raw) < 2) {
             return null;

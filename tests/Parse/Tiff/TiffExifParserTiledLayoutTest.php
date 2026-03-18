@@ -202,10 +202,10 @@ final class TiffExifParserTiledLayoutTest extends TestCase
         int $tileByteCountsBase = 8,
         bool $padToStorageRanges = false,
     ): string {
-        $tilesAcross        = intdiv($imageWidth + $tileWidth - 1, $tileWidth);
-        $tilesDown          = intdiv($imageLength + $tileLength - 1, $tileLength);
-        $tileCount          = $tilesAcross * $tilesDown;
-        $expected           = $planarConfiguration === 2 ? $tileCount * $samplesPerPixel : $tileCount;
+        $tilesAcross = intdiv($imageWidth + $tileWidth - 1, $tileWidth);
+        $tilesDown   = intdiv($imageLength + $tileLength - 1, $tileLength);
+        $tileCount   = $tilesAcross * $tilesDown;
+        $expected    = $planarConfiguration === 2 ? $tileCount * $samplesPerPixel : $tileCount;
 
         $tileOffsetsCount ??= $expected;
         $tileByteCountsCount ??= $expected;
@@ -213,7 +213,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
         $tileOffsetsPayload = $this->packNumericList($tileOffsetsCount, $tileOffsetsBase);
         $tileBytesPayload   = $this->packNumericList($tileByteCountsCount, $tileByteCountsBase, $tileByteCountsType);
 
-        $entries            = [
+        $entries = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_LONG)
                 . pack('V', 1)
@@ -246,26 +246,26 @@ final class TiffExifParserTiledLayoutTest extends TestCase
                 . pack('V', $tileByteCountsCount),
         ];
 
-        $payloadByTag       = [
+        $payloadByTag = [
             TiffTag::TILE_OFFSETS     => $tileOffsetsPayload,
             TiffTag::TILE_BYTE_COUNTS => $tileBytesPayload,
         ];
 
         if ($includeStripTags) {
-            $rowsPerStrip                             = 16;
-            $stripsPerImage                           = intdiv($imageLength + $rowsPerStrip - 1, $rowsPerStrip);
-            $stripCount                               = $planarConfiguration === 2
+            $rowsPerStrip   = 16;
+            $stripsPerImage = intdiv($imageLength + $rowsPerStrip - 1, $rowsPerStrip);
+            $stripCount     = $planarConfiguration === 2
                 ? $stripsPerImage * $samplesPerPixel
                 : $stripsPerImage;
 
-            $entries[ExifTag::ROWS_PER_STRIP]         = pack('v', ExifTag::ROWS_PER_STRIP)
+            $entries[ExifTag::ROWS_PER_STRIP] = pack('v', ExifTag::ROWS_PER_STRIP)
                 . pack('v', TiffConst::TYPE_LONG)
                 . pack('V', 1)
                 . pack('V', $rowsPerStrip);
-            $entries[ExifTag::STRIP_OFFSETS]          = pack('v', ExifTag::STRIP_OFFSETS)
+            $entries[ExifTag::STRIP_OFFSETS] = pack('v', ExifTag::STRIP_OFFSETS)
                 . pack('v', TiffConst::TYPE_LONG)
                 . pack('V', $stripCount);
-            $entries[ExifTag::STRIP_BYTE_COUNTS]      = pack('v', ExifTag::STRIP_BYTE_COUNTS)
+            $entries[ExifTag::STRIP_BYTE_COUNTS] = pack('v', ExifTag::STRIP_BYTE_COUNTS)
                 . pack('v', TiffConst::TYPE_LONG)
                 . pack('V', $stripCount);
 
@@ -275,12 +275,12 @@ final class TiffExifParserTiledLayoutTest extends TestCase
 
         ksort($entries);
 
-        $ifdOffset          = 8;
-        $entryCount         = count($entries);
-        $ifdSize            = 2 + (12 * $entryCount) + 4;
-        $nextOffset         = $ifdOffset + $ifdSize;
-        $ifdEntries         = '';
-        $payloadTail        = '';
+        $ifdOffset   = 8;
+        $entryCount  = count($entries);
+        $ifdSize     = 2 + (12 * $entryCount) + 4;
+        $nextOffset  = $ifdOffset + $ifdSize;
+        $ifdEntries  = '';
+        $payloadTail = '';
 
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {
@@ -302,7 +302,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
             $nextOffset += strlen($payload);
         }
 
-        $blob               = 'II'
+        $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . pack('v', $entryCount)
@@ -315,8 +315,8 @@ final class TiffExifParserTiledLayoutTest extends TestCase
             $pairCount      = min($tileOffsetsCount, $tileByteCountsCount);
 
             for ($i = 0; $i < $pairCount; ++$i) {
-                $offset         = $tileOffsetsBase + $i;
-                $byteCount      = $tileByteCountsBase + $i;
+                $offset    = $tileOffsetsBase + $i;
+                $byteCount = $tileByteCountsBase + $i;
 
                 if ($offset < 0) {
                     continue;

@@ -36,13 +36,13 @@ final readonly class CaptureDateResolver
      */
     public function bestCaptureDateTime(Metadata $metadata): ?DateTimeImmutable
     {
-        $structured  = $metadata->structured();
+        $structured = $metadata->structured();
 
-        $capture     = $structured->locationTime->capture;
-        $temporal    = $structured->locationTime->temporal;
-        $gps         = $structured->locationTime->gps;
+        $capture  = $structured->locationTime->capture;
+        $temporal = $structured->locationTime->temporal;
+        $gps      = $structured->locationTime->gps;
 
-        $candidate   = $this->captureDate($capture)
+        $candidate = $this->captureDate($capture)
             ?? $this->temporalFallback($temporal)
             ?? $this->gpsFallback($gps);
 

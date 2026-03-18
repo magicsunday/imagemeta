@@ -42,13 +42,13 @@ enum GpsAltitudeRef: int
      * Positive sea level value (at or above sea level).
      * EXIF 3.0 §4.6.7.1.6.
      */
-    case AboveSeaLevel           = 2;
+    case AboveSeaLevel = 2;
 
     /**
      * Negative sea level value (below sea level).
      * EXIF 3.0 §4.6.7.1.6.
      */
-    case BelowSeaLevel           = 3;
+    case BelowSeaLevel = 3;
 
     /**
      * Returns whether this reference indicates a negative (below) altitude.

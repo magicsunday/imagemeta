@@ -45,15 +45,15 @@ final readonly class FallbackIfdSet
      */
     public function resolve(bool $includePrimaryThumbnail = true, bool $includeIfd0 = false): array
     {
-        $ifds   = [];
-        $seen   = [];
+        $ifds = [];
+        $seen = [];
 
         $append = static function (?Ifd $candidate) use (&$ifds, &$seen): void {
             if (!$candidate instanceof Ifd) {
                 return;
             }
 
-            $id        = spl_object_id($candidate);
+            $id = spl_object_id($candidate);
 
             if (isset($seen[$id])) {
                 return;

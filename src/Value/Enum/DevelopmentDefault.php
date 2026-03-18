@@ -25,8 +25,8 @@ enum DevelopmentDefault: int
     case FactoryDefault = 0x01;
 
     /** Different from factory default. */
-    case Different      = 0x02;
+    case Different = 0x02;
 
     /** Unknown whether factory default was used. */
-    case Unknown        = 0x04;
+    case Unknown = 0x04;
 }

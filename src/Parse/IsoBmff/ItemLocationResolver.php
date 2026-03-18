@@ -109,7 +109,7 @@ final readonly class ItemLocationResolver
     public function resolveQueuedItems(array $itemIds, array $locations, array $itemReferences, ?callable $transform, array $dataReferences, ?string $idatPayload, int $metaContextOffset): IsoBmffQueuedResolveResult
     {
         /** @var list<string> $resolved */
-        $resolved        = [];
+        $resolved = [];
 
         /** @var list<IsoBmffUnresolvedItem> $unresolvedItems */
         $unresolvedItems = [];

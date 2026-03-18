@@ -37,7 +37,7 @@ final class MatrixConverterTest extends TestCase
     {
         $payload = $this->buildMatrixPayload(1, 1, ['C'], ['R'], [[1, 2]]);
 
-        $result  = $this->converter()->decodeOecf($payload);
+        $result = $this->converter()->decodeOecf($payload);
 
         self::assertNotNull($result);
         self::assertSame(1, $result['columns']);
@@ -52,7 +52,7 @@ final class MatrixConverterTest extends TestCase
     {
         $payload = $this->buildMatrixPayload(1, 1, ['C'], ['R'], [[1, 2]]) . "\xFF";
 
-        $result  = $this->converter()->decodeOecf($payload);
+        $result = $this->converter()->decodeOecf($payload);
 
         self::assertNull($result);
     }
@@ -65,7 +65,7 @@ final class MatrixConverterTest extends TestCase
     {
         $payload = $this->buildMatrixPayload(1, 1, ['C'], ['R'], [[3, 4]]);
 
-        $result  = $this->converter()->decodeSpatialFrequencyResponse($payload);
+        $result = $this->converter()->decodeSpatialFrequencyResponse($payload);
 
         self::assertNotNull($result);
         self::assertSame(1, $result['columns']);
@@ -79,7 +79,7 @@ final class MatrixConverterTest extends TestCase
     {
         $payload = $this->buildMatrixPayload(1, 1, ['C'], ['R'], [[3, 4]]) . "\x00";
 
-        $result  = $this->converter()->decodeSpatialFrequencyResponse($payload);
+        $result = $this->converter()->decodeSpatialFrequencyResponse($payload);
 
         self::assertNull($result);
     }
@@ -104,7 +104,7 @@ final class MatrixConverterTest extends TestCase
             ],
         );
 
-        $result  = $this->converter()->decodeOecf($payload);
+        $result = $this->converter()->decodeOecf($payload);
 
         self::assertNotNull($result);
         self::assertSame(2, $result['columns']);
@@ -133,7 +133,7 @@ final class MatrixConverterTest extends TestCase
             ],
         );
 
-        $result  = $this->converter()->decodeSpatialFrequencyResponse($payload);
+        $result = $this->converter()->decodeSpatialFrequencyResponse($payload);
 
         self::assertNotNull($result);
         self::assertSame(3, $result['columns']);

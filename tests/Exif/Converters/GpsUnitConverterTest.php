@@ -58,7 +58,7 @@ final class GpsUnitConverterTest extends TestCase
         $numericConverter  = new NumericConverter();
         $rationalConverter = new RationalConverter($numericConverter);
 
-        $this->converter   = new GpsUnitConverter($rationalConverter);
+        $this->converter = new GpsUnitConverter($rationalConverter);
     }
 
     // ── Altitude ──────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ final class GpsUnitConverterTest extends TestCase
     #[Test]
     public function extractsAltitudeAboveEllipsoidal(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
             ExifTag::GPS_ALTITUDE     => new IfdEntry(
                 ExifTag::GPS_ALTITUDE,
@@ -91,7 +91,7 @@ final class GpsUnitConverterTest extends TestCase
     #[Test]
     public function extractsAltitudeBelowEllipsoidal(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 1),
             ExifTag::GPS_ALTITUDE     => new IfdEntry(
                 ExifTag::GPS_ALTITUDE,
@@ -113,7 +113,7 @@ final class GpsUnitConverterTest extends TestCase
     #[Test]
     public function defaultsAltitudeRefToZeroWhenMissing(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_ALTITUDE => new IfdEntry(
                 ExifTag::GPS_ALTITUDE,
                 5,
@@ -134,7 +134,7 @@ final class GpsUnitConverterTest extends TestCase
     #[Test]
     public function toleratesNegativeAltitudeValue(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
             ExifTag::GPS_ALTITUDE     => new IfdEntry(
                 ExifTag::GPS_ALTITUDE,
@@ -158,7 +158,7 @@ final class GpsUnitConverterTest extends TestCase
     #[DataProvider('provideSpeedConversions')]
     public function convertsSpeedToMs(string $ref, float $input, float $expectedMs): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_SPEED_REF => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 2, $ref),
             ExifTag::GPS_SPEED     => new IfdEntry(
                 ExifTag::GPS_SPEED,
@@ -196,7 +196,7 @@ final class GpsUnitConverterTest extends TestCase
     #[Test]
     public function defaultsSpeedRefToKWhenMissing(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_SPEED => new IfdEntry(
                 ExifTag::GPS_SPEED,
                 5,
@@ -221,7 +221,7 @@ final class GpsUnitConverterTest extends TestCase
     #[DataProvider('provideDistanceConversions')]
     public function convertsDestDistanceToMetres(string $ref, float $input, float $expectedM): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_DEST_DISTANCE_REF => new IfdEntry(ExifTag::GPS_DEST_DISTANCE_REF, 2, 2, $ref),
             ExifTag::GPS_DEST_DISTANCE     => new IfdEntry(
                 ExifTag::GPS_DEST_DISTANCE,
@@ -259,7 +259,7 @@ final class GpsUnitConverterTest extends TestCase
     #[Test]
     public function defaultsDestDistanceRefToKWhenMissing(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_DEST_DISTANCE => new IfdEntry(
                 ExifTag::GPS_DEST_DISTANCE,
                 5,

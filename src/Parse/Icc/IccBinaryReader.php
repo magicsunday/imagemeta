@@ -83,7 +83,7 @@ final class IccBinaryReader
      */
     public function s15Fixed16(string $data, int $offset): float
     {
-        $bytes    = substr($data, $offset, 4);
+        $bytes = substr($data, $offset, 4);
 
         if (strlen($bytes) < 4) {
             throw new ParseError(
@@ -112,7 +112,7 @@ final class IccBinaryReader
         }
 
         // Convert to signed if necessary (two's complement)
-        $signed   = $unsigned >= 0x80000000
+        $signed = $unsigned >= 0x80000000
             ? $unsigned - 0x100000000
             : $unsigned;
 

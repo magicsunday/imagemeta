@@ -183,7 +183,7 @@ final class TiffExifParserSeparatedImageInkTagsTest extends TestCase
     #[Test]
     public function rejectsInvalidInkSetLayouts(): void
     {
-        $cases      = [
+        $cases = [
             [TiffConst::TYPE_SHORT, 1, 3, null, null], // invalid domain value
             [TiffConst::TYPE_BYTE, 1, 1, null, null],  // invalid type
             [TiffConst::TYPE_SHORT, 2, 1, null, pack('v2', 1, 1)], // invalid count
@@ -223,9 +223,9 @@ final class TiffExifParserSeparatedImageInkTagsTest extends TestCase
         int $photometricInterpretation = 5,
         ?string $targetPrinterPayload = null,
     ): string {
-        $ifdOffset    = 8;
+        $ifdOffset = 8;
 
-        $entries      = [
+        $entries = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -263,14 +263,14 @@ final class TiffExifParserSeparatedImageInkTagsTest extends TestCase
         }
 
         if ($inkNamesPayload !== null) {
-            $entries[TiffTag::INK_NAMES]      = pack('v', TiffTag::INK_NAMES)
+            $entries[TiffTag::INK_NAMES] = pack('v', TiffTag::INK_NAMES)
                 . pack('v', TiffConst::TYPE_ASCII)
                 . pack('V', strlen($inkNamesPayload));
             $payloadByTag[TiffTag::INK_NAMES] = $inkNamesPayload;
         }
 
         if ($targetPrinterPayload !== null) {
-            $entries[TiffTag::TARGET_PRINTER]      = pack('v', TiffTag::TARGET_PRINTER)
+            $entries[TiffTag::TARGET_PRINTER] = pack('v', TiffTag::TARGET_PRINTER)
                 . pack('v', TiffConst::TYPE_ASCII)
                 . pack('V', strlen($targetPrinterPayload));
             $payloadByTag[TiffTag::TARGET_PRINTER] = $targetPrinterPayload;
@@ -278,11 +278,11 @@ final class TiffExifParserSeparatedImageInkTagsTest extends TestCase
 
         ksort($entries);
 
-        $entryCount   = count($entries);
-        $ifdSize      = 2 + (12 * $entryCount) + 4;
-        $nextOffset   = $ifdOffset + $ifdSize;
-        $ifdEntries   = '';
-        $tailData     = '';
+        $entryCount = count($entries);
+        $ifdSize    = 2 + (12 * $entryCount) + 4;
+        $nextOffset = $ifdOffset + $ifdSize;
+        $ifdEntries = '';
+        $tailData   = '';
 
         foreach ($entries as $tag => $prefix) {
             if (!isset($payloadByTag[$tag])) {

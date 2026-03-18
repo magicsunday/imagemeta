@@ -67,7 +67,7 @@ final readonly class QuickTimeKeyResolver
      *
      * @var array<string, string>
      */
-    private const array MDIR_KEY_MAP   = [
+    private const array MDIR_KEY_MAP = [
         "\xA9nam" => 'com.apple.quicktime.title',
         "\xA9ART" => 'com.apple.quicktime.artist',
         "\xA9alb" => 'com.apple.quicktime.album',
@@ -101,7 +101,7 @@ final readonly class QuickTimeKeyResolver
      */
     public function parseKeys(BoxDescriptor $keys): array
     {
-        $win        = $keys->window;
+        $win = $keys->window;
         $win->seek(0);
 
         if ($keys->contentSize < 8) {
@@ -111,7 +111,7 @@ final readonly class QuickTimeKeyResolver
         // QuickTime File Format 2012, "Metadata item keys atom": the keys atom
         // is a FullAtom; version must be 0 and flags must be 0 for the defined
         // structure.
-        $header     = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         if (($header->version !== 0) || ($header->flags !== 0)) {
             throw new ParseError('keys box version/flags must be 0', 1222);
@@ -123,8 +123,8 @@ final readonly class QuickTimeKeyResolver
             throw new ParseError('keys entry count exceeds maximum allowed', 1223);
         }
 
-        $map        = [];
-        $pos        = $win->tell();
+        $map = [];
+        $pos = $win->tell();
 
         for ($i = 1; $i <= $entryCount; ++$i) {
             if ($pos + 8 > $keys->contentSize) {
@@ -149,7 +149,7 @@ final readonly class QuickTimeKeyResolver
                 throw new ParseError('keys entry has empty key_value', 1910);
             }
 
-            $name      = $win->read($size - 8);
+            $name = $win->read($size - 8);
 
             if ($namespace === self::QUICKTIME_MDTA) {
                 // QuickTime File Format 2012, "Metadata Item Keys Atom" defines
@@ -172,7 +172,7 @@ final readonly class QuickTimeKeyResolver
                 }
             }
 
-            $map[$i]   = [
+            $map[$i] = [
                 'namespace' => $namespace,
                 'name'      => $name,
             ];
@@ -288,10 +288,10 @@ final readonly class QuickTimeKeyResolver
             throw new ParseError($label . ' atom truncated', 1429);
         }
 
-        $win         = $atom->window;
+        $win = $atom->window;
         $win->seek(0);
 
-        $header      = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         if ($header->version !== 0) {
             throw new ParseError($label . ' atom version must be 0', 1430);
@@ -307,7 +307,7 @@ final readonly class QuickTimeKeyResolver
             throw new ParseError($label . ' atom has empty payload', 1432);
         }
 
-        $value       = $win->read($payloadSize);
+        $value = $win->read($payloadSize);
 
         if (!mb_check_encoding($value, 'UTF-8')) {
             throw new ParseError($label . ' atom contains invalid UTF-8', 1433);

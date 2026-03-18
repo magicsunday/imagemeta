@@ -74,7 +74,7 @@ final class SceneFactoryTest extends TestCase
     #[Test]
     public function detectsHdrSceneFromAppleHeadroom(): void
     {
-        $apple      = new AppleMakerNotes(
+        $apple = new AppleMakerNotes(
             identity: null,
             hdr: new AppleHdr(headroom: 2.5, gain: null, imageType: null),
             autoExposure: null,
@@ -93,7 +93,7 @@ final class SceneFactoryTest extends TestCase
             apple: $apple,
         );
 
-        $scene      = $this->createScene(makerNotes: $makerNotes);
+        $scene = $this->createScene(makerNotes: $makerNotes);
 
         self::assertTrue($scene->hdrScene);
     }
@@ -121,7 +121,7 @@ final class SceneFactoryTest extends TestCase
     #[Test]
     public function detectsHdrFromAppleFlags(): void
     {
-        $apple      = new AppleMakerNotes(
+        $apple = new AppleMakerNotes(
             identity: null,
             hdr: null,
             autoExposure: null,
@@ -140,7 +140,7 @@ final class SceneFactoryTest extends TestCase
             apple: $apple,
         );
 
-        $scene      = $this->createScene(makerNotes: $makerNotes);
+        $scene = $this->createScene(makerNotes: $makerNotes);
 
         self::assertTrue($scene->hdrScene);
     }

@@ -44,8 +44,8 @@ final class IccProfileAssemblerTest extends TestCase
     {
         $assembler = new IccProfileAssembler(maxIccProfileSize: 1024);
 
-        $data      = str_repeat('A', 100);
-        $payload   = self::ICC_SIGNATURE . "\x01\x01" . $data;
+        $data    = str_repeat('A', 100);
+        $payload = self::ICC_SIGNATURE . "\x01\x01" . $data;
 
         $assembler->handleSegment($payload, 0);
         $assembler->finalise();
@@ -61,8 +61,8 @@ final class IccProfileAssemblerTest extends TestCase
     {
         $assembler = new IccProfileAssembler(maxIccProfileSize: 50);
 
-        $data      = str_repeat('B', 100);
-        $payload   = self::ICC_SIGNATURE . "\x01\x01" . $data;
+        $data    = str_repeat('B', 100);
+        $payload = self::ICC_SIGNATURE . "\x01\x01" . $data;
 
         $assembler->handleSegment($payload, 0);
 
@@ -78,9 +78,9 @@ final class IccProfileAssemblerTest extends TestCase
     {
         $assembler = new IccProfileAssembler(maxIccProfileSize: 4096);
 
-        $chunk1    = 'AAAA';
-        $chunk2    = 'BBBB';
-        $chunk3    = 'CCCC';
+        $chunk1 = 'AAAA';
+        $chunk2 = 'BBBB';
+        $chunk3 = 'CCCC';
 
         // Deliver chunks out of order: 2, 3, 1
         $assembler->handleSegment(self::ICC_SIGNATURE . chr(2) . chr(3) . $chunk2, 100);
@@ -99,8 +99,8 @@ final class IccProfileAssemblerTest extends TestCase
     {
         $assembler = new IccProfileAssembler();
 
-        $payload1  = self::ICC_SIGNATURE . chr(1) . chr(2) . 'part1';
-        $payload2  = self::ICC_SIGNATURE . chr(2) . chr(2) . 'part2';
+        $payload1 = self::ICC_SIGNATURE . chr(1) . chr(2) . 'part1';
+        $payload2 = self::ICC_SIGNATURE . chr(2) . chr(2) . 'part2';
 
         $assembler->handleSegment($payload1, 0);
         $assembler->handleSegment($payload2, 100);
@@ -116,7 +116,7 @@ final class IccProfileAssemblerTest extends TestCase
     {
         $assembler = new IccProfileAssembler();
 
-        $payload   = self::ICC_SIGNATURE . chr(1) . chr(0) . 'data';
+        $payload = self::ICC_SIGNATURE . chr(1) . chr(0) . 'data';
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1301);
@@ -133,7 +133,7 @@ final class IccProfileAssemblerTest extends TestCase
         $assembler = new IccProfileAssembler();
 
         // Sequence number 5 with count 3 is out of range
-        $payload   = self::ICC_SIGNATURE . chr(5) . chr(3) . 'data';
+        $payload = self::ICC_SIGNATURE . chr(5) . chr(3) . 'data';
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1302);
@@ -149,7 +149,7 @@ final class IccProfileAssemblerTest extends TestCase
     {
         $assembler = new IccProfileAssembler();
 
-        $payload   = self::ICC_SIGNATURE . chr(0) . chr(2) . 'data';
+        $payload = self::ICC_SIGNATURE . chr(0) . chr(2) . 'data';
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1302);
@@ -198,7 +198,7 @@ final class IccProfileAssemblerTest extends TestCase
         $assembler = new IccProfileAssembler();
 
         // Only signature, missing sequence/count bytes
-        $payload   = self::ICC_SIGNATURE . chr(1);
+        $payload = self::ICC_SIGNATURE . chr(1);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1268);

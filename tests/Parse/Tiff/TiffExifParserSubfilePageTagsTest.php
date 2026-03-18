@@ -181,7 +181,7 @@ final class TiffExifParserSubfilePageTagsTest extends TestCase
         ?array $pageNumber,
         ?int $photometric,
     ): string {
-        $entries    = [
+        $entries = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)

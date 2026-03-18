@@ -76,9 +76,9 @@ final readonly class BoxPayloadCollector
     public function collect(BoxDescriptor $meta, bool $allowQuickTimeMetaWithoutFullBox, int $fileOffsetOrigin = 0): BoxPayloadCollection
     {
         /** @var array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos */
-        $itemInfos      = [];
+        $itemInfos = [];
         /** @var array<int, array{dataReferenceIndex:int, constructionMethod:ConstructionMethod, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations */
-        $locations      = [];
+        $locations = [];
         /** @var array<int, list<IsoBmffItemReference>> $itemReferences */
         $itemReferences = [];
         /** @var array<int, IsoBmffDataReference> $dataReferences */
@@ -89,22 +89,22 @@ final readonly class BoxPayloadCollector
         $directExif     = [];
         $idatPayload    = null;
         /** @var list<array<int, QuickTimeKeyEntry>> $keysMaps */
-        $keysMaps       = [];
+        $keysMaps = [];
         /** @var list<BoxDescriptor> $ilstBoxes */
-        $ilstBoxes      = [];
-        $handlerType    = null;
-        $hdlrCount      = 0;
-        $requiresHdlr   = false;
-        $hasMhdr        = false;
+        $ilstBoxes    = [];
+        $handlerType  = null;
+        $hdlrCount    = 0;
+        $requiresHdlr = false;
+        $hasMhdr      = false;
         /** @var list<list<int>> $countryLists */
-        $countryLists   = [];
+        $countryLists = [];
         /** @var list<list<int>> $languageLists */
-        $languageLists  = [];
-        $ispeWidth      = null;
-        $ispeHeight     = null;
-        $iccProfile     = null;
+        $languageLists = [];
+        $ispeWidth     = null;
+        $ispeHeight    = null;
+        $iccProfile    = null;
 
-        $childOffset    = $this->detectMetaChildOffset($meta, $allowQuickTimeMetaWithoutFullBox);
+        $childOffset = $this->detectMetaChildOffset($meta, $allowQuickTimeMetaWithoutFullBox);
 
         foreach ($this->boxNavigator->walkChildren($meta, $childOffset) as $child) {
             switch ($child->type) {
@@ -127,7 +127,7 @@ final readonly class BoxPayloadCollector
                         throw new ParseError('meta context must contain at most one iloc box', 1413);
                     }
 
-                    $locations      = $this->ilocBoxParser->parseIloc($child, $fileOffsetOrigin);
+                    $locations = $this->ilocBoxParser->parseIloc($child, $fileOffsetOrigin);
 
                     break;
                 case BoxType::IDAT->value:
@@ -135,7 +135,7 @@ final readonly class BoxPayloadCollector
 
                     break;
                 case BoxType::PITM->value:
-                    $primaryItemId  = $this->ilocBoxParser->parsePitm($child);
+                    $primaryItemId = $this->ilocBoxParser->parsePitm($child);
 
                     break;
                 case BoxType::IREF->value:
@@ -341,7 +341,7 @@ final readonly class BoxPayloadCollector
             throw new ParseError('meta must contain at most one keys atom', 1964);
         }
 
-        $keysMaps[]   = $this->quickTimeKeyResolver->parseKeys($child);
+        $keysMaps[] = $this->quickTimeKeyResolver->parseKeys($child);
     }
 
     /**
@@ -379,7 +379,7 @@ final readonly class BoxPayloadCollector
             throw new ParseError(sprintf('meta must contain at most one %s atom', $atomType), $duplicateCode);
         }
 
-        $lists        = $this->quickTimeDecoder->parseLocaleListAtom($child, $atomType);
+        $lists = $this->quickTimeDecoder->parseLocaleListAtom($child, $atomType);
     }
 
     /**
@@ -420,7 +420,7 @@ final readonly class BoxPayloadCollector
     {
         // ISO/IEC 14496-12 §8.11.1 defines `meta` as FullBox(version=0, flags=0).
         // QuickTime compatibility mode may omit this 4-byte header.
-        $window     = $meta->window;
+        $window = $meta->window;
         $window->seek(0);
 
         $peekLength = min($meta->contentSize, 20);
@@ -581,7 +581,7 @@ final readonly class BoxPayloadCollector
             return ['width' => null, 'height' => null];
         }
 
-        $win    = $ispe->window;
+        $win = $ispe->window;
         $win->seek(0);
 
         $header = $this->boxNavigator->readFullBoxHeader($win);
@@ -614,7 +614,7 @@ final readonly class BoxPayloadCollector
             return null;
         }
 
-        $win         = $colr->window;
+        $win = $colr->window;
         $win->seek(0);
 
         $colourType  = $win->read(4);

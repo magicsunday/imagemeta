@@ -248,7 +248,7 @@ final class RationalConverterTest extends TestCase
     #[Test]
     public function tripletToFloatVectorConvertsThreeRationals(): void
     {
-        $list   = new ExifRationalList([
+        $list = new ExifRationalList([
             new ExifRational(1, 2),
             new ExifRational(3, 4),
             new ExifRational(5, 6),

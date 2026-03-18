@@ -57,7 +57,7 @@ final readonly class DngStructureValidator
      *
      * @var array<int, int>
      */
-    private const array DNG_ROLE_PHOTOMETRIC   = [
+    private const array DNG_ROLE_PHOTOMETRIC = [
         8     => 51177,
         9     => 51177,
         65540 => 52527,
@@ -68,7 +68,7 @@ final readonly class DngStructureValidator
      *
      * @var list<int>
      */
-    private const array DNG_IFD0_ONLY_TAGS     = [
+    private const array DNG_IFD0_ONLY_TAGS = [
         DngTag::DNG_VERSION,
         DngTag::DNG_BACKWARD_VERSION,
         DngTag::UNIQUE_CAMERA_MODEL,
@@ -94,7 +94,7 @@ final readonly class DngStructureValidator
      *
      * @var array<int, string>
      */
-    private const array DNG_OPCODE_LIST_TAGS   = [
+    private const array DNG_OPCODE_LIST_TAGS = [
         DngTag::OPCODE_LIST_1 => 'OpcodeList1',
         DngTag::OPCODE_LIST_2 => 'OpcodeList2',
         DngTag::OPCODE_LIST_3 => 'OpcodeList3',
@@ -116,7 +116,7 @@ final readonly class DngStructureValidator
      *
      * @var array<int, string>
      */
-    private const array DIGEST_TAGS            = [
+    private const array DIGEST_TAGS = [
         DngTag::PREVIEW_SETTINGS_DIGEST  => 'PreviewSettingsDigest',
         DngTag::RAW_IMAGE_DIGEST         => 'RawImageDigest',
         DngTag::ORIGINAL_RAW_FILE_DIGEST => 'OriginalRawFileDigest',
@@ -168,14 +168,14 @@ final readonly class DngStructureValidator
             return;
         }
 
-        $required     = self::DNG_ROLE_PHOTOMETRIC[$subfileEntry->value] ?? null;
+        $required = self::DNG_ROLE_PHOTOMETRIC[$subfileEntry->value] ?? null;
 
         if ($required === null) {
             return;
         }
 
-        $photoEntry   = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
-        $photoValue   = $photoEntry instanceof IfdEntry && is_int($photoEntry->value) ? $photoEntry->value : null;
+        $photoEntry = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $photoValue = $photoEntry instanceof IfdEntry && is_int($photoEntry->value) ? $photoEntry->value : null;
 
         if ($photoValue !== $required) {
             throw new ParseError(
@@ -220,7 +220,7 @@ final readonly class DngStructureValidator
         $jxlEffort      = $ifd->get(DngTag::JXL_EFFORT);
         $jxlDecodeSpeed = $ifd->get(DngTag::JXL_DECODE_SPEED);
 
-        $hasJxlTags     = $jxlDistance instanceof IfdEntry
+        $hasJxlTags = $jxlDistance instanceof IfdEntry
             || $jxlEffort instanceof IfdEntry
             || $jxlDecodeSpeed instanceof IfdEntry;
 
@@ -228,7 +228,7 @@ final readonly class DngStructureValidator
             return;
         }
 
-        $compression    = $ifd->get(ExifTag::COMPRESSION);
+        $compression = $ifd->get(ExifTag::COMPRESSION);
 
         if (!$compression instanceof IfdEntry || !is_int($compression->value) || $compression->value !== Compression::JpegXl->value) {
             throw new ParseError(
@@ -251,7 +251,7 @@ final readonly class DngStructureValidator
             );
         }
 
-        $spp            = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
+        $spp = $ifd->get(ExifTag::SAMPLES_PER_PIXEL);
 
         if (($spp instanceof IfdEntry) && is_int($spp->value) && ($spp->value !== 1) && ($spp->value !== 3)) {
             throw new ParseError(
@@ -260,7 +260,7 @@ final readonly class DngStructureValidator
             );
         }
 
-        $photo          = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
 
         if (($photo instanceof IfdEntry) && is_int($photo->value) && !in_array($photo->value, [0, 1, 2, 4, 32803, 34892, 51177, 52527], true)) {
             throw new ParseError(
@@ -278,7 +278,7 @@ final readonly class DngStructureValidator
      */
     public function validateDngCfaPhotometric(Ifd $ifd): void
     {
-        $photo    = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
 
         if (!$photo instanceof IfdEntry || $photo->value !== 32803) {
             return;
@@ -405,7 +405,7 @@ final readonly class DngStructureValidator
      */
     public function validateDngOriginalRawFileData(Ifd $ifd): void
     {
-        $entry   = $ifd->get(DngTag::ORIGINAL_RAW_FILE_DATA);
+        $entry = $ifd->get(DngTag::ORIGINAL_RAW_FILE_DATA);
 
         if (!$entry instanceof IfdEntry) {
             return;
@@ -425,13 +425,13 @@ final readonly class DngStructureValidator
         $payload = $entry->value;
         $offset  = 0;
 
-        $offset  = $this->validateDngOriginalRawForkBlock($payload, $offset, 'original raw data fork');
-        $offset  = $this->validateDngOriginalRawForkBlock($payload, $offset, 'original raw resource fork');
-        $offset  = $this->consumeDngOriginalRawFixedBlock($payload, $offset, 'original raw macOS file type');
-        $offset  = $this->consumeDngOriginalRawFixedBlock($payload, $offset, 'original raw macOS file creator');
-        $offset  = $this->validateDngOriginalRawForkBlock($payload, $offset, 'sidecar THM data fork');
-        $offset  = $this->validateDngOriginalRawForkBlock($payload, $offset, 'sidecar THM resource fork');
-        $offset  = $this->consumeDngOriginalRawFixedBlock($payload, $offset, 'sidecar THM macOS file type');
+        $offset = $this->validateDngOriginalRawForkBlock($payload, $offset, 'original raw data fork');
+        $offset = $this->validateDngOriginalRawForkBlock($payload, $offset, 'original raw resource fork');
+        $offset = $this->consumeDngOriginalRawFixedBlock($payload, $offset, 'original raw macOS file type');
+        $offset = $this->consumeDngOriginalRawFixedBlock($payload, $offset, 'original raw macOS file creator');
+        $offset = $this->validateDngOriginalRawForkBlock($payload, $offset, 'sidecar THM data fork');
+        $offset = $this->validateDngOriginalRawForkBlock($payload, $offset, 'sidecar THM resource fork');
+        $offset = $this->consumeDngOriginalRawFixedBlock($payload, $offset, 'sidecar THM macOS file type');
         $this->consumeDngOriginalRawFixedBlock($payload, $offset, 'sidecar THM macOS file creator');
     }
 
@@ -444,15 +444,15 @@ final readonly class DngStructureValidator
      */
     public function validateDngRgbTables(Ifd $ifd): void
     {
-        $entry           = $ifd->get(DngTag::RGB_TABLES);
+        $entry = $ifd->get(DngTag::RGB_TABLES);
 
         if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
             return;
         }
 
-        $payload         = $entry->value;
+        $payload = $entry->value;
         PayloadGuard::ensureMinimumLength($payload, 8, 'RGBTables payload', 1527);
-        $length          = strlen($payload);
+        $length = strlen($payload);
 
         $numTables       = $this->support->unpackU32(substr($payload, 0, 4));
         $compositeMethod = $this->support->unpackU32(substr($payload, 4, 4));
@@ -471,8 +471,8 @@ final readonly class DngStructureValidator
             );
         }
 
-        $offset          = 8;
-        $zeroNameCount   = 0;
+        $offset        = 8;
+        $zeroNameCount = 0;
 
         for ($t = 0; $t < $numTables; ++$t) {
             if (($length - $offset) < 2) {
@@ -482,7 +482,7 @@ final readonly class DngStructureValidator
                 );
             }
 
-            $nameLen        = $this->support->unpackU16(substr($payload, $offset, 2));
+            $nameLen = $this->support->unpackU16(substr($payload, $offset, 2));
             $offset += 2;
 
             if ($nameLen === 0) {
@@ -540,7 +540,7 @@ final readonly class DngStructureValidator
                 );
             }
 
-            $tableDataSize  = $divisions * $divisions * $divisions * self::RGB_TABLES_PIXEL_BYTES[$pixelType];
+            $tableDataSize = $divisions * $divisions * $divisions * self::RGB_TABLES_PIXEL_BYTES[$pixelType];
             $offset += $tableDataSize;
         }
 
@@ -567,7 +567,7 @@ final readonly class DngStructureValidator
      */
     public function validateDngSemanticMaskIdentity(Ifd $ifd): void
     {
-        $photo     = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
 
         if (!$photo instanceof IfdEntry || !is_int($photo->value) || $photo->value !== Photometric::PhotometricMask->value) {
             return;
@@ -644,15 +644,15 @@ final readonly class DngStructureValidator
      */
     public function validateDngImageStats(Ifd $ifd): void
     {
-        $entry      = $ifd->get(DngTag::IMAGE_STATS);
+        $entry = $ifd->get(DngTag::IMAGE_STATS);
 
         if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
             return;
         }
 
-        $payload    = $entry->value;
+        $payload = $entry->value;
         PayloadGuard::ensureMinimumLength($payload, 4, 'ImageStats payload', 1543);
-        $length     = strlen($payload);
+        $length = strlen($payload);
 
         // ImageStats is always big-endian
         $childCount = Unpack::int('N', substr($payload, 0, 4), 'ImageStats child count');
@@ -667,8 +667,8 @@ final readonly class DngStructureValidator
                 );
             }
 
-            $childTag            = Unpack::int('N', substr($payload, $offset, 4), 'ImageStats child tag');
-            $childLength         = Unpack::int('N', substr($payload, $offset + 4, 4), 'ImageStats child length');
+            $childTag    = Unpack::int('N', substr($payload, $offset, 4), 'ImageStats child tag');
+            $childLength = Unpack::int('N', substr($payload, $offset + 4, 4), 'ImageStats child length');
             $offset += 8;
 
             if ($offset + $childLength > $length) {
@@ -698,24 +698,24 @@ final readonly class DngStructureValidator
      */
     public function validateDngImageSequenceInfo(Ifd $ifd): void
     {
-        $entry      = $ifd->get(DngTag::IMAGE_SEQUENCE_INFO);
+        $entry = $ifd->get(DngTag::IMAGE_SEQUENCE_INFO);
 
         if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
             return;
         }
 
-        $payload    = $entry->value;
-        $length     = strlen($payload);
-        $offset     = 0;
+        $payload = $entry->value;
+        $length  = strlen($payload);
+        $offset  = 0;
 
         // SequenceID: NUL-terminated, minimum 8 chars before NUL
-        $nulPos     = strpos($payload, "\0", $offset);
+        $nulPos = strpos($payload, "\0", $offset);
 
         if ($nulPos === false) {
             throw new ParseError('ImageSequenceInfo SequenceID must be NUL-terminated.', 1521);
         }
 
-        $seqIdLen   = $nulPos - $offset;
+        $seqIdLen = $nulPos - $offset;
 
         if ($seqIdLen < 8) {
             throw new ParseError(
@@ -724,10 +724,10 @@ final readonly class DngStructureValidator
             );
         }
 
-        $offset     = $nulPos + 1;
+        $offset = $nulPos + 1;
 
         // SequenceType: NUL-terminated, minimum 1 char
-        $nulPos     = strpos($payload, "\0", $offset);
+        $nulPos = strpos($payload, "\0", $offset);
 
         if ($nulPos === false) {
             throw new ParseError('ImageSequenceInfo SequenceType must be NUL-terminated.', 1523);
@@ -739,16 +739,16 @@ final readonly class DngStructureValidator
             throw new ParseError('ImageSequenceInfo SequenceType must be at least 1 character.', 1524);
         }
 
-        $offset     = $nulPos + 1;
+        $offset = $nulPos + 1;
 
         // FrameInfo: NUL-terminated (may be empty)
-        $nulPos     = strpos($payload, "\0", $offset);
+        $nulPos = strpos($payload, "\0", $offset);
 
         if ($nulPos === false) {
             throw new ParseError('ImageSequenceInfo FrameInfo must be NUL-terminated.', 1525);
         }
 
-        $offset     = $nulPos + 1;
+        $offset = $nulPos + 1;
 
         // Index(4) + Count(4) + Final(1) = 9 bytes remaining
         if (($length - $offset) < 9) {
@@ -818,7 +818,7 @@ final readonly class DngStructureValidator
      */
     public function validateDngPreviewDateTime(Ifd $ifd): void
     {
-        $entry  = $ifd->get(DngTag::PREVIEW_DATE_TIME);
+        $entry = $ifd->get(DngTag::PREVIEW_DATE_TIME);
 
         if (!$entry instanceof IfdEntry) {
             return;
@@ -972,10 +972,10 @@ final readonly class DngStructureValidator
     private function validateDngOpcodeListPayload(string $tagName, string $payload): void
     {
         PayloadGuard::ensureMinimumLength($payload, 4, sprintf('%s payload', $tagName), 1635);
-        $length         = strlen($payload);
+        $length = strlen($payload);
 
-        $opcodeCount    = Unpack::int('N', substr($payload, 0, 4), sprintf('%s opcode count', $tagName));
-        $offset         = 4;
+        $opcodeCount = Unpack::int('N', substr($payload, 0, 4), sprintf('%s opcode count', $tagName));
+        $offset      = 4;
 
         $maxOpcodeCount = intdiv($length - 4, 16);
 
@@ -1048,7 +1048,7 @@ final readonly class DngStructureValidator
      */
     private function validateDngOriginalRawForkBlock(string $payload, int $offset, string $blockName): int
     {
-        $payloadLength     = strlen($payload);
+        $payloadLength = strlen($payload);
 
         if (($payloadLength - $offset) < 4) {
             throw new ParseError(
@@ -1057,17 +1057,17 @@ final readonly class DngStructureValidator
             );
         }
 
-        $forkStart         = $offset;
-        $forkLength        = Unpack::int('N', substr($payload, $offset, 4), sprintf('%s length', $blockName));
+        $forkStart  = $offset;
+        $forkLength = Unpack::int('N', substr($payload, $offset, 4), sprintf('%s length', $blockName));
         $offset += 4;
 
         if ($forkLength === 0) {
             return $offset;
         }
 
-        $forkBlocks        = intdiv($forkLength + 65535, 65536);
-        $indexCount        = $forkBlocks + 1;
-        $indexBytes        = $indexCount * 4;
+        $forkBlocks = intdiv($forkLength + 65535, 65536);
+        $indexCount = $forkBlocks + 1;
+        $indexBytes = $indexCount * 4;
 
         if (($payloadLength - $offset) < $indexBytes) {
             throw new ParseError(
@@ -1098,7 +1098,7 @@ final readonly class DngStructureValidator
             $forkDataEnd    = $relativeOffset;
         }
 
-        $forkEnd           = $forkStart + $forkDataEnd;
+        $forkEnd = $forkStart + $forkDataEnd;
 
         if ($forkEnd > $payloadLength) {
             throw new ParseError(

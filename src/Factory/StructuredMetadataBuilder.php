@@ -48,11 +48,11 @@ final readonly class StructuredMetadataBuilder
      */
     public function assemble(Metadata $metadata): StructuredMetadata
     {
-        $components   = $this->valueFactory->createComponents(
+        $components = $this->valueFactory->createComponents(
             metadata: $metadata,
         );
 
-        $hardware     = new CaptureHardware(
+        $hardware = new CaptureHardware(
             camera: $components[ComponentKey::Camera->value],
             lens: $components[ComponentKey::Lens->value],
             sensor: $components[ComponentKey::Sensor->value],
@@ -60,7 +60,7 @@ final readonly class StructuredMetadataBuilder
             focus: $components[ComponentKey::Focus->value],
         );
 
-        $content      = new MediaContent(
+        $content = new MediaContent(
             image: $components[ComponentKey::Image->value],
             audio: $components[ComponentKey::Audio->value],
             embeddedAudio: $components[ComponentKey::EmbeddedAudio->value],
@@ -72,7 +72,7 @@ final readonly class StructuredMetadataBuilder
             regions: $components[ComponentKey::Regions->value],
         );
 
-        $settings     = new CaptureSettings(
+        $settings = new CaptureSettings(
             exposure: $components[ComponentKey::Exposure->value],
             whiteBalance: $components[ComponentKey::WhiteBalance->value],
             scene: $components[ComponentKey::Scene->value],
@@ -80,7 +80,7 @@ final readonly class StructuredMetadataBuilder
             processing: $components[ComponentKey::Processing->value],
         );
 
-        $provenance   = new Provenance(
+        $provenance = new Provenance(
             author: $components[ComponentKey::Author->value],
             rights: $components[ComponentKey::Rights->value],
             iptc: $components[ComponentKey::Iptc->value],
@@ -97,7 +97,7 @@ final readonly class StructuredMetadataBuilder
             capture: $components[ComponentKey::Capture->value],
         );
 
-        $technical    = new TechnicalData(
+        $technical = new TechnicalData(
             derived: $components[ComponentKey::Derived->value],
             colorProfile: $components[ComponentKey::ColorProfile->value],
             composite: $components[ComponentKey::Composite->value],

@@ -173,7 +173,7 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         #[Test]
         public function readThrowsParseErrorOnShortRead(): void
         {
-            $buffer               = new MemoryBuffer('buffer');
+            $buffer = new MemoryBuffer('buffer');
 
             self::$forceShortRead = true;
 
@@ -196,7 +196,7 @@ namespace MagicSunday\ImageMeta\Tests\Core {
                 . pack('V2', 0x89ABCDEF, 0x01234567)
                 . pack('N2', 0x01234567, 0x89ABCDEF);
 
-            $buffer  = new MemoryBuffer($payload);
+            $buffer = new MemoryBuffer($payload);
 
             self::assertSame(0x7F, $buffer->readU8());
             self::assertSame(0x3412, $buffer->readU16LE());

@@ -34,9 +34,9 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(RegionCoordinateNormalizer::class)]
 final class RegionsFactoryTest extends TestCase
 {
-    private const string NS_MWG_REGIONS    = 'http://www.metadataworkinggroup.com/schemas/regions/';
+    private const string NS_MWG_REGIONS = 'http://www.metadataworkinggroup.com/schemas/regions/';
 
-    private const string NS_ST_AREA        = 'http://ns.adobe.com/xmp/sType/Area#';
+    private const string NS_ST_AREA = 'http://ns.adobe.com/xmp/sType/Area#';
 
     private const string NS_APPLE_FACEINFO = 'http://ns.apple.com/faceinfo/1.0/';
 
@@ -75,7 +75,7 @@ final class RegionsFactoryTest extends TestCase
 
         self::assertCount(1, $regions->items);
 
-        $region  = $regions->items[0];
+        $region = $regions->items[0];
 
         self::assertSame(RegionType::Face, $region->type);
         self::assertSame('John Doe', $region->personName);
@@ -113,7 +113,7 @@ final class RegionsFactoryTest extends TestCase
 
         self::assertCount(1, $regions->items);
 
-        $region  = $regions->items[0];
+        $region = $regions->items[0];
 
         self::assertSame(RegionType::Face, $region->type);
         self::assertSame('Jane Doe', $region->personName);
@@ -210,7 +210,7 @@ final class RegionsFactoryTest extends TestCase
 
         self::assertCount(1, $regions->items);
 
-        $region  = $regions->items[0];
+        $region = $regions->items[0];
 
         self::assertSame('Bob Smith', $region->personName);
         self::assertEqualsWithDelta(0.95, $region->confidence, 0.01);
@@ -221,7 +221,7 @@ final class RegionsFactoryTest extends TestCase
      */
     private function createRegions(?array $xmpData = null): RegionCollection
     {
-        $xmpDoc   = $xmpData !== null ? new XmpDocument($xmpData, []) : null;
+        $xmpDoc = $xmpData !== null ? new XmpDocument($xmpData, []) : null;
 
         $metadata = new Metadata(
             exifBlobs: [],

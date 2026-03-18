@@ -50,7 +50,7 @@ final class JisTextDecoder
                 continue;
             }
 
-            $trimmed   = trim($converted, "\0 ");
+            $trimmed = trim($converted, "\0 ");
 
             if ($trimmed === '') {
                 continue;

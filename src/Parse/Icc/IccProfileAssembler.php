@@ -34,9 +34,9 @@ final class IccProfileAssembler
     private const int MAX_ICC_PROFILE_SIZE = 16_777_216;
 
     /** @var list<string> */
-    private array $chunks                  = [];
+    private array $chunks = [];
 
-    private ?string $profile               = null;
+    private ?string $profile = null;
 
     /**
      * @param int $maxSize Maximum allowed assembled ICC profile size in bytes.
@@ -67,7 +67,7 @@ final class IccProfileAssembler
             return;
         }
 
-        $totalSize     = 0;
+        $totalSize = 0;
 
         foreach ($this->chunks as $chunk) {
             $totalSize += strlen($chunk);

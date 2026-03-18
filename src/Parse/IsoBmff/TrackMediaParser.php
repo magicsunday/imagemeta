@@ -51,7 +51,7 @@ final readonly class TrackMediaParser
     /**
      * Track-header flag indicating whether a track is enabled.
      */
-    private const int TKHD_FLAG_TRACK_ENABLED  = 0x000001;
+    private const int TKHD_FLAG_TRACK_ENABLED = 0x000001;
 
     /**
      * Track-header flag indicating whether a track participates in movie presentation.
@@ -86,11 +86,11 @@ final readonly class TrackMediaParser
      */
     public function parseTrak(BoxDescriptor $trak, IsoBmffParseContext $context): array
     {
-        $tkhdResult       = null;
-        $handler          = null;
-        $handlerName      = null;
-        $sampleInfo       = [];
-        $mediaHdrInfo     = [];
+        $tkhdResult   = null;
+        $handler      = null;
+        $handlerName  = null;
+        $sampleInfo   = [];
+        $mediaHdrInfo = [];
 
         /** @var MdhdResult|null $mdhdData */
         $mdhdData         = null;
@@ -148,7 +148,7 @@ final readonly class TrackMediaParser
             $context->qtKeys[QuickTimeMeta::HANDLER_DESCRIPTION_KEY] = $handlerName;
         }
 
-        $trackKeys        = match ($handler) {
+        $trackKeys = match ($handler) {
             'vide'  => $this->buildVideoTrackKeys($sampleInfo, $tkhdResult, $mdhdData, $mediaHdrInfo),
             'soun'  => $this->buildAudioTrackKeys($sampleInfo, $tkhdResult, $mdhdData, $mediaHdrInfo),
             default => [],
@@ -179,7 +179,7 @@ final readonly class TrackMediaParser
         $height     = $sampleInfo['height'] ?? $tkhdHeight;
 
         /** @var QuickTimeKeyMap $trackKeys */
-        $trackKeys  = [];
+        $trackKeys = [];
 
         if (($width !== null) && ($width > 0)) {
             $trackKeys[QuickTimeMeta::VIDEO_WIDTH_KEY] = $width;
@@ -349,28 +349,28 @@ final readonly class TrackMediaParser
      */
     public function parseMvhd(BoxDescriptor $mvhd): array
     {
-        $header            = $this->parseTimescaleHeader($mvhd, 100, 112, 1906, 1908, 1407, 1907, 1408);
+        $header = $this->parseTimescaleHeader($mvhd, 100, 112, 1906, 1908, 1407, 1907, 1408);
 
-        $win               = $mvhd->window;
-        $version           = $header['version'];
+        $win     = $mvhd->window;
+        $version = $header['version'];
 
         // Duration: 8 bytes for v1, 4 bytes for v0
-        $duration          = $version === 1 ? $win->readU64BE()->toInt('mvhd duration') : $win->readU32BE();
+        $duration = $version === 1 ? $win->readU64BE()->toInt('mvhd duration') : $win->readU32BE();
 
         // Rate: 16.16 fixed-point (4 bytes)
-        $rateRaw           = $win->readU32BE();
-        $rate              = $this->decodeSigned16_16($rateRaw);
+        $rateRaw = $win->readU32BE();
+        $rate    = $this->decodeSigned16_16($rateRaw);
 
         // Volume: 8.8 fixed-point (2 bytes)
-        $volumeRaw         = $win->readU16BE();
-        $volume            = $volumeRaw / 256.0;
+        $volumeRaw = $win->readU16BE();
+        $volume    = $volumeRaw / 256.0;
 
         // Reserved (10 bytes)
         $win->read(10);
 
         // Matrix (36 bytes = 9 x u32)
-        $matrixRaw         = $this->readMatrixRaw($win);
-        $matrix            = $this->formatMatrix($matrixRaw);
+        $matrixRaw = $this->readMatrixRaw($win);
+        $matrix    = $this->formatMatrix($matrixRaw);
 
         // QuickTime-specific fields (overlap ISO pre_defined[6])
         $previewTime       = $win->readU32BE();
@@ -380,7 +380,7 @@ final readonly class TrackMediaParser
         $selectionDuration = $win->readU32BE();
         $currentTime       = $win->readU32BE();
 
-        $nextTrackId       = $win->readU32BE();
+        $nextTrackId = $win->readU32BE();
 
         if ($nextTrackId === 0) {
             throw new ParseError('mvhd next_track_ID must not be zero', 1409);
@@ -465,14 +465,14 @@ final readonly class TrackMediaParser
      */
     public function parseHdlr(BoxDescriptor $hdlr): array
     {
-        $win         = $hdlr->window;
+        $win = $hdlr->window;
         $win->seek(0);
 
         if ($hdlr->contentSize < 24) {
             throw new ParseError('hdlr box truncated', 1147);
         }
 
-        $header      = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         if ($header->version !== 0) {
             throw new ParseError('unsupported hdlr box version', 1148);
@@ -486,7 +486,7 @@ final readonly class TrackMediaParser
         // MOV files commonly write 'mhlr' or 'dhlr' here.
         $win->readU32BE();
 
-        $handler     = $win->read(4);
+        $handler = $win->read(4);
         $win->read(12);
 
         // Postel's Law: ISO 14496-12 §8.4.3.1 requires these 12 bytes to be zero,
@@ -515,7 +515,7 @@ final readonly class TrackMediaParser
                     throw new ParseError('hdlr handler name contains invalid UTF-8', 1384);
                 }
 
-                $name    = $trimmed !== '' ? $trimmed : null;
+                $name = $trimmed !== '' ? $trimmed : null;
             } else {
                 // Best-effort: strip NUL bytes from raw name when neither format matches
                 $trimmed = rtrim($nameBytes, "\0");
@@ -538,21 +538,21 @@ final readonly class TrackMediaParser
      */
     private function parseTkhd(BoxDescriptor $tkhd): array
     {
-        $win              = $tkhd->window;
+        $win = $tkhd->window;
         $win->seek(0);
 
         if ($tkhd->contentSize < 84) {
             throw new ParseError('tkhd box truncated', 1144);
         }
 
-        $header           = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         if (($header->version !== 0) && ($header->version !== 1)) {
             throw new ParseError('unsupported tkhd box version', 1145);
         }
 
-        $version          = $header->version;
-        $flags            = $header->flags;
+        $version = $header->version;
+        $flags   = $header->flags;
 
         // ISO/IEC 14496-12 §8.3.2: version 0 uses 32-bit timestamps, version 1 uses 64-bit
         if ($version === 1) {
@@ -564,13 +564,13 @@ final readonly class TrackMediaParser
             $modifyDate = $win->readU64BE()->toInt('tkhd modification_time');
             $trackId    = $win->readU32BE();
             $win->read(4); // reserved
-            $duration   = $win->readU64BE()->toInt('tkhd duration');
+            $duration = $win->readU64BE()->toInt('tkhd duration');
         } else {
             $createDate = $win->readU32BE();
             $modifyDate = $win->readU32BE();
             $trackId    = $win->readU32BE();
             $win->read(4); // reserved
-            $duration   = $win->readU32BE();
+            $duration = $win->readU32BE();
         }
 
         // ISO/IEC 14496-12 §8.3.2: track_ID must be non-zero
@@ -580,26 +580,26 @@ final readonly class TrackMediaParser
 
         $win->read(8); // reserved (64-bit)
 
-        $layer            = $this->decodeSigned16($win->readU16BE());
+        $layer = $this->decodeSigned16($win->readU16BE());
         $win->read(2); // alternate group
-        $volume           = $win->readU16BE() / 256.0;
+        $volume = $win->readU16BE() / 256.0;
 
         $win->read(2); // reserved (16-bit)
 
-        $matrixRaw        = $this->readMatrixRaw($win);
-        $matrix           = $this->formatMatrix($matrixRaw);
-        $rotation         = $this->computeRotation($matrixRaw);
+        $matrixRaw = $this->readMatrixRaw($win);
+        $matrix    = $this->formatMatrix($matrixRaw);
+        $rotation  = $this->computeRotation($matrixRaw);
 
-        $widthFixed       = $win->readU32BE();
-        $heightFixed      = $win->readU32BE();
+        $widthFixed  = $win->readU32BE();
+        $heightFixed = $win->readU32BE();
 
         // ISO/IEC 14496-12 §8.3.2: when track_size_is_aspect_ratio flag is set,
         // width/height represent aspect ratio, not pixel dimensions
-        $isAspectRatio    = ($flags & 0x000008) !== 0;
+        $isAspectRatio = ($flags & 0x000008) !== 0;
 
         // Decode 16.16 fixed-point with rounding instead of truncation
-        $width            = ($widthFixed > 0 && !$isAspectRatio) ? (int) round($widthFixed / 65536) : null;
-        $height           = ($heightFixed > 0 && !$isAspectRatio) ? (int) round($heightFixed / 65536) : null;
+        $width  = ($widthFixed > 0 && !$isAspectRatio) ? (int) round($widthFixed / 65536) : null;
+        $height = ($heightFixed > 0 && !$isAspectRatio) ? (int) round($heightFixed / 65536) : null;
 
         // ISO/IEC 14496-12 §8.3.2: usable movie tracks are enabled and marked in_movie.
         $isTrackEnabled   = ($flags & self::TKHD_FLAG_TRACK_ENABLED) !== 0;
@@ -677,14 +677,14 @@ final readonly class TrackMediaParser
         int $payloadCode,
         int $timescaleCode,
     ): array {
-        $win        = $box->window;
+        $win = $box->window;
         $win->seek(0);
 
         if ($box->contentSize < 4) {
             throw new ParseError('box truncated', $truncatedCode);
         }
 
-        $header     = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         if (($header->version !== 0) && ($header->version !== 1)) {
             throw new ParseError('unsupported box version', $versionCode);
@@ -709,7 +709,7 @@ final readonly class TrackMediaParser
             $modifyDate = $win->readU32BE();
         }
 
-        $timescale  = $win->readU32BE();
+        $timescale = $win->readU32BE();
 
         if ($timescale === 0) {
             throw new ParseError('timescale must not be zero', $timescaleCode);
@@ -737,8 +737,8 @@ final readonly class TrackMediaParser
      */
     private function parseMdhd(BoxDescriptor $mdhd): array
     {
-        $header   = $this->parseTimescaleHeader($mdhd, 24, 36, 1901, 1903, 1904, 1902, 1905);
-        $win      = $mdhd->window;
+        $header = $this->parseTimescaleHeader($mdhd, 24, 36, 1901, 1903, 1904, 1902, 1905);
+        $win    = $mdhd->window;
 
         // Duration: 8 bytes for v1, 4 bytes for v0
         $duration = ($header['version'] === 1)
@@ -803,7 +803,7 @@ final readonly class TrackMediaParser
         $udtaCount    = 0;
 
         // Collect children first so hdlr/minf order does not matter
-        $children     = [];
+        $children = [];
 
         foreach ($this->boxNavigator->walkChildren($mdia) as $child) {
             if ($child->type === BoxType::HDLR->value) {
@@ -875,11 +875,11 @@ final readonly class TrackMediaParser
             return [[], []];
         }
 
-        $stblCount        = 0;
-        $dinfCount        = 0;
-        $mediaHdrType     = null;
-        $mediaHdrInfo     = [];
-        $result           = [];
+        $stblCount    = 0;
+        $dinfCount    = 0;
+        $mediaHdrType = null;
+        $mediaHdrInfo = [];
+        $result       = [];
 
         // Determine expected media header box from handler type
         $expectedMediaHdr = match ($handlerType) {
@@ -954,14 +954,14 @@ final readonly class TrackMediaParser
      */
     private function parseVmhd(BoxDescriptor $vmhd): array
     {
-        $win          = $vmhd->window;
+        $win = $vmhd->window;
         $win->seek(0);
 
         if ($vmhd->contentSize < 12) {
             throw new ParseError('vmhd box truncated', 2101);
         }
 
-        $header       = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         if ($header->version !== 0) {
             throw new ParseError('unsupported vmhd box version', 2102);
@@ -992,14 +992,14 @@ final readonly class TrackMediaParser
      */
     private function parseSmhd(BoxDescriptor $smhd): array
     {
-        $win        = $smhd->window;
+        $win = $smhd->window;
         $win->seek(0);
 
         if ($smhd->contentSize < 8) {
             throw new ParseError('smhd box truncated', 2103);
         }
 
-        $header     = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         if ($header->version !== 0) {
             throw new ParseError('unsupported smhd box version', 2104);
@@ -1102,14 +1102,14 @@ final readonly class TrackMediaParser
      */
     private function parseStsd(BoxDescriptor $stsd, string $handlerType): array
     {
-        $win        = $stsd->window;
+        $win = $stsd->window;
         $win->seek(0);
 
         if ($stsd->contentSize < 8) {
             throw new ParseError('stsd box truncated', 1153);
         }
 
-        $header     = $this->boxNavigator->readFullBoxHeader($win);
+        $header = $this->boxNavigator->readFullBoxHeader($win);
 
         // ISO/IEC 14496-12 §8.5.2.2/§8.5.2.3: stsd is a FullBox with flags=0.
         // Version 1 is only valid in audio sample-description context.
@@ -1136,8 +1136,8 @@ final readonly class TrackMediaParser
             throw new ParseError('stsd entry count exceeds maximum allowed', 1156);
         }
 
-        $result     = [];
-        $pos        = $win->tell();
+        $result = [];
+        $pos    = $win->tell();
 
         for ($i = 0; $i < $entryCount; ++$i) {
             if ($pos + 8 > $stsd->contentSize) {
@@ -1145,15 +1145,15 @@ final readonly class TrackMediaParser
             }
 
             $win->seek($pos);
-            $entrySize    = $win->readU32BE();
-            $format       = $win->read(4);
+            $entrySize = $win->readU32BE();
+            $format    = $win->read(4);
 
             if (($entrySize < 16) || (($pos + $entrySize) > $stsd->contentSize)) {
                 throw new ParseError('invalid stsd entry size', 1158);
             }
 
-            $entryStart   = $win->tell();
-            $entryEnd     = $pos + $entrySize;
+            $entryStart = $win->tell();
+            $entryEnd   = $pos + $entrySize;
 
             // ISO 14496-12 §8.5.2.2: reserved 6-byte field (ignored for tolerance)
             $win->read(6);

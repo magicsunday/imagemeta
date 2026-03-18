@@ -47,7 +47,7 @@ final readonly class FormatDetector
      *
      * @var array<string, bool>
      */
-    private const array PADDING_BOXES            = [
+    private const array PADDING_BOXES = [
         'free' => true,
         'skip' => true,
         'wide' => true,
@@ -58,7 +58,7 @@ final readonly class FormatDetector
     /**
      * Maximum byte budget for ISO BMFF detection scanning.
      */
-    private const int ISO_BMFF_MAX_SCAN_BYTES    = 65536;
+    private const int ISO_BMFF_MAX_SCAN_BYTES = 65536;
 
     /**
      * Inspects the leading bytes of the stream and returns the detected container type.
@@ -272,7 +272,7 @@ final readonly class FormatDetector
                 return false;
             }
 
-            $skip       = $size - $headerSize;
+            $skip = $size - $headerSize;
 
             if ($skip > 0) {
                 try {

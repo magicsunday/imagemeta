@@ -46,7 +46,7 @@ final readonly class GpsUnitConverter
      *
      * @var list<string>
      */
-    private const array GPS_SPEED_REF_VALUES    = ['K', 'M', 'N'];
+    private const array GPS_SPEED_REF_VALUES = ['K', 'M', 'N'];
 
     /**
      * EXIF 3.0 §4.6.7.1.26 GPSDestDistanceRef: 'K' (km), 'M' (miles) or 'N' (nautical miles).
@@ -81,21 +81,21 @@ final readonly class GpsUnitConverter
      */
     public function extractFromIfd(Ifd $gps): array
     {
-        $result                               = [
+        $result = [
             'alt_ref' => null,
             'alt'     => null,
         ];
 
         // Altitude
-        $altRefEntry                          = $gps->get(ExifTag::GPS_ALTITUDE_REF);
-        $altRefValue                          = $altRefEntry?->value;
-        $altRef                               = $this->normalizeAltitudeRef($altRefValue);
+        $altRefEntry = $gps->get(ExifTag::GPS_ALTITUDE_REF);
+        $altRefValue = $altRefEntry?->value;
+        $altRef      = $this->normalizeAltitudeRef($altRefValue);
 
         if ($altRef !== null) {
             $result['alt_ref'] = $altRef;
         }
 
-        $altEntry                             = $gps->get(ExifTag::GPS_ALTITUDE);
+        $altEntry = $gps->get(ExifTag::GPS_ALTITUDE);
 
         if ($altEntry instanceof IfdEntry) {
             // EXIF 3.0 §4.6.7.1.6: default GPSAltitudeRef is 0 when tag is missing
@@ -121,15 +121,15 @@ final readonly class GpsUnitConverter
         }
 
         // Speed
-        $speedRefEntry                        = $gps->get(ExifTag::GPS_SPEED_REF);
-        $speedEntry                           = $gps->get(ExifTag::GPS_SPEED);
-        $speedRefValue                        = $speedRefEntry?->value;
+        $speedRefEntry = $gps->get(ExifTag::GPS_SPEED_REF);
+        $speedEntry    = $gps->get(ExifTag::GPS_SPEED);
+        $speedRefValue = $speedRefEntry?->value;
 
-        $speedOriginalRef                     = $this->validateGpsRef(
+        $speedOriginalRef = $this->validateGpsRef(
             is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null,
             self::GPS_SPEED_REF_VALUES,
         );
-        $speedRef                             = $this->validateGpsRef(
+        $speedRef = $this->validateGpsRef(
             is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null,
             self::GPS_SPEED_REF_VALUES,
         );
@@ -138,21 +138,21 @@ final readonly class GpsUnitConverter
             $speedRef = 'K';
         }
 
-        $result['speed_ref']                  = $speedRef;
-        $result['speed_ms']                   = $this->speedToMs($speedRef, $speedEntry?->value);
-        $result['speed_original_ref']         = $speedOriginalRef;
-        $result['speed_original']             = $this->rationalConverter->toFloat($speedEntry?->value);
+        $result['speed_ref']          = $speedRef;
+        $result['speed_ms']           = $this->speedToMs($speedRef, $speedEntry?->value);
+        $result['speed_original_ref'] = $speedOriginalRef;
+        $result['speed_original']     = $this->rationalConverter->toFloat($speedEntry?->value);
 
         // Destination distance
-        $destDistRefEntry                     = $gps->get(ExifTag::GPS_DEST_DISTANCE_REF);
-        $destDistEntry                        = $gps->get(ExifTag::GPS_DEST_DISTANCE);
-        $destDistanceRefValue                 = $destDistRefEntry?->value;
+        $destDistRefEntry     = $gps->get(ExifTag::GPS_DEST_DISTANCE_REF);
+        $destDistEntry        = $gps->get(ExifTag::GPS_DEST_DISTANCE);
+        $destDistanceRefValue = $destDistRefEntry?->value;
 
-        $destDistanceOriginalRef              = $this->validateGpsRef(
+        $destDistanceOriginalRef = $this->validateGpsRef(
             is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null,
             self::GPS_DISTANCE_REF_VALUES,
         );
-        $result['dest_distance_ref']          = $this->validateGpsRef(
+        $result['dest_distance_ref'] = $this->validateGpsRef(
             is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null,
             self::GPS_DISTANCE_REF_VALUES,
         );
@@ -298,7 +298,7 @@ final readonly class GpsUnitConverter
             return null;
         }
 
-        $numeric       = $this->rationalConverter->toFloat($value);
+        $numeric = $this->rationalConverter->toFloat($value);
 
         if ($numeric === null) {
             return null;
@@ -330,7 +330,7 @@ final readonly class GpsUnitConverter
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
         array $conversions,
     ): ?float {
-        $resolved   = $this->resolveNumericReference($ref, $value);
+        $resolved = $this->resolveNumericReference($ref, $value);
 
         if ($resolved === null) {
             return null;

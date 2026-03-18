@@ -71,7 +71,7 @@ final class AppleMakerNotesBuilderNewFieldsTest extends TestCase
     #[Test]
     public function buildExtractsMediaGroupUuid(): void
     {
-        $builder    = new AppleMakerNotesBuilder();
+        $builder = new AppleMakerNotesBuilder();
 
         $dictionary = [
             'MediaGroupUUID' => 'E621E1F8-C36C-495A-93FC-0C247A3E6E5F',
@@ -91,7 +91,7 @@ final class AppleMakerNotesBuilderNewFieldsTest extends TestCase
     #[Test]
     public function buildExtractsContentIdentifierAndMediaGroupUuid(): void
     {
-        $builder    = new AppleMakerNotesBuilder();
+        $builder = new AppleMakerNotesBuilder();
 
         $dictionary = [
             'ContentIdentifier' => 'ABCD-1234',
@@ -125,7 +125,7 @@ final class AppleMakerNotesBuilderNewFieldsTest extends TestCase
     #[Test]
     public function buildCreatesIdentityWithOnlyMediaGroupUuid(): void
     {
-        $builder    = new AppleMakerNotesBuilder();
+        $builder = new AppleMakerNotesBuilder();
 
         $dictionary = [
             'MediaGroupUUID' => 'AABB-CCDD',

@@ -122,7 +122,7 @@ final class StreamWindowTest extends TestCase
             . pack('N', 0x01020304)
             . pack('N2', 0x01234567, 0x89ABCDEF);
 
-        $window  = new StreamWindow($this->createStream($payload), 0, strlen($payload));
+        $window = new StreamWindow($this->createStream($payload), 0, strlen($payload));
 
         self::assertSame(0xAA, $window->readU8());
         self::assertSame(0xBEEF, $window->readU16BE());

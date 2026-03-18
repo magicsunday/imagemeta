@@ -54,25 +54,25 @@ use function strlen;
 #[UsesClass(MpImageType::class)]
 final class MpfParserTest extends TestCase
 {
-    private const int TAG_MPF_VERSION             = 0xB000;
+    private const int TAG_MPF_VERSION = 0xB000;
 
-    private const int TAG_NUMBER_OF_IMAGES        = 0xB001;
+    private const int TAG_NUMBER_OF_IMAGES = 0xB001;
 
-    private const int TAG_MP_ENTRY                = 0xB002;
+    private const int TAG_MP_ENTRY = 0xB002;
 
-    private const int TAG_IMAGE_UID_LIST          = 0xB003;
+    private const int TAG_IMAGE_UID_LIST = 0xB003;
 
-    private const int TAG_TOTAL_FRAMES            = 0xB004;
+    private const int TAG_TOTAL_FRAMES = 0xB004;
 
     private const int TAG_INDIVIDUAL_IMAGE_NUMBER = 0xB101;
 
-    private const int TYPE_ASCII                  = 2;
+    private const int TYPE_ASCII = 2;
 
-    private const int TYPE_LONG                   = 4;
+    private const int TYPE_LONG = 4;
 
-    private const int TYPE_UNDEFINED              = 7;
+    private const int TYPE_UNDEFINED = 7;
 
-    private const int TYPE_BYTE                   = 1;
+    private const int TYPE_BYTE = 1;
 
     /**
      * Parses a full MPF payload including image entries and attribute tags.
@@ -81,15 +81,15 @@ final class MpfParserTest extends TestCase
     #[Test]
     public function parsesCompleteMpfPayloadWithAttributes(): void
     {
-        $entriesData      = $this->buildMpEntries([
+        $entriesData = $this->buildMpEntries([
             [0x83000044, 1_000, 2_048, 1, 0],
             [0x44000088, 2_000, 4_096, 0, 2],
         ]);
 
-        $uidList          = str_repeat("\xAB", 33);
-        $extraTagData     = pack('C*', 1, 2, 3, 4, 5, 6);
+        $uidList      = str_repeat("\xAB", 33);
+        $extraTagData = pack('C*', 1, 2, 3, 4, 5, 6);
 
-        $indexEntries     = [
+        $indexEntries = [
             [self::TAG_MPF_VERSION, self::TYPE_ASCII, 4, '0100'],
             [self::TAG_NUMBER_OF_IMAGES, self::TYPE_LONG, 1, 2],
             [self::TAG_MP_ENTRY, self::TYPE_UNDEFINED, strlen($entriesData), $entriesData],
@@ -102,12 +102,12 @@ final class MpfParserTest extends TestCase
             [0xB123, self::TYPE_BYTE, strlen($extraTagData), $extraTagData],
         ];
 
-        $payload          = $this->buildMpfPayload($indexEntries, $attributeEntries);
+        $payload = $this->buildMpfPayload($indexEntries, $attributeEntries);
 
-        $parser           = new MpfParser();
-        $document         = $parser->parse($payload);
+        $parser   = new MpfParser();
+        $document = $parser->parse($payload);
 
-        $expected         = new MpfDocument(
+        $expected = new MpfDocument(
             version: '0100',
             imageCount: 2,
             entries: [
@@ -156,7 +156,7 @@ final class MpfParserTest extends TestCase
     #[Test]
     public function defaultsImageCountWhenTagMissing(): void
     {
-        $entriesData  = $this->buildMpEntries([
+        $entriesData = $this->buildMpEntries([
             [0x01020304, 512, 1_024, 0, 0],
             [0x02030405, 256, 2_048, 0, 1],
         ]);
@@ -166,8 +166,8 @@ final class MpfParserTest extends TestCase
             [self::TAG_MP_ENTRY, self::TYPE_UNDEFINED, strlen($entriesData), $entriesData],
         ];
 
-        $parser       = new MpfParser();
-        $document     = $parser->parse($this->buildMpfPayload($indexEntries));
+        $parser   = new MpfParser();
+        $document = $parser->parse($this->buildMpfPayload($indexEntries));
 
         self::assertSame(2, $document->imageCount);
         self::assertCount(2, $document->entries);
@@ -185,7 +185,7 @@ final class MpfParserTest extends TestCase
             [self::TAG_MP_ENTRY, self::TYPE_UNDEFINED, 3, 'bad'],
         ];
 
-        $parser       = new MpfParser();
+        $parser = new MpfParser();
 
         $this->expectException(ParseError::class);
         $parser->parse($this->buildMpfPayload($indexEntries));
@@ -197,7 +197,7 @@ final class MpfParserTest extends TestCase
     #[Test]
     public function decomposesRepresentativeParentEntry(): void
     {
-        $entriesData  = $this->buildMpEntries([
+        $entriesData = $this->buildMpEntries([
             [0xE3000000, 4_096, 0, 0, 0],
         ]);
 
@@ -207,10 +207,10 @@ final class MpfParserTest extends TestCase
             [self::TAG_MP_ENTRY, self::TYPE_UNDEFINED, strlen($entriesData), $entriesData],
         ];
 
-        $parser       = new MpfParser();
-        $document     = $parser->parse($this->buildMpfPayload($indexEntries));
+        $parser   = new MpfParser();
+        $document = $parser->parse($this->buildMpfPayload($indexEntries));
 
-        $entry        = $document->entries[0];
+        $entry = $document->entries[0];
         self::assertTrue($entry->isDependentParent);
         self::assertTrue($entry->isDependentChild);
         self::assertTrue($entry->isRepresentativeImage);
@@ -268,7 +268,7 @@ final class MpfParserTest extends TestCase
 
     private function parseSingleEntryType(int $attributes): ?MpImageType
     {
-        $entriesData  = $this->buildMpEntries([
+        $entriesData = $this->buildMpEntries([
             [$attributes, 1_024, 0, 0, 0],
         ]);
 
@@ -278,8 +278,8 @@ final class MpfParserTest extends TestCase
             [self::TAG_MP_ENTRY, self::TYPE_UNDEFINED, strlen($entriesData), $entriesData],
         ];
 
-        $parser       = new MpfParser();
-        $document     = $parser->parse($this->buildMpfPayload($indexEntries));
+        $parser   = new MpfParser();
+        $document = $parser->parse($this->buildMpfPayload($indexEntries));
 
         return $document->entries[0]->imageType;
     }
@@ -308,11 +308,11 @@ final class MpfParserTest extends TestCase
      */
     private function buildMpfPayload(array $entries, ?array $attributeEntries = null): string
     {
-        $header          = 'II' . pack('v', 42);
-        $firstIfdOffset  = 8;
+        $header         = 'II' . pack('v', 42);
+        $firstIfdOffset = 8;
 
-        $indexIfd        = $this->prepareIfd($entries, $firstIfdOffset);
-        $indexLen        = strlen($indexIfd['body']) + 4;
+        $indexIfd = $this->prepareIfd($entries, $firstIfdOffset);
+        $indexLen = strlen($indexIfd['body']) + 4;
 
         $attributeOffset = 0;
         $attributeIfd    = null;
@@ -325,7 +325,7 @@ final class MpfParserTest extends TestCase
         $indexNextOffset = $attributeEntries !== null ? $attributeOffset : 0;
         $indexBinary     = $indexIfd['body'] . pack('V', $indexNextOffset);
 
-        $payload         = $header . pack('V', $firstIfdOffset) . $indexBinary . $indexIfd['data'];
+        $payload = $header . pack('V', $firstIfdOffset) . $indexBinary . $indexIfd['data'];
 
         if ($attributeIfd !== null) {
             $payload .= $attributeIfd['body'] . pack('V', 0) . $attributeIfd['data'];

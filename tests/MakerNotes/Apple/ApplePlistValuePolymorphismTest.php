@@ -45,7 +45,7 @@ final class ApplePlistValuePolymorphismTest extends TestCase
         $value      = new ApplePlistScalar('value');
         $unarchiver = new KeyedArchiveUnarchiver();
 
-        $resolved   = $value->resolveValue($unarchiver);
+        $resolved = $value->resolveValue($unarchiver);
 
         self::assertSame($value, $resolved);
     }

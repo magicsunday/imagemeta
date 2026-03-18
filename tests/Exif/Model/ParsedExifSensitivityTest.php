@@ -108,7 +108,7 @@ final class ParsedExifSensitivityTest extends TestCase
     #[Test]
     public function isoSpeedLatitudeYyyRequiresRelatedTags(): void
     {
-        $parsedExif    = $this->parsedExifFromExifEntries([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::ISO_SPEED_LATITUDE_YYY => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 4, 1, 20),
             ExifTag::ISO_SPEED_LATITUDE_ZZZ => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 4, 1, 30),
         ]);
@@ -137,7 +137,7 @@ final class ParsedExifSensitivityTest extends TestCase
         array $tagValues,
         int $expected,
     ): void {
-        $entries    = [
+        $entries = [
             ExifTag::SENSITIVITY_TYPE => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, $sensitivityType->value),
         ];
 

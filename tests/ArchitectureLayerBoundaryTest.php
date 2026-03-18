@@ -63,10 +63,10 @@ final class ArchitectureLayerBoundaryTest extends TestCase
         $srcRoot        = __DIR__ . '/../src';
         $restrictedDirs = ['Model', 'Convenience', 'Exif', 'Value'];
 
-        $violations     = [];
+        $violations = [];
 
         foreach ($restrictedDirs as $dir) {
-            $dirPath  = $srcRoot . '/' . $dir;
+            $dirPath = $srcRoot . '/' . $dir;
 
             if (!is_dir($dirPath)) {
                 continue;
@@ -88,7 +88,7 @@ final class ArchitectureLayerBoundaryTest extends TestCase
                     continue;
                 }
 
-                $matches  = [];
+                $matches = [];
                 preg_match_all(
                     '/^use\s+MagicSunday\\\\ImageMeta\\\\Parse\\\\/m',
                     $contents,

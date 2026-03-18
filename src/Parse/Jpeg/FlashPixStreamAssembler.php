@@ -40,31 +40,31 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
     private const int FLASHPIX_STORAGE_ENTITY_SIZE = 0xFFFFFFFF;
 
     /** @var array<int, array{size:int, defaultByte:int, isStorage:bool, skipAssembly:bool}> */
-    private array $contents                        = [];
+    private array $contents = [];
 
     /** @var array<int, list<array{offset:int, data:string}>> */
-    private array $chunks                          = [];
+    private array $chunks = [];
 
     /** @var array<int, list<array{start:int, end:int}>> */
-    private array $ranges                          = [];
+    private array $ranges = [];
 
     /** @var array<int, int> */
-    private array $sequenceExpectedCount           = [];
+    private array $sequenceExpectedCount = [];
 
     /** @var array<int, array<int, bool>> */
-    private array $sequenceSeen                    = [];
+    private array $sequenceSeen = [];
 
     /** @var array<int, int> */
-    private array $sequenceFirstOffset             = [];
+    private array $sequenceFirstOffset = [];
 
-    private bool $contentsSeen                     = false;
+    private bool $contentsSeen = false;
 
-    private ?int $lastStreamIndex                  = null;
+    private ?int $lastStreamIndex = null;
 
     /** @var array<int, string> */
-    private array $streams                         = [];
+    private array $streams = [];
 
-    private int $cumulativeStreamSize              = 0;
+    private int $cumulativeStreamSize = 0;
 
     /**
      * @param int $maxContentEntries    Maximum allowed FlashPix contents-list entries.
@@ -143,13 +143,13 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
                 continue;
             }
 
-            $chunks                = $this->chunks[$index];
+            $chunks = $this->chunks[$index];
 
             if ($chunks === []) {
                 continue;
             }
 
-            $assembledSize         = $entry['size'];
+            $assembledSize = $entry['size'];
             $aggregateSize += $assembledSize;
 
             if ($aggregateSize > $this->maxFlashPixTotalSize) {
@@ -168,9 +168,9 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
                 static fn (array $left, array $right): int => $left['offset'] <=> $right['offset'],
             );
 
-            $assembled             = '';
-            $cursor                = 0;
-            $fillByte              = chr($entry['defaultByte']);
+            $assembled = '';
+            $cursor    = 0;
+            $fillByte  = chr($entry['defaultByte']);
 
             foreach ($chunks as $chunk) {
                 if ($chunk['offset'] > $cursor) {
@@ -227,7 +227,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             throw new ParseError(sprintf('FlashPix segment at offset %d has invalid FPXR ID header', $offset), 1324);
         }
 
-        $version         = ord($payload[$signatureLength + 1]);
+        $version = ord($payload[$signatureLength + 1]);
 
         if ($version !== 0) {
             throw new ParseError(
@@ -258,7 +258,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
     {
         PayloadGuard::ensureMinimumLength($body, 2, sprintf('FlashPix contents list at offset %d', $offset), 1282);
 
-        $entryCount     = (ord($body[0]) << 8) | ord($body[1]);
+        $entryCount = (ord($body[0]) << 8) | ord($body[1]);
 
         if ($entryCount > $this->maxContentEntries) {
             throw new ParseError(
@@ -282,14 +282,14 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
                 break;
             }
 
-            $entitySize             = (ord($body[$cursor]) << 24)
+            $entitySize = (ord($body[$cursor]) << 24)
                 | (ord($body[$cursor + 1]) << 16)
                 | (ord($body[$cursor + 2]) << 8)
                 | ord($body[$cursor + 3]);
-            $defaultByte            = ord($body[$cursor + 4]);
+            $defaultByte = ord($body[$cursor + 4]);
             $cursor += 5;
 
-            $name                   = $this->parseName($body, $cursor);
+            $name = $this->parseName($body, $cursor);
 
             if ($name === null) {
                 // Postel's Law: tolerate unterminated names and skip the
@@ -297,10 +297,10 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
                 break;
             }
 
-            [, $cursor]             = $name;
+            [, $cursor] = $name;
 
-            $isStorage              = $entitySize === self::FLASHPIX_STORAGE_ENTITY_SIZE;
-            $skipAssembly           = !$isStorage && $entitySize > $this->maxStreamSize;
+            $isStorage    = $entitySize === self::FLASHPIX_STORAGE_ENTITY_SIZE;
+            $skipAssembly = !$isStorage && $entitySize > $this->maxStreamSize;
 
             if ($isStorage) {
                 if (($length - $cursor) < 16) {
@@ -338,8 +338,8 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      */
     private function parseName(string $body, int $cursor): ?array
     {
-        $length             = strlen($body);
-        $nameBytes          = '';
+        $length    = strlen($body);
+        $nameBytes = '';
 
         while (true) {
             if (($length - $cursor) < 2) {
@@ -369,7 +369,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             return ['', $cursor];
         }
 
-        $decoded            = iconv('UTF-16LE', 'UTF-8//IGNORE', $sanitizedNameBytes);
+        $decoded = iconv('UTF-16LE', 'UTF-8//IGNORE', $sanitizedNameBytes);
 
         if ($decoded === false || $decoded === '') {
             return ['', $cursor];
@@ -463,7 +463,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
 
         $this->validateSequenceMetadata($header, $offset);
 
-        $range  = $this->validateRangeAndOverlap($header, $entry, $offset);
+        $range = $this->validateRangeAndOverlap($header, $entry, $offset);
 
         if ($range === null) {
             return;
@@ -512,9 +512,9 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      */
     private function validateSequenceMetadata(array $header, int $offset): void
     {
-        $index                                       = $header['index'];
-        $sequenceNumber                              = $header['sequenceNumber'];
-        $sequenceCount                               = $header['sequenceCount'];
+        $index          = $header['index'];
+        $sequenceNumber = $header['sequenceNumber'];
+        $sequenceCount  = $header['sequenceCount'];
 
         if (($sequenceCount === 0) || ($sequenceNumber === 0) || ($sequenceNumber > $sequenceCount)) {
             throw new ParseError(
@@ -574,9 +574,9 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      */
     private function validateRangeAndOverlap(array $header, array $entry, int $offset): ?array
     {
-        $index                      = $header['index'];
-        $streamOffset               = $header['streamOffset'];
-        $data                       = $header['data'];
+        $index        = $header['index'];
+        $streamOffset = $header['streamOffset'];
+        $data         = $header['data'];
 
         if ($entry['isStorage']) {
             throw new ParseError(
@@ -610,15 +610,15 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             );
         }
 
-        $this->lastStreamIndex      = $index;
+        $this->lastStreamIndex = $index;
 
-        $chunkLength                = strlen($data);
+        $chunkLength = strlen($data);
 
         if ($chunkLength === 0) {
             return null;
         }
 
-        $newCumulativeSize          = $this->cumulativeStreamSize + $chunkLength;
+        $newCumulativeSize = $this->cumulativeStreamSize + $chunkLength;
 
         if ($newCumulativeSize > $this->maxFlashPixTotalSize) {
             throw new ParseError(
@@ -634,8 +634,8 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
 
         $this->cumulativeStreamSize = $newCumulativeSize;
 
-        $start                      = $streamOffset;
-        $end                        = $streamOffset + $chunkLength;
+        $start = $streamOffset;
+        $end   = $streamOffset + $chunkLength;
 
         if (!array_key_exists($index, $this->ranges)) {
             $this->ranges[$index] = [];
@@ -665,7 +665,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      */
     private function commitStreamChunk(array $header, array $range): void
     {
-        $index                  = $header['index'];
+        $index = $header['index'];
 
         $this->ranges[$index][] = $range;
 

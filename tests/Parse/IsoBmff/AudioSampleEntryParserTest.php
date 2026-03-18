@@ -59,7 +59,7 @@ final class AudioSampleEntryParserTest extends TestCase
         $expectedRate = 96000;
 
         // Build version-1 audio sample entry specific fields
-        $entryFields  = pack('n', 1)          // version = 1
+        $entryFields = pack('n', 1)          // version = 1
             . pack('n', 0)                   // revision level
             . pack('N', 0)                   // vendor
             . pack('n', 2)                   // channels
@@ -73,14 +73,14 @@ final class AudioSampleEntryParserTest extends TestCase
             . pack('N', 0);                  // bytesPerSample
 
         // Append srat FullBox: size(4) + type(4) + version/flags(4) + samplingRate(4) = 16
-        $sratBox      = $this->fullBox('srat', pack('N', $expectedRate));
-        $payload      = $entryFields . $sratBox;
+        $sratBox = $this->fullBox('srat', pack('N', $expectedRate));
+        $payload = $entryFields . $sratBox;
 
-        $stream       = new Stream($this->createTempStream($payload), strlen($payload));
-        $win          = new StreamWindow($stream, 0, strlen($payload));
+        $stream = new Stream($this->createTempStream($payload), strlen($payload));
+        $win    = new StreamWindow($stream, 0, strlen($payload));
 
-        $parser       = new AudioSampleEntryParser();
-        $result       = $parser->parseSoundSampleEntry(
+        $parser = new AudioSampleEntryParser();
+        $result = $parser->parseSoundSampleEntry(
             $win,
             0,
             strlen($payload),

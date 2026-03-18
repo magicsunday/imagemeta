@@ -110,7 +110,7 @@ final readonly class PlistTextParser
                 throw new ParseError('Unterminated dictionary payload.', 1105);
             }
 
-            $char             = $cursor->peek();
+            $char = $cursor->peek();
 
             if ($char === '}') {
                 $cursor->advance();
@@ -118,7 +118,7 @@ final readonly class PlistTextParser
                 break;
             }
 
-            $key              = $this->parseKey($cursor);
+            $key = $this->parseKey($cursor);
 
             $this->skipWhitespace($cursor);
 
@@ -126,7 +126,7 @@ final readonly class PlistTextParser
                 throw new ParseError('Dictionary entry without value.', 1106);
             }
 
-            $delimiter        = $cursor->peek();
+            $delimiter = $cursor->peek();
 
             if (($delimiter !== '=') && ($delimiter !== ':')) {
                 throw new ParseError('Dictionary entry is missing a separator.', 1107);
@@ -134,7 +134,7 @@ final readonly class PlistTextParser
 
             $cursor->advance();
 
-            $value            = $this->parseValue($cursor, $depth);
+            $value = $this->parseValue($cursor, $depth);
 
             $dictionary[$key] = $value;
 
@@ -144,7 +144,7 @@ final readonly class PlistTextParser
                 throw new ParseError('Unexpected end of dictionary payload.', 1108);
             }
 
-            $terminator       = $cursor->peek();
+            $terminator = $cursor->peek();
 
             if ($terminator === ';' || $terminator === ',') {
                 $cursor->advance();
@@ -174,7 +174,7 @@ final readonly class PlistTextParser
             throw new ParseError('Missing value for dictionary entry.', 1109);
         }
 
-        $char  = $cursor->peek();
+        $char = $cursor->peek();
 
         if ($char === '{') {
             /** @phpstan-ignore-next-line */
@@ -190,7 +190,7 @@ final readonly class PlistTextParser
             return $this->parseQuotedString($cursor);
         }
 
-        $word  = $this->parseWord($cursor);
+        $word = $this->parseWord($cursor);
 
         if ($word === '') {
             return null;
@@ -264,7 +264,7 @@ final readonly class PlistTextParser
                 break;
             }
 
-            $values[]   = $this->parseValue($cursor, $depth);
+            $values[] = $this->parseValue($cursor, $depth);
 
             $this->skipWhitespace($cursor);
 

@@ -121,7 +121,7 @@ final class DjiDecoderTest extends TestCase
 
     private function buildLittleEndianDjiMakerNote(): string
     {
-        $entries   = [];
+        $entries = [];
 
         $entries[] = $this->buildEntry(0x0003, 11, 1, pack('g', -1.5));
         $entries[] = $this->buildEntry(0x0004, 11, 1, pack('g', 2.3));
@@ -139,7 +139,7 @@ final class DjiDecoderTest extends TestCase
 
     private function buildBigEndianDjiMakerNote(): string
     {
-        $entries   = [];
+        $entries = [];
 
         $entries[] = $this->buildBigEndianEntry(0x0006, 11, 1, pack('G', -5.0));
         $entries[] = $this->buildBigEndianEntry(0x000E, 11, 1, pack('G', 275.3));

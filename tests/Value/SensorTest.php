@@ -46,7 +46,7 @@ final class SensorTest extends TestCase
 
         self::assertInstanceOf(CfaPattern::class, $cfaPattern);
 
-        $sensor     = new Sensor(
+        $sensor = new Sensor(
             pixelPitchUm: null,
             sensorType: null,
             ibis: false,

@@ -35,5 +35,5 @@ enum GpsStatus: string
      * Measurement interoperability (void).
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case MeasurementVoid       = 'V';
+    case MeasurementVoid = 'V';
 }

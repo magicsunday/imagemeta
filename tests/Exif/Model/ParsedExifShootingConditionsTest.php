@@ -130,7 +130,7 @@ final class ParsedExifShootingConditionsTest extends TestCase
             ExifTag::FLASH => new IfdEntry(ExifTag::FLASH, 3, 1, 0x7D),
         ]);
 
-        $flashInfo  = $parsedExif->flashInfo();
+        $flashInfo = $parsedExif->flashInfo();
 
         self::assertSame(0x7D, $parsedExif->flash());
         self::assertNotNull($flashInfo);
@@ -177,7 +177,7 @@ final class ParsedExifShootingConditionsTest extends TestCase
     {
         $spectralString = "ISO 12232 SOS\0";
 
-        $parsedExif     = $this->parsedExifFromExifEntries([
+        $parsedExif = $this->parsedExifFromExifEntries([
             ExifTag::SPECTRAL_SENSITIVITY => new IfdEntry(ExifTag::SPECTRAL_SENSITIVITY, 2, 14, $spectralString),
         ]);
 

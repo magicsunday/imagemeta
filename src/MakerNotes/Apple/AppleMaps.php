@@ -21,7 +21,7 @@ final class AppleMaps
      *
      * @var array<int, string>
      */
-    public const array CAMERA_TYPE_MAP       = [
+    public const array CAMERA_TYPE_MAP = [
         0 => 'Back Wide Angle',
         1 => 'Back Normal',
         6 => 'Front',
@@ -42,7 +42,7 @@ final class AppleMaps
      *
      * @var array<string, array<int, string>>
      */
-    public const array FLAG_MASK_MAP         = [
+    public const array FLAG_MASK_MAP = [
         'SceneFlags' => [
             0 => 'nightMode',
             1 => 'longExposure',
@@ -62,7 +62,7 @@ final class AppleMaps
      *
      * @var array<string, string>
      */
-    public const array FLAG_MAP              = [
+    public const array FLAG_MAP = [
         'AEStable'              => 'aeStable',
         'AFStable'              => 'afStable',
         'LivePhotoAuto'         => 'livePhotoAuto',
@@ -83,7 +83,7 @@ final class AppleMaps
      *
      * @var array<int, string>
      */
-    public const array HDR_IMAGE_TYPES       = [
+    public const array HDR_IMAGE_TYPES = [
         0 => 'Standard',
         1 => 'HDR',
         2 => 'HDR2',
@@ -96,7 +96,7 @@ final class AppleMaps
      *
      * @var array<int, string>
      */
-    public const array IMAGE_CAPTURE_TYPES   = [
+    public const array IMAGE_CAPTURE_TYPES = [
         0  => 'Unknown',
         1  => 'ProRAW',
         2  => 'Portrait',

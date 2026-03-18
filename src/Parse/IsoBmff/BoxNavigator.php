@@ -102,10 +102,10 @@ final readonly class BoxNavigator
         }
 
         $this->stream->seek($offset);
-        $size32        = $this->stream->readU32BE();
-        $type          = $this->stream->read(4);
-        $headerSize    = 8;
-        $size          = $size32;
+        $size32     = $this->stream->readU32BE();
+        $type       = $this->stream->read(4);
+        $headerSize = 8;
+        $size       = $size32;
 
         if ($size32 === 0) {
             if (!$allowImplicitSize) {
@@ -118,7 +118,7 @@ final readonly class BoxNavigator
             $headerSize += 8;
         }
 
-        $userType      = null;
+        $userType = null;
 
         if ($type === BoxType::UUID->value) {
             // uuid box must be at least 24 bytes (8-byte header + 16-byte userType)

@@ -184,20 +184,20 @@ final class MetadataTest extends TestCase
     #[Test]
     public function storesProvidedMetadataComponents(): void
     {
-        $exifBlobs      = [
+        $exifBlobs = [
             'primary-exif-blob',
             'alternate-exif-blob',
         ];
 
-        $xmpBlobs       = [
+        $xmpBlobs = [
             '<x:xmpmeta>\n  <!-- primary -->\n</x:xmpmeta>',
             '<x:xmpmeta>\n  <!-- secondary -->\n</x:xmpmeta>',
         ];
-        $quickTime      = new QuickTimeMeta([
+        $quickTime = new QuickTimeMeta([
             'com.apple.quicktime.content.identifier' => 'movie-123',
         ]);
-        $exifDoc        = $this->createParsedExifDocument('Canon', 'EOS R5');
-        $xmpDoc         = new XmpDocument([
+        $exifDoc = $this->createParsedExifDocument('Canon', 'EOS R5');
+        $xmpDoc  = new XmpDocument([
             '{http://ns.adobe.com/photoshop/1.0/}DateCreated' => '2024-05-01',
         ]);
 
@@ -207,14 +207,14 @@ final class MetadataTest extends TestCase
             ],
         ]);
 
-        $iccProfile     = 'icc-profile';
-        $iccSegments    = ['seg-1', 'seg-2'];
-        $sampling       = [
+        $iccProfile  = 'icc-profile';
+        $iccSegments = ['seg-1', 'seg-2'];
+        $sampling    = [
             1 => ['horizontal' => 2, 'vertical' => 2],
             2 => ['horizontal' => 1, 'vertical' => 1],
         ];
 
-        $metadata       = new Metadata(
+        $metadata = new Metadata(
             exifBlobs: $exifBlobs,
             quickTime: $quickTime,
             exifDoc: $exifDoc,
@@ -294,10 +294,10 @@ final class MetadataTest extends TestCase
             'alternate-exif-blob',
         ];
 
-        $xmpBlobs  = [
+        $xmpBlobs = [
             '<x:xmpmeta>\n  <photoshop:DateCreated>2024-06-01</photoshop:DateCreated>\n</x:xmpmeta>',
         ];
-        $metadata  = $this->createMetadataWithCoreDocuments(
+        $metadata = $this->createMetadataWithCoreDocuments(
             $exifBlobs,
             'clip-42',
             'Fujifilm',
@@ -324,7 +324,7 @@ final class MetadataTest extends TestCase
     #[Test]
     public function exposesSelectiveXmpDocumentWhenUnavailable(): void
     {
-        $xmp      = <<<XML
+        $xmp = <<<XML
 <x:xmpmeta xmlns:x="adobe:ns:meta/"
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     xmlns:xmp="http://ns.adobe.com/xap/1.0/"
@@ -395,7 +395,7 @@ XML;
     #[Test]
     public function reusesExistingXmpDocument(): void
     {
-        $xmpDoc   = (new XmpParser())->parse('<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"></rdf:RDF>');
+        $xmpDoc = (new XmpParser())->parse('<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"></rdf:RDF>');
 
         $metadata = new Metadata([], null, null, [], $xmpDoc);
 
@@ -421,16 +421,16 @@ XML;
             $resourceBlock .= "\0";
         }
 
-        $payload       = "Photoshop 3.0\0" . $resourceBlock;
+        $payload = "Photoshop 3.0\0" . $resourceBlock;
 
-        $metadata      = new Metadata(
+        $metadata = new Metadata(
             exifBlobs: [],
             quickTime: null,
             iptcBlobs: [$payload],
             iptcParser: new IptcParser(),
         );
 
-        $document      = $metadata->selectiveIptcDocument();
+        $document = $metadata->selectiveIptcDocument();
 
         self::assertInstanceOf(IptcDocument::class, $document);
         self::assertSame('Object Name', $document->first(2, 5));
@@ -447,8 +447,8 @@ XML;
         $resolver = static fn (Metadata $m): StructuredMetadata => $builder->assemble($m);
         $metadata = new Metadata([], null, structuredResolver: $resolver);
 
-        $first    = $metadata->structured();
-        $second   = $metadata->structured();
+        $first  = $metadata->structured();
+        $second = $metadata->structured();
 
         self::assertSame($first, $second);
     }

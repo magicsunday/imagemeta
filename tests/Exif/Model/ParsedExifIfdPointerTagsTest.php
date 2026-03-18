@@ -47,12 +47,12 @@ final class ParsedExifIfdPointerTagsTest extends TestCase
     #[Test]
     public function pointerAccessorsReturnConfiguredOffsets(): void
     {
-        $ifd0       = new Ifd([
+        $ifd0 = new Ifd([
             ExifTag::EXIF_IFD_POINTER => new IfdEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, 128),
             ExifTag::GPS_IFD_POINTER  => new IfdEntry(ExifTag::GPS_IFD_POINTER, 4, 1, 256),
         ]);
 
-        $exifIfd    = new Ifd([
+        $exifIfd = new Ifd([
             ExifTag::INTEROPERABILITY_IFD_POINTER => new IfdEntry(ExifTag::INTEROPERABILITY_IFD_POINTER, 4, 1, 384),
         ]);
 

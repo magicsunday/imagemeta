@@ -66,7 +66,7 @@ final class TiffExifParserCfaPatternTest extends TestCase
         $payload = pack('v', 2) . pack('v', 2) . "\x00\x01\x01\x02";
         $result  = $this->parseWithCfaPattern($payload);
 
-        $entry   = $result->exifIfd?->get(ExifTag::CFA_PATTERN);
+        $entry = $result->exifIfd?->get(ExifTag::CFA_PATTERN);
         self::assertNotNull($entry);
         self::assertInstanceOf(ExifNumericList::class, $entry->value);
     }
@@ -116,7 +116,7 @@ final class TiffExifParserCfaPatternTest extends TestCase
         // Declares 2x2 (4 pattern bytes expected) but only 2 bytes are available.
         $result = $this->parseWithCfaPattern(pack('v', 2) . pack('v', 2) . "\x00\x01");
 
-        $entry  = $result->exifIfd?->get(ExifTag::CFA_PATTERN);
+        $entry = $result->exifIfd?->get(ExifTag::CFA_PATTERN);
         self::assertNotNull($entry);
         self::assertInstanceOf(ExifNumericList::class, $entry->value);
         self::assertSame([2, 2, 0, 1], $entry->value->values);
@@ -144,7 +144,7 @@ final class TiffExifParserCfaPatternTest extends TestCase
         // 1x1 pattern with code 8 (extended, beyond EXIF 3.0 Table 13)
         $result = $this->parseWithCfaPattern(pack('v', 1) . pack('v', 1) . "\x08");
 
-        $entry  = $result->exifIfd?->get(ExifTag::CFA_PATTERN);
+        $entry = $result->exifIfd?->get(ExifTag::CFA_PATTERN);
         self::assertNotNull($entry);
         self::assertInstanceOf(ExifNumericList::class, $entry->value);
     }
@@ -158,7 +158,7 @@ final class TiffExifParserCfaPatternTest extends TestCase
         // 2x2 pattern: codes 0, 1, 2, 255 — last one is extended
         $result = $this->parseWithCfaPattern(pack('v', 2) . pack('v', 2) . "\x00\x01\x02\xFF");
 
-        $entry  = $result->exifIfd?->get(ExifTag::CFA_PATTERN);
+        $entry = $result->exifIfd?->get(ExifTag::CFA_PATTERN);
         self::assertNotNull($entry);
         self::assertInstanceOf(ExifNumericList::class, $entry->value);
     }
@@ -177,7 +177,7 @@ final class TiffExifParserCfaPatternTest extends TestCase
         $payloadOffset   = $exifIfdOffset + $exifIfdSize;
         $payloadByteSize = strlen($payload);
 
-        $ifd0            = pack('v', $ifd0EntryCount)
+        $ifd0 = pack('v', $ifd0EntryCount)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -192,14 +192,14 @@ final class TiffExifParserCfaPatternTest extends TestCase
             . pack('V', $exifIfdOffset)
             . pack('V', 0);
 
-        $exifIfd         = pack('v', $exifEntryCount)
+        $exifIfd = pack('v', $exifEntryCount)
             . pack('v', ExifTag::CFA_PATTERN)
             . pack('v', TiffConst::TYPE_UNDEFINED)
             . pack('V', $payloadByteSize)
             . pack('V', $payloadOffset)
             . pack('V', 0);
 
-        $blob            = 'II'
+        $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset)
             . $ifd0

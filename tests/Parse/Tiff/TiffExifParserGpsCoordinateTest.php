@@ -174,7 +174,7 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
             $this->buildGpsCoordinateExample(),
         );
 
-        $gps    = $result->gps();
+        $gps = $result->gps();
 
         self::assertSame('N', $gps['lat_ref']);
         self::assertSame('E', $gps['lon_ref']);
@@ -227,13 +227,13 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
         int $valueCount,
         string $valueBytes,
     ): string {
-        $header        = Endian::Little->value
+        $header = Endian::Little->value
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
-        $ifd0Length    = $this->classicIfd0WithGpsPointerLength();
-        $gpsIfdOffset  = strlen($header) + $ifd0Length;
-        $ifd0          = $this->buildClassicIfd0WithGpsPointer($gpsIfdOffset);
+        $ifd0Length   = $this->classicIfd0WithGpsPointerLength();
+        $gpsIfdOffset = strlen($header) + $ifd0Length;
+        $ifd0         = $this->buildClassicIfd0WithGpsPointer($gpsIfdOffset);
 
         $componentSize = $this->bytesPerComponent($valueType);
         $dataSize      = $componentSize * $valueCount;
@@ -242,17 +242,17 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
             : str_pad($valueBytes, $dataSize, "\0");
 
         // GPS IFD: count(2) + 2×entry(12) + nextIfd(4)
-        $gpsIfdLength  = 2 + (2 * 12) + 4;
-        $dataOffset    = strlen($header . $ifd0) + $gpsIfdLength;
+        $gpsIfdLength = 2 + (2 * 12) + 4;
+        $dataOffset   = strlen($header . $ifd0) + $gpsIfdLength;
 
         // Ref entry: ASCII[2] fits inline (≤ 4 bytes)
-        $refEntry      = pack('v', $refTag)
+        $refEntry = pack('v', $refTag)
             . pack('v', TiffConst::TYPE_ASCII)
             . pack('V', 2)
             . pack('a4', $refValue);
 
         // Value entry
-        $valEntry      = pack('v', $valueTag)
+        $valEntry = pack('v', $valueTag)
             . pack('v', $valueType)
             . pack('V', $valueCount);
 
@@ -264,7 +264,7 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
             $payload = '';
         }
 
-        $gpsIfd        = pack('v', 2)
+        $gpsIfd = pack('v', 2)
             . $refEntry
             . $valEntry
             . pack('V', 0);
@@ -277,13 +277,13 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
      */
     private function buildClassicTiffWithSingleGpsEntry(int $tag, int $type, int $count, string $valueBytes): string
     {
-        $header        = Endian::Little->value
+        $header = Endian::Little->value
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
-        $ifd0Length    = $this->classicIfd0WithGpsPointerLength();
-        $gpsIfdOffset  = strlen($header) + $ifd0Length;
-        $ifd0          = $this->buildClassicIfd0WithGpsPointer($gpsIfdOffset);
+        $ifd0Length   = $this->classicIfd0WithGpsPointerLength();
+        $gpsIfdOffset = strlen($header) + $ifd0Length;
+        $ifd0         = $this->buildClassicIfd0WithGpsPointer($gpsIfdOffset);
 
         $componentSize = $this->bytesPerComponent($type);
         $dataSize      = $componentSize * $count;
@@ -291,10 +291,10 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
             ? substr($valueBytes, 0, $dataSize)
             : str_pad($valueBytes, $dataSize, "\0");
 
-        $gpsIfdLength  = 2 + 12 + 4;
-        $dataOffset    = strlen($header . $ifd0) + $gpsIfdLength;
+        $gpsIfdLength = 2 + 12 + 4;
+        $dataOffset   = strlen($header . $ifd0) + $gpsIfdLength;
 
-        $entry         = pack('v', $tag)
+        $entry = pack('v', $tag)
             . pack('v', $type)
             . pack('V', $count);
 
@@ -306,7 +306,7 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
             $payload = '';
         }
 
-        $gpsIfd        = pack('v', 1)
+        $gpsIfd = pack('v', 1)
             . $entry
             . pack('V', 0);
 
@@ -319,13 +319,13 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
      */
     private function buildGpsCoordinateExample(): string
     {
-        $header        = Endian::Little->value
+        $header = Endian::Little->value
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
-        $ifd0Length    = $this->classicIfd0WithGpsPointerLength();
-        $gpsIfdOffset  = strlen($header) + $ifd0Length;
-        $ifd0          = $this->buildClassicIfd0WithGpsPointer($gpsIfdOffset);
+        $ifd0Length   = $this->classicIfd0WithGpsPointerLength();
+        $gpsIfdOffset = strlen($header) + $ifd0Length;
+        $ifd0         = $this->buildClassicIfd0WithGpsPointer($gpsIfdOffset);
 
         $gpsEntryCount = 4;
         $gpsIfdLength  = 2 + ($gpsEntryCount * 12) + 4;
@@ -333,7 +333,7 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
         $latOffset     = $gpsDataOffset;
         $lonOffset     = $latOffset + (3 * 8);
 
-        $gpsIfd        = pack('v', $gpsEntryCount)
+        $gpsIfd = pack('v', $gpsEntryCount)
             // GPSLatitudeRef = "N"
             . pack('v', ExifTag::GPS_LATITUDE_REF)
             . pack('v', TiffConst::TYPE_ASCII)
@@ -356,7 +356,7 @@ final class TiffExifParserGpsCoordinateTest extends TestCase
             . pack('V', $lonOffset)
             . pack('V', 0);
 
-        $gpsData       = pack('V2', 52, 1)
+        $gpsData = pack('V2', 52, 1)
             . pack('V2', 31, 1)
             . pack('V2', 15, 1)
             . pack('V2', 13, 1)

@@ -199,11 +199,11 @@ final readonly class ApexConverter
             return null;
         }
 
-        $rounded    = round($brightness, 2);
+        $rounded = round($brightness, 2);
 
         // Remove trailing zeros after decimal point
-        $formatted  = sprintf('%.2f', $rounded);
-        $formatted  = rtrim($formatted, '0');
+        $formatted = sprintf('%.2f', $rounded);
+        $formatted = rtrim($formatted, '0');
 
         return rtrim($formatted, '.');
     }

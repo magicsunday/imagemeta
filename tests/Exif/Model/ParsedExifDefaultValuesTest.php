@@ -496,7 +496,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
 
         self::assertNull($parsedExif->transferFunction());
 
-        $table      = range(0, 767);
+        $table = range(0, 767);
 
         $parsedExif = $this->parsedExifFromIfd0([
             ExifTag::TRANSFER_FUNCTION => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, count($table), $table),
@@ -516,7 +516,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
         ]);
 
-        $table      = $parsedExif->transferFunction();
+        $table = $parsedExif->transferFunction();
 
         self::assertNotNull($table);
         self::assertCount(768, $table);
@@ -573,7 +573,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::Uncompressed->value),
         ]);
 
-        $range      = $parsedExif->transferRange();
+        $range = $parsedExif->transferRange();
 
         self::assertInstanceOf(ExifNumericList::class, $range);
         self::assertSame([0, 255, 0, 255, 0, 255], $range->toArray());

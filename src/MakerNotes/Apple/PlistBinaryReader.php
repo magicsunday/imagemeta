@@ -35,13 +35,13 @@ final class PlistBinaryReader
     private const int MARKER_INFO_EXTENDED = 0x0F;
 
     /** @var int Mask to isolate info nibble */
-    private const int MARKER_INFO_MASK     = BitMask::LOW_NIBBLE;
+    private const int MARKER_INFO_MASK = BitMask::LOW_NIBBLE;
 
     /** @var string Raw data payload */
-    private string $data                   = '';
+    private string $data = '';
 
     /** @var int Length in bytes */
-    private int $length                    = 0;
+    private int $length = 0;
 
     /**
      * Load a raw data payload into the reader.
@@ -107,13 +107,13 @@ final class PlistBinaryReader
      */
     public function readUint64(string $data, int $offset): int
     {
-        $slice   = substr($data, $offset, 8);
+        $slice = substr($data, $offset, 8);
 
         if (strlen($slice) !== 8) {
             throw new ParseError('Failed to read 64-bit integer.', 1088);
         }
 
-        $parts   = unpack('Nhigh/Nlow', $slice);
+        $parts = unpack('Nhigh/Nlow', $slice);
 
         if ($parts === false || !array_key_exists('high', $parts) || !array_key_exists('low', $parts)) {
             throw new ParseError('Failed to unpack 64-bit integer.', 1089);
@@ -151,16 +151,16 @@ final class PlistBinaryReader
             throw new ParseError('The property list size marker exceeds the payload.', 1084);
         }
 
-        $marker           = ord($this->data[$sizeMarkerOffset]);
-        $type             = $marker >> 4;
-        $innerInfo        = $marker & self::MARKER_INFO_MASK;
+        $marker    = ord($this->data[$sizeMarkerOffset]);
+        $type      = $marker >> 4;
+        $innerInfo = $marker & self::MARKER_INFO_MASK;
 
         if ($type !== PlistMarkerType::Integer->value) {
             throw new ParseError('Size marker does not encode an integer.', 1085);
         }
 
-        $sizeBytes        = 1 << $innerInfo;
-        $value            = $this->readUint($sizeMarkerOffset + 1, $sizeBytes);
+        $sizeBytes = 1 << $innerInfo;
+        $value     = $this->readUint($sizeMarkerOffset + 1, $sizeBytes);
 
         return [$value, 2 + $sizeBytes];
     }
@@ -196,8 +196,8 @@ final class PlistBinaryReader
      */
     private function multiplyAndAddDecimalString(string $decimal, int $multiplier, int $addend): string
     {
-        $carry   = $addend;
-        $result  = '';
+        $carry  = $addend;
+        $result = '';
 
         for ($idx = strlen($decimal) - 1; $idx >= 0; --$idx) {
             $digit   = ord($decimal[$idx]) - 48; // ASCII '0' => 48

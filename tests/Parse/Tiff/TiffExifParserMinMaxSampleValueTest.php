@@ -164,7 +164,7 @@ final class TiffExifParserMinMaxSampleValueTest extends TestCase
         ?int $maxType = null,
         ?array $maxValues = null,
     ): string {
-        $entries      = [
+        $entries = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -187,14 +187,14 @@ final class TiffExifParserMinMaxSampleValueTest extends TestCase
         ];
 
         if (($minType !== null) && is_array($minValues)) {
-            $entries[TiffTag::MIN_SAMPLE_VALUE]      = pack('v', TiffTag::MIN_SAMPLE_VALUE)
+            $entries[TiffTag::MIN_SAMPLE_VALUE] = pack('v', TiffTag::MIN_SAMPLE_VALUE)
                 . pack('v', $minType)
                 . pack('V', count($minValues));
             $payloadByTag[TiffTag::MIN_SAMPLE_VALUE] = $this->packNumericPayload($minType, $minValues);
         }
 
         if (($maxType !== null) && is_array($maxValues)) {
-            $entries[TiffTag::MAX_SAMPLE_VALUE]      = pack('v', TiffTag::MAX_SAMPLE_VALUE)
+            $entries[TiffTag::MAX_SAMPLE_VALUE] = pack('v', TiffTag::MAX_SAMPLE_VALUE)
                 . pack('v', $maxType)
                 . pack('V', count($maxValues));
             $payloadByTag[TiffTag::MAX_SAMPLE_VALUE] = $this->packNumericPayload($maxType, $maxValues);
@@ -202,12 +202,12 @@ final class TiffExifParserMinMaxSampleValueTest extends TestCase
 
         ksort($entries);
 
-        $ifdOffset    = 8;
-        $entryCount   = count($entries);
-        $ifdSize      = 2 + (12 * $entryCount) + 4;
-        $nextOffset   = $ifdOffset + $ifdSize;
-        $ifdEntries   = '';
-        $payloadTail  = '';
+        $ifdOffset   = 8;
+        $entryCount  = count($entries);
+        $ifdSize     = 2 + (12 * $entryCount) + 4;
+        $nextOffset  = $ifdOffset + $ifdSize;
+        $ifdEntries  = '';
+        $payloadTail = '';
 
         foreach ($entries as $tag => $prefix) {
             $payload = $payloadByTag[$tag] ?? null;

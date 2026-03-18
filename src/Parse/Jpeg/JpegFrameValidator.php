@@ -36,19 +36,19 @@ use function unpack;
  */
 final class JpegFrameValidator
 {
-    private ?int $frameMarker              = null;
+    private ?int $frameMarker = null;
 
-    private ?int $frameBitsPerSample       = null;
+    private ?int $frameBitsPerSample = null;
 
-    private ?int $frameLines               = null;
+    private ?int $frameLines = null;
 
-    private ?int $frameSamplesPerLine      = null;
+    private ?int $frameSamplesPerLine = null;
 
     /** @var array<int, array{horizontal: int, vertical: int}>|null */
     private ?array $frameComponentSampling = null;
 
     /** @var array{0:int,1:int}|null */
-    private ?array $frameYCbCrSubSampling  = null;
+    private ?array $frameYCbCrSubSampling = null;
 
     /**
      * @param JpegMarkerScanner $scanner Low-level marker I/O dependency.
@@ -117,23 +117,23 @@ final class JpegFrameValidator
 
         PayloadGuard::ensureMinimumLength($payload, 6, sprintf('SOF marker 0x%02X at offset %d', $marker, $offset), 1283);
 
-        $componentCount               = ord($payload[5]);
+        $componentCount = ord($payload[5]);
 
         if ($componentCount === 0) {
             throw new ParseError(sprintf('SOF marker 0x%02X at offset %d reports zero components', $marker, $offset), 1284);
         }
 
-        $expectedLength               = 6 + ($componentCount * 3);
+        $expectedLength = 6 + ($componentCount * 3);
         PayloadGuard::ensureMinimumLength($payload, $expectedLength, sprintf('SOF marker 0x%02X at offset %d', $marker, $offset), 1285);
 
-        $components                   = [];
-        $index                        = 6;
+        $components = [];
+        $index      = 6;
 
         for ($i = 0; $i < $componentCount; ++$i) {
-            $componentId              = ord($payload[$index]);
-            $samplingFactors          = ord($payload[$index + 1]);
-            $horizontal               = $samplingFactors >> 4;
-            $vertical                 = $samplingFactors & BitMask::LOW_NIBBLE;
+            $componentId     = ord($payload[$index]);
+            $samplingFactors = ord($payload[$index + 1]);
+            $horizontal      = $samplingFactors >> 4;
+            $vertical        = $samplingFactors & BitMask::LOW_NIBBLE;
 
             if (array_key_exists($componentId, $components)) {
                 throw new ParseError(
@@ -162,7 +162,7 @@ final class JpegFrameValidator
             $index += 3;
         }
 
-        $fields                       = unpack('nlines/nsamples', substr($payload, 1, 4));
+        $fields = unpack('nlines/nsamples', substr($payload, 1, 4));
 
         if (($fields === false) || !isset($fields['lines'], $fields['samples'])) {
             throw new ParseError(sprintf('SOF marker 0x%02X at offset %d has invalid dimensions', $marker, $offset), 1287);
@@ -177,9 +177,9 @@ final class JpegFrameValidator
             $this->frameSamplesPerLine = $fields['samples'];
         }
 
-        $bitsPerSample                = ord($payload[0]);
+        $bitsPerSample = ord($payload[0]);
 
-        $derivedSubSampling           = $this->deriveYCbCrSubSampling($components);
+        $derivedSubSampling = $this->deriveYCbCrSubSampling($components);
 
         $this->frameMarker            = $marker;
         $this->frameBitsPerSample     = $bitsPerSample;
@@ -198,7 +198,7 @@ final class JpegFrameValidator
      */
     public function validateSosHeader(string $payload, int $sosOffset): void
     {
-        $payloadLength       = strlen($payload);
+        $payloadLength = strlen($payload);
 
         if ($payloadLength < 6) {
             throw new ParseError(
@@ -207,7 +207,7 @@ final class JpegFrameValidator
             );
         }
 
-        $componentCount      = ord($payload[0]);
+        $componentCount = ord($payload[0]);
 
         if ($componentCount === 0) {
             throw new ParseError(
@@ -216,7 +216,7 @@ final class JpegFrameValidator
             );
         }
 
-        $expectedLength      = 1 + ($componentCount * 2) + 3;
+        $expectedLength = 1 + ($componentCount * 2) + 3;
 
         if ($payloadLength !== $expectedLength) {
             throw new ParseError(
@@ -240,7 +240,7 @@ final class JpegFrameValidator
 
         // ITU-T T.81 §B.2.3, §G.1.2 — progressive (SOF2) scans may encode a
         // subset of frame components; non-progressive scans require all of them.
-        $isProgressive       = $this->frameMarker === Marker::SOF2;
+        $isProgressive = $this->frameMarker === Marker::SOF2;
 
         if ($isProgressive && ($componentCount > $frameComponentCount)) {
             throw new ParseError(
@@ -266,11 +266,11 @@ final class JpegFrameValidator
             );
         }
 
-        $seenSelectors       = [];
-        $index               = 1;
+        $seenSelectors = [];
+        $index         = 1;
 
         for ($i = 0; $i < $componentCount; ++$i) {
-            $componentSelector                 = ord($payload[$index]);
+            $componentSelector = ord($payload[$index]);
 
             if (isset($seenSelectors[$componentSelector])) {
                 throw new ParseError(
@@ -355,13 +355,13 @@ final class JpegFrameValidator
      */
     private function deriveYCbCrSubSampling(array $components): ?array
     {
-        $luma        = $components[1] ?? null;
+        $luma = $components[1] ?? null;
 
         if ($luma === null) {
             return null;
         }
 
-        $chromas     = [];
+        $chromas = [];
 
         foreach ($components as $id => $component) {
             if ($id !== 1) {
@@ -373,14 +373,14 @@ final class JpegFrameValidator
             return null;
         }
 
-        $horizontal  = $chromas[0]['horizontal'];
-        $vertical    = $chromas[0]['vertical'];
+        $horizontal = $chromas[0]['horizontal'];
+        $vertical   = $chromas[0]['vertical'];
 
         if ($horizontal === 0 || $vertical === 0) {
             return null;
         }
 
-        $count       = count($chromas);
+        $count = count($chromas);
 
         for ($i = 1; $i < $count; ++$i) {
             $component  = $chromas[$i];
@@ -392,8 +392,8 @@ final class JpegFrameValidator
             return null;
         }
 
-        $derivedH    = (int) ($luma['horizontal'] / $horizontal);
-        $derivedV    = (int) ($luma['vertical'] / $vertical);
+        $derivedH = (int) ($luma['horizontal'] / $horizontal);
+        $derivedV = (int) ($luma['vertical'] / $vertical);
 
         // EXIF 3.0 §4.6.5.1.12 lists only [2,1] (4:2:2) and [2,2] (4:2:0)
         // as writer-side requirements.  ITU-T T.81 §B.2.2 allows arbitrary
@@ -406,7 +406,7 @@ final class JpegFrameValidator
             [2, 2],
         ];
 
-        $result      = array_any(
+        $result = array_any(
             $legalValues,
             fn ($legal): bool => $derivedH === $legal[0] && $derivedV === $legal[1]
         );

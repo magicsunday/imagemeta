@@ -46,7 +46,7 @@ final class OecfTest extends TestCase
             ],
         ];
 
-        $oecf   = Oecf::fromMatrix($matrix);
+        $oecf = Oecf::fromMatrix($matrix);
 
         self::assertNotNull($oecf);
         self::assertSame(2, $oecf->columns);
@@ -82,7 +82,7 @@ final class OecfTest extends TestCase
             ],
         ];
 
-        $oecf   = Oecf::fromMatrix($matrix);
+        $oecf = Oecf::fromMatrix($matrix);
 
         self::assertNotNull($oecf);
         self::assertSame([[null, 1.0]], $oecf->values);

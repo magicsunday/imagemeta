@@ -57,8 +57,8 @@ final readonly class JpegMarkerScanner
     public function nextMarkerWithOffset(bool $allowInterveningBytes = true): array
     {
         while (true) {
-            $byteOffset   = $this->stream->tell();
-            $byte         = $this->stream->read(1);
+            $byteOffset = $this->stream->tell();
+            $byte       = $this->stream->read(1);
 
             if ($byte !== "\xFF") {
                 if ($allowInterveningBytes) {

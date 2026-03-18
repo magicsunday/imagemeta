@@ -24,23 +24,23 @@ use function is_string;
  */
 final class FlashPixPropertyExtractor
 {
-    private const int PID_TITLE         = 2;
+    private const int PID_TITLE = 2;
 
-    private const int PID_SUBJECT       = 3;
+    private const int PID_SUBJECT = 3;
 
-    private const int PID_AUTHOR        = 4;
+    private const int PID_AUTHOR = 4;
 
-    private const int PID_KEYWORDS      = 5;
+    private const int PID_KEYWORDS = 5;
 
-    private const int PID_COMMENTS      = 6;
+    private const int PID_COMMENTS = 6;
 
     private const int PID_LAST_SAVED_BY = 8;
 
-    private const int PID_CREATE_TIME   = 12;
+    private const int PID_CREATE_TIME = 12;
 
-    private const int PID_SAVE_TIME     = 13;
+    private const int PID_SAVE_TIME = 13;
 
-    private const int PID_APPLICATION   = 18;
+    private const int PID_APPLICATION = 18;
 
     /**
      * Extracts Summary Information properties from a parsed OLE property set.

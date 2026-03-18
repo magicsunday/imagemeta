@@ -48,7 +48,7 @@ final class SensorDataReaderTest extends TestCase
             ExifTag::COMPOSITE_IMAGE => new IfdEntry(ExifTag::COMPOSITE_IMAGE, 3, 1, CompositeImage::GeneralComposite->value),
         ];
 
-        $reader      = $this->createReader($exifEntries);
+        $reader = $this->createReader($exifEntries);
 
         self::assertSame(CompositeImage::GeneralComposite, $reader->compositeImage());
     }
@@ -80,9 +80,9 @@ final class SensorDataReaderTest extends TestCase
             ),
         ];
 
-        $reader      = $this->createReader($exifEntries);
+        $reader = $this->createReader($exifEntries);
 
-        $result      = $reader->sourceImageNumberOfCompositeImage();
+        $result = $reader->sourceImageNumberOfCompositeImage();
         self::assertSame([5, 3], $result);
     }
 
@@ -102,7 +102,7 @@ final class SensorDataReaderTest extends TestCase
             ),
         ];
 
-        $reader      = $this->createReader($exifEntries);
+        $reader = $this->createReader($exifEntries);
 
         self::assertNull($reader->sourceImageNumberOfCompositeImage());
     }

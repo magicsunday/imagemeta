@@ -65,9 +65,9 @@ final class ExifConvenienceTest extends TestCase
             ),
         );
 
-        $lens     = $this->createLens(focalLengthMm: 50.0);
+        $lens = $this->createLens(focalLengthMm: 50.0);
 
-        $summary  = (new ExifConvenience())->exposureSummary(
+        $summary = (new ExifConvenience())->exposureSummary(
             $exposure,
             $lens
         );
@@ -87,7 +87,7 @@ final class ExifConvenienceTest extends TestCase
     {
         $exposure = new Exposure();
 
-        $derived  = new Derived(
+        $derived = new Derived(
             ev100                   : null,
             hyperfocalDistanceMetres: null,
             circleOfConfusionMm     : null,
@@ -127,7 +127,7 @@ final class ExifConvenienceTest extends TestCase
     #[Test]
     public function gpsStringFormatsCoordinates(): void
     {
-        $gps       = new Gps(
+        $gps = new Gps(
             position: new GpsPosition(
                 latitude: 51.5,
                 longitude: 0.125,
@@ -234,7 +234,7 @@ final class ExifConvenienceTest extends TestCase
             null,
             null,
         );
-        $lens   = $this->createLens(lensModel: 'RF 24-70mm');
+        $lens = $this->createLens(lensModel: 'RF 24-70mm');
 
         self::assertSame(
             'Canon EOS R6 · RF 24-70mm',
@@ -252,7 +252,7 @@ final class ExifConvenienceTest extends TestCase
     #[Test]
     public function toArrayReturnsNormalizedShape(): void
     {
-        $camera   = new Camera(
+        $camera = new Camera(
             'Canon',
             'EOS',
             null,
@@ -260,16 +260,16 @@ final class ExifConvenienceTest extends TestCase
             null,
             null,
         );
-        $lens     = $this->createLens(
+        $lens = $this->createLens(
             lensModel    : 'EF 50mm',
             focalLengthMm: 50.0,
         );
-        $image    = new Image(
+        $image = new Image(
             width: 6000,
             height: 4000,
             orientation: Orientation::TopLeft,
         );
-        $capture  = new Capture(
+        $capture = new Capture(
             new DateTimeImmutable('2024-05-01T12:34:56+02:00'),
             null,
             null,
@@ -285,7 +285,7 @@ final class ExifConvenienceTest extends TestCase
                 fNumber: 1.8,
             ),
         );
-        $gps      = new Gps(
+        $gps = new Gps(
             position: new GpsPosition(
                 latitude: 51.5,
                 longitude: 0.125,

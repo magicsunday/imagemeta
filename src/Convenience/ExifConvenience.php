@@ -69,8 +69,8 @@ final readonly class ExifConvenience
      */
     public function cameraDescription(Camera $camera, ?Lens $lens = null): ?string
     {
-        $make        = $this->normalize($camera->make);
-        $model       = $this->normalize($camera->model);
+        $make  = $this->normalize($camera->make);
+        $model = $this->normalize($camera->model);
 
         $cameraLabel = null;
 
@@ -80,9 +80,9 @@ final readonly class ExifConvenience
             $cameraLabel = $make ?? $model;
         }
 
-        $lensLabel   = $this->normalize($lens?->lensModel);
+        $lensLabel = $this->normalize($lens?->lensModel);
 
-        $parts       = [];
+        $parts = [];
 
         if ($cameraLabel !== null) {
             $parts[] = $cameraLabel;
@@ -104,21 +104,21 @@ final readonly class ExifConvenience
      */
     public function exposureSummary(Exposure $exposure, ?Lens $lens = null, ?Derived $derived = null): ?string
     {
-        $parts       = [];
+        $parts = [];
 
-        $seconds     = $exposure->settings?->exposureTimeSec;
+        $seconds = $exposure->settings?->exposureTimeSec;
 
         if ($seconds !== null) {
             $parts[] = $this->formatExposureTime($seconds);
         }
 
-        $fNumber     = $exposure->settings?->fNumber;
+        $fNumber = $exposure->settings?->fNumber;
 
         if ($fNumber !== null) {
             $parts[] = $this->formatFNumber($fNumber);
         }
 
-        $iso         = $exposure->settings?->iso;
+        $iso = $exposure->settings?->iso;
 
         if ($iso !== null) {
             $parts[] = $this->formatIso($iso);
@@ -130,7 +130,7 @@ final readonly class ExifConvenience
             $parts[] = $this->formatFocalLength($focalLength);
         }
 
-        $equivalent  = $derived?->equivalent35mm;
+        $equivalent = $derived?->equivalent35mm;
 
         if (($equivalent !== null) && !$this->containsEquivalent($parts, $equivalent)) {
             $parts[] = sprintf('%d mm eq', $equivalent);
@@ -163,8 +163,8 @@ final readonly class ExifConvenience
      */
     public function gpsString(Gps $gps, int $precision = 6, bool $includeAltitude = false): ?string
     {
-        $latitude     = $gps->position?->latitude;
-        $longitude    = $gps->position?->longitude;
+        $latitude  = $gps->position?->latitude;
+        $longitude = $gps->position?->longitude;
 
         if ($latitude === null || $longitude === null) {
             return null;
@@ -173,10 +173,10 @@ final readonly class ExifConvenience
         $latitudeRef  = $this->resolveLatitudeRef($gps, $latitude);
         $longitudeRef = $this->resolveLongitudeRef($gps, $longitude);
 
-        $latValue     = $this->formatCoordinate(abs($latitude), $precision) . '° ' . $latitudeRef;
-        $lonValue     = $this->formatCoordinate(abs($longitude), $precision) . '° ' . $longitudeRef;
+        $latValue = $this->formatCoordinate(abs($latitude), $precision) . '° ' . $latitudeRef;
+        $lonValue = $this->formatCoordinate(abs($longitude), $precision) . '° ' . $longitudeRef;
 
-        $result       = $latValue . ', ' . $lonValue;
+        $result = $latValue . ', ' . $lonValue;
 
         if ($includeAltitude) {
             $altitude = $this->resolveAltitude($gps);
@@ -437,13 +437,13 @@ final readonly class ExifConvenience
      */
     private function resolveAltitude(Gps $gps): ?float
     {
-        $position  = $gps->position;
+        $position = $gps->position;
 
         if (!$position instanceof GpsPosition) {
             return null;
         }
 
-        $altitude  = $position->altitude;
+        $altitude = $position->altitude;
 
         if ($altitude === null) {
             return null;

@@ -81,46 +81,46 @@ final class SamsungDecoderTest extends TestCase
 
     private function buildSamsungMakerNote(): string
     {
-        $entries       = [];
-        $data          = '';
+        $entries = [];
+        $data    = '';
 
-        $version       = "0100\0";
-        $deviceType    = "Phone\0";
+        $version    = "0100\0";
+        $deviceType = "Phone\0";
 
         $versionOffset = 8 + 2 + (3 * 12) + 4;
         $deviceOffset  = $versionOffset + strlen($version);
 
-        $entries[]     = $this->buildEntry(0x0001, 2, strlen($version), $versionOffset);
-        $entries[]     = $this->buildEntry(0x0002, 2, strlen($deviceType), $deviceOffset);
-        $entries[]     = $this->buildEntry(0x0003, 3, 1, 0x1234, true);
+        $entries[] = $this->buildEntry(0x0001, 2, strlen($version), $versionOffset);
+        $entries[] = $this->buildEntry(0x0002, 2, strlen($deviceType), $deviceOffset);
+        $entries[] = $this->buildEntry(0x0003, 3, 1, 0x1234, true);
 
         $data .= $version;
         $data .= $deviceType;
 
-        $ifd           = pack('v', 3) . implode('', $entries) . pack('V', 0);
+        $ifd = pack('v', 3) . implode('', $entries) . pack('V', 0);
 
         return 'II' . pack('v', 0x2A) . pack('V', 8) . $ifd . $data;
     }
 
     private function buildBigEndianSamsungMakerNote(): string
     {
-        $entries       = [];
-        $data          = '';
+        $entries = [];
+        $data    = '';
 
-        $version       = "0100\0";
-        $deviceType    = "Phone\0";
+        $version    = "0100\0";
+        $deviceType = "Phone\0";
 
         $versionOffset = 8 + 2 + (3 * 12) + 4;
         $deviceOffset  = $versionOffset + strlen($version);
 
-        $entries[]     = $this->buildBigEndianEntry(0x0001, 2, strlen($version), $versionOffset);
-        $entries[]     = $this->buildBigEndianEntry(0x0002, 2, strlen($deviceType), $deviceOffset);
-        $entries[]     = $this->buildBigEndianEntry(0x0003, 3, 1, 0x1234, true);
+        $entries[] = $this->buildBigEndianEntry(0x0001, 2, strlen($version), $versionOffset);
+        $entries[] = $this->buildBigEndianEntry(0x0002, 2, strlen($deviceType), $deviceOffset);
+        $entries[] = $this->buildBigEndianEntry(0x0003, 3, 1, 0x1234, true);
 
         $data .= $version;
         $data .= $deviceType;
 
-        $ifd           = pack('n', 3) . implode('', $entries) . pack('N', 0);
+        $ifd = pack('n', 3) . implode('', $entries) . pack('N', 0);
 
         return 'MM' . pack('n', 0x2A) . pack('N', 8) . $ifd . $data;
     }

@@ -83,7 +83,7 @@ final class StreamWindow implements BinaryReadAccessInterface
             return '';
         }
 
-        $len       = $this->normalizeReadLength($length, 'window read length out of range');
+        $len = $this->normalizeReadLength($length, 'window read length out of range');
 
         if ($len > PHP_INT_MAX - $this->cursor) {
             throw new BoundsError('window read offset overflow', 1060);
@@ -99,7 +99,7 @@ final class StreamWindow implements BinaryReadAccessInterface
             $this->base->seek($targetPos);
         }
 
-        $data      = $this->base->read($len);
+        $data = $this->base->read($len);
         $this->cursor += $len;
 
         return $data;
@@ -131,7 +131,7 @@ final class StreamWindow implements BinaryReadAccessInterface
      */
     private function seekInternal(int|UInt64 $offset, int $whence): void
     {
-        $target       = match ($whence) {
+        $target = match ($whence) {
             SEEK_SET => $this->normalizeAbsoluteOffset($offset, 'window seek out of range'),
             SEEK_CUR => $this->normalizeRelativeOffset($offset, $this->cursor, 'window seek out of range'),
             SEEK_END => $this->normalizeRelativeOffset($offset, $this->length, 'window seek out of range'),

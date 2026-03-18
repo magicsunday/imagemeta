@@ -103,7 +103,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
             return '';
         }
 
-        $len   = $this->normalizeLength($length);
+        $len = $this->normalizeLength($length);
 
         if ($len > ($this->size() - $this->pos)) {
             throw new BoundsError('MemoryBuffer read out of range: ' . $this->pos . '+' . $len, 1048);
@@ -176,7 +176,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      */
     private function seekInternal(int|UInt64 $offset, int $whence): void
     {
-        $target    = match ($whence) {
+        $target = match ($whence) {
             SEEK_SET => $this->normalizeOffset($offset, 0, 'MemoryBuffer seek out of range'),
             SEEK_CUR => $this->normalizeRelativeOffset($offset, $this->pos, 'MemoryBuffer seek out of range'),
             SEEK_END => $this->normalizeRelativeOffset($offset, $this->size(), 'MemoryBuffer seek out of range'),

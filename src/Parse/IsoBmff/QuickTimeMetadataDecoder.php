@@ -44,7 +44,7 @@ final readonly class QuickTimeMetadataDecoder
      *
      * @var array<string, string>
      */
-    private const array UDTA_TEXT_KEYS   = [
+    private const array UDTA_TEXT_KEYS = [
         "\xA9nam" => 'com.apple.quicktime.title',
         "\xA9ART" => 'com.apple.quicktime.artist',
         "\xA9alb" => 'com.apple.quicktime.album',
@@ -197,10 +197,10 @@ final readonly class QuickTimeMetadataDecoder
             return;
         }
 
-        $win   = $name->window;
+        $win = $name->window;
         $win->seek(0);
 
-        $raw   = $win->read($name->contentSize);
+        $raw = $win->read($name->contentSize);
 
         // Strip NULL terminator if present
         $value = rtrim($raw, "\0");
@@ -226,13 +226,13 @@ final readonly class QuickTimeMetadataDecoder
      */
     public function parseUdtaTextAtom(BoxDescriptor $atom, IsoBmffParseContext $context): void
     {
-        $key   = self::UDTA_TEXT_KEYS[$atom->type] ?? null;
+        $key = self::UDTA_TEXT_KEYS[$atom->type] ?? null;
 
         if ($key === null || $atom->contentSize < 1) {
             return;
         }
 
-        $win   = $atom->window;
+        $win = $atom->window;
         $win->seek(0);
 
         $raw   = $win->read($atom->contentSize);
@@ -268,13 +268,13 @@ final readonly class QuickTimeMetadataDecoder
      */
     public function parseUdtaBinaryAtom(BoxDescriptor $atom, IsoBmffParseContext $context): void
     {
-        $spec  = self::UDTA_BINARY_KEYS[$atom->type] ?? null;
+        $spec = self::UDTA_BINARY_KEYS[$atom->type] ?? null;
 
         if (($spec === null) || ($atom->contentSize < $spec['size'])) {
             return;
         }
 
-        $win   = $atom->window;
+        $win = $atom->window;
         $win->seek(0);
 
         $value = match ($spec['type']) {
@@ -283,7 +283,7 @@ final readonly class QuickTimeMetadataDecoder
             'u16pair' => sprintf('%d %d', $win->readU16BE(), $win->readU16BE()),
         };
 
-        $key   = $spec['key'];
+        $key = $spec['key'];
 
         if (!array_key_exists($key, $context->qtKeys)) {
             $context->qtKeys[$key] = $value;
@@ -330,8 +330,8 @@ final readonly class QuickTimeMetadataDecoder
             throw new ParseError(sprintf('%s atom entry count %d exceeds maximum %d', $label, $entryCount, QuickTimeValueDecoder::MAX_LOCALE_LIST_ENTRIES), 1243);
         }
 
-        $entries    = [];
-        $consumed   = 8; // version(1) + flags(3) + entry_count(4)
+        $entries  = [];
+        $consumed = 8; // version(1) + flags(3) + entry_count(4)
 
         for ($i = 0; $i < $entryCount; ++$i) {
             if ($consumed + 2 > $box->contentSize) {
@@ -341,13 +341,13 @@ final readonly class QuickTimeMetadataDecoder
             $itemCount = $win->readU16BE();
             $consumed += 2;
 
-            $needed    = $itemCount * 2;
+            $needed = $itemCount * 2;
 
             if ($consumed + $needed > $box->contentSize) {
                 throw new ParseError(sprintf('%s atom entry %d truncated (expected %d codes, only %d bytes remain)', $label, $i + 1, $itemCount, $box->contentSize - $consumed), 1245);
             }
 
-            $codes     = [];
+            $codes = [];
 
             for ($j = 0; $j < $itemCount; ++$j) {
                 $codes[] = $win->readU16BE();
@@ -401,9 +401,9 @@ final readonly class QuickTimeMetadataDecoder
                 );
             }
 
-            $keyName    = null;
-            $itemName   = null;
-            $index      = $this->valueDecoder->fourccToIndex($entry->type);
+            $keyName  = null;
+            $itemName = null;
+            $index    = $this->valueDecoder->fourccToIndex($entry->type);
 
             if (($index !== null) && isset($keyIndex[$index])) {
                 $keyName = $this->keyResolver->resolveKeyName($keyIndex[$index]);
@@ -440,11 +440,11 @@ final readonly class QuickTimeMetadataDecoder
                 }
 
                 if ($sub->type === BoxType::DATA->value) {
-                    $structured                 = $this->valueDecoder->parseDataBoxStructured($sub);
+                    $structured = $this->valueDecoder->parseDataBoxStructured($sub);
                     $this->valueDecoder->validateLocaleIndicator($structured['locale'], $countryLists, $languageLists);
-                    $entryAtoms[]               = $structured;
+                    $entryAtoms[] = $structured;
 
-                    $effectiveKey               = $keyName ?? $itemName;
+                    $effectiveKey = $keyName ?? $itemName;
 
                     if ($effectiveKey === null) {
                         continue;
@@ -463,7 +463,7 @@ final readonly class QuickTimeMetadataDecoder
                         continue;
                     }
 
-                    $coerced                    = $this->valueDecoder->coerceQuickTimeValue($effectiveKey, $structured['value']);
+                    $coerced = $this->valueDecoder->coerceQuickTimeValue($effectiveKey, $structured['value']);
 
                     if (!array_key_exists($effectiveKey, $result)) {
                         $result[$effectiveKey] = $coerced;
@@ -510,15 +510,15 @@ final readonly class QuickTimeMetadataDecoder
     private function parseIlstNameAtom(BoxDescriptor $name, array &$seenNames): string
     {
         $this->validateFullAtomHeader($name, 'ilst name', 4, 1227, 1228, 1229);
-        $win               = $name->window;
+        $win = $name->window;
 
-        $payloadSize       = $name->contentSize - 4;
+        $payloadSize = $name->contentSize - 4;
 
         if ($payloadSize < 1) {
             throw new ParseError('ilst name atom has empty payload', 1230);
         }
 
-        $value             = $win->read($payloadSize);
+        $value = $win->read($payloadSize);
 
         if (!mb_check_encoding($value, 'UTF-8')) {
             throw new ParseError('ilst name atom contains invalid UTF-8', 1231);
@@ -551,9 +551,9 @@ final readonly class QuickTimeMetadataDecoder
     private function parseIlstItemInfo(BoxDescriptor $itif, array &$seenItemIds): void
     {
         $this->validateFullAtomHeader($itif, 'itif', 8, 1233, 1234, 1235);
-        $win                  = $itif->window;
+        $win = $itif->window;
 
-        $itemId               = $win->readU32BE();
+        $itemId = $win->readU32BE();
 
         if (array_key_exists($itemId, $seenItemIds)) {
             throw new ParseError(sprintf(
@@ -636,8 +636,8 @@ final readonly class QuickTimeMetadataDecoder
         ksort($nestedKeys);
 
         foreach ($nestedKeys as $nestedKey => $nestedValue) {
-            $flattenedKey               = $parentKey . '.' . $nestedKey;
-            $coerced                    = $this->valueDecoder->coerceQuickTimeValue($flattenedKey, $nestedValue);
+            $flattenedKey = $parentKey . '.' . $nestedKey;
+            $coerced      = $this->valueDecoder->coerceQuickTimeValue($flattenedKey, $nestedValue);
 
             if (!array_key_exists($flattenedKey, $result)) {
                 $result[$flattenedKey] = $coerced;

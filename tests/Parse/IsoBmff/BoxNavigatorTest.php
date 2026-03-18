@@ -70,7 +70,7 @@ final class BoxNavigatorTest extends TestCase
         $navigator   = new BoxNavigator($stream);
         $window      = $stream->window(0, $contentSize);
 
-        $container   = new BoxDescriptor(
+        $container = new BoxDescriptor(
             type: 'root',
             size: $contentSize,
             offset: 0,
@@ -147,9 +147,9 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function walkChildrenYieldsTwoAdjacentBoxes(): void
     {
-        $child1                  = $this->box('abcd', 'HELLO');
-        $child2                  = $this->box('efgh', 'WORLD!!');
-        $data                    = $child1 . $child2;
+        $child1 = $this->box('abcd', 'HELLO');
+        $child2 = $this->box('efgh', 'WORLD!!');
+        $data   = $child1 . $child2;
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
@@ -162,12 +162,12 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function walkChildrenReturnsSingleChildWithCorrectDescriptor(): void
     {
-        $payload                 = 'DATA';
-        $child                   = $this->box('test', $payload);
+        $payload = 'DATA';
+        $child   = $this->box('test', $payload);
 
         [$navigator, $container] = $this->createNavigatorWithContainer($child);
 
-        $children                = $this->walkChildrenToList($navigator, $container);
+        $children = $this->walkChildrenToList($navigator, $container);
 
         self::assertCount(1, $children);
         self::assertSame('test', $children[0]->type);
@@ -183,9 +183,9 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function walkChildrenWithOffset(): void
     {
-        $prefix                  = pack('N', 0);
-        $child                   = $this->box('skip', 'OK');
-        $data                    = $prefix . $child;
+        $prefix = pack('N', 0);
+        $child  = $this->box('skip', 'OK');
+        $data   = $prefix . $child;
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
@@ -198,18 +198,18 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function walkChildrenHandlesNestedBoxes(): void
     {
-        $inner                   = $this->box('innr', 'AB');
-        $outer                   = $this->box('outr', $inner);
-        $data                    = $outer;
+        $inner = $this->box('innr', 'AB');
+        $outer = $this->box('outr', $inner);
+        $data  = $outer;
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
-        $outerBoxes              = $this->walkChildrenToList($navigator, $container);
+        $outerBoxes = $this->walkChildrenToList($navigator, $container);
 
         self::assertCount(1, $outerBoxes);
         self::assertSame('outr', $outerBoxes[0]->type);
 
-        $innerBoxes              = $this->walkChildrenToList($navigator, $outerBoxes[0]);
+        $innerBoxes = $this->walkChildrenToList($navigator, $outerBoxes[0]);
 
         self::assertCount(1, $innerBoxes);
         self::assertSame('innr', $innerBoxes[0]->type);
@@ -221,9 +221,9 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function walkChildrenAllowsTrailingTerminator(): void
     {
-        $child                   = $this->box('term', 'XY');
-        $terminator              = pack('N', 0);
-        $data                    = $child . $terminator;
+        $child      = $this->box('term', 'XY');
+        $terminator = pack('N', 0);
+        $data       = $child . $terminator;
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
@@ -273,8 +273,8 @@ final class BoxNavigatorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('child boxes do not align with parent');
 
-        $child                   = $this->box('test', 'X');
-        $data                    = $child . "\xFF\xFF";
+        $child = $this->box('test', 'X');
+        $data  = $child . "\xFF\xFF";
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
@@ -290,9 +290,9 @@ final class BoxNavigatorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('child boxes do not align with parent');
 
-        $child                   = $this->box('term', 'XY');
-        $terminator              = pack('N', 42);
-        $data                    = $child . $terminator;
+        $child      = $this->box('term', 'XY');
+        $terminator = pack('N', 42);
+        $data       = $child . $terminator;
 
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
@@ -313,7 +313,7 @@ final class BoxNavigatorTest extends TestCase
         $boxBytes  = $this->box('test', $payload);
         $navigator = $this->createNavigator($boxBytes);
 
-        $box       = $navigator->readBoxAt(0, strlen($boxBytes));
+        $box = $navigator->readBoxAt(0, strlen($boxBytes));
 
         self::assertSame('test', $box->type);
         self::assertSame(14, $box->size);
@@ -348,8 +348,8 @@ final class BoxNavigatorTest extends TestCase
     #[Test]
     public function readBoxAtHandlesImplicitSize(): void
     {
-        $payload   = 'IMPLICIT';
-        $boxBytes  = pack('N', 0) . 'impl' . $payload;
+        $payload  = 'IMPLICIT';
+        $boxBytes = pack('N', 0) . 'impl' . $payload;
 
         $navigator = $this->createNavigator($boxBytes);
         $box       = $navigator->readBoxAt(0, strlen($boxBytes), true);
@@ -446,7 +446,7 @@ final class BoxNavigatorTest extends TestCase
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
         $container->window->seek(0);
-        $value                   = $navigator->readUInt($container->window, 2);
+        $value = $navigator->readUInt($container->window, 2);
 
         self::assertSame(0x1234, $value);
     }
@@ -460,7 +460,7 @@ final class BoxNavigatorTest extends TestCase
         $data                    = 'X';
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
-        $value                   = $navigator->readUInt($container->window, 0);
+        $value = $navigator->readUInt($container->window, 0);
 
         self::assertSame(0, $value);
     }
@@ -563,7 +563,7 @@ final class BoxNavigatorTest extends TestCase
         $data                    = 'HELLOWORLD';
         [$navigator, $container] = $this->createNavigatorWithContainer($data);
 
-        $result                  = $navigator->readAll($container->window);
+        $result = $navigator->readAll($container->window);
 
         self::assertSame('HELLOWORLD', $result);
     }
@@ -594,8 +594,8 @@ final class BoxNavigatorTest extends TestCase
     public function readFullBoxHeaderReadsVersionZeroFlagsZero(): void
     {
         // version=0, flags=0x000000
-        $data      = "\x00\x00\x00\x00";
-        $window    = $this->createIsoBmffTempWindow($data);
+        $data   = "\x00\x00\x00\x00";
+        $window = $this->createIsoBmffTempWindow($data);
         $window->seek(0);
 
         $navigator = $this->createDummyNavigator();
@@ -612,8 +612,8 @@ final class BoxNavigatorTest extends TestCase
     public function readFullBoxHeaderReadsVersionOneFlags(): void
     {
         // version=1, flags=0x000000
-        $data      = "\x01\x00\x00\x00";
-        $window    = $this->createIsoBmffTempWindow($data);
+        $data   = "\x01\x00\x00\x00";
+        $window = $this->createIsoBmffTempWindow($data);
         $window->seek(0);
 
         $navigator = $this->createDummyNavigator();
@@ -630,8 +630,8 @@ final class BoxNavigatorTest extends TestCase
     public function readFullBoxHeaderReadsNonZeroFlags(): void
     {
         // version=0, flags=0x010001 (bit 0 and bit 16 set)
-        $data      = "\x00\x01\x00\x01";
-        $window    = $this->createIsoBmffTempWindow($data);
+        $data   = "\x00\x01\x00\x01";
+        $window = $this->createIsoBmffTempWindow($data);
         $window->seek(0);
 
         $navigator = $this->createDummyNavigator();
@@ -648,8 +648,8 @@ final class BoxNavigatorTest extends TestCase
     public function readFullBoxHeaderReadsMaxVersionAndFlags(): void
     {
         // version=255, flags=0xFFFFFF
-        $data      = "\xFF\xFF\xFF\xFF";
-        $window    = $this->createIsoBmffTempWindow($data);
+        $data   = "\xFF\xFF\xFF\xFF";
+        $window = $this->createIsoBmffTempWindow($data);
         $window->seek(0);
 
         $navigator = $this->createDummyNavigator();

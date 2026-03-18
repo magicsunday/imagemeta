@@ -38,7 +38,7 @@ final class XmpValueAccumulator
             return $data;
         }
 
-        $existing   = $data[$key];
+        $existing = $data[$key];
 
         if ($existing instanceof XmpLanguageAlternative || $value instanceof XmpLanguageAlternative) {
             $data[$key] = self::mergeLanguageAlternatives($existing, $value);
@@ -81,7 +81,7 @@ final class XmpValueAccumulator
         array|string|XmpLanguageAlternative $existing,
         array|string|XmpLanguageAlternative $value,
     ): XmpLanguageAlternative {
-        $first  = $existing instanceof XmpLanguageAlternative
+        $first = $existing instanceof XmpLanguageAlternative
             ? $existing
             : XmpLanguageAlternative::fromValue($existing);
         $second = $value instanceof XmpLanguageAlternative

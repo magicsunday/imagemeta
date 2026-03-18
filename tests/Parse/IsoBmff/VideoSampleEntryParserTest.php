@@ -391,7 +391,7 @@ final class VideoSampleEntryParserTest extends TestCase
     #[Test]
     public function rejectsColorTableIdZeroWithWrongTrailingType(): void
     {
-        $data   = $this->buildVideoSampleData(depth: 8, colorTableId: 0x0000)
+        $data = $this->buildVideoSampleData(depth: 8, colorTableId: 0x0000)
             . pack('N', 16) . 'xxxx' . str_repeat("\x00", 4);
 
         $win    = $this->createWindow($data);
@@ -410,7 +410,7 @@ final class VideoSampleEntryParserTest extends TestCase
     public function rejectsTruncatedCtabAtom(): void
     {
         // ctab size claims 100 bytes but only 12 trailing bytes exist
-        $data   = $this->buildVideoSampleData(depth: 8, colorTableId: 0x0000)
+        $data = $this->buildVideoSampleData(depth: 8, colorTableId: 0x0000)
             . pack('N', 100) . 'ctab' . str_repeat("\x00", 4);
 
         $win    = $this->createWindow($data);
@@ -546,7 +546,7 @@ final class VideoSampleEntryParserTest extends TestCase
     public function acceptsColorTableIdZeroWithValidCtab(): void
     {
         // depth=8, colorTableId=0, valid ctab of 16 bytes
-        $data   = $this->buildVideoSampleData(depth: 8, colorTableId: 0x0000)
+        $data = $this->buildVideoSampleData(depth: 8, colorTableId: 0x0000)
             . pack('N', 16) . 'ctab' . str_repeat("\x00", 8);
 
         $win    = $this->createWindow($data);

@@ -35,7 +35,7 @@ use function substr;
  */
 final readonly class IccTagDecoder
 {
-    private const int HEADER_LENGTH     = 128;
+    private const int HEADER_LENGTH = 128;
 
     private const int TAG_RECORD_LENGTH = 12;
 
@@ -76,8 +76,8 @@ final readonly class IccTagDecoder
             return [];
         }
 
-        $tagCount       = $this->reader->uInt32Be(substr($data, $tagCountOffset, 4));
-        $cursor         = $tagCountOffset + 4;
+        $tagCount = $this->reader->uInt32Be(substr($data, $tagCountOffset, 4));
+        $cursor   = $tagCountOffset + 4;
 
         // Guard against integer overflow before multiplying tag count by entry size.
         // On 32-bit PHP, large uint32 tag counts would overflow PHP_INT_MAX.
@@ -92,7 +92,7 @@ final readonly class IccTagDecoder
             );
         }
 
-        $tableEnd       = $tagCountOffset + 4 + ($tagCount * self::TAG_RECORD_LENGTH);
+        $tableEnd = $tagCountOffset + 4 + ($tagCount * self::TAG_RECORD_LENGTH);
 
         if ($tableEnd > $length) {
             throw new ParseError(
@@ -106,7 +106,7 @@ final readonly class IccTagDecoder
             );
         }
 
-        $map            = [];
+        $map = [];
 
         for ($i = 0; $i < $tagCount; ++$i) {
             if ($cursor + self::TAG_RECORD_LENGTH > $length) {
@@ -168,7 +168,7 @@ final readonly class IccTagDecoder
             return null;
         }
 
-        $type    = substr($tagData, 0, 4);
+        $type = substr($tagData, 0, 4);
 
         if ($type === 'mluc') {
             return $this->parseMlucTag($tagData);
@@ -229,7 +229,7 @@ final readonly class IccTagDecoder
             return null;
         }
 
-        $type    = substr($tagData, 0, 4);
+        $type = substr($tagData, 0, 4);
 
         if ($type !== 'XYZ ') {
             return null;
@@ -355,7 +355,7 @@ final readonly class IccTagDecoder
             return null;
         }
 
-        $type    = substr($tagData, 0, 4);
+        $type = substr($tagData, 0, 4);
 
         if ($type === 'para') {
             return $this->parseParametricCurve($tagData);
@@ -383,13 +383,13 @@ final readonly class IccTagDecoder
      */
     public function extractSignatureTag(string $data, int $profileSize, string $tagSignature, array $tagMap = []): ?string
     {
-        $tagData   = $this->findTagData($data, $profileSize, $tagSignature, $tagMap);
+        $tagData = $this->findTagData($data, $profileSize, $tagSignature, $tagMap);
 
         if ($tagData === null || strlen($tagData) < 12) {
             return null;
         }
 
-        $type      = substr($tagData, 0, 4);
+        $type = substr($tagData, 0, 4);
 
         if ($type !== 'sig ') {
             return null;
@@ -552,13 +552,13 @@ final readonly class IccTagDecoder
             return null;
         }
 
-        $available   = strlen($data) - 12;
+        $available = strlen($data) - 12;
 
         if ($asciiLength > $available) {
             return null;
         }
 
-        $text        = substr($data, 12, $asciiLength);
+        $text = substr($data, 12, $asciiLength);
 
         return $this->validateNulTerminatedAscii($text);
     }
@@ -601,7 +601,7 @@ final readonly class IccTagDecoder
      */
     private function parseMlucTag(string $data): ?string
     {
-        $length        = strlen($data);
+        $length = strlen($data);
 
         if ($length < 16) {
             return null;
@@ -609,8 +609,8 @@ final readonly class IccTagDecoder
 
         // Tolerate non-zero reserved bytes 4..7 per Postel's Law.
 
-        $recordCount   = $this->reader->uInt32Be(substr($data, 8, 4));
-        $recordSize    = $this->reader->uInt32Be(substr($data, 12, 4));
+        $recordCount = $this->reader->uInt32Be(substr($data, 8, 4));
+        $recordSize  = $this->reader->uInt32Be(substr($data, 12, 4));
 
         if ($recordCount === 0) {
             return null;
@@ -622,7 +622,7 @@ final readonly class IccTagDecoder
         }
 
         // Record table must fit within payload
-        $tableEnd      = 16 + ($recordCount * $recordSize);
+        $tableEnd = 16 + ($recordCount * $recordSize);
 
         if ($tableEnd > $length) {
             throw new ParseError('ICC mluc record table exceeds payload bounds', 1139);
@@ -633,7 +633,7 @@ final readonly class IccTagDecoder
         $enAny         = null;
         $enUs          = null;
 
-        $cursor        = 16;
+        $cursor = 16;
 
         for ($i = 0; $i < $recordCount; ++$i) {
             $lang         = substr($data, $cursor, 2);
@@ -675,8 +675,8 @@ final readonly class IccTagDecoder
                 );
             }
 
-            $raw          = substr($data, $stringOffset, $stringLength);
-            $utf          = $this->reader->decodeUtf16Be($raw);
+            $raw = substr($data, $stringOffset, $stringLength);
+            $utf = $this->reader->decodeUtf16Be($raw);
 
             if ($utf === null) {
                 continue;
@@ -732,7 +732,7 @@ final readonly class IccTagDecoder
         }
 
         // s15Fixed16 gamma value at offset 12
-        $gamma        = $this->reader->s15Fixed16($data, 12);
+        $gamma = $this->reader->s15Fixed16($data, 12);
 
         return ['gamma' => $gamma];
     }
@@ -761,7 +761,7 @@ final readonly class IccTagDecoder
             return null;
         }
 
-        $count  = $this->reader->uInt32Be(substr($data, 8, 4));
+        $count = $this->reader->uInt32Be(substr($data, 8, 4));
 
         // Identity curve
         if ($count === 0) {
@@ -786,7 +786,7 @@ final readonly class IccTagDecoder
             return null;
         }
 
-        $table  = [];
+        $table = [];
 
         for ($i = 0; $i < $count; ++$i) {
             $table[] = $this->reader->uInt16Be(substr($data, 12 + ($i * 2), 2));

@@ -83,7 +83,7 @@ final class AppleMakerNotesMergerTest extends TestCase
             ),
         );
 
-        $quickTime  = new QuickTimeMeta([
+        $quickTime = new QuickTimeMeta([
             QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'qt-content',
             'CameraType'                          => 'QuickTime Camera',
             'HdrHeadroom'                         => 1.0,
@@ -98,12 +98,12 @@ final class AppleMakerNotesMergerTest extends TestCase
             'ImageCaptureType'                    => 6,
         ]);
 
-        $merger     = new AppleMakerNotesMerger();
-        $mapped     = $merger->merge($makerNotes, $quickTime);
+        $merger = new AppleMakerNotesMerger();
+        $mapped = $merger->merge($makerNotes, $quickTime);
 
         self::assertNotNull($mapped);
 
-        $apple      = $mapped->apple;
+        $apple = $mapped->apple;
 
         self::assertNotSame($makerNotes, $mapped);
         self::assertSame('Apple', $mapped->vendor);
@@ -144,7 +144,7 @@ final class AppleMakerNotesMergerTest extends TestCase
             ),
         );
 
-        $quickTime  = new QuickTimeMeta([
+        $quickTime = new QuickTimeMeta([
             QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'qt-content',
             'CameraType'                          => 'Quick Camera',
             'HdrHeadroom'                         => 1.25,
@@ -172,12 +172,12 @@ final class AppleMakerNotesMergerTest extends TestCase
             'AFConfidence'                        => 0.6,
         ]);
 
-        $merger     = new AppleMakerNotesMerger();
-        $mapped     = $merger->merge($makerNotes, $quickTime);
+        $merger = new AppleMakerNotesMerger();
+        $mapped = $merger->merge($makerNotes, $quickTime);
 
         self::assertNotNull($mapped);
 
-        $apple      = $mapped->apple;
+        $apple = $mapped->apple;
 
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('qt-content', $apple->identity?->contentIdentifier);
@@ -216,15 +216,15 @@ final class AppleMakerNotesMergerTest extends TestCase
             'AccelerationVector'                  => '0.3 -0.2 0.1',
         ]);
 
-        $merger    = new AppleMakerNotesMerger();
-        $mapped    = $merger->merge(null, $quickTime);
+        $merger = new AppleMakerNotesMerger();
+        $mapped = $merger->merge(null, $quickTime);
 
         self::assertNotNull($mapped);
         self::assertSame('Apple', $mapped->vendor);
         self::assertSame(0, $mapped->length);
         self::assertSame(str_repeat('0', 40), $mapped->sha1);
 
-        $apple     = $mapped->apple;
+        $apple = $mapped->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('qt-content', $apple->identity?->contentIdentifier);
         self::assertSame([0.3, -0.2, 0.1], $apple->livePhoto?->accelerationVector);
@@ -255,20 +255,20 @@ final class AppleMakerNotesMergerTest extends TestCase
             ),
         );
 
-        $quickTime  = new QuickTimeMeta([
+        $quickTime = new QuickTimeMeta([
             'NightMode' => false,
             'HdrAuto'   => true,
         ]);
 
-        $merger     = new AppleMakerNotesMerger();
-        $mapped     = $merger->merge($makerNotes, $quickTime);
+        $merger = new AppleMakerNotesMerger();
+        $mapped = $merger->merge($makerNotes, $quickTime);
 
         self::assertNotNull($mapped);
 
-        $apple      = $mapped->apple;
+        $apple = $mapped->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
 
-        $flags      = $apple->flags;
+        $flags = $apple->flags;
         self::assertTrue($flags['nightMode']);
         self::assertFalse($flags['hdrEnabled']);
         self::assertTrue($flags['hdrAuto']);

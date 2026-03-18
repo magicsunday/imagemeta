@@ -25,12 +25,12 @@ enum SubjectAreaType: string
     /**
      * Subject area defined as a center point (x, y).
      */
-    case Point     = 'point';
+    case Point = 'point';
 
     /**
      * Subject area defined as a circle (center x, y, diameter).
      */
-    case Circle    = 'circle';
+    case Circle = 'circle';
 
     /**
      * Subject area defined as a rectangle (center x, y, width, height).

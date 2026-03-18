@@ -43,7 +43,7 @@ final class TiffValueDecoderTest extends TestCase
     #[Test]
     public function exposesPrecomputedHintParametersInPublicMethods(): void
     {
-        $valueBytes  = new ReflectionMethod(TiffValueDecoder::class, 'valueBytes');
+        $valueBytes = new ReflectionMethod(TiffValueDecoder::class, 'valueBytes');
         self::assertCount(6, $valueBytes->getParameters());
         self::assertSame('componentSize', $valueBytes->getParameters()[4]->getName());
         self::assertSame('valueBytes', $valueBytes->getParameters()[5]->getName());
@@ -57,7 +57,7 @@ final class TiffValueDecoderTest extends TestCase
     #[Test]
     public function valueBytesAcceptsPrecomputedSizeAndLength(): void
     {
-        $decoder             = $this->createDecoder();
+        $decoder = $this->createDecoder();
 
         [$rawBytes, $offset] = $decoder->valueBytes(
             TiffConst::TYPE_SHORT,
@@ -77,7 +77,7 @@ final class TiffValueDecoderTest extends TestCase
     {
         $decoder = $this->createDecoder();
 
-        $value   = $decoder->decodeBytes(
+        $value = $decoder->decodeBytes(
             ExifTag::IMAGE_WIDTH,
             TiffConst::TYPE_SHORT,
             1,

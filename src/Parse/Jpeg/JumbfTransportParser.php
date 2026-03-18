@@ -40,18 +40,18 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
 {
     private const int TRANSPORT_HEADER_LENGTH = 10;
 
-    private const int MAX_SEQUENCE_NUMBER     = 65_535;
+    private const int MAX_SEQUENCE_NUMBER = 65_535;
 
-    private const string XMP_SIGNATURE        = "http://ns.adobe.com/xap/1.0/\0";
+    private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
 
     /** @var array<int, array<int, string>> */
-    private array $sequence                   = [];
+    private array $sequence = [];
 
     /** @var array<int, string> */
-    private array $identifier                 = [];
+    private array $identifier = [];
 
     /** @var array<int, int> */
-    private array $firstOffset                = [];
+    private array $firstOffset = [];
 
     /**
      * @param Closure(string): void $appendXmpPacket
@@ -78,11 +78,11 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
             return;
         }
 
-        $header                                           = $this->parseTransportHeader($payload, $offset);
-        $identifier                                       = $header['identifier'];
-        $instanceNumber                                   = $header['instance'];
-        $sequenceNumber                                   = $header['sequence'];
-        $transportData                                    = $header['data'];
+        $header         = $this->parseTransportHeader($payload, $offset);
+        $identifier     = $header['identifier'];
+        $instanceNumber = $header['instance'];
+        $sequenceNumber = $header['sequence'];
+        $transportData  = $header['data'];
 
         if (!array_key_exists($instanceNumber, $this->identifier)) {
             $this->identifier[$instanceNumber]  = $identifier;
@@ -132,8 +132,8 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
                 continue;
             }
 
-            $segmentOffset    = $this->firstOffset[$instanceNumber] ?? 0;
-            $maxSequence      = max(array_keys($sequenceChunks));
+            $segmentOffset = $this->firstOffset[$instanceNumber] ?? 0;
+            $maxSequence   = max(array_keys($sequenceChunks));
 
             for ($expectedSequence = 1; $expectedSequence <= $maxSequence; ++$expectedSequence) {
                 if (!array_key_exists($expectedSequence, $sequenceChunks)) {
@@ -175,7 +175,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
         // Bytes 0–3: CI (Common Identifier, 4 bytes)
         // Bytes 4–5: En (Instance Number, uint16)
         // Bytes 6–9: Z  (Sequence Number, uint32)
-        $identifier     = substr($payload, 0, 4);
+        $identifier = substr($payload, 0, 4);
 
         $instanceNumber = Unpack::int('n', substr($payload, 4, 2), 'APP11 instance number');
 
@@ -252,7 +252,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
         $offset = 0;
 
         while ($offset + 8 <= $length) {
-            $boxLength  = Unpack::int('N', substr($boxStream, $offset, 4), 'JUMBF child box size');
+            $boxLength = Unpack::int('N', substr($boxStream, $offset, 4), 'JUMBF child box size');
 
             if ($boxLength < 8) {
                 throw new ParseError(
@@ -307,7 +307,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
             return null;
         }
 
-        $start     = strpos($payload, '<');
+        $start = strpos($payload, '<');
 
         if ($start === false) {
             return null;

@@ -133,7 +133,7 @@ final readonly class TiffValidationSupport
      */
     public function resolveUniformBitsPerSample(Ifd $ifd, string $context, int $baseErrCode): int
     {
-        $bitsEntry            = $ifd->get(ExifTag::BITS_PER_SAMPLE);
+        $bitsEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
 
         if (!$bitsEntry instanceof IfdEntry) {
             throw new ParseError(
@@ -175,7 +175,7 @@ final readonly class TiffValidationSupport
             );
         }
 
-        $uniformBitDepth      = $bitDepths[0];
+        $uniformBitDepth = $bitDepths[0];
 
         foreach ($bitDepths as $index => $bitDepth) {
             if ($bitDepth <= 0) {
@@ -226,7 +226,7 @@ final readonly class TiffValidationSupport
         int $typeCode,
         int $countCode,
     ): ?array {
-        $entry      = $ifd->get($tag);
+        $entry = $ifd->get($tag);
 
         if (!$entry instanceof IfdEntry) {
             return null;

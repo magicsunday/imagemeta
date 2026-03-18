@@ -51,11 +51,11 @@ enum LightSource: int
     case WarmWhiteLightSource = 29;
 
     // EXIF 3.1 §4.6.6.5.2: LED sources
-    case DaylightLed          = 30;
-    case DayWhiteLed          = 31;
-    case CoolWhiteLed         = 32;
-    case WhiteLed             = 33;
-    case WarmWhiteLed         = 34;
+    case DaylightLed  = 30;
+    case DayWhiteLed  = 31;
+    case CoolWhiteLed = 32;
+    case WhiteLed     = 33;
+    case WarmWhiteLed = 34;
 
-    case Other                = 255;
+    case Other = 255;
 }

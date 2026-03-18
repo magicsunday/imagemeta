@@ -29,7 +29,7 @@ final readonly class SensorFactory
      */
     public function create(Metadata $metadata): Sensor
     {
-        $exifDocument       = $metadata->exifDoc;
+        $exifDocument = $metadata->exifDoc;
 
         $focalPlaneUnit     = null;
         $focalPlaneUnitCode = $exifDocument?->focalPlaneResolutionUnit();

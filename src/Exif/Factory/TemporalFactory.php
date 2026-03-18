@@ -73,46 +73,46 @@ final readonly class TemporalFactory
      */
     private function buildTemporal(?ParsedExif $exifDocument, ?QuickTimeMeta $quickTime, ?XmpDocument $xmpDocument): Temporal
     {
-        $exifCreate                       = $exifDocument?->dateTimeDigitized();
-        $exifModify                       = $exifDocument?->dateTime();
+        $exifCreate = $exifDocument?->dateTimeDigitized();
+        $exifModify = $exifDocument?->dateTime();
 
-        $xmpCreate                        = $this->parseFirstAvailableDate(
+        $xmpCreate = $this->parseFirstAvailableDate(
             $xmpDocument?->string(XmpNamespace::XAP->value, 'CreateDate'),
             $xmpDocument?->string(XmpNamespace::EXIF->value, 'CreateDate'),
         );
-        $xmpModify                        = $this->parseFirstAvailableDate(
+        $xmpModify = $this->parseFirstAvailableDate(
             $xmpDocument?->string(XmpNamespace::XAP->value, 'ModifyDate'),
             $xmpDocument?->string(XmpNamespace::EXIF->value, 'ModifyDate'),
         );
-        $xmpDateCreated                   = $this->parseFirstAvailableDate($xmpDocument?->string(XmpNamespace::PHOTOSHOP->value, 'DateCreated'));
-        $lookup                           = new QuickTimeLookup($quickTime);
-        $quickTimeCreate                  = $this->parseFirstAvailableDate($lookup->string('CreationDate'));
-        $quickTimeModify                  = $this->parseFirstAvailableDate($lookup->string('ModifyDate'));
+        $xmpDateCreated  = $this->parseFirstAvailableDate($xmpDocument?->string(XmpNamespace::PHOTOSHOP->value, 'DateCreated'));
+        $lookup          = new QuickTimeLookup($quickTime);
+        $quickTimeCreate = $this->parseFirstAvailableDate($lookup->string('CreationDate'));
+        $quickTimeModify = $this->parseFirstAvailableDate($lookup->string('ModifyDate'));
 
-        $create                           = $exifCreate ?? $xmpCreate ?? $quickTimeCreate ?? $xmpDateCreated;
-        $modify                           = $exifModify ?? $xmpModify ?? $quickTimeModify;
+        $create = $exifCreate ?? $xmpCreate ?? $quickTimeCreate ?? $xmpDateCreated;
+        $modify = $exifModify ?? $xmpModify ?? $quickTimeModify;
 
         [$original, $tz, $subOriginalRaw] = $this->originalTimestampComponents($exifDocument);
 
-        $originalWithTz                   = $original;
+        $originalWithTz = $original;
 
         if (($original instanceof DateTimeImmutable) && ($tz instanceof DateTimeZone)) {
             $originalWithTz = $original->setTimezone($tz);
         }
 
-        $offsetTime                       = $exifDocument?->offsetTime();
-        $offsetTimeOriginal               = $exifDocument?->offsetTimeOriginal();
-        $offsetTimeDigitized              = $exifDocument?->offsetTimeDigitized();
+        $offsetTime          = $exifDocument?->offsetTime();
+        $offsetTimeOriginal  = $exifDocument?->offsetTimeOriginal();
+        $offsetTimeDigitized = $exifDocument?->offsetTimeDigitized();
 
-        $subSecTime                       = $this->sanitizeSubSeconds($exifDocument?->subSecTime());
-        $subSecTimeDigitized              = $this->sanitizeSubSeconds($exifDocument?->subSecTimeDigitized());
-        $subSecOriginal                   = $this->sanitizeSubSeconds($subOriginalRaw);
+        $subSecTime          = $this->sanitizeSubSeconds($exifDocument?->subSecTime());
+        $subSecTimeDigitized = $this->sanitizeSubSeconds($exifDocument?->subSecTimeDigitized());
+        $subSecOriginal      = $this->sanitizeSubSeconds($subOriginalRaw);
 
         if ($subSecTime === null) {
             $subSecTime = $subSecOriginal ?? $subSecTimeDigitized;
         }
 
-        $tzSource                         = null;
+        $tzSource = null;
 
         if (($tz instanceof DateTimeZone) && ($offsetTimeOriginal !== null) && ($this->converters->parseOffset($offsetTimeOriginal) instanceof DateTimeZone)) {
             $tzSource = 'OffsetTimeOriginal';
@@ -144,8 +144,8 @@ final readonly class TemporalFactory
             return [null, null, null];
         }
 
-        $original     = $document->dateTimeOriginalBestEffort();
-        $offset       = $document->offsetTimeOriginal();
+        $original = $document->dateTimeOriginalBestEffort();
+        $offset   = $document->offsetTimeOriginal();
 
         if (($offset === null) && $this->dateTimeStringEmpty($document->dateTimeOriginalRaw())) {
             $offset = $document->offsetTimeDigitized();
@@ -162,7 +162,7 @@ final readonly class TemporalFactory
             $original = $original->setTimezone($timezone);
         }
 
-        $subSeconds   = $document->subSecTimeOriginal();
+        $subSeconds = $document->subSecTimeOriginal();
 
         return [
             $original,
@@ -207,7 +207,7 @@ final readonly class TemporalFactory
             return null;
         }
 
-        $sign      = $offset < 0 ? '-' : '+';
+        $sign = $offset < 0 ? '-' : '+';
 
         return sprintf('%s%02d:%02d', $sign, $hours, $minutes);
     }

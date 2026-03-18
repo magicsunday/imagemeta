@@ -405,7 +405,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function extractsGpsCoordinatesWithPositiveAltitude(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
             ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
@@ -451,7 +451,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function extractsGpsCoordinatesWithNegativeHemisphereAndAltitude(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'S'),
             ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
@@ -497,7 +497,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function extractsGpsCoordinatesWithoutAltitude(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
             ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
@@ -536,7 +536,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function handlesGpsCoordinatesWithNumericListComponents(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 1, 'N'),
             ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
@@ -574,7 +574,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function altitudeReferenceAcceptsStringFlag(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 1, 'S'),
             ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
@@ -621,7 +621,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function returnsNullForGpsCoordinateWithInvalidSeconds(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 1, 'N'),
             ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
@@ -659,7 +659,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function extractsExtendedGpsMetadata(): void
     {
-        $gps       = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_VERSION_ID   => new IfdEntry(ExifTag::GPS_VERSION_ID, 2, 9, '2.4.0.0' . chr(0)),
             ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
             ExifTag::GPS_LATITUDE     => new IfdEntry(
@@ -739,7 +739,7 @@ final class ValueConvertersTest extends TestCase
             ExifTag::GPS_H_POSITIONING_ERROR => new IfdEntry(ExifTag::GPS_H_POSITIONING_ERROR, 5, 1, new ExifRational(15, 10)),
         ]);
 
-        $result    = $this->converters->gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertEqualsWithDelta(51.5, $result['lat'], 0.000001);
         self::assertEqualsWithDelta(8.5, $result['lon'], 0.000001);
@@ -795,9 +795,9 @@ final class ValueConvertersTest extends TestCase
         $jisContent     = iconv('UTF-8', 'ISO-2022-JP', '東京');
         self::assertIsString($jisContent);
 
-        $jisPayload     = "JIS\0\0\0\0\0" . $jisContent . "\0";
+        $jisPayload = "JIS\0\0\0\0\0" . $jisContent . "\0";
 
-        $gps            = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_PROCESSING_METHOD => new IfdEntry(
                 ExifTag::GPS_PROCESSING_METHOD,
                 7,
@@ -812,7 +812,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result         = $this->converters->gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertSame('測位方式', $result['processing_method']);
         self::assertSame('東京', $result['area_information']);
@@ -826,7 +826,7 @@ final class ValueConvertersTest extends TestCase
     {
         $shiftJisPayload = "JIS\0\0\0\0\0" . pack('C*', 0x93, 0x8C, 0x8B, 0x9E) . "\0";
 
-        $gps             = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_AREA_INFORMATION => new IfdEntry(
                 ExifTag::GPS_AREA_INFORMATION,
                 7,
@@ -835,7 +835,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result          = $this->converters->gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertNull($result['area_information']);
     }
@@ -848,7 +848,7 @@ final class ValueConvertersTest extends TestCase
     {
         $malformedPayload = "JIS\0\0\0\0\0\x1B\x24\x42\x24";
 
-        $gps              = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_AREA_INFORMATION => new IfdEntry(
                 ExifTag::GPS_AREA_INFORMATION,
                 7,
@@ -857,7 +857,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result           = $this->converters->gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertNull($result['area_information']);
     }
@@ -870,7 +870,7 @@ final class ValueConvertersTest extends TestCase
     {
         $unicodePayload = "UNICODE\0\xFE\xFF" . pack('n*', 0x6E2C, 0x4F4D, 0x65B9, 0x5F0F) . "\0\0";
 
-        $gps            = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_PROCESSING_METHOD => new IfdEntry(
                 ExifTag::GPS_PROCESSING_METHOD,
                 7,
@@ -879,7 +879,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result         = $this->converters->gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertSame('測位方式', $result['processing_method']);
     }
@@ -892,7 +892,7 @@ final class ValueConvertersTest extends TestCase
     {
         $malformedPayload = "UNICODE\0\xC3\x28";
 
-        $gps              = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_PROCESSING_METHOD => new IfdEntry(
                 ExifTag::GPS_PROCESSING_METHOD,
                 7,
@@ -901,7 +901,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result           = $this->converters->gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertNull($result['processing_method']);
     }
@@ -914,7 +914,7 @@ final class ValueConvertersTest extends TestCase
     {
         $malformedPayload = "UNICODE\0\xFE\xFF\x00A\x00";
 
-        $gps              = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_PROCESSING_METHOD => new IfdEntry(
                 ExifTag::GPS_PROCESSING_METHOD,
                 7,
@@ -923,7 +923,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result           = $this->converters->gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertNull($result['processing_method']);
     }
@@ -937,7 +937,7 @@ final class ValueConvertersTest extends TestCase
     {
         $payload = "UNICODE\0\0\0";
 
-        $gps     = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_PROCESSING_METHOD => new IfdEntry(
                 ExifTag::GPS_PROCESSING_METHOD,
                 7,
@@ -946,7 +946,7 @@ final class ValueConvertersTest extends TestCase
             ),
         ]);
 
-        $result  = $this->converters->gpsFromIfd($gps);
+        $result = $this->converters->gpsFromIfd($gps);
 
         self::assertNull($result['processing_method']);
     }
@@ -958,7 +958,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function formatsGpsVersionFromNumericList(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_VERSION_ID => new IfdEntry(ExifTag::GPS_VERSION_ID, 1, 4, [2, 4, 0, 0]),
         ]);
 
@@ -975,7 +975,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function defaultsGpsVersionWhenEntryMissing(): void
     {
-        $gps    = new Ifd([]);
+        $gps = new Ifd([]);
 
         $result = $this->converters->gpsFromIfd($gps);
 
@@ -990,7 +990,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function defaultsGpsVersionWhenStringPayloadEmpty(): void
     {
-        $gps    = new Ifd([
+        $gps = new Ifd([
             ExifTag::GPS_VERSION_ID => new IfdEntry(ExifTag::GPS_VERSION_ID, 2, 4, "\0\0\0\0"),
         ]);
 
@@ -1012,7 +1012,7 @@ final class ValueConvertersTest extends TestCase
         $payload .= "Beta\0";
         $payload .= $this->packSrational(1, 1);
 
-        $result  = $this->converters->decodeSpatialFrequencyResponse($payload);
+        $result = $this->converters->decodeSpatialFrequencyResponse($payload);
 
         self::assertNotNull($result);
         self::assertSame(['Alpha'], $result['labels']['columns']);
@@ -1028,7 +1028,7 @@ final class ValueConvertersTest extends TestCase
     {
         $payload = $this->buildSpatialFrequencyResponsePayload();
 
-        $result  = $this->converters->decodeSpatialFrequencyResponse($payload);
+        $result = $this->converters->decodeSpatialFrequencyResponse($payload);
 
         self::assertNotNull($result);
         self::assertSame(3, $result['columns']);
@@ -1248,7 +1248,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function rejectsInvalidWhitePointAndChromaticityLengths(): void
     {
-        $whitePoint     = new ExifRationalList([
+        $whitePoint = new ExifRationalList([
             new ExifRational(1, 2),
             new ExifRational(1, 2),
             new ExifRational(1, 2),
@@ -1273,7 +1273,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function calculatesFieldOfViewAndHyperfocalMetrics(): void
     {
-        $cropFactor        = $this->converters->calcCropFactor(75, 50.0);
+        $cropFactor = $this->converters->calcCropFactor(75, 50.0);
         self::assertEqualsWithDelta(1.5, $cropFactor, 1e-12);
 
         $circleOfConfusion = $this->converters->calcCircleOfConfusionMm($cropFactor);
@@ -1281,7 +1281,7 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(0.03, $this->converters->calcCircleOfConfusionMm(null), 1e-12);
         self::assertNull($this->converters->calcCircleOfConfusionMm(0.0));
 
-        $hyperfocal        = $this->converters->calcHyperfocalM(50.0, 8.0, $circleOfConfusion);
+        $hyperfocal = $this->converters->calcHyperfocalM(50.0, 8.0, $circleOfConfusion);
         self::assertEqualsWithDelta(15.675, $hyperfocal, 1e-12);
 
         self::assertEqualsWithDelta(32.179788109672, $this->converters->calcFovDeg(75, $cropFactor, 50.0), 1e-12);
@@ -1307,13 +1307,13 @@ final class ValueConvertersTest extends TestCase
         float $expectedFovHorizontal,
         float $expectedFovVertical,
     ): void {
-        $cropFactor        = $this->converters->calcCropFactor($focalLength35mm, $focalLengthMm);
+        $cropFactor = $this->converters->calcCropFactor($focalLength35mm, $focalLengthMm);
         self::assertEqualsWithDelta($expectedCropFactor, $cropFactor, 1e-9);
 
         $circleOfConfusion = $this->converters->calcCircleOfConfusionMm($cropFactor);
         self::assertEqualsWithDelta($expectedCircleOfConfusion, $circleOfConfusion, 1e-9);
 
-        $hyperfocal        = $this->converters->calcHyperfocalM($focalLengthMm, $fNumber, $circleOfConfusion);
+        $hyperfocal = $this->converters->calcHyperfocalM($focalLengthMm, $fNumber, $circleOfConfusion);
         self::assertEqualsWithDelta($expectedHyperfocal, $hyperfocal, 1e-6);
 
         self::assertEqualsWithDelta(
@@ -1430,7 +1430,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function convertsSrationalTripletToFloatVector(): void
     {
-        $list   = new ExifRationalList([
+        $list = new ExifRationalList([
             new ExifRational(50, 100),   // 0.5 m/s²
             new ExifRational(-20, 100),  // -0.2 m/s²
             new ExifRational(980, 100),  // 9.8 m/s²
@@ -1451,7 +1451,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function convertsSrationalTripletWithZeroComponents(): void
     {
-        $list   = new ExifRationalList([
+        $list = new ExifRationalList([
             new ExifRational(0, 100),
             new ExifRational(0, 100),
             new ExifRational(981, 100),  // Near gravity
@@ -1471,7 +1471,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function convertsSrationalTripletWithUnsignedSentinelDenominator(): void
     {
-        $list   = new ExifRationalList([
+        $list = new ExifRationalList([
             new ExifRational(10, 100),
             new ExifRational(20, 0xFFFFFFFF),
             new ExifRational(-10, 100),
@@ -1492,7 +1492,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function rejectsSrationalListWithWrongComponentCount(): void
     {
-        $listWithTwo  = new ExifRationalList([
+        $listWithTwo = new ExifRationalList([
             new ExifRational(10, 100),
             new ExifRational(20, 100),
         ]);
@@ -1516,7 +1516,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function rejectsSrationalTripletWithZeroDenominator(): void
     {
-        $list   = new ExifRationalList([
+        $list = new ExifRationalList([
             new ExifRational(50, 100),
             new ExifRational(20, 0),     // Invalid: division by zero
             new ExifRational(980, 100),
@@ -1535,7 +1535,7 @@ final class ValueConvertersTest extends TestCase
     public function convertsSrationalTripletWithLargeValues(): void
     {
         // Example: High-speed collision or extreme motion
-        $list   = new ExifRationalList([
+        $list = new ExifRationalList([
             new ExifRational(500000, 1000),  // 500 m/s²
             new ExifRational(-200000, 1000), // -200 m/s²
             new ExifRational(100000, 1000),  // 100 m/s²
@@ -1556,7 +1556,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function convertsSrationalTripletWithAllNegativeValues(): void
     {
-        $list   = new ExifRationalList([
+        $list = new ExifRationalList([
             new ExifRational(-30, 100),
             new ExifRational(-50, 100),
             new ExifRational(-20, 100),
@@ -1608,8 +1608,8 @@ final class ValueConvertersTest extends TestCase
     public function formatsShutterSpeedFromApex(): void
     {
         // APEX value 4.32 => 2^(-4.32) ≈ 0.05 seconds => "1/20"
-        $apexValue  = new ExifRational(64736, 14979);
-        $formatted  = $this->converters->formatShutterSpeedFromApex($apexValue);
+        $apexValue = new ExifRational(64736, 14979);
+        $formatted = $this->converters->formatShutterSpeedFromApex($apexValue);
 
         self::assertSame('1/20', $formatted);
 
@@ -1659,8 +1659,8 @@ final class ValueConvertersTest extends TestCase
     public function formatsApertureFromApex(): void
     {
         // APEX value 1.85 => 2^(1.85/2) ≈ 1.9 => "f/1.9"
-        $apexValue  = new ExifRational(16384, 8847);
-        $formatted  = $this->converters->formatApertureFromApex($apexValue);
+        $apexValue = new ExifRational(16384, 8847);
+        $formatted = $this->converters->formatApertureFromApex($apexValue);
 
         self::assertSame('f/1.9', $formatted);
 

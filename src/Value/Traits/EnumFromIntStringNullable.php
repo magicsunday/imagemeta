@@ -71,11 +71,11 @@ trait EnumFromIntStringNullable
         /** @var array<class-string, string> $backingTypeCache */
         static $backingTypeCache = [];
 
-        $class                   = self::class;
+        $class = self::class;
 
         if (!isset($backingTypeCache[$class])) {
-            $reflection               = new ReflectionEnum($class);
-            $backing                  = $reflection->getBackingType();
+            $reflection = new ReflectionEnum($class);
+            $backing    = $reflection->getBackingType();
 
             $backingTypeCache[$class] = $backing instanceof ReflectionNamedType
                 ? $backing->getName()

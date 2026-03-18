@@ -92,55 +92,55 @@ use function unlink;
 #[UsesClass(JfifSegmentHandler::class)]
 final class JpegParserTest extends TestCase
 {
-    private const string EXIF_SIGNATURE         = "Exif\0\0";
+    private const string EXIF_SIGNATURE = "Exif\0\0";
 
-    private const string TIFF_HEADER            = "MM\x00\x2A";
+    private const string TIFF_HEADER = "MM\x00\x2A";
 
-    private const string XMP_SIGNATURE          = "http://ns.adobe.com/xap/1.0/\0";
+    private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
 
     private const string EXTENDED_XMP_SIGNATURE = "http://ns.adobe.com/xmp/extension/\0";
 
-    private const string ICC_SIGNATURE          = "ICC_PROFILE\0";
+    private const string ICC_SIGNATURE = "ICC_PROFILE\0";
 
-    private const string MPF_SIGNATURE          = "MPF\0";
+    private const string MPF_SIGNATURE = "MPF\0";
 
-    private const string IPTC_SIGNATURE         = "Photoshop 3.0\0";
+    private const string IPTC_SIGNATURE = "Photoshop 3.0\0";
 
-    private const string ADOBE_APP14_SIGNATURE  = 'Adobe';
+    private const string ADOBE_APP14_SIGNATURE = 'Adobe';
 
-    private const string FPXR_SIGNATURE         = 'FPXR';
+    private const string FPXR_SIGNATURE = 'FPXR';
 
-    private const string AUDIO_SIGNATURE        = "Exif\0\0Audio";
+    private const string AUDIO_SIGNATURE = "Exif\0\0Audio";
 
-    private const string JFIF_SIGNATURE         = "JFIF\0";
+    private const string JFIF_SIGNATURE = "JFIF\0";
 
-    private const int MARKER_APP0               = 0xE0;
+    private const int MARKER_APP0 = 0xE0;
 
-    private const int MARKER_APP1               = 0xE1;
+    private const int MARKER_APP1 = 0xE1;
 
-    private const int MARKER_APP2               = 0xE2;
+    private const int MARKER_APP2 = 0xE2;
 
-    private const int MARKER_APP11              = 0xEB;
+    private const int MARKER_APP11 = 0xEB;
 
-    private const int MARKER_APP13              = 0xED;
+    private const int MARKER_APP13 = 0xED;
 
-    private const int MARKER_APP14              = 0xEE;
+    private const int MARKER_APP14 = 0xEE;
 
-    private const int MARKER_DQT                = 0xDB;
+    private const int MARKER_DQT = 0xDB;
 
-    private const int MARKER_DHT                = 0xC4;
+    private const int MARKER_DHT = 0xC4;
 
-    private const int MARKER_DRI                = 0xDD;
+    private const int MARKER_DRI = 0xDD;
 
-    private const int MARKER_SOF0               = 0xC0;
+    private const int MARKER_SOF0 = 0xC0;
 
-    private const int MARKER_SOF1               = 0xC1;
+    private const int MARKER_SOF1 = 0xC1;
 
-    private const int MARKER_SOF2               = 0xC2;
+    private const int MARKER_SOF2 = 0xC2;
 
-    private const int MARKER_SOF3               = 0xC3;
+    private const int MARKER_SOF3 = 0xC3;
 
-    private const int MARKER_SOS                = 0xDA;
+    private const int MARKER_SOS = 0xDA;
 
     /**
      * Extracts EXIF and XMP from APP1 segments in EXIF-compliant order.
@@ -184,12 +184,12 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'combo-exif';
         $xmpPayload  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Combo</x:xmpmeta>';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame([$xmpPayload], $extractor->extractXmpPackets());
@@ -237,12 +237,12 @@ final class JpegParserTest extends TestCase
         $firstBlob  = self::TIFF_HEADER . 'first-exif';
         $secondBlob = self::TIFF_HEADER . 'second-exif';
 
-        $jpeg       = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $firstBlob),
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $secondBlob),
         );
 
-        $extractor  = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$firstBlob], $extractor->extractExifBlobs());
     }
@@ -257,7 +257,7 @@ final class JpegParserTest extends TestCase
         $dupeBlob  = self::TIFF_HEADER . 'duplicate-exif';
         $xmpPacket = '<x:xmpmeta xmlns:x="adobe:ns:meta/">XMP</x:xmpmeta>';
 
-        $jpeg      = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifBlob),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPacket),
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $dupeBlob),
@@ -276,11 +276,11 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function duplicateXmpSegmentsAreDeduplicated(): void
     {
-        $xmpOne    = '<x:xmpmeta xmlns:x="adobe:ns:meta/">One</x:xmpmeta>';
-        $xmpTwo    = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Two</x:xmpmeta>';
-        $exifBlob  = self::TIFF_HEADER . 'primary-exif';
+        $xmpOne   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">One</x:xmpmeta>';
+        $xmpTwo   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Two</x:xmpmeta>';
+        $exifBlob = self::TIFF_HEADER . 'primary-exif';
 
-        $jpeg      = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifBlob),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpOne),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpOne),
@@ -305,13 +305,13 @@ final class JpegParserTest extends TestCase
         $basePacket      = '<x:xmpmeta xmlns:x="adobe:ns:meta/" xmlns:xmpNote="http://ns.adobe.com/xmp/note/" xmpNote:HasExtendedXMP="' . $guid . '">BASE-';
         $extendedPayload = 'EXTENDED</x:xmpmeta>';
 
-        $jpeg            = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $basePacket),
             self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 8, substr($extendedPayload, 8))),
             self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 0, substr($extendedPayload, 0, 8))),
         );
 
-        $extractor       = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$basePacket . $extendedPayload], $extractor->extractXmpPackets());
     }
@@ -326,13 +326,13 @@ final class JpegParserTest extends TestCase
         $basePacket      = '<x:xmpmeta xmlns:xmpNote="http://ns.adobe.com/xmp/note/" xmpNote:HasExtendedXMP="' . $guid . '">BASE-';
         $extendedPayload = 'EXTENDED</x:xmpmeta>';
 
-        $jpeg            = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $basePacket),
             self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 0, substr($extendedPayload, 0, 4))),
             self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 8, substr($extendedPayload, 8))),
         );
 
-        $extractor       = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessageMatches('/ExtendedXMP.*missing|missing.*ExtendedXMP/i');
@@ -350,13 +350,13 @@ final class JpegParserTest extends TestCase
         $basePacket      = '<x:xmpmeta xmlns:xmpNote="http://ns.adobe.com/xmp/note/" xmpNote:HasExtendedXMP="' . $guid . '">BASE-';
         $extendedPayload = 'EXTENDED</x:xmpmeta>';
 
-        $jpeg            = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $basePacket),
             self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 0, substr($extendedPayload, 0, 8))),
             self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 6, substr($extendedPayload, 6))),
         );
 
-        $extractor       = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessageMatches('/ExtendedXMP.*overlap|overlap.*ExtendedXMP/i');
@@ -375,12 +375,12 @@ final class JpegParserTest extends TestCase
         $basePacket      = '<x:xmpmeta xmlns:xmpNote="http://ns.adobe.com/xmp/note/" xmpNote:HasExtendedXMP="' . $baseGuid . '">BASE-';
         $extendedPayload = 'EXTENDED</x:xmpmeta>';
 
-        $jpeg            = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $basePacket),
             self::segment(self::MARKER_APP1, $this->extendedXmpPayload($extensionGuid, strlen($extendedPayload), 0, $extendedPayload)),
         );
 
-        $extractor       = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessageMatches('/HasExtendedXMP|GUID|ExtendedXMP/i');
@@ -398,12 +398,12 @@ final class JpegParserTest extends TestCase
         $xmpPacket       = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Plain</x:xmpmeta>';
         $extendedPayload = 'ORPHAN';
 
-        $jpeg            = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPacket),
             self::segment(self::MARKER_APP1, $this->extendedXmpPayload($guid, strlen($extendedPayload), 0, $extendedPayload)),
         );
 
-        $extractor       = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$xmpPacket], $extractor->extractXmpPackets());
     }
@@ -418,7 +418,7 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
         $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Meta</x:xmpmeta>';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(0xE3, 'vendor-one'),
             self::segment(0xE4, 'vendor-two'),
@@ -428,7 +428,7 @@ final class JpegParserTest extends TestCase
             self::segment(0xE6, 'vendor-four')
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame([$xmpXml], $extractor->extractXmpPackets());
@@ -443,14 +443,14 @@ final class JpegParserTest extends TestCase
         $mpfPayload  = self::MPF_SIGNATURE . 'x';
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP2, $mpfPayload),
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
-        $blobs       = $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
         self::assertSame([$exifPayload], $blobs);
     }
 
@@ -463,13 +463,13 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(0xE3, 'vendor'),
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
-        $blobs       = $extractor->extractExifBlobs();
+        $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
         self::assertCount(1, $blobs);
     }
@@ -486,13 +486,13 @@ final class JpegParserTest extends TestCase
         $fpxrPayload = $this->fpxrContentsListPayload([
             ['size' => 0, 'default' => 0x00, 'name' => '/Root/Stream0'],
         ]);
-        $sofPayload  = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+        $sofPayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
             . "\x01\x22\x00"
             . "\x02\x11\x01"
             . "\x03\x11\x01";
-        $sosPayload  = $this->defaultSosPayload();
+        $sosPayload = $this->defaultSosPayload();
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, $fpxrPayload),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml),
@@ -502,7 +502,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_SOS, $sosPayload),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame([$xmpXml], $extractor->extractXmpPackets());
@@ -519,9 +519,9 @@ final class JpegParserTest extends TestCase
             . "\x01\x22\x00"
             . "\x02\x11\x01"
             . "\x03\x11\x01";
-        $sosPayload  = $this->defaultSosPayload();
+        $sosPayload = $this->defaultSosPayload();
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, 'dummy-app2'),
             self::segment(self::MARKER_DQT, "\x00"),
@@ -530,7 +530,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_SOS, $sosPayload),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -547,14 +547,14 @@ final class JpegParserTest extends TestCase
             . "\x02\x11\x01"
             . "\x03\x11\x01";
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DHT, "\x00"),
             self::segment(self::MARKER_SOF0, $sofPayload),
             self::segment(self::MARKER_SOS, $this->defaultSosPayload()),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -571,14 +571,14 @@ final class JpegParserTest extends TestCase
             . "\x02\x11\x01"
             . "\x03\x11\x01";
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DQT, "\x00"),
             self::segment(self::MARKER_SOF0, $sofPayload),
             self::segment(self::MARKER_SOS, $this->defaultSosPayload()),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -591,14 +591,14 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DQT, "\x00"),
             self::segment(self::MARKER_DHT, "\x00"),
             self::segment(self::MARKER_SOS, $this->defaultSosPayload()),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -614,7 +614,7 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'sof1-exif';
         $sofPayload  = $this->defaultSofPayload();
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
@@ -623,7 +623,7 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -639,7 +639,7 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'sof3-exif';
         $sofPayload  = $this->defaultSofPayload();
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
@@ -648,7 +648,7 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -661,15 +661,15 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
-        $blobs       = $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
         self::assertSame([$exifPayload], $blobs);
     }
 
@@ -682,15 +682,15 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DQT, "\x00"),
             self::segment(self::MARKER_DHT, "\x00"),
             self::segment(self::MARKER_APP2, 'late-app2'),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
-        $blobs       = $extractor->extractExifBlobs();
+        $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
         self::assertCount(1, $blobs);
     }
@@ -703,14 +703,14 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DQT, "\x00"),
             self::segment(self::MARKER_DQT, "\x01"),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
-        $blobs       = $extractor->extractExifBlobs();
+        $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
         self::assertCount(1, $blobs);
     }
@@ -723,14 +723,14 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DHT, "\x00"),
             self::segment(self::MARKER_DHT, "\x01"),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
-        $blobs       = $extractor->extractExifBlobs();
+        $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
         self::assertCount(1, $blobs);
     }
@@ -743,7 +743,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DRI, "\x00\x01"),
             self::segment(self::MARKER_DRI, "\x00\x02"),
@@ -754,8 +754,8 @@ final class JpegParserTest extends TestCase
             "scan\xFF\xD0",
         );
 
-        $extractor   = $this->createExtractor($jpeg);
-        $blobs       = $extractor->extractExifBlobs();
+        $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
         self::assertCount(1, $blobs);
     }
@@ -771,12 +771,12 @@ final class JpegParserTest extends TestCase
         $app11Payload = $this->app11Payload(
             $this->app11SuperboxWithContent('abcd', 'marker-order'),
         );
-        $sofPayload   = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+        $sofPayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
             . "\x01\x22\x00"
             . "\x02\x11\x01"
             . "\x03\x11\x01";
 
-        $jpeg         = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, $app2Payload),
             self::segment(self::MARKER_APP11, $app11Payload),
@@ -786,7 +786,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_SOS, $this->defaultSosPayload()),
         );
 
-        $extractor    = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -802,14 +802,14 @@ final class JpegParserTest extends TestCase
             $this->app11SuperboxWithContent('abcd', 'marker-order'),
         );
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP11, $app11),
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
-        $blobs       = $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
         self::assertSame([$exifPayload], $blobs);
     }
 
@@ -824,16 +824,16 @@ final class JpegParserTest extends TestCase
             $this->app11SuperboxWithContent('abcd', 'marker-order'),
         );
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, 'dummy-app2'),
             self::segment(self::MARKER_DQT, "\x00"),
             self::segment(self::MARKER_APP11, $app11),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
-        $blobs       = $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
         self::assertSame([$exifPayload], $blobs);
     }
 
@@ -848,15 +848,15 @@ final class JpegParserTest extends TestCase
             $this->app11SuperboxWithContent('abcd', 'marker-order'),
         );
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP11, $app11),
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, 'dummy-app2'),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
-        $blobs       = $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
         self::assertSame([$exifPayload], $blobs);
     }
 
@@ -868,13 +868,13 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, 'dummy-app2'),
             self::segment(self::MARKER_DQT, "\x00"),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -891,13 +891,13 @@ final class JpegParserTest extends TestCase
             $this->app11SuperboxWithContent('xml ', $xmpPacket),
         );
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, 'dummy-app2'),
             self::segment(self::MARKER_APP11, $app11),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$xmpPacket], $extractor->extractXmpPackets());
     }
@@ -918,7 +918,7 @@ final class JpegParserTest extends TestCase
         $app11b        = $this->app11TransportPayload($fragmentB, 7, 2);
         $app11c        = $this->app11TransportPayload($fragmentC, 7, 3);
 
-        $jpeg          = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, 'dummy-app2'),
             self::segment(self::MARKER_APP11, $app11a),
@@ -926,7 +926,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_APP11, $app11c),
         );
 
-        $extractor     = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$xmpPacket], $extractor->extractXmpPackets());
     }
@@ -944,14 +944,14 @@ final class JpegParserTest extends TestCase
         $app11a        = $this->app11TransportPayload($fragmentA, 3, 1);
         $app11b        = $this->app11TransportPayload($fragmentB, 3, 3);
 
-        $jpeg          = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, 'dummy-app2'),
             self::segment(self::MARKER_APP11, $app11a),
             self::segment(self::MARKER_APP11, $app11b),
         );
 
-        $extractor     = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessageMatches('/APP11.*missing sequence|missing sequence.*APP11/i');
@@ -969,14 +969,14 @@ final class JpegParserTest extends TestCase
         $app11a      = $this->app11TransportPayload('first', 9, 1);
         $app11b      = $this->app11TransportPayload('second', 9, 1);
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, 'dummy-app2'),
             self::segment(self::MARKER_APP11, $app11a),
             self::segment(self::MARKER_APP11, $app11b),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessageMatches('/APP11.*duplicate sequence|duplicate sequence.*APP11/i');
@@ -994,14 +994,14 @@ final class JpegParserTest extends TestCase
         $app11a      = $this->app11TransportPayload('chunk-a', 5, 1, "JP\0\0");
         $app11b      = $this->app11TransportPayload('chunk-b', 5, 2, "JP\0\x01");
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, 'dummy-app2'),
             self::segment(self::MARKER_APP11, $app11a),
             self::segment(self::MARKER_APP11, $app11b),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessageMatches('/APP11.*inconsistent instance metadata|inconsistent instance metadata.*APP11/i');
@@ -1024,14 +1024,14 @@ final class JpegParserTest extends TestCase
             $this->app11SuperboxWithContent('xml ', $app11Xmp),
         );
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $app1Xmp),
             self::segment(self::MARKER_APP2, $iccPayload),
             self::segment(self::MARKER_APP11, $app11),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame([$app1Xmp, $app11Xmp], $extractor->extractXmpPackets());
@@ -1047,13 +1047,13 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
         $malformed   = "JP\0\0" . pack('n', 1) . pack('N', 1) . pack('N', 32) . 'jumbshort';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, 'dummy-app2'),
             self::segment(self::MARKER_APP11, $malformed),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessageMatches('/APP11|JUMBF|truncated/i');
@@ -1072,13 +1072,13 @@ final class JpegParserTest extends TestCase
             $this->app11SuperboxWithContent('abcd', 'not-xml-content'),
         );
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, 'dummy-app2'),
             self::segment(self::MARKER_APP11, $app11),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame([], $extractor->extractXmpPackets());
@@ -1096,9 +1096,9 @@ final class JpegParserTest extends TestCase
         $segment1Payload = self::ICC_SIGNATURE . "\x01\x02" . $iccPart1;
         $segment2Payload = self::ICC_SIGNATURE . "\x02\x02" . $iccPart2;
 
-        $jpeg            = $this->jpeg(self::segment(self::MARKER_APP2, $segment1Payload), self::segment(self::MARKER_APP2, $segment2Payload));
+        $jpeg = $this->jpeg(self::segment(self::MARKER_APP2, $segment1Payload), self::segment(self::MARKER_APP2, $segment2Payload));
 
-        $extractor       = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$segment1Payload, $segment2Payload], $extractor->getIccSegments());
         self::assertSame($iccPart1 . $iccPart2, $extractor->getIccProfile());
@@ -1111,20 +1111,20 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function flashPixSegmentsAreMerged(): void
     {
-        $partOne   = 'flashpix-part-one';
-        $partTwo   = 'flashpix-part-two';
+        $partOne = 'flashpix-part-one';
+        $partTwo = 'flashpix-part-two';
 
-        $contents  = self::segment(
+        $contents = self::segment(
             self::MARKER_APP2,
             $this->fpxrContentsListPayload([
                 ['size' => strlen($partOne . $partTwo), 'default' => 0x00, 'name' => '/Root/Stream0'],
             ]),
         );
 
-        $segment1  = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 1, 2, 0, $partOne));
-        $segment2  = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 2, 2, strlen($partOne), $partTwo));
+        $segment1 = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 1, 2, 0, $partOne));
+        $segment2 = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 2, 2, strlen($partOne), $partTwo));
 
-        $jpeg      = $this->jpeg($contents, $segment1, $segment2);
+        $jpeg = $this->jpeg($contents, $segment1, $segment2);
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1138,7 +1138,7 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function flashPixMultipleStreamsAreHandled(): void
     {
-        $contents   = self::segment(
+        $contents = self::segment(
             self::MARKER_APP2,
             $this->fpxrContentsListPayload([
                 ['size' => strlen('stream-one'), 'default' => 0x20, 'name' => '/Root/Stream0'],
@@ -1151,9 +1151,9 @@ final class JpegParserTest extends TestCase
         $streamTwoB = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(1, 2, 3, 6, 'beta-'));
         $streamTwoC = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(1, 3, 3, 11, 'gamma'));
 
-        $jpeg       = $this->jpeg($contents, $streamOne, $streamTwoA, $streamTwoB, $streamTwoC);
+        $jpeg = $this->jpeg($contents, $streamOne, $streamTwoA, $streamTwoB, $streamTwoC);
 
-        $extractor  = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([
             0 => 'stream-one',
@@ -1173,13 +1173,13 @@ final class JpegParserTest extends TestCase
         $muLawSegment = self::segment(self::MARKER_APP2, $this->audioPayload(1, 1, 8_000, 8, $muLawData));
         $pcmSegment   = self::segment(self::MARKER_APP2, $this->audioPayload(0, 2, 44_100, 16, $pcmData));
 
-        $jpeg         = $this->jpeg($muLawSegment . $pcmSegment);
-        $extractor    = $this->createExtractor($jpeg);
+        $jpeg      = $this->jpeg($muLawSegment . $pcmSegment);
+        $extractor = $this->createExtractor($jpeg);
 
-        $streams      = $extractor->getAudioStreams();
+        $streams = $extractor->getAudioStreams();
         self::assertCount(2, $streams);
 
-        $muLaw        = $streams[0];
+        $muLaw = $streams[0];
         self::assertSame('MU_LAW_PCM', $muLaw->format);
         self::assertSame(1, $muLaw->channels);
         self::assertSame(8_000, $muLaw->sampleRate);
@@ -1187,7 +1187,7 @@ final class JpegParserTest extends TestCase
         self::assertSame('1.00', $muLaw->version);
         self::assertSame($muLawData, $muLaw->data);
 
-        $pcm          = $streams[1];
+        $pcm = $streams[1];
         self::assertSame('PCM', $pcm->format);
         self::assertSame(2, $pcm->channels);
         self::assertSame(44_100, $pcm->sampleRate);
@@ -1203,8 +1203,8 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function audioSegmentWithUnsupportedSampleRateThrows(): void
     {
-        $payload   = self::segment(self::MARKER_APP2, $this->audioPayload(0, 1, 12_000, 16, str_repeat("\x00", 4)));
-        $jpeg      = $this->jpeg($payload);
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(0, 1, 12_000, 16, str_repeat("\x00", 4)));
+        $jpeg    = $this->jpeg($payload);
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1220,8 +1220,8 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function muLawAudioSegmentWithNonEightKilohertzSampleRateThrows(): void
     {
-        $payload   = self::segment(self::MARKER_APP2, $this->audioPayload(1, 1, 11_025, 8, str_repeat("\x00", 8)));
-        $jpeg      = $this->jpeg($payload);
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(1, 1, 11_025, 8, str_repeat("\x00", 8)));
+        $jpeg    = $this->jpeg($payload);
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1237,9 +1237,9 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function pcmTwentyFourBitAudioSegmentIsCollected(): void
     {
-        $pcmData   = "\x01\x02\x03\x04\x05\x06";
-        $segment   = self::segment(self::MARKER_APP2, $this->audioPayload(0, 1, 44_100, 24, $pcmData));
-        $jpeg      = $this->jpeg($segment);
+        $pcmData = "\x01\x02\x03\x04\x05\x06";
+        $segment = self::segment(self::MARKER_APP2, $this->audioPayload(0, 1, 44_100, 24, $pcmData));
+        $jpeg    = $this->jpeg($segment);
 
         $extractor = $this->createExtractor($jpeg);
         $streams   = $extractor->getAudioStreams();
@@ -1257,8 +1257,8 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function pcmAudioSegmentWithUnsupportedBitDepthThrows(): void
     {
-        $payload   = self::segment(self::MARKER_APP2, $this->audioPayload(0, 1, 44_100, 12, str_repeat("\x00", 8)));
-        $jpeg      = $this->jpeg($payload);
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(0, 1, 44_100, 12, str_repeat("\x00", 8)));
+        $jpeg    = $this->jpeg($payload);
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1274,8 +1274,8 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function pcmTwentyFourBitAudioSegmentWithInconsistentDataLengthThrows(): void
     {
-        $payload   = self::segment(self::MARKER_APP2, $this->audioPayload(0, 2, 44_100, 24, "\x01\x02\x03\x04\x05\x06\x07"));
-        $jpeg      = $this->jpeg($payload);
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(0, 2, 44_100, 24, "\x01\x02\x03\x04\x05\x06\x07"));
+        $jpeg    = $this->jpeg($payload);
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1291,8 +1291,8 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function pcmAudioSegmentWithZeroSampleCountAndNonEmptyPayloadThrows(): void
     {
-        $payload   = self::segment(self::MARKER_APP2, $this->audioPayload(0, 1, 44_100, 16, "\x01\x02", 0));
-        $jpeg      = $this->jpeg($payload);
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(0, 1, 44_100, 16, "\x01\x02", 0));
+        $jpeg    = $this->jpeg($payload);
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1308,8 +1308,8 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function muLawAudioSegmentWithZeroSampleCountAndNonEmptyPayloadThrows(): void
     {
-        $payload   = self::segment(self::MARKER_APP2, $this->audioPayload(1, 1, 8_000, 8, "\x01", 0));
-        $jpeg      = $this->jpeg($payload);
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(1, 1, 8_000, 8, "\x01", 0));
+        $jpeg    = $this->jpeg($payload);
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1324,8 +1324,8 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function imaAdpcmAudioSegmentWithZeroSampleCountAndNonEmptyPayloadThrows(): void
     {
-        $payload   = self::segment(self::MARKER_APP2, $this->audioPayload(2, 1, 8_000, 4, "\x01\x02\x03\x04", 0));
-        $jpeg      = $this->jpeg($payload);
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(2, 1, 8_000, 4, "\x01\x02\x03\x04", 0));
+        $jpeg    = $this->jpeg($payload);
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1341,29 +1341,29 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function mpfSegmentsAreBufferedAndParsed(): void
     {
-        $mpfBody    = $this->buildMpfPayload();
-        $split      = 24;
+        $mpfBody = $this->buildMpfPayload();
+        $split   = 24;
 
         $segmentOne = self::segment(self::MARKER_APP2, self::MPF_SIGNATURE . substr($mpfBody, 0, $split));
         $segmentTwo = self::segment(self::MARKER_APP2, self::MPF_SIGNATURE . substr($mpfBody, $split));
 
-        $jpeg       = $this->jpeg($segmentOne, $segmentTwo);
+        $jpeg = $this->jpeg($segmentOne, $segmentTwo);
 
-        $extractor  = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
-        $document   = $extractor->getMpfDocument();
+        $document = $extractor->getMpfDocument();
 
         self::assertNotNull($document);
         self::assertSame('0100', $document->version);
         self::assertSame(2, $document->imageCount);
         self::assertCount(2, $document->entries);
 
-        $first      = $document->entries[0];
+        $first = $document->entries[0];
         self::assertSame(0x80000001, $first->attributes);
         self::assertSame(12345, $first->imageSize);
         self::assertSame(1000, $first->dataOffset);
 
-        $second     = $document->entries[1];
+        $second = $document->entries[1];
         self::assertSame(0x00000002, $second->attributes);
         self::assertSame(54321, $second->imageSize);
         self::assertSame(2000, $second->dataOffset);
@@ -1386,13 +1386,13 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'test';
         $mpfPayload  = self::MPF_SIGNATURE . "\x00\x00\x00\x00";
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, $mpfPayload),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
-        $blobs       = $extractor->extractExifBlobs();
+        $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
         self::assertCount(1, $blobs);
         self::assertNull($extractor->getMpfDocument());
@@ -1406,9 +1406,9 @@ final class JpegParserTest extends TestCase
     {
         $streamData = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 1, 1, 0, 'data'));
 
-        $jpeg       = $this->jpeg($streamData);
+        $jpeg = $this->jpeg($streamData);
 
-        $extractor  = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([], $extractor->getFlashPixStreams());
     }
@@ -1420,7 +1420,7 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function flashPixInvalidContentsListIndexIsIgnored(): void
     {
-        $contents     = self::segment(
+        $contents = self::segment(
             self::MARKER_APP2,
             $this->fpxrContentsListPayload([
                 ['size' => 8, 'default' => 0x00, 'name' => '/Root/Stream0'],
@@ -1429,9 +1429,9 @@ final class JpegParserTest extends TestCase
         $invalidIndex = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(1, 1, 1, 0, 'abcd'));
         $validIndex   = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 1, 1, 0, 'wxyz'));
 
-        $jpeg         = $this->jpeg($contents, $invalidIndex, $validIndex);
+        $jpeg = $this->jpeg($contents, $invalidIndex, $validIndex);
 
-        $extractor    = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([0 => 'wxyz' . str_repeat("\x00", 4)], $extractor->getFlashPixStreams());
     }
@@ -1443,16 +1443,16 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function flashPixOverlappingOffsetsThrowParseError(): void
     {
-        $contents  = self::segment(
+        $contents = self::segment(
             self::MARKER_APP2,
             $this->fpxrContentsListPayload([
                 ['size' => 10, 'default' => 0x00, 'name' => '/Root/Stream0'],
             ]),
         );
-        $first     = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 1, 2, 0, 'abcde'));
-        $second    = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 2, 2, 3, 'xyz'));
+        $first  = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 1, 2, 0, 'abcde'));
+        $second = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 2, 2, 3, 'xyz'));
 
-        $jpeg      = $this->jpeg($contents, $first, $second);
+        $jpeg = $this->jpeg($contents, $first, $second);
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1468,11 +1468,11 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function flashPixSimpleRepresentablePayloadStillParses(): void
     {
-        $first      = 'first-';
-        $second     = 'second';
-        $all        = $first . $second;
+        $first  = 'first-';
+        $second = 'second';
+        $all    = $first . $second;
 
-        $contents   = self::segment(
+        $contents = self::segment(
             self::MARKER_APP2,
             $this->fpxrContentsListPayload([
                 ['size' => strlen($all), 'default' => 0x20, 'name' => '/Root/Stream0'],
@@ -1481,9 +1481,9 @@ final class JpegParserTest extends TestCase
         $segmentOne = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 1, 2, 0, $first));
         $segmentTwo = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 2, 2, strlen($first), $second));
 
-        $jpeg       = $this->jpeg($contents, $segmentOne, $segmentTwo);
+        $jpeg = $this->jpeg($contents, $segmentOne, $segmentTwo);
 
-        $extractor  = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([0 => $all], $extractor->getFlashPixStreams());
     }
@@ -1495,18 +1495,18 @@ final class JpegParserTest extends TestCase
     #[DataProvider('provideInvalidFlashPixSequenceRanges')]
     public function flashPixInvalidSequenceMetadataThrowsParseError(int $sequenceNumber, int $sequenceCount): void
     {
-        $contents  = self::segment(
+        $contents = self::segment(
             self::MARKER_APP2,
             $this->fpxrContentsListPayload([
                 ['size' => 8, 'default' => 0x00, 'name' => '/Root/Stream0'],
             ]),
         );
-        $stream    = self::segment(
+        $stream = self::segment(
             self::MARKER_APP2,
             $this->fpxrStreamDataPayload(0, $sequenceNumber, $sequenceCount, 0, 'abcd'),
         );
 
-        $jpeg      = $this->jpeg($contents, $stream);
+        $jpeg = $this->jpeg($contents, $stream);
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1532,16 +1532,16 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function flashPixConflictingSequenceCountThrowsParseError(): void
     {
-        $contents  = self::segment(
+        $contents = self::segment(
             self::MARKER_APP2,
             $this->fpxrContentsListPayload([
                 ['size' => 12, 'default' => 0x00, 'name' => '/Root/Stream0'],
             ]),
         );
-        $first     = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 1, 2, 0, 'first-'));
-        $second    = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 2, 3, 6, 'second'));
+        $first  = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 1, 2, 0, 'first-'));
+        $second = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 2, 3, 6, 'second'));
 
-        $jpeg      = $this->jpeg($contents, $first, $second);
+        $jpeg = $this->jpeg($contents, $first, $second);
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1557,16 +1557,16 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function flashPixMissingSequenceThrowsParseError(): void
     {
-        $contents  = self::segment(
+        $contents = self::segment(
             self::MARKER_APP2,
             $this->fpxrContentsListPayload([
                 ['size' => 12, 'default' => 0x00, 'name' => '/Root/Stream0'],
             ]),
         );
-        $first     = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 1, 3, 0, 'first-'));
-        $third     = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 3, 3, 6, 'third-'));
+        $first = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 1, 3, 0, 'first-'));
+        $third = self::segment(self::MARKER_APP2, $this->fpxrStreamDataPayload(0, 3, 3, 6, 'third-'));
 
-        $jpeg      = $this->jpeg($contents, $first, $third);
+        $jpeg = $this->jpeg($contents, $first, $third);
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1585,12 +1585,12 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'primary-exif';
         $xmpPayload  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">No FlashPix</x:xmpmeta>';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame([$xmpPayload], $extractor->extractXmpPackets());
@@ -1606,7 +1606,7 @@ final class JpegParserTest extends TestCase
     #[DataProvider('provideInvalidFlashPixIdHeaders')]
     public function invalidFlashPixIdHeaderThrowsParseError(string $payload): void
     {
-        $jpeg      = $this->jpeg(self::segment(self::MARKER_APP2, $payload));
+        $jpeg = $this->jpeg(self::segment(self::MARKER_APP2, $payload));
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1641,12 +1641,12 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function iptcIsCollectedRaw(): void
     {
-        $iimOne    = $this->iimDataset(2, 5, 'Object One');
-        $iimTwo    = $this->iimDataset(2, 5, 'Object Two');
-        $iptcOne   = self::IPTC_SIGNATURE . $this->resourceBlock(0x0404, $iimOne);
-        $iptcTwo   = self::IPTC_SIGNATURE . $this->resourceBlock(0x0404, $iimTwo);
+        $iimOne  = $this->iimDataset(2, 5, 'Object One');
+        $iimTwo  = $this->iimDataset(2, 5, 'Object Two');
+        $iptcOne = self::IPTC_SIGNATURE . $this->resourceBlock(0x0404, $iimOne);
+        $iptcTwo = self::IPTC_SIGNATURE . $this->resourceBlock(0x0404, $iimTwo);
 
-        $jpeg      = $this->jpeg(self::segment(self::MARKER_APP13, $iptcOne), self::segment(self::MARKER_APP13, $iptcTwo));
+        $jpeg = $this->jpeg(self::segment(self::MARKER_APP13, $iptcOne), self::segment(self::MARKER_APP13, $iptcTwo));
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -1663,12 +1663,12 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'filesystem-exif';
         $xmpPayload  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Filesystem</x:xmpmeta>';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload),
         );
 
-        $path        = tempnam(sys_get_temp_dir(), 'imagemeta-jpeg-');
+        $path = tempnam(sys_get_temp_dir(), 'imagemeta-jpeg-');
 
         if ($path === false) {
             self::fail('Unable to allocate temporary path for JPEG extractor regression test.');
@@ -1702,8 +1702,8 @@ final class JpegParserTest extends TestCase
             . "\x02\x11\x01"
             . "\x03\x11\x01";
 
-        $jpeg         = $this->jpeg(self::segment($marker, $framePayload));
-        $extractor    = $this->createExtractor($jpeg);
+        $jpeg      = $this->jpeg(self::segment($marker, $framePayload));
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame(8, $extractor->getFrameSamplePrecision());
         self::assertSame(32, $extractor->getFrameHeight());
@@ -1730,8 +1730,8 @@ final class JpegParserTest extends TestCase
             . "\x02\x11\x01"
             . "\x03\x11\x01";
 
-        $jpeg         = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayload));
-        $extractor    = $this->createExtractor($jpeg);
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayload));
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame(
             [
@@ -1754,8 +1754,8 @@ final class JpegParserTest extends TestCase
             . "\x01\x11\x01"
             . "\x03\x11\x01";
 
-        $jpeg         = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayload));
-        $extractor    = $this->createExtractor($jpeg);
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayload));
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1500);
@@ -1773,13 +1773,13 @@ final class JpegParserTest extends TestCase
     {
         // Test illegal subsampling: [3,2] should be rejected
         // Luma: 3H×2V, Chroma: 1H×1V → 3/1=3, 2/1=2 → [3,2] is illegal
-        $framePayloadIllegal    = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+        $framePayloadIllegal = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
             . "\x01\x32\x00" // Component 1 (Y):  3H×2V
             . "\x02\x11\x01" // Component 2 (Cb): 1H×1V
             . "\x03\x11\x01"; // Component 3 (Cr): 1H×1V
 
-        $jpegIllegal            = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadIllegal));
-        $extractorIllegal       = $this->createExtractor($jpegIllegal);
+        $jpegIllegal      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadIllegal));
+        $extractorIllegal = $this->createExtractor($jpegIllegal);
 
         // Should return null for illegal subsampling values
         self::assertNull($extractorIllegal->getFrameYCbCrSubSampling());
@@ -1791,8 +1791,8 @@ final class JpegParserTest extends TestCase
             . "\x02\x11\x01" // Component 2 (Cb): 1H×1V
             . "\x03\x11\x01"; // Component 3 (Cr): 1H×1V
 
-        $jpegReserved41         = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadReserved41));
-        $extractorReserved41    = $this->createExtractor($jpegReserved41);
+        $jpegReserved41      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadReserved41));
+        $extractorReserved41 = $this->createExtractor($jpegReserved41);
 
         self::assertNull($extractorReserved41->getFrameYCbCrSubSampling());
 
@@ -1803,20 +1803,20 @@ final class JpegParserTest extends TestCase
             . "\x02\x11\x01" // Component 2 (Cb): 1H×1V
             . "\x03\x11\x01"; // Component 3 (Cr): 1H×1V
 
-        $jpegReserved44         = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadReserved44));
-        $extractorReserved44    = $this->createExtractor($jpegReserved44);
+        $jpegReserved44      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadReserved44));
+        $extractorReserved44 = $this->createExtractor($jpegReserved44);
 
         self::assertNull($extractorReserved44->getFrameYCbCrSubSampling());
 
         // Test legal subsampling: [2,1]
         // Luma: 2H×1V, Chroma: 1H×1V → 2/1=2, 1/1=1 → [2,1] is legal (YCbCr4:2:2)
-        $framePayloadLegal21    = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+        $framePayloadLegal21 = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
             . "\x01\x21\x00" // Component 1 (Y):  2H×1V
             . "\x02\x11\x01" // Component 2 (Cb): 1H×1V
             . "\x03\x11\x01"; // Component 3 (Cr): 1H×1V
 
-        $jpegLegal21            = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadLegal21));
-        $extractorLegal21       = $this->createExtractor($jpegLegal21);
+        $jpegLegal21      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadLegal21));
+        $extractorLegal21 = $this->createExtractor($jpegLegal21);
 
         self::assertSame([2, 1], $extractorLegal21->getFrameYCbCrSubSampling());
     }
@@ -1841,12 +1841,12 @@ final class JpegParserTest extends TestCase
             . "\x02\x11\x01"
             . "\x03\x11\x01";
 
-        $jpeg         = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_SOF2, $framePayload),
         );
 
-        $extractor    = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
         $extractor->extractExifBlobs();
 
         $this->addToAssertionCount(1);
@@ -1867,12 +1867,12 @@ final class JpegParserTest extends TestCase
             . "\x02\x11\x01"
             . "\x03\x11\x01";
 
-        $jpeg         = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_SOF0, $framePayload),
         );
 
-        $extractor    = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame(12, $extractor->getFrameSamplePrecision());
@@ -1888,11 +1888,11 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'strict-exif';
         $sofPayload  = "\x08" . pack('n', 32) . pack('n', 64) . "\x01"
             . "\x01\x11\x00";
-        $sosPayload  = "\x01"
+        $sosPayload = "\x01"
             . "\x01\x00"
             . "\x00\x3F\x00";
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
@@ -1901,7 +1901,7 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
         $extractor->extractExifBlobs();
 
         $this->addToAssertionCount(1);
@@ -1918,13 +1918,13 @@ final class JpegParserTest extends TestCase
             . "\x00\x22\x00"   // component 0 (non-standard)
             . "\x01\x11\x01"   // component 1
             . "\x02\x11\x01";  // component 2
-        $sosPayload  = "\x03"
+        $sosPayload = "\x03"
             . "\x00\x00"       // component 0
             . "\x01\x11"       // component 1
             . "\x02\x11"       // component 2
             . "\x00\x3F\x00";
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
@@ -1933,7 +1933,7 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
         $extractor->extractExifBlobs();
 
         $this->addToAssertionCount(1);
@@ -1951,13 +1951,13 @@ final class JpegParserTest extends TestCase
             . "\x02\x11\x01"
             . "\x03\x11\x01";
 
-        $jpeg         = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_SOF0, $framePayload),
         );
 
-        $extractor    = $this->createExtractor($jpeg);
-        $blobs        = $extractor->extractExifBlobs();
+        $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
         self::assertCount(1, $blobs);
     }
@@ -1974,12 +1974,12 @@ final class JpegParserTest extends TestCase
             . "\x02\x11\x01"
             . "\x03\x11\x01";
 
-        $jpeg         = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_SOF0, $framePayload),
         );
 
-        $extractor    = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
         $extractor->extractExifBlobs();
 
         $this->addToAssertionCount(1);
@@ -1994,8 +1994,8 @@ final class JpegParserTest extends TestCase
         $framePayload = "\x0C" . pack('n', 32) . pack('n', 64) . "\x01"
             . "\x01\x11\x00";
 
-        $jpeg         = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayload));
-        $extractor    = $this->createExtractor($jpeg);
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayload));
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame(12, $extractor->getFrameSamplePrecision());
         self::assertSame(
@@ -2015,7 +2015,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'sos-valid';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DQT, "\x00"),
             self::segment(self::MARKER_DHT, "\x00"),
@@ -2023,7 +2023,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_SOS, $this->defaultSosPayload()),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -2043,7 +2043,7 @@ final class JpegParserTest extends TestCase
             . "\xFF\xDA" . pack('n', 12) . "\x03\x01\x00\x02\x11\x03\x11"
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessageMatches('/Truncated segment|truncated/i');
@@ -2059,7 +2059,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'pre-sos-restart';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . "\xFF\xD0"
             . self::segment(self::MARKER_DQT, "\x00")
@@ -2069,9 +2069,9 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
-        $blobs       = $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
         self::assertCount(1, $blobs);
     }
 
@@ -2083,7 +2083,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'pre-sos-tem';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . "\xFF\x01"
             . self::segment(self::MARKER_DQT, "\x00")
@@ -2093,9 +2093,9 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
-        $blobs       = $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
         self::assertCount(1, $blobs);
     }
 
@@ -2107,7 +2107,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'no-pre-sos-restart';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
@@ -2116,7 +2116,7 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -2129,7 +2129,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'no-pre-sos-tem';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
@@ -2138,7 +2138,7 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -2151,7 +2151,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'single-sof-before-sos';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
@@ -2160,7 +2160,7 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -2173,7 +2173,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'duplicate-sof-before-sos';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
@@ -2183,7 +2183,7 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessageMatches('/SOF|before SOS|duplicate/i');
@@ -2199,7 +2199,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'baseline-sof-regression';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
@@ -2208,7 +2208,7 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame(8, $extractor->getFrameSamplePrecision());
@@ -2223,7 +2223,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'marker-contiguous';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
@@ -2232,7 +2232,7 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -2245,7 +2245,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'garbage-before-sos';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . 'X'
             . self::segment(self::MARKER_DQT, "\x00")
@@ -2255,7 +2255,7 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessageMatches('/non-marker|before SOS|marker/i');
@@ -2271,7 +2271,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'marker-fill-before-sos';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . "\xFF" . self::segment(self::MARKER_DQT, "\x00")
             . "\xFF" . self::segment(self::MARKER_DHT, "\x00")
@@ -2280,7 +2280,7 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -2298,7 +2298,7 @@ final class JpegParserTest extends TestCase
             . "\x04\x11"
             . "\x00\x3F\x00";
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DQT, "\x00"),
             self::segment(self::MARKER_DHT, "\x00"),
@@ -2306,7 +2306,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_SOS, $sosPayload),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(2030);
@@ -2328,7 +2328,7 @@ final class JpegParserTest extends TestCase
             . "\x02\x11"
             . "\x00\x3F\x00";
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DQT, "\x00"),
             self::segment(self::MARKER_DHT, "\x00"),
@@ -2336,7 +2336,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_SOS, $sosPayload),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(2032);
@@ -2357,7 +2357,7 @@ final class JpegParserTest extends TestCase
             . "\x02\x11"
             . "\x00\x3F\x00";
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DQT, "\x00"),
             self::segment(self::MARKER_DHT, "\x00"),
@@ -2365,7 +2365,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_SOS, $sosPayload),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(2036);
@@ -2422,7 +2422,7 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'pre-sos-exif';
         $xmpPayload  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">DRI-RST</x:xmpmeta>';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload)
             . self::segment(self::MARKER_DQT, "\x00")
@@ -2435,7 +2435,7 @@ final class JpegParserTest extends TestCase
             . 'tail'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame([$xmpPayload], $extractor->extractXmpPackets());
@@ -2450,7 +2450,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'pre-sos-exif';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
@@ -2459,7 +2459,7 @@ final class JpegParserTest extends TestCase
             . "\xFF\x00" . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -2476,7 +2476,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'pre-sos-exif';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
@@ -2484,7 +2484,7 @@ final class JpegParserTest extends TestCase
             . "\xFF\xDA" . pack('n', 12) . $this->defaultSosPayload()
             . "\xFF\x00" . 'scan';
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
@@ -2500,7 +2500,7 @@ final class JpegParserTest extends TestCase
         $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">BeforeSOS</x:xmpmeta>';
         $lateExif    = self::TIFF_HEADER . 'late-exif';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $primaryExif)
             . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml)
             . self::segment(self::MARKER_DQT, "\x00")
@@ -2513,8 +2513,8 @@ final class JpegParserTest extends TestCase
             . self::EXIF_SIGNATURE . $lateExif
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
-        $blobs       = $extractor->extractExifBlobs();
+        $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
         self::assertSame($primaryExif, $blobs[0]);
     }
@@ -2528,7 +2528,7 @@ final class JpegParserTest extends TestCase
     {
         $exifPayload = self::TIFF_HEADER . 'double-sos';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
@@ -2538,8 +2538,8 @@ final class JpegParserTest extends TestCase
             . "\xFF\xDA" . pack('n', 12) . $this->defaultSosPayload()
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
-        $blobs       = $extractor->extractExifBlobs();
+        $extractor = $this->createExtractor($jpeg);
+        $blobs     = $extractor->extractExifBlobs();
 
         self::assertSame($exifPayload, $blobs[0]);
     }
@@ -2556,7 +2556,7 @@ final class JpegParserTest extends TestCase
         $iccProfile   = 'icc-profile';
         $postExifData = self::TIFF_HEADER . 'ignored-post-eoi';
 
-        $jpeg         = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload)
             . self::segment(self::MARKER_APP2, self::ICC_SIGNATURE . "\x01\x01" . $iccProfile)
@@ -2570,7 +2570,7 @@ final class JpegParserTest extends TestCase
             . self::segment(self::MARKER_APP2, self::ICC_SIGNATURE . "\x02\x02" . 'ignored')
             . "\xFF\x00" . 'padding';
 
-        $extractor    = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame([$xmpPayload], $extractor->extractXmpPackets());
@@ -2587,7 +2587,7 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'pre-eoi-exif';
         $xmpPayload  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Trailing</x:xmpmeta>';
 
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload)
             . self::segment(self::MARKER_DQT, "\x00")
@@ -2599,7 +2599,7 @@ final class JpegParserTest extends TestCase
             . "\xFF\xE1\xFF\xFF" // Advertised oversized length after EOI should be ignored
             . "\x00\x01";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame([$xmpPayload], $extractor->extractXmpPackets());
@@ -2779,7 +2779,7 @@ final class JpegParserTest extends TestCase
             $nameField .= "\0";
         }
 
-        $block      = '8BIM'
+        $block = '8BIM'
             . pack('n', $resourceId)
             . $nameField
             . pack('N', strlen($data))
@@ -2803,13 +2803,13 @@ final class JpegParserTest extends TestCase
      */
     private function buildMpfPayload(): string
     {
-        $entries         = [
+        $entries = [
             $this->mpfEntry(0x80000001, 12345, 1000, 0, 0),
             $this->mpfEntry(0x00000002, 54321, 2000, 1, 0),
         ];
 
-        $entryData       = implode('', $entries);
-        $imageCount      = count($entries);
+        $entryData  = implode('', $entries);
+        $imageCount = count($entries);
 
         $header          = 'II' . pack('v', 42) . pack('V', 8);
         $entryCount      = 4;
@@ -2817,14 +2817,14 @@ final class JpegParserTest extends TestCase
         $mpEntryOffset   = 8 + $indexIfdLength;
         $attributeOffset = $mpEntryOffset + strlen($entryData);
 
-        $indexIfd        = pack('v', $entryCount)
+        $indexIfd = pack('v', $entryCount)
             . $this->mpfIfdEntry(0xB000, 2, 4, '0100')
             . $this->mpfIfdEntry(0xB001, 4, 1, pack('V', $imageCount))
             . $this->mpfIfdEntry(0xB002, 7, strlen($entryData), offset: $mpEntryOffset)
             . $this->mpfIfdEntry(0xB004, 4, 1, pack('V', 5))
             . pack('V', $attributeOffset);
 
-        $attributeIfd    = pack('v', 1)
+        $attributeIfd = pack('v', 1)
             . $this->mpfIfdEntry(0xB101, 4, 1, pack('V', 1))
             . pack('V', 0);
 
@@ -2842,7 +2842,7 @@ final class JpegParserTest extends TestCase
 
     private function mpfIfdEntry(int $tag, int $type, int $count, string $value = '', ?int $offset = null): string
     {
-        $entry     = pack('v', $tag) . pack('v', $type) . pack('V', $count);
+        $entry = pack('v', $tag) . pack('v', $type) . pack('V', $count);
 
         if ($offset !== null) {
             return $entry . pack('V', $offset);
@@ -2930,7 +2930,7 @@ final class JpegParserTest extends TestCase
             $sampleCount = $sampleCountOverride;
         }
 
-        $header      = self::AUDIO_SIGNATURE
+        $header = self::AUDIO_SIGNATURE
             . chr(1) // major version
             . chr(0) // minor version
             . chr($format)
@@ -2951,7 +2951,7 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'dup-soi';
 
         // SOI + APP1(Exif) + SOI(duplicate) + structural markers + SOS + EOI
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . "\xFF\xD8"
             . self::segment(self::MARKER_DQT, "\x00")
@@ -2961,9 +2961,9 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
-        $blobs       = $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
         self::assertCount(1, $blobs);
     }
 
@@ -2989,13 +2989,13 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'truncated-stream';
 
         // SOI + APP1(Exif) + APP2 marker bytes with no length — stream truncated
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . "\xFF\xE2";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
-        $blobs       = $extractor->extractExifBlobs();
+        $blobs = $extractor->extractExifBlobs();
         self::assertSame([$exifPayload], $blobs);
     }
 
@@ -3011,7 +3011,7 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'pre-sos-stuff';
 
         // SOI + APP1(Exif) + FF00(invalid) + structural markers + SOS + EOI
-        $jpeg        = "\xFF\xD8"
+        $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
             . "\xFF\x00"
             . self::segment(self::MARKER_DQT, "\x00")
@@ -3021,7 +3021,7 @@ final class JpegParserTest extends TestCase
             . 'scan'
             . "\xFF\xD9";
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(2056);
@@ -3061,7 +3061,7 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function rejectsAppSegmentLengthFieldBelowTwo(): void
     {
-        $jpeg      = chr(0xFF) . chr(0xD8)
+        $jpeg = chr(0xFF) . chr(0xD8)
             . chr(0xFF) . chr(self::MARKER_APP1) . "\x00\x01"
             . chr(0xFF) . chr(0xD9);
 
@@ -3091,12 +3091,12 @@ final class JpegParserTest extends TestCase
         $exifPayload = self::TIFF_HEADER . 'exif-regression';
         $iccPayload  = self::ICC_SIGNATURE . chr(1) . chr(1) . 'icc-regression';
 
-        $jpeg        = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_APP2, $iccPayload),
         );
 
-        $extractor   = $this->createExtractor($jpeg);
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame('icc-regression', $extractor->getIccProfile());
@@ -3131,14 +3131,14 @@ final class JpegParserTest extends TestCase
         $app14Flags1      = pack('n', 0);
         $colorTransform   = "\x01"; // 1 = YCbCr
 
-        $payload          = self::ADOBE_APP14_SIGNATURE
+        $payload = self::ADOBE_APP14_SIGNATURE
             . $dctEncodeVersion
             . $app14Flags0
             . $app14Flags1
             . $colorTransform;
 
-        $jpeg             = $this->jpeg(self::segment(self::MARKER_APP14, $payload));
-        $extractor        = $this->createExtractor($jpeg);
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_APP14, $payload));
+        $extractor = $this->createExtractor($jpeg);
 
         self::assertSame(1, $extractor->getAdobeApp14ColorTransform());
     }
@@ -3162,7 +3162,7 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function adobeApp14IgnoresNonAdobeSignature(): void
     {
-        $payload   = 'NotAd' . pack('n', 100) . pack('n', 0) . pack('n', 0) . "\x02";
+        $payload = 'NotAd' . pack('n', 100) . pack('n', 0) . pack('n', 0) . "\x02";
 
         $jpeg      = $this->jpeg(self::segment(self::MARKER_APP14, $payload));
         $extractor = $this->createExtractor($jpeg);
@@ -3176,7 +3176,7 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function adobeApp14ParsesYcckColorTransform(): void
     {
-        $payload   = self::ADOBE_APP14_SIGNATURE
+        $payload = self::ADOBE_APP14_SIGNATURE
             . pack('n', 100) // DCTEncodeVersion
             . pack('n', 0)   // APP14Flags0
             . pack('n', 0)   // APP14Flags1
@@ -3194,7 +3194,7 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function adobeApp14ParsesUnknownColorTransform(): void
     {
-        $payload   = self::ADOBE_APP14_SIGNATURE
+        $payload = self::ADOBE_APP14_SIGNATURE
             . pack('n', 100) // DCTEncodeVersion
             . pack('n', 0)   // APP14Flags0
             . pack('n', 0)   // APP14Flags1
@@ -3213,7 +3213,7 @@ final class JpegParserTest extends TestCase
     public function adobeApp14IgnoresTruncatedPayload(): void
     {
         // Only signature + 4 bytes (missing last 3 bytes: APP14Flags1 + ColorTransform)
-        $payload   = self::ADOBE_APP14_SIGNATURE . pack('n', 100) . pack('n', 0);
+        $payload = self::ADOBE_APP14_SIGNATURE . pack('n', 100) . pack('n', 0);
 
         $jpeg      = $this->jpeg(self::segment(self::MARKER_APP14, $payload));
         $extractor = $this->createExtractor($jpeg);
@@ -3271,7 +3271,7 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function jfifApp0SegmentIsParsed(): void
     {
-        $payload   = self::JFIF_SIGNATURE
+        $payload = self::JFIF_SIGNATURE
             . "\x01\x02"       // version 1.02
             . "\x01"           // units = inches
             . pack('n', 72)    // Xdensity
@@ -3323,10 +3323,10 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function onlyFirstJfifApp0IsRetained(): void
     {
-        $first     = self::JFIF_SIGNATURE . "\x01\x01\x01" . pack('n', 96) . pack('n', 96) . "\x00\x00";
-        $second    = self::JFIF_SIGNATURE . "\x01\x02\x00" . pack('n', 72) . pack('n', 72) . "\x00\x00";
+        $first  = self::JFIF_SIGNATURE . "\x01\x01\x01" . pack('n', 96) . pack('n', 96) . "\x00\x00";
+        $second = self::JFIF_SIGNATURE . "\x01\x02\x00" . pack('n', 72) . pack('n', 72) . "\x00\x00";
 
-        $jpeg      = $this->jpeg(
+        $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP0, $first),
             self::segment(self::MARKER_APP0, $second),
         );
@@ -3343,7 +3343,7 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function jfifApp0CapturesThumbnailDimensions(): void
     {
-        $payload   = self::JFIF_SIGNATURE . "\x01\x02\x01" . pack('n', 72) . pack('n', 72) . "\x10\x10";
+        $payload = self::JFIF_SIGNATURE . "\x01\x02\x01" . pack('n', 72) . pack('n', 72) . "\x10\x10";
 
         $jpeg      = $this->jpeg(self::segment(self::MARKER_APP0, $payload));
         $extractor = $this->createExtractor($jpeg);
@@ -3360,7 +3360,7 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function jfifApp0WithNoUnitsHasZeroDensityUnit(): void
     {
-        $payload   = self::JFIF_SIGNATURE . "\x01\x00\x00" . pack('n', 1) . pack('n', 1) . "\x00\x00";
+        $payload = self::JFIF_SIGNATURE . "\x01\x00\x00" . pack('n', 1) . pack('n', 1) . "\x00\x00";
 
         $jpeg      = $this->jpeg(self::segment(self::MARKER_APP0, $payload));
         $extractor = $this->createExtractor($jpeg);
@@ -3378,7 +3378,7 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function jfifApp0TooShortThrows(): void
     {
-        $payload   = self::JFIF_SIGNATURE . "\x01\x02\x01"; // only 8 bytes — below minimum 14
+        $payload = self::JFIF_SIGNATURE . "\x01\x02\x01"; // only 8 bytes — below minimum 14
 
         $jpeg      = $this->jpeg(self::segment(self::MARKER_APP0, $payload));
         $extractor = $this->createExtractor($jpeg);

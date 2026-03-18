@@ -50,7 +50,7 @@ final readonly class QuickTimeValueDecoder
      *
      * @var array<string, 'int'|'float'|'bool'|'string'>
      */
-    private const array QUICKTIME_KEY_TYPES  = [
+    private const array QUICKTIME_KEY_TYPES = [
         'com.apple.quicktime.videoOrientation'             => 'int',
         'com.apple.quicktime.location.accuracy.horizontal' => 'float',
         'com.apple.quicktime.location.accuracy.vertical'   => 'float',
@@ -89,14 +89,14 @@ final readonly class QuickTimeValueDecoder
      */
     public function parseDataBoxStructured(BoxDescriptor $data): array
     {
-        $win         = $data->window;
+        $win = $data->window;
         $win->seek(0);
 
         if ($data->contentSize < 8) {
             throw new ParseError('data box too small', 1251);
         }
 
-        $type        = $win->readU32BE();
+        $type = $win->readU32BE();
 
         // QuickTime File Format 2012, "Type Indicator" (p. 139): the indicator
         // byte (bits 24–31) must be 0, meaning the type is drawn from the
@@ -203,7 +203,7 @@ final readonly class QuickTimeValueDecoder
             return $payload;
         }
 
-        $trimmed  = trim($payload, "\0");
+        $trimmed = trim($payload, "\0");
 
         if ($dataType === QuickTimeDataType::MacRoman) {
             $converted = iconv('macintosh', 'UTF-8', $trimmed);
@@ -348,7 +348,7 @@ final readonly class QuickTimeValueDecoder
         $previousSpecificity = null;
 
         foreach ($entryAtoms as $atom) {
-            $specificity         = $this->localeSpecificityScore($atom['locale']);
+            $specificity = $this->localeSpecificityScore($atom['locale']);
 
             if (($previousSpecificity !== null) && ($specificity > $previousSpecificity)) {
                 throw new ParseError(sprintf(
@@ -375,14 +375,14 @@ final readonly class QuickTimeValueDecoder
     private function decodeQuickTimeSignedInt(string $payload, int $payloadSize): int
     {
         if ($payloadSize === 8) {
-            $parts     = unpack('Nhigh/Nlow', $payload);
+            $parts = unpack('Nhigh/Nlow', $payload);
 
             if ($parts === false || !isset($parts['high'], $parts['low']) || !is_int($parts['high']) || !is_int($parts['low'])) {
                 throw new ParseError('Failed to decode QuickTime signed integer payload.', 2095);
             }
 
-            $high      = $parts['high'];
-            $low       = $parts['low'];
+            $high = $parts['high'];
+            $low  = $parts['low'];
 
             if (($high & 0x80000000) === 0) {
                 return ($high << 32) | $low;
@@ -392,8 +392,8 @@ final readonly class QuickTimeValueDecoder
                 return PHP_INT_MIN;
             }
 
-            $invHigh   = (~$high) & 0xFFFFFFFF;
-            $invLow    = (~$low) & 0xFFFFFFFF;
+            $invHigh = (~$high) & 0xFFFFFFFF;
+            $invLow  = (~$low) & 0xFFFFFFFF;
 
             if ($invLow === 0xFFFFFFFF) {
                 $invLow = 0;
@@ -436,7 +436,7 @@ final readonly class QuickTimeValueDecoder
         $value = 0;
 
         for ($i = 0; $i < $payloadSize; ++$i) {
-            $byte  = ord($payload[$i]);
+            $byte = ord($payload[$i]);
 
             if ($value > intdiv(PHP_INT_MAX - $byte, 256)) {
                 throw new ParseError('QuickTime integer payload exceeds supported integer range.', 2096);

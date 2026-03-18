@@ -39,7 +39,7 @@ final class XmpDocumentTest extends TestCase
     #[Test]
     public function mergeAggregatesValuesAndPrefixes(): void
     {
-        $first  = new XmpDocument(
+        $first = new XmpDocument(
             [
                 '{ns1}PropA' => 'ValueA',
                 '{ns2}List'  => ['One'],
@@ -102,9 +102,9 @@ final class XmpDocumentTest extends TestCase
     #[Test]
     public function mergeAggregatesStructuredValues(): void
     {
-        $namespace   = 'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/';
+        $namespace = 'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/';
 
-        $first       = new XmpDocument(
+        $first = new XmpDocument(
             [],
             [],
             [
@@ -114,7 +114,7 @@ final class XmpDocumentTest extends TestCase
             ],
         );
 
-        $second      = new XmpDocument(
+        $second = new XmpDocument(
             [],
             [],
             [
@@ -124,7 +124,7 @@ final class XmpDocumentTest extends TestCase
             ],
         );
 
-        $merged      = XmpDocument::merge($first, $second);
+        $merged = XmpDocument::merge($first, $second);
 
         $contactInfo = $merged->structured($namespace, 'CreatorContactInfo');
         self::assertInstanceOf(XmpStructuredValue::class, $contactInfo);
@@ -149,7 +149,7 @@ final class XmpDocumentTest extends TestCase
             ],
         );
 
-        $value     = $document->get($namespace, 'CreatorContactInfo');
+        $value = $document->get($namespace, 'CreatorContactInfo');
         self::assertInstanceOf(XmpStructuredValue::class, $value);
         self::assertSame('https://example.com', $value->get($namespace, 'CiUrlWork'));
         self::assertInstanceOf(XmpStructuredValue::class, $document->find('CreatorContactInfo'));
@@ -243,9 +243,9 @@ final class XmpDocumentTest extends TestCase
     #[Test]
     public function boolParsesCanonicalValues(): void
     {
-        $namespace     = 'http://example.com/xmp/';
+        $namespace = 'http://example.com/xmp/';
 
-        $trueDocument  = new XmpDocument(
+        $trueDocument = new XmpDocument(
             [
                 sprintf('{%s}Flag', $namespace) => 'True',
             ],
@@ -275,7 +275,7 @@ final class XmpDocumentTest extends TestCase
     {
         $namespace = 'http://example.com/xmp/';
 
-        $document  = new XmpDocument(
+        $document = new XmpDocument(
             [
                 sprintf('{%s}Flag', $namespace) => $value,
             ],
@@ -347,7 +347,7 @@ final class XmpDocumentTest extends TestCase
     #[Test]
     public function intAcceptsStrictDecimalIntegers(): void
     {
-        $ns  = 'http://example.com/xmp/';
+        $ns = 'http://example.com/xmp/';
 
         $doc = new XmpDocument([
             sprintf('{%s}A', $ns) => '0',

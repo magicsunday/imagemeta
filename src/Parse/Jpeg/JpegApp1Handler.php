@@ -35,18 +35,18 @@ final class JpegApp1Handler
      */
     private const string EXIF_SIGNATURE = "Exif\0\0";
 
-    private const string XMP_SIGNATURE  = "http://ns.adobe.com/xap/1.0/\0";
+    private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
 
     /** @var list<string> */
-    private array $exifBlobs            = [];
+    private array $exifBlobs = [];
 
-    private ?int $firstExifApp1Offset   = null;
+    private ?int $firstExifApp1Offset = null;
 
     /** @var list<string> */
-    private array $xmpPackets           = [];
+    private array $xmpPackets = [];
 
     /** @var array<string, bool> */
-    private array $xmpPacketHashes      = [];
+    private array $xmpPacketHashes = [];
 
     private ExtendedXmpAssembler $extendedXmpAssembler;
 
@@ -82,9 +82,9 @@ final class JpegApp1Handler
 
             // EXIF 3.0 §4.7.2 requires APP1 Exif data to start with "Exif\0\0"
             // followed by a valid TIFF header (byte order + magic number).
-            $tiffData                  = substr($payload, strlen(self::EXIF_SIGNATURE));
+            $tiffData = substr($payload, strlen(self::EXIF_SIGNATURE));
             $this->validateApp1TiffHeader($tiffData);
-            $this->exifBlobs[]         = $tiffData;
+            $this->exifBlobs[] = $tiffData;
         } elseif (str_starts_with($payload, self::XMP_SIGNATURE)) {
             $packet = substr($payload, strlen(self::XMP_SIGNATURE));
             $guid   = $this->extendedXmpAssembler->extractGuidFromPacket($packet);
@@ -187,8 +187,8 @@ final class JpegApp1Handler
             throw new ParseError('APP1 Exif TIFF header has invalid byte order', 1401);
         }
 
-        $format    = $byteOrder === 'II' ? 'v' : 'n';
-        $magic     = Unpack::int($format, substr($tiffData, 2, 2), 'APP1 Exif TIFF magic number');
+        $format = $byteOrder === 'II' ? 'v' : 'n';
+        $magic  = Unpack::int($format, substr($tiffData, 2, 2), 'APP1 Exif TIFF magic number');
 
         if (($magic !== 0x002A) && ($magic !== 0x002B)) {
             throw new ParseError('APP1 Exif TIFF header has invalid magic number', 1402);

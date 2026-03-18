@@ -107,7 +107,7 @@ final readonly class IsoSensitivityReader
             }
         }
 
-        $candidates      = [
+        $candidates = [
             [$this->exifIfd, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
             [$this->exifIfd, ExifTag::ISO_SPEED],
             [$this->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY],
@@ -125,7 +125,7 @@ final readonly class IsoSensitivityReader
             }
         }
 
-        $fallbackTags    = [
+        $fallbackTags = [
             ExifTag::STANDARD_OUTPUT_SENSITIVITY,
             ExifTag::RECOMMENDED_EXPOSURE_INDEX,
             ExifTag::PHOTOGRAPHIC_SENSITIVITY,
@@ -151,13 +151,13 @@ final readonly class IsoSensitivityReader
      */
     public function isoBestEffort(): ?int
     {
-        $iso         = $this->iso();
+        $iso = $this->iso();
 
         if ($iso !== null) {
             return $iso;
         }
 
-        $fallbacks   = [
+        $fallbacks = [
             [$this->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY],
             [$this->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
             [$this->exifIfd, ExifTag::ISO_SPEED],

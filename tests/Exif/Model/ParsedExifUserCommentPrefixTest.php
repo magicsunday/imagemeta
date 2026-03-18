@@ -67,7 +67,7 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     #[Test]
     public function rejectsUserCommentWithUnknownPrefix(): void
     {
-        $raw        = "INVALID\0Some text here";
+        $raw = "INVALID\0Some text here";
 
         $parsedExif = $this->parsedExifWithUserComment($raw);
 
@@ -82,7 +82,7 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     #[Test]
     public function rejectsUserCommentWithUtf8MarkerPrefix(): void
     {
-        $raw        = "UTF8\0\0\0\0Payload";
+        $raw = "UTF8\0\0\0\0Payload";
 
         $parsedExif = $this->parsedExifWithUserComment($raw);
 
@@ -97,7 +97,7 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     #[Test]
     public function returnsNullForUndefinedPrefixWithoutContent(): void
     {
-        $raw        = "\0\0\0\0\0\0\0\0";
+        $raw = "\0\0\0\0\0\0\0\0";
 
         $parsedExif = $this->parsedExifWithUserComment($raw);
 
@@ -111,7 +111,7 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     #[Test]
     public function acceptsValidAsciiPrefixedComment(): void
     {
-        $raw        = "ASCII\0\0\0Hello World";
+        $raw = "ASCII\0\0\0Hello World";
 
         $parsedExif = $this->parsedExifWithUserComment($raw);
 
@@ -126,7 +126,7 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     #[Test]
     public function acceptsUndefinedPrefixWithContent(): void
     {
-        $raw        = "\0\0\0\0\0\0\0\0Some content";
+        $raw = "\0\0\0\0\0\0\0\0Some content";
 
         $parsedExif = $this->parsedExifWithUserComment($raw);
 
@@ -141,7 +141,7 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     #[Test]
     public function acceptsUnicodePrefixWithUtf8Content(): void
     {
-        $raw        = "UNICODE\0測位方式";
+        $raw = "UNICODE\0測位方式";
 
         $parsedExif = $this->parsedExifWithUserComment($raw);
 
@@ -156,7 +156,7 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     #[Test]
     public function rejectsUnicodePrefixWithMalformedUtf8Content(): void
     {
-        $raw        = "UNICODE\0\xC3\x28";
+        $raw = "UNICODE\0\xC3\x28";
 
         $parsedExif = $this->parsedExifWithUserComment($raw);
 
@@ -171,7 +171,7 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     #[Test]
     public function acceptsUnicodePrefixWithLegacyUtf16BomContent(): void
     {
-        $raw        = "UNICODE\0\xFE\xFF" . pack('n*', 0x6E2C, 0x4F4D, 0x65B9, 0x5F0F);
+        $raw = "UNICODE\0\xFE\xFF" . pack('n*', 0x6E2C, 0x4F4D, 0x65B9, 0x5F0F);
 
         $parsedExif = $this->parsedExifWithUserComment($raw);
 
@@ -186,7 +186,7 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     #[Test]
     public function rejectsUnicodePrefixWithOddLengthUtf16BomContent(): void
     {
-        $raw        = "UNICODE\0\xFE\xFF\x00A\x00";
+        $raw = "UNICODE\0\xFE\xFF\x00A\x00";
 
         $parsedExif = $this->parsedExifWithUserComment($raw);
 
@@ -204,7 +204,7 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
         $jisContent = iconv('UTF-8', 'ISO-2022-JP', '東京');
         self::assertIsString($jisContent);
 
-        $raw        = "JIS\0\0\0\0\0" . $jisContent;
+        $raw = "JIS\0\0\0\0\0" . $jisContent;
 
         $parsedExif = $this->parsedExifWithUserComment($raw);
 
@@ -219,7 +219,7 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
     #[Test]
     public function rejectsJisPrefixWithShiftJisContent(): void
     {
-        $raw        = "JIS\0\0\0\0\0" . pack('C*', 0x93, 0x8C, 0x8B, 0x9E);
+        $raw = "JIS\0\0\0\0\0" . pack('C*', 0x93, 0x8C, 0x8B, 0x9E);
 
         $parsedExif = $this->parsedExifWithUserComment($raw);
 

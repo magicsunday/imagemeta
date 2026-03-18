@@ -32,7 +32,7 @@ enum GpsDirectionRef: string
      * True direction.
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    case TrueDirection     = 'T';
+    case TrueDirection = 'T';
 
     /**
      * Magnetic direction.

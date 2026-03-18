@@ -53,7 +53,7 @@ final readonly class DngProfileValidator
      *
      * @var list<int>
      */
-    private const array HUE_SAT_MAP_DATA_TAGS         = [
+    private const array HUE_SAT_MAP_DATA_TAGS = [
         DngTag::PROFILE_HUE_SAT_MAP_DATA_1,
         DngTag::PROFILE_HUE_SAT_MAP_DATA_2,
         DngTag::PROFILE_HUE_SAT_MAP_DATA_3_V17,
@@ -64,7 +64,7 @@ final readonly class DngProfileValidator
      *
      * @var list<int>
      */
-    private const array ILLUMINANT_DATA_TAGS          = [
+    private const array ILLUMINANT_DATA_TAGS = [
         DngTag::ILLUMINANT_DATA_1,
         DngTag::ILLUMINANT_DATA_2,
         DngTag::ILLUMINANT_DATA_3,
@@ -92,19 +92,19 @@ final readonly class DngProfileValidator
      */
     public function validateDngProfileToneCurve(Ifd $ifd): void
     {
-        $entry    = $ifd->get(DngTag::PROFILE_TONE_CURVE);
+        $entry = $ifd->get(DngTag::PROFILE_TONE_CURVE);
 
         if (!$entry instanceof IfdEntry) {
             return;
         }
 
-        $value    = $entry->value;
+        $value = $entry->value;
 
         if (!$value instanceof ExifNumericList) {
             return;
         }
 
-        $vals     = $value->values;
+        $vals = $value->values;
 
         if (count($vals) % 2 !== 0) {
             throw new ParseError(
@@ -115,7 +115,7 @@ final readonly class DngProfileValidator
 
         // Extract typed float array, bail if any value is not numeric
         /** @var list<float> $floats */
-        $floats   = [];
+        $floats = [];
 
         foreach ($vals as $v) {
             if (!is_float($v) && !is_int($v)) {
@@ -136,7 +136,7 @@ final readonly class DngProfileValidator
         }
 
         // Check x values are strictly increasing
-        $prevX    = -1.0;
+        $prevX = -1.0;
 
         for ($i = 0, $n = count($floats); $i < $n; $i += 2) {
             if ($floats[$i] <= $prevX) {
@@ -200,13 +200,13 @@ final readonly class DngProfileValidator
      */
     public function validateDngHueSatMapData(Ifd $ifd): void
     {
-        $dimsEntry                                                                                               = $ifd->get(DngTag::PROFILE_HUE_SAT_MAP_DIMS);
+        $dimsEntry = $ifd->get(DngTag::PROFILE_HUE_SAT_MAP_DIMS);
 
         if (!$dimsEntry instanceof IfdEntry) {
             return;
         }
 
-        $dims                                                                                                    = $this->extractHsvDimensions($dimsEntry, 'ProfileHueSatMapData', 2089, 2090, 2091);
+        $dims = $this->extractHsvDimensions($dimsEntry, 'ProfileHueSatMapData', 2089, 2090, 2091);
 
         if ($dims === null) {
             return;
@@ -215,13 +215,13 @@ final readonly class DngProfileValidator
         ['hueDivs' => $hueDivs, 'satDivs' => $satDivs, 'valDivs' => $valDivs, 'expectedCount' => $expectedCount] = $dims;
 
         foreach (self::HUE_SAT_MAP_DATA_TAGS as $tag) {
-            $dataEntry   = $ifd->get($tag);
+            $dataEntry = $ifd->get($tag);
 
             if (!$dataEntry instanceof IfdEntry) {
                 continue;
             }
 
-            $dataValue   = $dataEntry->value;
+            $dataValue = $dataEntry->value;
 
             if (!$dataValue instanceof ExifNumericList) {
                 continue;
@@ -273,7 +273,7 @@ final readonly class DngProfileValidator
     public function validateDngIlluminantData(Ifd $ifd): void
     {
         foreach (self::ILLUMINANT_DATA_TAGS as $tag) {
-            $entry     = $ifd->get($tag);
+            $entry = $ifd->get($tag);
 
             if (!$entry instanceof IfdEntry) {
                 continue;
@@ -283,13 +283,13 @@ final readonly class DngProfileValidator
                 continue;
             }
 
-            $payload   = $entry->value;
+            $payload = $entry->value;
 
             if (strlen($payload) < 2) {
                 continue;
             }
 
-            $dataType  = $this->support->unpackU16(substr($payload, 0, 2));
+            $dataType = $this->support->unpackU16(substr($payload, 0, 2));
 
             if ($dataType === 0) {
                 continue;
@@ -345,7 +345,7 @@ final readonly class DngProfileValidator
         int $satErrCode,
         int $valErrCode,
     ): void {
-        $entry   = $ifd->get($tag);
+        $entry = $ifd->get($tag);
 
         if (!$entry instanceof IfdEntry) {
             return;
@@ -358,7 +358,7 @@ final readonly class DngProfileValidator
             );
         }
 
-        $value   = $entry->value;
+        $value = $entry->value;
 
         if (!$value instanceof ExifNumericList || count($value->values) !== 3) {
             return;
@@ -402,8 +402,8 @@ final readonly class DngProfileValidator
      */
     public function validateDngProfileLookTableData(Ifd $ifd): void
     {
-        $dimsEntry                                                                                               = $ifd->get(DngTag::PROFILE_LOOK_TABLE_DIMS);
-        $dataEntry                                                                                               = $ifd->get(DngTag::PROFILE_LOOK_TABLE_DATA);
+        $dimsEntry = $ifd->get(DngTag::PROFILE_LOOK_TABLE_DIMS);
+        $dataEntry = $ifd->get(DngTag::PROFILE_LOOK_TABLE_DATA);
 
         // Pair consistency: both must be present or both absent
         if (($dimsEntry instanceof IfdEntry) && (!$dataEntry instanceof IfdEntry)) {
@@ -431,7 +431,7 @@ final readonly class DngProfileValidator
             );
         }
 
-        $dims                                                                                                    = $this->extractHsvDimensions($dimsEntry, 'ProfileLookTableData', 2092, 2093, 2094);
+        $dims = $this->extractHsvDimensions($dimsEntry, 'ProfileLookTableData', 2092, 2093, 2094);
 
         if ($dims === null) {
             return;
@@ -565,7 +565,7 @@ final readonly class DngProfileValidator
      */
     public function validateDngEncodingTag(Ifd $ifd, int $encTag, int $dimsTag, string $name): void
     {
-        $entry     = $ifd->get($encTag);
+        $entry = $ifd->get($encTag);
 
         if (!$entry instanceof IfdEntry) {
             return;
@@ -598,7 +598,7 @@ final readonly class DngProfileValidator
             return;
         }
 
-        $valDivs   = $dimsValue->values[2];
+        $valDivs = $dimsValue->values[2];
 
         if ($valDivs === 1) {
             throw new ParseError(
@@ -616,13 +616,13 @@ final readonly class DngProfileValidator
      */
     public function validateDngProfileDynamicRange(Ifd $ifd): void
     {
-        $entry        = $ifd->get(DngTag::PROFILE_DYNAMIC_RANGE);
+        $entry = $ifd->get(DngTag::PROFILE_DYNAMIC_RANGE);
 
         if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
             return;
         }
 
-        $payload      = $entry->value;
+        $payload = $entry->value;
 
         if (strlen($payload) !== 8) {
             throw new ParseError(
@@ -631,7 +631,7 @@ final readonly class DngProfileValidator
             );
         }
 
-        $version      = $this->support->unpackU16(substr($payload, 0, 2));
+        $version = $this->support->unpackU16(substr($payload, 0, 2));
 
         if ($version !== 1) {
             throw new ParseError(
@@ -668,15 +668,15 @@ final readonly class DngProfileValidator
      */
     public function validateDngProfileGainTableMap2(Ifd $ifd): void
     {
-        $entry           = $ifd->get(DngTag::PROFILE_GAIN_TABLE_MAP_2);
+        $entry = $ifd->get(DngTag::PROFILE_GAIN_TABLE_MAP_2);
 
         if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
             return;
         }
 
-        $payload         = $entry->value;
+        $payload = $entry->value;
         PayloadGuard::ensureMinimumLength($payload, 80, 'ProfileGainTableMap2 payload', 1516);
-        $header          = $this->decodeProfileGainTableMap2Header($payload);
+        $header = $this->decodeProfileGainTableMap2Header($payload);
 
         $bytesPerElement = $this->validateProfileGainTableMap2Header($header);
         $this->validateProfileGainTableMap2Length(strlen($payload), $header, $bytesPerElement);
@@ -768,7 +768,7 @@ final readonly class DngProfileValidator
      */
     public function validateDngProfileGainTableMapLegacy(Ifd $ifd): void
     {
-        $entry          = $ifd->get(DngTag::PROFILE_GAIN_TABLE_MAP);
+        $entry = $ifd->get(DngTag::PROFILE_GAIN_TABLE_MAP);
 
         if (!$entry instanceof IfdEntry) {
             return;
@@ -784,9 +784,9 @@ final readonly class DngProfileValidator
             );
         }
 
-        $payload        = $entry->value;
+        $payload = $entry->value;
         PayloadGuard::ensureMinimumLength($payload, 64, 'ProfileGainTableMap payload', 1686);
-        $length         = strlen($payload);
+        $length = strlen($payload);
 
         // DNG 1.7.1.0 ProfileGainTableMap (legacy) 64-byte header layout:
         // Bytes  0– 3: MapPointsV (uint32)
@@ -801,12 +801,12 @@ final readonly class DngProfileValidator
         // Bytes 52–55: reserved float32
         // Bytes 56–59: reserved float32
         // Bytes 60–63: reserved float32
-        $mapPointsV     = $this->support->unpackU32(substr($payload, 0, 4));
-        $mapPointsH     = $this->support->unpackU32(substr($payload, 4, 4));
-        $mapPointsN     = $this->support->unpackU32(substr($payload, 40, 4));
+        $mapPointsV = $this->support->unpackU32(substr($payload, 0, 4));
+        $mapPointsH = $this->support->unpackU32(substr($payload, 4, 4));
+        $mapPointsN = $this->support->unpackU32(substr($payload, 40, 4));
 
         // Decode and validate fixed header scalar fields to enforce binary layout.
-        $headerScalars  = [
+        $headerScalars = [
             $this->support->unpackDouble(substr($payload, 8, 8)),   // MapSpacingV
             $this->support->unpackDouble(substr($payload, 16, 8)),  // MapSpacingH
             $this->support->unpackDouble(substr($payload, 24, 8)),  // MapOriginV
@@ -834,13 +834,13 @@ final readonly class DngProfileValidator
             );
         }
 
-        $vh             = $this->checkedMultiply(
+        $vh = $this->checkedMultiply(
             $mapPointsV,
             $mapPointsH,
             'ProfileGainTableMap size multiplication overflow (V*H).',
             1689,
         );
-        $entryCount     = $this->checkedMultiply(
+        $entryCount = $this->checkedMultiply(
             $vh,
             $mapPointsN,
             'ProfileGainTableMap size multiplication overflow (V*H*N).',
@@ -867,7 +867,7 @@ final readonly class DngProfileValidator
             );
         }
 
-        $offset         = 64;
+        $offset = 64;
 
         for ($i = 0; $i < $entryCount; ++$i) {
             $gain = $this->support->unpackFloat(substr($payload, $offset, 4));
@@ -894,15 +894,15 @@ final readonly class DngProfileValidator
         int $hsvCode,
         int $hsv3Code,
     ): ?array {
-        $dimsValue     = $dimsEntry->value;
+        $dimsValue = $dimsEntry->value;
 
         if (!$dimsValue instanceof ExifNumericList || count($dimsValue->values) !== 3) {
             return null;
         }
 
-        $hueDivs       = $dimsValue->values[0];
-        $satDivs       = $dimsValue->values[1];
-        $valDivs       = $dimsValue->values[2];
+        $hueDivs = $dimsValue->values[0];
+        $satDivs = $dimsValue->values[1];
+        $valDivs = $dimsValue->values[2];
 
         if (!is_int($hueDivs) || !is_int($satDivs) || !is_int($valDivs)) {
             return null;
@@ -999,7 +999,7 @@ final readonly class DngProfileValidator
      */
     public function validateDngExtraCameraProfiles(Ifd $ifd): void
     {
-        $entry          = $ifd->get(DngTag::EXTRA_CAMERA_PROFILES);
+        $entry = $ifd->get(DngTag::EXTRA_CAMERA_PROFILES);
 
         if (!$entry instanceof IfdEntry) {
             return;
@@ -1016,8 +1016,8 @@ final readonly class DngProfileValidator
             );
         }
 
-        $buffer         = $this->support->buffer();
-        $blobSize       = $buffer->size();
+        $buffer   = $this->support->buffer();
+        $blobSize = $buffer->size();
 
         foreach ($profileOffsets as $profileIndex => $profileOffset) {
             $this->validateExtraCameraProfileRecord($profileIndex, $profileOffset, $blobSize);
@@ -1060,13 +1060,13 @@ final readonly class DngProfileValidator
             );
         }
 
-        $buffer                 = $this->support->buffer();
-        $cursorBeforeRead       = $buffer->tell();
+        $buffer           = $this->support->buffer();
+        $cursorBeforeRead = $buffer->tell();
         $buffer->seek($profileOffset);
-        $profileHeader          = $buffer->read(8);
+        $profileHeader = $buffer->read(8);
         $buffer->seek($cursorBeforeRead);
 
-        $byteOrderMarker        = substr($profileHeader, 0, 2);
+        $byteOrderMarker = substr($profileHeader, 0, 2);
 
         if ($byteOrderMarker === 'II') {
             $profileIsLittleEndian = true;
@@ -1084,8 +1084,8 @@ final readonly class DngProfileValidator
             );
         }
 
-        $magicFormat            = $profileIsLittleEndian ? 'v' : 'n';
-        $magicValue             = Unpack::int($magicFormat, substr($profileHeader, 2, 2), 'ExtraCameraProfiles magic');
+        $magicFormat = $profileIsLittleEndian ? 'v' : 'n';
+        $magicValue  = Unpack::int($magicFormat, substr($profileHeader, 2, 2), 'ExtraCameraProfiles magic');
 
         if ($magicValue !== 0x4352) {
             throw new ParseError(
@@ -1098,8 +1098,8 @@ final readonly class DngProfileValidator
             );
         }
 
-        $ifdOffsetFormat        = $profileIsLittleEndian ? 'V' : 'N';
-        $innerIfdOffset         = Unpack::int(
+        $ifdOffsetFormat = $profileIsLittleEndian ? 'V' : 'N';
+        $innerIfdOffset  = Unpack::int(
             $ifdOffsetFormat,
             substr($profileHeader, 4, 4),
             'ExtraCameraProfiles inner IFD offset',

@@ -57,7 +57,7 @@ final class DescriptionExifReaderTest extends TestCase
             ExifTag::IMAGE_DESCRIPTION => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 1, 'A sunset over the ocean'),
         ];
 
-        $reader      = $this->createReader($ifd0Entries, []);
+        $reader = $this->createReader($ifd0Entries, []);
 
         self::assertSame('Adobe Lightroom 6.0', $reader->software());
         self::assertSame('2024 John Doe', $reader->copyright());
@@ -76,7 +76,7 @@ final class DescriptionExifReaderTest extends TestCase
             ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0232'),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
+        $reader = $this->createReader([], $exifEntries);
 
         self::assertSame('2.32', $reader->exifVersion());
     }
@@ -102,7 +102,7 @@ final class DescriptionExifReaderTest extends TestCase
             ExifTag::FLASHPIX_VERSION => new IfdEntry(ExifTag::FLASHPIX_VERSION, 7, 4, '0100'),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
+        $reader = $this->createReader([], $exifEntries);
 
         self::assertSame('1.00', $reader->flashpixVersion());
     }
@@ -118,7 +118,7 @@ final class DescriptionExifReaderTest extends TestCase
             ExifTag::IMAGE_UNIQUE_ID => new IfdEntry(ExifTag::IMAGE_UNIQUE_ID, 2, 33, 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6'),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
+        $reader = $this->createReader([], $exifEntries);
 
         self::assertSame('a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6', $reader->imageUniqueId());
     }
@@ -134,7 +134,7 @@ final class DescriptionExifReaderTest extends TestCase
             ExifTag::IMAGE_UNIQUE_ID => new IfdEntry(ExifTag::IMAGE_UNIQUE_ID, 2, 10, 'not-hex-id'),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
+        $reader = $this->createReader([], $exifEntries);
 
         self::assertNull($reader->imageUniqueId());
     }
@@ -168,7 +168,7 @@ final class DescriptionExifReaderTest extends TestCase
             ExifTag::CAMERA_OWNER_NAME => new IfdEntry(ExifTag::CAMERA_OWNER_NAME, 2, 1, 'Fallback Owner'),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
+        $reader = $this->createReader([], $exifEntries);
 
         self::assertSame('Fallback Owner', $reader->artist());
     }
@@ -184,8 +184,8 @@ final class DescriptionExifReaderTest extends TestCase
             ExifTag::LEARNING_OPT_OUT_IN => new IfdEntry(ExifTag::LEARNING_OPT_OUT_IN, 7, 2, "\x00\x00"),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
-        $result      = $reader->learningOptOutIn();
+        $reader = $this->createReader([], $exifEntries);
+        $result = $reader->learningOptOutIn();
 
         self::assertNotNull($result);
         self::assertCount(1, $result->entries);
@@ -204,8 +204,8 @@ final class DescriptionExifReaderTest extends TestCase
             ExifTag::LEARNING_OPT_OUT_IN => new IfdEntry(ExifTag::LEARNING_OPT_OUT_IN, 7, 4, "\x00\x00\x01\x01"),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
-        $result      = $reader->learningOptOutIn();
+        $reader = $this->createReader([], $exifEntries);
+        $result = $reader->learningOptOutIn();
 
         self::assertNotNull($result);
         self::assertCount(2, $result->entries);
@@ -230,8 +230,8 @@ final class DescriptionExifReaderTest extends TestCase
             ),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
-        $result      = $reader->learningOptOutIn();
+        $reader = $this->createReader([], $exifEntries);
+        $result = $reader->learningOptOutIn();
 
         self::assertNotNull($result);
         self::assertCount(5, $result->entries);
@@ -265,7 +265,7 @@ final class DescriptionExifReaderTest extends TestCase
             ExifTag::LEARNING_OPT_OUT_IN => new IfdEntry(ExifTag::LEARNING_OPT_OUT_IN, 7, 0, ''),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
+        $reader = $this->createReader([], $exifEntries);
 
         self::assertNull($reader->learningOptOutIn());
     }
@@ -280,8 +280,8 @@ final class DescriptionExifReaderTest extends TestCase
             ExifTag::LEARNING_OPT_OUT_IN => new IfdEntry(ExifTag::LEARNING_OPT_OUT_IN, 7, 3, "\x00\x00\x01"),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
-        $result      = $reader->learningOptOutIn();
+        $reader = $this->createReader([], $exifEntries);
+        $result = $reader->learningOptOutIn();
 
         self::assertNotNull($result);
         self::assertCount(1, $result->entries);
@@ -303,8 +303,8 @@ final class DescriptionExifReaderTest extends TestCase
             ),
         ];
 
-        $reader      = $this->createReader([], $exifEntries);
-        $result      = $reader->learningOptOutIn();
+        $reader = $this->createReader([], $exifEntries);
+        $result = $reader->learningOptOutIn();
 
         self::assertNotNull($result);
         self::assertCount(1, $result->entries);

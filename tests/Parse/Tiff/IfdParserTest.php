@@ -30,11 +30,11 @@ final class IfdParserTest extends TestCase
     #[Test]
     public function validatesEntriesWithAscendingTagOrder(): void
     {
-        $parser                   = new IfdParser();
-        $entry1                   = new IfdEntry(0x0100, 4, 1, 10);
-        $entry2                   = new IfdEntry(0x0101, 4, 1, 20);
+        $parser = new IfdParser();
+        $entry1 = new IfdEntry(0x0100, 4, 1, 10);
+        $entry2 = new IfdEntry(0x0101, 4, 1, 20);
 
-        $entries                  = [];
+        $entries = [];
 
         $validated                = $parser->validateEntry($entries, $entry1);
         $entries[$validated->tag] = $validated;
@@ -48,11 +48,11 @@ final class IfdParserTest extends TestCase
     #[Test]
     public function acceptsUnsortedIfdEntries(): void
     {
-        $parser                   = new IfdParser();
-        $entry1                   = new IfdEntry(0x0112, 3, 1, 1);
-        $entry2                   = new IfdEntry(0x010F, 2, 5, 'Test');
+        $parser = new IfdParser();
+        $entry1 = new IfdEntry(0x0112, 3, 1, 1);
+        $entry2 = new IfdEntry(0x010F, 2, 5, 'Test');
 
-        $entries                  = [];
+        $entries = [];
 
         $validated                = $parser->validateEntry($entries, $entry1);
         $entries[$validated->tag] = $validated;
@@ -71,16 +71,16 @@ final class IfdParserTest extends TestCase
     #[Test]
     public function skipsDuplicateEntryTags(): void
     {
-        $parser                   = new IfdParser();
-        $entry1                   = new IfdEntry(0x0100, 4, 1, 10);
-        $entry2                   = new IfdEntry(0x0100, 4, 1, 20);
+        $parser = new IfdParser();
+        $entry1 = new IfdEntry(0x0100, 4, 1, 10);
+        $entry2 = new IfdEntry(0x0100, 4, 1, 20);
 
-        $entries                  = [];
+        $entries = [];
 
         $validated                = $parser->validateEntry($entries, $entry1);
         $entries[$validated->tag] = $validated;
 
-        $validated2               = $parser->validateEntry($entries, $entry2);
+        $validated2 = $parser->validateEntry($entries, $entry2);
 
         // First occurrence wins
         self::assertSame(10, $validated2->value);

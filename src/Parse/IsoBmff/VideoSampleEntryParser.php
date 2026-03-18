@@ -37,7 +37,7 @@ final readonly class VideoSampleEntryParser
      *
      * @var list<int>
      */
-    private const array QUICKTIME_VIDEO_DEPTH_VALUES          = [1, 2, 4, 8, 16, 24, 32, 34, 36, 40];
+    private const array QUICKTIME_VIDEO_DEPTH_VALUES = [1, 2, 4, 8, 16, 24, 32, 34, 36, 40];
 
     /**
      * Depth values that must not reference color tables.
@@ -74,8 +74,8 @@ final readonly class VideoSampleEntryParser
         $win->readU32BE(); // temporal quality
         $win->readU32BE(); // spatial quality
 
-        $width                = $win->readU16BE();
-        $height               = $win->readU16BE();
+        $width  = $win->readU16BE();
+        $height = $win->readU16BE();
 
         if ($width === 0) {
             throw new ParseError('video sample entry width must be > 0', 1601);
@@ -88,24 +88,24 @@ final readonly class VideoSampleEntryParser
         $horizontalResolution = $this->decodeVideoResolution16_16($win->readU32BE(), 'horizontal');
         $verticalResolution   = $this->decodeVideoResolution16_16($win->readU32BE(), 'vertical');
 
-        $dataSize             = $win->readU32BE();
+        $dataSize = $win->readU32BE();
 
         if ($dataSize !== 0) {
             throw new ParseError('video sample entry data size must be 0', 2051);
         }
 
-        $frameCount           = $win->readU16BE();
+        $frameCount = $win->readU16BE();
 
         if ($frameCount === 0) {
             throw new ParseError('video sample entry frame count must be > 0', 1606);
         }
 
         // Decode compressorName as 32-byte Pascal string; clamp length to 31
-        $nameLength           = min($win->readU8(), 31);
-        $nameData             = $win->read(31);
-        $compressor           = $nameLength > 0 ? substr($nameData, 0, $nameLength) : '';
-        $depth                = $win->readU16BE();
-        $colorTableId         = $this->decodeSigned16($win->readU16BE());
+        $nameLength   = min($win->readU8(), 31);
+        $nameData     = $win->read(31);
+        $compressor   = $nameLength > 0 ? substr($nameData, 0, $nameLength) : '';
+        $depth        = $win->readU16BE();
+        $colorTableId = $this->decodeSigned16($win->readU16BE());
 
         $this->validateVideoSampleEntryDepthAndColorTable(
             $depth,
@@ -145,8 +145,8 @@ final readonly class VideoSampleEntryParser
         }
 
         if ($colorTableId === 0) {
-            $tailOffset     = $win->tell();
-            $remaining      = $entryEnd - $tailOffset;
+            $tailOffset = $win->tell();
+            $remaining  = $entryEnd - $tailOffset;
 
             if ($remaining < 8) {
                 throw new ParseError('video sample entry colorTableId=0 requires trailing ctab atom', 1496);
@@ -197,7 +197,7 @@ final readonly class VideoSampleEntryParser
             }
 
             $win->seek($offset);
-            $boxSize   = $win->readU32BE();
+            $boxSize = $win->readU32BE();
 
             if ($boxSize < 8 || $boxSize > $remaining) {
                 throw new ParseError('video sample entry trailing payload is malformed', 1934);
@@ -223,7 +223,7 @@ final readonly class VideoSampleEntryParser
             throw new ParseError(sprintf('video sample entry %s resolution exceeds supported 16.16 range', $axis), 1605);
         }
 
-        $integerPart    = $resolutionRaw >> 16;
+        $integerPart = $resolutionRaw >> 16;
 
         if ($integerPart <= 0) {
             throw new ParseError(sprintf('video sample entry %s resolution must be > 0', $axis), 1938);

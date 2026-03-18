@@ -32,9 +32,9 @@ final class MetadataBuilderTest extends TestCase
     #[Test]
     public function injectsStructuredResolverIntoBuiltMetadata(): void
     {
-        $builder          = new MetadataBuilder();
-        $first            = $builder->withFileIdentity(extension: 'jpg')->build();
-        $second           = $builder->withFileIdentity(extension: 'heic')->build();
+        $builder = new MetadataBuilder();
+        $first   = $builder->withFileIdentity(extension: 'jpg')->build();
+        $second  = $builder->withFileIdentity(extension: 'heic')->build();
 
         $resolverProperty = new ReflectionProperty(Metadata::class, 'structuredResolver');
         $firstResolver    = $resolverProperty->getValue($first);

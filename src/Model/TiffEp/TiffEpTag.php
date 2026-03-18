@@ -27,12 +27,12 @@ final readonly class TiffEpTag
     /**
      * Time-zone offset(s) of the ModifyDate relative to UTC; deprecated pre-EXIF 2.3 tag.
      */
-    public const int TIME_ZONE_OFFSET    = 0x882A;
+    public const int TIME_ZONE_OFFSET = 0x882A;
 
     /**
      * Image number assigned by the camera; deprecated pre-EXIF 2.3 tag.
      */
-    public const int IMAGE_NUMBER        = 0x9211;
+    public const int IMAGE_NUMBER = 0x9211;
 
     /**
      * TIFF/EP standard identification version; TIFF/EP §5.3.

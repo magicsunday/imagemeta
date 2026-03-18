@@ -83,7 +83,7 @@ final readonly class AppleDecoder implements MakerNotesDecoderInterface
             return $this->builder->build($ifdDictionary); // @phpstan-ignore argument.type (IFD values are builder-compatible)
         }
 
-        $decoded       = $this->archiveResolver->decodeBinaryPropertyList($raw);
+        $decoded = $this->archiveResolver->decodeBinaryPropertyList($raw);
 
         if ($decoded === null) {
             $decoded = $this->textParser->parse($raw);
@@ -94,9 +94,9 @@ final readonly class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         /** @var NativePlistDictionary $dictionary */
-        $dictionary    = $decoded;
+        $dictionary = $decoded;
 
-        $decoded       = $this->archiveResolver->resolveKeyedArchiveDictionary($dictionary);
+        $decoded = $this->archiveResolver->resolveKeyedArchiveDictionary($dictionary);
 
         if ($decoded === null || !KeyedArchiveResolver::isStringKeyedDictionary($decoded)) {
             return null;

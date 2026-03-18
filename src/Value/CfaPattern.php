@@ -62,10 +62,10 @@ final readonly class CfaPattern
             return null;
         }
 
-        $colors   = [];
+        $colors = [];
 
         for ($index = 0; $index < $expected; ++$index) {
-            $color    = CfaPatternColor::fromExifValue($componentIdentifiers[$index]);
+            $color = CfaPatternColor::fromExifValue($componentIdentifiers[$index]);
 
             if (!$color instanceof CfaPatternColor) {
                 return null;

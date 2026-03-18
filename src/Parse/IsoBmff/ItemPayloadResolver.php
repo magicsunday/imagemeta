@@ -215,8 +215,8 @@ final readonly class ItemPayloadResolver
     ): IsoBmffItemResolveResult {
         // ISO/IEC 14496-12 §8.11.3.2 — only 'iloc' references are
         // valid lookup targets for item-offset construction.
-        $allRefs         = $itemReferences[$itemId] ?? [];
-        $references      = array_values(array_filter(
+        $allRefs    = $itemReferences[$itemId] ?? [];
+        $references = array_values(array_filter(
             $allRefs,
             static fn (IsoBmffItemReference $ref): bool => $ref->relation === 'iloc',
         ));
@@ -232,7 +232,7 @@ final readonly class ItemPayloadResolver
         $extentCount     = count($location['extents']);
 
         foreach ($location['extents'] as $extent) {
-            $length            = $extent['length'];
+            $length = $extent['length'];
 
             if ($length > $this->maxItemPayloadSize - $total) {
                 throw new ParseError('iloc item payload exceeds configured limit', 1188);
@@ -249,8 +249,8 @@ final readonly class ItemPayloadResolver
                 ), 1607);
             }
 
-            $referenceItemId   = $references[$referencePosition]->toItemId;
-            $result            = $this->resolveReferencedItemData(
+            $referenceItemId = $references[$referencePosition]->toItemId;
+            $result          = $this->resolveReferencedItemData(
                 $itemId,
                 $referenceItemId,
                 $location,
@@ -261,15 +261,15 @@ final readonly class ItemPayloadResolver
                 $metaContextOffset,
                 $visitedItemIds,
             );
-            $unresolvedItems   = [...$unresolvedItems, ...$result->unresolvedItems];
+            $unresolvedItems = [...$unresolvedItems, ...$result->unresolvedItems];
 
             if ($result->data === null) {
                 return new IsoBmffItemResolveResult(null, $unresolvedItems);
             }
 
-            $referenceData     = $result->data;
-            $referenceSize     = strlen($referenceData);
-            $offset            = $this->computeSafeOffset($location['baseOffset'], $extent['offset'], 0, 1189, 1190, 0);
+            $referenceData = $result->data;
+            $referenceSize = strlen($referenceData);
+            $offset        = $this->computeSafeOffset($location['baseOffset'], $extent['offset'], 0, 1189, 1190, 0);
 
             // Implied extent_length semantics for single-extent items
             if ($length === 0) {
@@ -325,14 +325,14 @@ final readonly class ItemPayloadResolver
         int $metaContextOffset,
         array $visitedItemIds,
     ): IsoBmffItemResolveResult {
-        $nextVisited       = $visitedItemIds;
-        $nextVisited[]     = $itemId;
+        $nextVisited   = $visitedItemIds;
+        $nextVisited[] = $itemId;
 
         if (in_array($referenceItemId, $nextVisited, true)) {
             return new IsoBmffItemResolveResult(null, [$this->createUnresolvedItem($itemId, $location, $dataReferences, $metaContextOffset)]);
         }
 
-        $result            = $this->resolveItemData(
+        $result = $this->resolveItemData(
             $referenceItemId,
             $locations,
             $itemReferences,
@@ -395,13 +395,13 @@ final readonly class ItemPayloadResolver
      */
     public function isExifItem(array $info): bool
     {
-        $itemType    = $info['itemType'] ?? null;
+        $itemType = $info['itemType'] ?? null;
 
         if (is_string($itemType) && (strcasecmp($itemType, BoxType::EXIF->value) === 0)) {
             return true;
         }
 
-        $name        = $info['name'] ?? null;
+        $name = $info['name'] ?? null;
 
         if (is_string($name) && (strcasecmp($name, BoxType::EXIF->value) === 0)) {
             return true;
@@ -427,7 +427,7 @@ final readonly class ItemPayloadResolver
      */
     public function isXmpItem(array $info): bool
     {
-        $itemType    = $info['itemType'] ?? null;
+        $itemType = $info['itemType'] ?? null;
 
         if (is_string($itemType)) {
             // EXIF 3.0 Annex A.2.3 allows explicit XMP item typing in the item_type field.
@@ -496,8 +496,8 @@ final readonly class ItemPayloadResolver
         $extentCount = count($extents);
 
         foreach ($extents as $extent) {
-            $length  = $extent['length'];
-            $offset  = $this->computeSafeOffset(
+            $length = $extent['length'];
+            $offset = $this->computeSafeOffset(
                 $baseOffset,
                 $extent['offset'],
                 $originOffset,

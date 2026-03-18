@@ -37,12 +37,12 @@ final readonly class ImageFactory
      */
     public function create(Metadata $metadata, ?XmpDocument $xmpDocument = null): Image
     {
-        $exifDocument   = $metadata->exifDoc;
+        $exifDocument = $metadata->exifDoc;
 
-        $width          = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth;
-        $height         = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight;
-        $orientation    = $exifDocument?->orientation();
-        $bitsPerSample  = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
+        $width         = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth;
+        $height        = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight;
+        $orientation   = $exifDocument?->orientation();
+        $bitsPerSample = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
 
         $xmpTitle       = $xmpDocument?->string(XmpNamespace::DC->value, 'title');
         $xmpHeadline    = $xmpDocument?->string(XmpNamespace::PHOTOSHOP->value, 'Headline');
@@ -80,13 +80,13 @@ final readonly class ImageFactory
             return null;
         }
 
-        $colorSpace             = $exifDocument->colorSpace();
+        $colorSpace = $exifDocument->colorSpace();
 
         if ($colorSpace !== ColorSpace::Uncalibrated) {
             return $colorSpace;
         }
 
-        $interopIndex           = $exifDocument->interopIndex();
+        $interopIndex = $exifDocument->interopIndex();
 
         if (!is_string($interopIndex)) {
             return $colorSpace;

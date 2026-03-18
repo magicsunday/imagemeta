@@ -51,7 +51,7 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesJpegSignature(): void
     {
-        $stream   = $this->createStream("\xFF\xD8\xFF\xE0");
+        $stream = $this->createStream("\xFF\xD8\xFF\xE0");
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -65,7 +65,7 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesIsoBmffBrand(): void
     {
-        $stream   = $this->createStream("\x00\x00\x00\x10ftypisom\x00\x00\x00\x00");
+        $stream = $this->createStream("\x00\x00\x00\x10ftypisom\x00\x00\x00\x00");
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -91,7 +91,7 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesQuickTimeWideBox(): void
     {
-        $stream   = $this->createStream("\x00\x00\x00\x08wide\x00\x00\x00\x08moov");
+        $stream = $this->createStream("\x00\x00\x00\x08wide\x00\x00\x00\x08moov");
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -105,7 +105,7 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesIsoBmffAfterFreePadding(): void
     {
-        $stream   = $this->createStream("\x00\x00\x00\x08free\x00\x00\x00\x10ftypqt  \x00\x00\x00\x00");
+        $stream = $this->createStream("\x00\x00\x00\x08free\x00\x00\x00\x10ftypqt  \x00\x00\x00\x00");
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -121,7 +121,7 @@ final class FormatDetectorTest extends TestCase
         $uuidOnly = hex2bin('0000001875756964' . str_repeat('00', 16));
         self::assertIsString($uuidOnly);
 
-        $stream   = $this->createStream($uuidOnly);
+        $stream = $this->createStream($uuidOnly);
         $this->expectException(ParseError::class);
 
         (new FormatDetector())->detect($stream);
@@ -133,8 +133,8 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesIsoBmffAfterLeadingUuid(): void
     {
-        $uuidBox  = hex2bin('0000001875756964' . str_repeat('00', 16));
-        $ftyp     = hex2bin('000000106674797069736F6D00000000');
+        $uuidBox = hex2bin('0000001875756964' . str_repeat('00', 16));
+        $ftyp    = hex2bin('000000106674797069736F6D00000000');
         self::assertIsString($uuidBox);
         self::assertIsString($ftyp);
 
@@ -153,7 +153,7 @@ final class FormatDetectorTest extends TestCase
     public function detectRecognisesIsoBmffWhenFtypPayloadHasOneExtraByte(): void
     {
         // size=17 → payload=9 bytes (8 + 1 extra), type='ftyp'
-        $stream   = $this->createStream("\x00\x00\x00\x11ftypisom\x00\x00\x00\x00\x78");
+        $stream = $this->createStream("\x00\x00\x00\x11ftypisom\x00\x00\x00\x00\x78");
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -169,7 +169,7 @@ final class FormatDetectorTest extends TestCase
     public function detectRecognisesIsoBmffWhenFtypPayloadHasThreeExtraBytes(): void
     {
         // size=19 → payload=11 bytes (8 + 3 extra), type='ftyp'
-        $stream   = $this->createStream("\x00\x00\x00\x13ftypisom\x00\x00\x00\x00abc");
+        $stream = $this->createStream("\x00\x00\x00\x13ftypisom\x00\x00\x00\x00abc");
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -182,8 +182,8 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesIsoBmffAfterManyPaddingBoxes(): void
     {
-        $padding  = str_repeat("\x00\x00\x00\x08free", 5);
-        $ftyp     = "\x00\x00\x00\x10ftypisom\x00\x00\x00\x00";
+        $padding = str_repeat("\x00\x00\x00\x08free", 5);
+        $ftyp    = "\x00\x00\x00\x10ftypisom\x00\x00\x00\x00";
 
         $stream   = $this->createStream($padding . $ftyp);
         $detected = (new FormatDetector())->detect($stream);
@@ -198,7 +198,7 @@ final class FormatDetectorTest extends TestCase
     public function detectRecognisesIsoBmffWhenMdatFollowedByMoov(): void
     {
         // mdat(size=16) + moov(size=8)
-        $stream   = $this->createStream(
+        $stream = $this->createStream(
             "\x00\x00\x00\x10mdat" . str_repeat("\x00", 8)
             . "\x00\x00\x00\x08moov"
         );
@@ -221,8 +221,8 @@ final class FormatDetectorTest extends TestCase
         $mdat            = pack('N', $mdatSize) . 'mdat' . str_repeat("\x00", $mdatPayloadSize);
         $moov            = "\x00\x00\x00\x08moov";
 
-        $stream          = $this->createStream($wide . $mdat . $moov);
-        $detected        = (new FormatDetector())->detect($stream);
+        $stream   = $this->createStream($wide . $mdat . $moov);
+        $detected = (new FormatDetector())->detect($stream);
 
         self::assertSame(ContainerType::ISOBMFF, $detected);
     }
@@ -235,7 +235,7 @@ final class FormatDetectorTest extends TestCase
     public function detectRecognisesIsoBmffWhenFtypHasZeroSize(): void
     {
         // size=0 means box extends to EOF; ftyp type is sufficient evidence
-        $stream   = $this->createStream("\x00\x00\x00\x00ftypisom\x00\x00\x00\x00");
+        $stream = $this->createStream("\x00\x00\x00\x00ftypisom\x00\x00\x00\x00");
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -250,7 +250,7 @@ final class FormatDetectorTest extends TestCase
     public function detectRecognisesIsoBmffWhenStypHasZeroSize(): void
     {
         // size=0 means box extends to EOF; styp type is sufficient evidence
-        $stream   = $this->createStream("\x00\x00\x00\x00stypiso6\x00\x00\x00\x00");
+        $stream = $this->createStream("\x00\x00\x00\x00stypiso6\x00\x00\x00\x00");
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -263,7 +263,7 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesClassicTiffLittleEndian(): void
     {
-        $stream   = $this->createStream('II' . pack('v', 0x002A) . pack('V', 8));
+        $stream = $this->createStream('II' . pack('v', 0x002A) . pack('V', 8));
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -276,7 +276,7 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesClassicTiffBigEndian(): void
     {
-        $stream   = $this->createStream('MM' . pack('n', 0x002A) . pack('N', 8));
+        $stream = $this->createStream('MM' . pack('n', 0x002A) . pack('N', 8));
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -289,7 +289,7 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesBigTiffLittleEndian(): void
     {
-        $stream   = $this->createStream('II' . pack('v', 0x002B) . pack('v', 8) . pack('v', 0) . pack('P', 16));
+        $stream = $this->createStream('II' . pack('v', 0x002B) . pack('v', 8) . pack('v', 0) . pack('P', 16));
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -302,7 +302,7 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesBigTiffBigEndian(): void
     {
-        $stream   = $this->createStream('MM' . pack('n', 0x002B) . pack('n', 8) . pack('n', 0) . pack('J', 16));
+        $stream = $this->createStream('MM' . pack('n', 0x002B) . pack('n', 8) . pack('n', 0) . pack('J', 16));
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -315,7 +315,7 @@ final class FormatDetectorTest extends TestCase
     #[Test]
     public function detectRecognisesBareJxlCodestream(): void
     {
-        $stream   = $this->createStream("\xFF\x0A" . str_repeat("\x00", 8));
+        $stream = $this->createStream("\xFF\x0A" . str_repeat("\x00", 8));
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -331,7 +331,7 @@ final class FormatDetectorTest extends TestCase
         $jxlSignature = "\x00\x00\x00\x0C\x4A\x58\x4C\x20\x0D\x0A\x87\x0A";
         $stream       = $this->createStream($jxlSignature . str_repeat("\x00", 8));
 
-        $detected     = (new FormatDetector())->detect($stream);
+        $detected = (new FormatDetector())->detect($stream);
 
         self::assertSame(ContainerType::JXL, $detected);
     }
@@ -358,7 +358,7 @@ final class FormatDetectorTest extends TestCase
     public function detectRecognisesJpegWithOneFillByteBeforeApp1(): void
     {
         // FF D8 = SOI, FF FF = fill byte then marker prefix, E1 = APP1
-        $stream   = $this->createStream("\xFF\xD8\xFF\xFF\xE1");
+        $stream = $this->createStream("\xFF\xD8\xFF\xFF\xE1");
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -373,7 +373,7 @@ final class FormatDetectorTest extends TestCase
     public function detectRecognisesJpegWithMultipleFillBytesBeforeApp0(): void
     {
         // FF D8 = SOI, FF FF FF FF = three fill bytes then marker prefix, E0 = APP0
-        $stream   = $this->createStream("\xFF\xD8\xFF\xFF\xFF\xFF\xE0");
+        $stream = $this->createStream("\xFF\xD8\xFF\xFF\xFF\xFF\xE0");
 
         $detected = (new FormatDetector())->detect($stream);
 
@@ -466,7 +466,7 @@ final class FormatDetectorTest extends TestCase
      */
     private function createStream(string $bytes): Stream
     {
-        $handle  = fopen('php://temp', 'w+b');
+        $handle = fopen('php://temp', 'w+b');
 
         if ($handle === false) {
             self::fail('Unable to create temporary stream resource.');

@@ -100,7 +100,7 @@ final class ColrBoxParsingTest extends TestCase
         $iccBlob = $this->syntheticIccProfile();
         $data    = $this->buildColrContainer('prof', $iccBlob);
 
-        $result  = $this->createExtractor($data)->extract();
+        $result = $this->createExtractor($data)->extract();
 
         self::assertSame($iccBlob, $result->iccProfile);
     }
@@ -116,7 +116,7 @@ final class ColrBoxParsingTest extends TestCase
         $iccBlob = $this->syntheticIccProfile();
         $data    = $this->buildColrContainer('rICC', $iccBlob);
 
-        $result  = $this->createExtractor($data)->extract();
+        $result = $this->createExtractor($data)->extract();
 
         self::assertSame($iccBlob, $result->iccProfile);
     }
@@ -131,7 +131,7 @@ final class ColrBoxParsingTest extends TestCase
         $nclxPayload = pack('nnn', 1, 13, 6) . "\x80";
         $data        = $this->buildColrContainer('nclx', $nclxPayload);
 
-        $result      = $this->createExtractor($data)->extract();
+        $result = $this->createExtractor($data)->extract();
 
         self::assertNull($result->iccProfile);
     }
@@ -142,13 +142,13 @@ final class ColrBoxParsingTest extends TestCase
     #[Test]
     public function extractReturnsNullWhenNoColrPresent(): void
     {
-        $ispe   = $this->fullBox('ispe', pack('N', 100) . pack('N', 200));
-        $ipco   = $this->box('ipco', $ispe);
-        $iprp   = $this->box('iprp', $ipco);
-        $hdlr   = $this->fullBox('hdlr', pack('N', 0) . 'pict' . str_repeat("\0", 12));
-        $meta   = $this->fullBox('meta', $hdlr . $iprp);
-        $ftyp   = $this->box('ftyp', 'heic' . pack('N', 0));
-        $data   = $ftyp . $meta;
+        $ispe = $this->fullBox('ispe', pack('N', 100) . pack('N', 200));
+        $ipco = $this->box('ipco', $ispe);
+        $iprp = $this->box('iprp', $ipco);
+        $hdlr = $this->fullBox('hdlr', pack('N', 0) . 'pict' . str_repeat("\0", 12));
+        $meta = $this->fullBox('meta', $hdlr . $iprp);
+        $ftyp = $this->box('ftyp', 'heic' . pack('N', 0));
+        $data = $ftyp . $meta;
 
         $result = $this->createExtractor($data)->extract();
 
@@ -161,7 +161,7 @@ final class ColrBoxParsingTest extends TestCase
     #[Test]
     public function extractReturnsNullForTruncatedColrBox(): void
     {
-        $data   = $this->buildColrContainer('pro', '');
+        $data = $this->buildColrContainer('pro', '');
 
         $result = $this->createExtractor($data)->extract();
 
@@ -190,12 +190,12 @@ final class ColrBoxParsingTest extends TestCase
      */
     private function syntheticIccProfile(): string
     {
-        $profile     = str_repeat("\0", 128);
+        $profile = str_repeat("\0", 128);
         // ICC profile size at offset 0 (4 bytes BE)
-        $profile[0]  = "\x00";
-        $profile[1]  = "\x00";
-        $profile[2]  = "\x00";
-        $profile[3]  = "\x80";
+        $profile[0] = "\x00";
+        $profile[1] = "\x00";
+        $profile[2] = "\x00";
+        $profile[3] = "\x80";
         // 'acsp' signature at offset 36
         $profile[36] = 'a';
         $profile[37] = 'c';

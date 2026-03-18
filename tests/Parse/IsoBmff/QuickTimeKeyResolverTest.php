@@ -70,7 +70,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $resolver      = new QuickTimeKeyResolver($navigator);
         $window        = $stream->window(0, $contentLength);
 
-        $descriptor    = new BoxDescriptor(
+        $descriptor = new BoxDescriptor(
             type: $type,
             size: 8 + $contentLength,
             offset: 0,
@@ -89,7 +89,7 @@ final class QuickTimeKeyResolverTest extends TestCase
     private function buildKeysPayloadWithMdtaKey(string $keyName, bool $appendTerminator = true): string
     {
         // version=0, flags=0
-        $data      = chr(0) . chr(0) . chr(0) . chr(0);
+        $data = chr(0) . chr(0) . chr(0) . chr(0);
         // entry_count=1
         $data .= pack('N', 1);
         // entry: size(4) + namespace(4) + key_value
@@ -105,7 +105,7 @@ final class QuickTimeKeyResolverTest extends TestCase
     private function buildKeysPayloadWithCustomNamespace(string $namespace, string $keyName): string
     {
         // version=0, flags=0
-        $data      = chr(0) . chr(0) . chr(0) . chr(0);
+        $data = chr(0) . chr(0) . chr(0) . chr(0);
         // entry_count=1
         $data .= pack('N', 1);
         // entry: size(4) + namespace(4) + key_value
@@ -124,8 +124,8 @@ final class QuickTimeKeyResolverTest extends TestCase
     #[Test]
     public function parseKeysSingleMdtaEntry(): void
     {
-        $keyName                 = 'com.apple.quicktime.title';
-        $payload                 = $this->buildKeysPayloadWithMdtaKey($keyName);
+        $keyName = 'com.apple.quicktime.title';
+        $payload = $this->buildKeysPayloadWithMdtaKey($keyName);
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($payload);
         $map                     = $resolver->parseKeys($descriptor);
@@ -141,22 +141,22 @@ final class QuickTimeKeyResolverTest extends TestCase
     #[Test]
     public function parseKeysMultipleEntries(): void
     {
-        $key1                    = 'com.apple.quicktime.title';
-        $key2                    = 'com.apple.quicktime.model';
+        $key1 = 'com.apple.quicktime.title';
+        $key2 = 'com.apple.quicktime.model';
 
         // version=0, flags=0
-        $data                    = chr(0) . chr(0) . chr(0) . chr(0);
+        $data = chr(0) . chr(0) . chr(0) . chr(0);
         // entry_count=2
         $data .= pack('N', 2);
 
         // entry 1
-        $kv1                     = $key1 . "\0";
-        $entrySize               = 8 + strlen($kv1);
+        $kv1       = $key1 . "\0";
+        $entrySize = 8 + strlen($kv1);
         $data .= pack('N', $entrySize) . 'mdta' . $kv1;
 
         // entry 2
-        $kv2                     = $key2 . "\0";
-        $entrySize               = 8 + strlen($kv2);
+        $kv2       = $key2 . "\0";
+        $entrySize = 8 + strlen($kv2);
         $data .= pack('N', $entrySize) . 'mdta' . $kv2;
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($data);
@@ -173,7 +173,7 @@ final class QuickTimeKeyResolverTest extends TestCase
     #[Test]
     public function parseKeysNonMdtaNamespace(): void
     {
-        $payload                 = $this->buildKeysPayloadWithCustomNamespace('itun', 'Artist');
+        $payload = $this->buildKeysPayloadWithCustomNamespace('itun', 'Artist');
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($payload);
         $map                     = $resolver->parseKeys($descriptor);
@@ -197,7 +197,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $this->expectExceptionMessage('keys box truncated');
 
         // Only 7 bytes (needs at least 8)
-        $content                 = chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
+        $content = chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($content);
         $resolver->parseKeys($descriptor);
@@ -212,7 +212,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('keys box version/flags must be 0');
 
-        $content                 = chr(1) . chr(0) . chr(0) . chr(0) . pack('N', 0);
+        $content = chr(1) . chr(0) . chr(0) . chr(0) . pack('N', 0);
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($content);
         $resolver->parseKeys($descriptor);
@@ -227,7 +227,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('keys box version/flags must be 0');
 
-        $content                 = chr(0) . chr(0) . chr(0) . chr(1) . pack('N', 0);
+        $content = chr(0) . chr(0) . chr(0) . chr(1) . pack('N', 0);
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($content);
         $resolver->parseKeys($descriptor);
@@ -243,7 +243,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $this->expectExceptionMessage('invalid keys entry size');
 
         // version=0, flags=0, entry_count=1
-        $data                    = chr(0) . chr(0) . chr(0) . chr(0) . pack('N', 1);
+        $data = chr(0) . chr(0) . chr(0) . chr(0) . pack('N', 1);
         // entry with size=4 (too small, minimum is 8)
         $data .= pack('N', 4) . 'mdta';
 
@@ -261,7 +261,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $this->expectExceptionMessage('keys entry has empty key_value');
 
         // version=0, flags=0, entry_count=1
-        $data                    = chr(0) . chr(0) . chr(0) . chr(0) . pack('N', 1);
+        $data = chr(0) . chr(0) . chr(0) . chr(0) . pack('N', 1);
         // entry with size=8 (exactly header, no key_value)
         $data .= pack('N', 8) . 'mdta';
 
@@ -275,8 +275,8 @@ final class QuickTimeKeyResolverTest extends TestCase
     #[Test]
     public function parseKeysAcceptsMdtaMissingNulTerminator(): void
     {
-        $keyName                 = 'com.apple.quicktime.title';
-        $payload                 = $this->buildKeysPayloadWithMdtaKey($keyName, false);
+        $keyName = 'com.apple.quicktime.title';
+        $payload = $this->buildKeysPayloadWithMdtaKey($keyName, false);
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($payload);
         $map                     = $resolver->parseKeys($descriptor);
@@ -295,7 +295,7 @@ final class QuickTimeKeyResolverTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('keys mdta key_value contains embedded NUL bytes');
 
-        $payload                 = $this->buildKeysPayloadWithMdtaKey("com.apple\0quicktime.title");
+        $payload = $this->buildKeysPayloadWithMdtaKey("com.apple\0quicktime.title");
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($payload);
         $resolver->parseKeys($descriptor);
@@ -310,8 +310,8 @@ final class QuickTimeKeyResolverTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('keys entries do not fill container');
 
-        $keyName                 = 'com.apple.quicktime.title';
-        $payload                 = $this->buildKeysPayloadWithMdtaKey($keyName);
+        $keyName = 'com.apple.quicktime.title';
+        $payload = $this->buildKeysPayloadWithMdtaKey($keyName);
         // Append extra bytes that make entries not fill the container
         $payload .= "\x00\x00";
 
@@ -331,7 +331,7 @@ final class QuickTimeKeyResolverTest extends TestCase
     {
         [$resolver, $_] = $this->createResolverWithDescriptor('X');
 
-        $result         = $resolver->resolveKeyName([
+        $result = $resolver->resolveKeyName([
             'namespace' => 'mdta',
             'name'      => 'com.apple.quicktime.title',
         ]);
@@ -347,7 +347,7 @@ final class QuickTimeKeyResolverTest extends TestCase
     {
         [$resolver, $_] = $this->createResolverWithDescriptor('X');
 
-        $result         = $resolver->resolveKeyName([
+        $result = $resolver->resolveKeyName([
             'namespace' => 'itun',
             'name'      => 'Artist',
         ]);
@@ -366,16 +366,16 @@ final class QuickTimeKeyResolverTest extends TestCase
     public function parseFreeformKeyReturnsDottedKey(): void
     {
         // mean: FullAtom (v0, flags=0) + payload
-        $meanPayload             = chr(0) . chr(0) . chr(0) . chr(0) . 'com.apple.iTunes';
-        $meanBox                 = $this->box('mean', $meanPayload);
+        $meanPayload = chr(0) . chr(0) . chr(0) . chr(0) . 'com.apple.iTunes';
+        $meanBox     = $this->box('mean', $meanPayload);
 
         // name: FullAtom (v0, flags=0) + payload
-        $namePayload             = chr(0) . chr(0) . chr(0) . chr(0) . 'ISRC';
-        $nameBox                 = $this->box('name', $namePayload);
+        $namePayload = chr(0) . chr(0) . chr(0) . chr(0) . 'ISRC';
+        $nameBox     = $this->box('name', $namePayload);
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($meanBox . $nameBox, '----');
 
-        $key                     = $resolver->parseFreeformKey($descriptor);
+        $key = $resolver->parseFreeformKey($descriptor);
 
         self::assertSame('com.apple.iTunes.ISRC', $key);
     }
@@ -391,8 +391,8 @@ final class QuickTimeKeyResolverTest extends TestCase
     public function parseFreeformKeyReturnsNullWithoutMean(): void
     {
         // Only a name box, no mean box
-        $namePayload             = chr(0) . chr(0) . chr(0) . chr(0) . 'ISRC';
-        $nameBox                 = $this->box('name', $namePayload);
+        $namePayload = chr(0) . chr(0) . chr(0) . chr(0) . 'ISRC';
+        $nameBox     = $this->box('name', $namePayload);
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($nameBox, '----');
 
@@ -409,11 +409,11 @@ final class QuickTimeKeyResolverTest extends TestCase
         $this->expectExceptionMessage('mean atom version must be 0');
 
         // mean: FullAtom (v=1, flags=0) + payload
-        $meanPayload             = chr(1) . chr(0) . chr(0) . chr(0) . 'com.apple.iTunes';
-        $meanBox                 = $this->box('mean', $meanPayload);
+        $meanPayload = chr(1) . chr(0) . chr(0) . chr(0) . 'com.apple.iTunes';
+        $meanBox     = $this->box('mean', $meanPayload);
 
-        $namePayload             = chr(0) . chr(0) . chr(0) . chr(0) . 'ISRC';
-        $nameBox                 = $this->box('name', $namePayload);
+        $namePayload = chr(0) . chr(0) . chr(0) . chr(0) . 'ISRC';
+        $nameBox     = $this->box('name', $namePayload);
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($meanBox . $nameBox, '----');
 

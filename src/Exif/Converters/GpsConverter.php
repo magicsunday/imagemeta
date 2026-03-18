@@ -83,14 +83,14 @@ final readonly class GpsConverter
     /**
      * EXIF 3.0 §4.6.7.1.1 (GPSVersionID) default value when the field is blank.
      */
-    private const string DEFAULT_GPS_VERSION    = '2.4.0.0';
+    private const string DEFAULT_GPS_VERSION = '2.4.0.0';
 
     /**
      * EXIF 3.0 §4.6.7.1.10 GPSStatus: 'A' (measurement in progress) or 'V' (measurement interrupted).
      *
      * @var list<string>
      */
-    private const array GPS_STATUS_VALUES       = ['A', 'V'];
+    private const array GPS_STATUS_VALUES = ['A', 'V'];
 
     /**
      * EXIF 3.0 §4.6.7.1.11 GPSMeasureMode: '2' (2D) or '3' (3D).
@@ -179,54 +179,54 @@ final readonly class GpsConverter
      */
     public function fromIfd(Ifd $gps): array
     {
-        $result                        = $this->emptyGpsResult();
+        $result = $this->emptyGpsResult();
 
         // Delegate domain extractions
-        $result                        = array_replace($result, $this->coordinateConverter->extractFromIfd($gps));
-        $result                        = array_replace($result, $this->unitConverter->extractFromIfd($gps));
-        $result                        = array_replace($result, $this->directionConverter->extractFromIfd($gps));
-        $result                        = array_replace($result, $this->timestampConverter->extractFromIfd($gps));
+        $result = array_replace($result, $this->coordinateConverter->extractFromIfd($gps));
+        $result = array_replace($result, $this->unitConverter->extractFromIfd($gps));
+        $result = array_replace($result, $this->directionConverter->extractFromIfd($gps));
+        $result = array_replace($result, $this->timestampConverter->extractFromIfd($gps));
 
         // Remaining simple fields handled by the orchestrator
-        $versionEntry                  = $gps->get(ExifTag::GPS_VERSION_ID);
-        $satellitesEntry               = $gps->get(ExifTag::GPS_SATELLITES);
-        $statusEntry                   = $gps->get(ExifTag::GPS_STATUS);
-        $measureEntry                  = $gps->get(ExifTag::GPS_MEASURE_MODE);
-        $dopEntry                      = $gps->get(ExifTag::GPS_DOP);
-        $mapDatumEntry                 = $gps->get(ExifTag::GPS_MAP_DATUM);
+        $versionEntry    = $gps->get(ExifTag::GPS_VERSION_ID);
+        $satellitesEntry = $gps->get(ExifTag::GPS_SATELLITES);
+        $statusEntry     = $gps->get(ExifTag::GPS_STATUS);
+        $measureEntry    = $gps->get(ExifTag::GPS_MEASURE_MODE);
+        $dopEntry        = $gps->get(ExifTag::GPS_DOP);
+        $mapDatumEntry   = $gps->get(ExifTag::GPS_MAP_DATUM);
 
-        $versionParts                  = $this->formatVersion($versionEntry?->value);
-        $result['version']             = $versionParts['normalized'];
-        $result['version_raw']         = $versionParts['raw'];
-        $result['satellites']          = $this->stringConverter->sanitize($satellitesEntry?->value);
+        $versionParts          = $this->formatVersion($versionEntry?->value);
+        $result['version']     = $versionParts['normalized'];
+        $result['version_raw'] = $versionParts['raw'];
+        $result['satellites']  = $this->stringConverter->sanitize($satellitesEntry?->value);
 
         // EXIF 3.0 §4.6.7.1.10 GPSStatus: 'A' (measurement in progress) or 'V' (measurement interrupted)
-        $statusSanitized               = $this->stringConverter->sanitize($statusEntry?->value);
-        $result['status']              = $this->validateGpsRef(
+        $statusSanitized  = $this->stringConverter->sanitize($statusEntry?->value);
+        $result['status'] = $this->validateGpsRef(
             is_string($statusSanitized) ? strtoupper(trim($statusSanitized)) : null,
             self::GPS_STATUS_VALUES,
         );
 
         // EXIF 3.0 §4.6.7.1.11 GPSMeasureMode: '2' (2D) or '3' (3D)
-        $measureSanitized              = $this->stringConverter->sanitize($measureEntry?->value);
-        $result['measure_mode']        = $this->validateGpsRef(
+        $measureSanitized       = $this->stringConverter->sanitize($measureEntry?->value);
+        $result['measure_mode'] = $this->validateGpsRef(
             is_string($measureSanitized) ? strtoupper(trim($measureSanitized)) : null,
             self::GPS_MEASURE_MODE_VALUES,
         );
 
-        $dopValue                      = $this->rationalConverter->toFloat($dopEntry?->value);
+        $dopValue = $this->rationalConverter->toFloat($dopEntry?->value);
 
         // Tolerate negative DOP — set to null.
         if (($dopValue !== null) && ($dopValue < 0.0)) {
             $dopValue = null;
         }
 
-        $result['dop']                 = $dopValue;
-        $result['map_datum']           = $this->stringConverter->sanitize($mapDatumEntry?->value);
+        $result['dop']       = $dopValue;
+        $result['map_datum'] = $this->stringConverter->sanitize($mapDatumEntry?->value);
 
         // Differential
-        $diffEntry                     = $gps->get(ExifTag::GPS_DIFFERENTIAL);
-        $diffValue                     = $diffEntry?->value;
+        $diffEntry = $gps->get(ExifTag::GPS_DIFFERENTIAL);
+        $diffValue = $diffEntry?->value;
 
         if ($diffValue instanceof ExifNumericList) {
             $diffValue = $diffValue->values[0] ?? null;
@@ -237,8 +237,8 @@ final readonly class GpsConverter
         }
 
         // Horizontal positioning error
-        $hPositionEntry                = $gps->get(ExifTag::GPS_H_POSITIONING_ERROR);
-        $hPositioningErrorValue        = $this->rationalConverter->toFloat($hPositionEntry?->value);
+        $hPositionEntry         = $gps->get(ExifTag::GPS_H_POSITIONING_ERROR);
+        $hPositioningErrorValue = $this->rationalConverter->toFloat($hPositionEntry?->value);
 
         // Tolerate negative HPositioningError — set to null.
         if (($hPositioningErrorValue !== null) && ($hPositioningErrorValue < 0.0)) {

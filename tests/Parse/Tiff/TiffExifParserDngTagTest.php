@@ -99,18 +99,18 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function dngGeometryValidatorAvoidsDeadProxyFallbackAssignments(): void
     {
-        $method      = new ReflectionMethod(DngGeometryValidator::class, 'validateDngOriginalProxySizes');
-        $fileName    = $method->getFileName();
+        $method   = new ReflectionMethod(DngGeometryValidator::class, 'validateDngOriginalProxySizes');
+        $fileName = $method->getFileName();
         self::assertIsString($fileName);
 
         $sourceLines = file($fileName);
         self::assertIsArray($sourceLines);
-        $startLine   = $method->getStartLine();
-        $endLine     = $method->getEndLine();
+        $startLine = $method->getStartLine();
+        $endLine   = $method->getEndLine();
         self::assertIsInt($startLine);
         self::assertIsInt($endLine);
 
-        $body        = implode(
+        $body = implode(
             '',
             array_slice(
                 $sourceLines,
@@ -180,7 +180,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $ifdSize    = 2 + (12 * $entryCount) + 4;
         $valOffset  = $ifdOffset + $ifdSize;
 
-        $blob       = 'II'
+        $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . pack('v', $entryCount)
@@ -201,10 +201,10 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', 0)
             . $model;
 
-        $parser     = new TiffExifParser();
-        $parsed     = $parser->parseFromBlob($blob);
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob($blob);
 
-        $entry      = $parsed->ifd0->get(DngTag::LOCALIZED_CAMERA_MODEL);
+        $entry = $parsed->ifd0->get(DngTag::LOCALIZED_CAMERA_MODEL);
         self::assertNotNull($entry);
         self::assertSame('Camera Model', $entry->value);
     }
@@ -218,10 +218,10 @@ final class TiffExifParserDngTagTest extends TestCase
         $privateData = "Adobe\0\x01\x02\x03\x04";
         $blob        = $this->buildTiffWithDngPrivateData($privateData);
 
-        $parser      = new TiffExifParser();
-        $parsed      = $parser->parseFromBlob($blob);
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob($blob);
 
-        $entry       = $parsed->ifd0->get(DngTag::DNG_PRIVATE_DATA);
+        $entry = $parsed->ifd0->get(DngTag::DNG_PRIVATE_DATA);
         self::assertNotNull($entry);
     }
 
@@ -400,7 +400,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $parser = new TiffExifParser();
         $parsed = $parser->parseFromBlob($this->buildTiffWithEnhancedIfd("Adobe Enhance\0"));
 
-        $entry  = $parsed->ifd0->get(DngTag::ENHANCE_PARAMS);
+        $entry = $parsed->ifd0->get(DngTag::ENHANCE_PARAMS);
         self::assertNotNull($entry);
         self::assertSame('Adobe Enhance', $entry->value);
     }
@@ -442,7 +442,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $valOffset  = $ifdOffset + $ifdSize;
 
         // Tags sorted ascending: NEW_SUBFILE_TYPE(0xFE) < IMAGE_WIDTH(0x100) < IMAGE_LENGTH(0x101) < ENHANCE_PARAMS(0xC7EE)
-        $ifdData    = pack('v', $entryCount)
+        $ifdData = pack('v', $entryCount)
             // NewSubfileType: LONG, count=1, value=16 (enhanced) — fits inline
             . pack('v', TiffTag::NEW_SUBFILE_TYPE)
             . pack('v', TiffConst::TYPE_LONG)
@@ -459,7 +459,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
 
-        $outOfLine  = '';
+        $outOfLine = '';
 
         if ($enhanceParams !== null) {
             $len = strlen($enhanceParams);
@@ -493,7 +493,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function parsesValidColorMatrixWithCorrectCount(): void
     {
-        $blob   = $this->buildTiffWithDngMatrixTag(
+        $blob = $this->buildTiffWithDngMatrixTag(
             DngTag::COLOR_MATRIX_1,
             TiffConst::TYPE_SRATIONAL,
             9,
@@ -503,7 +503,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $parser = new TiffExifParser();
         $parsed = $parser->parseFromBlob($blob);
 
-        $entry  = $parsed->ifd0->get(DngTag::COLOR_MATRIX_1);
+        $entry = $parsed->ifd0->get(DngTag::COLOR_MATRIX_1);
         self::assertNotNull($entry);
     }
 
@@ -605,7 +605,7 @@ final class TiffExifParserDngTagTest extends TestCase
             $this->buildTiffWithCfaPlaneColor(3, true),
         );
 
-        $entry  = $parsed->ifd0->get(DngTag::COLOR_MATRIX_1);
+        $entry = $parsed->ifd0->get(DngTag::COLOR_MATRIX_1);
         self::assertNotNull($entry);
     }
 
@@ -636,15 +636,15 @@ final class TiffExifParserDngTagTest extends TestCase
         $ifdSize    = 2 + (12 * $entryCount) + 4;
         $valOffset  = $ifdOffset + $ifdSize;
 
-        $cfaValues  = '';
+        $cfaValues = '';
 
         for ($i = 0; $i < $colorPlanes; ++$i) {
             $cfaValues .= pack('C', $i);
         }
 
-        $cfaValues  = str_pad($cfaValues, 4, "\0");
+        $cfaValues = str_pad($cfaValues, 4, "\0");
 
-        $ifdData    = pack('v', $entryCount)
+        $ifdData = pack('v', $entryCount)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -658,7 +658,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', $colorPlanes)
             . $cfaValues;
 
-        $sratData   = '';
+        $sratData = '';
 
         if ($includeColorMat1) {
             $matCount = $colorPlanes * 3;
@@ -700,20 +700,20 @@ final class TiffExifParserDngTagTest extends TestCase
         $valOffset  = $ifdOffset + $ifdSize;
 
         // CfaPlaneColor: BYTE[colorPlanes] — fits inline for colorPlanes ≤ 4
-        $cfaValues  = '';
+        $cfaValues = '';
 
         for ($i = 0; $i < $colorPlanes; ++$i) {
             $cfaValues .= pack('C', $i);
         }
 
-        $cfaValues  = str_pad($cfaValues, 4, "\0");
+        $cfaValues = str_pad($cfaValues, 4, "\0");
 
         // SRATIONAL data: each entry is 8 bytes (numerator + denominator)
-        $sratData   = str_repeat(pack('VV', 1, 1), $count);
+        $sratData = str_repeat(pack('VV', 1, 1), $count);
 
         // Tags must be in ascending order: IMAGE_WIDTH(0x100) < IMAGE_LENGTH(0x101)
         // < CFA_PLANE_COLOR(0xC616) < matrix tag (0xC621+)
-        $ifdData    = pack('v', $entryCount)
+        $ifdData = pack('v', $entryCount)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -805,7 +805,7 @@ final class TiffExifParserDngTagTest extends TestCase
             ),
         );
 
-        $entry  = $parsed->ifd0->get(DngTag::CALIBRATION_ILLUMINANT_1);
+        $entry = $parsed->ifd0->get(DngTag::CALIBRATION_ILLUMINANT_1);
         self::assertNotNull($entry);
         self::assertSame(17, $entry->value);
     }
@@ -825,7 +825,7 @@ final class TiffExifParserDngTagTest extends TestCase
             ),
         );
 
-        $entry  = $parsed->ifd0->get(DngTag::CALIBRATION_ILLUMINANT_1);
+        $entry = $parsed->ifd0->get(DngTag::CALIBRATION_ILLUMINANT_1);
         self::assertNotNull($entry);
         self::assertSame(255, $entry->value);
     }
@@ -847,7 +847,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $entryCount = $dataTag !== null ? 4 : 3;
 
         // Collect tags in ascending order
-        $tags       = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -874,7 +874,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $ifdData    = pack('v', $entryCount);
+        $ifdData = pack('v', $entryCount);
 
         foreach ($tags as $entry) {
             $ifdData .= $entry;
@@ -882,7 +882,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         $ifdData .= pack('V', 0); // next IFD
 
-        $result     = 'II'
+        $result = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . $ifdData;
@@ -1006,32 +1006,32 @@ final class TiffExifParserDngTagTest extends TestCase
         int $illuminant2Val = 21,
         int $illuminant3Val = 23,
     ): string {
-        $ifdOffset                              = 8;
-        $colorPlanes                            = 3;
-        $matCount                               = $colorPlanes * 3;
+        $ifdOffset   = 8;
+        $colorPlanes = 3;
+        $matCount    = $colorPlanes * 3;
 
         // Tags keyed by tag ID for automatic ascending sort
-        $tags                                   = [];
-        $outOfLineData                          = '';
+        $tags          = [];
+        $outOfLineData = '';
 
         // ImageWidth + ImageLength (always present)
-        $tags[ExifTag::IMAGE_WIDTH]             = pack('v', ExifTag::IMAGE_WIDTH)
+        $tags[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
-        $tags[ExifTag::IMAGE_LENGTH]            = pack('v', ExifTag::IMAGE_LENGTH)
+        $tags[ExifTag::IMAGE_LENGTH] = pack('v', ExifTag::IMAGE_LENGTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
 
         // CfaPlaneColor (3 planes)
-        $tags[DngTag::CFA_PLANE_COLOR]          = pack('v', DngTag::CFA_PLANE_COLOR)
+        $tags[DngTag::CFA_PLANE_COLOR] = pack('v', DngTag::CFA_PLANE_COLOR)
             . pack('v', TiffConst::TYPE_BYTE)
             . pack('V', $colorPlanes)
             . "\x00\x01\x02\x00";
 
         // ColorMatrix1 (always present for non-monochrome)
-        $tags[DngTag::COLOR_MATRIX_1]           = 'PLACEHOLDER'; // will be replaced below
+        $tags[DngTag::COLOR_MATRIX_1] = 'PLACEHOLDER'; // will be replaced below
 
         if ($includeIlluminant1) {
             $tags[DngTag::CALIBRATION_ILLUMINANT_1] = pack('v', DngTag::CALIBRATION_ILLUMINANT_1)
@@ -1058,7 +1058,7 @@ final class TiffExifParserDngTagTest extends TestCase
         }
 
         // Optional ForwardMatrix/ReductionMatrix tags
-        $optionalMatrixTags                     = [];
+        $optionalMatrixTags = [];
 
         if ($includeForwardMatrix1) {
             $optionalMatrixTags[] = DngTag::FORWARD_MATRIX_1;
@@ -1091,12 +1091,12 @@ final class TiffExifParserDngTagTest extends TestCase
         ksort($tags);
 
         // Calculate IFD size to determine out-of-line data offsets
-        $entryCount                             = count($tags);
-        $ifdSize                                = 2 + (12 * $entryCount) + 4;
-        $curOffset                              = $ifdOffset + $ifdSize;
+        $entryCount = count($tags);
+        $ifdSize    = 2 + (12 * $entryCount) + 4;
+        $curOffset  = $ifdOffset + $ifdSize;
 
         // Build SRATIONAL data block (all matrices use same dummy data: 1/1)
-        $sratBlock                              = str_repeat(pack('VV', 1, 1), $matCount);
+        $sratBlock = str_repeat(pack('VV', 1, 1), $matCount);
 
         // Replace placeholders with actual matrix entries pointing to out-of-line data
         foreach ($tags as $tag => &$data) {
@@ -1114,7 +1114,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         unset($data);
 
-        $ifdData                                = pack('v', $entryCount);
+        $ifdData = pack('v', $entryCount);
 
         foreach ($tags as $entry) {
             $ifdData .= $entry;
@@ -1189,10 +1189,10 @@ final class TiffExifParserDngTagTest extends TestCase
         bool $includeNeutral,
         bool $includeWhiteXY,
     ): string {
-        $ifdOffset                   = 8;
-        $tags                        = [];
+        $ifdOffset = 8;
+        $tags      = [];
 
-        $tags[ExifTag::IMAGE_WIDTH]  = pack('v', ExifTag::IMAGE_WIDTH)
+        $tags[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
@@ -1201,8 +1201,8 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
 
-        $outOfLine                   = '';
-        $entryCount                  = 2;
+        $outOfLine  = '';
+        $entryCount = 2;
 
         if ($includeNeutral) {
             // AsShotNeutral: RATIONAL[3] — 3 × 8 = 24 bytes, out-of-line
@@ -1218,8 +1218,8 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $ifdSize                     = 2 + (12 * $entryCount) + 4;
-        $curOffset                   = $ifdOffset + $ifdSize;
+        $ifdSize   = 2 + (12 * $entryCount) + 4;
+        $curOffset = $ifdOffset + $ifdSize;
 
         // Replace placeholders
         foreach ($tags as $tag => &$data) {
@@ -1244,7 +1244,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         unset($data);
 
-        $ifdData                     = pack('v', $entryCount);
+        $ifdData = pack('v', $entryCount);
 
         foreach ($tags as $entry) {
             $ifdData .= $entry;
@@ -1353,7 +1353,7 @@ final class TiffExifParserDngTagTest extends TestCase
     {
         $ifdOffset = 8;
 
-        $tags      = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -1382,7 +1382,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $ifdData   = pack('v', count($tags));
+        $ifdData = pack('v', count($tags));
 
         foreach ($tags as $entry) {
             $ifdData .= $entry;
@@ -1390,7 +1390,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         $ifdData .= pack('V', 0);
 
-        $blob      = 'II'
+        $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . $ifdData;
@@ -1407,7 +1407,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function acceptsDngBackwardVersionBelowDngVersion(): void
     {
-        $blob   = $this->buildTiffWithDngVersionPair([1, 7, 0, 0], [1, 6, 0, 0]);
+        $blob = $this->buildTiffWithDngVersionPair([1, 7, 0, 0], [1, 6, 0, 0]);
 
         $result = (new TiffExifParser())->parseFromBlob($blob);
 
@@ -1420,7 +1420,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function acceptsDngBackwardVersionEqualToDngVersion(): void
     {
-        $blob   = $this->buildTiffWithDngVersionPair([1, 6, 0, 0], [1, 6, 0, 0]);
+        $blob = $this->buildTiffWithDngVersionPair([1, 6, 0, 0], [1, 6, 0, 0]);
 
         $result = (new TiffExifParser())->parseFromBlob($blob);
 
@@ -1449,26 +1449,26 @@ final class TiffExifParserDngTagTest extends TestCase
      */
     private function buildTiffWithDngVersionPair(array $dngVersion, array $backwardVersion): string
     {
-        $ifdOffset                          = 8;
+        $ifdOffset = 8;
 
-        $tags                               = [];
+        $tags = [];
 
-        $tags[ExifTag::IMAGE_WIDTH]         = pack('v', ExifTag::IMAGE_WIDTH)
+        $tags[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
 
-        $tags[ExifTag::IMAGE_LENGTH]        = pack('v', ExifTag::IMAGE_LENGTH)
+        $tags[ExifTag::IMAGE_LENGTH] = pack('v', ExifTag::IMAGE_LENGTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
 
-        $tags[ExifTag::ORIENTATION]         = pack('v', ExifTag::ORIENTATION)
+        $tags[ExifTag::ORIENTATION] = pack('v', ExifTag::ORIENTATION)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 1) . pack('v', 0);
 
-        $tags[DngTag::DNG_VERSION]          = pack('v', DngTag::DNG_VERSION)
+        $tags[DngTag::DNG_VERSION] = pack('v', DngTag::DNG_VERSION)
             . pack('v', TiffConst::TYPE_BYTE)
             . pack('V', 4)
             . pack('C4', $dngVersion[0], $dngVersion[1], $dngVersion[2], $dngVersion[3]);
@@ -1479,14 +1479,14 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('C4', $backwardVersion[0], $backwardVersion[1], $backwardVersion[2], $backwardVersion[3]);
 
         // UniqueCameraModel required for DNG
-        $tags[DngTag::UNIQUE_CAMERA_MODEL]  = pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+        $tags[DngTag::UNIQUE_CAMERA_MODEL] = pack('v', DngTag::UNIQUE_CAMERA_MODEL)
             . pack('v', TiffConst::TYPE_ASCII)
             . pack('V', 2)
             . "X\0\0\0";
 
         ksort($tags);
 
-        $ifdData                            = pack('v', count($tags));
+        $ifdData = pack('v', count($tags));
 
         foreach ($tags as $entry) {
             $ifdData .= $entry;
@@ -1537,36 +1537,36 @@ final class TiffExifParserDngTagTest extends TestCase
      */
     private function buildTiffWithThirdIlluminant(array $backwardVersion): string
     {
-        $ifdOffset                              = 8;
+        $ifdOffset = 8;
 
-        $tags                                   = [];
+        $tags = [];
 
-        $tags[ExifTag::IMAGE_WIDTH]             = pack('v', ExifTag::IMAGE_WIDTH)
+        $tags[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
 
-        $tags[ExifTag::IMAGE_LENGTH]            = pack('v', ExifTag::IMAGE_LENGTH)
+        $tags[ExifTag::IMAGE_LENGTH] = pack('v', ExifTag::IMAGE_LENGTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
 
-        $tags[ExifTag::ORIENTATION]             = pack('v', ExifTag::ORIENTATION)
+        $tags[ExifTag::ORIENTATION] = pack('v', ExifTag::ORIENTATION)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 1) . pack('v', 0);
 
-        $tags[DngTag::DNG_VERSION]              = pack('v', DngTag::DNG_VERSION)
+        $tags[DngTag::DNG_VERSION] = pack('v', DngTag::DNG_VERSION)
             . pack('v', TiffConst::TYPE_BYTE)
             . pack('V', 4)
             . pack('C4', 1, 7, 1, 0);
 
-        $tags[DngTag::DNG_BACKWARD_VERSION]     = pack('v', DngTag::DNG_BACKWARD_VERSION)
+        $tags[DngTag::DNG_BACKWARD_VERSION] = pack('v', DngTag::DNG_BACKWARD_VERSION)
             . pack('v', TiffConst::TYPE_BYTE)
             . pack('V', 4)
             . pack('C4', $backwardVersion[0], $backwardVersion[1], $backwardVersion[2], $backwardVersion[3]);
 
-        $tags[DngTag::UNIQUE_CAMERA_MODEL]      = pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+        $tags[DngTag::UNIQUE_CAMERA_MODEL] = pack('v', DngTag::UNIQUE_CAMERA_MODEL)
             . pack('v', TiffConst::TYPE_ASCII)
             . pack('V', 2)
             . "X\0\0\0";
@@ -1579,7 +1579,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $ifdData                                = pack('v', count($tags));
+        $ifdData = pack('v', count($tags));
 
         foreach ($tags as $entry) {
             $ifdData .= $entry;
@@ -1628,7 +1628,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function localizedCameraModelUsesExplicitValueWhenPresent(): void
     {
-        $blob   = $this->buildTiffWithDngCameraModels("UniqueModel\0", "LocalizedModel\0");
+        $blob = $this->buildTiffWithDngCameraModels("UniqueModel\0", "LocalizedModel\0");
 
         $result = (new TiffExifParser())->parseFromBlob($blob);
 
@@ -1642,7 +1642,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function localizedCameraModelFallsBackToUniqueCameraModel(): void
     {
-        $blob   = $this->buildTiffWithDngCameraModels("UniqueModel\0", null);
+        $blob = $this->buildTiffWithDngCameraModels("UniqueModel\0", null);
 
         $result = (new TiffExifParser())->parseFromBlob($blob);
 
@@ -1657,11 +1657,11 @@ final class TiffExifParserDngTagTest extends TestCase
      */
     private function buildTiffWithDngCameraModels(string $uniqueModel, ?string $localizedModel): string
     {
-        $ifdOffset                   = 8;
+        $ifdOffset = 8;
 
-        $tags                        = [];
+        $tags = [];
 
-        $tags[ExifTag::IMAGE_WIDTH]  = pack('v', ExifTag::IMAGE_WIDTH)
+        $tags[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
@@ -1671,18 +1671,18 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
 
-        $tags[ExifTag::ORIENTATION]  = pack('v', ExifTag::ORIENTATION)
+        $tags[ExifTag::ORIENTATION] = pack('v', ExifTag::ORIENTATION)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 1) . pack('v', 0);
 
-        $tags[DngTag::DNG_VERSION]   = pack('v', DngTag::DNG_VERSION)
+        $tags[DngTag::DNG_VERSION] = pack('v', DngTag::DNG_VERSION)
             . pack('v', TiffConst::TYPE_BYTE)
             . pack('V', 4)
             . pack('C4', 1, 7, 1, 0);
 
         // UniqueCameraModel — always present; inline if ≤ 4 bytes, otherwise out-of-band
-        $uniqueLen                   = strlen($uniqueModel);
+        $uniqueLen = strlen($uniqueModel);
 
         if ($uniqueLen <= 4) {
             $tags[DngTag::UNIQUE_CAMERA_MODEL] = pack('v', DngTag::UNIQUE_CAMERA_MODEL)
@@ -1715,7 +1715,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $ifdData                     = pack('v', count($tags));
+        $ifdData = pack('v', count($tags));
 
         foreach ($tags as $entry) {
             $ifdData .= $entry;
@@ -1723,8 +1723,8 @@ final class TiffExifParserDngTagTest extends TestCase
 
         $ifdData .= pack('V', 0); // next IFD offset
 
-        $blob                        = 'II' . pack('v', TiffConst::MAGIC_CLASSIC) . pack('V', $ifdOffset) . $ifdData;
-        $outOfBand                   = '';
+        $blob      = 'II' . pack('v', TiffConst::MAGIC_CLASSIC) . pack('V', $ifdOffset) . $ifdData;
+        $outOfBand = '';
 
         // Patch out-of-band string offsets
         if ($uniqueLen > 4) {
@@ -1781,16 +1781,16 @@ final class TiffExifParserDngTagTest extends TestCase
         int $factorValue,
         array $backwardVer,
     ): string {
-        $ifdOffset                          = 8;
-        $entryCount                         = 4; // ImageWidth + ImageLength + DNGBackwardVersion + interleave tag
+        $ifdOffset  = 8;
+        $entryCount = 4; // ImageWidth + ImageLength + DNGBackwardVersion + interleave tag
 
-        $tags                               = [];
+        $tags = [];
 
-        $tags[ExifTag::IMAGE_WIDTH]         = pack('v', ExifTag::IMAGE_WIDTH)
+        $tags[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
-        $tags[ExifTag::IMAGE_LENGTH]        = pack('v', ExifTag::IMAGE_LENGTH)
+        $tags[ExifTag::IMAGE_LENGTH] = pack('v', ExifTag::IMAGE_LENGTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', 100) . pack('v', 0);
@@ -1803,14 +1803,14 @@ final class TiffExifParserDngTagTest extends TestCase
             . $verBytes;
 
         // Interleave factor: SHORT[1], inline
-        $tags[$interleaveTag]               = pack('v', $interleaveTag)
+        $tags[$interleaveTag] = pack('v', $interleaveTag)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
             . pack('v', $factorValue) . pack('v', 0);
 
         ksort($tags);
 
-        $ifdData                            = pack('v', $entryCount);
+        $ifdData = pack('v', $entryCount);
 
         foreach ($tags as $entry) {
             $ifdData .= $entry;
@@ -1832,7 +1832,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $ifd0Size       = 2 + (12 * $ifd0EntryCount) + 4;
         $exifIfdOffset  = $ifd0Offset + $ifd0Size;
 
-        $ifd0           = pack('v', $ifd0EntryCount)
+        $ifd0 = pack('v', $ifd0EntryCount)
             // ImageWidth SHORT[1] = 100
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
@@ -1857,7 +1857,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', 0);
 
         // EXIF IFD: MakerNote with 4 bytes inline (UNDEFINED type)
-        $exifIfd        = pack('v', 1)
+        $exifIfd = pack('v', 1)
             . pack('v', ExifTag::MAKER_NOTE)
             . pack('v', TiffConst::TYPE_UNDEFINED)
             . pack('V', 4)
@@ -1926,7 +1926,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $ifdOffset  = 8;
         $entryCount = 4;
 
-        $tags       = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -1947,7 +1947,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $ifdData    = pack('v', $entryCount);
+        $ifdData = pack('v', $entryCount);
 
         foreach ($tags as $entry) {
             $ifdData .= $entry;
@@ -2040,20 +2040,20 @@ final class TiffExifParserDngTagTest extends TestCase
         array $floats,
         bool $hdr = false,
     ): string {
-        $ifdOffset       = 8;
-        $entryCount      = $hdr ? 4 : 3;
+        $ifdOffset  = 8;
+        $entryCount = $hdr ? 4 : 3;
 
         // Float data goes out-of-line after the IFD
         // IFD: 2 (count) + entryCount*12 (entries) + 4 (next IFD)
-        $ifdSize         = 2 + ($entryCount * 12) + 4;
-        $floatOffset     = $ifdOffset + $ifdSize;
-        $floatPayload    = '';
+        $ifdSize      = 2 + ($entryCount * 12) + 4;
+        $floatOffset  = $ifdOffset + $ifdSize;
+        $floatPayload = '';
 
         foreach ($floats as $f) {
             $floatPayload .= pack('g', $f);
         }
 
-        $tags            = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -2072,8 +2072,8 @@ final class TiffExifParserDngTagTest extends TestCase
 
         if ($hdr) {
             // ProfileDynamicRange: UNDEFINED, 8 bytes out-of-line
-            $dynRangeOffset                      = $floatOffset + strlen($floatPayload);
-            $dynRangePayload                     = pack('v', 1)   // version = 1
+            $dynRangeOffset  = $floatOffset + strlen($floatPayload);
+            $dynRangePayload = pack('v', 1)   // version = 1
                 . pack('v', 1)                // dynamicRange = 1 (HDR)
                 . pack('g', 1.0);             // hintMaxOutputValue
 
@@ -2085,7 +2085,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $ifdData         = pack('v', $entryCount);
+        $ifdData = pack('v', $entryCount);
 
         foreach ($tags as $entry) {
             $ifdData .= $entry;
@@ -2150,7 +2150,7 @@ final class TiffExifParserDngTagTest extends TestCase
     ): string {
         $ifdOffset = 8;
 
-        $tags      = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -2170,7 +2170,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         if ($isDng) {
             // DNGVersion: BYTE[4] inline
-            $tags[DngTag::DNG_VERSION]         = pack('v', DngTag::DNG_VERSION)
+            $tags[DngTag::DNG_VERSION] = pack('v', DngTag::DNG_VERSION)
                 . pack('v', TiffConst::TYPE_BYTE)
                 . pack('V', 4)
                 . pack('C4', 1, 7, 1, 0);
@@ -2183,7 +2183,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $ifdData   = pack('v', count($tags));
+        $ifdData = pack('v', count($tags));
 
         foreach ($tags as $entry) {
             $ifdData .= $entry;
@@ -2273,12 +2273,12 @@ final class TiffExifParserDngTagTest extends TestCase
         int $photometric,
         bool $includeSemanticName = false,
     ): string {
-        $ifdOffset      = 8;
-        $ifd0Entries    = 2;
-        $ifd0Size       = 2 + ($ifd0Entries * 12) + 4;
-        $ifd1Offset     = $ifdOffset + $ifd0Size;
+        $ifdOffset   = 8;
+        $ifd0Entries = 2;
+        $ifd0Size    = 2 + ($ifd0Entries * 12) + 4;
+        $ifd1Offset  = $ifdOffset + $ifd0Size;
 
-        $tags           = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -2297,8 +2297,8 @@ final class TiffExifParserDngTagTest extends TestCase
                 . pack('V', $newSubFileType),
         ];
 
-        $semanticName   = pack('Z*', 'MaskName0');
-        $ifd1Entries    = count($tags);
+        $semanticName = pack('Z*', 'MaskName0');
+        $ifd1Entries  = count($tags);
 
         if ($includeSemanticName) {
             ++$ifd1Entries;
@@ -2316,7 +2316,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $ifd0           = pack('v', $ifd0Entries)
+        $ifd0 = pack('v', $ifd0Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -2327,7 +2327,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', 100) . pack('v', 0)
             . pack('V', $ifd1Offset);
 
-        $ifd1           = pack('v', $ifd1Entries);
+        $ifd1 = pack('v', $ifd1Entries);
 
         foreach ($tags as $entry) {
             $ifd1 .= $entry;
@@ -2335,7 +2335,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         $ifd1 .= pack('V', 0);
 
-        $result         = 'II'
+        $result = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . $ifd0
@@ -2472,18 +2472,18 @@ final class TiffExifParserDngTagTest extends TestCase
         int $colorPlanes,
         ?string $wbPayload = null,
     ): string {
-        $ifdOffset                    = 8;
+        $ifdOffset = 8;
 
         // CfaPlaneColor: BYTE, count = colorPlanes, inline (padded to 4 bytes)
-        $cfaValues                    = '';
+        $cfaValues = '';
 
         for ($i = 0; $i < $colorPlanes; ++$i) {
             $cfaValues .= pack('C', $i);
         }
 
-        $cfaValues                    = str_pad($cfaValues, 4, "\x00");
+        $cfaValues = str_pad($cfaValues, 4, "\x00");
 
-        $tags                         = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -2504,14 +2504,14 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $entryCount                   = count($tags);
-        $ifdSize                      = 2 + ($entryCount * 12) + 4;
-        $curOffset                    = $ifdOffset + $ifdSize;
-        $outOfLine                    = '';
+        $entryCount = count($tags);
+        $ifdSize    = 2 + ($entryCount * 12) + 4;
+        $curOffset  = $ifdOffset + $ifdSize;
+        $outOfLine  = '';
 
         // ColorMatrix1: SRATIONAL, count = colorPlanes * 3
-        $cm1Count                     = $colorPlanes * 3;
-        $cm1Data                      = str_repeat(pack('VV', 1, 1), $cm1Count);
+        $cm1Count = $colorPlanes * 3;
+        $cm1Data  = str_repeat(pack('VV', 1, 1), $cm1Count);
 
         $tags[DngTag::COLOR_MATRIX_1] = pack('v', DngTag::COLOR_MATRIX_1)
             . pack('v', TiffConst::TYPE_SRATIONAL)
@@ -2537,7 +2537,7 @@ final class TiffExifParserDngTagTest extends TestCase
             }
         }
 
-        $totalSz                      = strlen($wbData);
+        $totalSz = strlen($wbData);
 
         if ($totalSz <= 4) {
             $valOrOffset = str_pad($wbData, 4, "\x00");
@@ -2546,14 +2546,14 @@ final class TiffExifParserDngTagTest extends TestCase
             $outOfLine .= $wbData;
         }
 
-        $tags[$wbTag]                 = pack('v', $wbTag)
+        $tags[$wbTag] = pack('v', $wbTag)
             . pack('v', $wbType)
             . pack('V', $wbCount)
             . $valOrOffset;
 
         ksort($tags);
 
-        $ifdData                      = pack('v', $entryCount);
+        $ifdData = pack('v', $entryCount);
 
         foreach ($tags as $entry) {
             $ifdData .= $entry;
@@ -2606,7 +2606,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $ifd0Size    = 2 + ($ifd0Entries * 12) + 4;
         $ifd1Offset  = $ifdOffset + $ifd0Size;
 
-        $ifd0        = pack('v', $ifd0Entries)
+        $ifd0 = pack('v', $ifd0Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -2617,7 +2617,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', 100) . pack('v', 0)
             . pack('V', $ifd1Offset);
 
-        $tags        = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -2634,7 +2634,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $ifd1        = pack('v', count($tags));
+        $ifd1 = pack('v', count($tags));
 
         foreach ($tags as $entry) {
             $ifd1 .= $entry;
@@ -3011,7 +3011,7 @@ final class TiffExifParserDngTagTest extends TestCase
         // DataType=0: SHORT(0) + x RATIONAL(1/3) + y RATIONAL(1/3)
         $payload = pack('v', 0) . pack('V', 1) . pack('V', 3) . pack('V', 1) . pack('V', 3);
 
-        $parsed  = (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithIlluminantData($payload),
         );
 
@@ -3031,7 +3031,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', 100) . pack('V', 1)  // sample 1
             . pack('V', 200) . pack('V', 1); // sample 2
 
-        $parsed  = (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithIlluminantData($payload),
         );
 
@@ -3122,7 +3122,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function acceptsValidHueSatMapData(): void
     {
         // dims 2*2*1 = 4 triples; sat index 0 has valueScale=1.0
-        $data   = [
+        $data = [
             0.0, 1.0, 1.0,  // sat=0 row
             0.0, 1.0, 1.2,  // sat=1 row
             0.0, 1.0, 1.0,  // sat=0 row
@@ -3263,7 +3263,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $ifd1Size    = 2 + ($ifd1Entries * 12) + 4;
         $ifd2Offset  = $ifd1Offset + $ifd1Size;
 
-        $ifd0        = pack('v', $ifd0Entries)
+        $ifd0 = pack('v', $ifd0Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -3274,7 +3274,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', 100) . pack('v', 0)
             . pack('V', $ifd1Offset);
 
-        $ifd1        = pack('v', $ifd1Entries)
+        $ifd1 = pack('v', $ifd1Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -3285,7 +3285,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', 100) . pack('v', 0)
             . pack('V', $ifd2Offset);
 
-        $tags        = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -3328,7 +3328,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $ifd2        = pack('v', count($tags));
+        $ifd2 = pack('v', count($tags));
 
         foreach ($tags as $entry) {
             $ifd2 .= $entry;
@@ -3363,7 +3363,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $ifd1Size    = 2 + ($ifd1Entries * 12) + 4;
         $ifd2Offset  = $ifd1Offset + $ifd1Size;
 
-        $ifd0        = pack('v', $ifd0Entries)
+        $ifd0 = pack('v', $ifd0Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -3374,7 +3374,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', 100) . pack('v', 0)
             . pack('V', $ifd1Offset);
 
-        $ifd1        = pack('v', $ifd1Entries)
+        $ifd1 = pack('v', $ifd1Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -3385,7 +3385,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', 100) . pack('v', 0)
             . pack('V', $ifd2Offset);
 
-        $tags        = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -3424,7 +3424,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $ifd2        = pack('v', count($tags));
+        $ifd2 = pack('v', count($tags));
 
         foreach ($tags as $entry) {
             $ifd2 .= $entry;
@@ -3454,7 +3454,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $uniqueCameraModel = pack('Z*', 'TestCamera');
         $modelOffset       = $ifdOffset + $ifdSize;
 
-        $bwVersionPacked   = pack('C4', $bwVer[0], $bwVer[1], $bwVer[2], $bwVer[3]);
+        $bwVersionPacked = pack('C4', $bwVer[0], $bwVer[1], $bwVer[2], $bwVer[3]);
 
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
@@ -3586,7 +3586,7 @@ final class TiffExifParserDngTagTest extends TestCase
             $noiseData .= pack('e', $d);
         }
 
-        $noiseOffset       = $modelOffset + strlen($uniqueCameraModel);
+        $noiseOffset = $modelOffset + strlen($uniqueCameraModel);
 
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
@@ -4028,18 +4028,18 @@ final class TiffExifParserDngTagTest extends TestCase
         $uniqueCameraModel = pack('Z*', 'TestCamera0');
 
         // ColorMatrix1: SRATIONAL[3] = 3 rationals × 8 bytes = 24 bytes
-        $matrixData        = pack('V6', 1, 1, 0, 1, 0, 1);
-        $profileName       = pack('Z*', 'Profile00');
+        $matrixData  = pack('V6', 1, 1, 0, 1, 0, 1);
+        $profileName = pack('Z*', 'Profile00');
 
         // IFD0: ImageWidth, ImageLength, Orientation, DngVersion, UniqueCameraModel,
         //       ColorMatrix1, and optionally ProfileName
-        $ifd0EntryCount    = $includeNames ? 7 : 6;
-        $ifd0Size          = 2 + (12 * $ifd0EntryCount) + 4;
-        $modelOffset       = $ifdOffset + $ifd0Size;
-        $matrixOffset      = $modelOffset + strlen($uniqueCameraModel);
-        $nameOffset        = $matrixOffset + strlen($matrixData);
+        $ifd0EntryCount = $includeNames ? 7 : 6;
+        $ifd0Size       = 2 + (12 * $ifd0EntryCount) + 4;
+        $modelOffset    = $ifdOffset + $ifd0Size;
+        $matrixOffset   = $modelOffset + strlen($uniqueCameraModel);
+        $nameOffset     = $matrixOffset + strlen($matrixData);
 
-        $afterIfd0Data     = $uniqueCameraModel . $matrixData;
+        $afterIfd0Data = $uniqueCameraModel . $matrixData;
 
         if ($includeNames) {
             $afterIfd0Data .= $profileName;
@@ -4051,10 +4051,10 @@ final class TiffExifParserDngTagTest extends TestCase
             $ifd1EntryCount = 2;
             $ifd1Size       = 2 + (12 * $ifd1EntryCount) + 4;
 
-            $ifd2Offset     = $ifd1Offset + $ifd1Size;
-            $profile2Name   = pack('Z*', 'Profile01');
-            $matrix2Offset  = $ifd2Offset + 2 + (12 * ($includeNames ? 2 : 1)) + 4;
-            $name2Offset    = $matrix2Offset + strlen($matrixData);
+            $ifd2Offset    = $ifd1Offset + $ifd1Size;
+            $profile2Name  = pack('Z*', 'Profile01');
+            $matrix2Offset = $ifd2Offset + 2 + (12 * ($includeNames ? 2 : 1)) + 4;
+            $name2Offset   = $matrix2Offset + strlen($matrixData);
         } else {
             $ifd1Offset     = 0;
             $ifd1EntryCount = 0;
@@ -4064,7 +4064,7 @@ final class TiffExifParserDngTagTest extends TestCase
             $name2Offset    = 0;
         }
 
-        $ifd0              = pack('v', $ifd0EntryCount)
+        $ifd0 = pack('v', $ifd0EntryCount)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -4099,7 +4099,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         $ifd0 .= pack('V', $ifd1Offset);
 
-        $result            = 'II'
+        $result = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . $ifd0
@@ -4225,17 +4225,17 @@ final class TiffExifParserDngTagTest extends TestCase
         float $gamma = 1.0,
         int $extraBytes = 0,
     ): string {
-        $bytesPerElement   = match ($dataType) {
+        $bytesPerElement = match ($dataType) {
             0 => 1,
             1, 2 => 2,
             3       => 4,
             default => 1,
         };
 
-        $gainDataSize      = $bytesPerElement * $mapPointsV * $mapPointsH * $mapPointsN + $extraBytes;
-        $gainData          = str_repeat("\x01", $gainDataSize);
+        $gainDataSize = $bytesPerElement * $mapPointsV * $mapPointsH * $mapPointsN + $extraBytes;
+        $gainData     = str_repeat("\x01", $gainDataSize);
 
-        $header            = pack('V', $mapPointsV)
+        $header = pack('V', $mapPointsV)
             . pack('V', $mapPointsH)
             . pack('e', 1.0)                                 // MapSpacingV
             . pack('e', 1.0)                                 // MapSpacingH
@@ -4248,7 +4248,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('g', 0.0)                                 // GainMin
             . pack('g', 1.0);                                // GainMax
 
-        $payload           = $header . $gainData;
+        $payload = $header . $gainData;
 
         $ifdOffset         = 8;
         $entryCount        = 6;
@@ -4376,7 +4376,7 @@ final class TiffExifParserDngTagTest extends TestCase
             substr($validPayload, 0, 60),
             substr($validPayload, 0, 64),
         ];
-        $rejections   = 0;
+        $rejections = 0;
 
         foreach ($cases as $payload) {
             try {
@@ -4406,8 +4406,8 @@ final class TiffExifParserDngTagTest extends TestCase
         $uniqueCameraModel = pack('Z*', 'TestCamera0');
         $modelOffset       = $ifdOffset + $ifdSize;
         $payload ??= $this->buildLegacyGainTableMapPayload();
-        $count             = $countOverride ?? strlen($payload);
-        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+        $count         = $countOverride ?? strlen($payload);
+        $payloadOffset = $modelOffset + strlen($uniqueCameraModel);
 
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
@@ -4450,26 +4450,26 @@ final class TiffExifParserDngTagTest extends TestCase
         ?string $payload = null,
         ?int $countOverride = null,
     ): string {
-        $ifdOffset         = 8;
-        $ifd0Entries       = 5;
-        $ifd0Size          = 2 + ($ifd0Entries * 12) + 4;
+        $ifdOffset   = 8;
+        $ifd0Entries = 5;
+        $ifd0Size    = 2 + ($ifd0Entries * 12) + 4;
 
         $uniqueCameraModel = pack('Z*', 'TestCamera0');
         $modelOffset       = $ifdOffset + $ifd0Size;
 
-        $ifd1Offset        = $modelOffset + strlen($uniqueCameraModel);
-        $ifd1Entries       = 2;
-        $ifd1Size          = 2 + ($ifd1Entries * 12) + 4;
+        $ifd1Offset  = $modelOffset + strlen($uniqueCameraModel);
+        $ifd1Entries = 2;
+        $ifd1Size    = 2 + ($ifd1Entries * 12) + 4;
 
-        $ifd2Offset        = $ifd1Offset + $ifd1Size;
-        $ifd2Entries       = 3;
-        $ifd2Size          = 2 + ($ifd2Entries * 12) + 4;
+        $ifd2Offset  = $ifd1Offset + $ifd1Size;
+        $ifd2Entries = 3;
+        $ifd2Size    = 2 + ($ifd2Entries * 12) + 4;
 
         $payload ??= $this->buildLegacyGainTableMapPayload();
-        $count             = $countOverride ?? strlen($payload);
-        $payloadOffset     = $ifd2Offset + $ifd2Size;
+        $count         = $countOverride ?? strlen($payload);
+        $payloadOffset = $ifd2Offset + $ifd2Size;
 
-        $ifd0              = pack('v', $ifd0Entries)
+        $ifd0 = pack('v', $ifd0Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -4492,7 +4492,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', $modelOffset)
             . pack('V', $ifd1Offset);
 
-        $ifd1              = pack('v', $ifd1Entries)
+        $ifd1 = pack('v', $ifd1Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -4503,7 +4503,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', 100) . pack('v', 0)
             . pack('V', $ifd2Offset);
 
-        $ifd2              = pack('v', $ifd2Entries)
+        $ifd2 = pack('v', $ifd2Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -4542,7 +4542,7 @@ final class TiffExifParserDngTagTest extends TestCase
         int $mapPointsN = 1,
         float $gain = 1.0,
     ): string {
-        $header    = pack('V', $mapPointsV)
+        $header = pack('V', $mapPointsV)
             . pack('V', $mapPointsH)
             . pack('e', 1.0) // MapSpacingV
             . pack('e', 1.0) // MapSpacingH
@@ -4574,8 +4574,8 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('N', 10)       // Count (big-endian)
             . "\x01";             // Final
 
-        $parser  = new TiffExifParser();
-        $parsed  = $parser->parseFromBlob(
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
             $this->buildDngWithImageSequenceInfo($payload),
         );
 
@@ -4695,8 +4695,8 @@ final class TiffExifParserDngTagTest extends TestCase
             . "\x02\x00\x00\x00\x00"
             . str_repeat("\x80", 24);
 
-        $parser  = new TiffExifParser();
-        $parsed  = $parser->parseFromBlob(
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
             $this->buildDngWithRgbTables($payload),
         );
 
@@ -4880,19 +4880,19 @@ final class TiffExifParserDngTagTest extends TestCase
         $uniqueCameraModel = pack('Z*', 'TestCamera0');
         $modelOffset       = $ifdOffset + $ifd0Size;
 
-        $ifd1Offset        = $modelOffset + strlen($uniqueCameraModel);
-        $ifd1Entries       = 2;
-        $ifd1Size          = 2 + ($ifd1Entries * 12) + 4;
+        $ifd1Offset  = $modelOffset + strlen($uniqueCameraModel);
+        $ifd1Entries = 2;
+        $ifd1Size    = 2 + ($ifd1Entries * 12) + 4;
 
-        $ifd2Offset        = $ifd1Offset + $ifd1Size;
-        $ifd2Entries       = $includeSemanticName ? 5 : 4;
-        $ifd2Size          = 2 + ($ifd2Entries * 12) + 4;
+        $ifd2Offset  = $ifd1Offset + $ifd1Size;
+        $ifd2Entries = $includeSemanticName ? 5 : 4;
+        $ifd2Size    = 2 + ($ifd2Entries * 12) + 4;
 
-        $semanticName      = pack('Z*', 'SkinMask');
-        $nameDataOffset    = $ifd2Offset + $ifd2Size;
+        $semanticName   = pack('Z*', 'SkinMask');
+        $nameDataOffset = $ifd2Offset + $ifd2Size;
 
         // IFD0
-        $ifd0              = pack('v', $ifd0Entries)
+        $ifd0 = pack('v', $ifd0Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -4916,7 +4916,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', $ifd1Offset);
 
         // IFD1 (minimal thumbnail)
-        $ifd1              = pack('v', $ifd1Entries)
+        $ifd1 = pack('v', $ifd1Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -4934,7 +4934,7 @@ final class TiffExifParserDngTagTest extends TestCase
         // ImageWidth=0x0100, ImageLength=0x0101
         // Order: 0x00FE, 0x0100, 0x0101, 0x0106, 0xCD2E
 
-        $ifd2              = pack('v', $ifd2Entries)
+        $ifd2 = pack('v', $ifd2Entries)
             . pack('v', TiffTag::NEW_SUBFILE_TYPE)
             . pack('v', TiffConst::TYPE_LONG)
             . pack('V', 1)
@@ -4961,7 +4961,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         $ifd2 .= pack('V', 0);
 
-        $result            = 'II'
+        $result = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . $ifd0
@@ -5057,7 +5057,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('N', 4)
             . pack('G', 0.5);
 
-        $parsed  = (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithImageStats($payload),
         );
 
@@ -5144,11 +5144,11 @@ final class TiffExifParserDngTagTest extends TestCase
         $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
 
         // For inline values (<=4 bytes), pad payload to 4 bytes and store in value field
-        $valueField        = $inline
+        $valueField = $inline
             ? str_pad($payload, 4, "\0")
             : pack('V', $payloadOffset);
 
-        $ifd0              = pack('v', $ifd0Entries)
+        $ifd0 = pack('v', $ifd0Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -5175,7 +5175,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . $valueField
             . pack('V', 0);
 
-        $result            = 'II'
+        $result = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . $ifd0
@@ -5274,7 +5274,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $modelOffset       = $ifdOffset + $ifdSize;
         $dimsOffset        = $modelOffset + strlen($uniqueCameraModel);
 
-        $dimsData          = ($type === TiffConst::TYPE_SHORT)
+        $dimsData = ($type === TiffConst::TYPE_SHORT)
             ? pack('v3', $dims[0], $dims[1], $dims[2])
             : pack('V3', $dims[0], $dims[1], $dims[2]);
 
@@ -5382,20 +5382,20 @@ final class TiffExifParserDngTagTest extends TestCase
         $uniqueCameraModel = pack('Z*', 'TestCamera0');
         $modelOffset       = $ifdOffset + $ifd0Size;
 
-        $ifd1Offset        = $modelOffset + strlen($uniqueCameraModel);
-        $ifd1Entries       = 2;
-        $ifd1Size          = 2 + ($ifd1Entries * 12) + 4;
+        $ifd1Offset  = $modelOffset + strlen($uniqueCameraModel);
+        $ifd1Entries = 2;
+        $ifd1Size    = 2 + ($ifd1Entries * 12) + 4;
 
-        $ifd2Offset        = $ifd1Offset + $ifd1Size;
-        $ifd2Entries       = 6;
-        $ifd2Size          = 2 + ($ifd2Entries * 12) + 4;
+        $ifd2Offset  = $ifd1Offset + $ifd1Size;
+        $ifd2Entries = 6;
+        $ifd2Size    = 2 + ($ifd2Entries * 12) + 4;
 
-        $semanticName      = pack('Z*', 'SkinMask0');
-        $nameDataOffset    = $ifd2Offset + $ifd2Size;
+        $semanticName   = pack('Z*', 'SkinMask0');
+        $nameDataOffset = $ifd2Offset + $ifd2Size;
 
         // MaskSubArea values stored out-of-line (count >= 2 LONGs = 8+ bytes > 4-byte value field)
-        $maskDataOffset    = $nameDataOffset + strlen($semanticName);
-        $maskData          = '';
+        $maskDataOffset = $nameDataOffset + strlen($semanticName);
+        $maskData       = '';
 
         if ($maskType === TiffConst::TYPE_LONG) {
             foreach ($maskVals as $v) {
@@ -5408,7 +5408,7 @@ final class TiffExifParserDngTagTest extends TestCase
         }
 
         // IFD0
-        $ifd0              = pack('v', $ifd0Entries)
+        $ifd0 = pack('v', $ifd0Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -5432,7 +5432,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', $ifd1Offset);
 
         // IFD1 (minimal thumbnail)
-        $ifd1              = pack('v', $ifd1Entries)
+        $ifd1 = pack('v', $ifd1Entries)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -5446,7 +5446,7 @@ final class TiffExifParserDngTagTest extends TestCase
         // IFD2 (semantic mask): tags in ascending order
         // 0x00FE NewSubfileType, 0x0100 ImageWidth, 0x0101 ImageLength,
         // 0x0106 PhotometricInterpretation, 0xCD2E SemanticName, 0xCD38 MaskSubArea
-        $ifd2              = pack('v', $ifd2Entries)
+        $ifd2 = pack('v', $ifd2Entries)
             . pack('v', TiffTag::NEW_SUBFILE_TYPE)
             . pack('v', TiffConst::TYPE_LONG)
             . pack('V', 1)
@@ -5780,7 +5780,7 @@ final class TiffExifParserDngTagTest extends TestCase
         ];
 
         foreach ($overrides as $tag => $override) {
-            $baseTag    = [
+            $baseTag = [
                 'tag'     => $tag,
                 'type'    => TiffConst::TYPE_LONG,
                 'count'   => 1,
@@ -5791,19 +5791,19 @@ final class TiffExifParserDngTagTest extends TestCase
                 $baseTag = $tags[$tag];
             }
 
-            $type       = $baseTag['type'];
+            $type = $baseTag['type'];
 
             if (isset($override['type'])) {
                 $type = $override['type'];
             }
 
-            $count      = $baseTag['count'];
+            $count = $baseTag['count'];
 
             if (isset($override['count'])) {
                 $count = $override['count'];
             }
 
-            $payload    = $baseTag['payload'];
+            $payload = $baseTag['payload'];
 
             if (isset($override['payload'])) {
                 $payload = $override['payload'];
@@ -6364,7 +6364,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $modelOffset       = $ifdOffset + $ifdSize;
         $cropOffset        = $modelOffset + strlen($uniqueCameraModel);
 
-        $cropData          = '';
+        $cropData = '';
 
         foreach ($rationals as [$num, $den]) {
             $cropData .= pack('V', $num) . pack('V', $den);
@@ -6570,7 +6570,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $ifdSize           = 2 + (12 * $entryCount) + 4;
         $modelOffset       = $ifdOffset + $ifdSize;
 
-        $entries           = [
+        $entries = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -6593,8 +6593,8 @@ final class TiffExifParserDngTagTest extends TestCase
                 . pack('V', $modelOffset),
         ];
 
-        $outOfLineData     = $uniqueCameraModel;
-        $nextValueOffset   = $modelOffset + strlen($uniqueCameraModel);
+        $outOfLineData   = $uniqueCameraModel;
+        $nextValueOffset = $modelOffset + strlen($uniqueCameraModel);
 
         if ($nextValueOffset % 2 !== 0) {
             $outOfLineData .= "\0";
@@ -6602,11 +6602,11 @@ final class TiffExifParserDngTagTest extends TestCase
         }
 
         foreach ($tags as $tagSpec) {
-            $tag           = $tagSpec['tag'];
-            $type          = $tagSpec['type'];
-            $count         = $tagSpec['count'];
-            $payload       = $tagSpec['payload'];
-            $valueSize     = $this->bytesPerTiffTypeForTest($type) * $count;
+            $tag       = $tagSpec['tag'];
+            $type      = $tagSpec['type'];
+            $count     = $tagSpec['count'];
+            $payload   = $tagSpec['payload'];
+            $valueSize = $this->bytesPerTiffTypeForTest($type) * $count;
 
             if ($valueSize <= 4) {
                 $valueField = str_pad(substr($payload, 0, $valueSize), 4, "\0");
@@ -6629,7 +6629,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($entries);
 
-        $ifdData           = pack('v', $entryCount);
+        $ifdData = pack('v', $entryCount);
 
         foreach ($entries as $entry) {
             $ifdData .= $entry;
@@ -7394,10 +7394,10 @@ final class TiffExifParserDngTagTest extends TestCase
             $valueBytes = pack('C', $rows) . pack('C', $cols) . "\x00\x00";
         }
 
-        $count             = 2;
-        $dataSize          = $this->bytesPerComponent($type) * $count;
-        $inline            = $dataSize <= 4;
-        $tagOffset         = $modelOffset + strlen($uniqueCameraModel);
+        $count     = 2;
+        $dataSize  = $this->bytesPerComponent($type) * $count;
+        $inline    = $dataSize <= 4;
+        $tagOffset = $modelOffset + strlen($uniqueCameraModel);
 
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
@@ -7652,11 +7652,11 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', 0)
             . pack('V', 0);
 
-        $parsed         = (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithExtraCameraProfiles($profilePayload),
         );
 
-        $entry          = $parsed->ifd0->get(DngTag::EXTRA_CAMERA_PROFILES);
+        $entry = $parsed->ifd0->get(DngTag::EXTRA_CAMERA_PROFILES);
         self::assertNotNull($entry);
     }
 
@@ -7774,7 +7774,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsOpcodeListWithTruncatedOpcodeHeaderForAllOpcodeTags(): void
     {
-        $payload    = pack('N', 1)
+        $payload = pack('N', 1)
             . pack('N', 1)
             . pack('N', 0x01030000);
         $rejections = 0;
@@ -7803,7 +7803,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsOpcodeListWithOverflowingOpcodePayloadForAllOpcodeTags(): void
     {
-        $payload    = pack('N', 1)
+        $payload = pack('N', 1)
             . pack('N', 1)
             . pack('N', 0x01030000)
             . pack('N', 0)
@@ -7898,7 +7898,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsOriginalProxySizeTagsWithWrongType(): void
     {
-        $cases      = [
+        $cases = [
             [
                 'tag'     => DngTag::ORIGINAL_DEFAULT_FINAL_SIZE,
                 'type'    => TiffConst::TYPE_RATIONAL,
@@ -7947,7 +7947,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsOriginalProxySizeTagsWithWrongCount(): void
     {
-        $cases      = [
+        $cases = [
             [
                 'tag'     => DngTag::ORIGINAL_DEFAULT_FINAL_SIZE,
                 'type'    => TiffConst::TYPE_SHORT,
@@ -7996,7 +7996,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsOriginalProxySizeTagsWithNonPositiveDimensions(): void
     {
-        $cases      = [
+        $cases = [
             [
                 'tag'     => DngTag::ORIGINAL_DEFAULT_FINAL_SIZE,
                 'type'    => TiffConst::TYPE_SHORT,
@@ -8086,7 +8086,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsBestQualityScaleWithWrongTypeOrCount(): void
     {
-        $cases      = [
+        $cases = [
             [
                 'type'    => TiffConst::TYPE_LONG,
                 'count'   => 1,
@@ -8161,7 +8161,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsLinearResponseLimitWithWrongTypeOrCount(): void
     {
-        $cases      = [
+        $cases = [
             [
                 'type'    => TiffConst::TYPE_LONG,
                 'count'   => 1,
@@ -8254,7 +8254,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsLensInfoWithWrongTypeOrCount(): void
     {
-        $cases      = [
+        $cases = [
             [
                 'type'    => TiffConst::TYPE_LONG,
                 'count'   => 4,
@@ -8329,7 +8329,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsLensInfoWithInvalidZeroDenominator(): void
     {
-        $cases      = [
+        $cases = [
             pack('V8', 24, 0, 70, 1, 28, 10, 40, 10),
             pack('V8', 24, 1, 70, 1, 1, 0, 40, 10),
         ];
@@ -8380,7 +8380,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsBaselineNoiseAndSharpnessWithWrongTypeOrCount(): void
     {
-        $cases      = [
+        $cases = [
             [
                 'tag'     => DngTag::BASELINE_NOISE,
                 'type'    => TiffConst::TYPE_LONG,
@@ -8435,7 +8435,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsBaselineNoiseAndSharpnessWithInvalidValues(): void
     {
-        $cases      = [
+        $cases = [
             [
                 'tag'     => DngTag::BASELINE_NOISE,
                 'payload' => pack('V2', 0, 1),
@@ -8536,7 +8536,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsAnalogBalanceWithInvalidGainValues(): void
     {
-        $cases      = [
+        $cases = [
             pack('V6', 1, 1, 0, 1, 1, 1),
             pack('V6', 1, 1, 1, 0, 1, 1),
         ];
@@ -8640,7 +8640,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsBaselineExposureWithWrongTypeOrCount(): void
     {
-        $cases      = [
+        $cases = [
             [TiffConst::TYPE_LONG, 1, pack('V', 1)],
             [TiffConst::TYPE_SRATIONAL, 2, pack('V4', 1, 2, 1, 2)],
         ];
@@ -8692,7 +8692,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $iccPayload    = $this->buildMinimalIccProfilePayload();
         $matrixPayload = str_repeat(pack('V2', 1, 1), 12); // 3 * ColorPlanes (4)
 
-        $parsed        = (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithIccProfilePair(
                 DngTag::AS_SHOT_ICC_PROFILE,
                 TiffConst::TYPE_UNDEFINED,
@@ -8719,7 +8719,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $iccPayload    = $this->buildMinimalIccProfilePayload();
         $matrixPayload = str_repeat(pack('V2', 1, 1), 16); // ColorPlanes * ColorPlanes (4 * 4)
 
-        $parsed        = (new TiffExifParser())->parseFromBlob(
+        $parsed = (new TiffExifParser())->parseFromBlob(
             $this->buildDngWithIccProfilePair(
                 DngTag::CURRENT_ICC_PROFILE,
                 TiffConst::TYPE_UNDEFINED,
@@ -8746,7 +8746,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $validIccPayload    = $this->buildMinimalIccProfilePayload();
         $validMatrixPayload = str_repeat(pack('V2', 1, 1), 12);
 
-        $cases              = [
+        $cases = [
             [
                 DngTag::AS_SHOT_ICC_PROFILE,
                 TiffConst::TYPE_LONG,
@@ -8788,7 +8788,7 @@ final class TiffExifParserDngTagTest extends TestCase
                 str_repeat(pack('V2', 1, 1), 8),
             ],
         ];
-        $rejections         = 0;
+        $rejections = 0;
 
         foreach ($cases as [$iccTag, $iccType, $iccCount, $iccPayload, $matrixTag, $matrixType, $matrixCount, $matrixPayload]) {
             try {
@@ -8889,7 +8889,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsBayerGreenSplitWithWrongTypeOrCount(): void
     {
-        $cases      = [
+        $cases = [
             [
                 'type'    => TiffConst::TYPE_SHORT,
                 'count'   => 1,
@@ -8948,7 +8948,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsBayerGreenSplitInNonBayerContext(): void
     {
-        $cases      = [
+        $cases = [
             [2, [2, 2]],    // RGB photometric, not CFA
             [32803, [4, 4]], // CFA but not Bayer 2x2 pattern
         ];
@@ -9006,7 +9006,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsChromaBlurRadiusAntiAliasStrengthAndShadowScaleWithWrongTypeOrCount(): void
     {
-        $cases      = [
+        $cases = [
             [DngTag::CHROMA_BLUR_RADIUS, TiffConst::TYPE_LONG, 1, pack('V', 1)],
             [DngTag::CHROMA_BLUR_RADIUS, TiffConst::TYPE_RATIONAL, 2, pack('V4', 1, 1, 1, 1)],
             [DngTag::ANTI_ALIAS_STRENGTH, TiffConst::TYPE_LONG, 1, pack('V', 1)],
@@ -9038,7 +9038,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsChromaBlurRadiusAntiAliasStrengthAndShadowScaleWithInvalidValues(): void
     {
-        $cases      = [
+        $cases = [
             [DngTag::CHROMA_BLUR_RADIUS, pack('V2', 1, 0)],
             [DngTag::ANTI_ALIAS_STRENGTH, pack('V2', 1, 0)],
             [DngTag::SHADOW_SCALE, pack('V2', 0, 1)],
@@ -9219,7 +9219,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $payloadLength     = strlen($payload);
         $payloadInline     = $payloadLength <= 4;
 
-        $tags              = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -9260,12 +9260,12 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $entryCount        = count($tags);
-        $ifdSize           = 2 + (12 * $entryCount) + 4;
-        $modelOffset       = $ifdOffset + $ifdSize;
-        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+        $entryCount    = count($tags);
+        $ifdSize       = 2 + (12 * $entryCount) + 4;
+        $modelOffset   = $ifdOffset + $ifdSize;
+        $payloadOffset = $modelOffset + strlen($uniqueCameraModel);
 
-        $ifdEntries        = '';
+        $ifdEntries = '';
 
         foreach ($tags as $tag => $entryPrefix) {
             if ($tag === DngTag::UNIQUE_CAMERA_MODEL) {
@@ -9328,7 +9328,7 @@ final class TiffExifParserDngTagTest extends TestCase
             $matrixTag                  => $matrixPayload,
         ];
 
-        $tags              = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -9362,11 +9362,11 @@ final class TiffExifParserDngTagTest extends TestCase
 
         ksort($tags);
 
-        $entryCount        = count($tags);
-        $ifdSize           = 2 + (12 * $entryCount) + 4;
-        $nextOffset        = $ifdOffset + $ifdSize;
-        $ifdEntries        = '';
-        $tailData          = '';
+        $entryCount = count($tags);
+        $ifdSize    = 2 + (12 * $entryCount) + 4;
+        $nextOffset = $ifdOffset + $ifdSize;
+        $ifdEntries = '';
+        $tailData   = '';
 
         foreach ($tags as $tag => $entryPrefix) {
             if (isset($payloadByTag[$tag])) {
@@ -9651,9 +9651,9 @@ final class TiffExifParserDngTagTest extends TestCase
         int $illuminantTag,
         int $illuminantValue,
     ): string {
-        $ifdOffset  = 8;
+        $ifdOffset = 8;
 
-        $tags       = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -9703,9 +9703,9 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsDngWithoutUniqueCameraModel(): void
     {
-        $ifdOffset  = 8;
+        $ifdOffset = 8;
 
-        $tags       = [
+        $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
                 . pack('v', TiffConst::TYPE_SHORT)
                 . pack('V', 1)
@@ -9735,7 +9735,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         $ifdData .= pack('V', 0);
 
-        $blob       = 'II'
+        $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . $ifdData;

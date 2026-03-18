@@ -36,7 +36,7 @@ final class AppleDecoderFloatListTest extends TestCase
     {
         $extractor = new AppleDictionaryValueExtractor();
 
-        $result    = $extractor->floatList(['HdrGain' => 1.25], 'HdrGain');
+        $result = $extractor->floatList(['HdrGain' => 1.25], 'HdrGain');
 
         self::assertSame([1.25], $result);
     }
@@ -48,7 +48,7 @@ final class AppleDecoderFloatListTest extends TestCase
     #[Test]
     public function floatListNormalizesArrayPayloads(): void
     {
-        $extractor  = new AppleDictionaryValueExtractor();
+        $extractor = new AppleDictionaryValueExtractor();
 
         $dictionary = [
             'HdrGain' => [
@@ -56,7 +56,7 @@ final class AppleDecoderFloatListTest extends TestCase
             ],
         ];
 
-        $result     = $extractor->floatList($dictionary, 'HdrGain');
+        $result = $extractor->floatList($dictionary, 'HdrGain');
 
         self::assertSame([1.0, 2.5, 3.75], $result);
     }

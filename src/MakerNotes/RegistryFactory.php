@@ -21,7 +21,7 @@ final class RegistryFactory
      */
     public static function createDefault(): Registry
     {
-        $registry       = new Registry();
+        $registry = new Registry();
 
         $appleDecoder   = new AppleDecoder();
         $canonDecoder   = new SimpleDecoder('Canon');

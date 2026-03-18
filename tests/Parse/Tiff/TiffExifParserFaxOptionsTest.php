@@ -141,14 +141,14 @@ final class TiffExifParserFaxOptionsTest extends TestCase
      */
     private function buildTiffWithFaxOptionsInThirdIfd(int $compression, ?int $t4Options, ?int $t6Options): string
     {
-        $ifdOffset   = 8;
-        $ifd0Count   = 2;
-        $ifd0Size    = 2 + (12 * $ifd0Count) + 4;
-        $ifd1Offset  = $ifdOffset + $ifd0Size;
+        $ifdOffset  = 8;
+        $ifd0Count  = 2;
+        $ifd0Size   = 2 + (12 * $ifd0Count) + 4;
+        $ifd1Offset = $ifdOffset + $ifd0Size;
 
-        $ifd1Count   = 2;
-        $ifd1Size    = 2 + (12 * $ifd1Count) + 4;
-        $ifd2Offset  = $ifd1Offset + $ifd1Size;
+        $ifd1Count  = 2;
+        $ifd1Size   = 2 + (12 * $ifd1Count) + 4;
+        $ifd2Offset = $ifd1Offset + $ifd1Size;
 
         $ifd2Entries = [
             pack('v', ExifTag::IMAGE_WIDTH)
@@ -179,9 +179,9 @@ final class TiffExifParserFaxOptionsTest extends TestCase
                 . pack('V', $t6Options);
         }
 
-        $ifd2Count   = count($ifd2Entries);
+        $ifd2Count = count($ifd2Entries);
 
-        $ifd0        = pack('v', $ifd0Count)
+        $ifd0 = pack('v', $ifd0Count)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -192,7 +192,7 @@ final class TiffExifParserFaxOptionsTest extends TestCase
             . pack('v', 100) . pack('v', 0)
             . pack('V', $ifd1Offset);
 
-        $ifd1        = pack('v', $ifd1Count)
+        $ifd1 = pack('v', $ifd1Count)
             . pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_SHORT)
             . pack('V', 1)
@@ -203,7 +203,7 @@ final class TiffExifParserFaxOptionsTest extends TestCase
             . pack('v', 100) . pack('v', 0)
             . pack('V', $ifd2Offset);
 
-        $ifd2        = pack('v', $ifd2Count);
+        $ifd2 = pack('v', $ifd2Count);
 
         foreach ($ifd2Entries as $entry) {
             $ifd2 .= $entry;

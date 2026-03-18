@@ -365,7 +365,7 @@ final class DngProfileValidatorTest extends TestCase
         // Build an 8-byte LE payload: Version=1, DynamicRange=0 (SDR), HintMaxOutputValue=1.0
         $payload = pack('v', 1) . pack('v', 0) . pack('g', 1.0);
 
-        $ifd     = new Ifd([
+        $ifd = new Ifd([
             DngTag::PROFILE_DYNAMIC_RANGE => new IfdEntry(
                 DngTag::PROFILE_DYNAMIC_RANGE,
                 TiffConst::TYPE_UNDEFINED,
@@ -405,7 +405,7 @@ final class DngProfileValidatorTest extends TestCase
 
         $payload = pack('v', 2) . pack('v', 0) . pack('g', 1.0);
 
-        $ifd     = new Ifd([
+        $ifd = new Ifd([
             DngTag::PROFILE_DYNAMIC_RANGE => new IfdEntry(
                 DngTag::PROFILE_DYNAMIC_RANGE,
                 TiffConst::TYPE_UNDEFINED,

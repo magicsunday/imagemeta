@@ -120,9 +120,9 @@ final class MotionFactoryTest extends TestCase
 
     private function parsedExifWithAccelerationVector(float $x, float $y, float $z): ParsedExif
     {
-        $scale   = 1;
+        $scale = 1;
 
-        $entry   = new IfdEntry(
+        $entry = new IfdEntry(
             ExifTag::ACCELERATION,
             10,
             3,

@@ -108,7 +108,7 @@ final readonly class TiffBaselineExifReader
             return count($values) === 3 * 256 ? $values : null;
         }
 
-        $bps    = $this->bitsPerSample();
+        $bps = $this->bitsPerSample();
 
         if ($bps === null) {
             return null;
@@ -419,13 +419,13 @@ final readonly class TiffBaselineExifReader
             return $value;
         }
 
-        $bps   = $this->bitsPerSample();
+        $bps = $this->bitsPerSample();
 
         if ($bps === null) {
             return null;
         }
 
-        $nv    = (1 << $bps) - 1;
+        $nv = (1 << $bps) - 1;
 
         return new ExifNumericList([0, $nv, 0, $nv, 0, $nv]);
     }
@@ -531,15 +531,15 @@ final readonly class TiffBaselineExifReader
     private function defaultTransferFunction(int $bitsPerSample): array
     {
         /** @var array<int, list<int>> $cache */
-        static $cache          = [];
+        static $cache = [];
 
         if (isset($cache[$bitsPerSample])) {
             return $cache[$bitsPerSample];
         }
 
-        $n                     = 1 << $bitsPerSample;
-        $max                   = $n - 1;
-        $table                 = [];
+        $n     = 1 << $bitsPerSample;
+        $max   = $n - 1;
+        $table = [];
 
         for ($i = 0; $i < $n; ++$i) {
             $table[] = (int) round(($i / $max) ** 2.2 * 65535);

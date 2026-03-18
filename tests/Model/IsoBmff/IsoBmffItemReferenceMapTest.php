@@ -56,7 +56,7 @@ final class IsoBmffItemReferenceMapTest extends TestCase
         $firstReference  = new IsoBmffItemReference('dimg', 2);
         $secondReference = new IsoBmffItemReference('thmb', 3);
 
-        $map             = new IsoBmffItemReferenceMap([
+        $map = new IsoBmffItemReferenceMap([
             32 => [1 => [$firstReference]],
             96 => [1 => [$secondReference]],
         ]);

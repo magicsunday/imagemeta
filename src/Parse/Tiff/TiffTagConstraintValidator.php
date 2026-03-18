@@ -49,7 +49,7 @@ final readonly class TiffTagConstraintValidator
      */
     public function validateEnhancedIfd(Ifd $ifd): void
     {
-        $entry   = $ifd->get(TiffTag::NEW_SUBFILE_TYPE);
+        $entry = $ifd->get(TiffTag::NEW_SUBFILE_TYPE);
 
         if (!$entry instanceof IfdEntry || !is_int($entry->value)) {
             return;
@@ -135,12 +135,12 @@ final readonly class TiffTagConstraintValidator
      */
     public function validateFaxOptionTags(Ifd $ifd): void
     {
-        $t4Options      = $ifd->get(TiffTag::T4_OPTIONS);
+        $t4Options = $ifd->get(TiffTag::T4_OPTIONS);
 
         if ($t4Options instanceof IfdEntry) {
             $t4OptionsValue = $this->requireSingleIntEntryValue($t4Options, TiffConst::TYPE_LONG, 'T4Options must be LONG[1].', 2077);
 
-            $compression    = $ifd->get(ExifTag::COMPRESSION);
+            $compression = $ifd->get(ExifTag::COMPRESSION);
 
             if (!($compression instanceof IfdEntry) || ($compression->value !== 3)) {
                 throw new ParseError('T4Options is only valid when Compression = 3 (CCITT Group 3).', 1703);
@@ -154,7 +154,7 @@ final readonly class TiffTagConstraintValidator
             }
         }
 
-        $t6Options      = $ifd->get(TiffTag::T6_OPTIONS);
+        $t6Options = $ifd->get(TiffTag::T6_OPTIONS);
 
         if (!$t6Options instanceof IfdEntry) {
             return;
@@ -162,7 +162,7 @@ final readonly class TiffTagConstraintValidator
 
         $t6OptionsValue = $this->requireSingleIntEntryValue($t6Options, TiffConst::TYPE_LONG, 'T6Options must be LONG[1].', 1705);
 
-        $compression    = $ifd->get(ExifTag::COMPRESSION);
+        $compression = $ifd->get(ExifTag::COMPRESSION);
 
         if (!($compression instanceof IfdEntry) || ($compression->value !== 4)) {
             throw new ParseError('T6Options is only valid when Compression = 4 (CCITT Group 4).', 1706);
@@ -193,13 +193,13 @@ final readonly class TiffTagConstraintValidator
      */
     public function validateFillOrderTag(Ifd $ifd): void
     {
-        $fillOrderEntry     = $ifd->get(TiffTag::FILL_ORDER);
+        $fillOrderEntry = $ifd->get(TiffTag::FILL_ORDER);
 
         if (!$fillOrderEntry instanceof IfdEntry) {
             return;
         }
 
-        $fillOrderValue     = $this->requireSingleIntEntryValue($fillOrderEntry, TiffConst::TYPE_SHORT, 'FillOrder must be SHORT[1].', 1752);
+        $fillOrderValue = $this->requireSingleIntEntryValue($fillOrderEntry, TiffConst::TYPE_SHORT, 'FillOrder must be SHORT[1].', 1752);
 
         if (($fillOrderValue !== 1) && ($fillOrderValue !== 2)) {
             throw new ParseError(
@@ -218,7 +218,7 @@ final readonly class TiffTagConstraintValidator
             throw new ParseError('FillOrder=2 requires BitsPerSample=1.', 1754);
         }
 
-        $bitDepth           = null;
+        $bitDepth = null;
 
         if (is_int($bitsPerSampleEntry->value)) {
             $bitDepth = $bitsPerSampleEntry->value;
@@ -237,8 +237,8 @@ final readonly class TiffTagConstraintValidator
             );
         }
 
-        $compressionCode    = 1;
-        $compressionEntry   = $ifd->get(ExifTag::COMPRESSION);
+        $compressionCode  = 1;
+        $compressionEntry = $ifd->get(ExifTag::COMPRESSION);
 
         if (($compressionEntry instanceof IfdEntry) && is_int($compressionEntry->value)) {
             $compressionCode = $compressionEntry->value;
@@ -275,7 +275,7 @@ final readonly class TiffTagConstraintValidator
             $this->validateNewSubfileTypeEntry($ifd, $newSubfileTypeEntry, $strictTiffNewSubfileType);
         }
 
-        $subfileTypeEntry    = $ifd->get(TiffTag::SUBFILE_TYPE);
+        $subfileTypeEntry = $ifd->get(TiffTag::SUBFILE_TYPE);
 
         if ($subfileTypeEntry instanceof IfdEntry) {
             $this->validateSubfileTypeEntry($subfileTypeEntry);
@@ -321,8 +321,8 @@ final readonly class TiffTagConstraintValidator
             }
         }
 
-        $hasCellWidth       = $cellWidthEntry instanceof IfdEntry;
-        $hasCellLength      = $cellLengthEntry instanceof IfdEntry;
+        $hasCellWidth  = $cellWidthEntry instanceof IfdEntry;
+        $hasCellLength = $cellLengthEntry instanceof IfdEntry;
 
         if ($hasCellWidth) {
             $cellWidthValue = $this->requireSingleIntEntryValue($cellWidthEntry, TiffConst::TYPE_SHORT, 'CellWidth must be SHORT[1].', 1800);
@@ -403,8 +403,8 @@ final readonly class TiffTagConstraintValidator
             throw new ParseError('FreeOffsets and FreeByteCounts must both be present', 1809);
         }
 
-        $freeOffsets         = $this->extractFreeSpaceComponents($freeOffsetsEntry, 'FreeOffsets');
-        $freeByteCounts      = $this->extractFreeSpaceComponents($freeByteCountsEntry, 'FreeByteCounts');
+        $freeOffsets    = $this->extractFreeSpaceComponents($freeOffsetsEntry, 'FreeOffsets');
+        $freeByteCounts = $this->extractFreeSpaceComponents($freeByteCountsEntry, 'FreeByteCounts');
 
         if (count($freeOffsets) !== count($freeByteCounts)) {
             throw new ParseError(
@@ -417,7 +417,7 @@ final readonly class TiffTagConstraintValidator
             );
         }
 
-        $fileSize            = $this->support->buffer()->size();
+        $fileSize = $this->support->buffer()->size();
 
         foreach ($freeOffsets as $index => $offset) {
             $byteCount = $freeByteCounts[$index] ?? 0;
@@ -453,7 +453,7 @@ final readonly class TiffTagConstraintValidator
      */
     public function validatePredictorTag(Ifd $ifd): void
     {
-        $predictor   = $ifd->get(TiffTag::PREDICTOR);
+        $predictor = $ifd->get(TiffTag::PREDICTOR);
 
         if (!($predictor instanceof IfdEntry) || ($predictor->value !== 2)) {
             return;
@@ -515,7 +515,7 @@ final readonly class TiffTagConstraintValidator
         IfdEntry $newSubfileTypeEntry,
         bool $strictTiffNewSubfileType,
     ): void {
-        $newSubfileTypeValue         = $this->requireSingleIntEntryValue($newSubfileTypeEntry, TiffConst::TYPE_LONG, 'NewSubfileType must be LONG[1].', 1788);
+        $newSubfileTypeValue = $this->requireSingleIntEntryValue($newSubfileTypeEntry, TiffConst::TYPE_LONG, 'NewSubfileType must be LONG[1].', 1788);
 
         $isDngExtendedNewSubfileType = in_array($newSubfileTypeValue, [8, 9, 16, 65540], true);
 
@@ -607,7 +607,7 @@ final readonly class TiffTagConstraintValidator
      */
     private function validatePageNumberEntry(Ifd $ifd): void
     {
-        $pageComponents           = $this->support->extractShortPair($ifd, TiffTag::PAGE_NUMBER, 'PageNumber', 1794, 1795);
+        $pageComponents = $this->support->extractShortPair($ifd, TiffTag::PAGE_NUMBER, 'PageNumber', 1794, 1795);
 
         if ($pageComponents === null) {
             return;

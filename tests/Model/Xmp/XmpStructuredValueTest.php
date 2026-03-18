@@ -71,15 +71,15 @@ final class XmpStructuredValueTest extends TestCase
                 sprintf('{%s}City', $namespace) => 'Berlin',
             ]),
         ]);
-        $second    = new XmpStructuredValue([
+        $second = new XmpStructuredValue([
             sprintf('{%s}Address', $namespace) => new XmpStructuredValue([
                 sprintf('{%s}Street', $namespace) => 'Main Street 1',
             ]),
         ]);
 
-        $merged    = XmpStructuredValue::merge($first, $second);
+        $merged = XmpStructuredValue::merge($first, $second);
 
-        $address   = $merged->get($namespace, 'Address');
+        $address = $merged->get($namespace, 'Address');
         self::assertInstanceOf(XmpStructuredValue::class, $address);
         self::assertSame('Berlin', $address->get($namespace, 'City'));
         self::assertSame('Main Street 1', $address->get($namespace, 'Street'));

@@ -88,7 +88,7 @@ final class ConverterFactoryTest extends TestCase
     {
         $rational = new ExifRational(6, 2);
 
-        $result   = $this->factory->rationalConverter()->toFloat($rational);
+        $result = $this->factory->rationalConverter()->toFloat($rational);
 
         self::assertEqualsWithDelta(3.0, $result, 0.0001);
     }

@@ -43,7 +43,7 @@ final readonly class IfdValueReader
 {
     public const int RATIONAL_BYTE_LENGTH = 8;
 
-    public const int SHORT_BYTE_LENGTH    = 2;
+    public const int SHORT_BYTE_LENGTH = 2;
 
     public function __construct(
         private ValueConverters $converters,
@@ -141,7 +141,7 @@ final readonly class IfdValueReader
      */
     public function str(?Ifd $ifd, int $tag): ?string
     {
-        $value   = $this->normalizedValue($ifd, $tag);
+        $value = $this->normalizedValue($ifd, $tag);
 
         if (!is_string($value)) {
             return null;
@@ -322,7 +322,7 @@ final readonly class IfdValueReader
             $result = [];
 
             foreach ($value->values as $item) {
-                $float    = $this->converters->rationalToFloat($item);
+                $float = $this->converters->rationalToFloat($item);
 
                 if ($float === null) {
                     return null;
@@ -536,7 +536,7 @@ final readonly class IfdValueReader
      */
     public function rawOffset(?Ifd $ifd, int $tag): ?string
     {
-        $value   = $this->value($ifd, $tag);
+        $value = $this->value($ifd, $tag);
 
         if (!is_string($value)) {
             return null;
@@ -600,7 +600,7 @@ final readonly class IfdValueReader
         $byteOrderMark = substr($content, 0, 2);
         $payload       = substr($content, 2);
 
-        $encoding      = match ($byteOrderMark) {
+        $encoding = match ($byteOrderMark) {
             "\xFF\xFE" => 'UTF-16LE',
             "\xFE\xFF" => 'UTF-16BE',
             default    => null,
@@ -610,13 +610,13 @@ final readonly class IfdValueReader
             return null;
         }
 
-        $converted     = $this->convertTextToUtf8($encoding, $payload);
+        $converted = $this->convertTextToUtf8($encoding, $payload);
 
         if ($converted === null) {
             return null;
         }
 
-        $trimmed       = trim($converted, "\0 ");
+        $trimmed = trim($converted, "\0 ");
 
         return $trimmed === '' ? null : $trimmed;
     }
@@ -640,7 +640,7 @@ final readonly class IfdValueReader
             return null;
         }
 
-        $result    = trim($converted, "\0 ");
+        $result = trim($converted, "\0 ");
 
         return $result === '' ? null : $result;
     }

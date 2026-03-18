@@ -60,7 +60,7 @@ final class TiffExifParserXmpPacketTest extends TestCase
         $xmpPayload = '<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/></x:xmpmeta>';
         $blob       = $this->buildTiffWithXmpPacket($xmpPayload);
 
-        $result     = (new TiffExifParser())->parseFromBlob($blob);
+        $result = (new TiffExifParser())->parseFromBlob($blob);
 
         self::assertSame($xmpPayload, $result->xmpPacketRaw);
     }
@@ -71,7 +71,7 @@ final class TiffExifParserXmpPacketTest extends TestCase
     #[Test]
     public function returnsNullWhenNoXmpPacketPresent(): void
     {
-        $blob   = $this->buildMinimalTiffWithoutXmp();
+        $blob = $this->buildMinimalTiffWithoutXmp();
 
         $result = (new TiffExifParser())->parseFromBlob($blob);
 
@@ -85,7 +85,7 @@ final class TiffExifParserXmpPacketTest extends TestCase
     #[Test]
     public function toleratesTruncatedXmpPacketData(): void
     {
-        $blob   = $this->buildTiffWithTruncatedXmpPacket();
+        $blob = $this->buildTiffWithTruncatedXmpPacket();
 
         $result = (new TiffExifParser())->parseFromBlob($blob);
 
@@ -110,7 +110,7 @@ final class TiffExifParserXmpPacketTest extends TestCase
         $xmpOffset      = $ifd0Offset + $ifd0Size;
 
         // TIFF header
-        $blob           = 'II'
+        $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset);
 
@@ -152,7 +152,7 @@ final class TiffExifParserXmpPacketTest extends TestCase
         $ifd0Offset = 8;
 
         // TIFF header
-        $blob       = 'II'
+        $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset);
 
@@ -185,7 +185,7 @@ final class TiffExifParserXmpPacketTest extends TestCase
         $ifd0Offset = 8;
 
         // TIFF header
-        $blob       = 'II'
+        $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifd0Offset);
 

@@ -100,18 +100,18 @@ final class BoxPayloadCollectorTest extends TestCase
      */
     private function createCollector(string $data): array
     {
-        $stream           = $this->createIsoBmffTempStream($data);
-        $navigator        = new BoxNavigator($stream);
+        $stream    = $this->createIsoBmffTempStream($data);
+        $navigator = new BoxNavigator($stream);
 
-        $keyResolver      = new QuickTimeKeyResolver($navigator);
-        $ilocParser       = new IlocBoxParser($navigator);
-        $payloadResolver  = new ItemPayloadResolver($stream, $navigator, 1_048_576);
+        $keyResolver     = new QuickTimeKeyResolver($navigator);
+        $ilocParser      = new IlocBoxParser($navigator);
+        $payloadResolver = new ItemPayloadResolver($stream, $navigator, 1_048_576);
 
-        $valueDecoder     = new QuickTimeValueDecoder(
+        $valueDecoder = new QuickTimeValueDecoder(
             static fn (string $payload): array => ['keys' => [], 'atoms' => []],
         );
 
-        $qtDecoder        = new QuickTimeMetadataDecoder($navigator, $keyResolver, $valueDecoder);
+        $qtDecoder = new QuickTimeMetadataDecoder($navigator, $keyResolver, $valueDecoder);
 
         $trackMediaParser = new TrackMediaParser(
             $navigator,
@@ -119,7 +119,7 @@ final class BoxPayloadCollectorTest extends TestCase
             $ilocParser->parseDinf(...),
         );
 
-        $collector        = new BoxPayloadCollector(
+        $collector = new BoxPayloadCollector(
             $navigator,
             $trackMediaParser,
             $ilocParser,
@@ -188,9 +188,9 @@ final class BoxPayloadCollectorTest extends TestCase
     #[Test]
     public function collectDirectExifFromMetaBox(): void
     {
-        $exifBlob   = pack('N', 0) . "MM\x00\x2Atest-exif";
-        $exifBox    = $this->box('Exif', $exifBlob);
-        $hdlrBox    = $this->box('hdlr', $this->hdlrPayload('pict'));
+        $exifBlob = pack('N', 0) . "MM\x00\x2Atest-exif";
+        $exifBox  = $this->box('Exif', $exifBlob);
+        $hdlrBox  = $this->box('hdlr', $this->hdlrPayload('pict'));
 
         $collection = $this->collectMetaData($this->createFullMetaData($hdlrBox, $exifBox));
 
@@ -204,9 +204,9 @@ final class BoxPayloadCollectorTest extends TestCase
     #[Test]
     public function collectDirectXmpFromMetaBox(): void
     {
-        $xmpData    = '<x:xmpmeta>test</x:xmpmeta>';
-        $xmpBox     = $this->box('XMP ', $xmpData);
-        $hdlrBox    = $this->box('hdlr', $this->hdlrPayload('pict'));
+        $xmpData = '<x:xmpmeta>test</x:xmpmeta>';
+        $xmpBox  = $this->box('XMP ', $xmpData);
+        $hdlrBox = $this->box('hdlr', $this->hdlrPayload('pict'));
 
         $collection = $this->collectMetaData($this->createFullMetaData($hdlrBox, $xmpBox));
 
@@ -224,7 +224,7 @@ final class BoxPayloadCollectorTest extends TestCase
         $idatBox     = $this->box('idat', $idatPayload);
         $hdlrBox     = $this->box('hdlr', $this->hdlrPayload('pict'));
 
-        $collection  = $this->collectMetaData($this->createFullMetaData($hdlrBox, $idatBox));
+        $collection = $this->collectMetaData($this->createFullMetaData($hdlrBox, $idatBox));
 
         self::assertSame('binary-payload-data', $collection->idatPayload);
     }
@@ -252,9 +252,9 @@ final class BoxPayloadCollectorTest extends TestCase
             . pack('n', 1)
             . pack('N', 0)
             . pack('N', 10);
-        $ilocBox     = $this->box('iloc', $ilocPayload);
+        $ilocBox = $this->box('iloc', $ilocPayload);
 
-        $collection  = $this->collectMetaData($this->createFullMetaData($hdlrBox, $pitmBox, $ilocBox));
+        $collection = $this->collectMetaData($this->createFullMetaData($hdlrBox, $pitmBox, $ilocBox));
 
         self::assertSame(42, $collection->primaryItemId);
     }
@@ -315,8 +315,8 @@ final class BoxPayloadCollectorTest extends TestCase
     #[Test]
     public function collectAcceptsNonFullMetaWhenQuickTimeDisabled(): void
     {
-        $exifBlob   = pack('N', 0) . "MM\x00\x2Aisom-exif";
-        $exifBox    = $this->box('Exif', $exifBlob);
+        $exifBlob = pack('N', 0) . "MM\x00\x2Aisom-exif";
+        $exifBox  = $this->box('Exif', $exifBlob);
 
         $collection = $this->collectMetaData($this->createMetaData($exifBox));
 
@@ -329,8 +329,8 @@ final class BoxPayloadCollectorTest extends TestCase
     #[Test]
     public function collectAcceptsNonFullMetaWhenQuickTimeEnabled(): void
     {
-        $exifBlob   = pack('N', 0) . "MM\x00\x2Aqt-exif";
-        $exifBox    = $this->box('Exif', $exifBlob);
+        $exifBlob = pack('N', 0) . "MM\x00\x2Aqt-exif";
+        $exifBox  = $this->box('Exif', $exifBlob);
 
         $collection = $this->collectMetaData($this->createMetaData($exifBox), true);
 

@@ -36,16 +36,16 @@ final readonly class ExposureFactory
      */
     public function create(Metadata $metadata): Exposure
     {
-        $exifDocument    = $metadata->exifDoc;
-        $xmpDocument     = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
-        $resolver        = $xmpDocument instanceof XmpDocument ? XmpFallbackResolver::fromDocument($xmpDocument) : null;
+        $exifDocument = $metadata->exifDoc;
+        $xmpDocument  = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $resolver     = $xmpDocument instanceof XmpDocument ? XmpFallbackResolver::fromDocument($xmpDocument) : null;
 
         $exposureProgram = $exifDocument?->exposureProgram();
         $meteringMode    = $exifDocument?->meteringMode();
         $whiteBalance    = $exifDocument?->whiteBalance();
         $flashInfo       = $exifDocument?->flashInfo() ?? ExifFlash::fromExifValue(0);
 
-        $settings        = new ExposureSettings(
+        $settings = new ExposureSettings(
             iso: $exifDocument?->isoBestEffort() ?? $resolver?->int(ExifTag::PHOTOGRAPHIC_SENSITIVITY),
             exposureIndex: $exifDocument?->exposureIndex() ?? $resolver?->float(ExifTag::EXPOSURE_INDEX),
             isoLatitudeYyy: $exifDocument?->isoSpeedLatitudeYyy() ?? $resolver?->int(ExifTag::ISO_SPEED_LATITUDE_YYY),
@@ -58,7 +58,7 @@ final readonly class ExposureFactory
             brightnessEv: $exifDocument?->brightnessValue() ?? $resolver?->float(ExifTag::BRIGHTNESS_VALUE),
         );
 
-        $adjustments     = new ExposureAdjustments(
+        $adjustments = new ExposureAdjustments(
             whiteBalance: $whiteBalance,
             contrast: $exifDocument?->contrast(),
             saturation: $exifDocument?->saturation(),

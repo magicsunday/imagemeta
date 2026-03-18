@@ -44,7 +44,7 @@ final readonly class DngVersionValidator
      *
      * @var list<int>
      */
-    private const array DNG_THIRD_ILLUMINANT_TAGS   = [
+    private const array DNG_THIRD_ILLUMINANT_TAGS = [
         DngTag::CALIBRATION_ILLUMINANT_3,
         DngTag::COLOR_MATRIX_3,
         DngTag::FORWARD_MATRIX_3,
@@ -135,7 +135,7 @@ final readonly class DngVersionValidator
             return;
         }
 
-        $bwVer  = $this->support->extractDngVersionTuple($ifd, DngTag::DNG_BACKWARD_VERSION);
+        $bwVer = $this->support->extractDngVersionTuple($ifd, DngTag::DNG_BACKWARD_VERSION);
 
         if ($bwVer === null) {
             return;
@@ -229,7 +229,7 @@ final readonly class DngVersionValidator
             return;
         }
 
-        $bwVer    = $this->support->getEffectiveDngBackwardVersion($ifd);
+        $bwVer = $this->support->getEffectiveDngBackwardVersion($ifd);
 
         if ($bwVer === null) {
             return;

@@ -47,11 +47,11 @@ final class IptcParserTest extends TestCase
     #[Test]
     public function parsesIimDatasetsFromApp13Payload(): void
     {
-        $iimData  = $this->iimDataset(2, 5, 'Object Name')
+        $iimData = $this->iimDataset(2, 5, 'Object Name')
             . $this->iimDataset(2, 25, 'keyword-one')
             . $this->iimDataset(2, 25, 'keyword-two');
 
-        $payload  = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
+        $payload = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
 
         $document = (new IptcParser())->parse($payload);
 
@@ -66,9 +66,9 @@ final class IptcParserTest extends TestCase
     #[Test]
     public function parsesExtendedLengthDatasets(): void
     {
-        $value    = str_repeat('A', 300);
-        $iimData  = $this->iimDatasetExtended(2, 120, $value, 2);
-        $payload  = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
+        $value   = str_repeat('A', 300);
+        $iimData = $this->iimDatasetExtended(2, 120, $value, 2);
+        $payload = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
 
         $document = (new IptcParser())->parse($payload);
 
@@ -111,8 +111,8 @@ final class IptcParserTest extends TestCase
     #[Test]
     public function parsesOddSizedResourceDataWithTrailingPadByte(): void
     {
-        $iimData  = $this->iimDataset(2, 5, 'AB'); // 7 bytes (odd) including header
-        $payload  = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
+        $iimData = $this->iimDataset(2, 5, 'AB'); // 7 bytes (odd) including header
+        $payload = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
 
         $document = (new IptcParser())->parse($payload);
 
@@ -125,9 +125,9 @@ final class IptcParserTest extends TestCase
     #[Test]
     public function parsesOddSizedNameAndDataWithZeroAlignmentPadding(): void
     {
-        $iimData  = $this->iimDataset(2, 5, 'AB'); // odd resource data length
-        $block    = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, 'AB');
-        $payload  = self::PHOTOSHOP_SIGNATURE . $block;
+        $iimData = $this->iimDataset(2, 5, 'AB'); // odd resource data length
+        $block   = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, 'AB');
+        $payload = self::PHOTOSHOP_SIGNATURE . $block;
 
         $document = (new IptcParser())->parse($payload);
 
@@ -140,9 +140,9 @@ final class IptcParserTest extends TestCase
     #[Test]
     public function toleratesOddSizedNameWithNonZeroAlignmentPadding(): void
     {
-        $iimData  = $this->iimDataset(2, 5, 'AB');
-        $block    = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, 'AB', chr(1));
-        $payload  = self::PHOTOSHOP_SIGNATURE . $block;
+        $iimData = $this->iimDataset(2, 5, 'AB');
+        $block   = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, 'AB', chr(1));
+        $payload = self::PHOTOSHOP_SIGNATURE . $block;
 
         $document = (new IptcParser())->parse($payload);
 
@@ -155,9 +155,9 @@ final class IptcParserTest extends TestCase
     #[Test]
     public function toleratesOddSizedDataWithNonZeroAlignmentPadding(): void
     {
-        $iimData  = $this->iimDataset(2, 5, 'AB');
-        $block    = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, '', chr(0), chr(1));
-        $payload  = self::PHOTOSHOP_SIGNATURE . $block;
+        $iimData = $this->iimDataset(2, 5, 'AB');
+        $block   = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, '', chr(0), chr(1));
+        $payload = self::PHOTOSHOP_SIGNATURE . $block;
 
         $document = (new IptcParser())->parse($payload);
 
@@ -186,9 +186,9 @@ final class IptcParserTest extends TestCase
     #[Test]
     public function parsesEvenSizedBlocksWithoutAlignmentPadding(): void
     {
-        $iimData  = $this->iimDataset(2, 5, 'A'); // even resource data length
-        $block    = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, 'A');
-        $payload  = self::PHOTOSHOP_SIGNATURE . $block;
+        $iimData = $this->iimDataset(2, 5, 'A'); // even resource data length
+        $block   = $this->resourceBlockWithExplicitPadding(0x0404, $iimData, 'A');
+        $payload = self::PHOTOSHOP_SIGNATURE . $block;
 
         $document = (new IptcParser())->parse($payload);
 
@@ -217,8 +217,8 @@ final class IptcParserTest extends TestCase
     #[Test]
     public function parsesEvenSizedResourceDataWithoutPaddingRequirement(): void
     {
-        $iimData  = $this->iimDataset(2, 5, 'A'); // 6 bytes (even) including header
-        $payload  = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
+        $iimData = $this->iimDataset(2, 5, 'A'); // 6 bytes (even) including header
+        $payload = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
 
         $document = (new IptcParser())->parse($payload);
 
@@ -237,7 +237,7 @@ final class IptcParserTest extends TestCase
         $iimData      = $validDataset . $corruptTrail;
         $payload      = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
 
-        $document     = (new IptcParser())->parse($payload);
+        $document = (new IptcParser())->parse($payload);
 
         self::assertSame(['Object Name'], $document->values(2, 5));
     }
@@ -254,7 +254,7 @@ final class IptcParserTest extends TestCase
         $iimData        = $validDataset . $truncatedBytes;
         $payload        = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
 
-        $document       = (new IptcParser())->parse($payload);
+        $document = (new IptcParser())->parse($payload);
 
         self::assertSame(['Object Name'], $document->values(2, 5));
     }
@@ -266,7 +266,7 @@ final class IptcParserTest extends TestCase
     #[Test]
     public function parsesAllApplicationRecordDatasetsUsedByFormatScript(): void
     {
-        $iimData  = $this->iimDataset(2, 5, 'Test Object')
+        $iimData = $this->iimDataset(2, 5, 'Test Object')
             . $this->iimDataset(2, 25, 'keyword-a')
             . $this->iimDataset(2, 25, 'keyword-b')
             . $this->iimDataset(2, 55, '20240315')
@@ -337,7 +337,7 @@ final class IptcParserTest extends TestCase
             $nameField .= $namePaddingByte;
         }
 
-        $block      = '8BIM'
+        $block = '8BIM'
             . pack('n', $resourceId)
             . $nameField
             . pack('N', strlen($data))

@@ -31,24 +31,24 @@ use function substr;
  */
 final class IptcParser implements IptcParserInterface
 {
-    private const string PHOTOSHOP_SIGNATURE              = "Photoshop 3.0\0";
+    private const string PHOTOSHOP_SIGNATURE = "Photoshop 3.0\0";
 
-    private const string RESOURCE_SIGNATURE               = '8BIM';
+    private const string RESOURCE_SIGNATURE = '8BIM';
 
-    private const int IPTC_RESOURCE_ID                    = 0x0404;
+    private const int IPTC_RESOURCE_ID = 0x0404;
 
     /**
      * IIM extended-length indicator bit (ISO 7160).
      * When set in the length field, the remaining bits encode the byte-count of the actual length.
      */
-    private const int IIM_EXTENDED_LENGTH_FLAG            = 0x8000;
+    private const int IIM_EXTENDED_LENGTH_FLAG = 0x8000;
 
     /**
      * Mask to extract the extended-length byte-count from the length field (ISO 7160).
      */
     private const int IIM_EXTENDED_LENGTH_BYTE_COUNT_MASK = 0x7FFF;
 
-    private const int IIM_EXTENDED_LENGTH_MAX_BYTES       = 4;
+    private const int IIM_EXTENDED_LENGTH_MAX_BYTES = 4;
 
     /**
      * Parses the supplied APP13 payload and returns the decoded IPTC datasets.
@@ -79,18 +79,18 @@ final class IptcParser implements IptcParserInterface
      */
     private function parseResourceBlocks(string $payload, int $offset): array
     {
-        $length   = strlen($payload);
+        $length = strlen($payload);
         /** @var IptcDatasetMap $datasets */
         $datasets = [];
 
         while ($offset < $length) {
-            $remaining       = $length - $offset;
+            $remaining = $length - $offset;
 
             if ($remaining < 4) {
                 throw new BoundsError('APP13 resource block header exceeds payload length.', 1126);
             }
 
-            $signature       = substr($payload, $offset, 4);
+            $signature = substr($payload, $offset, 4);
             $offset += 4;
 
             if ($signature !== self::RESOURCE_SIGNATURE) {
@@ -101,14 +101,14 @@ final class IptcParser implements IptcParserInterface
                 throw new BoundsError('APP13 resource ID exceeds payload length.', 1128);
             }
 
-            $resourceId      = Unpack::int('n', substr($payload, $offset, 2), 'IPTC resource ID');
+            $resourceId = Unpack::int('n', substr($payload, $offset, 2), 'IPTC resource ID');
             $offset += 2;
 
             if (($length - $offset) < 1) {
                 throw new BoundsError('APP13 resource name exceeds payload length.', 1129);
             }
 
-            $nameLength      = ord($payload[$offset]);
+            $nameLength = ord($payload[$offset]);
             ++$offset;
 
             if (($length - $offset) < $nameLength) {
@@ -132,14 +132,14 @@ final class IptcParser implements IptcParserInterface
                 throw new BoundsError('APP13 resource size exceeds payload length.', 1132);
             }
 
-            $resourceSize    = Unpack::int('N', substr($payload, $offset, 4), 'IPTC resource size');
+            $resourceSize = Unpack::int('N', substr($payload, $offset, 4), 'IPTC resource size');
             $offset += 4;
 
             if (($length - $offset) < $resourceSize) {
                 throw new BoundsError('APP13 resource data exceeds payload length.', 1133);
             }
 
-            $data            = substr($payload, $offset, $resourceSize);
+            $data = substr($payload, $offset, $resourceSize);
             $offset += $resourceSize;
 
             if (($resourceSize % 2) !== 0) {
@@ -182,12 +182,12 @@ final class IptcParser implements IptcParserInterface
                 break;
             }
 
-            $recordNumber     = ord($data[$offset + 1]);
-            $datasetNumber    = ord($data[$offset + 2]);
-            $lengthField      = Unpack::int('n', substr($data, $offset + 3, 2), 'IPTC record size');
+            $recordNumber  = ord($data[$offset + 1]);
+            $datasetNumber = ord($data[$offset + 2]);
+            $lengthField   = Unpack::int('n', substr($data, $offset + 3, 2), 'IPTC record size');
             $offset += 5;
 
-            $valueLength      = $lengthField;
+            $valueLength = $lengthField;
 
             if (($lengthField & self::IIM_EXTENDED_LENGTH_FLAG) !== 0) {
                 $lengthBytes = $lengthField & self::IIM_EXTENDED_LENGTH_BYTE_COUNT_MASK;
@@ -224,10 +224,10 @@ final class IptcParser implements IptcParserInterface
                 throw new BoundsError('IPTC IIM dataset value exceeds payload length.', 1137);
             }
 
-            $value            = substr($data, $offset, $valueLength);
+            $value = substr($data, $offset, $valueLength);
             $offset += $valueLength;
 
-            $key              = $recordNumber . ':' . $datasetNumber;
+            $key = $recordNumber . ':' . $datasetNumber;
 
             if (!array_key_exists($key, $datasets)) {
                 $datasets[$key] = [];

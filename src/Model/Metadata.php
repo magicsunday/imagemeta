@@ -167,9 +167,9 @@ final readonly class Metadata
         $this->tmapItemIds            = [...$tmapItemIds];
         $this->iptcBlobs              = [...$iptcBlobs];
 
-        $cached                       = null;
-        $resolver                     = $structuredResolver;
-        $this->structuredResolver     = static function (self $metadata) use ($resolver, &$cached): StructuredMetadata {
+        $cached                   = null;
+        $resolver                 = $structuredResolver;
+        $this->structuredResolver = static function (self $metadata) use ($resolver, &$cached): StructuredMetadata {
             if (!$resolver instanceof Closure) {
                 throw new LogicException('No structured metadata resolver configured; use MetadataBuilder to construct Metadata instances');
             }
