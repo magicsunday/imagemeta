@@ -13,7 +13,6 @@ namespace MagicSunday\ImageMeta\Exif\Reader;
 
 use Closure;
 use DateTimeImmutable;
-use DateTimeZone;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -32,7 +31,6 @@ use function preg_match;
 use function preg_replace;
 use function rtrim;
 use function str_pad;
-use function str_replace;
 use function strlen;
 use function substr;
 use function trim;
@@ -295,8 +293,7 @@ final readonly class TemporalExifReader
             $timeZone = $this->converters->parseOffset($rawOffset);
         }
 
-        $normalized = str_replace(':', '-', substr($rawDateTime, 0, 10)) . substr($rawDateTime, 10);
-        $format     = 'Y-m-d H:i:s';
+        $format = 'Y:m:d H:i:s';
 
         if (($subSeconds !== null) && ($subSeconds !== '')) {
             $digits = preg_replace('/\D/', '', $subSeconds);
@@ -304,14 +301,12 @@ final readonly class TemporalExifReader
             if (($digits !== null) && ($digits !== '')) {
                 $digits = substr($digits, 0, 6);
                 $digits = str_pad($digits, 6, '0');
-                $normalized .= '.' . $digits;
-                $format .= '.u';
+                $rawDateTime .= '.' . $digits;
+                $format      .= '.u';
             }
         }
 
-        $dt = $timeZone instanceof DateTimeZone
-            ? DateTimeImmutable::createFromFormat($format, $normalized, $timeZone)
-            : DateTimeImmutable::createFromFormat($format, $normalized);
+        $dt = DateTimeImmutable::createFromFormat($format, $rawDateTime, $timeZone);
 
         if ($dt === false) {
             return null;
