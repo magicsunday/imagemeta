@@ -103,17 +103,9 @@ final readonly class AudioSampleEntryParser
             throw new ParseError('audio sample entry truncated', 1160);
         }
 
-        $version       = $win->readU16BE();
-        $revisionLevel = $win->readU16BE();
-        $vendor        = $win->readU32BE();
-
-        if ($revisionLevel !== 0) {
-            throw new ParseError('audio sample entry revision level must be 0', 1920);
-        }
-
-        if ($vendor !== 0) {
-            throw new ParseError('audio sample entry vendor must be 0', 1921);
-        }
+        $version = $win->readU16BE();
+        $win->readU16BE(); // revision level — tolerate non-zero (Postel's Law)
+        $win->readU32BE(); // vendor — tolerate non-zero (legacy MOV files)
 
         if ($version === 2) {
             $result = $this->parseSoundSampleEntryVersion2($win, $entryStart, $entryEnd, $entrySize, $normalizedFormat);

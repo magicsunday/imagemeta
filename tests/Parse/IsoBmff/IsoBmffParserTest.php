@@ -3674,14 +3674,11 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects version 0 audio sample entries with non-zero revision level.
+     * Tolerates version 0 audio sample entries with non-zero revision level (Postel's Law).
      */
     #[Test]
-    public function rejectsAudioStsdVersion0EntryWithNonZeroRevisionLevel(): void
+    public function toleratesAudioStsdVersion0EntryWithNonZeroRevisionLevel(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample entry revision level must be 0');
-
         $entry = $this->audioSampleEntryVersion0(
             format: 'raw ',
             channels: 2,
@@ -3690,18 +3687,18 @@ final class IsoBmffParserTest extends TestCase
             revisionLevel: 1,
         );
 
-        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+        $quickTime = $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract()->quickTimeMeta;
+
+        self::assertNotNull($quickTime);
+        self::assertSame('raw', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
     }
 
     /**
-     * Rejects version 0 audio sample entries with non-zero vendor.
+     * Tolerates version 0 audio sample entries with non-zero vendor (Postel's Law).
      */
     #[Test]
-    public function rejectsAudioStsdVersion0EntryWithNonZeroVendor(): void
+    public function toleratesAudioStsdVersion0EntryWithNonZeroVendor(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample entry vendor must be 0');
-
         $entry = $this->audioSampleEntryVersion0(
             format: 'raw ',
             channels: 2,
@@ -3710,7 +3707,10 @@ final class IsoBmffParserTest extends TestCase
             vendor: 1,
         );
 
-        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+        $quickTime = $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract()->quickTimeMeta;
+
+        self::assertNotNull($quickTime);
+        self::assertSame('raw', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
     }
 
     /**
