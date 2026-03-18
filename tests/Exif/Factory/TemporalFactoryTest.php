@@ -284,6 +284,45 @@ final class TemporalFactoryTest extends TestCase
     }
 
     /**
+     * Omits all EXIF, XMP, and QuickTime string timestamps while providing
+     * only mvhd Mac-epoch integers in QuickTimeMeta.
+     * Verifies the factory converts Mac-epoch seconds to DateTimeImmutable as a last-resort fallback.
+     */
+    #[Test]
+    public function fallsBackToMvhdMacEpochTimestamps(): void
+    {
+        $temporal = $this->createTemporal(
+            quickTime: new QuickTimeMeta([
+                QuickTimeMeta::CREATE_DATE_KEY => 3_692_304_000,
+                QuickTimeMeta::MODIFY_DATE_KEY => 3_692_390_400,
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2021-01-01', $temporal->create->format('Y-m-d'));
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
+        self::assertSame('2021-01-02', $temporal->modify->format('Y-m-d'));
+    }
+
+    /**
+     * Provides mvhd Mac-epoch timestamps set to zero (uninitialised mvhd fields).
+     * Verifies the factory treats zero timestamps as missing and returns null.
+     */
+    #[Test]
+    public function mvhdZeroTimestampsAreIgnored(): void
+    {
+        $temporal = $this->createTemporal(
+            quickTime: new QuickTimeMeta([
+                QuickTimeMeta::CREATE_DATE_KEY => 0,
+                QuickTimeMeta::MODIFY_DATE_KEY => 0,
+            ]),
+        );
+
+        self::assertNull($temporal->create);
+        self::assertNull($temporal->modify);
+    }
+
+    /**
      * Supplies an empty offset time string in the EXIF IFD.
      * Verifies the factory handles an empty offset without crashing.
      */

@@ -92,6 +92,10 @@ final readonly class TemporalFactory
         $create = $exifCreate ?? $xmpCreate ?? $quickTimeCreate ?? $xmpDateCreated;
         $modify = $exifModify ?? $xmpModify ?? $quickTimeModify;
 
+        // mvhd Mac-epoch as last resort
+        $create ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::CREATE_DATE_KEY));
+        $modify ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::MODIFY_DATE_KEY));
+
         [$original, $tz, $subOriginalRaw] = $this->originalTimestampComponents($exifDocument);
 
         $originalWithTz = $original;
@@ -235,6 +239,26 @@ final readonly class TemporalFactory
 
         // EXIF 3.0 §4.6.6.6.6 — digits are aligned with the start (right-pad fractional seconds)
         return str_pad($digits, 3, '0');
+    }
+
+    /**
+     * Converts a Mac epoch timestamp (seconds since 1904-01-01) to DateTimeImmutable.
+     *
+     * Returns null for zero or null timestamps (uninitialised mvhd fields).
+     *
+     * @param int|null $macTimestamp Seconds since the Mac epoch (1904-01-01 00:00:00 UTC).
+     *
+     * @return DateTimeImmutable|null Converted timestamp or null when absent/zero.
+     */
+    private function macEpochToDateTime(?int $macTimestamp): ?DateTimeImmutable
+    {
+        if (($macTimestamp === null) || ($macTimestamp === 0)) {
+            return null;
+        }
+
+        $unixTimestamp = $macTimestamp - 2_082_844_800;
+
+        return new DateTimeImmutable('@' . $unixTimestamp);
     }
 
     /**

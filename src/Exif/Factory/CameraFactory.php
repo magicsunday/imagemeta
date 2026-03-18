@@ -13,14 +13,16 @@ namespace MagicSunday\ImageMeta\Exif\Factory;
 
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Camera;
 
 /**
- * Factory for creating Camera value objects from EXIF metadata with XMP fallback.
+ * Factory for creating Camera value objects from EXIF metadata with XMP and QuickTime fallback.
  *
- * Falls back to XMP properties per CIPA DC-X010-2017 Tables 5 and 14 when EXIF tags are absent.
+ * Falls back to XMP properties per CIPA DC-X010-2017 Tables 5 and 14 when EXIF tags are absent,
+ * then to QuickTime metadata keys for make and model.
  */
 final readonly class CameraFactory
 {
@@ -33,13 +35,14 @@ final readonly class CameraFactory
      */
     public function create(Metadata $metadata): Camera
     {
-        $exifDocument = $metadata->exifDoc;
-        $xmpDocument  = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
-        $resolver     = $xmpDocument instanceof XmpDocument ? XmpFallbackResolver::fromDocument($xmpDocument) : null;
+        $exifDocument    = $metadata->exifDoc;
+        $xmpDocument     = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $resolver        = $xmpDocument instanceof XmpDocument ? XmpFallbackResolver::fromDocument($xmpDocument) : null;
+        $quickTimeLookup = new QuickTimeLookup($metadata->quickTime);
 
         return new Camera(
-            make: $exifDocument?->cameraMake() ?? $resolver?->string(ExifTag::MAKE),
-            model: $exifDocument?->cameraModel() ?? $resolver?->string(ExifTag::MODEL),
+            make: $exifDocument?->cameraMake() ?? $resolver?->string(ExifTag::MAKE) ?? $quickTimeLookup->string('com.apple.quicktime.make'),
+            model: $exifDocument?->cameraModel() ?? $resolver?->string(ExifTag::MODEL) ?? $quickTimeLookup->string('com.apple.quicktime.model'),
             ownerName: $exifDocument?->ownerName() ?? $resolver?->string(ExifTag::CAMERA_OWNER_NAME),
             firmware: $exifDocument?->cameraFirmware() ?? $resolver?->string(ExifTag::SOFTWARE),
             fileSource: $exifDocument?->fileSource(),

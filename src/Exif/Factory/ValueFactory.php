@@ -303,6 +303,8 @@ final readonly class ValueFactory
             hdr: $quickTimeLookup->bool('com.apple.quicktime.hdrFormat') ?? false,
             transferFunction: $quickTimeLookup->string('com.apple.quicktime.transferFunction'),
             colorPrimaries: $quickTimeLookup->string('com.apple.quicktime.colorPrimaries'),
+            rotation: $quickTimeLookup->int(QuickTimeMeta::ROTATION_KEY),
+            bitDepth: $quickTimeLookup->int(QuickTimeMeta::VIDEO_BIT_DEPTH_KEY),
         );
 
         $audio = new ValueAudio(

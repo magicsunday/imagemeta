@@ -16,12 +16,15 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -33,6 +36,8 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(CameraFactory::class)]
+#[UsesClass(QuickTimeLookup::class)]
+#[UsesClass(QuickTimeMeta::class)]
 final class CameraFactoryTest extends TestCase
 {
     /**
@@ -152,6 +157,62 @@ final class CameraFactoryTest extends TestCase
             !$camera->fileSource instanceof FileSource || $camera->fileSource === FileSource::DigitalCamera,
             'FileSource should be null or default DigitalCamera for invalid backing value',
         );
+    }
+
+    /**
+     * Creates Metadata without EXIF but with QuickTime make/model keys.
+     * Verifies CameraFactory falls back to QuickTime values for make and model.
+     */
+    #[Test]
+    public function fallsBackToQuickTimeMakeModel(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.make'  => 'Apple',
+            'com.apple.quicktime.model' => 'iPhone 16 Pro',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+        );
+
+        $camera = (new CameraFactory())->create($metadata);
+
+        self::assertSame('Apple', $camera->make);
+        self::assertSame('iPhone 16 Pro', $camera->model);
+    }
+
+    /**
+     * Creates Metadata with both EXIF make/model and QuickTime make/model.
+     * Verifies EXIF values take precedence over QuickTime values.
+     */
+    #[Test]
+    public function exifMakeModelTakesPrecedenceOverQuickTime(): void
+    {
+        $parsedExif = $this->parsedExif(
+            make: 'Canon',
+            model: 'EOS R6',
+            ownerName: null,
+            firmware: null,
+            fileSource: null,
+            sensingMethod: null,
+        );
+
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.make'  => 'Apple',
+            'com.apple.quicktime.model' => 'iPhone 16 Pro',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            exifDoc: $parsedExif,
+        );
+
+        $camera = (new CameraFactory())->create($metadata);
+
+        self::assertSame('Canon', $camera->make);
+        self::assertSame('EOS R6', $camera->model);
     }
 
     private function parsedExif(

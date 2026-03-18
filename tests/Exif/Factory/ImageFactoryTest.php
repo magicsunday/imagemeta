@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
@@ -247,6 +248,100 @@ final class ImageFactoryTest extends TestCase
         $image      = $this->createImageFromParsedExif($parsedExif);
 
         self::assertNull($image->colorSpace);
+    }
+
+    /**
+     * Creates Metadata with no EXIF and no JPEG frame data but with QuickTime video
+     * dimensions and bit depth.  Verifies the factory falls back to QuickTime values.
+     */
+    #[Test]
+    public function fallsBackToQuickTimeDimensions(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::VIDEO_WIDTH_KEY     => 3840,
+            QuickTimeMeta::VIDEO_HEIGHT_KEY    => 2160,
+            QuickTimeMeta::VIDEO_BIT_DEPTH_KEY => 24,
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(3840, $image->width);
+        self::assertSame(2160, $image->height);
+        self::assertSame(24, $image->bitsPerSample);
+    }
+
+    /**
+     * Creates Metadata with only a QuickTime rotation of 90 degrees.
+     * Verifies the factory maps the rotation to Orientation::RightTop.
+     */
+    #[Test]
+    public function fallsBackToQuickTimeRotationAsOrientation(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::ROTATION_KEY => 90,
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(Orientation::RightTop, $image->orientation);
+    }
+
+    /**
+     * Creates Metadata with both EXIF dimensions and QuickTime dimensions.
+     * Verifies that EXIF values take precedence over QuickTime values.
+     */
+    #[Test]
+    public function exifDimensionsTakePrecedenceOverQuickTime(): void
+    {
+        $parsedExif = $this->parsedExif(
+            width: 6000,
+            height: 4000,
+            orientation: Orientation::TopLeft,
+            bitsPerSample: 8,
+            colorSpace: ColorSpace::Srgb,
+            interopIndex: null,
+            imageUniqueId: null,
+            documentName: null,
+            imageDescription: null,
+            imageTitle: null,
+            componentsConfiguration: null,
+            compressedBitsPerPixel: null,
+            userComment: null,
+            userCommentEncoding: null,
+        );
+
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::VIDEO_WIDTH_KEY     => 3840,
+            QuickTimeMeta::VIDEO_HEIGHT_KEY    => 2160,
+            QuickTimeMeta::VIDEO_BIT_DEPTH_KEY => 24,
+            QuickTimeMeta::ROTATION_KEY        => 180,
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(6000, $image->width);
+        self::assertSame(4000, $image->height);
+        self::assertSame(Orientation::TopLeft, $image->orientation);
+        self::assertSame(8, $image->bitsPerSample);
     }
 
     /**

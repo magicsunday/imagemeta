@@ -12,10 +12,13 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Factory;
 
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
+use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\UserComment;
 
@@ -37,12 +40,13 @@ final readonly class ImageFactory
      */
     public function create(Metadata $metadata, ?XmpDocument $xmpDocument = null): Image
     {
-        $exifDocument = $metadata->exifDoc;
+        $exifDocument    = $metadata->exifDoc;
+        $quickTimeLookup = new QuickTimeLookup($metadata->quickTime);
 
-        $width         = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth;
-        $height        = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight;
-        $orientation   = $exifDocument?->orientation();
-        $bitsPerSample = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
+        $width         = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY);
+        $height        = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_HEIGHT_KEY);
+        $orientation   = $exifDocument?->orientation() ?? $this->rotationToOrientation($quickTimeLookup->int(QuickTimeMeta::ROTATION_KEY));
+        $bitsPerSample = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_BIT_DEPTH_KEY);
 
         $xmpTitle       = $xmpDocument?->string(XmpNamespace::DC->value, 'title');
         $xmpHeadline    = $xmpDocument?->string(XmpNamespace::PHOTOSHOP->value, 'Headline');
@@ -65,6 +69,27 @@ final readonly class ImageFactory
                 encoding: $exifDocument?->userCommentEncodingBestEffort(),
             ),
         );
+    }
+
+    /**
+     * Maps a QuickTime rotation angle in degrees to an EXIF orientation value.
+     *
+     * Only the four cardinal rotations (0, 90, 180, 270) are mapped.
+     * Any other value, including null, returns null.
+     *
+     * @param int|null $rotation Clockwise rotation in degrees from the QuickTime track header.
+     *
+     * @return Orientation|null Corresponding EXIF orientation or null when unmapped.
+     */
+    private function rotationToOrientation(?int $rotation): ?Orientation
+    {
+        return match ($rotation) {
+            0       => Orientation::TopLeft,
+            90      => Orientation::RightTop,
+            180     => Orientation::BottomRight,
+            270     => Orientation::LeftBottom,
+            default => null,
+        };
     }
 
     /**

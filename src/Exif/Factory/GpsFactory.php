@@ -14,8 +14,10 @@ namespace MagicSunday\ImageMeta\Exif\Factory;
 use DateMalformedStringException;
 use DateTimeImmutable;
 use DateTimeZone;
+use MagicSunday\ImageMeta\Core\Util\Iso6709Parser;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
@@ -27,6 +29,7 @@ use MagicSunday\ImageMeta\Value\GpsMovement;
 use MagicSunday\ImageMeta\Value\GpsPosition;
 use MagicSunday\ImageMeta\Value\GpsTiming;
 
+use function abs;
 use function array_any;
 use function array_map;
 use function count;
@@ -64,10 +67,15 @@ final readonly class GpsFactory
     public function create(Metadata $metadata): Gps
     {
         $xmpDocument = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
-        $gps         = $this->resolveGps($metadata->exifDoc, $xmpDocument);
+        $gps         = $this->resolveGps($metadata->exifDoc, $xmpDocument) ?? new Gps();
 
-        if (!$gps instanceof Gps) {
-            return new Gps();
+        if (!$gps->position instanceof GpsPosition) {
+            $quickTimeLookup = new QuickTimeLookup($metadata->quickTime);
+            $qtPosition      = $this->resolveQuickTimeGps($quickTimeLookup);
+
+            if ($qtPosition instanceof GpsPosition) {
+                $gps = new Gps(position: $qtPosition);
+            }
         }
 
         return $gps;
@@ -316,6 +324,54 @@ final readonly class GpsFactory
             processingMethod: $processingMethod,
             areaInformation: $areaInformation,
         );
+    }
+
+    /**
+     * Resolves GPS position from QuickTime metadata sources.
+     *
+     * Tries ISO 6709 location string first (©xyz atom), then falls back
+     * to separate numeric latitude/longitude keys (DJI telemetry).
+     */
+    private function resolveQuickTimeGps(QuickTimeLookup $lookup): ?GpsPosition
+    {
+        $iso6709 = $lookup->string('com.apple.quicktime.location.ISO6709');
+
+        if ($iso6709 !== null) {
+            $parsed = Iso6709Parser::parse($iso6709);
+
+            if ($parsed !== null) {
+                return new GpsPosition(
+                    latitude: abs($parsed['latitude']),
+                    longitude: abs($parsed['longitude']),
+                    latitudeRef: $parsed['latitude'] >= 0 ? GpsEnum\GpsLatLonRef::North : GpsEnum\GpsLatLonRef::South,
+                    longitudeRef: $parsed['longitude'] >= 0 ? GpsEnum\GpsLatLonRef::East : GpsEnum\GpsLatLonRef::West,
+                    altitude: $parsed['altitude'] !== null ? abs($parsed['altitude']) : null,
+                    altitudeRef: $parsed['altitude'] !== null
+                        ? ($parsed['altitude'] >= 0 ? GpsEnum\GpsAltitudeRef::AboveEllipsoidalSurface : GpsEnum\GpsAltitudeRef::BelowEllipsoidalSurface)
+                        : null,
+                );
+            }
+        }
+
+        $lat = $lookup->float('com.apple.quicktime.location.latitude');
+        $lon = $lookup->float('com.apple.quicktime.location.longitude');
+
+        if (($lat !== null) && ($lon !== null)) {
+            $alt = $lookup->float('com.apple.quicktime.location.altitude');
+
+            return new GpsPosition(
+                latitude: abs($lat),
+                longitude: abs($lon),
+                latitudeRef: $lat >= 0 ? GpsEnum\GpsLatLonRef::North : GpsEnum\GpsLatLonRef::South,
+                longitudeRef: $lon >= 0 ? GpsEnum\GpsLatLonRef::East : GpsEnum\GpsLatLonRef::West,
+                altitude: $alt !== null ? abs($alt) : null,
+                altitudeRef: $alt !== null
+                    ? ($alt >= 0 ? GpsEnum\GpsAltitudeRef::AboveEllipsoidalSurface : GpsEnum\GpsAltitudeRef::BelowEllipsoidalSurface)
+                    : null,
+            );
+        }
+
+        return null;
     }
 
     /**

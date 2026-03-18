@@ -27,6 +27,8 @@ final readonly class Video
      * @param bool        $hdr              Indicates HDR mastering.
      * @param string|null $transferFunction Transfer function identifier (PQ/HLG/...).
      * @param string|null $colorPrimaries   Colour primaries name as reported by the container.
+     * @param int|null    $rotation         Track rotation in degrees (0, 90, 180, 270).
+     * @param int|null    $bitDepth         Bit depth per video sample (e.g. 8, 10, 24).
      */
     public function __construct(
         public ?float $durationSec = null,
@@ -37,6 +39,8 @@ final readonly class Video
         public bool $hdr = false,
         public ?string $transferFunction = null,
         public ?string $colorPrimaries = null,
+        public ?int $rotation = null,
+        public ?int $bitDepth = null,
     ) {
     }
 }

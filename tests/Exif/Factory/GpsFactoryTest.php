@@ -12,13 +12,16 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Exif\Factory;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Core\Util\Iso6709Parser;
 use MagicSunday\ImageMeta\Exif\Factory\GpsFactory;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
@@ -45,6 +48,9 @@ use function strlen;
  * @internal
  */
 #[CoversClass(GpsFactory::class)]
+#[UsesClass(Iso6709Parser::class)]
+#[UsesClass(QuickTimeLookup::class)]
+#[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(XmpDocument::class)]
 final class GpsFactoryTest extends TestCase
 {
@@ -1012,6 +1018,110 @@ final class GpsFactoryTest extends TestCase
         self::assertTrue($reflection->hasMethod('applyMovementFallbacks'));
         self::assertTrue($reflection->hasMethod('applyDestinationFallbacks'));
         self::assertTrue($reflection->hasMethod('hasAnyGpsData'));
+    }
+
+    /**
+     * Verifies that ISO 6709 location from QuickTime metadata is used when no EXIF GPS is present.
+     */
+    #[Test]
+    public function fallsBackToQuickTimeGpsFromXyz(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.location.ISO6709' => '+48.1234+011.5678+500.000/',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertEqualsWithDelta(48.1234, $gps->position->latitude, 0.0001);
+        self::assertSame(GpsLatLonRef::North, $gps->position->latitudeRef);
+        self::assertEqualsWithDelta(11.5678, $gps->position->longitude, 0.0001);
+        self::assertSame(GpsLatLonRef::East, $gps->position->longitudeRef);
+        self::assertEqualsWithDelta(500.0, $gps->position->altitude, 0.01);
+        self::assertSame(GpsAltitudeRef::AboveEllipsoidalSurface, $gps->position->altitudeRef);
+    }
+
+    /**
+     * Verifies that separate numeric latitude/longitude from QuickTime metadata is used
+     * when no EXIF GPS or ISO 6709 string is present.
+     */
+    #[Test]
+    public function fallsBackToQuickTimeDjiNumericGps(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.location.latitude'  => 48.1234,
+            'com.apple.quicktime.location.longitude' => 11.5678,
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertEqualsWithDelta(48.1234, $gps->position->latitude, 0.0001);
+        self::assertSame(GpsLatLonRef::North, $gps->position->latitudeRef);
+        self::assertEqualsWithDelta(11.5678, $gps->position->longitude, 0.0001);
+        self::assertSame(GpsLatLonRef::East, $gps->position->longitudeRef);
+    }
+
+    /**
+     * Verifies that EXIF GPS takes precedence over QuickTime location metadata.
+     */
+    #[Test]
+    public function exifGpsTakesPrecedenceOverQuickTime(): void
+    {
+        $parsedExif = $this->parsedExif(
+            latRef: GpsLatLonRef::North,
+            lat: 52.520008,
+            lonRef: GpsLatLonRef::East,
+            lon: 13.404954,
+            altitudeRef: null,
+            altitude: null,
+            version: null,
+            satellites: null,
+            status: null,
+            measureMode: null,
+            dop: null,
+            speedRef: null,
+            speedMs: null,
+            track: null,
+            mapDatum: null,
+            processingMethod: null,
+            areaInformation: null,
+            date: null,
+            time: null,
+            differential: null,
+            hPositioningError: null,
+        );
+
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.location.ISO6709' => '+48.1234+011.5678+500.000/',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertSame(52.520008, $gps->position->latitude);
+        self::assertSame(GpsLatLonRef::North, $gps->position->latitudeRef);
+        self::assertSame(13.404954, $gps->position->longitude);
+        self::assertSame(GpsLatLonRef::East, $gps->position->longitudeRef);
     }
 
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';

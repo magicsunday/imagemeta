@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Model\Icc\IccProfile;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\Author;
@@ -34,6 +35,7 @@ use MagicSunday\ImageMeta\Value\MediaContent;
 use MagicSunday\ImageMeta\Value\Provenance;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
 use MagicSunday\ImageMeta\Value\TechnicalData;
+use MagicSunday\ImageMeta\Value\Video;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -72,6 +74,8 @@ use function strlen;
 #[UsesClass(TechnicalData::class)]
 #[UsesClass(DepthMap::class)]
 #[UsesClass(HdrGainMap::class)]
+#[UsesClass(QuickTimeMeta::class)]
+#[UsesClass(Video::class)]
 final class ValueFactoryTest extends TestCase
 {
     /**
@@ -355,6 +359,46 @@ XML;
         // Even without XMP, the factory should produce all components
         $this->addToAssertionCount(1);
         self::assertSame([], $components['keywords']->flat);
+    }
+
+    /**
+     * Builds Metadata with QuickTimeMeta containing rotation and video bit depth.
+     * Verifies the Video value object exposes rotation and bitDepth fields.
+     */
+    #[Test]
+    public function mapsQuickTimeRotationAndBitDepthToVideo(): void
+    {
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: new QuickTimeMeta([
+                QuickTimeMeta::ROTATION_KEY        => 90,
+                QuickTimeMeta::VIDEO_BIT_DEPTH_KEY => 24,
+            ]),
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertSame(90, $components['video']->rotation);
+        self::assertSame(24, $components['video']->bitDepth);
+    }
+
+    /**
+     * Verifies that Video rotation and bitDepth default to null when QuickTime is absent.
+     */
+    #[Test]
+    public function videoRotationAndBitDepthDefaultToNull(): void
+    {
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertNull($components['video']->rotation);
+        self::assertNull($components['video']->bitDepth);
     }
 
     /**
