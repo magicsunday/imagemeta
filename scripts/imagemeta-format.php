@@ -999,7 +999,7 @@ final class MetadataFormatter
                 $label = sprintf('     - %s', $key);
             }
 
-            printf("%-42s: %s\n", $label, $formattedValue);
+            printf("%-42s: %s\n", $label, rtrim($formattedValue));
         }
     }
 
