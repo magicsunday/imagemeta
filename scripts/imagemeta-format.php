@@ -96,6 +96,7 @@ use ReflectionClass;
 use ReflectionProperty;
 use Throwable;
 
+use function array_key_exists;
 use function count;
 use function dirname;
 use function file_exists;
@@ -104,8 +105,10 @@ use function filectime;
 use function filemtime;
 use function fileperms;
 use function filesize;
+use function fmod;
 use function implode;
 use function in_array;
+use function intdiv;
 use function is_array;
 use function is_bool;
 use function is_float;
@@ -113,11 +116,13 @@ use function is_int;
 use function is_numeric;
 use function is_string;
 use function number_format;
+use function realpath;
 use function round;
 use function rtrim;
 use function sprintf;
+use function str_replace;
 use function strlen;
-use function realpath;
+use function trim;
 
 // Check if we're using composer or standalone
 $autoloadPaths = [
@@ -252,6 +257,50 @@ final class MetadataFormatter
         'com.apple.quicktime.model',
         'com.apple.quicktime.location.latitude',
         'com.apple.quicktime.location.longitude',
+    ];
+
+    /**
+     * Maps QuickTime ftyp Major Brand codes to human-readable labels (ExifTool-compatible).
+     *
+     * @var array<string, string>
+     */
+    private const array BRAND_LABELS = [
+        'isom' => 'MP4 Base Media v1 [IS0 14496-12:2003]',
+        'iso2' => 'MP4 Base Media v2 [ISO 14496-12:2005]',
+        'mp41' => 'MP4 v1 [ISO 14496-1:2001]',
+        'mp42' => 'MP4 v2 [ISO 14496-14:2003]',
+        'M4V ' => 'M4V',
+        'M4A ' => 'M4A',
+        'qt  ' => 'Apple QuickTime (.MOV/QT)',
+        'avc1' => 'MP4 Base w/ AVC ext [ISO 14496-12:2005]',
+        'heic' => 'High Efficiency Image Format HEVC Still Image (.HEIC)',
+        'heix' => 'High Efficiency Image Format Still Image (.HEIF)',
+        'mif1' => 'High Efficiency Image Format Still Image (.HEIF)',
+        'avif' => 'AV1 Image File Format (.AVIF)',
+        '3gp4' => '3GPP Media (.3GP) Release 4',
+        '3gp5' => '3GPP Media (.3GP) Release 5',
+        '3gp6' => '3GPP Media (.3GP) Release 6',
+        'crx ' => 'Canon Raw (.CR3)',
+    ];
+
+    /**
+     * Maps QuickTime graphics mode values to their display names.
+     *
+     * @var array<int, string>
+     */
+    private const array GRAPHICS_MODE_LABELS = [
+        0x0000 => 'srcCopy',
+        0x0001 => 'srcOr',
+        0x0002 => 'srcXor',
+        0x0003 => 'srcBic',
+        0x0004 => 'notSrcCopy',
+        0x0024 => 'blend',
+        0x0040 => 'ditherCopy',
+        0x0100 => 'straightAlpha',
+        0x0101 => 'premulWhiteAlpha',
+        0x0102 => 'premulBlackAlpha',
+        0x0103 => 'composition',
+        0x0104 => 'straightAlphaBlend',
     ];
 
     /**
@@ -2595,7 +2644,7 @@ final class MetadataFormatter
             }
 
             $label        = $this->formatQuickTimeLabel($key);
-            $data[$label] = $this->formatQuickTimeValue($key, $value);
+            $data[$label] = $this->formatQuickTimeValue($key, $value, $quickTime);
         }
 
         if ($data !== []) {
@@ -2655,8 +2704,11 @@ final class MetadataFormatter
     /**
      * Formats a QuickTime value based on its key type for display.
      */
-    private function formatQuickTimeValue(string $key, string|int|float|bool $value): string|int|float|bool
-    {
+    private function formatQuickTimeValue(
+        string $key,
+        string|int|float|bool $value,
+        QuickTimeMeta $quickTime,
+    ): string|int|float|bool {
         // Mac epoch timestamps
         if (is_int($value) && in_array($key, [
             QuickTimeMeta::CREATE_DATE_KEY,
@@ -2669,12 +2721,106 @@ final class MetadataFormatter
             return $this->formatMacTimestamp($value);
         }
 
-        // Volume as percentage
-        if (is_float($value) && ($key === QuickTimeMeta::PREFERRED_VOLUME_KEY)) {
+        // Duration / Track Duration — divide by movie timescale, format as H:MM:SS
+        if (is_int($value) && in_array($key, [
+            QuickTimeMeta::DURATION_KEY,
+            QuickTimeMeta::TRACK_DURATION_KEY,
+        ], true)) {
+            return $this->formatQuickTimeDuration($value, $quickTime->intValue(QuickTimeMeta::TIME_SCALE_KEY));
+        }
+
+        // Media Duration — divide by media timescale, format as H:MM:SS
+        if (is_int($value) && ($key === QuickTimeMeta::MEDIA_DURATION_KEY)) {
+            return $this->formatQuickTimeDuration($value, $quickTime->intValue(QuickTimeMeta::MEDIA_TIME_SCALE_KEY));
+        }
+
+        // Preview/Poster/Selection/Current time fields — divide by movie timescale, show as "X.XX s"
+        if (is_int($value) && in_array($key, [
+            QuickTimeMeta::PREVIEW_TIME_KEY,
+            QuickTimeMeta::PREVIEW_DURATION_KEY,
+            QuickTimeMeta::POSTER_TIME_KEY,
+            QuickTimeMeta::SELECTION_TIME_KEY,
+            QuickTimeMeta::SELECTION_DURATION_KEY,
+            QuickTimeMeta::CURRENT_TIME_KEY,
+        ], true)) {
+            return $this->formatQuickTimeTimeSuffix($value, $quickTime->intValue(QuickTimeMeta::TIME_SCALE_KEY));
+        }
+
+        // Volume as percentage (Preferred Volume + Track Volume)
+        if (is_float($value) && in_array($key, [
+            QuickTimeMeta::PREFERRED_VOLUME_KEY,
+            QuickTimeMeta::TRACK_VOLUME_KEY,
+        ], true)) {
             return sprintf('%.2f%%', $value * 100);
         }
 
+        // Major Brand — resolve to human-readable label
+        if (($key === QuickTimeMeta::MAJOR_BRAND_KEY) && is_string($value)) {
+            return array_key_exists($value, self::BRAND_LABELS)
+                ? self::BRAND_LABELS[$value]
+                : $value;
+        }
+
+        // Minor Version — format as dotted version string
+        if (($key === QuickTimeMeta::MINOR_VERSION_KEY) && is_int($value)) {
+            return sprintf('%d.%d.%d', ($value >> 16) & 0xFF, ($value >> 8) & 0xFF, $value & 0xFF);
+        }
+
+        // Compatible Brands — comma-separated
+        if (($key === QuickTimeMeta::COMPATIBLE_BRANDS_KEY) && is_string($value)) {
+            return str_replace(' ', ', ', trim($value));
+        }
+
+        // Graphics Mode — resolve to name
+        if (($key === QuickTimeMeta::GRAPHICS_MODE_KEY) && is_int($value)) {
+            return array_key_exists($value, self::GRAPHICS_MODE_LABELS)
+                ? self::GRAPHICS_MODE_LABELS[$value]
+                : sprintf('0x%04X', $value);
+        }
+
+        // Preferred Rate — show whole numbers as integers
+        if (($key === QuickTimeMeta::PREFERRED_RATE_KEY) && is_float($value)) {
+            if (fmod($value, 1.0) === 0.0) {
+                return (int) $value;
+            }
+        }
+
         return $value;
+    }
+
+    /**
+     * Formats a QuickTime duration as H:MM:SS given raw units and timescale.
+     */
+    private function formatQuickTimeDuration(int $rawDuration, ?int $timeScale): string
+    {
+        if (($timeScale === null) || ($timeScale <= 0)) {
+            return (string) $rawDuration;
+        }
+
+        $totalSeconds = (int) round($rawDuration / $timeScale);
+        $hours        = intdiv($totalSeconds, 3600);
+        $minutes      = intdiv($totalSeconds % 3600, 60);
+        $seconds      = $totalSeconds % 60;
+
+        return sprintf('%d:%02d:%02d', $hours, $minutes, $seconds);
+    }
+
+    /**
+     * Formats a QuickTime time value as seconds with " s" suffix.
+     */
+    private function formatQuickTimeTimeSuffix(int $rawValue, ?int $timeScale): string
+    {
+        if (($timeScale === null) || ($timeScale <= 0)) {
+            return $rawValue . ' s';
+        }
+
+        $seconds = $rawValue / $timeScale;
+
+        if (fmod($seconds, 1.0) === 0.0) {
+            return (int) $seconds . ' s';
+        }
+
+        return sprintf('%.2f s', $seconds);
     }
 
     /**
