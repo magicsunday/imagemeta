@@ -125,6 +125,22 @@ final class VideoSampleEntryParserTest extends TestCase
         self::assertSame(72, $result['verticalResolution']);
         self::assertSame(1, $result['frameCount']);
         self::assertSame('H.264', $result['compressorName']);
+        self::assertSame(24, $result['depth']);
+    }
+
+    /**
+     * Verifies depth is returned for non-default depth values.
+     */
+    #[Test]
+    public function parsesVideoSampleEntryWithDepth16(): void
+    {
+        $data   = $this->buildVideoSampleData(depth: 16);
+        $win    = $this->createWindow($data);
+        $parser = new VideoSampleEntryParser();
+
+        $result = $parser->parseVideoSampleEntry($win, 70, 'avc1');
+
+        self::assertSame(16, $result['depth']);
     }
 
     /**
@@ -375,7 +391,7 @@ final class VideoSampleEntryParserTest extends TestCase
     #[Test]
     public function rejectsColorTableIdZeroWithWrongTrailingType(): void
     {
-        $data = $this->buildVideoSampleData(depth: 8, colorTableId: 0x0000)
+        $data   = $this->buildVideoSampleData(depth: 8, colorTableId: 0x0000)
             . pack('N', 16) . 'xxxx' . str_repeat("\x00", 4);
 
         $win    = $this->createWindow($data);
@@ -394,7 +410,7 @@ final class VideoSampleEntryParserTest extends TestCase
     public function rejectsTruncatedCtabAtom(): void
     {
         // ctab size claims 100 bytes but only 12 trailing bytes exist
-        $data = $this->buildVideoSampleData(depth: 8, colorTableId: 0x0000)
+        $data   = $this->buildVideoSampleData(depth: 8, colorTableId: 0x0000)
             . pack('N', 100) . 'ctab' . str_repeat("\x00", 4);
 
         $win    = $this->createWindow($data);
@@ -530,7 +546,7 @@ final class VideoSampleEntryParserTest extends TestCase
     public function acceptsColorTableIdZeroWithValidCtab(): void
     {
         // depth=8, colorTableId=0, valid ctab of 16 bytes
-        $data = $this->buildVideoSampleData(depth: 8, colorTableId: 0x0000)
+        $data   = $this->buildVideoSampleData(depth: 8, colorTableId: 0x0000)
             . pack('N', 16) . 'ctab' . str_repeat("\x00", 8);
 
         $win    = $this->createWindow($data);

@@ -74,27 +74,27 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         private IsoBmffParserConfig $config = new IsoBmffParserConfig(),
         private int $nestedMetadataDepth = 0,
     ) {
-        $boxNavigator = new BoxNavigator($stream);
+        $boxNavigator               = new BoxNavigator($stream);
 
-        $this->boxNavigator = $boxNavigator;
+        $this->boxNavigator         = $boxNavigator;
 
         $quickTimeKeyResolver       = new QuickTimeKeyResolver($boxNavigator);
         $ilocBoxParser              = new IlocBoxParser($boxNavigator);
         $this->itemPayloadResolver  = new ItemPayloadResolver($stream, $boxNavigator, $this->config->maxItemPayloadSize);
         $this->itemLocationResolver = new ItemLocationResolver($this->itemPayloadResolver);
 
-        $this->quickTimeDecoder = new QuickTimeMetadataDecoder(
+        $this->quickTimeDecoder     = new QuickTimeMetadataDecoder(
             $boxNavigator,
             $quickTimeKeyResolver,
             new QuickTimeValueDecoder($this->parseNestedMetadataPayload(...)),
         );
-        $this->trackMediaParser = new TrackMediaParser(
+        $this->trackMediaParser     = new TrackMediaParser(
             $boxNavigator,
             $this->parseUdtaBox(...),
             $ilocBoxParser->parseDinf(...),
         );
 
-        $this->boxPayloadCollector = new BoxPayloadCollector(
+        $this->boxPayloadCollector  = new BoxPayloadCollector(
             $boxNavigator,
             $this->trackMediaParser,
             $ilocBoxParser,
@@ -110,7 +110,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      */
     public function extract(): IsoBmffParseResult
     {
-        $context = new IsoBmffParseContext();
+        $context          = new IsoBmffParseContext();
 
         foreach ($this->walkTopLevelBoxes() as $box) {
             if ($box->type === BoxType::FTYP->value) {
@@ -141,7 +141,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         /** @var array<string, list<QuickTimeDataAtom>> $dataAtomVOs */
-        $dataAtomVOs = [];
+        $dataAtomVOs      = [];
 
         foreach ($context->qtDataAtoms as $key => $rawAtoms) {
             foreach ($rawAtoms as $raw) {
@@ -194,13 +194,13 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      */
     private function parseMoovBox(BoxDescriptor $moov, IsoBmffParseContext $context): void
     {
-        $metaSeen  = false;
-        $udtaCount = 0;
-        $mvhdCount = 0;
-        $trakCount = 0;
+        $metaSeen              = false;
+        $udtaCount             = 0;
+        $mvhdCount             = 0;
+        $trakCount             = 0;
 
         /** @var QuickTimeKeyMap|null $selectedVideoTrack */
-        $selectedVideoTrack = null;
+        $selectedVideoTrack    = null;
         /** @var QuickTimeKeyMap|null $selectedAudioTrack */
         $selectedAudioTrack    = null;
         $hasEligibleVideoTrack = false;
@@ -254,7 +254,30 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                     throw new ParseError('moov must contain exactly one mvhd box', 1374);
                 }
 
-                $this->trackMediaParser->parseMvhd($child);
+                $mvhdData    = $this->trackMediaParser->parseMvhd($child);
+
+                $mvhdMapping = [
+                    'createDate'        => QuickTimeMeta::CREATE_DATE_KEY,
+                    'modifyDate'        => QuickTimeMeta::MODIFY_DATE_KEY,
+                    'duration'          => QuickTimeMeta::DURATION_KEY,
+                    'timescale'         => QuickTimeMeta::TIME_SCALE_KEY,
+                    'preferredRate'     => QuickTimeMeta::PREFERRED_RATE_KEY,
+                    'preferredVolume'   => QuickTimeMeta::PREFERRED_VOLUME_KEY,
+                    'matrix'            => QuickTimeMeta::MATRIX_STRUCTURE_KEY,
+                    'nextTrackID'       => QuickTimeMeta::NEXT_TRACK_ID_KEY,
+                    'previewTime'       => QuickTimeMeta::PREVIEW_TIME_KEY,
+                    'previewDuration'   => QuickTimeMeta::PREVIEW_DURATION_KEY,
+                    'posterTime'        => QuickTimeMeta::POSTER_TIME_KEY,
+                    'selectionTime'     => QuickTimeMeta::SELECTION_TIME_KEY,
+                    'selectionDuration' => QuickTimeMeta::SELECTION_DURATION_KEY,
+                    'currentTime'       => QuickTimeMeta::CURRENT_TIME_KEY,
+                ];
+
+                foreach ($mvhdMapping as $dataKey => $qtKey) {
+                    if (isset($mvhdData[$dataKey]) && !array_key_exists($qtKey, $context->qtKeys)) {
+                        $context->qtKeys[$qtKey] = $mvhdData[$dataKey];
+                    }
+                }
             }
         }
 
@@ -305,7 +328,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      */
     private function parseFtyp(BoxDescriptor $ftyp, IsoBmffParseContext $context): array
     {
-        $win = $ftyp->window;
+        $win           = $ftyp->window;
         $win->seek(0);
 
         if ($ftyp->contentSize < 8) {
@@ -318,14 +341,14 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('ftyp major_brand must be a printable 4CC', 1476);
         }
 
-        $majorBrand = $this->boxNavigator->normalizeFourcc($majorBrandRaw);
-        $minor      = $win->readU32BE();
+        $majorBrand    = $this->boxNavigator->normalizeFourcc($majorBrandRaw);
+        $minor         = $win->readU32BE();
 
         if (($ftyp->contentSize - 8) % 4 !== 0) {
             throw new ParseError('ftyp compatible_brands length is not a multiple of 4', 1142);
         }
 
-        $brands = [];
+        $brands        = [];
 
         while ($win->tell() + 4 <= $ftyp->contentSize) {
             $brandRaw = $win->read(4);
@@ -371,6 +394,8 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                 }
 
                 $this->appendUniqueXmpToContext($context, $this->boxNavigator->readAll($child->window));
+            } elseif ($this->quickTimeDecoder->isUdtaBinaryAtom($child->type)) {
+                $this->quickTimeDecoder->parseUdtaBinaryAtom($child, $context);
             } else {
                 $this->quickTimeDecoder->parseUdtaTextAtom($child, $context);
             }
@@ -461,11 +486,11 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         // EXIF 3.0 Annex A.2 describes how the `meta` box aggregates
         // direct Exif boxes, UUID-wrapped payloads and item references, so we collect each
         // channel before normalising the referenced data.
-        $payloads                = $this->collectDirectPayloads($meta, $context, $fileOffsetOrigin);
-        $context->itemReferences = $this->itemLocationResolver->mergeItemReferencesByContext($context->itemReferences, $meta->offset, $payloads->itemReferences);
-        $context->dataReferences = $this->itemLocationResolver->mergeDataReferencesByContext($context->dataReferences, $meta->offset, $payloads->dataReferences);
+        $payloads                                 = $this->collectDirectPayloads($meta, $context, $fileOffsetOrigin);
+        $context->itemReferences                  = $this->itemLocationResolver->mergeItemReferencesByContext($context->itemReferences, $meta->offset, $payloads->itemReferences);
+        $context->dataReferences                  = $this->itemLocationResolver->mergeDataReferencesByContext($context->dataReferences, $meta->offset, $payloads->dataReferences);
 
-        $idatPayload = $payloads->idatPayload;
+        $idatPayload                              = $payloads->idatPayload;
 
         [$exifItemIds, $xmpItemIds, $tmapItemIds] = $this->itemLocationResolver->gatherItemIds($payloads->itemInfos, $payloads->primaryItemId);
 
@@ -476,7 +501,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         // Resolve EXIF item payloads and normalize leading headers.
         // EXIF 3.0 §4.8 notes that item payloads omit the APP1 signature; some
         // encoders still include it, so we normalize accordingly.
-        $exifResult = $this->itemLocationResolver->resolveQueuedItems($exifItemIds, $payloads->locations, $payloads->itemReferences, $this->itemPayloadResolver->normalizeExifBlob(...), $payloads->dataReferences, $idatPayload, $meta->offset);
+        $exifResult                               = $this->itemLocationResolver->resolveQueuedItems($exifItemIds, $payloads->locations, $payloads->itemReferences, $this->itemPayloadResolver->normalizeExifBlob(...), $payloads->dataReferences, $idatPayload, $meta->offset);
 
         foreach ($exifResult->unresolvedItems as $unresolvedItem) {
             $context->unresolvedItems[] = $unresolvedItem;
@@ -494,7 +519,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         }
 
         // Resolve referenced XMP payloads in declared priority order.
-        $xmpResult = $this->itemLocationResolver->resolveQueuedItems($xmpItemIds, $payloads->locations, $payloads->itemReferences, null, $payloads->dataReferences, $idatPayload, $meta->offset);
+        $xmpResult                                = $this->itemLocationResolver->resolveQueuedItems($xmpItemIds, $payloads->locations, $payloads->itemReferences, null, $payloads->dataReferences, $idatPayload, $meta->offset);
 
         foreach ($xmpResult->unresolvedItems as $unresolvedItem) {
             $context->unresolvedItems[] = $unresolvedItem;
@@ -512,7 +537,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $this->appendUniqueXmpToContext($context, $blob);
         }
 
-        [$mergedQtKeys, $mergedQtDataAtoms] = $this->quickTimeDecoder->mergeQuickTimeKeys(
+        [$mergedQtKeys, $mergedQtDataAtoms]       = $this->quickTimeDecoder->mergeQuickTimeKeys(
             $context->qtKeys,
             $payloads->keysMaps,
             $payloads->ilstBoxes,
@@ -523,8 +548,8 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             $payloads->isMdta,
             $payloads->isMdir,
         );
-        $context->qtKeys      = $mergedQtKeys;
-        $context->qtDataAtoms = $mergedQtDataAtoms;
+        $context->qtKeys                          = $mergedQtKeys;
+        $context->qtDataAtoms                     = $mergedQtDataAtoms;
 
         if (($context->ispeWidth === null) && ($payloads->ispeWidth !== null)) {
             $context->ispeWidth  = $payloads->ispeWidth;
@@ -565,15 +590,15 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             throw new ParseError('data box nested metadata payload exceeds maximum allowed size.', 1459);
         }
 
-        $metaSize = 8 + strlen($payload);
+        $metaSize     = 8 + strlen($payload);
 
-        $handle = fopen('php://temp', 'w+b');
+        $handle       = fopen('php://temp', 'w+b');
 
         if ($handle === false) {
             throw new ParseError('unable to create nested metadata stream.', 1992);
         }
 
-        $written = fwrite($handle, pack('N', $metaSize) . BoxType::META->value . $payload);
+        $written      = fwrite($handle, pack('N', $metaSize) . BoxType::META->value . $payload);
 
         if (!is_int($written) || ($written !== $metaSize)) {
             throw new ParseError('unable to write nested metadata payload.', 1465);
@@ -585,7 +610,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
         $nestedParser = new self($nestedStream, $this->config, $this->nestedMetadataDepth + 1);
         $context      = new IsoBmffParseContext();
 
-        $meta = $nestedParser->boxNavigator->readBoxAt(0, $metaSize);
+        $meta         = $nestedParser->boxNavigator->readBoxAt(0, $metaSize);
 
         if ($meta->type !== BoxType::META->value) {
             throw new ParseError('nested metadata payload is not a valid meta atom.', 1466);

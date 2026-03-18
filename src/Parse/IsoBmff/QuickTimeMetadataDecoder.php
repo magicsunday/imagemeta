@@ -44,7 +44,7 @@ final readonly class QuickTimeMetadataDecoder
      *
      * @var array<string, string>
      */
-    private const array UDTA_TEXT_KEYS = [
+    private const array UDTA_TEXT_KEYS   = [
         "\xA9nam" => 'com.apple.quicktime.title',
         "\xA9ART" => 'com.apple.quicktime.artist',
         "\xA9alb" => 'com.apple.quicktime.album',
@@ -58,6 +58,51 @@ final readonly class QuickTimeMetadataDecoder
         "\xA9swr" => 'com.apple.quicktime.software',
         "\xA9wrt" => 'com.apple.quicktime.author',
         "\xA9xyz" => 'com.apple.quicktime.location.ISO6709',
+        "\xA9arg" => 'com.apple.quicktime.arranger',
+        "\xA9ark" => 'com.apple.quicktime.arrangerKeywords',
+        "\xA9cok" => 'com.apple.quicktime.composerKeywords',
+        "\xA9com" => 'com.apple.quicktime.composer',
+        "\xA9dir" => 'com.apple.quicktime.director',
+        "\xA9ed1" => 'com.apple.quicktime.editDate1',
+        "\xA9ed2" => 'com.apple.quicktime.editDate2',
+        "\xA9ed3" => 'com.apple.quicktime.editDate3',
+        "\xA9ed4" => 'com.apple.quicktime.editDate4',
+        "\xA9ed5" => 'com.apple.quicktime.editDate5',
+        "\xA9ed6" => 'com.apple.quicktime.editDate6',
+        "\xA9ed7" => 'com.apple.quicktime.editDate7',
+        "\xA9ed8" => 'com.apple.quicktime.editDate8',
+        "\xA9ed9" => 'com.apple.quicktime.editDate9',
+        "\xA9fmt" => 'com.apple.quicktime.format',
+        "\xA9inf" => 'com.apple.quicktime.information',
+        "\xA9isr" => 'com.apple.quicktime.ISRCCode',
+        "\xA9lab" => 'com.apple.quicktime.recordLabel',
+        "\xA9lal" => 'com.apple.quicktime.recordLabelURL',
+        "\xA9mal" => 'com.apple.quicktime.makerURL',
+        "\xA9nak" => 'com.apple.quicktime.titleKeywords',
+        "\xA9pdk" => 'com.apple.quicktime.producerKeywords',
+        "\xA9phg" => 'com.apple.quicktime.recordingCopyright',
+        "\xA9prd" => 'com.apple.quicktime.producer',
+        "\xA9prf" => 'com.apple.quicktime.performers',
+        "\xA9prk" => 'com.apple.quicktime.mainArtistKeywords',
+        "\xA9prl" => 'com.apple.quicktime.mainArtistURL',
+        "\xA9req" => 'com.apple.quicktime.requirements',
+        "\xA9snk" => 'com.apple.quicktime.subtitleKeywords',
+        "\xA9snm" => 'com.apple.quicktime.subtitle',
+        "\xA9src" => 'com.apple.quicktime.sourceCredits',
+        "\xA9swf" => 'com.apple.quicktime.songwriter',
+        "\xA9swk" => 'com.apple.quicktime.songwriterKeywords',
+    ];
+
+    /**
+     * Recognized non-text user data atoms mapped to metadata keys.
+     *
+     * @var array<string, array{key: string, size: int, type: string}>
+     */
+    private const array UDTA_BINARY_KEYS = [
+        'LOOP' => ['key' => 'com.apple.quicktime.loopStyle',         'size' => 4, 'type' => 'u32'],
+        'SelO' => ['key' => 'com.apple.quicktime.playSelectionOnly', 'size' => 1, 'type' => 'u8'],
+        'AllF' => ['key' => 'com.apple.quicktime.playAllFrames',     'size' => 1, 'type' => 'u8'],
+        'WLOC' => ['key' => 'com.apple.quicktime.windowLocation',   'size' => 4, 'type' => 'u16pair'],
     ];
 
     /**
@@ -152,10 +197,10 @@ final readonly class QuickTimeMetadataDecoder
             return;
         }
 
-        $win = $name->window;
+        $win   = $name->window;
         $win->seek(0);
 
-        $raw = $win->read($name->contentSize);
+        $raw   = $win->read($name->contentSize);
 
         // Strip NULL terminator if present
         $value = rtrim($raw, "\0");
@@ -181,13 +226,13 @@ final readonly class QuickTimeMetadataDecoder
      */
     public function parseUdtaTextAtom(BoxDescriptor $atom, IsoBmffParseContext $context): void
     {
-        $key = self::UDTA_TEXT_KEYS[$atom->type] ?? null;
+        $key   = self::UDTA_TEXT_KEYS[$atom->type] ?? null;
 
         if ($key === null || $atom->contentSize < 1) {
             return;
         }
 
-        $win = $atom->window;
+        $win   = $atom->window;
         $win->seek(0);
 
         $raw   = $win->read($atom->contentSize);
@@ -196,6 +241,49 @@ final readonly class QuickTimeMetadataDecoder
         if ($value === '') {
             return;
         }
+
+        if (!array_key_exists($key, $context->qtKeys)) {
+            $context->qtKeys[$key] = $value;
+        }
+    }
+
+    /**
+     * Returns whether the given atom type is a recognized binary udta atom.
+     *
+     * @param string $type Four-character atom type.
+     */
+    public function isUdtaBinaryAtom(string $type): bool
+    {
+        return array_key_exists($type, self::UDTA_BINARY_KEYS);
+    }
+
+    /**
+     * Parses a recognized non-text binary user-data atom inside udta containers.
+     *
+     * QuickTime File Format 2012 §2 "User Data Atoms": recognized binary atom types
+     * are decoded into their respective metadata keys. Unknown atom types are ignored.
+     *
+     * @param BoxDescriptor       $atom    Box descriptor for a direct udta child atom.
+     * @param IsoBmffParseContext $context Shared parse-state context.
+     */
+    public function parseUdtaBinaryAtom(BoxDescriptor $atom, IsoBmffParseContext $context): void
+    {
+        $spec  = self::UDTA_BINARY_KEYS[$atom->type] ?? null;
+
+        if (($spec === null) || ($atom->contentSize < $spec['size'])) {
+            return;
+        }
+
+        $win   = $atom->window;
+        $win->seek(0);
+
+        $value = match ($spec['type']) {
+            'u32'     => $win->readU32BE(),
+            'u8'      => $win->readU8(),
+            'u16pair' => sprintf('%d %d', $win->readU16BE(), $win->readU16BE()),
+        };
+
+        $key   = $spec['key'];
 
         if (!array_key_exists($key, $context->qtKeys)) {
             $context->qtKeys[$key] = $value;
@@ -242,8 +330,8 @@ final readonly class QuickTimeMetadataDecoder
             throw new ParseError(sprintf('%s atom entry count %d exceeds maximum %d', $label, $entryCount, QuickTimeValueDecoder::MAX_LOCALE_LIST_ENTRIES), 1243);
         }
 
-        $entries  = [];
-        $consumed = 8; // version(1) + flags(3) + entry_count(4)
+        $entries    = [];
+        $consumed   = 8; // version(1) + flags(3) + entry_count(4)
 
         for ($i = 0; $i < $entryCount; ++$i) {
             if ($consumed + 2 > $box->contentSize) {
@@ -253,13 +341,13 @@ final readonly class QuickTimeMetadataDecoder
             $itemCount = $win->readU16BE();
             $consumed += 2;
 
-            $needed = $itemCount * 2;
+            $needed    = $itemCount * 2;
 
             if ($consumed + $needed > $box->contentSize) {
                 throw new ParseError(sprintf('%s atom entry %d truncated (expected %d codes, only %d bytes remain)', $label, $i + 1, $itemCount, $box->contentSize - $consumed), 1245);
             }
 
-            $codes = [];
+            $codes     = [];
 
             for ($j = 0; $j < $itemCount; ++$j) {
                 $codes[] = $win->readU16BE();
@@ -313,9 +401,9 @@ final readonly class QuickTimeMetadataDecoder
                 );
             }
 
-            $keyName  = null;
-            $itemName = null;
-            $index    = $this->valueDecoder->fourccToIndex($entry->type);
+            $keyName    = null;
+            $itemName   = null;
+            $index      = $this->valueDecoder->fourccToIndex($entry->type);
 
             if (($index !== null) && isset($keyIndex[$index])) {
                 $keyName = $this->keyResolver->resolveKeyName($keyIndex[$index]);
@@ -352,11 +440,11 @@ final readonly class QuickTimeMetadataDecoder
                 }
 
                 if ($sub->type === BoxType::DATA->value) {
-                    $structured = $this->valueDecoder->parseDataBoxStructured($sub);
+                    $structured                 = $this->valueDecoder->parseDataBoxStructured($sub);
                     $this->valueDecoder->validateLocaleIndicator($structured['locale'], $countryLists, $languageLists);
-                    $entryAtoms[] = $structured;
+                    $entryAtoms[]               = $structured;
 
-                    $effectiveKey = $keyName ?? $itemName;
+                    $effectiveKey               = $keyName ?? $itemName;
 
                     if ($effectiveKey === null) {
                         continue;
@@ -375,7 +463,7 @@ final readonly class QuickTimeMetadataDecoder
                         continue;
                     }
 
-                    $coerced = $this->valueDecoder->coerceQuickTimeValue($effectiveKey, $structured['value']);
+                    $coerced                    = $this->valueDecoder->coerceQuickTimeValue($effectiveKey, $structured['value']);
 
                     if (!array_key_exists($effectiveKey, $result)) {
                         $result[$effectiveKey] = $coerced;
@@ -422,15 +510,15 @@ final readonly class QuickTimeMetadataDecoder
     private function parseIlstNameAtom(BoxDescriptor $name, array &$seenNames): string
     {
         $this->validateFullAtomHeader($name, 'ilst name', 4, 1227, 1228, 1229);
-        $win = $name->window;
+        $win               = $name->window;
 
-        $payloadSize = $name->contentSize - 4;
+        $payloadSize       = $name->contentSize - 4;
 
         if ($payloadSize < 1) {
             throw new ParseError('ilst name atom has empty payload', 1230);
         }
 
-        $value = $win->read($payloadSize);
+        $value             = $win->read($payloadSize);
 
         if (!mb_check_encoding($value, 'UTF-8')) {
             throw new ParseError('ilst name atom contains invalid UTF-8', 1231);
@@ -463,9 +551,9 @@ final readonly class QuickTimeMetadataDecoder
     private function parseIlstItemInfo(BoxDescriptor $itif, array &$seenItemIds): void
     {
         $this->validateFullAtomHeader($itif, 'itif', 8, 1233, 1234, 1235);
-        $win = $itif->window;
+        $win                  = $itif->window;
 
-        $itemId = $win->readU32BE();
+        $itemId               = $win->readU32BE();
 
         if (array_key_exists($itemId, $seenItemIds)) {
             throw new ParseError(sprintf(
@@ -548,8 +636,8 @@ final readonly class QuickTimeMetadataDecoder
         ksort($nestedKeys);
 
         foreach ($nestedKeys as $nestedKey => $nestedValue) {
-            $flattenedKey = $parentKey . '.' . $nestedKey;
-            $coerced      = $this->valueDecoder->coerceQuickTimeValue($flattenedKey, $nestedValue);
+            $flattenedKey               = $parentKey . '.' . $nestedKey;
+            $coerced                    = $this->valueDecoder->coerceQuickTimeValue($flattenedKey, $nestedValue);
 
             if (!array_key_exists($flattenedKey, $result)) {
                 $result[$flattenedKey] = $coerced;

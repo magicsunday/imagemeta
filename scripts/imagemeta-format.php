@@ -105,6 +105,7 @@ use function filemtime;
 use function fileperms;
 use function filesize;
 use function implode;
+use function in_array;
 use function is_array;
 use function is_bool;
 use function is_float;
@@ -189,9 +190,56 @@ final class MetadataFormatter
      * @var array<string, string>
      */
     private const array QUICKTIME_KEY_LABELS = [
-        QuickTimeMeta::MAJOR_BRAND_KEY       => '0x0000 Major Brand',
-        QuickTimeMeta::MINOR_VERSION_KEY     => '0x0001 Minor Version',
-        QuickTimeMeta::COMPATIBLE_BRANDS_KEY => '0x0002 Compatible Brands',
+        QuickTimeMeta::MAJOR_BRAND_KEY            => '0x0000 Major Brand',
+        QuickTimeMeta::MINOR_VERSION_KEY          => '0x0001 Minor Version',
+        QuickTimeMeta::COMPATIBLE_BRANDS_KEY      => '0x0002 Compatible Brands',
+
+        // mvhd fields
+        QuickTimeMeta::CREATE_DATE_KEY            => 'Create Date',
+        QuickTimeMeta::MODIFY_DATE_KEY            => 'Modify Date',
+        QuickTimeMeta::TIME_SCALE_KEY             => 'Time Scale',
+        QuickTimeMeta::DURATION_KEY               => 'Duration',
+        QuickTimeMeta::PREFERRED_RATE_KEY         => 'Preferred Rate',
+        QuickTimeMeta::PREFERRED_VOLUME_KEY       => 'Preferred Volume',
+        QuickTimeMeta::MATRIX_STRUCTURE_KEY       => 'Matrix Structure',
+        QuickTimeMeta::NEXT_TRACK_ID_KEY          => 'Next Track ID',
+        QuickTimeMeta::PREVIEW_TIME_KEY           => 'Preview Time',
+        QuickTimeMeta::PREVIEW_DURATION_KEY       => 'Preview Duration',
+        QuickTimeMeta::POSTER_TIME_KEY            => 'Poster Time',
+        QuickTimeMeta::SELECTION_TIME_KEY         => 'Selection Time',
+        QuickTimeMeta::SELECTION_DURATION_KEY     => 'Selection Duration',
+        QuickTimeMeta::CURRENT_TIME_KEY           => 'Current Time',
+
+        // tkhd fields
+        QuickTimeMeta::TRACK_CREATE_DATE_KEY      => 'Track Create Date',
+        QuickTimeMeta::TRACK_MODIFY_DATE_KEY      => 'Track Modify Date',
+        QuickTimeMeta::TRACK_ID_KEY               => 'Track ID',
+        QuickTimeMeta::TRACK_DURATION_KEY         => 'Track Duration',
+        QuickTimeMeta::TRACK_LAYER_KEY            => 'Track Layer',
+        QuickTimeMeta::TRACK_VOLUME_KEY           => 'Track Volume',
+        QuickTimeMeta::ROTATION_KEY               => 'Rotation',
+        QuickTimeMeta::TRACK_MATRIX_KEY           => 'Track Matrix Structure',
+
+        // mdhd fields
+        QuickTimeMeta::MEDIA_CREATE_DATE_KEY      => 'Media Create Date',
+        QuickTimeMeta::MEDIA_MODIFY_DATE_KEY      => 'Media Modify Date',
+        QuickTimeMeta::MEDIA_DURATION_KEY         => 'Media Duration',
+        QuickTimeMeta::MEDIA_TIME_SCALE_KEY       => 'Media Time Scale',
+        QuickTimeMeta::MEDIA_LANGUAGE_CODE_KEY    => 'Media Language Code',
+
+        // Sample entry fields
+        QuickTimeMeta::VIDEO_BIT_DEPTH_KEY        => 'Bit Depth',
+
+        // vmhd/smhd fields
+        QuickTimeMeta::GRAPHICS_MODE_KEY          => 'Graphics Mode',
+        QuickTimeMeta::OP_COLOR_KEY               => 'Op Color',
+        QuickTimeMeta::BALANCE_KEY                => 'Balance',
+
+        // udta binary atoms
+        QuickTimeMeta::LOOP_KEY                   => 'Loop Style',
+        QuickTimeMeta::PLAY_SELECTION_ONLY_KEY    => 'Play Selection Only',
+        QuickTimeMeta::PLAY_ALL_FRAMES_KEY        => 'Play All Frames',
+        QuickTimeMeta::WINDOW_LOCATION_KEY        => 'Window Location',
     ];
 
     /**
@@ -2547,7 +2595,7 @@ final class MetadataFormatter
             }
 
             $label        = $this->formatQuickTimeLabel($key);
-            $data[$label] = $value;
+            $data[$label] = $this->formatQuickTimeValue($key, $value);
         }
 
         if ($data !== []) {
@@ -2591,6 +2639,42 @@ final class MetadataFormatter
         }
 
         $this->printSection('DJI Telemetry', $data);
+    }
+
+    /**
+     * Formats a Mac epoch timestamp (seconds since 1904-01-01) as ExifTool-style date string.
+     */
+    private function formatMacTimestamp(int $macTimestamp): string
+    {
+        $unixTimestamp = $macTimestamp - 2_082_844_800;
+        $dt            = new DateTimeImmutable('@' . $unixTimestamp, new DateTimeZone('UTC'));
+
+        return $dt->format('Y:m:d H:i:s');
+    }
+
+    /**
+     * Formats a QuickTime value based on its key type for display.
+     */
+    private function formatQuickTimeValue(string $key, string|int|float|bool $value): string|int|float|bool
+    {
+        // Mac epoch timestamps
+        if (is_int($value) && in_array($key, [
+            QuickTimeMeta::CREATE_DATE_KEY,
+            QuickTimeMeta::MODIFY_DATE_KEY,
+            QuickTimeMeta::TRACK_CREATE_DATE_KEY,
+            QuickTimeMeta::TRACK_MODIFY_DATE_KEY,
+            QuickTimeMeta::MEDIA_CREATE_DATE_KEY,
+            QuickTimeMeta::MEDIA_MODIFY_DATE_KEY,
+        ], true)) {
+            return $this->formatMacTimestamp($value);
+        }
+
+        // Volume as percentage
+        if (is_float($value) && ($key === QuickTimeMeta::PREFERRED_VOLUME_KEY)) {
+            return sprintf('%.2f%%', $value * 100);
+        }
+
+        return $value;
     }
 
     /**

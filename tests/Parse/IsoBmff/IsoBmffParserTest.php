@@ -54,6 +54,7 @@ use function iconv;
 use function is_int;
 use function pack;
 use function sort;
+use function str_repeat;
 use function strlen;
 use function substr;
 
@@ -105,11 +106,11 @@ final class IsoBmffParserTest extends TestCase
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
         $data        = $ftyp . $meta;
 
-        $extractor = $this->createExtractor($data);
-        $result    = $extractor->extract();
-        $exifs     = $result->exifBlobs;
-        $xmps      = $result->xmpBlobs;
-        $qt        = $result->quickTimeMeta;
+        $extractor   = $this->createExtractor($data);
+        $result      = $extractor->extract();
+        $exifs       = $result->exifBlobs;
+        $xmps        = $result->xmpBlobs;
+        $qt          = $result->quickTimeMeta;
 
         self::assertSame(["MM\x00\x2Aprimary-exif"], $exifs);
         self::assertSame([], $xmps);
@@ -128,11 +129,11 @@ final class IsoBmffParserTest extends TestCase
         $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
         $data        = $ftyp . $meta;
 
-        $extractor = $this->createExtractor($data);
-        $result    = $extractor->extract();
-        $exifs     = $result->exifBlobs;
-        $xmps      = $result->xmpBlobs;
-        $qt        = $result->quickTimeMeta;
+        $extractor   = $this->createExtractor($data);
+        $result      = $extractor->extract();
+        $exifs       = $result->exifBlobs;
+        $xmps        = $result->xmpBlobs;
+        $qt          = $result->quickTimeMeta;
 
         self::assertSame(["MM\x00\x2Aquicktime-exif"], $exifs);
         self::assertSame([], $xmps);
@@ -151,11 +152,11 @@ final class IsoBmffParserTest extends TestCase
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
         $data        = $ftyp . $meta;
 
-        $extractor = $this->createExtractor($data);
-        $result    = $extractor->extract();
-        $exifs     = $result->exifBlobs;
-        $xmps      = $result->xmpBlobs;
-        $qt        = $result->quickTimeMeta;
+        $extractor   = $this->createExtractor($data);
+        $result      = $extractor->extract();
+        $exifs       = $result->exifBlobs;
+        $xmps        = $result->xmpBlobs;
+        $qt          = $result->quickTimeMeta;
 
         self::assertSame(["MM\x00\x2Aisom-exif"], $exifs);
         self::assertSame([], $xmps);
@@ -194,7 +195,7 @@ final class IsoBmffParserTest extends TestCase
     {
         $payload = $this->extendedBox('hdlr', "\0\0\0\0");
 
-        $offset = $this->detectMetaChildOffsetForPayload($payload, true);
+        $offset  = $this->detectMetaChildOffsetForPayload($payload, true);
 
         self::assertSame(0, $offset);
     }
@@ -207,7 +208,7 @@ final class IsoBmffParserTest extends TestCase
     {
         $payload = $this->box('hdlr', "\0\0\0\0");
 
-        $offset = $this->detectMetaChildOffsetForPayload($payload, false);
+        $offset  = $this->detectMetaChildOffsetForPayload($payload, false);
 
         self::assertSame(0, $offset);
     }
@@ -220,7 +221,7 @@ final class IsoBmffParserTest extends TestCase
     {
         $payload = "\0\0\0\0" . $this->extendedBox('hdlr', "\0\0\0\0");
 
-        $offset = $this->detectMetaChildOffsetForPayload($payload, false);
+        $offset  = $this->detectMetaChildOffsetForPayload($payload, false);
 
         self::assertSame(4, $offset);
     }
@@ -231,20 +232,20 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parserDelegatesToBoxPayloadCollector(): void
     {
-        $exifPayload = pack('N', 0) . "MM\x00\x2Adelegation-test";
-        $meta        = $this->fullBox('meta', $this->box('Exif', $exifPayload));
-        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
-        $data        = $ftyp . $meta;
+        $exifPayload   = pack('N', 0) . "MM\x00\x2Adelegation-test";
+        $meta          = $this->fullBox('meta', $this->box('Exif', $exifPayload));
+        $ftyp          = $this->box('ftyp', 'isom' . pack('N', 0));
+        $data          = $ftyp . $meta;
 
-        $parser = $this->createExtractor($data);
+        $parser        = $this->createExtractor($data);
 
         $collectorProp = new ReflectionProperty(IsoBmffParser::class, 'boxPayloadCollector');
         $collector     = $collectorProp->getValue($parser);
 
         self::assertNotNull($collector);
 
-        $result = $parser->extract();
-        $exifs  = $result->exifBlobs;
+        $result        = $parser->extract();
+        $exifs         = $result->exifBlobs;
 
         self::assertSame(["MM\x00\x2Adelegation-test"], $exifs);
     }
@@ -256,8 +257,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeOneBytUnsignedIntPayload(): void
     {
-        $keyName = 'com.apple.quicktime.live-photo.auto';
-        $file    = $this->createQuickTimeKeysFileWithCustomKey($keyName, 0x16, "\x01");
+        $keyName   = 'com.apple.quicktime.live-photo.auto';
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($keyName, 0x16, "\x01");
 
         $extractor = $this->createExtractor($file);
         $quickTime = $extractor->extract()->quickTimeMeta;
@@ -273,8 +274,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeOneByteUnsignedIntMaxPayload(): void
     {
-        $key     = 'com.apple.quicktime.test';
-        $payload = hex2bin('FF');
+        $key       = 'com.apple.quicktime.test';
+        $payload   = hex2bin('FF');
         self::assertIsString($payload);
 
         $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
@@ -292,8 +293,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeOneByteSignedIntPayload(): void
     {
-        $keyName = 'com.apple.quicktime.live-photo.auto';
-        $file    = $this->createQuickTimeKeysFileWithCustomKey($keyName, 0x15, "\x01");
+        $keyName   = 'com.apple.quicktime.live-photo.auto';
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($keyName, 0x15, "\x01");
 
         $extractor = $this->createExtractor($file);
         $quickTime = $extractor->extract()->quickTimeMeta;
@@ -309,8 +310,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeEightByteUnsignedIntPayload(): void
     {
-        $key     = 'com.apple.quicktime.test';
-        $payload = pack('N2', 0, 42);
+        $key       = 'com.apple.quicktime.test';
+        $payload   = pack('N2', 0, 42);
 
         $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
         $extractor = $this->createExtractor($file);
@@ -326,8 +327,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeEightByteSignedIntPayload(): void
     {
-        $key     = 'com.apple.quicktime.test';
-        $payload = hex2bin('FFFFFFFFFFFFFFFE');
+        $key       = 'com.apple.quicktime.test';
+        $payload   = hex2bin('FFFFFFFFFFFFFFFE');
         self::assertIsString($payload);
 
         $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
@@ -345,9 +346,9 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function resolveIlocMultiExtent(): void
     {
-        $exifBlob = pack('N', 0) . "MM\x00\x2Asegment-onesegment-two";
-        $part1    = substr($exifBlob, 0, 10);
-        $part2    = substr($exifBlob, 10);
+        $exifBlob    = pack('N', 0) . "MM\x00\x2Asegment-onesegment-two";
+        $part1       = substr($exifBlob, 0, 10);
+        $part2       = substr($exifBlob, 10);
 
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $infe        = $this->box('infe', $infePayload);
@@ -367,7 +368,7 @@ final class IsoBmffParserTest extends TestCase
             return $this->box('iloc', $payload);
         };
 
-        $iinf = $this->box('iinf', $iinfPayload);
+        $iinf        = $this->box('iinf', $iinfPayload);
 
         // Build once to compute offsets
         $metaPayload = $iinf . $ilocBuilder(0, 0, strlen($part1), strlen($part2));
@@ -376,13 +377,13 @@ final class IsoBmffParserTest extends TestCase
         $mdatPayload = $part1 . $part2;
         $mdat        = $this->box('mdat', $mdatPayload);
 
-        $offsetBase = strlen($ftyp) + strlen($meta) + 8; // mdat payload offset
-        $iloc       = $ilocBuilder($offsetBase, $offsetBase + strlen($part1), strlen($part1), strlen($part2));
-        $meta       = $this->fullBox('meta', $iinf . $iloc);
-        $data       = $ftyp . $meta . $mdat;
+        $offsetBase  = strlen($ftyp) + strlen($meta) + 8; // mdat payload offset
+        $iloc        = $ilocBuilder($offsetBase, $offsetBase + strlen($part1), strlen($part1), strlen($part2));
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $data        = $ftyp . $meta . $mdat;
 
-        $extractor = $this->createExtractor($data);
-        $exifs     = $extractor->extract()->exifBlobs;
+        $extractor   = $this->createExtractor($data);
+        $exifs       = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Asegment-onesegment-two"], $exifs);
     }
@@ -394,7 +395,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function resolveIlocVersion1(): void
     {
-        $exifBlob = pack('N', 0) . "MM\x00\x2Aversion-one-data";
+        $exifBlob    = pack('N', 0) . "MM\x00\x2Aversion-one-data";
 
         // Build infe for Exif item (version 2 infe with item_ID as 16-bit)
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
@@ -427,13 +428,13 @@ final class IsoBmffParserTest extends TestCase
         $ftyp        = $this->box('ftyp', 'heic' . pack('N', 0));
         $mdat        = $this->box('mdat', $exifBlob);
 
-        $offsetBase = strlen($ftyp) + strlen($meta) + 8; // mdat payload starts after header
-        $iloc       = $ilocBuilder($offsetBase, strlen($exifBlob));
-        $meta       = $this->fullBox('meta', $iinf . $iloc);
-        $data       = $ftyp . $meta . $mdat;
+        $offsetBase  = strlen($ftyp) + strlen($meta) + 8; // mdat payload starts after header
+        $iloc        = $ilocBuilder($offsetBase, strlen($exifBlob));
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $data        = $ftyp . $meta . $mdat;
 
-        $extractor = $this->createExtractor($data);
-        $exifs     = $extractor->extract()->exifBlobs;
+        $extractor   = $this->createExtractor($data);
+        $exifs       = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Aversion-one-data"], $exifs);
     }
@@ -445,7 +446,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function resolveIlocVersion2Uses32BitItemId(): void
     {
-        $exifBlob = pack('N', 0) . "MM\x00\x2Aversion-two-data";
+        $exifBlob    = pack('N', 0) . "MM\x00\x2Aversion-two-data";
 
         // Build infe for Exif item (version 2 infe with item_ID as 16-bit)
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
@@ -474,13 +475,13 @@ final class IsoBmffParserTest extends TestCase
         $ftyp        = $this->box('ftyp', 'heic' . pack('N', 0));
         $mdat        = $this->box('mdat', $exifBlob);
 
-        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
-        $iloc       = $ilocBuilder($offsetBase, strlen($exifBlob));
-        $meta       = $this->fullBox('meta', $iinf . $iloc);
-        $data       = $ftyp . $meta . $mdat;
+        $offsetBase  = strlen($ftyp) + strlen($meta) + 8;
+        $iloc        = $ilocBuilder($offsetBase, strlen($exifBlob));
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $data        = $ftyp . $meta . $mdat;
 
-        $extractor = $this->createExtractor($data);
-        $exifs     = $extractor->extract()->exifBlobs;
+        $extractor   = $this->createExtractor($data);
+        $exifs       = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Aversion-two-data"], $exifs);
     }
@@ -495,7 +496,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('iloc construction_method value out of range');
 
-        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
 
         // Deliberately malformed for v2: item_ID encoded as 16-bit like v0/v1.
         $ilocPayload = "\x44";       // offset_size=4, length_size=4
@@ -505,12 +506,12 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload .= pack('n', 0); // legacy construction_method field
         $ilocPayload .= pack('n', 4); // legacy data_reference_index (misread as construction_method)
         $ilocPayload .= pack('n', 0); // extent_count = 0
-        $iloc = $this->fullBox('iloc', $ilocPayload, 2, 0);
+        $iloc        = $this->fullBox('iloc', $ilocPayload, 2, 0);
 
-        $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'heic' . pack('N', 0));
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp        = $this->box('ftyp', 'heic' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -521,10 +522,10 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesDirectXmpFromMoofMetaBox(): void
     {
-        $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">moof-meta</x:xmpmeta>';
-        $meta = $this->fullBox('meta', $this->box('XMP ', $xmp));
-        $moof = $this->box('moof', $meta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $xmp       = '<x:xmpmeta xmlns:x="adobe:ns:meta/">moof-meta</x:xmpmeta>';
+        $meta      = $this->fullBox('meta', $this->box('XMP ', $xmp));
+        $moof      = $this->box('moof', $meta);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moof);
         $xmps      = $extractor->extract()->xmpBlobs;
@@ -539,13 +540,13 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function resolveIlocFileOffsetInMoofMetaUsesMoofOrigin(): void
     {
-        $exifBlob = pack('N', 0) . "MM\x00\x2Amoof-origin";
+        $exifBlob           = pack('N', 0) . "MM\x00\x2Amoof-origin";
 
-        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
-        $infe        = $this->box('infe', $infePayload);
-        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
+        $infePayload        = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $infe               = $this->box('infe', $infePayload);
+        $iinf               = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
 
-        $buildIloc = function (int $offset, int $length): string {
+        $buildIloc          = function (int $offset, int $length): string {
             $payload = "\0\0\0\0";
             $payload .= "\x44";
             $payload .= "\0";
@@ -559,20 +560,20 @@ final class IsoBmffParserTest extends TestCase
             return $this->box('iloc', $payload);
         };
 
-        $meta = $this->fullBox('meta', $iinf . $buildIloc(0, strlen($exifBlob)));
-        $moof = $this->box('moof', $meta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
-        $mdat = $this->box('mdat', $exifBlob);
+        $meta               = $this->fullBox('meta', $iinf . $buildIloc(0, strlen($exifBlob)));
+        $moof               = $this->box('moof', $meta);
+        $ftyp               = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat               = $this->box('mdat', $exifBlob);
 
         $moofOffset         = strlen($ftyp);
         $absoluteDataOffset = strlen($ftyp) + strlen($moof) + 8;
         $moofRelativeOffset = $absoluteDataOffset - $moofOffset;
 
-        $meta = $this->fullBox('meta', $iinf . $buildIloc($moofRelativeOffset, strlen($exifBlob)));
-        $moof = $this->box('moof', $meta);
+        $meta               = $this->fullBox('meta', $iinf . $buildIloc($moofRelativeOffset, strlen($exifBlob)));
+        $moof               = $this->box('moof', $meta);
 
-        $extractor = $this->createExtractor($ftyp . $moof . $mdat);
-        $exifs     = $extractor->extract()->exifBlobs;
+        $extractor          = $this->createExtractor($ftyp . $moof . $mdat);
+        $exifs              = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Amoof-origin"], $exifs);
     }
@@ -608,12 +609,12 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload = "\x14";       // offset_size=1 (invalid), length_size=4
         $ilocPayload .= "\x00";       // base_offset_size=0, index_size=0
         $ilocPayload .= pack('n', 0); // item_count = 0
-        $iloc = $this->fullBox('iloc', $ilocPayload);
+        $iloc        = $this->fullBox('iloc', $ilocPayload);
 
-        $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -633,12 +634,12 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload = "\x44";       // offset_size=4, length_size=4
         $ilocPayload .= "\x02";       // base_offset_size=0 (high), index_size=2 (invalid)
         $ilocPayload .= pack('n', 0); // item_count = 0
-        $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
+        $iloc        = $this->fullBox('iloc', $ilocPayload, 1, 0);
 
-        $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -658,12 +659,12 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload = "\x44";       // offset_size=4, length_size=4
         $ilocPayload .= "\x04";       // base_offset_size=0 (high), reserved=4 (low, should be 0)
         $ilocPayload .= pack('n', 0); // item_count = 0
-        $iloc = $this->fullBox('iloc', $ilocPayload, 0, 0);
+        $iloc        = $this->fullBox('iloc', $ilocPayload, 0, 0);
 
-        $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -683,12 +684,12 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload .= pack('n', 0x0010); // reserved bits set (bit 4)
         $ilocPayload .= pack('n', 0);   // data_reference_index = 0
         $ilocPayload .= pack('n', 0);   // extent_count = 0
-        $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
+        $iloc        = $this->fullBox('iloc', $ilocPayload, 1, 0);
 
-        $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $this->expectNotToPerformAssertions();
         $extractor->extract();
     }
@@ -709,12 +710,12 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload .= pack('n', 0x0010); // reserved bits set (bit 4)
         $ilocPayload .= pack('n', 0);   // data_reference_index = 0
         $ilocPayload .= pack('n', 0);   // extent_count = 0
-        $iloc = $this->fullBox('iloc', $ilocPayload, 2, 0);
+        $iloc        = $this->fullBox('iloc', $ilocPayload, 2, 0);
 
-        $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $this->expectNotToPerformAssertions();
         $extractor->extract();
     }
@@ -739,12 +740,12 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload .= pack('n', 0x0004); // construction_method=4 (invalid)
         $ilocPayload .= pack('n', 0);   // data_reference_index = 0
         $ilocPayload .= pack('n', 0);   // extent_count = 0
-        $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
+        $iloc        = $this->fullBox('iloc', $ilocPayload, 1, 0);
 
-        $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -825,12 +826,12 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload .= pack('n', 1);   // item_id = 1 (duplicate)
         $ilocPayload .= pack('n', 0);   // data_reference_index = 0
         $ilocPayload .= pack('n', 0);   // extent_count = 0
-        $iloc = $this->fullBox('iloc', $ilocPayload);
+        $iloc        = $this->fullBox('iloc', $ilocPayload);
 
-        $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -841,12 +842,12 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function extractXmpFromUuidAndItem(): void
     {
-        $uuidGuid  = hex2bin('be7acfcb97a942e89c71999491e3afac');
-        $uuidXmp   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">uuid</x:xmpmeta>';
-        $directXmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/">direct</x:xmpmeta>';
-        $itemXmp   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">item</x:xmpmeta>';
+        $uuidGuid    = hex2bin('be7acfcb97a942e89c71999491e3afac');
+        $uuidXmp     = '<x:xmpmeta xmlns:x="adobe:ns:meta/">uuid</x:xmpmeta>';
+        $directXmp   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">direct</x:xmpmeta>';
+        $itemXmp     = '<x:xmpmeta xmlns:x="adobe:ns:meta/">item</x:xmpmeta>';
 
-        $uuidBox = $this->box('uuid', $uuidGuid . $uuidXmp);
+        $uuidBox     = $this->box('uuid', $uuidGuid . $uuidXmp);
 
         $infePayload = "\x02\0\0\0" . pack('n', 2) . pack('n', 0) . 'xmp' . "\0" . 'application/rdf+xml' . "\0\0";
         $infe        = $this->box('infe', $infePayload);
@@ -875,13 +876,13 @@ final class IsoBmffParserTest extends TestCase
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
         $mdat        = $this->box('mdat', $xmpData);
 
-        $offsetBase = strlen($ftyp) + strlen($uuidBox) + strlen($meta) + 8;
-        $iloc       = $ilocBuilder($offsetBase, strlen($xmpData));
-        $meta       = $this->fullBox('meta', $pitm . $iinf . $iloc . $this->box('XMP ', $directXmp));
-        $data       = $ftyp . $uuidBox . $meta . $mdat;
+        $offsetBase  = strlen($ftyp) + strlen($uuidBox) + strlen($meta) + 8;
+        $iloc        = $ilocBuilder($offsetBase, strlen($xmpData));
+        $meta        = $this->fullBox('meta', $pitm . $iinf . $iloc . $this->box('XMP ', $directXmp));
+        $data        = $ftyp . $uuidBox . $meta . $mdat;
 
-        $extractor = $this->createExtractor($data);
-        $xmps      = $extractor->extract()->xmpBlobs;
+        $extractor   = $this->createExtractor($data);
+        $xmps        = $extractor->extract()->xmpBlobs;
 
         self::assertSame([$itemXmp, $directXmp, $uuidXmp], $xmps);
     }
@@ -895,7 +896,7 @@ final class IsoBmffParserTest extends TestCase
         $primaryImagePayload = 'PRIMARY-IMAGE-PAYLOAD';
         $xmpPayload          = '<x:xmpmeta xmlns:x="adobe:ns:meta/">descriptor-xmp</x:xmpmeta>';
 
-        $data = $this->createItemBasedMetaFile(
+        $data                = $this->createItemBasedMetaFile(
             [
                 ['id' => 1, 'name' => 'PrimaryImage', 'contentType' => 'image/heic', 'payload' => $primaryImagePayload],
                 ['id' => 2, 'name' => 'XmpMetadata', 'contentType' => 'application/rdf+xml', 'payload' => $xmpPayload],
@@ -903,8 +904,8 @@ final class IsoBmffParserTest extends TestCase
             1,
         );
 
-        $extractor = $this->createExtractor($data);
-        $xmps      = $extractor->extract()->xmpBlobs;
+        $extractor           = $this->createExtractor($data);
+        $xmps                = $extractor->extract()->xmpBlobs;
 
         self::assertSame([$xmpPayload], $xmps);
     }
@@ -918,7 +919,7 @@ final class IsoBmffParserTest extends TestCase
         $xmpFirst  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">xmp-first</x:xmpmeta>';
         $xmpSecond = '<x:xmpmeta xmlns:x="adobe:ns:meta/">xmp-second-primary</x:xmpmeta>';
 
-        $data = $this->createItemBasedMetaFile(
+        $data      = $this->createItemBasedMetaFile(
             [
                 ['id' => 1, 'name' => 'XmpOne', 'contentType' => 'application/rdf+xml', 'payload' => $xmpFirst],
                 ['id' => 2, 'name' => 'XmpTwo', 'contentType' => 'application/rdf+xml', 'payload' => $xmpSecond],
@@ -941,7 +942,7 @@ final class IsoBmffParserTest extends TestCase
         $xmpFirst  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">xmp-order-1</x:xmpmeta>';
         $xmpSecond = '<x:xmpmeta xmlns:x="adobe:ns:meta/">xmp-order-2</x:xmpmeta>';
 
-        $data = $this->createItemBasedMetaFile(
+        $data      = $this->createItemBasedMetaFile(
             [
                 ['id' => 11, 'name' => 'XmpOne', 'contentType' => 'application/rdf+xml', 'payload' => $xmpFirst],
                 ['id' => 12, 'name' => 'XmpTwo', 'contentType' => 'application/rdf+xml', 'payload' => $xmpSecond],
@@ -966,7 +967,7 @@ final class IsoBmffParserTest extends TestCase
         $exifFirst      = "MM\x00\x2Aitem-exif-first";
         $exifPrimary    = "MM\x00\x2Aitem-exif-primary";
 
-        $data = $this->createItemBasedMetaFile(
+        $data           = $this->createItemBasedMetaFile(
             [
                 ['id' => 1, 'name' => 'ExifOne', 'contentType' => 'application/exif', 'payload' => $exifFirstRaw],
                 ['id' => 2, 'name' => 'ExifTwo', 'contentType' => 'application/exif', 'payload' => $exifPrimaryRaw],
@@ -974,8 +975,8 @@ final class IsoBmffParserTest extends TestCase
             2,
         );
 
-        $extractor = $this->createExtractor($data);
-        $exifBlobs = $extractor->extract()->exifBlobs;
+        $extractor      = $this->createExtractor($data);
+        $exifBlobs      = $extractor->extract()->exifBlobs;
 
         self::assertSame([$exifPrimary, $exifFirst], $exifBlobs);
     }
@@ -990,10 +991,10 @@ final class IsoBmffParserTest extends TestCase
         $itemExif    = "MM\x00\x2Aitem-based-exif";
         $directExif  = "MM\x00\x2Adirect-exif-box";
 
-        $data = $this->createMetaFileWithDirectAndItemExif($itemExifRaw, $directExif, 1);
+        $data        = $this->createMetaFileWithDirectAndItemExif($itemExifRaw, $directExif, 1);
 
-        $extractor = $this->createExtractor($data);
-        $exifBlobs = $extractor->extract()->exifBlobs;
+        $extractor   = $this->createExtractor($data);
+        $exifBlobs   = $extractor->extract()->exifBlobs;
 
         self::assertSame([$itemExif, $directExif], $exifBlobs);
     }
@@ -1009,7 +1010,7 @@ final class IsoBmffParserTest extends TestCase
         $exifFirst     = "MM\x00\x2Afallback-exif-1";
         $exifSecond    = "MM\x00\x2Afallback-exif-2";
 
-        $data = $this->createItemBasedMetaFile(
+        $data          = $this->createItemBasedMetaFile(
             [
                 ['id' => 7, 'name' => 'ExifOne', 'contentType' => 'application/exif', 'payload' => $exifFirstRaw],
                 ['id' => 8, 'name' => 'ExifTwo', 'contentType' => 'application/exif', 'payload' => $exifSecondRaw],
@@ -1017,8 +1018,8 @@ final class IsoBmffParserTest extends TestCase
             null,
         );
 
-        $extractor = $this->createExtractor($data);
-        $exifBlobs = $extractor->extract()->exifBlobs;
+        $extractor     = $this->createExtractor($data);
+        $exifBlobs     = $extractor->extract()->exifBlobs;
 
         self::assertSame([$exifFirst, $exifSecond], $exifBlobs);
     }
@@ -1030,8 +1031,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function readContentIdentifierFromKeysOrMdta(): void
     {
-        $keysValue = 'id-from-keys';
-        $mdtaValue = 'id-from-mdta';
+        $keysValue     = 'id-from-keys';
+        $mdtaValue     = 'id-from-mdta';
 
         $keysFile      = $this->createFileWithQuickTimeKeys($keysValue);
         $keysExtractor = $this->createExtractor($keysFile);
@@ -1054,15 +1055,15 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parseMdtaFreeformShortNamePayload(): void
     {
-        $mean     = $this->box('mean', pack('N', 0) . 'com.apple.quicktime');
-        $name     = $this->box('name', pack('N', 0) . 'abc');
-        $data     = $this->box('data', pack('N', 1) . pack('N', 0) . 'short-name-value');
-        $freeform = $this->box('----', $mean . $name . $data);
-        $ilst     = $this->box('ilst', $freeform);
+        $mean      = $this->box('mean', pack('N', 0) . 'com.apple.quicktime');
+        $name      = $this->box('name', pack('N', 0) . 'abc');
+        $data      = $this->box('data', pack('N', 1) . pack('N', 0) . 'short-name-value');
+        $freeform  = $this->box('----', $mean . $name . $data);
+        $ilst      = $this->box('ilst', $freeform);
 
-        $meta = $this->box('meta', pack('N', 0) . $ilst);
-        $moov = $this->moov($meta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta      = $this->box('meta', pack('N', 0) . $ilst);
+        $moov      = $this->moov($meta);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -1087,9 +1088,9 @@ final class IsoBmffParserTest extends TestCase
         $freeform = $this->box('----', $mean . $name . $data);
         $ilst     = $this->box('ilst', $freeform);
 
-        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
-        $moov = $this->moov($meta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta     = $this->box('meta', "\0\0\0\0" . $ilst);
+        $moov     = $this->moov($meta);
+        $ftyp     = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -1110,9 +1111,9 @@ final class IsoBmffParserTest extends TestCase
         $freeform = $this->box('----', $mean . $name . $data);
         $ilst     = $this->box('ilst', $freeform);
 
-        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
-        $moov = $this->moov($meta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta     = $this->box('meta', "\0\0\0\0" . $ilst);
+        $moov     = $this->moov($meta);
+        $ftyp     = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -1133,9 +1134,9 @@ final class IsoBmffParserTest extends TestCase
         $freeform = $this->box('----', $mean . $name . $data);
         $ilst     = $this->box('ilst', $freeform);
 
-        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
-        $moov = $this->moov($meta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta     = $this->box('meta', "\0\0\0\0" . $ilst);
+        $moov     = $this->moov($meta);
+        $ftyp     = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -1147,8 +1148,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeUtf16DataBoxToUtf8(): void
     {
-        $value   = 'Identifier UTF16';
-        $encoded = iconv('UTF-8', 'UTF-16BE', $value);
+        $value        = 'Identifier UTF16';
+        $encoded      = iconv('UTF-8', 'UTF-16BE', $value);
         self::assertIsString($encoded);
         $utf16Payload = $encoded . "\0\0";
         $file         = $this->createQuickTimeKeysFileWithData(2, $utf16Payload);
@@ -1182,8 +1183,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeShiftJisDataBoxTypeToUtf8(): void
     {
-        $value    = '東京';
-        $shiftJis = iconv('UTF-8', 'SJIS', $value);
+        $value     = '東京';
+        $shiftJis  = iconv('UTF-8', 'SJIS', $value);
         self::assertIsString($shiftJis);
         $file      = $this->createQuickTimeKeysFileWithData(3, $shiftJis);
         $extractor = $this->createExtractor($file);
@@ -1214,8 +1215,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeUtf16SortDataBoxTypeToUtf8(): void
     {
-        $value = 'Sort UTF16';
-        $utf16 = iconv('UTF-8', 'UTF-16BE', $value);
+        $value     = 'Sort UTF16';
+        $utf16     = iconv('UTF-8', 'UTF-16BE', $value);
         self::assertIsString($utf16);
         $file      = $this->createQuickTimeKeysFileWithData(5, $utf16);
         $extractor = $this->createExtractor($file);
@@ -1276,9 +1277,9 @@ final class IsoBmffParserTest extends TestCase
         $utf16File    = $this->createQuickTimeKeysFileWithData(2, $utf16Payload);
         $macRomanFile = $this->createQuickTimeKeysFileWithData(7, 'Caf' . chr(0x8E) . ' Legacy' . "\0");
 
-        $utf8Meta  = $this->createExtractor($utf8File)->extract()->quickTimeMeta;
-        $utf16Meta = $this->createExtractor($utf16File)->extract()->quickTimeMeta;
-        $macMeta   = $this->createExtractor($macRomanFile)->extract()->quickTimeMeta;
+        $utf8Meta     = $this->createExtractor($utf8File)->extract()->quickTimeMeta;
+        $utf16Meta    = $this->createExtractor($utf16File)->extract()->quickTimeMeta;
+        $macMeta      = $this->createExtractor($macRomanFile)->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $utf8Meta);
         self::assertInstanceOf(QuickTimeMeta::class, $utf16Meta);
@@ -1295,14 +1296,14 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function readLegacyFourCcTag(): void
     {
-        $legacyKey = chr(0xA9) . 'nam';
-        $value     = 'Legacy Title';
-        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . $value);
-        $ilstEntry = $this->box($legacyKey, $dataBox);
-        $ilst      = $this->box('ilst', $ilstEntry);
-        $meta      = $this->box('meta', "\0\0\0\0" . $ilst);
-        $moov      = $this->moov($meta);
-        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $legacyKey     = chr(0xA9) . 'nam';
+        $value         = 'Legacy Title';
+        $dataBox       = $this->box('data', pack('N', 1) . pack('N', 0) . $value);
+        $ilstEntry     = $this->box($legacyKey, $dataBox);
+        $ilst          = $this->box('ilst', $ilstEntry);
+        $meta          = $this->box('meta', "\0\0\0\0" . $ilst);
+        $moov          = $this->moov($meta);
+        $ftyp          = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor     = $this->createExtractor($ftyp . $moov);
         $quickTimeMeta = $extractor->extract()->quickTimeMeta;
@@ -1319,13 +1320,13 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function toleratesUdtaTrailingZeroTerminator(): void
     {
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key         = 'com.apple.quicktime.content.identifier';
+        $keyEntry    = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys        = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
-        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'udta-terminator-value');
-        $ilstEntry = $this->box(pack('N', 1), $dataBox);
-        $ilst      = $this->box('ilst', $ilstEntry);
+        $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . 'udta-terminator-value');
+        $ilstEntry   = $this->box(pack('N', 1), $dataBox);
+        $ilst        = $this->box('ilst', $ilstEntry);
 
         $hdlr        = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
         $metaPayload = "\0\0\0\0" . $hdlr . $keys . $ilst;
@@ -1337,8 +1338,8 @@ final class IsoBmffParserTest extends TestCase
         $moov        = $this->moov($udta);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('udta-terminator-value', $qtMeta->keys[$key]);
@@ -1353,24 +1354,24 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function ignoresKeysIlstWhenHdlrIsNotMdta(): void
     {
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key         = 'com.apple.quicktime.content.identifier';
+        $keyEntry    = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys        = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
-        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'should-be-ignored');
-        $ilstEntry = $this->box(pack('N', 1), $dataBox);
-        $ilst      = $this->box('ilst', $ilstEntry);
+        $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . 'should-be-ignored');
+        $ilstEntry   = $this->box(pack('N', 1), $dataBox);
+        $ilst        = $this->box('ilst', $ilstEntry);
 
         // hdlr with handler type 'pict' (not 'mdta')
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0pict" . str_repeat("\0", 12));
+        $hdlr        = $this->box('hdlr', "\0\0\0\0\0\0\0\0pict" . str_repeat("\0", 12));
 
         $metaPayload = "\0\0\0\0" . $hdlr . $keys . $ilst;
         $meta        = $this->box('meta', $metaPayload);
         $moov        = $this->moov($this->box('udta', $meta));
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
 
         // With keys/ilst discarded due to non-mdta handler, only ftyp-derived
         // metadata is produced (majorBrand, minorVersion, compatibleBrands).
@@ -1386,23 +1387,23 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function extractsMdirIlstMetadata(): void
     {
-        $title = 'My Video Title';
+        $title       = 'My Video Title';
 
         // ilst entry: ©nam with UTF-8 data (type=1)
-        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . $title);
-        $ilstEntry = $this->box("\xA9nam", $dataBox);
-        $ilst      = $this->box('ilst', $ilstEntry);
+        $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . $title);
+        $ilstEntry   = $this->box("\xA9nam", $dataBox);
+        $ilst        = $this->box('ilst', $ilstEntry);
 
         // hdlr with handler type 'mdir'
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdir" . str_repeat("\0", 12));
+        $hdlr        = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdir" . str_repeat("\0", 12));
 
         $metaPayload = "\0\0\0\0" . $hdlr . $ilst;
         $meta        = $this->box('meta', $metaPayload);
         $moov        = $this->moov($this->box('udta', $meta));
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($qtMeta);
         self::assertArrayHasKey('com.apple.quicktime.title', $qtMeta->keys);
@@ -1417,9 +1418,9 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function mdirHandlerResolvesMultipleFourccKeys(): void
     {
-        $title  = 'Test Title';
-        $artist = 'Test Artist';
-        $custom = 'custom-value';
+        $title      = 'Test Title';
+        $artist     = 'Test Artist';
+        $custom     = 'custom-value';
 
         // Known fourchars
         $dataTitle  = $this->box('data', pack('N', 1) . pack('N', 0) . $title);
@@ -1427,18 +1428,18 @@ final class IsoBmffParserTest extends TestCase
         // Unknown printable fourcc — should fall back to raw key
         $dataCustom = $this->box('data', pack('N', 1) . pack('N', 0) . $custom);
 
-        $ilst = $this->box('ilst', $this->box("\xA9nam", $dataTitle)
+        $ilst       = $this->box('ilst', $this->box("\xA9nam", $dataTitle)
             . $this->box("\xA9ART", $dataArtist)
             . $this->box('cpil', $dataCustom));
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdir" . str_repeat("\0", 12));
+        $hdlr       = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdir" . str_repeat("\0", 12));
 
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $ilst);
-        $moov = $this->moov($this->box('udta', $meta));
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta       = $this->box('meta', "\0\0\0\0" . $hdlr . $ilst);
+        $moov       = $this->moov($this->box('udta', $meta));
+        $ftyp       = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor  = $this->createExtractor($ftyp . $moov);
+        $qtMeta     = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($qtMeta);
         self::assertSame($title, $qtMeta->keys['com.apple.quicktime.title']);
@@ -1458,11 +1459,11 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry = $this->box("\xA9too", $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdir" . str_repeat("\0", 12));
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdir" . str_repeat("\0", 12));
 
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $ilst);
-        $moov = $this->moov($this->box('udta', $meta));
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $ilst);
+        $moov      = $this->moov($this->box('udta', $meta));
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -1479,15 +1480,15 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function rejectMdtaMetaMissingKeys(): void
     {
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $ilst);
-        $moov = $this->moov($this->box('udta', $meta));
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $ilst);
+        $moov      = $this->moov($this->box('udta', $meta));
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('mdta meta box missing required keys subatom');
@@ -1503,15 +1504,15 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function rejectMdtaMetaMissingIlst(): void
     {
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $hdlr     = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
 
         $key      = 'com.apple.quicktime.content.identifier';
         $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys);
-        $moov = $this->moov($this->box('udta', $meta));
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta     = $this->box('meta', "\0\0\0\0" . $hdlr . $keys);
+        $moov     = $this->moov($this->box('udta', $meta));
+        $ftyp     = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('mdta meta box missing required ilst subatom');
@@ -1527,28 +1528,28 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function preservesKeyNamespaceForNonMdtaKeys(): void
     {
-        $mdtaKey   = 'com.apple.quicktime.content.identifier';
-        $customKey = 'custom.vendor.key';
+        $mdtaKey     = 'com.apple.quicktime.content.identifier';
+        $customKey   = 'custom.vendor.key';
 
         // Build two key entries: one mdta, one with custom 'cust' namespace
-        $mdtaEntry = pack('N', 9 + strlen($mdtaKey)) . 'mdta' . $mdtaKey . "\0";
-        $custEntry = pack('N', 8 + strlen($customKey)) . 'cust' . $customKey;
-        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 2) . $mdtaEntry . $custEntry);
+        $mdtaEntry   = pack('N', 9 + strlen($mdtaKey)) . 'mdta' . $mdtaKey . "\0";
+        $custEntry   = pack('N', 8 + strlen($customKey)) . 'cust' . $customKey;
+        $keys        = $this->box('keys', "\0\0\0\0" . pack('N', 2) . $mdtaEntry . $custEntry);
 
         // Build ilst with two data entries mapped by index
-        $dataBox1   = $this->box('data', pack('N', 1) . pack('N', 0) . 'mdta-value');
-        $dataBox2   = $this->box('data', pack('N', 1) . pack('N', 0) . 'cust-value');
-        $ilstEntry1 = $this->box(pack('N', 1), $dataBox1);
-        $ilstEntry2 = $this->box(pack('N', 2), $dataBox2);
-        $ilst       = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
+        $dataBox1    = $this->box('data', pack('N', 1) . pack('N', 0) . 'mdta-value');
+        $dataBox2    = $this->box('data', pack('N', 1) . pack('N', 0) . 'cust-value');
+        $ilstEntry1  = $this->box(pack('N', 1), $dataBox1);
+        $ilstEntry2  = $this->box(pack('N', 2), $dataBox2);
+        $ilst        = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->moov($this->box('udta', $meta));
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $hdlr        = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta        = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov        = $this->moov($this->box('udta', $meta));
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
 
@@ -1576,10 +1577,10 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->moov($this->box('udta', $meta));
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov      = $this->moov($this->box('udta', $meta));
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -1605,10 +1606,10 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->moov($this->box('udta', $meta));
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov      = $this->moov($this->box('udta', $meta));
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -1693,8 +1694,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeOneByteSignedIntNegativePayload(): void
     {
-        $key     = 'com.apple.quicktime.test';
-        $payload = hex2bin('FF'); // -1 as signed 8-bit
+        $key       = 'com.apple.quicktime.test';
+        $payload   = hex2bin('FF'); // -1 as signed 8-bit
         self::assertIsString($payload);
 
         $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
@@ -1711,8 +1712,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeTwoByteSignedIntMinimumPayload(): void
     {
-        $key     = 'com.apple.quicktime.test';
-        $payload = hex2bin('8000'); // -32768 as signed 16-bit BE
+        $key       = 'com.apple.quicktime.test';
+        $payload   = hex2bin('8000'); // -32768 as signed 16-bit BE
         self::assertIsString($payload);
 
         $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
@@ -1745,8 +1746,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeThreeByteSignedIntNegativePayload(): void
     {
-        $key     = 'com.apple.quicktime.test';
-        $payload = hex2bin('FF0000'); // -65536 as signed 24-bit BE
+        $key       = 'com.apple.quicktime.test';
+        $payload   = hex2bin('FF0000'); // -65536 as signed 24-bit BE
         self::assertIsString($payload);
 
         $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
@@ -1779,8 +1780,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeTwoByteUnsignedIntMaxPayload(): void
     {
-        $key     = 'com.apple.quicktime.test';
-        $payload = hex2bin('FFFF');
+        $key       = 'com.apple.quicktime.test';
+        $payload   = hex2bin('FFFF');
         self::assertIsString($payload);
 
         $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
@@ -1797,8 +1798,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function decodeThreeByteUnsignedIntMaxPayload(): void
     {
-        $key     = 'com.apple.quicktime.test';
-        $payload = hex2bin('FFFFFF');
+        $key       = 'com.apple.quicktime.test';
+        $payload   = hex2bin('FFFFFF');
         self::assertIsString($payload);
 
         $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
@@ -2041,16 +2042,16 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function collectsUnresolvedExternalItemReferences(): void
     {
-        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
-        $infe        = $this->box('infe', $infePayload);
-        $iinfPayload = "\0\0\0\0" . pack('n', 1) . $infe;
-        $iinf        = $this->box('iinf', $iinfPayload);
+        $infePayload     = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
+        $infe            = $this->box('infe', $infePayload);
+        $iinfPayload     = "\0\0\0\0" . pack('n', 1) . $infe;
+        $iinf            = $this->box('iinf', $iinfPayload);
 
-        $drefEntry = $this->fullBox('url ', "file://example\0");
-        $dref      = $this->fullBox('dref', pack('N', 1) . $drefEntry);
-        $dinf      = $this->box('dinf', $dref);
+        $drefEntry       = $this->fullBox('url ', "file://example\0");
+        $dref            = $this->fullBox('dref', pack('N', 1) . $drefEntry);
+        $dinf            = $this->box('dinf', $dref);
 
-        $payload = "\0\0\0\0";
+        $payload         = "\0\0\0\0";
         $payload .= "\x44";
         $payload .= "\0";
         $payload .= pack('n', 1);
@@ -2058,11 +2059,11 @@ final class IsoBmffParserTest extends TestCase
         $payload .= pack('n', 1); // data_reference_index = 1
         $payload .= pack('n', 1);
         $payload .= pack('N', 0) . pack('N', 4);
-        $iloc = $this->box('iloc', $payload);
+        $iloc            = $this->box('iloc', $payload);
 
-        $meta = $this->fullBox('meta', $iinf . $iloc . $dinf);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
-        $data = $ftyp . $meta;
+        $meta            = $this->fullBox('meta', $iinf . $iloc . $dinf);
+        $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
+        $data            = $ftyp . $meta;
 
         $extractor       = $this->createExtractor($data);
         $result          = $extractor->extract();
@@ -2072,14 +2073,14 @@ final class IsoBmffParserTest extends TestCase
 
         self::assertSame([], $exifs);
         self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
-        $reference = $dataReferences->referenceForIndex(1);
+        $reference       = $dataReferences->referenceForIndex(1);
         self::assertNotNull($reference);
         self::assertSame('url ', $reference->type);
         self::assertSame('file://example', $reference->uri);
         self::assertFalse($reference->selfContained);
 
         self::assertCount(1, $unresolvedItems);
-        $unresolved = $unresolvedItems[0];
+        $unresolved      = $unresolvedItems[0];
         /** @phpstan-ignore staticMethod.alreadyNarrowedType */
         self::assertInstanceOf(IsoBmffUnresolvedItem::class, $unresolved);
         self::assertSame(1, $unresolved->itemId);
@@ -2107,12 +2108,12 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload .= pack('n', 0);
         $ilocPayload .= pack('n', 1);
         $ilocPayload .= pack('N', 0x7FFF0000) . pack('N', 8);
-        $iloc = $this->box('iloc', $ilocPayload);
+        $iloc        = $this->box('iloc', $ilocPayload);
 
-        $meta = $this->fullBox('meta', $iinf . $iloc);
-        $data = $this->box('ftyp', 'isom' . pack('N', 0)) . $meta;
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $data        = $this->box('ftyp', 'isom' . pack('N', 0)) . $meta;
 
-        $extractor = $this->createExtractor($data);
+        $extractor   = $this->createExtractor($data);
 
         try {
             $extractor->extract();
@@ -2130,11 +2131,11 @@ final class IsoBmffParserTest extends TestCase
     public function parseIrefRelationships(): void
     {
         // SingleItemTypeReferenceBox is a plain Box, not a FullBox (no version/flags)
-        $entryPayload = pack('n', 1) . pack('n', 2) . pack('n', 2) . pack('n', 3);
-        $entry        = $this->box('dimg', $entryPayload);
-        $iref         = $this->fullBox('iref', $entry);
-        $meta         = $this->fullBox('meta', $iref);
-        $ftyp         = $this->box('ftyp', 'isom' . pack('N', 0));
+        $entryPayload   = pack('n', 1) . pack('n', 2) . pack('n', 2) . pack('n', 3);
+        $entry          = $this->box('dimg', $entryPayload);
+        $iref           = $this->fullBox('iref', $entry);
+        $meta           = $this->fullBox('meta', $iref);
+        $ftyp           = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor      = $this->createExtractor($ftyp . $meta);
         $itemReferences = $extractor->extract()->itemReferences;
@@ -2142,7 +2143,7 @@ final class IsoBmffParserTest extends TestCase
         self::assertInstanceOf(IsoBmffItemReferenceMap::class, $itemReferences);
         self::assertSame([1], $itemReferences->fromItemIds());
 
-        $references = $itemReferences->referencesFor(1);
+        $references     = $itemReferences->referencesFor(1);
         self::assertCount(2, $references);
         self::assertSame('dimg', $references[0]->relation);
         self::assertSame(2, $references[0]->toItemId);
@@ -2156,15 +2157,15 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parseIrefVersion1Relationships(): void
     {
-        $fromItemId = 70_000;
-        $toItemA    = 70_001;
-        $toItemB    = 70_002;
+        $fromItemId     = 70_000;
+        $toItemA        = 70_001;
+        $toItemB        = 70_002;
 
-        $entryPayload = pack('N', $fromItemId) . pack('n', 2) . pack('N', $toItemA) . pack('N', $toItemB);
-        $entry        = $this->box('dimg', $entryPayload);
-        $iref         = $this->fullBox('iref', $entry, 1, 0);
-        $meta         = $this->fullBox('meta', $iref);
-        $ftyp         = $this->box('ftyp', 'isom' . pack('N', 0));
+        $entryPayload   = pack('N', $fromItemId) . pack('n', 2) . pack('N', $toItemA) . pack('N', $toItemB);
+        $entry          = $this->box('dimg', $entryPayload);
+        $iref           = $this->fullBox('iref', $entry, 1, 0);
+        $meta           = $this->fullBox('meta', $iref);
+        $ftyp           = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor      = $this->createExtractor($ftyp . $meta);
         $itemReferences = $extractor->extract()->itemReferences;
@@ -2172,7 +2173,7 @@ final class IsoBmffParserTest extends TestCase
         self::assertInstanceOf(IsoBmffItemReferenceMap::class, $itemReferences);
         self::assertSame([$fromItemId], $itemReferences->fromItemIds());
 
-        $references = $itemReferences->referencesFor($fromItemId);
+        $references     = $itemReferences->referencesFor($fromItemId);
         self::assertCount(2, $references);
         self::assertSame('dimg', $references[0]->relation);
         self::assertSame($toItemA, $references[0]->toItemId);
@@ -2186,13 +2187,13 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function resolveIlocIdatConstructionMethod(): void
     {
-        $exifPayload = pack('N', 0) . "MM\x00\x2Aidat-exif";
+        $exifPayload     = pack('N', 0) . "MM\x00\x2Aidat-exif";
 
-        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
-        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+        $infePayload     = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf            = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
         // iloc v1: offset_size(4)|length_size(4), base_offset_size(0)|index_size(0) in ONE byte
-        $payload = "\x44";       // offset_size=4, length_size=4
+        $payload         = "\x44";       // offset_size=4, length_size=4
         $payload .= "\x00";       // base_offset_size=0 (high nibble), index_size=0 (low nibble)
         $payload .= pack('n', 1); // item_count = 1
         $payload .= pack('n', 1); // item_id = 1
@@ -2201,13 +2202,13 @@ final class IsoBmffParserTest extends TestCase
         $payload .= pack('n', 1); // extent_count = 1
         $payload .= pack('N', 0); // extent_offset = 0
         $payload .= pack('N', strlen($exifPayload)); // extent_length
-        $iloc = $this->fullBox('iloc', $payload, 1, 0);
+        $iloc            = $this->fullBox('iloc', $payload, 1, 0);
 
-        $idat    = $this->box('idat', $exifPayload);
-        $prefix  = $iinf . $iloc;
-        $padding = $this->alignmentPadding(16 + 12 + strlen($prefix), 8);
-        $meta    = $this->fullBox('meta', $prefix . $padding . $idat);
-        $ftyp    = $this->box('ftyp', 'isom' . pack('N', 0));
+        $idat            = $this->box('idat', $exifPayload);
+        $prefix          = $iinf . $iloc;
+        $padding         = $this->alignmentPadding(16 + 12 + strlen($prefix), 8);
+        $meta            = $this->fullBox('meta', $prefix . $padding . $idat);
+        $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor       = $this->createExtractor($ftyp . $meta);
         $result          = $extractor->extract();
@@ -2234,7 +2235,7 @@ final class IsoBmffParserTest extends TestCase
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
         // iloc v1: base_offset_size and index_size share ONE byte
-        $payload = "\x44";       // offset_size=4, length_size=4
+        $payload     = "\x44";       // offset_size=4, length_size=4
         $payload .= "\x00";       // base_offset_size=0, index_size=0
         $payload .= pack('n', 1); // item_count = 1
         $payload .= pack('n', 1); // item_id = 1
@@ -2243,15 +2244,15 @@ final class IsoBmffParserTest extends TestCase
         $payload .= pack('n', 1); // extent_count = 1
         $payload .= pack('N', 0); // extent_offset = 0
         $payload .= pack('N', strlen($exifPayload) + 1); // extent_length (too large!)
-        $iloc = $this->fullBox('iloc', $payload, 1, 0);
+        $iloc        = $this->fullBox('iloc', $payload, 1, 0);
 
-        $idat    = $this->box('idat', $exifPayload);
-        $prefix  = $iinf . $iloc;
-        $padding = $this->alignmentPadding(16 + 12 + strlen($prefix), 8);
-        $meta    = $this->fullBox('meta', $prefix . $padding . $idat);
-        $ftyp    = $this->box('ftyp', 'isom' . pack('N', 0));
+        $idat        = $this->box('idat', $exifPayload);
+        $prefix      = $iinf . $iloc;
+        $padding     = $this->alignmentPadding(16 + 12 + strlen($prefix), 8);
+        $meta        = $this->fullBox('meta', $prefix . $padding . $idat);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -2280,18 +2281,18 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function resolveIlocItemOffsetWithExtentIndex(): void
     {
-        $exifPayload = pack('N', 0) . "MM\x00\x2Aitem-ref";
+        $exifPayload     = pack('N', 0) . "MM\x00\x2Aitem-ref";
 
-        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
-        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+        $infePayload     = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf            = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
         // SingleItemTypeReferenceBox must use 'iloc' relation type
         // for construction_method=2 item-offset resolution.
-        $irefEntry = $this->box('iloc', pack('n', 1) . pack('n', 1) . pack('n', 2));
-        $iref      = $this->fullBox('iref', $irefEntry);
+        $irefEntry       = $this->box('iloc', pack('n', 1) . pack('n', 1) . pack('n', 2));
+        $iref            = $this->fullBox('iref', $irefEntry);
 
         // iloc v1: base_offset_size and index_size share ONE byte
-        $ilocBuilder = function (int $item2Offset, int $item2Length, int $item1Length): string {
+        $ilocBuilder     = function (int $item2Offset, int $item2Length, int $item1Length): string {
             $payload = "\x44"; // offset_size=4, length_size=4
             $payload .= "\x04"; // base_offset_size=0 (high nibble), index_size=4 (low nibble)
             $payload .= pack('n', 2); // item_count = 2
@@ -2320,12 +2321,12 @@ final class IsoBmffParserTest extends TestCase
         $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
         $mdat            = $this->box('mdat', $exifPayload);
 
-        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
-        $iloc       = $ilocBuilder($offsetBase, strlen($exifPayload), strlen($exifPayload));
-        $meta       = $this->fullBox('meta', $iinf . $iref . $iloc);
+        $offsetBase      = strlen($ftyp) + strlen($meta) + 8;
+        $iloc            = $ilocBuilder($offsetBase, strlen($exifPayload), strlen($exifPayload));
+        $meta            = $this->fullBox('meta', $iinf . $iref . $iloc);
 
-        $extractor = $this->createExtractor($ftyp . $meta . $mdat);
-        $exifs     = $extractor->extract()->exifBlobs;
+        $extractor       = $this->createExtractor($ftyp . $meta . $mdat);
+        $exifs           = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Aitem-ref"], $exifs);
     }
@@ -2400,18 +2401,18 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('iloc extent outside referenced item');
 
-        $exifPayload = pack('N', 0) . "MM\x00\x2Aref";
+        $exifPayload     = pack('N', 0) . "MM\x00\x2Aref";
 
-        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
-        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+        $infePayload     = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf            = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
         // SingleItemTypeReferenceBox must use 'iloc' relation type
         // for construction_method=2 item-offset resolution.
-        $irefEntry = $this->box('iloc', pack('n', 1) . pack('n', 1) . pack('n', 2));
-        $iref      = $this->fullBox('iref', $irefEntry);
+        $irefEntry       = $this->box('iloc', pack('n', 1) . pack('n', 1) . pack('n', 2));
+        $iref            = $this->fullBox('iref', $irefEntry);
 
         // iloc v1: base_offset_size and index_size share ONE byte
-        $ilocBuilder = function (int $item2Offset, int $item2Length, int $item1Length): string {
+        $ilocBuilder     = function (int $item2Offset, int $item2Length, int $item1Length): string {
             $payload = "\x44"; // offset_size=4, length_size=4
             $payload .= "\x04"; // base_offset_size=0 (high nibble), index_size=4 (low nibble)
             $payload .= pack('n', 2); // item_count = 2
@@ -2440,11 +2441,11 @@ final class IsoBmffParserTest extends TestCase
         $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
         $mdat            = $this->box('mdat', $exifPayload);
 
-        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
-        $iloc       = $ilocBuilder($offsetBase, strlen($exifPayload), strlen($exifPayload));
-        $meta       = $this->fullBox('meta', $iinf . $iref . $iloc);
+        $offsetBase      = strlen($ftyp) + strlen($meta) + 8;
+        $iloc            = $ilocBuilder($offsetBase, strlen($exifPayload), strlen($exifPayload));
+        $meta            = $this->fullBox('meta', $iinf . $iref . $iloc);
 
-        $extractor = $this->createExtractor($ftyp . $meta . $mdat);
+        $extractor       = $this->createExtractor($ftyp . $meta . $mdat);
         $extractor->extract();
     }
 
@@ -2455,11 +2456,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function trackExternalDataReferenceWithoutResolving(): void
     {
-        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
-        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+        $infePayload     = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
+        $iinf            = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
         // iloc v1: base_offset_size and index_size share ONE byte
-        $payload = "\x44";       // offset_size=4, length_size=4
+        $payload         = "\x44";       // offset_size=4, length_size=4
         $payload .= "\x00";       // base_offset_size=0, index_size=0
         $payload .= pack('n', 1); // item_count = 1
         $payload .= pack('n', 1); // item_id = 1
@@ -2468,14 +2469,14 @@ final class IsoBmffParserTest extends TestCase
         $payload .= pack('n', 1); // extent_count = 1
         $payload .= pack('N', 0); // extent_offset = 0
         $payload .= pack('N', 4); // extent_length = 4
-        $iloc = $this->fullBox('iloc', $payload, 1, 0);
+        $iloc            = $this->fullBox('iloc', $payload, 1, 0);
 
-        $drefEntry = $this->fullBox('url ', "https://example.test/exif\0");
-        $dref      = $this->fullBox('dref', pack('N', 1) . $drefEntry);
-        $dinf      = $this->box('dinf', $dref);
+        $drefEntry       = $this->fullBox('url ', "https://example.test/exif\0");
+        $dref            = $this->fullBox('dref', pack('N', 1) . $drefEntry);
+        $dinf            = $this->box('dinf', $dref);
 
-        $meta = $this->fullBox('meta', $iinf . $iloc . $dinf);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta            = $this->fullBox('meta', $iinf . $iloc . $dinf);
+        $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor       = $this->createExtractor($ftyp . $meta);
         $result          = $extractor->extract();
@@ -2485,7 +2486,7 @@ final class IsoBmffParserTest extends TestCase
 
         self::assertSame([], $exifs);
         self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
-        $reference = $dataReferences->referenceForIndex(1);
+        $reference       = $dataReferences->referenceForIndex(1);
         self::assertNotNull($reference);
         self::assertSame('url ', $reference->type);
         self::assertSame('https://example.test/exif', $reference->uri);
@@ -2494,7 +2495,7 @@ final class IsoBmffParserTest extends TestCase
         self::assertNull($reference->urnLocation);
 
         self::assertCount(1, $unresolvedItems);
-        $unresolved = $unresolvedItems[0];
+        $unresolved      = $unresolvedItems[0];
         self::assertSame(1, $unresolved->itemId);
         self::assertGreaterThanOrEqual(0, $unresolved->metaContextOffset);
         self::assertSame(1, $unresolved->dataReferenceIndex);
@@ -2522,7 +2523,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function preserveDataReferencesPerMetaContextWithoutGlobalOverwrite(): void
     {
-        $extractor = $this->createExtractor($this->createFileWithTwoMetaExternalDataReferences(
+        $extractor      = $this->createExtractor($this->createFileWithTwoMetaExternalDataReferences(
             'https://example.test/meta-a',
             'https://example.test/meta-b',
         ));
@@ -2533,12 +2534,12 @@ final class IsoBmffParserTest extends TestCase
         self::assertCount(2, $dataReferences->contextOffsets());
         self::assertNull($dataReferences->referenceForIndex(1));
 
-        $uris = [];
+        $uris           = [];
 
         foreach ($dataReferences->contextOffsets() as $contextOffset) {
             $reference = $dataReferences->referenceForContextIndex($contextOffset, 1);
             self::assertNotNull($reference);
-            $uris[] = $reference->uri;
+            $uris[]    = $reference->uri;
         }
 
         sort($uris);
@@ -2555,7 +2556,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function unresolvedExternalItemsRetainTheirOwnContextDataReference(): void
     {
-        $extractor = $this->createExtractor($this->createFileWithTwoMetaExternalDataReferences(
+        $extractor       = $this->createExtractor($this->createFileWithTwoMetaExternalDataReferences(
             'https://example.test/meta-a',
             'https://example.test/meta-b',
         ));
@@ -2564,8 +2565,8 @@ final class IsoBmffParserTest extends TestCase
 
         self::assertCount(2, $unresolvedItems);
 
-        $uris           = [];
-        $contextOffsets = [];
+        $uris            = [];
+        $contextOffsets  = [];
 
         foreach ($unresolvedItems as $unresolvedItem) {
             self::assertSame(1, $unresolvedItem->itemId);
@@ -2592,12 +2593,12 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function preserveItemReferencesPerMetaContextWithoutGlobalMerge(): void
     {
-        $extractor = $this->createExtractor($this->createFileWithTwoMetaIrefContexts(
+        $extractor       = $this->createExtractor($this->createFileWithTwoMetaIrefContexts(
             ['relation' => 'dimg', 'toItemId' => 2],
             ['relation' => 'thmb', 'toItemId' => 3],
         ));
 
-        $itemReferences = $extractor->extract()->itemReferences;
+        $itemReferences  = $extractor->extract()->itemReferences;
 
         self::assertInstanceOf(IsoBmffItemReferenceMap::class, $itemReferences);
         self::assertCount(2, $itemReferences->contextOffsets());
@@ -2606,7 +2607,7 @@ final class IsoBmffParserTest extends TestCase
         $relationTargets = [];
 
         foreach ($itemReferences->contextOffsets() as $contextOffset) {
-            $references = $itemReferences->referencesForContext($contextOffset, 1);
+            $references        = $itemReferences->referencesForContext($contextOffset, 1);
             self::assertCount(1, $references);
             $relationTargets[] = $references[0]->relation . ':' . $references[0]->toItemId;
         }
@@ -2632,7 +2633,7 @@ final class IsoBmffParserTest extends TestCase
         $meta         = $this->fullBox('meta', $iref);
         $ftyp         = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor    = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -2644,13 +2645,13 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function preservesMultipleDataAtomsPerQuickTimeKey(): void
     {
-        $keyName = 'com.apple.quicktime.content.identifier';
+        $keyName        = 'com.apple.quicktime.content.identifier';
 
-        $keysPayload = pack('N', 1);
+        $keysPayload    = pack('N', 1);
         $keysPayload .= pack('N', 9 + strlen($keyName));
         $keysPayload .= 'mdta';
         $keysPayload .= $keyName . "\0";
-        $keys = $this->fullBox('keys', $keysPayload);
+        $keys           = $this->fullBox('keys', $keysPayload);
 
         // Ordered from specific locale to generic locale.
         $localeSpecific = 0x555315C7; // country='US', language='eng'
@@ -2660,19 +2661,19 @@ final class IsoBmffParserTest extends TestCase
         $entry          = $this->box(pack('N', 1), $dataBox1 . $dataBox2);
         $ilst           = $this->box('ilst', $entry);
 
-        $hdlr = $this->fullBox('hdlr', "\0\0\0\0mdta" . str_repeat("\0", 12) . "\0");
-        $meta = $this->fullBox('meta', $hdlr . $keys . $ilst);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $hdlr           = $this->fullBox('hdlr', "\0\0\0\0mdta" . str_repeat("\0", 12) . "\0");
+        $meta           = $this->fullBox('meta', $hdlr . $keys . $ilst);
+        $ftyp           = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
-        $quickTime = $extractor->extract()->quickTimeMeta;
+        $extractor      = $this->createExtractor($ftyp . $meta);
+        $quickTime      = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
 
         // Backward compat: keys map stores first item in source order.
         self::assertSame('localized-value', $quickTime->keys[$keyName]);
 
-        $atoms = $quickTime->allValues($keyName);
+        $atoms          = $quickTime->allValues($keyName);
         self::assertCount(2, $atoms);
 
         self::assertSame(1, $atoms[0]->typeIndicator);
@@ -2698,30 +2699,30 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function selectedFirstDataAtomKeepsTypeCoercion(): void
     {
-        $keyName = 'com.apple.quicktime.videoOrientation';
+        $keyName        = 'com.apple.quicktime.videoOrientation';
 
-        $keysPayload = pack('N', 1);
+        $keysPayload    = pack('N', 1);
         $keysPayload .= pack('N', 9 + strlen($keyName));
         $keysPayload .= 'mdta';
         $keysPayload .= $keyName . chr(0);
-        $keys = $this->fullBox('keys', $keysPayload);
+        $keys           = $this->fullBox('keys', $keysPayload);
 
         $localeSpecific = 0x555315C7;
         $localeDefault  = 0x00000000;
         $specificValue  = hex2bin('02');
         self::assertIsString($specificValue);
 
-        $specificData = $this->box('data', pack('N', 0x15) . pack('N', $localeSpecific) . $specificValue);
-        $fallbackData = $this->box('data', pack('N', 1) . pack('N', $localeDefault) . 'fallback-orientation');
-        $entry        = $this->box(pack('N', 1), $specificData . $fallbackData);
-        $ilst         = $this->box('ilst', $entry);
+        $specificData   = $this->box('data', pack('N', 0x15) . pack('N', $localeSpecific) . $specificValue);
+        $fallbackData   = $this->box('data', pack('N', 1) . pack('N', $localeDefault) . 'fallback-orientation');
+        $entry          = $this->box(pack('N', 1), $specificData . $fallbackData);
+        $ilst           = $this->box('ilst', $entry);
 
-        $hdlr = $this->fullBox('hdlr', hex2bin('00000000') . 'mdta' . str_repeat(chr(0), 12) . chr(0));
-        $meta = $this->fullBox('meta', $hdlr . $keys . $ilst);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $hdlr           = $this->fullBox('hdlr', hex2bin('00000000') . 'mdta' . str_repeat(chr(0), 12) . chr(0));
+        $meta           = $this->fullBox('meta', $hdlr . $keys . $ilst);
+        $ftyp           = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
-        $quickTime = $extractor->extract()->quickTimeMeta;
+        $extractor      = $this->createExtractor($ftyp . $meta);
+        $quickTime      = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(2, $quickTime->keys[$keyName]);
@@ -2736,13 +2737,13 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('must be ordered from most-specific to most-general');
 
-        $keyName = 'com.apple.quicktime.content.identifier';
+        $keyName        = 'com.apple.quicktime.content.identifier';
 
-        $keysPayload = pack('N', 1);
+        $keysPayload    = pack('N', 1);
         $keysPayload .= pack('N', 9 + strlen($keyName));
         $keysPayload .= 'mdta';
         $keysPayload .= $keyName . "\0";
-        $keys = $this->fullBox('keys', $keysPayload);
+        $keys           = $this->fullBox('keys', $keysPayload);
 
         // Invalid ordering: default locale first, specific locale second.
         $localeDefault  = 0x00000000;
@@ -2752,9 +2753,9 @@ final class IsoBmffParserTest extends TestCase
         $entry          = $this->box(pack('N', 1), $dataBox1 . $dataBox2);
         $ilst           = $this->box('ilst', $entry);
 
-        $hdlr = $this->fullBox('hdlr', "\0\0\0\0mdta" . str_repeat("\0", 12) . "\0");
-        $meta = $this->fullBox('meta', $hdlr . $keys . $ilst);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $hdlr           = $this->fullBox('hdlr', "\0\0\0\0mdta" . str_repeat("\0", 12) . "\0");
+        $meta           = $this->fullBox('meta', $hdlr . $keys . $ilst);
+        $ftyp           = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $this->createExtractor($ftyp . $meta)->extract();
     }
@@ -2796,16 +2797,16 @@ final class IsoBmffParserTest extends TestCase
      */
     private function createQuickTimeKeysFileWithCustomKey(string $key, int $type, string $encodedData): string
     {
-        $keysEntry = pack('N', 9 + strlen($key))
+        $keysEntry   = pack('N', 9 + strlen($key))
             . 'mdta'
             . $key
             . "\0";
-        $keys = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keysEntry);
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $keys        = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keysEntry);
+        $hdlr        = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
 
-        $dataBox   = $this->box('data', pack('N', $type) . pack('N', 0) . $encodedData);
-        $ilstEntry = $this->box(pack('N', 1), $dataBox);
-        $ilst      = $this->box('ilst', $ilstEntry);
+        $dataBox     = $this->box('data', pack('N', $type) . pack('N', 0) . $encodedData);
+        $ilstEntry   = $this->box(pack('N', 1), $dataBox);
+        $ilst        = $this->box('ilst', $ilstEntry);
 
         $metaPayload = "\0\0\0\0" . $hdlr . $keys . $ilst;
         $meta        = $this->box('meta', $metaPayload);
@@ -2822,11 +2823,11 @@ final class IsoBmffParserTest extends TestCase
      */
     private function createFileWithMdtaIdentifier(string $value): string
     {
-        $mean     = $this->box('mean', pack('N', 0) . 'com.apple.quicktime');
-        $name     = $this->box('name', pack('N', 0) . 'content.identifier');
-        $data     = $this->box('data', pack('N', 1) . pack('N', 0) . $value);
-        $freeform = $this->box('----', $mean . $name . $data);
-        $ilst     = $this->box('ilst', $freeform);
+        $mean        = $this->box('mean', pack('N', 0) . 'com.apple.quicktime');
+        $name        = $this->box('name', pack('N', 0) . 'content.identifier');
+        $data        = $this->box('data', pack('N', 1) . pack('N', 0) . $value);
+        $freeform    = $this->box('----', $mean . $name . $data);
+        $ilst        = $this->box('ilst', $freeform);
 
         $metaPayload = "\0\0\0\0" . $ilst;
         $meta        = $this->box('meta', $metaPayload);
@@ -2846,15 +2847,15 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('iloc item count exceeds maximum allowed');
 
         // Build an iloc box with itemCount > MAX_ILOC_ITEMS (10000)
-        $payload = "\0\0\0\0";           // version 0, flags 0
+        $payload   = "\0\0\0\0";           // version 0, flags 0
         $payload .= "\x44";                // offset_size=4, length_size=4
         $payload .= "\0";                  // base_offset_size=0
         $payload .= pack('n', 10001);      // itemCount = 10001 (exceeds limit)
 
-        $iloc = $this->box('iloc', $payload);
-        $iinf = $this->fullBox('iinf', pack('n', 0)); // empty iinf
-        $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $iloc      = $this->box('iloc', $payload);
+        $iinf      = $this->fullBox('iinf', pack('n', 0)); // empty iinf
+        $meta      = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2871,10 +2872,10 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('iinf entry count exceeds maximum allowed');
 
         // Build an iinf box with entryCount > MAX_IINF_ENTRIES (10000)
-        $payload = pack('N', 10001); // version 1 uses 32-bit entry count
-        $iinf    = $this->fullBox('iinf', $payload, 1, 0);
-        $meta    = $this->fullBox('meta', $iinf);
-        $ftyp    = $this->box('ftyp', 'isom' . pack('N', 0));
+        $payload   = pack('N', 10001); // version 1 uses 32-bit entry count
+        $iinf      = $this->fullBox('iinf', $payload, 1, 0);
+        $meta      = $this->fullBox('meta', $iinf);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2891,11 +2892,11 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('keys entry count exceeds maximum allowed');
 
         // Build a keys box with entryCount > MAX_KEYS_ENTRIES (1000)
-        $payload = pack('N', 1001); // entryCount = 1001 (exceeds limit)
-        $keys    = $this->fullBox('keys', $payload);
-        $meta    = $this->fullBox('meta', $keys);
-        $moov    = $this->moov($meta);
-        $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $payload   = pack('N', 1001); // entryCount = 1001 (exceeds limit)
+        $keys      = $this->fullBox('keys', $payload);
+        $meta      = $this->fullBox('meta', $keys);
+        $moov      = $this->moov($meta);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
@@ -2911,11 +2912,11 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('keys box version/flags must be 0');
 
-        $payload = pack('N', 1); // entryCount = 1
-        $keys    = $this->fullBox('keys', $payload, 1, 0); // version=1
-        $meta    = $this->fullBox('meta', $keys);
-        $moov    = $this->moov($meta);
-        $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $payload   = pack('N', 1); // entryCount = 1
+        $keys      = $this->fullBox('keys', $payload, 1, 0); // version=1
+        $meta      = $this->fullBox('meta', $keys);
+        $moov      = $this->moov($meta);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
@@ -2931,11 +2932,11 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('keys box version/flags must be 0');
 
-        $payload = pack('N', 1); // entryCount = 1
-        $keys    = $this->fullBox('keys', $payload, 0, 1); // flags=1
-        $meta    = $this->fullBox('meta', $keys);
-        $moov    = $this->moov($meta);
-        $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $payload   = pack('N', 1); // entryCount = 1
+        $keys      = $this->fullBox('keys', $payload, 0, 1); // flags=1
+        $meta      = $this->fullBox('meta', $keys);
+        $moov      = $this->moov($meta);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
@@ -2951,11 +2952,11 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('keys box version/flags must be 0');
 
-        $payload = pack('N', 1); // entryCount = 1
-        $keys    = $this->fullBox('keys', $payload, 1, 1); // version=1, flags=1
-        $meta    = $this->fullBox('meta', $keys);
-        $moov    = $this->moov($meta);
-        $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $payload   = pack('N', 1); // entryCount = 1
+        $keys      = $this->fullBox('keys', $payload, 1, 1); // version=1, flags=1
+        $meta      = $this->fullBox('meta', $keys);
+        $moov      = $this->moov($meta);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
@@ -2972,25 +2973,25 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('stsd entry count exceeds maximum allowed');
 
         // Build a track with stsd containing entryCount > MAX_STSD_ENTRIES (100)
-        $payload = pack('N', 101); // entryCount = 101 (exceeds limit)
-        $stsd    = $this->fullBox('stsd', $payload);
-        $stbl    = $this->box('stbl', $stsd);
-        $minf    = $this->box('minf', $stbl);
+        $payload     = pack('N', 101); // entryCount = 101 (exceeds limit)
+        $stsd        = $this->fullBox('stsd', $payload);
+        $stbl        = $this->box('stbl', $stsd);
+        $minf        = $this->box('minf', $stbl);
 
         // Create a minimal hdlr box for video handler
         $hdlrPayload = pack('N', 0);      // version/flags
         $hdlrPayload .= "\0\0\0\0";       // pre_defined
         $hdlrPayload .= 'vide';           // handler_type
         $hdlrPayload .= str_repeat("\0", 12); // reserved
-        $hdlr = $this->box('hdlr', $hdlrPayload);
+        $hdlr        = $this->box('hdlr', $hdlrPayload);
 
-        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
-        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
-        $trak = $this->box('trak', $mdia);
-        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $mdhd        = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia        = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $trak        = $this->box('trak', $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
+        $extractor   = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
     }
 
@@ -3003,20 +3004,20 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('stsd entry count must be at least 1');
 
-        $stsd = $this->fullBox('stsd', pack('N', 0));
-        $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
-        $vmhd = $this->fullBox('vmhd', str_repeat("\0", 8), 0, 1);
-        $url  = $this->fullBox('url ', '', 0, 1);
-        $dref = $this->fullBox('dref', pack('N', 1) . $url);
-        $dinf = $this->box('dinf', $dref);
-        $minf = $this->box('minf', $vmhd . $dinf . $stbl);
-        $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
-        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
-        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
-        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
-        $trak = $this->box('trak', $tkhd . $mdia);
-        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $stsd      = $this->fullBox('stsd', pack('N', 0));
+        $stbl      = $this->box('stbl', $stsd . $this->minimalStblAtoms());
+        $vmhd      = $this->fullBox('vmhd', str_repeat("\0", 8), 0, 1);
+        $url       = $this->fullBox('url ', '', 0, 1);
+        $dref      = $this->fullBox('dref', pack('N', 1) . $url);
+        $dinf      = $this->box('dinf', $dref);
+        $minf      = $this->box('minf', $vmhd . $dinf . $stbl);
+        $hdlr      = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdhd      = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia      = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $tkhd      = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak      = $this->box('trak', $tkhd . $mdia);
+        $moov      = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
@@ -3031,21 +3032,21 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('unsupported stsd box version');
 
-        $payload = pack('N', 0);
-        $stsd    = $this->fullBox('stsd', $payload, 2); // version=2
-        $stbl    = $this->box('stbl', $stsd);
-        $minf    = $this->box('minf', $stbl);
+        $payload     = pack('N', 0);
+        $stsd        = $this->fullBox('stsd', $payload, 2); // version=2
+        $stbl        = $this->box('stbl', $stsd);
+        $minf        = $this->box('minf', $stbl);
 
         $hdlrPayload = pack('N', 0) . "\0\0\0\0" . 'vide' . str_repeat("\0", 12);
         $hdlr        = $this->box('hdlr', $hdlrPayload);
 
-        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
-        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
-        $trak = $this->box('trak', $mdia);
-        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $mdhd        = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia        = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $trak        = $this->box('trak', $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
+        $extractor   = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
     }
 
@@ -3058,21 +3059,21 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('stsd version 1 requires audio handler context');
 
-        $payload = pack('N', 0);
-        $stsd    = $this->fullBox('stsd', $payload, 1, 0); // version=1
-        $stbl    = $this->box('stbl', $stsd);
-        $minf    = $this->box('minf', $stbl);
+        $payload     = pack('N', 0);
+        $stsd        = $this->fullBox('stsd', $payload, 1, 0); // version=1
+        $stbl        = $this->box('stbl', $stsd);
+        $minf        = $this->box('minf', $stbl);
 
         $hdlrPayload = pack('N', 0) . "\0\0\0\0" . 'vide' . str_repeat("\0", 12);
         $hdlr        = $this->box('hdlr', $hdlrPayload);
 
-        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
-        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
-        $trak = $this->box('trak', $mdia);
-        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $mdhd        = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia        = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $trak        = $this->box('trak', $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
+        $extractor   = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
     }
 
@@ -3085,21 +3086,21 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('unsupported stsd box flags');
 
-        $payload = pack('N', 0);
-        $stsd    = $this->fullBox('stsd', $payload, 0, 1); // flags=1
-        $stbl    = $this->box('stbl', $stsd);
-        $minf    = $this->box('minf', $stbl);
+        $payload     = pack('N', 0);
+        $stsd        = $this->fullBox('stsd', $payload, 0, 1); // flags=1
+        $stbl        = $this->box('stbl', $stsd);
+        $minf        = $this->box('minf', $stbl);
 
         $hdlrPayload = pack('N', 0) . "\0\0\0\0" . 'vide' . str_repeat("\0", 12);
         $hdlr        = $this->box('hdlr', $hdlrPayload);
 
-        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
-        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
-        $trak = $this->box('trak', $mdia);
-        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $mdhd        = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia        = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $trak        = $this->box('trak', $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
+        $extractor   = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
     }
 
@@ -3109,7 +3110,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesVideoStsdEntryWithConformingQualityAndDataSize(): void
     {
-        $entry = $this->videoSampleEntry(
+        $entry     = $this->videoSampleEntry(
             format: 'raw ',
             width: 320,
             height: 240,
@@ -3136,7 +3137,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesVideoStsdEntryWithFrameCountOne(): void
     {
-        $entry = $this->videoSampleEntry(
+        $entry     = $this->videoSampleEntry(
             format: 'raw ',
             width: 320,
             height: 240,
@@ -3182,7 +3183,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesVideoStsdEntryWithNonDefaultFrameCount(): void
     {
-        $entry = $this->videoSampleEntry(
+        $entry     = $this->videoSampleEntry(
             format: 'raw ',
             width: 320,
             height: 240,
@@ -3207,7 +3208,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesVideoStsdEntryWithValidResolution1616Values(): void
     {
-        $entry = $this->videoSampleEntry(
+        $entry     = $this->videoSampleEntry(
             format: 'raw ',
             width: 320,
             height: 240,
@@ -3237,7 +3238,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('video sample entry truncated');
 
-        $entry = $this->videoSampleEntry(
+        $entry     = $this->videoSampleEntry(
             format: 'raw ',
             width: 320,
             height: 240,
@@ -3301,7 +3302,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesVideoStsdResolutionDeterministicallyWithMultipleEntries(): void
     {
-        $firstEntry = $this->videoSampleEntry(
+        $firstEntry  = $this->videoSampleEntry(
             format: 'raw ',
             width: 320,
             height: 240,
@@ -3321,23 +3322,23 @@ final class IsoBmffParserTest extends TestCase
             verticalResolution: 0x003C0000,
         );
 
-        $stsd = $this->fullBox('stsd', pack('N', 2) . $firstEntry . $secondEntry);
-        $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
-        $vmhd = $this->fullBox('vmhd', str_repeat("\0", 8), 0, 1);
-        $url  = $this->fullBox('url ', '', 0, 1);
-        $dref = $this->fullBox('dref', pack('N', 1) . $url);
-        $dinf = $this->box('dinf', $dref);
-        $minf = $this->box('minf', $vmhd . $dinf . $stbl);
-        $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
-        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
-        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
-        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
-        $trak = $this->box('trak', $tkhd . $mdia);
-        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $stsd        = $this->fullBox('stsd', pack('N', 2) . $firstEntry . $secondEntry);
+        $stbl        = $this->box('stbl', $stsd . $this->minimalStblAtoms());
+        $vmhd        = $this->fullBox('vmhd', str_repeat("\0", 8), 0, 1);
+        $url         = $this->fullBox('url ', '', 0, 1);
+        $dref        = $this->fullBox('dref', pack('N', 1) . $url);
+        $dinf        = $this->box('dinf', $dref);
+        $minf        = $this->box('minf', $vmhd . $dinf . $stbl);
+        $hdlr        = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdhd        = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia        = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $tkhd        = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak        = $this->box('trak', $tkhd . $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $quickTime = $extractor->extract()->quickTimeMeta;
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $quickTime   = $extractor->extract()->quickTimeMeta;
 
         self::assertNotNull($quickTime);
         self::assertSame(320, $quickTime->intValue(QuickTimeMeta::VIDEO_WIDTH_KEY));
@@ -3474,8 +3475,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesVideoStsdEntryWithExplicitColorTableAtom(): void
     {
-        $ctab  = $this->box('ctab', pack('Nnn', 0, 0, 0));
-        $entry = $this->videoSampleEntry(
+        $ctab      = $this->box('ctab', pack('Nnn', 0, 0, 0));
+        $entry     = $this->videoSampleEntry(
             format: 'raw ',
             width: 320,
             height: 240,
@@ -3498,8 +3499,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesVideoStsdEntryWithGenericExtensionBox(): void
     {
-        $pasp  = $this->box('pasp', pack('NN', 1, 1));
-        $entry = $this->videoSampleEntry(
+        $pasp      = $this->box('pasp', pack('NN', 1, 1));
+        $entry     = $this->videoSampleEntry(
             format: 'raw ',
             width: 320,
             height: 240,
@@ -3522,7 +3523,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesVideoStsdEntryWithFourByteZeroTerminator(): void
     {
-        $entry = $this->videoSampleEntry(
+        $entry     = $this->videoSampleEntry(
             format: 'raw ',
             width: 320,
             height: 240,
@@ -3655,7 +3656,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesAudioStsdVersion0Entry(): void
     {
-        $entry = $this->audioSampleEntryVersion0(
+        $entry     = $this->audioSampleEntryVersion0(
             format: 'raw ',
             channels: 2,
             sampleSize: 16,
@@ -3796,7 +3797,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function toleratesAudioStsdVersion0EntryWithNonLegacyFormat(): void
     {
-        $entry = $this->audioSampleEntryVersion0(
+        $entry     = $this->audioSampleEntryVersion0(
             format: 'mp4a',
             channels: 2,
             sampleSize: 16,
@@ -3816,7 +3817,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesAudioStsdVersion1Entry(): void
     {
-        $entry = $this->audioSampleEntryVersion1(
+        $entry     = $this->audioSampleEntryVersion1(
             format: 'mp4a',
             channels: 2,
             sampleSize: 16,
@@ -3843,7 +3844,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function acceptsAudioStsdVersion1EntryInStsdVersion0(): void
     {
-        $entry = $this->audioSampleEntryVersion1(
+        $entry     = $this->audioSampleEntryVersion1(
             format: 'mp4a',
             channels: 2,
             sampleSize: 16,
@@ -3867,7 +3868,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesAudioStsdVersion1SamplingRateBoxOverride(): void
     {
-        $entry = $this->audioSampleEntryVersion1(
+        $entry     = $this->audioSampleEntryVersion1(
             format: 'mp4a',
             channels: 2,
             sampleSize: 16,
@@ -3877,7 +3878,7 @@ final class IsoBmffParserTest extends TestCase
             bytesPerFrame: 0,
             bytesPerSample: 0,
         );
-        $entry = $this->box('mp4a', substr($entry, 8) . $this->fullBox('srat', pack('N', 96000)));
+        $entry     = $this->box('mp4a', substr($entry, 8) . $this->fullBox('srat', pack('N', 96000)));
 
         $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry, 1, 48000));
         $quickTime = $extractor->extract()->quickTimeMeta;
@@ -3912,7 +3913,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesAudioStsdSampleRateMatchingMdhdTimescale(): void
     {
-        $entry = $this->audioSampleEntryVersion0(
+        $entry     = $this->audioSampleEntryVersion0(
             format: 'raw ',
             channels: 2,
             sampleSize: 16,
@@ -3932,7 +3933,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesAudioStsdSampleRateWithIntegerTimescaleRelation(): void
     {
-        $entry = $this->audioSampleEntryVersion0(
+        $entry     = $this->audioSampleEntryVersion0(
             format: 'raw ',
             channels: 2,
             sampleSize: 16,
@@ -3952,13 +3953,13 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function preservesAudioStsdFractionalLegacySampleRatePayload(): void
     {
-        $entry = $this->audioSampleEntryVersion0(
+        $entry     = $this->audioSampleEntryVersion0(
             format: 'raw ',
             channels: 2,
             sampleSize: 16,
             sampleRate: 44100,
         );
-        $entry = substr($entry, 0, -4) . pack('N', (44100 << 16) + 1);
+        $entry     = substr($entry, 0, -4) . pack('N', (44100 << 16) + 1);
 
         $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
         $quickTime = $extractor->extract()->quickTimeMeta;
@@ -3974,13 +3975,13 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesAudioStsdLegacyLikeFractionalSampleRateDeterministically(): void
     {
-        $entry = $this->audioSampleEntryVersion0(
+        $entry     = $this->audioSampleEntryVersion0(
             format: 'raw ',
             channels: 2,
             sampleSize: 16,
             sampleRate: 22254,
         );
-        $entry = substr($entry, 0, -4) . pack('N', 0x56EE8BA3);
+        $entry     = substr($entry, 0, -4) . pack('N', 0x56EE8BA3);
 
         $extractor = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
         $quickTime = $extractor->extract()->quickTimeMeta;
@@ -4035,7 +4036,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function toleratesAudioStsdSampleRateInconsistentWithMdhdTimescale(): void
     {
-        $entry = $this->audioSampleEntryVersion0(
+        $entry     = $this->audioSampleEntryVersion0(
             format: 'raw ',
             channels: 2,
             sampleSize: 16,
@@ -4055,7 +4056,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesAudioStsdVersion1FullBox(): void
     {
-        $entry = $this->audioSampleEntryVersion1(
+        $entry     = $this->audioSampleEntryVersion1(
             format: 'mp4a',
             channels: 2,
             sampleSize: 16,
@@ -4080,7 +4081,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesAudioStsdVersion2Entry(): void
     {
-        $entry = $this->audioSampleEntryVersion2(
+        $entry     = $this->audioSampleEntryVersion2(
             format: 'lpcm',
             channels: 6,
             sampleRate: 96000.0,
@@ -4103,7 +4104,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesAudioStsdVersion2LpcmFlagSemantics(): void
     {
-        $entry = $this->audioSampleEntryVersion2(
+        $entry     = $this->audioSampleEntryVersion2(
             format: 'lpcm',
             channels: 2,
             sampleRate: 48000.0,
@@ -4158,7 +4159,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesAudioStsdVersion2NonLpcmWithoutLpcmAssumptions(): void
     {
-        $entry = $this->audioSampleEntryVersion2(
+        $entry     = $this->audioSampleEntryVersion2(
             format: 'mp4a',
             channels: 2,
             sampleRate: 44100.0,
@@ -4233,7 +4234,7 @@ final class IsoBmffParserTest extends TestCase
         $meta        = $this->fullBox('meta', $iinf);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -4247,10 +4248,10 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('infe box truncated');
 
-        $infe = $this->box('infe', "\0\0\0\0"); // only 4 bytes, needs 8
-        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
-        $meta = $this->fullBox('meta', $iinf);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $infe      = $this->box('infe', "\0\0\0\0"); // only 4 bytes, needs 8
+        $iinf      = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
+        $meta      = $this->fullBox('meta', $iinf);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -4273,7 +4274,7 @@ final class IsoBmffParserTest extends TestCase
         $meta        = $this->fullBox('meta', $iinf);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -4284,7 +4285,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesInfeVersion3(): void
     {
-        $exifBlob = pack('N', 0) . "MM\x00\x2Ainfe-v3";
+        $exifBlob    = pack('N', 0) . "MM\x00\x2Ainfe-v3";
 
         $infePayload = "\x03\0\0\0" . pack('N', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $infe        = $this->box('infe', $infePayload);
@@ -4294,20 +4295,20 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload = "\0\0\0\0\x44\0" . pack('n', 1)
             . pack('n', 1) . pack('n', 0) . pack('n', 1)
             . pack('N', 0) . pack('N', strlen($exifBlob));
-        $iloc = $this->box('iloc', $ilocPayload);
-        $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
-        $mdat = $this->box('mdat', $exifBlob);
+        $iloc        = $this->box('iloc', $ilocPayload);
+        $meta        = $this->fullBox('meta', $pitm . $iinf . $iloc);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat        = $this->box('mdat', $exifBlob);
 
         $offset      = strlen($ftyp) + strlen($meta) + 8;
         $ilocPayload = "\0\0\0\0\x44\0" . pack('n', 1)
             . pack('n', 1) . pack('n', 0) . pack('n', 1)
             . pack('N', $offset) . pack('N', strlen($exifBlob));
-        $iloc = $this->box('iloc', $ilocPayload);
-        $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
+        $iloc        = $this->box('iloc', $ilocPayload);
+        $meta        = $this->fullBox('meta', $pitm . $iinf . $iloc);
 
-        $extractor = $this->createExtractor($ftyp . $meta . $mdat);
-        $exifs     = $extractor->extract()->exifBlobs;
+        $extractor   = $this->createExtractor($ftyp . $meta . $mdat);
+        $exifs       = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Ainfe-v3"], $exifs);
     }
@@ -4320,36 +4321,36 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesInfeWithContentEncoding(): void
     {
-        $xmpData = '<x:xmpmeta xmlns:x="adobe:ns:meta/">encoded</x:xmpmeta>';
+        $xmpData     = '<x:xmpmeta xmlns:x="adobe:ns:meta/">encoded</x:xmpmeta>';
 
         // infe v2: item_ID=1, protection_index=0, item_type='xmp\0',
         // name='XMP\0', content_type='application/rdf+xml\0', content_encoding='gzip\0'
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . "xmp\0"
             . "XMP\0application/rdf+xml\0gzip\0";
-        $infe = $this->box('infe', $infePayload);
-        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
-        $pitm = $this->box('pitm', "\0\0\0\0" . pack('n', 1));
+        $infe        = $this->box('infe', $infePayload);
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
+        $pitm        = $this->box('pitm', "\0\0\0\0" . pack('n', 1));
 
         // iloc v0: one item at a known offset
         $ilocPayload = "\0\0\0\0\x44\0" . pack('n', 1)
             . pack('n', 1) . pack('n', 0) . pack('n', 1)
             . pack('N', 0) . pack('N', strlen($xmpData));
-        $iloc = $this->box('iloc', $ilocPayload);
+        $iloc        = $this->box('iloc', $ilocPayload);
 
-        $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
-        $mdat = $this->box('mdat', $xmpData);
+        $meta        = $this->fullBox('meta', $pitm . $iinf . $iloc);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat        = $this->box('mdat', $xmpData);
 
         // Recalculate iloc offset now that we know full meta size
         $dataOffset  = strlen($ftyp) + strlen($meta) + 8; // +8 for mdat box header
         $ilocPayload = "\0\0\0\0\x44\0" . pack('n', 1)
             . pack('n', 1) . pack('n', 0) . pack('n', 1)
             . pack('N', $dataOffset) . pack('N', strlen($xmpData));
-        $iloc = $this->box('iloc', $ilocPayload);
-        $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
+        $iloc        = $this->box('iloc', $ilocPayload);
+        $meta        = $this->fullBox('meta', $pitm . $iinf . $iloc);
 
-        $extractor = $this->createExtractor($ftyp . $meta . $mdat);
-        $xmps      = $extractor->extract()->xmpBlobs;
+        $extractor   = $this->createExtractor($ftyp . $meta . $mdat);
+        $xmps        = $extractor->extract()->xmpBlobs;
 
         self::assertSame([$xmpData], $xmps);
     }
@@ -4361,33 +4362,33 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesInfeWithExtensionType(): void
     {
-        $xmpData = '<x:xmpmeta xmlns:x="adobe:ns:meta/">ext</x:xmpmeta>';
+        $xmpData     = '<x:xmpmeta xmlns:x="adobe:ns:meta/">ext</x:xmpmeta>';
 
         // infe v2: item_type='mime', with content_encoding + extension_type
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'mime'
             . "XMP\0application/rdf+xml\0\0" . 'fdel';
-        $infe = $this->box('infe', $infePayload);
-        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
-        $pitm = $this->box('pitm', "\0\0\0\0" . pack('n', 1));
+        $infe        = $this->box('infe', $infePayload);
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
+        $pitm        = $this->box('pitm', "\0\0\0\0" . pack('n', 1));
 
         $ilocPayload = "\0\0\0\0\x44\0" . pack('n', 1)
             . pack('n', 1) . pack('n', 0) . pack('n', 1)
             . pack('N', 0) . pack('N', strlen($xmpData));
-        $iloc = $this->box('iloc', $ilocPayload);
+        $iloc        = $this->box('iloc', $ilocPayload);
 
-        $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
-        $mdat = $this->box('mdat', $xmpData);
+        $meta        = $this->fullBox('meta', $pitm . $iinf . $iloc);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat        = $this->box('mdat', $xmpData);
 
         $dataOffset  = strlen($ftyp) + strlen($meta) + 8;
         $ilocPayload = "\0\0\0\0\x44\0" . pack('n', 1)
             . pack('n', 1) . pack('n', 0) . pack('n', 1)
             . pack('N', $dataOffset) . pack('N', strlen($xmpData));
-        $iloc = $this->box('iloc', $ilocPayload);
-        $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
+        $iloc        = $this->box('iloc', $ilocPayload);
+        $meta        = $this->fullBox('meta', $pitm . $iinf . $iloc);
 
-        $extractor = $this->createExtractor($ftyp . $meta . $mdat);
-        $xmps      = $extractor->extract()->xmpBlobs;
+        $extractor   = $this->createExtractor($ftyp . $meta . $mdat);
+        $xmps        = $extractor->extract()->xmpBlobs;
 
         self::assertSame([$xmpData], $xmps);
     }
@@ -4408,7 +4409,7 @@ final class IsoBmffParserTest extends TestCase
         $meta        = $this->fullBox('meta', $iinf);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -4430,7 +4431,7 @@ final class IsoBmffParserTest extends TestCase
         $meta            = $this->fullBox('meta', $iinf);
         $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor       = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -4444,9 +4445,9 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('unsupported iinf box version');
 
-        $iinf = $this->box('iinf', "\x02\0\0\0" . pack('N', 0)); // version=2
-        $meta = $this->fullBox('meta', $iinf);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $iinf      = $this->box('iinf', "\x02\0\0\0" . pack('N', 0)); // version=2
+        $meta      = $this->fullBox('meta', $iinf);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -4462,9 +4463,9 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('iinf box truncated');
 
-        $iinf = $this->box('iinf', "\0\0\0"); // only 3 bytes
-        $meta = $this->fullBox('meta', $iinf);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $iinf      = $this->box('iinf', "\0\0\0"); // only 3 bytes
+        $meta      = $this->fullBox('meta', $iinf);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -4480,9 +4481,9 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('iinf box truncated');
 
-        $iinf = $this->box('iinf', "\x01\0\0\0" . pack('n', 0)); // version=1 but only 6 bytes
-        $meta = $this->fullBox('meta', $iinf);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $iinf      = $this->box('iinf', "\x01\0\0\0" . pack('n', 0)); // version=1 but only 6 bytes
+        $meta      = $this->fullBox('meta', $iinf);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -4495,14 +4496,14 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function acceptPitmVersion1WithValidPrimaryItemId(): void
     {
-        $rawExif = pack('N', 0) . "MM\x00\x2Apitm-v1-primary";
+        $rawExif     = pack('N', 0) . "MM\x00\x2Apitm-v1-primary";
 
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/exif' . "\0\0";
         $infe        = $this->box('infe', $infePayload);
         $iinfPayload = "\0\0\0\0" . pack('n', 1) . $infe;
         $iinf        = $this->box('iinf', $iinfPayload);
 
-        $pitm = $this->fullBox('pitm', pack('N', 1), 1, 0);
+        $pitm        = $this->fullBox('pitm', pack('N', 1), 1, 0);
 
         $ilocBuilder = function (int $offset, int $length): string {
             $payload = "\0\0\0\0";
@@ -4517,16 +4518,16 @@ final class IsoBmffParserTest extends TestCase
             return $this->box('iloc', $payload);
         };
 
-        $meta = $this->fullBox('meta', $pitm . $iinf . $ilocBuilder(0, strlen($rawExif)));
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
-        $mdat = $this->box('mdat', $rawExif);
+        $meta        = $this->fullBox('meta', $pitm . $iinf . $ilocBuilder(0, strlen($rawExif)));
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat        = $this->box('mdat', $rawExif);
 
-        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
-        $iloc       = $ilocBuilder($offsetBase, strlen($rawExif));
-        $meta       = $this->fullBox('meta', $pitm . $iinf . $iloc);
+        $offsetBase  = strlen($ftyp) + strlen($meta) + 8;
+        $iloc        = $ilocBuilder($offsetBase, strlen($rawExif));
+        $meta        = $this->fullBox('meta', $pitm . $iinf . $iloc);
 
-        $extractor = $this->createExtractor($ftyp . $meta . $mdat);
-        $exifs     = $extractor->extract()->exifBlobs;
+        $extractor   = $this->createExtractor($ftyp . $meta . $mdat);
+        $exifs       = $extractor->extract()->exifBlobs;
 
         self::assertSame(["MM\x00\x2Apitm-v1-primary"], $exifs);
     }
@@ -4546,7 +4547,7 @@ final class IsoBmffParserTest extends TestCase
         $meta        = $this->fullBox('meta', $pitm);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -4565,7 +4566,7 @@ final class IsoBmffParserTest extends TestCase
         $meta        = $this->fullBox('meta', $pitm);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -4579,10 +4580,10 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('unsupported dref box version');
 
-        $dref = $this->fullBox('dref', pack('N', 0), 1); // version=1, entry_count=0
-        $dinf = $this->box('dinf', $dref);
-        $meta = $this->fullBox('meta', $dinf);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $dref      = $this->fullBox('dref', pack('N', 0), 1); // version=1, entry_count=0
+        $dinf      = $this->box('dinf', $dref);
+        $meta      = $this->fullBox('meta', $dinf);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -4594,11 +4595,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function toleratesDrefNonZeroFlags(): void
     {
-        $urlEntry = $this->fullBox('url ', '', 0, 1);
-        $dref     = $this->fullBox('dref', pack('N', 1) . $urlEntry, 0, 1); // version=0, flags=1, entry_count=1
-        $dinf     = $this->box('dinf', $dref);
-        $meta     = $this->fullBox('meta', $dinf);
-        $ftyp     = $this->box('ftyp', 'isom' . pack('N', 0));
+        $urlEntry  = $this->fullBox('url ', '', 0, 1);
+        $dref      = $this->fullBox('dref', pack('N', 1) . $urlEntry, 0, 1); // version=0, flags=1, entry_count=1
+        $dinf      = $this->box('dinf', $dref);
+        $meta      = $this->fullBox('meta', $dinf);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $this->expectNotToPerformAssertions();
@@ -4621,7 +4622,7 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame([], $exifs);
         self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
 
-        $reference = $dataReferences->referenceForIndex(1);
+        $reference       = $dataReferences->referenceForIndex(1);
         self::assertNotNull($reference);
         self::assertSame('url ', $reference->type);
         self::assertSame('https://example.test/exif', $reference->uri);
@@ -4650,7 +4651,7 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame([], $exifs);
         self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
 
-        $reference = $dataReferences->referenceForIndex(1);
+        $reference       = $dataReferences->referenceForIndex(1);
         self::assertNotNull($reference);
         self::assertSame('urn ', $reference->type);
         self::assertSame("name\0urn:example:test", $reference->uri);
@@ -4678,7 +4679,7 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame([], $exifs);
         self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
 
-        $reference = $dataReferences->referenceForIndex(1);
+        $reference       = $dataReferences->referenceForIndex(1);
         self::assertNotNull($reference);
         self::assertSame('urn ', $reference->type);
         self::assertSame('name', $reference->uri);
@@ -4759,7 +4760,7 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame([], $exifs);
         self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
 
-        $reference = $dataReferences->referenceForIndex(1);
+        $reference       = $dataReferences->referenceForIndex(1);
         self::assertNotNull($reference);
         self::assertSame('alis', $reference->type);
         self::assertFalse($reference->selfContained);
@@ -4778,9 +4779,9 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('unsupported meta box version');
 
-        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
-        $meta = $this->fullBox('meta', $iinf, 1); // version=1, flags=0
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $iinf      = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
+        $meta      = $this->fullBox('meta', $iinf, 1); // version=1, flags=0
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -4792,9 +4793,9 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function toleratesMetaUnsupportedFlags(): void
     {
-        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
-        $meta = $this->fullBox('meta', $iinf, 0, 1); // version=0, flags=1
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $iinf      = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
+        $meta      = $this->fullBox('meta', $iinf, 0, 1); // version=0, flags=1
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $this->expectNotToPerformAssertions();
@@ -4810,9 +4811,9 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('unsupported iinf box flags');
 
-        $iinf = $this->fullBox('iinf', pack('n', 0), 0, 1); // flags=1
-        $meta = $this->fullBox('meta', $iinf);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $iinf      = $this->fullBox('iinf', pack('n', 0), 0, 1); // flags=1
+        $meta      = $this->fullBox('meta', $iinf);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -4830,7 +4831,7 @@ final class IsoBmffParserTest extends TestCase
         $meta        = $this->fullBox('meta', $iinf);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
 
         $this->addToAssertionCount(1);
@@ -4851,7 +4852,7 @@ final class IsoBmffParserTest extends TestCase
         $meta        = $this->fullBox('meta', $iinf);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -4870,7 +4871,7 @@ final class IsoBmffParserTest extends TestCase
         $meta        = $this->fullBox('meta', $iinf);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -4884,10 +4885,10 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('pitm references non-existent item 99');
 
-        $pitm = $this->fullBox('pitm', pack('n', 99)); // item_ID = 99 (no such item)
-        $iinf = $this->fullBox('iinf', pack('n', 0));  // No items defined
-        $meta = $this->fullBox('meta', $iinf . $pitm);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $pitm      = $this->fullBox('pitm', pack('n', 99)); // item_ID = 99 (no such item)
+        $iinf      = $this->fullBox('iinf', pack('n', 0));  // No items defined
+        $meta      = $this->fullBox('meta', $iinf . $pitm);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -4922,7 +4923,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectExceptionMessage('ftyp compatible_brands length is not a multiple of 4');
 
         // major_brand (4) + minor_version (4) + 5 bytes (not multiple of 4)
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0) . 'heicX');
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0) . 'heicX');
 
         $extractor = $this->createExtractor($ftyp);
         $extractor->extract();
@@ -4934,7 +4935,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parseFtypWithPrintableBrands(): void
     {
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 512) . 'mif1heic');
+        $ftyp          = $this->box('ftyp', 'isom' . pack('N', 512) . 'mif1heic');
 
         $extractor     = $this->createExtractor($ftyp);
         $quickTimeMeta = $extractor->extract()->quickTimeMeta;
@@ -4954,7 +4955,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('ftyp major_brand must be a printable 4CC');
 
-        $ftyp = $this->box('ftyp', "\x00\x00\x00\x01" . pack('N', 0) . 'isom');
+        $ftyp      = $this->box('ftyp', "\x00\x00\x00\x01" . pack('N', 0) . 'isom');
 
         $extractor = $this->createExtractor($ftyp);
         $extractor->extract();
@@ -4966,7 +4967,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function toleratesFtypNonPrintableCompatibleBrand(): void
     {
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0) . 'mif1' . "\x00\x00\x00\x01");
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0) . 'mif1' . "\x00\x00\x00\x01");
 
         $extractor = $this->createExtractor($ftyp);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -4991,7 +4992,7 @@ final class IsoBmffParserTest extends TestCase
         $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
+        $extractor   = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
     }
 
@@ -5016,14 +5017,14 @@ final class IsoBmffParserTest extends TestCase
             . pack('N', 1920 << 16)          // width (16.16)
             . pack('N', 1080 << 16);         // height (16.16)
 
-        $mdia = $this->box('mdia', $this->minimalMdiaContent());
-        $tkhd = $this->fullBox('tkhd', $tkhdPayload, 1, 0);
-        $trak = $this->box('trak', $tkhd . $mdia);
-        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdia        = $this->box('mdia', $this->minimalMdiaContent());
+        $tkhd        = $this->fullBox('tkhd', $tkhdPayload, 1, 0);
+        $trak        = $this->box('trak', $tkhd . $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $xmps      = $extractor->extract()->xmpBlobs;
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $xmps        = $extractor->extract()->xmpBlobs;
 
         self::assertSame([], $xmps);
     }
@@ -5041,11 +5042,11 @@ final class IsoBmffParserTest extends TestCase
             . "\x00\x00\x00\x00"                   // pre_defined=0
             . 'vide'                               // handler_type
             . str_repeat("\0", 12);                // reserved
-        $hdlr = $this->box('hdlr', $hdlrPayload);
-        $meta = $this->fullBox('meta', $hdlr);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $hdlr        = $this->box('hdlr', $hdlrPayload);
+        $meta        = $this->fullBox('meta', $hdlr);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -5062,11 +5063,11 @@ final class IsoBmffParserTest extends TestCase
             . "\x00\x00\x00\x00"                   // pre_defined=0
             . 'vide'                               // handler_type
             . str_repeat("\0", 12);                // reserved
-        $hdlr = $this->box('hdlr', $hdlrPayload);
-        $meta = $this->fullBox('meta', $hdlr);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $hdlr        = $this->box('hdlr', $hdlrPayload);
+        $meta        = $this->fullBox('meta', $hdlr);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
     }
 
@@ -5081,12 +5082,12 @@ final class IsoBmffParserTest extends TestCase
             . 'vide'                               // handler_type
             . str_repeat("\0", 12)                // reserved
             . "VideoHandler\0";                    // name
-        $hdlr = $this->box('hdlr', $hdlrPayload);
-        $meta = $this->fullBox('meta', $hdlr);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $hdlr        = $this->box('hdlr', $hdlrPayload);
+        $meta        = $this->fullBox('meta', $hdlr);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
-        $xmps      = $extractor->extract()->xmpBlobs;
+        $extractor   = $this->createExtractor($ftyp . $meta);
+        $xmps        = $extractor->extract()->xmpBlobs;
 
         self::assertSame([], $xmps);
     }
@@ -5102,11 +5103,11 @@ final class IsoBmffParserTest extends TestCase
             . "\x00\x00\x00\x01"                   // pre_defined=1
             . 'vide'                               // handler_type
             . str_repeat("\0", 12);                // reserved
-        $hdlr = $this->box('hdlr', $hdlrPayload);
-        $meta = $this->fullBox('meta', $hdlr);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $hdlr        = $this->box('hdlr', $hdlrPayload);
+        $meta        = $this->fullBox('meta', $hdlr);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor   = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
 
         $this->addToAssertionCount(1);
@@ -5121,8 +5122,8 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('meta must contain exactly one hdlr box');
 
-        $keyName = 'com.apple.quicktime.content.identifier';
-        $keys    = $this->box(
+        $keyName   = 'com.apple.quicktime.content.identifier';
+        $keys      = $this->box(
             'keys',
             "\0\0\0\0"
             . pack('N', 1)
@@ -5131,10 +5132,10 @@ final class IsoBmffParserTest extends TestCase
             . $keyName
             . "\0",
         );
-        $data = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
-        $ilst = $this->box('ilst', $this->box(pack('N', 1), $data));
-        $meta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $data      = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
+        $ilst      = $this->box('ilst', $this->box(pack('N', 1), $data));
+        $meta      = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -5149,9 +5150,9 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('meta must contain exactly one hdlr box');
 
-        $hdlr = $this->fullBox('hdlr', "\0\0\0\0pict" . str_repeat("\0", 12) . "\0");
-        $meta = $this->fullBox('meta', $hdlr . $hdlr);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $hdlr      = $this->fullBox('hdlr', "\0\0\0\0pict" . str_repeat("\0", 12) . "\0");
+        $meta      = $this->fullBox('meta', $hdlr . $hdlr);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -5196,13 +5197,13 @@ final class IsoBmffParserTest extends TestCase
     public function parsesTrackLevelUdtaMetaBox(): void
     {
         // Build a keys/ilst metadata inside udta inside trak
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key         = 'com.apple.quicktime.content.identifier';
+        $keyEntry    = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys        = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
-        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'track-meta-value');
-        $ilstEntry = $this->box(pack('N', 1), $dataBox);
-        $ilst      = $this->box('ilst', $ilstEntry);
+        $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . 'track-meta-value');
+        $ilstEntry   = $this->box(pack('N', 1), $dataBox);
+        $ilst        = $this->box('ilst', $ilstEntry);
 
         $hdlr        = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
         $metaPayload = "\0\0\0\0" . $hdlr . $keys . $ilst;
@@ -5212,8 +5213,8 @@ final class IsoBmffParserTest extends TestCase
         $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('track-meta-value', $qtMeta->keys[$key]);
@@ -5229,8 +5230,8 @@ final class IsoBmffParserTest extends TestCase
         $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('Test Track Name', $qtMeta->keys[QuickTimeMeta::TRACK_NAME_KEY]);
@@ -5261,17 +5262,17 @@ final class IsoBmffParserTest extends TestCase
     {
         $titleAtom = $this->box("\xA9nam", "Movie Title\0");
 
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
-        $dataBox  = $this->box('data', pack('N', 1) . pack('N', 0) . 'meta-value');
-        $ilst     = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
-        $hdlr     = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta     = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $key       = 'com.apple.quicktime.content.identifier';
+        $keyEntry  = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'meta-value');
+        $ilst      = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
 
-        $udta = $this->box('udta', $titleAtom . $meta);
-        $moov = $this->moov($udta);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $udta      = $this->box('udta', $titleAtom . $meta);
+        $moov      = $this->moov($udta);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -5287,9 +5288,9 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function ignoresUnknownMovieLevelDirectUdtaAtom(): void
     {
-        $unknown = $this->box('abcd', "ignored\0");
-        $moov    = $this->moov($this->box('udta', $unknown));
-        $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $unknown   = $this->box('abcd', "ignored\0");
+        $moov      = $this->moov($this->box('udta', $unknown));
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -5306,9 +5307,9 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesGpsLocationFromUdtaXyzAtom(): void
     {
-        $gps  = "+48.1234+011.5678+500.000/\0";
-        $moov = $this->moov($this->box('udta', $this->box("\xA9xyz", $gps)));
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $gps       = "+48.1234+011.5678+500.000/\0";
+        $moov      = $this->moov($this->box('udta', $this->box("\xA9xyz", $gps)));
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -5323,8 +5324,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesEncoderFromUdtaTooAtom(): void
     {
-        $moov = $this->moov($this->box('udta', $this->box("\xA9too", "HandBrake 1.8.0\0")));
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $moov      = $this->moov($this->box('udta', $this->box("\xA9too", "HandBrake 1.8.0\0")));
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -5339,9 +5340,9 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesCameraMakeModelFromUdta(): void
     {
-        $udta = $this->box('udta', $this->box("\xA9mak", "Apple\0") . $this->box("\xA9mod", "iPhone 16 Pro\0"));
-        $moov = $this->moov($udta);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $udta      = $this->box('udta', $this->box("\xA9mak", "Apple\0") . $this->box("\xA9mod", "iPhone 16 Pro\0"));
+        $moov      = $this->moov($udta);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -5352,15 +5353,103 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Parses new udta text atoms (composer, director, producer, performers, subtitle, information).
+     */
+    #[Test]
+    public function parsesNewUdtaTextAtoms(): void
+    {
+        $udta      = $this->box(
+            'udta',
+            $this->box("\xA9com", "Hans Zimmer\0")
+            . $this->box("\xA9dir", "Christopher Nolan\0")
+            . $this->box("\xA9prd", "Emma Thomas\0")
+            . $this->box("\xA9prf", "London Symphony\0")
+            . $this->box("\xA9snm", "Extended Cut\0")
+            . $this->box("\xA9inf", "Behind the scenes\0")
+            . $this->box("\xA9fmt", "HD\0")
+            . $this->box("\xA9src", "Original negative\0"),
+        );
+        $moov      = $this->moov($udta);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('Hans Zimmer', $qtMeta->keys['com.apple.quicktime.composer']);
+        self::assertSame('Christopher Nolan', $qtMeta->keys['com.apple.quicktime.director']);
+        self::assertSame('Emma Thomas', $qtMeta->keys['com.apple.quicktime.producer']);
+        self::assertSame('London Symphony', $qtMeta->keys['com.apple.quicktime.performers']);
+        self::assertSame('Extended Cut', $qtMeta->keys['com.apple.quicktime.subtitle']);
+        self::assertSame('Behind the scenes', $qtMeta->keys['com.apple.quicktime.information']);
+        self::assertSame('HD', $qtMeta->keys['com.apple.quicktime.format']);
+        self::assertSame('Original negative', $qtMeta->keys['com.apple.quicktime.sourceCredits']);
+    }
+
+    /**
+     * Parses movie header (mvhd) metadata into QuickTime keys.
+     * Verifies timestamps, duration, rate, volume, matrix, and nextTrackID.
+     */
+    #[Test]
+    public function parsesMovieHeaderMetadata(): void
+    {
+        // Build a custom mvhd v0 with known values
+        $creationTime     = 3_692_217_600;
+        $modificationTime = 3_692_304_000;
+        $timescale        = 600;
+        $duration         = 3600;
+        $rate             = 0x00010000; // 1.0 in 16.16 fixed-point
+        $volume           = 0x0100;     // 1.0 in 8.8 fixed-point
+        $nextTrackId      = 2;
+
+        // Identity matrix: [1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0]
+        // Positions 0,1,3,4,6,7 = 16.16 fixed-point; positions 2,5,8 = 2.30 fixed-point
+        $matrix           = pack('N9', 0x00010000, 0, 0, 0, 0x00010000, 0, 0, 0, 0x40000000);
+
+        $mvhdPayload      = pack('NNN', $creationTime, $modificationTime, $timescale)
+            . pack('N', $duration)
+            . pack('N', $rate)
+            . pack('n', $volume)
+            . str_repeat("\0", 10)   // reserved
+            . $matrix
+            . str_repeat("\0", 24)   // previewTime..currentTime (6 x u32)
+            . pack('N', $nextTrackId);
+
+        $mvhd             = $this->fullBox('mvhd', $mvhdPayload);
+        $trak             = $this->minimalTrak();
+        $moov             = $this->box('moov', $mvhd . $trak);
+        $ftyp             = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor        = $this->createExtractor($ftyp . $moov);
+        $qtMeta           = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame($creationTime, $qtMeta->keys[QuickTimeMeta::CREATE_DATE_KEY]);
+        self::assertSame($modificationTime, $qtMeta->keys[QuickTimeMeta::MODIFY_DATE_KEY]);
+        self::assertSame($timescale, $qtMeta->keys[QuickTimeMeta::TIME_SCALE_KEY]);
+        self::assertSame($duration, $qtMeta->keys[QuickTimeMeta::DURATION_KEY]);
+        self::assertSame(1.0, $qtMeta->keys[QuickTimeMeta::PREFERRED_RATE_KEY]);
+        self::assertSame(1.0, $qtMeta->keys[QuickTimeMeta::PREFERRED_VOLUME_KEY]);
+        self::assertSame('1 0 0 0 1 0 0 0 1', $qtMeta->keys[QuickTimeMeta::MATRIX_STRUCTURE_KEY]);
+        self::assertSame($nextTrackId, $qtMeta->keys[QuickTimeMeta::NEXT_TRACK_ID_KEY]);
+        self::assertSame(0, $qtMeta->keys[QuickTimeMeta::PREVIEW_TIME_KEY]);
+        self::assertSame(0, $qtMeta->keys[QuickTimeMeta::PREVIEW_DURATION_KEY]);
+        self::assertSame(0, $qtMeta->keys[QuickTimeMeta::POSTER_TIME_KEY]);
+        self::assertSame(0, $qtMeta->keys[QuickTimeMeta::SELECTION_TIME_KEY]);
+        self::assertSame(0, $qtMeta->keys[QuickTimeMeta::SELECTION_DURATION_KEY]);
+        self::assertSame(0, $qtMeta->keys[QuickTimeMeta::CURRENT_TIME_KEY]);
+    }
+
+    /**
      * Extracts XMP from a udta XMP_ atom (Adobe QuickTime convention).
      */
     #[Test]
     public function extractsXmpFromUdtaXmpUnderscoreAtom(): void
     {
-        $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
-        $udta = $this->box('udta', $this->box('XMP_', $xmp));
-        $moov = $this->moov($udta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $xmp       = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
+        $udta      = $this->box('udta', $this->box('XMP_', $xmp));
+        $moov      = $this->moov($udta);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $xmpBlobs  = $extractor->extract()->xmpBlobs;
@@ -5375,10 +5464,10 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function throwsForOversizedUdtaXmpPayload(): void
     {
-        $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
-        $udta = $this->box('udta', $this->box('XMP_', $xmp));
-        $moov = $this->moov($udta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $xmp       = '<x:xmpmeta xmlns:x="adobe:ns:meta/" />';
+        $udta      = $this->box('udta', $this->box('XMP_', $xmp));
+        $moov      = $this->moov($udta);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $stream    = $this->createIsoBmffTempStream($ftyp . $moov);
         $extractor = new IsoBmffParser($stream, new IsoBmffParserConfig(maxItemPayloadSize: 4));
@@ -5393,32 +5482,32 @@ final class IsoBmffParserTest extends TestCase
     public function moovLevelMetadataNotOverwrittenByTrackUdta(): void
     {
         // Movie-level udta with keys/ilst
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key        = 'com.apple.quicktime.content.identifier';
+        $keyEntry   = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys       = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
-        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'movie-level-value');
-        $ilstEntry = $this->box(pack('N', 1), $dataBox);
-        $ilst      = $this->box('ilst', $ilstEntry);
+        $dataBox    = $this->box('data', pack('N', 1) . pack('N', 0) . 'movie-level-value');
+        $ilstEntry  = $this->box(pack('N', 1), $dataBox);
+        $ilst       = $this->box('ilst', $ilstEntry);
 
-        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $movieMeta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $movieUdta = $this->box('udta', $movieMeta);
+        $hdlr       = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $movieMeta  = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $movieUdta  = $this->box('udta', $movieMeta);
 
         // Track-level udta with same key but different value
         $dataBox2   = $this->box('data', pack('N', 1) . pack('N', 0) . 'track-level-value');
         $ilstEntry2 = $this->box(pack('N', 1), $dataBox2);
         $ilst2      = $this->box('ilst', $ilstEntry2);
 
-        $trackMeta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst2);
-        $trackUdta = $this->box('udta', $trackMeta);
-        $trak      = $this->box('trak', $this->minimalTrakContent() . $trackUdta);
+        $trackMeta  = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst2);
+        $trackUdta  = $this->box('udta', $trackMeta);
+        $trak       = $this->box('trak', $this->minimalTrakContent() . $trackUdta);
 
-        $moov = $this->box('moov', $this->minimalMvhd() . $movieUdta . $trak);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $moov       = $this->box('moov', $this->minimalMvhd() . $movieUdta . $trak);
+        $ftyp       = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor  = $this->createExtractor($ftyp . $moov);
+        $qtMeta     = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         // Track-level overwrites movie-level via mergeAssociative (last wins)
@@ -5512,8 +5601,8 @@ final class IsoBmffParserTest extends TestCase
     public function mergesMoovAndMdiaUdtaMetadataDeterministically(): void
     {
         // Movie-level udta with title
-        $moovTitle = $this->box("\xA9nam", "Movie Title\0");
-        $moovUdta  = $this->box('udta', $moovTitle);
+        $moovTitle  = $this->box("\xA9nam", "Movie Title\0");
+        $moovUdta   = $this->box('udta', $moovTitle);
 
         // Media-level udta with artist (different key)
         $mdiaArtist = $this->box("\xA9ART", "Media Artist\0");
@@ -5522,11 +5611,11 @@ final class IsoBmffParserTest extends TestCase
         $tkhd       = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
         $trak       = $this->box('trak', $tkhd . $mdia);
 
-        $moov = $this->box('moov', $this->minimalMvhd() . $moovUdta . $trak);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $moov       = $this->box('moov', $this->minimalMvhd() . $moovUdta . $trak);
+        $ftyp       = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor  = $this->createExtractor($ftyp . $moov);
+        $qtMeta     = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('Movie Title', $qtMeta->keys['com.apple.quicktime.title']);
@@ -5539,13 +5628,13 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function ignoresUnknownMdiaUdtaAtom(): void
     {
-        $unknown = $this->box('abcd', "ignored\0");
-        $udta    = $this->box('udta', $unknown);
-        $mdia    = $this->box('mdia', $this->minimalMdiaContent() . $udta);
-        $tkhd    = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
-        $trak    = $this->box('trak', $tkhd . $mdia);
-        $moov    = $this->box('moov', $this->minimalMvhd() . $trak);
-        $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $unknown   = $this->box('abcd', "ignored\0");
+        $udta      = $this->box('udta', $unknown);
+        $mdia      = $this->box('mdia', $this->minimalMdiaContent() . $udta);
+        $tkhd      = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak      = $this->box('trak', $tkhd . $mdia);
+        $moov      = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -5581,11 +5670,11 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parseMdiaWithRequiredSingletonChildren(): void
     {
-        $mdia = $this->box('mdia', $this->minimalMdiaContent());
-        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
-        $trak = $this->box('trak', $tkhd . $mdia);
-        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $mdia      = $this->box('mdia', $this->minimalMdiaContent());
+        $tkhd      = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak      = $this->box('trak', $tkhd . $mdia);
+        $moov      = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -5678,12 +5767,12 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function multiTrackVideoUsesFirstTrackDeterministically(): void
     {
-        $videoOne = [
+        $videoOne  = [
             'format' => 'avc1',
             'width'  => 1920,
             'height' => 1080,
         ];
-        $videoTwo = [
+        $videoTwo  = [
             'format' => 'hvc1',
             'width'  => 3840,
             'height' => 2160,
@@ -5704,7 +5793,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function multiTrackVideoPrefersEnabledInMovieTrackOverDisabledTrack(): void
     {
-        $disabled = [
+        $disabled       = [
             'format'    => 'hvc1',
             'width'     => 3840,
             'height'    => 2160,
@@ -5717,8 +5806,8 @@ final class IsoBmffParserTest extends TestCase
             'tkhdFlags' => 0x000003,
         ];
 
-        $extractor = $this->createExtractor($this->createFileWithVideoTrackDescriptors($disabled, $enabledInMovie));
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor      = $this->createExtractor($this->createFileWithVideoTrackDescriptors($disabled, $enabledInMovie));
+        $qtMeta         = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(1920, $qtMeta->keys[QuickTimeMeta::VIDEO_WIDTH_KEY]);
@@ -5738,15 +5827,15 @@ final class IsoBmffParserTest extends TestCase
             'height'    => 2160,
             'tkhdFlags' => 0x000001,
         ];
-        $inMovie = [
+        $inMovie     = [
             'format'    => 'avc1',
             'width'     => 1920,
             'height'    => 1080,
             'tkhdFlags' => 0x000003,
         ];
 
-        $extractor = $this->createExtractor($this->createFileWithVideoTrackDescriptors($enabledOnly, $inMovie));
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor   = $this->createExtractor($this->createFileWithVideoTrackDescriptors($enabledOnly, $inMovie));
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(1920, $qtMeta->keys[QuickTimeMeta::VIDEO_WIDTH_KEY]);
@@ -5760,7 +5849,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function singleTrackVideoKeepsCurrentBehaviorWhenFlagsAreUnset(): void
     {
-        $track = [
+        $track     = [
             'format'    => 'avc1',
             'width'     => 1920,
             'height'    => 1080,
@@ -5782,7 +5871,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function multiTrackVideoUsesFirstEligibleTrackDeterministically(): void
     {
-        $firstEligible = [
+        $firstEligible  = [
             'format'    => 'avc1',
             'width'     => 1920,
             'height'    => 1080,
@@ -5795,8 +5884,8 @@ final class IsoBmffParserTest extends TestCase
             'tkhdFlags' => 0x000003,
         ];
 
-        $extractor = $this->createExtractor($this->createFileWithVideoTrackDescriptors($firstEligible, $secondEligible));
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor      = $this->createExtractor($this->createFileWithVideoTrackDescriptors($firstEligible, $secondEligible));
+        $qtMeta         = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(1920, $qtMeta->keys[QuickTimeMeta::VIDEO_WIDTH_KEY]);
@@ -5811,8 +5900,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function multiTrackAudioUsesFirstTrackDeterministically(): void
     {
-        $audioOne = $this->audioSampleEntryVersion0('raw ', 2, 16, 44_100);
-        $audioTwo = $this->audioSampleEntryVersion0('twos', 1, 8, 22_050);
+        $audioOne  = $this->audioSampleEntryVersion0('raw ', 2, 16, 44_100);
+        $audioTwo  = $this->audioSampleEntryVersion0('twos', 1, 8, 22_050);
 
         $extractor = $this->createExtractor($this->createFileWithAudioTracks($audioOne, $audioTwo));
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -5835,17 +5924,17 @@ final class IsoBmffParserTest extends TestCase
         $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . 'name-fallback-value');
 
         // Use a non-printable fourcc (0x00000001) so the key index lookup fails
-        $ilstEntry = $this->box(pack('N', 1), $nameAtom . $dataBox);
-        $ilst      = $this->box('ilst', $ilstEntry);
+        $ilstEntry   = $this->box(pack('N', 1), $nameAtom . $dataBox);
+        $ilst        = $this->box('ilst', $ilstEntry);
 
         // No keys box — only ilst with name atom fallback
-        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
-        $udta = $this->box('udta', $meta);
-        $moov = $this->moov($udta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta        = $this->box('meta', "\0\0\0\0" . $ilst);
+        $udta        = $this->box('udta', $meta);
+        $moov        = $this->moov($udta);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('name-fallback-value', $qtMeta->keys['custom.metadata.key']);
@@ -5862,14 +5951,14 @@ final class IsoBmffParserTest extends TestCase
         $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . 'value1');
         $ilstEntry1  = $this->box(pack('N', 1), $nameAtom . $dataBox);
 
-        $dataBox2   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value2');
-        $ilstEntry2 = $this->box(pack('N', 2), $nameAtom . $dataBox2);
+        $dataBox2    = $this->box('data', pack('N', 1) . pack('N', 0) . 'value2');
+        $ilstEntry2  = $this->box(pack('N', 2), $nameAtom . $dataBox2);
 
-        $ilst = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
-        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
-        $udta = $this->box('udta', $meta);
-        $moov = $this->moov($udta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $ilst        = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
+        $meta        = $this->box('meta', "\0\0\0\0" . $ilst);
+        $udta        = $this->box('udta', $meta);
+        $moov        = $this->moov($udta);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -5885,11 +5974,11 @@ final class IsoBmffParserTest extends TestCase
         $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
         $ilstEntry   = $this->box(pack('N', 1), $nameAtom . $dataBox);
 
-        $ilst = $this->box('ilst', $ilstEntry);
-        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
-        $udta = $this->box('udta', $meta);
-        $moov = $this->moov($udta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $ilst        = $this->box('ilst', $ilstEntry);
+        $meta        = $this->box('meta', "\0\0\0\0" . $ilst);
+        $udta        = $this->box('udta', $meta);
+        $moov        = $this->moov($udta);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -5897,25 +5986,25 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesItifAtomWithValidItemId(): void
     {
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key       = 'com.apple.quicktime.content.identifier';
+        $keyEntry  = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         // mhdr: version=0, flags=0, nextItemID=43
-        $mhdr = $this->box('mhdr', "\0\0\0\0" . pack('N', 43));
+        $mhdr      = $this->box('mhdr', "\0\0\0\0" . pack('N', 43));
 
         // itif: version=0, flags=0, Item_ID=42
-        $itif    = $this->box('itif', "\0\0\0\0" . pack('N', 42));
-        $dataBox = $this->box('data', pack('N', 1) . pack('N', 0) . 'itif-test-value');
+        $itif      = $this->box('itif', "\0\0\0\0" . pack('N', 42));
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'itif-test-value');
         // ilst entry with itif + data
         $ilstEntry = $this->box(pack('N', 1), $itif . $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $mhdr . $keys . $ilst);
-        $udta = $this->box('udta', $meta);
-        $moov = $this->moov($udta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $mhdr . $keys . $ilst);
+        $udta      = $this->box('udta', $meta);
+        $moov      = $this->moov($udta);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -5930,9 +6019,9 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('duplicate Item_ID 7 in ilst itif atoms');
 
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 2) . $keyEntry . $keyEntry);
+        $key        = 'com.apple.quicktime.content.identifier';
+        $keyEntry   = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys       = $this->box('keys', "\0\0\0\0" . pack('N', 2) . $keyEntry . $keyEntry);
 
         $itif1      = $this->box('itif', "\0\0\0\0" . pack('N', 7));
         $dataBox1   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value1');
@@ -5942,12 +6031,12 @@ final class IsoBmffParserTest extends TestCase
         $dataBox2   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value2');
         $ilstEntry2 = $this->box(pack('N', 2), $itif2 . $dataBox2);
 
-        $ilst = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $udta = $this->box('udta', $meta);
-        $moov = $this->moov($udta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $ilst       = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
+        $hdlr       = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta       = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $udta       = $this->box('udta', $meta);
+        $moov       = $this->moov($udta);
+        $ftyp       = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -5962,11 +6051,11 @@ final class IsoBmffParserTest extends TestCase
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
         $ilstEntry = $this->box(pack('N', 1), $itif . $dataBox);
 
-        $ilst = $this->box('ilst', $ilstEntry);
-        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
-        $udta = $this->box('udta', $meta);
-        $moov = $this->moov($udta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $ilst      = $this->box('ilst', $ilstEntry);
+        $meta      = $this->box('meta', "\0\0\0\0" . $ilst);
+        $udta      = $this->box('udta', $meta);
+        $moov      = $this->moov($udta);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -5981,11 +6070,11 @@ final class IsoBmffParserTest extends TestCase
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
         $ilstEntry = $this->box(pack('N', 1), $itif . $dataBox);
 
-        $ilst = $this->box('ilst', $ilstEntry);
-        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
-        $udta = $this->box('udta', $meta);
-        $moov = $this->moov($udta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $ilst      = $this->box('ilst', $ilstEntry);
+        $meta      = $this->box('meta', "\0\0\0\0" . $ilst);
+        $udta      = $this->box('udta', $meta);
+        $moov      = $this->moov($udta);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -6002,11 +6091,11 @@ final class IsoBmffParserTest extends TestCase
         $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
         $ilstEntry   = $this->box(pack('N', 1), $nameAtom . $dataBox);
 
-        $ilst = $this->box('ilst', $ilstEntry);
-        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
-        $udta = $this->box('udta', $meta);
-        $moov = $this->moov($udta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $ilst        = $this->box('ilst', $ilstEntry);
+        $meta        = $this->box('meta', "\0\0\0\0" . $ilst);
+        $udta        = $this->box('udta', $meta);
+        $moov        = $this->moov($udta);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -6014,12 +6103,12 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function acceptsItifWithValidMhdr(): void
     {
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key       = 'com.apple.quicktime.content.identifier';
+        $keyEntry  = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         // mhdr: version=0, flags=0, nextItemID=43
-        $mhdr = $this->box('mhdr', "\0\0\0\0" . pack('N', 43));
+        $mhdr      = $this->box('mhdr', "\0\0\0\0" . pack('N', 43));
 
         // itif: version=0, flags=0, Item_ID=42
         $itif      = $this->box('itif', "\0\0\0\0" . pack('N', 42));
@@ -6027,10 +6116,10 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry = $this->box(pack('N', 1), $itif . $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $mhdr . $keys . $ilst);
-        $moov = $this->moov($meta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $mhdr . $keys . $ilst);
+        $moov      = $this->moov($meta);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -6045,19 +6134,19 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('metadata header atom (mhdr) required when ilst items have itif atoms');
 
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key       = 'com.apple.quicktime.content.identifier';
+        $keyEntry  = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $itif      = $this->box('itif', "\0\0\0\0" . pack('N', 1));
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
         $ilstEntry = $this->box(pack('N', 1), $itif . $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->moov($meta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov      = $this->moov($meta);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -6068,8 +6157,8 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('mhdr atom version must be 0');
 
-        $mhdr = $this->box('mhdr', "\x01\0\0\0" . pack('N', 1));
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $mhdr     = $this->box('mhdr', "\x01\0\0\0" . pack('N', 1));
+        $hdlr     = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
 
         $key      = 'com.apple.quicktime.content.identifier';
         $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
@@ -6077,9 +6166,9 @@ final class IsoBmffParserTest extends TestCase
         $dataBox  = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
         $ilst     = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
 
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $mhdr . $keys . $ilst);
-        $moov = $this->moov($meta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta     = $this->box('meta', "\0\0\0\0" . $hdlr . $mhdr . $keys . $ilst);
+        $moov     = $this->moov($meta);
+        $ftyp     = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -6087,18 +6176,18 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function acceptsIlstWithoutItifAndNoMhdr(): void
     {
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key       = 'com.apple.quicktime.content.identifier';
+        $keyEntry  = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'no-itif-value');
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->moov($meta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov      = $this->moov($meta);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -6113,7 +6202,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesValidCtryAndLangWithLocaleIndicators(): void
     {
-        $file = $this->createQuickTimeMetaWithLocale(
+        $file      = $this->createQuickTimeMetaWithLocale(
             $this->buildLocaleListPayload([[0x5553, 0x4742]]),
             $this->buildLocaleListPayload([[0x15C7, 0x1676]]),
             (1 << 16) | 1,
@@ -6180,17 +6269,17 @@ final class IsoBmffParserTest extends TestCase
         $name        = 'VideoHandler';
         $hdlrPayload = "\0\0\0\0\0\0\0\0vide" . str_repeat("\0", 12)
             . chr(strlen($name)) . $name;
-        $hdlr = $this->box('hdlr', $hdlrPayload);
-        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
-        $minf = $this->minimalMinf();
-        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
-        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
-        $trak = $this->box('trak', $tkhd . $mdia);
-        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $hdlr        = $this->box('hdlr', $hdlrPayload);
+        $mdhd        = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $minf        = $this->minimalMinf();
+        $mdia        = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $tkhd        = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak        = $this->box('trak', $tkhd . $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('VideoHandler', $qtMeta->stringValue('HandlerDescription'));
@@ -6206,18 +6295,18 @@ final class IsoBmffParserTest extends TestCase
         $hdlrPayload = "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12) . "\0";
         $hdlr        = $this->box('hdlr', $hdlrPayload);
 
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
-        $dataBox  = $this->box('data', pack('N', 1) . pack('N', 0) . 'test');
-        $ilst     = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
+        $key         = 'com.apple.quicktime.content.identifier';
+        $keyEntry    = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys        = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . 'test');
+        $ilst        = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
 
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->moov($meta);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $meta        = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov        = $this->moov($meta);
+        $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('test', $qtMeta->stringValue($key));
@@ -6258,8 +6347,8 @@ final class IsoBmffParserTest extends TestCase
         $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
         $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
-        $extractor = $this->createExtractor($ftyp . $moov);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('VideoHandler', $qtMeta->stringValue('HandlerDescription'));
@@ -6271,8 +6360,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesValidUtf8DataPayload(): void
     {
-        $value = 'Ünïcödé Tëxt';
-        $file  = $this->createQuickTimeMetaWithDataPayload(1, $value);
+        $value     = 'Ünïcödé Tëxt';
+        $file      = $this->createQuickTimeMetaWithDataPayload(1, $value);
 
         $extractor = $this->createExtractor($file);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -6287,10 +6376,10 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function preservesLeadingNullByteInUtf8DataPayload(): void
     {
-        $payload = hex2bin('00616263');
+        $payload   = hex2bin('00616263');
         self::assertIsString($payload);
 
-        $file = $this->createQuickTimeMetaWithDataPayload(1, $payload);
+        $file      = $this->createQuickTimeMetaWithDataPayload(1, $payload);
 
         $extractor = $this->createExtractor($file);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -6305,10 +6394,10 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function preservesTrailingNullByteInUtf8DataPayload(): void
     {
-        $payload = hex2bin('61626300');
+        $payload   = hex2bin('61626300');
         self::assertIsString($payload);
 
-        $file = $this->createQuickTimeMetaWithDataPayload(1, $payload);
+        $file      = $this->createQuickTimeMetaWithDataPayload(1, $payload);
 
         $extractor = $this->createExtractor($file);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -6337,10 +6426,10 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function parsesValidUtf16beDataPayload(): void
     {
-        $utf16 = iconv('UTF-8', 'UTF-16BE', 'Hello');
+        $utf16     = iconv('UTF-8', 'UTF-16BE', 'Hello');
         self::assertIsString($utf16);
 
-        $file = $this->createQuickTimeMetaWithDataPayload(2, $utf16);
+        $file      = $this->createQuickTimeMetaWithDataPayload(2, $utf16);
 
         $extractor = $this->createExtractor($file);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -6369,8 +6458,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function acceptsType13JpegWrapperPayload(): void
     {
-        $payload = chr(0xFF) . chr(0xD8) . chr(0xFF) . chr(0xE0) . 'JFIF' . chr(0) . 'payload';
-        $file    = $this->createQuickTimeMetaWithDataPayload(13, $payload);
+        $payload   = chr(0xFF) . chr(0xD8) . chr(0xFF) . chr(0xE0) . 'JFIF' . chr(0) . 'payload';
+        $file      = $this->createQuickTimeMetaWithDataPayload(13, $payload);
 
         $extractor = $this->createExtractor($file);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -6385,9 +6474,9 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function acceptsType14PngWrapperPayload(): void
     {
-        $payload = chr(0x89) . 'PNG' . chr(0x0D) . chr(0x0A) . chr(0x1A) . chr(0x0A) . 'rest';
+        $payload   = chr(0x89) . 'PNG' . chr(0x0D) . chr(0x0A) . chr(0x1A) . chr(0x0A) . 'rest';
 
-        $file = $this->createQuickTimeMetaWithDataPayload(14, $payload);
+        $file      = $this->createQuickTimeMetaWithDataPayload(14, $payload);
 
         $extractor = $this->createExtractor($file);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -6402,8 +6491,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function acceptsType27BmpWrapperPayload(): void
     {
-        $payload = 'BM' . chr(0x36) . chr(0) . chr(0) . chr(0) . 'payload';
-        $file    = $this->createQuickTimeMetaWithDataPayload(27, $payload);
+        $payload   = 'BM' . chr(0x36) . chr(0) . chr(0) . chr(0) . 'payload';
+        $file      = $this->createQuickTimeMetaWithDataPayload(27, $payload);
 
         $extractor = $this->createExtractor($file);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -6455,8 +6544,8 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function unknownBinaryDataTypeRemainsUnchanged(): void
     {
-        $payload = chr(0) . 'BIN' . chr(0xFF);
-        $file    = $this->createQuickTimeMetaWithDataPayload(99, $payload);
+        $payload   = chr(0) . 'BIN' . chr(0xFF);
+        $file      = $this->createQuickTimeMetaWithDataPayload(99, $payload);
 
         $extractor = $this->createExtractor($file);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -6476,10 +6565,10 @@ final class IsoBmffParserTest extends TestCase
             1,
             'Nested Title',
         );
-        $file = $this->createQuickTimeMetaWithDataPayload(28, $nestedPayload);
+        $file          = $this->createQuickTimeMetaWithDataPayload(28, $nestedPayload);
 
-        $extractor = $this->createExtractor($file);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor     = $this->createExtractor($file);
+        $qtMeta        = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame(
@@ -6498,10 +6587,10 @@ final class IsoBmffParserTest extends TestCase
             ['key' => 'com.apple.quicktime.beta', 'type' => 1, 'payload' => 'B'],
             ['key' => 'com.apple.quicktime.alpha', 'type' => 1, 'payload' => 'A'],
         ]);
-        $file = $this->createQuickTimeMetaWithDataPayload(28, $nestedPayload);
+        $file          = $this->createQuickTimeMetaWithDataPayload(28, $nestedPayload);
 
-        $extractor = $this->createExtractor($file);
-        $qtMeta    = $extractor->extract()->quickTimeMeta;
+        $extractor     = $this->createExtractor($file);
+        $qtMeta        = $extractor->extract()->quickTimeMeta;
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('A', $qtMeta->stringValue('com.apple.quicktime.content.identifier.com.apple.quicktime.alpha'));
@@ -6526,7 +6615,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function enforceNestedMetadataType28RecursionGuard(): void
     {
-        $deepPayload = $this->createNestedMetaPayloadWithData(
+        $deepPayload   = $this->createNestedMetaPayloadWithData(
             'com.apple.quicktime.deep',
             1,
             'deep-value',
@@ -6539,7 +6628,7 @@ final class IsoBmffParserTest extends TestCase
 
         $this->expectException(ParseError::class);
 
-        $file = $this->createQuickTimeMetaWithDataPayload(28, $nestedPayload);
+        $file          = $this->createQuickTimeMetaWithDataPayload(28, $nestedPayload);
         $this->createExtractor($file)->extract();
     }
 
@@ -6549,7 +6638,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function scalarDataTypesRemainUnchangedAfterType28Support(): void
     {
-        $file = $this->createQuickTimeMetaWithDataPayload(1, 'Plain Scalar Value');
+        $file      = $this->createQuickTimeMetaWithDataPayload(1, 'Plain Scalar Value');
 
         $extractor = $this->createExtractor($file);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -6564,19 +6653,19 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function rejectsDuplicateKeysInMeta(): void
     {
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys1    = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
-        $keys2    = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key       = 'com.apple.quicktime.content.identifier';
+        $keyEntry  = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys1     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $keys2     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys1 . $keys2 . $ilst);
-        $moov = $this->moov($meta);
-        $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $keys1 . $keys2 . $ilst);
+        $moov      = $this->moov($meta);
+        $file      = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('keys');
@@ -6590,19 +6679,19 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function rejectsDuplicateIlstInMeta(): void
     {
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key       = 'com.apple.quicktime.content.identifier';
+        $keyEntry  = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst1     = $this->box('ilst', $ilstEntry);
         $ilst2     = $this->box('ilst', $ilstEntry);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst1 . $ilst2);
-        $moov = $this->moov($meta);
-        $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst1 . $ilst2);
+        $moov      = $this->moov($meta);
+        $file      = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('ilst');
@@ -6619,19 +6708,19 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function rejectsFreeAtomInsideIlstEntry(): void
     {
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key       = 'com.apple.quicktime.content.identifier';
+        $keyEntry  = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
         $freeBox   = $this->box('free', str_repeat("\0", 4));
         $ilstEntry = $this->box(pack('N', 1), $dataBox . $freeBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->moov($meta);
-        $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov      = $this->moov($meta);
+        $file      = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('free');
@@ -6645,19 +6734,19 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function rejectsFreeAtomDirectlyInsideIlst(): void
     {
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key       = 'com.apple.quicktime.content.identifier';
+        $keyEntry  = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $freeBox   = $this->box('free', str_repeat("\0", 4));
         $ilst      = $this->box('ilst', $ilstEntry . $freeBox);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->moov($meta);
-        $file = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov      = $this->moov($meta);
+        $file      = $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('free');
@@ -6676,7 +6765,7 @@ final class IsoBmffParserTest extends TestCase
         $mdatHeader         = pack('N', 1000) . 'mdat';
         $mdatPartialPayload = str_repeat("\x00", 50);
 
-        $extractor = $this->createExtractor($ftyp . $mdatHeader . $mdatPartialPayload);
+        $extractor          = $this->createExtractor($ftyp . $mdatHeader . $mdatPartialPayload);
         $extractor->extract();
 
         $this->addToAssertionCount(1);
@@ -6695,7 +6784,7 @@ final class IsoBmffParserTest extends TestCase
         $moovHeader         = pack('N', 1000) . 'moov';
         $moovPartialPayload = str_repeat("\x00", 50);
 
-        $extractor = $this->createExtractor($ftyp . $moovHeader . $moovPartialPayload);
+        $extractor          = $this->createExtractor($ftyp . $moovHeader . $moovPartialPayload);
         $extractor->extract();
     }
 
@@ -6705,10 +6794,10 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function toleratesTrailingBytesAfterLastBox(): void
     {
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         // 4 trailing bytes that don't form a valid box (< 8 bytes)
-        $data = $ftyp . "\xFF\xFF\xFF\xFF";
+        $data      = $ftyp . "\xFF\xFF\xFF\xFF";
 
         $extractor = $this->createExtractor($data);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -6723,18 +6812,18 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function acceptsFourccValueZero(): void
     {
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key       = 'com.apple.quicktime.content.identifier';
+        $keyEntry  = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'zero-fourcc');
         $ilstEntry = $this->box("\x00\x00\x00\x00", $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->moov($meta);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov      = $this->moov($meta);
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $qtMeta    = $extractor->extract()->quickTimeMeta;
@@ -6764,15 +6853,15 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function detectsTmapItemInIsoBmffContainer(): void
     {
-        $exifBlob = pack('N', 0) . "MM\x00\x2Atmap-exif";
+        $exifBlob    = pack('N', 0) . "MM\x00\x2Atmap-exif";
 
         // infe v2 for Exif item (ID=1)
-        $infeExif = $this->box('infe', "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0");
+        $infeExif    = $this->box('infe', "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0");
 
         // infe v2 for tmap item (ID=2)
-        $infeTmap = $this->box('infe', "\x02\0\0\0" . pack('n', 2) . pack('n', 0) . 'tmap' . "\0\0\0");
+        $infeTmap    = $this->box('infe', "\x02\0\0\0" . pack('n', 2) . pack('n', 0) . 'tmap' . "\0\0\0");
 
-        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 2) . $infeExif . $infeTmap);
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 2) . $infeExif . $infeTmap);
 
         // iloc v0 with one entry for Exif item only (tmap needs no payload resolution)
         $ilocBuilder = function (int $offset, int $length): string {
@@ -6789,16 +6878,16 @@ final class IsoBmffParserTest extends TestCase
         };
 
         // Build once to compute offsets
-        $meta = $this->fullBox('meta', $iinf . $ilocBuilder(0, strlen($exifBlob)));
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
-        $mdat = $this->box('mdat', $exifBlob);
+        $meta        = $this->fullBox('meta', $iinf . $ilocBuilder(0, strlen($exifBlob)));
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat        = $this->box('mdat', $exifBlob);
 
-        $offsetBase = strlen($ftyp) + strlen($meta) + 8; // mdat payload offset
-        $iloc       = $ilocBuilder($offsetBase, strlen($exifBlob));
-        $meta       = $this->fullBox('meta', $iinf . $iloc);
-        $data       = $ftyp . $meta . $mdat;
+        $offsetBase  = strlen($ftyp) + strlen($meta) + 8; // mdat payload offset
+        $iloc        = $ilocBuilder($offsetBase, strlen($exifBlob));
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $data        = $ftyp . $meta . $mdat;
 
-        $result = $this->createExtractor($data)->extract();
+        $result      = $this->createExtractor($data)->extract();
 
         self::assertSame(["MM\x00\x2Atmap-exif"], $result->exifBlobs);
         self::assertSame([2], $result->tmapItemIds);
@@ -6811,10 +6900,10 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function returnsEmptyTmapListWhenNoTmapItem(): void
     {
-        $exifBlob = pack('N', 0) . "MM\x00\x2Ano-tmap";
+        $exifBlob    = pack('N', 0) . "MM\x00\x2Ano-tmap";
 
-        $infeExif = $this->box('infe', "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0");
-        $iinf     = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infeExif);
+        $infeExif    = $this->box('infe', "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0");
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infeExif);
 
         $ilocBuilder = function (int $offset, int $length): string {
             $payload = "\0\0\0\0";
@@ -6829,19 +6918,410 @@ final class IsoBmffParserTest extends TestCase
             return $this->box('iloc', $payload);
         };
 
-        $meta = $this->fullBox('meta', $iinf . $ilocBuilder(0, strlen($exifBlob)));
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
-        $mdat = $this->box('mdat', $exifBlob);
+        $meta        = $this->fullBox('meta', $iinf . $ilocBuilder(0, strlen($exifBlob)));
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat        = $this->box('mdat', $exifBlob);
 
-        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
-        $iloc       = $ilocBuilder($offsetBase, strlen($exifBlob));
-        $meta       = $this->fullBox('meta', $iinf . $iloc);
-        $data       = $ftyp . $meta . $mdat;
+        $offsetBase  = strlen($ftyp) + strlen($meta) + 8;
+        $iloc        = $ilocBuilder($offsetBase, strlen($exifBlob));
+        $meta        = $this->fullBox('meta', $iinf . $iloc);
+        $data        = $ftyp . $meta . $mdat;
 
-        $result = $this->createExtractor($data)->extract();
+        $result      = $this->createExtractor($data)->extract();
 
         self::assertSame(["MM\x00\x2Ano-tmap"], $result->exifBlobs);
         self::assertSame([], $result->tmapItemIds);
+    }
+
+    /**
+     * Parses tkhd metadata including 90-degree rotation from matrix.
+     * Verifies creation/modification timestamps, trackId, duration, layer, volume,
+     * rotation, and the formatted matrix string.
+     */
+    #[Test]
+    public function parsesTrackHeaderRotation90(): void
+    {
+        $creationTime     = 3_692_217_600;
+        $modificationTime = 3_692_304_000;
+        $trackId          = 1;
+        $duration         = 1800;
+        $layer            = 0;
+        $volume           = 0x0100; // 1.0 in 8.8 fixed-point
+
+        // 90-degree clockwise rotation matrix:
+        // a=0, b=1.0, u=0, c=-1.0, d=0, v=0, x=0, y=0, w=1.0
+        $matrix           = pack('N9', 0x00000000, 0x00010000, 0x00000000, 0xFFFF0000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x40000000);
+
+        // tkhd v0 payload: creation(4) + modification(4) + trackId(4) + reserved(4) + duration(4)
+        //                + reserved(8) + layer(2) + alternateGroup(2) + volume(2) + reserved(2)
+        //                + matrix(36) + width(4) + height(4) = 80
+        $tkhdPayload      = pack('NNN', $creationTime, $modificationTime, $trackId)
+            . pack('x4')
+            . pack('N', $duration)
+            . str_repeat("\0", 8)
+            . pack('n', $layer)
+            . pack('n', 0) // alternate group
+            . pack('n', $volume)
+            . pack('n', 0) // reserved
+            . $matrix
+            . pack('N', 1920 << 16) // width 1920 as 16.16 fixed-point
+            . pack('N', 1080 << 16); // height 1080 as 16.16 fixed-point
+
+        // tkhd flags: enabled(0x01) + in_movie(0x02) = 0x03
+        $tkhd             = $this->fullBox('tkhd', $tkhdPayload, 0, 3);
+        $mdia             = $this->box('mdia', $this->minimalMdiaContent());
+        $trak             = $this->box('trak', $tkhd . $mdia);
+        $moov             = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp             = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor        = $this->createExtractor($ftyp . $moov);
+        $qtMeta           = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(90, $qtMeta->keys[QuickTimeMeta::ROTATION_KEY]);
+        self::assertSame($creationTime, $qtMeta->keys[QuickTimeMeta::TRACK_CREATE_DATE_KEY]);
+        self::assertSame($modificationTime, $qtMeta->keys[QuickTimeMeta::TRACK_MODIFY_DATE_KEY]);
+        self::assertSame($trackId, $qtMeta->keys[QuickTimeMeta::TRACK_ID_KEY]);
+        self::assertSame($duration, $qtMeta->keys[QuickTimeMeta::TRACK_DURATION_KEY]);
+        self::assertSame($layer, $qtMeta->keys[QuickTimeMeta::TRACK_LAYER_KEY]);
+        self::assertSame(1.0, $qtMeta->keys[QuickTimeMeta::TRACK_VOLUME_KEY]);
+        self::assertSame('0 1 0 -1 0 0 0 0 1', $qtMeta->keys[QuickTimeMeta::TRACK_MATRIX_KEY]);
+    }
+
+    /**
+     * Parses tkhd with identity matrix and verifies 0-degree rotation.
+     */
+    #[Test]
+    public function parsesTrackHeaderRotation0(): void
+    {
+        // Identity matrix: a=1.0, b=0, u=0, c=0, d=1.0, v=0, x=0, y=0, w=1.0
+        $matrix      = pack('N9', 0x00010000, 0, 0, 0, 0x00010000, 0, 0, 0, 0x40000000);
+
+        $tkhdPayload = pack('NNN', 0, 0, 1)
+            . pack('x4')
+            . pack('N', 0)
+            . str_repeat("\0", 8)
+            . pack('nn', 0, 0)
+            . pack('nn', 0x0100, 0)
+            . $matrix
+            . pack('NN', 1920 << 16, 1080 << 16);
+
+        $tkhd        = $this->fullBox('tkhd', $tkhdPayload, 0, 3);
+        $mdia        = $this->box('mdia', $this->minimalMdiaContent());
+        $trak        = $this->box('trak', $tkhd . $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(0, $qtMeta->keys[QuickTimeMeta::ROTATION_KEY]);
+        self::assertSame('1 0 0 0 1 0 0 0 1', $qtMeta->keys[QuickTimeMeta::TRACK_MATRIX_KEY]);
+    }
+
+    /**
+     * Parses tkhd with 180-degree rotation matrix.
+     */
+    #[Test]
+    public function parsesTrackHeaderRotation180(): void
+    {
+        // 180-degree rotation: a=-1.0, b=0, u=0, c=0, d=-1.0, v=0, x=0, y=0, w=1.0
+        $matrix      = pack('N9', 0xFFFF0000, 0, 0, 0, 0xFFFF0000, 0, 0, 0, 0x40000000);
+
+        $tkhdPayload = pack('NNN', 0, 0, 1)
+            . pack('x4')
+            . pack('N', 0)
+            . str_repeat("\0", 8)
+            . pack('nn', 0, 0)
+            . pack('nn', 0x0100, 0)
+            . $matrix
+            . pack('NN', 1920 << 16, 1080 << 16);
+
+        $tkhd        = $this->fullBox('tkhd', $tkhdPayload, 0, 3);
+        $mdia        = $this->box('mdia', $this->minimalMdiaContent());
+        $trak        = $this->box('trak', $tkhd . $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(180, $qtMeta->keys[QuickTimeMeta::ROTATION_KEY]);
+    }
+
+    /**
+     * Parses tkhd with 270-degree rotation matrix.
+     */
+    #[Test]
+    public function parsesTrackHeaderRotation270(): void
+    {
+        // 270-degree rotation: a=0, b=-1.0, u=0, c=1.0, d=0, v=0, x=0, y=0, w=1.0
+        $matrix      = pack('N9', 0x00000000, 0xFFFF0000, 0x00000000, 0x00010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x40000000);
+
+        $tkhdPayload = pack('NNN', 0, 0, 1)
+            . pack('x4')
+            . pack('N', 0)
+            . str_repeat("\0", 8)
+            . pack('nn', 0, 0)
+            . pack('nn', 0x0100, 0)
+            . $matrix
+            . pack('NN', 1920 << 16, 1080 << 16);
+
+        $tkhd        = $this->fullBox('tkhd', $tkhdPayload, 0, 3);
+        $mdia        = $this->box('mdia', $this->minimalMdiaContent());
+        $trak        = $this->box('trak', $tkhd . $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(270, $qtMeta->keys[QuickTimeMeta::ROTATION_KEY]);
+    }
+
+    /**
+     * Parses tkhd with a negative layer value.
+     */
+    #[Test]
+    public function parsesTrackHeaderNegativeLayer(): void
+    {
+        // Identity matrix
+        $matrix      = pack('N9', 0x00010000, 0, 0, 0, 0x00010000, 0, 0, 0, 0x40000000);
+
+        // Layer -1 encoded as unsigned 16-bit: 0xFFFF
+        $tkhdPayload = pack('NNN', 0, 0, 1)
+            . pack('x4')
+            . pack('N', 0)
+            . str_repeat("\0", 8)
+            . pack('n', 0xFFFF) // layer = -1
+            . pack('n', 0)     // alternate group
+            . pack('nn', 0x0100, 0)
+            . $matrix
+            . pack('NN', 1920 << 16, 1080 << 16);
+
+        $tkhd        = $this->fullBox('tkhd', $tkhdPayload, 0, 3);
+        $mdia        = $this->box('mdia', $this->minimalMdiaContent());
+        $trak        = $this->box('trak', $tkhd . $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(-1, $qtMeta->keys[QuickTimeMeta::TRACK_LAYER_KEY]);
+    }
+
+    /**
+     * Parses mdhd v0 and extracts media timestamps, timescale, duration, and language code.
+     *
+     * ISO/IEC 14496-12 §8.4.2: language is a packed ISO 639-2/T code.
+     * "eng" packs as (5 << 10) | (14 << 5) | 7 = 0x15C7.
+     */
+    #[Test]
+    public function parsesMediaHeaderLanguageAndDuration(): void
+    {
+        $creationTime     = 3_692_217_600;
+        $modificationTime = 3_692_304_000;
+        $timescale        = 44100;
+        $duration         = 441000; // 10 seconds at 44100 Hz
+        $languagePacked   = 0x15C7; // "eng": (5 << 10) | (14 << 5) | 7
+        $quality          = 0;
+
+        $mdhdPayload      = pack('NNN', $creationTime, $modificationTime, $timescale)
+            . pack('N', $duration)
+            . pack('n', $languagePacked)
+            . pack('n', $quality);
+
+        $mdhd             = $this->fullBox('mdhd', $mdhdPayload);
+        $hdlr             = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdia             = $this->box('mdia', $hdlr . $mdhd . $this->minimalMinf());
+        $tkhd             = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak             = $this->box('trak', $tkhd . $mdia);
+        $moov             = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp             = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor        = $this->createExtractor($ftyp . $moov);
+        $qtMeta           = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame($creationTime, $qtMeta->keys[QuickTimeMeta::MEDIA_CREATE_DATE_KEY]);
+        self::assertSame($modificationTime, $qtMeta->keys[QuickTimeMeta::MEDIA_MODIFY_DATE_KEY]);
+        self::assertSame($timescale, $qtMeta->keys[QuickTimeMeta::MEDIA_TIME_SCALE_KEY]);
+        self::assertSame($duration, $qtMeta->keys[QuickTimeMeta::MEDIA_DURATION_KEY]);
+        self::assertSame('eng', $qtMeta->keys[QuickTimeMeta::MEDIA_LANGUAGE_CODE_KEY]);
+    }
+
+    /**
+     * Parses mdhd v0 with undetermined language (packed=0x0000 → 'und').
+     *
+     * ISO/IEC 14496-12 §8.4.2: when all three 5-bit character values are zero,
+     * the language is undetermined.
+     */
+    #[Test]
+    public function parsesMediaHeaderUndeterminedLanguage(): void
+    {
+        $timescale      = 30000;
+        $duration       = 60000;
+        $languagePacked = 0x0000; // undetermined
+
+        $mdhdPayload    = pack('NNN', 0, 0, $timescale)
+            . pack('N', $duration)
+            . pack('n', $languagePacked)
+            . pack('n', 0); // quality
+
+        $mdhd           = $this->fullBox('mdhd', $mdhdPayload);
+        $hdlr           = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdia           = $this->box('mdia', $hdlr . $mdhd . $this->minimalMinf());
+        $tkhd           = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak           = $this->box('trak', $tkhd . $mdia);
+        $moov           = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp           = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor      = $this->createExtractor($ftyp . $moov);
+        $qtMeta         = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('und', $qtMeta->keys[QuickTimeMeta::MEDIA_LANGUAGE_CODE_KEY]);
+        self::assertSame($timescale, $qtMeta->keys[QuickTimeMeta::MEDIA_TIME_SCALE_KEY]);
+        self::assertSame($duration, $qtMeta->keys[QuickTimeMeta::MEDIA_DURATION_KEY]);
+    }
+
+    /**
+     * Parses vmhd with graphicsMode=0x0040 (ditherCopy) and opColor={0x8000, 0x8000, 0x8000}.
+     */
+    #[Test]
+    public function parsesVideoMediaInfoGraphicsMode(): void
+    {
+        // vmhd payload: graphicsMode(2) + opColor R(2) + G(2) + B(2) = 8 bytes
+        $vmhdPayload = pack('n', 0x0040)
+            . pack('n', 0x8000)
+            . pack('n', 0x8000)
+            . pack('n', 0x8000);
+
+        $vmhd        = $this->fullBox('vmhd', $vmhdPayload, 0, 1);
+        $url         = $this->fullBox('url ', '', 0, 1);
+        $dref        = $this->fullBox('dref', pack('N', 1) . $url);
+        $dinf        = $this->box('dinf', $dref);
+        $stsd        = $this->fullBox('stsd', pack('N', 1) . $this->videoSampleEntry('avc1', 1920, 1080));
+        $stbl        = $this->box('stbl', $stsd . $this->minimalStblAtoms());
+        $minf        = $this->box('minf', $vmhd . $dinf . $stbl);
+        $hdlr        = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdhd        = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia        = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $tkhd        = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60), 0, 3);
+        $trak        = $this->box('trak', $tkhd . $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(64, $qtMeta->keys[QuickTimeMeta::GRAPHICS_MODE_KEY]);
+        self::assertSame('32768 32768 32768', $qtMeta->keys[QuickTimeMeta::OP_COLOR_KEY]);
+    }
+
+    /**
+     * Parses smhd with balance=0 (center).
+     */
+    #[Test]
+    public function parsesSoundMediaInfoBalance(): void
+    {
+        // smhd payload: balance(2) + reserved(2) = 4 bytes
+        $smhdPayload = pack('n', 0) . pack('n', 0);
+
+        $smhd        = $this->fullBox('smhd', $smhdPayload);
+        $url         = $this->fullBox('url ', '', 0, 1);
+        $dref        = $this->fullBox('dref', pack('N', 1) . $url);
+        $dinf        = $this->box('dinf', $dref);
+        $stsd        = $this->fullBox('stsd', pack('N', 1) . $this->audioSampleEntryVersion0('raw ', 2, 16, 44100));
+        $stbl        = $this->box('stbl', $stsd . $this->minimalStblAtoms());
+        $minf        = $this->box('minf', $smhd . $dinf . $stbl);
+        $hdlr        = $this->fullBox('hdlr', "\0\0\0\0soun" . str_repeat("\0", 12) . "\0");
+        $mdhd        = $this->fullBox('mdhd', pack('NNN', 0, 0, 44100) . str_repeat("\0", 8));
+        $mdia        = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $tkhd        = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60), 0, 3);
+        $trak        = $this->box('trak', $tkhd . $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor   = $this->createExtractor($ftyp . $moov);
+        $qtMeta      = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(0.0, $qtMeta->keys[QuickTimeMeta::BALANCE_KEY]);
+    }
+
+    /**
+     * Parses a LOOP atom (4-byte u32) from movie-level udta.
+     */
+    #[Test]
+    public function parsesLoopUdtaAtom(): void
+    {
+        $loopAtom  = $this->box('LOOP', pack('N', 1));
+        $moov      = $this->moov($this->box('udta', $loopAtom));
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(1, $qtMeta->keys[QuickTimeMeta::LOOP_KEY]);
+    }
+
+    /**
+     * Parses a SelO atom (1-byte u8) from movie-level udta.
+     */
+    #[Test]
+    public function parsesSelOUdtaAtom(): void
+    {
+        $selOAtom  = $this->box('SelO', pack('C', 1));
+        $moov      = $this->moov($this->box('udta', $selOAtom));
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(1, $qtMeta->keys[QuickTimeMeta::PLAY_SELECTION_ONLY_KEY]);
+    }
+
+    /**
+     * Parses an AllF atom (1-byte u8) from movie-level udta.
+     */
+    #[Test]
+    public function parsesAllFUdtaAtom(): void
+    {
+        $allFAtom  = $this->box('AllF', pack('C', 1));
+        $moov      = $this->moov($this->box('udta', $allFAtom));
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(1, $qtMeta->keys[QuickTimeMeta::PLAY_ALL_FRAMES_KEY]);
+    }
+
+    /**
+     * Parses a WLOC atom (two u16 values) from movie-level udta.
+     */
+    #[Test]
+    public function parsesWlocUdtaAtom(): void
+    {
+        $wlocAtom  = $this->box('WLOC', pack('n', 100) . pack('n', 200));
+        $moov      = $this->moov($this->box('udta', $wlocAtom));
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('100 200', $qtMeta->keys[QuickTimeMeta::WINDOW_LOCATION_KEY]);
     }
 
     /**
@@ -6852,17 +7332,17 @@ final class IsoBmffParserTest extends TestCase
      */
     private function createQuickTimeMetaWithDataPayload(int $dataType, string $payload): string
     {
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key       = 'com.apple.quicktime.content.identifier';
+        $keyEntry  = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', $dataType) . pack('N', 0) . $payload);
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->moov($meta);
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov      = $this->moov($meta);
 
         return $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
     }
@@ -6899,9 +7379,9 @@ final class IsoBmffParserTest extends TestCase
             ++$index;
         }
 
-        $keys = $this->box('keys', pack('N', 0) . pack('N', count($entries)) . $keysEntries);
-        $hdlr = $this->box('hdlr', pack('N', 0) . pack('N', 0) . 'mdta' . str_repeat(chr(0), 12));
-        $ilst = $this->box('ilst', $ilstEntries);
+        $keys        = $this->box('keys', pack('N', 0) . pack('N', count($entries)) . $keysEntries);
+        $hdlr        = $this->box('hdlr', pack('N', 0) . pack('N', 0) . 'mdta' . str_repeat(chr(0), 12));
+        $ilst        = $this->box('ilst', $ilstEntries);
 
         // Return FullBox(meta) content (version/flags + children), without outer box header.
         return pack('N', 0) . $hdlr . $keys . $ilst;
@@ -6921,7 +7401,7 @@ final class IsoBmffParserTest extends TestCase
             return '';
         }
 
-        $needed = $alignment - $remainder;
+        $needed    = $alignment - $remainder;
 
         // A box has an 8-byte header minimum; if the gap is < 8 we pad to
         // the next aligned boundary instead.
@@ -6941,17 +7421,17 @@ final class IsoBmffParserTest extends TestCase
      */
     private function createQuickTimeMetaWithLocale(?string $ctryPayload, ?string $langPayload, int $locale): string
     {
-        $key      = 'com.apple.quicktime.content.identifier';
-        $keyEntry = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
-        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $key       = 'com.apple.quicktime.content.identifier';
+        $keyEntry  = pack('N', 9 + strlen($key)) . 'mdta' . $key . "\0";
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', $locale) . 'locale-test');
         $ilstEntry = $this->box(pack('N', 1), $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $hdlr      = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
 
-        $extras = '';
+        $extras    = '';
 
         if ($ctryPayload !== null) {
             $extras .= $this->fullBox('ctry', $ctryPayload);
@@ -6961,8 +7441,8 @@ final class IsoBmffParserTest extends TestCase
             $extras .= $this->fullBox('lang', $langPayload);
         }
 
-        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst . $extras);
-        $moov = $this->moov($meta);
+        $meta      = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst . $extras);
+        $moov      = $this->moov($meta);
 
         return $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
     }
@@ -7040,8 +7520,8 @@ final class IsoBmffParserTest extends TestCase
             ++$trackId;
         }
 
-        $moov = $this->box('moov', $this->minimalMvhd() . $trakBoxes);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $moov      = $this->box('moov', $this->minimalMvhd() . $trakBoxes);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         return $ftyp . $moov;
     }
@@ -7072,8 +7552,8 @@ final class IsoBmffParserTest extends TestCase
             ++$trackId;
         }
 
-        $moov = $this->box('moov', $this->minimalMvhd() . $trakBoxes);
-        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+        $moov      = $this->box('moov', $this->minimalMvhd() . $trakBoxes);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         return $ftyp . $moov;
     }
@@ -7116,13 +7596,13 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload .= pack('n', 1);
         $ilocPayload .= pack('N', 0);
         $ilocPayload .= pack('N', 4);
-        $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
+        $iloc        = $this->fullBox('iloc', $ilocPayload, 1, 0);
 
-        $dref = $this->fullBox('dref', pack('N', $entryCount) . implode('', $entries));
-        $dinf = $this->box('dinf', $dref);
+        $dref        = $this->fullBox('dref', pack('N', $entryCount) . implode('', $entries));
+        $dinf        = $this->box('dinf', $dref);
 
-        $meta = $this->fullBox('meta', $iinf . $iloc . $dinf);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta        = $this->fullBox('meta', $iinf . $iloc . $dinf);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         return $ftyp . $meta;
     }
@@ -7142,7 +7622,7 @@ final class IsoBmffParserTest extends TestCase
         $iinfPayload = "\0\0\0\0" . pack('n', 1) . $infe;
         $iinf        = $this->box('iinf', $iinfPayload);
 
-        $payload = "\x44";
+        $payload     = "\x44";
         $payload .= "\x00";
 
         if ($version === 1) {
@@ -7159,14 +7639,14 @@ final class IsoBmffParserTest extends TestCase
         $payload .= pack('N', 0);
         $payload .= pack('N', 1);
 
-        $iloc = $this->fullBox('iloc', $payload, $version, 0);
+        $iloc        = $this->fullBox('iloc', $payload, $version, 0);
 
-        $drefEntry = $this->fullBox('url ', "https://example.test/exif\0");
-        $dref      = $this->fullBox('dref', pack('N', 1) . $drefEntry);
-        $dinf      = $this->box('dinf', $dref);
+        $drefEntry   = $this->fullBox('url ', "https://example.test/exif\0");
+        $dref        = $this->fullBox('dref', pack('N', 1) . $drefEntry);
+        $dinf        = $this->box('dinf', $dref);
 
-        $meta = $this->fullBox('meta', $iinf . $iloc . $dinf);
-        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta        = $this->fullBox('meta', $iinf . $iloc . $dinf);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         return $ftyp . $meta;
     }
@@ -7190,7 +7670,7 @@ final class IsoBmffParserTest extends TestCase
     ): string {
         $compressor = str_pad('', 31, "\0");
 
-        $payload = str_repeat("\0", 6)
+        $payload    = str_repeat("\0", 6)
             . pack('n', 1)
             . pack('n', $videoVersion)
             . pack('n', $videoRevisionLevel)
@@ -7371,30 +7851,30 @@ final class IsoBmffParserTest extends TestCase
      */
     private function createItemBasedMetaFile(array $items, ?int $primaryItemId): string
     {
-        $infeBoxes = '';
+        $infeBoxes       = '';
 
         foreach ($items as $item) {
             $infeBoxes .= $this->buildInfeMimeBox($item['id'], $item['name'], $item['contentType']);
         }
 
-        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', count($items)) . $infeBoxes);
-        $pitm = $primaryItemId !== null ? $this->box('pitm', "\0\0\0\0" . pack('n', $primaryItemId)) : '';
+        $iinf            = $this->box('iinf', "\0\0\0\0" . pack('n', count($items)) . $infeBoxes);
+        $pitm            = $primaryItemId !== null ? $this->box('pitm', "\0\0\0\0" . pack('n', $primaryItemId)) : '';
 
         $placeholderIloc = $this->buildIlocV0ForItems($items, 0);
         $meta            = $this->fullBox('meta', $pitm . $iinf . $placeholderIloc);
         $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
-        $iloc       = $this->buildIlocV0ForItems($items, $offsetBase);
-        $meta       = $this->fullBox('meta', $pitm . $iinf . $iloc);
+        $offsetBase      = strlen($ftyp) + strlen($meta) + 8;
+        $iloc            = $this->buildIlocV0ForItems($items, $offsetBase);
+        $meta            = $this->fullBox('meta', $pitm . $iinf . $iloc);
 
-        $mdatPayload = '';
+        $mdatPayload     = '';
 
         foreach ($items as $item) {
             $mdatPayload .= $item['payload'];
         }
 
-        $mdat = $this->box('mdat', $mdatPayload);
+        $mdat            = $this->box('mdat', $mdatPayload);
 
         return $ftyp . $meta . $mdat;
     }
@@ -7410,14 +7890,14 @@ final class IsoBmffParserTest extends TestCase
         $firstReferencePayload  = pack('N', 0) . "MM\x00\x2Aitem-ref-one";
         $secondReferencePayload = pack('N', 0) . "MM\x00\x2Aitem-ref-two";
 
-        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
-        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+        $infePayload            = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf                   = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
         // construction_method=2 (item_offset) resolves only via 'iloc' item references.
-        $irefEntry = $this->box('iloc', pack('n', 1) . pack('n', 2) . pack('n', 2) . pack('n', 3));
-        $iref      = $this->fullBox('iref', $irefEntry);
+        $irefEntry              = $this->box('iloc', pack('n', 1) . pack('n', 2) . pack('n', 2) . pack('n', 3));
+        $iref                   = $this->fullBox('iref', $irefEntry);
 
-        $ilocBuilder = function (int $item2Offset, int $item3Offset) use ($extentIndex, $indexSize, $firstReferencePayload, $secondReferencePayload): string {
+        $ilocBuilder            = function (int $item2Offset, int $item3Offset) use ($extentIndex, $indexSize, $firstReferencePayload, $secondReferencePayload): string {
             $payload = "\x44"; // offset_size=4, length_size=4
             $payload .= chr($indexSize); // base_offset_size=0 (high nibble), index_size in low nibble
             $payload .= pack('n', 3); // item_count = 3
@@ -7461,14 +7941,14 @@ final class IsoBmffParserTest extends TestCase
             return $this->fullBox('iloc', $payload, 1, 0);
         };
 
-        $placeholderIloc = $ilocBuilder(0, 0);
-        $meta            = $this->fullBox('meta', $iinf . $iref . $placeholderIloc);
-        $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
+        $placeholderIloc        = $ilocBuilder(0, 0);
+        $meta                   = $this->fullBox('meta', $iinf . $iref . $placeholderIloc);
+        $ftyp                   = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
-        $iloc       = $ilocBuilder($offsetBase, $offsetBase + strlen($firstReferencePayload));
-        $meta       = $this->fullBox('meta', $iinf . $iref . $iloc);
-        $mdat       = $this->box('mdat', $firstReferencePayload . $secondReferencePayload);
+        $offsetBase             = strlen($ftyp) + strlen($meta) + 8;
+        $iloc                   = $ilocBuilder($offsetBase, $offsetBase + strlen($firstReferencePayload));
+        $meta                   = $this->fullBox('meta', $iinf . $iref . $iloc);
+        $mdat                   = $this->box('mdat', $firstReferencePayload . $secondReferencePayload);
 
         return $ftyp . $meta . $mdat;
     }
@@ -7482,23 +7962,23 @@ final class IsoBmffParserTest extends TestCase
      */
     private function createMetaFileWithDirectAndItemExif(string $itemExif, string $directExif, ?int $primaryItemId): string
     {
-        $items = [
+        $items           = [
             ['id' => 1, 'name' => 'ExifItem', 'contentType' => 'application/exif', 'payload' => $itemExif],
         ];
 
-        $infeBoxes = $this->buildInfeMimeBox(1, 'ExifItem', 'application/exif');
-        $iinf      = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infeBoxes);
-        $pitm      = $primaryItemId !== null ? $this->box('pitm', "\0\0\0\0" . pack('n', $primaryItemId)) : '';
-        $direct    = $this->box('Exif', pack('N', 0) . $directExif);
+        $infeBoxes       = $this->buildInfeMimeBox(1, 'ExifItem', 'application/exif');
+        $iinf            = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infeBoxes);
+        $pitm            = $primaryItemId !== null ? $this->box('pitm', "\0\0\0\0" . pack('n', $primaryItemId)) : '';
+        $direct          = $this->box('Exif', pack('N', 0) . $directExif);
 
         $placeholderIloc = $this->buildIlocV0ForItems($items, 0);
         $meta            = $this->fullBox('meta', $pitm . $iinf . $placeholderIloc . $direct);
         $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
 
-        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
-        $iloc       = $this->buildIlocV0ForItems($items, $offsetBase);
-        $meta       = $this->fullBox('meta', $pitm . $iinf . $iloc . $direct);
-        $mdat       = $this->box('mdat', $itemExif);
+        $offsetBase      = strlen($ftyp) + strlen($meta) + 8;
+        $iloc            = $this->buildIlocV0ForItems($items, $offsetBase);
+        $meta            = $this->fullBox('meta', $pitm . $iinf . $iloc . $direct);
+        $mdat            = $this->box('mdat', $itemExif);
 
         return $ftyp . $meta . $mdat;
     }
@@ -7533,11 +8013,11 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload .= pack('n', 1);
         $ilocPayload .= pack('N', 0);
         $ilocPayload .= pack('N', 4);
-        $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
+        $iloc        = $this->fullBox('iloc', $ilocPayload, 1, 0);
 
-        $drefEntry = $this->fullBox('url ', $uri . "\0");
-        $dref      = $this->fullBox('dref', pack('N', 1) . $drefEntry);
-        $dinf      = $this->box('dinf', $dref);
+        $drefEntry   = $this->fullBox('url ', $uri . "\0");
+        $dref        = $this->fullBox('dref', pack('N', 1) . $drefEntry);
+        $dinf        = $this->box('dinf', $dref);
 
         return $this->fullBox('meta', $iinf . $iloc . $dinf);
     }
@@ -7597,7 +8077,7 @@ final class IsoBmffParserTest extends TestCase
         $payload .= "\0";
         $payload .= pack('n', count($items));
 
-        $cursor = 0;
+        $cursor  = 0;
 
         foreach ($items as $item) {
             $payloadLength = strlen($item['payload']);
@@ -7630,21 +8110,21 @@ final class IsoBmffParserTest extends TestCase
      */
     private function detectMetaChildOffsetForPayload(string $metaPayload, bool $allowQuickTimeMetaWithoutFullBox): int
     {
-        $meta = $this->box('meta', $metaPayload);
+        $meta           = $this->box('meta', $metaPayload);
 
-        $parser = $this->createExtractor($meta);
+        $parser         = $this->createExtractor($meta);
 
-        $collectorProp = new ReflectionProperty(IsoBmffParser::class, 'boxPayloadCollector');
+        $collectorProp  = new ReflectionProperty(IsoBmffParser::class, 'boxPayloadCollector');
         /** @var BoxPayloadCollector $collector */
-        $collector = $collectorProp->getValue($parser);
+        $collector      = $collectorProp->getValue($parser);
 
-        $navProp = new ReflectionProperty(IsoBmffParser::class, 'boxNavigator');
+        $navProp        = new ReflectionProperty(IsoBmffParser::class, 'boxNavigator');
         /** @var BoxNavigator $boxNavigator */
-        $boxNavigator = $navProp->getValue($parser);
+        $boxNavigator   = $navProp->getValue($parser);
 
-        $metaBox = $boxNavigator->readBoxAt(0, strlen($meta), true);
+        $metaBox        = $boxNavigator->readBoxAt(0, strlen($meta), true);
 
-        $detect = new ReflectionMethod(BoxPayloadCollector::class, 'detectMetaChildOffset');
+        $detect         = new ReflectionMethod(BoxPayloadCollector::class, 'detectMetaChildOffset');
 
         $detectedOffset = $detect->invoke($collector, $metaBox, $allowQuickTimeMetaWithoutFullBox);
 
