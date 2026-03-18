@@ -85,10 +85,7 @@ final readonly class IlocBoxParser
         $indexSize      = 0;
 
         if ($version === 0) {
-            // ISO/IEC 14496-12 §8.11.3: for version 0 the low nibble is reserved and must be 0
-            if (($baseField & BitMask::LOW_NIBBLE) !== 0) {
-                throw new ParseError('iloc version 0 reserved nibble must be zero', 1204);
-            }
+            // Tolerate non-zero reserved nibble in iloc v0 (Postel's Law)
         } else {
             $indexSize = $this->validateSizeNibble($baseField & BitMask::LOW_NIBBLE);
         }

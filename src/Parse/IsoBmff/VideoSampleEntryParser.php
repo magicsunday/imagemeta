@@ -88,11 +88,7 @@ final readonly class VideoSampleEntryParser
         $horizontalResolution = $this->decodeVideoResolution16_16($win->readU32BE(), 'horizontal');
         $verticalResolution   = $this->decodeVideoResolution16_16($win->readU32BE(), 'vertical');
 
-        $dataSize = $win->readU32BE();
-
-        if ($dataSize !== 0) {
-            throw new ParseError('video sample entry data size must be 0', 2051);
-        }
+        $win->readU32BE(); // dataSize — tolerate non-zero (Postel's Law)
 
         $frameCount = $win->readU16BE();
 

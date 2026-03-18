@@ -113,9 +113,11 @@ final readonly class QuickTimeKeyResolver
         // structure.
         $header = $this->boxNavigator->readFullBoxHeader($win);
 
-        if (($header->version !== 0) || ($header->flags !== 0)) {
-            throw new ParseError('keys box version/flags must be 0', 1222);
+        if ($header->version !== 0) {
+            throw new ParseError('keys box version must be 0', 1222);
         }
+
+        // Tolerate non-zero flags (Postel's Law)
 
         $entryCount = $win->readU32BE();
 
@@ -297,9 +299,7 @@ final readonly class QuickTimeKeyResolver
             throw new ParseError($label . ' atom version must be 0', 1430);
         }
 
-        if ($header->flags !== 0) {
-            throw new ParseError($label . ' atom flags must be 0', 1431);
-        }
+        // Tolerate non-zero flags (Postel's Law)
 
         $payloadSize = $atom->contentSize - 4;
 

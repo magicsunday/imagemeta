@@ -39,18 +39,6 @@ final readonly class AudioSampleEntryParser
     private const int VERSION_0_SAMPLE_RATE_MAX_16_16 = 0xFFFF0000;
 
     /**
-     * Version-2 constant field: "alwaysMinus2" stored as unsigned 16-bit (two's complement of −2).
-     * QuickTime File Format 2012, "Sound Sample Description (Version 2)".
-     */
-    private const int VERSION_2_ALWAYS_MINUS_2 = 0xFFFE;
-
-    /**
-     * Version-2 constant field "always7F000000".
-     * QuickTime File Format 2012, "Sound Sample Description (Version 2)".
-     */
-    private const int VERSION_2_ALWAYS_7F000000 = 0x7F000000;
-
-    /**
      * LPCM flag: payload stores IEEE floating-point samples.
      */
     private const int LPCM_FLAG_IS_FLOAT = 1 << 0;
@@ -127,10 +115,10 @@ final readonly class AudioSampleEntryParser
             throw new ParseError('audio sample entry truncated', 1871);
         }
 
-        $channels      = $win->readU16BE();
-        $sampleSize    = $win->readU16BE();
-        $compressionId = $win->readU16BE();
-        $packetSize    = $win->readU16BE();
+        $channels   = $win->readU16BE();
+        $sampleSize = $win->readU16BE();
+        $win->readU16BE(); // compressionId — tolerate non-zero (Postel's Law)
+        $win->readU16BE(); // packetSize — tolerate non-zero (Postel's Law)
 
         if ($version === 0) {
             if (($channels !== 1) && ($channels !== 2)) {
@@ -139,14 +127,6 @@ final readonly class AudioSampleEntryParser
 
             if (($sampleSize !== 8) && ($sampleSize !== 16)) {
                 throw new ParseError('audio sample entry version 0 sample size must be 8 or 16 bits', 1936);
-            }
-
-            if ($compressionId !== 0) {
-                throw new ParseError('audio sample entry version 0 compression ID must be 0', 1965);
-            }
-
-            if ($packetSize !== 0) {
-                throw new ParseError('audio sample entry version 0 packet size must be 0', 1506);
             }
         }
 
@@ -215,21 +195,22 @@ final readonly class AudioSampleEntryParser
             throw new ParseError('audio sample entry version 2 truncated', 1924);
         }
 
-        $always3                       = $win->readU16BE();
-        $always16                      = $win->readU16BE();
-        $alwaysMinus2                  = $win->readU16BE();
-        $always0                       = $win->readU16BE();
-        $always65536                   = $win->readU32BE();
-        $sizeOfStructOnly              = $win->readU32BE();
-        $audioSampleRate               = Unpack::float('E', $win->read(8), 'audio sample entry version 2 sample rate');
-        $numChannels                   = $win->readU32BE();
-        $always7F000000                = $win->readU32BE();
+        $always3  = $win->readU16BE();
+        $always16 = $win->readU16BE();
+        $win->readU16BE(); // alwaysMinus2 — tolerate non-standard values (Postel's Law)
+        $always0 = $win->readU16BE();
+        $win->readU32BE(); // always65536 — tolerate non-standard values (Postel's Law)
+        $sizeOfStructOnly = $win->readU32BE();
+        $audioSampleRate  = Unpack::float('E', $win->read(8), 'audio sample entry version 2 sample rate');
+        $numChannels      = $win->readU32BE();
+        $win->readU32BE(); // always7F000000 — tolerate non-standard values (Postel's Law)
         $bitsPerChannel                = $win->readU32BE();
         $formatSpecificFlags           = $win->readU32BE();
         $constBytesPerAudioPacket      = $win->readU32BE();
         $constLpcmFramesPerAudioPacket = $win->readU32BE();
 
-        if ($always3 !== 3 || $always16 !== 16 || $alwaysMinus2 !== self::VERSION_2_ALWAYS_MINUS_2 || $always0 !== 0 || $always65536 !== 65536 || $always7F000000 !== self::VERSION_2_ALWAYS_7F000000) {
+        // Only validate structurally critical constants; tolerate others (Postel's Law)
+        if (($always3 !== 3) || ($always16 !== 16) || ($always0 !== 0)) {
             throw new ParseError('audio sample entry version 2 constants are invalid', 1460);
         }
 

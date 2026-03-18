@@ -210,7 +210,7 @@ final class QuickTimeKeyResolverTest extends TestCase
     public function parseKeysRejectsNonZeroVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys box version/flags must be 0');
+        $this->expectExceptionMessage('keys box version must be 0');
 
         $content = chr(1) . chr(0) . chr(0) . chr(0) . pack('N', 0);
 
@@ -219,18 +219,18 @@ final class QuickTimeKeyResolverTest extends TestCase
     }
 
     /**
-     * Rejects a keys box with non-zero flags.
+     * Tolerates a keys box with non-zero flags (Postel's Law).
      */
     #[Test]
-    public function parseKeysRejectsNonZeroFlags(): void
+    public function parseKeysToleratesNonZeroFlags(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys box version/flags must be 0');
-
+        // version=0, flags=1, entry_count=0
         $content = chr(0) . chr(0) . chr(0) . chr(1) . pack('N', 0);
 
         [$resolver, $descriptor] = $this->createResolverWithDescriptor($content);
-        $resolver->parseKeys($descriptor);
+        $result                  = $resolver->parseKeys($descriptor);
+
+        self::assertSame([], $result);
     }
 
     /**

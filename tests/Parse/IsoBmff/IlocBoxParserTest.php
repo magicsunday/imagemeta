@@ -364,14 +364,11 @@ final class IlocBoxParserTest extends TestCase
     }
 
     /**
-     * Rejects iloc v0 with non-zero reserved nibble.
+     * Tolerates iloc v0 with non-zero reserved nibble (Postel's Law).
      */
     #[Test]
-    public function parseIlocRejectsV0WithNonZeroReservedNibble(): void
+    public function parseIlocToleratesV0WithNonZeroReservedNibble(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iloc version 0 reserved nibble must be zero');
-
         // version=0, flags=0
         $data = chr(0) . chr(0) . chr(0) . chr(0)
             // offset_size=4, length_size=4
@@ -381,7 +378,9 @@ final class IlocBoxParserTest extends TestCase
             . pack('n', 0);
 
         [$parser, $descriptor] = $this->createParserWithDescriptor($data);
-        $parser->parseIloc($descriptor);
+        $locations             = $parser->parseIloc($descriptor);
+
+        self::assertSame([], $locations);
     }
 
     /**

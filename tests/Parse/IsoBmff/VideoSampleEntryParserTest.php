@@ -288,19 +288,18 @@ final class VideoSampleEntryParserTest extends TestCase
     }
 
     /**
-     * Rejects non-zero data size (code 1502).
+     * Tolerates non-zero data size (Postel's Law).
      */
     #[Test]
-    public function rejectsNonZeroDataSize(): void
+    public function toleratesNonZeroDataSize(): void
     {
         $data   = $this->buildVideoSampleData(dataSize: 1);
         $win    = $this->createWindow($data);
         $parser = new VideoSampleEntryParser();
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionCode(2051);
+        $result = $parser->parseVideoSampleEntry($win, 70, 'avc1');
 
-        $parser->parseVideoSampleEntry($win, 70, 'avc1');
+        self::assertSame('avc1', $result['format']);
     }
 
     /**

@@ -98,12 +98,8 @@ final readonly class QuickTimeValueDecoder
 
         $type = $win->readU32BE();
 
-        // QuickTime File Format 2012, "Type Indicator" (p. 139): the indicator
-        // byte (bits 24–31) must be 0, meaning the type is drawn from the
-        // well-known set. All other values are reserved.
-        if (($type >> 24) !== 0) {
-            throw new ParseError('data box type indicator byte must be 0', 1252);
-        }
+        // Mask off reserved high byte (Postel's Law)
+        $type &= 0x00FFFFFF;
 
         $locale      = $win->readU32BE();
         $payloadSize = $data->contentSize - 8;
@@ -226,28 +222,20 @@ final readonly class QuickTimeValueDecoder
         }
 
         if ($dataType === QuickTimeDataType::Float32) {
-            // Reject truncated float32 payloads
             if ($payloadSize < 4) {
                 throw new ParseError('data box float32 payload truncated', 1418);
             }
 
-            if ($payloadSize > 4) {
-                throw new ParseError('data box float32 payload must be exactly 4 bytes', 1911);
-            }
-
+            // Tolerate trailing padding bytes (Postel's Law)
             return Unpack::float('G', substr($payload, 0, 4), 'QuickTime float32 payload');
         }
 
         if ($dataType === QuickTimeDataType::Float64) {
-            // Reject truncated float64 payloads
             if ($payloadSize < 8) {
                 throw new ParseError('data box float64 payload truncated', 1419);
             }
 
-            if ($payloadSize > 8) {
-                throw new ParseError('data box float64 payload must be exactly 8 bytes', 1913);
-            }
-
+            // Tolerate trailing padding bytes (Postel's Law)
             return Unpack::float('E', substr($payload, 0, 8), 'QuickTime float64 payload');
         }
 

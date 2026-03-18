@@ -644,15 +644,11 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Builds an iloc v0 box where the low nibble of the base_offset/index byte is non-zero.
-     * This confirms the reserved nibble is validated per ISO/IEC 14496-12 §8.11.3.
+     * Tolerates iloc v0 box where the low nibble of the base_offset/index byte is non-zero (Postel's Law).
      */
     #[Test]
-    public function rejectIlocVersion0NonZeroReservedNibble(): void
+    public function tolerateIlocVersion0NonZeroReservedNibble(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('iloc version 0 reserved nibble must be zero');
-
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
@@ -665,6 +661,9 @@ final class IsoBmffParserTest extends TestCase
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
+
+        $this->expectNotToPerformAssertions();
+
         $extractor->extract();
     }
 
@@ -1096,15 +1095,11 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Uses a free-form name atom with non-zero FullAtom flags.
-     * Verifies the parser rejects malformed name atom headers.
+     * Tolerates a free-form name atom with non-zero FullAtom flags (Postel's Law).
      */
     #[Test]
-    public function rejectMdtaFreeformNameAtomWithNonZeroFlags(): void
+    public function tolerateMdtaFreeformNameAtomWithNonZeroFlags(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('name atom flags must be 0');
-
         $mean     = $this->box('mean', pack('N', 0) . 'com.apple.quicktime');
         $name     = $this->box('name', pack('C4', 0, 0, 0, 1) . 'content.identifier');
         $data     = $this->box('data', pack('N', 1) . pack('N', 0) . 'id-value');
@@ -1114,6 +1109,8 @@ final class IsoBmffParserTest extends TestCase
         $meta = $this->box('meta', "\0\0\0\0" . $ilst);
         $moov = $this->moov($meta);
         $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $this->expectNotToPerformAssertions();
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -1903,33 +1900,33 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects a float32 data box payload with extra trailing bytes.
+     * Tolerates a float32 data box payload with extra trailing bytes (Postel's Law).
      */
     #[Test]
-    public function rejectsOversizedFloat32DataBoxPayload(): void
+    public function toleratesOversizedFloat32DataBoxPayload(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box float32 payload must be exactly 4 bytes');
+        $key       = 'com.apple.quicktime.content.identifier';
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x17, pack('G', 1.25) . "\0");
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
-        $key  = 'com.apple.quicktime.videoOrientation';
-        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x17, pack('G', 1.25) . "\0");
-
-        $this->createExtractor($file)->extract();
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertEqualsWithDelta(1.25, $qtMeta->keys[$key], 0.001);
     }
 
     /**
-     * Rejects a float64 data box payload with extra trailing bytes.
+     * Tolerates a float64 data box payload with extra trailing bytes (Postel's Law).
      */
     #[Test]
-    public function rejectsOversizedFloat64DataBoxPayload(): void
+    public function toleratesOversizedFloat64DataBoxPayload(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box float64 payload must be exactly 8 bytes');
+        $key       = 'com.apple.quicktime.content.identifier';
+        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 0x18, pack('E', 1.25) . "\0");
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
-        $key  = 'com.apple.quicktime.videoOrientation';
-        $file = $this->createQuickTimeKeysFileWithCustomKey($key, 0x18, pack('E', 1.25) . "\0");
-
-        $this->createExtractor($file)->extract();
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertEqualsWithDelta(1.25, $qtMeta->keys[$key], 0.001);
     }
 
     /**
@@ -2014,12 +2011,11 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Provides a data box whose type indicator byte (bits 24–31) is non-zero.
-     * Per QuickTime File Format 2012, "Type Indicator" (p. 139), the indicator
-     * byte must be 0; a non-zero value must trigger a ParseError.
+     * Tolerates a data box whose type indicator byte (bits 24-31) is non-zero (Postel's Law).
+     * The high byte is masked off and the lower 24 bits are used as the well-known type.
      */
     #[Test]
-    public function rejectsNonZeroDataBoxTypeIndicatorByte(): void
+    public function toleratesNonZeroDataBoxTypeIndicatorByte(): void
     {
         // Indicator byte = 0x01, well-known type bits = 0x000001 (UTF-8)
         $invalidType = 0x01000001;
@@ -2029,10 +2025,11 @@ final class IsoBmffParserTest extends TestCase
             'test-value',
         );
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box type indicator byte must be 0');
+        $extractor = $this->createExtractor($file);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
 
-        $this->createExtractor($file)->extract();
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('test-value', $qtMeta->keys['com.apple.quicktime.content.identifier']);
     }
 
     /**
@@ -2904,13 +2901,13 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Creates a keys box with non-zero version to trigger validation.
-     * QuickTime File Format 2012, "Metadata item keys atom": version/flags must be 0.
+     * QuickTime File Format 2012, "Metadata item keys atom": version must be 0.
      */
     #[Test]
     public function rejectsKeysBoxWithNonZeroVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys box version/flags must be 0');
+        $this->expectExceptionMessage('keys box version must be 0');
 
         $payload = pack('N', 1); // entryCount = 1
         $keys    = $this->fullBox('keys', $payload, 1, 0); // version=1
@@ -2923,34 +2920,33 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Creates a keys box with non-zero flags to trigger validation.
-     * QuickTime File Format 2012, "Metadata item keys atom": version/flags must be 0.
+     * Tolerates a keys box with non-zero flags (Postel's Law).
      */
     #[Test]
-    public function rejectsKeysBoxWithNonZeroFlags(): void
+    public function toleratesKeysBoxWithNonZeroFlags(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys box version/flags must be 0');
-
-        $payload = pack('N', 1); // entryCount = 1
+        $hdlr    = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $payload = pack('N', 0); // entryCount = 0
         $keys    = $this->fullBox('keys', $payload, 0, 1); // flags=1
-        $meta    = $this->fullBox('meta', $keys);
+        $ilst    = $this->box('ilst', '');
+        $meta    = $this->fullBox('meta', $hdlr . $keys . $ilst);
         $moov    = $this->moov($meta);
         $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $this->expectNotToPerformAssertions();
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
     }
 
     /**
-     * Creates a keys box with non-zero version and flags.
-     * Confirms the parser rejects combined FullBox header violations.
+     * Rejects a keys box with non-zero version even when flags are also non-zero.
      */
     #[Test]
     public function rejectsKeysBoxWithNonZeroVersionAndFlags(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys box version/flags must be 0');
+        $this->expectExceptionMessage('keys box version must be 0');
 
         $payload = pack('N', 1); // entryCount = 1
         $keys    = $this->fullBox('keys', $payload, 1, 1); // version=1, flags=1
@@ -3409,14 +3405,11 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects non-zero data-size values in video sample entries.
+     * Tolerates non-zero data-size values in video sample entries (Postel's Law).
      */
     #[Test]
-    public function rejectsVideoStsdEntryWithNonZeroDataSize(): void
+    public function toleratesVideoStsdEntryWithNonZeroDataSize(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('video sample entry data size must be 0');
-
         $entry = $this->videoSampleEntry(
             format: 'raw ',
             width: 320,
@@ -3425,6 +3418,8 @@ final class IsoBmffParserTest extends TestCase
             colorTableId: -1,
             dataSize: 1,
         );
+
+        $this->expectNotToPerformAssertions();
 
         $this->createExtractor($this->createFileWithVideoStsdEntry($entry))->extract();
     }
@@ -3752,14 +3747,11 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Rejects version 0 audio sample entries with non-zero compression IDs.
+     * Tolerates version 0 audio sample entries with non-zero compression IDs (Postel's Law).
      */
     #[Test]
-    public function rejectsAudioStsdVersion0EntryWithNonZeroCompressionId(): void
+    public function toleratesAudioStsdVersion0EntryWithNonZeroCompressionId(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample entry version 0 compression ID must be 0');
-
         $entry = $this->audioSampleEntryVersion0(
             format: 'raw ',
             channels: 2,
@@ -3768,18 +3760,17 @@ final class IsoBmffParserTest extends TestCase
             compressionId: 1,
         );
 
+        $this->expectNotToPerformAssertions();
+
         $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
     }
 
     /**
-     * Rejects version 0 audio sample entries with non-zero packet sizes.
+     * Tolerates version 0 audio sample entries with non-zero packet sizes (Postel's Law).
      */
     #[Test]
-    public function rejectsAudioStsdVersion0EntryWithNonZeroPacketSize(): void
+    public function toleratesAudioStsdVersion0EntryWithNonZeroPacketSize(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('audio sample entry version 0 packet size must be 0');
-
         $entry = $this->audioSampleEntryVersion0(
             format: 'raw ',
             channels: 2,
@@ -3787,6 +3778,8 @@ final class IsoBmffParserTest extends TestCase
             sampleRate: 44100,
             packetSize: 1,
         );
+
+        $this->expectNotToPerformAssertions();
 
         $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
     }
@@ -6060,11 +6053,15 @@ final class IsoBmffParserTest extends TestCase
         $this->createExtractor($ftyp . $moov)->extract();
     }
 
+    /**
+     * Tolerates itif atom with non-zero flags (Postel's Law).
+     * The itif atom is parsed successfully but mhdr is still required when itif is present.
+     */
     #[Test]
-    public function rejectItifAtomWithNonZeroFlags(): void
+    public function tolerateItifAtomWithNonZeroFlags(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('itif atom flags must be 0');
+        $this->expectExceptionMessage('metadata header atom (mhdr) required when ilst items have itif atoms');
 
         $itif      = $this->box('itif', "\0\0\0\x01" . pack('N', 1));
         $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');

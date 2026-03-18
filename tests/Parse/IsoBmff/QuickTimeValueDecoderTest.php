@@ -246,20 +246,20 @@ final class QuickTimeValueDecoderTest extends TestCase
     }
 
     /**
-     * Rejects a data box with a non-zero type indicator byte.
+     * Tolerates a data box with a non-zero type indicator byte (Postel's Law).
      */
     #[Test]
-    public function parseDataBoxStructuredRejectsNonZeroIndicatorByte(): void
+    public function parseDataBoxStructuredToleratesNonZeroIndicatorByte(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box type indicator byte must be 0');
-
         $decoder = $this->createDecoder();
-        // type with non-zero indicator byte (0x01000001)
+        // type with non-zero indicator byte (0x01000001) — masked to 0x000001 (UTF-8)
         $content    = pack('N', 0x01000001) . pack('N', 0) . 'text';
         $descriptor = $this->createDataBoxDescriptor($content);
 
-        $decoder->parseDataBoxStructured($descriptor);
+        $result = $decoder->parseDataBoxStructured($descriptor);
+
+        self::assertSame(1, $result['type']);
+        self::assertSame('text', $result['value']);
     }
 
     // =========================================================================
@@ -320,16 +320,15 @@ final class QuickTimeValueDecoderTest extends TestCase
     }
 
     /**
-     * Rejects a float32 payload that is longer than 4 bytes.
+     * Tolerates a float32 payload with trailing padding bytes (Postel's Law).
      */
     #[Test]
-    public function decodeDataPayloadRejectsOversizedFloat32(): void
+    public function decodeDataPayloadToleratesOversizedFloat32(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box float32 payload must be exactly 4 bytes');
-
         $decoder = $this->createDecoder();
-        $decoder->decodeDataPayload(0x17, "\x00\x00\x00\x00\x00", 5);
+        $result  = $decoder->decodeDataPayload(0x17, pack('G', 3.14) . "\x00", 5);
+
+        self::assertEqualsWithDelta(3.14, $result, 0.001);
     }
 
     /**

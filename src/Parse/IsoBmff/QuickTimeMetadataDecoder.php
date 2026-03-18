@@ -300,7 +300,7 @@ final readonly class QuickTimeMetadataDecoder
      */
     public function parseMhdr(BoxDescriptor $mhdr): void
     {
-        $this->validateFullAtomHeader($mhdr, 'mhdr', 8, 1237, 1238, 1239);
+        $this->validateFullAtomHeader($mhdr, 'mhdr', 8, 1237, 1238);
 
         // nextItemID — read for validation but not currently exposed
         $win = $mhdr->window;
@@ -322,7 +322,7 @@ final readonly class QuickTimeMetadataDecoder
      */
     public function parseLocaleListAtom(BoxDescriptor $box, string $label): array
     {
-        $this->validateFullAtomHeader($box, $label, 8, 1240, 1241, 1242);
+        $this->validateFullAtomHeader($box, $label, 8, 1240, 1241);
         $win        = $box->window;
         $entryCount = $win->readU32BE();
 
@@ -509,7 +509,7 @@ final readonly class QuickTimeMetadataDecoder
      */
     private function parseIlstNameAtom(BoxDescriptor $name, array &$seenNames): string
     {
-        $this->validateFullAtomHeader($name, 'ilst name', 4, 1227, 1228, 1229);
+        $this->validateFullAtomHeader($name, 'ilst name', 4, 1227, 1228);
         $win = $name->window;
 
         $payloadSize = $name->contentSize - 4;
@@ -550,7 +550,7 @@ final readonly class QuickTimeMetadataDecoder
      */
     private function parseIlstItemInfo(BoxDescriptor $itif, array &$seenItemIds): void
     {
-        $this->validateFullAtomHeader($itif, 'itif', 8, 1233, 1234, 1235);
+        $this->validateFullAtomHeader($itif, 'itif', 8, 1233, 1234);
         $win = $itif->window;
 
         $itemId = $win->readU32BE();
@@ -576,7 +576,6 @@ final readonly class QuickTimeMetadataDecoder
         int $minimumContentSize,
         int $truncatedCode,
         int $versionCode,
-        int $flagsCode,
     ): void {
         if ($box->contentSize < $minimumContentSize) {
             throw new ParseError(sprintf('%s atom truncated', $label), $truncatedCode);
@@ -591,9 +590,7 @@ final readonly class QuickTimeMetadataDecoder
             throw new ParseError(sprintf('%s atom version must be 0', $label), $versionCode);
         }
 
-        if ($header->flags !== 0) {
-            throw new ParseError(sprintf('%s atom flags must be 0', $label), $flagsCode);
-        }
+        // Tolerate non-zero flags (Postel's Law) — specs reserve flags for future use
     }
 
     /**
