@@ -122,6 +122,16 @@ final readonly class TemporalFactory
             $tzSource = 'OffsetTimeOriginal';
         }
 
+        // Fall back to QuickTime Keys CreationDate timezone when EXIF provides none
+        if (!$tz instanceof DateTimeZone) {
+            $qtTz = $this->extractNonUtcTimezone($quickTimeCreate);
+
+            if ($qtTz instanceof DateTimeZone) {
+                $tz       = $qtTz;
+                $tzSource = 'KeysCreationDate';
+            }
+        }
+
         return new Temporal(
             create: $create,
             modify: $modify,
@@ -262,6 +272,27 @@ final readonly class TemporalFactory
     }
 
     /**
+     * Extracts the timezone from a DateTimeImmutable when it is not UTC.
+     *
+     * UTC timestamps (offset 0) are considered timezone-less since mvhd timestamps
+     * are always UTC and carry no meaningful timezone information.
+     */
+    private function extractNonUtcTimezone(?DateTimeImmutable $date): ?DateTimeZone
+    {
+        if (!$date instanceof DateTimeImmutable) {
+            return null;
+        }
+
+        $tz = $date->getTimezone();
+
+        if ($tz->getOffset($date) === 0) {
+            return null;
+        }
+
+        return $tz;
+    }
+
+    /**
      * Returns the first successfully parsed date from ordered timestamp candidates.
      */
     private function parseFirstAvailableDate(?string ...$values): ?DateTimeImmutable
@@ -291,7 +322,7 @@ final readonly class TemporalFactory
         }
 
         // XMP Date value type: ISO 8601 subset (YYYY through YYYY-MM-DDThh:mm:ss.sTZD)
-        if (preg_match('/^\d{4}(-\d{2}(-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})?)?)?)?$/', $value) !== 1) {
+        if (preg_match('/^\d{4}(-\d{2}(-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?)?)?$/', $value) !== 1) {
             return null;
         }
 

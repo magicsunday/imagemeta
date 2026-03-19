@@ -323,6 +323,102 @@ final class TemporalFactoryTest extends TestCase
     }
 
     /**
+     * Provides a QuickTime Keys CreationDate with timezone offset in compact format (+0200).
+     * Verifies the factory parses the compact timezone and uses it for create and tz fields.
+     */
+    #[Test]
+    public function extractsTimezoneFromQuickTimeKeysCreationDate(): void
+    {
+        $temporal = $this->createTemporal(
+            quickTime: new QuickTimeMeta([
+                'com.apple.quicktime.creationdate' => '2025-06-05T17:53:44+0200',
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2025-06-05T17:53:44+02:00', $temporal->create->format('c'));
+        self::assertInstanceOf(DateTimeZone::class, $temporal->tz);
+        self::assertSame('+02:00', $temporal->tz->getName());
+        self::assertSame('KeysCreationDate', $temporal->tzSource);
+    }
+
+    /**
+     * Provides a QuickTime Keys CreationDate with colon-separated timezone offset (+02:00).
+     * Verifies the factory handles the standard ISO 8601 timezone format from Keys metadata.
+     */
+    #[Test]
+    public function extractsTimezoneFromQuickTimeKeysCreationDateWithColon(): void
+    {
+        $temporal = $this->createTemporal(
+            quickTime: new QuickTimeMeta([
+                'com.apple.quicktime.creationdate' => '2025-06-05T17:53:44+02:00',
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2025-06-05T17:53:44+02:00', $temporal->create->format('c'));
+        self::assertInstanceOf(DateTimeZone::class, $temporal->tz);
+        self::assertSame('+02:00', $temporal->tz->getName());
+    }
+
+    /**
+     * Provides both EXIF OffsetTimeOriginal and QuickTime Keys CreationDate with timezone.
+     * Verifies the EXIF timezone takes precedence over the QuickTime Keys timezone.
+     */
+    #[Test]
+    public function exifTimezoneTakesPrecedenceOverQuickTimeKeys(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                original: new DateTimeImmutable('2025-06-05T17:53:44+02:00'),
+                offsetTimeOriginal: '+02:00',
+            ),
+            quickTime: new QuickTimeMeta([
+                'com.apple.quicktime.creationdate' => '2025-06-05T17:53:44+0300',
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeZone::class, $temporal->tz);
+        self::assertSame('+02:00', $temporal->tz->getName());
+        self::assertSame('OffsetTimeOriginal', $temporal->tzSource);
+    }
+
+    /**
+     * Provides QuickTime Keys CreationDate with timezone alongside mvhd Mac-epoch timestamp.
+     * Verifies the Keys value (with timezone) is preferred over the mvhd UTC fallback.
+     */
+    #[Test]
+    public function keysCreationDatePreferredOverMvhdFallback(): void
+    {
+        $temporal = $this->createTemporal(
+            quickTime: new QuickTimeMeta([
+                'com.apple.quicktime.creationdate' => '2025-06-05T17:53:44+0200',
+                QuickTimeMeta::CREATE_DATE_KEY     => 3_831_983_624,
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2025-06-05T17:53:44+02:00', $temporal->create->format('c'));
+    }
+
+    /**
+     * Provides a QuickTime Keys CreationDate with UTC timezone (Z suffix).
+     * Verifies the factory does not extract UTC as a meaningful timezone.
+     */
+    #[Test]
+    public function quickTimeKeysUtcTimezoneDoesNotSetTz(): void
+    {
+        $temporal = $this->createTemporal(
+            quickTime: new QuickTimeMeta([
+                'com.apple.quicktime.creationdate' => '2025-06-05T15:53:44Z',
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertNull($temporal->tz);
+    }
+
+    /**
      * Supplies an empty offset time string in the EXIF IFD.
      * Verifies the factory handles an empty offset without crashing.
      */
