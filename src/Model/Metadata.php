@@ -16,6 +16,7 @@ use LogicException;
 use MagicSunday\ImageMeta\Contract\IptcParserInterface;
 use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
@@ -217,6 +218,14 @@ final readonly class Metadata
         $documents = array_map($this->iptcParser->parse(...), $this->iptcBlobs);
 
         return IptcDocument::merge(...$documents);
+    }
+
+    /**
+     * Creates a QuickTime metadata lookup helper for the current metadata instance.
+     */
+    public function quickTimeLookup(): QuickTimeLookup
+    {
+        return new QuickTimeLookup($this->quickTime);
     }
 
     /**

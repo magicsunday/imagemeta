@@ -13,7 +13,6 @@ namespace MagicSunday\ImageMeta\Exif\Factory;
 
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
@@ -38,7 +37,7 @@ final readonly class CameraFactory
     {
         $exifDocument    = $metadata->exifDoc;
         $resolver        = XmpFallbackResolver::fromMetadata($metadata);
-        $quickTimeLookup = new QuickTimeLookup($metadata->quickTime);
+        $quickTimeLookup = $metadata->quickTimeLookup();
 
         return new Camera(
             make: $exifDocument?->cameraMake() ?? $resolver?->string(ExifTag::MAKE) ?? $quickTimeLookup->string('com.apple.quicktime.make'),

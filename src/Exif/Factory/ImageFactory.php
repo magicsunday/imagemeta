@@ -14,7 +14,6 @@ namespace MagicSunday\ImageMeta\Exif\Factory;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -47,7 +46,7 @@ final readonly class ImageFactory
         $exifDocument    = $metadata->exifDoc;
         $resolverDoc     = $xmpDocument ?? $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
         $resolver        = $resolverDoc instanceof XmpDocument ? XmpFallbackResolver::fromDocument($resolverDoc) : null;
-        $quickTimeLookup = new QuickTimeLookup($metadata->quickTime);
+        $quickTimeLookup = $metadata->quickTimeLookup();
 
         $width         = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth ?? $resolver?->int(ExifTag::PIXEL_X_DIMENSION) ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY);
         $height        = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight ?? $resolver?->int(ExifTag::PIXEL_Y_DIMENSION) ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_HEIGHT_KEY);

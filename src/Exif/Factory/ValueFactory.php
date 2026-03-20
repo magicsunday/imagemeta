@@ -129,7 +129,7 @@ final readonly class ValueFactory
         $xmpDocument     = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
         $iptcDocument    = $metadata->iptcDoc ?? $metadata->selectiveIptcDocument();
         $exifDocument    = $metadata->exifDoc;
-        $quickTimeLookup = new QuickTimeLookup($metadata->quickTime);
+        $quickTimeLookup = $metadata->quickTimeLookup();
         $appleMakerNotes = $metadata->makerNotes?->apple;
         $apple           = $appleMakerNotes ?? AppleMakerNotes::empty();
 
@@ -177,7 +177,7 @@ final readonly class ValueFactory
             temperatureC: $exifDocument?->temperatureCelsius(),
             humidityPercent: $exifDocument?->humidityPercent(),
             pressureHPa: $exifDocument?->pressureHPa(),
-            waterDepthM: $exifDocument?->waterDepthMeters(),
+            waterDepthMetres: $exifDocument?->waterDepthMeters(),
             accelerationMs2: $exifDocument?->accelerationMs2(),
             cameraElevationAngleDeg: $exifDocument?->cameraElevationAngleDeg(),
         );
@@ -192,9 +192,6 @@ final readonly class ValueFactory
         $media = $this->createContainerMedia($quickTimeLookup, $metadata);
 
         $processing = new ValueProcessingSettings(
-            sharpness: $exifDocument?->sharpness(),
-            contrast: $exifDocument?->contrast(),
-            saturation: $exifDocument?->saturation(),
             pictureStyle: null,
             clarity: null,
             customRendered: $exifDocument?->customRendered(),
@@ -216,7 +213,7 @@ final readonly class ValueFactory
         );
 
         $focus = new Focus(
-            subjectDistanceM: $exifDocument?->subjectDistance(),
+            subjectDistanceMetres: $exifDocument?->subjectDistance(),
             subjectArea: $exifDocument?->subjectArea(),
             afMode: null,
         );
@@ -468,7 +465,7 @@ final readonly class ValueFactory
         return new Author(
             artist: $exifDocument?->artist(),
             ownerName: $exifDocument?->ownerName(),
-            creator: $this->firstListValue($xmpDocument?->stringList(XmpNamespace::DC->value, 'creator') ?? []),
+            creator: ($xmpDocument?->stringList(XmpNamespace::DC->value, 'creator') ?? [])[0] ?? null,
             contact: $contact,
             photographer: $exifDocument?->photographer(),
             imageEditor: $exifDocument?->imageEditor(),
@@ -500,7 +497,7 @@ final readonly class ValueFactory
      */
     private function createDerived(Lens $lens, Exposure $exposure): Derived
     {
-        $cropFactor          = $this->converters->calcCropFactor($lens->focalLengthIn35mm, $lens->focalLengthMm);
+        $cropFactor          = $this->converters->calcCropFactor($lens->focalLength35Mm, $lens->focalLengthMm);
         $circleOfConfusionMm = $cropFactor !== null
             ? $this->converters->calcCircleOfConfusionMm($cropFactor)
             : null;
@@ -517,10 +514,10 @@ final readonly class ValueFactory
                 $circleOfConfusionMm,
             ),
             circleOfConfusionMm: $circleOfConfusionMm,
-            fieldOfViewDiagonalDeg: $this->converters->calcFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
-            fieldOfViewHorizontalDeg: $this->converters->calcHorizontalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
-            fieldOfViewVerticalDeg: $this->converters->calcVerticalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
-            equivalent35mm: $lens->focalLengthIn35mm,
+            fieldOfViewDiagonalDeg: $this->converters->calcFovDeg($lens->focalLength35Mm, $cropFactor, $lens->focalLengthMm),
+            fieldOfViewHorizontalDeg: $this->converters->calcHorizontalFovDeg($lens->focalLength35Mm, $cropFactor, $lens->focalLengthMm),
+            fieldOfViewVerticalDeg: $this->converters->calcVerticalFovDeg($lens->focalLength35Mm, $cropFactor, $lens->focalLengthMm),
+            focalLength35Mm: $lens->focalLength35Mm,
             cropFactor: $cropFactor,
         );
     }
@@ -557,18 +554,6 @@ final readonly class ValueFactory
         ));
 
         return $count > 0 ? $count : null;
-    }
-
-    /**
-     * Returns the first string from the list or null.
-     *
-     * @param list<string> $values List of candidate string values in priority order.
-     *
-     * @return string|null First entry in the list or null when the list is empty.
-     */
-    private function firstListValue(array $values): ?string
-    {
-        return $values[0] ?? null;
     }
 
     /**

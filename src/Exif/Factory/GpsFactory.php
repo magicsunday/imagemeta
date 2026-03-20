@@ -70,7 +70,7 @@ final readonly class GpsFactory
         $gps         = $this->resolveGps($metadata->exifDoc, $xmpDocument) ?? new Gps();
 
         if (!$gps->position instanceof GpsPosition) {
-            $quickTimeLookup = new QuickTimeLookup($metadata->quickTime);
+            $quickTimeLookup = $metadata->quickTimeLookup();
             $qtPosition      = $this->resolveQuickTimeGps($quickTimeLookup);
 
             if ($qtPosition instanceof GpsPosition) {
