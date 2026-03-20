@@ -362,6 +362,52 @@ final class TemporalFactoryTest extends TestCase
     }
 
     /**
+     * Provides mvhd, tkhd and mdhd Mac-epoch integers with distinct dates.
+     * Verifies mvhd takes precedence over tkhd and mdhd.
+     */
+    #[Test]
+    public function mvhdTakesPrecedenceOverTkhdAndMdhd(): void
+    {
+        $temporal = $this->createTemporal(
+            quickTime: new QuickTimeMeta([
+                QuickTimeMeta::CREATE_DATE_KEY       => 3_692_304_000, // 2021-01-01
+                QuickTimeMeta::TRACK_CREATE_DATE_KEY => 3_723_840_000, // 2022-01-01
+                QuickTimeMeta::MEDIA_CREATE_DATE_KEY => 3_755_376_000, // 2023-01-01
+                QuickTimeMeta::MODIFY_DATE_KEY       => 3_692_390_400, // 2021-01-02
+                QuickTimeMeta::TRACK_MODIFY_DATE_KEY => 3_723_926_400, // 2022-01-02
+                QuickTimeMeta::MEDIA_MODIFY_DATE_KEY => 3_755_462_400, // 2023-01-02
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2021-01-01', $temporal->create->format('Y-m-d'));
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
+        self::assertSame('2021-01-02', $temporal->modify->format('Y-m-d'));
+    }
+
+    /**
+     * Provides zero mvhd timestamps alongside valid tkhd Mac-epoch integers.
+     * Verifies tkhd is used when mvhd is uninitialised.
+     */
+    #[Test]
+    public function tkhdUsedWhenMvhdIsZero(): void
+    {
+        $temporal = $this->createTemporal(
+            quickTime: new QuickTimeMeta([
+                QuickTimeMeta::CREATE_DATE_KEY       => 0,
+                QuickTimeMeta::MODIFY_DATE_KEY       => 0,
+                QuickTimeMeta::TRACK_CREATE_DATE_KEY => 3_692_304_000, // 2021-01-01
+                QuickTimeMeta::TRACK_MODIFY_DATE_KEY => 3_692_390_400, // 2021-01-02
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2021-01-01', $temporal->create->format('Y-m-d'));
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
+        self::assertSame('2021-01-02', $temporal->modify->format('Y-m-d'));
+    }
+
+    /**
      * Provides mvhd Mac-epoch timestamps set to zero (uninitialised mvhd fields).
      * Verifies the factory treats zero timestamps as missing and returns null.
      */
