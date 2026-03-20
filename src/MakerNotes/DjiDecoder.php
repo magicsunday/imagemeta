@@ -15,13 +15,10 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\Dji\DjiMakerNotes;
-use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
+use MagicSunday\ImageMeta\MakerNotes\Support\ReadsMakerNoteFields;
 
-use function rtrim;
-use function sha1;
 use function strlen;
 use function substr;
-use function trim;
 
 /**
  * Decoder that extracts structured metadata from DJI drone maker note payloads.
@@ -33,6 +30,8 @@ use function trim;
  */
 final readonly class DjiDecoder implements MakerNotesDecoderInterface
 {
+    use ReadsMakerNoteFields;
+
     private const int TAG_MAKER_NOTE_VERSION = 0x0001;
 
     private const int TAG_SPEED_X = 0x0003;
@@ -71,13 +70,10 @@ final readonly class DjiDecoder implements MakerNotesDecoderInterface
     {
         $djiData = $this->parseDjiData($raw);
 
-        return new MakerNotesRecord(
+        return MakerNotesRecord::from(
             'DJI',
-            strlen($raw),
-            sha1($raw),
-            null,
-            null,
-            $djiData,
+            $raw,
+            dji: $djiData,
         );
     }
 
@@ -207,30 +203,6 @@ final readonly class DjiDecoder implements MakerNotesDecoderInterface
         return null;
     }
 
-    // jscpd:ignore-start
-
-    /**
-     * Reads an unsigned 16-bit integer using the supplied byte order.
-     */
-    private function readU16(string $raw, int $offset, Endian $endian, string $context): int
-    {
-        $bytes = substr($raw, $offset, 2);
-
-        return Unpack::int($endian === Endian::Little ? 'v' : 'n', $bytes, $context);
-    }
-
-    /**
-     * Reads an unsigned 32-bit integer using the supplied byte order.
-     */
-    private function readU32(string $raw, int $offset, Endian $endian, string $context): int
-    {
-        $bytes = substr($raw, $offset, 4);
-
-        return Unpack::int($endian === Endian::Little ? 'V' : 'N', $bytes, $context);
-    }
-
-    // jscpd:ignore-end
-
     /**
      * Resolves inline value bytes for TIFF IFD entries with data size ≤ 4 bytes.
      *
@@ -257,31 +229,6 @@ final readonly class DjiDecoder implements MakerNotesDecoderInterface
         }
 
         return substr($raw, $inlineOffset, $dataSize);
-    }
-
-    /**
-     * Returns the byte width for a TIFF type used in DJI maker notes.
-     */
-    private function typeSize(int $type): int
-    {
-        return match ($type) {
-            TiffFieldType::Byte->value,
-            TiffFieldType::Ascii->value => 1,
-            TiffFieldType::Short->value => 2,
-            TiffFieldType::Long->value,
-            TiffFieldType::Float->value => 4,
-            default                     => 0,
-        };
-    }
-
-    /**
-     * Parses an ASCII-encoded value and normalizes it.
-     */
-    private function parseAscii(string $valueBytes): ?string
-    {
-        $value = trim(rtrim($valueBytes, "\0"));
-
-        return $value === '' ? null : $value;
     }
 
     /**

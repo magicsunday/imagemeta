@@ -16,14 +16,12 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\Samsung\SamsungMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Support\ReadsMakerNoteFields;
 use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
 
-use function rtrim;
-use function sha1;
 use function str_starts_with;
 use function strlen;
 use function substr;
-use function trim;
 
 /**
  * Decoder that extracts structured metadata from Samsung maker note payloads.
@@ -33,6 +31,8 @@ use function trim;
  */
 final readonly class SamsungDecoder implements MakerNotesDecoderInterface
 {
+    use ReadsMakerNoteFields;
+
     private const int TIFF_MAGIC = 0x2A;
 
     private const string SAMSUNG_SIGNATURE = "SAMSUNG\0";
@@ -54,12 +54,10 @@ final readonly class SamsungDecoder implements MakerNotesDecoderInterface
     {
         $samsungData = $this->parseSamsungData($raw);
 
-        return new MakerNotesRecord(
+        return MakerNotesRecord::from(
             'Samsung',
-            strlen($raw),
-            sha1($raw),
-            null,
-            $samsungData,
+            $raw,
+            samsung: $samsungData,
         );
     }
 
@@ -192,26 +190,6 @@ final readonly class SamsungDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * Reads an unsigned 16-bit integer using the supplied byte order.
-     */
-    private function readU16(string $raw, int $offset, Endian $endian, string $context): int
-    {
-        $bytes = substr($raw, $offset, 2);
-
-        return Unpack::int($endian === Endian::Little ? 'v' : 'n', $bytes, $context);
-    }
-
-    /**
-     * Reads an unsigned 32-bit integer using the supplied byte order.
-     */
-    private function readU32(string $raw, int $offset, Endian $endian, string $context): int
-    {
-        $bytes = substr($raw, $offset, 4);
-
-        return Unpack::int($endian === Endian::Little ? 'V' : 'N', $bytes, $context);
-    }
-
-    /**
      * Resolves the bytes representing a tag value.
      */
     private function resolveValueBytes(
@@ -246,29 +224,6 @@ final readonly class SamsungDecoder implements MakerNotesDecoderInterface
         }
 
         return substr($raw, $dataOffset, $dataSize);
-    }
-
-    /**
-     * Returns the byte width for a TIFF type used in Samsung maker notes.
-     */
-    private function typeSize(int $type): int
-    {
-        return match ($type) {
-            TiffFieldType::Ascii->value => 1,
-            TiffFieldType::Short->value => 2,
-            TiffFieldType::Long->value  => 4,
-            default                     => 0,
-        };
-    }
-
-    /**
-     * Parses an ASCII-encoded value and normalizes it.
-     */
-    private function parseAscii(string $valueBytes): ?string
-    {
-        $value = trim(rtrim($valueBytes, "\0"));
-
-        return $value === '' ? null : $value;
     }
 
     /**
