@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Convenience;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Core\Util\StringUtil;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\Derived;
@@ -31,7 +32,6 @@ use function strcasecmp;
 use function strlen;
 use function strncmp;
 use function strtolower;
-use function trim;
 
 use const DATE_ATOM;
 
@@ -59,8 +59,8 @@ final readonly class ExifConvenience
      */
     public function cameraDescription(Camera $camera, ?Lens $lens = null): ?string
     {
-        $make  = $this->normalize($camera->make);
-        $model = $this->normalize($camera->model);
+        $make  = StringUtil::trimToNull($camera->make);
+        $model = StringUtil::trimToNull($camera->model);
 
         $cameraLabel = null;
 
@@ -70,7 +70,7 @@ final readonly class ExifConvenience
             $cameraLabel = $make ?? $model;
         }
 
-        $lensLabel = $this->normalize($lens?->lensModel);
+        $lensLabel = StringUtil::trimToNull($lens?->lensModel);
 
         $parts = [];
 
@@ -208,9 +208,9 @@ final readonly class ExifConvenience
         $capturedAt = $capture->dateTime;
 
         return [
-            'make'        => $this->normalize($camera->make),
-            'model'       => $this->normalize($camera->model),
-            'lens'        => $this->normalize($lens->lensModel),
+            'make'        => StringUtil::trimToNull($camera->make),
+            'model'       => StringUtil::trimToNull($camera->model),
+            'lens'        => StringUtil::trimToNull($lens->lensModel),
             'orientation' => $image->orientation?->value,
             'captured_at' => $capturedAt?->format(DATE_ATOM),
             'exposure_s'  => $exposure->settings?->exposureTimeSec,
@@ -341,24 +341,6 @@ final readonly class ExifConvenience
         $formatted = sprintf($format, $value);
 
         return rtrim(rtrim($formatted, '0'), '.');
-    }
-
-    /**
-     * Normalizes a string value by trimming whitespace and collapsing empties to null.
-     *
-     * @param string|null $value Raw string value.
-     *
-     * @return string|null Normalized string or null when empty.
-     */
-    private function normalize(?string $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $normalized = trim($value);
-
-        return $normalized === '' ? null : $normalized;
     }
 
     /**
