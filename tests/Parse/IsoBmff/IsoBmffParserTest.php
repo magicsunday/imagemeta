@@ -7322,6 +7322,54 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Verifies that a timed metadata track with handler type `meta` and a `mebx`
+     * sample entry containing a `keys` box with the `com.apple.quicktime.still-image-time`
+     * key is detected and exposed as a boolean flag in QuickTime metadata.
+     */
+    #[Test]
+    public function parsesMetaHandlerTrackWithStillImageTimeKey(): void
+    {
+        $data      = $this->createFileWithMetaTrack('com.apple.quicktime.still-image-time');
+        $extractor = $this->createExtractor($data);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertTrue($qtMeta->keys[QuickTimeMeta::STILL_IMAGE_TIME_KEY]);
+    }
+
+    /**
+     * Verifies that a timed metadata track with handler type `meta` and a `mebx`
+     * sample entry containing a `keys` box with the `com.apple.quicktime.live-photo-info`
+     * key is detected and exposed as a boolean flag in QuickTime metadata.
+     */
+    #[Test]
+    public function parsesMetaHandlerTrackWithLivePhotoInfoKey(): void
+    {
+        $data      = $this->createFileWithMetaTrack('com.apple.quicktime.live-photo-info');
+        $extractor = $this->createExtractor($data);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertTrue($qtMeta->keys[QuickTimeMeta::HAS_LIVE_PHOTO_INFO_KEY]);
+    }
+
+    /**
+     * Verifies that a timed metadata track with an unrecognized metadata key
+     * does not produce any Live Photo flags in QuickTime metadata.
+     */
+    #[Test]
+    public function parsesMetaHandlerTrackWithUnknownKeyProducesNoFlags(): void
+    {
+        $data      = $this->createFileWithMetaTrack('com.apple.quicktime.unknown-key');
+        $extractor = $this->createExtractor($data);
+        $qtMeta    = $extractor->extract()->quickTimeMeta;
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertArrayNotHasKey(QuickTimeMeta::STILL_IMAGE_TIME_KEY, $qtMeta->keys);
+        self::assertArrayNotHasKey(QuickTimeMeta::HAS_LIVE_PHOTO_INFO_KEY, $qtMeta->keys);
+    }
+
+    /**
      * Creates a QuickTime file with a data atom using a specific type and payload.
      *
      * @param int    $dataType Well-known type code (1=UTF-8, 2=UTF-16BE, etc.).
@@ -8235,6 +8283,50 @@ final class IsoBmffParserTest extends TestCase
         $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
 
         return $hdlr . $mdhd . $this->minimalMinf();
+    }
+
+    /**
+     * Builds a minimal QuickTime file containing a video track and one timed metadata
+     * track with the given metadata key inside an `mebx` sample entry.
+     *
+     * @param string $metadataKey The metadata key string (e.g. 'com.apple.quicktime.still-image-time').
+     */
+    private function createFileWithMetaTrack(string $metadataKey): string
+    {
+        // Build the keyd box: namespace(4 'mdta') + key_value
+        $keydPayload = 'mdta' . $metadataKey;
+        $keydBox     = $this->box('keyd', $keydPayload);
+
+        // Build the keys box inside mebx: version(1) + flags(3) + entry_count(4) + keyd entry
+        $keysPayload = "\0\0\0\0" . pack('N', 1) . $keydBox;
+        $keysBox     = $this->box('keys', $keysPayload);
+
+        // Build the mebx sample entry: reserved(6) + data_ref_index(2) + keys child box
+        $mebxPayload = str_repeat("\0", 6) . pack('n', 1) . $keysBox;
+        $mebxEntry   = $this->box('mebx', $mebxPayload);
+
+        // Build stsd with the mebx entry
+        $stsd = $this->fullBox('stsd', pack('N', 1) . $mebxEntry);
+        $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
+
+        // nmhd for meta handler tracks
+        $nmhd = $this->fullBox('nmhd', '');
+        $url  = $this->fullBox('url ', '', 0, 1);
+        $dref = $this->fullBox('dref', pack('N', 1) . $url);
+        $dinf = $this->box('dinf', $dref);
+        $minf = $this->box('minf', $nmhd . $dinf . $stbl);
+
+        // hdlr with 'meta' handler type
+        $hdlr     = $this->fullBox('hdlr', "\0\0\0\0meta" . str_repeat("\0", 12) . "\0");
+        $mdhd     = $this->fullBox('mdhd', pack('NNN', 0, 0, 600) . str_repeat("\0", 8));
+        $mdia     = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $tkhd     = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 2, 0) . str_repeat("\0", 60));
+        $metaTrak = $this->box('trak', $tkhd . $mdia);
+
+        $moov = $this->box('moov', $this->minimalMvhd() . $this->minimalTrak() . $metaTrak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        return $ftyp . $moov;
     }
 
     /**

@@ -246,6 +246,8 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
                         $selectedAudioTrack    = $trackSelection['keys'];
                         $hasEligibleAudioTrack = $trackSelection['isEnabledInMovie'];
                     }
+                } elseif ($trackSelection['handler'] === 'meta') {
+                    $this->mergeTrackKeysIfMissing($context->qtKeys, $trackSelection['keys']);
                 }
             } elseif ($child->type === BoxType::MVHD->value) {
                 ++$mvhdCount;

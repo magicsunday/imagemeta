@@ -151,6 +151,7 @@ final readonly class TrackMediaParser
         $trackKeys = match ($handler) {
             'vide'  => $this->buildVideoTrackKeys($sampleInfo, $tkhdResult, $mdhdData, $mediaHdrInfo),
             'soun'  => $this->buildAudioTrackKeys($sampleInfo, $tkhdResult, $mdhdData, $mediaHdrInfo),
+            'meta'  => $this->buildMetaTrackKeys($sampleInfo),
             default => [],
         };
 
@@ -268,6 +269,149 @@ final readonly class TrackMediaParser
         $this->applyMdhdKeys($mdhdData, $trackKeys);
 
         return $trackKeys;
+    }
+
+    /**
+     * Builds QuickTime keys for timed metadata tracks.
+     *
+     * Apple Live Photo MOV files embed timed metadata tracks (handler type `meta`)
+     * whose sample description contains an `mebx` sample entry with a `keys` child
+     * box listing the metadata key for that track. Two keys are relevant:
+     *
+     * - `com.apple.quicktime.still-image-time` marks the still-frame moment.
+     * - `com.apple.quicktime.live-photo-info` carries per-frame camera motion data.
+     *
+     * Because the actual sample data lives in mdat and is not needed for presence
+     * detection, we expose the key as a boolean flag.
+     *
+     * @param SampleEntryMap $sampleInfo Parsed sample-entry fields from stsd.
+     *
+     * @return QuickTimeKeyMap
+     */
+    private function buildMetaTrackKeys(array $sampleInfo): array
+    {
+        /** @var QuickTimeKeyMap $trackKeys */
+        $trackKeys = [];
+
+        if (!isset($sampleInfo['metaKey'])) {
+            return $trackKeys;
+        }
+
+        $key = $sampleInfo['metaKey'];
+
+        if ($key === 'com.apple.quicktime.still-image-time') {
+            $trackKeys[QuickTimeMeta::STILL_IMAGE_TIME_KEY] = true;
+        } elseif ($key === 'com.apple.quicktime.live-photo-info') {
+            $trackKeys[QuickTimeMeta::HAS_LIVE_PHOTO_INFO_KEY] = true;
+        }
+
+        return $trackKeys;
+    }
+
+    /**
+     * Parses a timed metadata sample entry (`mebx`) and extracts the metadata key.
+     *
+     * The mebx sample entry body (after the 8-byte SampleEntry header of reserved +
+     * data_reference_index, already consumed) contains child boxes. A `keys` child
+     * box holds the key namespace and key value describing the metadata track.
+     *
+     * @param StreamWindow $win              Window positioned after the sample entry header.
+     * @param int          $entryEnd         Absolute end offset within the stsd window.
+     * @param string       $normalizedFormat Normalized four-character sample entry type.
+     *
+     * @return SampleEntryMap
+     */
+    private function parseMetaSampleEntry(StreamWindow $win, int $entryEnd, string $normalizedFormat): array
+    {
+        if ($normalizedFormat !== 'mebx') {
+            return [];
+        }
+
+        $remaining = $entryEnd - $win->tell();
+
+        if ($remaining < 8) {
+            return [];
+        }
+
+        // Walk child boxes within the mebx sample entry body
+        $cursor = $win->tell();
+        $end    = $entryEnd;
+
+        while (($cursor + 8) <= $end) {
+            $win->seek($cursor);
+
+            $childSize = $win->readU32BE();
+            $childType = $win->read(4);
+
+            if (($childSize < 8) || (($cursor + $childSize) > $end)) {
+                break;
+            }
+
+            if ($childType === BoxType::KEYS->value) {
+                return $this->parseMetaSampleEntryKeys($win, $cursor + $childSize);
+            }
+
+            $cursor += $childSize;
+        }
+
+        return [];
+    }
+
+    /**
+     * Parses the `keys` box inside a timed metadata sample entry.
+     *
+     * Structure: version(1) + flags(3) + entry_count(4) + entries.
+     * Each entry is a child box (e.g. `keyd`) containing: namespace(4) + key_value(remaining).
+     *
+     * @param StreamWindow $win    Window positioned after the keys box header.
+     * @param int          $keyEnd Absolute end offset of the keys box.
+     *
+     * @return SampleEntryMap
+     */
+    private function parseMetaSampleEntryKeys(StreamWindow $win, int $keyEnd): array
+    {
+        $remaining = $keyEnd - $win->tell();
+
+        if ($remaining < 8) {
+            return [];
+        }
+
+        // version(1) + flags(3)
+        $win->readU8();
+        $win->read(3);
+
+        $entryCount = $win->readU32BE();
+
+        if ($entryCount === 0) {
+            return [];
+        }
+
+        // Parse first entry (child box, typically 'keyd')
+        $cursor = $win->tell();
+
+        if (($cursor + 8) > $keyEnd) {
+            return [];
+        }
+
+        $win->seek($cursor);
+        $entrySize = $win->readU32BE();
+        $win->read(4); // entry type (e.g. 'keyd')
+
+        if (($entrySize < 12) || (($cursor + $entrySize) > $keyEnd)) {
+            return [];
+        }
+
+        // namespace(4) + key_value(remaining)
+        $namespace    = $win->read(4);
+        $keyValueSize = $entrySize - 12;
+
+        if (($keyValueSize <= 0) || ($namespace !== 'mdta')) {
+            return [];
+        }
+
+        $keyValue = $win->read($keyValueSize);
+
+        return ['metaKey' => $keyValue];
     }
 
     /**
@@ -1173,6 +1317,9 @@ final readonly class TrackMediaParser
             } elseif (($result === []) && ($handlerType === 'soun')) {
                 $normalizedFormat = $this->boxNavigator->normalizeFourcc($format);
                 $result           = $this->audioParser->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $normalizedFormat);
+            } elseif (($result === []) && ($handlerType === 'meta')) {
+                $normalizedFormat = $this->boxNavigator->normalizeFourcc($format);
+                $result           = $this->parseMetaSampleEntry($win, $entryEnd, $normalizedFormat);
             }
 
             $pos += $entrySize;

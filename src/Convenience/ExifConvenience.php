@@ -15,7 +15,6 @@ use DateTimeImmutable;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\Derived;
-use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\Gps;

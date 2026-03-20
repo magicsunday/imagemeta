@@ -348,6 +348,16 @@ final readonly class QuickTimeMeta
     public const string WINDOW_LOCATION_KEY = 'com.apple.quicktime.windowLocation';
 
     /**
+     * QuickTime metadata key indicating the still-image time marker in a Live Photo MOV.
+     */
+    public const string STILL_IMAGE_TIME_KEY = 'com.apple.quicktime.stillImageTime';
+
+    /**
+     * QuickTime metadata key indicating the presence of Live Photo motion data.
+     */
+    public const string HAS_LIVE_PHOTO_INFO_KEY = 'com.apple.quicktime.hasLivePhotoInfo';
+
+    /**
      * Mapping of shorthand lookup keys to canonical QuickTime metadata identifiers.
      *
      * @var array<string, list<string>>
@@ -493,6 +503,10 @@ final readonly class QuickTimeMeta
         'PlayAllFrames'                        => ['PlayAllFrames', self::PLAY_ALL_FRAMES_KEY],
         self::WINDOW_LOCATION_KEY              => [self::WINDOW_LOCATION_KEY, 'WindowLocation'],
         'WindowLocation'                       => ['WindowLocation', self::WINDOW_LOCATION_KEY],
+        self::STILL_IMAGE_TIME_KEY             => [self::STILL_IMAGE_TIME_KEY, 'StillImageTime'],
+        'StillImageTime'                       => ['StillImageTime', self::STILL_IMAGE_TIME_KEY],
+        self::HAS_LIVE_PHOTO_INFO_KEY          => [self::HAS_LIVE_PHOTO_INFO_KEY, 'HasLivePhotoInfo'],
+        'HasLivePhotoInfo'                     => ['HasLivePhotoInfo', self::HAS_LIVE_PHOTO_INFO_KEY],
     ];
 
     /** @var array<string, string|int|float|bool> Map of QuickTime metadata keys and their values (first value per key). */
