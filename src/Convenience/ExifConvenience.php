@@ -227,8 +227,8 @@ final readonly class ExifConvenience
             'fnumber'     => $exposure->settings?->fNumber,
             'focal_mm'    => $lens->focalLengthMm,
             'iso'         => $exposure->settings?->iso,
-            'gps_lat'     => $gps->position?->latitude,
-            'gps_lon'     => $gps->position?->longitude,
+            'gps_lat'     => $gps->position?->latitudeSigned,
+            'gps_lon'     => $gps->position?->longitudeSigned,
             'gps_alt'     => $this->resolveAltitude($gps),
         ];
     }
