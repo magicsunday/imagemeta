@@ -54,11 +54,17 @@ final readonly class TiffOffsetValidator
             return $this->ensureDecimalOffset($offset, $context, $length);
         }
 
-        $offset64 = $offset instanceof UInt64 ? $offset : UInt64::fromInt($offset);
+        if (is_int($offset)) {
+            if ($offset < 0) {
+                throw new BoundsError(sprintf('%s: negative offset.', $context), 1333);
+            }
 
-        $this->assertOffsetRange($offset64, $length, $context);
+            return $this->assertIntOffsetRange($offset, $length, $context);
+        }
 
-        return $offset64->toInt($context);
+        $this->assertOffsetRange($offset, $length, $context);
+
+        return $offset->toInt($context);
     }
 
     /**
@@ -119,6 +125,32 @@ final readonly class TiffOffsetValidator
         }
 
         return true;
+    }
+
+    /**
+     * Verifies that an integer offset and optional length are contained within the TIFF blob.
+     *
+     * @param int    $offset  Non-negative integer offset.
+     * @param int    $length  Data length for bounds check.
+     * @param string $context Description for error messages.
+     */
+    private function assertIntOffsetRange(int $offset, int $length, string $context): int
+    {
+        $size = $this->buffer->size();
+
+        if ($offset > $size) {
+            throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context), 1333);
+        }
+
+        if ($length > $size) {
+            throw new BoundsError(sprintf('%s length %d exceeds TIFF data length.', $context, $length), 1334);
+        }
+
+        if (($length > 0) && ($offset > ($size - $length))) {
+            throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context), 1335);
+        }
+
+        return $offset;
     }
 
     /**
