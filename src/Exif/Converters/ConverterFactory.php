@@ -24,33 +24,33 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
  */
 final readonly class ConverterFactory
 {
-    private NumericConverter $numericConverter;
+    public NumericConverter $numericConverter;
 
-    private RationalConverter $rationalConverter;
+    public RationalConverter $rationalConverter;
 
-    private StringConverter $stringConverter;
+    public StringConverter $stringConverter;
 
-    private DateTimeConverter $dateTimeConverter;
+    public DateTimeConverter $dateTimeConverter;
 
-    private PhotoCalculator $photoCalculator;
+    public PhotoCalculator $photoCalculator;
 
-    private SubjectAreaConverter $subjectAreaConverter;
+    public SubjectAreaConverter $subjectAreaConverter;
 
-    private ApexConverter $apexConverter;
+    public ApexConverter $apexConverter;
 
-    private FlashConverter $flashConverter;
+    public FlashConverter $flashConverter;
 
-    private EnumConverter $enumConverter;
+    public EnumConverter $enumConverter;
 
-    private MatrixConverter $matrixConverter;
+    public MatrixConverter $matrixConverter;
 
-    private ComponentsConverter $componentsConverter;
+    public ComponentsConverter $componentsConverter;
 
-    private GpsUnitConverter $gpsUnitConverter;
+    public GpsUnitConverter $gpsUnitConverter;
 
-    private GpsDirectionConverter $gpsDirectionConverter;
+    public GpsDirectionConverter $gpsDirectionConverter;
 
-    private GpsConverter $gpsConverter;
+    public GpsConverter $gpsConverter;
 
     /**
      * Builds the converter graph with the required dependencies wired.
@@ -101,117 +101,5 @@ final readonly class ConverterFactory
             $this->rationalConverter,
             $this->stringConverter,
         );
-    }
-
-    /**
-     * Returns the numeric converter instance.
-     */
-    public function numericConverter(): NumericConverter
-    {
-        return $this->numericConverter;
-    }
-
-    /**
-     * Returns the rational converter instance.
-     */
-    public function rationalConverter(): RationalConverter
-    {
-        return $this->rationalConverter;
-    }
-
-    /**
-     * Returns the string converter instance.
-     */
-    public function stringConverter(): StringConverter
-    {
-        return $this->stringConverter;
-    }
-
-    /**
-     * Returns the date/time converter instance.
-     */
-    public function dateTimeConverter(): DateTimeConverter
-    {
-        return $this->dateTimeConverter;
-    }
-
-    /**
-     * Returns the photo calculator helper.
-     */
-    public function photoCalculator(): PhotoCalculator
-    {
-        return $this->photoCalculator;
-    }
-
-    /**
-     * Returns the subject area converter instance.
-     */
-    public function subjectAreaConverter(): SubjectAreaConverter
-    {
-        return $this->subjectAreaConverter;
-    }
-
-    /**
-     * Returns the APEX converter instance.
-     */
-    public function apexConverter(): ApexConverter
-    {
-        return $this->apexConverter;
-    }
-
-    /**
-     * Returns the flash converter instance.
-     */
-    public function flashConverter(): FlashConverter
-    {
-        return $this->flashConverter;
-    }
-
-    /**
-     * Returns the enum converter instance.
-     */
-    public function enumConverter(): EnumConverter
-    {
-        return $this->enumConverter;
-    }
-
-    /**
-     * Returns the matrix converter instance.
-     */
-    public function matrixConverter(): MatrixConverter
-    {
-        return $this->matrixConverter;
-    }
-
-    /**
-     * Returns the components converter instance.
-     */
-    public function componentsConverter(): ComponentsConverter
-    {
-        return $this->componentsConverter;
-    }
-
-    /**
-     * Returns the GPS unit converter instance.
-     */
-    public function gpsUnitConverter(): GpsUnitConverter
-    {
-        return $this->gpsUnitConverter;
-    }
-
-    /**
-     * Returns the GPS direction converter instance.
-     */
-    public function gpsDirectionConverter(): GpsDirectionConverter
-    {
-        return $this->gpsDirectionConverter;
-    }
-
-    /**
-     * Returns the GPS converter instance.
-     */
-    public function gpsConverter(): GpsConverter
-    {
-        return $this->gpsConverter;
     }
 }

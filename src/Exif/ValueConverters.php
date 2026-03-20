@@ -56,7 +56,7 @@ final readonly class ValueConverters
     public function rationalToFloat(
         int|float|string|array|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
-        return $this->factory->rationalConverter()->toFloat($value);
+        return $this->factory->rationalConverter->toFloat($value);
     }
 
     /**
@@ -68,7 +68,7 @@ final readonly class ValueConverters
      */
     public function srationalTripletToFloatVector(ExifRationalList $value): ?array
     {
-        return $this->factory->rationalConverter()->tripletToFloatVector($value);
+        return $this->factory->rationalConverter->tripletToFloatVector($value);
     }
 
     /**
@@ -80,7 +80,7 @@ final readonly class ValueConverters
      */
     public function subjectAreaToRect(array $values): ?array
     {
-        return $this->factory->subjectAreaConverter()->toRect($values);
+        return $this->factory->subjectAreaConverter->toRect($values);
     }
 
     /**
@@ -92,7 +92,7 @@ final readonly class ValueConverters
      */
     public function toWhitePoint(ExifRationalList|ExifNumericList|array|null $rational): ?array
     {
-        return $this->factory->matrixConverter()->toWhitePoint($rational);
+        return $this->factory->matrixConverter->toWhitePoint($rational);
     }
 
     /**
@@ -104,7 +104,7 @@ final readonly class ValueConverters
      */
     public function toPrimaryChromaticities(ExifRationalList|ExifNumericList|array|null $rational): ?array
     {
-        return $this->factory->matrixConverter()->toPrimaryChromaticities($rational);
+        return $this->factory->matrixConverter->toPrimaryChromaticities($rational);
     }
 
     /**
@@ -114,7 +114,7 @@ final readonly class ValueConverters
      */
     public function dngMatrixToString(ExifRationalList|ExifNumericList|array|null $matrix): ?string
     {
-        return $this->factory->matrixConverter()->dngMatrixToString($matrix);
+        return $this->factory->matrixConverter->dngMatrixToString($matrix);
     }
 
     /**
@@ -124,7 +124,7 @@ final readonly class ValueConverters
      */
     public function ycbcrSubSamplingToPair(?string $val): ?array
     {
-        return $this->factory->componentsConverter()->ycbcrSubSamplingToPair($val);
+        return $this->factory->componentsConverter->ycbcrSubSamplingToPair($val);
     }
 
     /**
@@ -132,7 +132,7 @@ final readonly class ValueConverters
      */
     public function toExifVersion(?string $bytes): ?string
     {
-        return $this->factory->stringConverter()->toExifVersion($bytes);
+        return $this->factory->stringConverter->toExifVersion($bytes);
     }
 
     /**
@@ -146,7 +146,7 @@ final readonly class ValueConverters
      */
     public function toEnumOrNull(string $enumClass, int|string|null $raw): ?BackedEnum
     {
-        return $this->factory->enumConverter()->toEnumOrNull($enumClass, $raw);
+        return $this->factory->enumConverter->toEnumOrNull($enumClass, $raw);
     }
 
     /**
@@ -157,7 +157,7 @@ final readonly class ValueConverters
     public function makerNoteSafety(
         ExifNumericList|ExifRationalList|ExifRational|int|float|string|null $value,
     ): ?bool {
-        return $this->factory->enumConverter()->makerNoteSafety($value);
+        return $this->factory->enumConverter->makerNoteSafety($value);
     }
 
     /**
@@ -168,7 +168,7 @@ final readonly class ValueConverters
     public function apexToFNumber(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
-        return $this->factory->apexConverter()->toFNumber($value);
+        return $this->factory->apexConverter->toFNumber($value);
     }
 
     /**
@@ -179,7 +179,7 @@ final readonly class ValueConverters
     public function apexShutterSpeedToSeconds(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
-        return $this->factory->apexConverter()->toSeconds($value);
+        return $this->factory->apexConverter->toSeconds($value);
     }
 
     /**
@@ -190,7 +190,7 @@ final readonly class ValueConverters
     public function formatShutterSpeedFromApex(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?string {
-        return $this->factory->apexConverter()->formatShutterSpeed($value);
+        return $this->factory->apexConverter->formatShutterSpeed($value);
     }
 
     /**
@@ -200,7 +200,7 @@ final readonly class ValueConverters
      */
     public function formatExposureTime(?float $seconds): ?string
     {
-        return $this->factory->apexConverter()->formatExposureTime($seconds);
+        return $this->factory->apexConverter->formatExposureTime($seconds);
     }
 
     /**
@@ -211,7 +211,7 @@ final readonly class ValueConverters
     public function formatApertureFromApex(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?string {
-        return $this->factory->apexConverter()->formatAperture($value);
+        return $this->factory->apexConverter->formatAperture($value);
     }
 
     /**
@@ -221,7 +221,7 @@ final readonly class ValueConverters
      */
     public function formatFNumber(?float $fNumber): ?string
     {
-        return $this->factory->apexConverter()->formatFNumber($fNumber);
+        return $this->factory->apexConverter->formatFNumber($fNumber);
     }
 
     /**
@@ -232,7 +232,7 @@ final readonly class ValueConverters
     public function formatBrightnessValue(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?string {
-        return $this->factory->apexConverter()->formatBrightness($value);
+        return $this->factory->apexConverter->formatBrightness($value);
     }
 
     /**
@@ -240,7 +240,7 @@ final readonly class ValueConverters
      */
     public function calcEv100(?float $exposureTimeSec, ?float $fNumber, ?int $iso): ?float
     {
-        return $this->factory->apexConverter()->calcEv100($exposureTimeSec, $fNumber, $iso);
+        return $this->factory->apexConverter->calcEv100($exposureTimeSec, $fNumber, $iso);
     }
 
     /**
@@ -248,7 +248,7 @@ final readonly class ValueConverters
      */
     public function calcHyperfocalM(?float $focalLengthMm, ?float $fNumber, ?float $circleOfConfusionMm): ?float
     {
-        return $this->factory->photoCalculator()->calcHyperfocalM($focalLengthMm, $fNumber, $circleOfConfusionMm);
+        return $this->factory->photoCalculator->calcHyperfocalM($focalLengthMm, $fNumber, $circleOfConfusionMm);
     }
 
     /**
@@ -256,7 +256,7 @@ final readonly class ValueConverters
      */
     public function calcCropFactor(?int $focalLength35mm, ?float $focalLengthMm): ?float
     {
-        return $this->factory->photoCalculator()->calcCropFactor($focalLength35mm, $focalLengthMm);
+        return $this->factory->photoCalculator->calcCropFactor($focalLength35mm, $focalLengthMm);
     }
 
     /**
@@ -264,7 +264,7 @@ final readonly class ValueConverters
      */
     public function calcCircleOfConfusionMm(?float $cropFactor): ?float
     {
-        return $this->factory->photoCalculator()->calcCircleOfConfusionMm($cropFactor);
+        return $this->factory->photoCalculator->calcCircleOfConfusionMm($cropFactor);
     }
 
     /**
@@ -272,7 +272,7 @@ final readonly class ValueConverters
      */
     public function calcFovDeg(?int $focalLength35mm, ?float $cropFactor, ?float $focalLengthMm = null): ?float
     {
-        return $this->factory->photoCalculator()->calcFovDeg($focalLength35mm, $cropFactor, $focalLengthMm);
+        return $this->factory->photoCalculator->calcFovDeg($focalLength35mm, $cropFactor, $focalLengthMm);
     }
 
     /**
@@ -280,7 +280,7 @@ final readonly class ValueConverters
      */
     public function calcHorizontalFovDeg(?int $focalLength35mm, ?float $cropFactor, ?float $focalLengthMm = null): ?float
     {
-        return $this->factory->photoCalculator()->calcHorizontalFovDeg($focalLength35mm, $cropFactor, $focalLengthMm);
+        return $this->factory->photoCalculator->calcHorizontalFovDeg($focalLength35mm, $cropFactor, $focalLengthMm);
     }
 
     /**
@@ -288,7 +288,7 @@ final readonly class ValueConverters
      */
     public function calcVerticalFovDeg(?int $focalLength35mm, ?float $cropFactor, ?float $focalLengthMm = null): ?float
     {
-        return $this->factory->photoCalculator()->calcVerticalFovDeg($focalLength35mm, $cropFactor, $focalLengthMm);
+        return $this->factory->photoCalculator->calcVerticalFovDeg($focalLength35mm, $cropFactor, $focalLengthMm);
     }
 
     /**
@@ -300,7 +300,7 @@ final readonly class ValueConverters
      */
     public function decodeSpatialFrequencyResponse(?string $payload, Endian $endian = Endian::Big): ?array
     {
-        return $this->factory->matrixConverter()->decodeSpatialFrequencyResponse($payload, $endian);
+        return $this->factory->matrixConverter->decodeSpatialFrequencyResponse($payload, $endian);
     }
 
     /**
@@ -313,7 +313,7 @@ final readonly class ValueConverters
      */
     public function decodeOecf(?string $payload, Endian $endian = Endian::Big): ?array
     {
-        return $this->factory->matrixConverter()->decodeOecf($payload, $endian);
+        return $this->factory->matrixConverter->decodeOecf($payload, $endian);
     }
 
     /**
@@ -326,7 +326,7 @@ final readonly class ValueConverters
     public function componentsConfiguration(
         array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
     ): ?array {
-        return $this->factory->componentsConverter()->configuration($value);
+        return $this->factory->componentsConverter->configuration($value);
     }
 
     /**
@@ -339,7 +339,7 @@ final readonly class ValueConverters
     public function componentsConfigurationLabels(
         array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
     ): ?array {
-        return $this->factory->componentsConverter()->configurationLabels($value);
+        return $this->factory->componentsConverter->configurationLabels($value);
     }
 
     /**
@@ -350,7 +350,7 @@ final readonly class ValueConverters
     public function componentsConfigurationDescription(
         array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
     ): ?string {
-        return $this->factory->componentsConverter()->configurationDescription($value);
+        return $this->factory->componentsConverter->configurationDescription($value);
     }
 
     /**
@@ -363,7 +363,7 @@ final readonly class ValueConverters
         ?string $ref,
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
-        return $this->factory->gpsUnitConverter()->speedToMs($ref, $value);
+        return $this->factory->gpsUnitConverter->speedToMs($ref, $value);
     }
 
     /**
@@ -376,7 +376,7 @@ final readonly class ValueConverters
         ?string $ref,
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
-        return $this->factory->gpsUnitConverter()->distanceToMetres($ref, $value);
+        return $this->factory->gpsUnitConverter->distanceToMetres($ref, $value);
     }
 
     /**
@@ -384,7 +384,7 @@ final readonly class ValueConverters
      */
     public function normalizeBearing(int|float|null $value): ?float
     {
-        return $this->factory->gpsDirectionConverter()->normalizeBearing($value);
+        return $this->factory->gpsDirectionConverter->normalizeBearing($value);
     }
 
     /**
@@ -395,7 +395,7 @@ final readonly class ValueConverters
     public function flashFromShort(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
     ): ?FlashInfo {
-        return $this->factory->flashConverter()->fromShort($value);
+        return $this->factory->flashConverter->fromShort($value);
     }
 
     /**
@@ -405,7 +405,7 @@ final readonly class ValueConverters
      */
     public function parseOffsetString(int|float|string|ExifRational|ExifRationalList|null $value): ?string
     {
-        return $this->factory->dateTimeConverter()->parseOffsetString($value);
+        return $this->factory->dateTimeConverter->parseOffsetString($value);
     }
 
     /**
@@ -413,7 +413,7 @@ final readonly class ValueConverters
      */
     public function parseOffset(?string $offset): ?DateTimeZone
     {
-        return $this->factory->dateTimeConverter()->parseOffset($offset);
+        return $this->factory->dateTimeConverter->parseOffset($offset);
     }
 
     /**
@@ -423,7 +423,7 @@ final readonly class ValueConverters
      */
     public function offsetToMinutes(int|float|string|ExifRational|ExifRationalList|null $value): ?int
     {
-        return $this->factory->dateTimeConverter()->offsetToMinutes($value);
+        return $this->factory->dateTimeConverter->offsetToMinutes($value);
     }
 
     /**
@@ -433,7 +433,7 @@ final readonly class ValueConverters
      */
     public function emptyGpsResult(): array
     {
-        return $this->factory->gpsConverter()->emptyGpsResult();
+        return $this->factory->gpsConverter->emptyGpsResult();
     }
 
     /**
@@ -445,6 +445,6 @@ final readonly class ValueConverters
      */
     public function gpsFromIfd(Ifd $gps): array
     {
-        return $this->factory->gpsConverter()->fromIfd($gps);
+        return $this->factory->gpsConverter->fromIfd($gps);
     }
 }

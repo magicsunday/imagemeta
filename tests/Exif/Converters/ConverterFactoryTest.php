@@ -70,7 +70,7 @@ final class ConverterFactoryTest extends TestCase
     }
 
     /**
-     * Verifies all getter methods return instances of the correct types.
+     * Verifies all public properties expose instances of the correct types.
      */
     #[Test]
     #[DataProvider('converterGetterProvider')]
@@ -88,7 +88,7 @@ final class ConverterFactoryTest extends TestCase
     {
         $rational = new ExifRational(6, 2);
 
-        $result = $this->factory->rationalConverter()->toFloat($rational);
+        $result = $this->factory->rationalConverter->toFloat($rational);
 
         self::assertEqualsWithDelta(3.0, $result, 0.0001);
     }
@@ -111,20 +111,20 @@ final class ConverterFactoryTest extends TestCase
      */
     public static function converterGetterProvider(): iterable
     {
-        yield 'numeric' => [static fn (ConverterFactory $factory): object => $factory->numericConverter()];
-        yield 'rational' => [static fn (ConverterFactory $factory): object => $factory->rationalConverter()];
-        yield 'string' => [static fn (ConverterFactory $factory): object => $factory->stringConverter()];
-        yield 'date time' => [static fn (ConverterFactory $factory): object => $factory->dateTimeConverter()];
-        yield 'photo calculator' => [static fn (ConverterFactory $factory): object => $factory->photoCalculator()];
-        yield 'subject area' => [static fn (ConverterFactory $factory): object => $factory->subjectAreaConverter()];
-        yield 'apex' => [static fn (ConverterFactory $factory): object => $factory->apexConverter()];
-        yield 'flash' => [static fn (ConverterFactory $factory): object => $factory->flashConverter()];
-        yield 'enum' => [static fn (ConverterFactory $factory): object => $factory->enumConverter()];
-        yield 'matrix' => [static fn (ConverterFactory $factory): object => $factory->matrixConverter()];
-        yield 'components' => [static fn (ConverterFactory $factory): object => $factory->componentsConverter()];
-        yield 'gps unit' => [static fn (ConverterFactory $factory): object => $factory->gpsUnitConverter()];
-        yield 'gps direction' => [static fn (ConverterFactory $factory): object => $factory->gpsDirectionConverter()];
-        yield 'gps' => [static fn (ConverterFactory $factory): object => $factory->gpsConverter()];
+        yield 'numeric' => [static fn (ConverterFactory $factory): object => $factory->numericConverter];
+        yield 'rational' => [static fn (ConverterFactory $factory): object => $factory->rationalConverter];
+        yield 'string' => [static fn (ConverterFactory $factory): object => $factory->stringConverter];
+        yield 'date time' => [static fn (ConverterFactory $factory): object => $factory->dateTimeConverter];
+        yield 'photo calculator' => [static fn (ConverterFactory $factory): object => $factory->photoCalculator];
+        yield 'subject area' => [static fn (ConverterFactory $factory): object => $factory->subjectAreaConverter];
+        yield 'apex' => [static fn (ConverterFactory $factory): object => $factory->apexConverter];
+        yield 'flash' => [static fn (ConverterFactory $factory): object => $factory->flashConverter];
+        yield 'enum' => [static fn (ConverterFactory $factory): object => $factory->enumConverter];
+        yield 'matrix' => [static fn (ConverterFactory $factory): object => $factory->matrixConverter];
+        yield 'components' => [static fn (ConverterFactory $factory): object => $factory->componentsConverter];
+        yield 'gps unit' => [static fn (ConverterFactory $factory): object => $factory->gpsUnitConverter];
+        yield 'gps direction' => [static fn (ConverterFactory $factory): object => $factory->gpsDirectionConverter];
+        yield 'gps' => [static fn (ConverterFactory $factory): object => $factory->gpsConverter];
     }
 
     /**
@@ -132,7 +132,7 @@ final class ConverterFactoryTest extends TestCase
      */
     public static function stableConverterGetterProvider(): iterable
     {
-        yield 'numeric' => [static fn (ConverterFactory $factory): object => $factory->numericConverter()];
-        yield 'rational' => [static fn (ConverterFactory $factory): object => $factory->rationalConverter()];
+        yield 'numeric' => [static fn (ConverterFactory $factory): object => $factory->numericConverter];
+        yield 'rational' => [static fn (ConverterFactory $factory): object => $factory->rationalConverter];
     }
 }
