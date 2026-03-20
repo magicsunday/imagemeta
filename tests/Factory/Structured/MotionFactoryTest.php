@@ -9,13 +9,13 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Exif\Factory;
+namespace MagicSunday\ImageMeta\Tests\Factory\Structured;
 
-use MagicSunday\ImageMeta\Exif\Factory\MotionFactory;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Factory\Structured\MotionFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleLivePhoto;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;

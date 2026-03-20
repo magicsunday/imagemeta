@@ -9,16 +9,16 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Exif\Factory;
+namespace MagicSunday\ImageMeta\Tests\Factory\Structured;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Core\Util\Iso6709Parser;
-use MagicSunday\ImageMeta\Exif\Factory\GpsFactory;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Factory\Structured\GpsFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;

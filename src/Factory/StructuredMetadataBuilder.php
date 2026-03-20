@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Factory;
 
-use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
+use MagicSunday\ImageMeta\Factory\Structured\ValueFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;

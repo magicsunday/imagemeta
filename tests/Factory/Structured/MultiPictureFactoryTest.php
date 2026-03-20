@@ -9,9 +9,9 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Exif\Factory;
+namespace MagicSunday\ImageMeta\Tests\Factory\Structured;
 
-use MagicSunday\ImageMeta\Exif\Factory\MultiPictureFactory;
+use MagicSunday\ImageMeta\Factory\Structured\MultiPictureFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;

@@ -9,15 +9,15 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Exif\Factory;
+namespace MagicSunday\ImageMeta\Tests\Factory\Structured;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use MagicSunday\ImageMeta\Exif\Factory\TemporalFactory;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Factory\Structured\TemporalFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;

@@ -9,10 +9,10 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Exif\Factory;
+namespace MagicSunday\ImageMeta\Tests\Factory\Structured;
 
-use MagicSunday\ImageMeta\Exif\Factory\RegionCoordinateNormalizer;
-use MagicSunday\ImageMeta\Exif\Factory\RegionsFactory;
+use MagicSunday\ImageMeta\Factory\Structured\RegionCoordinateNormalizer;
+use MagicSunday\ImageMeta\Factory\Structured\RegionsFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\RegionType;

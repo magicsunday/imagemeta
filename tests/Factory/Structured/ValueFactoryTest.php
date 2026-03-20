@@ -9,12 +9,12 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Exif\Factory;
+namespace MagicSunday\ImageMeta\Tests\Factory\Structured;
 
 use Closure;
 use MagicSunday\ImageMeta\Contract\IccParserInterface;
-use MagicSunday\ImageMeta\Exif\Factory\TiffDataFactory;
-use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
+use MagicSunday\ImageMeta\Factory\Structured\TiffDataFactory;
+use MagicSunday\ImageMeta\Factory\Structured\ValueFactory;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Model\Icc\IccProfile;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;

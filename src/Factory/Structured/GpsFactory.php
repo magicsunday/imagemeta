@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Exif\Factory;
+namespace MagicSunday\ImageMeta\Factory\Structured;
 
 use DateMalformedStringException;
 use DateTimeImmutable;
