@@ -32,30 +32,30 @@ final readonly class MotionFactory
      */
     public function create(Metadata $metadata): Motion
     {
-        $exif  = $metadata->exifDoc;
-        $apple = $metadata->makerNotes?->apple;
+        $exifDocument = $metadata->exifDoc;
+        $apple        = $metadata->makerNotes?->apple;
 
         if (!$apple instanceof AppleMakerNotes) {
             $apple = AppleMakerNotes::empty();
         }
 
-        return $this->buildMotion($exif, $apple);
+        return $this->buildMotion($exifDocument, $apple);
     }
 
     /**
      * Builds the motion metadata aggregate from EXIF and Apple motion sources.
      *
-     * @param ParsedExif|null $exif  Resolver exposing EXIF camera orientation measurements.
-     * @param AppleMakerNotes $apple Aggregated Apple metadata composed from maker notes and QuickTime sources.
+     * @param ParsedExif|null $exifDocument Resolver exposing EXIF camera orientation measurements.
+     * @param AppleMakerNotes $apple        Aggregated Apple metadata composed from maker notes and QuickTime sources.
      *
      * @return Motion Motion metadata aggregate with camera orientation and per-axis acceleration.
      */
-    private function buildMotion(?ParsedExif $exif, AppleMakerNotes $apple): Motion
+    private function buildMotion(?ParsedExif $exifDocument, AppleMakerNotes $apple): Motion
     {
         $vector = $apple->livePhoto?->accelerationVector;
 
         if (!is_array($vector)) {
-            $vector = $exif?->accelerationVector();
+            $vector = $exifDocument?->accelerationVector();
         }
 
         $accelX = null;

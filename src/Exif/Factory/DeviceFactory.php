@@ -30,8 +30,8 @@ final readonly class DeviceFactory
      */
     public function create(Metadata $metadata): Device
     {
-        $exif     = $metadata->exifDoc;
-        $software = $exif?->software() ?? $exif?->hostComputer();
+        $exifDocument = $metadata->exifDoc;
+        $software     = $exifDocument?->software() ?? $exifDocument?->hostComputer();
 
         if (($software === null) && ($metadata->quickTime instanceof QuickTimeMeta)) {
             $lookup   = new QuickTimeLookup($metadata->quickTime);
@@ -45,9 +45,9 @@ final readonly class DeviceFactory
 
         return new Device(
             software: $software,
-            rawDevelopingSoftware: $exif?->rawDevelopingSoftware(),
-            imageEditingSoftware: $exif?->imageEditingSoftware(),
-            metadataEditingSoftware: $exif?->metadataEditingSoftware(),
+            rawDevelopingSoftware: $exifDocument?->rawDevelopingSoftware(),
+            imageEditingSoftware: $exifDocument?->imageEditingSoftware(),
+            metadataEditingSoftware: $exifDocument?->metadataEditingSoftware(),
         );
     }
 }
