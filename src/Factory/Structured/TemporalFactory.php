@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Factory\Structured;
 
-use DateMalformedStringException;
 use DateTimeImmutable;
 use DateTimeZone;
+use MagicSunday\ImageMeta\Core\Util\DateTimeUtil;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
@@ -26,7 +26,6 @@ use MagicSunday\ImageMeta\Value\Temporal;
 use function abs;
 use function intdiv;
 use function is_string;
-use function preg_match;
 use function preg_replace;
 use function sprintf;
 use function str_pad;
@@ -55,23 +54,23 @@ final readonly class TemporalFactory
      */
     public function create(Metadata $metadata): Temporal
     {
-        $exifDocument = $metadata->exifDoc;
-        $quickTime    = $metadata->quickTime;
-        $xmpDocument  = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $exifDocument    = $metadata->exifDoc;
+        $quickTimeLookup = $metadata->quickTimeLookup();
+        $xmpDocument     = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
 
-        return $this->buildTemporal($exifDocument, $quickTime, $xmpDocument);
+        return $this->buildTemporal($exifDocument, $quickTimeLookup, $xmpDocument);
     }
 
     /**
      * Builds the temporal value object derived from EXIF, QuickTime and XMP data.
      *
-     * @param ParsedExif|null    $exifDocument EXIF document exposing timestamps and offsets.
-     * @param QuickTimeMeta|null $quickTime    QuickTime metadata used for time fallbacks.
-     * @param XmpDocument|null   $xmpDocument  XMP document providing timestamp fields.
+     * @param ParsedExif|null  $exifDocument EXIF document exposing timestamps and offsets.
+     * @param QuickTimeLookup  $lookup       QuickTime metadata lookup for time fallbacks.
+     * @param XmpDocument|null $xmpDocument  XMP document providing timestamp fields.
      *
      * @return Temporal Normalized temporal metadata aggregate.
      */
-    private function buildTemporal(?ParsedExif $exifDocument, ?QuickTimeMeta $quickTime, ?XmpDocument $xmpDocument): Temporal
+    private function buildTemporal(?ParsedExif $exifDocument, QuickTimeLookup $lookup, ?XmpDocument $xmpDocument): Temporal
     {
         $exifCreate = $exifDocument?->dateTimeDigitized();
         $exifModify = $exifDocument?->dateTime();
@@ -85,7 +84,6 @@ final readonly class TemporalFactory
             $xmpDocument?->string(XmpNamespace::EXIF->value, 'ModifyDate'),
         );
         $xmpDateCreated  = $this->parseFirstAvailableDate($xmpDocument?->string(XmpNamespace::PHOTOSHOP->value, 'DateCreated'));
-        $lookup          = new QuickTimeLookup($quickTime);
         $quickTimeCreate = $this->parseFirstAvailableDate($lookup->string('CreationDate'));
         $quickTimeModify = $this->parseFirstAvailableDate($lookup->string('ModifyDate'));
 
@@ -324,20 +322,6 @@ final readonly class TemporalFactory
      */
     private function parseFlexibleDate(?string $value): ?DateTimeImmutable
     {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        // XMP Date value type: ISO 8601 subset (YYYY through YYYY-MM-DDThh:mm:ss.sTZD)
-        if (preg_match('/^\d{4}(-\d{2}(-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?)?)?$/', $value) !== 1) {
-            return null;
-        }
-
-        try {
-            return new DateTimeImmutable($value, new DateTimeZone('UTC'));
-        } catch (DateMalformedStringException) {
-            // XMP date formats may be incomplete or malformed; yield null for graceful degradation.
-            return null;
-        }
+        return DateTimeUtil::parseIso8601($value);
     }
 }
