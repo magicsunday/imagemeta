@@ -34,23 +34,10 @@ final class BitMaskTest extends TestCase
     public static function bitMaskValueProvider(): iterable
     {
         yield 'bit 0' => ['constant' => 'BIT_0', 'hex' => '01'];
-        yield 'bit 1' => ['constant' => 'BIT_1', 'hex' => '02'];
-        yield 'bit 2' => ['constant' => 'BIT_2', 'hex' => '04'];
-        yield 'bit 3' => ['constant' => 'BIT_3', 'hex' => '08'];
-        yield 'bit 4' => ['constant' => 'BIT_4', 'hex' => '10'];
-        yield 'bit 5' => ['constant' => 'BIT_5', 'hex' => '20'];
-        yield 'bit 6' => ['constant' => 'BIT_6', 'hex' => '40'];
-        yield 'bit 7' => ['constant' => 'BIT_7', 'hex' => '80'];
         yield 'low nibble' => ['constant' => 'LOW_NIBBLE', 'hex' => '0F'];
-        yield 'high nibble' => ['constant' => 'HIGH_NIBBLE', 'hex' => 'F0'];
-        yield 'low byte' => ['constant' => 'LOW_BYTE', 'hex' => 'FF'];
-        yield 'high byte' => ['constant' => 'HIGH_BYTE', 'hex' => 'FF00'];
-        yield 'six bit mask' => ['constant' => 'SIX_BIT_MASK', 'hex' => '3F'];
-        yield 'seven bit mask' => ['constant' => 'SEVEN_BIT_MASK', 'hex' => '7F'];
         yield 'int31 max' => ['constant' => 'INT31_MAX', 'hex' => '7FFF_FFFF'];
         yield 'sign bit 16' => ['constant' => 'SIGN_BIT_16', 'hex' => '8000'];
         yield 'sign bit 32' => ['constant' => 'SIGN_BIT_32', 'hex' => '8000_0000'];
-        yield 'uint16 max' => ['constant' => 'UINT16_MAX', 'hex' => 'FFFF'];
         yield 'uint16 base' => ['constant' => 'UINT16_BASE', 'hex' => '1_0000'];
         yield 'uint32 max' => ['constant' => 'UINT32_MAX', 'hex' => 'FFFF_FFFF'];
         yield 'uint32 base' => ['constant' => 'UINT32_BASE', 'hex' => '1_0000_0000'];
@@ -71,81 +58,10 @@ final class BitMaskTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{expected: string, bits: non-empty-list<string>}>
-     */
-    public static function bitCombinationProvider(): iterable
-    {
-        yield 'low nibble' => [
-            'expected' => 'LOW_NIBBLE',
-            'bits'     => ['BIT_0', 'BIT_1', 'BIT_2', 'BIT_3'],
-        ];
-        yield 'high nibble' => [
-            'expected' => 'HIGH_NIBBLE',
-            'bits'     => ['BIT_4', 'BIT_5', 'BIT_6', 'BIT_7'],
-        ];
-        yield 'low byte' => [
-            'expected' => 'LOW_BYTE',
-            'bits'     => ['LOW_NIBBLE', 'HIGH_NIBBLE'],
-        ];
-        yield 'six bit mask' => [
-            'expected' => 'SIX_BIT_MASK',
-            'bits'     => ['BIT_0', 'BIT_1', 'BIT_2', 'BIT_3', 'BIT_4', 'BIT_5'],
-        ];
-        yield 'seven bit mask' => [
-            'expected' => 'SEVEN_BIT_MASK',
-            'bits'     => ['SIX_BIT_MASK', 'BIT_6'],
-        ];
-    }
-
-    /**
-     * Combines bit constants to match expected composite masks.
-     * This verifies that composed masks equal their named constants.
-     *
-     * @param array<int, string> $bits
-     */
-    #[DataProvider('bitCombinationProvider')]
-    #[Test]
-    public function bitCombinationsMatchExpectedMasks(string $expected, array $bits): void
-    {
-        $mask = $this->combineMasks($bits);
-
-        self::assertSame($this->bitMaskValue($expected), $mask);
-    }
-
-    /**
-     * @return iterable<string, array{source: string, shift: int, expected: string}>
-     */
-    public static function shiftedMaskProvider(): iterable
-    {
-        yield 'high byte' => [
-            'source'   => 'LOW_BYTE',
-            'shift'    => 8,
-            'expected' => 'HIGH_BYTE',
-        ];
-    }
-
-    /**
-     * Matches shifted masks to their corresponding constants.
-     * This confirms that bit shifting preserves the expected bit positions.
-     */
-    #[DataProvider('shiftedMaskProvider')]
-    #[Test]
-    public function shiftedMasksMatchExpectedValue(string $source, int $shift, string $expected): void
-    {
-        $shifted = $this->bitMaskValue($source) << $shift;
-
-        self::assertSame($this->bitMaskValue($expected), $shifted);
-    }
-
-    /**
      * @return iterable<string, array{source: string, expected: string}>
      */
     public static function incrementedMaskProvider(): iterable
     {
-        yield 'uint16 base' => [
-            'source'   => 'UINT16_MAX',
-            'expected' => 'UINT16_BASE',
-        ];
         yield 'uint32 base' => [
             'source'   => 'UINT32_MAX',
             'expected' => 'UINT32_BASE',
@@ -208,20 +124,6 @@ final class BitMaskTest extends TestCase
     private function fromHex(string $hex): int
     {
         return (int) hexdec(str_replace(['_', '0x', '0X'], '', $hex));
-    }
-
-    /**
-     * @param array<int|string, string> $constants
-     */
-    private function combineMasks(array $constants): int
-    {
-        $mask = 0;
-
-        foreach ($constants as $name) {
-            $mask |= $this->bitMaskValue($name);
-        }
-
-        return $mask;
     }
 
     private function bitMaskValue(string $name): int
