@@ -340,15 +340,10 @@ final readonly class GpsFactory
             $parsed = Iso6709Parser::parse($iso6709);
 
             if ($parsed !== null) {
-                return new GpsPosition(
-                    latitude: abs($parsed['latitude']),
-                    longitude: abs($parsed['longitude']),
-                    latitudeRef: $parsed['latitude'] >= 0 ? GpsEnum\GpsLatLonRef::North : GpsEnum\GpsLatLonRef::South,
-                    longitudeRef: $parsed['longitude'] >= 0 ? GpsEnum\GpsLatLonRef::East : GpsEnum\GpsLatLonRef::West,
-                    altitude: $parsed['altitude'] !== null ? abs($parsed['altitude']) : null,
-                    altitudeRef: $parsed['altitude'] !== null
-                        ? ($parsed['altitude'] >= 0 ? GpsEnum\GpsAltitudeRef::AboveEllipsoidalSurface : GpsEnum\GpsAltitudeRef::BelowEllipsoidalSurface)
-                        : null,
+                return $this->positionFromSignedCoordinates(
+                    $parsed['latitude'],
+                    $parsed['longitude'],
+                    $parsed['altitude'],
                 );
             }
         }
@@ -359,19 +354,28 @@ final readonly class GpsFactory
         if (($lat !== null) && ($lon !== null)) {
             $alt = $lookup->float('com.apple.quicktime.location.altitude');
 
-            return new GpsPosition(
-                latitude: abs($lat),
-                longitude: abs($lon),
-                latitudeRef: $lat >= 0 ? GpsEnum\GpsLatLonRef::North : GpsEnum\GpsLatLonRef::South,
-                longitudeRef: $lon >= 0 ? GpsEnum\GpsLatLonRef::East : GpsEnum\GpsLatLonRef::West,
-                altitude: $alt !== null ? abs($alt) : null,
-                altitudeRef: $alt !== null
-                    ? ($alt >= 0 ? GpsEnum\GpsAltitudeRef::AboveEllipsoidalSurface : GpsEnum\GpsAltitudeRef::BelowEllipsoidalSurface)
-                    : null,
-            );
+            return $this->positionFromSignedCoordinates($lat, $lon, $alt);
         }
 
         return null;
+    }
+
+    /**
+     * Creates a GpsPosition from signed coordinates by decomposing each value
+     * into its unsigned magnitude and directional reference.
+     */
+    private function positionFromSignedCoordinates(float $lat, float $lon, ?float $alt): GpsPosition
+    {
+        return new GpsPosition(
+            latitude: abs($lat),
+            longitude: abs($lon),
+            latitudeRef: $lat >= 0 ? GpsEnum\GpsLatLonRef::North : GpsEnum\GpsLatLonRef::South,
+            longitudeRef: $lon >= 0 ? GpsEnum\GpsLatLonRef::East : GpsEnum\GpsLatLonRef::West,
+            altitude: $alt !== null ? abs($alt) : null,
+            altitudeRef: $alt !== null
+                ? ($alt >= 0 ? GpsEnum\GpsAltitudeRef::AboveEllipsoidalSurface : GpsEnum\GpsAltitudeRef::BelowEllipsoidalSurface)
+                : null,
+        );
     }
 
     /**
