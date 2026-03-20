@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
 use function array_key_exists;
+use function array_push;
 use function array_unique;
 use function array_unshift;
 use function array_values;
@@ -116,8 +117,8 @@ final readonly class ItemLocationResolver
 
         // Pull data for each referenced item and optionally transform the payload.
         foreach ($itemIds as $itemId) {
-            $result          = $this->payloadResolver->resolveItemData($itemId, $locations, $itemReferences, $dataReferences, $idatPayload, $metaContextOffset);
-            $unresolvedItems = [...$unresolvedItems, ...$result->unresolvedItems];
+            $result = $this->payloadResolver->resolveItemData($itemId, $locations, $itemReferences, $dataReferences, $idatPayload, $metaContextOffset);
+            array_push($unresolvedItems, ...$result->unresolvedItems);
 
             if ($result->data !== null) {
                 $resolved[] = $transform !== null ? $transform($result->data) : $result->data;

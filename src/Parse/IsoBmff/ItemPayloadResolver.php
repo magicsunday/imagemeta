@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
 use function array_filter;
+use function array_push;
 use function array_values;
 use function count;
 use function implode;
@@ -261,7 +262,7 @@ final readonly class ItemPayloadResolver
                 $metaContextOffset,
                 $visitedItemIds,
             );
-            $unresolvedItems = [...$unresolvedItems, ...$result->unresolvedItems];
+            array_push($unresolvedItems, ...$result->unresolvedItems);
 
             if ($result->data === null) {
                 return new IsoBmffItemResolveResult(null, $unresolvedItems);
