@@ -28,14 +28,6 @@ enum UndefinedTextMarker: string
     case Jis       = 'JIS';
     case Undefined = 'UNDEFINED';
 
-    public const string MARKER_ASCII = self::Ascii->value;
-
-    public const string MARKER_UNICODE = self::Unicode->value;
-
-    public const string MARKER_JIS = self::Jis->value;
-
-    public const string MARKER_UNDEFINED = self::Undefined->value;
-
     /**
      * Resolves an 8-byte EXIF marker prefix to its canonical identifier.
      *
