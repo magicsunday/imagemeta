@@ -23,6 +23,8 @@ use function sprintf;
 use function strlen;
 use function substr;
 
+use const PHP_INT_MAX;
+
 /**
  * Parses audio codec sample-entry descriptions from ISO BMFF sample
  * description boxes (stsd), extracting channel count, sample rate,
@@ -381,6 +383,16 @@ final readonly class AudioSampleEntryParser
     {
         $bytesPerSample = intdiv($bitsPerChannel + 7, 8);
 
-        return $bytesPerSample * $numChannels * $framesPerPacket;
+        if ($numChannels > intdiv(PHP_INT_MAX, $bytesPerSample)) {
+            throw new ParseError('lpcm packet size overflow', 2112);
+        }
+
+        $bytesPerFrame = $bytesPerSample * $numChannels;
+
+        if ($framesPerPacket > intdiv(PHP_INT_MAX, $bytesPerFrame)) {
+            throw new ParseError('lpcm packet size overflow', 2113);
+        }
+
+        return $bytesPerFrame * $framesPerPacket;
     }
 }
