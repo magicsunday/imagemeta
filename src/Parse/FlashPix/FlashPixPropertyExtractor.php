@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\FlashPix;
 
 use DateTimeImmutable;
-use MagicSunday\ImageMeta\Value\FlashPixSummaryInfo;
+use MagicSunday\ImageMeta\Model\FlashPix\FlashPixSummaryData;
 
 use function is_string;
 
@@ -45,7 +45,7 @@ final class FlashPixPropertyExtractor
     /**
      * Extracts Summary Information properties from a parsed OLE property set.
      */
-    public function extractSummaryInfo(OlePropertySet $set): ?FlashPixSummaryInfo
+    public function extractSummaryInfo(OlePropertySet $set): ?FlashPixSummaryData
     {
         $title       = $this->string($set, self::PID_TITLE);
         $subject     = $this->string($set, self::PID_SUBJECT);
@@ -68,7 +68,7 @@ final class FlashPixPropertyExtractor
             return null;
         }
 
-        return new FlashPixSummaryInfo(
+        return new FlashPixSummaryData(
             $title,
             $subject,
             $author,

@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\FlashPix;
 
 use MagicSunday\ImageMeta\Contract\FlashPixParserInterface;
-use MagicSunday\ImageMeta\Value\FlashPix;
+use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
 
 /**
  * Parses assembled FlashPix APP2 streams by extracting OLE property set metadata.
@@ -26,15 +26,15 @@ final readonly class FlashPixParser implements FlashPixParserInterface
     }
 
     /**
-     * Creates a FlashPix value object from assembled streams, extracting Summary Information
+     * Creates a FlashPix document model from assembled streams, extracting Summary Information
      * from the first parseable OLE property set.
      *
      * @param array<int, string> $streams Assembled FlashPix extension streams.
      */
-    public function parse(array $streams): FlashPix
+    public function parse(array $streams): FlashPixDocument
     {
         if ($streams === []) {
-            return new FlashPix([]);
+            return new FlashPixDocument([]);
         }
 
         $summary = null;
@@ -49,6 +49,6 @@ final readonly class FlashPixParser implements FlashPixParserInterface
             $summary ??= $this->extractor->extractSummaryInfo($propertySet);
         }
 
-        return new FlashPix($streams, $summary);
+        return new FlashPixDocument($streams, $summary);
     }
 }

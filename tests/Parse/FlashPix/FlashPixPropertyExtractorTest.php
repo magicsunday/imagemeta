@@ -13,9 +13,9 @@ namespace MagicSunday\ImageMeta\Tests\Parse\FlashPix;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use MagicSunday\ImageMeta\Model\FlashPix\FlashPixSummaryData;
 use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixPropertyExtractor;
 use MagicSunday\ImageMeta\Parse\FlashPix\OlePropertySet;
-use MagicSunday\ImageMeta\Value\FlashPixSummaryInfo;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
  * Verifies Summary Information PID mapping to named fields.
  */
 #[CoversClass(FlashPixPropertyExtractor::class)]
-#[UsesClass(FlashPixSummaryInfo::class)]
+#[UsesClass(FlashPixSummaryData::class)]
 #[UsesClass(OlePropertySet::class)]
 final class FlashPixPropertyExtractorTest extends TestCase
 {
@@ -43,7 +43,7 @@ final class FlashPixPropertyExtractorTest extends TestCase
         $extractor = new FlashPixPropertyExtractor();
         $info      = $extractor->extractSummaryInfo($set);
 
-        self::assertInstanceOf(FlashPixSummaryInfo::class, $info);
+        self::assertInstanceOf(FlashPixSummaryData::class, $info);
         self::assertSame('Photo Title', $info->title);
         self::assertSame('John Doe', $info->author);
         self::assertSame('landscape, nature', $info->keywords);
@@ -64,7 +64,7 @@ final class FlashPixPropertyExtractorTest extends TestCase
         $extractor = new FlashPixPropertyExtractor();
         $info      = $extractor->extractSummaryInfo($set);
 
-        self::assertInstanceOf(FlashPixSummaryInfo::class, $info);
+        self::assertInstanceOf(FlashPixSummaryData::class, $info);
         self::assertSame($createTime, $info->createTime);
     }
 

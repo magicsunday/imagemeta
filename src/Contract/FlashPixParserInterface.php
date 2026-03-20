@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Contract;
 
-use MagicSunday\ImageMeta\Value\FlashPix;
+use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
 
 /**
  * Defines the contract for parsing assembled FlashPix APP2 streams.
@@ -19,9 +19,9 @@ use MagicSunday\ImageMeta\Value\FlashPix;
 interface FlashPixParserInterface
 {
     /**
-     * Creates a FlashPix value object from assembled streams, optionally extracting OLE property set metadata.
+     * Creates a FlashPix document model from assembled streams, optionally extracting OLE property set metadata.
      *
      * @param array<int, string> $streams Assembled FlashPix extension streams keyed by FPXR contents-list index.
      */
-    public function parse(array $streams): FlashPix;
+    public function parse(array $streams): FlashPixDocument;
 }
