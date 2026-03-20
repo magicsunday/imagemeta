@@ -11,26 +11,20 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
-use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CorrectionApplied;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\DevelopmentCharacteristic;
 use MagicSunday\ImageMeta\Value\Enum\DevelopmentDefault;
 use MagicSunday\ImageMeta\Value\Enum\NoiseReduction;
-use MagicSunday\ImageMeta\Value\Enum\Saturation;
-use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 
 /**
- * Describes in-camera processing adjustments such as sharpness and saturation.
+ * Describes in-camera processing adjustments such as custom rendering and corrections.
  */
 final readonly class ProcessingSettings
 {
     /**
      * Creates a processing settings metadata value object.
      *
-     * @param Sharpness|null                 $sharpness                     Sharpness adjustment level.
-     * @param Contrast|null                  $contrast                      Contrast adjustment level.
-     * @param Saturation|null                $saturation                    Saturation adjustment level.
      * @param string|null                    $pictureStyle                  Vendor specific picture style identifier.
      * @param int|null                       $clarity                       Clarity adjustment level.
      * @param CustomRendered|null            $customRendered                Indicates whether a custom rendering was applied in-camera.
@@ -44,9 +38,6 @@ final readonly class ProcessingSettings
      * @param string|null                    $developmentTypeDescription    Development description; EXIF 3.1 §4.6.6.7.48.
      */
     public function __construct(
-        public ?Sharpness $sharpness,
-        public ?Contrast $contrast,
-        public ?Saturation $saturation,
         public ?string $pictureStyle,
         public ?int $clarity,
         public ?CustomRendered $customRendered,
