@@ -602,10 +602,8 @@ final readonly class IlocBoxParser
         if ($itemType === 'uri ') {
             $itemUriType = $this->readNulString($payload, $offset);
 
-            if ($itemUriType === null || $itemUriType === '') {
-                throw new ParseError('infe uri item_uri_type must be non-empty', 1392);
-            }
-
+            // Tolerate empty item_uri_type (Postel's Law) — some HEIC encoders
+            // write 'uri ' items without a URI type string
             return [
                 'id'              => $id,
                 'itemType'        => $itemType,
@@ -613,7 +611,7 @@ final readonly class IlocBoxParser
                 'contentType'     => null,
                 'contentEncoding' => null,
                 'extensionType'   => null,
-                'itemUriType'     => $itemUriType,
+                'itemUriType'     => ($itemUriType !== null && $itemUriType !== '') ? $itemUriType : null,
                 'hidden'          => $hidden,
             ];
         }
