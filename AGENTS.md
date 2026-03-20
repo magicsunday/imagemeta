@@ -316,7 +316,7 @@ The parser is **reader-only** and must be lenient:
 
 * **Tolerate:** non-zero reserved fields, non-standard FullBox flags, padding bytes, empty optional strings
 * **Reject:** only when data is genuinely unparseable (truncated boxes, zero timescale, zero dimensions)
-* **Strategy:** do not proactively add strict validations — relax when a real file fails. Use ExifTool source (`/usr/share/ug-exiftool/lib/Image/ExifTool/`) as reference for accepted formats
+* **Strategy:** do not proactively add strict validations — relax when a real file fails. Use ExifTool behavior as reference for accepted formats
 
 ### 7.2 StructuredMetadata Completeness (Hard Rule)
 

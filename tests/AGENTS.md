@@ -245,7 +245,7 @@ See root `AGENTS.md §2.3` for CI execution. No additional setup beyond `compose
 ## Build & Tests
 
 ```bash
-cd /volume2/docker/webtrees && docker compose run --rm -e COMPOSER_AUTH buildbox composer -d /var/docker/imagemeta ci:test
+make test
 ```
 
 Run only PHPUnit: `composer ci:test:php:unit`
