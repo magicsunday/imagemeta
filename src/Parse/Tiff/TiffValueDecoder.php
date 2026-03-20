@@ -66,26 +66,26 @@ final readonly class TiffValueDecoder
     /**
      * EXIF 3.0 text tags that allow UTF-8 in addition to ASCII.
      *
-     * @var list<int>
+     * @var array<int, true>
      */
     private const array EXIF_30_UTF8_TAGS = [
-        ExifTag::SOFTWARE,
-        ExifTag::ARTIST,
-        ExifTag::CAMERA_OWNER_NAME,
-        ExifTag::PHOTOGRAPHER,
-        ExifTag::IMAGE_EDITOR,
-        ExifTag::CAMERA_FIRMWARE,
-        ExifTag::RAW_DEVELOPING_SOFTWARE,
-        ExifTag::IMAGE_EDITING_SOFTWARE,
-        ExifTag::METADATA_EDITING_SOFTWARE,
-        DngTag::CAMERA_CALIBRATION_SIGNATURE,
-        DngTag::PROFILE_CALIBRATION_SIGNATURE,
-        DngTag::AS_SHOT_PROFILE_NAME,
-        DngTag::PROFILE_COPYRIGHT,
-        DngTag::ORIGINAL_RAW_FILE_NAME,
-        DngTag::PREVIEW_APPLICATION_NAME,
-        DngTag::PREVIEW_APPLICATION_VERSION,
-        DngTag::PREVIEW_SETTINGS_NAME,
+        ExifTag::SOFTWARE                     => true,
+        ExifTag::ARTIST                       => true,
+        ExifTag::CAMERA_OWNER_NAME            => true,
+        ExifTag::PHOTOGRAPHER                 => true,
+        ExifTag::IMAGE_EDITOR                 => true,
+        ExifTag::CAMERA_FIRMWARE              => true,
+        ExifTag::RAW_DEVELOPING_SOFTWARE      => true,
+        ExifTag::IMAGE_EDITING_SOFTWARE       => true,
+        ExifTag::METADATA_EDITING_SOFTWARE    => true,
+        DngTag::CAMERA_CALIBRATION_SIGNATURE  => true,
+        DngTag::PROFILE_CALIBRATION_SIGNATURE => true,
+        DngTag::AS_SHOT_PROFILE_NAME          => true,
+        DngTag::PROFILE_COPYRIGHT             => true,
+        DngTag::ORIGINAL_RAW_FILE_NAME        => true,
+        DngTag::PREVIEW_APPLICATION_NAME      => true,
+        DngTag::PREVIEW_APPLICATION_VERSION   => true,
+        DngTag::PREVIEW_SETTINGS_NAME         => true,
     ];
 
     /**
@@ -127,14 +127,14 @@ final readonly class TiffValueDecoder
         $inlineThreshold = 4;
 
         if ($inlineBytes !== null) {
-            PayloadGuard::ensureMinimumLength($inlineBytes, $dataSize, sprintf('Inline value for TIFF type %d', $type), 1336);
+            PayloadGuard::ensureMinimumLength($inlineBytes, $dataSize, 'Inline value for TIFF type ' . $type, 1336);
 
             return [$this->sliceBytes($inlineBytes, 0, $dataSize), null];
         }
 
         if ($dataSize <= $inlineThreshold) {
             if (is_string($valueOrOffset)) {
-                PayloadGuard::ensureMinimumLength($valueOrOffset, $dataSize, sprintf('Inline value for TIFF type %d', $type), 1337);
+                PayloadGuard::ensureMinimumLength($valueOrOffset, $dataSize, 'Inline value for TIFF type ' . $type, 1337);
 
                 return [$this->sliceBytes($valueOrOffset, 0, $dataSize), null];
             }
@@ -144,7 +144,7 @@ final readonly class TiffValueDecoder
             return [$this->sliceBytes($raw, 0, $dataSize), null];
         }
 
-        $offset = $this->offsetValidator->ensureOffset($valueOrOffset, sprintf('Value offset for TIFF type %d', $type), $dataSize);
+        $offset = $this->offsetValidator->ensureOffset($valueOrOffset, 'Value offset for TIFF type ' . $type, $dataSize);
         $bytes  = $this->binaryReader->readAt($offset, $dataSize);
 
         return [$bytes, $offset];
