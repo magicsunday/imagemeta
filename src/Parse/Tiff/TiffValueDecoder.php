@@ -23,7 +23,6 @@ use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
 
 use function assert;
-use function in_array;
 use function intdiv;
 use function is_string;
 use function ord;
@@ -42,26 +41,26 @@ final readonly class TiffValueDecoder
     /**
      * Tags whose values encode offsets within the TIFF blob.
      *
-     * @var list<int>
+     * @var array<int, true>
      */
     private const array POINTER_TAGS = [
-        ExifTag::EXIF_IFD_POINTER,
-        ExifTag::GPS_IFD_POINTER,
-        ExifTag::INTEROPERABILITY_IFD_POINTER,
-        ExifTag::JPEG_INTERCHANGE_FORMAT,
+        ExifTag::EXIF_IFD_POINTER             => true,
+        ExifTag::GPS_IFD_POINTER              => true,
+        ExifTag::INTEROPERABILITY_IFD_POINTER => true,
+        ExifTag::JPEG_INTERCHANGE_FORMAT      => true,
     ];
 
     /**
      * Windows XP tags that store UCS-2 (UTF-16LE) text as BYTE arrays.
      *
-     * @var list<int>
+     * @var array<int, true>
      */
     private const array XP_TAGS = [
-        MicrosoftTag::XP_TITLE,
-        MicrosoftTag::XP_COMMENT,
-        MicrosoftTag::XP_AUTHOR,
-        MicrosoftTag::XP_KEYWORDS,
-        MicrosoftTag::XP_SUBJECT,
+        MicrosoftTag::XP_TITLE    => true,
+        MicrosoftTag::XP_COMMENT  => true,
+        MicrosoftTag::XP_AUTHOR   => true,
+        MicrosoftTag::XP_KEYWORDS => true,
+        MicrosoftTag::XP_SUBJECT  => true,
     ];
 
     /**
@@ -193,7 +192,7 @@ final readonly class TiffValueDecoder
         }
 
         // XP tags store UCS-2 text as BYTE arrays — preserve raw bytes for UTF-16LE decoding
-        if (($type === TiffFieldType::Byte->value) && in_array($tag, self::XP_TAGS, true)) {
+        if (($type === TiffFieldType::Byte->value) && isset(self::XP_TAGS[$tag])) {
             return $bytes;
         }
 
@@ -316,7 +315,7 @@ final readonly class TiffValueDecoder
      */
     private function isPointerTag(int $tag): bool
     {
-        return in_array($tag, self::POINTER_TAGS, true);
+        return isset(self::POINTER_TAGS[$tag]);
     }
 
     /**
