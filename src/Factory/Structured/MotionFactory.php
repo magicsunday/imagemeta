@@ -26,20 +26,14 @@ final readonly class MotionFactory
     /**
      * Creates a Motion value object from EXIF and Apple metadata.
      *
-     * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
+     * @param Metadata        $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
+     * @param AppleMakerNotes $apple    Pre-resolved Apple maker note metadata.
      *
      * @return Motion Motion metadata aggregate with camera orientation and per-axis acceleration.
      */
-    public function create(Metadata $metadata): Motion
+    public function create(Metadata $metadata, AppleMakerNotes $apple): Motion
     {
-        $exifDocument = $metadata->exifDoc;
-        $apple        = $metadata->makerNotes?->apple;
-
-        if (!$apple instanceof AppleMakerNotes) {
-            $apple = AppleMakerNotes::empty();
-        }
-
-        return $this->buildMotion($exifDocument, $apple);
+        return $this->buildMotion($metadata->exifDoc, $apple);
     }
 
     /**

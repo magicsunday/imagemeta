@@ -144,11 +144,11 @@ final readonly class ValueFactory
         $sensor       = $this->sensorFactory->create($metadata);
         $device       = $this->deviceFactory->create($metadata);
         $image        = $this->imageFactory->create($metadata, $xmpDocument);
-        $motion       = $this->motionFactory->create($metadata);
+        $motion       = $this->motionFactory->create($metadata, $apple);
         $temporal     = $this->temporalFactory->create($metadata);
         $regions      = $this->regionsFactory->create($metadata);
         $multiPicture = $this->multiPictureFactory->create($metadata);
-        $scene        = $this->sceneFactory->create($metadata, $this->countFaceRegions($regions));
+        $scene        = $this->sceneFactory->create($metadata, $apple, $this->countFaceRegions($regions));
 
         // Cohesive private methods for complex value-object creation
         $tiff         = (new TiffDataFactory())->create($metadata);

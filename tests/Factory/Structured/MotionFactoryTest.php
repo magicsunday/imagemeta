@@ -186,7 +186,13 @@ final class MotionFactoryTest extends TestCase
             makerNotes: $makerNotes,
         );
 
-        return new MotionFactory()->create($metadata);
+        $apple = $makerNotes?->apple;
+
+        if (!$apple instanceof AppleMakerNotes) {
+            $apple = AppleMakerNotes::empty();
+        }
+
+        return new MotionFactory()->create($metadata, $apple);
     }
 
     private function toScaledComponent(float $value, int $scale): int

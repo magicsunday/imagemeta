@@ -218,7 +218,13 @@ final class SceneFactoryTest extends TestCase
             makerNotes: $makerNotes,
         );
 
-        return new SceneFactory()->create($metadata, $faceCount);
+        $apple = $makerNotes?->apple;
+
+        if (!$apple instanceof AppleMakerNotes) {
+            $apple = AppleMakerNotes::empty();
+        }
+
+        return new SceneFactory()->create($metadata, $apple, $faceCount);
     }
 
     private function parsedExif(
