@@ -25,7 +25,7 @@ final readonly class Derived
      * @param float|null $fieldOfViewDiagonalDeg   Diagonal field of view in degrees.
      * @param float|null $fieldOfViewHorizontalDeg Horizontal field of view in degrees.
      * @param float|null $fieldOfViewVerticalDeg   Vertical field of view in degrees.
-     * @param int|null   $equivalent35mm           Equivalent focal length in 35mm terms.
+     * @param int|null   $focalLength35Mm          Equivalent focal length in 35mm terms.
      * @param float|null $cropFactor               Estimated crop factor.
      */
     public function __construct(
@@ -35,7 +35,7 @@ final readonly class Derived
         public ?float $fieldOfViewDiagonalDeg,
         public ?float $fieldOfViewHorizontalDeg,
         public ?float $fieldOfViewVerticalDeg,
-        public ?int $equivalent35mm,
+        public ?int $focalLength35Mm,
         public ?float $cropFactor,
     ) {
     }

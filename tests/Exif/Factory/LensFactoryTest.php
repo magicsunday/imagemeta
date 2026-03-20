@@ -56,7 +56,7 @@ final class LensFactoryTest extends TestCase
         self::assertSame('RF 24-70mm F2.8 L IS USM', $lens->lensModel);
         self::assertSame('123456789', $lens->lensSerialNumber);
         self::assertSame(50.0, $lens->focalLengthMm);
-        self::assertSame(50, $lens->focalLengthIn35mm);
+        self::assertSame(50, $lens->focalLength35Mm);
         self::assertSame(2.0, $lens->maxApertureFNumber);
         self::assertSame([24.0, 70.0, 2.8, 2.8], $lens->lensSpecification);
     }
@@ -74,7 +74,7 @@ final class LensFactoryTest extends TestCase
         self::assertNull($lens->lensModel);
         self::assertNull($lens->lensSerialNumber);
         self::assertNull($lens->focalLengthMm);
-        self::assertNull($lens->focalLengthIn35mm);
+        self::assertNull($lens->focalLength35Mm);
         self::assertNull($lens->maxApertureFNumber);
         self::assertNull($lens->lensSpecification);
     }

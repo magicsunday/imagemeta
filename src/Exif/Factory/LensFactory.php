@@ -51,7 +51,7 @@ final readonly class LensFactory
                 lensModel: $resolver?->string(ExifTag::LENS_MODEL),
                 lensSerialNumber: $resolver?->string(ExifTag::LENS_SERIAL_NUMBER),
                 focalLengthMm: $resolver?->float(ExifTag::FOCAL_LENGTH),
-                focalLengthIn35mm: $resolver?->int(ExifTag::FOCAL_LENGTH_IN_35MM_FILM),
+                focalLength35Mm: $resolver?->int(ExifTag::FOCAL_LENGTH_IN_35MM_FILM),
                 maxApertureFNumber: $this->xmpMaxApertureFNumber($resolver),
             );
         }
@@ -64,7 +64,7 @@ final readonly class LensFactory
             lensModel: $exifDocument->lensModel() ?? $resolver?->string(ExifTag::LENS_MODEL),
             lensSerialNumber: $exifDocument->lensSerialNumber() ?? $resolver?->string(ExifTag::LENS_SERIAL_NUMBER),
             focalLengthMm: $exifDocument->focalLengthMm() ?? $resolver?->float(ExifTag::FOCAL_LENGTH),
-            focalLengthIn35mm: $exifDocument->focalLength35Mm() ?? $resolver?->int(ExifTag::FOCAL_LENGTH_IN_35MM_FILM),
+            focalLength35Mm: $exifDocument->focalLength35Mm() ?? $resolver?->int(ExifTag::FOCAL_LENGTH_IN_35MM_FILM),
             maxApertureFNumber: $maxF,
             lensSpecification: $exifDocument->lensSpecification(),
         );
