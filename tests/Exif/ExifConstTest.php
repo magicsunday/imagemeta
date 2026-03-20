@@ -29,15 +29,15 @@ use ReflectionClass;
 final class ExifConstTest extends TestCase
 {
     /**
-     * EXIF 3.0 §4.6.6.8 — sentinel denominator must match the Parse-layer constant.
+     * EXIF 3.0 §4.6.6.8 — sentinel denominator must match 0xFFFFFFFF.
      */
     #[Test]
-    public function unknownDenominatorMatchesParseLayerValue(): void
+    public function unknownDenominatorMatchesExpectedValue(): void
     {
         $ref   = new ReflectionClass(ExifConst::class);
         $value = $ref->getConstant('EXIF_UNKNOWN_DENOMINATOR');
 
-        self::assertSame(TiffConst::EXIF_UNKNOWN_DENOMINATOR, $value);
+        self::assertSame(0xFFFFFFFF, $value);
     }
 
     /**

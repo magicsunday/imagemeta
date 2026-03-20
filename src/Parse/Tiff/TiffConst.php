@@ -36,12 +36,6 @@ final class TiffConst
     public const int MAGIC_BIG = 0x002B;
 
     /**
-     * Alias for the BigTIFF magic number for compatibility with legacy helpers.
-     * BigTIFF specification; EXIF 3.0 §4.5.1.
-     */
-    public const int MAGIC_BIG_TIFF = self::MAGIC_BIG;
-
-    /**
      * Size in bytes of the classic TIFF file header (byte order + magic + IFD offset).
      * TIFF 6.0 §2.1; EXIF 3.0 §4.5.1.
      */
@@ -148,11 +142,6 @@ final class TiffConst
      * BigTIFF specification; EXIF 3.0 §4.5.2 Table 3.
      */
     public const int TYPE_IFD8 = TiffFieldType::Ifd8->value;
-
-    /**
-     * EXIF 3.0 §4.6.6.8 — sentinel denominator value indicating an unknown measurement.
-     */
-    public const int EXIF_UNKNOWN_DENOMINATOR = 0xFFFFFFFF;
 
     /**
      * Prevents instantiation of the constants-only utility class.
