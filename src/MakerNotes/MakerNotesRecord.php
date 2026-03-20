@@ -17,12 +17,35 @@ use MagicSunday\ImageMeta\MakerNotes\Dji\DjiMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Samsung\SamsungMakerNotes;
 
 use function preg_match;
+use function sha1;
+use function strlen;
 
 /**
  * Immutable value object that describes a normalized maker note payload.
  */
 final readonly class MakerNotesRecord
 {
+    /**
+     * Creates a MakerNotesRecord from a raw payload, computing length and SHA-1 automatically.
+     *
+     * @param string                 $vendor  Vendor responsible for the maker note payload.
+     * @param string                 $raw     Raw maker note payload bytes.
+     * @param AppleMakerNotes|null   $apple   Additional Apple specific maker note data.
+     * @param SamsungMakerNotes|null $samsung Additional Samsung specific maker note data.
+     * @param DjiMakerNotes|null     $dji     Additional DJI specific maker note data.
+     * @param bool|null              $safe    DNG MakerNoteSafety flag (true=safe, false=unsafe, null=absent).
+     */
+    public static function from(
+        string $vendor,
+        string $raw,
+        ?AppleMakerNotes $apple = null,
+        ?SamsungMakerNotes $samsung = null,
+        ?DjiMakerNotes $dji = null,
+        ?bool $safe = null,
+    ): self {
+        return new self($vendor, strlen($raw), sha1($raw), $apple, $samsung, $dji, $safe);
+    }
+
     /**
      * @param string                 $vendor  Vendor responsible for the maker note payload. Must not be empty.
      * @param int                    $length  Number of bytes contained in the payload. Must be zero or positive.

@@ -21,8 +21,6 @@ use MagicSunday\ImageMeta\Model\Dng\DngTag;
 
 use function is_string;
 use function rtrim;
-use function sha1;
-use function strlen;
 
 /**
  * Dispatches maker note payloads to manufacturer-specific decoders and applies
@@ -76,11 +74,7 @@ final class MakerNoteDispatcher
      */
     private function digest(string $raw): MakerNotesRecord
     {
-        return new MakerNotesRecord(
-            'Unknown',
-            strlen($raw),
-            sha1($raw)
-        );
+        return MakerNotesRecord::from('Unknown', $raw);
     }
 
     /**

@@ -18,8 +18,6 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\PlistTextParser;
 
 use function is_array;
-use function sha1;
-use function strlen;
 
 /**
  * Decoder that extracts structured metadata from Apple maker note payloads.
@@ -60,11 +58,10 @@ final readonly class AppleDecoder implements MakerNotesDecoderInterface
     {
         $appleData = $this->parseAppleData($raw);
 
-        return new MakerNotesRecord(
+        return MakerNotesRecord::from(
             'Apple',
-            strlen($raw),
-            sha1($raw),
-            $appleData
+            $raw,
+            $appleData,
         );
     }
 

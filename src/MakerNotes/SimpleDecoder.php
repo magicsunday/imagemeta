@@ -11,9 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes;
 
-use function sha1;
-use function strlen;
-
 /**
  * Decoder for maker note vendors that only expose payload identity metadata.
  */
@@ -36,10 +33,9 @@ final readonly class SimpleDecoder implements MakerNotesDecoderInterface
      */
     public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
     {
-        return new MakerNotesRecord(
+        return MakerNotesRecord::from(
             $this->vendorName,
-            strlen($raw),
-            sha1($raw),
+            $raw,
         );
     }
 }
