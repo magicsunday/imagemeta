@@ -443,18 +443,7 @@ final readonly class ExifConvenience
             return null;
         }
 
-        $altitude = $position->altitude;
-
-        if ($altitude === null) {
-            return null;
-        }
-
-        $reference = $position->altitudeRef;
-
-        if (($reference instanceof GpsAltitudeRef) && $reference->isBelow()) {
-            return -$altitude;
-        }
-
-        return $altitude;
+        // GpsPosition->altitude is already signed by GpsUnitConverter/GpsFactory
+        return $position->altitude;
     }
 }
