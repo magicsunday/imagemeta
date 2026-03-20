@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
-use function in_array;
 use function mb_check_encoding;
 use function mb_convert_encoding;
 use function mb_substitute_character;
@@ -28,10 +27,10 @@ final readonly class ExifTagDecoder
     /**
      * Decodes TIFF/EXIF ASCII payloads and validates 7-bit / UTF-8 conformance rules.
      *
-     * @param int       $tag      Tag identifier.
-     * @param int       $count    Declared value count.
-     * @param string    $bytes    Raw payload bytes.
-     * @param list<int> $utf8Tags EXIF 3.0 tags that allow UTF-8 text.
+     * @param int              $tag      Tag identifier.
+     * @param int              $count    Declared value count.
+     * @param string           $bytes    Raw payload bytes.
+     * @param array<int, true> $utf8Tags EXIF 3.0 tags that allow UTF-8 text.
      */
     public function decodeAscii(int $tag, int $count, string $bytes, array $utf8Tags): string
     {
@@ -57,7 +56,7 @@ final readonly class ExifTagDecoder
 
             // EXIF 3.0 §4.6.5.4 designates certain tags as UTF-8 text.
             // Malformed sequences are scrubbed with U+FFFD (Postel's Law).
-            if (in_array($tag, $utf8Tags, true)) {
+            if (isset($utf8Tags[$tag])) {
                 $previous = mb_substitute_character();
                 mb_substitute_character(0xFFFD);
                 $scrubbed = mb_convert_encoding($text, 'UTF-8', 'UTF-8');

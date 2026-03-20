@@ -37,7 +37,7 @@ final class ExifTagDecoderTest extends TestCase
     {
         $decoder = new ExifTagDecoder();
 
-        self::assertSame('Jörg', $decoder->decodeAscii(700, 6, "Jörg\0", [700]));
+        self::assertSame('Jörg', $decoder->decodeAscii(700, 6, "Jörg\0", [700 => true]));
     }
 
     #[Test]
@@ -46,7 +46,7 @@ final class ExifTagDecoderTest extends TestCase
         $decoder = new ExifTagDecoder();
 
         // 'ö' is UTF-8 \xC3\xB6 — accepted even for non-whitelisted tags
-        self::assertSame('Jörg', $decoder->decodeAscii(701, 6, "Jörg\0", [700]));
+        self::assertSame('Jörg', $decoder->decodeAscii(701, 6, "Jörg\0", [700 => true]));
     }
 
     #[Test]
@@ -69,7 +69,7 @@ final class ExifTagDecoderTest extends TestCase
 
         // 0xE9 is a 3-byte UTF-8 lead byte but 'e' is not a continuation byte.
         // The decoder should replace the invalid byte with U+FFFD.
-        self::assertSame("Ren\u{FFFD}e", $decoder->decodeAscii(700, 6, "Ren\xE9e\0", [700]));
+        self::assertSame("Ren\u{FFFD}e", $decoder->decodeAscii(700, 6, "Ren\xE9e\0", [700 => true]));
     }
 
     /**
@@ -83,7 +83,7 @@ final class ExifTagDecoderTest extends TestCase
 
         // \xC3 alone is a truncated 2-byte UTF-8 sequence followed by ASCII 'X'.
         // The decoder should replace the orphan lead byte with U+FFFD.
-        $result = $decoder->decodeAscii(700, 4, "\xC3X\0\0", [700]);
+        $result = $decoder->decodeAscii(700, 4, "\xC3X\0\0", [700 => true]);
 
         self::assertSame("\u{FFFD}X", $result);
     }
