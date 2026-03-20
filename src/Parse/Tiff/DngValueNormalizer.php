@@ -42,13 +42,13 @@ final readonly class DngValueNormalizer
     /**
      * Tag identifiers that store counted image data such as strips or tiles.
      *
-     * @var list<int>
+     * @var array<int, true>
      */
     private const array COUNTED_IMAGE_DATA_TAGS = [
-        ExifTag::STRIP_OFFSETS,
-        ExifTag::STRIP_BYTE_COUNTS,
-        TiffTag::TILE_OFFSETS,
-        TiffTag::TILE_BYTE_COUNTS,
+        ExifTag::STRIP_OFFSETS     => true,
+        ExifTag::STRIP_BYTE_COUNTS => true,
+        TiffTag::TILE_OFFSETS      => true,
+        TiffTag::TILE_BYTE_COUNTS  => true,
     ];
 
     /**
@@ -65,17 +65,17 @@ final readonly class DngValueNormalizer
     /**
      * DNG tags that use ASCII or BYTE type with NUL-terminated UTF-8 semantics.
      *
-     * @var list<int>
+     * @var array<int, true>
      */
     private const array DNG_UTF8_STRING_TAGS = [
-        DngTag::CAMERA_CALIBRATION_SIGNATURE,
-        DngTag::PROFILE_CALIBRATION_SIGNATURE,
-        DngTag::AS_SHOT_PROFILE_NAME,
-        DngTag::PROFILE_COPYRIGHT,
-        DngTag::ORIGINAL_RAW_FILE_NAME,
-        DngTag::PREVIEW_APPLICATION_NAME,
-        DngTag::PREVIEW_APPLICATION_VERSION,
-        DngTag::PREVIEW_SETTINGS_NAME,
+        DngTag::CAMERA_CALIBRATION_SIGNATURE  => true,
+        DngTag::PROFILE_CALIBRATION_SIGNATURE => true,
+        DngTag::AS_SHOT_PROFILE_NAME          => true,
+        DngTag::PROFILE_COPYRIGHT             => true,
+        DngTag::ORIGINAL_RAW_FILE_NAME        => true,
+        DngTag::PREVIEW_APPLICATION_NAME      => true,
+        DngTag::PREVIEW_APPLICATION_VERSION   => true,
+        DngTag::PREVIEW_SETTINGS_NAME         => true,
     ];
 
     /**
@@ -126,7 +126,7 @@ final readonly class DngValueNormalizer
         }
 
         // DNG 1.7.1.0: String tags that must be ASCII or BYTE, NUL-terminated UTF-8.
-        if (in_array($tag, self::DNG_UTF8_STRING_TAGS, true)) {
+        if (isset(self::DNG_UTF8_STRING_TAGS[$tag])) {
             if (($type !== TiffFieldType::Ascii->value) && ($type !== TiffFieldType::Byte->value)) {
                 return $value;
             }
@@ -252,7 +252,7 @@ final readonly class DngValueNormalizer
      */
     public function isCountedImageDataTag(int $tag): bool
     {
-        return in_array($tag, self::COUNTED_IMAGE_DATA_TAGS, true);
+        return isset(self::COUNTED_IMAGE_DATA_TAGS[$tag]);
     }
 
     /**
