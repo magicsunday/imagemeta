@@ -451,7 +451,6 @@ final class FormatDetectorTest extends TestCase
             "\x00\x00\x00\x08abcd"
             . "\x00\x00\x00\x10ftypisom\x00\x00\x00\x00",
         ];
-        yield 'mdat only' => ["\x00\x00\x00\x10mdat" . str_repeat("\x00", 8)];
         yield 'too many padding boxes' => [
             str_repeat("\x00\x00\x00\x08free", 8193)
             . "\x00\x00\x00\x10ftypisom\x00\x00\x00\x00",

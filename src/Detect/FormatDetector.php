@@ -40,6 +40,11 @@ final readonly class FormatDetector
         'meta' => true,
         'moof' => true,
         'mfra' => true,
+        'pnot' => true,
+        'PICT' => true,
+        'pict' => true,
+        'mdat' => true,
+        'junk' => true,
     ];
 
     /**
