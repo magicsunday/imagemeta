@@ -92,9 +92,13 @@ final readonly class TemporalFactory
         $create = $exifCreate ?? $xmpCreate ?? $quickTimeCreate ?? $xmpDateCreated;
         $modify = $exifModify ?? $xmpModify ?? $quickTimeModify;
 
-        // mvhd Mac-epoch as last resort
+        // Mac-epoch fallback: mvhd → tkhd → mdhd
         $create ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::CREATE_DATE_KEY));
+        $create ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::TRACK_CREATE_DATE_KEY));
+        $create ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::MEDIA_CREATE_DATE_KEY));
         $modify ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::MODIFY_DATE_KEY));
+        $modify ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::TRACK_MODIFY_DATE_KEY));
+        $modify ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::MEDIA_MODIFY_DATE_KEY));
 
         [$original, $tz, $subOriginalRaw] = $this->originalTimestampComponents($exifDocument);
 
@@ -103,6 +107,9 @@ final readonly class TemporalFactory
         if (($original instanceof DateTimeImmutable) && ($tz instanceof DateTimeZone)) {
             $originalWithTz = $original->setTimezone($tz);
         }
+
+        // Fall back to resolved create date when no EXIF original is available
+        $originalWithTz ??= $create;
 
         $offsetTime          = $exifDocument?->offsetTime();
         $offsetTimeOriginal  = $exifDocument?->offsetTimeOriginal();

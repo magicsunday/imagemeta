@@ -305,6 +305,63 @@ final class TemporalFactoryTest extends TestCase
     }
 
     /**
+     * Omits all EXIF timestamps while providing only mvhd Mac-epoch integers.
+     * Verifies the factory uses the resolved create date as fallback for the original field.
+     */
+    #[Test]
+    public function originalFallsBackToQuickTimeCreateDate(): void
+    {
+        $temporal = $this->createTemporal(
+            quickTime: new QuickTimeMeta([
+                QuickTimeMeta::CREATE_DATE_KEY => 3_692_304_000,
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->original);
+        self::assertSame('2021-01-01', $temporal->original->format('Y-m-d'));
+    }
+
+    /**
+     * Omits mvhd timestamps while providing tkhd Mac-epoch integers.
+     * Verifies the factory falls back to tkhd timestamps when mvhd is absent.
+     */
+    #[Test]
+    public function fallsBackToTkhdMacEpochTimestamps(): void
+    {
+        $temporal = $this->createTemporal(
+            quickTime: new QuickTimeMeta([
+                QuickTimeMeta::TRACK_CREATE_DATE_KEY => 3_692_304_000,
+                QuickTimeMeta::TRACK_MODIFY_DATE_KEY => 3_692_390_400,
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2021-01-01', $temporal->create->format('Y-m-d'));
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
+        self::assertSame('2021-01-02', $temporal->modify->format('Y-m-d'));
+    }
+
+    /**
+     * Omits mvhd and tkhd timestamps while providing mdhd Mac-epoch integers.
+     * Verifies the factory falls back to mdhd timestamps as last resort.
+     */
+    #[Test]
+    public function fallsBackToMdhdMacEpochTimestamps(): void
+    {
+        $temporal = $this->createTemporal(
+            quickTime: new QuickTimeMeta([
+                QuickTimeMeta::MEDIA_CREATE_DATE_KEY => 3_692_304_000,
+                QuickTimeMeta::MEDIA_MODIFY_DATE_KEY => 3_692_390_400,
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2021-01-01', $temporal->create->format('Y-m-d'));
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
+        self::assertSame('2021-01-02', $temporal->modify->format('Y-m-d'));
+    }
+
+    /**
      * Provides mvhd Mac-epoch timestamps set to zero (uninitialised mvhd fields).
      * Verifies the factory treats zero timestamps as missing and returns null.
      */
