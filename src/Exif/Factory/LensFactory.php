@@ -52,12 +52,12 @@ final readonly class LensFactory
                 lensSerialNumber: $resolver?->string(ExifTag::LENS_SERIAL_NUMBER),
                 focalLengthMm: $resolver?->float(ExifTag::FOCAL_LENGTH),
                 focalLengthIn35mm: $resolver?->int(ExifTag::FOCAL_LENGTH_IN_35MM_FILM),
-                maxApertureFNumber: null,
+                maxApertureFNumber: $this->xmpMaxApertureFNumber($resolver),
             );
         }
 
         $maxApex = $exifDocument->maxApertureApex();
-        $maxF    = $maxApex !== null ? $this->converters->apexToFNumber($maxApex) : null;
+        $maxF    = $maxApex !== null ? $this->converters->apexToFNumber($maxApex) : $this->xmpMaxApertureFNumber($resolver);
 
         return new Lens(
             lensMake: $exifDocument->lensMake() ?? $resolver?->string(ExifTag::LENS_MAKE),
@@ -68,5 +68,16 @@ final readonly class LensFactory
             maxApertureFNumber: $maxF,
             lensSpecification: $exifDocument->lensSpecification(),
         );
+    }
+
+    private function xmpMaxApertureFNumber(?XmpFallbackResolver $resolver): ?float
+    {
+        $apex = $resolver?->float(ExifTag::MAX_APERTURE_VALUE);
+
+        if ($apex === null) {
+            return null;
+        }
+
+        return $this->converters->apexToFNumber($apex);
     }
 }
