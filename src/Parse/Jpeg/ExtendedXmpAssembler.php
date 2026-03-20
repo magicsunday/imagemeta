@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function array_key_exists;
 use function array_keys;
+use function implode;
 use function preg_match;
 use function sprintf;
 use function str_contains;
@@ -325,8 +326,8 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
             static fn (array $left, array $right): int => $left['offset'] <=> $right['offset'],
         );
 
-        $cursor    = 0;
-        $assembled = '';
+        $cursor = 0;
+        $parts  = [];
 
         foreach ($chunks as $chunk) {
             if ($chunk['offset'] > $cursor) {
@@ -353,7 +354,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
                 );
             }
 
-            $assembled .= $chunk['data'];
+            $parts[] = $chunk['data'];
             $cursor += $chunk['length'];
         }
 
@@ -370,6 +371,6 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
             );
         }
 
-        return $assembled;
+        return implode('', $parts);
     }
 }
