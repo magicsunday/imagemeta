@@ -99,7 +99,7 @@ final readonly class JxlParser implements JxlParserInterface
                 throw match ($box->type) {
                     self::BOX_EXIF => new ParseError('JXL Exif box payload exceeds maximum allowed size', 1560),
                     self::BOX_XML  => new ParseError('JXL xml box payload exceeds maximum allowed size', 1561),
-                    default        => new ParseError('JXL hrgm box payload exceeds maximum allowed size', 1563),
+                    default        => new ParseError('JXL hrgm box payload exceeds maximum allowed size', 2114),
                 };
             }
 

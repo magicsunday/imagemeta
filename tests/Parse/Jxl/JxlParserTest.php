@@ -384,7 +384,7 @@ final class JxlParserTest extends TestCase
         $parser = new JxlParser($stream, maxPayloadSize: 4);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionCode(1563);
+        $this->expectExceptionCode(2114);
 
         $parser->extract();
     }
