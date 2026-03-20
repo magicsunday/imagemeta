@@ -15,6 +15,7 @@ use Closure;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
+use MagicSunday\ImageMeta\Value\StructuredMetadata;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -32,9 +33,10 @@ final class MetadataBuilderTest extends TestCase
     #[Test]
     public function injectsStructuredResolverIntoBuiltMetadata(): void
     {
-        $builder = new MetadataBuilder();
-        $first   = $builder->withFileIdentity(extension: 'jpg')->build();
-        $second  = $builder->withFileIdentity(extension: 'heic')->build();
+        $resolver = $this->createStructuredResolver();
+        $builder  = new MetadataBuilder($resolver);
+        $first    = $builder->withFileIdentity(extension: 'jpg')->build();
+        $second   = $builder->withFileIdentity(extension: 'heic')->build();
 
         $resolverProperty = new ReflectionProperty(Metadata::class, 'structuredResolver');
         $firstResolver    = $resolverProperty->getValue($first);
@@ -48,11 +50,22 @@ final class MetadataBuilderTest extends TestCase
     #[Test]
     public function preservesPerMetadataStructuredResultsWhenBuilderIsShared(): void
     {
-        $builder = new MetadataBuilder();
-        $first   = $builder->withFileIdentity(extension: 'jpg')->build();
-        $second  = $builder->withFileIdentity(extension: 'heic')->build();
+        $resolver = $this->createStructuredResolver();
+        $builder  = new MetadataBuilder($resolver);
+        $first    = $builder->withFileIdentity(extension: 'jpg')->build();
+        $second   = $builder->withFileIdentity(extension: 'heic')->build();
 
         self::assertSame('jpg', $first->structured()->provenance->file->extension);
         self::assertSame('heic', $second->structured()->provenance->file->extension);
+    }
+
+    /**
+     * @return Closure(Metadata):StructuredMetadata
+     */
+    private function createStructuredResolver(): Closure
+    {
+        $assembler = StructuredMetadataBuilder::createDefault();
+
+        return $assembler->assemble(...);
     }
 }

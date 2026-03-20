@@ -16,7 +16,6 @@ use Closure;
 use MagicSunday\ImageMeta\Contract\IptcParserInterface;
 use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
@@ -112,13 +111,15 @@ final class MetadataBuilder
 
     private ?IptcParserInterface $iptcParser = null;
 
-    /** @var Closure(Metadata):StructuredMetadata */
-    private readonly Closure $structuredResolver;
-
-    public function __construct()
+    /**
+     * @param (Closure(Metadata):StructuredMetadata)|null $structuredResolver Closure that converts a Metadata aggregate
+     *                                                                        into typed StructuredMetadata. When null,
+     *                                                                        the Metadata instance will not support
+     *                                                                        structured() calls unless a resolver is
+     *                                                                        provided at the Metadata level.
+     */
+    public function __construct(private readonly ?Closure $structuredResolver = null)
     {
-        $builder                  = StructuredMetadataBuilder::createDefault();
-        $this->structuredResolver = static fn (Metadata $metadata): StructuredMetadata => $builder->assemble($metadata);
     }
 
     /**

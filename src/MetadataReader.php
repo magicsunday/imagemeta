@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta;
 
+use Closure;
 use finfo;
 use MagicSunday\ImageMeta\Contract\IptcParserInterface;
 use MagicSunday\ImageMeta\Contract\TiffExifParserInterface;
@@ -21,6 +22,7 @@ use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
@@ -35,9 +37,10 @@ use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\DjiMdatTelemetryScanner;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactory;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
-use MagicSunday\ImageMeta\Parse\Jxl\JxlParserFactory;
+use MagicSunday\ImageMeta\Parse\Jxl\JxlParser;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
+use MagicSunday\ImageMeta\Value\StructuredMetadata;
 use ValueError;
 
 use function array_map;
@@ -64,6 +67,9 @@ final readonly class MetadataReader
      */
     private const int MAX_TIFF_SIZE = 256 * 1024 * 1024;
 
+    /** @var Closure(Metadata):StructuredMetadata */
+    private Closure $structuredResolver;
+
     /**
      * @param TiffExifParserInterface $tiffReader           TIFF/EXIF parser instance.
      * @param AppleMakerNotesMerger   $appleMerger          Apple maker notes merger.
@@ -72,7 +78,6 @@ final readonly class MetadataReader
      * @param FormatDetector          $formatDetector       Container format detector.
      * @param JpegParserFactory       $jpegParserFactory    Factory creating JPEG parser instances.
      * @param IsoBmffParserFactory    $isoBmffParserFactory Factory creating ISO BMFF parser instances.
-     * @param JxlParserFactory        $jxlParserFactory     Factory creating JPEG XL parser instances.
      * @param int                     $maxTiffSize          Maximum stream size in bytes before TIFF materialisation is rejected.
      */
     public function __construct(
@@ -83,9 +88,10 @@ final readonly class MetadataReader
         private FormatDetector $formatDetector,
         private JpegParserFactory $jpegParserFactory,
         private IsoBmffParserFactory $isoBmffParserFactory,
-        private JxlParserFactory $jxlParserFactory,
         private int $maxTiffSize = self::MAX_TIFF_SIZE,
     ) {
+        $builder                  = StructuredMetadataBuilder::createDefault();
+        $this->structuredResolver = static fn (Metadata $metadata): StructuredMetadata => $builder->assemble($metadata);
     }
 
     /**
@@ -101,7 +107,6 @@ final readonly class MetadataReader
             new FormatDetector(),
             new JpegParserFactory(),
             new IsoBmffParserFactory(),
-            new JxlParserFactory(),
         );
     }
 
@@ -135,7 +140,7 @@ final readonly class MetadataReader
             if (($exception->getCode() === 1031) || ($exception->getCode() === 1032)) {
                 // Postel's Law: tolerate unreadable/truncated signatures and
                 // return empty metadata instead of aborting the whole read.
-                return (new MetadataBuilder())
+                return (new MetadataBuilder($this->structuredResolver))
                     ->withParsers($this->xmpParser, $this->iptcParser)
                     ->withFileIdentity($mimeType, $fileSize, $extension, $sha256)
                     ->build();
@@ -200,7 +205,7 @@ final readonly class MetadataReader
         }
 
         // Assemble the final metadata aggregate with container context.
-        return (new MetadataBuilder())
+        return (new MetadataBuilder($this->structuredResolver))
             ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif($exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($xmpBlobs, $xmpDoc)
@@ -247,7 +252,7 @@ final readonly class MetadataReader
         $makerNotes = $this->appleMerger->merge($makerNotes, $qt);
         $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs);
 
-        return (new MetadataBuilder())
+        return (new MetadataBuilder($this->structuredResolver))
             ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif($result->exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($result->xmpBlobs, $xmpDoc)
@@ -301,7 +306,7 @@ final readonly class MetadataReader
             $iptcDoc   = IptcDocument::merge(...$documents);
         }
 
-        return (new MetadataBuilder())
+        return (new MetadataBuilder($this->structuredResolver))
             ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif($exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($xmpBlobs, $xmpDoc)
@@ -330,14 +335,14 @@ final readonly class MetadataReader
         ?string $extension,
         ?string $digestSha256,
     ): Metadata {
-        $result = $this->jxlParserFactory->create($stream)->extract();
+        $result = (new JxlParser($stream))->extract();
 
         [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($result->exifBlobs, embeddedContext: true);
 
         $makerNotes = $this->appleMerger->merge($makerNotes, null);
         $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs);
 
-        return (new MetadataBuilder())
+        return (new MetadataBuilder($this->structuredResolver))
             ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif($result->exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($result->xmpBlobs, $xmpDoc)
