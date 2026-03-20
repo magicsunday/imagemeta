@@ -166,6 +166,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $this->iccProfileRaw     = null;
         $this->iptcNaaRaw        = null;
         $this->ifdCache          = [];
+        $this->bigTiff           = false;
         $this->bigTiffOffsetSize = 8;
         $this->ifdParser ??= new IfdParser();
 
