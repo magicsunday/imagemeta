@@ -26,7 +26,7 @@ use function in_array;
  * with a 12-byte JXL signature box followed by standard top-level boxes including
  * `Exif` for EXIF metadata and `xml ` for XMP.
  */
-final readonly class JxlParser implements JxlParserInterface
+final readonly class JxlParser
 {
     /**
      * Four-character code for the Exif box.

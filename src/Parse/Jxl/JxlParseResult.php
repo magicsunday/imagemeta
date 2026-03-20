@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Jxl;
 
 /**
- * Immutable result object returned by {@see JxlParserInterface::extract()}.
+ * Immutable result object returned by {@see JxlParser::extract()}.
  */
 final readonly class JxlParseResult
 {
