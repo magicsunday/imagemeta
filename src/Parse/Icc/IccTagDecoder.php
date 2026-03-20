@@ -23,6 +23,8 @@ use function str_starts_with;
 use function strlen;
 use function substr;
 
+use const PHP_INT_MAX;
+
 /**
  * Traverses the ICC tag table and decodes tag payloads.
  *
@@ -621,6 +623,10 @@ final readonly class IccTagDecoder
             return null;
         }
 
+        if ($recordCount > intdiv(PHP_INT_MAX - 16, $recordSize)) {
+            return null;
+        }
+
         // Record table must fit within payload
         $tableEnd = 16 + ($recordCount * $recordSize);
 
@@ -762,6 +768,10 @@ final readonly class IccTagDecoder
         }
 
         $count = $this->reader->uInt32Be(substr($data, 8, 4));
+
+        if ($count > 65536) {
+            return null;
+        }
 
         // Identity curve
         if ($count === 0) {
