@@ -645,7 +645,7 @@ final class XmpParser implements XmpParserInterface
     private function buildClarkName(string $namespaceUri, string $localName): string
     {
         return $namespaceUri !== ''
-            ? sprintf('{%s}%s', $namespaceUri, $localName)
+            ? '{' . $namespaceUri . '}' . $localName
             : $localName;
     }
 }
