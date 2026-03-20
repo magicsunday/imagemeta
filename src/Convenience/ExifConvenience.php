@@ -18,7 +18,6 @@ use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\Gps;
-use MagicSunday\ImageMeta\Value\GpsPosition;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Lens;
 
@@ -41,14 +40,6 @@ use const DATE_ATOM;
  */
 final readonly class ExifConvenience
 {
-    /**
-     * Returns the capture timestamp value from the capture metadata.
-     */
-    public function captureDateTime(Capture $capture): ?DateTimeImmutable
-    {
-        return $capture->dateTime;
-    }
-
     /**
      * Formats the capture timestamp as a string using the supplied format.
      */
@@ -129,7 +120,7 @@ final readonly class ExifConvenience
             $parts[] = $this->formatFocalLength($focalLength);
         }
 
-        $equivalent = $derived?->equivalent35mm;
+        $equivalent = $derived?->focalLength35Mm;
 
         if (($equivalent !== null) && !$this->containsEquivalent($parts, $equivalent)) {
             $parts[] = sprintf('%d mm eq', $equivalent);
@@ -178,7 +169,7 @@ final readonly class ExifConvenience
         $result = $latValue . ', ' . $lonValue;
 
         if ($includeAltitude) {
-            $altitude = $this->resolveAltitude($gps);
+            $altitude = $gps->position->altitude;
 
             if ($altitude !== null) {
                 $result .= ' (' . $this->formatNumber($altitude, 1) . ' m)';
@@ -228,7 +219,7 @@ final readonly class ExifConvenience
             'iso'         => $exposure->settings?->iso,
             'gps_lat'     => $gps->position?->latitudeSigned,
             'gps_lon'     => $gps->position?->longitudeSigned,
-            'gps_alt'     => $this->resolveAltitude($gps),
+            'gps_alt'     => $gps->position?->altitude,
         ];
     }
 
@@ -425,24 +416,5 @@ final readonly class ExifConvenience
         }
 
         return $longitude >= 0.0 ? 'E' : 'W';
-    }
-
-    /**
-     * Applies the GPS altitude reference to produce a signed altitude.
-     *
-     * @param Gps $gps GPS data container.
-     *
-     * @return float|null Signed altitude value or null when absent.
-     */
-    private function resolveAltitude(Gps $gps): ?float
-    {
-        $position = $gps->position;
-
-        if (!$position instanceof GpsPosition) {
-            return null;
-        }
-
-        // GpsPosition->altitude is already signed by GpsUnitConverter/GpsFactory
-        return $position->altitude;
     }
 }

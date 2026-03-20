@@ -16,8 +16,6 @@ use DateTimeImmutable;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
-use MagicSunday\ImageMeta\Value\Capture;
-use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Temporal;
 
 use function array_find;
@@ -42,9 +40,9 @@ final readonly class CaptureDateResolver
         $temporal = $structured->locationTime->temporal;
         $gps      = $structured->locationTime->gps;
 
-        $candidate = $this->captureDate($capture)
+        $candidate = $capture->dateTime
             ?? $this->temporalFallback($temporal)
-            ?? $this->gpsFallback($gps);
+            ?? $gps->timing?->timestamp;
 
         if ($candidate instanceof DateTimeImmutable) {
             return $candidate;
@@ -72,18 +70,6 @@ final readonly class CaptureDateResolver
     }
 
     /**
-     * Returns the capture timestamp from structured capture metadata.
-     *
-     * @param Capture $capture Structured capture data.
-     *
-     * @return DateTimeImmutable|null Capture timestamp or null.
-     */
-    private function captureDate(Capture $capture): ?DateTimeImmutable
-    {
-        return $capture->dateTime;
-    }
-
-    /**
      * Returns the first temporal timestamp candidate when available.
      *
      * @param Temporal $temporal Structured temporal data.
@@ -102,18 +88,6 @@ final readonly class CaptureDateResolver
             $candidates,
             fn ($candidate): bool => $candidate instanceof DateTimeImmutable
         );
-    }
-
-    /**
-     * Returns the GPS timestamp as a fallback candidate.
-     *
-     * @param Gps $gps Structured GPS data.
-     *
-     * @return DateTimeImmutable|null GPS timestamp or null.
-     */
-    private function gpsFallback(Gps $gps): ?DateTimeImmutable
-    {
-        return $gps->timing?->timestamp;
     }
 
     /**
