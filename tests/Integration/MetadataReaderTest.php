@@ -26,8 +26,6 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
-use MagicSunday\ImageMeta\Exif\Factory\TiffDataFactory;
-use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
@@ -39,6 +37,8 @@ use MagicSunday\ImageMeta\Exif\Reader\DngMetadataExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\ImageStructureExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\UserCommentExifReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Factory\Structured\TiffDataFactory;
+use MagicSunday\ImageMeta\Factory\Structured\ValueFactory;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
@@ -77,7 +77,6 @@ use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
 use MagicSunday\ImageMeta\Parse\Jxl\JxlParser;
 use MagicSunday\ImageMeta\Parse\Jxl\JxlParseResult;
-use MagicSunday\ImageMeta\Parse\Jxl\JxlParserFactory;
 use MagicSunday\ImageMeta\Parse\Tiff\DngValueNormalizer;
 use MagicSunday\ImageMeta\Parse\Tiff\MakerNoteDispatcher;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffBinaryReader;
@@ -238,7 +237,6 @@ use function unlink;
 #[UsesClass(JpegParserFactory::class)]
 #[UsesClass(JxlParseResult::class)]
 #[UsesClass(JxlParser::class)]
-#[UsesClass(JxlParserFactory::class)]
 #[UsesClass(Keywords::class)]
 #[UsesClass(Lens::class)]
 #[UsesClass(LocationTime::class)]
@@ -463,7 +461,6 @@ final class MetadataReaderTest extends TestCase
                 formatDetector: new FormatDetector(),
                 jpegParserFactory: new JpegParserFactory(),
                 isoBmffParserFactory: new IsoBmffParserFactory(),
-                jxlParserFactory: new JxlParserFactory(),
             );
             $result = $metadata->read($path);
         } finally {
@@ -758,7 +755,6 @@ final class MetadataReaderTest extends TestCase
                 formatDetector: new FormatDetector(),
                 jpegParserFactory: new JpegParserFactory(),
                 isoBmffParserFactory: new IsoBmffParserFactory(),
-                jxlParserFactory: new JxlParserFactory(),
                 maxTiffSize: strlen($tiff) - 1,
             );
 
@@ -788,7 +784,6 @@ final class MetadataReaderTest extends TestCase
                 formatDetector: new FormatDetector(),
                 jpegParserFactory: new JpegParserFactory(),
                 isoBmffParserFactory: new IsoBmffParserFactory(),
-                jxlParserFactory: new JxlParserFactory(),
                 maxTiffSize: strlen($tiff),
             );
 
