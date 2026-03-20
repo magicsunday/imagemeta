@@ -124,7 +124,10 @@ final readonly class UInt64
             return 1;
         }
 
-        return $this->compare(self::fromInt($value));
+        $valueHi = intdiv($value, self::UINT32_BASE);
+        $valueLo = $value & self::UINT32_MASK;
+
+        return $this->hi !== $valueHi ? $this->hi <=> $valueHi : $this->lo <=> $valueLo;
     }
 
     /**
