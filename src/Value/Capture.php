@@ -33,7 +33,7 @@ final readonly class Capture
      * @param float|null             $temperatureC            Recorded temperature in Celsius (EXIF 3.0 §4.6.6).
      * @param float|null             $humidityPercent         Relative humidity percentage (EXIF 3.0 §4.6.6).
      * @param float|null             $pressureHPa             Ambient pressure in hPa (EXIF 3.0 §4.6.6).
-     * @param float|null             $waterDepthM             Water depth in metres (EXIF 3.0 §4.6.6, tag 0x9403).
+     * @param float|null             $waterDepthMetres        Water depth in metres (EXIF 3.0 §4.6.6, tag 0x9403).
      * @param float|null             $accelerationMs2         Camera acceleration magnitude in m/s² (EXIF 3.0 §4.6.6.8.6, tag 0x9404).
      * @param float|null             $cameraElevationAngleDeg Camera elevation angle in degrees (EXIF 3.0 §4.6.6, tag 0x9405).
      */
@@ -42,7 +42,7 @@ final readonly class Capture
         public ?float $temperatureC,
         public ?float $humidityPercent,
         public ?float $pressureHPa,
-        public ?float $waterDepthM,
+        public ?float $waterDepthMetres,
         public ?float $accelerationMs2,
         public ?float $cameraElevationAngleDeg,
     ) {

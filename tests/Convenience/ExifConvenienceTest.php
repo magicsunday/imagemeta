@@ -94,7 +94,7 @@ final class ExifConvenienceTest extends TestCase
             fieldOfViewDiagonalDeg  : null,
             fieldOfViewHorizontalDeg: null,
             fieldOfViewVerticalDeg  : null,
-            equivalent35mm          : 75,
+            focalLength35Mm          : 75,
             cropFactor              : null,
         );
 
