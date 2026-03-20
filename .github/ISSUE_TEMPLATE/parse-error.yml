@@ -1,0 +1,59 @@
+name: "Parse Error Report"
+description: "A file cannot be parsed and the parser aborts with an error."
+title: "Parse error: <brief description>"
+labels:
+    - bug
+    - parse-error
+body:
+    - type: markdown
+      attributes:
+          value: |
+              ## Parse Error Report
+              Use this template when a file fails to parse with an error message.
+
+    - type: input
+      id: file_type
+      attributes:
+          label: "File type"
+          description: "Container format of the file."
+          placeholder: "HEIC / MOV / MP4 / JPEG / TIFF / AVIF / JXL"
+      validations:
+          required: true
+
+    - type: input
+      id: device
+      attributes:
+          label: "Camera / device / application"
+          description: "What created the file?"
+          placeholder: "iPhone 16 Pro / Panasonic DMC-FZ28 / FFmpeg / Handbrake"
+      validations:
+          required: false
+
+    - type: textarea
+      id: error_message
+      attributes:
+          label: "Error message and stack trace"
+          description: "The full error output."
+          render: shell
+          placeholder: |
+              ERROR: infe uri item_uri_type must be non-empty
+              #0 /app/src/Parse/IsoBmff/IlocBoxParser.php(231): ...
+              #1 ...
+      validations:
+          required: true
+
+    - type: textarea
+      id: sample_file
+      attributes:
+          label: "Sample file"
+          description: "Attach a minimal sample file that reproduces the error, or describe how to obtain one. If the file contains personal data, consider stripping metadata first."
+      validations:
+          required: false
+
+    - type: textarea
+      id: additional_context
+      attributes:
+          label: "Additional context"
+          description: "Any other relevant information (PHP version, library version, etc.)."
+      validations:
+          required: false
