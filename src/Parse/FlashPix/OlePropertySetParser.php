@@ -38,6 +38,11 @@ final class OlePropertySetParser
     private const int BYTE_ORDER_LE = 0xFFFE;
 
     /**
+     * Maximum number of properties allowed in a single section.
+     */
+    private const int MAX_OLE_PROPERTIES = 10_000;
+
+    /**
      * Minimum header size: 2 (byteOrder) + 2 (format) + 4 (osVer) + 16 (clsid) + 4 (sectionCount).
      */
     private const int MIN_HEADER_SIZE = 28;
@@ -101,7 +106,7 @@ final class OlePropertySetParser
         $propertyCount = $this->u32($raw, $sectionOffset + 4);
         $tableEnd      = $sectionOffset + 8 + ($propertyCount * 8);
 
-        if (($propertyCount < 1) || ($tableEnd > $length)) {
+        if (($propertyCount < 1) || ($propertyCount > self::MAX_OLE_PROPERTIES) || ($tableEnd > $length)) {
             return null;
         }
 
@@ -230,9 +235,14 @@ final class OlePropertySetParser
         }
 
         $charCount = $this->u32($raw, $offset);
+
+        if (($charCount < 1) || ($charCount > 1_000_000)) {
+            return null;
+        }
+
         $byteCount = $charCount * 2;
 
-        if (($charCount < 1) || (($offset + 4 + $byteCount) > $length)) {
+        if (($offset + 4 + $byteCount) > $length) {
             return null;
         }
 

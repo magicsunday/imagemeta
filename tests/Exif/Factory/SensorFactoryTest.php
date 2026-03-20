@@ -65,12 +65,12 @@ final class SensorFactoryTest extends TestCase
         self::assertSame(ResolutionUnit::Inches, $sensor->focalPlaneResolutionUnit);
         self::assertNull($sensor->pixelPitchUm);
         self::assertNull($sensor->sensorType);
-        self::assertFalse($sensor->ibis);
+        self::assertNull($sensor->ibis);
     }
 
     /**
      * Creates Metadata without an EXIF document.
-     * Ensures the sensor value object contains null fields and disables ibis.
+     * Ensures the sensor value object contains null fields including ibis.
      */
     #[Test]
     public function createsWithNullExifDoc(): void
@@ -79,7 +79,7 @@ final class SensorFactoryTest extends TestCase
 
         self::assertNull($sensor->pixelPitchUm);
         self::assertNull($sensor->sensorType);
-        self::assertFalse($sensor->ibis);
+        self::assertNull($sensor->ibis);
         self::assertNull($sensor->cfaPattern);
         self::assertNull($sensor->spectralSensitivity);
         self::assertNull($sensor->oecf);

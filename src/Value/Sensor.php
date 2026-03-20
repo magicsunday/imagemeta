@@ -23,7 +23,7 @@ final readonly class Sensor
      *
      * @param float|null                    $pixelPitchUm             Pixel pitch in micrometres.
      * @param string|null                   $sensorType               Sensor technology (e.g. CCD or CMOS).
-     * @param bool                          $ibis                     Indicates in-body image stabilisation support.
+     * @param bool|null                     $ibis                     Indicates in-body image stabilisation support.
      * @param CfaPattern|null               $cfaPattern               Colour filter array pattern definition.
      * @param string|null                   $spectralSensitivity      Spectral sensitivity description.
      * @param Oecf|null                     $oecf                     Opto-electronic conversion function (EXIF 3.0 §4.6.3).
@@ -35,7 +35,7 @@ final readonly class Sensor
     public function __construct(
         public ?float $pixelPitchUm = null,
         public ?string $sensorType = null,
-        public bool $ibis = false,
+        public ?bool $ibis = null,
         public ?CfaPattern $cfaPattern = null,
         public ?string $spectralSensitivity = null,
         public ?Oecf $oecf = null,

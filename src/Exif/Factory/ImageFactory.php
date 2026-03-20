@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Factory;
 
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
@@ -26,12 +28,14 @@ use function is_string;
 use function strtoupper;
 
 /**
- * Factory for creating Image value objects from EXIF metadata.
+ * Factory for creating Image value objects from EXIF metadata with XMP fallback.
+ *
+ * Falls back to XMP properties per CIPA DC-X010-2017 Tables 8-9 and 14 when EXIF tags are absent.
  */
 final readonly class ImageFactory
 {
     /**
-     * Creates an Image value object from EXIF metadata.
+     * Creates an Image value object from EXIF metadata with XMP fallback.
      *
      * @param Metadata         $metadata    Metadata container with decoded EXIF, XMP and QuickTime data.
      * @param XmpDocument|null $xmpDocument Parsed XMP document for title/description overrides.
@@ -41,10 +45,12 @@ final readonly class ImageFactory
     public function create(Metadata $metadata, ?XmpDocument $xmpDocument = null): Image
     {
         $exifDocument    = $metadata->exifDoc;
+        $resolverDoc     = $xmpDocument ?? $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $resolver        = $resolverDoc instanceof XmpDocument ? XmpFallbackResolver::fromDocument($resolverDoc) : null;
         $quickTimeLookup = new QuickTimeLookup($metadata->quickTime);
 
-        $width         = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY);
-        $height        = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_HEIGHT_KEY);
+        $width         = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth ?? $resolver?->int(ExifTag::PIXEL_X_DIMENSION) ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY);
+        $height        = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight ?? $resolver?->int(ExifTag::PIXEL_Y_DIMENSION) ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_HEIGHT_KEY);
         $orientation   = $exifDocument?->orientation() ?? $this->rotationToOrientation($quickTimeLookup->int(QuickTimeMeta::ROTATION_KEY));
         $bitsPerSample = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_BIT_DEPTH_KEY);
 
@@ -57,8 +63,8 @@ final readonly class ImageFactory
             height: $height,
             orientation: $orientation,
             bitsPerSample: $bitsPerSample,
-            colorSpace: $this->normalizedColorSpace($exifDocument),
-            imageUniqueId: $exifDocument?->imageUniqueId(),
+            colorSpace: $this->normalizedColorSpace($exifDocument, $resolver),
+            imageUniqueId: $exifDocument?->imageUniqueId() ?? $resolver?->string(ExifTag::IMAGE_UNIQUE_ID),
             documentName: $exifDocument?->documentName(),
             description: $xmpDescription ?? $exifDocument?->imageDescription(),
             title: $xmpTitle ?? $xmpHeadline ?? $exifDocument?->imageTitle(),
@@ -93,16 +99,17 @@ final readonly class ImageFactory
     }
 
     /**
-     * Normalizes the colour space based on interoperability metadata hints.
+     * Normalizes the colour space based on interoperability metadata hints with XMP fallback.
      *
-     * @param ParsedExif|null $exifDocument EXIF document exposing colour space and interoperability tags.
+     * @param ParsedExif|null          $exifDocument EXIF document exposing colour space and interoperability tags.
+     * @param XmpFallbackResolver|null $resolver     XMP fallback resolver for colour space lookup.
      *
      * @return ColorSpace|null Normalized colour space enumeration or null when undefined.
      */
-    private function normalizedColorSpace(?ParsedExif $exifDocument): ?ColorSpace
+    private function normalizedColorSpace(?ParsedExif $exifDocument, ?XmpFallbackResolver $resolver = null): ?ColorSpace
     {
         if (!$exifDocument instanceof ParsedExif) {
-            return null;
+            return ColorSpace::tryFrom($resolver?->int(ExifTag::COLOR_SPACE) ?? -1);
         }
 
         $colorSpace = $exifDocument->colorSpace();

@@ -144,7 +144,7 @@ final class IptcParser implements IptcParserInterface
 
             if (($resourceSize % 2) !== 0) {
                 if (($length - $offset) < 1) {
-                    throw new BoundsError('APP13 resource data padding exceeds payload length.', 1142);
+                    throw new BoundsError('APP13 resource data padding exceeds payload length.', 2108);
                 }
 
                 // Tolerate non-zero data padding bytes.

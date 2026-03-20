@@ -17,6 +17,8 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Camera;
+use MagicSunday\ImageMeta\Value\Enum\FileSource;
+use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 
 /**
  * Factory for creating Camera value objects from EXIF metadata with XMP and QuickTime fallback.
@@ -45,8 +47,8 @@ final readonly class CameraFactory
             model: $exifDocument?->cameraModel() ?? $resolver?->string(ExifTag::MODEL) ?? $quickTimeLookup->string('com.apple.quicktime.model'),
             ownerName: $exifDocument?->ownerName() ?? $resolver?->string(ExifTag::CAMERA_OWNER_NAME),
             firmware: $exifDocument?->cameraFirmware() ?? $resolver?->string(ExifTag::SOFTWARE),
-            fileSource: $exifDocument?->fileSource(),
-            sensingMethod: $exifDocument?->sensingMethod(),
+            fileSource: $exifDocument?->fileSource() ?? FileSource::tryFrom($resolver?->int(ExifTag::FILE_SOURCE) ?? -1),
+            sensingMethod: $exifDocument?->sensingMethod() ?? SensingMethod::tryFrom($resolver?->int(ExifTag::SENSING_METHOD) ?? -1),
         );
     }
 }

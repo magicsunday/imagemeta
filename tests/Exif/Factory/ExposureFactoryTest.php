@@ -53,7 +53,7 @@ final class ExposureFactoryTest extends TestCase
 
     /**
      * Creates Metadata without an EXIF document attached.
-     * Ensures ISO is null while FlashInfo is still instantiated with defaults.
+     * Ensures ISO is null and flash is null when no EXIF data exists.
      */
     #[Test]
     public function createsWithNullExifDoc(): void
@@ -62,8 +62,7 @@ final class ExposureFactoryTest extends TestCase
 
         self::assertNotNull($exposure->settings);
         self::assertNull($exposure->settings->iso);
-        self::assertInstanceOf(FlashInfo::class, $exposure->flash);
-        self::assertFalse($exposure->flash->fired);
+        self::assertNull($exposure->flash);
     }
 
     /**
@@ -108,18 +107,17 @@ final class ExposureFactoryTest extends TestCase
 
     /**
      * Supplies IFD entries with empty EXIF IFD (no flash, no ISO).
-     * Confirms flash defaults to not-fired and ISO stays null.
+     * Confirms flash is null and ISO stays null when neither tag is present.
      */
     #[Test]
-    public function emptyExifIfdYieldsDefaultFlashAndNullIso(): void
+    public function emptyExifIfdYieldsNullFlashAndNullIso(): void
     {
         $parsedExif = $this->createParsedExifWithExifEntries([]);
         $exposure   = $this->createExposure($parsedExif);
 
         self::assertNotNull($exposure->settings);
         self::assertNull($exposure->settings->iso);
-        self::assertInstanceOf(FlashInfo::class, $exposure->flash);
-        self::assertFalse($exposure->flash->fired);
+        self::assertNull($exposure->flash);
     }
 
     private function parsedExifWithIsoAndFlash(?int $iso, ?int $flash): ParsedExif

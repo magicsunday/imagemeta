@@ -11,11 +11,18 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Factory;
 
-use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Value\Enum\Contrast;
+use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
+use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
+use MagicSunday\ImageMeta\Value\Enum\GainControl;
+use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
+use MagicSunday\ImageMeta\Value\Enum\Saturation;
+use MagicSunday\ImageMeta\Value\Enum\Sharpness;
+use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\ExposureAdjustments;
 use MagicSunday\ImageMeta\Value\ExposureSettings;
@@ -40,10 +47,10 @@ final readonly class ExposureFactory
         $xmpDocument  = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
         $resolver     = $xmpDocument instanceof XmpDocument ? XmpFallbackResolver::fromDocument($xmpDocument) : null;
 
-        $exposureProgram = $exifDocument?->exposureProgram();
-        $meteringMode    = $exifDocument?->meteringMode();
-        $whiteBalance    = $exifDocument?->whiteBalance();
-        $flashInfo       = $exifDocument?->flashInfo() ?? ExifFlash::fromExifValue(0);
+        $exposureProgram = $exifDocument?->exposureProgram() ?? ExposureProgram::tryFrom($resolver?->int(ExifTag::EXPOSURE_PROGRAM) ?? -1);
+        $meteringMode    = $exifDocument?->meteringMode() ?? MeteringMode::tryFrom($resolver?->int(ExifTag::METERING_MODE) ?? -1);
+        $whiteBalance    = $exifDocument?->whiteBalance() ?? WhiteBalance::tryFrom($resolver?->int(ExifTag::WHITE_BALANCE) ?? -1);
+        $flashInfo       = $exifDocument?->flashInfo();
 
         $settings = new ExposureSettings(
             iso: $exifDocument?->isoBestEffort() ?? $resolver?->int(ExifTag::PHOTOGRAPHIC_SENSITIVITY),
@@ -60,18 +67,18 @@ final readonly class ExposureFactory
 
         $adjustments = new ExposureAdjustments(
             whiteBalance: $whiteBalance,
-            contrast: $exifDocument?->contrast(),
-            saturation: $exifDocument?->saturation(),
-            sharpness: $exifDocument?->sharpness(),
+            contrast: $exifDocument?->contrast() ?? Contrast::tryFrom($resolver?->int(ExifTag::CONTRAST) ?? -1),
+            saturation: $exifDocument?->saturation() ?? Saturation::tryFrom($resolver?->int(ExifTag::SATURATION) ?? -1),
+            sharpness: $exifDocument?->sharpness() ?? Sharpness::tryFrom($resolver?->int(ExifTag::SHARPNESS) ?? -1),
             digitalZoomRatio: $exifDocument?->digitalZoomRatio() ?? $resolver?->float(ExifTag::DIGITAL_ZOOM_RATIO),
-            gainControl: $exifDocument?->gainControl(),
+            gainControl: $exifDocument?->gainControl() ?? GainControl::tryFrom($resolver?->int(ExifTag::GAIN_CONTROL) ?? -1),
         );
 
         return new Exposure(
             settings: $settings,
             adjustments: $adjustments,
             program: $exposureProgram,
-            exposureMode: $exifDocument?->exposureMode(),
+            exposureMode: $exifDocument?->exposureMode() ?? ExposureMode::tryFrom($resolver?->int(ExifTag::EXPOSURE_MODE) ?? -1),
             meteringMode: $meteringMode,
             flash: $flashInfo,
             flashEnergy: $exifDocument?->flashEnergy() ?? $resolver?->float(ExifTag::FLASH_ENERGY),

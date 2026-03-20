@@ -147,6 +147,11 @@ final readonly class UInt64
 
         if ($lo > self::UINT32_MASK) {
             $lo -= self::UINT32_BASE;
+
+            if ($hi === self::UINT32_MASK) {
+                throw new ParseError('UInt64 addition overflow.', 2107);
+            }
+
             ++$hi;
         }
 

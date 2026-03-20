@@ -49,7 +49,7 @@ final class SensorTest extends TestCase
         $sensor = new Sensor(
             pixelPitchUm: null,
             sensorType: null,
-            ibis: false,
+            ibis: null,
             cfaPattern: $cfaPattern,
         );
 

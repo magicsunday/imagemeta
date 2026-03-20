@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function count;
 use function iconv;
+use function intdiv;
 use function is_bool;
 use function is_float;
 use function is_int;

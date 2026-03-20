@@ -108,6 +108,7 @@ final class DngTagTest extends TestCase
         // Exclude the deprecated alias which intentionally duplicates PROFILE_TONE_CURVE
         unset($constants['PROFILE_HUE_SAT_MAP_DATA_3']);
 
+        /** @var list<int> $values */
         $values = array_values($constants);
 
         self::assertCount(count($values), array_unique($values));

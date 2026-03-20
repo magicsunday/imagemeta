@@ -34,7 +34,7 @@ use function substr;
  *
  * @phpstan-type IlocExtent   = array{offset: int, length: int, index: ?int}
  * @phpstan-type IlocLocation = array{dataReferenceIndex: int, constructionMethod: ConstructionMethod, baseOffset: int, fileOffsetOrigin: int, extents: list<IlocExtent>}
- * @phpstan-type InfeItem     = array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string, itemUriType?: string, hidden: bool}
+ * @phpstan-type InfeItem     = array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string, itemUriType?: ?string, hidden: bool}
  */
 final readonly class IlocBoxParser
 {
@@ -525,7 +525,7 @@ final readonly class IlocBoxParser
      *
      * @param BoxDescriptor $infe Box descriptor for the entry being parsed.
      *
-     * @return array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string, itemUriType?: string, hidden: bool}
+     * @return array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string, itemUriType?: ?string, hidden: bool}
      */
     private function parseInfe(BoxDescriptor $infe): array
     {

@@ -20,6 +20,7 @@ use function intdiv;
 use function is_int;
 use function ltrim;
 use function ord;
+use function sprintf;
 use function strlen;
 use function substr;
 
@@ -80,6 +81,13 @@ final class PlistBinaryReader
      */
     public function readUint(int $offset, int $length): int
     {
+        if ($length > PHP_INT_SIZE) {
+            throw new ParseError(
+                sprintf('Integer read length %d exceeds platform int size %d.', $length, PHP_INT_SIZE),
+                2109,
+            );
+        }
+
         if ($length < 1) {
             throw new ParseError('Cannot read zero length integers.', 1086);
         }

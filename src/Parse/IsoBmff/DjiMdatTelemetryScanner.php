@@ -14,9 +14,11 @@ namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Model\Dji\DjiTelemetry;
 
+use function abs;
 use function is_finite;
 use function max;
 use function min;
+use function ord;
 use function strlen;
 use function strpos;
 use function substr;
@@ -229,9 +231,18 @@ final readonly class DjiMdatTelemetryScanner
                 continue;
             }
 
-            /** @var array{1: float} $unpacked */
             $unpacked = unpack('e', substr($chunk, $altOffset, 8));
-            $val      = $unpacked[1];
+
+            if ($unpacked === false) {
+                continue;
+            }
+
+            if (!isset($unpacked[1])) {
+                continue;
+            }
+
+            /** @var float $val */
+            $val = $unpacked[1];
 
             if (!is_finite($val)) {
                 continue;
@@ -257,9 +268,14 @@ final readonly class DjiMdatTelemetryScanner
             return null;
         }
 
-        /** @var array{1: float} $unpacked */
         $unpacked = unpack('e', $bytes);
-        $val      = $unpacked[1];
+
+        if ($unpacked === false || !isset($unpacked[1])) {
+            return null;
+        }
+
+        /** @var float $val */
+        $val = $unpacked[1];
 
         // GPS coordinates in radians: lat ∈ [-π/2, π/2], lon ∈ [-π, π]
         // Filter for reasonable range (> 0.01 rad ≈ 0.57°, < π ≈ 3.14159)
