@@ -14,7 +14,9 @@ namespace MagicSunday\ImageMeta\Factory\Structured;
 use DateMalformedStringException;
 use DateTimeImmutable;
 use DateTimeZone;
+use MagicSunday\ImageMeta\Core\Util\DateTimeUtil;
 use MagicSunday\ImageMeta\Core\Util\Iso6709Parser;
+use MagicSunday\ImageMeta\Core\Util\StringUtil;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
@@ -42,7 +44,6 @@ use function round;
 use function sprintf;
 use function str_contains;
 use function str_replace;
-use function strtoupper;
 use function trim;
 
 use const PREG_SPLIT_NO_EMPTY;
@@ -135,54 +136,54 @@ final readonly class GpsFactory
 
         $latitude     = $this->floatValue($gpsData['lat']);
         $longitude    = $this->floatValue($gpsData['lon']);
-        $latitudeRef  = $this->uppercase($gpsData['lat_ref']);
-        $longitudeRef = $this->uppercase($gpsData['lon_ref']);
+        $latitudeRef  = StringUtil::trimToUpperNull($gpsData['lat_ref']);
+        $longitudeRef = StringUtil::trimToUpperNull($gpsData['lon_ref']);
         $altitude     = $this->floatValue($gpsData['alt']);
         $altitudeRef  = $this->intValue($gpsData['alt_ref']);
 
-        $version    = $this->stringValue($gpsData['version']);
+        $version    = StringUtil::trimToNull($gpsData['version']);
         $versionRaw = $gpsData['version_raw'];
 
         if (!is_string($versionRaw)) {
             $versionRaw = null;
         }
 
-        $satellites       = $this->stringValue($gpsData['satellites']);
-        $status           = $this->stringValue($gpsData['status']);
-        $measureMode      = $this->stringValue($gpsData['measure_mode']);
+        $satellites       = StringUtil::trimToNull($gpsData['satellites']);
+        $status           = StringUtil::trimToNull($gpsData['status']);
+        $measureMode      = StringUtil::trimToNull($gpsData['measure_mode']);
         $dop              = $this->floatValue($gpsData['dop']);
-        $speedRef         = $this->uppercase($gpsData['speed_ref']);
+        $speedRef         = StringUtil::trimToUpperNull($gpsData['speed_ref']);
         $speedMs          = $this->floatValue($gpsData['speed_ms']);
-        $speedOriginalRef = $this->stringValue($gpsData['speed_original_ref']);
+        $speedOriginalRef = StringUtil::trimToNull($gpsData['speed_original_ref']);
         $speedOriginal    = $this->floatValue($gpsData['speed_original']);
-        $trackRef         = $this->uppercase($gpsData['track_ref']);
+        $trackRef         = StringUtil::trimToUpperNull($gpsData['track_ref']);
         $track            = $this->floatValue($gpsData['track']);
-        $imgDirRef        = $this->uppercase($gpsData['img_direction_ref']);
+        $imgDirRef        = StringUtil::trimToUpperNull($gpsData['img_direction_ref']);
         $imgDir           = $this->floatValue($gpsData['img_direction']);
-        $mapDatum         = $this->stringValue($gpsData['map_datum']);
+        $mapDatum         = StringUtil::trimToNull($gpsData['map_datum']);
 
-        $destLatRef          = $this->uppercase($gpsData['dest_lat_ref']);
+        $destLatRef          = StringUtil::trimToUpperNull($gpsData['dest_lat_ref']);
         $destLat             = $this->floatValue($gpsData['dest_lat']);
-        $destLonRef          = $this->uppercase($gpsData['dest_lon_ref']);
+        $destLonRef          = StringUtil::trimToUpperNull($gpsData['dest_lon_ref']);
         $destLon             = $this->floatValue($gpsData['dest_lon']);
-        $destBearRef         = $this->uppercase($gpsData['dest_bearing_ref']);
+        $destBearRef         = StringUtil::trimToUpperNull($gpsData['dest_bearing_ref']);
         $destBear            = $this->floatValue($gpsData['dest_bearing']);
-        $destDistRef         = $this->uppercase($gpsData['dest_distance_ref']);
+        $destDistRef         = StringUtil::trimToUpperNull($gpsData['dest_distance_ref']);
         $destDistMetre       = $this->floatValue($gpsData['dest_distance_m']);
-        $destDistOriginalRef = $this->stringValue($gpsData['dest_distance_original_ref']);
+        $destDistOriginalRef = StringUtil::trimToNull($gpsData['dest_distance_original_ref']);
         $destDistOriginal    = $this->floatValue($gpsData['dest_distance_original']);
 
-        $processingMethod = $this->stringValue($gpsData['processing_method']);
-        $areaInformation  = $this->stringValue($gpsData['area_information']);
+        $processingMethod = StringUtil::trimToNull($gpsData['processing_method']);
+        $areaInformation  = StringUtil::trimToNull($gpsData['area_information']);
 
-        $date    = $this->normalizeDate($this->stringValue($gpsData['date']));
+        $date    = $this->normalizeDate(StringUtil::trimToNull($gpsData['date']));
         $dateRaw = $gpsData['date_raw'];
 
         if (!is_string($dateRaw)) {
             $dateRaw = null;
         }
 
-        $time = $this->stringValue($gpsData['time']);
+        $time = StringUtil::trimToNull($gpsData['time']);
 
         $timestamp = $exifDocument?->gpsTimestamp();
 
@@ -195,7 +196,7 @@ final readonly class GpsFactory
         }
 
         if ($time === null) {
-            $time = $this->stringValue($exifDocument?->gpsTimeStampString());
+            $time = StringUtil::trimToNull($exifDocument?->gpsTimeStampString());
         }
 
         [$latitude, $longitude, $latitudeRef, $longitudeRef] = $this->applyCoordinateFallbacks(
@@ -266,34 +267,34 @@ final readonly class GpsFactory
         $position = new GpsPosition(
             latitude: $latitude,
             longitude: $longitude,
-            latitudeRef: $this->toGpsLatLonRef($latitudeRef),
-            longitudeRef: $this->toGpsLatLonRef($longitudeRef),
+            latitudeRef: GpsEnum\GpsLatLonRef::fromExifValue($latitudeRef),
+            longitudeRef: GpsEnum\GpsLatLonRef::fromExifValue($longitudeRef),
             altitude: $altitude,
-            altitudeRef: $this->toGpsAltitudeRef($altitudeRef),
+            altitudeRef: GpsEnum\GpsAltitudeRef::fromExifValue($altitudeRef),
             mapDatum: $mapDatum,
         );
 
         $destination = new GpsDestination(
             latitude: $destLat,
-            latitudeRef: $this->toGpsLatLonRef($destLatRef),
+            latitudeRef: GpsEnum\GpsLatLonRef::fromExifValue($destLatRef),
             longitude: $destLon,
-            longitudeRef: $this->toGpsLatLonRef($destLonRef),
-            bearingRef: $this->toGpsDirectionRef($destBearRef),
+            longitudeRef: GpsEnum\GpsLatLonRef::fromExifValue($destLonRef),
+            bearingRef: GpsEnum\GpsDirectionRef::fromExifValue($destBearRef),
             bearing: $destBear,
-            distanceRef: $this->toGpsDistanceRef($destDistRef),
+            distanceRef: GpsEnum\GpsDistanceRef::fromExifValue($destDistRef),
             distanceMetres: $destDistMetre,
-            distanceOriginalRef: $this->toGpsDistanceRef($destDistOriginalRef),
+            distanceOriginalRef: GpsEnum\GpsDistanceRef::fromExifValue($destDistOriginalRef),
             distanceOriginal: $destDistOriginal,
         );
 
         $movement = new GpsMovement(
-            speedRef: $this->toGpsSpeedRef($speedRef),
+            speedRef: GpsEnum\GpsSpeedRef::fromExifValue($speedRef),
             speedMs: $speedMs,
-            speedOriginalRef: $this->toGpsSpeedRef($speedOriginalRef),
+            speedOriginalRef: GpsEnum\GpsSpeedRef::fromExifValue($speedOriginalRef),
             speedOriginal: $speedOriginal,
-            trackRef: $this->toGpsDirectionRef($trackRef),
+            trackRef: GpsEnum\GpsDirectionRef::fromExifValue($trackRef),
             track: $track,
-            imageDirectionRef: $this->toGpsDirectionRef($imgDirRef),
+            imageDirectionRef: GpsEnum\GpsDirectionRef::fromExifValue($imgDirRef),
             imageDirection: $imgDir,
         );
 
@@ -306,10 +307,10 @@ final readonly class GpsFactory
 
         $measurement = new GpsMeasurement(
             satellites: $satellites,
-            status: $this->toGpsStatus($status),
-            measureMode: $this->toGpsMeasureMode($measureMode),
+            status: GpsEnum\GpsStatus::fromExifValue($status),
+            measureMode: GpsEnum\GpsMeasureMode::fromExifValue($measureMode),
             dop: $dop,
-            differential: $this->toGpsDifferential($differential),
+            differential: GpsEnum\GpsDifferential::fromExifValue($differential),
             horizontalPositioningError: $hError,
         );
 
@@ -434,7 +435,7 @@ final readonly class GpsFactory
         string $xmpLonRefKey,
         string $xmpLonKey,
     ): array {
-        $xmpLatRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, $xmpLatRefKey));
+        $xmpLatRef = StringUtil::trimToUpperNull($xmpDocument?->string(XmpNamespace::EXIF->value, $xmpLatRefKey));
 
         if ($latitudeRef === null) {
             $latitudeRef = $xmpLatRef;
@@ -447,7 +448,7 @@ final readonly class GpsFactory
             );
         }
 
-        $xmpLonRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, $xmpLonRefKey));
+        $xmpLonRef = StringUtil::trimToUpperNull($xmpDocument?->string(XmpNamespace::EXIF->value, $xmpLonRefKey));
 
         if ($longitudeRef === null) {
             $longitudeRef = $xmpLonRef;
@@ -514,11 +515,11 @@ final readonly class GpsFactory
         ?string $mapDatum,
     ): array {
         if ($status === null) {
-            $status = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSStatus'));
+            $status = StringUtil::trimToUpperNull($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSStatus'));
         }
 
         if ($measureMode === null) {
-            $measureMode = $this->stringValue($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSMeasureMode'));
+            $measureMode = StringUtil::trimToNull($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSMeasureMode'));
         }
 
         if ($dop === null) {
@@ -526,7 +527,7 @@ final readonly class GpsFactory
         }
 
         if ($trackRef === null) {
-            $trackRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSTrackRef'));
+            $trackRef = StringUtil::trimToUpperNull($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSTrackRef'));
         }
 
         if ($track === null) {
@@ -534,7 +535,7 @@ final readonly class GpsFactory
         }
 
         if ($imgDirRef === null) {
-            $imgDirRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSImgDirectionRef'));
+            $imgDirRef = StringUtil::trimToUpperNull($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSImgDirectionRef'));
         }
 
         if ($imgDir === null) {
@@ -542,17 +543,17 @@ final readonly class GpsFactory
         }
 
         if ($mapDatum === null) {
-            $mapDatum = $this->stringValue($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSMapDatum'));
+            $mapDatum = StringUtil::trimToNull($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSMapDatum'));
         }
 
         $xmpSpeedRef = $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSSpeedRef');
 
         if ($speedRef === null) {
-            $speedRef = $this->uppercase($xmpSpeedRef);
+            $speedRef = StringUtil::trimToUpperNull($xmpSpeedRef);
         }
 
         if ($speedOriginalRef === null) {
-            $speedOriginalRef = $this->stringValue($xmpSpeedRef);
+            $speedOriginalRef = StringUtil::trimToNull($xmpSpeedRef);
         }
 
         $speedValue = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSSpeed');
@@ -600,7 +601,7 @@ final readonly class GpsFactory
             'GPSDestLongitude',
         );
 
-        $xmpDestBearRef = $this->uppercase($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestBearingRef'));
+        $xmpDestBearRef = StringUtil::trimToUpperNull($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestBearingRef'));
 
         if ($destBearRef === null) {
             $destBearRef = $xmpDestBearRef;
@@ -617,11 +618,11 @@ final readonly class GpsFactory
         $xmpDestDistRef = $xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSDestDistanceRef');
 
         if ($destDistRef === null) {
-            $destDistRef = $this->uppercase($xmpDestDistRef);
+            $destDistRef = StringUtil::trimToUpperNull($xmpDestDistRef);
         }
 
         if ($destDistOriginalRef === null) {
-            $destDistOriginalRef = $this->stringValue($xmpDestDistRef);
+            $destDistOriginalRef = StringUtil::trimToNull($xmpDestDistRef);
         }
 
         $destDistValue = $xmpDocument?->float(XmpNamespace::EXIF->value, 'GPSDestDistance');
@@ -659,7 +660,7 @@ final readonly class GpsFactory
         }
 
         if ($time === null) {
-            $time = $this->stringValue($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSTimeStamp'));
+            $time = StringUtil::trimToNull($xmpDocument?->string(XmpNamespace::EXIF->value, 'GPSTimeStamp'));
         }
 
         if (!$timestamp instanceof DateTimeImmutable) {
@@ -784,38 +785,6 @@ final readonly class GpsFactory
     }
 
     /**
-     * Normalizes a textual value to uppercase when present.
-     */
-    private function uppercase(?string $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $trimmed = trim($value);
-
-        if ($trimmed === '') {
-            return null;
-        }
-
-        return strtoupper($trimmed);
-    }
-
-    /**
-     * Returns the value as string when not empty.
-     */
-    private function stringValue(?string $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $trimmed = trim($value);
-
-        return $trimmed === '' ? null : $trimmed;
-    }
-
-    /**
      * Returns the value as float when numeric.
      */
     private function floatValue(int|float|null $value): ?float
@@ -880,24 +849,9 @@ final readonly class GpsFactory
     {
         $value = $document?->string(XmpNamespace::EXIF->value, 'GPSDateTime');
 
-        if ($value === null) {
-            return null;
-        }
+        $dateTime = DateTimeUtil::parseIso8601($value, new DateTimeZone('UTC'));
 
-        // Accept only ISO 8601 date-time: YYYY-MM-DDThh:mm:ss[.frac][Z|±hh:mm]
-        if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/', $value) !== 1) {
-            return null;
-        }
-
-        try {
-            // Parse with UTC fallback for timezone-less values (GPS time is always UTC)
-            $dateTime = new DateTimeImmutable($value, new DateTimeZone('UTC'));
-        } catch (DateMalformedStringException) {
-            // GPS timestamps from camera firmware may be malformed; yield null for graceful degradation.
-            return null;
-        }
-
-        return $dateTime->setTimezone(new DateTimeZone('UTC'));
+        return $dateTime?->setTimezone(new DateTimeZone('UTC'));
     }
 
     /**
@@ -957,85 +911,5 @@ final readonly class GpsFactory
             'N'     => $speed * 0.5144444444444444,
             default => null,
         };
-    }
-
-    /**
-     * Converts string latitude/longitude reference to enum.
-     *
-     * EXIF 3.0 §4.6.6 Table 27.
-     */
-    private function toGpsLatLonRef(?string $value): ?GpsEnum\GpsLatLonRef
-    {
-        return GpsEnum\GpsLatLonRef::fromExifValue($value);
-    }
-
-    /**
-     * Converts int/string altitude reference to enum.
-     *
-     * EXIF 3.0 §4.6.6 Table 27.
-     */
-    private function toGpsAltitudeRef(?int $value): ?GpsEnum\GpsAltitudeRef
-    {
-        return GpsEnum\GpsAltitudeRef::fromExifValue($value);
-    }
-
-    /**
-     * Converts string GPS status to enum.
-     *
-     * EXIF 3.0 §4.6.6 Table 27.
-     */
-    private function toGpsStatus(?string $value): ?GpsEnum\GpsStatus
-    {
-        return GpsEnum\GpsStatus::fromExifValue($value);
-    }
-
-    /**
-     * Converts string GPS measure mode to enum.
-     *
-     * EXIF 3.0 §4.6.6 Table 27.
-     */
-    private function toGpsMeasureMode(?string $value): ?GpsEnum\GpsMeasureMode
-    {
-        return GpsEnum\GpsMeasureMode::fromExifValue($value);
-    }
-
-    /**
-     * Converts string speed reference to enum.
-     *
-     * EXIF 3.0 §4.6.6 Table 27.
-     */
-    private function toGpsSpeedRef(?string $value): ?GpsEnum\GpsSpeedRef
-    {
-        return GpsEnum\GpsSpeedRef::fromExifValue($value);
-    }
-
-    /**
-     * Converts string direction reference to enum.
-     *
-     * EXIF 3.0 §4.6.6 Table 27.
-     */
-    private function toGpsDirectionRef(?string $value): ?GpsEnum\GpsDirectionRef
-    {
-        return GpsEnum\GpsDirectionRef::fromExifValue($value);
-    }
-
-    /**
-     * Converts string distance reference to enum.
-     *
-     * EXIF 3.0 §4.6.6 Table 27.
-     */
-    private function toGpsDistanceRef(?string $value): ?GpsEnum\GpsDistanceRef
-    {
-        return GpsEnum\GpsDistanceRef::fromExifValue($value);
-    }
-
-    /**
-     * Converts int/string differential to enum.
-     *
-     * EXIF 3.0 §4.6.6 Table 27.
-     */
-    private function toGpsDifferential(?int $value): ?GpsEnum\GpsDifferential
-    {
-        return GpsEnum\GpsDifferential::fromExifValue($value);
     }
 }
