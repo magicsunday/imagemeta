@@ -16,6 +16,8 @@ use MagicSunday\ImageMeta\Value\Region;
 use function abs;
 use function ceil;
 use function log10;
+use function max;
+use function min;
 
 /**
  * Normalizes region geometry and confidence values to the unit interval.
@@ -83,15 +85,7 @@ final readonly class RegionCoordinateNormalizer
      */
     public function clamp(float $value): float
     {
-        if ($value < 0.0) {
-            return 0.0;
-        }
-
-        if ($value > 1.0) {
-            return 1.0;
-        }
-
-        return $value;
+        return max(0.0, min(1.0, $value));
     }
 
     /**
