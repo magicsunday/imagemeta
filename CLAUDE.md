@@ -67,13 +67,16 @@ Cite specs inline: `EXIF 3.0 §4.6.4`. Prefer HTML for search, PDF for authorita
 src/
   Contract/          # Parser interfaces
   Convenience/       # High-level reader wrappers
-  Core/              # Stream, ByteReader, BoundsError, ParseError, Util/
+  Core/              # Stream, ByteReader, BoundsError, ParseError
+    Util/            # DateTimeUtil, StringUtil, UInt64, Unpack, Iso6709Parser
   Detect/            # Container type detection (signature-based)
-  Exif/              # EXIF parsing, adapters, converters, text formatting
-  Factory/           # StructuredMetadata builder
-  MakerNotes/        # Vendor MakerNote decoders (Apple, Samsung)
-  Model/             # Data models (EXIF tags, IPTC, ICC, QuickTime, XMP, DJI, etc.)
-  Parse/             # Parsers: Icc/, Iptc/, IsoBmff/, Jpeg/, Jxl/, Tiff/, Xmp/
+  Exif/              # EXIF parsing, converters, text formatting, reconciliation
+  Factory/           # StructuredMetadata builder + ComponentKey
+    Structured/      # Per-component factories (Camera, Gps, Temporal, etc.)
+  MakerNotes/        # Vendor MakerNote decoders (Apple, Samsung, DJI)
+    Support/         # Shared traits (ReadsMakerNoteFields)
+  Model/             # Data models (EXIF, IPTC, ICC, QuickTime, XMP, FlashPix, etc.)
+  Parse/             # Parsers: FlashPix/, Icc/, Iptc/, IsoBmff/, Jpeg/, Jxl/, Tiff/, Xmp/
   Value/             # Typed structured value objects (Camera, Gps, Exposure, etc.)
   MetadataReader.php # Main entry point
 tests/               # Mirrors src/ structure; synthetic binary test data

@@ -247,7 +247,7 @@ Codes are assigned per module in these ranges:
 
 ### 5.2 DRY
 
-* Extract only after **3+ real duplicates**
+* Extract only after **2+ real duplicates** with identical logic
 * Prefer constants/enums over helpers
 
 ### 5.3 YAGNI
