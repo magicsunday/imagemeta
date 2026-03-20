@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple\Support;
 
+use Closure;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 
 /**
@@ -42,19 +43,13 @@ final readonly class QuickTimeLookup
      */
     public function string(string ...$keys): ?string
     {
-        if (!$this->quickTime instanceof QuickTimeMeta) {
-            return null;
-        }
-
-        foreach ($keys as $key) {
-            $value = $this->quickTime->stringValue($key);
-
-            if (($value !== null) && ($value !== '')) {
-                return $value;
-            }
-        }
-
-        return null;
+        /** @var non-empty-string|null */
+        return $this->firstNonNull(
+            fn (string $key): ?string => ($this->quickTime?->stringValue($key) ?? null) !== ''
+                ? $this->quickTime?->stringValue($key)
+                : null,
+            ...$keys,
+        );
     }
 
     /**
@@ -70,19 +65,11 @@ final readonly class QuickTimeLookup
      */
     public function float(string ...$keys): ?float
     {
-        if (!$this->quickTime instanceof QuickTimeMeta) {
-            return null;
-        }
-
-        foreach ($keys as $key) {
-            $value = $this->quickTime->floatValue($key);
-
-            if ($value !== null) {
-                return $value;
-            }
-        }
-
-        return null;
+        /** @var float|null */
+        return $this->firstNonNull(
+            fn (string $key): ?float => $this->quickTime?->floatValue($key),
+            ...$keys,
+        );
     }
 
     /**
@@ -98,19 +85,11 @@ final readonly class QuickTimeLookup
      */
     public function int(string ...$keys): ?int
     {
-        if (!$this->quickTime instanceof QuickTimeMeta) {
-            return null;
-        }
-
-        foreach ($keys as $key) {
-            $value = $this->quickTime->intValue($key);
-
-            if ($value !== null) {
-                return $value;
-            }
-        }
-
-        return null;
+        /** @var int|null */
+        return $this->firstNonNull(
+            fn (string $key): ?int => $this->quickTime?->intValue($key),
+            ...$keys,
+        );
     }
 
     /**
@@ -126,12 +105,31 @@ final readonly class QuickTimeLookup
      */
     public function bool(string ...$keys): ?bool
     {
+        /** @var bool|null */
+        return $this->firstNonNull(
+            fn (string $key): ?bool => $this->quickTime?->boolValue($key),
+            ...$keys,
+        );
+    }
+
+    /**
+     * Returns the first non-null value produced by applying the accessor to each key.
+     *
+     * @template T of string|int|float|bool
+     *
+     * @param Closure(string): (T|null) $accessor Accessor function that resolves a single key.
+     * @param string                    ...$keys  Ordered list of QuickTime metadata keys to resolve.
+     *
+     * @return T|null First non-null value or null when no key resolves.
+     */
+    private function firstNonNull(Closure $accessor, string ...$keys): string|int|float|bool|null
+    {
         if (!$this->quickTime instanceof QuickTimeMeta) {
             return null;
         }
 
         foreach ($keys as $key) {
-            $value = $this->quickTime->boolValue($key);
+            $value = $accessor($key);
 
             if ($value !== null) {
                 return $value;
