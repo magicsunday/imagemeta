@@ -20,4 +20,18 @@ enum Endian: string
     case Little = 'II';
     /** Big-endian ordering ("MM"). */
     case Big = 'MM';
+
+    /**
+     * Resolves the endian marker from the TIFF byte-order indicator.
+     *
+     * @param string $marker Two-byte byte-order marker ("II" or "MM").
+     */
+    public static function tryFromByteOrder(string $marker): ?self
+    {
+        return match ($marker) {
+            self::Little->value => self::Little,
+            self::Big->value    => self::Big,
+            default             => null,
+        };
+    }
 }

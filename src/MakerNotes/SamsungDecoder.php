@@ -182,11 +182,7 @@ final readonly class SamsungDecoder implements MakerNotesDecoderInterface
      */
     private function resolveEndian(string $endian): ?Endian
     {
-        return match ($endian) {
-            Endian::Little->value => Endian::Little,
-            Endian::Big->value    => Endian::Big,
-            default               => null,
-        };
+        return Endian::tryFromByteOrder($endian);
     }
 
     /**

@@ -106,11 +106,8 @@ final class MpfParser
 
         $byteOrder = $buffer->read(2);
         // EXIF 3.0 §4.6.1 restricts MPF to the standard TIFF byte-order signatures "II" or "MM".
-        $endian = match ($byteOrder) {
-            Endian::Little->value => Endian::Little,
-            Endian::Big->value    => Endian::Big,
-            default               => throw new ParseError('MPF payload contains invalid byte order', 1289),
-        };
+        $endian = Endian::tryFromByteOrder($byteOrder)
+            ?? throw new ParseError('MPF payload contains invalid byte order', 1289);
 
         $magic = $this->readU16($buffer, $endian);
 
