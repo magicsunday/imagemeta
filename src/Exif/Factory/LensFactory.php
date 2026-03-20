@@ -42,7 +42,7 @@ final readonly class LensFactory
     public function create(Metadata $metadata): Lens
     {
         $exifDocument = $metadata->exifDoc;
-        $xmpDocument  = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $xmpDocument  = $metadata->selectiveXmpDocument();
         $resolver     = $xmpDocument instanceof XmpDocument ? XmpFallbackResolver::fromDocument($xmpDocument) : null;
 
         if (!$exifDocument instanceof ParsedExif) {

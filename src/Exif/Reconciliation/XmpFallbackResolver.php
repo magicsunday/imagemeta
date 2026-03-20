@@ -11,8 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reconciliation;
 
+use BackedEnum;
 use DateTimeImmutable;
 use Exception;
+use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 
 /**
@@ -41,6 +43,18 @@ final readonly class XmpFallbackResolver
     }
 
     /**
+     * Creates a resolver from the metadata container's XMP document.
+     *
+     * Returns null when no XMP document is available.
+     */
+    public static function fromMetadata(Metadata $metadata): ?self
+    {
+        $xmpDocument = $metadata->selectiveXmpDocument();
+
+        return $xmpDocument instanceof XmpDocument ? self::fromDocument($xmpDocument) : null;
+    }
+
+    /**
      * Resolves an integer value from XMP for the given EXIF tag.
      */
     public function int(int $exifTag): ?int
@@ -52,6 +66,27 @@ final readonly class XmpFallbackResolver
         }
 
         return $this->xmpDocument->int($mapping->xmpNamespace->value, $mapping->xmpProperty);
+    }
+
+    /**
+     * Resolves a backed enum value from XMP for the given EXIF tag.
+     *
+     * @template T of \BackedEnum
+     *
+     * @param int             $exifTag   EXIF tag identifier.
+     * @param class-string<T> $enumClass Fully qualified enum class name.
+     *
+     * @return T|null Resolved enum case or null when absent or unmapped.
+     */
+    public function enum(int $exifTag, string $enumClass): ?BackedEnum
+    {
+        $value = $this->int($exifTag);
+
+        if ($value === null) {
+            return null;
+        }
+
+        return $enumClass::tryFrom($value);
     }
 
     /**

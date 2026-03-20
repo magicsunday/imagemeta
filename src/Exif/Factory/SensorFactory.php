@@ -14,7 +14,6 @@ namespace MagicSunday\ImageMeta\Exif\Factory;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Sensor;
 
@@ -35,13 +34,12 @@ final readonly class SensorFactory
     public function create(Metadata $metadata): Sensor
     {
         $exifDocument = $metadata->exifDoc;
-        $xmpDocument  = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
-        $resolver     = $xmpDocument instanceof XmpDocument ? XmpFallbackResolver::fromDocument($xmpDocument) : null;
+        $resolver     = XmpFallbackResolver::fromMetadata($metadata);
 
         $focalPlaneUnitCode = $exifDocument?->focalPlaneResolutionUnit();
         $focalPlaneUnit     = $focalPlaneUnitCode !== null
             ? ResolutionUnit::tryFrom($focalPlaneUnitCode)
-            : ResolutionUnit::tryFrom($resolver?->int(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT) ?? -1);
+            : $resolver?->enum(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, ResolutionUnit::class);
 
         return new Sensor(
             pixelPitchUm: null,

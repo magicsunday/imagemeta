@@ -15,7 +15,6 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
@@ -38,8 +37,7 @@ final readonly class CameraFactory
     public function create(Metadata $metadata): Camera
     {
         $exifDocument    = $metadata->exifDoc;
-        $xmpDocument     = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
-        $resolver        = $xmpDocument instanceof XmpDocument ? XmpFallbackResolver::fromDocument($xmpDocument) : null;
+        $resolver        = XmpFallbackResolver::fromMetadata($metadata);
         $quickTimeLookup = new QuickTimeLookup($metadata->quickTime);
 
         return new Camera(
@@ -47,8 +45,8 @@ final readonly class CameraFactory
             model: $exifDocument?->cameraModel() ?? $resolver?->string(ExifTag::MODEL) ?? $quickTimeLookup->string('com.apple.quicktime.model'),
             ownerName: $exifDocument?->ownerName() ?? $resolver?->string(ExifTag::CAMERA_OWNER_NAME),
             firmware: $exifDocument?->cameraFirmware() ?? $resolver?->string(ExifTag::SOFTWARE),
-            fileSource: $exifDocument?->fileSource() ?? FileSource::tryFrom($resolver?->int(ExifTag::FILE_SOURCE) ?? -1),
-            sensingMethod: $exifDocument?->sensingMethod() ?? SensingMethod::tryFrom($resolver?->int(ExifTag::SENSING_METHOD) ?? -1),
+            fileSource: $exifDocument?->fileSource() ?? $resolver?->enum(ExifTag::FILE_SOURCE, FileSource::class),
+            sensingMethod: $exifDocument?->sensingMethod() ?? $resolver?->enum(ExifTag::SENSING_METHOD, SensingMethod::class),
         );
     }
 }

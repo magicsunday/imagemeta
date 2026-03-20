@@ -14,7 +14,6 @@ namespace MagicSunday\ImageMeta\Exif\Factory;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
@@ -44,12 +43,11 @@ final readonly class ExposureFactory
     public function create(Metadata $metadata): Exposure
     {
         $exifDocument = $metadata->exifDoc;
-        $xmpDocument  = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
-        $resolver     = $xmpDocument instanceof XmpDocument ? XmpFallbackResolver::fromDocument($xmpDocument) : null;
+        $resolver     = XmpFallbackResolver::fromMetadata($metadata);
 
-        $exposureProgram = $exifDocument?->exposureProgram() ?? ExposureProgram::tryFrom($resolver?->int(ExifTag::EXPOSURE_PROGRAM) ?? -1);
-        $meteringMode    = $exifDocument?->meteringMode() ?? MeteringMode::tryFrom($resolver?->int(ExifTag::METERING_MODE) ?? -1);
-        $whiteBalance    = $exifDocument?->whiteBalance() ?? WhiteBalance::tryFrom($resolver?->int(ExifTag::WHITE_BALANCE) ?? -1);
+        $exposureProgram = $exifDocument?->exposureProgram() ?? $resolver?->enum(ExifTag::EXPOSURE_PROGRAM, ExposureProgram::class);
+        $meteringMode    = $exifDocument?->meteringMode() ?? $resolver?->enum(ExifTag::METERING_MODE, MeteringMode::class);
+        $whiteBalance    = $exifDocument?->whiteBalance() ?? $resolver?->enum(ExifTag::WHITE_BALANCE, WhiteBalance::class);
         $flashInfo       = $exifDocument?->flashInfo();
 
         $settings = new ExposureSettings(
@@ -67,18 +65,18 @@ final readonly class ExposureFactory
 
         $adjustments = new ExposureAdjustments(
             whiteBalance: $whiteBalance,
-            contrast: $exifDocument?->contrast() ?? Contrast::tryFrom($resolver?->int(ExifTag::CONTRAST) ?? -1),
-            saturation: $exifDocument?->saturation() ?? Saturation::tryFrom($resolver?->int(ExifTag::SATURATION) ?? -1),
-            sharpness: $exifDocument?->sharpness() ?? Sharpness::tryFrom($resolver?->int(ExifTag::SHARPNESS) ?? -1),
+            contrast: $exifDocument?->contrast() ?? $resolver?->enum(ExifTag::CONTRAST, Contrast::class),
+            saturation: $exifDocument?->saturation() ?? $resolver?->enum(ExifTag::SATURATION, Saturation::class),
+            sharpness: $exifDocument?->sharpness() ?? $resolver?->enum(ExifTag::SHARPNESS, Sharpness::class),
             digitalZoomRatio: $exifDocument?->digitalZoomRatio() ?? $resolver?->float(ExifTag::DIGITAL_ZOOM_RATIO),
-            gainControl: $exifDocument?->gainControl() ?? GainControl::tryFrom($resolver?->int(ExifTag::GAIN_CONTROL) ?? -1),
+            gainControl: $exifDocument?->gainControl() ?? $resolver?->enum(ExifTag::GAIN_CONTROL, GainControl::class),
         );
 
         return new Exposure(
             settings: $settings,
             adjustments: $adjustments,
             program: $exposureProgram,
-            exposureMode: $exifDocument?->exposureMode() ?? ExposureMode::tryFrom($resolver?->int(ExifTag::EXPOSURE_MODE) ?? -1),
+            exposureMode: $exifDocument?->exposureMode() ?? $resolver?->enum(ExifTag::EXPOSURE_MODE, ExposureMode::class),
             meteringMode: $meteringMode,
             flash: $flashInfo,
             flashEnergy: $exifDocument?->flashEnergy() ?? $resolver?->float(ExifTag::FLASH_ENERGY),
