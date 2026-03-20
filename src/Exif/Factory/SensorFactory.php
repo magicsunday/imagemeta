@@ -11,17 +11,22 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Factory;
 
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Sensor;
 
 /**
- * Factory for creating Sensor value objects from EXIF metadata.
+ * Factory for creating Sensor value objects from EXIF metadata with XMP fallback.
+ *
+ * Falls back to XMP properties per CIPA DC-X010-2017 when EXIF tags are absent.
  */
 final readonly class SensorFactory
 {
     /**
-     * Creates a Sensor value object from EXIF metadata.
+     * Creates a Sensor value object from EXIF metadata with XMP fallback.
      *
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
@@ -30,24 +35,24 @@ final readonly class SensorFactory
     public function create(Metadata $metadata): Sensor
     {
         $exifDocument = $metadata->exifDoc;
+        $xmpDocument  = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $resolver     = $xmpDocument instanceof XmpDocument ? XmpFallbackResolver::fromDocument($xmpDocument) : null;
 
-        $focalPlaneUnit     = null;
         $focalPlaneUnitCode = $exifDocument?->focalPlaneResolutionUnit();
-
-        if ($focalPlaneUnitCode !== null) {
-            $focalPlaneUnit = ResolutionUnit::tryFrom($focalPlaneUnitCode);
-        }
+        $focalPlaneUnit     = $focalPlaneUnitCode !== null
+            ? ResolutionUnit::tryFrom($focalPlaneUnitCode)
+            : ResolutionUnit::tryFrom($resolver?->int(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT) ?? -1);
 
         return new Sensor(
             pixelPitchUm: null,
             sensorType: null,
             ibis: null,
             cfaPattern: $exifDocument?->cfaPattern(),
-            spectralSensitivity: $exifDocument?->spectralSensitivity(),
+            spectralSensitivity: $exifDocument?->spectralSensitivity() ?? $resolver?->string(ExifTag::SPECTRAL_SENSITIVITY),
             oecf: $exifDocument?->oecf(),
             spatialFrequencyResponse: $exifDocument?->spatialFrequencyResponse(),
-            focalPlaneXResolution: $exifDocument?->focalPlaneXResolution(),
-            focalPlaneYResolution: $exifDocument?->focalPlaneYResolution(),
+            focalPlaneXResolution: $exifDocument?->focalPlaneXResolution() ?? $resolver?->float(ExifTag::FOCAL_PLANE_X_RESOLUTION),
+            focalPlaneYResolution: $exifDocument?->focalPlaneYResolution() ?? $resolver?->float(ExifTag::FOCAL_PLANE_Y_RESOLUTION),
             focalPlaneResolutionUnit: $focalPlaneUnit,
         );
     }
