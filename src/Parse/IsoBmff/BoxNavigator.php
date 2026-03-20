@@ -17,7 +17,7 @@ use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function bin2hex;
-use function preg_match;
+use function ord;
 use function sprintf;
 use function strlen;
 use function strtoupper;
@@ -218,11 +218,21 @@ final readonly class BoxNavigator
             return false;
         }
 
-        if (preg_match('/^[\x20-\x7E]{4}$/', $fourcc) === 1) {
-            return true;
+        $first = ord($fourcc[0]);
+
+        if (($first !== 0xA9) && (($first < 0x20) || ($first > 0x7E))) {
+            return false;
         }
 
-        return preg_match('/^\xA9[\x20-\x7E]{3}$/', $fourcc) === 1;
+        for ($i = 1; $i < 4; ++$i) {
+            $byte = ord($fourcc[$i]);
+
+            if (($byte < 0x20) || ($byte > 0x7E)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
