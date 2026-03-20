@@ -83,8 +83,15 @@ No follow-up commits, no deferred closure, no “left open for review”.
 ### 1.6 CI Dry-Run Changes (Hard Rule)
 
 * `ci:test` is the mandatory gate and includes dry-run checks for `ci:cgl` and `ci:rector`
-* Any `ci:cgl` / `ci:rector` changes detected by this gate **must be applied and included** in the same ticket work
+* Any `ci:cgl` / `ci:rector` changes detected by this gate **must be applied**
+* CGL alignment fixes go in a **separate commit** from feature changes (alignment cascades across hundreds of files)
 * A ticket is only considered done when `ci:test` is green **and** no pending CGL/Rector diffs remain
+
+### 1.7 TDD (Hard Rule)
+
+* **Test-driven development is mandatory** for all feature and bugfix work
+* Write a failing test first, then implement the minimal code to make it pass
+* For refactorings: verify existing tests pass before changing code
 
 ---
 
@@ -124,7 +131,7 @@ No follow-up commits, no deferred closure, no “left open for review”.
 CI runs via Docker buildbox:
 
 ```bash
-cd /volume2/docker/webtrees && docker compose run --rm -e COMPOSER_AUTH buildbox composer -d /var/docker/imagemeta ci:test
+make test
 ```
 
 Pipeline order: phplint → php-cs-fixer (dry-run) → rector (dry-run) → phpstan → phpunit → jscpd
@@ -225,7 +232,7 @@ Codes are assigned per module in these ranges:
 | 1943–1951 | Assembler limits & config validation | various (added by GH-1621, GH-1626) |
 
 **Rules:**
-* New codes: use `max + 1` (currently **2100**).
+* New codes: use `max + 1` (currently **2106**).
 * Each code must be globally unique across all `src/` files.
 * Overlapping ranges are historical; do not extend them further.
 
@@ -301,7 +308,25 @@ Never guess. Never infer. Never silently change semantics.
 
 ---
 
-## 7. Domain Reference (Non-Normative)
+## 7. Parser Tolerance & StructuredMetadata
+
+### 7.1 Postel’s Law (Hard Rule)
+
+The parser is **reader-only** and must be lenient:
+
+* **Tolerate:** non-zero reserved fields, non-standard FullBox flags, padding bytes, empty optional strings
+* **Reject:** only when data is genuinely unparseable (truncated boxes, zero timescale, zero dimensions)
+* **Strategy:** do not proactively add strict validations — relax when a real file fails. Use ExifTool source (`/usr/share/ug-exiftool/lib/Image/ExifTool/`) as reference for accepted formats
+
+### 7.2 StructuredMetadata Completeness (Hard Rule)
+
+`StructuredMetadata` must aggregate **all** parsed sources via fallback chains:
+
+* Fallback priority: **EXIF → XMP → QuickTime**
+* Every factory that builds a `StructuredMetadata` component must use `QuickTimeLookup` as last-resort fallback
+* Users must get complete metadata without knowing which source holds it
+
+### 7.3 Domain Reference (Non-Normative)
 
 The following topics are reference-only and do not override the rules above:
 
@@ -309,7 +334,6 @@ The following topics are reference-only and do not override the rules above:
 * ISOBMFF / QuickTime rules
 * XMP handling rules
 * Enums & constants guidance
-* Postel’s Law (reader robustness with documented deviations)
 
 ---
 

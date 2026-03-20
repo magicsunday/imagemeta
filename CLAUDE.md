@@ -75,6 +75,13 @@ CI pipeline order: phplint -> php-cs-fixer (dry-run) -> rector (dry-run) -> phps
 - **No** GH-XXXX references in code comments — only in commit messages
 - **No** Conventional Commits prefixes (`feat:`, `fix:`, etc.)
 - When `ci:test` is green and commit references an issue: close the issue immediately
+- CGL alignment fixes in **separate commits** from feature changes (php-cs-fixer cascades across hundreds of files)
+
+## TDD
+
+- **Test-driven development is mandatory** for all feature and bugfix work
+- Write a failing test first, then implement the minimal code to make it pass
+- For refactorings: verify existing tests pass before changing code
 
 ## Architecture
 
@@ -85,6 +92,8 @@ CI pipeline order: phplint -> php-cs-fixer (dry-run) -> rector (dry-run) -> phps
 - Constants/enums over magic numbers
 - Errors via exceptions only: `ParseError` (unique numeric codes) and `BoundsError`
 - Streaming-based parsing; no full-buffer materialization
+- **Parser tolerance (Postel's Law):** Tolerate non-zero reserved fields, non-standard flags, and padding. Only reject when data is genuinely unparseable (truncated, zero timescale, etc.). When a real file fails, check ExifTool behavior as reference before adding strict validation.
+- **StructuredMetadata fallback chain:** Factories must aggregate all sources: EXIF → XMP → QuickTime. Users should get complete metadata without knowing which source holds it.
 
 ## Specifications
 
