@@ -11,11 +11,18 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Factory;
 
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Value\Enum\LightSource;
+use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
+use MagicSunday\ImageMeta\Value\Enum\SceneType;
+use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Scene;
 
 use function str_starts_with;
@@ -40,21 +47,24 @@ final readonly class SceneFactory
         $exif           = $metadata->exifDoc;
         $quickTime      = $metadata->quickTime;
         $appleMakerNote = $metadata->makerNotes?->apple;
+        $xmpDocument    = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $resolver       = $xmpDocument instanceof XmpDocument ? XmpFallbackResolver::fromDocument($xmpDocument) : null;
 
         if (!$appleMakerNote instanceof AppleMakerNotes) {
             $appleMakerNote = AppleMakerNotes::empty();
         }
 
-        return $this->buildScene($exif, $quickTime, $appleMakerNote, $faceCount);
+        return $this->buildScene($exif, $quickTime, $appleMakerNote, $faceCount, $resolver);
     }
 
     /**
      * Builds the scene metadata aggregate using EXIF, QuickTime and Apple sources.
      *
-     * @param ParsedExif|null    $exif      Resolver exposing EXIF scene metadata.
-     * @param QuickTimeMeta|null $quickTime QuickTime metadata providing scene hints.
-     * @param AppleMakerNotes    $apple     Aggregated Apple maker note metadata.
-     * @param int|null           $faceCount Number of detected face regions.
+     * @param ParsedExif|null          $exif      Resolver exposing EXIF scene metadata.
+     * @param QuickTimeMeta|null       $quickTime QuickTime metadata providing scene hints.
+     * @param AppleMakerNotes          $apple     Aggregated Apple maker note metadata.
+     * @param int|null                 $faceCount Number of detected face regions.
+     * @param XmpFallbackResolver|null $resolver  XMP fallback resolver for enum lookups.
      *
      * @return Scene Scene metadata value object.
      */
@@ -63,6 +73,7 @@ final readonly class SceneFactory
         ?QuickTimeMeta $quickTime,
         AppleMakerNotes $apple,
         ?int $faceCount,
+        ?XmpFallbackResolver $resolver = null,
     ): Scene {
         $appleFlags = $apple->flags;
         $hdrLabel   = $apple->hdr?->imageType;
@@ -99,13 +110,13 @@ final readonly class SceneFactory
         }
 
         return new Scene(
-            type: $exif?->sceneCaptureType(),
-            sceneType: $exif?->sceneType(),
-            light: $exif?->lightSource(),
+            type: $exif?->sceneCaptureType() ?? SceneCaptureType::tryFrom($resolver?->int(ExifTag::SCENE_CAPTURE_TYPE) ?? -1),
+            sceneType: $exif?->sceneType() ?? SceneType::tryFrom($resolver?->int(ExifTag::SCENE_TYPE) ?? -1),
+            light: $exif?->lightSource() ?? LightSource::tryFrom($resolver?->int(ExifTag::LIGHT_SOURCE) ?? -1),
             faceCount: $faceCount,
             hdrScene: $hdrScene,
             nightMode: $nightMode,
-            subjectDistanceRange: $exif?->subjectDistanceRange(),
+            subjectDistanceRange: $exif?->subjectDistanceRange() ?? SubjectDistanceRange::tryFrom($resolver?->int(ExifTag::SUBJECT_DISTANCE_RANGE) ?? -1),
         );
     }
 
