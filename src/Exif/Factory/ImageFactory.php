@@ -109,7 +109,7 @@ final readonly class ImageFactory
     private function normalizedColorSpace(?ParsedExif $exifDocument, ?XmpFallbackResolver $resolver = null): ?ColorSpace
     {
         if (!$exifDocument instanceof ParsedExif) {
-            return ColorSpace::tryFrom($resolver?->int(ExifTag::COLOR_SPACE) ?? -1);
+            return $resolver?->enum(ExifTag::COLOR_SPACE, ColorSpace::class);
         }
 
         $colorSpace = $exifDocument->colorSpace();
