@@ -23,6 +23,10 @@ use function trim;
  */
 final class ExifCapabilities
 {
+    private function __construct()
+    {
+    }
+
     /**
      * Normalizes vendor provided EXIF version identifiers to known capability profile codes.
      * Trims whitespace and maps digit-only fallbacks so unusual encodings still yield the canonical profile.

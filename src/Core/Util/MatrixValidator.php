@@ -24,6 +24,10 @@ use function is_string;
  */
 final class MatrixValidator
 {
+    private function __construct()
+    {
+    }
+
     /**
      * @param DecodedMatrix $matrix           Decoded matrix payload.
      * @param bool          $requireRowLabels Whether row labels are mandatory.

@@ -20,6 +20,10 @@ use function preg_match;
  */
 final class Iso6709Parser
 {
+    private function __construct()
+    {
+    }
+
     /**
      * Parses an ISO 6709 coordinate string into latitude, longitude, and optional altitude.
      *
