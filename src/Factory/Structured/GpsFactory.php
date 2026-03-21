@@ -187,10 +187,6 @@ final readonly class GpsFactory
 
         $timestamp = $exifDocument?->gpsTimestamp();
 
-        if (!$timestamp instanceof DateTimeImmutable) {
-            $timestamp = null;
-        }
-
         if ($date === null) {
             $date = $this->normalizeDate($exifDocument?->gpsDateStamp());
         }
@@ -789,15 +785,7 @@ final readonly class GpsFactory
      */
     private function floatValue(int|float|null $value): ?float
     {
-        if (is_float($value)) {
-            return $value;
-        }
-
-        if (is_int($value)) {
-            return (float) $value;
-        }
-
-        return null;
+        return $value !== null ? (float) $value : null;
     }
 
     /**
