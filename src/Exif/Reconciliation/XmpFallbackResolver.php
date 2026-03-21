@@ -12,8 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Reconciliation;
 
 use BackedEnum;
-use DateTimeImmutable;
-use Exception;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 
@@ -30,7 +28,7 @@ final readonly class XmpFallbackResolver
 {
     public function __construct(
         private XmpDocument $xmpDocument,
-        private ExifXmpMappingRegistry $registry = new ExifXmpMappingRegistry([], [], []),
+        private ExifXmpMappingRegistry $registry = new ExifXmpMappingRegistry([]),
     ) {
     }
 
@@ -117,53 +115,5 @@ final readonly class XmpFallbackResolver
         }
 
         return $this->xmpDocument->string($mapping->xmpNamespace->value, $mapping->xmpProperty);
-    }
-
-    /**
-     * Resolves a DateTime value from XMP for the given EXIF tag.
-     *
-     * Parses ISO 8601 date strings from XMP into DateTimeImmutable.
-     */
-    public function dateTime(int $exifTag): ?DateTimeImmutable
-    {
-        $raw = $this->string($exifTag);
-
-        if ($raw === null) {
-            return null;
-        }
-
-        try {
-            return new DateTimeImmutable($raw);
-        } catch (Exception) {
-            return null;
-        }
-    }
-
-    /**
-     * Resolves a GPS coordinate string from XMP for the given GPS IFD tag.
-     */
-    public function gpsString(int $gpsTag): ?string
-    {
-        $mapping = $this->registry->findGpsTag($gpsTag);
-
-        if (!$mapping instanceof ExifXmpMapping) {
-            return null;
-        }
-
-        return $this->xmpDocument->string($mapping->xmpNamespace->value, $mapping->xmpProperty);
-    }
-
-    /**
-     * Resolves a GPS float value from XMP for the given GPS IFD tag.
-     */
-    public function gpsFloat(int $gpsTag): ?float
-    {
-        $mapping = $this->registry->findGpsTag($gpsTag);
-
-        if (!$mapping instanceof ExifXmpMapping) {
-            return null;
-        }
-
-        return $this->xmpDocument->float($mapping->xmpNamespace->value, $mapping->xmpProperty);
     }
 }

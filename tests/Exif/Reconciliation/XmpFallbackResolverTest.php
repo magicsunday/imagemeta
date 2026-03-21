@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Reconciliation;
 
-use DateTimeImmutable;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Reconciliation\ExifXmpMapping;
 use MagicSunday\ImageMeta\Exif\Reconciliation\ExifXmpMappingRegistry;
@@ -56,18 +55,6 @@ final class XmpFallbackResolverTest extends TestCase
         $resolver = XmpFallbackResolver::fromDocument($xmpDoc);
 
         self::assertSame('Canon', $resolver->string(ExifTag::MAKE));
-    }
-
-    #[Test]
-    public function resolvesDateTimeFromXmp(): void
-    {
-        $xmpDoc   = $this->buildXmpDocument(['http://ns.adobe.com/xap/1.0/' => ['ModifyDate' => '2025-01-15T10:30:00+01:00']]);
-        $resolver = XmpFallbackResolver::fromDocument($xmpDoc);
-
-        $dateTime = $resolver->dateTime(ExifTag::DATETIME);
-
-        self::assertInstanceOf(DateTimeImmutable::class, $dateTime);
-        self::assertSame('2025-01-15', $dateTime->format('Y-m-d'));
     }
 
     #[Test]
