@@ -303,7 +303,7 @@ final readonly class TemporalFactory
     private function parseFirstAvailableDate(?string ...$values): ?DateTimeImmutable
     {
         foreach ($values as $value) {
-            $parsed = $this->parseFlexibleDate($value);
+            $parsed = DateTimeUtil::parseIso8601($value);
 
             if ($parsed instanceof DateTimeImmutable) {
                 return $parsed;
@@ -311,17 +311,5 @@ final readonly class TemporalFactory
         }
 
         return null;
-    }
-
-    /**
-     * Attempts to parse various ISO 8601 date representations.
-     *
-     * @param string|null $value Timestamp string in ISO 8601 format.
-     *
-     * @return DateTimeImmutable|null Parsed timestamp or null when parsing fails.
-     */
-    private function parseFlexibleDate(?string $value): ?DateTimeImmutable
-    {
-        return DateTimeUtil::parseIso8601($value);
     }
 }
