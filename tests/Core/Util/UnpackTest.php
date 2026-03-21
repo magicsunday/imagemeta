@@ -73,19 +73,6 @@ final class UnpackTest extends TestCase
     }
 
     /**
-     * Combines two 32-bit words into a UInt64 instance.
-     * It confirms the high and low parts are preserved correctly.
-     */
-    #[Test]
-    public function combinesTwoUint32Values(): void
-    {
-        $result = Unpack::combineUint32(0x12345678, 0x9ABCDEF0);
-
-        self::assertSame(0x12345678, $result->high());
-        self::assertSame(0x9ABCDEF0, $result->low());
-    }
-
-    /**
      * Unpacks a 64-bit unsigned integer in big-endian order.
      * It verifies the high/low words match the original packed values.
      */

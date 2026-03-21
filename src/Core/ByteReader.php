@@ -86,7 +86,7 @@ final readonly class ByteReader
         $hi = $this->readU32BE();
         $lo = $this->readU32BE();
 
-        return Unpack::combineUint32($hi, $lo);
+        return UInt64::fromUInt32($hi, $lo);
     }
 
     /**
@@ -97,7 +97,7 @@ final readonly class ByteReader
         $lo = $this->readU32LE();
         $hi = $this->readU32LE();
 
-        return Unpack::combineUint32($hi, $lo);
+        return UInt64::fromUInt32($hi, $lo);
     }
 
     /**

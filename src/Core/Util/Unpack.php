@@ -24,6 +24,10 @@ use function unpack;
  */
 final class Unpack
 {
+    private function __construct()
+    {
+    }
+
     /**
      * Unpacks a value from the provided bytes and returns it as an integer.
      *
@@ -46,17 +50,6 @@ final class Unpack
     public static function float(string $format, string $bytes, string $context): float
     {
         return (float) self::numeric($format, $bytes, $context);
-    }
-
-    /**
-     * Combines two 32-bit unsigned integers into a single 64-bit value.
-     *
-     * @param int $hi High-order 32 bits.
-     * @param int $lo Low-order 32 bits.
-     */
-    public static function combineUint32(int $hi, int $lo): UInt64
-    {
-        return UInt64::fromUInt32($hi, $lo);
     }
 
     /**
@@ -99,7 +92,7 @@ final class Unpack
             $lo = (int) $second;
         }
 
-        return self::combineUint32($hi, $lo);
+        return UInt64::fromUInt32($hi, $lo);
     }
 
     /**

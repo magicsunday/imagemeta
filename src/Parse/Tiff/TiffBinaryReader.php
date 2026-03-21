@@ -217,7 +217,7 @@ final readonly class TiffBinaryReader
         $hiComplement = (~$hi) & BitMask::UINT32_MAX;
         $loComplement = (~$lo) & BitMask::UINT32_MAX;
 
-        $magnitude = Unpack::combineUint32($hiComplement, $loComplement)
+        $magnitude = UInt64::fromUInt32($hiComplement, $loComplement)
             ->addSmall(1)
             ->toInt('Signed 64-bit integer magnitude');
 
