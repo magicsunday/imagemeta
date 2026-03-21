@@ -29,19 +29,14 @@ final class ExifXmpMappingRegistry
     /** @var array<int, ExifXmpMapping> GPS IFD mappings keyed by tag ID. */
     private array $gps;
 
-    /** @var array<int, ExifXmpMapping> Interoperability IFD mappings keyed by tag ID. */
-    private array $interop;
-
     /**
      * @param list<ExifXmpMapping> $primaryMappings Primary/Exif IFD mappings.
      * @param list<ExifXmpMapping> $gpsMappings     GPS IFD mappings.
-     * @param list<ExifXmpMapping> $interopMappings Interoperability IFD mappings.
      */
-    public function __construct(array $primaryMappings, array $gpsMappings = [], array $interopMappings = [])
+    public function __construct(array $primaryMappings, array $gpsMappings = [])
     {
         $this->primary = $this->indexByTag($primaryMappings);
         $this->gps     = $this->indexByTag($gpsMappings);
-        $this->interop = $this->indexByTag($interopMappings);
     }
 
     /**
@@ -52,7 +47,6 @@ final class ExifXmpMappingRegistry
         return new self(
             self::primaryMappings(),
             self::gpsMappings(),
-            self::interopMappings(),
         );
     }
 
@@ -70,14 +64,6 @@ final class ExifXmpMappingRegistry
     public function findGpsTag(int $tag): ?ExifXmpMapping
     {
         return $this->gps[$tag] ?? null;
-    }
-
-    /**
-     * Finds the XMP mapping for an Interoperability IFD tag.
-     */
-    public function findInteropTag(int $tag): ?ExifXmpMapping
-    {
-        return $this->interop[$tag] ?? null;
     }
 
     /**
@@ -263,20 +249,6 @@ final class ExifXmpMappingRegistry
             new ExifXmpMapping(ExifTag::GPS_DATE_STAMP, $e, 'GPSDateStamp', ExifXmpValueType::Date),
             new ExifXmpMapping(ExifTag::GPS_DIFFERENTIAL, $e, 'GPSDifferential', ExifXmpValueType::ClosedChoiceOfInteger),
             new ExifXmpMapping(ExifTag::GPS_H_POSITIONING_ERROR, $e, 'GPSHPositioningError', ExifXmpValueType::Rational),
-        ];
-    }
-
-    // ========================================================================
-    // Table 16: Interoperability
-    // ========================================================================
-
-    /**
-     * @return list<ExifXmpMapping>
-     */
-    private static function interopMappings(): array
-    {
-        return [
-            new ExifXmpMapping(ExifTag::INTEROPERABILITY_INDEX, XmpNamespace::EXIFEX, 'InteroperabilityIndex', ExifXmpValueType::ClosedChoiceOfText),
         ];
     }
 }

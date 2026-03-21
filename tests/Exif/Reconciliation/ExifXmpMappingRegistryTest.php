@@ -110,17 +110,6 @@ final class ExifXmpMappingRegistryTest extends TestCase
     }
 
     #[Test]
-    public function findsInteroperabilityIndexMapping(): void
-    {
-        $registry = ExifXmpMappingRegistry::createDefault();
-        $mapping  = $registry->findInteropTag(ExifTag::INTEROPERABILITY_INDEX);
-
-        self::assertInstanceOf(ExifXmpMapping::class, $mapping);
-        self::assertSame(XmpNamespace::EXIFEX, $mapping->xmpNamespace);
-        self::assertSame('InteroperabilityIndex', $mapping->xmpProperty);
-    }
-
-    #[Test]
     public function returnsNullForUnmappedTag(): void
     {
         $registry = ExifXmpMappingRegistry::createDefault();
