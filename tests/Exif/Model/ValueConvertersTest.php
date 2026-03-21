@@ -361,44 +361,6 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Converts offsets to minute deltas from UTC.
-     * It validates the transformation using representative inputs.
-     *
-     * @param int|float|string|ExifRational|ExifRationalList|null $value    The raw offset value.
-     * @param int|null                                            $expected Expected minutes from UTC.
-     */
-    #[Test]
-    #[DataProvider('provideOffsetMinutes')]
-    public function convertsOffsetToMinutes(int|float|string|ExifRational|ExifRationalList|null $value, ?int $expected): void
-    {
-        self::assertSame($expected, $this->converters->offsetToMinutes($value));
-    }
-
-    /**
-     * @return iterable<string, array{int|float|string|ExifRational|ExifRationalList|null, int|null}>
-     */
-    public static function provideOffsetMinutes(): iterable
-    {
-        yield 'positive offset' => ['+01:30', 90];
-        yield 'negative compact' => ['-0330', null];
-        yield 'decimal hours' => ['2.25', null];
-        yield 'maximum offset' => ['+14:00', 840];
-        yield 'positive above maximum' => ['+14:30', null];
-        yield 'negative above maximum' => ['-14:30', null];
-        yield 'single digit hour with sign' => ['+5:30', null];
-        yield 'no minutes' => ['14', null];
-        yield 'minute overflow' => ['-12:99', null];
-        yield 'srational positive' => [new ExifRational(11, 2), null];
-        yield 'srational list negative' => [
-            new ExifRationalList([
-                new ExifRational(-11, 2),
-            ]),
-            null,
-        ];
-        yield 'invalid input' => ['invalid', null];
-    }
-
-    /**
      * Extracts GPS coordinates with positive altitude.
      * It exercises the scenario described by the test name.
      */
@@ -1618,37 +1580,6 @@ final class ValueConvertersTest extends TestCase
         $formatted2 = $this->converters->formatShutterSpeedFromApex($apexValue2);
 
         self::assertSame('1/100', $formatted2);
-    }
-
-    /**
-     * Formats f-numbers into camera-style strings.
-     * It validates the transformation using representative inputs.
-     */
-    #[Test]
-    #[DataProvider('provideFNumberValues')]
-    public function formatsFNumber(?float $fNumber, ?string $expected): void
-    {
-        self::assertSame($expected, $this->converters->formatFNumber($fNumber));
-    }
-
-    /**
-     * @return iterable<string, array{?float, ?string}>
-     */
-    public static function provideFNumberValues(): iterable
-    {
-        yield 'null input' => [null, null];
-        yield 'zero' => [0.0, null];
-        yield 'negative' => [-1.0, null];
-        yield 'f/1.8' => [1.8, 'f/1.8'];
-        yield 'f/1.9' => [1.9, 'f/1.9'];
-        yield 'f/2' => [2.0, 'f/2'];
-        yield 'f/2.8' => [2.8, 'f/2.8'];
-        yield 'f/4' => [4.0, 'f/4'];
-        yield 'f/5.6' => [5.6, 'f/5.6'];
-        yield 'f/8' => [8.0, 'f/8'];
-        yield 'f/11' => [11.0, 'f/11'];
-        yield 'f/16' => [16.0, 'f/16'];
-        yield 'f/22' => [22.0, 'f/22'];
     }
 
     /**

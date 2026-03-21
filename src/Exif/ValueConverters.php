@@ -215,16 +215,6 @@ final readonly class ValueConverters
     }
 
     /**
-     * Formats an f-number as a human-readable string.
-     *
-     * @param float|null $fNumber The f-number to format.
-     */
-    public function formatFNumber(?float $fNumber): ?string
-    {
-        return $this->factory->apexConverter->formatFNumber($fNumber);
-    }
-
-    /**
      * Formats an APEX brightness value as a human-readable EV string.
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The APEX value to format.
@@ -414,16 +404,6 @@ final readonly class ValueConverters
     public function parseOffset(?string $offset): ?DateTimeZone
     {
         return $this->factory->dateTimeConverter->parseOffset($offset);
-    }
-
-    /**
-     * Converts an EXIF offset time value to minutes relative to UTC.
-     *
-     * @param int|float|string|ExifRational|ExifRationalList|null $value The raw offset value.
-     */
-    public function offsetToMinutes(int|float|string|ExifRational|ExifRationalList|null $value): ?int
-    {
-        return $this->factory->dateTimeConverter->offsetToMinutes($value);
     }
 
     /**
