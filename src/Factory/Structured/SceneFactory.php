@@ -78,7 +78,7 @@ final readonly class SceneFactory
         $nightMode = $lookup->bool('NightMode');
 
         if ($nightMode === null) {
-            $nightMode = $this->appleFlag($appleFlags, 'nightMode');
+            $nightMode = $appleFlags['nightMode'] ?? null;
         }
 
         $hdrScene = null;
@@ -92,7 +92,7 @@ final readonly class SceneFactory
 
             if (($hdrHeadroom !== null) && ($hdrHeadroom > 0.0)) {
                 $hdrScene = true;
-            } elseif ($this->appleFlag($appleFlags, 'hdrEnabled') === true || $this->appleFlag($appleFlags, 'hdrAuto') === true) {
+            } elseif (($appleFlags['hdrEnabled'] ?? null) === true || ($appleFlags['hdrAuto'] ?? null) === true) {
                 $hdrScene = true;
             }
         }
@@ -121,18 +121,5 @@ final readonly class SceneFactory
         $normalized = strtoupper(trim($label));
 
         return str_starts_with($normalized, 'HDR');
-    }
-
-    /**
-     * Extracts a boolean flag from the Apple maker note flag map.
-     *
-     * @param array<string, bool> $flags Normalized Apple maker note flag map.
-     * @param string              $key   Name of the flag to resolve.
-     *
-     * @return bool|null Resolved boolean flag or null when the flag is absent.
-     */
-    private function appleFlag(array $flags, string $key): ?bool
-    {
-        return $flags[$key] ?? null;
     }
 }
