@@ -181,21 +181,6 @@ final class ParsedExif
         return $this->subIfds;
     }
 
-    public function exifIfdPointer(): ?int
-    {
-        return $this->reader()->int($this->ifd0, ExifTag::EXIF_IFD_POINTER);
-    }
-
-    public function gpsIfdPointer(): ?int
-    {
-        return $this->reader()->int($this->ifd0, ExifTag::GPS_IFD_POINTER);
-    }
-
-    public function interoperabilityIfdPointer(): ?int
-    {
-        return $this->reader()->int($this->exifIfd, ExifTag::INTEROPERABILITY_IFD_POINTER);
-    }
-
     // ── Camera / lens domain ──────────────────────────────────
 
     public function cameraMake(): ?string

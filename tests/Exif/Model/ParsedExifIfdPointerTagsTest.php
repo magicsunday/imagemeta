@@ -27,7 +27,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Covers ParsedExif accessors for EXIF IFD pointer tags.
+ * Covers ParsedExif IFD pointer tag storage via the underlying Ifd entries.
  *
  * @internal
  */
@@ -42,10 +42,10 @@ final class ParsedExifIfdPointerTagsTest extends TestCase
 {
     /**
      * Provides all EXIF pointer tags with valid scalar offsets.
-     * Verifies each pointer accessor returns the configured offset.
+     * Verifies each pointer value is accessible through the underlying Ifd entries.
      */
     #[Test]
-    public function pointerAccessorsReturnConfiguredOffsets(): void
+    public function pointerEntriesReturnConfiguredOffsets(): void
     {
         $ifd0 = new Ifd([
             ExifTag::EXIF_IFD_POINTER => new IfdEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, 128),
@@ -58,22 +58,22 @@ final class ParsedExifIfdPointerTagsTest extends TestCase
 
         $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
-        self::assertSame(128, $parsedExif->exifIfdPointer());
-        self::assertSame(256, $parsedExif->gpsIfdPointer());
-        self::assertSame(384, $parsedExif->interoperabilityIfdPointer());
+        self::assertSame(128, $parsedExif->ifd0->get(ExifTag::EXIF_IFD_POINTER)?->value);
+        self::assertSame(256, $parsedExif->ifd0->get(ExifTag::GPS_IFD_POINTER)?->value);
+        self::assertSame(384, $parsedExif->exifIfd?->get(ExifTag::INTEROPERABILITY_IFD_POINTER)?->value);
     }
 
     /**
      * Uses EXIF data without pointer tags.
-     * Verifies pointer accessors return null when tags are absent.
+     * Verifies pointer entries return null when tags are absent.
      */
     #[Test]
-    public function pointerAccessorsReturnNullWhenTagsAreAbsent(): void
+    public function pointerEntriesReturnNullWhenTagsAreAbsent(): void
     {
         $parsedExif = new ParsedExif(new Ifd([]), null, null, null, null);
 
-        self::assertNull($parsedExif->exifIfdPointer());
-        self::assertNull($parsedExif->gpsIfdPointer());
-        self::assertNull($parsedExif->interoperabilityIfdPointer());
+        self::assertNull($parsedExif->ifd0->get(ExifTag::EXIF_IFD_POINTER));
+        self::assertNull($parsedExif->ifd0->get(ExifTag::GPS_IFD_POINTER));
+        self::assertNull($parsedExif->exifIfd?->get(ExifTag::INTEROPERABILITY_IFD_POINTER));
     }
 }
