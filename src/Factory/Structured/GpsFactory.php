@@ -70,12 +70,24 @@ final readonly class GpsFactory
         $xmpDocument = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
         $gps         = $this->resolveGps($metadata->exifDoc, $xmpDocument) ?? new Gps();
 
-        if (!$gps->position instanceof GpsPosition) {
+        $position = $gps->position;
+
+        if (!$position instanceof GpsPosition || ($position->latitude === null) || ($position->longitude === null)) {
             $quickTimeLookup = $metadata->quickTimeLookup();
             $qtPosition      = $this->resolveQuickTimeGps($quickTimeLookup);
 
             if ($qtPosition instanceof GpsPosition) {
-                $gps = new Gps(position: $qtPosition);
+                $gps = new Gps(
+                    position: $qtPosition,
+                    destination: $gps->destination,
+                    movement: $gps->movement,
+                    timing: $gps->timing,
+                    measurement: $gps->measurement,
+                    version: $gps->version,
+                    versionRaw: $gps->versionRaw,
+                    processingMethod: $gps->processingMethod,
+                    areaInformation: $gps->areaInformation,
+                );
             }
         }
 

@@ -193,6 +193,66 @@ final class GpsFactoryTest extends TestCase
     }
 
     /**
+     * Provides EXIF GPS timing and measurement fields without coordinates,
+     * alongside a QuickTime ISO 6709 position.
+     * Verifies the factory merges the QuickTime position into the existing
+     * EXIF GPS data rather than replacing it.
+     */
+    #[Test]
+    public function mergesQuickTimePositionWithExifGpsFields(): void
+    {
+        $parsedExif = $this->parsedExif(
+            latRef: null,
+            lat: null,
+            lonRef: null,
+            lon: null,
+            altitudeRef: null,
+            altitude: null,
+            version: '2.4.0.0',
+            satellites: '08',
+            status: GpsStatus::MeasurementInProgress,
+            measureMode: GpsMeasureMode::ThreeDimensional,
+            dop: 2.5,
+            speedRef: null,
+            speedMs: null,
+            track: null,
+            mapDatum: null,
+            processingMethod: null,
+            areaInformation: null,
+            date: '2023-06-15',
+            time: '14:30:00',
+            differential: null,
+            hPositioningError: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: new QuickTimeMeta([
+                'com.apple.quicktime.location.ISO6709' => '+48.1372+011.5755+519/',
+            ]),
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        // QuickTime position must be present
+        self::assertNotNull($gps->position);
+        self::assertEqualsWithDelta(48.1372, $gps->position->latitude, 0.001);
+        self::assertEqualsWithDelta(11.5755, $gps->position->longitude, 0.001);
+
+        // EXIF timing and measurement must be preserved (not discarded)
+        self::assertSame('2.4.0.0', $gps->version);
+        self::assertNotNull($gps->timing);
+        self::assertSame('2023-06-15', $gps->timing->date);
+        self::assertSame('14:30:00', $gps->timing->time);
+        self::assertNotNull($gps->measurement);
+        self::assertSame('08', $gps->measurement->satellites);
+        self::assertSame(GpsMeasureMode::ThreeDimensional, $gps->measurement->measureMode);
+        self::assertSame(2.5, $gps->measurement->dop);
+    }
+
+    /**
      * Builds Metadata without an EXIF document.
      * Ensures the GPS value object contains null coordinates when no data is available.
      */
