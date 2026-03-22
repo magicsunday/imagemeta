@@ -180,10 +180,64 @@ final class TemporalExifReaderTest extends TestCase
     }
 
     /**
+     * Supplies only a ModifyDate (0x0132) tag without DateTimeOriginal (0x9003).
+     * Verifies dateTimeOriginal() returns null instead of falling back to ModifyDate.
+     */
+    #[Test]
+    public function dateTimeOriginalDoesNotFallBackToModifyDate(): void
+    {
+        $reader = $this->createReader(
+            ifd0Entries: [
+                ExifTag::DATETIME => new IfdEntry(ExifTag::DATETIME, 2, 20, "2023:12:25 08:00:00\0"),
+            ],
+        );
+
+        self::assertNull($reader->dateTimeOriginal());
+    }
+
+    /**
+     * Supplies only a ModifyDate (0x0132) tag without DateTimeOriginal (0x9003).
+     * Verifies dateTimeOriginalBestEffort() still returns the ModifyDate as fallback.
+     */
+    #[Test]
+    public function dateTimeOriginalBestEffortFallsBackToModifyDate(): void
+    {
+        $reader = $this->createReader(
+            ifd0Entries: [
+                ExifTag::DATETIME => new IfdEntry(ExifTag::DATETIME, 2, 20, "2023:12:25 08:00:00\0"),
+            ],
+        );
+
+        $dt = $reader->dateTimeOriginalBestEffort();
+
+        self::assertInstanceOf(DateTimeImmutable::class, $dt);
+        self::assertSame('2023-12-25 08:00:00', $dt->format('Y-m-d H:i:s'));
+    }
+
+    /**
+     * Supplies a valid DateTimeOriginal (0x9003) tag.
+     * Verifies dateTimeOriginal() returns it directly.
+     */
+    #[Test]
+    public function dateTimeOriginalReturnsParsedTagWhenPresent(): void
+    {
+        $reader = $this->createReader(
+            exifEntries: [
+                ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 20, "2023:12:25 10:30:00\0"),
+            ],
+        );
+
+        $dt = $reader->dateTimeOriginal();
+
+        self::assertInstanceOf(DateTimeImmutable::class, $dt);
+        self::assertSame('2023-12-25 10:30:00', $dt->format('Y-m-d H:i:s'));
+    }
+
+    /**
      * @param array<int, IfdEntry> $ifd0Entries
      * @param array<int, IfdEntry> $exifEntries
      */
-    private function createReader(array $ifd0Entries, array $exifEntries = []): TemporalExifReader
+    private function createReader(array $ifd0Entries = [], array $exifEntries = []): TemporalExifReader
     {
         $converters = new ValueConverters();
         $ifd0       = new Ifd($ifd0Entries);

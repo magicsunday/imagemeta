@@ -74,31 +74,24 @@ final readonly class TemporalExifReader
     }
 
     /**
-     * Returns the DateTimeOriginal tag combined with fractional seconds and offsets when available.
+     * Returns the DateTimeOriginal tag (0x9003) combined with fractional seconds and offsets.
+     *
+     * Returns null when the tag is absent — does not fall back to DateTimeDigitized or DateTime.
+     * Use {@see dateTimeOriginalBestEffort()} when a fallback chain is desired.
      */
     public function dateTimeOriginal(): ?DateTimeImmutable
     {
-        $dateTime = $this->parseExifDateTime(
+        return $this->parseExifDateTime(
             $this->dateTimeOriginalRaw(),
             $this->offsetTimeOriginalRaw(),
             $this->subSecTimeOriginal(),
         );
-
-        if ($dateTime instanceof DateTimeImmutable) {
-            return $dateTime;
-        }
-
-        $digitized = $this->dateTimeDigitized();
-
-        if ($digitized instanceof DateTimeImmutable) {
-            return $digitized;
-        }
-
-        return $this->captureDateTime();
     }
 
     /**
      * Returns the most appropriate capture timestamp prioritising DateTimeOriginal metadata.
+     *
+     * Fallback chain: DateTimeOriginal (0x9003) → DateTimeDigitized (0x9004) → captureDateTime().
      */
     public function dateTimeOriginalBestEffort(): ?DateTimeImmutable
     {
