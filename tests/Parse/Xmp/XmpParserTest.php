@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpContainer;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
+use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParseState;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -38,6 +39,7 @@ use ReflectionMethod;
 #[UsesClass(XmpLanguageAlternative::class)]
 #[UsesClass(XmpParseState::class)]
 #[UsesClass(XmpStructuredValue::class)]
+#[UsesClass(XmpValueAccumulator::class)]
 final class XmpParserTest extends TestCase
 {
     private const string XMP_NS = 'http://ns.adobe.com/xap/1.0/';

@@ -27,6 +27,7 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxPayloadCollection;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxPayloadCollector;
+use MagicSunday\ImageMeta\Parse\IsoBmff\FullBoxHeader;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParseContext;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemLocationResolver;
@@ -84,7 +85,7 @@ use function strlen;
 #[UsesClass(IsoBmffItemReference::class)]
 #[UsesTrait(NormalizesOffsets::class)]
 #[UsesTrait(ReadsBinaryPrimitives::class)]
-#[UsesTrait(IsoBmffBoxTrait::class)]
+#[UsesClass(FullBoxHeader::class)]
 final class BoxPayloadCollectorTest extends TestCase
 {
     use IsoBmffBoxTrait;

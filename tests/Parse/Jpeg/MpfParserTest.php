@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
@@ -52,6 +53,7 @@ use function strlen;
 #[UsesClass(MpfEntry::class)]
 #[UsesClass(MpImageDataFormat::class)]
 #[UsesClass(MpImageType::class)]
+#[UsesClass(Endian::class)]
 final class MpfParserTest extends TestCase
 {
     private const int TAG_MPF_VERSION = 0xB000;

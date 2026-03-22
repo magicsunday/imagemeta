@@ -12,12 +12,14 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffQueuedResolveResult;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
@@ -26,8 +28,10 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxPayloadCollection;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxPayloadCollector;
+use MagicSunday\ImageMeta\Parse\IsoBmff\FullBoxHeader;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserConfig;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParseResult;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemLocationResolver;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemPayloadResolver;
@@ -62,7 +66,6 @@ use function pack;
 #[UsesClass(Stream::class)]
 #[UsesClass(StreamWindow::class)]
 #[UsesTrait(NormalizesOffsets::class)]
-#[UsesTrait(IsoBmffBoxTrait::class)]
 #[UsesTrait(ReadsBinaryPrimitives::class)]
 #[UsesClass(Unpack::class)]
 #[UsesClass(BoxDescriptor::class)]
@@ -80,6 +83,10 @@ use function pack;
 #[UsesClass(QuickTimeValueDecoder::class)]
 #[UsesClass(TrackMediaParser::class)]
 #[UsesClass(VideoSampleEntryParser::class)]
+#[UsesClass(PayloadGuard::class)]
+#[UsesClass(IsoBmffQueuedResolveResult::class)]
+#[UsesClass(FullBoxHeader::class)]
+#[UsesClass(IsoBmffParserConfig::class)]
 final class IspeBoxParsingTest extends TestCase
 {
     use IsoBmffBoxTrait;

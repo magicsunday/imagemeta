@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Icc;
 
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\Icc\IccBinaryReader;
 use MagicSunday\ImageMeta\Parse\Icc\IccTagDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -32,6 +33,7 @@ use function strlen;
  */
 #[CoversClass(IccTagDecoder::class)]
 #[UsesClass(IccBinaryReader::class)]
+#[UsesClass(Unpack::class)]
 final class IccTagDecoderTest extends TestCase
 {
     /**

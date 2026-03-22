@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Factory\Structured\RegionsFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\RegionType;
+use MagicSunday\ImageMeta\Value\Region;
 use MagicSunday\ImageMeta\Value\RegionCollection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,6 +33,11 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(RegionsFactory::class)]
 #[UsesClass(RegionCoordinateNormalizer::class)]
+#[UsesClass(Metadata::class)]
+#[UsesClass(XmpDocument::class)]
+#[UsesClass(RegionType::class)]
+#[UsesClass(Region::class)]
+#[UsesClass(RegionCollection::class)]
 final class RegionsFactoryTest extends TestCase
 {
     private const string NS_MWG_REGIONS = 'http://www.metadataworkinggroup.com/schemas/regions/';

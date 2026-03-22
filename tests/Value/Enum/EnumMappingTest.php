@@ -43,6 +43,7 @@ use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -77,6 +78,7 @@ use ReflectionMethod;
 #[CoversClass(NoiseReduction::class)]
 #[CoversClass(SceneCaptureType::class)]
 #[CoversClass(WhiteBalance::class)]
+#[UsesClass(Orientation::class)]
 final class EnumMappingTest extends TestCase
 {
     /**

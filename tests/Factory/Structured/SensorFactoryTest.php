@@ -11,18 +11,45 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Factory\Structured;
 
+use MagicSunday\ImageMeta\Core\Util\MatrixValidator;
+use MagicSunday\ImageMeta\Exif\Converters\ApexConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ComponentsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ConverterFactory;
+use MagicSunday\ImageMeta\Exif\Converters\EnumConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsCoordinateConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsDirectionConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsTimestampConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsUnitConverter;
+use MagicSunday\ImageMeta\Exif\Converters\MatrixConverter;
+use MagicSunday\ImageMeta\Exif\Converters\NumericConverter;
+use MagicSunday\ImageMeta\Exif\Converters\RationalConverter;
+use MagicSunday\ImageMeta\Exif\Converters\StringConverter;
+use MagicSunday\ImageMeta\Exif\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\FallbackIfdSet;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Reader\FocalReader;
+use MagicSunday\ImageMeta\Exif\Reader\IsoSensitivityReader;
+use MagicSunday\ImageMeta\Exif\Reader\SensorDataReader;
+use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
+use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\Structured\SensorFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Value\CfaPattern;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Sensor;
+use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 use function count;
@@ -37,6 +64,37 @@ use function strlen;
  * @internal
  */
 #[CoversClass(SensorFactory::class)]
+#[UsesClass(MatrixValidator::class)]
+#[UsesClass(ApexConverter::class)]
+#[UsesClass(ComponentsConverter::class)]
+#[UsesClass(ConverterFactory::class)]
+#[UsesClass(EnumConverter::class)]
+#[UsesClass(GpsConverter::class)]
+#[UsesClass(GpsCoordinateConverter::class)]
+#[UsesClass(GpsDirectionConverter::class)]
+#[UsesClass(GpsTimestampConverter::class)]
+#[UsesClass(GpsUnitConverter::class)]
+#[UsesClass(MatrixConverter::class)]
+#[UsesClass(NumericConverter::class)]
+#[UsesClass(RationalConverter::class)]
+#[UsesClass(StringConverter::class)]
+#[UsesClass(ExifCapabilities::class)]
+#[UsesClass(ExifNumericList::class)]
+#[UsesClass(FallbackIfdSet::class)]
+#[UsesClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
+#[UsesClass(IfdValueReader::class)]
+#[UsesClass(ParsedExif::class)]
+#[UsesClass(FocalReader::class)]
+#[UsesClass(IsoSensitivityReader::class)]
+#[UsesClass(SensorDataReader::class)]
+#[UsesClass(XmpFallbackResolver::class)]
+#[UsesClass(ValueConverters::class)]
+#[UsesClass(Metadata::class)]
+#[UsesClass(CfaPattern::class)]
+#[UsesClass(Sensor::class)]
+#[UsesClass(SpatialFrequencyResponse::class)]
+#[UsesTrait(EnumFromIntStringNullable::class)]
 final class SensorFactoryTest extends TestCase
 {
     /**

@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
@@ -44,6 +46,8 @@ use function substr;
 #[UsesClass(ApplePlistDictionary::class)]
 #[UsesClass(ApplePlistScalar::class)]
 #[UsesClass(PlistBinaryReader::class)]
+#[UsesClass(PayloadGuard::class)]
+#[UsesClass(Unpack::class)]
 final class BinaryPlistDecoderTest extends TestCase
 {
     private function decodeSingleObject(string $objectBytes): ApplePlistScalar|ApplePlistArray|ApplePlistDictionary

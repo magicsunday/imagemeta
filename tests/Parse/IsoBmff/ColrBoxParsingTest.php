@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffQueuedResolveResult;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
@@ -29,6 +30,7 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\BoxPayloadCollector;
 use MagicSunday\ImageMeta\Parse\IsoBmff\FullBoxHeader;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IlocBoxParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserConfig;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParseResult;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemLocationResolver;
 use MagicSunday\ImageMeta\Parse\IsoBmff\ItemPayloadResolver;
@@ -66,7 +68,6 @@ use function str_repeat;
 #[UsesClass(Stream::class)]
 #[UsesClass(StreamWindow::class)]
 #[UsesTrait(NormalizesOffsets::class)]
-#[UsesTrait(IsoBmffBoxTrait::class)]
 #[UsesTrait(ReadsBinaryPrimitives::class)]
 #[UsesClass(Unpack::class)]
 #[UsesClass(BoxDescriptor::class)]
@@ -84,6 +85,8 @@ use function str_repeat;
 #[UsesClass(QuickTimeValueDecoder::class)]
 #[UsesClass(TrackMediaParser::class)]
 #[UsesClass(VideoSampleEntryParser::class)]
+#[UsesClass(IsoBmffQueuedResolveResult::class)]
+#[UsesClass(IsoBmffParserConfig::class)]
 final class ColrBoxParsingTest extends TestCase
 {
     use IsoBmffBoxTrait;

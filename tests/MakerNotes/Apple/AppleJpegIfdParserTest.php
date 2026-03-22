@@ -21,9 +21,11 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleHdr;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleJpegIfdParser;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleRationalNormalizer;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\PlistTextCursor;
 use MagicSunday\ImageMeta\MakerNotes\Apple\PlistTextParser;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -57,6 +59,8 @@ use function strlen;
 #[UsesClass(PlistTextCursor::class)]
 #[UsesClass(PlistTextParser::class)]
 #[UsesClass(Unpack::class)]
+#[UsesClass(AppleRationalNormalizer::class)]
+#[UsesClass(SemanticStyle::class)]
 final class AppleJpegIfdParserTest extends TestCase
 {
     private const int TIFF_TYPE_ASCII = 2;

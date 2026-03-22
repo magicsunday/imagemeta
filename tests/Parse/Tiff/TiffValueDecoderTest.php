@@ -11,10 +11,13 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Parse\Tiff\ExifTagDecoder;
@@ -25,6 +28,7 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffOffsetValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
@@ -38,6 +42,14 @@ use function substr_count;
  * @internal
  */
 #[CoversClass(TiffValueDecoder::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(MemoryBuffer::class)]
+#[UsesClass(PayloadGuard::class)]
+#[UsesClass(UInt64::class)]
+#[UsesClass(Unpack::class)]
+#[UsesClass(ExifNumericList::class)]
+#[UsesClass(TiffBinaryReader::class)]
+#[UsesClass(TiffOffsetValidator::class)]
 final class TiffValueDecoderTest extends TestCase
 {
     #[Test]

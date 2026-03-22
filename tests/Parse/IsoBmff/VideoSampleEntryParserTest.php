@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
@@ -21,7 +22,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
-use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 use function pack;
@@ -37,7 +37,7 @@ use function strlen;
 #[UsesClass(StreamWindow::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Unpack::class)]
-#[UsesTrait(IsoBmffBoxTrait::class)]
+#[UsesClass(Stream::class)]
 final class VideoSampleEntryParserTest extends TestCase
 {
     use IsoBmffBoxTrait;

@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
+use MagicSunday\ImageMeta\Core\Endian;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Samsung\SamsungMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\SamsungDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -30,6 +33,9 @@ use function strlen;
  */
 #[CoversClass(SamsungDecoder::class)]
 #[UsesClass(SamsungMakerNotes::class)]
+#[UsesClass(Endian::class)]
+#[UsesClass(Unpack::class)]
+#[UsesClass(MakerNotesRecord::class)]
 final class SamsungDecoderTest extends TestCase
 {
     /**

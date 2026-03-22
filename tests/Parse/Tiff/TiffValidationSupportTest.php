@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
@@ -22,6 +23,7 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffValidationSupport;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function file_get_contents;
@@ -31,6 +33,11 @@ use function substr_count;
  * Verifies the TiffValidationSupport helper for tag name resolution and BitsPerSample validation.
  */
 #[CoversClass(TiffValidationSupport::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(MemoryBuffer::class)]
+#[UsesClass(ExifNumericList::class)]
+#[UsesClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
 final class TiffValidationSupportTest extends TestCase
 {
     #[Test]

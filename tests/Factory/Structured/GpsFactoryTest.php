@@ -12,12 +12,35 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Factory\Structured;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Core\Util\DateTimeUtil;
 use MagicSunday\ImageMeta\Core\Util\Iso6709Parser;
+use MagicSunday\ImageMeta\Core\Util\StringUtil;
+use MagicSunday\ImageMeta\Exif\Converters\ApexConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ComponentsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ConverterFactory;
+use MagicSunday\ImageMeta\Exif\Converters\EnumConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsCoordinateConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsDirectionConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsTimestampConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsUnitConverter;
+use MagicSunday\ImageMeta\Exif\Converters\MatrixConverter;
+use MagicSunday\ImageMeta\Exif\Converters\NumericConverter;
+use MagicSunday\ImageMeta\Exif\Converters\RationalConverter;
+use MagicSunday\ImageMeta\Exif\Converters\StringConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ValidatesGpsRef;
+use MagicSunday\ImageMeta\Exif\ExifCapabilities;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
+use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Reader\GpsExifReader;
+use MagicSunday\ImageMeta\Exif\Text\UndefinedTextMarker;
+use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\Structured\GpsFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -29,10 +52,19 @@ use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsMeasureMode;
 use MagicSunday\ImageMeta\Value\Enum\GpsSpeedRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsStatus;
+use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\GpsCoordinate;
+use MagicSunday\ImageMeta\Value\GpsDestination;
+use MagicSunday\ImageMeta\Value\GpsMeasurement;
+use MagicSunday\ImageMeta\Value\GpsMovement;
+use MagicSunday\ImageMeta\Value\GpsPosition;
+use MagicSunday\ImageMeta\Value\GpsTiming;
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -52,6 +84,43 @@ use function strlen;
 #[UsesClass(QuickTimeLookup::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(XmpDocument::class)]
+#[UsesClass(DateTimeUtil::class)]
+#[UsesClass(StringUtil::class)]
+#[UsesClass(ApexConverter::class)]
+#[UsesClass(ComponentsConverter::class)]
+#[UsesClass(ConverterFactory::class)]
+#[UsesClass(EnumConverter::class)]
+#[UsesClass(GpsConverter::class)]
+#[UsesClass(GpsCoordinateConverter::class)]
+#[UsesClass(GpsDirectionConverter::class)]
+#[UsesClass(GpsTimestampConverter::class)]
+#[UsesClass(GpsUnitConverter::class)]
+#[UsesClass(MatrixConverter::class)]
+#[UsesClass(NumericConverter::class)]
+#[UsesClass(RationalConverter::class)]
+#[UsesClass(StringConverter::class)]
+#[UsesTrait(ValidatesGpsRef::class)]
+#[UsesClass(ExifCapabilities::class)]
+#[UsesClass(ExifNumericList::class)]
+#[UsesClass(ExifRational::class)]
+#[UsesClass(ExifRationalList::class)]
+#[UsesClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
+#[UsesClass(IfdValueReader::class)]
+#[UsesClass(ParsedExif::class)]
+#[UsesClass(GpsExifReader::class)]
+#[UsesClass(UndefinedTextMarker::class)]
+#[UsesClass(ValueConverters::class)]
+#[UsesClass(Metadata::class)]
+#[UsesClass(GpsAltitudeRef::class)]
+#[UsesClass(Gps::class)]
+#[UsesClass(GpsCoordinate::class)]
+#[UsesClass(GpsDestination::class)]
+#[UsesClass(GpsMeasurement::class)]
+#[UsesClass(GpsMovement::class)]
+#[UsesClass(GpsPosition::class)]
+#[UsesClass(GpsTiming::class)]
+#[UsesTrait(EnumFromIntStringNullable::class)]
 final class GpsFactoryTest extends TestCase
 {
     /**

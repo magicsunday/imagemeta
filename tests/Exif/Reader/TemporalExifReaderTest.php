@@ -12,6 +12,19 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Exif\Reader;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Exif\Converters\ApexConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ComponentsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ConverterFactory;
+use MagicSunday\ImageMeta\Exif\Converters\DateTimeConverter;
+use MagicSunday\ImageMeta\Exif\Converters\EnumConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsCoordinateConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsDirectionConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsTimestampConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsUnitConverter;
+use MagicSunday\ImageMeta\Exif\Converters\MatrixConverter;
+use MagicSunday\ImageMeta\Exif\Converters\NumericConverter;
+use MagicSunday\ImageMeta\Exif\Converters\RationalConverter;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\FallbackIfdSet;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -38,6 +51,19 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(FallbackIfdSet::class)]
 #[UsesClass(GpsExifReader::class)]
+#[UsesClass(ApexConverter::class)]
+#[UsesClass(ComponentsConverter::class)]
+#[UsesClass(ConverterFactory::class)]
+#[UsesClass(DateTimeConverter::class)]
+#[UsesClass(EnumConverter::class)]
+#[UsesClass(GpsConverter::class)]
+#[UsesClass(GpsCoordinateConverter::class)]
+#[UsesClass(GpsDirectionConverter::class)]
+#[UsesClass(GpsTimestampConverter::class)]
+#[UsesClass(GpsUnitConverter::class)]
+#[UsesClass(MatrixConverter::class)]
+#[UsesClass(NumericConverter::class)]
+#[UsesClass(RationalConverter::class)]
 final class TemporalExifReaderTest extends TestCase
 {
     /**

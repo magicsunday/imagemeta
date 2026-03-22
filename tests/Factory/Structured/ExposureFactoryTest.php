@@ -11,16 +11,44 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Factory\Structured;
 
+use MagicSunday\ImageMeta\Exif\Converters\ApexConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ComponentsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ConverterFactory;
+use MagicSunday\ImageMeta\Exif\Converters\EnumConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
+use MagicSunday\ImageMeta\Exif\Converters\FlashConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsCoordinateConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsDirectionConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsTimestampConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsUnitConverter;
+use MagicSunday\ImageMeta\Exif\Converters\MatrixConverter;
+use MagicSunday\ImageMeta\Exif\Converters\NumericConverter;
+use MagicSunday\ImageMeta\Exif\Converters\RationalConverter;
+use MagicSunday\ImageMeta\Exif\Converters\StringConverter;
+use MagicSunday\ImageMeta\Exif\ExifCapabilities;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\FallbackIfdSet;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Reader\ExposureParameterReader;
+use MagicSunday\ImageMeta\Exif\Reader\IsoSensitivityReader;
+use MagicSunday\ImageMeta\Exif\Reader\SceneModeReader;
+use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
+use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\Structured\ExposureFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Value\Exposure;
+use MagicSunday\ImageMeta\Value\ExposureAdjustments;
+use MagicSunday\ImageMeta\Value\ExposureSettings;
 use MagicSunday\ImageMeta\Value\FlashInfo;
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -32,6 +60,38 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(ExposureFactory::class)]
+#[UsesClass(ApexConverter::class)]
+#[UsesClass(ComponentsConverter::class)]
+#[UsesClass(ConverterFactory::class)]
+#[UsesClass(EnumConverter::class)]
+#[UsesClass(ExifFlash::class)]
+#[UsesClass(FlashConverter::class)]
+#[UsesClass(GpsConverter::class)]
+#[UsesClass(GpsCoordinateConverter::class)]
+#[UsesClass(GpsDirectionConverter::class)]
+#[UsesClass(GpsTimestampConverter::class)]
+#[UsesClass(GpsUnitConverter::class)]
+#[UsesClass(MatrixConverter::class)]
+#[UsesClass(NumericConverter::class)]
+#[UsesClass(RationalConverter::class)]
+#[UsesClass(StringConverter::class)]
+#[UsesClass(ExifCapabilities::class)]
+#[UsesClass(FallbackIfdSet::class)]
+#[UsesClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
+#[UsesClass(IfdValueReader::class)]
+#[UsesClass(ParsedExif::class)]
+#[UsesClass(ExposureParameterReader::class)]
+#[UsesClass(IsoSensitivityReader::class)]
+#[UsesClass(SceneModeReader::class)]
+#[UsesClass(XmpFallbackResolver::class)]
+#[UsesClass(ValueConverters::class)]
+#[UsesClass(Metadata::class)]
+#[UsesClass(Exposure::class)]
+#[UsesClass(ExposureAdjustments::class)]
+#[UsesClass(ExposureSettings::class)]
+#[UsesClass(FlashInfo::class)]
+#[UsesTrait(EnumFromIntStringNullable::class)]
 final class ExposureFactoryTest extends TestCase
 {
     /**

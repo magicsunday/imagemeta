@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Jxl;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
@@ -53,7 +54,7 @@ use function strlen;
 #[UsesClass(Unpack::class)]
 #[UsesTrait(NormalizesOffsets::class)]
 #[UsesTrait(ReadsBinaryPrimitives::class)]
-#[UsesTrait(IsoBmffBoxTrait::class)]
+#[UsesClass(PayloadGuard::class)]
 final class JxlParserTest extends TestCase
 {
     use IsoBmffBoxTrait;

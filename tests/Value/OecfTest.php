@@ -11,9 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Value;
 
+use MagicSunday\ImageMeta\Core\Util\MatrixParts;
+use MagicSunday\ImageMeta\Core\Util\MatrixValidator;
 use MagicSunday\ImageMeta\Value\Oecf;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -23,6 +26,8 @@ use PHPUnit\Framework\TestCase;
  * This keeps OECF metadata aligned with EXIF-defined structure and expectations.
  */
 #[CoversClass(Oecf::class)]
+#[UsesClass(MatrixParts::class)]
+#[UsesClass(MatrixValidator::class)]
 final class OecfTest extends TestCase
 {
     /**

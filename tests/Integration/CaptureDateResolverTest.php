@@ -14,56 +14,137 @@ namespace MagicSunday\ImageMeta\Tests\Integration;
 use Closure;
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Convenience\CaptureDateResolver;
+use MagicSunday\ImageMeta\Core\Util\DateTimeUtil;
+use MagicSunday\ImageMeta\Core\Util\MatrixValidator;
+use MagicSunday\ImageMeta\Core\Util\StringUtil;
+use MagicSunday\ImageMeta\Exif\Converters\ApexConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ComponentsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ConverterFactory;
+use MagicSunday\ImageMeta\Exif\Converters\DateTimeConverter;
+use MagicSunday\ImageMeta\Exif\Converters\EnumConverter;
 use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
+use MagicSunday\ImageMeta\Exif\Converters\FlashConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsCoordinateConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsDirectionConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsTimestampConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsUnitConverter;
+use MagicSunday\ImageMeta\Exif\Converters\MatrixConverter;
+use MagicSunday\ImageMeta\Exif\Converters\NumericConverter;
+use MagicSunday\ImageMeta\Exif\Converters\PhotoCalculator;
+use MagicSunday\ImageMeta\Exif\Converters\RationalConverter;
+use MagicSunday\ImageMeta\Exif\Converters\StringConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ValidatesGpsRef;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\FallbackIfdSet;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Reader\CameraLensExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ColorSpaceExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\DescriptionExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\DeviceExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ExposureParameterReader;
+use MagicSunday\ImageMeta\Exif\Reader\FocalReader;
+use MagicSunday\ImageMeta\Exif\Reader\GpsExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ImageStructureExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\IsoSensitivityReader;
+use MagicSunday\ImageMeta\Exif\Reader\SceneModeReader;
+use MagicSunday\ImageMeta\Exif\Reader\SensorDataReader;
+use MagicSunday\ImageMeta\Exif\Reader\TemporalExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\ThumbnailExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\TiffBaselineExifReader;
+use MagicSunday\ImageMeta\Exif\Reader\UserCommentExifReader;
+use MagicSunday\ImageMeta\Exif\Reconciliation\ExifXmpMapping;
+use MagicSunday\ImageMeta\Exif\Reconciliation\ExifXmpMappingRegistry;
+use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Factory\Structured\CameraFactory;
+use MagicSunday\ImageMeta\Factory\Structured\DeviceFactory;
+use MagicSunday\ImageMeta\Factory\Structured\ExposureFactory;
+use MagicSunday\ImageMeta\Factory\Structured\GpsFactory;
+use MagicSunday\ImageMeta\Factory\Structured\ImageFactory;
+use MagicSunday\ImageMeta\Factory\Structured\LensFactory;
+use MagicSunday\ImageMeta\Factory\Structured\MotionFactory;
+use MagicSunday\ImageMeta\Factory\Structured\MultiPictureFactory;
+use MagicSunday\ImageMeta\Factory\Structured\RegionCoordinateNormalizer;
+use MagicSunday\ImageMeta\Factory\Structured\RegionsFactory;
+use MagicSunday\ImageMeta\Factory\Structured\SceneFactory;
+use MagicSunday\ImageMeta\Factory\Structured\SensorFactory;
+use MagicSunday\ImageMeta\Factory\Structured\TemporalFactory;
+use MagicSunday\ImageMeta\Factory\Structured\TiffDataFactory;
 use MagicSunday\ImageMeta\Factory\Structured\ValueFactory;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
+use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
+use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
+use MagicSunday\ImageMeta\Parse\Icc\IccParser;
+use MagicSunday\ImageMeta\Parse\Icc\IccTagDecoder;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
+use MagicSunday\ImageMeta\Value\CaptureHardware;
+use MagicSunday\ImageMeta\Value\CaptureSettings;
 use MagicSunday\ImageMeta\Value\ColorProfile;
 use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
+use MagicSunday\ImageMeta\Value\CreatorContact;
+use MagicSunday\ImageMeta\Value\DepthMap;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Exposure;
+use MagicSunday\ImageMeta\Value\ExposureAdjustments;
+use MagicSunday\ImageMeta\Value\ExposureSettings;
 use MagicSunday\ImageMeta\Value\File;
 use MagicSunday\ImageMeta\Value\FlashPix;
 use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\GpsCoordinate;
+use MagicSunday\ImageMeta\Value\GpsDestination;
+use MagicSunday\ImageMeta\Value\GpsMeasurement;
+use MagicSunday\ImageMeta\Value\GpsMovement;
+use MagicSunday\ImageMeta\Value\GpsPosition;
+use MagicSunday\ImageMeta\Value\GpsTiming;
+use MagicSunday\ImageMeta\Value\HdrGainMap;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
 use MagicSunday\ImageMeta\Value\Interop;
+use MagicSunday\ImageMeta\Value\Iptc;
 use MagicSunday\ImageMeta\Value\Keywords;
 use MagicSunday\ImageMeta\Value\Lens;
+use MagicSunday\ImageMeta\Value\LocationTime;
+use MagicSunday\ImageMeta\Value\MediaContent;
 use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
+use MagicSunday\ImageMeta\Value\Provenance;
 use MagicSunday\ImageMeta\Value\RegionCollection;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
 use MagicSunday\ImageMeta\Value\Scene;
 use MagicSunday\ImageMeta\Value\Sensor;
+use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
 use MagicSunday\ImageMeta\Value\Standards;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
+use MagicSunday\ImageMeta\Value\TechnicalData;
 use MagicSunday\ImageMeta\Value\Temporal;
 use MagicSunday\ImageMeta\Value\Thumbnail;
+use MagicSunday\ImageMeta\Value\TiffColorRef;
 use MagicSunday\ImageMeta\Value\TiffData;
+use MagicSunday\ImageMeta\Value\TiffLayout;
+use MagicSunday\ImageMeta\Value\TiffStructure;
 use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+use MagicSunday\ImageMeta\Value\UserComment;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
@@ -135,6 +216,87 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Xmp::class)]
 #[UsesClass(XmpDocument::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
+#[UsesClass(DateTimeUtil::class)]
+#[UsesClass(MatrixValidator::class)]
+#[UsesClass(StringUtil::class)]
+#[UsesClass(ApexConverter::class)]
+#[UsesClass(ComponentsConverter::class)]
+#[UsesClass(ConverterFactory::class)]
+#[UsesClass(DateTimeConverter::class)]
+#[UsesClass(EnumConverter::class)]
+#[UsesClass(FlashConverter::class)]
+#[UsesClass(GpsConverter::class)]
+#[UsesClass(GpsCoordinateConverter::class)]
+#[UsesClass(GpsDirectionConverter::class)]
+#[UsesClass(GpsTimestampConverter::class)]
+#[UsesClass(GpsUnitConverter::class)]
+#[UsesClass(MatrixConverter::class)]
+#[UsesClass(NumericConverter::class)]
+#[UsesClass(PhotoCalculator::class)]
+#[UsesClass(RationalConverter::class)]
+#[UsesClass(StringConverter::class)]
+#[UsesTrait(ValidatesGpsRef::class)]
+#[UsesClass(FallbackIfdSet::class)]
+#[UsesClass(IfdValueReader::class)]
+#[UsesClass(CameraLensExifReader::class)]
+#[UsesClass(ColorSpaceExifReader::class)]
+#[UsesClass(DescriptionExifReader::class)]
+#[UsesClass(DeviceExifReader::class)]
+#[UsesClass(ExposureParameterReader::class)]
+#[UsesClass(FocalReader::class)]
+#[UsesClass(GpsExifReader::class)]
+#[UsesClass(ImageStructureExifReader::class)]
+#[UsesClass(IsoSensitivityReader::class)]
+#[UsesClass(SceneModeReader::class)]
+#[UsesClass(SensorDataReader::class)]
+#[UsesClass(TemporalExifReader::class)]
+#[UsesClass(ThumbnailExifReader::class)]
+#[UsesClass(TiffBaselineExifReader::class)]
+#[UsesClass(UserCommentExifReader::class)]
+#[UsesClass(ExifXmpMapping::class)]
+#[UsesClass(ExifXmpMappingRegistry::class)]
+#[UsesClass(XmpFallbackResolver::class)]
+#[UsesClass(CameraFactory::class)]
+#[UsesClass(DeviceFactory::class)]
+#[UsesClass(ExposureFactory::class)]
+#[UsesClass(GpsFactory::class)]
+#[UsesClass(ImageFactory::class)]
+#[UsesClass(LensFactory::class)]
+#[UsesClass(MotionFactory::class)]
+#[UsesClass(MultiPictureFactory::class)]
+#[UsesClass(RegionCoordinateNormalizer::class)]
+#[UsesClass(RegionsFactory::class)]
+#[UsesClass(SceneFactory::class)]
+#[UsesClass(SensorFactory::class)]
+#[UsesClass(TemporalFactory::class)]
+#[UsesClass(TiffDataFactory::class)]
+#[UsesClass(FlashPixDocument::class)]
+#[UsesClass(FlashPixParser::class)]
+#[UsesClass(IccHeaderDecoder::class)]
+#[UsesClass(IccParser::class)]
+#[UsesClass(IccTagDecoder::class)]
+#[UsesClass(CaptureHardware::class)]
+#[UsesClass(CaptureSettings::class)]
+#[UsesClass(CreatorContact::class)]
+#[UsesClass(DepthMap::class)]
+#[UsesClass(ExposureAdjustments::class)]
+#[UsesClass(ExposureSettings::class)]
+#[UsesClass(GpsDestination::class)]
+#[UsesClass(GpsMeasurement::class)]
+#[UsesClass(GpsMovement::class)]
+#[UsesClass(GpsPosition::class)]
+#[UsesClass(GpsTiming::class)]
+#[UsesClass(HdrGainMap::class)]
+#[UsesClass(Iptc::class)]
+#[UsesClass(LocationTime::class)]
+#[UsesClass(MediaContent::class)]
+#[UsesClass(Provenance::class)]
+#[UsesClass(SpatialFrequencyResponse::class)]
+#[UsesClass(TechnicalData::class)]
+#[UsesClass(TiffColorRef::class)]
+#[UsesClass(TiffLayout::class)]
+#[UsesClass(TiffStructure::class)]
+#[UsesClass(UserComment::class)]
 final class CaptureDateResolverTest extends TestCase
 {
     private const string XMP_NAMESPACE = 'http://ns.adobe.com/xap/1.0/';

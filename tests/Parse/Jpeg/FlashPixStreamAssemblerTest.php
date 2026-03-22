@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Parse\Jpeg\FlashPixStreamAssembler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -35,6 +36,7 @@ use function substr;
  */
 #[CoversClass(FlashPixStreamAssembler::class)]
 #[UsesClass(ParseError::class)]
+#[UsesClass(PayloadGuard::class)]
 final class FlashPixStreamAssemblerTest extends TestCase
 {
     /**

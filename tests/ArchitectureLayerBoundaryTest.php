@@ -19,7 +19,6 @@ use MagicSunday\ImageMeta\Parse\Icc\IccParser;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -42,10 +41,6 @@ use function str_starts_with;
  *
  * @internal
  */
-#[CoversClass(IptcParserInterface::class)]
-#[CoversClass(XmpParserInterface::class)]
-#[CoversClass(TiffExifParserInterface::class)]
-#[CoversClass(IccParserInterface::class)]
 #[UsesClass(IptcParser::class)]
 #[UsesClass(XmpParser::class)]
 #[UsesClass(TiffExifParser::class)]

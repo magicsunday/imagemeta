@@ -14,9 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
-use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistValueInterface;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -28,7 +26,6 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  */
-#[CoversClass(ApplePlistValueInterface::class)]
 #[UsesClass(ApplePlistArray::class)]
 #[UsesClass(ApplePlistDictionary::class)]
 #[UsesClass(ApplePlistScalar::class)]

@@ -11,8 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleCaptureIdentity;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleDictionaryValueExtractor;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleFlagExtractor;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleHdr;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleSemanticStyle;
@@ -36,6 +38,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(AppleSemanticStyle::class)]
 #[UsesClass(SemanticStyle::class)]
+#[UsesClass(AppleCaptureIdentity::class)]
+#[UsesClass(AppleHdr::class)]
 final class AppleDecoderSemanticStyleTest extends TestCase
 {
     /**

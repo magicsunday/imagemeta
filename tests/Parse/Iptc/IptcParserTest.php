@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Iptc;
 
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -36,6 +37,7 @@ use function substr;
  */
 #[CoversClass(IptcParser::class)]
 #[UsesClass(IptcDocument::class)]
+#[UsesClass(Unpack::class)]
 final class IptcParserTest extends TestCase
 {
     private const string PHOTOSHOP_SIGNATURE = "Photoshop 3.0\0";

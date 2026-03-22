@@ -27,6 +27,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -56,6 +57,8 @@ use function sprintf;
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(ExifRationalList::class)]
 #[UsesTrait(ValidatesGpsRef::class)]
+#[UsesClass(ExifRational::class)]
+#[UsesClass(GpsAltitudeRef::class)]
 final class GpsConverterTest extends TestCase
 {
     private GpsConverter $converter;

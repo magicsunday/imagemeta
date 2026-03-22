@@ -11,6 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleDictionaryValueExtractor;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleJpegIfdParser;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
+use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
@@ -36,6 +40,11 @@ use function implode;
  */
 #[CoversClass(Registry::class)]
 #[UsesClass(RegistryFactory::class)]
+#[UsesClass(AppleDecoder::class)]
+#[UsesClass(AppleDictionaryValueExtractor::class)]
+#[UsesClass(AppleJpegIfdParser::class)]
+#[UsesClass(AppleMakerNotesBuilder::class)]
+#[UsesClass(SimpleDecoder::class)]
 final class RegistryTest extends TestCase
 {
     private function readMethodBody(string $class, string $methodName): string

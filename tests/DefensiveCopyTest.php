@@ -36,9 +36,11 @@ use MagicSunday\ImageMeta\Value\Region;
 use MagicSunday\ImageMeta\Value\RegionCollection;
 use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -71,6 +73,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(IsoBmffItemReferenceMap::class)]
 #[UsesClass(MultiPictureEntry::class)]
 #[UsesClass(MpfEntry::class)]
+#[UsesTrait(EnumFromIntStringNullable::class)]
 final class DefensiveCopyTest extends TestCase
 {
     #[Test]

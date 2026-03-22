@@ -17,13 +17,43 @@ use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
+use MagicSunday\ImageMeta\Core\Util\DateTimeUtil;
+use MagicSunday\ImageMeta\Core\Util\StringUtil;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
+use MagicSunday\ImageMeta\Exif\Converters\ApexConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ComponentsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\ConverterFactory;
+use MagicSunday\ImageMeta\Exif\Converters\EnumConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsCoordinateConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsDirectionConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsTimestampConverter;
+use MagicSunday\ImageMeta\Exif\Converters\GpsUnitConverter;
+use MagicSunday\ImageMeta\Exif\Converters\MatrixConverter;
+use MagicSunday\ImageMeta\Exif\Converters\NumericConverter;
+use MagicSunday\ImageMeta\Exif\Converters\PhotoCalculator;
+use MagicSunday\ImageMeta\Exif\Converters\RationalConverter;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Factory\Structured\CameraFactory;
+use MagicSunday\ImageMeta\Factory\Structured\DeviceFactory;
+use MagicSunday\ImageMeta\Factory\Structured\ExposureFactory;
+use MagicSunday\ImageMeta\Factory\Structured\GpsFactory;
+use MagicSunday\ImageMeta\Factory\Structured\ImageFactory;
+use MagicSunday\ImageMeta\Factory\Structured\LensFactory;
+use MagicSunday\ImageMeta\Factory\Structured\MotionFactory;
+use MagicSunday\ImageMeta\Factory\Structured\MultiPictureFactory;
+use MagicSunday\ImageMeta\Factory\Structured\RegionsFactory;
+use MagicSunday\ImageMeta\Factory\Structured\SceneFactory;
+use MagicSunday\ImageMeta\Factory\Structured\SensorFactory;
+use MagicSunday\ImageMeta\Factory\Structured\TemporalFactory;
 use MagicSunday\ImageMeta\Factory\Structured\TiffDataFactory;
 use MagicSunday\ImageMeta\Factory\Structured\ValueFactory;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleCaptureIdentity;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleHdr;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
@@ -32,17 +62,27 @@ use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\MakerNotes\SimpleDecoder;
 use MagicSunday\ImageMeta\MetadataReader;
+use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
+use MagicSunday\ImageMeta\Model\Icc\IccProfile;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\MetadataBuilder;
+use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccBinaryReader;
 use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccTagDecoder;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserConfig;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactory;
+use MagicSunday\ImageMeta\Parse\Jpeg\AudioStreamHandler;
+use MagicSunday\ImageMeta\Parse\Jpeg\ExifSegmentHandler;
+use MagicSunday\ImageMeta\Parse\Jpeg\ExtendedXmpAssembler;
 use MagicSunday\ImageMeta\Parse\Jpeg\FlashPixHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\FlashPixStreamAssembler;
 use MagicSunday\ImageMeta\Parse\Jpeg\IccProfileAssembler;
 use MagicSunday\ImageMeta\Parse\Jpeg\IccProfileHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\IptcSegmentHandler;
+use MagicSunday\ImageMeta\Parse\Jpeg\JfifSegmentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegApp1Handler;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegAudioSegmentParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegFrameValidator;
@@ -52,6 +92,8 @@ use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserConfig;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
 use MagicSunday\ImageMeta\Parse\Jpeg\JumbfTransportParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\MarkerHandlerRegistry;
+use MagicSunday\ImageMeta\Parse\Jpeg\MpfDocumentHandler;
+use MagicSunday\ImageMeta\Parse\Jpeg\XmpSegmentHandler;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParseState;
 use MagicSunday\ImageMeta\Value\Audio;
@@ -65,8 +107,10 @@ use MagicSunday\ImageMeta\Value\ColorProfile;
 use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\CreatorContact;
+use MagicSunday\ImageMeta\Value\DepthMap;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
+use MagicSunday\ImageMeta\Value\Enum\IccRenderingIntent;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\ExposureAdjustments;
 use MagicSunday\ImageMeta\Value\ExposureSettings;
@@ -80,6 +124,7 @@ use MagicSunday\ImageMeta\Value\GpsMeasurement;
 use MagicSunday\ImageMeta\Value\GpsMovement;
 use MagicSunday\ImageMeta\Value\GpsPosition;
 use MagicSunday\ImageMeta\Value\GpsTiming;
+use MagicSunday\ImageMeta\Value\HdrGainMap;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
 use MagicSunday\ImageMeta\Value\Interop;
@@ -235,6 +280,51 @@ use function unlink;
 #[UsesClass(XmpParser::class)]
 #[UsesClass(XmpParseState::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
+#[UsesClass(DateTimeUtil::class)]
+#[UsesClass(StringUtil::class)]
+#[UsesClass(ApexConverter::class)]
+#[UsesClass(ComponentsConverter::class)]
+#[UsesClass(ConverterFactory::class)]
+#[UsesClass(EnumConverter::class)]
+#[UsesClass(GpsConverter::class)]
+#[UsesClass(GpsCoordinateConverter::class)]
+#[UsesClass(GpsDirectionConverter::class)]
+#[UsesClass(GpsTimestampConverter::class)]
+#[UsesClass(GpsUnitConverter::class)]
+#[UsesClass(MatrixConverter::class)]
+#[UsesClass(NumericConverter::class)]
+#[UsesClass(PhotoCalculator::class)]
+#[UsesClass(RationalConverter::class)]
+#[UsesClass(XmpFallbackResolver::class)]
+#[UsesClass(CameraFactory::class)]
+#[UsesClass(DeviceFactory::class)]
+#[UsesClass(ExposureFactory::class)]
+#[UsesClass(GpsFactory::class)]
+#[UsesClass(ImageFactory::class)]
+#[UsesClass(LensFactory::class)]
+#[UsesClass(MotionFactory::class)]
+#[UsesClass(MultiPictureFactory::class)]
+#[UsesClass(RegionsFactory::class)]
+#[UsesClass(SceneFactory::class)]
+#[UsesClass(SensorFactory::class)]
+#[UsesClass(TemporalFactory::class)]
+#[UsesClass(AppleCaptureIdentity::class)]
+#[UsesClass(AppleHdr::class)]
+#[UsesClass(FlashPixDocument::class)]
+#[UsesClass(IccProfile::class)]
+#[UsesClass(MetadataBuilder::class)]
+#[UsesClass(FlashPixParser::class)]
+#[UsesClass(IsoBmffParserConfig::class)]
+#[UsesClass(IsoBmffParserFactory::class)]
+#[UsesClass(AudioStreamHandler::class)]
+#[UsesClass(ExifSegmentHandler::class)]
+#[UsesClass(ExtendedXmpAssembler::class)]
+#[UsesClass(JfifSegmentHandler::class)]
+#[UsesClass(MpfDocumentHandler::class)]
+#[UsesClass(XmpSegmentHandler::class)]
+#[UsesClass(DepthMap::class)]
+#[UsesClass(IccRenderingIntent::class)]
+#[UsesClass(HdrGainMap::class)]
 final class IccIntegrationTest extends TestCase
 {
     private const int MARKER_APP2 = 0xE2;

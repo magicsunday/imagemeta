@@ -31,6 +31,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(RationalConverter::class)]
 #[UsesClass(NumericConverter::class)]
 #[UsesClass(ExifConst::class)]
+#[UsesClass(ExifRational::class)]
 final class ApexConverterTest extends TestCase
 {
     private ApexConverter $converter;

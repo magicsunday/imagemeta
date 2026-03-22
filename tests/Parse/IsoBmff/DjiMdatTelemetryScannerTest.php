@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Model\Dji\DjiTelemetry;
 use MagicSunday\ImageMeta\Parse\IsoBmff\DjiMdatTelemetryScanner;
@@ -32,6 +33,7 @@ use function strlen;
 #[CoversClass(DjiMdatTelemetryScanner::class)]
 #[UsesClass(DjiTelemetry::class)]
 #[UsesClass(Stream::class)]
+#[UsesClass(ByteReader::class)]
 final class DjiMdatTelemetryScannerTest extends TestCase
 {
     /**

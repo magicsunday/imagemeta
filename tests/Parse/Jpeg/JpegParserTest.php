@@ -12,8 +12,10 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
@@ -23,16 +25,27 @@ use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
+use MagicSunday\ImageMeta\Parse\Jpeg\AudioStreamHandler;
+use MagicSunday\ImageMeta\Parse\Jpeg\ExifSegmentHandler;
+use MagicSunday\ImageMeta\Parse\Jpeg\ExtendedXmpAssembler;
+use MagicSunday\ImageMeta\Parse\Jpeg\FlashPixHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\FlashPixStreamAssembler;
 use MagicSunday\ImageMeta\Parse\Jpeg\IccProfileAssembler;
+use MagicSunday\ImageMeta\Parse\Jpeg\IccProfileHandler;
+use MagicSunday\ImageMeta\Parse\Jpeg\IptcSegmentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\JfifSegmentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegApp1Handler;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegAudioFormat;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegAudioSegmentParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegFrameValidator;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegMarkerScanner;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserConfig;
+use MagicSunday\ImageMeta\Parse\Jpeg\JumbfTransportParser;
+use MagicSunday\ImageMeta\Parse\Jpeg\MarkerHandlerRegistry;
+use MagicSunday\ImageMeta\Parse\Jpeg\MpfDocumentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfParser;
+use MagicSunday\ImageMeta\Parse\Jpeg\XmpSegmentHandler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -90,6 +103,19 @@ use function unlink;
 #[UsesClass(JpegApp1Handler::class)]
 #[UsesClass(JfifSegment::class)]
 #[UsesClass(JfifSegmentHandler::class)]
+#[UsesClass(Endian::class)]
+#[UsesClass(PayloadGuard::class)]
+#[UsesClass(AudioStreamHandler::class)]
+#[UsesClass(ExifSegmentHandler::class)]
+#[UsesClass(ExtendedXmpAssembler::class)]
+#[UsesClass(FlashPixHandler::class)]
+#[UsesClass(IccProfileHandler::class)]
+#[UsesClass(IptcSegmentHandler::class)]
+#[UsesClass(JpegAudioFormat::class)]
+#[UsesClass(JumbfTransportParser::class)]
+#[UsesClass(MarkerHandlerRegistry::class)]
+#[UsesClass(MpfDocumentHandler::class)]
+#[UsesClass(XmpSegmentHandler::class)]
 final class JpegParserTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";

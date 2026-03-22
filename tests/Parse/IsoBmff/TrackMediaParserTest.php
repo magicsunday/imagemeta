@@ -15,10 +15,12 @@ use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\IsoBmff\AudioSampleEntryParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
+use MagicSunday\ImageMeta\Parse\IsoBmff\FullBoxHeader;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParseContext;
 use MagicSunday\ImageMeta\Parse\IsoBmff\TrackMediaParser;
 use MagicSunday\ImageMeta\Parse\IsoBmff\VideoSampleEntryParser;
@@ -52,6 +54,8 @@ use function strlen;
 #[UsesClass(IsoBmffParseContext::class)]
 #[UsesClass(VideoSampleEntryParser::class)]
 #[UsesClass(AudioSampleEntryParser::class)]
+#[UsesClass(UInt64::class)]
+#[UsesClass(FullBoxHeader::class)]
 final class TrackMediaParserTest extends TestCase
 {
     use IsoBmffBoxTrait;

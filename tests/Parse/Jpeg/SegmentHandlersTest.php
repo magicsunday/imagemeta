@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Jpeg;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Model\Jpeg\Marker;
 use MagicSunday\ImageMeta\Parse\Jpeg\AudioStreamHandler;
@@ -25,7 +26,6 @@ use MagicSunday\ImageMeta\Tests\Core\CreatesTempStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
-use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -41,7 +41,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(JfifSegmentHandler::class)]
 #[UsesClass(Stream::class)]
 #[UsesClass(Marker::class)]
-#[UsesTrait(CreatesTempStream::class)]
+#[UsesClass(ByteReader::class)]
 final class SegmentHandlersTest extends TestCase
 {
     use CreatesTempStream;

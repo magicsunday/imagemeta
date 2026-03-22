@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,6 +26,7 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(StringConverter::class)]
+#[UsesClass(ExifRational::class)]
 final class StringConverterTest extends TestCase
 {
     private StringConverter $converter;

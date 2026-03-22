@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
+use MagicSunday\ImageMeta\Core\PayloadGuard;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleAutoExposure;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleAutoFocus;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleCameraCapture;
@@ -18,6 +20,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleCaptureIdentity;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleDictionaryValueExtractor;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleFlagExtractor;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleHdr;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleJpegIfdParser;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleLivePhoto;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
@@ -25,6 +28,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleNoise;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleRationalNormalizer;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleSemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveResolver;
@@ -79,6 +83,10 @@ use function strlen;
 #[UsesClass(KeyedArchiveResolver::class)]
 #[UsesClass(PlistTextCursor::class)]
 #[UsesClass(PlistTextParser::class)]
+#[UsesClass(PayloadGuard::class)]
+#[UsesClass(Unpack::class)]
+#[UsesClass(AppleJpegIfdParser::class)]
+#[UsesClass(AppleRationalNormalizer::class)]
 final class AppleDecoderTest extends TestCase
 {
     private function decodeAppleMakerNotesRecord(string $raw): MakerNotesRecord

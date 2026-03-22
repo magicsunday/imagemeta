@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Convenience;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Convenience\ExifConvenience;
+use MagicSunday\ImageMeta\Core\Util\StringUtil;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\Derived;
@@ -48,6 +49,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(GpsPosition::class)]
 #[UsesClass(Image::class)]
 #[UsesClass(Lens::class)]
+#[UsesClass(StringUtil::class)]
 final class ExifConvenienceTest extends TestCase
 {
     /**

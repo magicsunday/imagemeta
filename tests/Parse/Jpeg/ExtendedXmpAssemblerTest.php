@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\Jpeg\ExtendedXmpAssembler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -26,6 +28,8 @@ use function str_repeat;
  */
 #[CoversClass(ExtendedXmpAssembler::class)]
 #[UsesClass(ParseError::class)]
+#[UsesClass(PayloadGuard::class)]
+#[UsesClass(Unpack::class)]
 final class ExtendedXmpAssemblerTest extends TestCase
 {
     private const string SIGNATURE = "http://ns.adobe.com/xmp/extension/\0";

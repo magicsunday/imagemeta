@@ -33,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(UInt64::class)]
 #[UsesClass(ExifNumericList::class)]
 #[UsesClass(ExifRationalList::class)]
+#[UsesClass(ExifRational::class)]
 final class RationalConverterTest extends TestCase
 {
     private RationalConverter $converter;

@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
@@ -44,7 +45,7 @@ use function strlen;
 #[UsesClass(BoxDescriptor::class)]
 #[UsesTrait(NormalizesOffsets::class)]
 #[UsesTrait(ReadsBinaryPrimitives::class)]
-#[UsesTrait(IsoBmffBoxTrait::class)]
+#[UsesClass(Stream::class)]
 final class QuickTimeValueDecoderTest extends TestCase
 {
     use IsoBmffBoxTrait;

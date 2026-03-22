@@ -13,9 +13,11 @@ namespace MagicSunday\ImageMeta\Tests\Model\Xmp;
 
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
+use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function sprintf;
@@ -30,6 +32,7 @@ use function sprintf;
  */
 #[CoversClass(XmpDocument::class)]
 #[CoversClass(XmpStructuredValue::class)]
+#[UsesClass(XmpValueAccumulator::class)]
 final class XmpDocumentTest extends TestCase
 {
     /**

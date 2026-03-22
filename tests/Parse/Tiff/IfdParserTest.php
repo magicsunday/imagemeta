@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Parse\Tiff\IfdParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function array_keys;
@@ -25,6 +26,7 @@ use function array_keys;
  * @internal
  */
 #[CoversClass(IfdParser::class)]
+#[UsesClass(IfdEntry::class)]
 final class IfdParserTest extends TestCase
 {
     #[Test]

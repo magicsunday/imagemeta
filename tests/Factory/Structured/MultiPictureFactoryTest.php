@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Value\Enum\MpImageDataFormat;
 use MagicSunday\ImageMeta\Value\Enum\MpImageType;
+use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\MultiPictureEntry;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -35,6 +36,12 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(MultiPictureFactory::class)]
 #[UsesClass(MpImageDataFormat::class)]
 #[UsesClass(MpImageType::class)]
+#[UsesClass(Metadata::class)]
+#[UsesClass(MpfAttributes::class)]
+#[UsesClass(MpfDocument::class)]
+#[UsesClass(MpfEntry::class)]
+#[UsesClass(MultiPicture::class)]
+#[UsesClass(MultiPictureEntry::class)]
 final class MultiPictureFactoryTest extends TestCase
 {
     /**

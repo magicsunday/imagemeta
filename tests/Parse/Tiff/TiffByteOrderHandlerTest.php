@@ -11,13 +11,18 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffByteOrderHandler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,6 +31,11 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(TiffByteOrderHandler::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(MemoryBuffer::class)]
+#[UsesTrait(NormalizesOffsets::class)]
+#[UsesClass(UInt64::class)]
+#[UsesClass(Unpack::class)]
 final class TiffByteOrderHandlerTest extends TestCase
 {
     #[Test]

@@ -12,13 +12,13 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Tests\Helpers\IsoBmffBoxTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
-use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -30,7 +30,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(BoxDescriptor::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(StreamWindow::class)]
-#[UsesTrait(IsoBmffBoxTrait::class)]
+#[UsesClass(Stream::class)]
 final class BoxDescriptorTest extends TestCase
 {
     use IsoBmffBoxTrait;

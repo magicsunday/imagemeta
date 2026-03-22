@@ -11,10 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Model\Xmp;
 
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function sprintf;
@@ -23,6 +25,8 @@ use function sprintf;
  * Tests structured XMP values used for rdf:parseType="Resource" properties.
  */
 #[CoversClass(XmpStructuredValue::class)]
+#[UsesClass(XmpDocument::class)]
+#[UsesClass(XmpLanguageAlternative::class)]
 final class XmpStructuredValueTest extends TestCase
 {
     /**

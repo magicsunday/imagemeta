@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Jpeg;
 
 use Closure;
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Model\Jpeg\Marker;
 use MagicSunday\ImageMeta\Parse\Jpeg\MarkerHandlerInterface;
@@ -19,12 +20,15 @@ use MagicSunday\ImageMeta\Parse\Jpeg\MarkerHandlerRegistry;
 use MagicSunday\ImageMeta\Tests\Core\CreatesTempStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Covers dispatch behavior and dynamic registration for marker handlers.
  */
 #[CoversClass(MarkerHandlerRegistry::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(Stream::class)]
 final class MarkerHandlerRegistryTest extends TestCase
 {
     use CreatesTempStream;

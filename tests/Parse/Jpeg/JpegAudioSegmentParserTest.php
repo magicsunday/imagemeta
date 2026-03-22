@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegAudioFormat;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegAudioSegmentParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -37,6 +38,7 @@ use function str_repeat;
 #[UsesClass(JpegAudioStream::class)]
 #[UsesClass(PayloadGuard::class)]
 #[UsesClass(Unpack::class)]
+#[UsesClass(JpegAudioFormat::class)]
 final class JpegAudioSegmentParserTest extends TestCase
 {
     private const string AUDIO_SIGNATURE = "Exif\0\0Audio";

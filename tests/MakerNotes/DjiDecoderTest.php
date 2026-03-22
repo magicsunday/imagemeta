@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\Dji\DjiMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\DjiDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
@@ -33,6 +34,7 @@ use function strlen;
 #[CoversClass(DjiDecoder::class)]
 #[UsesClass(DjiMakerNotes::class)]
 #[UsesClass(MakerNotesRecord::class)]
+#[UsesClass(Unpack::class)]
 final class DjiDecoderTest extends TestCase
 {
     /**

@@ -36,6 +36,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(FlashInfo::class)]
 #[UsesClass(ExifNumericList::class)]
 #[UsesClass(ExifRationalList::class)]
+#[UsesClass(ExifRational::class)]
 final class FlashConverterTest extends TestCase
 {
     private FlashConverter $converter;

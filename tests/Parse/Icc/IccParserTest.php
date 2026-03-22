@@ -12,6 +12,9 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Icc;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\PayloadGuard;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Model\Icc\IccProfile;
 use MagicSunday\ImageMeta\Model\Icc\IccTag;
 use MagicSunday\ImageMeta\Parse\Icc\IccBinaryReader;
 use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
@@ -50,6 +53,9 @@ use function substr_replace;
 #[UsesClass(IccHeaderDecoder::class)]
 #[UsesClass(IccTagDecoder::class)]
 #[CoversClass(IccParser::class)]
+#[UsesClass(PayloadGuard::class)]
+#[UsesClass(Unpack::class)]
+#[UsesClass(IccProfile::class)]
 final class IccParserTest extends TestCase
 {
     /**

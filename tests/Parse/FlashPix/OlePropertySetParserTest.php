@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\FlashPix;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\FlashPix\OlePropertySet;
 use MagicSunday\ImageMeta\Parse\FlashPix\OlePropertySetParser;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -30,6 +31,7 @@ use function strlen;
  */
 #[CoversClass(OlePropertySetParser::class)]
 #[UsesClass(OlePropertySet::class)]
+#[UsesClass(Unpack::class)]
 final class OlePropertySetParserTest extends TestCase
 {
     #[Test]

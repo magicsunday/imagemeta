@@ -11,9 +11,11 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -45,6 +47,8 @@ use function str_repeat;
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(ExifNumericList::class)]
 #[UsesClass(ExifRational::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(Unpack::class)]
 final class DngProfileValidatorTest extends TestCase
 {
     private DngProfileValidator $validator;

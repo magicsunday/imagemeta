@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
@@ -44,6 +45,7 @@ use function substr_count;
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(ExifRational::class)]
 #[UsesClass(ExifNumericList::class)]
+#[UsesClass(ByteReader::class)]
 final class TiffTagConstraintValidatorTest extends TestCase
 {
     private TiffTagConstraintValidator $validator;

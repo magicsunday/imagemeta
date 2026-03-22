@@ -14,8 +14,11 @@ namespace MagicSunday\ImageMeta\Tests\Value;
 use MagicSunday\ImageMeta\Value\CfaPattern;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Sensor;
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,6 +27,8 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(Sensor::class)]
+#[UsesClass(CfaPattern::class)]
+#[UsesTrait(EnumFromIntStringNullable::class)]
 final class SensorTest extends TestCase
 {
     /**

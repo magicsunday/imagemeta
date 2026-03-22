@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxNavigator;
+use MagicSunday\ImageMeta\Parse\IsoBmff\FullBoxHeader;
 use MagicSunday\ImageMeta\Parse\IsoBmff\QuickTimeKeyResolver;
 use MagicSunday\ImageMeta\Tests\Helpers\IsoBmffBoxTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -47,7 +48,7 @@ use function strlen;
 #[UsesClass(BoxDescriptor::class)]
 #[UsesTrait(NormalizesOffsets::class)]
 #[UsesTrait(ReadsBinaryPrimitives::class)]
-#[UsesTrait(IsoBmffBoxTrait::class)]
+#[UsesClass(FullBoxHeader::class)]
 final class QuickTimeKeyResolverTest extends TestCase
 {
     use IsoBmffBoxTrait;

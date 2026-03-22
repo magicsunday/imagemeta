@@ -58,6 +58,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(RationalConverter::class)]
 #[UsesClass(StringConverter::class)]
 #[UsesClass(SubjectAreaConverter::class)]
+#[UsesClass(ExifRational::class)]
 final class ConverterFactoryTest extends TestCase
 {
     private ConverterFactory $factory;
