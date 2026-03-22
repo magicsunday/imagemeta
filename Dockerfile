@@ -5,7 +5,10 @@ RUN apk add --no-cache \
     git \
     libxml2-dev \
     nodejs \
-    npm
+    npm \
+    php84-pecl-pcov && \
+    echo "extension=/usr/lib/php84/modules/pcov.so" > /usr/local/etc/php/conf.d/pcov.ini && \
+    echo "pcov.enabled=0" >> /usr/local/etc/php/conf.d/pcov.ini
 
 RUN docker-php-ext-install xmlreader
 
