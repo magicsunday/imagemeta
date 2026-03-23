@@ -242,7 +242,7 @@ final readonly class GpsUnitConverter
         if (is_string($value)) {
             $clean = trim($value);
 
-            if ($clean === '' || !is_numeric($clean)) {
+            if (($clean === '') || !is_numeric($clean)) {
                 return null;
             }
 
@@ -257,7 +257,7 @@ final readonly class GpsUnitConverter
             $normalized = $value;
 
             // EXIF 3.0 §4.6.7.1.6: Valid values are 0-3
-            if ($normalized < 0 || $normalized > 3) {
+            if (($normalized < 0) || ($normalized > 3)) {
                 return null;
             }
 
@@ -272,7 +272,7 @@ final readonly class GpsUnitConverter
             $normalized = (int) $value;
 
             // EXIF 3.0 §4.6.7.1.6: Valid values are 0-3
-            if ($normalized < 0 || $normalized > 3) {
+            if (($normalized < 0) || ($normalized > 3)) {
                 return null;
             }
 

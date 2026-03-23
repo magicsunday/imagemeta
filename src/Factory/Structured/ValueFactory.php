@@ -423,7 +423,7 @@ final readonly class ValueFactory
     {
         $iccData = null;
 
-        if ($metadata->iccProfile !== null || $metadata->iccSegments !== []) {
+        if (($metadata->iccProfile !== null) || ($metadata->iccSegments !== [])) {
             try {
                 $iccData = $this->iccParser->decode($metadata->iccProfile, $metadata->iccSegments);
             } catch (ParseError) {

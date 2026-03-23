@@ -85,7 +85,7 @@ final class IccProfileAssembler implements SegmentAssemblerInterface
         }
 
         // Sequence number must be in range 1..sequenceCount
-        if ($sequenceNumber === 0 || $sequenceNumber > $sequenceCount) {
+        if (($sequenceNumber === 0) || ($sequenceNumber > $sequenceCount)) {
             throw new ParseError(
                 sprintf(
                     'ICC segment at offset %d has out-of-range sequence number %d (expected 1..%d)',

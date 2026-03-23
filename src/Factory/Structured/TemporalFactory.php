@@ -195,7 +195,7 @@ final readonly class TemporalFactory
      */
     private function dateTimeStringEmpty(?string $value): bool
     {
-        return $value === null || trim($value) === '';
+        return ($value === null) || (trim($value) === '');
     }
 
     /**
@@ -222,7 +222,7 @@ final readonly class TemporalFactory
             $minutes = $absOffset % 60;
         }
 
-        if ($hours > 14 || ($hours === 14 && $minutes !== 0)) {
+        if (($hours > 14) || ($hours === 14 && $minutes !== 0)) {
             return null;
         }
 
@@ -240,13 +240,13 @@ final readonly class TemporalFactory
      */
     private function sanitizeSubSeconds(?string $value): ?string
     {
-        if ($value === null || $value === '') {
+        if (($value === null) || ($value === '')) {
             return null;
         }
 
         $digits = preg_replace('/\\D+/', '', $value);
 
-        if ($digits === null || $digits === '') {
+        if (($digits === null) || ($digits === '')) {
             return null;
         }
 

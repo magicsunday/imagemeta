@@ -149,27 +149,27 @@ final class AppleMakerNotesMerger
 
         $autoExposure = $makerNotes?->autoExposure;
 
-        $autoFocus = ($makerNotes?->autoFocus?->stable !== null || $makerNotes?->autoFocus?->performance !== null
-            || $afMeasuredDepth !== null || $afConfidence !== null || $focusPosition !== null || $focusDistanceRange !== null)
+        $autoFocus = (($makerNotes?->autoFocus?->stable !== null) || ($makerNotes?->autoFocus?->performance !== null)
+            || ($afMeasuredDepth !== null) || ($afConfidence !== null) || ($focusPosition !== null) || ($focusDistanceRange !== null))
             ? new AppleAutoFocus($makerNotes?->autoFocus?->stable, $makerNotes?->autoFocus?->performance, $afMeasuredDepth, $afConfidence, $focusPosition, $focusDistanceRange)
             : null;
 
-        $noise = ($snr !== null || $makerNotes?->noise?->signalToNoiseRatioType !== null
-            || $makerNotes?->noise?->luminanceAmplitude !== null)
+        $noise = (($snr !== null) || ($makerNotes?->noise?->signalToNoiseRatioType !== null)
+            || ($makerNotes?->noise?->luminanceAmplitude !== null))
             ? new AppleNoise($snr, $makerNotes?->noise?->signalToNoiseRatioType, $makerNotes?->noise?->luminanceAmplitude)
             : null;
 
-        $style = ($semanticPreset !== null || $semanticWarmth !== null || $semanticTone !== null)
+        $style = (($semanticPreset !== null) || ($semanticWarmth !== null) || ($semanticTone !== null))
             ? new AppleSemanticStyle($semanticPreset, $semanticWarmth, $semanticTone)
             : null;
 
-        $livePhoto = ($livePhotoIndex !== null || $livePhotoTime !== null
-            || $makerNotes?->livePhoto?->runTime instanceof RunTime || $accelerationVector !== null)
+        $livePhoto = (($livePhotoIndex !== null) || ($livePhotoTime !== null)
+            || ($makerNotes?->livePhoto?->runTime instanceof RunTime) || ($accelerationVector !== null))
             ? new AppleLivePhoto($livePhotoIndex, $livePhotoTime, $makerNotes?->livePhoto?->runTime, $accelerationVector)
             : null;
 
-        $camera = ($cameraType !== null || $imageCaptureType !== null || $makerNoteVersion !== null
-            || $qualityHint !== null || $oisMode !== null || $colorTemperature !== null || $colorCorrectionMatrix !== null)
+        $camera = (($cameraType !== null) || ($imageCaptureType !== null) || ($makerNoteVersion !== null)
+            || ($qualityHint !== null) || ($oisMode !== null) || ($colorTemperature !== null) || ($colorCorrectionMatrix !== null))
             ? new AppleCameraCapture($cameraType, $imageCaptureType, $makerNoteVersion, $qualityHint, $oisMode, $colorTemperature, $colorCorrectionMatrix)
             : null;
 

@@ -241,7 +241,7 @@ final class NumericConverterTest extends TestCase
     public function toIntListConvertsRationalWithCallback(): void
     {
         $converter = new NumericConverter(
-            static fn (mixed $value): ?float => $value instanceof ExifRational && $value->denominator !== 0
+            static fn (mixed $value): ?float => ($value instanceof ExifRational) && ($value->denominator !== 0)
                 ? $value->numerator / $value->denominator
                 : null,
         );
@@ -256,7 +256,7 @@ final class NumericConverterTest extends TestCase
     public function toIntListReturnsNullForFractionalRationalWithCallback(): void
     {
         $converter = new NumericConverter(
-            static fn (mixed $value): ?float => $value instanceof ExifRational && $value->denominator !== 0
+            static fn (mixed $value): ?float => ($value instanceof ExifRational) && ($value->denominator !== 0)
                 ? $value->numerator / $value->denominator
                 : null,
         );

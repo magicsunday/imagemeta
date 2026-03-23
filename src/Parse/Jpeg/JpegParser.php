@@ -380,7 +380,7 @@ final class JpegParser implements JpegParserInterface
             return false;
         }
 
-        $isAppSegment  = $marker >= Marker::APP_FIRST && $marker <= Marker::APP_LAST;
+        $isAppSegment  = ($marker >= Marker::APP_FIRST) && ($marker <= Marker::APP_LAST);
         $segmentLength = $this->scanner->readSegmentLength($marker, $offset, $isAppSegment);
         $payloadLength = $segmentLength - 2;
         $payload       = $this->scanner->readSegmentPayload($marker, $offset, $payloadLength);

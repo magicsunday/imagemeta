@@ -37,7 +37,7 @@ final readonly class RegionCoordinateNormalizer
      */
     public function normalizedBox(float $centerX, float $centerY, float $width, float $height, ?array $dimensions): ?array
     {
-        if ($width <= 0.0 || $height <= 0.0) {
+        if (($width <= 0.0) || ($height <= 0.0)) {
             return null;
         }
 
@@ -47,12 +47,12 @@ final readonly class RegionCoordinateNormalizer
         $scaledHeight  = $height;
 
         if ($dimensions !== null) {
-            if ($scaledCenterX > 1.0 || $scaledWidth > 1.0) {
+            if (($scaledCenterX > 1.0) || ($scaledWidth > 1.0)) {
                 $scaledCenterX /= $dimensions['w'];
                 $scaledWidth /= $dimensions['w'];
             }
 
-            if ($scaledCenterY > 1.0 || $scaledHeight > 1.0) {
+            if (($scaledCenterY > 1.0) || ($scaledHeight > 1.0)) {
                 $scaledCenterY /= $dimensions['h'];
                 $scaledHeight /= $dimensions['h'];
             }
@@ -112,7 +112,7 @@ final readonly class RegionCoordinateNormalizer
             return null;
         }
 
-        if ($scale <= 1.0 || abs($confidence) <= 1.0) {
+        if (($scale <= 1.0) || (abs($confidence) <= 1.0)) {
             return $confidence;
         }
 

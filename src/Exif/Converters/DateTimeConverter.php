@@ -71,7 +71,7 @@ final readonly class DateTimeConverter
         $hours   = (int) substr($trimmed, 1, 2);
         $minutes = (int) substr($trimmed, 4, 2);
 
-        if ($hours > 14 || $minutes >= 60 || ($hours === 14 && $minutes !== 0)) {
+        if (($hours > 14) || ($minutes >= 60) || ($hours === 14 && $minutes !== 0)) {
             return null;
         }
 
@@ -133,7 +133,7 @@ final readonly class DateTimeConverter
         }
 
         // EXIF 3.0 §4.6.6.6.3-§4.6.6.6.5: maximum absolute offset is 14:00.
-        if ($hours > 14 || ($hours === 14 && $minutes !== 0)) {
+        if (($hours > 14) || ($hours === 14 && $minutes !== 0)) {
             return null;
         }
 

@@ -268,7 +268,7 @@ final readonly class DngCalibrationValidator
         }
 
         // CalibrationIlluminant1 and CalibrationIlluminant2 must also be present
-        if (!$ifd->get(DngTag::CALIBRATION_ILLUMINANT_1) instanceof IfdEntry || !$ifd->get(DngTag::CALIBRATION_ILLUMINANT_2) instanceof IfdEntry) {
+        if ((!$ifd->get(DngTag::CALIBRATION_ILLUMINANT_1) instanceof IfdEntry) || (!$ifd->get(DngTag::CALIBRATION_ILLUMINANT_2) instanceof IfdEntry)) {
             throw new ParseError(
                 'CalibrationIlluminant3 requires CalibrationIlluminant1 and CalibrationIlluminant2 per DNG 1.7.1.0.',
                 2003,
@@ -351,7 +351,7 @@ final readonly class DngCalibrationValidator
 
         if ($neutral instanceof IfdEntry) {
             $validType = $neutral->type === TiffConst::TYPE_SHORT
-                || $neutral->type === TiffConst::TYPE_RATIONAL;
+                || ($neutral->type === TiffConst::TYPE_RATIONAL);
 
             if (!$validType || ($colorPlanes !== null && $neutral->count !== $colorPlanes)) {
                 throw new ParseError(
@@ -408,7 +408,7 @@ final readonly class DngCalibrationValidator
             );
         }
 
-        if (!$entry->value instanceof ExifRationalList || count($entry->value->values) !== $entry->count) {
+        if ((!$entry->value instanceof ExifRationalList) || (count($entry->value->values) !== $entry->count)) {
             throw new ParseError('AnalogBalance must decode to a rational gain vector.', 1668);
         }
 
@@ -440,7 +440,7 @@ final readonly class DngCalibrationValidator
         $illum1 = $ifd->get(DngTag::CALIBRATION_ILLUMINANT_1);
         $illum2 = $ifd->get(DngTag::CALIBRATION_ILLUMINANT_2);
 
-        if (!$illum1 instanceof IfdEntry || !$illum2 instanceof IfdEntry) {
+        if ((!$illum1 instanceof IfdEntry) || (!$illum2 instanceof IfdEntry)) {
             return;
         }
 
@@ -461,7 +461,7 @@ final readonly class DngCalibrationValidator
     {
         $entry = $ifd->get(DngTag::COLORIMETRIC_REFERENCE);
 
-        if (!$entry instanceof IfdEntry || !is_int($entry->value)) {
+        if ((!$entry instanceof IfdEntry) || !is_int($entry->value)) {
             return;
         }
 
@@ -648,7 +648,7 @@ final readonly class DngCalibrationValidator
      */
     private function validateDngPreProfileMatrixComponents(IfdEntry $matrixEntry, string $matrixName): void
     {
-        if (!$matrixEntry->value instanceof ExifRationalList || count($matrixEntry->value->values) !== $matrixEntry->count) {
+        if ((!$matrixEntry->value instanceof ExifRationalList) || (count($matrixEntry->value->values) !== $matrixEntry->count)) {
             throw new ParseError(
                 sprintf('%s must decode to SRATIONAL list with %d components.', $matrixName, $matrixEntry->count),
                 1682,

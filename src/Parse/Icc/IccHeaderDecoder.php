@@ -105,7 +105,7 @@ final readonly class IccHeaderDecoder
         for ($i = 0; $i < 4; ++$i) {
             $byte = ord($signature[$i]);
 
-            if ($byte < 0x20 || $byte > 0x7E) {
+            if (($byte < 0x20) || ($byte > 0x7E)) {
                 return false;
             }
         }

@@ -56,7 +56,7 @@ final readonly class SubjectAreaConverter
                     'w' => $subjectArea->diameter,
                     'h' => $subjectArea->diameter,
                 ],
-            SubjectAreaType::Rectangle => ($subjectArea->width === null || $subjectArea->height === null)
+            SubjectAreaType::Rectangle => (($subjectArea->width === null) || ($subjectArea->height === null))
                 ? null
                 : [
                     'x' => $subjectArea->centerX,

@@ -228,7 +228,7 @@ final readonly class QuickTimeMetadataDecoder
     {
         $key = self::UDTA_TEXT_KEYS[$atom->type] ?? null;
 
-        if ($key === null || $atom->contentSize < 1) {
+        if (($key === null) || ($atom->contentSize < 1)) {
             return;
         }
 
@@ -394,7 +394,7 @@ final readonly class QuickTimeMetadataDecoder
         foreach ($this->boxNavigator->walkChildren($ilst) as $entry) {
             // QuickTime File Format 2012, Metadata Structure: "The free space atom
             // may not occur within any other subatom contained in the metadata atom."
-            if ($entry->type === 'free' || $entry->type === 'skip') {
+            if (($entry->type === 'free') || ($entry->type === 'skip')) {
                 throw new ParseError(
                     sprintf('free-space atom "%s" is not allowed inside ilst', $entry->type),
                     1501,
@@ -432,7 +432,7 @@ final readonly class QuickTimeMetadataDecoder
             $entryAtoms = [];
 
             foreach ($this->boxNavigator->walkChildren($entry) as $sub) {
-                if ($sub->type === 'free' || $sub->type === 'skip') {
+                if (($sub->type === 'free') || ($sub->type === 'skip')) {
                     throw new ParseError(
                         sprintf('free-space atom "%s" is not allowed inside metadata item entry', $sub->type),
                         1502,

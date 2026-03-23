@@ -266,7 +266,7 @@ final readonly class TemporalExifReader
     {
         $rawDateTime = rtrim($rawDateTime ?? '', " \0");
 
-        if ($rawDateTime === '' || strlen($rawDateTime) < 19) {
+        if (($rawDateTime === '') || (strlen($rawDateTime) < 19)) {
             return null;
         }
 
@@ -282,7 +282,7 @@ final readonly class TemporalExifReader
         // time without timezone information, preserving subsecond precision.
         $timeZone = null;
 
-        if ($rawOffset !== null && trim($rawOffset) !== '') {
+        if (($rawOffset !== null) && (trim($rawOffset) !== '')) {
             $timeZone = $this->converters->parseOffset($rawOffset);
         }
 
@@ -309,7 +309,7 @@ final readonly class TemporalExifReader
 
         if (is_array($lastErrors) && (
             $lastErrors['warning_count'] > 0
-            || $lastErrors['error_count'] > 0
+            || ($lastErrors['error_count'] > 0)
         )) {
             return null;
         }
@@ -383,7 +383,7 @@ final readonly class TemporalExifReader
 
                 $value = $value->toInt('EXIF offset normalisation');
             }
-        } elseif ($value instanceof ExifRationalList || $value instanceof ExifRational) {
+        } elseif (($value instanceof ExifRationalList) || ($value instanceof ExifRational)) {
             $value = $this->converters->rationalToFloat($value);
         }
 

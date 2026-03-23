@@ -86,12 +86,12 @@ final readonly class AppleMakerNotesBuilder
             $hdrData['hdrImageType'],
         );
 
-        $autoExposure = ($aeStable !== null || $aeTarget !== null || $aeAverage !== null)
+        $autoExposure = (($aeStable !== null) || ($aeTarget !== null) || ($aeAverage !== null))
             ? new AppleAutoExposure($aeStable, $aeTarget, $aeAverage)
             : null;
 
-        $autoFocus = ($focusData['afStable'] !== null || $focusData['afPerformance'] !== null || $focusData['afMeasuredDepth'] !== null
-            || $focusData['afConfidence'] !== null || $focusData['focusPosition'] !== null || $focusData['focusDistanceRange'] !== null)
+        $autoFocus = (($focusData['afStable'] !== null) || ($focusData['afPerformance'] !== null) || ($focusData['afMeasuredDepth'] !== null)
+            || ($focusData['afConfidence'] !== null) || ($focusData['focusPosition'] !== null) || ($focusData['focusDistanceRange'] !== null))
             ? new AppleAutoFocus(
                 $focusData['afStable'],
                 $focusData['afPerformance'],
@@ -102,11 +102,11 @@ final readonly class AppleMakerNotesBuilder
             )
             : null;
 
-        $noise = ($snr !== null || $signalToNoiseRatioType !== null || $luminanceAmplitude !== null)
+        $noise = (($snr !== null) || ($signalToNoiseRatioType !== null) || ($luminanceAmplitude !== null))
             ? new AppleNoise($snr, $signalToNoiseRatioType, $luminanceAmplitude)
             : null;
 
-        $style = ($styleData['semanticStylePreset'] !== null || $styleData['semanticStyleWarmth'] !== null || $styleData['semanticStyleTone'] !== null)
+        $style = (($styleData['semanticStylePreset'] !== null) || ($styleData['semanticStyleWarmth'] !== null) || ($styleData['semanticStyleTone'] !== null))
             ? new AppleSemanticStyle(
                 $styleData['semanticStylePreset'],
                 $styleData['semanticStyleWarmth'],
@@ -114,15 +114,15 @@ final readonly class AppleMakerNotesBuilder
             )
             : null;
 
-        $livePhoto = ($livePhotoIndex !== null || $livePhotoTime !== null
-            || $runTime instanceof RunTime || $accelerationVector !== null)
+        $livePhoto = (($livePhotoIndex !== null) || ($livePhotoTime !== null)
+            || ($runTime instanceof RunTime) || ($accelerationVector !== null))
             ? new AppleLivePhoto($livePhotoIndex, $livePhotoTime, $runTime, $accelerationVector)
             : null;
 
         $camera = (
-            $identityData['type'] !== null || $cameraData['imageCaptureType'] !== null || $cameraData['makerNoteVersion'] !== null
-            || $cameraData['qualityHint'] !== null || $cameraData['oisMode'] !== null
-            || $cameraData['colorTemperature'] !== null || $cameraData['colorCorrectionMatrix'] !== null
+            ($identityData['type'] !== null) || ($cameraData['imageCaptureType'] !== null) || ($cameraData['makerNoteVersion'] !== null)
+            || ($cameraData['qualityHint'] !== null) || ($cameraData['oisMode'] !== null)
+            || ($cameraData['colorTemperature'] !== null) || ($cameraData['colorCorrectionMatrix'] !== null)
         )
             ? new AppleCameraCapture(
                 $identityData['type'],
@@ -367,13 +367,13 @@ final readonly class AppleMakerNotesBuilder
         array $flags,
     ): bool {
         return $identity instanceof AppleCaptureIdentity
-            || $hdr instanceof AppleHdr
-            || $autoExposure instanceof AppleAutoExposure
-            || $autoFocus instanceof AppleAutoFocus
-            || $noise instanceof AppleNoise
-            || $style instanceof AppleSemanticStyle
-            || $livePhoto instanceof AppleLivePhoto
-            || $camera instanceof AppleCameraCapture
-            || $flags !== [];
+            || ($hdr instanceof AppleHdr)
+            || ($autoExposure instanceof AppleAutoExposure)
+            || ($autoFocus instanceof AppleAutoFocus)
+            || ($noise instanceof AppleNoise)
+            || ($style instanceof AppleSemanticStyle)
+            || ($livePhoto instanceof AppleLivePhoto)
+            || ($camera instanceof AppleCameraCapture)
+            || ($flags !== []);
     }
 }

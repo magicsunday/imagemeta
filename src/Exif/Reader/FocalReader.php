@@ -122,7 +122,7 @@ final readonly class FocalReader
     {
         $components = $this->reader->numericList($this->exifIfd, ExifTag::CFA_PATTERN);
 
-        if ($components === null || count($components) < 3) {
+        if (($components === null) || (count($components) < 3)) {
             return null;
         }
 
@@ -196,7 +196,7 @@ final readonly class FocalReader
             return null;
         }
 
-        if ($entry->type !== ExifConst::TYPE_ASCII || $entry->count !== 4) {
+        if (($entry->type !== ExifConst::TYPE_ASCII) || ($entry->count !== 4)) {
             return null;
         }
 

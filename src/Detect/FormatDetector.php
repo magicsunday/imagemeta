@@ -193,7 +193,7 @@ final readonly class FormatDetector
             return false;
         }
 
-        return $unpacked[1] === 0x002A || $unpacked[1] === 0x002B;
+        return ($unpacked[1] === 0x002A) || ($unpacked[1] === 0x002B);
     }
 
     /**
@@ -256,7 +256,7 @@ final readonly class FormatDetector
                 }
 
                 // ftyp/styp require at least 8 payload bytes (major_brand + minor_version)
-                if ($boxType === 'ftyp' || $boxType === 'styp') {
+                if (($boxType === 'ftyp') || ($boxType === 'styp')) {
                     $payload = $size - $headerSize;
 
                     if ($payload < 8) {

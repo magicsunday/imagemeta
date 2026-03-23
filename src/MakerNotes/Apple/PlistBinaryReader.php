@@ -123,7 +123,7 @@ final class PlistBinaryReader
 
         $parts = unpack('Nhigh/Nlow', $slice);
 
-        if ($parts === false || !array_key_exists('high', $parts) || !array_key_exists('low', $parts)) {
+        if (($parts === false) || !array_key_exists('high', $parts) || !array_key_exists('low', $parts)) {
             throw new ParseError('Failed to unpack 64-bit integer.', 1089);
         }
 

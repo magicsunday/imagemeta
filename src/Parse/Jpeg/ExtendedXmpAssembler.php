@@ -146,7 +146,7 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
             );
         }
 
-        if ($chunkLength > $totalLength || $chunkOffset > ($totalLength - $chunkLength)) {
+        if (($chunkLength > $totalLength) || ($chunkOffset > ($totalLength - $chunkLength))) {
             throw new ParseError(
                 sprintf(
                     'ExtendedXMP APP1 segment at offset %d has out-of-range chunk [%d,%d) for full length %d',

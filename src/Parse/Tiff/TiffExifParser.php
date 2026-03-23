@@ -289,7 +289,7 @@ final class TiffExifParser implements TiffExifParserInterface
         $nextOffset     = $ifd0->nextIfdOffset;
 
         try {
-            while ($nextOffset !== null && $nextOffset > 0) {
+            while (($nextOffset !== null) && ($nextOffset > 0)) {
                 if (isset($visitedOffsets[$nextOffset])) {
                     break;
                 }

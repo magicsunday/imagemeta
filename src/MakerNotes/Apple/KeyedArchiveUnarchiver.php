@@ -169,7 +169,7 @@ final class KeyedArchiveUnarchiver
     {
         $entries = $reference->entries();
 
-        if (!array_key_exists('CF$UID', $entries) || count($entries) !== 1) {
+        if (!array_key_exists('CF$UID', $entries) || (count($entries) !== 1)) {
             return false;
         }
 

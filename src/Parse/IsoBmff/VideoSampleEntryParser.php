@@ -155,7 +155,7 @@ final readonly class VideoSampleEntryParser
                 throw new ParseError('video sample entry colorTableId=0 requires trailing ctab atom', 1931);
             }
 
-            if ($colorTableSize < 8 || $colorTableSize > $remaining) {
+            if (($colorTableSize < 8) || ($colorTableSize > $remaining)) {
                 throw new ParseError('video sample entry ctab atom is truncated', 1498);
             }
 
@@ -195,7 +195,7 @@ final readonly class VideoSampleEntryParser
             $win->seek($offset);
             $boxSize = $win->readU32BE();
 
-            if ($boxSize < 8 || $boxSize > $remaining) {
+            if (($boxSize < 8) || ($boxSize > $remaining)) {
                 throw new ParseError('video sample entry trailing payload is malformed', 1934);
             }
 

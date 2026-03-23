@@ -149,7 +149,7 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
      */
     private function isIgnorableToken(array|string $token): bool
     {
-        return is_array($token) && $token[0] === T_WHITESPACE;
+        return is_array($token) && ($token[0] === T_WHITESPACE);
     }
 
     /**
@@ -165,11 +165,11 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
             return false;
         }
 
-        return $token[0] === T_STRING
-            || $token[0] === T_VARIABLE
-            || (defined('T_NAME_QUALIFIED') && $token[0] === T_NAME_QUALIFIED)
-            || (defined('T_NAME_FULLY_QUALIFIED') && $token[0] === T_NAME_FULLY_QUALIFIED)
-            || (defined('T_NAME_RELATIVE') && $token[0] === T_NAME_RELATIVE);
+        return ($token[0] === T_STRING)
+            || ($token[0] === T_VARIABLE)
+            || (defined('T_NAME_QUALIFIED') && ($token[0] === T_NAME_QUALIFIED))
+            || (defined('T_NAME_FULLY_QUALIFIED') && ($token[0] === T_NAME_FULLY_QUALIFIED))
+            || (defined('T_NAME_RELATIVE') && ($token[0] === T_NAME_RELATIVE));
     }
 
     /**
@@ -186,9 +186,9 @@ final class SuppressedRuntimeCallGuardTest extends TestCase
         }
 
         return in_array($token[0], [T_STRING, T_VARIABLE, T_DOUBLE_COLON, T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR], true)
-            || (defined('T_NAME_QUALIFIED') && $token[0] === T_NAME_QUALIFIED)
-            || (defined('T_NAME_FULLY_QUALIFIED') && $token[0] === T_NAME_FULLY_QUALIFIED)
-            || (defined('T_NAME_RELATIVE') && $token[0] === T_NAME_RELATIVE);
+            || (defined('T_NAME_QUALIFIED') && ($token[0] === T_NAME_QUALIFIED))
+            || (defined('T_NAME_FULLY_QUALIFIED') && ($token[0] === T_NAME_FULLY_QUALIFIED))
+            || (defined('T_NAME_RELATIVE') && ($token[0] === T_NAME_RELATIVE));
     }
 
     #[Test]

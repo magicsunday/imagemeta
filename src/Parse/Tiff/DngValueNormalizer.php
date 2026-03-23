@@ -215,7 +215,7 @@ final readonly class DngValueNormalizer
             }
         }
 
-        if ($horizontalRepeatPixelUnit === 0 || $verticalRepeatPixelUnit === 0) {
+        if (($horizontalRepeatPixelUnit === 0) || ($verticalRepeatPixelUnit === 0)) {
             throw new ParseError(
                 sprintf('CFAPattern repeat units must be non-zero, got %d x %d', $horizontalRepeatPixelUnit, $verticalRepeatPixelUnit),
                 2058,
@@ -318,7 +318,7 @@ final readonly class DngValueNormalizer
             };
 
             if ($value instanceof UInt64) {
-                $value = ($tag === ExifTag::STRIP_OFFSETS || $tag === TiffTag::TILE_OFFSETS)
+                $value = (($tag === ExifTag::STRIP_OFFSETS) || ($tag === TiffTag::TILE_OFFSETS))
                     ? $this->offsetValidator->ensureOffset($value, sprintf('IFD tag 0x%04X', $tag))
                     : $value->toInt(sprintf('IFD tag 0x%04X', $tag));
             }

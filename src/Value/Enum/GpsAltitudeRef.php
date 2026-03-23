@@ -55,6 +55,6 @@ enum GpsAltitudeRef: int
      */
     public function isBelow(): bool
     {
-        return $this === self::BelowEllipsoidalSurface || $this === self::BelowSeaLevel;
+        return ($this === self::BelowEllipsoidalSurface) || ($this === self::BelowSeaLevel);
     }
 }

@@ -494,7 +494,7 @@ final readonly class BoxPayloadCollector
      */
     private function readU32FromBytes(string $bytes, int $offset, string $context): int
     {
-        if ($offset < 0 || ($offset + 4) > strlen($bytes)) {
+        if (($offset < 0) || (($offset + 4) > strlen($bytes))) {
             throw new ParseError('Insufficient bytes for ' . $context . '.', 1170);
         }
 
@@ -512,7 +512,7 @@ final readonly class BoxPayloadCollector
      */
     private function readU64FromBytes(string $bytes, int $offset, string $context): int
     {
-        if ($offset < 0 || ($offset + 8) > strlen($bytes)) {
+        if (($offset < 0) || (($offset + 8) > strlen($bytes))) {
             throw new ParseError('Insufficient bytes for ' . $context . '.', 1872);
         }
 

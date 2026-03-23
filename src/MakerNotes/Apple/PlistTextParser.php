@@ -50,7 +50,7 @@ final readonly class PlistTextParser
 
         $this->skipWhitespace($cursor);
 
-        if ($cursor->isAtEnd() || $cursor->peek() !== '{') {
+        if ($cursor->isAtEnd() || ($cursor->peek() !== '{')) {
             return null;
         }
 
@@ -146,7 +146,7 @@ final readonly class PlistTextParser
 
             $terminator = $cursor->peek();
 
-            if ($terminator === ';' || $terminator === ',') {
+            if (($terminator === ';') || ($terminator === ',')) {
                 $cursor->advance();
             }
         }
@@ -198,11 +198,11 @@ final readonly class PlistTextParser
 
         $lower = strtolower($word);
 
-        if ($lower === 'true' || $word === 'YES') {
+        if (($lower === 'true') || ($word === 'YES')) {
             return true;
         }
 
-        if ($lower === 'false' || $word === 'NO') {
+        if (($lower === 'false') || ($word === 'NO')) {
             return false;
         }
 
@@ -274,7 +274,7 @@ final readonly class PlistTextParser
 
             $terminator = $cursor->peek();
 
-            if ($terminator === ',' || $terminator === ';') {
+            if (($terminator === ',') || ($terminator === ';')) {
                 $cursor->advance();
             }
         }

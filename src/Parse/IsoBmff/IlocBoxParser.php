@@ -68,7 +68,7 @@ final readonly class IlocBoxParser
         // Skip unsupported versions gracefully instead of failing the
         // entire parse — the spec requires readers to ignore boxes with
         // unrecognized versions.
-        if ($header->version > 2 || $header->flags !== 0) {
+        if (($header->version > 2) || ($header->flags !== 0)) {
             return [];
         }
 
@@ -105,7 +105,7 @@ final readonly class IlocBoxParser
 
             $constructionMethod = ConstructionMethod::FileOffset;
 
-            if ($version === 1 || $version === 2) {
+            if (($version === 1) || ($version === 2)) {
                 // ISO/IEC 14496-12 §8.11.3: 12-bit reserved (must be 0) followed by 4-bit construction_method
                 $tmp = $win->readU16BE();
 
@@ -274,7 +274,7 @@ final readonly class IlocBoxParser
 
         // Skip unsupported versions/flags gracefully — the spec requires
         // readers to ignore boxes with unrecognized versions.
-        if (($header->version !== 0 && $header->version !== 1) || $header->flags !== 0) {
+        if (($header->version !== 0 && $header->version !== 1) || ($header->flags !== 0)) {
             return null;
         }
 
@@ -313,7 +313,7 @@ final readonly class IlocBoxParser
 
         // Skip unsupported versions/flags gracefully — the spec requires
         // readers to ignore boxes with unrecognized versions.
-        if (($header->version !== 0 && $header->version !== 1) || $header->flags !== 0) {
+        if (($header->version !== 0 && $header->version !== 1) || ($header->flags !== 0)) {
             return [];
         }
 
@@ -552,7 +552,7 @@ final readonly class IlocBoxParser
         $hidden  = ($header->flags & 0x01) !== 0;
         $version = $header->version;
 
-        if ($version === 0 || $version === 1) {
+        if (($version === 0) || ($version === 1)) {
             $itemId = $win->readU16BE();
             $win->readU16BE(); // protection index
             $remaining = $infe->contentSize - $win->tell();
@@ -611,7 +611,7 @@ final readonly class IlocBoxParser
                 'contentType'     => null,
                 'contentEncoding' => null,
                 'extensionType'   => null,
-                'itemUriType'     => ($itemUriType !== null && $itemUriType !== '') ? $itemUriType : null,
+                'itemUriType'     => (($itemUriType !== null) && ($itemUriType !== '')) ? $itemUriType : null,
                 'hidden'          => $hidden,
             ];
         }

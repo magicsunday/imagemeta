@@ -516,7 +516,7 @@ final readonly class IfdValueReader
     {
         $components = $this->numericList($ifd, $tag);
 
-        if (!is_array($components) || count($components) !== 4) {
+        if (!is_array($components) || (count($components) !== 4)) {
             return null;
         }
 
@@ -557,7 +557,7 @@ final readonly class IfdValueReader
         if (is_string($value)) {
             $digits = preg_replace('/\D/', '', $value);
 
-            return ($digits !== null && $digits !== '') ? $digits : null;
+            return (($digits !== null) && ($digits !== '')) ? $digits : null;
         }
 
         if ($value instanceof ExifNumericList) {

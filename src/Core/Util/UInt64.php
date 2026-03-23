@@ -92,7 +92,7 @@ final readonly class UInt64
      */
     public function isZero(): bool
     {
-        return $this->hi === 0 && $this->lo === 0;
+        return ($this->hi === 0) && ($this->lo === 0);
     }
 
     /**
@@ -172,7 +172,7 @@ final readonly class UInt64
             return $this->hi <= BitMask::INT31_MAX;
         }
 
-        return $this->hi === 0 && $this->lo <= BitMask::INT31_MAX;
+        return ($this->hi === 0) && ($this->lo <= BitMask::INT31_MAX);
     }
 
     /**
@@ -210,7 +210,7 @@ final readonly class UInt64
      */
     private function assertUint32(int $value): void
     {
-        if ($value < 0 || $value > self::UINT32_MASK) {
+        if (($value < 0) || ($value > self::UINT32_MASK)) {
             throw new ParseError('UInt64 components must be unsigned 32-bit integers.', 1026);
         }
     }

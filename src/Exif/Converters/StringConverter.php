@@ -59,7 +59,7 @@ final readonly class StringConverter
      */
     public function toExifVersion(?string $bytes): ?string
     {
-        if ($bytes === null || $bytes === '') {
+        if (($bytes === null) || ($bytes === '')) {
             return null;
         }
 

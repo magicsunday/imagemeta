@@ -189,6 +189,6 @@ final readonly class RationalConverter
      */
     public function isUnknownDenominator(int|float $denominator): bool
     {
-        return $denominator === 0 || $denominator === 0.0;
+        return ($denominator === 0) || ($denominator === 0.0);
     }
 }

@@ -239,7 +239,7 @@ final class TiffIfdTraverser
      */
     private function pointerOffsetFromFloat(float $value, int $tag): ?int
     {
-        if (!is_finite($value) || (float) (int) $value !== $value) {
+        if (!is_finite($value) || ((float) (int) $value !== $value)) {
             throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain an integer offset.', $tag), 1342);
         }
 

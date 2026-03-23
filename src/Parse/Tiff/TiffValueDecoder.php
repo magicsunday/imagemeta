@@ -201,7 +201,7 @@ final readonly class TiffValueDecoder
         }
 
         // RATIONAL / SRATIONAL
-        if ($type === TiffFieldType::Rational->value || $type === TiffFieldType::SRational->value) {
+        if (($type === TiffFieldType::Rational->value) || ($type === TiffFieldType::SRational->value)) {
             $rationalValues = [];
 
             for ($i = 0; $i < $count; ++$i) {

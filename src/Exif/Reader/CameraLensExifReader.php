@@ -128,7 +128,7 @@ final readonly class CameraLensExifReader
     {
         $values = $this->reader->rationalList($this->exifIfd, ExifTag::LENS_SPECIFICATION);
 
-        if (!is_array($values) || count($values) !== 4) {
+        if (!is_array($values) || (count($values) !== 4)) {
             return null;
         }
 

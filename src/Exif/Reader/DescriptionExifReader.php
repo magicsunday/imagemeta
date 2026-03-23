@@ -259,7 +259,7 @@ final readonly class DescriptionExifReader
     {
         $raw = $this->reader->rawString($this->exifIfd, ExifTag::LEARNING_OPT_OUT_IN);
 
-        if ($raw === null || strlen($raw) < 2) {
+        if (($raw === null) || (strlen($raw) < 2)) {
             return null;
         }
 
@@ -270,7 +270,7 @@ final readonly class DescriptionExifReader
             $usage     = LearningUsage::tryFrom(ord($raw[$i]));
             $intention = LearningIntention::tryFrom(ord($raw[$i + 1]));
 
-            if ($usage !== null && $intention !== null) {
+            if (($usage !== null) && ($intention !== null)) {
                 $entries[] = new LearningOptOutInEntry($usage, $intention);
             }
         }

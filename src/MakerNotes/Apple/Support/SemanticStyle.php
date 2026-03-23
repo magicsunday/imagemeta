@@ -227,7 +227,7 @@ final class SemanticStyle
                 array_find(
                     $entry,
                     static function (array|bool|float|int|string|object|null $candidate) use (&$scalar): bool {
-                        if (is_array($candidate) || is_bool($candidate) || is_float($candidate) || is_int($candidate) || is_string($candidate) || $candidate === null) {
+                        if (is_array($candidate) || is_bool($candidate) || is_float($candidate) || is_int($candidate) || is_string($candidate) || ($candidate === null)) {
                             $scalar = self::extractScalar($candidate);
 
                             return $scalar !== null;

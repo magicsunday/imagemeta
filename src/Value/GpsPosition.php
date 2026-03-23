@@ -58,7 +58,7 @@ final readonly class GpsPosition
      */
     private function signedCoordinate(?float $value, ?GpsLatLonRef $reference, GpsLatLonRef $negativeReference, GpsLatLonRef $positiveReference): ?float
     {
-        if ($value === null || !$reference instanceof GpsLatLonRef) {
+        if (($value === null) || (!$reference instanceof GpsLatLonRef)) {
             return $value;
         }
 

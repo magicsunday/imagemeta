@@ -33,7 +33,7 @@ final class DateTimeUtil
      */
     public static function parseIso8601(?string $value, ?DateTimeZone $fallbackTz = null): ?DateTimeImmutable
     {
-        if ($value === null || $value === '') {
+        if (($value === null) || ($value === '')) {
             return null;
         }
 

@@ -193,7 +193,7 @@ final readonly class Metadata
             return $this->xmpDoc;
         }
 
-        if ($this->xmpBlobs === [] || !$this->xmpParser instanceof XmpParserInterface) {
+        if (($this->xmpBlobs === []) || (!$this->xmpParser instanceof XmpParserInterface)) {
             return null;
         }
 
@@ -211,7 +211,7 @@ final readonly class Metadata
             return $this->iptcDoc;
         }
 
-        if ($this->iptcBlobs === [] || !$this->iptcParser instanceof IptcParserInterface) {
+        if (($this->iptcBlobs === []) || (!$this->iptcParser instanceof IptcParserInterface)) {
             return null;
         }
 

@@ -339,7 +339,7 @@ final readonly class RegionsFactory
      */
     private function supplementalRegionsFromAppleEntries(array $entries, array $mwgRegions): array
     {
-        if ($entries === [] || $mwgRegions === []) {
+        if (($entries === []) || ($mwgRegions === [])) {
             return [];
         }
 
@@ -492,9 +492,9 @@ final readonly class RegionsFactory
     private function hasSupplementalMetadata(array $entry): bool
     {
         return $entry['person'] !== null
-            || $entry['confidence'] !== null
-            || $entry['rotation'] !== null
-            || $entry['faceId'] !== null;
+            || ($entry['confidence'] !== null)
+            || ($entry['rotation'] !== null)
+            || ($entry['faceId'] !== null);
     }
 
     /**
@@ -527,7 +527,7 @@ final readonly class RegionsFactory
             $sizeDiff = abs($region->w - $candidate->w) + abs($region->h - $candidate->h);
             $score    = $distance + $sizeDiff;
 
-            if ($bestScore === null || $score < $bestScore) {
+            if (($bestScore === null) || ($score < $bestScore)) {
                 $bestScore = $score;
                 $bestIndex = $index;
             }
@@ -692,7 +692,7 @@ final readonly class RegionsFactory
         $width  = $widths[0] ?? null;
         $height = $heights[0] ?? null;
 
-        if ($width === null || $width <= 0.0 || $height === null || $height <= 0.0) {
+        if (($width === null) || ($width <= 0.0) || ($height === null) || ($height <= 0.0)) {
             return null;
         }
 

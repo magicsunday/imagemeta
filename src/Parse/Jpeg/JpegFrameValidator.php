@@ -147,7 +147,7 @@ final class JpegFrameValidator
                 );
             }
 
-            if ($horizontal === 0 || $vertical === 0) {
+            if (($horizontal === 0) || ($vertical === 0)) {
                 throw new ParseError(
                     sprintf('SOF marker 0x%02X at offset %d contains zero sampling factor', $marker, $offset),
                     1286,
@@ -376,7 +376,7 @@ final class JpegFrameValidator
         $horizontal = $chromas[0]['horizontal'];
         $vertical   = $chromas[0]['vertical'];
 
-        if ($horizontal === 0 || $vertical === 0) {
+        if (($horizontal === 0) || ($vertical === 0)) {
             return null;
         }
 
@@ -408,7 +408,7 @@ final class JpegFrameValidator
 
         $result = array_any(
             $legalValues,
-            fn ($legal): bool => $derivedH === $legal[0] && $derivedV === $legal[1]
+            fn ($legal): bool => ($derivedH === $legal[0]) && ($derivedV === $legal[1])
         );
 
         if ($result) {

@@ -106,7 +106,7 @@ final readonly class TiffSampleValidator
     {
         $bitsPerSampleEntry = $ifd->get(ExifTag::BITS_PER_SAMPLE);
 
-        if (!$bitsPerSampleEntry instanceof IfdEntry || ($bitsPerSampleEntry->type !== TiffConst::TYPE_SHORT)) {
+        if ((!$bitsPerSampleEntry instanceof IfdEntry) || ($bitsPerSampleEntry->type !== TiffConst::TYPE_SHORT)) {
             return;
         }
 

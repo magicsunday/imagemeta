@@ -366,7 +366,7 @@ final readonly class QuickTimeValueDecoder
         if ($payloadSize === 8) {
             $parts = unpack('Nhigh/Nlow', $payload);
 
-            if ($parts === false || !isset($parts['high'], $parts['low']) || !is_int($parts['high']) || !is_int($parts['low'])) {
+            if (($parts === false) || !isset($parts['high'], $parts['low']) || !is_int($parts['high']) || !is_int($parts['low'])) {
                 throw new ParseError('Failed to decode QuickTime signed integer payload.', 2095);
             }
 
@@ -415,7 +415,7 @@ final readonly class QuickTimeValueDecoder
      */
     private function decodeQuickTimeUnsignedInt(string $payload, int $payloadSize): int
     {
-        if ($payloadSize < 1 || $payloadSize > 8) {
+        if (($payloadSize < 1) || ($payloadSize > 8)) {
             throw new ParseError(
                 sprintf('QuickTime integer payload must be 1–8 bytes, got %d', $payloadSize),
                 1993,

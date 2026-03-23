@@ -270,7 +270,7 @@ final readonly class DjiMdatTelemetryScanner
 
         $unpacked = unpack('e', $bytes);
 
-        if ($unpacked === false || !isset($unpacked[1])) {
+        if (($unpacked === false) || !isset($unpacked[1])) {
             return null;
         }
 

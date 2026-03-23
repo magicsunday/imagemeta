@@ -107,7 +107,7 @@ final readonly class TiffJpegThumbnailValidator
             $this->buffer->seek($cursor);
         }
 
-        if (strlen($thumbnailBytes) < 4 || !str_starts_with($thumbnailBytes, "\xFF\xD8")) {
+        if ((strlen($thumbnailBytes) < 4) || !str_starts_with($thumbnailBytes, "\xFF\xD8")) {
             return;
         }
 

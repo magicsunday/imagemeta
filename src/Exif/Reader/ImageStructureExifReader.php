@@ -59,7 +59,7 @@ final readonly class ImageStructureExifReader
     public function imageWidth(): ?int
     {
         $explicitlyUncompressed = $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry
-            && $this->compression() === Compression::Uncompressed;
+            && ($this->compression() === Compression::Uncompressed);
 
         if (!$explicitlyUncompressed) {
             $pixelWidth = $this->reader->int($this->exifIfd, ExifTag::PIXEL_X_DIMENSION);
@@ -81,7 +81,7 @@ final readonly class ImageStructureExifReader
     public function imageHeight(): ?int
     {
         $explicitlyUncompressed = $this->ifd0->get(ExifTag::COMPRESSION) instanceof IfdEntry
-            && $this->compression() === Compression::Uncompressed;
+            && ($this->compression() === Compression::Uncompressed);
 
         if (!$explicitlyUncompressed) {
             $pixelHeight = $this->reader->int($this->exifIfd, ExifTag::PIXEL_Y_DIMENSION);

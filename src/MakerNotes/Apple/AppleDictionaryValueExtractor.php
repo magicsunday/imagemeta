@@ -209,7 +209,7 @@ final readonly class AppleDictionaryValueExtractor
      */
     public function stringWithinIntRange(string $value): bool
     {
-        $negative = $value !== '' && $value[0] === '-';
+        $negative = ($value !== '') && ($value[0] === '-');
         $digits   = $negative ? substr($value, 1) : $value;
 
         if ($digits === '') {

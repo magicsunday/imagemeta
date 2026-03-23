@@ -227,7 +227,7 @@ final readonly class IccTagDecoder
     {
         $tagData = $this->findTagData($data, $profileSize, $tagSignature, $tagMap);
 
-        if ($tagData === null || strlen($tagData) < 20) {
+        if (($tagData === null) || (strlen($tagData) < 20)) {
             return null;
         }
 
@@ -270,7 +270,7 @@ final readonly class IccTagDecoder
     {
         $tagData = $this->findTagData($data, $profileSize, 'view', $tagMap);
 
-        if ($tagData === null || strlen($tagData) < 36) {
+        if (($tagData === null) || (strlen($tagData) < 36)) {
             return null;
         }
 
@@ -311,7 +311,7 @@ final readonly class IccTagDecoder
     {
         $tagData = $this->findTagData($data, $profileSize, 'meas', $tagMap);
 
-        if ($tagData === null || strlen($tagData) < 36) {
+        if (($tagData === null) || (strlen($tagData) < 36)) {
             return null;
         }
 
@@ -353,7 +353,7 @@ final readonly class IccTagDecoder
     {
         $tagData = $this->findTagData($data, $profileSize, $tagSignature, $tagMap);
 
-        if ($tagData === null || strlen($tagData) < 8) {
+        if (($tagData === null) || (strlen($tagData) < 8)) {
             return null;
         }
 
@@ -387,7 +387,7 @@ final readonly class IccTagDecoder
     {
         $tagData = $this->findTagData($data, $profileSize, $tagSignature, $tagMap);
 
-        if ($tagData === null || strlen($tagData) < 12) {
+        if (($tagData === null) || (strlen($tagData) < 12)) {
             return null;
         }
 
@@ -575,7 +575,7 @@ final readonly class IccTagDecoder
      */
     private function validateNulTerminatedAscii(string $text): ?string
     {
-        if ($text === '' || $text[-1] !== "\0") {
+        if (($text === '') || ($text[-1] !== "\0")) {
             return null;
         }
 
@@ -697,7 +697,7 @@ final readonly class IccTagDecoder
             if ($lang === 'en') {
                 $enAny ??= $utf;
 
-                if ($country === 'US' || $country === "\0\0") {
+                if (($country === 'US') || ($country === "\0\0")) {
                     $enUs ??= $utf;
                 }
             }

@@ -118,7 +118,7 @@ final class MpfParser
         $firstIfdOffset = $this->readU32($buffer, $endian);
 
         // The MP Index IFD offset is stored as a 32-bit value relative to the TIFF header (EXIF 3.0 §4.6.2).
-        if ($firstIfdOffset < 8 || $firstIfdOffset >= $buffer->size()) {
+        if (($firstIfdOffset < 8) || ($firstIfdOffset >= $buffer->size())) {
             throw new ParseError('MP Index IFD offset outside payload bounds', 1291);
         }
 
@@ -134,11 +134,11 @@ final class MpfParser
             ],
             self::TAG_MP_ENTRY => [
                 'type'    => TiffFieldType::Undefined->value,
-                'countFn' => static fn (int $c): bool => $c >= 16 && ($c % 16) === 0,
+                'countFn' => static fn (int $c): bool => ($c >= 16) && (($c % 16) === 0),
             ],
             self::TAG_IMAGE_UID_LIST => [
                 'type'    => TiffFieldType::Undefined->value,
-                'countFn' => static fn (int $c): bool => $c >= 33 && ($c % 33) === 0,
+                'countFn' => static fn (int $c): bool => ($c >= 33) && (($c % 33) === 0),
             ],
             self::TAG_TOTAL_FRAMES => [
                 'type'    => TiffFieldType::Long->value,
@@ -277,7 +277,7 @@ final class MpfParser
 
         $entryCount = $this->readU16($buffer, $endian);
 
-        if ($entryCount < 0 || $entryCount > ParserLimits::MAX_MPF_IFD_ENTRIES) {
+        if (($entryCount < 0) || ($entryCount > ParserLimits::MAX_MPF_IFD_ENTRIES)) {
             throw new ParseError('MPF IFD entry count outside supported range', 1295);
         }
 
@@ -303,7 +303,7 @@ final class MpfParser
 
             $previousTag = $tag;
 
-            if ($componentCount < 0 || $componentCount > ParserLimits::MAX_MPF_COMPONENT_COUNT) {
+            if (($componentCount < 0) || ($componentCount > ParserLimits::MAX_MPF_COMPONENT_COUNT)) {
                 throw new ParseError('MPF entry reports unreasonable component count', 1296);
             }
 

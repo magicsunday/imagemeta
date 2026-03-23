@@ -79,7 +79,7 @@ final readonly class GpsTimestampConverter
 
         // Tolerate malformed GPS date stamps — skip silently.
 
-        $timeParts = $timeEntry instanceof IfdEntry && $timeEntry->value instanceof ExifRationalList
+        $timeParts = ($timeEntry instanceof IfdEntry) && ($timeEntry->value instanceof ExifRationalList)
             ? $this->parseTime($timeEntry->value)
             : null;
 
@@ -168,7 +168,7 @@ final readonly class GpsTimestampConverter
         $minutes = $this->rationalConverter->toFloat($value->values[1]);
         $seconds = $this->rationalConverter->toFloat($value->values[2]);
 
-        if ($hours === null || $minutes === null || $seconds === null) {
+        if (($hours === null) || ($minutes === null) || ($seconds === null)) {
             return null;
         }
 
@@ -234,7 +234,7 @@ final readonly class GpsTimestampConverter
      */
     private function combineDateTime(?string $date, ?array $timeParts): ?DateTimeImmutable
     {
-        if ($date === null || $timeParts === null) {
+        if (($date === null) || ($timeParts === null)) {
             return null;
         }
 
@@ -319,7 +319,7 @@ final readonly class GpsTimestampConverter
     private function decodeUndefinedString(
         string|int|float|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?string {
-        if (!is_string($value) || strlen($value) < 8) {
+        if (!is_string($value) || (strlen($value) < 8)) {
             return null;
         }
 
@@ -415,7 +415,7 @@ final readonly class GpsTimestampConverter
             default                 => $this->convertTextToUtf8($sourceEncoding->value, $payload),
         };
 
-        if (!is_string($decoded) || $decoded === '') {
+        if (!is_string($decoded) || ($decoded === '')) {
             return null;
         }
 

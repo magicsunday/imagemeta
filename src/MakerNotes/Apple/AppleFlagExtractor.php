@@ -136,7 +136,7 @@ final readonly class AppleFlagExtractor
             if (str_starts_with($normalized, '0x') || str_starts_with($normalized, '0X')) {
                 $hex = substr($normalized, 2);
 
-                if ($hex === '' || !ctype_xdigit($hex)) {
+                if (($hex === '') || !ctype_xdigit($hex)) {
                     return null;
                 }
 
@@ -150,7 +150,7 @@ final readonly class AppleFlagExtractor
             return $this->bitPositionsFromMask((int) $normalized);
         }
 
-        if (is_bool($value) || $value === null) {
+        if (is_bool($value) || ($value === null)) {
             return null;
         }
 

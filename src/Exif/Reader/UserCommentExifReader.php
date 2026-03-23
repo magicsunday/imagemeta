@@ -290,7 +290,7 @@ final readonly class UserCommentExifReader
 
         $bom = substr($content, 0, 2);
 
-        if ($bom === "\xFF\xFE" || $bom === "\xFE\xFF") {
+        if (($bom === "\xFF\xFE") || ($bom === "\xFE\xFF")) {
             return true;
         }
 
@@ -322,7 +322,7 @@ final readonly class UserCommentExifReader
             return false;
         }
 
-        if ($nullsOnEven === 0 || $nullsOnOdd === 0) {
+        if (($nullsOnEven === 0) || ($nullsOnOdd === 0)) {
             return true;
         }
 

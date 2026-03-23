@@ -44,7 +44,7 @@ trait CreatesTempStream
 
         $written = fwrite($handle, $payload);
 
-        if ($written === false || $written !== strlen($payload)) {
+        if (($written === false) || ($written !== strlen($payload))) {
             Assert::fail('Unable to populate temporary stream.');
         }
 

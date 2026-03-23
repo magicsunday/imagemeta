@@ -175,7 +175,7 @@ final readonly class XmpLanguageAlternative
             }
         }
 
-        if ($defaultIndex === null || $defaultIndex === 0) {
+        if (($defaultIndex === null) || ($defaultIndex === 0)) {
             return $entries;
         }
 

@@ -143,7 +143,7 @@ final readonly class TiffExifTagValidator
      */
     public function validatePrimaryThumbnailStructureCompatibility(Ifd $ifd0, ?Ifd $ifd1, bool $jpegContext): void
     {
-        if (!$ifd1 instanceof Ifd || $jpegContext) {
+        if ((!$ifd1 instanceof Ifd) || $jpegContext) {
             return;
         }
 

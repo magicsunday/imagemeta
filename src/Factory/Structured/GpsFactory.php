@@ -72,7 +72,7 @@ final readonly class GpsFactory
 
         $position = $gps->position;
 
-        if (!$position instanceof GpsPosition || ($position->latitude === null) || ($position->longitude === null)) {
+        if ((!$position instanceof GpsPosition) || ($position->latitude === null) || ($position->longitude === null)) {
             $quickTimeLookup = $metadata->quickTimeLookup();
             $qtPosition      = $this->resolveQuickTimeGps($quickTimeLookup);
 
@@ -724,11 +724,11 @@ final readonly class GpsFactory
             $sec = XmpDocument::parseNumericValue($parts[2]);
 
             if (($deg !== null) && ($min !== null) && ($sec !== null)) {
-                if ($deg < 0.0 || $min < 0.0 || $sec < 0.0) {
+                if (($deg < 0.0) || ($min < 0.0) || ($sec < 0.0)) {
                     return null;
                 }
 
-                if ($min >= 60.0 || $sec >= 60.0) {
+                if (($min >= 60.0) || ($sec >= 60.0)) {
                     return null;
                 }
 
@@ -750,7 +750,7 @@ final readonly class GpsFactory
 
         $numeric = XmpDocument::parseNumericValue($parts[0]);
 
-        if ($numeric === null || $numeric < 0.0) {
+        if (($numeric === null) || ($numeric < 0.0)) {
             return null;
         }
 
@@ -770,10 +770,10 @@ final readonly class GpsFactory
      */
     private function validateCoordinateRange(float $coordinate, ?string $ref): ?float
     {
-        $isLatitude = $ref === 'N' || $ref === 'S';
+        $isLatitude = ($ref === 'N') || ($ref === 'S');
         $limit      = $isLatitude ? 90.0 : 180.0;
 
-        if ($coordinate < -$limit || $coordinate > $limit) {
+        if (($coordinate < -$limit) || ($coordinate > $limit)) {
             return null;
         }
 
@@ -859,7 +859,7 @@ final readonly class GpsFactory
      */
     private function combineDateAndTime(?string $date, ?string $time): ?DateTimeImmutable
     {
-        if ($date === null || $time === null) {
+        if (($date === null) || ($time === null)) {
             return null;
         }
 

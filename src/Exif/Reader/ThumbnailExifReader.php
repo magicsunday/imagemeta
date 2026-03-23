@@ -53,7 +53,7 @@ final readonly class ThumbnailExifReader
             return false;
         }
 
-        if ($offset === null || $length === null) {
+        if (($offset === null) || ($length === null)) {
             return false;
         }
 

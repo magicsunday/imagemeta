@@ -742,8 +742,8 @@ final readonly class TrackMediaParser
         $isAspectRatio = ($flags & 0x000008) !== 0;
 
         // Decode 16.16 fixed-point with rounding instead of truncation
-        $width  = ($widthFixed > 0 && !$isAspectRatio) ? (int) round($widthFixed / 65536) : null;
-        $height = ($heightFixed > 0 && !$isAspectRatio) ? (int) round($heightFixed / 65536) : null;
+        $width  = (($widthFixed > 0) && !$isAspectRatio) ? (int) round($widthFixed / 65536) : null;
+        $height = (($heightFixed > 0) && !$isAspectRatio) ? (int) round($heightFixed / 65536) : null;
 
         // ISO/IEC 14496-12 §8.3.2: usable movie tracks are enabled and marked in_movie.
         $isTrackEnabled   = ($flags & self::TKHD_FLAG_TRACK_ENABLED) !== 0;
@@ -1197,13 +1197,13 @@ final readonly class TrackMediaParser
                 if ($stscCount > 1) {
                     throw new ParseError('stbl must contain exactly one stsc box', 1425);
                 }
-            } elseif ($child->type === BoxType::STSZ->value || $child->type === BoxType::STZ2->value) {
+            } elseif (($child->type === BoxType::STSZ->value) || ($child->type === BoxType::STZ2->value)) {
                 ++$stszCount;
 
                 if ($stszCount > 1) {
                     throw new ParseError('stbl must contain exactly one stsz or stz2 box', 1426);
                 }
-            } elseif ($child->type === BoxType::STCO->value || $child->type === BoxType::CO64->value) {
+            } elseif (($child->type === BoxType::STCO->value) || ($child->type === BoxType::CO64->value)) {
                 ++$stcoCount;
 
                 if ($stcoCount > 1) {

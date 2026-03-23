@@ -300,7 +300,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             [, $cursor] = $name;
 
             $isStorage    = $entitySize === self::FLASHPIX_STORAGE_ENTITY_SIZE;
-            $skipAssembly = !$isStorage && $entitySize > $this->maxStreamSize;
+            $skipAssembly = !$isStorage && ($entitySize > $this->maxStreamSize);
 
             if ($isStorage) {
                 if (($length - $cursor) < 16) {
@@ -371,7 +371,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
 
         $decoded = iconv('UTF-16LE', 'UTF-8//IGNORE', $sanitizedNameBytes);
 
-        if ($decoded === false || $decoded === '') {
+        if (($decoded === false) || ($decoded === '')) {
             return ['', $cursor];
         }
 
@@ -589,7 +589,7 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
             );
         }
 
-        if ($streamOffset > $entry['size'] || ($streamOffset + strlen($data)) > $entry['size']) {
+        if (($streamOffset > $entry['size']) || (($streamOffset + strlen($data)) > $entry['size'])) {
             throw new ParseError(
                 sprintf(
                     'FlashPix stream data at offset %d exceeds declared stream size for entry %d',

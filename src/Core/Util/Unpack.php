@@ -73,7 +73,7 @@ final class Unpack
             }
         }
 
-        if ($parts === false || !isset($parts[1], $parts[2])) {
+        if (($parts === false) || !isset($parts[1], $parts[2])) {
             throw new ParseError('Failed to unpack ' . $context . '.', 1027);
         }
 
@@ -110,7 +110,7 @@ final class Unpack
             $result = false;
         }
 
-        if ($result === false || !isset($result[1])) {
+        if (($result === false) || !isset($result[1])) {
             throw new ParseError('Failed to unpack ' . $context . '.', 1029);
         }
 

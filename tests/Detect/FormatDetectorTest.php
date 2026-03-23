@@ -478,7 +478,7 @@ final class FormatDetectorTest extends TestCase
         $length  = strlen($bytes);
         $written = fwrite($handle, $bytes);
 
-        if ($written === false || $written !== $length) {
+        if (($written === false) || ($written !== $length)) {
             self::fail('Unable to write bytes to temporary stream resource.');
         }
 

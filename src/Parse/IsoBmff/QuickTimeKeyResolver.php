@@ -206,7 +206,7 @@ final readonly class QuickTimeKeyResolver
             }
         }
 
-        if ($mean === null || $mean === '' || $name === null || $name === '') {
+        if (($mean === null) || ($mean === '') || ($name === null) || ($name === '')) {
             return null;
         }
 

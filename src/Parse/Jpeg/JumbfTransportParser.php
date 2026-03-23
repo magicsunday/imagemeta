@@ -270,7 +270,7 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
 
             if ($boxType === 'jumb') {
                 $this->collectXmlPacketsFromBoxes($boxPayload, $segmentOffset);
-            } elseif ($boxType === 'xml ' || $boxType === 'bidb') {
+            } elseif (($boxType === 'xml ') || ($boxType === 'bidb')) {
                 $candidate = $this->extractXmlPacketCandidate($boxPayload);
 
                 if ($candidate !== null) {

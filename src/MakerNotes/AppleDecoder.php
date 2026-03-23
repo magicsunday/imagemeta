@@ -95,7 +95,7 @@ final readonly class AppleDecoder implements MakerNotesDecoderInterface
 
         $decoded = $this->archiveResolver->resolveKeyedArchiveDictionary($dictionary);
 
-        if ($decoded === null || !KeyedArchiveResolver::isStringKeyedDictionary($decoded)) {
+        if (($decoded === null) || !KeyedArchiveResolver::isStringKeyedDictionary($decoded)) {
             return null;
         }
 

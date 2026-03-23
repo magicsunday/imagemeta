@@ -131,7 +131,7 @@ final readonly class NumericConverter
             foreach ($value->values as $component) {
                 $numeric = $this->rationalToFloat instanceof Closure ? ($this->rationalToFloat)($component) : null;
 
-                if ($numeric === null || fmod($numeric, 1.0) !== 0.0) {
+                if (($numeric === null) || (fmod($numeric, 1.0) !== 0.0)) {
                     return null;
                 }
 
@@ -144,7 +144,7 @@ final readonly class NumericConverter
         if ($value instanceof ExifRational) {
             $numeric = $this->rationalToFloat instanceof Closure ? ($this->rationalToFloat)($value) : null;
 
-            if ($numeric === null || fmod($numeric, 1.0) !== 0.0) {
+            if (($numeric === null) || (fmod($numeric, 1.0) !== 0.0)) {
                 return null;
             }
 
@@ -203,7 +203,7 @@ final readonly class NumericConverter
             return [$value];
         }
 
-        if (!is_string($value) || $value === '') {
+        if (!is_string($value) || ($value === '')) {
             return null;
         }
 

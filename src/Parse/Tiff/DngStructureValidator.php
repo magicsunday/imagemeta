@@ -164,7 +164,7 @@ final readonly class DngStructureValidator
     {
         $subfileEntry = $ifd->get(TiffTag::NEW_SUBFILE_TYPE);
 
-        if (!$subfileEntry instanceof IfdEntry || !is_int($subfileEntry->value)) {
+        if ((!$subfileEntry instanceof IfdEntry) || !is_int($subfileEntry->value)) {
             return;
         }
 
@@ -175,7 +175,7 @@ final readonly class DngStructureValidator
         }
 
         $photoEntry = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
-        $photoValue = $photoEntry instanceof IfdEntry && is_int($photoEntry->value) ? $photoEntry->value : null;
+        $photoValue = ($photoEntry instanceof IfdEntry) && is_int($photoEntry->value) ? $photoEntry->value : null;
 
         if ($photoValue !== $required) {
             throw new ParseError(
@@ -221,8 +221,8 @@ final readonly class DngStructureValidator
         $jxlDecodeSpeed = $ifd->get(DngTag::JXL_DECODE_SPEED);
 
         $hasJxlTags = $jxlDistance instanceof IfdEntry
-            || $jxlEffort instanceof IfdEntry
-            || $jxlDecodeSpeed instanceof IfdEntry;
+            || ($jxlEffort instanceof IfdEntry)
+            || ($jxlDecodeSpeed instanceof IfdEntry);
 
         if (!$hasJxlTags) {
             return;
@@ -230,7 +230,7 @@ final readonly class DngStructureValidator
 
         $compression = $ifd->get(ExifTag::COMPRESSION);
 
-        if (!$compression instanceof IfdEntry || !is_int($compression->value) || $compression->value !== Compression::JpegXl->value) {
+        if ((!$compression instanceof IfdEntry) || !is_int($compression->value) || ($compression->value !== Compression::JpegXl->value)) {
             throw new ParseError(
                 'JXL tags (JXLDistance, JXLEffort, JXLDecodeSpeed) require Compression = 52546 (JPEG XL).',
                 2024,
@@ -280,7 +280,7 @@ final readonly class DngStructureValidator
     {
         $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
 
-        if (!$photo instanceof IfdEntry || $photo->value !== 32803) {
+        if ((!$photo instanceof IfdEntry) || ($photo->value !== 32803)) {
             return;
         }
 
@@ -312,7 +312,7 @@ final readonly class DngStructureValidator
 
         if (array_any(
             $cfaValue->values,
-            static fn (int|float|UInt64 $color): bool => is_int($color) && $color > 2,
+            static fn (int|float|UInt64 $color): bool => is_int($color) && ($color > 2),
         )) {
             throw new ParseError(
                 'Non-RGB CFA images require CFAPlaneColor per DNG 1.7.1.0.',
@@ -334,7 +334,7 @@ final readonly class DngStructureValidator
             return;
         }
 
-        if (!is_int($entry->value) || $entry->value < 1 || $entry->value > 9) {
+        if (!is_int($entry->value) || ($entry->value < 1) || ($entry->value > 9)) {
             throw new ParseError(
                 sprintf('CFALayout value must be 1..9, got %d.', is_int($entry->value) ? $entry->value : -1),
                 1584,
@@ -446,7 +446,7 @@ final readonly class DngStructureValidator
     {
         $entry = $ifd->get(DngTag::RGB_TABLES);
 
-        if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
+        if ((!$entry instanceof IfdEntry) || !is_string($entry->value)) {
             return;
         }
 
@@ -457,7 +457,7 @@ final readonly class DngStructureValidator
         $numTables       = $this->support->unpackU32(substr($payload, 0, 4));
         $compositeMethod = $this->support->unpackU32(substr($payload, 4, 4));
 
-        if ($numTables < 1 || $numTables > 20) {
+        if (($numTables < 1) || ($numTables > 20)) {
             throw new ParseError(
                 sprintf('RGBTables NumTables must be 1..20, got %d.', $numTables),
                 1528,
@@ -505,7 +505,7 @@ final readonly class DngStructureValidator
             $gamutExtension = ord($payload[$offset + 4]);
             $offset += 5;
 
-            if ($divisions < 2 || $divisions > 32) {
+            if (($divisions < 2) || ($divisions > 32)) {
                 throw new ParseError(
                     sprintf('RGBTables table %d Divisions must be 2..32, got %d.', $t, $divisions),
                     1531,
@@ -569,7 +569,7 @@ final readonly class DngStructureValidator
     {
         $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
 
-        if (!$photo instanceof IfdEntry || !is_int($photo->value) || $photo->value !== Photometric::PhotometricMask->value) {
+        if ((!$photo instanceof IfdEntry) || !is_int($photo->value) || ($photo->value !== Photometric::PhotometricMask->value)) {
             return;
         }
 
@@ -589,7 +589,7 @@ final readonly class DngStructureValidator
             );
         }
 
-        if (!is_string($nameEntry->value) || $nameEntry->value === '') {
+        if (!is_string($nameEntry->value) || ($nameEntry->value === '')) {
             throw new ParseError(
                 'SemanticName must not be empty in Semantic Mask IFD.',
                 1540,
@@ -609,7 +609,7 @@ final readonly class DngStructureValidator
     {
         $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
 
-        if (!$photo instanceof IfdEntry || !is_int($photo->value) || $photo->value !== Photometric::PhotometricMask->value) {
+        if ((!$photo instanceof IfdEntry) || !is_int($photo->value) || ($photo->value !== Photometric::PhotometricMask->value)) {
             return;
         }
 
@@ -646,7 +646,7 @@ final readonly class DngStructureValidator
     {
         $entry = $ifd->get(DngTag::IMAGE_STATS);
 
-        if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
+        if ((!$entry instanceof IfdEntry) || !is_string($entry->value)) {
             return;
         }
 
@@ -700,7 +700,7 @@ final readonly class DngStructureValidator
     {
         $entry = $ifd->get(DngTag::IMAGE_SEQUENCE_INFO);
 
-        if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
+        if ((!$entry instanceof IfdEntry) || !is_string($entry->value)) {
             return;
         }
 
@@ -773,7 +773,7 @@ final readonly class DngStructureValidator
                 continue;
             }
 
-            if ($entry->type !== TiffConst::TYPE_BYTE || $entry->count !== 16) {
+            if (($entry->type !== TiffConst::TYPE_BYTE) || ($entry->count !== 16)) {
                 throw new ParseError(
                     sprintf('%s must be BYTE[16], got type %d count %d.', $name, $entry->type, $entry->count),
                     1558,
@@ -795,14 +795,14 @@ final readonly class DngStructureValidator
             return;
         }
 
-        if ($entry->type !== TiffConst::TYPE_LONG || $entry->count !== 1) {
+        if (($entry->type !== TiffConst::TYPE_LONG) || ($entry->count !== 1)) {
             throw new ParseError(
                 sprintf('PreviewColorSpace must be LONG[1], got type %d count %d.', $entry->type, $entry->count),
                 1559,
             );
         }
 
-        if (!is_int($entry->value) || $entry->value < 0 || $entry->value > 4) {
+        if (!is_int($entry->value) || ($entry->value < 0) || ($entry->value > 4)) {
             throw new ParseError(
                 sprintf('PreviewColorSpace value must be 0..4, got %d.', is_int($entry->value) ? $entry->value : -1),
                 2062,
@@ -831,7 +831,7 @@ final readonly class DngStructureValidator
             );
         }
 
-        if (!is_string($entry->value) || $entry->value === '') {
+        if (!is_string($entry->value) || ($entry->value === '')) {
             throw new ParseError(
                 'PreviewDateTime must not be empty.',
                 1562,
@@ -852,7 +852,7 @@ final readonly class DngStructureValidator
         $minute = (int) $m[4];
         $second = (int) $m[5];
 
-        if ($month < 1 || $month > 12 || $day < 1 || $day > 31 || $hour > 23 || $minute > 59 || $second > 59) {
+        if (($month < 1) || ($month > 12) || ($day < 1) || ($day > 31) || ($hour > 23) || ($minute > 59) || ($second > 59)) {
             throw new ParseError(
                 sprintf('PreviewDateTime contains out-of-range date/time components: %s.', $entry->value),
                 2065,
@@ -927,7 +927,7 @@ final readonly class DngStructureValidator
 
         $value = $entry->value->numerator / $entry->value->denominator;
 
-        if ($value < 0.0 || $value > 1.0) {
+        if (($value < 0.0) || ($value > 1.0)) {
             throw new ParseError(
                 sprintf('NoiseReductionApplied must be in [0.0, 1.0], got %.4f.', $value),
                 1582,
@@ -955,7 +955,7 @@ final readonly class DngStructureValidator
             );
         }
 
-        if (!is_string($entry->value) || $entry->value === '') {
+        if (!is_string($entry->value) || ($entry->value === '')) {
             throw new ParseError(
                 'EnhanceParams must not be empty per DNG 1.7.1.0.',
                 1576,

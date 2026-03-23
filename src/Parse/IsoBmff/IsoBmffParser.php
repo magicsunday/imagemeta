@@ -149,7 +149,7 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
             }
         }
 
-        $qt               = ($context->qtKeys === [] && $dataAtomVOs === []) ? null : new QuickTimeMeta($context->qtKeys, $dataAtomVOs);
+        $qt               = (($context->qtKeys === []) && ($dataAtomVOs === [])) ? null : new QuickTimeMeta($context->qtKeys, $dataAtomVOs);
         $itemReferenceMap = $context->itemReferences === [] ? null : new IsoBmffItemReferenceMap($context->itemReferences);
         $dataReferenceMap = $context->dataReferences === [] ? null : new IsoBmffDataReferenceMap($context->dataReferences);
 

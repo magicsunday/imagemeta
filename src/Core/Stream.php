@@ -52,7 +52,7 @@ final class Stream implements BinaryReadAccessInterface
      */
     public static function fromPath(string $path): self
     {
-        if (str_contains($path, '://') && preg_match('#^file://#i', $path) !== 1) {
+        if (str_contains($path, '://') && (preg_match('#^file://#i', $path) !== 1)) {
             throw new ParseError('Unsupported stream wrapper in path.', 1036);
         }
 
@@ -139,7 +139,7 @@ final class Stream implements BinaryReadAccessInterface
 
         $data = fread($this->fh, $len);
 
-        if ($data === false || strlen($data) !== $len) {
+        if (($data === false) || (strlen($data) !== $len)) {
             throw new ParseError('short read', 1013);
         }
 

@@ -35,7 +35,7 @@ final readonly class PhotoCalculator
      */
     public function calcHyperfocalM(?float $focalLengthMm, ?float $fNumber, ?float $circleOfConfusionMm): ?float
     {
-        if ($focalLengthMm === null || $focalLengthMm <= 0.0 || $fNumber === null || $fNumber <= 0.0 || $circleOfConfusionMm === null || $circleOfConfusionMm <= 0.0) {
+        if (($focalLengthMm === null) || ($focalLengthMm <= 0.0) || ($fNumber === null) || ($fNumber <= 0.0) || ($circleOfConfusionMm === null) || ($circleOfConfusionMm <= 0.0)) {
             return null;
         }
 
@@ -50,7 +50,7 @@ final readonly class PhotoCalculator
      */
     public function calcCropFactor(?int $focalLength35mm, ?float $focalLengthMm): ?float
     {
-        if ($focalLength35mm === null || $focalLength35mm <= 0 || $focalLengthMm === null || $focalLengthMm <= 0.0) {
+        if (($focalLength35mm === null) || ($focalLength35mm <= 0) || ($focalLengthMm === null) || ($focalLengthMm <= 0.0)) {
             return null;
         }
 

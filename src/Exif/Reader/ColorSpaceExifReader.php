@@ -357,7 +357,7 @@ final readonly class ColorSpaceExifReader
     {
         $value = $this->reader->value($this->ifd0, ExifTag::WHITE_POINT);
 
-        return $value instanceof ExifRationalList || $value instanceof ExifNumericList
+        return ($value instanceof ExifRationalList) || ($value instanceof ExifNumericList)
             ? $this->converters->toWhitePoint($value)
             : null;
     }
@@ -374,7 +374,7 @@ final readonly class ColorSpaceExifReader
     {
         $value = $this->reader->value($this->ifd0, ExifTag::PRIMARY_CHROMATICITIES);
 
-        return $value instanceof ExifRationalList || $value instanceof ExifNumericList
+        return ($value instanceof ExifRationalList) || ($value instanceof ExifNumericList)
             ? $this->converters->toPrimaryChromaticities($value)
             : null;
     }

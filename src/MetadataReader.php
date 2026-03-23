@@ -442,7 +442,7 @@ final readonly class MetadataReader
             return null;
         }
 
-        if (!is_string($mime) || $mime === '') {
+        if (!is_string($mime) || ($mime === '')) {
             return null;
         }
 

@@ -112,7 +112,7 @@ final readonly class ApexConverter
      */
     public function formatExposureTime(?float $seconds): ?string
     {
-        if ($seconds === null || $seconds <= 0) {
+        if (($seconds === null) || ($seconds <= 0)) {
             return null;
         }
 
@@ -163,7 +163,7 @@ final readonly class ApexConverter
      */
     public function formatFNumber(?float $fNumber): ?string
     {
-        if ($fNumber === null || $fNumber <= 0) {
+        if (($fNumber === null) || ($fNumber <= 0)) {
             return null;
         }
 

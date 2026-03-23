@@ -52,7 +52,7 @@ final readonly class CfaPattern
         int $verticalRepeatPixelUnit,
         array $componentIdentifiers,
     ): ?self {
-        if ($horizontalRepeatPixelUnit <= 0 || $verticalRepeatPixelUnit <= 0) {
+        if (($horizontalRepeatPixelUnit <= 0) || ($verticalRepeatPixelUnit <= 0)) {
             return null;
         }
 

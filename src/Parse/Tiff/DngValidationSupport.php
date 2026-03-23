@@ -126,7 +126,7 @@ final readonly class DngValidationSupport
 
         $value = $entry->value;
 
-        if (!$value instanceof ExifNumericList || count($value->values) !== 4) {
+        if ((!$value instanceof ExifNumericList) || (count($value->values) !== 4)) {
             return null;
         }
 
@@ -359,7 +359,7 @@ final readonly class DngValidationSupport
      */
     public function extractDngPositivePairFromNumericList(IfdEntry $entry, string $tagName): array
     {
-        if (!$entry->value instanceof ExifNumericList || count($entry->value->values) !== 2) {
+        if ((!$entry->value instanceof ExifNumericList) || (count($entry->value->values) !== 2)) {
             throw new ParseError(
                 sprintf('%s must decode to exactly two numeric components.', $tagName),
                 1623,

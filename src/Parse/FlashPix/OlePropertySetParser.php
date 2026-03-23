@@ -125,7 +125,7 @@ final class OlePropertySetParser
             $typeCode = $this->u32($raw, $propertyOffset);
             $value    = $this->readValue($raw, $propertyOffset + 4, $typeCode, $length);
 
-            if ($pid === 1 && is_int($value)) {
+            if (($pid === 1) && is_int($value)) {
                 $codepage = $value;
             }
 

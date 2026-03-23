@@ -413,7 +413,7 @@ final readonly class ItemPayloadResolver
         if (is_string($contentType)) {
             $ct = strtolower($contentType);
 
-            return $ct === 'application/exif' || $ct === 'image/tiff';
+            return ($ct === 'application/exif') || ($ct === 'image/tiff');
         }
 
         return false;
@@ -563,7 +563,7 @@ final readonly class ItemPayloadResolver
         int $overflowCode,
         int $originOverflowCode,
     ): int {
-        if ($baseOffset < 0 || $extentOffset < 0 || $originOffset < 0) {
+        if (($baseOffset < 0) || ($extentOffset < 0) || ($originOffset < 0)) {
             throw new ParseError('iloc negative offset', $negativeCode);
         }
 

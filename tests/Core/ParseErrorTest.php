@@ -73,7 +73,7 @@ final class ParseErrorTest extends TestCase
 
                     $written = fwrite($handle, 'A');
 
-                    if ($written === false || $written !== 1) {
+                    if (($written === false) || ($written !== 1)) {
                         Assert::fail('Unable to populate temporary stream.');
                     }
 

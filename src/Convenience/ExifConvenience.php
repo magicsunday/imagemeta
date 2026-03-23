@@ -66,7 +66,7 @@ final readonly class ExifConvenience
 
         if (($make !== null) && ($model !== null)) {
             $cameraLabel = $this->startsWithCaseInsensitive($model, $make) ? $model : $make . ' ' . $model;
-        } elseif ($make !== null || $model !== null) {
+        } elseif (($make !== null) || ($model !== null)) {
             $cameraLabel = $make ?? $model;
         }
 
@@ -141,7 +141,7 @@ final readonly class ExifConvenience
         $width  = $image->width;
         $height = $image->height;
 
-        if ($width === null || $height === null) {
+        if (($width === null) || ($height === null)) {
             return null;
         }
 
@@ -156,7 +156,7 @@ final readonly class ExifConvenience
         $latitude  = $gps->position?->latitude;
         $longitude = $gps->position?->longitude;
 
-        if ($latitude === null || $longitude === null) {
+        if (($latitude === null) || ($longitude === null)) {
             return null;
         }
 

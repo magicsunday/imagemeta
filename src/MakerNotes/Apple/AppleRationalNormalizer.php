@@ -61,7 +61,7 @@ final readonly class AppleRationalNormalizer
                 $numerator                       = trim($numeratorRaw);
                 $denominator                     = trim($denominatorRaw);
 
-                if ($numerator === '' || $denominator === '' || !is_numeric($numerator) || !is_numeric($denominator)) {
+                if (($numerator === '') || ($denominator === '') || !is_numeric($numerator) || !is_numeric($denominator)) {
                     return null;
                 }
 

@@ -79,7 +79,7 @@ final readonly class GpsCoordinate implements Stringable
      */
     private function normalizeReference(?string $reference): ?string
     {
-        if ($reference === null || $reference === '') {
+        if (($reference === null) || ($reference === '')) {
             return null;
         }
 

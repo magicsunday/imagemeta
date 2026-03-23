@@ -376,7 +376,7 @@ final readonly class DeviceExifReader
 
         // EXIF 3.0 §4.6.6.7.45: UTF-16 encoded strings require even byte
         // length for code-unit alignment.  Odd-length payloads are malformed.
-        if ($length < 4 || ($length % 2) !== 0) {
+        if (($length < 4) || (($length % 2) !== 0)) {
             return [];
         }
 

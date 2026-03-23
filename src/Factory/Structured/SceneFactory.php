@@ -92,7 +92,7 @@ final readonly class SceneFactory
 
             if (($hdrHeadroom !== null) && ($hdrHeadroom > 0.0)) {
                 $hdrScene = true;
-            } elseif (($appleFlags['hdrEnabled'] ?? null) === true || ($appleFlags['hdrAuto'] ?? null) === true) {
+            } elseif ((($appleFlags['hdrEnabled'] ?? null) === true) || (($appleFlags['hdrAuto'] ?? null) === true)) {
                 $hdrScene = true;
             }
         }

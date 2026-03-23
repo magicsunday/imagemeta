@@ -25,7 +25,7 @@ trait ValidatesGpsRef
      */
     private function validateGpsRef(?string $value, array $allowed): ?string
     {
-        if ($value === null || $value === '') {
+        if (($value === null) || ($value === '')) {
             return null;
         }
 

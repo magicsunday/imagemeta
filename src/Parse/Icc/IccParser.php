@@ -142,7 +142,7 @@ final readonly class IccParser implements IccParserInterface
     {
         $data = $profileData;
 
-        if ($data === null || strlen($data) < self::HEADER_LENGTH) {
+        if (($data === null) || (strlen($data) < self::HEADER_LENGTH)) {
             $combined = $this->combineSegments($segments);
 
             if ($combined !== null) {
@@ -394,7 +394,7 @@ final readonly class IccParser implements IccParserInterface
             }
 
             // Reject out-of-range sequence numbers
-            if ($sequenceNumber === 0 || $sequenceNumber > $sequenceCount) {
+            if (($sequenceNumber === 0) || ($sequenceNumber > $sequenceCount)) {
                 throw new ParseError(
                     sprintf(
                         'ICC chunk assembly: sequence number %d is out of range 1..%d',

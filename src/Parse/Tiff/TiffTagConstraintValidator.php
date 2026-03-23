@@ -51,7 +51,7 @@ final readonly class TiffTagConstraintValidator
     {
         $entry = $ifd->get(TiffTag::NEW_SUBFILE_TYPE);
 
-        if (!$entry instanceof IfdEntry || !is_int($entry->value)) {
+        if ((!$entry instanceof IfdEntry) || !is_int($entry->value)) {
             return;
         }
 
@@ -61,7 +61,7 @@ final readonly class TiffTagConstraintValidator
 
         $enhance = $ifd->get(DngTag::ENHANCE_PARAMS);
 
-        if (!$enhance instanceof IfdEntry || !is_string($enhance->value)) {
+        if ((!$enhance instanceof IfdEntry) || !is_string($enhance->value)) {
             throw new ParseError('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag per DNG 1.5.', 1976);
         }
 
@@ -88,13 +88,13 @@ final readonly class TiffTagConstraintValidator
             if (
                 $entry instanceof IfdEntry
                 && is_int($entry->value)
-                && $entry->value !== 1
+                && ($entry->value !== 1)
                 // TIFF 6.0 §8 defines Compression=4 (CCITT Group 4) and
                 // Compression=7 (JPEG new-style); keep raw camera values for
                 // reader-side tolerance in JPEG APP1 EXIF (EXIF 3.0 §4.6.2).
-                && $entry->value !== 4
-                && $entry->value !== 6
-                && $entry->value !== 7
+                && ($entry->value !== 4)
+                && ($entry->value !== 6)
+                && ($entry->value !== 7)
             ) {
                 throw new ParseError(sprintf(
                     'Compression value %d in IFD0 is invalid; only 1 (uncompressed) is allowed.',
@@ -113,11 +113,11 @@ final readonly class TiffTagConstraintValidator
             $thumbEntry instanceof IfdEntry
             && is_int($thumbEntry->value)
             // Postel's Law: tolerate real-world IFD1 Compression=0 values.
-            && $thumbEntry->value !== 0
-            && $thumbEntry->value !== 1
-            && $thumbEntry->value !== 6
+            && ($thumbEntry->value !== 0)
+            && ($thumbEntry->value !== 1)
+            && ($thumbEntry->value !== 6)
             // Postel's Law: accept Compression=7 (JPEG new-style TN2).
-            && $thumbEntry->value !== 7
+            && ($thumbEntry->value !== 7)
         ) {
             throw new ParseError(sprintf(
                 'Compression value %d in IFD1 is invalid; only 1 or 6 is allowed.',
@@ -484,7 +484,7 @@ final readonly class TiffTagConstraintValidator
         // Also, IFD0 with NewSubFileType != 0 indicates a non-primary image.
         // Skip the dimension check when tags are absent — the image dimensions
         // are not needed for metadata extraction.
-        if (!$widthEntry instanceof IfdEntry || !$lengthEntry instanceof IfdEntry) {
+        if ((!$widthEntry instanceof IfdEntry) || (!$lengthEntry instanceof IfdEntry)) {
             return;
         }
 

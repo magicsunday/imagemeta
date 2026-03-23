@@ -2629,7 +2629,7 @@ final class TiffExifParserDngTagTest extends TestCase
             $wbData = '';
 
             for ($i = 0; $i < $wbCount; ++$i) {
-                if ($wbType === TiffConst::TYPE_RATIONAL || $wbType === TiffConst::TYPE_SRATIONAL) {
+                if (($wbType === TiffConst::TYPE_RATIONAL) || ($wbType === TiffConst::TYPE_SRATIONAL)) {
                     $wbData .= pack('VV', 1, 3);
                 } elseif ($wbType === TiffConst::TYPE_SHORT) {
                     $wbData .= pack('v', 1);

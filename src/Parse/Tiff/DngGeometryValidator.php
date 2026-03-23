@@ -367,7 +367,7 @@ final readonly class DngGeometryValidator
             return;
         }
 
-        if ($entry->type !== TiffConst::TYPE_RATIONAL || $entry->count !== 4) {
+        if (($entry->type !== TiffConst::TYPE_RATIONAL) || ($entry->count !== 4)) {
             throw new ParseError(
                 sprintf('DefaultUserCrop must be RATIONAL[4], got type %d count %d.', $entry->type, $entry->count),
                 1565,
@@ -376,7 +376,7 @@ final readonly class DngGeometryValidator
 
         $value = $entry->value;
 
-        if (!$value instanceof ExifRationalList || count($value->values) !== 4) {
+        if ((!$value instanceof ExifRationalList) || (count($value->values) !== 4)) {
             return;
         }
 
@@ -385,7 +385,7 @@ final readonly class DngGeometryValidator
         $bottom = $this->rationalToFloat($value->values[2]);
         $right  = $this->rationalToFloat($value->values[3]);
 
-        if ($top < 0.0 || $left < 0.0 || $bottom > 1.0 || $right > 1.0) {
+        if (($top < 0.0) || ($left < 0.0) || ($bottom > 1.0) || ($right > 1.0)) {
             throw new ParseError(
                 sprintf('DefaultUserCrop values must be in [0.0, 1.0], got (%.4f, %.4f, %.4f, %.4f).', $top, $left, $bottom, $right),
                 1566,
@@ -420,7 +420,7 @@ final readonly class DngGeometryValidator
             return;
         }
 
-        if ($entry->type !== TiffConst::TYPE_LONG || $entry->count !== 1) {
+        if (($entry->type !== TiffConst::TYPE_LONG) || ($entry->count !== 1)) {
             throw new ParseError(
                 sprintf('DefaultBlackRender must be LONG[1], got type %d count %d.', $entry->type, $entry->count),
                 1569,
@@ -558,7 +558,7 @@ final readonly class DngGeometryValidator
 
         $value = $entry->value;
 
-        if (!$value instanceof ExifRationalList || count($value->values) !== 4) {
+        if ((!$value instanceof ExifRationalList) || (count($value->values) !== 4)) {
             throw new ParseError('LensInfo must decode to four rational components.', 1650);
         }
 
@@ -649,7 +649,7 @@ final readonly class DngGeometryValidator
 
         $repeat = $ifd->get(DngTag::CFA_REPEAT_PATTERN_DIM);
 
-        if (!$repeat instanceof IfdEntry || !$repeat->value instanceof ExifNumericList || count($repeat->value->values) !== 2) {
+        if ((!$repeat instanceof IfdEntry) || (!$repeat->value instanceof ExifNumericList) || (count($repeat->value->values) !== 2)) {
             return;
         }
 
@@ -911,7 +911,7 @@ final readonly class DngGeometryValidator
             return;
         }
 
-        if (($entry->type !== TiffConst::TYPE_SHORT && $entry->type !== TiffConst::TYPE_LONG) || $entry->count !== 2) {
+        if (($entry->type !== TiffConst::TYPE_SHORT && $entry->type !== TiffConst::TYPE_LONG) || ($entry->count !== 2)) {
             throw new ParseError(
                 sprintf('SubTileBlockSize must be (SHORT|LONG)[2], got type %d count %d.', $entry->type, $entry->count),
                 1577,
@@ -929,7 +929,7 @@ final readonly class DngGeometryValidator
             return;
         }
 
-        if ($rows < 1 || $cols < 1) {
+        if (($rows < 1) || ($cols < 1)) {
             throw new ParseError(
                 sprintf('SubTileBlockSize components must be >= 1, got %d, %d.', $rows, $cols),
                 1578,
@@ -950,14 +950,14 @@ final readonly class DngGeometryValidator
             return;
         }
 
-        if (($entry->type !== TiffConst::TYPE_SHORT && $entry->type !== TiffConst::TYPE_LONG) || $entry->count !== 1) {
+        if (($entry->type !== TiffConst::TYPE_SHORT && $entry->type !== TiffConst::TYPE_LONG) || ($entry->count !== 1)) {
             throw new ParseError(
                 sprintf('RowInterleaveFactor must be (SHORT|LONG)[1], got type %d count %d.', $entry->type, $entry->count),
                 1579,
             );
         }
 
-        if (!is_int($entry->value) || $entry->value < 1) {
+        if (!is_int($entry->value) || ($entry->value < 1)) {
             throw new ParseError(
                 sprintf('RowInterleaveFactor must be >= 1, got %d.', is_int($entry->value) ? $entry->value : -1),
                 1580,

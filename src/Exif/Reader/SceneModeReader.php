@@ -261,7 +261,7 @@ final readonly class SceneModeReader
             return null;
         }
 
-        if ($numerator === ExifConst::EXIF_UNKNOWN_DENOMINATOR || $numerator === -1) {
+        if (($numerator === ExifConst::EXIF_UNKNOWN_DENOMINATOR) || ($numerator === -1)) {
             return INF;
         }
 
@@ -412,7 +412,7 @@ final readonly class SceneModeReader
     {
         $coordinates = $this->reader->numericList($this->exifIfd, ExifTag::SUBJECT_LOCATION);
 
-        if ($coordinates === null || count($coordinates) !== 2) {
+        if (($coordinates === null) || (count($coordinates) !== 2)) {
             return null;
         }
 

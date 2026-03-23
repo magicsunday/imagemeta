@@ -82,7 +82,7 @@ final readonly class ComponentsConverter
     ): ?array {
         $components = $this->numericConverter->toIntList($value);
 
-        if ($components === null || $components === []) {
+        if (($components === null) || ($components === [])) {
             return null;
         }
 
@@ -133,7 +133,7 @@ final readonly class ComponentsConverter
      */
     public function ycbcrSubSamplingToPair(?string $val): ?array
     {
-        if ($val === null || $val === '') {
+        if (($val === null) || ($val === '')) {
             return null;
         }
 
@@ -161,7 +161,7 @@ final readonly class ComponentsConverter
 
         $result = array_any(
             $legalValues,
-            fn ($legal): bool => $horizontal === $legal[0] && $vertical === $legal[1]
+            fn ($legal): bool => ($horizontal === $legal[0]) && ($vertical === $legal[1])
         );
 
         if ($result) {

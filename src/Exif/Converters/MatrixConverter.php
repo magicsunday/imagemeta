@@ -72,14 +72,14 @@ final readonly class MatrixConverter
     {
         $values = $this->normalizeRationalValues($rational);
 
-        if ($values === null || count($values) !== 2) {
+        if (($values === null) || (count($values) !== 2)) {
             return null;
         }
 
         $x = $this->rationalConverter->toFloat($values[0]);
         $y = $this->rationalConverter->toFloat($values[1]);
 
-        if ($x === null || $y === null) {
+        if (($x === null) || ($y === null)) {
             return null;
         }
 
@@ -100,7 +100,7 @@ final readonly class MatrixConverter
     {
         $values = $this->normalizeRationalValues($rational);
 
-        if ($values === null || count($values) !== 6) {
+        if (($values === null) || (count($values) !== 6)) {
             return null;
         }
 
@@ -133,7 +133,7 @@ final readonly class MatrixConverter
             return null;
         }
 
-        if ($rational instanceof ExifRationalList || $rational instanceof ExifNumericList) {
+        if (($rational instanceof ExifRationalList) || ($rational instanceof ExifNumericList)) {
             return $rational->values;
         }
 
@@ -172,7 +172,7 @@ final readonly class MatrixConverter
             return null;
         }
 
-        if ($matrix instanceof ExifRationalList || $matrix instanceof ExifNumericList) {
+        if (($matrix instanceof ExifRationalList) || ($matrix instanceof ExifNumericList)) {
             $raw = $matrix->values;
         } else {
             $raw = [];
@@ -264,7 +264,7 @@ final readonly class MatrixConverter
      */
     private function decodeSrationalMatrix(?string $payload, Endian $endian = Endian::Big): ?array
     {
-        if ($payload === null || $payload === '') {
+        if (($payload === null) || ($payload === '')) {
             return null;
         }
 
@@ -293,7 +293,7 @@ final readonly class MatrixConverter
         $columns = $columnsRaw;
         $rows    = $rowsRaw;
 
-        if ($columns <= 0 || $rows <= 0) {
+        if (($columns <= 0) || ($rows <= 0)) {
             return null;
         }
 
@@ -341,7 +341,7 @@ final readonly class MatrixConverter
                 $numerator   = $this->readSrationalInt32($payload, $offset, $length, $endian);
                 $denominator = $this->readSrationalInt32($payload, $offset + 4, $length, $endian);
 
-                if ($numerator === null || $denominator === null) {
+                if (($numerator === null) || ($denominator === null)) {
                     return null;
                 }
 

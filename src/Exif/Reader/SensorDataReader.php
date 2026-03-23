@@ -107,7 +107,7 @@ final readonly class SensorDataReader
     {
         $payload = $this->reader->rawString($this->exifIfd, ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE);
 
-        if ($payload === null || $payload === '') {
+        if (($payload === null) || ($payload === '')) {
             return null;
         }
 

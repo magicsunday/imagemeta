@@ -118,7 +118,7 @@ final class BinaryPlistDecoder
 
         $topIndex = $this->topObjectIndex;
 
-        if ($topIndex < 0 || $topIndex >= $this->objectCount) {
+        if (($topIndex < 0) || ($topIndex >= $this->objectCount)) {
             throw new ParseError('Top level object index is out of range.', 1038);
         }
 
@@ -144,7 +144,7 @@ final class BinaryPlistDecoder
         $topObject        = $this->reader->readUint64($trailer, 16);
         $offsetTableStart = $this->reader->readUint64($trailer, 24);
 
-        if ($offsetIntSize < 1 || $objectRefSize < 1) {
+        if (($offsetIntSize < 1) || ($objectRefSize < 1)) {
             throw new ParseError('Invalid property list integer sizing.', 1040);
         }
 
@@ -212,7 +212,7 @@ final class BinaryPlistDecoder
         for ($idx = 0; $idx < $numObjects; ++$idx) {
             $offset = $this->reader->readUint($cursor, $offsetIntSize);
 
-            if ($offset < 8 || $offset > $maxObjectOffset) {
+            if (($offset < 8) || ($offset > $maxObjectOffset)) {
                 throw new ParseError('Object offset is outside of the object table range.', 1052);
             }
 
@@ -233,7 +233,7 @@ final class BinaryPlistDecoder
      */
     private function parseObject(int $index): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
     {
-        if ($index < 0 || $index >= $this->objectCount) {
+        if (($index < 0) || ($index >= $this->objectCount)) {
             throw new ParseError('The property list object reference is invalid.', 1053);
         }
 

@@ -66,7 +66,7 @@ final readonly class TiffImageDataValidator
 
         $rowsPerStripEntry = $ifd0->get(ExifTag::ROWS_PER_STRIP);
 
-        if (!$rowsPerStripEntry instanceof IfdEntry || !is_int($rowsPerStripEntry->value) || $rowsPerStripEntry->value <= 0) {
+        if ((!$rowsPerStripEntry instanceof IfdEntry) || !is_int($rowsPerStripEntry->value) || ($rowsPerStripEntry->value <= 0)) {
             throw new ParseError(
                 'RowsPerStrip must be a positive integer when strip tags are present per EXIF 3.0 §4.6.5.2.2.',
                 1987,
@@ -75,7 +75,7 @@ final readonly class TiffImageDataValidator
 
         $imageLengthEntry = $ifd0->get(ExifTag::IMAGE_LENGTH);
 
-        if (!$imageLengthEntry instanceof IfdEntry || !is_int($imageLengthEntry->value) || $imageLengthEntry->value <= 0) {
+        if ((!$imageLengthEntry instanceof IfdEntry) || !is_int($imageLengthEntry->value) || ($imageLengthEntry->value <= 0)) {
             return;
         }
 
@@ -144,7 +144,7 @@ final readonly class TiffImageDataValidator
 
         [$tileWidth, $tileLength] = $this->validateTileDimensions($tileWidthEntry, $tileLengthEntry);
 
-        if (!$tileOffsetsEntry instanceof IfdEntry || !$tileByteCountsEntry instanceof IfdEntry) {
+        if ((!$tileOffsetsEntry instanceof IfdEntry) || (!$tileByteCountsEntry instanceof IfdEntry)) {
             throw new ParseError(
                 'TileOffsets and TileByteCounts must both be present for tiled image layout.',
                 1699,
@@ -184,11 +184,11 @@ final readonly class TiffImageDataValidator
      */
     private function validateTileDimensions(?IfdEntry $tileWidthEntry, ?IfdEntry $tileLengthEntry): array
     {
-        if (!$tileWidthEntry instanceof IfdEntry || !is_int($tileWidthEntry->value) || ($tileWidthEntry->value <= 0)) {
+        if ((!$tileWidthEntry instanceof IfdEntry) || !is_int($tileWidthEntry->value) || ($tileWidthEntry->value <= 0)) {
             throw new ParseError('TileWidth must be a positive integer when tiled layout tags are present.', 1695);
         }
 
-        if (!$tileLengthEntry instanceof IfdEntry || !is_int($tileLengthEntry->value) || ($tileLengthEntry->value <= 0)) {
+        if ((!$tileLengthEntry instanceof IfdEntry) || !is_int($tileLengthEntry->value) || ($tileLengthEntry->value <= 0)) {
             throw new ParseError('TileLength must be a positive integer when tiled layout tags are present.', 1696);
         }
 
@@ -226,7 +226,7 @@ final readonly class TiffImageDataValidator
         $imageWidthEntry  = $ifd0->get(ExifTag::IMAGE_WIDTH);
         $imageLengthEntry = $ifd0->get(ExifTag::IMAGE_LENGTH);
 
-        if (!$imageWidthEntry instanceof IfdEntry || !is_int($imageWidthEntry->value) || ($imageWidthEntry->value <= 0) || !$imageLengthEntry instanceof IfdEntry || !is_int($imageLengthEntry->value) || ($imageLengthEntry->value <= 0)) {
+        if ((!$imageWidthEntry instanceof IfdEntry) || !is_int($imageWidthEntry->value) || ($imageWidthEntry->value <= 0) || (!$imageLengthEntry instanceof IfdEntry) || !is_int($imageLengthEntry->value) || ($imageLengthEntry->value <= 0)) {
             return;
         }
 

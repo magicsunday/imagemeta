@@ -165,7 +165,7 @@ final readonly class DngProfileValidator
         if ($isSdr && (count($floats) >= 4)) {
             $lastIdx = count($floats) - 1;
 
-            if ($floats[0] !== 0.0 || $floats[1] !== 0.0 || $floats[$lastIdx - 1] !== 1.0 || $floats[$lastIdx] !== 1.0) {
+            if (($floats[0] !== 0.0) || ($floats[1] !== 0.0) || ($floats[$lastIdx - 1] !== 1.0) || ($floats[$lastIdx] !== 1.0)) {
                 throw new ParseError(
                     'SDR ProfileToneCurve must start at (0.0,0.0) and end at (1.0,1.0) per DNG 1.7.1.0.',
                     2017,
@@ -351,7 +351,7 @@ final readonly class DngProfileValidator
             return;
         }
 
-        if ($entry->type !== TiffConst::TYPE_LONG || $entry->count !== 3) {
+        if (($entry->type !== TiffConst::TYPE_LONG) || ($entry->count !== 3)) {
             throw new ParseError(
                 sprintf('%s must be LONG[3], got type %d count %d.', $tagName, $entry->type, $entry->count),
                 $typeErrCode,
@@ -360,7 +360,7 @@ final readonly class DngProfileValidator
 
         $value = $entry->value;
 
-        if (!$value instanceof ExifNumericList || count($value->values) !== 3) {
+        if ((!$value instanceof ExifNumericList) || (count($value->values) !== 3)) {
             return;
         }
 
@@ -420,7 +420,7 @@ final readonly class DngProfileValidator
             );
         }
 
-        if (!$dimsEntry instanceof IfdEntry || !$dataEntry instanceof IfdEntry) {
+        if ((!$dimsEntry instanceof IfdEntry) || (!$dataEntry instanceof IfdEntry)) {
             return;
         }
 
@@ -496,7 +496,7 @@ final readonly class DngProfileValidator
             return;
         }
 
-        if (!is_int($entry->value) || $entry->value < 0 || $entry->value > 3) {
+        if (!is_int($entry->value) || ($entry->value < 0) || ($entry->value > 3)) {
             throw new ParseError(
                 sprintf('ProfileEmbedPolicy value must be 0..3, got %d.', is_int($entry->value) ? $entry->value : -1),
                 1583,
@@ -525,7 +525,7 @@ final readonly class DngProfileValidator
 
         $count = count($value->values);
 
-        if ($count < 2 || $count % 2 !== 0) {
+        if (($count < 2) || ($count % 2 !== 0)) {
             throw new ParseError(
                 sprintf('NoiseProfile count must be even (pairs of S,O), got %d.', $count),
                 2048,
@@ -571,7 +571,7 @@ final readonly class DngProfileValidator
             return;
         }
 
-        if ($entry->type !== TiffConst::TYPE_LONG || $entry->count !== 1) {
+        if (($entry->type !== TiffConst::TYPE_LONG) || ($entry->count !== 1)) {
             throw new ParseError(
                 sprintf('%s must be LONG[1], got type %d count %d.', $name, $entry->type, $entry->count),
                 1555,
@@ -594,7 +594,7 @@ final readonly class DngProfileValidator
 
         $dimsValue = $dimsEntry->value;
 
-        if (!$dimsValue instanceof ExifNumericList || count($dimsValue->values) !== 3) {
+        if ((!$dimsValue instanceof ExifNumericList) || (count($dimsValue->values) !== 3)) {
             return;
         }
 
@@ -618,7 +618,7 @@ final readonly class DngProfileValidator
     {
         $entry = $ifd->get(DngTag::PROFILE_DYNAMIC_RANGE);
 
-        if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
+        if ((!$entry instanceof IfdEntry) || !is_string($entry->value)) {
             return;
         }
 
@@ -670,7 +670,7 @@ final readonly class DngProfileValidator
     {
         $entry = $ifd->get(DngTag::PROFILE_GAIN_TABLE_MAP_2);
 
-        if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
+        if ((!$entry instanceof IfdEntry) || !is_string($entry->value)) {
             return;
         }
 
@@ -723,7 +723,7 @@ final readonly class DngProfileValidator
             );
         }
 
-        if ($header['gamma'] < 0.25 || $header['gamma'] > 4.0) {
+        if (($header['gamma'] < 0.25) || ($header['gamma'] > 4.0)) {
             throw new ParseError(
                 sprintf('ProfileGainTableMap2 Gamma must be 0.25..4.0, got %g.', $header['gamma']),
                 1518,
@@ -896,7 +896,7 @@ final readonly class DngProfileValidator
     ): ?array {
         $dimsValue = $dimsEntry->value;
 
-        if (!$dimsValue instanceof ExifNumericList || count($dimsValue->values) !== 3) {
+        if ((!$dimsValue instanceof ExifNumericList) || (count($dimsValue->values) !== 3)) {
             return null;
         }
 
@@ -925,7 +925,7 @@ final readonly class DngProfileValidator
      */
     private function checkedMultiply(int $left, int $right, string $overflowMessage, int $code): int
     {
-        if ($left === 0 || $right === 0) {
+        if (($left === 0) || ($right === 0)) {
             return 0;
         }
 

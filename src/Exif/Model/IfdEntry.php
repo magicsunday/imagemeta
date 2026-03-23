@@ -71,7 +71,7 @@ final readonly class IfdEntry
         /** @var array<int, int|float|array<int, int|float>> $arrayValue */
         $arrayValue = array_values($value);
 
-        if ($type === 5 || $type === 10) {
+        if (($type === 5) || ($type === 10)) {
             $rationals = $this->normalizeRationalList($arrayValue);
 
             if (count($rationals) === 1) {

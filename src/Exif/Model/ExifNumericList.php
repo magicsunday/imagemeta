@@ -72,7 +72,7 @@ final readonly class ExifNumericList
     {
         if (!array_all(
             $values,
-            static fn (bool|float|int|string|UInt64 $value): bool => is_int($value) || is_float($value) || $value instanceof UInt64,
+            static fn (bool|float|int|string|UInt64 $value): bool => is_int($value) || is_float($value) || ($value instanceof UInt64),
         )) {
             throw new ParseError('Numeric EXIF lists may only contain integers, floats, or UInt64 values.', 1866);
         }

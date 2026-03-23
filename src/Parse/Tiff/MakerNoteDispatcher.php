@@ -51,7 +51,7 @@ final class MakerNoteDispatcher
 
         $make = $this->stringFromIfd($ifd0, ExifTag::MAKE);
 
-        if ($make === null || $make === '') {
+        if (($make === null) || ($make === '')) {
             return $this->applySafety($this->digest($raw), $ifd0);
         }
 

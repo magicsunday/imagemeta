@@ -202,7 +202,7 @@ final class CameraFactoryTest extends TestCase
 
         // Invalid enum should degrade — either null or the default DigitalCamera
         self::assertTrue(
-            !$camera->fileSource instanceof FileSource || $camera->fileSource === FileSource::DigitalCamera,
+            !($camera->fileSource instanceof FileSource) || ($camera->fileSource === FileSource::DigitalCamera),
             'FileSource should be null or default DigitalCamera for invalid backing value',
         );
     }

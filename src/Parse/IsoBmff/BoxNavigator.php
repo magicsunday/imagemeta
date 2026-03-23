@@ -57,7 +57,7 @@ final readonly class BoxNavigator
      */
     public function walkChildren(BoxDescriptor $parent, int $offset = 0, bool $allowTrailingTerminator = false): iterable
     {
-        if ($offset < 0 || $offset > $parent->contentSize) {
+        if (($offset < 0) || ($offset > $parent->contentSize)) {
             throw new ParseError('child offset outside container', 1258);
         }
 
@@ -97,7 +97,7 @@ final readonly class BoxNavigator
      */
     public function readBoxAt(int $offset, int $limit, bool $allowImplicitSize = false): BoxDescriptor
     {
-        if ($offset < 0 || $offset > $limit) {
+        if (($offset < 0) || ($offset > $limit)) {
             throw new ParseError('box offset outside container', 1260);
         }
 
