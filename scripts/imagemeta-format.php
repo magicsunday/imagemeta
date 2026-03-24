@@ -2758,7 +2758,13 @@ final class MetadataFormatter
         // INFO chunk metadata
         if ($metadata->riffInfo instanceof RiffInfo) {
             foreach ($metadata->riffInfo->fields as $tag => $value) {
-                $label        = self::RIFF_INFO_TAG_LABELS[$tag] ?? $tag;
+                $label = self::RIFF_INFO_TAG_LABELS[$tag] ?? $tag;
+
+                // Normalize date fields to EXIF format (YYYY:MM:DD HH:MM:SS)
+                if (($tag === 'IDIT') || ($tag === 'ICRD')) {
+                    $value = $this->normalizeRiffDate($value);
+                }
+
                 $data[$label] = $value;
             }
         }
@@ -2776,7 +2782,7 @@ final class MetadataFormatter
             }
 
             if ($exif->timeCreated !== null) {
-                $data['Time Created'] ??= $exif->timeCreated;
+                $data['Time Created'] ??= $this->normalizeRiffDate($exif->timeCreated);
             }
 
             if ($exif->userComment !== null) {
@@ -2795,6 +2801,43 @@ final class MetadataFormatter
         if ($data !== []) {
             $this->printSection('RIFF', $data);
         }
+    }
+
+    /**
+     * Normalizes RIFF date strings to EXIF format (YYYY:MM:DD HH:MM:SS).
+     *
+     * RIFF dates appear in various formats depending on the camera/software:
+     * - C ctime: "Mon Dec 15 15:19:38 2014"
+     * - Casio QV-3EX: "2001/ 1/27  1:42PM"
+     * - ISO-like: "2002-12-16  15:35:01"
+     * - Already EXIF: "2024:03:15 10:30:00"
+     *
+     * ExifTool RIFF.pm — ConvertRIFFDate().
+     */
+    private function normalizeRiffDate(string $raw): string
+    {
+        $trimmed = trim($raw);
+
+        // Already in EXIF format (YYYY:MM:DD HH:MM:SS)
+        if (preg_match('/^\d{4}:\d{2}:\d{2}\s+\d{2}:\d{2}:\d{2}/', $trimmed) === 1) {
+            return $trimmed;
+        }
+
+        // Try parsing common date formats via DateTimeImmutable
+        $parsed = DateTimeImmutable::createFromFormat('D M d H:i:s Y', $trimmed);         // ctime
+        $parsed = $parsed ?: DateTimeImmutable::createFromFormat('D M  d H:i:s Y', $trimmed); // ctime with double space
+        $parsed = $parsed ?: DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $trimmed);     // ISO-like
+        $parsed = $parsed ?: DateTimeImmutable::createFromFormat('Y/m/d H:i:s', $trimmed);     // slash-separated
+        $parsed = $parsed ?: DateTimeImmutable::createFromFormat('Y/ n/d  g:iA', $trimmed);    // Casio QV-3EX
+
+        if ($parsed instanceof DateTimeImmutable) {
+            return $parsed->format('Y:m:d H:i:s');
+        }
+
+        // Normalize dashes to colons in date portion (e.g. "2002-12-16 15:35:01" → "2002:12:16 15:35:01")
+        $normalized = preg_replace('/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/', '$1:$2:$3', $trimmed);
+
+        return $normalized ?? $trimmed;
     }
 
     /**
