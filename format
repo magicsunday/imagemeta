@@ -4,8 +4,27 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 if [[ $# -eq 0 ]]; then
-    echo "Usage: ./format [--digests] <file>" >&2
+    echo "Usage: ./format [--digest] [--debug] <file>" >&2
     exit 1
 fi
 
-make format FILE="$*"
+ARGS=""
+FILE=""
+
+for arg in "$@"; do
+    case "$arg" in
+        --digest|--debug)
+            ARGS="$ARGS $arg"
+            ;;
+        *)
+            FILE="$arg"
+            ;;
+    esac
+done
+
+if [[ -z "$FILE" ]]; then
+    echo "Usage: ./format [--digest] [--debug] <file>" >&2
+    exit 1
+fi
+
+make format FILE="$FILE" ARGS="$ARGS"

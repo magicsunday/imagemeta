@@ -17,5 +17,5 @@ bash: .logo ## Opens a bash within the buildbox container.
 
 .PHONY: format
 
-format: .logo ## Runs the format script (usage: make format FILE=<path>).
-	${COMPOSE_BUILD} php scripts/imagemeta-format.php '$(FILE)'
+format: .logo ## Runs the format script (usage: make format FILE=<path> [ARGS=--debug]).
+	${COMPOSE_BUILD} php scripts/imagemeta-format.php $(ARGS) '$(FILE)'
