@@ -39,7 +39,8 @@
         "optimize-autoloader": true,
         "allow-plugins": {
             "infection/extension-installer": true
-        }
+        },
+        "process-timeout": 0
     },
     "require": {
         "php": ">=8.4.0 <8.6.0",
@@ -111,7 +112,6 @@
             "composer audit --format=plain"
         ],
         "ci:test:php:mutation": [
-            "@putenv COMPOSER_PROCESS_TIMEOUT=0",
             "@php -d pcov.enabled=1 .build/bin/infection --configuration=infection.json5 --threads=4 --initial-tests-php-options=\"-d pcov.enabled=1\" --only-covering-test-cases"
         ],
         "ci:test": [
