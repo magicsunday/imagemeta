@@ -27,4 +27,7 @@ enum ContainerType
 
     /** JPEG XL container or bare codestream. */
     case JXL;
+
+    /** RIFF-based format such as AVI. */
+    case RIFF;
 }

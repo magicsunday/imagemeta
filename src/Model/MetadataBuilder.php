@@ -25,6 +25,9 @@ use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
+use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
 
@@ -98,6 +101,12 @@ final class MetadataBuilder
     private ?IptcDocument $iptcDoc = null;
 
     private ?string $gainMapBlob = null;
+
+    private ?RiffInfo $riffInfo = null;
+
+    private ?RiffAviHeader $riffAviHeader = null;
+
+    private ?RiffExifChunk $riffExif = null;
 
     private ?string $mimeType = null;
 
@@ -304,6 +313,25 @@ final class MetadataBuilder
     }
 
     /**
+     * Configures RIFF-specific metadata from AVI containers.
+     *
+     * @param RiffInfo|null      $info      INFO chunk metadata.
+     * @param RiffAviHeader|null $aviHeader Parsed AVI main header.
+     * @param RiffExifChunk|null $riffExif  RIFF-native EXIF sub-chunk fields.
+     */
+    public function withRiff(
+        ?RiffInfo $info = null,
+        ?RiffAviHeader $aviHeader = null,
+        ?RiffExifChunk $riffExif = null,
+    ): self {
+        $this->riffInfo      = $info;
+        $this->riffAviHeader = $aviHeader;
+        $this->riffExif      = $riffExif;
+
+        return $this;
+    }
+
+    /**
      * Configures file-level identity and integrity fields.
      *
      * @param string|null $mimeType  Detected MIME type for the source file.
@@ -360,6 +388,9 @@ final class MetadataBuilder
             iptcBlobs: $this->iptcBlobs,
             iptcDoc: $this->iptcDoc,
             gainMapBlob: $this->gainMapBlob,
+            riffInfo: $this->riffInfo,
+            riffAviHeader: $this->riffAviHeader,
+            riffExif: $this->riffExif,
             jfifSegment: $this->jfifSegment,
             xmpParser: $this->xmpParser,
             iptcParser: $this->iptcParser,

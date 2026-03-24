@@ -38,6 +38,7 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\DjiMdatTelemetryScanner;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParserFactory;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegParserFactory;
 use MagicSunday\ImageMeta\Parse\Jxl\JxlParser;
+use MagicSunday\ImageMeta\Parse\Riff\RiffParserFactory;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
@@ -78,6 +79,7 @@ final readonly class MetadataReader
      * @param FormatDetector          $formatDetector       Container format detector.
      * @param JpegParserFactory       $jpegParserFactory    Factory creating JPEG parser instances.
      * @param IsoBmffParserFactory    $isoBmffParserFactory Factory creating ISO BMFF parser instances.
+     * @param RiffParserFactory       $riffParserFactory    Factory creating RIFF parser instances.
      * @param int                     $maxTiffSize          Maximum stream size in bytes before TIFF materialisation is rejected.
      */
     public function __construct(
@@ -88,6 +90,7 @@ final readonly class MetadataReader
         private FormatDetector $formatDetector,
         private JpegParserFactory $jpegParserFactory,
         private IsoBmffParserFactory $isoBmffParserFactory,
+        private RiffParserFactory $riffParserFactory = new RiffParserFactory(),
         private int $maxTiffSize = self::MAX_TIFF_SIZE,
     ) {
         $builder                  = StructuredMetadataBuilder::createDefault();
@@ -107,6 +110,7 @@ final readonly class MetadataReader
             new FormatDetector(),
             new JpegParserFactory(),
             new IsoBmffParserFactory(),
+            new RiffParserFactory(),
         );
     }
 
@@ -154,6 +158,7 @@ final readonly class MetadataReader
             ContainerType::ISOBMFF => $this->fromIsoBmff($stream, $mimeType, $fileSize, $extension, $sha256),
             ContainerType::TIFF    => $this->fromTiff($stream, $mimeType, $fileSize, $extension, $sha256),
             ContainerType::JXL     => $this->fromJxl($stream, $mimeType, $fileSize, $extension, $sha256),
+            ContainerType::RIFF    => $this->fromRiff($stream, $mimeType, $fileSize, $extension, $sha256),
         };
     }
 
@@ -350,6 +355,42 @@ final readonly class MetadataReader
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
             ->build();
     }
+
+    // jscpd:ignore-start
+
+    /**
+     * Extracts metadata from a RIFF/AVI container.
+     *
+     * @param Stream  $stream       Source stream positioned at the start of the file.
+     * @param ?string $mimeType     MIME type associated with the inspected file.
+     * @param ?int    $fileSize     File size in bytes if it could be determined.
+     * @param ?string $extension    File extension detected from the path or stream.
+     * @param ?string $digestSha256 Pre-computed SHA-256 digest for the stream contents.
+     */
+    private function fromRiff(
+        Stream $stream,
+        ?string $mimeType,
+        ?int $fileSize,
+        ?string $extension,
+        ?string $digestSha256,
+    ): Metadata {
+        $result = $this->riffParserFactory->create($stream)->extract();
+
+        [$exifDoc, $makerNotes] = $this->parseEmbeddedExifBlobs($result->exifBlobs, embeddedContext: true);
+
+        $makerNotes = $this->appleMerger->merge($makerNotes, null);
+        $xmpDoc     = $this->parseXmpBlobs($result->xmpBlobs);
+
+        return (new MetadataBuilder($this->structuredResolver))
+            ->withParsers($this->xmpParser, $this->iptcParser)
+            ->withExif($result->exifBlobs, $exifDoc, $makerNotes)
+            ->withXmp($result->xmpBlobs, $xmpDoc)
+            ->withRiff($result->info, $result->aviHeader, $result->riffExif)
+            ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
+            ->build();
+    }
+
+    // jscpd:ignore-end
 
     /**
      * Scans the stream tail for DJI protobuf telemetry and injects model/GPS into QuickTime metadata.

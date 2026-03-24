@@ -26,6 +26,10 @@ use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
+use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
 
@@ -36,27 +40,29 @@ use MagicSunday\ImageMeta\Value\StructuredMetadata;
  * shows which groups of properties are available per container format detected
  * by {@see \MagicSunday\ImageMeta\MetadataReader::read()}.
  *
- * | Property group                     | JPEG | ISO BMFF | TIFF | JXL  |
- * |------------------------------------|:----:|:--------:|:----:|:----:|
- * | File identity (mimeType, fileSize, |      |          |      |      |
- * |   extension, digestSha256)|  Y   |    Y     |  Y   |  Y   |
- * | EXIF (exifBlobs, exifDoc,          |      |          |      |      |
- * |   makerNotes)                      |  Y   |    Y     |  Y   |  Y   |
- * | XMP (xmpBlobs, xmpDoc)             |  Y   |    Y     |  --  |  Y   |
- * | QuickTime (quickTime)              |  --  |    Y     |  --  |  --  |
- * | ICC profile (iccProfile)            |  Y   |    Y     |  --  |  --  |
- * | JPEG segments (iccSegments,        |      |          |      |      |
- * |   flashPixStreams, mpfDocument,     |      |          |      |      |
- * |   jpegAudioStreams)                 |  Y   |    --    |  --  |  --  |
- * | JPEG frame (jpegBitsPerSample,     |      |          |      |      |
- * |   jpegFrameSamplingFactors,         |      |          |      |      |
- * |   jpegYCbCrSubSampling,            |      |          |      |      |
- * |   jpegFrameWidth, jpegFrameHeight)  |  Y   |    --    |  --  |  --  |
- * | ISO BMFF (isoBmffItemReferences,   |      |          |      |      |
- * |   isoBmffDataReferences,            |      |          |      |      |
- * |   isoBmffUnresolvedItems)           |  --  |    Y     |  --  |  --  |
- * | HDR gain map (gainMapBlob)          |  --  |    --    |  --  |  Y   |
- * | IPTC (iptcBlobs, iptcDoc)           |  Y   |    --    |  --  |  --  |
+ * | Property group                     | JPEG | ISO BMFF | TIFF | JXL  | RIFF |
+ * |------------------------------------|:----:|:--------:|:----:|:----:|:----:|
+ * | File identity (mimeType, fileSize, |      |          |      |      |      |
+ * |   extension, digestSha256)         |  Y   |    Y     |  Y   |  Y   |  Y   |
+ * | EXIF (exifBlobs, exifDoc,          |      |          |      |      |      |
+ * |   makerNotes)                      |  Y   |    Y     |  Y   |  Y   |  Y   |
+ * | XMP (xmpBlobs, xmpDoc)             |  Y   |    Y     |  --  |  Y   |  Y   |
+ * | QuickTime (quickTime)              |  --  |    Y     |  --  |  --  |  --  |
+ * | ICC profile (iccProfile)           |  Y   |    Y     |  --  |  --  |  --  |
+ * | JPEG segments (iccSegments,        |      |          |      |      |      |
+ * |   flashPixStreams, mpfDocument,     |      |          |      |      |      |
+ * |   jpegAudioStreams)                |  Y   |    --    |  --  |  --  |  --  |
+ * | JPEG frame (jpegBitsPerSample,     |      |          |      |      |      |
+ * |   jpegFrameSamplingFactors,        |      |          |      |      |      |
+ * |   jpegYCbCrSubSampling,            |      |          |      |      |      |
+ * |   jpegFrameWidth, jpegFrameHeight) |  Y   |    --    |  --  |  --  |  --  |
+ * | ISO BMFF (isoBmffItemReferences,   |      |          |      |      |      |
+ * |   isoBmffDataReferences,           |      |          |      |      |      |
+ * |   isoBmffUnresolvedItems)          |  --  |    Y     |  --  |  --  |  --  |
+ * | HDR gain map (gainMapBlob)         |  --  |    --    |  --  |  Y   |  --  |
+ * | IPTC (iptcBlobs, iptcDoc)          |  Y   |    --    |  --  |  --  |  --  |
+ * | RIFF (riffInfo, riffAviHeader,     |      |          |      |      |      |
+ * |   riffExif)                        |  --  |    --    |  --  |  --  |  Y   |
  *
  * Properties outside their supported container group remain at their default
  * value (null for scalars/objects, empty array for list types).
@@ -121,6 +127,9 @@ final readonly class Metadata
      * @param list<string>                                         $iptcBlobs                IPTC payloads captured from JPEG APP13 segments. [JPEG only]
      * @param IptcDocument|null                                    $iptcDoc                  Parsed IPTC IIM datasets from APP13 payloads. [JPEG only]
      * @param string|null                                          $gainMapBlob              Raw HDR gain map image from a JXL hrgm box. [JXL only]
+     * @param RiffInfo|null                                        $riffInfo                 INFO chunk metadata from RIFF containers. [RIFF only]
+     * @param RiffAviHeader|null                                   $riffAviHeader            Parsed AVI main header from RIFF containers. [RIFF only]
+     * @param RiffExifChunk|null                                   $riffExif                 RIFF-native EXIF sub-chunk fields. [RIFF only]
      * @param XmpParserInterface|null                              $xmpParser                Injected XMP parser for selective document creation.
      * @param IptcParserInterface|null                             $iptcParser               Injected IPTC parser for selective document creation.
      * @param (Closure(self): StructuredMetadata)|null             $structuredResolver       Memoizing resolver for structured metadata assembly.
@@ -155,6 +164,9 @@ final readonly class Metadata
         array $iptcBlobs = [],
         public ?IptcDocument $iptcDoc = null,
         public ?string $gainMapBlob = null,
+        public ?RiffInfo $riffInfo = null,
+        public ?RiffAviHeader $riffAviHeader = null,
+        public ?RiffExifChunk $riffExif = null,
         public ?JfifSegment $jfifSegment = null,
         private ?XmpParserInterface $xmpParser = null,
         private ?IptcParserInterface $iptcParser = null,
@@ -226,6 +238,14 @@ final readonly class Metadata
     public function quickTimeLookup(): QuickTimeLookup
     {
         return new QuickTimeLookup($this->quickTime);
+    }
+
+    /**
+     * Creates a RIFF INFO metadata lookup helper for the current metadata instance.
+     */
+    public function riffInfoLookup(): RiffInfoLookup
+    {
+        return new RiffInfoLookup($this->riffInfo, $this->riffExif);
     }
 
     /**

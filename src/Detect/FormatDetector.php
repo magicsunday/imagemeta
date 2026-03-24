@@ -97,6 +97,10 @@ final readonly class FormatDetector
             return ContainerType::TIFF;
         }
 
+        if ($this->looksLikeRiff($stream, $magic2)) {
+            return ContainerType::RIFF;
+        }
+
         // JPEG XL ISO BMFF container: starts with a 12-byte JXL signature box
         if ($this->looksLikeJxl($stream)) {
             return ContainerType::JXL;
@@ -294,5 +298,38 @@ final readonly class FormatDetector
         }
 
         return false;
+    }
+
+    /**
+     * Checks whether the stream starts with a RIFF container for AVI.
+     *
+     * RIFF 1991 §2: RIFF header = 'RIFF' (4) + size (4, LE) + formType (4).
+     * AVI files use formType 'AVI '.
+     */
+    private function looksLikeRiff(Stream $stream, string $magic2): bool
+    {
+        if ($magic2 !== 'RI') {
+            return false;
+        }
+
+        try {
+            $remaining = $stream->read(2);
+        } catch (BoundsError) {
+            return false;
+        }
+
+        if ($remaining !== 'FF') {
+            return false;
+        }
+
+        try {
+            // Skip 4-byte file size
+            $stream->seek(4, SEEK_CUR);
+            $formType = $stream->read(4);
+        } catch (BoundsError) {
+            return false;
+        }
+
+        return $formType === 'AVI ';
     }
 }
