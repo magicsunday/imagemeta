@@ -35,10 +35,14 @@ use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\Reader\CameraLensExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\ExposureParameterReader;
 use MagicSunday\ImageMeta\Exif\Reader\FocalReader;
+use MagicSunday\ImageMeta\Exif\Reconciliation\ExifXmpMapping;
+use MagicSunday\ImageMeta\Exif\Reconciliation\ExifXmpMappingRegistry;
+use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\Structured\LensFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Lens;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -81,7 +85,11 @@ use function strlen;
 #[UsesClass(FocalReader::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(ExifXmpMapping::class)]
+#[UsesClass(ExifXmpMappingRegistry::class)]
+#[UsesClass(XmpFallbackResolver::class)]
 #[UsesClass(RiffInfoLookup::class)]
+#[UsesClass(XmpDocument::class)]
 #[UsesClass(Lens::class)]
 final class LensFactoryTest extends TestCase
 {
@@ -225,6 +233,140 @@ final class LensFactoryTest extends TestCase
         // A truncated specification should either be null or have fewer entries
         // — the key is that no exception is thrown
         $this->addToAssertionCount(1);
+    }
+
+    /**
+     * Provides EXIF lens fields alongside differing XMP values for the same tags.
+     * Verifies the factory prefers EXIF values over XMP for every coalesced field.
+     */
+    #[Test]
+    public function prefersExifOverXmpWhenBothArePresent(): void
+    {
+        $parsedExif = $this->parsedExif(
+            lensMake: 'Canon',
+            lensModel: 'RF 50mm F1.2 L USM',
+            lensSerialNumber: 'EXIF-SN-001',
+            focalLengthMm: 50.0,
+            focalLength35Mm: 50,
+            maxApertureApex: 1.0,
+            lensSpecification: [50.0, 50.0, 1.2, 1.2],
+        );
+
+        $xmpDoc = new XmpDocument([
+            '{http://cipa.jp/exif/1.0/}LensMake'                   => 'Nikon',
+            '{http://cipa.jp/exif/1.0/}LensModel'                  => 'NIKKOR Z 50mm f/1.8 S',
+            '{http://cipa.jp/exif/1.0/}LensSerialNumber'           => 'XMP-SN-999',
+            '{http://ns.adobe.com/exif/1.0/}FocalLength'           => '35/1',
+            '{http://ns.adobe.com/exif/1.0/}FocalLengthIn35mmFilm' => '35',
+            '{http://ns.adobe.com/exif/1.0/}MaxApertureValue'      => '4/1',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+            xmpDoc: $xmpDoc,
+        );
+
+        $lens = new LensFactory()->create($metadata);
+
+        self::assertSame('Canon', $lens->lensMake);
+        self::assertSame('RF 50mm F1.2 L USM', $lens->lensModel);
+        self::assertSame('EXIF-SN-001', $lens->lensSerialNumber);
+        self::assertSame(50.0, $lens->focalLengthMm);
+        self::assertSame(50, $lens->focalLength35Mm);
+        self::assertEqualsWithDelta(1.4142135, $lens->maxApertureFNumber, 0.0001);
+    }
+
+    /**
+     * Provides EXIF with null fields and XMP with values for those same fields.
+     * Verifies the factory falls back to XMP when EXIF fields are absent.
+     */
+    #[Test]
+    public function fallsBackToXmpWhenExifFieldsAreNull(): void
+    {
+        $parsedExif = $this->parsedExif(
+            lensMake: null,
+            lensModel: null,
+            lensSerialNumber: null,
+            focalLengthMm: null,
+            focalLength35Mm: null,
+            maxApertureApex: null,
+            lensSpecification: null,
+        );
+
+        $xmpDoc = new XmpDocument([
+            '{http://cipa.jp/exif/1.0/}LensMake'                   => 'Sigma',
+            '{http://cipa.jp/exif/1.0/}LensModel'                  => 'Art 35mm F1.4 DG HSM',
+            '{http://cipa.jp/exif/1.0/}LensSerialNumber'           => 'XMP-SN-123',
+            '{http://ns.adobe.com/exif/1.0/}FocalLength'           => '35/1',
+            '{http://ns.adobe.com/exif/1.0/}FocalLengthIn35mmFilm' => '52',
+            '{http://ns.adobe.com/exif/1.0/}MaxApertureValue'      => '1/1',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+            xmpDoc: $xmpDoc,
+        );
+
+        $lens = new LensFactory()->create($metadata);
+
+        self::assertSame('Sigma', $lens->lensMake);
+        self::assertSame('Art 35mm F1.4 DG HSM', $lens->lensModel);
+        self::assertSame('XMP-SN-123', $lens->lensSerialNumber);
+        self::assertSame(35.0, $lens->focalLengthMm);
+        self::assertSame(52, $lens->focalLength35Mm);
+        self::assertEqualsWithDelta(1.4142135, $lens->maxApertureFNumber, 0.0001);
+    }
+
+    /**
+     * Provides XMP data without any EXIF document attached.
+     * Verifies the XMP-only path resolves max aperture from XMP APEX value.
+     */
+    #[Test]
+    public function resolvesXmpMaxApertureWhenNoExifDocPresent(): void
+    {
+        $xmpDoc = new XmpDocument([
+            '{http://ns.adobe.com/exif/1.0/}MaxApertureValue' => '3/1',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $lens = new LensFactory()->create($metadata);
+
+        self::assertNotNull($lens->maxApertureFNumber);
+        self::assertEqualsWithDelta(2.8284271, $lens->maxApertureFNumber, 0.0001);
+    }
+
+    /**
+     * Provides XMP data without a MaxApertureValue property and no EXIF document.
+     * Verifies the factory returns null for maxApertureFNumber when XMP has no APEX value.
+     */
+    #[Test]
+    public function returnsNullMaxApertureWhenXmpLacksApexValue(): void
+    {
+        $xmpDoc = new XmpDocument([
+            '{http://cipa.jp/exif/1.0/}LensMake' => 'Tamron',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $lens = new LensFactory()->create($metadata);
+
+        self::assertSame('Tamron', $lens->lensMake);
+        self::assertNull($lens->maxApertureFNumber);
     }
 
     /**
