@@ -1,6 +1,26 @@
 {
     "name": "magicsunday/imagemeta",
-    "description": "Unified EXIF 3.0 / XMP / IPTC / ISOBMFF metadata for PHP.",
+    "description": "Read-only EXIF 3.1 / XMP / IPTC / QuickTime / RIFF metadata extraction for JPEG, ISO BMFF, TIFF, JXL, and AVI containers in PHP.",
+    "keywords": [
+        "exif",
+        "xmp",
+        "iptc",
+        "metadata",
+        "jpeg",
+        "heic",
+        "avif",
+        "tiff",
+        "jxl",
+        "avi",
+        "riff",
+        "iso-bmff",
+        "quicktime",
+        "icc",
+        "mpf",
+        "dng",
+        "maker-notes",
+        "php"
+    ],
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -26,6 +46,7 @@
         "ext-hash": "*",
         "ext-iconv": "*",
         "ext-json": "*",
+        "ext-mbstring": "*",
         "ext-pcre": "*",
         "ext-xmlreader": "*"
     },
