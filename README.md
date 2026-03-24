@@ -135,7 +135,7 @@ use MagicSunday\ImageMeta\MetadataReader;
 $metadata   = MetadataReader::createDefault()->read('/path/to/photo.heic');
 $structured = $metadata->structured();
 
-// Typed structured access (automatic EXIF → XMP → QuickTime fallback):
+// Typed structured access (automatic EXIF → XMP → QuickTime → RIFF fallback):
 $cameraMake = $structured->hardware->camera->make;
 $iso        = $structured->settings->exposure->settings->iso;
 $latitude   = $structured->locationTime->gps->position->latitudeCoordinate?->signed;
