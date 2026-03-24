@@ -1255,6 +1255,1155 @@ final class GpsFactoryTest extends TestCase
         self::assertSame(GpsLatLonRef::East, $gps->position->longitudeRef);
     }
 
+    /**
+     * Verifies that XMP coordinate with South ref produces negative latitude.
+     * Kills coordinateSign MatchArmRemoval mutant that removes 'S' from the 'S','W' arm.
+     */
+    #[Test]
+    public function xmpCoordinateWithSouthRefProducesNegativeLatitude(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52.5',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'S',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertSame(-52.5, $gps->position->latitude);
+        self::assertSame(GpsLatLonRef::South, $gps->position->latitudeRef);
+    }
+
+    /**
+     * Verifies that XMP coordinate with West ref produces negative longitude.
+     * Kills coordinateSign MatchArmRemoval mutant that removes 'W' from the 'S','W' arm.
+     */
+    #[Test]
+    public function xmpCoordinateWithWestRefProducesNegativeLongitude(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLongitude', self::NS_EXIF)    => '13.4',
+            sprintf('{%s}GPSLongitudeRef', self::NS_EXIF) => 'W',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertSame(-13.4, $gps->position->longitude);
+        self::assertSame(GpsLatLonRef::West, $gps->position->longitudeRef);
+    }
+
+    /**
+     * Verifies that XMP coordinate with East ref produces positive longitude.
+     * Kills coordinateSign MatchArmRemoval mutant that removes 'E' from the 'N','E' arm.
+     */
+    #[Test]
+    public function xmpCoordinateWithEastRefProducesPositiveLongitude(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLongitude', self::NS_EXIF)    => '13.4',
+            sprintf('{%s}GPSLongitudeRef', self::NS_EXIF) => 'E',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertSame(13.4, $gps->position->longitude);
+        self::assertSame(GpsLatLonRef::East, $gps->position->longitudeRef);
+    }
+
+    /**
+     * Verifies XMP DMS coordinate where all components are zero is valid.
+     * Kills LessThan mutants that change ($deg < 0.0) to ($deg <= 0.0).
+     */
+    #[Test]
+    public function xmpDmsWithZeroDegreeComponentIsValid(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '0,30,15',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertEqualsWithDelta(0.504167, $gps->position->latitude, 0.001);
+    }
+
+    /**
+     * Verifies XMP DMS coordinate where minutes are zero is valid.
+     * Kills LessThan mutant that changes ($min < 0.0) to ($min <= 0.0).
+     */
+    #[Test]
+    public function xmpDmsWithZeroMinutesComponentIsValid(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52,0,30',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertEqualsWithDelta(52.008333, $gps->position->latitude, 0.001);
+    }
+
+    /**
+     * Verifies XMP DMS coordinate where seconds are zero is valid.
+     * Kills LessThan mutant that changes ($sec < 0.0) to ($sec <= 0.0).
+     */
+    #[Test]
+    public function xmpDmsWithZeroSecondsComponentIsValid(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52,31,0',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertEqualsWithDelta(52.516667, $gps->position->latitude, 0.001);
+    }
+
+    /**
+     * Verifies XMP DMS coordinate with minutes exactly 59.99 is valid.
+     * Kills GreaterThanOrEqualTo mutant that changes ($min >= 60.0) to ($min > 60.0).
+     */
+    #[Test]
+    public function xmpDmsWithMinutesJustBelow60IsValid(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52,59.99,0',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertEqualsWithDelta(52.99983, $gps->position->latitude, 0.001);
+    }
+
+    /**
+     * Verifies XMP decimal coordinate produces value rounded to 6 decimal places.
+     * Kills RoundingFamily, IncrementInteger, DecrementInteger mutants on round($coordinate, 6).
+     */
+    #[Test]
+    public function xmpDecimalCoordinateIsRoundedToSixDecimalPlaces(): void
+    {
+        // 52.1234567 should be rounded to 52.123457
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52.12345674',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertSame(52.123457, $gps->position->latitude);
+    }
+
+    /**
+     * Verifies XMP DMS coordinate produces value rounded to 6 decimal places.
+     * Kills RoundingFamily, IncrementInteger, DecrementInteger mutants on DMS round().
+     */
+    #[Test]
+    public function xmpDmsCoordinateIsRoundedToSixDecimalPlaces(): void
+    {
+        // 52 deg, 7 min, 24.1234 sec = 52 + 7/60 + 24.1234/3600 = 52.123368
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52,7,24.1234',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        // 52 + 7/60 + 24.1234/3600 = 52.1233676... rounded to 6 places
+        self::assertSame(round(52.0 + (7.0 / 60.0) + (24.1234 / 3600.0), 6), $gps->position->latitude);
+    }
+
+    /**
+     * Verifies XMP decimal coordinate of exactly zero yields zero, not null.
+     * Kills LessThan mutant that changes ($numeric < 0.0) to ($numeric <= 0.0).
+     */
+    #[Test]
+    public function xmpDecimalCoordinateOfZeroYieldsZero(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '0.0',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertSame(0.0, $gps->position->latitude);
+    }
+
+    /**
+     * Verifies XMP decimal value applies the sign from coordinateSign(ref).
+     * Kills Multiplication mutant that changes ($numeric * $sign) to ($numeric / $sign).
+     */
+    #[Test]
+    public function xmpDecimalCoordinateAppliesCorrectSign(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '45.0',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'S',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        // S => sign = -1.0 => 45.0 * -1.0 = -45.0
+        self::assertSame(-45.0, $gps->position->latitude);
+    }
+
+    /**
+     * Verifies latitude exactly at +90 is valid.
+     * Kills GreaterThan mutant that changes ($coordinate > $limit) to ($coordinate >= $limit).
+     */
+    #[Test]
+    public function xmpLatitudeExactlyAt90IsValid(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '90.0',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertSame(90.0, $gps->position->latitude);
+    }
+
+    /**
+     * Verifies latitude exactly at -90 (S) is valid.
+     * Kills LessThan mutant that changes ($coordinate < -$limit) to ($coordinate <= -$limit).
+     */
+    #[Test]
+    public function xmpLatitudeExactlyAtMinus90IsValid(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '90.0',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'S',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertSame(-90.0, $gps->position->latitude);
+    }
+
+    /**
+     * Verifies longitude exactly at +180 (E) is valid.
+     * Kills GreaterThan and validateCoordinateRange mutants.
+     */
+    #[Test]
+    public function xmpLongitudeExactlyAt180IsValid(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLongitude', self::NS_EXIF)    => '180.0',
+            sprintf('{%s}GPSLongitudeRef', self::NS_EXIF) => 'E',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertSame(180.0, $gps->position->longitude);
+    }
+
+    /**
+     * Verifies longitude exactly at -180 (W) is valid.
+     * Kills LessThan mutant on lower-bound check.
+     */
+    #[Test]
+    public function xmpLongitudeExactlyAtMinus180IsValid(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLongitude', self::NS_EXIF)    => '180.0',
+            sprintf('{%s}GPSLongitudeRef', self::NS_EXIF) => 'W',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertSame(-180.0, $gps->position->longitude);
+    }
+
+    /**
+     * Verifies validateCoordinateRange uses 90 limit for latitude and 180 for longitude.
+     * Kills LogicalOrAllSubExprNegation mutant on isLatitude check and Identical mutant on 'S'.
+     */
+    #[Test]
+    public function xmpLongitudeAt100IsValidButLatitudeAt100IsNot(): void
+    {
+        // Longitude 100 with E ref should be valid (limit 180)
+        $xmpDocLon = new XmpDocument([
+            sprintf('{%s}GPSLongitude', self::NS_EXIF)    => '100.0',
+            sprintf('{%s}GPSLongitudeRef', self::NS_EXIF) => 'E',
+        ]);
+
+        $metadataLon = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDocLon,
+        );
+
+        $factory = new GpsFactory();
+        $gpsLon  = $factory->create($metadataLon);
+
+        self::assertNotNull($gpsLon->position);
+        self::assertSame(100.0, $gpsLon->position->longitude);
+
+        // Latitude 100 with N ref should be invalid (limit 90)
+        $xmpDocLat = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '100.0',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadataLat = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDocLat,
+        );
+
+        $gpsLat = $factory->create($metadataLat);
+
+        self::assertNull($gpsLat->position);
+    }
+
+    /**
+     * Verifies negative DMS minute component yields null.
+     * Kills LogicalOr mutant that changes || to && in negative component check.
+     */
+    #[Test]
+    public function xmpNegativeDmsMinuteComponentYieldsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52,-1,15',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->position);
+    }
+
+    /**
+     * Verifies negative DMS second component yields null.
+     * Kills LogicalOr mutant that changes || to && in negative component check.
+     */
+    #[Test]
+    public function xmpNegativeDmsSecondComponentYieldsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSLatitude', self::NS_EXIF)    => '52,31,-1',
+            sprintf('{%s}GPSLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->position);
+    }
+
+    /**
+     * Verifies XMP speed with miles per hour ref 'M' yields correct m/s conversion.
+     * Kills MatchArmRemoval mutant that removes 'M' arm from convertSpeedToMetresPerSecond.
+     */
+    #[Test]
+    public function xmpSpeedWithMilesRefYieldsMetresPerSecond(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSSpeed', self::NS_EXIF)    => '60.0',
+            sprintf('{%s}GPSSpeedRef', self::NS_EXIF) => 'M',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->movement);
+        self::assertSame(60.0 * 0.44704, $gps->movement->speedMs);
+    }
+
+    /**
+     * Verifies XMP speed with knots ref 'N' yields correct m/s conversion.
+     * Kills MatchArmRemoval mutant that removes 'N' arm from convertSpeedToMetresPerSecond.
+     */
+    #[Test]
+    public function xmpSpeedWithKnotsRefYieldsMetresPerSecond(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSSpeed', self::NS_EXIF)    => '20.0',
+            sprintf('{%s}GPSSpeedRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->movement);
+        self::assertSame(20.0 * 0.5144444444444444, $gps->movement->speedMs);
+    }
+
+    /**
+     * Verifies that EXIF-only satellites field makes hasAnyGpsData() return true.
+     * Kills ArrayItemRemoval mutant on satellites in measurement group.
+     */
+    #[Test]
+    public function satellitesOnlyExifDataIsNotNull(): void
+    {
+        $parsedExif = $this->parsedExif(
+            latRef: null,
+            lat: null,
+            lonRef: null,
+            lon: null,
+            altitudeRef: null,
+            altitude: null,
+            version: null,
+            satellites: '08',
+            status: null,
+            measureMode: null,
+            dop: null,
+            speedRef: null,
+            speedMs: null,
+            track: null,
+            mapDatum: null,
+            processingMethod: null,
+            areaInformation: null,
+            date: null,
+            time: null,
+            differential: null,
+            hPositioningError: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->measurement);
+        self::assertSame('08', $gps->measurement->satellites);
+    }
+
+    /**
+     * Verifies that EXIF-only speedRef field makes hasAnyGpsData() return true.
+     * Kills ArrayItemRemoval mutant that removes speedRef from movement group.
+     */
+    #[Test]
+    public function speedRefOnlyExifDataIsNotNull(): void
+    {
+        $parsedExif = $this->parsedExif(
+            latRef: null,
+            lat: null,
+            lonRef: null,
+            lon: null,
+            altitudeRef: null,
+            altitude: null,
+            version: null,
+            satellites: null,
+            status: null,
+            measureMode: null,
+            dop: null,
+            speedRef: GpsSpeedRef::KilometersPerHour,
+            speedMs: null,
+            track: null,
+            mapDatum: null,
+            processingMethod: null,
+            areaInformation: null,
+            date: null,
+            time: null,
+            differential: null,
+            hPositioningError: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->movement);
+        self::assertSame(GpsSpeedRef::KilometersPerHour, $gps->movement->speedRef);
+    }
+
+    /**
+     * Verifies that EXIF-only version field makes hasAnyGpsData() return true.
+     * Kills ArrayItemRemoval mutant that removes version from version group.
+     */
+    #[Test]
+    public function versionOnlyExifDataIsNotNull(): void
+    {
+        $parsedExif = $this->parsedExif(
+            latRef: null,
+            lat: null,
+            lonRef: null,
+            lon: null,
+            altitudeRef: null,
+            altitude: null,
+            version: '2.4.0.0',
+            satellites: null,
+            status: null,
+            measureMode: null,
+            dop: null,
+            speedRef: null,
+            speedMs: null,
+            track: null,
+            mapDatum: null,
+            processingMethod: null,
+            areaInformation: null,
+            date: null,
+            time: null,
+            differential: null,
+            hPositioningError: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertSame('2.4.0.0', $gps->version);
+    }
+
+    /**
+     * Verifies that XMP-only destLatRef field makes hasAnyGpsData() return true.
+     * Kills ArrayItemRemoval mutant that removes destLatRef from destination group.
+     */
+    #[Test]
+    public function destLatRefOnlyXmpDataIsNotNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDestLatitudeRef', self::NS_EXIF) => 'N',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->destination);
+        self::assertSame(GpsLatLonRef::North, $gps->destination->latitudeRef);
+    }
+
+    /**
+     * Verifies normalizeDate rejects dates with extra characters after the valid pattern.
+     * Kills PregMatchRemoveDollar mutants on both regex patterns.
+     */
+    #[Test]
+    public function normalizeDateRejectsDateWithTrailingCharacters(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDateStamp', self::NS_EXIF) => '2023:06:15 extra',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->timing);
+    }
+
+    /**
+     * Verifies normalizeDate rejects dates with extra characters before the valid pattern.
+     * Kills PregMatchRemoveCaret mutants on both regex patterns.
+     */
+    #[Test]
+    public function normalizeDateRejectsDateWithLeadingCharacters(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDateStamp', self::NS_EXIF) => 'x2023:06:15',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->timing);
+    }
+
+    /**
+     * Verifies normalizeDate rejects ISO dates with leading characters.
+     * Kills PregMatchRemoveCaret mutant on second regex pattern.
+     */
+    #[Test]
+    public function normalizeDateRejectsIsoDashDateWithLeadingCharacters(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDateStamp', self::NS_EXIF) => 'x2023-06-15',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->timing);
+    }
+
+    /**
+     * Verifies normalizeDate rejects ISO dates with trailing characters.
+     * Kills PregMatchRemoveDollar mutant on second regex pattern.
+     */
+    #[Test]
+    public function normalizeDateRejectsIsoDashDateWithTrailingCharacters(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDateStamp', self::NS_EXIF) => '2023-06-15 extra',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNull($gps->timing);
+    }
+
+    /**
+     * Verifies QuickTime GPS at zero latitude yields North ref.
+     * Kills GreaterThanOrEqualTo mutant that changes ($lat >= 0) to ($lat > 0).
+     */
+    #[Test]
+    public function quickTimeZeroLatitudeYieldsNorthRef(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.location.ISO6709' => '+00.0000+011.5678/',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertSame(GpsLatLonRef::North, $gps->position->latitudeRef);
+        self::assertEqualsWithDelta(0.0, $gps->position->latitude, 0.001);
+    }
+
+    /**
+     * Verifies QuickTime GPS at zero longitude yields East ref.
+     * Kills GreaterThanOrEqualTo mutant that changes ($lon >= 0) to ($lon > 0).
+     */
+    #[Test]
+    public function quickTimeZeroLongitudeYieldsEastRef(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.location.ISO6709' => '+48.1234+000.0000/',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertSame(GpsLatLonRef::East, $gps->position->longitudeRef);
+        self::assertEqualsWithDelta(0.0, $gps->position->longitude, 0.001);
+    }
+
+    /**
+     * Verifies QuickTime GPS at zero altitude yields AboveEllipsoidalSurface ref.
+     * Kills GreaterThanOrEqualTo mutant that changes ($alt >= 0) to ($alt > 0).
+     */
+    #[Test]
+    public function quickTimeZeroAltitudeYieldsAboveRef(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.location.ISO6709' => '+48.1234+011.5678+000.000/',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        self::assertSame(GpsAltitudeRef::AboveEllipsoidalSurface, $gps->position->altitudeRef);
+        self::assertEqualsWithDelta(0.0, $gps->position->altitude, 0.001);
+    }
+
+    /**
+     * Verifies XMP altitude without explicit ref defaults to above (ref 0).
+     * Kills IncrementInteger/DecrementInteger mutants on ($altRef ?? 0) and AssignCoalesce mutant.
+     */
+    #[Test]
+    public function xmpAltitudeWithoutRefDefaultsToAbove(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSAltitude', self::NS_EXIF) => '100.0',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        // Without ref, defaults to 0 (above) so altitude stays positive
+        self::assertSame(100.0, $gps->position->altitude);
+        self::assertNull($gps->position->altitudeRef);
+    }
+
+    /**
+     * Verifies EXIF altitudeRef is preserved even when XMP provides the altitude value.
+     * Kills AssignCoalesce mutant that changes ($altitudeRef ??= $altRefXmp) to ($altitudeRef = $altRefXmp).
+     */
+    #[Test]
+    public function exifAltitudeRefPreservedWhenXmpProvidesAltitude(): void
+    {
+        $parsedExif = $this->parsedExif(
+            latRef: null,
+            lat: null,
+            lonRef: null,
+            lon: null,
+            altitudeRef: GpsAltitudeRef::BelowSeaLevel,
+            altitude: null,
+            version: null,
+            satellites: null,
+            status: null,
+            measureMode: null,
+            dop: null,
+            speedRef: null,
+            speedMs: null,
+            track: null,
+            mapDatum: null,
+            processingMethod: null,
+            areaInformation: null,
+            date: null,
+            time: null,
+            differential: null,
+            hPositioningError: null,
+        );
+
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSAltitude', self::NS_EXIF)    => '50.0',
+            sprintf('{%s}GPSAltitudeRef', self::NS_EXIF) => '0',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        // EXIF altitudeRef (3 = below sea level) should be preserved, not overwritten by XMP (0)
+        self::assertSame(GpsAltitudeRef::BelowSeaLevel, $gps->position->altitudeRef);
+        // The XMP altitude should be negated because EXIF ref says "below"
+        self::assertSame(-50.0, $gps->position->altitude);
+    }
+
+    /**
+     * Verifies XMP track fallback is applied when EXIF track is null.
+     * Kills Identical mutant that flips ($trackRef === null) check.
+     */
+    #[Test]
+    public function xmpTrackFallbackAppliedWhenExifTrackIsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSTrack', self::NS_EXIF)    => '123.45',
+            sprintf('{%s}GPSTrackRef', self::NS_EXIF) => 'T',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->movement);
+        self::assertSame(123.45, $gps->movement->track);
+    }
+
+    /**
+     * Verifies XMP imgDirection fallback is applied when EXIF imgDir is null.
+     * Kills Identical mutant that flips ($imgDirRef === null) check.
+     */
+    #[Test]
+    public function xmpImgDirectionFallbackAppliedWhenExifImgDirIsNull(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSImgDirection', self::NS_EXIF)    => '270.0',
+            sprintf('{%s}GPSImgDirectionRef', self::NS_EXIF) => 'M',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->movement);
+        self::assertSame(270.0, $gps->movement->imageDirection);
+    }
+
+    /**
+     * Verifies XMP speedOriginalRef is set from XMP when EXIF is absent.
+     * Kills Identical mutant that flips ($speedOriginalRef === null) check.
+     */
+    #[Test]
+    public function xmpSpeedOriginalRefFallbackApplied(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSSpeed', self::NS_EXIF)    => '50.0',
+            sprintf('{%s}GPSSpeedRef', self::NS_EXIF) => 'K',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->movement);
+        self::assertSame(GpsSpeedRef::KilometersPerHour, $gps->movement->speedOriginalRef);
+        self::assertSame(50.0, $gps->movement->speedOriginal);
+    }
+
+    /**
+     * Verifies XMP destination bearing ref fallback is applied.
+     * Kills Identical mutant that flips ($destBearRef === null) check.
+     */
+    #[Test]
+    public function xmpDestBearingRefFallbackApplied(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDestBearing', self::NS_EXIF)    => '45.0',
+            sprintf('{%s}GPSDestBearingRef', self::NS_EXIF) => 'T',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->destination);
+        self::assertSame(45.0, $gps->destination->bearing);
+    }
+
+    /**
+     * Verifies XMP destination distance ref and value fallback is applied.
+     * Kills Identical mutants that flip ($destDistRef === null) and ($destDistOriginalRef === null).
+     */
+    #[Test]
+    public function xmpDestDistanceFallbackApplied(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDestDistance', self::NS_EXIF)    => '10.0',
+            sprintf('{%s}GPSDestDistanceRef', self::NS_EXIF) => 'K',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->destination);
+        self::assertSame(10.0 * 1000.0, $gps->destination->distanceMetres);
+        self::assertSame(10.0, $gps->destination->distanceOriginal);
+    }
+
+    /**
+     * Verifies that combineDateAndTime produces a timestamp when both date and time are present.
+     * Kills Identical mutant that flips ($date !== null) in combineDateAndTime.
+     */
+    #[Test]
+    public function combineDateAndTimeProducesTimestamp(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDateStamp', self::NS_EXIF) => '2023-06-15',
+            sprintf('{%s}GPSTimeStamp', self::NS_EXIF) => '14:30:00',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->timing);
+        self::assertInstanceOf(DateTimeImmutable::class, $gps->timing->timestamp);
+        self::assertSame('2023-06-15T14:30:00+00:00', $gps->timing->timestamp->format('Y-m-d\TH:i:sP'));
+    }
+
+    /**
+     * Verifies that combineDateAndTime with empty time string yields null timestamp.
+     * Kills the Identical mutant on ($time === '') check in combineDateAndTime.
+     */
+    #[Test]
+    public function combineDateAndTimeWithEmptyTimeYieldsNullTimestamp(): void
+    {
+        $xmpDoc = new XmpDocument([
+            sprintf('{%s}GPSDateStamp', self::NS_EXIF) => '2023-06-15',
+            sprintf('{%s}GPSTimeStamp', self::NS_EXIF) => ' ',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->timing);
+        self::assertSame('2023-06-15', $gps->timing->date);
+        self::assertNull($gps->timing->timestamp);
+    }
+
+    /**
+     * Verifies EXIF with latitude but null longitude triggers QuickTime fallback.
+     * Kills LogicalOr mutant that changes || to && in the position null check.
+     */
+    #[Test]
+    public function exifWithLatitudeOnlyTriggersQuickTimeFallback(): void
+    {
+        $parsedExif = $this->parsedExif(
+            latRef: GpsLatLonRef::North,
+            lat: 52.520008,
+            lonRef: null,
+            lon: null,
+            altitudeRef: null,
+            altitude: null,
+            version: null,
+            satellites: null,
+            status: null,
+            measureMode: null,
+            dop: null,
+            speedRef: null,
+            speedMs: null,
+            track: null,
+            mapDatum: null,
+            processingMethod: null,
+            areaInformation: null,
+            date: null,
+            time: null,
+            differential: null,
+            hPositioningError: null,
+        );
+
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.location.ISO6709' => '+48.1372+011.5755/',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new GpsFactory();
+        $gps     = $factory->create($metadata);
+
+        self::assertNotNull($gps->position);
+        // Should use QuickTime position since EXIF longitude is null
+        self::assertEqualsWithDelta(48.1372, $gps->position->latitude, 0.001);
+        self::assertEqualsWithDelta(11.5755, $gps->position->longitude, 0.001);
+    }
+
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     private function parsedExif(
