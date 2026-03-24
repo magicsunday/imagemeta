@@ -48,26 +48,27 @@ ImageMeta is a PHP library for read-only metadata extraction from image and medi
 | Output   | Raw `Model\Metadata` + typed `Value\StructuredMetadata` |
 
 ## ❓ What is this?
-ImageMeta reads metadata from supported containers and returns a unified, typed PHP model. It is designed for integration scenarios that need predictable parsing behavior across EXIF, XMP, IPTC, QuickTime, and RIFF INFO metadata sources.
+ImageMeta reads metadata from supported containers and returns both raw parsed documents and a typed, structured aggregate (`StructuredMetadata`). The structured output normalizes camera, exposure, GPS, temporal, and lens data across EXIF, XMP, IPTC, QuickTime, and RIFF INFO sources via automatic fallback chains — applications get complete metadata without knowing which source holds it. Vendor maker notes (Apple, Samsung, DJI) and ICC color profiles are decoded where present.
 
 ## 🎯 Why does this exist?
-Many PHP applications need one consistent metadata API across modern container formats and metadata families. Typical standard functions such as `exif_read_data()` are EXIF-focused and do not provide a unified, typed model across JPEG, ISO BMFF, TIFF-based, and RIFF/AVI inputs. This project exists to close that integration gap with deterministic parser behavior.
+PHP's built-in `exif_read_data()` is limited to JPEG/TIFF EXIF tags and returns untyped arrays. It cannot read ISO BMFF containers (HEIC, AVIF, MOV, MP4), has no XMP/IPTC/QuickTime support, and offers no structured output model. ImageMeta closes that gap: one API, five container families, six metadata sources, typed value objects with automatic cross-source fallback.
 
 ## 🧭 Scope & Non-Goals
 
 **In scope:**
 
-- Local file parsing via signature-based container detection.
-- Extraction and merge of supported metadata sources: EXIF, XMP, IPTC, QuickTime, and RIFF INFO metadata.
-- Exposure of both raw and structured output models.
-- Defensive parsing with explicit bounds checks and parser limits.
+- Local file parsing via signature-based container detection (JPEG, ISO BMFF, TIFF, JXL, RIFF/AVI).
+- Extraction and merge of metadata sources: EXIF, XMP, IPTC, QuickTime, RIFF INFO, and ICC profiles.
+- Typed structured output (`StructuredMetadata`) with automatic EXIF → XMP → QuickTime → RIFF fallback chains.
+- Vendor maker-note decoding (Apple, Samsung, DJI).
+- MPF (Multi-Picture Format) document parsing.
+- Defensive streaming parser with explicit bounds checks and configurable limits.
 
 **Out of scope:**
 
 - Writing, editing, or re-serializing metadata.
 - Pixel/media decoding, rendering, or transcoding.
 - Network-based metadata resolution.
-- JPEG XL codestream/pixel decoding or rendering.
 - Guaranteed support for every proprietary maker-note dialect.
 
 ## 🧩 Supported formats / features
