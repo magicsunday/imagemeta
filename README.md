@@ -1,7 +1,7 @@
 <h1 align="center">ImageMeta: Metadata Parser for PHP</h1>
 
 <p align="center">
-  Read-only metadata extraction for JPEG, ISO BMFF, and TIFF-based files in PHP.
+  Read-only metadata extraction for JPEG, ISO BMFF, TIFF-based, and RIFF/AVI files in PHP.
 </p>
 
 <!-- Row 1: CI / Quality badges -->
@@ -38,7 +38,7 @@
 ---
 
 ## 📌 Overview
-ImageMeta is a PHP library for read-only metadata extraction from image and media containers. It parses metadata from JPEG, ISO BMFF (for example HEIC, AVIF, MOV, MP4), TIFF-based files, and JPEG XL containers. The library exposes both low-level parsed documents and a typed structured aggregate for application-level usage. Parsing is defensive by design, with explicit bounds checks and strict validation.
+ImageMeta is a PHP library for read-only metadata extraction from image and media containers. It parses metadata from JPEG, ISO BMFF (for example HEIC, AVIF, MOV, MP4), TIFF-based files, JPEG XL containers, and RIFF/AVI video files. The library exposes both low-level parsed documents and a typed structured aggregate for application-level usage. Parsing is defensive by design, with explicit bounds checks and strict validation.
 
 | Key      | Value                                                   |
 |----------|---------------------------------------------------------|
@@ -48,10 +48,10 @@ ImageMeta is a PHP library for read-only metadata extraction from image and medi
 | Output   | Raw `Model\Metadata` + typed `Value\StructuredMetadata` |
 
 ## ❓ What is this?
-ImageMeta reads metadata from supported containers and returns a unified, typed PHP model. It is designed for integration scenarios that need predictable parsing behavior across EXIF, XMP, IPTC, and QuickTime metadata sources.
+ImageMeta reads metadata from supported containers and returns a unified, typed PHP model. It is designed for integration scenarios that need predictable parsing behavior across EXIF, XMP, IPTC, QuickTime, and RIFF INFO metadata sources.
 
 ## 🎯 Why does this exist?
-Many PHP applications need one consistent metadata API across modern container formats and metadata families. Typical standard functions such as `exif_read_data()` are EXIF-focused and do not provide a unified, typed model across JPEG, ISO BMFF, and TIFF-based inputs. This project exists to close that integration gap with deterministic parser behavior.
+Many PHP applications need one consistent metadata API across modern container formats and metadata families. Typical standard functions such as `exif_read_data()` are EXIF-focused and do not provide a unified, typed model across JPEG, ISO BMFF, TIFF-based, and RIFF/AVI inputs. This project exists to close that integration gap with deterministic parser behavior.
 
 ## 🧭 Scope & Non-Goals
 
@@ -74,12 +74,13 @@ Many PHP applications need one consistent metadata API across modern container f
 
 | Area                               | Status                                                                  |
 |------------------------------------|-------------------------------------------------------------------------|
-| Containers                         | `JPEG`, `ISO BMFF`, `TIFF`, `JXL`                                       |
+| Containers                         | `JPEG`, `ISO BMFF`, `TIFF`, `JXL`, `RIFF/AVI`                           |
 | JXL                                | Container parsing: EXIF (`Exif` box) + XMP (`xml ` box) extraction      |
 | EXIF versions (capability mapping) | `1.0`, `1.1`, `2.0`, `2.1`, `2.2`, `2.21`, `2.3`, `2.31`, `2.32`, `3.0`, `3.1` |
 | XMP                                | RDF/XML parsing via `XMLReader`                                         |
 | IPTC                               | IIM extraction from JPEG APP13                                          |
 | QuickTime metadata                 | Extracted from ISO BMFF structures                                      |
+| RIFF/AVI                           | INFO chunks, `_PMX` (XMP), `LIST 'exif'`, `strd` TIFF blobs, `avih` header |
 | MPF                                | CIPA DC-007-2025, 3rd Edition (all MP type codes incl. Gain Map)        |
 | JPEG auxiliary payloads            | ICC profile, MPF, FlashPix streams, EXIF audio streams                  |
 | Output model                       | `MagicSunday\ImageMeta\Model\Metadata` + `->structured()`               |
@@ -89,6 +90,7 @@ Notes:
 - Container support is signature-based; there is no static extension whitelist.
 - File-level support depends on whether the input actually contains parseable metadata blocks.
 - For JXL, the current scope is metadata-box extraction (EXIF/XMP); no pixel/codestream decode and no IPTC/QuickTime extraction path.
+- For RIFF/AVI, the parser extracts INFO metadata, XMP (`_PMX`), RIFF-native EXIF sub-chunks, embedded TIFF/EXIF blobs from `strd`, and the AVI main header. Vendor-specific JUNK-chunk maker notes are not yet supported.
 
 ## 🚀 Usage
 
@@ -130,6 +132,26 @@ $metadata = MetadataReader::createDefault()->read('/path/to/image.jxl');
 // JXL currently exposes metadata carried in Exif/xml boxes.
 $exif = $metadata->exifDoc;
 $xmp = $metadata->xmpDoc;
+```
+
+AVI example:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use MagicSunday\ImageMeta\MetadataReader;
+
+$metadata = MetadataReader::createDefault()->read('/path/to/video.avi');
+
+// AVI exposes INFO chunks, RIFF-native EXIF fields, XMP, and embedded TIFF/EXIF blobs.
+$info      = $metadata->riffInfo;
+$title     = $info?->get('INAM');
+$software  = $info?->get('ISFT');
+$aviHeader = $metadata->riffAviHeader;
+$width     = $aviHeader?->width;
+$height    = $aviHeader?->height;
 ```
 
 ## 🛡️ Error handling & guarantees
