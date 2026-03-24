@@ -42,6 +42,8 @@ use MagicSunday\ImageMeta\Factory\Structured\TemporalFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Temporal;
@@ -93,6 +95,8 @@ use function strlen;
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(QuickTimeLookup::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(RiffExifChunk::class)]
+#[UsesClass(RiffInfo::class)]
 #[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(Temporal::class)]
@@ -196,11 +200,11 @@ final class TemporalFactoryTest extends TestCase
             ),
         );
 
-        // "9" = 0.9s → right-padded to "900"
+        // "9" = 0.9s -> right-padded to "900"
         self::assertSame('900', $temporal->subSecTime);
-        // "12" = 0.12s → right-padded to "120"
+        // "12" = 0.12s -> right-padded to "120"
         self::assertSame('120', $temporal->subSecTimeOriginal);
-        // "123" = 0.123s → unchanged
+        // "123" = 0.123s -> unchanged
         self::assertSame('123', $temporal->subSecTimeDigitized);
     }
 
@@ -597,19 +601,589 @@ final class TemporalFactoryTest extends TestCase
         self::assertNull($temporal->tz);
     }
 
+    /**
+     * Provides EXIF create timestamp and distinct XMP create timestamp.
+     * Verifies EXIF create date takes precedence over XMP create date.
+     */
+    #[Test]
+    public function exifCreateTakesPrecedenceOverXmpCreate(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                create: new DateTimeImmutable('2023-01-01T10:00:00+00:00'),
+            ),
+            xmpDoc: new XmpDocument([
+                '{http://ns.adobe.com/xap/1.0/}CreateDate' => '2024-06-15T14:30:00+02:00',
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2023-01-01', $temporal->create->format('Y-m-d'));
+    }
+
+    /**
+     * Provides no EXIF create but distinct XMP and QuickTime create timestamps.
+     * Verifies XMP create date takes precedence over QuickTime create date.
+     */
+    #[Test]
+    public function xmpCreateTakesPrecedenceOverQuickTimeCreate(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(),
+            quickTime: new QuickTimeMeta([
+                'CreationDate' => '2024-07-20T12:00:00+00:00',
+            ]),
+            xmpDoc: new XmpDocument([
+                '{http://ns.adobe.com/xap/1.0/}CreateDate' => '2023-03-15T08:00:00+00:00',
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2023-03-15', $temporal->create->format('Y-m-d'));
+    }
+
+    /**
+     * Provides no EXIF or XMP create but distinct QuickTime string and Photoshop DateCreated.
+     * Verifies QuickTime create date takes precedence over XMP photoshop:DateCreated.
+     */
+    #[Test]
+    public function quickTimeCreateTakesPrecedenceOverXmpDateCreated(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(),
+            quickTime: new QuickTimeMeta([
+                'CreationDate' => '2023-05-10T09:00:00+00:00',
+            ]),
+            xmpDoc: new XmpDocument([
+                '{http://ns.adobe.com/photoshop/1.0/}DateCreated' => '2022-01-01T06:00:00+00:00',
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2023-05-10', $temporal->create->format('Y-m-d'));
+    }
+
+    /**
+     * Provides only XMP photoshop:DateCreated without any other create source.
+     * Verifies it is used as the last-resort create date for the chain.
+     */
+    #[Test]
+    public function xmpDateCreatedUsedAsLastResortCreateDate(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(),
+            xmpDoc: new XmpDocument([
+                '{http://ns.adobe.com/photoshop/1.0/}DateCreated' => '2022-11-20T15:00:00+01:00',
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2022-11-20', $temporal->create->format('Y-m-d'));
+    }
+
+    /**
+     * Provides EXIF modify timestamp and distinct XMP modify timestamp.
+     * Verifies EXIF modify date takes precedence over XMP modify date.
+     */
+    #[Test]
+    public function exifModifyTakesPrecedenceOverXmpModify(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                modify: new DateTimeImmutable('2023-02-01T11:00:00+00:00'),
+            ),
+            xmpDoc: new XmpDocument([
+                '{http://ns.adobe.com/xap/1.0/}ModifyDate' => '2024-08-20T18:00:00+02:00',
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
+        self::assertSame('2023-02-01', $temporal->modify->format('Y-m-d'));
+    }
+
+    /**
+     * Provides no EXIF modify but distinct XMP and QuickTime modify timestamps.
+     * Verifies XMP modify date takes precedence over QuickTime modify date.
+     */
+    #[Test]
+    public function xmpModifyTakesPrecedenceOverQuickTimeModify(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(),
+            quickTime: new QuickTimeMeta([
+                'ModifyDate' => '2024-09-15T16:00:00+00:00',
+            ]),
+            xmpDoc: new XmpDocument([
+                '{http://ns.adobe.com/xap/1.0/}ModifyDate' => '2023-04-01T09:00:00+00:00',
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
+        self::assertSame('2023-04-01', $temporal->modify->format('Y-m-d'));
+    }
+
+    /**
+     * Provides a RIFF INFO ICRD date without any other create date sources.
+     * Verifies the factory falls back to RIFF ICRD for the create date.
+     */
+    #[Test]
+    public function fallsBackToRiffIcrdForCreateDate(): void
+    {
+        $temporal = $this->createTemporal(
+            riffInfo: new RiffInfo(['ICRD' => '2023-08-10T12:00:00']),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2023-08-10', $temporal->create->format('Y-m-d'));
+    }
+
+    /**
+     * Provides a RIFF EXIF etim date without any other create date sources.
+     * Verifies the factory falls back to RIFF EXIF timeCreated for the create date.
+     */
+    #[Test]
+    public function fallsBackToRiffExifTimeCreatedForCreateDate(): void
+    {
+        $temporal = $this->createTemporal(
+            riffExif: new RiffExifChunk(timeCreated: '2023-09-05T14:30:00'),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2023-09-05', $temporal->create->format('Y-m-d'));
+    }
+
+    /**
+     * Provides a RIFF INFO IDIT date without any RIFF EXIF or ICRD.
+     * Verifies the factory uses IDIT as the last-resort RIFF date fallback.
+     */
+    #[Test]
+    public function fallsBackToRiffIditForCreateDate(): void
+    {
+        $temporal = $this->createTemporal(
+            riffInfo: new RiffInfo(['IDIT' => '2023-10-20T10:00:00']),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2023-10-20', $temporal->create->format('Y-m-d'));
+    }
+
+    /**
+     * Provides EXIF original timestamp with OffsetTimeOriginal.
+     * Verifies the original field has the timezone applied correctly.
+     */
+    #[Test]
+    public function appliesTimezoneToOriginalTimestamp(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                original: new DateTimeImmutable('2023-06-15T14:00:00+00:00'),
+                offsetTimeOriginal: '+05:00',
+            ),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->original);
+        self::assertSame('+05:00', $temporal->original->getTimezone()->getName());
+    }
+
+    /**
+     * Provides EXIF original timestamp and EXIF create timestamp.
+     * Verifies the original field preserves the EXIF original, not the create date.
+     */
+    #[Test]
+    public function originalPreservesExifOriginalOverCreateDate(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                create: new DateTimeImmutable('2023-01-01T08:00:00+00:00'),
+                original: new DateTimeImmutable('2023-06-15T14:00:00+00:00'),
+                offsetTimeOriginal: '+02:00',
+            ),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->original);
+        // Original should use the EXIF original, not fall back to create
+        self::assertSame('2023-06-15', $temporal->original->format('Y-m-d'));
+    }
+
+    /**
+     * Provides subSecTimeOriginal but no subSecTime.
+     * Verifies subSecTime falls back to subSecOriginal before subSecTimeDigitized.
+     */
+    #[Test]
+    public function subSecTimeFallsBackToOriginalBeforeDigitized(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                subSecTimeOriginal: '123',
+                subSecTimeDigitized: '456',
+            ),
+        );
+
+        // subSecTime is null -> fallback is subSecOriginal (123) not subSecTimeDigitized (456)
+        self::assertSame('123', $temporal->subSecTime);
+    }
+
+    /**
+     * Provides subSecTimeDigitized but no subSecTime or subSecTimeOriginal.
+     * Verifies subSecTime falls back to subSecTimeDigitized when original is absent.
+     */
+    #[Test]
+    public function subSecTimeFallsBackToDigitizedWhenOriginalAbsent(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                subSecTimeDigitized: '789',
+            ),
+        );
+
+        self::assertSame('789', $temporal->subSecTime);
+    }
+
+    /**
+     * Provides EXIF original with OffsetTimeOriginal but no OffsetTime.
+     * Verifies tzSource is set to 'OffsetTimeOriginal' when all conditions are met.
+     */
+    #[Test]
+    public function tzSourceSetToOffsetTimeOriginalWhenAllConditionsMet(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                original: new DateTimeImmutable('2023-06-15T14:00:00+00:00'),
+                offsetTimeOriginal: '+03:00',
+            ),
+        );
+
+        self::assertSame('OffsetTimeOriginal', $temporal->tzSource);
+    }
+
+    /**
+     * Provides no EXIF offset values and no QuickTime timezone.
+     * Verifies tzSource is null when no timezone can be derived.
+     */
+    #[Test]
+    public function tzSourceNullWhenNoTimezoneAvailable(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                create: new DateTimeImmutable('2023-06-15T14:00:00+00:00'),
+            ),
+        );
+
+        self::assertNull($temporal->tz);
+        self::assertNull($temporal->tzSource);
+    }
+
+    /**
+     * Provides EXIF with empty DateTimeOriginal raw string and no OffsetTimeOriginal.
+     * Verifies OffsetTimeDigitized is used as offset fallback.
+     */
+    #[Test]
+    public function offsetFallsBackToDigitizedWhenOriginalRawEmpty(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExifFromEntries(
+                exifEntries: [
+                    ExifTag::DATETIME_DIGITIZED => new IfdEntry(
+                        ExifTag::DATETIME_DIGITIZED,
+                        2,
+                        20,
+                        '2023:06:15 14:00:00',
+                    ),
+                    ExifTag::OFFSET_TIME_DIGITIZED => new IfdEntry(
+                        ExifTag::OFFSET_TIME_DIGITIZED,
+                        2,
+                        6,
+                        '+04:00',
+                    ),
+                ],
+            ),
+        );
+
+        // The offset should have been resolved from offsetTimeDigitized
+        self::assertSame('+04:00', $temporal->offsetTimeDigitized);
+    }
+
+    /**
+     * Provides EXIF with non-empty DateTimeOriginal raw string but no OffsetTimeOriginal.
+     * Verifies OffsetTimeDigitized is NOT used when DateTimeOriginal raw is present.
+     */
+    #[Test]
+    public function offsetDoesNotFallToDigitizedWhenOriginalRawPresent(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                original: new DateTimeImmutable('2023-06-15T14:00:00+00:00'),
+                offsetTimeDigitized: '+04:00',
+            ),
+        );
+
+        // offsetTimeOriginal is null, but dateTimeOriginalRaw is non-empty,
+        // so it should NOT fall back to offsetTimeDigitized for tz
+        self::assertNull($temporal->tz);
+    }
+
+    /**
+     * Provides EXIF with empty DateTimeOriginal and DateTimeDigitized raw strings.
+     * Verifies the offset falls back to OffsetTime as last resort.
+     */
+    #[Test]
+    public function offsetFallsBackToOffsetTimeWhenBothRawStringsEmpty(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExifFromEntries(
+                exifEntries: [
+                    ExifTag::OFFSET_TIME => new IfdEntry(
+                        ExifTag::OFFSET_TIME,
+                        2,
+                        6,
+                        '+06:00',
+                    ),
+                ],
+            ),
+        );
+
+        // Both dateTimeOriginalRaw and dateTimeDigitizedRaw are null/empty,
+        // and offset is null -> falls to offsetTime
+        self::assertSame('+06:00', $temporal->offsetTime);
+    }
+
+    /**
+     * Provides EXIF with non-empty DateTimeDigitized raw but empty DateTimeOriginal.
+     * Verifies offset does NOT fall to OffsetTime when DateTimeDigitized raw is non-empty.
+     */
+    #[Test]
+    public function offsetDoesNotFallToOffsetTimeWhenDigitizedRawPresent(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExifFromEntries(
+                exifEntries: [
+                    ExifTag::DATETIME_DIGITIZED => new IfdEntry(
+                        ExifTag::DATETIME_DIGITIZED,
+                        2,
+                        20,
+                        '2023:06:15 14:00:00',
+                    ),
+                    ExifTag::OFFSET_TIME => new IfdEntry(
+                        ExifTag::OFFSET_TIME,
+                        2,
+                        6,
+                        '+06:00',
+                    ),
+                ],
+            ),
+        );
+
+        // dateTimeDigitizedRaw is non-empty -> should NOT fall to OffsetTime
+        // tz should be null because no valid offset was resolved for original
+        self::assertNull($temporal->tz);
+    }
+
+    /**
+     * Provides EXIF with non-empty DateTimeOriginal raw but empty Digitized raw.
+     * Verifies the offset does NOT fall to OffsetTime when original raw is present.
+     */
+    #[Test]
+    public function offsetDoesNotFallToOffsetTimeWhenOriginalRawPresent(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExifFromEntries(
+                exifEntries: [
+                    ExifTag::DATETIME_ORIGINAL => new IfdEntry(
+                        ExifTag::DATETIME_ORIGINAL,
+                        2,
+                        20,
+                        '2023:06:15 14:00:00',
+                    ),
+                    ExifTag::OFFSET_TIME => new IfdEntry(
+                        ExifTag::OFFSET_TIME,
+                        2,
+                        6,
+                        '+07:00',
+                    ),
+                ],
+            ),
+        );
+
+        // dateTimeOriginalRaw is non-empty -> should NOT fall to OffsetTime
+        self::assertNull($temporal->tz);
+    }
+
+    /**
+     * Provides EXIF with valid OffsetTimeOriginal and original timestamp.
+     * Verifies the timezone is applied to the original timestamp in originalTimestampComponents.
+     */
+    #[Test]
+    public function originalTimestampGetsTimezoneApplied(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                original: new DateTimeImmutable('2023-06-15T14:00:00+00:00'),
+                offsetTimeOriginal: '+09:00',
+            ),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->original);
+        self::assertSame('+09:00', $temporal->original->getTimezone()->getName());
+        self::assertInstanceOf(DateTimeZone::class, $temporal->tz);
+    }
+
+    /**
+     * Provides a whitespace-only EXIF date/time string.
+     * Verifies the factory treats it as empty (tests dateTimeStringEmpty trim behavior).
+     */
+    #[Test]
+    public function whitespaceDateTimeStringTreatedAsEmpty(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExifFromEntries(
+                ifd0Entries: [
+                    ExifTag::DATETIME => new IfdEntry(
+                        ExifTag::DATETIME,
+                        2,
+                        20,
+                        '   ',
+                    ),
+                ],
+            ),
+        );
+
+        // A whitespace-only date string should be treated as missing
+        self::assertNull($temporal->modify);
+    }
+
+    /**
+     * Provides a whitespace-padded offset time string in EXIF.
+     * Verifies the factory trims it before using it as a timezone offset.
+     */
+    #[Test]
+    public function trimsWhitespacePaddedOffsetTimeString(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                original: new DateTimeImmutable('2023-06-15T14:00:00+00:00'),
+                offsetTimeOriginal: ' +02:00 ',
+            ),
+        );
+
+        self::assertInstanceOf(DateTimeZone::class, $temporal->tz);
+        self::assertSame('+02:00', $temporal->tz->getName());
+    }
+
+    /**
+     * Provides a known Mac-epoch timestamp and verifies the exact Unix date conversion.
+     * Mac epoch is 1904-01-01; the constant offset is exactly 2,082,844,800 seconds.
+     */
+    #[Test]
+    public function macEpochConversionUsesExactOffset(): void
+    {
+        // 2,082,844,800 seconds after Mac epoch (1904-01-01) = Unix epoch (1970-01-01)
+        $temporal = $this->createTemporal(
+            quickTime: new QuickTimeMeta([
+                QuickTimeMeta::CREATE_DATE_KEY => 2_082_844_800,
+            ]),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('1970-01-01T00:00:00+00:00', $temporal->create->format('c'));
+    }
+
+    /**
+     * Provides xmpDoc directly on Metadata, not via selectiveXmpDocument().
+     * Verifies that xmpDoc takes precedence over selectiveXmpDocument() in the coalesce.
+     */
+    #[Test]
+    public function xmpDocTakesPrecedenceOverSelectiveXmpDocument(): void
+    {
+        $xmpDoc = new XmpDocument([
+            '{http://ns.adobe.com/xap/1.0/}CreateDate' => '2023-05-05T10:00:00+00:00',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $temporal = (new TemporalFactory())->create($metadata);
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
+        self::assertSame('2023-05-05', $temporal->create->format('Y-m-d'));
+    }
+
+    /**
+     * Provides EXIF original without any offset, and no create fallback.
+     * Verifies the original field is used directly (without tz) and not overridden by create.
+     */
+    #[Test]
+    public function originalWithoutTimezoneIsPreservedWhenCreateIsNull(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExif(
+                original: new DateTimeImmutable('2023-06-15T14:00:00+00:00'),
+            ),
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $temporal->original);
+        self::assertSame('2023-06-15', $temporal->original->format('Y-m-d'));
+        // create should be null since only original was provided
+        self::assertNull($temporal->create);
+    }
+
+    /**
+     * Provides EXIF with whitespace-only DateTimeOriginal and DateTimeDigitized.
+     * Verifies both are treated as empty, allowing offset to fall through to OffsetTime.
+     */
+    #[Test]
+    public function whitespaceOnlyOriginalAndDigitizedRawAllowOffsetTimeFallback(): void
+    {
+        $temporal = $this->createTemporal(
+            exifDoc: $this->parsedExifFromEntries(
+                exifEntries: [
+                    ExifTag::DATETIME_ORIGINAL => new IfdEntry(
+                        ExifTag::DATETIME_ORIGINAL,
+                        2,
+                        20,
+                        '   ',
+                    ),
+                    ExifTag::DATETIME_DIGITIZED => new IfdEntry(
+                        ExifTag::DATETIME_DIGITIZED,
+                        2,
+                        20,
+                        '   ',
+                    ),
+                    ExifTag::OFFSET_TIME => new IfdEntry(
+                        ExifTag::OFFSET_TIME,
+                        2,
+                        6,
+                        '+08:00',
+                    ),
+                ],
+            ),
+        );
+
+        // Both original and digitized raw are whitespace-only (treated as empty),
+        // so offset cascades to OffsetTime
+        self::assertInstanceOf(DateTimeZone::class, $temporal->tz);
+        self::assertSame('+08:00', $temporal->tz->getName());
+    }
+
     private function createTemporal(
         ?ParsedExif $exifDoc = null,
         ?QuickTimeMeta $quickTime = null,
         ?XmpDocument $xmpDoc = null,
+        ?RiffInfo $riffInfo = null,
+        ?RiffExifChunk $riffExif = null,
     ): Temporal {
         $metadata = new Metadata(
             exifBlobs: [],
             quickTime: $quickTime,
             exifDoc: $exifDoc,
             xmpDoc: $xmpDoc,
+            riffInfo: $riffInfo,
+            riffExif: $riffExif,
         );
 
-        return new TemporalFactory()->create($metadata);
+        return (new TemporalFactory())->create($metadata);
     }
 
     /**
