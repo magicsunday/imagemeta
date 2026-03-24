@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Factory\Structured;
 
 use Closure;
+use MagicSunday\ImageMeta\Contract\FlashPixParserInterface;
 use MagicSunday\ImageMeta\Contract\IccParserInterface;
 use MagicSunday\ImageMeta\Core\Util\DateTimeUtil;
 use MagicSunday\ImageMeta\Core\Util\StringUtil;
@@ -52,6 +53,7 @@ use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
+use MagicSunday\ImageMeta\Model\FlashPix\FlashPixSummaryData;
 use MagicSunday\ImageMeta\Model\Icc\IccProfile;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -83,11 +85,13 @@ use MagicSunday\ImageMeta\Value\CreatorContact;
 use MagicSunday\ImageMeta\Value\DepthMap;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
+use MagicSunday\ImageMeta\Value\Enum\RegionType;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\ExposureAdjustments;
 use MagicSunday\ImageMeta\Value\ExposureSettings;
 use MagicSunday\ImageMeta\Value\File;
 use MagicSunday\ImageMeta\Value\FlashPix;
+use MagicSunday\ImageMeta\Value\FlashPixSummaryInfo;
 use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\HdrGainMap;
@@ -103,6 +107,7 @@ use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
 use MagicSunday\ImageMeta\Value\Provenance;
+use MagicSunday\ImageMeta\Value\Region;
 use MagicSunday\ImageMeta\Value\RegionCollection;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
@@ -249,6 +254,10 @@ use function strlen;
 #[UsesClass(UserComment::class)]
 #[UsesClass(WhiteBalanceDetails::class)]
 #[UsesClass(Xmp::class)]
+#[UsesClass(Region::class)]
+#[UsesClass(RegionType::class)]
+#[UsesClass(FlashPixSummaryInfo::class)]
+#[UsesClass(FlashPixSummaryData::class)]
 final class ValueFactoryTest extends TestCase
 {
     /**
@@ -589,6 +598,479 @@ XML;
         self::assertNotContains('createMediaComponentMap', $methods);
         self::assertNotContains('createXmpComponentMap', $methods);
         self::assertNotContains('createComponentMap', $methods);
+    }
+
+    /**
+     * Verifies that the standards profile returns 'unknown' when no EXIF data supplies a profile.
+     * Kills mutant 920: Coalesce reversal on exifProfile ?? 'unknown'.
+     */
+    #[Test]
+    public function standardsProfileDefaultsToUnknownWithoutExif(): void
+    {
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertSame('unknown', $components['standards']->profile);
+    }
+
+    /**
+     * Verifies the Video hdr field defaults to false when no QuickTime data provides hdrFormat.
+     * Kills mutants 922-923: FalseValue and Coalesce on hdr default.
+     */
+    #[Test]
+    public function videoHdrDefaultsToFalseWithoutQuickTime(): void
+    {
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertFalse($components['video']->hdr);
+    }
+
+    /**
+     * Verifies XMP flat keywords are extracted from dc:subject and hierarchical keywords from lr:hierarchicalSubject.
+     * Kills mutants 924-926: Coalesce reversals and Ternary swap on keyword fields.
+     */
+    #[Test]
+    public function extractsXmpFlatAndHierarchicalKeywords(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:lr="http://ns.adobe.com/lightroom/1.0/">
+  <rdf:Description>
+    <dc:subject>
+      <rdf:Bag>
+        <rdf:li>nature</rdf:li>
+        <rdf:li>landscape</rdf:li>
+      </rdf:Bag>
+    </dc:subject>
+    <lr:hierarchicalSubject>
+      <rdf:Bag>
+        <rdf:li>Places|Europe|Germany</rdf:li>
+      </rdf:Bag>
+    </lr:hierarchicalSubject>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: (new XmpParser())->parse($xml),
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertSame(['nature', 'landscape'], $components['keywords']->flat);
+        self::assertSame(['Places|Europe|Germany'], $components['keywords']->hierarchical);
+    }
+
+    /**
+     * Verifies isPrimaryInBurst defaults to false and panoramaId is null when no QuickTime data.
+     * Kills mutants 927-929: FalseValue, Coalesce, and Ternary on related assets fields.
+     */
+    #[Test]
+    public function relatedAssetsDefaultsWithoutQuickTime(): void
+    {
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertFalse($components['related']->isPrimaryInBurst);
+        self::assertNull($components['related']->panoramaId);
+    }
+
+    /**
+     * Verifies panoramaId is set to 'panorama' when the XMP panorama flag is true.
+     * Kills mutant 929: Ternary swap on panoramaFlag === true ? 'panorama' : null.
+     */
+    #[Test]
+    public function setsPanoramaIdWhenXmpPanoramaFlagIsTrue(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:GPano="http://ns.google.com/photos/1.0/panorama/">
+  <rdf:Description GPano:UsePanoramaViewer="True" />
+</rdf:RDF>
+XML;
+
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: (new XmpParser())->parse($xml),
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertSame('panorama', $components['related']->panoramaId);
+    }
+
+    /**
+     * Verifies hasThumbnail defaults to false when no EXIF document is available.
+     * Kills mutants 930-931: FalseValue and Coalesce on hasThumbnail default.
+     */
+    #[Test]
+    public function thumbnailHasThumbnailDefaultsToFalseWithoutExif(): void
+    {
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertFalse($components['thumbnail']->hasThumbnail);
+    }
+
+    /**
+     * Verifies the ICC parser is invoked when iccSegments are provided but iccProfile is null.
+     * Kills mutants 932-933: condition flip on (iccProfile !== null) || (iccSegments !== []).
+     */
+    #[Test]
+    public function invokesIccParserWhenOnlyIccSegmentsArePresent(): void
+    {
+        $called  = false;
+        $profile = $this->createIccProfile(description: 'Segment ICC');
+
+        $iccParser = new readonly class(function () use (&$called): void {
+            $called = true;
+        }, $profile) implements IccParserInterface {
+            public function __construct(
+                /** @var Closure():void $onDecode */
+                private Closure $onDecode,
+                private IccProfile $profile,
+            ) {
+            }
+
+            public function decode(?string $profileData, array $segments = []): IccProfile
+            {
+                ($this->onDecode)();
+
+                return $this->profile;
+            }
+        };
+
+        $factory  = new ValueFactory(iccParser: $iccParser);
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            iccProfile: null,
+            iccSegments: ['segment-data'],
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertTrue($called);
+        self::assertSame('Segment ICC', $components['colorProfile']->profileName);
+    }
+
+    /**
+     * Verifies the ICC parser is NOT invoked when both iccProfile and iccSegments are empty/null.
+     * Kills mutant 933: LogicalOrAllSubExprNegation on ICC condition.
+     */
+    #[Test]
+    public function skipsIccParserWhenNoProfileAndNoSegments(): void
+    {
+        $called = false;
+
+        $iccParser = new readonly class(function () use (&$called): void {
+            $called = true;
+        }) implements IccParserInterface {
+            public function __construct(
+                /** @var Closure():void $onDecode */
+                private Closure $onDecode,
+            ) {
+            }
+
+            public function decode(?string $profileData, array $segments = []): IccProfile
+            {
+                ($this->onDecode)();
+
+                return new IccProfile(
+                    description: null,
+                    copyright: null,
+                    whitePoint: null,
+                    blackPoint: null,
+                    redMatrixColumn: null,
+                    greenMatrixColumn: null,
+                    blueMatrixColumn: null,
+                    luminance: null,
+                    redTRC: null,
+                    greenTRC: null,
+                    blueTRC: null,
+                    deviceMfgDesc: null,
+                    deviceModelDesc: null,
+                    technology: null,
+                    viewingConditions: null,
+                    measurement: null,
+                    version: null,
+                    pcs: null,
+                    renderingIntent: null,
+                    profileId: null,
+                    cmmType: null,
+                    profileClass: null,
+                    colorSpace: null,
+                    profileDateTime: null,
+                    profileDateTimeUtc: null,
+                    profileSignature: null,
+                    profileFlags: null,
+                    primaryPlatform: null,
+                    deviceManufacturer: null,
+                    deviceModel: null,
+                    deviceAttributes: null,
+                    profileCreator: null,
+                    illuminant: null,
+                );
+            }
+        };
+
+        $factory  = new ValueFactory(iccParser: $iccParser);
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            iccProfile: null,
+            iccSegments: [],
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertFalse($called);
+        self::assertNull($components['colorProfile']->profileName);
+    }
+
+    /**
+     * Verifies the XMP dc:creator element is extracted as the author creator field.
+     * Kills mutants 934-935: Coalesce reversal and IncrementInteger on creator index.
+     */
+    #[Test]
+    public function extractsXmpCreatorAsAuthorCreator(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:creator>
+      <rdf:Seq>
+        <rdf:li>Jane Doe</rdf:li>
+        <rdf:li>John Smith</rdf:li>
+      </rdf:Seq>
+    </dc:creator>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: (new XmpParser())->parse($xml),
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertSame('Jane Doe', $components['author']->creator);
+    }
+
+    /**
+     * Verifies Integrity edited is null when no XMP history is present,
+     * and that hasHistory defaults to false without XMP.
+     * Kills mutants 941-944: FalseValue, Coalesce, TrueValue, Ternary on integrity fields.
+     */
+    #[Test]
+    public function integrityEditedIsNullWithoutXmpHistory(): void
+    {
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertNull($components['integrity']->edited);
+    }
+
+    /**
+     * Verifies Integrity edited is true when XMP contains xmpMM:History.
+     * Kills mutants 943-944: TrueValue and Ternary on edited = hasHistory ? true : null.
+     */
+    #[Test]
+    public function integrityEditedIsTrueWhenXmpHistoryExists(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:xmpMM="http://ns.adobe.com/xap/1.0/mm/">
+  <rdf:Description>
+    <xmpMM:History>
+      <rdf:Seq>
+        <rdf:li rdf:parseType="Resource">
+          <xmpMM:action>saved</xmpMM:action>
+        </rdf:li>
+      </rdf:Seq>
+    </xmpMM:History>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: (new XmpParser())->parse($xml),
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertTrue($components['integrity']->edited);
+    }
+
+    /**
+     * Verifies countFaceRegions returns null when no face regions exist (only non-face region types).
+     * Kills mutants 945-948: UnwrapArrayFilter, Identical, GreaterThan, Ternary on countFaceRegions.
+     */
+    #[Test]
+    public function sceneDetectedFacesNullWhenNoFaceRegions(): void
+    {
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertNull($components['scene']->faceCount);
+    }
+
+    /**
+     * Verifies the FlashPix parser is used when injected, and its return value is transformed.
+     * Kills mutant 950: ReturnRemoval on flashPixDocumentToValue.
+     */
+    #[Test]
+    public function flashPixParserProducesSummaryInfo(): void
+    {
+        $summaryData = new FlashPixSummaryData(
+            title: 'Test Title',
+            subject: 'Test Subject',
+            author: 'Test Author',
+        );
+
+        $document = new FlashPixDocument(
+            streams: [0 => 'stream-data'],
+            summaryData: $summaryData,
+        );
+
+        $flashPixParser = new readonly class($document) implements FlashPixParserInterface {
+            public function __construct(
+                private FlashPixDocument $document,
+            ) {
+            }
+
+            public function parse(array $streams): FlashPixDocument
+            {
+                return $this->document;
+            }
+        };
+
+        $factory = new ValueFactory(
+            iccParser: $this->stubIccParser(),
+            flashPixParser: $flashPixParser,
+        );
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            flashPixStreams: [0 => 'stream-data'],
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertInstanceOf(FlashPixSummaryInfo::class, $components['flashPix']->summaryInfo);
+        self::assertSame('Test Title', $components['flashPix']->summaryInfo->title);
+        self::assertSame('Test Subject', $components['flashPix']->summaryInfo->subject);
+        self::assertSame('Test Author', $components['flashPix']->summaryInfo->author);
+    }
+
+    /**
+     * Verifies the resolveCreatorContactValue returns the flattened XMP field when present,
+     * falling back to the CreatorContactInfo structured value only when the direct field is absent.
+     * Kills mutant 949: Coalesce reversal on resolveCreatorContactValue.
+     */
+    #[Test]
+    public function creatorContactPrefersDirectFieldOverStructured(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:Iptc4xmpCore="http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/">
+  <rdf:Description>
+    <Iptc4xmpCore:CiEmailWork>direct@example.com</Iptc4xmpCore:CiEmailWork>
+    <Iptc4xmpCore:CreatorContactInfo rdf:parseType="Resource">
+      <Iptc4xmpCore:CiEmailWork>structured@example.com</Iptc4xmpCore:CiEmailWork>
+    </Iptc4xmpCore:CreatorContactInfo>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: (new XmpParser())->parse($xml),
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertNotNull($components['author']->contact);
+        self::assertSame('direct@example.com', $components['author']->contact->email);
+    }
+
+    /**
+     * Verifies that hierarchical keywords are set to null when only flat keywords exist.
+     * Kills mutant 926: Ternary swap on hierarchicalKeywords !== [] ? hierarchicalKeywords : null.
+     */
+    #[Test]
+    public function hierarchicalKeywordsNullWhenAbsent(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:subject>
+      <rdf:Bag>
+        <rdf:li>tag1</rdf:li>
+      </rdf:Bag>
+    </dc:subject>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $factory  = new ValueFactory(iccParser: $this->stubIccParser());
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: (new XmpParser())->parse($xml),
+        );
+
+        $components = $factory->createComponents($metadata);
+
+        self::assertSame(['tag1'], $components['keywords']->flat);
+        self::assertNull($components['keywords']->hierarchical);
     }
 
     private function createIccProfile(?string $description = null, ?string $version = null): IccProfile
