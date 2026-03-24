@@ -38,6 +38,7 @@ use MagicSunday\ImageMeta\Exif\Reader\FocalReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\Structured\LensFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Value\Lens;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -80,6 +81,7 @@ use function strlen;
 #[UsesClass(FocalReader::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(Lens::class)]
 final class LensFactoryTest extends TestCase
 {

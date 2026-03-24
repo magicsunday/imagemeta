@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Factory\Structured;
 use MagicSunday\ImageMeta\Factory\Structured\RegionCoordinateNormalizer;
 use MagicSunday\ImageMeta\Factory\Structured\RegionsFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\RegionType;
 use MagicSunday\ImageMeta\Value\Region;
@@ -34,6 +35,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(RegionsFactory::class)]
 #[UsesClass(RegionCoordinateNormalizer::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(XmpDocument::class)]
 #[UsesClass(RegionType::class)]
 #[UsesClass(Region::class)]

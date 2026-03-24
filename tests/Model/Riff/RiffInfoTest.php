@@ -16,10 +16,12 @@ use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(RiffInfo::class)]
 #[CoversClass(RiffInfoLookup::class)]
+#[UsesClass(RiffExifChunk::class)]
 final class RiffInfoTest extends TestCase
 {
     #[Test]

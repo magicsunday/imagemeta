@@ -119,6 +119,7 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
 use MagicSunday\ImageMeta\Model\Xmp\XmpContainer;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -168,6 +169,8 @@ use MagicSunday\ImageMeta\Parse\Jpeg\MpfDocumentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\XmpSegmentHandler;
 use MagicSunday\ImageMeta\Parse\Jxl\JxlParser;
 use MagicSunday\ImageMeta\Parse\Jxl\JxlParseResult;
+use MagicSunday\ImageMeta\Parse\Riff\RiffParserConfig;
+use MagicSunday\ImageMeta\Parse\Riff\RiffParserFactory;
 use MagicSunday\ImageMeta\Parse\Tiff\DngCalibrationValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\DngGeometryValidator;
 use MagicSunday\ImageMeta\Parse\Tiff\DngProfileValidator;
@@ -357,6 +360,7 @@ use function unlink;
 #[UsesClass(MediaContent::class)]
 #[UsesClass(MemoryBuffer::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(Motion::class)]
 #[UsesClass(MultiPicture::class)]
 #[UsesClass(ParsedExif::class)]
@@ -485,6 +489,8 @@ use function unlink;
 #[UsesClass(BoxPayloadCollector::class)]
 #[UsesClass(FullBoxHeader::class)]
 #[UsesClass(IsoBmffParserConfig::class)]
+#[UsesClass(RiffParserConfig::class)]
+#[UsesClass(RiffParserFactory::class)]
 #[UsesClass(AudioStreamHandler::class)]
 #[UsesClass(ExifSegmentHandler::class)]
 #[UsesClass(ExtendedXmpAssembler::class)]

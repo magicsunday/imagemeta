@@ -61,6 +61,7 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpContainer;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
@@ -143,6 +144,7 @@ use function strlen;
 #[UsesClass(ExifTag::class)]
 #[UsesClass(Ifd::class)]
 #[UsesClass(IptcDocument::class)]
+#[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(IsoBmffItemReference::class)]

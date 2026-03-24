@@ -45,6 +45,7 @@ use MagicSunday\ImageMeta\Factory\Structured\GpsFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
@@ -112,6 +113,7 @@ use function strlen;
 #[UsesClass(UndefinedTextMarker::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(GpsAltitudeRef::class)]
 #[UsesClass(Gps::class)]
 #[UsesClass(GpsCoordinate::class)]

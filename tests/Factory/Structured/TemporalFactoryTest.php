@@ -42,6 +42,7 @@ use MagicSunday\ImageMeta\Factory\Structured\TemporalFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Temporal;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -92,6 +93,7 @@ use function strlen;
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(QuickTimeLookup::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(Temporal::class)]
 final class TemporalFactoryTest extends TestCase

@@ -49,6 +49,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
@@ -116,6 +117,7 @@ use ReflectionProperty;
  */
 #[CoversClass(MetadataBuilder::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(StructuredMetadataBuilder::class)]
 #[UsesClass(DateTimeUtil::class)]
 #[UsesClass(StringUtil::class)]

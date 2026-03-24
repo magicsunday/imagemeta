@@ -39,6 +39,7 @@ use MagicSunday\ImageMeta\Factory\Structured\CameraFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
@@ -84,6 +85,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(XmpFallbackResolver::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(Camera::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 final class CameraFactoryTest extends TestCase

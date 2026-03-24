@@ -64,6 +64,7 @@ use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
@@ -91,6 +92,8 @@ use MagicSunday\ImageMeta\Parse\Jpeg\JumbfTransportParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\MarkerHandlerRegistry;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfDocumentHandler;
 use MagicSunday\ImageMeta\Parse\Jpeg\XmpSegmentHandler;
+use MagicSunday\ImageMeta\Parse\Riff\RiffParserConfig;
+use MagicSunday\ImageMeta\Parse\Riff\RiffParserFactory;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParseState;
 use MagicSunday\ImageMeta\Value\Audio;
@@ -232,6 +235,7 @@ use function unlink;
 #[UsesClass(MediaContent::class)]
 #[UsesClass(MemoryBuffer::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(Motion::class)]
 #[UsesClass(MultiPicture::class)]
 #[UsesClass(ProcessingSettings::class)]
@@ -307,6 +311,8 @@ use function unlink;
 #[UsesClass(IccTagDecoder::class)]
 #[UsesClass(IsoBmffParserConfig::class)]
 #[UsesClass(IsoBmffParserFactory::class)]
+#[UsesClass(RiffParserConfig::class)]
+#[UsesClass(RiffParserFactory::class)]
 #[UsesClass(AudioStreamHandler::class)]
 #[UsesClass(ExifSegmentHandler::class)]
 #[UsesClass(ExtendedXmpAssembler::class)]

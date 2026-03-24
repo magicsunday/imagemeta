@@ -43,6 +43,7 @@ use MagicSunday\ImageMeta\Factory\Structured\ImageFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
@@ -98,6 +99,7 @@ use function strlen;
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(QuickTimeLookup::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(Image::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]

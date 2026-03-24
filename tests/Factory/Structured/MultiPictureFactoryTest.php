@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Value\Enum\MpImageDataFormat;
 use MagicSunday\ImageMeta\Value\Enum\MpImageType;
 use MagicSunday\ImageMeta\Value\MultiPicture;
@@ -37,6 +38,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(MpImageDataFormat::class)]
 #[UsesClass(MpImageType::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(MpfAttributes::class)]
 #[UsesClass(MpfDocument::class)]
 #[UsesClass(MpfEntry::class)]
