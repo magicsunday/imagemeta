@@ -31,6 +31,8 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\Reader\SceneModeReader;
+use MagicSunday\ImageMeta\Exif\Reconciliation\ExifXmpMapping;
+use MagicSunday\ImageMeta\Exif\Reconciliation\ExifXmpMappingRegistry;
 use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\Structured\SceneFactory;
@@ -41,6 +43,7 @@ use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
@@ -83,8 +86,11 @@ use function str_repeat;
 #[UsesClass(IfdValueReader::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(SceneModeReader::class)]
+#[UsesClass(ExifXmpMapping::class)]
+#[UsesClass(ExifXmpMappingRegistry::class)]
 #[UsesClass(XmpFallbackResolver::class)]
 #[UsesClass(ValueConverters::class)]
+#[UsesClass(XmpDocument::class)]
 #[UsesClass(AppleHdr::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(QuickTimeLookup::class)]
@@ -241,6 +247,215 @@ final class SceneFactoryTest extends TestCase
     }
 
     /**
+     * Supplies an Apple HDR imageType label that the factory already resolved.
+     * Asserts the QuickTime HDRImageType fallback is NOT consulted when imageType is present.
+     */
+    #[Test]
+    public function prefersAppleHdrImageTypeOverQuickTimeFallback(): void
+    {
+        $apple = new AppleMakerNotes(
+            identity: null,
+            hdr: new AppleHdr(headroom: null, gain: null, imageType: 'HDR'),
+            autoExposure: null,
+            autoFocus: null,
+            noise: null,
+            semanticStyle: null,
+            livePhoto: null,
+            camera: null,
+            flags: [],
+        );
+
+        $makerNotes = new MakerNotesRecord(
+            vendor: 'APPLE',
+            length: 0,
+            sha1: str_repeat('0', 40),
+            apple: $apple,
+        );
+
+        $scene = $this->createScene(
+            quickTime: new QuickTimeMeta([
+                'HDRImageType' => 'non-hdr',
+            ]),
+            makerNotes: $makerNotes,
+        );
+
+        self::assertTrue($scene->hdrScene);
+    }
+
+    /**
+     * Supplies a non-HDR label string in Apple maker notes.
+     * Asserts that hdrScene is NOT set to true when the label does not start with "HDR".
+     */
+    #[Test]
+    public function nonHdrLabelDoesNotFlagHdrScene(): void
+    {
+        $apple = new AppleMakerNotes(
+            identity: null,
+            hdr: new AppleHdr(headroom: null, gain: null, imageType: 'SDR'),
+            autoExposure: null,
+            autoFocus: null,
+            noise: null,
+            semanticStyle: null,
+            livePhoto: null,
+            camera: null,
+            flags: [],
+        );
+
+        $makerNotes = new MakerNotesRecord(
+            vendor: 'APPLE',
+            length: 0,
+            sha1: str_repeat('0', 40),
+            apple: $apple,
+        );
+
+        $scene = $this->createScene(makerNotes: $makerNotes);
+
+        self::assertNull($scene->hdrScene);
+    }
+
+    /**
+     * Supplies an Apple HDR headroom of exactly zero.
+     * Asserts that hdrScene is NOT flagged because headroom must be strictly positive.
+     */
+    #[Test]
+    public function zeroHeadroomDoesNotFlagHdrScene(): void
+    {
+        $apple = new AppleMakerNotes(
+            identity: null,
+            hdr: new AppleHdr(headroom: 0.0, gain: null, imageType: null),
+            autoExposure: null,
+            autoFocus: null,
+            noise: null,
+            semanticStyle: null,
+            livePhoto: null,
+            camera: null,
+            flags: [],
+        );
+
+        $makerNotes = new MakerNotesRecord(
+            vendor: 'APPLE',
+            length: 0,
+            sha1: str_repeat('0', 40),
+            apple: $apple,
+        );
+
+        $scene = $this->createScene(makerNotes: $makerNotes);
+
+        self::assertNull($scene->hdrScene);
+    }
+
+    /**
+     * Supplies null headroom with no Apple flags or HDR label.
+     * Asserts that hdrScene remains null because the null headroom guard must reject it.
+     */
+    #[Test]
+    public function nullHeadroomWithoutFlagsDoesNotFlagHdrScene(): void
+    {
+        $apple = new AppleMakerNotes(
+            identity: null,
+            hdr: new AppleHdr(headroom: null, gain: null, imageType: null),
+            autoExposure: null,
+            autoFocus: null,
+            noise: null,
+            semanticStyle: null,
+            livePhoto: null,
+            camera: null,
+            flags: [],
+        );
+
+        $makerNotes = new MakerNotesRecord(
+            vendor: 'APPLE',
+            length: 0,
+            sha1: str_repeat('0', 40),
+            apple: $apple,
+        );
+
+        $scene = $this->createScene(makerNotes: $makerNotes);
+
+        self::assertNull($scene->hdrScene);
+    }
+
+    /**
+     * Provides both EXIF and XMP values for sceneCaptureType.
+     * Asserts the EXIF value wins over the XMP fallback.
+     */
+    #[Test]
+    public function exifTakesPriorityOverXmpForSceneCaptureType(): void
+    {
+        $entries = [
+            ExifTag::SCENE_CAPTURE_TYPE => new IfdEntry(ExifTag::SCENE_CAPTURE_TYPE, 3, 1, SceneCaptureType::Landscape->value),
+        ];
+
+        $xmpData = [
+            '{http://ns.adobe.com/exif/1.0/}SceneCaptureType' => (string) SceneCaptureType::NightScene->value,
+        ];
+
+        $scene = $this->createSceneWithExifAndXmp($entries, $xmpData);
+
+        self::assertSame(SceneCaptureType::Landscape, $scene->type);
+    }
+
+    /**
+     * Provides both EXIF and XMP values for sceneType.
+     * Asserts the EXIF value wins over the XMP fallback.
+     */
+    #[Test]
+    public function exifTakesPriorityOverXmpForSceneType(): void
+    {
+        $entries = [
+            ExifTag::SCENE_TYPE => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, SceneType::DirectlyPhotographedImage->value),
+        ];
+
+        $xmpData = [
+            '{http://ns.adobe.com/exif/1.0/}SceneType' => (string) SceneType::NotDefined->value,
+        ];
+
+        $scene = $this->createSceneWithExifAndXmp($entries, $xmpData);
+
+        self::assertSame(SceneType::DirectlyPhotographedImage, $scene->sceneType);
+    }
+
+    /**
+     * Provides both EXIF and XMP values for lightSource.
+     * Asserts the EXIF value wins over the XMP fallback.
+     */
+    #[Test]
+    public function exifTakesPriorityOverXmpForLightSource(): void
+    {
+        $entries = [
+            ExifTag::LIGHT_SOURCE => new IfdEntry(ExifTag::LIGHT_SOURCE, 3, 1, LightSource::Daylight->value),
+        ];
+
+        $xmpData = [
+            '{http://ns.adobe.com/exif/1.0/}LightSource' => (string) LightSource::Tungsten->value,
+        ];
+
+        $scene = $this->createSceneWithExifAndXmp($entries, $xmpData);
+
+        self::assertSame(LightSource::Daylight, $scene->light);
+    }
+
+    /**
+     * Provides both EXIF and XMP values for subjectDistanceRange.
+     * Asserts the EXIF value wins over the XMP fallback.
+     */
+    #[Test]
+    public function exifTakesPriorityOverXmpForSubjectDistanceRange(): void
+    {
+        $entries = [
+            ExifTag::SUBJECT_DISTANCE_RANGE => new IfdEntry(ExifTag::SUBJECT_DISTANCE_RANGE, 3, 1, SubjectDistanceRange::Macro->value),
+        ];
+
+        $xmpData = [
+            '{http://ns.adobe.com/exif/1.0/}SubjectDistanceRange' => (string) SubjectDistanceRange::Distant->value,
+        ];
+
+        $scene = $this->createSceneWithExifAndXmp($entries, $xmpData);
+
+        self::assertSame(SubjectDistanceRange::Macro, $scene->subjectDistanceRange);
+    }
+
+    /**
      * Creates Metadata without EXIF, QuickTime, or maker notes scene data.
      * Ensures all scene fields remain null when no inputs are available.
      */
@@ -325,6 +540,27 @@ final class SceneFactoryTest extends TestCase
         }
 
         return $this->parsedExifFromEntries($exifEntries);
+    }
+
+    /**
+     * @param array<int, IfdEntry>  $entries EXIF IFD entries keyed by tag.
+     * @param array<string, string> $xmpData XMP data keyed by Clark notation.
+     */
+    private function createSceneWithExifAndXmp(array $entries, array $xmpData): Scene
+    {
+        $parsedExif = $this->parsedExifFromEntries($entries);
+        $xmpDoc     = new XmpDocument($xmpData);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+            xmpDoc: $xmpDoc,
+        );
+
+        $apple = AppleMakerNotes::empty();
+
+        return (new SceneFactory())->create($metadata, $apple);
     }
 
     /**
