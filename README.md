@@ -73,25 +73,51 @@ PHP's built-in `exif_read_data()` is limited to JPEG/TIFF EXIF tags and returns 
 
 ## 🧩 Supported formats / features
 
-| Area                               | Status                                                                  |
-|------------------------------------|-------------------------------------------------------------------------|
-| Containers                         | `JPEG`, `ISO BMFF`, `TIFF`, `JXL`, `RIFF/AVI`                           |
-| JXL                                | Container parsing: EXIF (`Exif` box) + XMP (`xml ` box) extraction      |
-| EXIF versions (capability mapping) | `1.0`, `1.1`, `2.0`, `2.1`, `2.2`, `2.21`, `2.3`, `2.31`, `2.32`, `3.0`, `3.1` |
-| XMP                                | RDF/XML parsing via `XMLReader`                                         |
-| IPTC                               | IIM extraction from JPEG APP13                                          |
-| QuickTime metadata                 | Extracted from ISO BMFF structures                                      |
-| RIFF/AVI                           | INFO chunks, `_PMX` (XMP), `LIST 'exif'`, `strd` TIFF blobs, `avih` header |
-| MPF                                | CIPA DC-007-2025, 3rd Edition (all MP type codes incl. Gain Map)        |
-| JPEG auxiliary payloads            | ICC profile, MPF, FlashPix streams, EXIF audio streams                  |
-| Output model                       | `MagicSunday\ImageMeta\Model\Metadata` + `->structured()`               |
+### Containers
 
-Notes:
+| Container | File types | Metadata extracted |
+|-----------|------------|-------------------|
+| JPEG | `.jpg`, `.jpeg` | EXIF, XMP, IPTC, ICC, MPF, FlashPix, JFIF, EXIF audio |
+| ISO BMFF | `.heic`, `.heif`, `.avif`, `.mp4`, `.mov`, `.m4v`, `.3gp` | EXIF, XMP, QuickTime metadata, ICC, item references |
+| TIFF | `.tiff`, `.tif`, `.dng`, `.nef`, `.arw`, `.cr2` | EXIF, XMP (tag 700), IPTC (tag 33723), ICC (tag 34675) |
+| JXL | `.jxl` | EXIF (`Exif` box), XMP (`xml ` box), HDR gain map (`hrgm`) |
+| RIFF/AVI | `.avi` | INFO chunks, XMP (`_PMX`), RIFF EXIF (`LIST 'exif'`), TIFF blobs (`strd`), AVI header |
 
-- Container support is signature-based; there is no static extension whitelist.
+Detection is signature-based (magic bytes), not extension-based.
+
+### Metadata sources
+
+| Source | Scope |
+|--------|-------|
+| EXIF | Versions `1.0` through `3.1` with full capability mapping per version |
+| XMP | RDF/XML parsing via `XMLReader` (non-network, entity-safe) |
+| IPTC | IIM datasets from JPEG APP13 and TIFF tag 33723 |
+| QuickTime | Keys/data atoms, mvhd/tkhd/mdhd timestamps, track media metadata |
+| RIFF INFO | Key-value pairs (INAM, IART, ICRD, ISFT, IDIT, etc.) |
+| ICC | Profile header, tag table, and tag data parsing |
+
+### Vendor maker notes
+
+| Vendor | Coverage |
+|--------|----------|
+| Apple | HDR, LivePhoto, AutoFocus, AutoExposure, capture identity, scene analysis |
+| Samsung | Maker note tag decoding |
+| DJI | Maker note tags + mdat protobuf telemetry scanning (GPS, model for truncated recordings) |
+
+### Additional features
+
+| Feature | Details |
+|---------|---------|
+| MPF | CIPA DC-007-2025, 3rd Edition (all MP type codes including Gain Map) |
+| FlashPix | OLE compound document / property set parsing |
+| DNG | DNG 1.7.1 tag semantics |
+| Structured output | `->structured()` returns typed value objects: Camera, Exposure, GPS, Temporal, Lens, Sensor, Image, Device, Scene, Motion, Regions, MultiPicture |
+
+### Notes
+
 - File-level support depends on whether the input actually contains parseable metadata blocks.
-- For JXL, the current scope is metadata-box extraction (EXIF/XMP); no pixel/codestream decode and no IPTC/QuickTime extraction path.
-- For RIFF/AVI, the parser extracts INFO metadata, XMP (`_PMX`), RIFF-native EXIF sub-chunks, embedded TIFF/EXIF blobs from `strd`, and the AVI main header. Vendor-specific JUNK-chunk maker notes are not yet supported.
+- For JXL, the current scope is metadata-box extraction (EXIF/XMP/gain map); no pixel/codestream decode.
+- For RIFF/AVI, vendor-specific JUNK-chunk maker notes are not yet supported.
 
 ## 🚀 Usage
 
@@ -106,16 +132,18 @@ declare(strict_types=1);
 
 use MagicSunday\ImageMeta\MetadataReader;
 
-$metadata = MetadataReader::createDefault()->read('/path/to/photo.heic');
+$metadata   = MetadataReader::createDefault()->read('/path/to/photo.heic');
 $structured = $metadata->structured();
 
-$cameraMake = $structured->camera->make;
-$iso = $structured->exposure->iso;
-$latitude = $structured->gps->latitudeCoordinate?->signed;
+// Typed structured access (automatic EXIF → XMP → QuickTime fallback):
+$cameraMake = $structured->hardware->camera->make;
+$iso        = $structured->settings->exposure->settings->iso;
+$latitude   = $structured->locationTime->gps->position->latitudeCoordinate?->signed;
+$createDate = $structured->locationTime->temporal->original;
 
-// Optional low-level access:
-$exif = $metadata->exifDoc;
-$xmp = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+// Low-level raw access:
+$exif      = $metadata->exifDoc;
+$xmp       = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
 $quickTime = $metadata->quickTime;
 ```
 
@@ -169,31 +197,41 @@ $height    = $aviHeader?->height;
 
 ## 🛠️ Development
 
-Prerequisites:
+Development uses a Docker buildbox. All commands are available via `make`:
+
+```bash
+make build      # Build the Docker image (first time)
+make install    # Install composer dependencies
+make test       # Run full CI pipeline (mandatory gate before any commit)
+```
+
+`make test` runs (in order): phplint → php-cs-fixer (dry-run) → rector (dry-run) → phpstan → phpunit → jscpd
+
+Additional targets:
+
+| Target | Description |
+|--------|-------------|
+| `make lint` | PHP linter only |
+| `make cgl-check` | Code style check (dry-run) |
+| `make cgl` | Fix code style |
+| `make rector-check` | Rector check (dry-run) |
+| `make rector` | Apply rector rules |
+| `make stan` | PHPStan analysis |
+| `make unit` | PHPUnit tests only |
+| `make coverage` | PHPUnit with HTML + Clover coverage report |
+| `make cpd` | Copy-paste detection (jscpd) |
+| `make bash` | Open a shell in the buildbox container |
+| `make format FILE=<path>` | Format metadata output for a file (`--debug`, `--digest` flags) |
+
+### Prerequisites (without Docker)
 
 - PHP `>=8.4.0 <8.6.0`
 - Extensions: `ctype`, `date`, `fileinfo`, `hash`, `iconv`, `json`, `mbstring`, `pcre`, `xmlreader`
 
-Install dependencies:
-
 ```bash
 composer install
-```
-
-Run the mandatory quality gate:
-
-```bash
 composer ci:test
 ```
-
-`ci:test` includes:
-
-- Linting (`phplint`)
-- Coding standards dry-run (`php-cs-fixer --dry-run`)
-- Refactoring dry-run (`rector --dry-run`)
-- Static analysis (`phpstan`)
-- Unit tests (`phpunit`)
-- Copy/paste detection (`jscpd`)
 
 ## 📚 Documentation & Specs
 
