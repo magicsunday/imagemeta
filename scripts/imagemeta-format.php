@@ -34,6 +34,9 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
+use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Epson\EpsonTag;
 use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftTag;
@@ -257,6 +260,42 @@ final class MetadataFormatter
         'com.apple.quicktime.model',
         'com.apple.quicktime.location.latitude',
         'com.apple.quicktime.location.longitude',
+    ];
+
+    /**
+     * Maps RIFF INFO chunk tags to human-readable labels (ExifTool-compatible).
+     *
+     * RIFF 1991 Multimedia Programming Interface, ExifTool RIFF.pm %RIFF::Info.
+     *
+     * @var array<string, string>
+     */
+    private const array RIFF_INFO_TAG_LABELS = [
+        'IARL' => 'Archival Location',
+        'IART' => 'Artist',
+        'ICMS' => 'Commissioned',
+        'ICMT' => 'Comment',
+        'ICOP' => 'Copyright',
+        'ICRD' => 'Date Created',
+        'ICRP' => 'Cropped',
+        'IDIM' => 'Dimensions',
+        'IDPI' => 'Dots Per Inch',
+        'IENG' => 'Engineer',
+        'IGNR' => 'Genre',
+        'IKEY' => 'Keywords',
+        'ILGT' => 'Lightness',
+        'IMED' => 'Medium',
+        'INAM' => 'Title',
+        'IPLT' => 'Num Colors',
+        'IPRD' => 'Product',
+        'ISBJ' => 'Subject',
+        'ISFT' => 'Software',
+        'ISHP' => 'Sharpness',
+        'ISRC' => 'Source',
+        'ISRF' => 'Source Form',
+        'ITCH' => 'Technician',
+        'ITRK' => 'Track Number',
+        'ISMP' => 'Time Code',
+        'IDIT' => 'Date/Time Original',
     ];
 
     /**
@@ -933,6 +972,9 @@ final class MetadataFormatter
             $this->printQuickTimeSection($metadata->quickTime);
             $this->printDjiTelemetrySection($metadata->quickTime);
         }
+
+        // RIFF section
+        $this->printRiffSection($metadata);
 
         // MPF section
         if ($metadata->mpfDocument instanceof MpfDocument) {
@@ -2691,6 +2733,71 @@ final class MetadataFormatter
     }
 
     /**
+     * Prints RIFF-specific metadata sections (AVI Header, INFO, RIFF EXIF).
+     *
+     * Modeled after ExifTool's RIFF group output.
+     */
+    private function printRiffSection(Metadata $metadata): void
+    {
+        $data = [];
+
+        // AVI main header fields
+        if ($metadata->riffAviHeader instanceof RiffAviHeader) {
+            $header = $metadata->riffAviHeader;
+
+            if ($header->microSecPerFrame > 0) {
+                $data['Frame Rate'] = sprintf('%g', round(1_000_000 / $header->microSecPerFrame, 3));
+            }
+
+            $data['Frame Count']  = $header->totalFrames;
+            $data['Stream Count'] = $header->streams;
+            $data['Image Width']  = $header->width;
+            $data['Image Height'] = $header->height;
+        }
+
+        // INFO chunk metadata
+        if ($metadata->riffInfo instanceof RiffInfo) {
+            foreach ($metadata->riffInfo->fields as $tag => $value) {
+                $label        = self::RIFF_INFO_TAG_LABELS[$tag] ?? $tag;
+                $data[$label] = $value;
+            }
+        }
+
+        // RIFF-native EXIF sub-chunks
+        if ($metadata->riffExif instanceof RiffExifChunk) {
+            $exif = $metadata->riffExif;
+
+            if ($exif->make !== null) {
+                $data['Make'] ??= $exif->make;
+            }
+
+            if ($exif->model !== null) {
+                $data['Model'] ??= $exif->model;
+            }
+
+            if ($exif->timeCreated !== null) {
+                $data['Time Created'] ??= $exif->timeCreated;
+            }
+
+            if ($exif->userComment !== null) {
+                $data['User Comment'] ??= $exif->userComment;
+            }
+
+            if ($exif->exifVersion !== null) {
+                $data['Exif Version'] ??= $exif->exifVersion;
+            }
+
+            if ($exif->relatedImageFile !== null) {
+                $data['Related Image File'] ??= $exif->relatedImageFile;
+            }
+        }
+
+        if ($data !== []) {
+            $this->printSection('RIFF', $data);
+        }
+    }
+
+    /**
      * Formats a Mac epoch timestamp (seconds since 1904-01-01) as ExifTool-style date string.
      */
     private function formatMacTimestamp(int $macTimestamp): string
@@ -3110,15 +3217,20 @@ final class MetadataFormatter
         }
 
         // Image Size
-        if ($metadata->jpegFrameWidth !== null && $metadata->jpegFrameHeight !== null) {
-            $data['Image Size'] = sprintf(
-                '%dx%d',
-                $metadata->jpegFrameWidth,
-                $metadata->jpegFrameHeight
-            );
+        $compositeWidth  = $metadata->jpegFrameWidth ?? $metadata->riffAviHeader?->width;
+        $compositeHeight = $metadata->jpegFrameHeight ?? $metadata->riffAviHeader?->height;
+
+        if ($compositeWidth !== null && $compositeHeight !== null) {
+            $data['Image Size'] = sprintf('%dx%d', $compositeWidth, $compositeHeight);
             $data['Megapixels'] = $this->formatCompositeMegapixels(
-                ($metadata->jpegFrameWidth * $metadata->jpegFrameHeight) / 1000000,
+                ($compositeWidth * $compositeHeight) / 1000000,
             );
+        }
+
+        // Duration (from RIFF AVI header)
+        if ($metadata->riffAviHeader instanceof RiffAviHeader && $metadata->riffAviHeader->microSecPerFrame > 0 && $metadata->riffAviHeader->totalFrames > 0) {
+            $durationSec      = ($metadata->riffAviHeader->microSecPerFrame / 1_000_000) * $metadata->riffAviHeader->totalFrames;
+            $data['Duration'] = $this->formatDuration($durationSec);
         }
 
         // Scale Factor To 35mm Equivalent
@@ -3390,15 +3502,17 @@ final class MetadataFormatter
 
 // Main execution
 if ((PHP_SAPI === 'cli') && (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__)) {
-    $options    = getopt('', ['digest']);
+    $options    = getopt('', ['digest', 'debug']);
     $withDigest = isset($options['digest']);
+    $withDebug  = isset($options['debug']);
     $args        = array_values(array_filter($argv, fn ($a) => !str_starts_with($a, '--')));
 
     if (count($args) < 2) {
-        echo "Usage: php scripts/imagemeta-format.php [--digest] <image-file>\n";
+        echo "Usage: php scripts/imagemeta-format.php [--digest] [--debug] <image-file>\n";
         echo "\n";
         echo "Options:\n";
         echo "  --digest  Compute SHA-256 file digest (slow for large files)\n";
+        echo "  --debug   Show full stack trace on errors\n";
         echo "\n";
         echo "Example:\n";
         echo "  php scripts/imagemeta-format.php photo.jpg\n";
@@ -3411,8 +3525,12 @@ if ((PHP_SAPI === 'cli') && (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __F
         $formatter = new MetadataFormatter();
         $formatter->format($filePath, $withDigest);
     } catch (Throwable $e) {
-        echo 'ERROR: ' . $e->getMessage() . "\n";
-        echo $e->getTraceAsString() . "\n";
+        echo "\033[1;31mERROR: " . $e->getMessage() . "\033[0m\n";
+
+        if ($withDebug) {
+            echo $e->getTraceAsString() . "\n";
+        }
+
         exit(1);
     }
 }
