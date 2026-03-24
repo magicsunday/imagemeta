@@ -58,7 +58,7 @@ Many PHP applications need one consistent metadata API across modern container f
 **In scope:**
 
 - Local file parsing via signature-based container detection.
-- Extraction and merge of supported metadata sources: EXIF, XMP, IPTC, and QuickTime metadata.
+- Extraction and merge of supported metadata sources: EXIF, XMP, IPTC, QuickTime, and RIFF INFO metadata.
 - Exposure of both raw and structured output models.
 - Defensive parsing with explicit bounds checks and parser limits.
 
@@ -171,7 +171,7 @@ $height    = $aviHeader?->height;
 Prerequisites:
 
 - PHP `>=8.4.0 <8.6.0`
-- Extensions: `ctype`, `date`, `fileinfo`, `hash`, `iconv`, `json`, `pcre`, `xmlreader`
+- Extensions: `ctype`, `date`, `fileinfo`, `hash`, `iconv`, `json`, `mbstring`, `pcre`, `xmlreader`
 
 Install dependencies:
 
