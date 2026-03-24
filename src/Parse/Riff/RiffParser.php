@@ -15,12 +15,12 @@ use Generator;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
 use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
 
 use function rtrim;
-use function unpack;
 
 use const SEEK_CUR;
 
@@ -539,11 +539,6 @@ final class RiffParser implements RiffParserInterface
      */
     private function readU32LE(): int
     {
-        $raw = $this->stream->read(4);
-
-        /** @var array{1: int} $unpacked */
-        $unpacked = unpack('V', $raw);
-
-        return $unpacked[1];
+        return Unpack::int('V', $this->stream->read(4), 'RIFF LE uint32');
     }
 }
