@@ -33,13 +33,17 @@ use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\Reader\CameraLensExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\DeviceExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\FocalReader;
+use MagicSunday\ImageMeta\Exif\Reconciliation\ExifXmpMapping;
+use MagicSunday\ImageMeta\Exif\Reconciliation\ExifXmpMappingRegistry;
 use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\Structured\CameraFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
@@ -82,10 +86,14 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(CameraLensExifReader::class)]
 #[UsesClass(DeviceExifReader::class)]
 #[UsesClass(FocalReader::class)]
+#[UsesClass(ExifXmpMapping::class)]
+#[UsesClass(ExifXmpMappingRegistry::class)]
 #[UsesClass(XmpFallbackResolver::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(RiffExifChunk::class)]
 #[UsesClass(RiffInfoLookup::class)]
+#[UsesClass(XmpDocument::class)]
 #[UsesClass(Camera::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 final class CameraFactoryTest extends TestCase
@@ -263,6 +271,302 @@ final class CameraFactoryTest extends TestCase
 
         self::assertSame('Canon', $camera->make);
         self::assertSame('EOS R6', $camera->model);
+    }
+
+    /**
+     * Provides both EXIF and XMP make values with different strings.
+     * Verifies the EXIF make takes precedence over the XMP fallback.
+     */
+    #[Test]
+    public function exifMakeTakesPrecedenceOverXmpMake(): void
+    {
+        $parsedExif = $this->parsedExif(
+            make: 'Canon',
+            model: null,
+            ownerName: null,
+            firmware: null,
+            fileSource: null,
+            sensingMethod: null,
+        );
+
+        $xmpDoc = new XmpDocument([
+            '{http://ns.adobe.com/tiff/1.0/}Make' => 'XMP-Sony',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+            xmpDoc: $xmpDoc,
+        );
+
+        $camera = (new CameraFactory())->create($metadata);
+
+        self::assertSame('Canon', $camera->make);
+    }
+
+    /**
+     * Provides XMP and QuickTime make values without EXIF data.
+     * Verifies the XMP make takes precedence over the QuickTime fallback.
+     */
+    #[Test]
+    public function xmpMakeFallsBackBeforeQuickTimeMake(): void
+    {
+        $xmpDoc = new XmpDocument([
+            '{http://ns.adobe.com/tiff/1.0/}Make' => 'XMP-Sony',
+        ]);
+
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.make' => 'Apple',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            exifDoc: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $camera = (new CameraFactory())->create($metadata);
+
+        self::assertSame('XMP-Sony', $camera->make);
+    }
+
+    /**
+     * Provides QuickTime and RIFF EXIF make values without EXIF or XMP data.
+     * Verifies the QuickTime make takes precedence over the RIFF fallback.
+     */
+    #[Test]
+    public function quickTimeMakeFallsBackBeforeRiffMake(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.make' => 'Apple',
+        ]);
+
+        $riffExif = new RiffExifChunk(make: 'RIFF-Canon');
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            exifDoc: null,
+            riffExif: $riffExif,
+        );
+
+        $camera = (new CameraFactory())->create($metadata);
+
+        self::assertSame('Apple', $camera->make);
+    }
+
+    /**
+     * Provides both EXIF and XMP model values with different strings.
+     * Verifies the EXIF model takes precedence over the XMP fallback.
+     */
+    #[Test]
+    public function exifModelTakesPrecedenceOverXmpModel(): void
+    {
+        $parsedExif = $this->parsedExif(
+            make: null,
+            model: 'EOS R6',
+            ownerName: null,
+            firmware: null,
+            fileSource: null,
+            sensingMethod: null,
+        );
+
+        $xmpDoc = new XmpDocument([
+            '{http://ns.adobe.com/tiff/1.0/}Model' => 'XMP-Alpha 7',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+            xmpDoc: $xmpDoc,
+        );
+
+        $camera = (new CameraFactory())->create($metadata);
+
+        self::assertSame('EOS R6', $camera->model);
+    }
+
+    /**
+     * Provides XMP and QuickTime model values without EXIF data.
+     * Verifies the XMP model takes precedence over the QuickTime fallback.
+     */
+    #[Test]
+    public function xmpModelFallsBackBeforeQuickTimeModel(): void
+    {
+        $xmpDoc = new XmpDocument([
+            '{http://ns.adobe.com/tiff/1.0/}Model' => 'XMP-Alpha 7',
+        ]);
+
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.model' => 'iPhone 16 Pro',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            exifDoc: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $camera = (new CameraFactory())->create($metadata);
+
+        self::assertSame('XMP-Alpha 7', $camera->model);
+    }
+
+    /**
+     * Provides QuickTime and RIFF EXIF model values without EXIF or XMP data.
+     * Verifies the QuickTime model takes precedence over the RIFF fallback.
+     */
+    #[Test]
+    public function quickTimeModelFallsBackBeforeRiffModel(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.model' => 'iPhone 16 Pro',
+        ]);
+
+        $riffExif = new RiffExifChunk(model: 'RIFF-EOS R6');
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            exifDoc: null,
+            riffExif: $riffExif,
+        );
+
+        $camera = (new CameraFactory())->create($metadata);
+
+        self::assertSame('iPhone 16 Pro', $camera->model);
+    }
+
+    /**
+     * Provides both EXIF and XMP owner name values with different strings.
+     * Verifies the EXIF owner name takes precedence over the XMP fallback.
+     */
+    #[Test]
+    public function exifOwnerNameTakesPrecedenceOverXmpOwnerName(): void
+    {
+        $parsedExif = $this->parsedExif(
+            make: null,
+            model: null,
+            ownerName: 'EXIF Owner',
+            firmware: null,
+            fileSource: null,
+            sensingMethod: null,
+        );
+
+        $xmpDoc = new XmpDocument([
+            '{http://cipa.jp/exif/1.0/}CameraOwnerName' => 'XMP Owner',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+            xmpDoc: $xmpDoc,
+        );
+
+        $camera = (new CameraFactory())->create($metadata);
+
+        self::assertSame('EXIF Owner', $camera->ownerName);
+    }
+
+    /**
+     * Provides both EXIF firmware and XMP CreatorTool values with different strings.
+     * Verifies the EXIF firmware takes precedence over the XMP software fallback.
+     */
+    #[Test]
+    public function exifFirmwareTakesPrecedenceOverXmpFirmware(): void
+    {
+        $parsedExif = $this->parsedExif(
+            make: null,
+            model: null,
+            ownerName: null,
+            firmware: 'EXIF-FW-2.0',
+            fileSource: null,
+            sensingMethod: null,
+        );
+
+        $xmpDoc = new XmpDocument([
+            '{http://ns.adobe.com/xap/1.0/}CreatorTool' => 'XMP-Lightroom',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+            xmpDoc: $xmpDoc,
+        );
+
+        $camera = (new CameraFactory())->create($metadata);
+
+        self::assertSame('EXIF-FW-2.0', $camera->firmware);
+    }
+
+    /**
+     * Provides both EXIF file source and XMP FileSource values with different enum cases.
+     * Verifies the EXIF file source takes precedence over the XMP fallback.
+     */
+    #[Test]
+    public function exifFileSourceTakesPrecedenceOverXmpFileSource(): void
+    {
+        $parsedExif = $this->parsedExif(
+            make: null,
+            model: null,
+            ownerName: null,
+            firmware: null,
+            fileSource: FileSource::TransparencyScanner,
+            sensingMethod: null,
+        );
+
+        $xmpDoc = new XmpDocument([
+            '{http://ns.adobe.com/exif/1.0/}FileSource' => '2',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+            xmpDoc: $xmpDoc,
+        );
+
+        $camera = (new CameraFactory())->create($metadata);
+
+        self::assertSame(FileSource::TransparencyScanner, $camera->fileSource);
+    }
+
+    /**
+     * Provides both EXIF sensing method and XMP SensingMethod values with different enum cases.
+     * Verifies the EXIF sensing method takes precedence over the XMP fallback.
+     */
+    #[Test]
+    public function exifSensingMethodTakesPrecedenceOverXmpSensingMethod(): void
+    {
+        $parsedExif = $this->parsedExif(
+            make: null,
+            model: null,
+            ownerName: null,
+            firmware: null,
+            fileSource: null,
+            sensingMethod: SensingMethod::OneChipColorArea,
+        );
+
+        $xmpDoc = new XmpDocument([
+            '{http://ns.adobe.com/exif/1.0/}SensingMethod' => '7',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+            xmpDoc: $xmpDoc,
+        );
+
+        $camera = (new CameraFactory())->create($metadata);
+
+        self::assertSame(SensingMethod::OneChipColorArea, $camera->sensingMethod);
     }
 
     private function parsedExif(
