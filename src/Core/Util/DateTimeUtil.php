@@ -82,18 +82,24 @@ final class DateTimeUtil
             }
         }
 
-        // C ctime format: "Mon Dec 15 15:19:38 2014"
-        $parsed = DateTimeImmutable::createFromFormat('D M d H:i:s Y', $trimmed);
+        // C ctime format: "Mon Dec 15 15:19:38 2014" or "Wen Jul  5 10:46:25 2017"
+        // Some cameras write non-standard day abbreviations (Wen, Thr, etc.),
+        // so strip the day-of-week prefix and parse month+day+time+year only.
+        if (preg_match('/^[A-Za-z]{3}\s+([A-Za-z]{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+\d{4})/', $trimmed, $matches) === 1) {
+            $withoutDay = $matches[1];
 
-        if ($parsed instanceof DateTimeImmutable) {
-            return $parsed;
-        }
+            $parsed = DateTimeImmutable::createFromFormat('M d H:i:s Y', $withoutDay);
 
-        // C ctime with double-space day padding: "Mon Dec  5 15:19:38 2014"
-        $parsed = DateTimeImmutable::createFromFormat('D M  d H:i:s Y', $trimmed);
+            if ($parsed instanceof DateTimeImmutable) {
+                return $parsed;
+            }
 
-        if ($parsed instanceof DateTimeImmutable) {
-            return $parsed;
+            // Single-digit day with space padding: "Jul  5 10:46:25 2017"
+            $parsed = DateTimeImmutable::createFromFormat('M  d H:i:s Y', $withoutDay);
+
+            if ($parsed instanceof DateTimeImmutable) {
+                return $parsed;
+            }
         }
 
         // ISO-like with dashes: "2002-12-16 15:35:01"
