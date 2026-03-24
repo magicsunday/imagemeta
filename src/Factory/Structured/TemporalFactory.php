@@ -103,9 +103,9 @@ final readonly class TemporalFactory
 
         // RIFF EXIF etim and INFO ICRD/IDIT as last-resort date fallback
         if ($riffLookup instanceof RiffInfoLookup) {
-            $create ??= $this->parseFirstAvailableDate($riffLookup->exifTimeCreated());
-            $create ??= $this->parseFirstAvailableDate($riffLookup->string('ICRD'));
-            $create ??= $this->parseFirstAvailableDate($riffLookup->string('IDIT'));
+            $create ??= DateTimeUtil::parseRiffDate($riffLookup->exifTimeCreated());
+            $create ??= DateTimeUtil::parseRiffDate($riffLookup->string('ICRD'));
+            $create ??= DateTimeUtil::parseRiffDate($riffLookup->string('IDIT'));
         }
 
         [$original, $tz, $subOriginalRaw] = $this->originalTimestampComponents($exifDocument);

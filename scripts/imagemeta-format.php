@@ -17,6 +17,7 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
+use MagicSunday\ImageMeta\Core\Util\DateTimeUtil;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
@@ -2814,30 +2815,18 @@ final class MetadataFormatter
      *
      * ExifTool RIFF.pm — ConvertRIFFDate().
      */
+    /**
+     * Normalizes a RIFF date string to EXIF display format (YYYY:MM:DD HH:MM:SS).
+     *
+     * Delegates to {@see DateTimeUtil::parseRiffDate()} and falls back to the raw value.
+     */
     private function normalizeRiffDate(string $raw): string
     {
-        $trimmed = trim($raw);
+        $parsed = DateTimeUtil::parseRiffDate($raw);
 
-        // Already in EXIF format (YYYY:MM:DD HH:MM:SS)
-        if (preg_match('/^\d{4}:\d{2}:\d{2}\s+\d{2}:\d{2}:\d{2}/', $trimmed) === 1) {
-            return $trimmed;
-        }
-
-        // Try parsing common date formats via DateTimeImmutable
-        $parsed = DateTimeImmutable::createFromFormat('D M d H:i:s Y', $trimmed);         // ctime
-        $parsed = $parsed ?: DateTimeImmutable::createFromFormat('D M  d H:i:s Y', $trimmed); // ctime with double space
-        $parsed = $parsed ?: DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $trimmed);     // ISO-like
-        $parsed = $parsed ?: DateTimeImmutable::createFromFormat('Y/m/d H:i:s', $trimmed);     // slash-separated
-        $parsed = $parsed ?: DateTimeImmutable::createFromFormat('Y/ n/d  g:iA', $trimmed);    // Casio QV-3EX
-
-        if ($parsed instanceof DateTimeImmutable) {
-            return $parsed->format('Y:m:d H:i:s');
-        }
-
-        // Normalize dashes to colons in date portion (e.g. "2002-12-16 15:35:01" → "2002:12:16 15:35:01")
-        $normalized = preg_replace('/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/', '$1:$2:$3', $trimmed);
-
-        return $normalized ?? $trimmed;
+        return $parsed instanceof DateTimeImmutable
+            ? $parsed->format('Y:m:d H:i:s')
+            : trim($raw);
     }
 
     /**

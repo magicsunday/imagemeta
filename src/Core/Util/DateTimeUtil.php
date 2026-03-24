@@ -16,6 +16,8 @@ use DateTimeImmutable;
 use DateTimeZone;
 
 use function preg_match;
+use function preg_replace;
+use function trim;
 
 /**
  * Shared ISO 8601 date parsing utility.
@@ -44,6 +46,59 @@ final class DateTimeUtil
 
         try {
             return new DateTimeImmutable($value, $fallbackTz ?? new DateTimeZone('UTC'));
+        } catch (DateMalformedStringException) {
+            return null;
+        }
+    }
+
+    /**
+     * Parses a RIFF date string into a DateTimeImmutable.
+     *
+     * RIFF dates appear in various formats depending on camera/software:
+     * - C ctime: "Mon Dec 15 15:19:38 2014"
+     * - ISO-like: "2002-12-16 15:35:01"
+     * - EXIF: "2024:03:15 10:30:00"
+     *
+     * ExifTool RIFF.pm — ConvertRIFFDate().
+     *
+     * @param string|null $value Raw date string from RIFF INFO or EXIF chunks.
+     */
+    public static function parseRiffDate(?string $value): ?DateTimeImmutable
+    {
+        if (($value === null) || ($value === '')) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        // Already EXIF format — delegate to ISO parser after converting colons to dashes
+        $normalized = preg_replace('/^(\d{4}):(\d{2}):(\d{2})/', '$1-$2-$3', $trimmed);
+
+        if ($normalized !== null) {
+            $parsed = self::parseIso8601($normalized);
+
+            if ($parsed instanceof DateTimeImmutable) {
+                return $parsed;
+            }
+        }
+
+        // C ctime format: "Mon Dec 15 15:19:38 2014"
+        $parsed = DateTimeImmutable::createFromFormat('D M d H:i:s Y', $trimmed);
+
+        if ($parsed instanceof DateTimeImmutable) {
+            return $parsed;
+        }
+
+        // C ctime with double-space day padding: "Mon Dec  5 15:19:38 2014"
+        $parsed = DateTimeImmutable::createFromFormat('D M  d H:i:s Y', $trimmed);
+
+        if ($parsed instanceof DateTimeImmutable) {
+            return $parsed;
+        }
+
+        // ISO-like with dashes: "2002-12-16 15:35:01"
+        try {
+            return new DateTimeImmutable($trimmed);
         } catch (DateMalformedStringException) {
             return null;
         }
