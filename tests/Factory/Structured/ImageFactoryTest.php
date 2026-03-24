@@ -37,14 +37,20 @@ use MagicSunday\ImageMeta\Exif\Reader\DescriptionExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\FocalReader;
 use MagicSunday\ImageMeta\Exif\Reader\ImageStructureExifReader;
 use MagicSunday\ImageMeta\Exif\Reader\UserCommentExifReader;
+use MagicSunday\ImageMeta\Exif\Reconciliation\ExifXmpMapping;
+use MagicSunday\ImageMeta\Exif\Reconciliation\ExifXmpMappingRegistry;
+use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Exif\Text\UndefinedTextMarker;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\Structured\ImageFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
@@ -102,6 +108,11 @@ use function strlen;
 #[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(Image::class)]
+#[UsesClass(XmpFallbackResolver::class)]
+#[UsesClass(ExifXmpMapping::class)]
+#[UsesClass(ExifXmpMappingRegistry::class)]
+#[UsesClass(XmpDocument::class)]
+#[UsesClass(RiffAviHeader::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 #[UsesClass(UserComment::class)]
 final class ImageFactoryTest extends TestCase
@@ -406,6 +417,566 @@ final class ImageFactoryTest extends TestCase
         self::assertSame(4000, $image->height);
         self::assertSame(Orientation::TopLeft, $image->orientation);
         self::assertSame(8, $image->bitsPerSample);
+    }
+
+    /**
+     * Passes an explicit XmpDocument parameter with dimensions and title.
+     * Verifies the parameter-supplied XmpDocument takes precedence over Metadata::xmpDoc
+     * for both the resolver (dimensions) and the direct XMP reads (title/description).
+     */
+    #[Test]
+    public function xmpDocumentParameterTakesPrecedenceOverMetadataXmpDoc(): void
+    {
+        $metadataXmpDoc = new XmpDocument([
+            '{' . XmpNamespace::EXIF->value . '}PixelXDimension' => '1000',
+            '{' . XmpNamespace::EXIF->value . '}PixelYDimension' => '800',
+            '{' . XmpNamespace::DC->value . '}title'             => 'Metadata Title',
+            '{' . XmpNamespace::DC->value . '}description'       => 'Metadata Description',
+        ]);
+
+        $parameterXmpDoc = new XmpDocument([
+            '{' . XmpNamespace::EXIF->value . '}PixelXDimension' => '2000',
+            '{' . XmpNamespace::EXIF->value . '}PixelYDimension' => '1600',
+            '{' . XmpNamespace::DC->value . '}title'             => 'Parameter Title',
+            '{' . XmpNamespace::DC->value . '}description'       => 'Parameter Description',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $metadataXmpDoc,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata, $parameterXmpDoc);
+
+        self::assertSame(2000, $image->width);
+        self::assertSame(1600, $image->height);
+        self::assertSame('Parameter Title', $image->title);
+        self::assertSame('Parameter Description', $image->description);
+    }
+
+    /**
+     * Passes null for xmpDocument parameter while Metadata::xmpDoc provides XMP dimensions.
+     * Verifies the factory falls back to Metadata::xmpDoc for the XMP fallback resolver.
+     */
+    #[Test]
+    public function fallsBackToMetadataXmpDocResolverWhenParameterIsNull(): void
+    {
+        $metadataXmpDoc = new XmpDocument([
+            '{' . XmpNamespace::EXIF->value . '}PixelXDimension' => '5000',
+            '{' . XmpNamespace::EXIF->value . '}PixelYDimension' => '4000',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $metadataXmpDoc,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(5000, $image->width);
+        self::assertSame(4000, $image->height);
+    }
+
+    /**
+     * Supplies XMP PixelXDimension and PixelYDimension without EXIF or JPEG dimensions.
+     * Verifies the factory falls back to XMP resolver for width and height.
+     */
+    #[Test]
+    public function fallsBackToXmpDimensionsWhenExifAndJpegAreAbsent(): void
+    {
+        $xmpDoc = new XmpDocument([
+            '{' . XmpNamespace::EXIF->value . '}PixelXDimension' => '4000',
+            '{' . XmpNamespace::EXIF->value . '}PixelYDimension' => '3000',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(4000, $image->width);
+        self::assertSame(3000, $image->height);
+    }
+
+    /**
+     * Supplies JPEG dimensions alongside XMP dimensions without an EXIF document.
+     * Verifies JPEG dimensions take precedence over XMP fallback values.
+     */
+    #[Test]
+    public function jpegDimensionsTakePrecedenceOverXmpDimensions(): void
+    {
+        $xmpDoc = new XmpDocument([
+            '{' . XmpNamespace::EXIF->value . '}PixelXDimension' => '4000',
+            '{' . XmpNamespace::EXIF->value . '}PixelYDimension' => '3000',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+            jpegFrameWidth: 1920,
+            jpegFrameHeight: 1080,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(1920, $image->width);
+        self::assertSame(1080, $image->height);
+    }
+
+    /**
+     * Supplies XMP dimensions alongside QuickTime video dimensions without EXIF or JPEG.
+     * Verifies XMP dimensions take precedence over QuickTime values.
+     */
+    #[Test]
+    public function xmpDimensionsTakePrecedenceOverQuickTime(): void
+    {
+        $xmpDoc = new XmpDocument([
+            '{' . XmpNamespace::EXIF->value . '}PixelXDimension' => '4000',
+            '{' . XmpNamespace::EXIF->value . '}PixelYDimension' => '3000',
+        ]);
+
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::VIDEO_WIDTH_KEY  => 3840,
+            QuickTimeMeta::VIDEO_HEIGHT_KEY => 2160,
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(4000, $image->width);
+        self::assertSame(3000, $image->height);
+    }
+
+    /**
+     * Supplies QuickTime dimensions alongside RIFF AVI header dimensions.
+     * Verifies QuickTime dimensions take precedence over RIFF values.
+     */
+    #[Test]
+    public function quickTimeDimensionsTakePrecedenceOverRiff(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::VIDEO_WIDTH_KEY  => 3840,
+            QuickTimeMeta::VIDEO_HEIGHT_KEY => 2160,
+        ]);
+
+        $riffAviHeader = new RiffAviHeader(
+            microSecPerFrame: 33333,
+            width: 1280,
+            height: 720,
+            totalFrames: 100,
+            streams: 2,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            riffAviHeader: $riffAviHeader,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(3840, $image->width);
+        self::assertSame(2160, $image->height);
+    }
+
+    /**
+     * Supplies only RIFF AVI header dimensions without any other dimension sources.
+     * Verifies the factory falls back to RIFF dimensions as last resort.
+     */
+    #[Test]
+    public function fallsBackToRiffAviHeaderDimensions(): void
+    {
+        $riffAviHeader = new RiffAviHeader(
+            microSecPerFrame: 33333,
+            width: 1280,
+            height: 720,
+            totalFrames: 100,
+            streams: 2,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            riffAviHeader: $riffAviHeader,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(1280, $image->width);
+        self::assertSame(720, $image->height);
+    }
+
+    /**
+     * Supplies JPEG bitsPerSample alongside QuickTime video bit depth without EXIF.
+     * Verifies JPEG bitsPerSample takes precedence over QuickTime bit depth.
+     */
+    #[Test]
+    public function jpegBitsPerSampleTakesPrecedenceOverQuickTime(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::VIDEO_BIT_DEPTH_KEY => 24,
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            jpegBitsPerSample: 8,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(8, $image->bitsPerSample);
+    }
+
+    /**
+     * Supplies an EXIF imageUniqueId alongside an XMP ImageUniqueID resolver value.
+     * Verifies the EXIF value takes precedence over the XMP fallback.
+     */
+    #[Test]
+    public function exifImageUniqueIdTakesPrecedenceOverXmp(): void
+    {
+        $parsedExif = $this->parsedExif(
+            width: null,
+            height: null,
+            orientation: null,
+            bitsPerSample: null,
+            colorSpace: null,
+            interopIndex: null,
+            imageUniqueId: 'aabbccddeeff00112233445566778899',
+            documentName: null,
+            imageDescription: null,
+            imageTitle: null,
+            componentsConfiguration: null,
+            compressedBitsPerPixel: null,
+            userComment: null,
+            userCommentEncoding: null,
+        );
+
+        $xmpDoc = new XmpDocument([
+            '{' . XmpNamespace::EXIF->value . '}ImageUniqueID' => 'xmp-unique-id-value',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame('aabbccddeeff00112233445566778899', $image->imageUniqueId);
+    }
+
+    /**
+     * Supplies only an XMP ImageUniqueID without an EXIF imageUniqueId.
+     * Verifies the factory falls back to the XMP resolver value.
+     */
+    #[Test]
+    public function fallsBackToXmpImageUniqueIdWhenExifIsAbsent(): void
+    {
+        $xmpDoc = new XmpDocument([
+            '{' . XmpNamespace::EXIF->value . '}ImageUniqueID' => 'xmp-unique-id-value',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            xmpDoc: $xmpDoc,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame('xmp-unique-id-value', $image->imageUniqueId);
+    }
+
+    /**
+     * Supplies an XMP description alongside an EXIF imageDescription.
+     * Verifies the XMP description takes precedence over the EXIF value.
+     */
+    #[Test]
+    public function xmpDescriptionTakesPrecedenceOverExif(): void
+    {
+        $parsedExif = $this->parsedExif(
+            width: null,
+            height: null,
+            orientation: null,
+            bitsPerSample: null,
+            colorSpace: null,
+            interopIndex: null,
+            imageUniqueId: null,
+            documentName: null,
+            imageDescription: 'EXIF description',
+            imageTitle: null,
+            componentsConfiguration: null,
+            compressedBitsPerPixel: null,
+            userComment: null,
+            userCommentEncoding: null,
+        );
+
+        $xmpDocument = new XmpDocument([
+            '{' . XmpNamespace::DC->value . '}description' => 'XMP description',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata, $xmpDocument);
+
+        self::assertSame('XMP description', $image->description);
+    }
+
+    /**
+     * Supplies both an XMP dc:title and a Photoshop Headline alongside EXIF imageTitle.
+     * Verifies dc:title takes precedence over Headline.
+     */
+    #[Test]
+    public function xmpTitleTakesPrecedenceOverHeadline(): void
+    {
+        $xmpDocument = new XmpDocument([
+            '{' . XmpNamespace::DC->value . '}title'           => 'DC Title',
+            '{' . XmpNamespace::PHOTOSHOP->value . '}Headline' => 'Photoshop Headline',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata, $xmpDocument);
+
+        self::assertSame('DC Title', $image->title);
+    }
+
+    /**
+     * Supplies only a Photoshop Headline without dc:title in the XMP document.
+     * Verifies the Headline is used as fallback when dc:title is absent.
+     */
+    #[Test]
+    public function headlineFallsBackWhenXmpTitleIsAbsent(): void
+    {
+        $parsedExif = $this->parsedExif(
+            width: null,
+            height: null,
+            orientation: null,
+            bitsPerSample: null,
+            colorSpace: null,
+            interopIndex: null,
+            imageUniqueId: null,
+            documentName: null,
+            imageDescription: null,
+            imageTitle: 'EXIF Title',
+            componentsConfiguration: null,
+            compressedBitsPerPixel: null,
+            userComment: null,
+            userCommentEncoding: null,
+        );
+
+        $xmpDocument = new XmpDocument([
+            '{' . XmpNamespace::PHOTOSHOP->value . '}Headline' => 'Photoshop Headline',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata, $xmpDocument);
+
+        self::assertSame('Photoshop Headline', $image->title);
+    }
+
+    /**
+     * Supplies both EXIF dimensions and JPEG frame dimensions with different values.
+     * Verifies EXIF dimensions take precedence over JPEG frame dimensions.
+     */
+    #[Test]
+    public function exifDimensionsTakePrecedenceOverJpegDimensions(): void
+    {
+        $parsedExif = $this->parsedExif(
+            width: 6000,
+            height: 4000,
+            orientation: null,
+            bitsPerSample: 14,
+            colorSpace: null,
+            interopIndex: null,
+            imageUniqueId: null,
+            documentName: null,
+            imageDescription: null,
+            imageTitle: null,
+            componentsConfiguration: null,
+            compressedBitsPerPixel: null,
+            userComment: null,
+            userCommentEncoding: null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+            jpegBitsPerSample: 8,
+            jpegFrameWidth: 1920,
+            jpegFrameHeight: 1080,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(6000, $image->width);
+        self::assertSame(4000, $image->height);
+        self::assertSame(14, $image->bitsPerSample);
+    }
+
+    /**
+     * Supplies a QuickTime rotation of 0 degrees without EXIF orientation.
+     * Verifies the factory maps rotation 0 to Orientation::TopLeft.
+     */
+    #[Test]
+    public function mapsQuickTimeRotation0ToTopLeft(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::ROTATION_KEY => 0,
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(Orientation::TopLeft, $image->orientation);
+    }
+
+    /**
+     * Supplies a QuickTime rotation of 180 degrees without EXIF orientation.
+     * Verifies the factory maps rotation 180 to Orientation::BottomRight.
+     */
+    #[Test]
+    public function mapsQuickTimeRotation180ToBottomRight(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::ROTATION_KEY => 180,
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(Orientation::BottomRight, $image->orientation);
+    }
+
+    /**
+     * Supplies a QuickTime rotation of 270 degrees without EXIF orientation.
+     * Verifies the factory maps rotation 270 to Orientation::LeftBottom.
+     */
+    #[Test]
+    public function mapsQuickTimeRotation270ToLeftBottom(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::ROTATION_KEY => 270,
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+        );
+
+        $factory = new ImageFactory();
+        $image   = $factory->create($metadata);
+
+        self::assertSame(Orientation::LeftBottom, $image->orientation);
+    }
+
+    /**
+     * Supplies EXIF AdobeRGB ColorSpace (non-Uncalibrated, non-sRGB) with interop index R98.
+     * Verifies the factory returns AdobeRGB without overriding it based on interop hints.
+     */
+    #[Test]
+    public function returnsNonUncalibratedColorSpaceWithoutInteropOverride(): void
+    {
+        $parsedExif = $this->parsedExif(
+            width: null,
+            height: null,
+            orientation: null,
+            bitsPerSample: null,
+            colorSpace: ColorSpace::AdobeRgb,
+            interopIndex: 'R98',
+            imageUniqueId: null,
+            documentName: null,
+            imageDescription: null,
+            imageTitle: null,
+            componentsConfiguration: null,
+            compressedBitsPerPixel: null,
+            userComment: null,
+            userCommentEncoding: null,
+        );
+
+        $image = $this->createImageFromParsedExif($parsedExif);
+
+        self::assertSame(ColorSpace::AdobeRgb, $image->colorSpace);
+    }
+
+    /**
+     * Supplies EXIF Uncalibrated ColorSpace with a lowercase interop index 'r98'.
+     * Verifies strtoupper normalizes the index and the factory returns sRGB.
+     */
+    #[Test]
+    public function normalizesLowercaseInteropIndexR98ToSrgb(): void
+    {
+        $parsedExif = $this->parsedExif(
+            width: null,
+            height: null,
+            orientation: null,
+            bitsPerSample: null,
+            colorSpace: ColorSpace::Uncalibrated,
+            interopIndex: 'r98',
+            imageUniqueId: null,
+            documentName: null,
+            imageDescription: null,
+            imageTitle: null,
+            componentsConfiguration: null,
+            compressedBitsPerPixel: null,
+            userComment: null,
+            userCommentEncoding: null,
+        );
+
+        $image = $this->createImageFromParsedExif($parsedExif);
+
+        self::assertSame(ColorSpace::Srgb, $image->colorSpace);
     }
 
     /**
