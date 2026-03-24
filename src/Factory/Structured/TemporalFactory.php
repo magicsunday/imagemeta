@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Value\Temporal;
@@ -57,20 +58,22 @@ final readonly class TemporalFactory
         $exifDocument    = $metadata->exifDoc;
         $quickTimeLookup = $metadata->quickTimeLookup();
         $xmpDocument     = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $riffLookup      = $metadata->riffInfoLookup();
 
-        return $this->buildTemporal($exifDocument, $quickTimeLookup, $xmpDocument);
+        return $this->buildTemporal($exifDocument, $quickTimeLookup, $xmpDocument, $riffLookup);
     }
 
     /**
      * Builds the temporal value object derived from EXIF, QuickTime and XMP data.
      *
-     * @param ParsedExif|null  $exifDocument EXIF document exposing timestamps and offsets.
-     * @param QuickTimeLookup  $lookup       QuickTime metadata lookup for time fallbacks.
-     * @param XmpDocument|null $xmpDocument  XMP document providing timestamp fields.
+     * @param ParsedExif|null     $exifDocument EXIF document exposing timestamps and offsets.
+     * @param QuickTimeLookup     $lookup       QuickTime metadata lookup for time fallbacks.
+     * @param XmpDocument|null    $xmpDocument  XMP document providing timestamp fields.
+     * @param RiffInfoLookup|null $riffLookup   RIFF INFO/EXIF lookup for date fallbacks.
      *
      * @return Temporal Normalized temporal metadata aggregate.
      */
-    private function buildTemporal(?ParsedExif $exifDocument, QuickTimeLookup $lookup, ?XmpDocument $xmpDocument): Temporal
+    private function buildTemporal(?ParsedExif $exifDocument, QuickTimeLookup $lookup, ?XmpDocument $xmpDocument, ?RiffInfoLookup $riffLookup = null): Temporal
     {
         $exifCreate = $exifDocument?->dateTimeDigitized();
         $exifModify = $exifDocument?->dateTime();
@@ -97,6 +100,13 @@ final readonly class TemporalFactory
         $modify ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::MODIFY_DATE_KEY));
         $modify ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::TRACK_MODIFY_DATE_KEY));
         $modify ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::MEDIA_MODIFY_DATE_KEY));
+
+        // RIFF EXIF etim and INFO ICRD/IDIT as last-resort date fallback
+        if ($riffLookup instanceof RiffInfoLookup) {
+            $create ??= $this->parseFirstAvailableDate($riffLookup->exifTimeCreated());
+            $create ??= $this->parseFirstAvailableDate($riffLookup->string('ICRD'));
+            $create ??= $this->parseFirstAvailableDate($riffLookup->string('IDIT'));
+        }
 
         [$original, $tz, $subOriginalRaw] = $this->originalTimestampComponents($exifDocument);
 

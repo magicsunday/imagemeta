@@ -22,7 +22,7 @@ use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
  * Factory for creating Camera value objects from EXIF metadata with XMP and QuickTime fallback.
  *
  * Falls back to XMP properties per CIPA DC-X010-2017 Tables 5 and 14 when EXIF tags are absent,
- * then to QuickTime metadata keys for make and model.
+ * then to QuickTime metadata keys, and finally to RIFF EXIF sub-chunks for make and model.
  */
 final readonly class CameraFactory
 {
@@ -39,9 +39,11 @@ final readonly class CameraFactory
         $resolver        = XmpFallbackResolver::fromMetadata($metadata);
         $quickTimeLookup = $metadata->quickTimeLookup();
 
+        $riffLookup = $metadata->riffInfoLookup();
+
         return new Camera(
-            make: $exifDocument?->cameraMake() ?? $resolver?->string(ExifTag::MAKE) ?? $quickTimeLookup->string('com.apple.quicktime.make'),
-            model: $exifDocument?->cameraModel() ?? $resolver?->string(ExifTag::MODEL) ?? $quickTimeLookup->string('com.apple.quicktime.model'),
+            make: $exifDocument?->cameraMake() ?? $resolver?->string(ExifTag::MAKE) ?? $quickTimeLookup->string('com.apple.quicktime.make') ?? $riffLookup->exifMake(),
+            model: $exifDocument?->cameraModel() ?? $resolver?->string(ExifTag::MODEL) ?? $quickTimeLookup->string('com.apple.quicktime.model') ?? $riffLookup->exifModel(),
             ownerName: $exifDocument?->ownerName() ?? $resolver?->string(ExifTag::CAMERA_OWNER_NAME),
             firmware: $exifDocument?->cameraFirmware() ?? $resolver?->string(ExifTag::SOFTWARE),
             fileSource: $exifDocument?->fileSource() ?? $resolver?->enum(ExifTag::FILE_SOURCE, FileSource::class),

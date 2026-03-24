@@ -42,6 +42,8 @@ final readonly class DeviceFactory
             );
         }
 
+        $software ??= $metadata->riffInfoLookup()->string('ISFT');
+
         return new Device(
             software: $software,
             rawDevelopingSoftware: $exifDocument?->rawDevelopingSoftware(),

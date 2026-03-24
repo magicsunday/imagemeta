@@ -48,8 +48,8 @@ final readonly class ImageFactory
         $resolver        = $resolverDoc instanceof XmpDocument ? XmpFallbackResolver::fromDocument($resolverDoc) : null;
         $quickTimeLookup = $metadata->quickTimeLookup();
 
-        $width         = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth ?? $resolver?->int(ExifTag::PIXEL_X_DIMENSION) ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY);
-        $height        = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight ?? $resolver?->int(ExifTag::PIXEL_Y_DIMENSION) ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_HEIGHT_KEY);
+        $width         = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth ?? $resolver?->int(ExifTag::PIXEL_X_DIMENSION) ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY) ?? $metadata->riffAviHeader?->width;
+        $height        = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight ?? $resolver?->int(ExifTag::PIXEL_Y_DIMENSION) ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_HEIGHT_KEY) ?? $metadata->riffAviHeader?->height;
         $orientation   = $exifDocument?->orientation() ?? $this->rotationToOrientation($quickTimeLookup->int(QuickTimeMeta::ROTATION_KEY));
         $bitsPerSample = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_BIT_DEPTH_KEY);
 
