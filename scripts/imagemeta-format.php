@@ -3568,7 +3568,15 @@ if ((PHP_SAPI === 'cli') && (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __F
         $formatter = new MetadataFormatter();
         $formatter->format($filePath, $withDigest);
     } catch (Throwable $e) {
-        echo "\033[1;31mERROR: " . $e->getMessage() . "\033[0m\n";
+        $message = $e->getMessage();
+        $width   = strlen($message) + 6;
+        $pad     = str_repeat(' ', $width);
+
+        echo "\n";
+        echo "\033[37;41m{$pad}\033[0m\n";
+        echo "\033[37;41m   " . $message . '   ' . "\033[0m\n";
+        echo "\033[37;41m{$pad}\033[0m\n";
+        echo "\n";
 
         if ($withDebug) {
             echo $e->getTraceAsString() . "\n";
