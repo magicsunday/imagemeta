@@ -28,6 +28,8 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\NikonCameraTags;
+use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
+use MagicSunday\ImageMeta\Model\Riff\OlympusCameraTags;
 use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
 use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
@@ -64,7 +66,8 @@ use MagicSunday\ImageMeta\Value\StructuredMetadata;
  * | HDR gain map (gainMapBlob)         |  --  |    --    |  --  |  Y   |  --  |
  * | IPTC (iptcBlobs, iptcDoc)          |  Y   |    --    |  --  |  --  |  --  |
  * | RIFF (riffInfo, riffAviHeader,     |      |          |      |      |      |
- * |   riffExif, nikonCameraTags)       |  --  |    --    |  --  |  --  |  Y   |
+ * |   riffExif, nikonCameraTags,       |      |          |      |      |      |
+ * |   olympusCameraTags)              |  --  |    --    |  --  |  --  |  Y   |
  *
  * Properties outside their supported container group remain at their default
  * value (null for scalars/objects, empty array for list types).
@@ -133,6 +136,7 @@ final readonly class Metadata
      * @param RiffAviHeader|null                                   $riffAviHeader            Parsed AVI main header from RIFF containers. [RIFF only]
      * @param RiffExifChunk|null                                   $riffExif                 RIFF-native EXIF sub-chunk fields. [RIFF only]
      * @param NikonCameraTags|null                                 $nikonCameraTags          Nikon camera tags from ncdt/nctg chunk. [RIFF only]
+     * @param OlympusCameraTags|null                               $olympusCameraTags        Olympus camera tags from JUNK chunk. [RIFF only]
      * @param XmpParserInterface|null                              $xmpParser                Injected XMP parser for selective document creation.
      * @param IptcParserInterface|null                             $iptcParser               Injected IPTC parser for selective document creation.
      * @param (Closure(self): StructuredMetadata)|null             $structuredResolver       Memoizing resolver for structured metadata assembly.
@@ -171,6 +175,7 @@ final readonly class Metadata
         public ?RiffAviHeader $riffAviHeader = null,
         public ?RiffExifChunk $riffExif = null,
         public ?NikonCameraTags $nikonCameraTags = null,
+        public ?OlympusCameraTags $olympusCameraTags = null,
         public ?JfifSegment $jfifSegment = null,
         private ?XmpParserInterface $xmpParser = null,
         private ?IptcParserInterface $iptcParser = null,
@@ -258,6 +263,14 @@ final readonly class Metadata
     public function nikonAviLookup(): NikonAviLookup
     {
         return new NikonAviLookup($this->nikonCameraTags);
+    }
+
+    /**
+     * Returns a typed lookup for Olympus AVI Camera Tags (JUNK chunk).
+     */
+    public function olympusAviLookup(): OlympusAviLookup
+    {
+        return new OlympusAviLookup($this->olympusCameraTags);
     }
 
     /**
