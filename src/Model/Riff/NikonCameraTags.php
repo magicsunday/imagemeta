@@ -27,7 +27,6 @@ final readonly class NikonCameraTags
      * @param string|null        $make                 Camera make (tag 0x0003).
      * @param string|null        $model                Camera model (tag 0x0004).
      * @param string|null        $software             Firmware version (tag 0x0005).
-     * @param string|null        $equipment            Equipment description (tag 0x0006).
      * @param int|null           $orientation          Image orientation (tag 0x0007).
      * @param float|null         $exposureTime         Exposure time in seconds (tag 0x0008).
      * @param float|null         $fNumber              F-number (tag 0x0009).
@@ -37,8 +36,6 @@ final readonly class NikonCameraTags
      * @param float|null         $focalLength          Focal length in mm (tag 0x000f).
      * @param string|null        $dateTimeOriginal     Original capture date (tag 0x0013, EXIF format).
      * @param string|null        $createDate           Creation date (tag 0x0014, EXIF format).
-     * @param float|null         $duration             Video duration in seconds (tag 0x0016).
-     * @param string|null        $focusMode            Focus mode string (tag 0x0018).
      * @param float|null         $digitalZoom          Digital zoom ratio (tag 0x001b).
      * @param string|null        $whiteBalance         White balance mode (tag 0x001f).
      */
@@ -47,7 +44,6 @@ final readonly class NikonCameraTags
         public ?string $make = null,
         public ?string $model = null,
         public ?string $software = null,
-        public ?string $equipment = null,
         public ?int $orientation = null,
         public ?float $exposureTime = null,
         public ?float $fNumber = null,
@@ -57,8 +53,6 @@ final readonly class NikonCameraTags
         public ?float $focalLength = null,
         public ?string $dateTimeOriginal = null,
         public ?string $createDate = null,
-        public ?float $duration = null,
-        public ?string $focusMode = null,
         public ?float $digitalZoom = null,
         public ?string $whiteBalance = null,
     ) {

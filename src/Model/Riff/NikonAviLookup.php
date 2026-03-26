@@ -38,11 +38,6 @@ final readonly class NikonAviLookup
         return $this->tags?->software;
     }
 
-    public function equipment(): ?string
-    {
-        return $this->tags?->equipment;
-    }
-
     public function dateTimeOriginal(): ?string
     {
         return $this->tags?->dateTimeOriginal;
@@ -86,16 +81,6 @@ final readonly class NikonAviLookup
     public function focalLength(): ?float
     {
         return $this->tags?->focalLength;
-    }
-
-    public function duration(): ?float
-    {
-        return $this->tags?->duration;
-    }
-
-    public function focusMode(): ?string
-    {
-        return $this->tags?->focusMode;
     }
 
     public function digitalZoom(): ?float

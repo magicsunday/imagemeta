@@ -164,7 +164,6 @@ final class NctgParser
         $make             = null;
         $model            = null;
         $software         = null;
-        $equipment        = null;
         $orientation      = null;
         $exposureTime     = null;
         $fNumber          = null;
@@ -174,8 +173,6 @@ final class NctgParser
         $focalLength      = null;
         $dateTimeOriginal = null;
         $createDate       = null;
-        $duration         = null;
-        $focusMode        = null;
         $digitalZoom      = null;
         $whiteBalance     = null;
 
@@ -205,7 +202,6 @@ final class NctgParser
                 $make,
                 $model,
                 $software,
-                $equipment,
                 $orientation,
                 $exposureTime,
                 $fNumber,
@@ -215,8 +211,6 @@ final class NctgParser
                 $focalLength,
                 $dateTimeOriginal,
                 $createDate,
-                $duration,
-                $focusMode,
                 $digitalZoom,
                 $whiteBalance,
             );
@@ -233,7 +227,6 @@ final class NctgParser
             $make,
             $model,
             $software,
-            $equipment,
             $orientation,
             $exposureTime,
             $fNumber,
@@ -243,8 +236,6 @@ final class NctgParser
             $focalLength,
             $dateTimeOriginal,
             $createDate,
-            $duration,
-            $focusMode,
             $digitalZoom,
             $whiteBalance,
         );
@@ -263,7 +254,6 @@ final class NctgParser
         ?string &$make,
         ?string &$model,
         ?string &$software,
-        ?string &$equipment,
         ?int &$orientation,
         ?float &$exposureTime,
         ?float &$fNumber,
@@ -273,8 +263,6 @@ final class NctgParser
         ?float &$focalLength,
         ?string &$dateTimeOriginal,
         ?string &$createDate,
-        ?float &$duration,
-        ?string &$focusMode,
         ?float &$digitalZoom,
         ?string &$whiteBalance,
     ): void {
@@ -291,10 +279,8 @@ final class NctgParser
                 self::TAG_MAKE               => $make             = $str,
                 self::TAG_MODEL              => $model            = $str,
                 self::TAG_SOFTWARE           => $software         = $str,
-                self::TAG_EQUIPMENT          => $equipment        = $str,
                 self::TAG_DATE_TIME_ORIGINAL => $dateTimeOriginal = $str,
                 self::TAG_CREATE_DATE        => $createDate       = $str,
-                self::TAG_FOCUS_MODE         => $focusMode        = $str,
                 self::TAG_WHITE_BALANCE      => $whiteBalance     = $str,
                 default                      => null,
             };
@@ -314,7 +300,6 @@ final class NctgParser
                 self::TAG_F_NUMBER      => $fNumber      = $value,
                 self::TAG_MAX_APERTURE  => $maxAperture  = $value,
                 self::TAG_FOCAL_LENGTH  => $focalLength  = $value,
-                self::TAG_DURATION      => $duration     = $value,
                 self::TAG_DIGITAL_ZOOM  => $digitalZoom  = $value,
                 default                 => null,
             };
