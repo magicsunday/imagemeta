@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
+use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
@@ -59,24 +60,26 @@ final readonly class TemporalFactory
         $exifDocument    = $metadata->exifDoc;
         $quickTimeLookup = $metadata->quickTimeLookup();
         $xmpDocument     = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
-        $riffLookup      = $metadata->riffInfoLookup();
-        $nikonAviLookup  = $metadata->nikonAviLookup();
+        $riffLookup        = $metadata->riffInfoLookup();
+        $nikonAviLookup    = $metadata->nikonAviLookup();
+        $olympusAviLookup  = $metadata->olympusAviLookup();
 
-        return $this->buildTemporal($exifDocument, $quickTimeLookup, $xmpDocument, $riffLookup, $nikonAviLookup);
+        return $this->buildTemporal($exifDocument, $quickTimeLookup, $xmpDocument, $riffLookup, $nikonAviLookup, $olympusAviLookup);
     }
 
     /**
      * Builds the temporal value object derived from EXIF, QuickTime and XMP data.
      *
-     * @param ParsedExif|null     $exifDocument   EXIF document exposing timestamps and offsets.
-     * @param QuickTimeLookup     $lookup         QuickTime metadata lookup for time fallbacks.
-     * @param XmpDocument|null    $xmpDocument    XMP document providing timestamp fields.
-     * @param RiffInfoLookup|null $riffLookup     RIFF INFO/EXIF lookup for date fallbacks.
-     * @param NikonAviLookup|null $nikonAviLookup Nikon AVI Camera Tags lookup for date fallbacks.
+     * @param ParsedExif|null       $exifDocument     EXIF document exposing timestamps and offsets.
+     * @param QuickTimeLookup       $lookup           QuickTime metadata lookup for time fallbacks.
+     * @param XmpDocument|null      $xmpDocument      XMP document providing timestamp fields.
+     * @param RiffInfoLookup|null   $riffLookup       RIFF INFO/EXIF lookup for date fallbacks.
+     * @param NikonAviLookup|null   $nikonAviLookup   Nikon AVI Camera Tags lookup for date fallbacks.
+     * @param OlympusAviLookup|null $olympusAviLookup Olympus AVI Camera Tags lookup for date fallbacks.
      *
      * @return Temporal Normalized temporal metadata aggregate.
      */
-    private function buildTemporal(?ParsedExif $exifDocument, QuickTimeLookup $lookup, ?XmpDocument $xmpDocument, ?RiffInfoLookup $riffLookup = null, ?NikonAviLookup $nikonAviLookup = null): Temporal
+    private function buildTemporal(?ParsedExif $exifDocument, QuickTimeLookup $lookup, ?XmpDocument $xmpDocument, ?RiffInfoLookup $riffLookup = null, ?NikonAviLookup $nikonAviLookup = null, ?OlympusAviLookup $olympusAviLookup = null): Temporal
     {
         $exifCreate = $exifDocument?->dateTimeDigitized();
         $exifModify = $exifDocument?->dateTime();
@@ -109,6 +112,10 @@ final readonly class TemporalFactory
         // semantically precise than the free-form RIFF EXIF etim or INFO ICRD strings.
         $create ??= DateTimeUtil::parseRiffDate($nikonAviLookup?->createDate());
 
+        // Olympus AVI JUNK chunk date fallback — placed before generic RIFF because
+        // Olympus-specific fields are more reliable than free-form RIFF INFO strings.
+        $create ??= DateTimeUtil::parseRiffDate($olympusAviLookup?->dateTime1());
+
         // RIFF EXIF etim and INFO ICRD/IDIT as last-resort date fallback
         if ($riffLookup instanceof RiffInfoLookup) {
             $create ??= DateTimeUtil::parseRiffDate($riffLookup->exifTimeCreated());
@@ -127,6 +134,7 @@ final readonly class TemporalFactory
         // Fall back to resolved create date when no EXIF original is available
         $originalWithTz ??= $create;
         $originalWithTz ??= DateTimeUtil::parseRiffDate($nikonAviLookup?->dateTimeOriginal());
+        $originalWithTz ??= DateTimeUtil::parseRiffDate($olympusAviLookup?->dateTime1());
 
         $offsetTime          = $exifDocument?->offsetTime();
         $offsetTimeOriginal  = $exifDocument?->offsetTimeOriginal();
