@@ -36,6 +36,7 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Riff\NikonCameraTags;
+use MagicSunday\ImageMeta\Model\Riff\OlympusCameraTags;
 use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
 use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
@@ -331,6 +332,21 @@ final class MetadataFormatter
         0x001e => 'Sharpness',
         0x001f => 'White Balance',
         0x0020 => 'Noise Reduction',
+    ];
+
+    /**
+     * Maps Olympus AVI JUNK chunk byte offsets to human-readable labels.
+     *
+     * Reference: ExifTool Olympus.pm — %Image::ExifTool::Olympus::AVI tag table.
+     *
+     * @var array<int, string>
+     */
+    private const array OLYMPUS_AVI_TAG_LABELS = [
+        0x0012 => 'Make',
+        0x002C => 'Camera Model Name',
+        0x005E => 'F Number',
+        0x0083 => 'Date Time 1',
+        0x009D => 'Date Time 2',
     ];
 
     /**
@@ -1014,6 +1030,9 @@ final class MetadataFormatter
         // Nikon Camera Tags section
         $this->printNikonSection($metadata);
 
+        // Olympus Camera Tags section
+        $this->printOlympusSection($metadata);
+
         // MPF section
         if ($metadata->mpfDocument instanceof MpfDocument) {
             $this->printMpfSection($metadata->mpfDocument);
@@ -1116,6 +1135,10 @@ final class MetadataFormatter
 
         if ($ifdContext === 'Nikon') {
             return self::NIKON_AVI_TAG_LABELS[$tagId] ?? sprintf('Nikon AVI Tags 0x%04x', $tagId);
+        }
+
+        if ($ifdContext === 'Olympus') {
+            return self::OLYMPUS_AVI_TAG_LABELS[$tagId] ?? sprintf('Olympus AVI Tags 0x%04x', $tagId);
         }
 
         // Fall back to general TIFF, EXIF, DNG, Adobe, TIFF/IT, IPTC, Microsoft, Epson, TIFF/EP tag maps
@@ -2861,6 +2884,25 @@ final class MetadataFormatter
 
         if ($data !== []) {
             $this->printSection('Nikon', $data, showHex: true, ifdContext: 'Nikon');
+        }
+    }
+
+    /**
+     * Prints Olympus Camera Tags (JUNK chunk) section with byte offsets.
+     *
+     * Modeled after ExifTool's Olympus group output for AVI files.
+     */
+    private function printOlympusSection(Metadata $metadata): void
+    {
+        if (!$metadata->olympusCameraTags instanceof OlympusCameraTags) {
+            return;
+        }
+
+        $data = $metadata->olympusCameraTags->entries;
+        ksort($data);
+
+        if ($data !== []) {
+            $this->printSection('Olympus', $data, showHex: true, ifdContext: 'Olympus');
         }
     }
 
