@@ -2856,12 +2856,7 @@ final class MetadataFormatter
             return;
         }
 
-        $data = [];
-
-        foreach ($metadata->nikonCameraTags->entries as $tagId => $value) {
-            $data[$tagId] = $value;
-        }
-
+        $data = $metadata->nikonCameraTags->entries;
         ksort($data);
 
         if ($data !== []) {
