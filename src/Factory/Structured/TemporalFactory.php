@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
@@ -59,21 +60,23 @@ final readonly class TemporalFactory
         $quickTimeLookup = $metadata->quickTimeLookup();
         $xmpDocument     = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
         $riffLookup      = $metadata->riffInfoLookup();
+        $nikonAviLookup  = $metadata->nikonAviLookup();
 
-        return $this->buildTemporal($exifDocument, $quickTimeLookup, $xmpDocument, $riffLookup);
+        return $this->buildTemporal($exifDocument, $quickTimeLookup, $xmpDocument, $riffLookup, $nikonAviLookup);
     }
 
     /**
      * Builds the temporal value object derived from EXIF, QuickTime and XMP data.
      *
-     * @param ParsedExif|null     $exifDocument EXIF document exposing timestamps and offsets.
-     * @param QuickTimeLookup     $lookup       QuickTime metadata lookup for time fallbacks.
-     * @param XmpDocument|null    $xmpDocument  XMP document providing timestamp fields.
-     * @param RiffInfoLookup|null $riffLookup   RIFF INFO/EXIF lookup for date fallbacks.
+     * @param ParsedExif|null     $exifDocument   EXIF document exposing timestamps and offsets.
+     * @param QuickTimeLookup     $lookup         QuickTime metadata lookup for time fallbacks.
+     * @param XmpDocument|null    $xmpDocument    XMP document providing timestamp fields.
+     * @param RiffInfoLookup|null $riffLookup     RIFF INFO/EXIF lookup for date fallbacks.
+     * @param NikonAviLookup|null $nikonAviLookup Nikon AVI Camera Tags lookup for date fallbacks.
      *
      * @return Temporal Normalized temporal metadata aggregate.
      */
-    private function buildTemporal(?ParsedExif $exifDocument, QuickTimeLookup $lookup, ?XmpDocument $xmpDocument, ?RiffInfoLookup $riffLookup = null): Temporal
+    private function buildTemporal(?ParsedExif $exifDocument, QuickTimeLookup $lookup, ?XmpDocument $xmpDocument, ?RiffInfoLookup $riffLookup = null, ?NikonAviLookup $nikonAviLookup = null): Temporal
     {
         $exifCreate = $exifDocument?->dateTimeDigitized();
         $exifModify = $exifDocument?->dateTime();
@@ -101,6 +104,9 @@ final readonly class TemporalFactory
         $modify ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::TRACK_MODIFY_DATE_KEY));
         $modify ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::MEDIA_MODIFY_DATE_KEY));
 
+        // Nikon AVI Camera Tags date fallback (ncdt/nctg chunk)
+        $create ??= DateTimeUtil::parseRiffDate($nikonAviLookup?->createDate());
+
         // RIFF EXIF etim and INFO ICRD/IDIT as last-resort date fallback
         if ($riffLookup instanceof RiffInfoLookup) {
             $create ??= DateTimeUtil::parseRiffDate($riffLookup->exifTimeCreated());
@@ -118,6 +124,7 @@ final readonly class TemporalFactory
 
         // Fall back to resolved create date when no EXIF original is available
         $originalWithTz ??= $create;
+        $originalWithTz ??= DateTimeUtil::parseRiffDate($nikonAviLookup?->dateTimeOriginal());
 
         $offsetTime          = $exifDocument?->offsetTime();
         $offsetTimeOriginal  = $exifDocument?->offsetTimeOriginal();
