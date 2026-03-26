@@ -35,6 +35,7 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\NikonCameraTags;
 use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
 use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
@@ -297,6 +298,39 @@ final class MetadataFormatter
         'ITRK' => 'Track Number',
         'ISMP' => 'Time Code',
         'IDIT' => 'Date/Time Original',
+    ];
+
+    /**
+     * Maps Nikon AVI nctg tag IDs to human-readable labels.
+     *
+     * Reference: ExifTool Nikon.pm — %Image::ExifTool::Nikon::AVITags.
+     *
+     * @var array<int, string>
+     */
+    private const array NIKON_AVI_TAG_LABELS = [
+        0x0003 => 'Make',
+        0x0004 => 'Model',
+        0x0005 => 'Software',
+        0x0006 => 'Equipment',
+        0x0007 => 'Orientation',
+        0x0008 => 'Exposure Time',
+        0x0009 => 'F Number',
+        0x000a => 'Exposure Compensation',
+        0x000b => 'Max Aperture Value',
+        0x000c => 'Metering Mode',
+        0x000f => 'Focal Length',
+        0x0010 => 'X Resolution',
+        0x0011 => 'Y Resolution',
+        0x0012 => 'Resolution Unit',
+        0x0013 => 'Date/Time Original',
+        0x0014 => 'Create Date',
+        0x0016 => 'Duration',
+        0x0018 => 'Focus Mode',
+        0x001b => 'Digital Zoom',
+        0x001d => 'Color Mode',
+        0x001e => 'Sharpness',
+        0x001f => 'White Balance',
+        0x0020 => 'Noise Reduction',
     ];
 
     /**
@@ -977,6 +1011,9 @@ final class MetadataFormatter
         // RIFF section
         $this->printRiffSection($metadata);
 
+        // Nikon Camera Tags section
+        $this->printNikonSection($metadata);
+
         // MPF section
         if ($metadata->mpfDocument instanceof MpfDocument) {
             $this->printMpfSection($metadata->mpfDocument);
@@ -1075,6 +1112,10 @@ final class MetadataFormatter
             if ($tagId === ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH) {
                 return 'Thumbnail Length';
             }
+        }
+
+        if ($ifdContext === 'Nikon') {
+            return self::NIKON_AVI_TAG_LABELS[$tagId] ?? sprintf('Nikon AVI Tags 0x%04x', $tagId);
         }
 
         // Fall back to general TIFF, EXIF, DNG, Adobe, TIFF/IT, IPTC, Microsoft, Epson, TIFF/EP tag maps
@@ -2801,6 +2842,30 @@ final class MetadataFormatter
 
         if ($data !== []) {
             $this->printSection('RIFF', $data);
+        }
+    }
+
+    /**
+     * Prints Nikon Camera Tags (nctg) section with tag IDs.
+     *
+     * Modeled after ExifTool's Nikon group output for AVI files.
+     */
+    private function printNikonSection(Metadata $metadata): void
+    {
+        if (!$metadata->nikonCameraTags instanceof NikonCameraTags) {
+            return;
+        }
+
+        $data = [];
+
+        foreach ($metadata->nikonCameraTags->entries as $tagId => $value) {
+            $data[$tagId] = $value;
+        }
+
+        ksort($data);
+
+        if ($data !== []) {
+            $this->printSection('Nikon', $data, showHex: true, ifdContext: 'Nikon');
         }
     }
 
