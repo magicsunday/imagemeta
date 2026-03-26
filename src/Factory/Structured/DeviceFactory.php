@@ -43,6 +43,7 @@ final readonly class DeviceFactory
         }
 
         $software ??= $metadata->riffInfoLookup()->string('ISFT');
+        $software ??= $metadata->nikonAviLookup()->software();
 
         return new Device(
             software: $software,
