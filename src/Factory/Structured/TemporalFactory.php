@@ -104,7 +104,9 @@ final readonly class TemporalFactory
         $modify ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::TRACK_MODIFY_DATE_KEY));
         $modify ??= $this->macEpochToDateTime($lookup->int(QuickTimeMeta::MEDIA_MODIFY_DATE_KEY));
 
-        // Nikon AVI Camera Tags date fallback (ncdt/nctg chunk)
+        // Nikon AVI Camera Tags date fallback (ncdt/nctg chunk) —
+        // placed before generic RIFF because the typed nctg tag 0x0014 is more
+        // semantically precise than the free-form RIFF EXIF etim or INFO ICRD strings.
         $create ??= DateTimeUtil::parseRiffDate($nikonAviLookup?->createDate());
 
         // RIFF EXIF etim and INFO ICRD/IDIT as last-resort date fallback
