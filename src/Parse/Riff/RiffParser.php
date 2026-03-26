@@ -562,7 +562,7 @@ final class RiffParser implements RiffParserInterface
     private function handleJunkChunk(int $dataOffset, int $dataSize): void
     {
         // Skip if already parsed — prevents later non-Olympus JUNK from overwriting
-        if ($this->olympusCameraTags !== null) {
+        if ($this->olympusCameraTags instanceof OlympusCameraTags) {
             return;
         }
 

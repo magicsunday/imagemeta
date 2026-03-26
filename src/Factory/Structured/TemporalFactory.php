@@ -57,12 +57,12 @@ final readonly class TemporalFactory
      */
     public function create(Metadata $metadata): Temporal
     {
-        $exifDocument    = $metadata->exifDoc;
-        $quickTimeLookup = $metadata->quickTimeLookup();
-        $xmpDocument     = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
-        $riffLookup        = $metadata->riffInfoLookup();
-        $nikonAviLookup    = $metadata->nikonAviLookup();
-        $olympusAviLookup  = $metadata->olympusAviLookup();
+        $exifDocument     = $metadata->exifDoc;
+        $quickTimeLookup  = $metadata->quickTimeLookup();
+        $xmpDocument      = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $riffLookup       = $metadata->riffInfoLookup();
+        $nikonAviLookup   = $metadata->nikonAviLookup();
+        $olympusAviLookup = $metadata->olympusAviLookup();
 
         return $this->buildTemporal($exifDocument, $quickTimeLookup, $xmpDocument, $riffLookup, $nikonAviLookup, $olympusAviLookup);
     }

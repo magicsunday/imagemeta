@@ -321,11 +321,11 @@ final class MetadataBuilder
     /**
      * Configures RIFF-specific metadata from AVI containers.
      *
-     * @param RiffInfo|null            $info              INFO chunk metadata.
-     * @param RiffAviHeader|null       $aviHeader         Parsed AVI main header.
-     * @param RiffExifChunk|null       $riffExif          RIFF-native EXIF sub-chunk fields.
-     * @param NikonCameraTags|null     $nikonCameraTags   Nikon camera tags from ncdt/nctg chunk.
-     * @param OlympusCameraTags|null   $olympusCameraTags Olympus camera tags from JUNK chunk.
+     * @param RiffInfo|null          $info              INFO chunk metadata.
+     * @param RiffAviHeader|null     $aviHeader         Parsed AVI main header.
+     * @param RiffExifChunk|null     $riffExif          RIFF-native EXIF sub-chunk fields.
+     * @param NikonCameraTags|null   $nikonCameraTags   Nikon camera tags from ncdt/nctg chunk.
+     * @param OlympusCameraTags|null $olympusCameraTags Olympus camera tags from JUNK chunk.
      */
     public function withRiff(
         ?RiffInfo $info = null,

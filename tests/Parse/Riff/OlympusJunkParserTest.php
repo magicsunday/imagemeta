@@ -74,7 +74,7 @@ final class OlympusJunkParserTest extends TestCase
         }
 
         if ($dateTime2 !== null) {
-            $payload = substr_replace($payload, str_pad($dateTime2, 24, "\x00"), 0x009D, 24);
+            return substr_replace($payload, str_pad($dateTime2, 24, "\x00"), 0x009D, 24);
         }
 
         return $payload;
