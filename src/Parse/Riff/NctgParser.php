@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Parse\Riff;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Riff\NikonCameraTags;
 
+use function round;
 use function rtrim;
 use function sprintf;
 use function strlen;
