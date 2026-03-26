@@ -2899,6 +2899,17 @@ final class MetadataFormatter
         }
 
         $data = $metadata->olympusCameraTags->entries;
+
+        // Normalize date fields from C ctime ("Fri Jun  6 11:08:45 2014")
+        // to EXIF format ("2014:06:06 11:08:45") for consistent display.
+        if (isset($data[0x0083])) {
+            $data[0x0083] = $this->normalizeRiffDate($data[0x0083]);
+        }
+
+        if (isset($data[0x009D])) {
+            $data[0x009D] = $this->normalizeRiffDate($data[0x009D]);
+        }
+
         ksort($data);
 
         if ($data !== []) {
