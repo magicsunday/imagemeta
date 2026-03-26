@@ -477,8 +477,6 @@ final class NctgParser
         $value = $num / $den;
 
         // If the result is a clean decimal (e.g. 2.8), show as float
-        $formatted = sprintf('%g', round($value, 6));
-
-        return $formatted;
+        return sprintf('%g', round($value, 6));
     }
 }
