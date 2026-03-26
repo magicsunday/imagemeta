@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Riff\NikonCameraTags;
+use MagicSunday\ImageMeta\Model\Riff\OlympusCameraTags;
 use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
 use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
@@ -71,6 +72,8 @@ final class RiffParser implements RiffParserInterface
 
     private ?NikonCameraTags $nikonCameraTags = null;
 
+    private ?OlympusCameraTags $olympusCameraTags = null;
+
     private int $chunkCount = 0;
 
     public function __construct(
@@ -101,6 +104,7 @@ final class RiffParser implements RiffParserInterface
             $this->aviHeader,
             $this->riffExif,
             $this->nikonCameraTags,
+            $this->olympusCameraTags,
         );
     }
 
@@ -201,6 +205,11 @@ final class RiffParser implements RiffParserInterface
 
             case 'avih':
                 $this->handleAviHeader($dataOffset, $chunkSize);
+
+                break;
+
+            case 'JUNK':
+                $this->handleJunkChunk($dataOffset, $chunkSize);
 
                 break;
         }
@@ -541,6 +550,35 @@ final class RiffParser implements RiffParserInterface
             $totalFrames,
             $streams,
         );
+    }
+
+    /**
+     * Handles a JUNK chunk, attempting to parse Olympus camera metadata.
+     *
+     * Olympus cameras embed metadata in JUNK chunks with an 'OLYMDigital Camera' signature.
+     * Only the first successfully parsed Olympus JUNK chunk is retained — later non-Olympus
+     * JUNK chunks are silently skipped.
+     */
+    private function handleJunkChunk(int $dataOffset, int $dataSize): void
+    {
+        // Skip if already parsed — prevents later non-Olympus JUNK from overwriting
+        if ($this->olympusCameraTags !== null) {
+            return;
+        }
+
+        if ($dataSize < OlympusJunkParser::MIN_PAYLOAD_SIZE || $dataSize > $this->config->maxMetadataPayloadSize) {
+            return;
+        }
+
+        $this->stream->seek($dataOffset);
+
+        try {
+            $payload = $this->stream->read($dataSize);
+        } catch (BoundsError) {
+            return;
+        }
+
+        $this->olympusCameraTags = (new OlympusJunkParser())->parse($payload);
     }
 
     /**

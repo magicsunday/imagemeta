@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Riff;
 
 use MagicSunday\ImageMeta\Model\Riff\NikonCameraTags;
+use MagicSunday\ImageMeta\Model\Riff\OlympusCameraTags;
 use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
 use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
@@ -22,12 +23,13 @@ use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
 final readonly class RiffParseResult
 {
     /**
-     * @param list<string>         $exifBlobs       Raw TIFF/EXIF blobs extracted from strd chunks.
-     * @param list<string>         $xmpBlobs        Raw XMP packets extracted from _PMX chunks.
-     * @param RiffInfo|null        $info            INFO chunk metadata, if present.
-     * @param RiffAviHeader|null   $aviHeader       Parsed AVI main header, if present.
-     * @param RiffExifChunk|null   $riffExif        RIFF-native EXIF sub-chunk fields, if present.
-     * @param NikonCameraTags|null $nikonCameraTags Nikon camera tags from ncdt/nctg, if present.
+     * @param list<string>           $exifBlobs         Raw TIFF/EXIF blobs extracted from strd chunks.
+     * @param list<string>           $xmpBlobs          Raw XMP packets extracted from _PMX chunks.
+     * @param RiffInfo|null          $info              INFO chunk metadata, if present.
+     * @param RiffAviHeader|null     $aviHeader         Parsed AVI main header, if present.
+     * @param RiffExifChunk|null     $riffExif          RIFF-native EXIF sub-chunk fields, if present.
+     * @param NikonCameraTags|null   $nikonCameraTags   Nikon camera tags from ncdt/nctg, if present.
+     * @param OlympusCameraTags|null $olympusCameraTags Olympus camera tags from JUNK chunk, if present.
      */
     public function __construct(
         public array $exifBlobs,
@@ -36,6 +38,7 @@ final readonly class RiffParseResult
         public ?RiffAviHeader $aviHeader,
         public ?RiffExifChunk $riffExif,
         public ?NikonCameraTags $nikonCameraTags = null,
+        public ?OlympusCameraTags $olympusCameraTags = null,
     ) {
     }
 }
