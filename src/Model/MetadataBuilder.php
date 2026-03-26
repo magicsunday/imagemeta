@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\NikonCameraTags;
 use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
 use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
@@ -107,6 +108,8 @@ final class MetadataBuilder
     private ?RiffAviHeader $riffAviHeader = null;
 
     private ?RiffExifChunk $riffExif = null;
+
+    private ?NikonCameraTags $nikonCameraTags = null;
 
     private ?string $mimeType = null;
 
@@ -315,18 +318,21 @@ final class MetadataBuilder
     /**
      * Configures RIFF-specific metadata from AVI containers.
      *
-     * @param RiffInfo|null      $info      INFO chunk metadata.
-     * @param RiffAviHeader|null $aviHeader Parsed AVI main header.
-     * @param RiffExifChunk|null $riffExif  RIFF-native EXIF sub-chunk fields.
+     * @param RiffInfo|null        $info            INFO chunk metadata.
+     * @param RiffAviHeader|null   $aviHeader       Parsed AVI main header.
+     * @param RiffExifChunk|null   $riffExif        RIFF-native EXIF sub-chunk fields.
+     * @param NikonCameraTags|null $nikonCameraTags Nikon camera tags from ncdt/nctg chunk.
      */
     public function withRiff(
         ?RiffInfo $info = null,
         ?RiffAviHeader $aviHeader = null,
         ?RiffExifChunk $riffExif = null,
+        ?NikonCameraTags $nikonCameraTags = null,
     ): self {
-        $this->riffInfo      = $info;
-        $this->riffAviHeader = $aviHeader;
-        $this->riffExif      = $riffExif;
+        $this->riffInfo        = $info;
+        $this->riffAviHeader   = $aviHeader;
+        $this->riffExif        = $riffExif;
+        $this->nikonCameraTags = $nikonCameraTags;
 
         return $this;
     }
@@ -391,6 +397,7 @@ final class MetadataBuilder
             riffInfo: $this->riffInfo,
             riffAviHeader: $this->riffAviHeader,
             riffExif: $this->riffExif,
+            nikonCameraTags: $this->nikonCameraTags,
             jfifSegment: $this->jfifSegment,
             xmpParser: $this->xmpParser,
             iptcParser: $this->iptcParser,

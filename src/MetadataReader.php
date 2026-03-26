@@ -385,7 +385,7 @@ final readonly class MetadataReader
             ->withParsers($this->xmpParser, $this->iptcParser)
             ->withExif($result->exifBlobs, $exifDoc, $makerNotes)
             ->withXmp($result->xmpBlobs, $xmpDoc)
-            ->withRiff($result->info, $result->aviHeader, $result->riffExif)
+            ->withRiff($result->info, $result->aviHeader, $result->riffExif, $result->nikonCameraTags)
             ->withFileIdentity($mimeType, $fileSize, $extension, $digestSha256)
             ->build();
     }
