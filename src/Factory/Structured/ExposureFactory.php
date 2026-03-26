@@ -47,6 +47,7 @@ final readonly class ExposureFactory
         $exifDocument = $metadata->exifDoc;
         $resolver     = XmpFallbackResolver::fromMetadata($metadata);
         $nikonAvi     = $metadata->nikonAviLookup();
+        $olympusAvi   = $metadata->olympusAviLookup();
 
         $exposureProgram = $exifDocument?->exposureProgram() ?? $resolver?->enum(ExifTag::EXPOSURE_PROGRAM, ExposureProgram::class);
 
@@ -72,7 +73,7 @@ final readonly class ExposureFactory
             isoLatitudeZzz: $exifDocument?->isoSpeedLatitudeZzz() ?? $resolver?->int(ExifTag::ISO_SPEED_LATITUDE_ZZZ),
             exposureTimeSec: $exifDocument?->exposureTime() ?? $resolver?->float(ExifTag::EXPOSURE_TIME) ?? $nikonAvi->exposureTime(),
             shutterSpeedEv: $exifDocument?->shutterSpeedValue() ?? $resolver?->float(ExifTag::SHUTTER_SPEED_VALUE),
-            fNumber: $exifDocument?->fNumber() ?? $resolver?->float(ExifTag::F_NUMBER) ?? $nikonAvi->fNumber(),
+            fNumber: $exifDocument?->fNumber() ?? $resolver?->float(ExifTag::F_NUMBER) ?? $nikonAvi->fNumber() ?? $olympusAvi->fNumber(),
             apertureEv: $exifDocument?->apertureValue() ?? $resolver?->float(ExifTag::APERTURE_VALUE),
             exposureBiasEv: $exifDocument?->exposureBias() ?? $resolver?->float(ExifTag::EXPOSURE_BIAS_VALUE) ?? $nikonAvi->exposureCompensation(),
             brightnessEv: $exifDocument?->brightnessValue() ?? $resolver?->float(ExifTag::BRIGHTNESS_VALUE),
