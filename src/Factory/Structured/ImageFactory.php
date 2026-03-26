@@ -48,9 +48,12 @@ final readonly class ImageFactory
         $resolver        = $resolverDoc instanceof XmpDocument ? XmpFallbackResolver::fromDocument($resolverDoc) : null;
         $quickTimeLookup = $metadata->quickTimeLookup();
 
+        $nikonAvi        = $metadata->nikonAviLookup();
+        $nikonOrientation = $nikonAvi->orientation();
+
         $width         = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth ?? $resolver?->int(ExifTag::PIXEL_X_DIMENSION) ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY) ?? $metadata->riffAviHeader?->width;
         $height        = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight ?? $resolver?->int(ExifTag::PIXEL_Y_DIMENSION) ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_HEIGHT_KEY) ?? $metadata->riffAviHeader?->height;
-        $orientation   = $exifDocument?->orientation() ?? $this->rotationToOrientation($quickTimeLookup->int(QuickTimeMeta::ROTATION_KEY));
+        $orientation   = $exifDocument?->orientation() ?? $this->rotationToOrientation($quickTimeLookup->int(QuickTimeMeta::ROTATION_KEY)) ?? ($nikonOrientation !== null ? Orientation::tryFrom($nikonOrientation) : null);
         $bitsPerSample = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_BIT_DEPTH_KEY);
 
         $xmpTitle       = $xmpDocument?->string(XmpNamespace::DC->value, 'title');
