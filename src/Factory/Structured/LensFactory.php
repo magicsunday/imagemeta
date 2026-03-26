@@ -44,26 +44,34 @@ final readonly class LensFactory
         $exifDocument = $metadata->exifDoc;
         $xmpDocument  = $metadata->selectiveXmpDocument();
         $resolver     = $xmpDocument instanceof XmpDocument ? XmpFallbackResolver::fromDocument($xmpDocument) : null;
+        $nikonAvi     = $metadata->nikonAviLookup();
 
         if (!$exifDocument instanceof ParsedExif) {
+            $maxF      = $this->xmpMaxApertureFNumber($resolver);
+            $nikonApex = $nikonAvi->maxApertureValue();
+            $maxF    ??= $nikonApex !== null ? $this->converters->apexToFNumber($nikonApex) : null;
+
             return new Lens(
                 lensMake: $resolver?->string(ExifTag::LENS_MAKE),
                 lensModel: $resolver?->string(ExifTag::LENS_MODEL),
                 lensSerialNumber: $resolver?->string(ExifTag::LENS_SERIAL_NUMBER),
-                focalLengthMm: $resolver?->float(ExifTag::FOCAL_LENGTH),
+                focalLengthMm: $resolver?->float(ExifTag::FOCAL_LENGTH) ?? $nikonAvi->focalLength(),
                 focalLength35Mm: $resolver?->int(ExifTag::FOCAL_LENGTH_IN_35MM_FILM),
-                maxApertureFNumber: $this->xmpMaxApertureFNumber($resolver),
+                maxApertureFNumber: $maxF,
             );
         }
 
         $maxApex = $exifDocument->maxApertureApex();
         $maxF    = $maxApex !== null ? $this->converters->apexToFNumber($maxApex) : $this->xmpMaxApertureFNumber($resolver);
 
+        $nikonApex = $nikonAvi->maxApertureValue();
+        $maxF    ??= $nikonApex !== null ? $this->converters->apexToFNumber($nikonApex) : null;
+
         return new Lens(
             lensMake: $exifDocument->lensMake() ?? $resolver?->string(ExifTag::LENS_MAKE),
             lensModel: $exifDocument->lensModel() ?? $resolver?->string(ExifTag::LENS_MODEL),
             lensSerialNumber: $exifDocument->lensSerialNumber() ?? $resolver?->string(ExifTag::LENS_SERIAL_NUMBER),
-            focalLengthMm: $exifDocument->focalLengthMm() ?? $resolver?->float(ExifTag::FOCAL_LENGTH),
+            focalLengthMm: $exifDocument->focalLengthMm() ?? $resolver?->float(ExifTag::FOCAL_LENGTH) ?? $nikonAvi->focalLength(),
             focalLength35Mm: $exifDocument->focalLength35Mm() ?? $resolver?->int(ExifTag::FOCAL_LENGTH_IN_35MM_FILM),
             maxApertureFNumber: $maxF,
             lensSpecification: $exifDocument->lensSpecification(),
