@@ -26,6 +26,8 @@ use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\ExposureAdjustments;
 use MagicSunday\ImageMeta\Value\ExposureSettings;
 
+use function strtoupper;
+
 /**
  * Factory for creating Exposure value objects from EXIF metadata with XMP fallback.
  *
@@ -44,22 +46,35 @@ final readonly class ExposureFactory
     {
         $exifDocument = $metadata->exifDoc;
         $resolver     = XmpFallbackResolver::fromMetadata($metadata);
+        $nikonAvi     = $metadata->nikonAviLookup();
 
         $exposureProgram = $exifDocument?->exposureProgram() ?? $resolver?->enum(ExifTag::EXPOSURE_PROGRAM, ExposureProgram::class);
-        $meteringMode    = $exifDocument?->meteringMode() ?? $resolver?->enum(ExifTag::METERING_MODE, MeteringMode::class);
-        $whiteBalance    = $exifDocument?->whiteBalance() ?? $resolver?->enum(ExifTag::WHITE_BALANCE, WhiteBalance::class);
-        $flashInfo       = $exifDocument?->flashInfo();
+
+        $nikonMetering = $nikonAvi->meteringMode();
+        $meteringMode  = $exifDocument?->meteringMode()
+            ?? $resolver?->enum(ExifTag::METERING_MODE, MeteringMode::class)
+            ?? ($nikonMetering !== null ? MeteringMode::tryFrom($nikonMetering) : null);
+
+        $nikonWb     = $nikonAvi->whiteBalance();
+        $nikonWbEnum = match (strtoupper($nikonWb ?? '')) {
+            'AUTO'   => WhiteBalance::Auto,
+            'MANUAL' => WhiteBalance::Manual,
+            default  => null,
+        };
+
+        $whiteBalance = $exifDocument?->whiteBalance() ?? $resolver?->enum(ExifTag::WHITE_BALANCE, WhiteBalance::class) ?? $nikonWbEnum;
+        $flashInfo    = $exifDocument?->flashInfo();
 
         $settings = new ExposureSettings(
             iso: $exifDocument?->isoBestEffort() ?? $resolver?->int(ExifTag::PHOTOGRAPHIC_SENSITIVITY),
             exposureIndex: $exifDocument?->exposureIndex() ?? $resolver?->float(ExifTag::EXPOSURE_INDEX),
             isoLatitudeYyy: $exifDocument?->isoSpeedLatitudeYyy() ?? $resolver?->int(ExifTag::ISO_SPEED_LATITUDE_YYY),
             isoLatitudeZzz: $exifDocument?->isoSpeedLatitudeZzz() ?? $resolver?->int(ExifTag::ISO_SPEED_LATITUDE_ZZZ),
-            exposureTimeSec: $exifDocument?->exposureTime() ?? $resolver?->float(ExifTag::EXPOSURE_TIME),
+            exposureTimeSec: $exifDocument?->exposureTime() ?? $resolver?->float(ExifTag::EXPOSURE_TIME) ?? $nikonAvi->exposureTime(),
             shutterSpeedEv: $exifDocument?->shutterSpeedValue() ?? $resolver?->float(ExifTag::SHUTTER_SPEED_VALUE),
-            fNumber: $exifDocument?->fNumber() ?? $resolver?->float(ExifTag::F_NUMBER),
+            fNumber: $exifDocument?->fNumber() ?? $resolver?->float(ExifTag::F_NUMBER) ?? $nikonAvi->fNumber(),
             apertureEv: $exifDocument?->apertureValue() ?? $resolver?->float(ExifTag::APERTURE_VALUE),
-            exposureBiasEv: $exifDocument?->exposureBias() ?? $resolver?->float(ExifTag::EXPOSURE_BIAS_VALUE),
+            exposureBiasEv: $exifDocument?->exposureBias() ?? $resolver?->float(ExifTag::EXPOSURE_BIAS_VALUE) ?? $nikonAvi->exposureCompensation(),
             brightnessEv: $exifDocument?->brightnessValue() ?? $resolver?->float(ExifTag::BRIGHTNESS_VALUE),
         );
 
@@ -68,7 +83,7 @@ final readonly class ExposureFactory
             contrast: $exifDocument?->contrast() ?? $resolver?->enum(ExifTag::CONTRAST, Contrast::class),
             saturation: $exifDocument?->saturation() ?? $resolver?->enum(ExifTag::SATURATION, Saturation::class),
             sharpness: $exifDocument?->sharpness() ?? $resolver?->enum(ExifTag::SHARPNESS, Sharpness::class),
-            digitalZoomRatio: $exifDocument?->digitalZoomRatio() ?? $resolver?->float(ExifTag::DIGITAL_ZOOM_RATIO),
+            digitalZoomRatio: $exifDocument?->digitalZoomRatio() ?? $resolver?->float(ExifTag::DIGITAL_ZOOM_RATIO) ?? $nikonAvi->digitalZoom(),
             gainControl: $exifDocument?->gainControl() ?? $resolver?->enum(ExifTag::GAIN_CONTROL, GainControl::class),
         );
 
