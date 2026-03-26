@@ -49,7 +49,7 @@ final readonly class LensFactory
         if (!$exifDocument instanceof ParsedExif) {
             $maxF      = $this->xmpMaxApertureFNumber($resolver);
             $nikonApex = $nikonAvi->maxApertureValue();
-            $maxF    ??= $nikonApex !== null ? $this->converters->apexToFNumber($nikonApex) : null;
+            $maxF ??= $nikonApex !== null ? $this->converters->apexToFNumber($nikonApex) : null;
 
             return new Lens(
                 lensMake: $resolver?->string(ExifTag::LENS_MAKE),
@@ -65,7 +65,7 @@ final readonly class LensFactory
         $maxF    = $maxApex !== null ? $this->converters->apexToFNumber($maxApex) : $this->xmpMaxApertureFNumber($resolver);
 
         $nikonApex = $nikonAvi->maxApertureValue();
-        $maxF    ??= $nikonApex !== null ? $this->converters->apexToFNumber($nikonApex) : null;
+        $maxF ??= $nikonApex !== null ? $this->converters->apexToFNumber($nikonApex) : null;
 
         return new Lens(
             lensMake: $exifDocument->lensMake() ?? $resolver?->string(ExifTag::LENS_MAKE),

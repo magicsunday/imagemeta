@@ -48,7 +48,7 @@ final readonly class ImageFactory
         $resolver        = $resolverDoc instanceof XmpDocument ? XmpFallbackResolver::fromDocument($resolverDoc) : null;
         $quickTimeLookup = $metadata->quickTimeLookup();
 
-        $nikonAvi        = $metadata->nikonAviLookup();
+        $nikonAvi         = $metadata->nikonAviLookup();
         $nikonOrientation = $nikonAvi->orientation();
 
         $width         = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth ?? $resolver?->int(ExifTag::PIXEL_X_DIMENSION) ?? $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY) ?? $metadata->riffAviHeader?->width;
