@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Model\Riff\NikonCameraTags;
 use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
 use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
@@ -68,6 +69,8 @@ final class RiffParser implements RiffParserInterface
 
     private ?RiffExifChunk $riffExif = null;
 
+    private ?NikonCameraTags $nikonCameraTags = null;
+
     private int $chunkCount = 0;
 
     public function __construct(
@@ -97,6 +100,7 @@ final class RiffParser implements RiffParserInterface
             $this->infoFields !== [] ? new RiffInfo($this->infoFields) : null,
             $this->aviHeader,
             $this->riffExif,
+            $this->nikonCameraTags,
         );
     }
 
@@ -245,6 +249,11 @@ final class RiffParser implements RiffParserInterface
 
             case 'strl':
                 $this->parseStreamList($childStart, $childEnd);
+
+                break;
+
+            case 'ncdt':
+                $this->parseNikonList($childStart, $childEnd);
 
                 break;
         }
@@ -417,6 +426,40 @@ final class RiffParser implements RiffParserInterface
             } catch (BoundsError) {
                 // Postel's Law: skip truncated blob
             }
+        }
+    }
+
+    /**
+     * Parses a Nikon Camera Data Table (LIST 'ncdt') looking for nctg (Nikon Camera Tags).
+     *
+     * Reference: ExifTool Nikon.pm — %Image::ExifTool::Nikon::AVI tag table.
+     */
+    private function parseNikonList(int $startOffset, int $endOffset): void
+    {
+        foreach ($this->iterateSubChunks($startOffset, $endOffset) as [$tag, $dataOffset, $size]) {
+            if ($tag !== 'nctg') {
+                continue;
+            }
+
+            if ($size <= 0) {
+                continue;
+            }
+
+            if ($size > $this->config->maxMetadataPayloadSize) {
+                continue;
+            }
+
+            $this->stream->seek($dataOffset);
+
+            try {
+                $payload = $this->stream->read($size);
+            } catch (BoundsError) {
+                continue;
+            }
+
+            $this->nikonCameraTags = (new NctgParser())->parse($payload);
+
+            break; // Only one nctg expected per ncdt LIST
         }
     }
 
