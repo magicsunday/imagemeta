@@ -40,10 +40,11 @@ final readonly class CameraFactory
         $quickTimeLookup = $metadata->quickTimeLookup();
 
         $riffLookup = $metadata->riffInfoLookup();
+        $nikonAvi   = $metadata->nikonAviLookup();
 
         return new Camera(
-            make: $exifDocument?->cameraMake() ?? $resolver?->string(ExifTag::MAKE) ?? $quickTimeLookup->string('com.apple.quicktime.make') ?? $riffLookup->exifMake(),
-            model: $exifDocument?->cameraModel() ?? $resolver?->string(ExifTag::MODEL) ?? $quickTimeLookup->string('com.apple.quicktime.model') ?? $riffLookup->exifModel(),
+            make: $exifDocument?->cameraMake() ?? $resolver?->string(ExifTag::MAKE) ?? $quickTimeLookup->string('com.apple.quicktime.make') ?? $riffLookup->exifMake() ?? $nikonAvi->make(),
+            model: $exifDocument?->cameraModel() ?? $resolver?->string(ExifTag::MODEL) ?? $quickTimeLookup->string('com.apple.quicktime.model') ?? $riffLookup->exifModel() ?? $nikonAvi->model(),
             ownerName: $exifDocument?->ownerName() ?? $resolver?->string(ExifTag::CAMERA_OWNER_NAME),
             firmware: $exifDocument?->cameraFirmware() ?? $resolver?->string(ExifTag::SOFTWARE),
             fileSource: $exifDocument?->fileSource() ?? $resolver?->enum(ExifTag::FILE_SOURCE, FileSource::class),
