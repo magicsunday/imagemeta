@@ -46,17 +46,29 @@ use function sprintf;
 final class TiffExifParser implements TiffExifParserInterface
 {
     /**
+     * Olympus ORF magic number ("OR" as u16 LE = 0x4F52).
+     * Non-standard TIFF variant used by Olympus RAW files.
+     */
+    private const int MAGIC_OLYMPUS_ORF = 0x4F52;
+
+    /**
+     * Panasonic RW2 magic number (0x0055).
+     * Non-standard TIFF variant used by Panasonic RAW files.
+     */
+    private const int MAGIC_PANASONIC_RW2 = 0x0055;
+
+    /**
      * TIFF magic numbers that use the classic IFD structure (4-byte offsets).
      *
      * Includes standard TIFF (0x002A) and vendor-specific variants
-     * that share the same IFD layout: Olympus ORF (0x4F52) and Panasonic RW2 (0x0055).
+     * that share the same IFD layout: Olympus ORF and Panasonic RW2.
      *
      * @var list<int>
      */
     private const array CLASSIC_TIFF_MAGICS = [
         TiffConst::MAGIC_CLASSIC,
-        0x4F52, // Olympus ORF ("OR" as u16)
-        0x0055, // Panasonic RW2
+        self::MAGIC_OLYMPUS_ORF,
+        self::MAGIC_PANASONIC_RW2,
     ];
 
     private BinaryReadAccessInterface $buffer;

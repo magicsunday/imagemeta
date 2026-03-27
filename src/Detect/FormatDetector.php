@@ -27,18 +27,35 @@ use const SEEK_CUR;
 final readonly class FormatDetector
 {
     /**
+     * Classic TIFF magic number (42 decimal). TIFF 6.0 §2.1.
+     */
+    private const int MAGIC_CLASSIC_TIFF = 0x002A;
+
+    /**
+     * BigTIFF magic number (43 decimal). BigTIFF specification.
+     */
+    private const int MAGIC_BIG_TIFF = 0x002B;
+
+    /**
+     * Olympus ORF magic number ("OR" as u16 LE = 0x4F52).
+     */
+    private const int MAGIC_OLYMPUS_ORF = 0x4F52;
+
+    /**
+     * Panasonic RW2 magic number (0x0055).
+     */
+    private const int MAGIC_PANASONIC_RW2 = 0x0055;
+
+    /**
      * TIFF-family magic numbers recognized during container detection.
-     *
-     * TIFF 6.0 §2.1 defines 0x002A (classic) and 0x002B (BigTIFF).
-     * Olympus ORF uses 0x4F52 ("OR" as u16); Panasonic RW2 uses 0x0055.
      *
      * @var list<int>
      */
     private const array TIFF_MAGIC_NUMBERS = [
-        0x002A, // Classic TIFF (TIFF 6.0 §2.1)
-        0x002B, // BigTIFF
-        0x4F52, // Olympus ORF
-        0x0055, // Panasonic RW2
+        self::MAGIC_CLASSIC_TIFF,
+        self::MAGIC_BIG_TIFF,
+        self::MAGIC_OLYMPUS_ORF,
+        self::MAGIC_PANASONIC_RW2,
     ];
 
     /**
