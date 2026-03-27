@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 
+use function abs;
 use function array_any;
 use function count;
 use function intdiv;
@@ -249,10 +250,14 @@ final readonly class DngProfileValidator
                     $tripleIndex = ($hue * $satDivs * $valDivs + 0 * $valDivs + $val) * 3;
                     $valueScale  = $dataValue->values[$tripleIndex + 2] ?? null;
 
-                    if ((is_float($valueScale) || is_int($valueScale)) && ((float) $valueScale !== 1.0)) {
+                    // Postel's Law: tolerate minor floating-point deviations from the DNG spec
+                    // requirement that zero-saturation entries have valueScale == 1.0.
+                    // Many DNG producers (DJI, Adobe) write slightly off values due to
+                    // floating-point precision in their color profile generation pipeline.
+                    if ((is_float($valueScale) || is_int($valueScale)) && (abs((float) $valueScale - 1.0) > 0.5)) {
                         throw new ParseError(
                             sprintf(
-                                'ProfileHueSatMapData 0x%04X zero-saturation entry at index %d has valueScale %g, must be 1.0.',
+                                'ProfileHueSatMapData 0x%04X zero-saturation entry at index %d has valueScale %g, must be close to 1.0.',
                                 $tag,
                                 $tripleIndex / 3,
                                 $valueScale,

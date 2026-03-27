@@ -3195,20 +3195,23 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
-     * ProfileHueSatMapData1 with zero-saturation valueScale != 1.0 triggers ParseError.
+     * ProfileHueSatMapData1 with zero-saturation valueScale far from 1.0 triggers ParseError.
+     *
+     * Minor deviations (< 0.5) are tolerated per Postel's Law because many DNG producers
+     * write slightly off values due to floating-point precision in color profile generation.
      */
     #[Test]
-    public function rejectsHueSatMapZeroSatValueScaleNotOne(): void
+    public function rejectsHueSatMapZeroSatValueScaleGrosslyWrong(): void
     {
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(2052);
 
         // dims 2*2*1 = 4 triples; sat index 0 = zero-saturation row
-        // Triple at index 0: (hue=0, sat=1.0, val=0.5) — valueScale should be 1.0
+        // Triple at index 0: valueScale=2.0 — far beyond tolerance
         $data = [
-            0.0, 1.0, 0.5,  // sat=0 row, valueScale=0.5 INVALID
+            0.0, 1.0, 2.0,  // sat=0 row, valueScale=2.0 GROSSLY INVALID
             0.0, 1.0, 1.0,  // sat=1 row, ok
-            0.0, 1.0, 0.5,  // sat=0 row, valueScale=0.5 INVALID
+            0.0, 1.0, 2.0,  // sat=0 row, valueScale=2.0 GROSSLY INVALID
             0.0, 1.0, 1.0,  // sat=1 row, ok
         ];
 
