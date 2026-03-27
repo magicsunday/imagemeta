@@ -335,11 +335,13 @@ final readonly class TiffBaselineExifReader
 
     /**
      * Returns InkNames tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014D.
+     *
+     * TIFF 6.0 §8 — InkNames is a NUL-separated list of ink names.
+     * Uses rawString() instead of str() to preserve embedded NUL separators.
      */
     public function inkNames(): ?string
     {
-        return $this->reader->str($this->ifd0, TiffTag::INK_NAMES);
+        return $this->reader->rawString($this->ifd0, TiffTag::INK_NAMES);
     }
 
     /**

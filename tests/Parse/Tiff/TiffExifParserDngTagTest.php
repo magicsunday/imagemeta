@@ -3221,6 +3221,28 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Postel's Law: tolerates minor float deviation in zero-saturation valueScale.
+     * DNG producers like DJI write values like 1.108 instead of exact 1.0.
+     */
+    #[Test]
+    public function toleratesHueSatMapZeroSatValueScaleNearOne(): void
+    {
+        // dims 2*2*1 = 4 triples; valueScale=1.4 is within 0.5 tolerance
+        $data = [
+            0.0, 1.0, 1.4,  // sat=0 row, valueScale=1.4 — within tolerance
+            0.0, 1.0, 1.0,  // sat=1 row, ok
+            0.0, 1.0, 1.4,  // sat=0 row, valueScale=1.4 — within tolerance
+            0.0, 1.0, 1.0,  // sat=1 row, ok
+        ];
+
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithHueSatMap([2, 2, 1], $data),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
      * Valid ProfileHueSatMapData1 parses successfully.
      */
     #[Test]
