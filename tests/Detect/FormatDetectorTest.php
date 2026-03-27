@@ -314,6 +314,32 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
+     * Detects Olympus ORF with little-endian byte order (II + 0x4F52 "OR").
+     */
+    #[Test]
+    public function detectRecognisesOlympusOrfLittleEndian(): void
+    {
+        $stream = $this->createStream('II' . pack('v', 0x4F52) . pack('V', 8));
+
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::TIFF, $detected);
+    }
+
+    /**
+     * Detects Panasonic RW2 with little-endian byte order (II + 0x0055).
+     */
+    #[Test]
+    public function detectRecognisesPanasonicRw2LittleEndian(): void
+    {
+        $stream = $this->createStream('II' . pack('v', 0x0055) . pack('V', 8));
+
+        $detected = (new FormatDetector())->detect($stream);
+
+        self::assertSame(ContainerType::TIFF, $detected);
+    }
+
+    /**
      * Detects a bare JPEG XL codestream by its 0xFF 0x0A signature.
      */
     #[Test]

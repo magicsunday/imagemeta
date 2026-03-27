@@ -45,6 +45,20 @@ use function sprintf;
  */
 final class TiffExifParser implements TiffExifParserInterface
 {
+    /**
+     * TIFF magic numbers that use the classic IFD structure (4-byte offsets).
+     *
+     * Includes standard TIFF (0x002A) and vendor-specific variants
+     * that share the same IFD layout: Olympus ORF (0x4F52) and Panasonic RW2 (0x0055).
+     *
+     * @var list<int>
+     */
+    private const array CLASSIC_TIFF_MAGICS = [
+        TiffConst::MAGIC_CLASSIC,
+        0x4F52, // Olympus ORF ("OR" as u16)
+        0x0055, // Panasonic RW2
+    ];
+
     private BinaryReadAccessInterface $buffer;
 
     private Endian $bo;
@@ -459,7 +473,9 @@ final class TiffExifParser implements TiffExifParserInterface
             return $this->readIfd($firstIfd);
         }
 
-        if ($magic === TiffConst::MAGIC_CLASSIC) {
+        // Classic TIFF and vendor variants (Olympus ORF, Panasonic RW2) share the
+        // same IFD structure with a 4-byte first-IFD offset after the magic.
+        if (in_array($magic, self::CLASSIC_TIFF_MAGICS, true)) {
             $this->bigTiff = false;
 
             $firstIfd = $this->binaryReader->readU32();

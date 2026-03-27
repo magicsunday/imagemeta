@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 
+use function in_array;
 use function ord;
 use function unpack;
 
@@ -25,6 +26,21 @@ use const SEEK_CUR;
  */
 final readonly class FormatDetector
 {
+    /**
+     * TIFF-family magic numbers recognized during container detection.
+     *
+     * TIFF 6.0 §2.1 defines 0x002A (classic) and 0x002B (BigTIFF).
+     * Olympus ORF uses 0x4F52 ("OR" as u16); Panasonic RW2 uses 0x0055.
+     *
+     * @var list<int>
+     */
+    private const array TIFF_MAGIC_NUMBERS = [
+        0x002A, // Classic TIFF (TIFF 6.0 §2.1)
+        0x002B, // BigTIFF
+        0x4F52, // Olympus ORF
+        0x0055, // Panasonic RW2
+    ];
+
     /**
      * Box types that indicate an ISO BMFF / QuickTime container.
      *
@@ -176,7 +192,8 @@ final readonly class FormatDetector
 
     /**
      * Checks whether the first two bytes are a TIFF byte-order mark and the following
-     * two bytes contain a classic TIFF (0x002A) or BigTIFF (0x002B) magic number.
+     * two bytes contain a recognized TIFF-family magic number: classic TIFF (0x002A),
+     * BigTIFF (0x002B), Olympus ORF (0x4F52), or Panasonic RW2 (0x0055).
      */
     private function looksLikeTiff(Stream $stream, string $magic2): bool
     {
@@ -197,7 +214,7 @@ final readonly class FormatDetector
             return false;
         }
 
-        return ($unpacked[1] === 0x002A) || ($unpacked[1] === 0x002B);
+        return in_array($unpacked[1], self::TIFF_MAGIC_NUMBERS, true);
     }
 
     /**
