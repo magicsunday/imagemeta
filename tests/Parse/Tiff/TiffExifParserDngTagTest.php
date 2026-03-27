@@ -8145,6 +8145,12 @@ final class TiffExifParserDngTagTest extends TestCase
                 'count'   => 2,
                 'payload' => pack('V4', 0, 1, 0, 1),  // 0/1, 0/1 — valid rationals with zero dimensions
             ],
+            [
+                'tag'     => DngTag::ORIGINAL_DEFAULT_CROP_SIZE,
+                'type'    => TiffConst::TYPE_RATIONAL,
+                'count'   => 2,
+                'payload' => pack('V4', 4000, 0, 3000, 0),  // 4000/0, 3000/0 — zero denominators tolerated as 0.0
+            ],
         ];
 
         $this->expectNotToPerformAssertions();
