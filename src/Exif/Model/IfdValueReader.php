@@ -30,6 +30,7 @@ use function round;
 use function rtrim;
 use function set_error_handler;
 use function strlen;
+use function strpos;
 use function substr;
 use function trim;
 
@@ -145,6 +146,14 @@ final readonly class IfdValueReader
 
         if (!is_string($value)) {
             return null;
+        }
+
+        // Truncate at the first NUL byte — some cameras (Samsung SRW) write garbage
+        // bytes after the NUL terminator within the declared TIFF tag byte count.
+        $nullPos = strpos($value, "\0");
+
+        if ($nullPos !== false) {
+            $value = substr($value, 0, $nullPos);
         }
 
         $trimmed = rtrim($value, "\0 ");
