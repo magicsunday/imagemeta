@@ -63,12 +63,13 @@ final class TiffImageDataValidatorTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
+    /**
+     * Postel's Law: tolerate missing RowsPerStrip when strip tags are present.
+     * RAW formats like Canon CR2 write StripOffsets but may omit RowsPerStrip.
+     */
     #[Test]
-    public function rejectsMissingRowsPerStripWhenStripTagsPresent(): void
+    public function toleratesMissingRowsPerStripWhenStripTagsPresent(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('RowsPerStrip must be a positive integer');
-
         $validator = $this->createValidator();
 
         $ifd = new Ifd([
@@ -79,6 +80,8 @@ final class TiffImageDataValidatorTest extends TestCase
         ]);
 
         $validator->validateStripLayoutConsistency($ifd);
+
+        $this->addToAssertionCount(1);
     }
 
     #[Test]

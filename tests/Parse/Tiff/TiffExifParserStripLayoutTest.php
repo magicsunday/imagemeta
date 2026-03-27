@@ -296,13 +296,13 @@ final class TiffExifParserStripLayoutTest extends TestCase
     }
 
     /**
-     * Rejects zero RowsPerStrip when strip tags are present.
+     * Postel's Law: tolerates zero RowsPerStrip when strip tags are present.
+     * RAW formats like Canon CR2 write StripOffsets but set RowsPerStrip to 0.
      */
     #[Test]
-    public function rejectsZeroRowsPerStripWithStripTags(): void
+    public function toleratesZeroRowsPerStripWithStripTags(): void
     {
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('RowsPerStrip must be a positive integer');
+        $this->expectNotToPerformAssertions();
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildStripLayoutTiff(

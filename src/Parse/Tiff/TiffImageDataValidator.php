@@ -66,11 +66,11 @@ final readonly class TiffImageDataValidator
 
         $rowsPerStripEntry = $ifd0->get(ExifTag::ROWS_PER_STRIP);
 
+        // Postel's Law: tolerate missing or invalid RowsPerStrip rather than rejecting the file.
+        // RAW formats like Canon CR2 write StripOffsets but may omit RowsPerStrip or set it to 0
+        // because their raw IFDs use a non-standard strip layout.
         if ((!$rowsPerStripEntry instanceof IfdEntry) || !is_int($rowsPerStripEntry->value) || ($rowsPerStripEntry->value <= 0)) {
-            throw new ParseError(
-                'RowsPerStrip must be a positive integer when strip tags are present per EXIF 3.0 §4.6.5.2.2.',
-                1987,
-            );
+            return;
         }
 
         $imageLengthEntry = $ifd0->get(ExifTag::IMAGE_LENGTH);
