@@ -8118,10 +8118,13 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
-     * Rejects non-positive (or equivalent invalid rational) original proxy-size dimensions.
+     * Postel's Law: tolerates zero-filled original proxy-size dimensions.
+     *
+     * Some DNG producers (DJI) write (0, 0) for optional proxy-size tags
+     * when the original dimensions are unknown.
      */
     #[Test]
-    public function rejectsOriginalProxySizeTagsWithNonPositiveDimensions(): void
+    public function toleratesOriginalProxySizeTagsWithZeroDimensions(): void
     {
         $cases = [
             [
@@ -8140,30 +8143,22 @@ final class TiffExifParserDngTagTest extends TestCase
                 'tag'     => DngTag::ORIGINAL_DEFAULT_CROP_SIZE,
                 'type'    => TiffConst::TYPE_RATIONAL,
                 'count'   => 2,
-                'payload' => pack('V4', 4000, 0, 3000, 1),
+                'payload' => pack('V4', 0, 1, 0, 1),  // 0/1, 0/1 — valid rationals with zero dimensions
             ],
         ];
-        $rejections = 0;
+
+        $this->expectNotToPerformAssertions();
 
         foreach ($cases as $case) {
-            try {
-                (new TiffExifParser())->parseFromBlob(
-                    $this->buildDngWithOriginalProxySizeTag(
-                        $case['tag'],
-                        $case['type'],
-                        $case['count'],
-                        $case['payload'],
-                    ),
-                );
-                self::fail(
-                    sprintf('Expected ParseError for invalid dimensions on proxy-size tag 0x%04X.', $case['tag']),
-                );
-            } catch (ParseError) {
-                ++$rejections;
-            }
+            (new TiffExifParser())->parseFromBlob(
+                $this->buildDngWithOriginalProxySizeTag(
+                    $case['tag'],
+                    $case['type'],
+                    $case['count'],
+                    $case['payload'],
+                ),
+            );
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**

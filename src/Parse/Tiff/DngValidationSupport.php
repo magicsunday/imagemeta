@@ -398,11 +398,13 @@ final readonly class DngValidationSupport
             $values = [];
 
             foreach ($value->values as $rational) {
+                // Postel's Law: tolerate zero denominators by treating as 0.0
+                // rather than rejecting. Some DNG producers write 0/0 for optional
+                // proxy-size and crop-size tags when values are unknown.
                 if ($rational->denominator <= 0) {
-                    throw new ParseError(
-                        sprintf('%s rational components must have denominator > 0.', $tagName),
-                        2070,
-                    );
+                    $values[] = 0.0;
+
+                    continue;
                 }
 
                 $values[] = $rational->numerator / $rational->denominator;
@@ -472,16 +474,11 @@ final readonly class DngValidationSupport
 
         [$width, $length] = $this->extractDngCropScalePair($entry, $tagName);
 
+        // Postel's Law: tolerate zero-filled proxy size tags rather than rejecting the file.
+        // Some DNG producers (DJI) write (0, 0) for optional OriginalDefaultFinalSize
+        // and related tags when the original proxy dimensions are unknown.
         if (($width <= 0.0) || ($length <= 0.0)) {
-            throw new ParseError(
-                sprintf(
-                    '%s components must be > 0, got (%.6F, %.6F).',
-                    $tagName,
-                    $width,
-                    $length,
-                ),
-                1640,
-            );
+            return null;
         }
 
         return [$width, $length];
