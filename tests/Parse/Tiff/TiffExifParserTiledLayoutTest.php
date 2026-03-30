@@ -300,7 +300,7 @@ final class TiffExifParserTiledLayoutTest extends TestCase
         $tileCount   = $tilesAcross * $tilesDown;
         $expected    = $planarConfiguration === 2 ? $tileCount * $samplesPerPixel : $tileCount;
 
-        $tileOffsetsCount ??= $expected;
+        $tileOffsetsCount    ??= $expected;
         $tileByteCountsCount ??= $expected;
 
         $tileOffsetsPayload = $this->packNumericList($tileOffsetsCount, $tileOffsetsBase);

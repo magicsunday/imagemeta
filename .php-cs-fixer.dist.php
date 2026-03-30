@@ -81,11 +81,12 @@ return (new PhpCsFixer\Config())
         ],
         'binary_operator_spaces'          => [
             'operators' => [
-                '='  => 'align_single_space_minimal', //align_by_scope',
-                '=>' => 'align_single_space_minimal',
-                '+=' => 'align_single_space_minimal',
-                '-=' => 'align_single_space_minimal',
-                '.=' => 'align_single_space_minimal',
+                '='   => 'align_single_space_minimal',
+                '+='  => 'align_single_space_minimal',
+                '-='  => 'align_single_space_minimal',
+                '.='  => 'align_single_space_minimal',
+                '??=' => 'align_single_space_minimal',
+                '=>'  => 'align_single_space_minimal',
             ],
         ],
         'yoda_style'                      => [
