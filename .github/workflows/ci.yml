@@ -18,12 +18,12 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
               with:
                   persist-credentials: false
 
             - name: Setup PHP
-              uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
+              uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # 2.37.1
               with:
                   php-version: ${{ matrix.php }}
                   extensions: ctype, date, fileinfo, hash, iconv, json, pcre, xmlreader, yaml
@@ -36,7 +36,7 @@ jobs:
               id: composer-cache
               run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-            - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+            - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
                   key: ${{ runner.os }}-${{ matrix.php }}-composer-${{ hashFiles('composer.lock') }}
