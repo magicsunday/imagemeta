@@ -16,13 +16,11 @@ use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 
-use function ctype_digit;
 use function in_array;
 use function is_string;
 use function sprintf;
 use function str_contains;
 use function str_replace;
-use function strlen;
 use function substr;
 use function trim;
 
@@ -70,14 +68,6 @@ final readonly class StringConverter
         $trimmed = trim($bytes, " \t\n\r");
 
         if ($trimmed === '') {
-            return null;
-        }
-
-        if (strlen($trimmed) !== 4) {
-            return null;
-        }
-
-        if (!ctype_digit($trimmed)) {
             return null;
         }
 

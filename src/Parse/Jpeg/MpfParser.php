@@ -510,7 +510,7 @@ final class MpfParser
         $buffer = new MemoryBuffer($data);
 
         $entries = [];
-        $count   = (int) ($length / $entrySize);
+        $count   = intdiv($length, $entrySize);
 
         for ($i = 0; $i < $count; ++$i) {
             $attributes = $this->readU32($buffer, $endian);

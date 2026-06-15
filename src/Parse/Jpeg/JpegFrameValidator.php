@@ -392,8 +392,8 @@ final class JpegFrameValidator
             return null;
         }
 
-        $derivedH = (int) ($luma['horizontal'] / $horizontal);
-        $derivedV = (int) ($luma['vertical'] / $vertical);
+        $derivedH = intdiv($luma['horizontal'], $horizontal);
+        $derivedV = intdiv($luma['vertical'], $vertical);
 
         // EXIF 3.0 §4.6.5.1.12 lists only [2,1] (4:2:2) and [2,2] (4:2:0)
         // as writer-side requirements.  ITU-T T.81 §B.2.2 allows arbitrary

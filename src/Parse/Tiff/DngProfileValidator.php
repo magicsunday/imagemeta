@@ -425,7 +425,7 @@ final readonly class DngProfileValidator
             );
         }
 
-        if ((!$dimsEntry instanceof IfdEntry) || (!$dataEntry instanceof IfdEntry)) {
+        if (!$dimsEntry instanceof IfdEntry) {
             return;
         }
 

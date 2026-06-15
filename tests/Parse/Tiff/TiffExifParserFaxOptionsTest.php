@@ -210,8 +210,7 @@ final class TiffExifParserFaxOptionsTest extends TestCase
     #[Test]
     public function rejectsT6OptionsReservedBits(): void
     {
-        $cases      = [0b1, 0b100];
-        $rejections = 0;
+        $cases = [0b1, 0b100];
 
         foreach ($cases as $value) {
             try {
@@ -219,12 +218,10 @@ final class TiffExifParserFaxOptionsTest extends TestCase
                     $this->buildTiffWithFaxOptionsInThirdIfd(compression: 4, t4Options: null, t6Options: $value),
                 );
                 self::fail('Expected ParseError for invalid T6Options bitfield.');
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(2, $rejections);
     }
 
     /**

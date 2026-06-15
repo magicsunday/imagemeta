@@ -4503,7 +4503,6 @@ final class TiffExifParserDngTagTest extends TestCase
             substr($validPayload, 0, 60),
             substr($validPayload, 0, 64),
         ];
-        $rejections = 0;
 
         foreach ($cases as $payload) {
             try {
@@ -4511,12 +4510,10 @@ final class TiffExifParserDngTagTest extends TestCase
                     $this->buildDngWithGainTableMapInRawIfd(payload: $payload),
                 );
                 self::fail('Expected ParseError for truncated legacy ProfileGainTableMap payload.');
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -7904,7 +7901,6 @@ final class TiffExifParserDngTagTest extends TestCase
         $payload = pack('N', 1)
             . pack('N', 1)
             . pack('N', 0x01030000);
-        $rejections = 0;
 
         foreach (self::DNG_OPCODE_LIST_TAGS as $tag) {
             try {
@@ -7914,12 +7910,10 @@ final class TiffExifParserDngTagTest extends TestCase
                 self::fail(
                     sprintf('Expected ParseError for truncated opcode header in tag 0x%04X.', $tag),
                 );
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count(self::DNG_OPCODE_LIST_TAGS), $rejections);
     }
 
     /**
@@ -7936,7 +7930,6 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('N', 0)
             . pack('N', 8)
             . 'abc';
-        $rejections = 0;
 
         foreach (self::DNG_OPCODE_LIST_TAGS as $tag) {
             try {
@@ -7946,12 +7939,10 @@ final class TiffExifParserDngTagTest extends TestCase
                 self::fail(
                     sprintf('Expected ParseError for overflowing opcode payload in tag 0x%04X.', $tag),
                 );
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count(self::DNG_OPCODE_LIST_TAGS), $rejections);
     }
 
     /**
@@ -7960,8 +7951,6 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function rejectsOpcodeListWithNonUndefinedType(): void
     {
-        $rejections = 0;
-
         foreach (self::DNG_OPCODE_LIST_TAGS as $tag) {
             try {
                 (new TiffExifParser())->parseFromBlob(
@@ -7970,12 +7959,10 @@ final class TiffExifParserDngTagTest extends TestCase
                 self::fail(
                     sprintf('Expected ParseError for non-UNDEFINED opcode-list type in tag 0x%04X.', $tag),
                 );
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count(self::DNG_OPCODE_LIST_TAGS), $rejections);
     }
 
     /**
@@ -8045,7 +8032,6 @@ final class TiffExifParserDngTagTest extends TestCase
                 'payload' => "\x01\x01",
             ],
         ];
-        $rejections = 0;
 
         foreach ($cases as $case) {
             try {
@@ -8060,12 +8046,10 @@ final class TiffExifParserDngTagTest extends TestCase
                 self::fail(
                     sprintf('Expected ParseError for invalid type on proxy-size tag 0x%04X.', $case['tag']),
                 );
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -8094,7 +8078,6 @@ final class TiffExifParserDngTagTest extends TestCase
                 'payload' => pack('V2', 4000, 1),
             ],
         ];
-        $rejections = 0;
 
         foreach ($cases as $case) {
             try {
@@ -8109,12 +8092,10 @@ final class TiffExifParserDngTagTest extends TestCase
                 self::fail(
                     sprintf('Expected ParseError for invalid count on proxy-size tag 0x%04X.', $case['tag']),
                 );
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -8226,7 +8207,6 @@ final class TiffExifParserDngTagTest extends TestCase
                 'payload' => pack('V4', 1, 1, 1, 1),
             ],
         ];
-        $rejections = 0;
 
         foreach ($cases as $case) {
             try {
@@ -8239,12 +8219,10 @@ final class TiffExifParserDngTagTest extends TestCase
                     ),
                 );
                 self::fail('Expected ParseError for invalid BestQualityScale type/count.');
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -8301,7 +8279,6 @@ final class TiffExifParserDngTagTest extends TestCase
                 'payload' => pack('V4', 1, 1, 1, 1),
             ],
         ];
-        $rejections = 0;
 
         foreach ($cases as $case) {
             try {
@@ -8314,12 +8291,10 @@ final class TiffExifParserDngTagTest extends TestCase
                     ),
                 );
                 self::fail('Expected ParseError for invalid LinearResponseLimit type/count.');
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -8394,7 +8369,6 @@ final class TiffExifParserDngTagTest extends TestCase
                 'payload' => pack('V6', 24, 1, 70, 1, 28, 10),
             ],
         ];
-        $rejections = 0;
 
         foreach ($cases as $case) {
             try {
@@ -8407,12 +8381,10 @@ final class TiffExifParserDngTagTest extends TestCase
                     ),
                 );
                 self::fail('Expected ParseError for invalid LensInfo type/count.');
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -8461,7 +8433,6 @@ final class TiffExifParserDngTagTest extends TestCase
             pack('V8', 24, 0, 70, 1, 28, 10, 40, 10),
             pack('V8', 24, 1, 70, 1, 1, 0, 40, 10),
         ];
-        $rejections = 0;
 
         foreach ($cases as $payload) {
             try {
@@ -8474,12 +8445,10 @@ final class TiffExifParserDngTagTest extends TestCase
                     ),
                 );
                 self::fail('Expected ParseError for invalid LensInfo denominator-zero usage.');
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -8534,7 +8503,6 @@ final class TiffExifParserDngTagTest extends TestCase
                 'payload' => pack('V4', 1, 1, 1, 1),
             ],
         ];
-        $rejections = 0;
 
         foreach ($cases as $case) {
             try {
@@ -8549,12 +8517,10 @@ final class TiffExifParserDngTagTest extends TestCase
                 self::fail(
                     sprintf('Expected ParseError for invalid baseline scalar layout in tag 0x%04X.', $case['tag']),
                 );
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -8581,7 +8547,6 @@ final class TiffExifParserDngTagTest extends TestCase
                 'payload' => pack('V2', 1, 0),
             ],
         ];
-        $rejections = 0;
 
         foreach ($cases as $case) {
             try {
@@ -8596,12 +8561,10 @@ final class TiffExifParserDngTagTest extends TestCase
                 self::fail(
                     sprintf('Expected ParseError for invalid baseline scalar value in tag 0x%04X.', $case['tag']),
                 );
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -8668,7 +8631,6 @@ final class TiffExifParserDngTagTest extends TestCase
             pack('V6', 1, 1, 0, 1, 1, 1),
             pack('V6', 1, 1, 1, 0, 1, 1),
         ];
-        $rejections = 0;
 
         foreach ($cases as $payload) {
             try {
@@ -8682,12 +8644,10 @@ final class TiffExifParserDngTagTest extends TestCase
                     ),
                 );
                 self::fail('Expected ParseError for invalid AnalogBalance gain vector.');
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -8772,7 +8732,6 @@ final class TiffExifParserDngTagTest extends TestCase
             [TiffConst::TYPE_LONG, 1, pack('V', 1)],
             [TiffConst::TYPE_SRATIONAL, 2, pack('V4', 1, 2, 1, 2)],
         ];
-        $rejections = 0;
 
         foreach ($cases as [$type, $count, $payload]) {
             try {
@@ -8785,12 +8744,10 @@ final class TiffExifParserDngTagTest extends TestCase
                     ),
                 );
                 self::fail('Expected ParseError for invalid BaselineExposure type/count.');
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -8916,7 +8873,6 @@ final class TiffExifParserDngTagTest extends TestCase
                 str_repeat(pack('V2', 1, 1), 8),
             ],
         ];
-        $rejections = 0;
 
         foreach ($cases as [$iccTag, $iccType, $iccCount, $iccPayload, $matrixTag, $matrixType, $matrixCount, $matrixPayload]) {
             try {
@@ -8934,12 +8890,10 @@ final class TiffExifParserDngTagTest extends TestCase
                     ),
                 );
                 self::fail('Expected ParseError for invalid ICC profile pair layout.');
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -9029,7 +8983,6 @@ final class TiffExifParserDngTagTest extends TestCase
                 'payload' => pack('V2', 1, 2),
             ],
         ];
-        $rejections = 0;
 
         foreach ($cases as $case) {
             try {
@@ -9043,12 +8996,10 @@ final class TiffExifParserDngTagTest extends TestCase
                     ),
                 );
                 self::fail('Expected ParseError for invalid BayerGreenSplit type/count.');
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -9080,7 +9031,6 @@ final class TiffExifParserDngTagTest extends TestCase
             [2, [2, 2]],    // RGB photometric, not CFA
             [32803, [4, 4]], // CFA but not Bayer 2x2 pattern
         ];
-        $rejections = 0;
 
         foreach ($cases as [$photometric, $repeatDim]) {
             try {
@@ -9094,12 +9044,10 @@ final class TiffExifParserDngTagTest extends TestCase
                     ),
                 );
                 self::fail('Expected ParseError for non-Bayer BayerGreenSplit applicability.');
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -9142,7 +9090,6 @@ final class TiffExifParserDngTagTest extends TestCase
             [DngTag::SHADOW_SCALE, TiffConst::TYPE_LONG, 1, pack('V', 1)],
             [DngTag::SHADOW_SCALE, TiffConst::TYPE_RATIONAL, 2, pack('V4', 1, 1, 1, 1)],
         ];
-        $rejections = 0;
 
         foreach ($cases as [$tag, $type, $count, $payload]) {
             try {
@@ -9152,12 +9099,10 @@ final class TiffExifParserDngTagTest extends TestCase
                 self::fail(
                     sprintf('Expected ParseError for invalid scalar tag layout 0x%04X.', $tag),
                 );
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**
@@ -9172,7 +9117,6 @@ final class TiffExifParserDngTagTest extends TestCase
             [DngTag::SHADOW_SCALE, pack('V2', 0, 1)],
             [DngTag::SHADOW_SCALE, pack('V2', 1, 0)],
         ];
-        $rejections = 0;
 
         foreach ($cases as [$tag, $payload]) {
             try {
@@ -9187,12 +9131,10 @@ final class TiffExifParserDngTagTest extends TestCase
                 self::fail(
                     sprintf('Expected ParseError for invalid scalar tag value 0x%04X.', $tag),
                 );
-            } catch (ParseError) {
-                ++$rejections;
+            } catch (ParseError $parseError) {
+                self::assertNotSame('', $parseError->getMessage());
             }
         }
-
-        self::assertSame(count($cases), $rejections);
     }
 
     /**

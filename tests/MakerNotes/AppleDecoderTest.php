@@ -290,7 +290,6 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        /** @var AppleMakerNotes|null $notes */
         $notes = $builder->build([
             'ContentIdentifier'  => 'extended',
             'MakerNoteVersion'   => '2.1',
@@ -330,7 +329,6 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        /** @var AppleMakerNotes|null $notes */
         $notes = $builder->build([
             'ContentIdentifier' => 'normalized-version',
             'MakerNoteVersion'  => $makerNoteVersion,
@@ -359,7 +357,6 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        /** @var AppleMakerNotes|null $notes */
         $notes = $builder->build([
             'ContentIdentifier'      => 'focus-range',
             'FocusDistanceRangeNear' => 0.3,
@@ -383,7 +380,6 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        /** @var AppleMakerNotes|null $notes */
         $notes = $builder->build([
             'ContentIdentifier'      => 'near-only',
             'FocusDistanceRangeNear' => 0.42,
@@ -402,7 +398,6 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        /** @var AppleMakerNotes|null $notes */
         $notes = $builder->build([
             'ContentIdentifier'     => 'far-only',
             'FocusDistanceRangeFar' => '1.75',
@@ -421,7 +416,6 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        /** @var AppleMakerNotes|null $notes */
         $notes = $builder->build([
             'ContentIdentifier' => 'unknown',
             'HDRImageType'      => 99,
@@ -443,7 +437,6 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        /** @var AppleMakerNotes|null $notes */
         $notes = $builder->build([
             'ContentIdentifier' => 'hdr-' . $code,
             'HDRImageType'      => $code,
@@ -475,7 +468,6 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        /** @var AppleMakerNotes|null $notes */
         $notes = $builder->build([
             'ContentIdentifier' => 'mapped-' . $code,
             'ImageCaptureType'  => $code,
@@ -602,7 +594,6 @@ final class AppleDecoderTest extends TestCase
             'LivePhotoVideoIndex' => 1200,
         ];
 
-        /** @var AppleMakerNotes|null $notes */
         $notes = $builder->build($dictionary);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
@@ -625,7 +616,6 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        /** @var AppleMakerNotes|null $notes */
         $notes = $builder->build([
             'ContentIdentifier'       => 'extended',
             'AEStable'                => '1',
@@ -663,7 +653,6 @@ final class AppleDecoderTest extends TestCase
     {
         $builder = new AppleMakerNotesBuilder();
 
-        /** @var AppleMakerNotes|null $notes */
         $notes = $builder->build([
             'ContentIdentifier' => 'stability',
             $makerKey           => $value,

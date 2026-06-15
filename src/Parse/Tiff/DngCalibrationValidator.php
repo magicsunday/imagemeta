@@ -268,7 +268,10 @@ final readonly class DngCalibrationValidator
         }
 
         // CalibrationIlluminant1 and CalibrationIlluminant2 must also be present
-        if ((!$ifd->get(DngTag::CALIBRATION_ILLUMINANT_1) instanceof IfdEntry) || (!$ifd->get(DngTag::CALIBRATION_ILLUMINANT_2) instanceof IfdEntry)) {
+        $illum1 = $ifd->get(DngTag::CALIBRATION_ILLUMINANT_1);
+        $illum2 = $ifd->get(DngTag::CALIBRATION_ILLUMINANT_2);
+
+        if ((!$illum1 instanceof IfdEntry) || (!$illum2 instanceof IfdEntry)) {
             throw new ParseError(
                 'CalibrationIlluminant3 requires CalibrationIlluminant1 and CalibrationIlluminant2 per DNG 1.7.1.0.',
                 2003,
@@ -307,11 +310,6 @@ final readonly class DngCalibrationValidator
         }
 
         // Illuminant values must be distinct (illum1/illum2 guaranteed present above)
-        /** @var IfdEntry $illum1 */
-        $illum1 = $ifd->get(DngTag::CALIBRATION_ILLUMINANT_1);
-        /** @var IfdEntry $illum2 */
-        $illum2 = $ifd->get(DngTag::CALIBRATION_ILLUMINANT_2);
-
         if (is_int($illum1->value) && is_int($illum2->value) && is_int($illum3->value) && ($illum1->value === $illum2->value || $illum1->value === $illum3->value || $illum2->value === $illum3->value)) {
             throw new ParseError(
                 'Triple-illuminant CalibrationIlluminant values must be distinct per DNG 1.7.1.0.',

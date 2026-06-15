@@ -59,7 +59,6 @@ final class AppleDecoderSemanticStyleTest extends TestCase
             ],
         ];
 
-        /** @var AppleMakerNotes|null $makerNotes */
         $makerNotes = $builder->build($dictionary);
 
         self::assertInstanceOf(AppleMakerNotes::class, $makerNotes);

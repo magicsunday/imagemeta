@@ -247,7 +247,7 @@ final readonly class TiffJpegValidator
             return;
         }
 
-        if (!($offsetEntry instanceof IfdEntry) || !is_int($offsetEntry->value)) {
+        if (!is_int($offsetEntry->value)) {
             throw new ParseError('JPEGInterchangeFormat must be LONG[1].', 1831);
         }
 
