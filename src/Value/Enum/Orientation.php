@@ -63,9 +63,9 @@ enum Orientation: int
     {
         return match ($this) {
             self::Unknown, self::TopLeft, self::TopRight => 0,
-            self::BottomRight, self::BottomLeft => 180,
-            self::RightTop, self::RightBottom => 90,
-            self::LeftTop, self::LeftBottom => 270,
+            self::BottomRight, self::BottomLeft          => 180,
+            self::RightTop, self::RightBottom            => 90,
+            self::LeftTop, self::LeftBottom              => 270,
         };
     }
 
@@ -76,7 +76,7 @@ enum Orientation: int
     {
         return match ($this) {
             self::TopRight, self::BottomLeft, self::LeftTop, self::RightBottom => true,
-            default => false,
+            default                                                            => false,
         };
     }
 }

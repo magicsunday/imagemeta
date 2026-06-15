@@ -788,7 +788,7 @@ final readonly class GpsFactory
         return match ($ref) {
             'N', 'E' => 1.0,
             'S', 'W' => -1.0,
-            default => null,
+            default  => null,
         };
     }
 

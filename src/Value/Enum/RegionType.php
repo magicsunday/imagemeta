@@ -44,10 +44,10 @@ enum RegionType: string
         }
 
         return match ($normalized) {
-            'face'  => self::Face,
-            'focus' => self::Focus,
+            'face'                                          => self::Face,
+            'focus'                                         => self::Focus,
             'object', 'pet', 'subject', 'rectangle', 'rect' => self::Object,
-            default => self::Unknown,
+            default                                         => self::Unknown,
         };
     }
 }

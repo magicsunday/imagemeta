@@ -221,17 +221,17 @@ final readonly class TiffValueDecoder
         for ($i = 0; $i < $count; ++$i) {
             $componentBytes = $this->sliceBytes($bytes, $cursor, $componentSize);
             $vals[]         = match ($type) {
-                TiffFieldType::Byte->value   => ord($bytes[$cursor]),
-                TiffFieldType::SByte->value  => $this->binaryReader->toSigned(ord($bytes[$cursor]), 8),
-                TiffFieldType::Short->value  => $this->binaryReader->unpackU16($componentBytes),
-                TiffFieldType::SShort->value => $this->binaryReader->unpackS16($componentBytes),
-                TiffFieldType::Long->value, TiffFieldType::Ifd->value => $this->binaryReader->unpackU32($componentBytes),
-                TiffFieldType::SLong->value => $this->binaryReader->unpackS32($componentBytes),
+                TiffFieldType::Byte->value                              => ord($bytes[$cursor]),
+                TiffFieldType::SByte->value                             => $this->binaryReader->toSigned(ord($bytes[$cursor]), 8),
+                TiffFieldType::Short->value                             => $this->binaryReader->unpackU16($componentBytes),
+                TiffFieldType::SShort->value                            => $this->binaryReader->unpackS16($componentBytes),
+                TiffFieldType::Long->value, TiffFieldType::Ifd->value   => $this->binaryReader->unpackU32($componentBytes),
+                TiffFieldType::SLong->value                             => $this->binaryReader->unpackS32($componentBytes),
                 TiffFieldType::Long8->value, TiffFieldType::Ifd8->value => $this->binaryReader->unpackU64($componentBytes),
-                TiffFieldType::SLong8->value => $this->binaryReader->unpackS64($componentBytes),
-                TiffFieldType::Float->value  => $this->binaryReader->unpackFloat($componentBytes),
-                TiffFieldType::Double->value => $this->binaryReader->unpackDouble($componentBytes),
-                default                      => throw new ParseError('Unsupported type in decodeBytes: ' . $type, 1886),
+                TiffFieldType::SLong8->value                            => $this->binaryReader->unpackS64($componentBytes),
+                TiffFieldType::Float->value                             => $this->binaryReader->unpackFloat($componentBytes),
+                TiffFieldType::Double->value                            => $this->binaryReader->unpackDouble($componentBytes),
+                default                                                 => throw new ParseError('Unsupported type in decodeBytes: ' . $type, 1886),
             };
             $cursor += $componentSize;
         }

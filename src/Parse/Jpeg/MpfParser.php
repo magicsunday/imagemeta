@@ -670,10 +670,10 @@ final class MpfParser
     {
         return match ($type) {
             TiffConst::TYPE_BYTE, TiffConst::TYPE_ASCII, TiffConst::TYPE_UNDEFINED => 1,
-            TiffConst::TYPE_SHORT => 2,
-            TiffConst::TYPE_LONG, TiffConst::TYPE_SLONG => 4,
-            TiffConst::TYPE_RATIONAL, TiffConst::TYPE_SRATIONAL => 8,
-            default => null,
+            TiffConst::TYPE_SHORT                                                  => 2,
+            TiffConst::TYPE_LONG, TiffConst::TYPE_SLONG                            => 4,
+            TiffConst::TYPE_RATIONAL, TiffConst::TYPE_SRATIONAL                    => 8,
+            default                                                                => null,
         };
     }
 

@@ -50,11 +50,11 @@ enum UndefinedTextMarker: string
         $normalized = strtoupper($matches[1]);
 
         return match ($normalized) {
-            self::Ascii->value   => self::Ascii->value,
-            self::Unicode->value => self::Unicode->value,
-            self::Jis->value     => self::Jis->value,
+            self::Ascii->value              => self::Ascii->value,
+            self::Unicode->value            => self::Unicode->value,
+            self::Jis->value                => self::Jis->value,
             self::Undefined->value, 'UNDEF' => self::Undefined->value,
-            default => '',
+            default                         => '',
         };
     }
 

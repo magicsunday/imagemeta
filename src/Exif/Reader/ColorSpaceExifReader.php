@@ -157,7 +157,7 @@ final readonly class ColorSpaceExifReader
         if ($photometric instanceof Photometric) {
             return match ($photometric) {
                 Photometric::Rgb, Photometric::Ycbcr, Photometric::Cielab => 3,
-                default => 1,
+                default                                                   => 1,
             };
         }
 

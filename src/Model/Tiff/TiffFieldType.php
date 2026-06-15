@@ -39,9 +39,9 @@ enum TiffFieldType: int
     public function bytesPerComponent(): int
     {
         return match ($this) {
-            self::Byte, self::Ascii, self::SByte, self::Undefined => 1,
-            self::Short, self::SShort => 2,
-            self::Long, self::Ifd, self::SLong, self::Float => 4,
+            self::Byte, self::Ascii, self::SByte, self::Undefined                                => 1,
+            self::Short, self::SShort                                                            => 2,
+            self::Long, self::Ifd, self::SLong, self::Float                                      => 4,
             self::Rational, self::SRational, self::Double, self::Long8, self::SLong8, self::Ifd8 => 8,
         };
     }

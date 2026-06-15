@@ -4353,8 +4353,8 @@ final class TiffExifParserDngTagTest extends TestCase
         int $extraBytes = 0,
     ): string {
         $bytesPerElement = match ($dataType) {
-            0 => 1,
-            1, 2 => 2,
+            0       => 1,
+            1, 2    => 2,
             3       => 4,
             default => 1,
         };

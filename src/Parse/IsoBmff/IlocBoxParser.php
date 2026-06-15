@@ -710,8 +710,8 @@ final readonly class IlocBoxParser
     private function validateSizeNibble(int $nibble): int
     {
         return match ($nibble) {
-            0 => 0,
-            4, 8 => $nibble,
+            0       => 0,
+            4, 8    => $nibble,
             default => throw new ParseError('invalid length field size', 1257),
         };
     }
