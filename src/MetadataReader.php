@@ -201,13 +201,7 @@ final readonly class MetadataReader
         $makerNotes = $this->appleMerger->merge($makerNotes, null);
         $xmpDoc     = $this->parseXmpBlobs($xmpBlobs);
 
-        $iptcDoc = null;
-
-        if ($iptcBlobs !== []) {
-            $documents = array_map($this->iptcParser->parse(...), $iptcBlobs);
-
-            $iptcDoc = IptcDocument::merge(...$documents);
-        }
+        $iptcDoc = $this->parseIptcBlobs($iptcBlobs);
 
         // Assemble the final metadata aggregate with container context.
         return (new MetadataBuilder($this->structuredResolver))
@@ -304,12 +298,7 @@ final readonly class MetadataReader
 
         // IPTC-IIM — tag 33723 (0x83BB) embeds IPTC/NAA in TIFF IFD0
         $iptcBlobs = $exifDoc->iptcNaaRaw !== null ? [$exifDoc->iptcNaaRaw] : [];
-        $iptcDoc   = null;
-
-        if ($iptcBlobs !== []) {
-            $documents = array_map($this->iptcParser->parse(...), $iptcBlobs);
-            $iptcDoc   = IptcDocument::merge(...$documents);
-        }
+        $iptcDoc   = $this->parseIptcBlobs($iptcBlobs);
 
         return (new MetadataBuilder($this->structuredResolver))
             ->withParsers($this->xmpParser, $this->iptcParser)
@@ -447,6 +436,22 @@ final readonly class MetadataReader
         $documents = array_map($this->xmpParser->parse(...), $xmpBlobs);
 
         return XmpDocument::merge(...$documents);
+    }
+
+    /**
+     * Parses IPTC blobs and merges them into a single document.
+     *
+     * @param list<string> $iptcBlobs Raw IPTC/IIM record strings.
+     */
+    private function parseIptcBlobs(array $iptcBlobs): ?IptcDocument
+    {
+        if ($iptcBlobs === []) {
+            return null;
+        }
+
+        $documents = array_map($this->iptcParser->parse(...), $iptcBlobs);
+
+        return IptcDocument::merge(...$documents);
     }
 
     /**
