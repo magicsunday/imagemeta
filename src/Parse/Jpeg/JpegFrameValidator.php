@@ -408,7 +408,7 @@ final class JpegFrameValidator
 
         $result = array_any(
             $legalValues,
-            fn ($legal): bool => ($derivedH === $legal[0]) && ($derivedV === $legal[1])
+            fn (array $legal): bool => ($derivedH === $legal[0]) && ($derivedV === $legal[1])
         );
 
         if ($result) {

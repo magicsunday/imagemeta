@@ -69,8 +69,6 @@ final readonly class SpatialFrequencyResponse
      * ]
      *
      * @param DecodedMatrix $matrix
-     *
-     * @return self|null
      */
     public static function fromMatrix(?array $matrix): ?self
     {

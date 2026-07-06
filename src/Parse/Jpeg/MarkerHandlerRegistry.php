@@ -40,7 +40,7 @@ final class MarkerHandlerRegistry
      */
     public function supports(int $marker): bool
     {
-        return array_any($this->handlers, fn ($handler) => $handler->canHandle($marker));
+        return array_any($this->handlers, fn (MarkerHandlerInterface $handler): bool => $handler->canHandle($marker));
     }
 
     /**

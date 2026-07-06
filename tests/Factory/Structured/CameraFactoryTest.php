@@ -323,7 +323,6 @@ final class CameraFactoryTest extends TestCase
         $metadata = new Metadata(
             exifBlobs: [],
             quickTime: $quickTime,
-            exifDoc: null,
             xmpDoc: $xmpDoc,
         );
 
@@ -348,7 +347,6 @@ final class CameraFactoryTest extends TestCase
         $metadata = new Metadata(
             exifBlobs: [],
             quickTime: $quickTime,
-            exifDoc: null,
             riffExif: $riffExif,
         );
 
@@ -407,7 +405,6 @@ final class CameraFactoryTest extends TestCase
         $metadata = new Metadata(
             exifBlobs: [],
             quickTime: $quickTime,
-            exifDoc: null,
             xmpDoc: $xmpDoc,
         );
 
@@ -432,7 +429,6 @@ final class CameraFactoryTest extends TestCase
         $metadata = new Metadata(
             exifBlobs: [],
             quickTime: $quickTime,
-            exifDoc: null,
             riffExif: $riffExif,
         );
 

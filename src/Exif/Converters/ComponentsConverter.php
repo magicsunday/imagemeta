@@ -161,7 +161,7 @@ final readonly class ComponentsConverter
 
         $result = array_any(
             $legalValues,
-            fn ($legal): bool => ($horizontal === $legal[0]) && ($vertical === $legal[1])
+            fn (array $legal): bool => ($horizontal === $legal[0]) && ($vertical === $legal[1])
         );
 
         if ($result) {

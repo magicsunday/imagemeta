@@ -533,7 +533,6 @@ XML;
         $metadata = new Metadata(
             exifBlobs: [],
             quickTime: null,
-            xmpDoc: null,
         );
 
         $components = $factory->createComponents($metadata);
@@ -771,7 +770,6 @@ XML;
         $metadata = new Metadata(
             exifBlobs: [],
             quickTime: null,
-            iccProfile: null,
             iccSegments: ['segment-data'],
         );
 
@@ -845,7 +843,6 @@ XML;
         $metadata = new Metadata(
             exifBlobs: [],
             quickTime: null,
-            iccProfile: null,
             iccSegments: [],
         );
 

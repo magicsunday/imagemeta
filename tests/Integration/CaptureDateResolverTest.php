@@ -499,7 +499,6 @@ final class CaptureDateResolverTest extends TestCase
         return new Metadata(
             exifBlobs: [],
             quickTime: null,
-            exifDoc: null,
             xmpBlobs: [],
             xmpDoc: new XmpDocument([
                 '{' . self::XMP_NAMESPACE . '}CreateDate' => $createDate,

@@ -649,7 +649,6 @@ final class ExposureFactoryTest extends TestCase
         $metadata = new Metadata(
             exifBlobs: [],
             quickTime: null,
-            exifDoc: null,
             xmpDoc: $xmpDoc,
         );
 

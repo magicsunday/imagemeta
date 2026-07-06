@@ -104,7 +104,7 @@ final readonly class KeyedArchiveResolver
      */
     public static function isStringKeyedDictionary(array $value): bool
     {
-        return array_all(array_keys($value), static fn ($key): bool => is_string($key));
+        return array_all(array_keys($value), static fn (int|string $key): bool => is_string($key));
     }
 
     /**
@@ -296,7 +296,7 @@ final readonly class KeyedArchiveResolver
             return true;
         }
 
-        return array_any($value, fn ($entry): bool => is_array($entry) && $this->containsUidReference($entry));
+        return array_any($value, fn (array|bool|float|int|string|null $entry): bool => is_array($entry) && $this->containsUidReference($entry));
     }
 
     /**

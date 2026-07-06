@@ -676,7 +676,7 @@ final class BinaryPlistDecoder
         // Validate that all keys are string scalars (use array_any per guidelines).
         $hasInvalidKey = array_any(
             $keys,
-            static fn ($key): bool => !($key instanceof ApplePlistScalar) || !is_string($key->value())
+            static fn (ApplePlistValueInterface $key): bool => !($key instanceof ApplePlistScalar) || !is_string($key->value())
         );
 
         if ($hasInvalidKey) {

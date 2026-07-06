@@ -235,7 +235,7 @@ final readonly class ExifConvenience
     {
         $needle = sprintf('%d mm eq', $equivalent);
 
-        return array_any($parts, fn ($part): bool => strcasecmp((string) $part, $needle) === 0);
+        return array_any($parts, fn (int|string $part): bool => strcasecmp((string) $part, $needle) === 0);
     }
 
     /**

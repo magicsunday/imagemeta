@@ -42,9 +42,6 @@ final readonly class SensorFactory
             : $resolver?->enum(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, ResolutionUnit::class);
 
         return new Sensor(
-            pixelPitchUm: null,
-            sensorType: null,
-            ibis: null,
             cfaPattern: $exifDocument?->cfaPattern(),
             spectralSensitivity: $exifDocument?->spectralSensitivity() ?? $resolver?->string(ExifTag::SPECTRAL_SENSITIVITY),
             oecf: $exifDocument?->oecf(),

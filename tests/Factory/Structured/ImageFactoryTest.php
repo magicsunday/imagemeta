@@ -170,11 +170,6 @@ final class ImageFactoryTest extends TestCase
             exifBlobs: [],
             quickTime: null,
             jpegBitsPerSample: 8,
-            jpegFrameSamplingFactors: null,
-            jpegYCbCrSubSampling: null,
-            mimeType: null,
-            fileSize: null,
-            extension: null,
             jpegFrameWidth: 1920,
             jpegFrameHeight: 1080,
         );
