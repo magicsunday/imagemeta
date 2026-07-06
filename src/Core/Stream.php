@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use MagicSunday\ImageMeta\Core\Traits\DelegatesToByteReader;
 use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
@@ -40,6 +41,7 @@ final class Stream implements BinaryReadAccessInterface
 {
     use ReadsBinaryPrimitives;
     use NormalizesOffsets;
+    use DelegatesToByteReader;
 
     private int $pos = 0;
 
@@ -81,14 +83,7 @@ final class Stream implements BinaryReadAccessInterface
      */
     public function __construct(private $fh, private readonly int $size)
     {
-        $this->byteReader = new ByteReader(
-            read: $this->read(...),
-            tell: fn (): int => $this->pos,
-            seek: function (int|UInt64 $offset, int $whence): void {
-                $this->seekInternal($offset, $whence);
-            },
-            context: 'stream',
-        );
+        $this->byteReader = $this->createByteReader('stream');
     }
 
     public function __destruct()
@@ -104,22 +99,6 @@ final class Stream implements BinaryReadAccessInterface
     public function size(): int
     {
         return $this->size;
-    }
-
-    /**
-     * Returns the current cursor position relative to the start of the stream.
-     */
-    public function tell(): int
-    {
-        return $this->byteReader->tell();
-    }
-
-    /**
-     * Moves the read cursor to an absolute offset within the stream.
-     */
-    public function seek(int|UInt64 $offset, int $whence = SEEK_SET): void
-    {
-        $this->seekInternal($offset, $whence);
     }
 
     /**
@@ -179,12 +158,22 @@ final class Stream implements BinaryReadAccessInterface
     }
 
     /**
+     * Returns the current read offset within the stream.
+     *
+     * @return int Current cursor position.
+     */
+    protected function currentOffset(): int
+    {
+        return $this->pos;
+    }
+
+    /**
      * Resolves and applies the seek operation against the underlying stream.
      *
      * @param int|UInt64 $offset Offset to seek to.
      * @param int        $whence Seek origin constant.
      */
-    private function seekInternal(int|UInt64 $offset, int $whence): void
+    protected function seekInternal(int|UInt64 $offset, int $whence): void
     {
         $target = match ($whence) {
             SEEK_SET => $this->normalizeAbsoluteOffset($offset, 'seek out of range'),

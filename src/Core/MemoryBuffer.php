@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use MagicSunday\ImageMeta\Core\Traits\DelegatesToByteReader;
 use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
@@ -32,6 +33,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
 {
     use ReadsBinaryPrimitives;
     use NormalizesOffsets;
+    use DelegatesToByteReader;
 
     private readonly ByteReader $byteReader;
 
@@ -46,14 +48,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
         private int $pos = 0,
     ) {
         $this->length     = strlen($data);
-        $this->byteReader = new ByteReader(
-            read: $this->read(...),
-            tell: fn (): int => $this->pos,
-            seek: function (int|UInt64 $offset, int $whence): void {
-                $this->seekInternal($offset, $whence);
-            },
-            context: 'buffer',
-        );
+        $this->byteReader = $this->createByteReader('buffer');
     }
 
     /**
@@ -64,28 +59,6 @@ final class MemoryBuffer implements BinaryReadAccessInterface
     public function size(): int
     {
         return $this->length;
-    }
-
-    /**
-     * Reports the current read offset within the buffer.
-     *
-     * @return int current cursor position
-     */
-    public function tell(): int
-    {
-        return $this->byteReader->tell();
-    }
-
-    /**
-     * Moves the read cursor to an absolute offset within the buffer.
-     *
-     * @param int|UInt64 $offset absolute position in bytes
-     *
-     * @throws BoundsError when the requested offset is outside the buffer
-     */
-    public function seek(int|UInt64 $offset, int $whence = SEEK_SET): void
-    {
-        $this->seekInternal($offset, $whence);
     }
 
     /**
@@ -172,12 +145,22 @@ final class MemoryBuffer implements BinaryReadAccessInterface
     }
 
     /**
+     * Returns the current read offset within the buffer.
+     *
+     * @return int Current cursor position.
+     */
+    protected function currentOffset(): int
+    {
+        return $this->pos;
+    }
+
+    /**
      * Applies a seek operation within the buffer bounds.
      *
      * @param int|UInt64 $offset Offset to seek to.
      * @param int        $whence Seek origin constant.
      */
-    private function seekInternal(int|UInt64 $offset, int $whence): void
+    protected function seekInternal(int|UInt64 $offset, int $whence): void
     {
         $target = match ($whence) {
             SEEK_SET => $this->normalizeOffset($offset, 0, 'MemoryBuffer seek out of range'),

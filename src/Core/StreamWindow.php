@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use MagicSunday\ImageMeta\Core\Traits\DelegatesToByteReader;
 use MagicSunday\ImageMeta\Core\Traits\NormalizesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
@@ -27,6 +28,7 @@ final class StreamWindow implements BinaryReadAccessInterface
 {
     use ReadsBinaryPrimitives;
     use NormalizesOffsets;
+    use DelegatesToByteReader;
 
     private int $cursor = 0;
 
@@ -40,14 +42,7 @@ final class StreamWindow implements BinaryReadAccessInterface
         private readonly int $offset,
         private readonly int $length,
     ) {
-        $this->byteReader = new ByteReader(
-            read: $this->read(...),
-            tell: fn (): int => $this->cursor,
-            seek: function (int|UInt64 $offset, int $whence): void {
-                $this->seekInternal($offset, $whence);
-            },
-            context: 'window',
-        );
+        $this->byteReader = $this->createByteReader('window');
     }
 
     /**
@@ -56,22 +51,6 @@ final class StreamWindow implements BinaryReadAccessInterface
     public function size(): int
     {
         return $this->length;
-    }
-
-    /**
-     * Returns the cursor position relative to the start of the window.
-     */
-    public function tell(): int
-    {
-        return $this->byteReader->tell();
-    }
-
-    /**
-     * Repositions the window cursor to an absolute offset inside the window.
-     */
-    public function seek(int|UInt64 $offset, int $whence = SEEK_SET): void
-    {
-        $this->seekInternal($offset, $whence);
     }
 
     /**
@@ -124,12 +103,22 @@ final class StreamWindow implements BinaryReadAccessInterface
     }
 
     /**
+     * Returns the current read offset within the window.
+     *
+     * @return int Current cursor position.
+     */
+    protected function currentOffset(): int
+    {
+        return $this->cursor;
+    }
+
+    /**
      * Resolves and applies a seek operation within the window bounds.
      *
      * @param int|UInt64 $offset Offset to seek to.
      * @param int        $whence Seek origin constant.
      */
-    private function seekInternal(int|UInt64 $offset, int $whence): void
+    protected function seekInternal(int|UInt64 $offset, int $whence): void
     {
         $target = match ($whence) {
             SEEK_SET => $this->normalizeAbsoluteOffset($offset, 'window seek out of range'),
