@@ -58,13 +58,13 @@ If unsure → **STOP and ask**. Never guess.
 
 ### 1.4 Git Rules
 
-* Branching is **not used**
-* Commit directly on `main`
-* Commit message **must** match exactly:
-
-```
-GH-<number>: <Message starting with capital letter>
-```
+* Work happens on a branch named exactly `GH-<number>` and reaches `main` through a **pull request** — never a direct commit
+* A subject starting with `GH-` must match `^GH-\d+: [A-ZÄÖÜ]`; every other subject must match `^[A-ZÄÖÜ]` — a capitalised imperative either way. The patterns check only the leading capital; two starts are banned whatever their case: **conventional-commit prefixes** (`feat:`, `Fix:`, `chore:` …) and path-like starts (`src/Reader.php: …`, `Src/Reader.php: …`)
+    * The two patterns are deliberately kept separate: `^(GH-\d+: )?[A-ZÄÖÜ]` (wrong) stops enforcing the capital *after* the prefix, because the optional group can be skipped and the `G` of `GH-` then satisfies `[A-ZÄÖÜ]` on its own — `GH-12: fix typo` would pass. Keying on the subject rather than on the branch also keeps this check decidable for commits already on `main`, where the issue branch no longer exists.
+    * The same two patterns apply to the **pull-request title**, which under squash-merge is the subject that reaches `main`.
+    * The normative definition lives in `magicsunday/.github/.github/workflows/commit-convention.yml@main`, which self-tests a decision table before applying it. No workflow here calls that gate, so the rule in this repository is documentation only; wherever it is wired, the workflow is authoritative and this text is what gets fixed.
+* The `GH-<number>: ` prefix marks work that belongs to the issue — a commit on that branch whose concern is something else (a drive-by lint fix, a dependency bump) keeps its own unprefixed subject. Merge and revert commits keep the subject git generates. Not every git-written subject is exempt, though: `fixup!` and `squash!` start lowercase and violate the rule, so autosquash them before opening the PR.
+* Never add a `Co-Authored-By:` trailer or any other AI attribution
 
 Example:
 
@@ -74,11 +74,10 @@ GH-421: Fix BigTIFF SRATIONAL sign handling
 
 ### 1.5 Ticket Handling (Hard Rule)
 
-* If a commit references a GitHub issue (`GH-<number>`)
-* **and** `ci:test` completes fully green
-* the referenced ticket **must be closed immediately**
+* The pull-request body closes the issue with a `Closes #<number>` keyword — the `GH-<number>: ` subject prefix is not a GitHub link and closes nothing
+* The ticket closes when the pull request merges, which requires `ci:test` fully green
 
-No follow-up commits, no deferred closure, no “left open for review”.
+No follow-up commits, no deferred closure, no “left open for review”: a merged pull request leaves nothing to tidy up afterwards.
 
 ### 1.6 CI Dry-Run Changes (Hard Rule)
 
