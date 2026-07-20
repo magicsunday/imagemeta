@@ -1,0 +1,33 @@
+name: "Question or documentation issue"
+description: "Something in the documentation is wrong or missing, or you are not sure how the library is meant to behave."
+labels:
+    - Documentation
+body:
+    - type: markdown
+      attributes:
+          value: |
+              > [!WARNING]
+              > This issue is public and effectively permanent. Assume nothing you
+              > paste is private, in any field — including the issue title, which
+              > reporters often paste a real file name into.
+
+              For a defect, the *Bug report* and *Parse error report* forms ask
+              for what a fix needs. This form is for everything else, and asks
+              for nothing you would have to look up.
+
+    - type: textarea
+      id: question
+      attributes:
+          label: "What is unclear, wrong or missing?"
+          description: "Redact anything identifying from values you quote, and put dumps in a fenced code block so identifiers are not linked into unrelated repositories."
+      validations:
+          required: true
+
+    - type: input
+      id: location
+      attributes:
+          label: "Where"
+          description: "The document, section or method this concerns, if it applies to one."
+          placeholder: "README, Supported formats / MetadataReader::read()"
+      validations:
+          required: false

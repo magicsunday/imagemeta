@@ -1,2 +1,23 @@
-blank_issues_enabled: true
-contact_links: []
+# The presence of this directory suppresses the shared issue templates from the
+# `.github` repository entirely — GitHub falls back to those only when a
+# repository has no ISSUE_TEMPLATE directory of its own. Improve the templates
+# here; the shared copies are never offered for this repository.
+
+# Disabled so the web chooser always puts a form, and therefore its warnings, in
+# front of an outside reporter. This is a chooser setting only — the REST API
+# still creates issues with no template at all, so treat it as removing the easy
+# bypass rather than closing the path.
+#
+# It costs the maintainer nothing: with blank issues disabled, anyone with write
+# access still sees the blank form, marked "Maintainers only". And every one of
+# this repository's issues to date was filed by the owner, so the reports that
+# carry no template label are the maintainer's own backlog, not traffic from
+# someone who would be turned away.
+blank_issues_enabled: false
+contact_links:
+    # GitHub renders its own security row from SECURITY.md. This one is named for
+    # the symptom instead, so a reporter holding a file that crashes the parser
+    # finds it without having to think of it as a vulnerability first.
+    - name: "A crafted file crashes, hangs or exhausts memory"
+      url: "https://github.com/magicsunday/imagemeta/security/advisories/new"
+      about: "Report it privately, never as a public issue — a public report hands out a working denial-of-service against every consumer of this library."
