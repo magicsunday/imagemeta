@@ -8,9 +8,9 @@
 **Scope:** This file defines **hard technical rules**. It is not process documentation.
 
 **Workflow:**
-✔ Commits are made **directly on `main`**
-✔ Commit message format is mandatory
-✔ Tickets are closed automatically after successful CI (see §1.5)
+✔ Work happens on a `GH-<number>` branch and reaches `main` by **pull request**
+✔ Commit message format is mandatory (see §1.4)
+✔ Tickets close on merge via `Closes #<number>` in the PR body (see §1.5)
 
 **Issue Authority:**
 Issues created via `.github/ISSUE_TEMPLATE/agent-task.yml`
