@@ -19,13 +19,13 @@
 
 ## 3. Pull requests
 
-- Open a PR from a branch in your fork.
+- Open a PR from a branch — in your fork if you do not have push access, otherwise in this repository.
 - Describe scope, motivation, and validation steps.
 - Follow `.github/pull_request_template.md`.
 - Before requesting review, run the mandatory checks locally:
   - `composer ci:test`
 - Include tests for new behavior and regression tests for fixes.
-- This workflow applies to everyone. Maintainers and agents use the same branch-and-pull-request flow; they differ only in the stricter branch name (`GH-<number>`) and subject format that `AGENTS.md` §1.4 requires.
+- This workflow applies to everyone. Maintainers and agents use the same branch-and-pull-request flow; they differ only in branching inside this repository rather than a fork, and in the stricter branch name (`GH-<number>`) and subject format that `AGENTS.md` §1.4 requires.
 
 ## 4. Development setup (minimal)
 

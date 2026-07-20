@@ -18,5 +18,5 @@ for a bug fix, say how you confirmed the test fails without the fix.
 -->
 
 - [ ] `composer ci:test` is green
-- [ ] A failing test was written first (see `AGENTS.md` §1.7)
+- [ ] A failing test was written first — or N/A for docs, refactoring and CGL-only changes (see `AGENTS.md` §1.7)
 - [ ] No `Co-Authored-By:` trailer or other AI attribution

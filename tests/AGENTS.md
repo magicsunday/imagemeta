@@ -1,4 +1,4 @@
-<!-- Managed by agent: keep sections and order; edit content, not structure. Last updated: 2026-03-20 -->
+<!-- Managed by agent: keep sections and order; edit content, not structure. Last updated: 2026-07-20 -->
 
 # AGENTS.md — MagicSunday/ImageMeta (tests)
 
