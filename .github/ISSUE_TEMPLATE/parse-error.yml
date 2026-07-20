@@ -1,15 +1,37 @@
-name: "Parse Error Report"
+name: "Parse error report"
 description: "A file cannot be parsed and the parser aborts with an error."
-title: "Parse error: <brief description>"
 labels:
-    - bug
+    - Bug
     - parse-error
 body:
     - type: markdown
       attributes:
           value: |
-              ## Parse Error Report
-              Use this template when a file fails to parse with an error message.
+              > [!CAUTION]
+              > Stop if a crafted file can make the parser hang, exhaust memory,
+              > loop forever, read outside its buffer, return data it should not,
+              > or take absurdly long. That is a vulnerability, not a parse error.
+              > Report it privately through the
+              > [security advisory form](https://github.com/magicsunday/imagemeta/security/advisories/new),
+              > and do not attach the file here — describe it there, and a
+              > maintainer will arrange a private transfer. If you are unsure whether it
+              > counts, use the private form anyway — a mistaken private report
+              > costs nothing, a public one cannot be undone.
+
+              > [!WARNING]
+              > This issue, and every file attached to it, is public and
+              > effectively permanent — deleting a comment does not retract an
+              > attachment. Metadata is what this library reads, so a sample file
+              > carries far more than the defect. Assume nothing you paste is
+              > private, in any field — including the issue title, which reporters
+              > often paste a real file name into. [Sharing a sample file](https://github.com/magicsunday/imagemeta/blob/main/.github/SHARING-A-SAMPLE-FILE.md)
+              > explains what this library reads out of a file.
+
+              The fastest report is often not the file at all: a hex window
+              around the offset named in the error, plus the box or IFD header
+              chain leading to it, is usually enough to write a fixture. It is
+              much smaller than the file — but not automatically anonymous, so
+              read its ASCII column before pasting.
 
     - type: input
       id: file_type
@@ -33,27 +55,67 @@ body:
       id: error_message
       attributes:
           label: "Error message and stack trace"
-          description: "The full error output."
+          description: "The full error output. Replace absolute paths and user names with placeholders. An exception message often quotes the offending tag value — redact it if it identifies anyone."
           render: shell
           placeholder: |
               ERROR: infe uri item_uri_type must be non-empty
-              #0 /app/src/Parse/IsoBmff/IlocBoxParser.php(231): ...
+              #0 /path/to/project/src/Parse/IsoBmff/IlocBoxParser.php(231): ...
               #1 ...
       validations:
           required: true
 
     - type: textarea
+      id: failing_structure
+      attributes:
+          label: "Failing structure"
+          description: >-
+              Required unless you attach a sample file below — a report with neither cannot be reproduced.
+              A hex dump of roughly 256 bytes around the offset the error names, plus the box or IFD header chain
+              leading to it. Usually more useful than the file, and far smaller — but not anonymous: read the ASCII
+              column, where serial numbers and QuickTime or XMP coordinates do show up — but the EXIF GPS IFD and
+              DJI telemetry never will. [Sharing a sample file](https://github.com/magicsunday/imagemeta/blob/main/.github/SHARING-A-SAMPLE-FILE.md) says what to check besides.
+          render: text
+      validations:
+          required: false
+
+    - type: textarea
       id: sample_file
       attributes:
           label: "Sample file"
-          description: "Attach a minimal sample file that reproduces the error, or describe how to obtain one. If the file contains personal data, consider stripping metadata first."
+          description: |
+              Attach a minimal file that reproduces the problem, or describe how to obtain one.
+
+              Only attach a file that is yours to license, that shows and names no other identifiable person, and
+              that you accept becoming a permanent public test fixture under this repository's licence.
+
+              Do not run `exiftool -all=` on it first — deleting tags rewrites the offsets the defect lives in, and
+              the file stops reproducing. [Sharing a sample file](https://github.com/magicsunday/imagemeta/blob/main/.github/SHARING-A-SAMPLE-FILE.md) explains what to overwrite instead, which
+              formats it does not work for, and what GitHub will refuse to accept.
       validations:
           required: false
+
+    - type: input
+      id: version
+      attributes:
+          label: "Library version"
+          description: "Which released version or commit does this occur with?"
+      validations:
+          required: true
+
+    - type: textarea
+      id: php_version
+      attributes:
+          label: "PHP version and extensions"
+          description: "Output of `php -v`, plus any relevant extensions."
+      validations:
+          required: true
 
     - type: textarea
       id: additional_context
       attributes:
           label: "Additional context"
-          description: "Any other relevant information (PHP version, library version, etc.)."
+          description: >-
+              Anything else that narrows it down. Put dumps in a fenced code block so identifiers are not linked into
+              unrelated repositories.
       validations:
           required: false
