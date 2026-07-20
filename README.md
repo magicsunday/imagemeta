@@ -253,6 +253,12 @@ HTML mirrors (`docs/*.html`) are available for faster navigation/search during i
 
 ## 🤝 Contributing
 
-See `CONTRIBUTING.md` for contributor workflow and minimal setup.
+Contributor workflow, security reporting and the pull-request template are shared
+across the magicsunday repositories and live in
+[`magicsunday/.github`](https://github.com/magicsunday/.github) — GitHub applies
+them here automatically, which is why they are not files in this tree.
+
+Setup specific to this package is in the table above; the mandatory gate is
+`composer ci:test`.
 
 If contributions are prepared or modified by an LLM/agent, follow `AGENTS.md` (and `tests/AGENTS.md` for test-only scope).
