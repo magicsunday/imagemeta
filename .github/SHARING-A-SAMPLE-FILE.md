@@ -106,10 +106,13 @@ a lot, because much of what matters here is stored as text:
 - XMP, which is UTF-8 throughout — including `exif:GPSLatitude`;
 - the QuickTime `location.ISO6709` atom, which reads as `+51.5074-000.1278/`.
 
-An ASCII pass is necessary but **not sufficient**, because two location sources
-have no printable form at all: the EXIF GPS IFD stores latitude and longitude as
-RATIONAL triplets — raw integers — and DJI telemetry stores them as 64-bit
-floats inside protobuf. Neither shows up as anything a reader would notice.
+An ASCII pass is necessary but **not sufficient**, because the coordinates
+themselves have no printable form in two of their sources: the EXIF GPS IFD
+stores latitude and longitude as RATIONAL triplets — raw integers — and DJI
+telemetry stores them as 64-bit floats inside protobuf. Note the scope: other
+tags in that same GPS IFD, such as the N/S reference, the map datum and the date
+stamp, *are* ASCII, so seeing readable text near the coordinates proves nothing
+about the coordinates.
 
 So also check *which structure* the window covers. If it overlaps the GPS IFD, a
 QuickTime location atom, or `mdat` bytes near a `DJI` marker, either zero those
@@ -124,8 +127,9 @@ camera formats — are not among them. Rather than guess: if the upload is
 rejected, put the file in a `.zip`, which is accepted.
 
 Size is capped at 10 MB for images and 25 MB for everything else, a `.zip`
-included. A video may be allowed larger, but only when both the account owning
-this repository and your own account are on a paid plan, so do not count on it.
+included. A video is capped at 10 MB unless both this repository's owner is on a
+paid plan and you are either on one yourself or a member or collaborator here —
+so plan for 10 MB.
 
 **25 MB is the ceiling for every route.** If the smallest file that still
 reproduces the defect does not fit, do not look for a file host — send the

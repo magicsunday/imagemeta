@@ -72,8 +72,8 @@ body:
               Required unless you attach a sample file below — a report with neither cannot be reproduced.
               A hex dump of roughly 256 bytes around the offset the error names, plus the box or IFD header chain
               leading to it. Usually more useful than the file, and far smaller — but not anonymous: read the ASCII
-              column, where serial numbers and QuickTime or XMP coordinates do show up — but the EXIF GPS IFD and
-              DJI telemetry never will. [Sharing a sample file](https://github.com/magicsunday/imagemeta/blob/main/.github/SHARING-A-SAMPLE-FILE.md) says what to check besides.
+              column, where serial numbers and QuickTime or XMP coordinates do show up — but the coordinates in
+              the EXIF GPS IFD and in DJI telemetry never will. [Sharing a sample file](https://github.com/magicsunday/imagemeta/blob/main/.github/SHARING-A-SAMPLE-FILE.md) says what to check besides.
           render: text
       validations:
           required: false
