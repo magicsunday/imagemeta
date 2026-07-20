@@ -58,7 +58,7 @@ If unsure → **STOP and ask**. Never guess.
 
 ### 1.4 Git Rules
 
-* Work happens on a branch named exactly `GH-<number>` and reaches `main` through a **pull request** — never a direct commit
+* Work happens on a branch named exactly `GH-<number>` and reaches `main` through a **pull request** — never a direct commit. `main` requires the `build (8.4)` check but no review, so this is convention rather than something the platform enforces
 * A subject starting with `GH-` must match `^GH-\d+: [A-ZÄÖÜ]`; every other subject must match `^[A-ZÄÖÜ]` — a capitalised imperative either way. The patterns check only the leading capital; two starts are banned whatever their case: **conventional-commit prefixes** (`feat:`, `Fix:`, `chore:` …) and path-like starts (`src/Reader.php: …`, `Src/Reader.php: …`)
     * The two patterns are deliberately kept separate: `^(GH-\d+: )?[A-ZÄÖÜ]` (wrong) stops enforcing the capital *after* the prefix, because the optional group can be skipped and the `G` of `GH-` then satisfies `[A-ZÄÖÜ]` on its own — `GH-12: fix typo` would pass. Keying on the subject rather than on the branch also keeps this check decidable for commits already on `main`, where the issue branch no longer exists.
     * The same two patterns apply to the **pull-request title**, which under squash-merge is the subject that reaches `main`.

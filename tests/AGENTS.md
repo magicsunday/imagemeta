@@ -42,9 +42,8 @@ If production code changes are required → **STOP**.
 
 The git flow and the commit-subject rule are the repository-wide ones in the root
 `AGENTS.md` §1.4 — work on a `GH-<number>` branch, merge by pull request, and use
-the prefix for issue-tied work. They are **not** restated here: this file used to
-carry its own copy, which drifted into demanding the prefix on every commit while
-its own example (`Add coverage for truncated IFD entries`) carried none.
+the prefix for issue-tied work. They are deliberately **not** restated here; a
+second copy is how the two drift apart.
 
 Test-only work adds nothing to that flow beyond the scope rule above.
 
