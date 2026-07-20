@@ -13,9 +13,9 @@ body:
               If you would need to guess, expand scope, or relax guards: **STOP** and ask.
 
               **TDD workflow:** Write a failing test first, then implement the minimal code to make it pass.
-              **Commit workflow:** commit directly to `main`
-              **Commit message:** `GH-<issue-number>: <Message starting with capital letter>`
-              **Close rule:** if `ci:test` is fully green → close this issue immediately.
+              **Commit workflow:** work on a branch named `GH-<issue-number>` and open a pull request — never commit directly to `main`
+              **Commit message:** `GH-<issue-number>: <Message starting with capital letter>` for work on this issue; see `AGENTS.md` §1.4 for the full rule
+              **Close rule:** put `Closes #<issue-number>` in the pull-request body; the issue closes when the PR merges, which requires `ci:test` fully green.
 
     - type: textarea
       id: goal

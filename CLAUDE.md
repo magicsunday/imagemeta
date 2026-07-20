@@ -14,7 +14,8 @@ All code style, architecture, testing, git, and specification rules are defined 
 
 Key rules to remember:
 - **TDD is mandatory** — failing test first, then implementation
-- **Commit directly on `main`** — format: `GH-<number>: <Message starting with capital letter>`
+- **Branch `GH-<number>`, merge by pull request** — never commit directly on `main`
+- **Subject format** — `GH-<number>: <Capital>` when the commit belongs to an issue, otherwise a capitalised imperative; see `AGENTS.md` §1.4 for the full rule
 - **No `Co-Authored-By` trailers** in commit messages
 - **CGL alignment fixes in separate commits** from feature changes
 - **Each review finding gets its own commit** — not bundled

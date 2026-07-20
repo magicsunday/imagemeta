@@ -1,4 +1,4 @@
-<!-- Managed by agent: keep sections and order; edit content, not structure. Last updated: 2026-03-20 -->
+<!-- Managed by agent: keep sections and order; edit content, not structure. Last updated: 2026-07-20 -->
 
 # AGENTS.md — MagicSunday/ImageMeta (tests)
 
@@ -40,24 +40,18 @@ If production code changes are required → **STOP**.
 
 ### 1.2 Git Rules
 
-* Commit directly on `main`
-* Commit message **must** match exactly:
+The git flow and the commit-subject rule are the repository-wide ones in the root
+`AGENTS.md` §1.4 — work on a `GH-<number>` branch, merge by pull request, and use
+the prefix for issue-tied work. They are deliberately **not** restated here; a
+second copy is how the two drift apart.
 
-```
-GH-<number>: <Message starting with capital letter>
-```
-
-Example:
-
-```
-Add coverage for truncated IFD entries
-```
+Test-only work adds nothing to that flow beyond the scope rule above.
 
 ### 1.3 Ticket Handling (Hard Rule)
 
-* If a commit references a GitHub issue (`GH-<number>`)
-* **and** `ci:test` completes fully green
-* the referenced ticket **must be closed immediately**
+As in the root `AGENTS.md` §1.5: the pull-request body closes the issue with a
+`Closes #<number>` keyword, and the ticket closes when the pull request merges,
+which requires `ci:test` fully green.
 
 No follow-up commits, no deferred closure, no “left open for review”.
 
