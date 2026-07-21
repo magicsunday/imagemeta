@@ -30,6 +30,20 @@ jobs:
             - name: Install check-jsonschema
               run: pipx install check-jsonschema
 
+            - name: Fetch the issue-form schemas
+              run: |
+                  set -euo pipefail
+                  # Fetch once, with retries, into local files. A required check
+                  # must not red-fail a good PR on a transient schemastore blip,
+                  # and validating against a local copy removes a network call
+                  # per template.
+                  curl -fsSL --retry 3 --retry-delay 2 \
+                      -o "$RUNNER_TEMP/github-issue-forms.json" \
+                      https://json.schemastore.org/github-issue-forms.json
+                  curl -fsSL --retry 3 --retry-delay 2 \
+                      -o "$RUNNER_TEMP/github-issue-config.json" \
+                      https://json.schemastore.org/github-issue-config.json
+
             - name: Validate issue forms against the schema
               run: |
                   set -euo pipefail
@@ -37,9 +51,9 @@ jobs:
                   status=0
                   for file in .github/ISSUE_TEMPLATE/*.yml; do
                       if [ "$(basename "$file")" = 'config.yml' ]; then
-                          schema='https://json.schemastore.org/github-issue-config.json'
+                          schema="$RUNNER_TEMP/github-issue-config.json"
                       else
-                          schema='https://json.schemastore.org/github-issue-forms.json'
+                          schema="$RUNNER_TEMP/github-issue-forms.json"
                       fi
                       echo "::group::$file"
                       check-jsonschema --schemafile "$schema" "$file" || status=1
@@ -57,12 +71,20 @@ jobs:
                   status=0
                   for file in .github/ISSUE_TEMPLATE/*.yml; do
                       [ "$(basename "$file")" = 'config.yml' ] && continue
+                      # Capture yq first so its exit status is checked — a parse
+                      # failure inside a `< <(…)` process substitution is
+                      # invisible to `set -e` and would skip the file silently.
+                      labels="$(yq -r '.labels[]?' "$file")" || {
+                          echo "::error file=$file::could not parse the labels key"
+                          status=1
+                          continue
+                      }
                       while IFS= read -r label; do
                           [ -z "$label" ] && continue
                           if ! grep -qxF "$label" <<<"$existing"; then
                               echo "::error file=$file::declared label '$label' does not exist in this repository"
                               status=1
                           fi
-                      done < <(yq -r '.labels[]?' "$file")
+                      done <<<"$labels"
                   done
                   exit "$status"
