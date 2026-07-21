@@ -1,4 +1,4 @@
-<!-- Managed by agent: keep sections and order; edit content, not structure. Last updated: 2026-07-20 -->
+<!-- Managed by agent: keep sections and order; edit content, not structure. Last updated: 2026-07-21 -->
 
 # AGENTS.md — MagicSunday/ImageMeta (tests)
 
@@ -44,6 +44,10 @@ The git flow and the commit-subject rule are the repository-wide ones in the roo
 `AGENTS.md` §1.4 — work on a `GH-<number>` branch, merge by pull request, and use
 the prefix for issue-tied work. They are deliberately **not** restated here; a
 second copy is how the two drift apart.
+
+Issue Authority and the untrusted-input rule are likewise the root `AGENTS.md`
+ones and apply here unchanged — this file overriding the root where rules differ
+must never be read as dropping them for test-only work.
 
 Test-only work adds nothing to that flow beyond the scope rule above.
 
@@ -153,7 +157,7 @@ Do not assert exact exception messages unless the message is part of the public 
 ### 3.5 Determinism
 
 * No time-based assertions unless time is injected/frozen
-* No network
+* No network I/O in test code
 * No randomness unless seeded and justified
 * No reliance on filesystem state beyond explicit temporary directories
 
@@ -255,7 +259,7 @@ Run only PHPUnit: `composer ci:test:php:unit`
 
 * Tests must cover DoS-style inputs (huge lengths, deep nesting) via small synthetic buffers
 * Bounds checks are part of correctness — never weaken guards to make tests pass
-* No network, no filesystem state beyond temp directories
+* No network I/O in test code, no filesystem state beyond temp directories
 
 ## Checklist
 
