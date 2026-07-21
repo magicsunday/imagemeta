@@ -43,9 +43,10 @@ offset and size, the APP2 segment span — so locate the payload and **zero-fill
 the whole region, keeping its byte count**. If zero-filling makes the defect
 disappear, the defect is *in* that payload: send the failing structure instead.
 
-The depth map is the exception that looks binary but is not: this library reads
-it from a Base64 value inside the XMP packet (`GDepth:Data`), so redact it as
-XMP text — overwrite that value in place, keeping its length.
+The depth map is the exception that looks binary but is not: the one this
+library surfaces is read from a Base64 value inside the XMP packet
+(`GDepth:Data`), so redact it as XMP text — overwrite that value in place,
+keeping its length.
 
 **Match the byte count, not the character count.** XMP is UTF-8, the Windows XP
 tags are UTF-16LE, and `UserComment` may carry a BOM-tagged UTF-16 payload — so
@@ -109,7 +110,7 @@ a lot, because much of what matters here is stored as text:
 - names and file paths;
 - camera and lens serial numbers, which EXIF stores as ASCII strings;
 - XMP, which is UTF-8 throughout — including `exif:GPSLatitude` and the IPTC
-  creator contact block, so a non-ASCII address there needs the UTF-8 caveat below;
+  creator contact block, so a non-ASCII address there is covered by the byte-count caveat above, not the ASCII pass;
 - the QuickTime `location.ISO6709` atom, which reads as `+51.5074-000.1278/`.
 
 An ASCII pass is necessary but **not sufficient**, because the coordinates
