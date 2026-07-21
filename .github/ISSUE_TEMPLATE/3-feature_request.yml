@@ -1,7 +1,7 @@
 name: "Feature request"
 description: "Suggest a capability, or an improvement to an existing one."
 labels:
-    - Enhancement
+    - enhancement
 body:
     - type: markdown
       attributes:
