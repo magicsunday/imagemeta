@@ -44,3 +44,5 @@ jobs:
         uses: magicsunday/.github/.github/workflows/yamllint.yml@main
         permissions:
             contents: read
+        with:
+            paths: '.github/workflows/ .github/ISSUE_TEMPLATE/ .github/dependabot.yml .github/zizmor.yml'
