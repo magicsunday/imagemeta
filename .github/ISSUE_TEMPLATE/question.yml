@@ -15,6 +15,12 @@ body:
               for what a fix needs. This form is for everything else, and asks
               for nothing you would have to look up.
 
+              Do not attach a sample file here — if your question is really about
+              a file that fails, use the *Parse error report* form, which explains
+              what to redact first. And if a file makes the parser hang or exhaust
+              memory, that is a vulnerability: report it through the
+              [security advisory form](https://github.com/magicsunday/imagemeta/security/advisories/new).
+
     - type: textarea
       id: question
       attributes:
