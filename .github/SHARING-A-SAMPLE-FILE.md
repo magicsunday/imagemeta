@@ -36,12 +36,16 @@ hex editor works; so does `xxd` for locating and patching, or `bbe` if you give
 it a replacement of exactly the same length.
 
 Some of what has to go is not text at all. The embedded thumbnail, MPF
-secondary images, an embedded audio stream and a depth map are kilobytes of
-binary with nothing to type over. Each is addressed by an offset and a length —
+secondary images and an embedded audio stream are kilobytes of binary with
+nothing to type over. Each is addressed by an offset and a length —
 `ThumbnailOffset`/`ThumbnailLength` for the EXIF thumbnail, the MPF entry's
 offset and size, the APP2 segment span — so locate the payload and **zero-fill
 the whole region, keeping its byte count**. If zero-filling makes the defect
 disappear, the defect is *in* that payload: send the failing structure instead.
+
+The depth map is the exception that looks binary but is not: this library reads
+it from a Base64 value inside the XMP packet (`GDepth:Data`), so redact it as
+XMP text — overwrite that value in place, keeping its length.
 
 **Match the byte count, not the character count.** XMP is UTF-8, the Windows XP
 tags are UTF-16LE, and `UserComment` may carry a BOM-tagged UTF-16 payload — so
@@ -66,8 +70,9 @@ This library extracts more than the fields people expect. At minimum:
   Preservation Image*, which is the un-edited original before any edit.
 - Any embedded audio stream. A "sound and shot" JPEG carries seconds of recorded
   audio in an APP2 segment, and no visual or hex inspection will notice it.
-- Depth maps, and live-photo or burst identifiers that link this file to the
-  rest of your library.
+- The depth map, a Base64 blob in the XMP packet that reconstructs scene
+  geometry, and live-photo or burst identifiers that link this file to the rest
+  of your library.
 
 **Clearing the EXIF GPS tags is not sufficient.** This library also recovers
 location from the QuickTime `location.ISO6709` atom and from DJI telemetry
@@ -101,9 +106,10 @@ enough to write a test fixture.
 It is **not** anonymous by default. Read its ASCII column first — that catches
 a lot, because much of what matters here is stored as text:
 
-- names, file paths and IPTC contact details;
+- names and file paths;
 - camera and lens serial numbers, which EXIF stores as ASCII strings;
-- XMP, which is UTF-8 throughout — including `exif:GPSLatitude`;
+- XMP, which is UTF-8 throughout — including `exif:GPSLatitude` and the IPTC
+  creator contact block, so a non-ASCII address there needs the UTF-8 caveat below;
 - the QuickTime `location.ISO6709` atom, which reads as `+51.5074-000.1278/`.
 
 An ASCII pass is necessary but **not sufficient**, because the coordinates
@@ -131,6 +137,8 @@ included. A video is capped at 10 MB unless both this repository's owner is on a
 paid plan and you are either on one yourself or a member or collaborator here —
 so plan for 10 MB.
 
-**25 MB is the ceiling for every route.** If the smallest file that still
-reproduces the defect does not fit, do not look for a file host — send the
-failing structure instead.
+**Plan for 25 MB.** That is the ceiling for the `.zip` route and for anything
+that is not an image or a directly-uploadable video; an image is 10 MB, and the
+paid-plan video exception above is the only way past 25 MB. If the smallest file
+that still reproduces the defect does not fit, do not look for a file host —
+send the failing structure instead.
