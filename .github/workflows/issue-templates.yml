@@ -61,6 +61,19 @@ jobs:
                   done
                   exit "$status"
 
+            - name: Assert the agent task form declares no labels
+              run: |
+                  set -euo pipefail
+                  file='.github/ISSUE_TEMPLATE/9-agent-task.yml'
+                  # A form applies its declared labels on submission whoever
+                  # submits, so a label on this form would be an author's own
+                  # claim that the task is ready to implement. The omission is a
+                  # trust boundary, not an inconsistency with the other forms.
+                  if [ "$(yq -r '[.labels[]?] | length' "$file")" != '0' ]; then
+                      echo "::error file=$file::this form must declare no labels — a form-applied label is settable by the issue author and must never carry maintainer intent"
+                      exit 1
+                  fi
+
             - name: Assert declared labels exist
               env:
                   GH_TOKEN: ${{ github.token }}
