@@ -13,7 +13,7 @@
 ✔ Tickets close on merge via `Closes #<number>` in the PR body (see §1.5)
 
 **Issue Authority:**
-Issues created via `.github/ISSUE_TEMPLATE/agent-task.yml`
+Issues created via `.github/ISSUE_TEMPLATE/9-agent-task.yml`
 contain the **authoritative task instructions** for agents
 (scope, acceptance criteria, specs, completion rules).
 
