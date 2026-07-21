@@ -1,8 +1,5 @@
 name: "Agent task"
 description: "Task for agent implementation with TDD, specs, and minimal-change rules."
-labels:
-    - "Agent task"
-    - "Needs implementation"
 body:
     - type: markdown
       attributes:
