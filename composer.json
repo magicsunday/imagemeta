@@ -107,7 +107,7 @@
             "@php -d pcov.enabled=1 .build/bin/phpunit --configuration phpunit.xml --coverage-html .build/coverage --coverage-clover .build/coverage/clover.xml"
         ],
         "ci:test:php:cpd": [
-            "npx --yes jscpd@^5.0.11 --config .jscpd.json --skip-comments --no-tips"
+            "node_modules/.bin/jscpd --config .jscpd.json --skip-comments --no-tips"
         ],
         "ci:test:php:audit": [
             "composer audit --format=plain"
@@ -123,8 +123,11 @@
             "@ci:test:php:unit",
             "@ci:test:php:cpd"
         ],
+        "post-install-cmd": [
+            "sh -c '[ \"$(node_modules/.bin/jscpd --version 2>/dev/null)\" = \"cpd 5.0.12\" ] || npm ci --no-audit --no-fund --ignore-scripts || echo \"jscpd tooling not installed (npm unavailable or offline); ci:test:php:cpd will fail until it is\"'"
+        ],
         "post-update-cmd": [
-            "npm install --prefix .build jscpd@^5.0.11"
+            "sh -c '[ \"$(node_modules/.bin/jscpd --version 2>/dev/null)\" = \"cpd 5.0.12\" ] || npm ci --no-audit --no-fund --ignore-scripts || echo \"jscpd tooling not installed (npm unavailable or offline); ci:test:php:cpd will fail until it is\"'"
         ]
     }
 }

@@ -10,10 +10,9 @@ bin/
 logs/
 composer.lock
 
-# NPM
+# NPM — the manifest and lockfile are tracked on purpose: they are what
+# pins the CI tooling. Only the installed tree is ignored.
 node_modules/
-package.json
-package-lock.json
 
 # Build stuff
 .build/
