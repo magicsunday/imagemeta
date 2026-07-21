@@ -1,0 +1,19 @@
+# Labels an issue form in this directory is permitted to declare, one per line
+# (blank lines and #-comments ignored). This is the reviewed source of truth for
+# the "declared labels resolve" check: a form may only apply a label listed here.
+#
+# Why a committed list and not `gh label list`: the live label set is mutable
+# state no pull request can observe, so a label renamed or removed elsewhere
+# (e.g. by the weekly label-sync normalising a case) would turn an unrelated
+# push red. Listing the permitted labels here catches a drift in the diff that
+# introduces it, and a rename becomes a reviewed edit to both the form and this
+# file in one change.
+#
+# The canonical entries (bug, enhancement, documentation) are guaranteed to
+# exist by the shared label-sync (.github/workflows/labels.yml); parse-error is
+# a repository-specific label kept in step with 2-parse-error.yml. Add a line
+# here in the same PR that teaches a form to declare a new label.
+bug
+enhancement
+documentation
+parse-error

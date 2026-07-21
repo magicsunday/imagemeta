@@ -20,7 +20,6 @@ jobs:
         runs-on: ubuntu-latest
         permissions:
             contents: read
-            issues: read
         steps:
             - name: Checkout repository
               uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -28,21 +27,7 @@ jobs:
                   persist-credentials: false
 
             - name: Install check-jsonschema
-              run: pipx install check-jsonschema
-
-            - name: Fetch the issue-form schemas
-              run: |
-                  set -euo pipefail
-                  # Fetch once, with retries, into local files. A required check
-                  # must not red-fail a good PR on a transient schemastore blip,
-                  # and validating against a local copy removes a network call
-                  # per template.
-                  curl -fsSL --retry 3 --retry-delay 2 \
-                      -o "$RUNNER_TEMP/github-issue-forms.json" \
-                      https://json.schemastore.org/github-issue-forms.json
-                  curl -fsSL --retry 3 --retry-delay 2 \
-                      -o "$RUNNER_TEMP/github-issue-config.json" \
-                      https://json.schemastore.org/github-issue-config.json
+              run: pipx install 'check-jsonschema==0.37.4'
 
             - name: Validate issue forms against the schema
               run: |
@@ -51,9 +36,9 @@ jobs:
                   status=0
                   for file in .github/ISSUE_TEMPLATE/*.yml; do
                       if [ "$(basename "$file")" = 'config.yml' ]; then
-                          schema="$RUNNER_TEMP/github-issue-config.json"
+                          schema='.github/ISSUE_TEMPLATE/schemas/github-issue-config.json'
                       else
-                          schema="$RUNNER_TEMP/github-issue-forms.json"
+                          schema='.github/ISSUE_TEMPLATE/schemas/github-issue-forms.json'
                       fi
                       echo "::group::$file"
                       check-jsonschema --schemafile "$schema" "$file" || status=1
@@ -74,13 +59,22 @@ jobs:
                       exit 1
                   fi
 
-            - name: Assert declared labels exist
-              env:
-                  GH_TOKEN: ${{ github.token }}
+            - name: Assert declared labels are on the allow-list
               run: |
                   set -euo pipefail
                   shopt -s nullglob
-                  existing="$(gh label list --limit 300 --json name --jq '.[].name')"
+                  # Compare against the committed allow-list, not the live label
+                  # set: a rename/removal elsewhere must not red-fail an
+                  # unrelated push, and a drift is caught in the diff that adds
+                  # the label. Strip comments and blanks to the bare names.
+                  # A missing list is a loud, distinct failure; an empty one (only
+                  # comments) must fall through so every declared label is rejected
+                  # with an annotation, not abort the step bare on grep's exit 1.
+                  [ -f .github/ISSUE_TEMPLATE/allowed-labels.txt ] || {
+                      echo '::error::.github/ISSUE_TEMPLATE/allowed-labels.txt is missing'
+                      exit 1
+                  }
+                  allowed="$(grep -v '^[[:space:]]*#' .github/ISSUE_TEMPLATE/allowed-labels.txt | grep -v '^[[:space:]]*$' || true)"
                   status=0
                   for file in .github/ISSUE_TEMPLATE/*.yml; do
                       [ "$(basename "$file")" = 'config.yml' ] && continue
@@ -94,8 +88,8 @@ jobs:
                       }
                       while IFS= read -r label; do
                           [ -z "$label" ] && continue
-                          if ! grep -qxF "$label" <<<"$existing"; then
-                              echo "::error file=$file::declared label '$label' does not exist in this repository"
+                          if ! grep -qxF "$label" <<<"$allowed"; then
+                              echo "::error file=$file::declared label '$label' is not on .github/ISSUE_TEMPLATE/allowed-labels.txt — add it there in this PR if the label is intended"
                               status=1
                           fi
                       done <<<"$labels"
