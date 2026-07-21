@@ -1,7 +1,7 @@
 name: "Question or documentation issue"
 description: "Something in the documentation is wrong or missing, or you are not sure how the library is meant to behave."
 labels:
-    - Documentation
+    - documentation
 body:
     - type: markdown
       attributes:
