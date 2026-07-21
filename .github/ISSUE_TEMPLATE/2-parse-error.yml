@@ -1,7 +1,7 @@
 name: "Parse error report"
 description: "A file cannot be parsed and the parser aborts with an error."
 labels:
-    - Bug
+    - bug
     - parse-error
 body:
     - type: markdown
