@@ -1,16 +1,25 @@
-name: "Agent Task"
+name: "Agent task"
 description: "Task for agent implementation with TDD, specs, and minimal-change rules."
-title: "<Title starting with capital letter>"
 labels:
-    - agent
-    - needs-implementation
+    - "Agent task"
+    - "Needs implementation"
 body:
     - type: markdown
       attributes:
           value: |
+              > [!WARNING]
+              > This issue is public and effectively permanent. Assume nothing you
+              > paste is private, in any field — including the issue title. If you
+              > meant to report a defect rather than commission one, the *Bug
+              > report* and *Parse error report* forms are the ones you want;
+              > [Sharing a sample file](https://github.com/magicsunday/imagemeta/blob/main/.github/SHARING-A-SAMPLE-FILE.md)
+              > explains what this library reads out of a file.
+
               ## Agent Instructions (Read First)
               This repo is governed by `CLAUDE.md`, `AGENTS.md` (and `tests/AGENTS.md` for work under `tests/`).
               If you would need to guess, expand scope, or relax guards: **STOP** and ask.
+
+              **Issue title:** a capitalised imperative, as the commit subject will be.
 
               **TDD workflow:** Write a failing test first, then implement the minimal code to make it pass.
               **Commit workflow:** work on a branch named `GH-<issue-number>` and open a pull request — never commit directly to `main`
