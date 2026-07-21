@@ -17,9 +17,10 @@ body:
 
               Do not attach a sample file here — if your question is really about
               a file that fails, use the *Parse error report* form, which explains
-              what to redact first. And if a file makes the parser hang or exhaust
-              memory, that is a vulnerability: report it through the
-              [security advisory form](https://github.com/magicsunday/imagemeta/security/advisories/new).
+              what to redact first. And if a crafted file can make the parser hang,
+              exhaust memory, loop forever, read outside its buffer, return data it
+              should not, or take absurdly long, that is a vulnerability: report it
+              through the [security advisory form](https://github.com/magicsunday/imagemeta/security/advisories/new).
 
     - type: textarea
       id: question
