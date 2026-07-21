@@ -139,13 +139,10 @@ If unsure → **STOP and ask**. Never guess.
 ### 1.4 Git Rules
 
 * Work happens on a branch named exactly `GH-<number>` and reaches `main` through a **pull request** — never a direct commit. `main` requires the `build (8.4)` check but no review, so this is convention rather than something the platform enforces
-* A subject starting with `GH-` must match `^GH-\d+: [A-Z]`; every other subject must match `^[A-Z]` — a capitalized imperative either way. The patterns check only the leading capital; two starts are banned whatever their case: **conventional-commit prefixes** (`feat:`, `Fix:`, `chore:` …) and path-like starts (`src/Reader.php: …`, `Src/Reader.php: …`). Commit messages and all dev-facing GitHub text are in **English**, so the leading capital is always `A-Z`.
-    * The two patterns are deliberately kept separate: `^(GH-\d+: )?[A-Z]` (wrong) stops enforcing the capital *after* the prefix, because the optional group can be skipped and the `G` of `GH-` then satisfies `[A-Z]` on its own — `GH-12: fix typo` would pass. Keying on the subject rather than on the branch also keeps this check decidable for commits already on `main`, where the issue branch no longer exists.
-    * The same two patterns apply to the **pull-request title**, which under squash-merge is the subject that reaches `main`.
-    * The shared gate in `magicsunday/.github/.github/workflows/commit-convention.yml@main` matches the wider `[[:upper:]]` for that character class on purpose. The capital *match* sits only in accept positions, so widening it can only add PASSes, never produce a false block; the byte-based `tr` in that workflow uses the class too, but on ASCII only. Narrowing it to `[A-Z]` would buy nothing and turn a documentation change into a behavioral one. This holds for the capital class alone — the gate is **not** a superset of `^[A-Z]`, because the `GH-` routing and the two banned starts above reject capitalized subjects too.
-    * The normative definition lives in `magicsunday/.github/.github/workflows/commit-convention.yml@main`, which self-tests a decision table before applying it. No workflow here calls that gate, so the rule in this repository is documentation only. The workflow is authoritative on what is *accepted*; this text is narrower about what is *written* (`[A-Z]`, see the note above) and so stays a strict subset of it — the mismatch resolved here is between the documented pattern and the English-only rule, not between this text and the gate. The invariant to preserve is that this text must never accept a subject the workflow blocks.
-* The `GH-<number>: ` prefix marks work that belongs to the issue — a commit on that branch whose concern is something else (a drive-by lint fix, a dependency bump) keeps its own unprefixed subject. Merge and revert commits keep the subject Git generates. Not every git-written subject is exempt, though: `fixup!` and `squash!` start lowercase and violate the rule, so autosquash them before opening the PR.
-* Never add a `Co-Authored-By:` trailer or any other AI attribution
+- Commit subjects — and the pull-request title — are governed by the shared `commit-convention` gate; the normative rule and its full rationale live in `magicsunday/.github/.github/workflows/commit-convention.yml@main`, which self-tests a decision table before applying it. In short: a `GH-`-prefixed subject must match `^GH-\d+: [A-Z]`, every other subject `^[A-Z]` — a capitalised English imperative — and conventional-commit prefixes (`feat:`, `Fix:`, …) as well as path-like starts (`src/…: …`) are rejected whatever their case. It runs on every pull request via `.github/workflows/commit-lint.yml`, advisory until `commit-convention / Commit convention` is a required context in branch protection.
+- Branches for an issue are named exactly `GH-<N>`; the `GH-<N>: ` prefix marks work that belongs to that issue, so a drive-by fix on the branch keeps its own unprefixed subject.
+- The pull-request body closes the issue with `Closes #<N>` — the `GH-<N>: ` subject prefix is not a GitHub link and closes nothing.
+- Never add a `Co-Authored-By:` trailer or any other AI attribution.
 
 Example:
 
@@ -155,7 +152,6 @@ GH-421: Fix BigTIFF SRATIONAL sign handling
 
 ### 1.5 Ticket Handling (Hard Rule)
 
-* The pull-request body closes the issue with a `Closes #<number>` keyword — the `GH-<number>: ` subject prefix is not a GitHub link and closes nothing
 * The ticket closes when the pull request merges, which requires `ci:test` fully green
 
 No follow-up commits, no deferred closure, no “left open for review”: a merged pull request leaves nothing to tidy up afterwards.
@@ -209,7 +205,6 @@ non-maintainer input.
 * `phpdoc_align`: `@param`/`@return` type and name columns must align
 * No magic number literals — use named constants
 * No `GH-XXXX` references in code comments — only in commit messages
-* No `Co-Authored-By` trailers in commit messages
 * In compound conditions (`&&`/`||`), wrap comparison operands in parentheses: `if (($x <= 0.0) || !is_finite($x))`
 
 ### 2.2 PHPUnit Conventions
