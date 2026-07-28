@@ -16,6 +16,11 @@ jobs:
         permissions:
             contents: read
             security-events: write
+        with:
+            # Vendored specification documents; several exceed the engine's
+            # default 1 MB target limit, so without this the scan would report
+            # them as files it was given and could not read.
+            excludes: docs
 
     zizmor:
         uses: magicsunday/.github/.github/workflows/zizmor.yml@main
