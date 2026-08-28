@@ -12,7 +12,7 @@ permissions:
 
 jobs:
     code-scanning:
-        uses: magicsunday/.github/.github/workflows/code-scanning.yml@main
+        uses: magicsunday/.github/.github/workflows/code-scanning.yml@GH-42
         permissions:
             contents: read
             security-events: write
