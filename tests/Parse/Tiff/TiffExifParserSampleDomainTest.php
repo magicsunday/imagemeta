@@ -170,7 +170,7 @@ final class TiffExifParserSampleDomainTest extends TestCase
     public function rejectsSampleFormatCountMismatch(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('SampleFormat count 2 must match SamplesPerPixel 3');
+        $this->expectExceptionMessageIsOrContains('SampleFormat count 2 must match SamplesPerPixel 3');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSampleDomainTiff(
@@ -205,7 +205,7 @@ final class TiffExifParserSampleDomainTest extends TestCase
     public function rejectsSMinSMaxCountMismatch(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('SMinSampleValue count 2 must match SamplesPerPixel 3');
+        $this->expectExceptionMessageIsOrContains('SMinSampleValue count 2 must match SamplesPerPixel 3');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSampleDomainTiff(
@@ -227,7 +227,7 @@ final class TiffExifParserSampleDomainTest extends TestCase
     public function rejectsSMinGreaterThanSMax(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('SMinSampleValue component 1 must be <= SMaxSampleValue');
+        $this->expectExceptionMessageIsOrContains('SMinSampleValue component 1 must be <= SMaxSampleValue');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSampleDomainTiff(
@@ -249,7 +249,7 @@ final class TiffExifParserSampleDomainTest extends TestCase
     public function rejectsIncompatibleSMinSMaxTypeForSampleFormat(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('SMinSampleValue type 3 is incompatible with SampleFormat component 0 value 3');
+        $this->expectExceptionMessageIsOrContains('SMinSampleValue type 3 is incompatible with SampleFormat component 0 value 3');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildSampleDomainTiff(

@@ -89,7 +89,7 @@ final class TiffSampleValidatorTest extends TestCase
     public function rejectsMinSampleValueWrongType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('MinSampleValue must be SHORT');
+        $this->expectExceptionMessageIsOrContains('MinSampleValue must be SHORT');
 
         $ifd = new Ifd([
             TiffTag::MIN_SAMPLE_VALUE => new IfdEntry(TiffTag::MIN_SAMPLE_VALUE, TiffConst::TYPE_LONG, 1, 0),
@@ -102,7 +102,7 @@ final class TiffSampleValidatorTest extends TestCase
     public function rejectsMinSampleValueCountMismatch(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('MinSampleValue count 1 must match SamplesPerPixel 3');
+        $this->expectExceptionMessageIsOrContains('MinSampleValue count 1 must match SamplesPerPixel 3');
 
         $ifd = new Ifd([
             ExifTag::SAMPLES_PER_PIXEL => new IfdEntry(ExifTag::SAMPLES_PER_PIXEL, TiffConst::TYPE_SHORT, 1, 3),
@@ -116,7 +116,7 @@ final class TiffSampleValidatorTest extends TestCase
     public function rejectsMinGreaterThanMax(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('MinSampleValue component 0 must be <= MaxSampleValue component 0');
+        $this->expectExceptionMessageIsOrContains('MinSampleValue component 0 must be <= MaxSampleValue component 0');
 
         $ifd = new Ifd([
             TiffTag::MIN_SAMPLE_VALUE => new IfdEntry(TiffTag::MIN_SAMPLE_VALUE, TiffConst::TYPE_SHORT, 1, 200),
@@ -145,7 +145,7 @@ final class TiffSampleValidatorTest extends TestCase
     public function rejectsExtraSamplesOutOfDomain(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ExtraSamples value 5 is outside the valid domain');
+        $this->expectExceptionMessageIsOrContains('ExtraSamples value 5 is outside the valid domain');
 
         $ifd = new Ifd([
             TiffTag::EXTRA_SAMPLES => new IfdEntry(TiffTag::EXTRA_SAMPLES, TiffConst::TYPE_SHORT, 1, 5),
@@ -172,7 +172,7 @@ final class TiffSampleValidatorTest extends TestCase
     public function rejectsSampleFormatWrongType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('SampleFormat must use SHORT type');
+        $this->expectExceptionMessageIsOrContains('SampleFormat must use SHORT type');
 
         $ifd = new Ifd([
             TiffTag::SAMPLE_FORMAT => new IfdEntry(TiffTag::SAMPLE_FORMAT, TiffConst::TYPE_LONG, 1, 1),
@@ -185,7 +185,7 @@ final class TiffSampleValidatorTest extends TestCase
     public function rejectsSampleFormatCountMismatch(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('SampleFormat count 1 must match SamplesPerPixel 3');
+        $this->expectExceptionMessageIsOrContains('SampleFormat count 1 must match SamplesPerPixel 3');
 
         $ifd = new Ifd([
             ExifTag::SAMPLES_PER_PIXEL => new IfdEntry(ExifTag::SAMPLES_PER_PIXEL, TiffConst::TYPE_SHORT, 1, 3),
@@ -214,7 +214,7 @@ final class TiffSampleValidatorTest extends TestCase
     public function rejectsGrayResponseTagsWithNonGrayscalePhotometric(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('GrayResponse tags are only valid for grayscale PhotometricInterpretation');
+        $this->expectExceptionMessageIsOrContains('GrayResponse tags are only valid for grayscale PhotometricInterpretation');
 
         $ifd = new Ifd([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, TiffConst::TYPE_SHORT, 1, 2),
@@ -243,7 +243,7 @@ final class TiffSampleValidatorTest extends TestCase
     public function rejectsHalftoneHintsExceedingBitRange(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('HalftoneHints component 1 value 300 exceeds max 255');
+        $this->expectExceptionMessageIsOrContains('HalftoneHints component 1 value 300 exceeds max 255');
 
         $ifd = new Ifd([
             TiffTag::HALFTONE_HINTS  => new IfdEntry(TiffTag::HALFTONE_HINTS, TiffConst::TYPE_SHORT, 2, new ExifNumericList([10, 300])),

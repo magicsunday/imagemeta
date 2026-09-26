@@ -403,7 +403,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectInvalidMakerNoteSafetyDomain(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('MakerNoteSafety value 2 is outside the valid domain {0, 1} per DNG 1.7.1.0.');
+        $this->expectExceptionMessageIsOrContains('MakerNoteSafety value 2 is outside the valid domain {0, 1} per DNG 1.7.1.0.');
 
         (new TiffExifParser())->parseFromBlob($this->buildTiffWithMakerNoteSafety(2));
     }
@@ -514,7 +514,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectEnhancedIfdMissingEnhanceParams(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag per DNG 1.5.');
+        $this->expectExceptionMessageIsOrContains('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag per DNG 1.5.');
 
         (new TiffExifParser())->parseFromBlob($this->buildTiffWithEnhancedIfd(null));
     }
@@ -526,7 +526,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectEnhancedIfdWithEmptyEnhanceParams(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('EnhanceParams must not be empty for an Enhanced IFD per DNG 1.5.');
+        $this->expectExceptionMessageIsOrContains('EnhanceParams must not be empty for an Enhanced IFD per DNG 1.5.');
 
         (new TiffExifParser())->parseFromBlob($this->buildTiffWithEnhancedIfd("\0"));
     }
@@ -1498,7 +1498,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . $ifdData;
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DNGBackwardVersion');
+        $this->expectExceptionMessageIsOrContains('DNGBackwardVersion');
 
         (new TiffExifParser())->parseFromBlob($blob);
     }
@@ -1538,7 +1538,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $blob = $this->buildTiffWithDngVersionPair([1, 6, 0, 0], [1, 7, 0, 0]);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DNGBackwardVersion');
+        $this->expectExceptionMessageIsOrContains('DNGBackwardVersion');
 
         (new TiffExifParser())->parseFromBlob($blob);
     }
@@ -1611,7 +1611,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $blob = $this->buildTiffWithThirdIlluminant([1, 5, 0, 0]);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DNGBackwardVersion');
+        $this->expectExceptionMessageIsOrContains('DNGBackwardVersion');
 
         (new TiffExifParser())->parseFromBlob($blob);
     }
@@ -1627,7 +1627,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $blob = $this->buildTiffWithThirdIlluminant([1, 6, 0, 0]);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('CalibrationIlluminant3 requires');
+        $this->expectExceptionMessageIsOrContains('CalibrationIlluminant3 requires');
 
         (new TiffExifParser())->parseFromBlob($blob);
     }
@@ -1704,7 +1704,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $blob = $this->buildTiffWithDngVersionPair([0, 0, 0, 0], [0, 0, 0, 0]);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DNGVersion');
+        $this->expectExceptionMessageIsOrContains('DNGVersion');
 
         (new TiffExifParser())->parseFromBlob($blob);
     }
@@ -1718,7 +1718,7 @@ final class TiffExifParserDngTagTest extends TestCase
         $blob = $this->buildTiffWithDngVersionPair([2, 0, 0, 0], [1, 7, 0, 0]);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DNGVersion');
+        $this->expectExceptionMessageIsOrContains('DNGVersion');
 
         (new TiffExifParser())->parseFromBlob($blob);
     }
@@ -9680,7 +9680,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsCalibrationIlluminantWithInvalidLightSourceValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('CalibrationIlluminant');
+        $this->expectExceptionMessageIsOrContains('CalibrationIlluminant');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDngCalibrationIlluminantBlob(
@@ -9698,7 +9698,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function rejectsCalibrationIlluminantOtherBeforeDng160(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('requires DNG');
+        $this->expectExceptionMessageIsOrContains('requires DNG');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDngCalibrationIlluminantBlob(
@@ -9811,7 +9811,7 @@ final class TiffExifParserDngTagTest extends TestCase
             . $ifdData;
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('UniqueCameraModel');
+        $this->expectExceptionMessageIsOrContains('UniqueCameraModel');
 
         (new TiffExifParser())->parseFromBlob($blob);
     }

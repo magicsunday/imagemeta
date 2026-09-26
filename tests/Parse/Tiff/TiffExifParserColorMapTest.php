@@ -166,7 +166,7 @@ final class TiffExifParserColorMapTest extends TestCase
     public function rejectsPaletteImageWithoutColorMap(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Palette images (PhotometricInterpretation=3) require ColorMap');
+        $this->expectExceptionMessageIsOrContains('Palette images (PhotometricInterpretation=3) require ColorMap');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildColorMapTiff(
@@ -183,7 +183,7 @@ final class TiffExifParserColorMapTest extends TestCase
     public function rejectsPaletteColorMapWithWrongCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ColorMap count 767 must be 3*(1<<BitsPerSample) = 768');
+        $this->expectExceptionMessageIsOrContains('ColorMap count 767 must be 3*(1<<BitsPerSample) = 768');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildColorMapTiff(
@@ -202,7 +202,7 @@ final class TiffExifParserColorMapTest extends TestCase
     public function rejectsPaletteColorMapWithWrongType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ColorMap must use SHORT type');
+        $this->expectExceptionMessageIsOrContains('ColorMap must use SHORT type');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildColorMapTiff(
@@ -221,7 +221,7 @@ final class TiffExifParserColorMapTest extends TestCase
     public function rejectsColorMapForNonPalettePhotometricMode(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ColorMap is only valid for palette images');
+        $this->expectExceptionMessageIsOrContains('ColorMap is only valid for palette images');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildColorMapTiff(

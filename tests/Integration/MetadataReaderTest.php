@@ -622,7 +622,6 @@ final class MetadataReaderTest extends TestCase
 
         foreach ($componentAccessors as $name => $accessor) {
             $value = $accessor();
-            /** @phpstan-ignore staticMethod.alreadyNarrowedType */
             self::assertInstanceOf($expectedClasses[$name], $value);
         }
 

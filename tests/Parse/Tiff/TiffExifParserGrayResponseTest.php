@@ -170,7 +170,7 @@ final class TiffExifParserGrayResponseTest extends TestCase
     public function rejectsGrayResponseCurveCountMismatch(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('GrayResponseCurve count 255 must be 1<<BitsPerSample (256)');
+        $this->expectExceptionMessageIsOrContains('GrayResponseCurve count 255 must be 1<<BitsPerSample (256)');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildGrayResponseTiff(
@@ -189,7 +189,7 @@ final class TiffExifParserGrayResponseTest extends TestCase
     public function rejectsGrayResponseCurveWrongType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('GrayResponseCurve must use SHORT type');
+        $this->expectExceptionMessageIsOrContains('GrayResponseCurve must use SHORT type');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildGrayResponseTiff(
@@ -208,7 +208,7 @@ final class TiffExifParserGrayResponseTest extends TestCase
     public function rejectsGrayResponseUnitWrongTypeOrCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('GrayResponseUnit must be SHORT[1].');
+        $this->expectExceptionMessageIsOrContains('GrayResponseUnit must be SHORT[1].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildGrayResponseTiff(
@@ -227,7 +227,7 @@ final class TiffExifParserGrayResponseTest extends TestCase
     public function rejectsGrayResponseUnitOutOfRange(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('GrayResponseUnit value 6 is outside the valid domain 1..5');
+        $this->expectExceptionMessageIsOrContains('GrayResponseUnit value 6 is outside the valid domain 1..5');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildGrayResponseTiff(

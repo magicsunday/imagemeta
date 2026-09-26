@@ -186,7 +186,7 @@ final class TiffExifParserFillOrderTest extends TestCase
     public function rejectsInvalidFillOrderDomainValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('FillOrder value 3 is invalid');
+        $this->expectExceptionMessageIsOrContains('FillOrder value 3 is invalid');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildFillOrderTiff(
@@ -206,7 +206,7 @@ final class TiffExifParserFillOrderTest extends TestCase
     public function rejectsInvalidFillOrderTypeOrCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('FillOrder must be SHORT[1].');
+        $this->expectExceptionMessageIsOrContains('FillOrder must be SHORT[1].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildFillOrderTiff(
@@ -226,7 +226,7 @@ final class TiffExifParserFillOrderTest extends TestCase
     public function rejectsFillOrderTwoWithIncompatibleContext(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('FillOrder=2 requires BitsPerSample=1');
+        $this->expectExceptionMessageIsOrContains('FillOrder=2 requires BitsPerSample=1');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildFillOrderTiff(

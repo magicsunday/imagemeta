@@ -193,7 +193,8 @@ non-maintainer input.
 * **Style:** PSR-12 + `@Symfony` ruleset (php-cs-fixer)
 * **Forbidden:** `mixed`, `empty()`, nested ternaries
 * **Docs:** English PHPDoc + English inline comments at complex logic
-* **Static:** PHPStan max level (strict-rules, deprecation-rules, phpunit extensions)
+* **Static:** PHPStan max level via the shared `magicsunday/coding-standard` base (strict-rules, deprecation-rules, phpunit extensions, checked exceptions)
+* **Architecture:** Deptrac (`deptrac.yaml`) enforces the layer boundaries of §5.5 and §5.7
 
 ### 2.1 Code Style Details (Enforced by Tooling)
 
@@ -209,7 +210,7 @@ non-maintainer input.
 
 ### 2.2 PHPUnit Conventions
 
-* PHPUnit 12 with attribute-based configuration
+* PHPUnit (the version `magicsunday/coding-standard` pins) with attribute-based configuration; every test class declares a coverage target (`#[CoversClass]`, or `#[CoversNothing]` for source-scanning guards)
 * Use `#[Test]`, `#[CoversClass]`, `#[UsesClass]`, `#[UsesTrait]` attributes
 * CamelCase test method names — no underscores (see `tests/AGENTS.md §4.2`)
 * Prefer synthetic binary data; build box structures with `box()`/`fullBox()` helpers
@@ -222,7 +223,7 @@ CI runs via Docker buildbox:
 make test
 ```
 
-Pipeline order: phplint → php-cs-fixer (dry-run) → rector (dry-run) → phpstan → phpunit → jscpd
+Pipeline order: phplint → php-cs-fixer (dry-run) → rector (dry-run) → phpstan → deptrac → templates → phpunit → jscpd
 
 Common CI pitfalls:
 * **php-cs-fixer:** import ordering, `phpdoc_align` column alignment, `no_useless_concat_operator`
@@ -354,6 +355,7 @@ Codes are assigned per module in these ranges:
 * Parsers parse, models hold data
 * Controllers orchestrate, not decode
 * Factories create; models never parse
+* Enforced by Deptrac: `Model` and `Parse` must not depend on `Factory`
 
 ### 5.6 Law of Demeter
 
@@ -372,6 +374,7 @@ $parser->getStream()->getBuffer()->seek()
 ### 5.7 Separation of Concerns
 
 * Detect ≠ Parse ≠ Model ≠ Convenience ≠ Value
+* Enforced by Deptrac: nothing outside `Factory` depends on `Parse`, and `Detect` does not depend on `Model`
 * No EXIF logic inside container detection
 * Vendor-specific logic (DJI, Apple, Samsung) belongs in dedicated classes under `MakerNotes/` or `Model/<Vendor>/`, not in general parsers like `IsoBmffParser`
 * General parsers (`IsoBmffParser`, `JpegParser`) must remain format-agnostic; vendor enrichment happens in `MetadataReader` or dedicated scanners

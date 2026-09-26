@@ -60,7 +60,7 @@ final class ExifRationalListTest extends TestCase
         ];
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Rational EXIF values must form a list.');
+        $this->expectExceptionMessageIsOrContains('Rational EXIF values must form a list.');
 
         // @phpstan-ignore-next-line: associative array passed intentionally to assert runtime validation.
         new ExifRationalList($values);
@@ -79,7 +79,7 @@ final class ExifRationalListTest extends TestCase
         ];
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Rational EXIF lists may only contain ExifRational instances.');
+        $this->expectExceptionMessageIsOrContains('Rational EXIF lists may only contain ExifRational instances.');
 
         // @phpstan-ignore-next-line: scalar element passed intentionally to assert runtime validation.
         new ExifRationalList($values);

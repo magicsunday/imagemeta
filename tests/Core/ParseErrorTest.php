@@ -48,7 +48,7 @@ final class ParseErrorTest extends TestCase
     public function reportsParseErrorsWithExpectedContext(callable $operation, string $expectedMessage, ?int $expectedCode): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage($expectedMessage);
+        $this->expectExceptionMessageIsOrContains($expectedMessage);
 
         if ($expectedCode !== null) {
             $this->expectExceptionCode($expectedCode);

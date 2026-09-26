@@ -80,7 +80,7 @@ final class DngStructureValidatorTest extends TestCase
     public function rejectsDngWithoutOrientation(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DNG requires Orientation tag in IFD0');
+        $this->expectExceptionMessageIsOrContains('DNG requires Orientation tag in IFD0');
 
         $ifd = new Ifd([
             DngTag::DNG_VERSION => new IfdEntry(DngTag::DNG_VERSION, TiffConst::TYPE_BYTE, 4, new ExifNumericList([1, 7, 1, 0])),
@@ -108,7 +108,7 @@ final class DngStructureValidatorTest extends TestCase
     public function rejectsDngWithoutUniqueCameraModel(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DNG requires UniqueCameraModel tag in IFD0');
+        $this->expectExceptionMessageIsOrContains('DNG requires UniqueCameraModel tag in IFD0');
 
         $ifd = new Ifd([
             DngTag::DNG_VERSION => new IfdEntry(DngTag::DNG_VERSION, TiffConst::TYPE_BYTE, 4, new ExifNumericList([1, 7, 1, 0])),
@@ -136,7 +136,7 @@ final class DngStructureValidatorTest extends TestCase
     public function rejectsDepthMapIfdWithWrongPhotometric(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DNG IFD with NewSubFileType 8 requires PhotometricInterpretation 51177');
+        $this->expectExceptionMessageIsOrContains('DNG IFD with NewSubFileType 8 requires PhotometricInterpretation 51177');
 
         $ifd = new Ifd([
             TiffTag::NEW_SUBFILE_TYPE           => new IfdEntry(TiffTag::NEW_SUBFILE_TYPE, TiffConst::TYPE_LONG, 1, 8),
@@ -165,7 +165,7 @@ final class DngStructureValidatorTest extends TestCase
     public function rejectsDngVersionInAdditionalIfd(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DNG tag 0xC612 is restricted to IFD 0');
+        $this->expectExceptionMessageIsOrContains('DNG tag 0xC612 is restricted to IFD 0');
 
         $ifd = new Ifd([
             DngTag::DNG_VERSION => new IfdEntry(DngTag::DNG_VERSION, TiffConst::TYPE_BYTE, 4, new ExifNumericList([1, 7, 1, 0])),
@@ -193,7 +193,7 @@ final class DngStructureValidatorTest extends TestCase
     public function rejectsJxlTagsWithoutJpegXlCompression(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JXL tags (JXLDistance, JXLEffort, JXLDecodeSpeed) require Compression = 52546');
+        $this->expectExceptionMessageIsOrContains('JXL tags (JXLDistance, JXLEffort, JXLDecodeSpeed) require Compression = 52546');
 
         $ifd = new Ifd([
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, TiffConst::TYPE_SHORT, 1, Compression::Lzw->value),
@@ -207,7 +207,7 @@ final class DngStructureValidatorTest extends TestCase
     public function rejectsJxlEffortOutOfRange(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JXLEffort must be 1');
+        $this->expectExceptionMessageIsOrContains('JXLEffort must be 1');
 
         $ifd = new Ifd([
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, TiffConst::TYPE_SHORT, 1, Compression::JpegXl->value),
@@ -235,7 +235,7 @@ final class DngStructureValidatorTest extends TestCase
     public function rejectsDigestTagWithWrongCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('RawImageDigest must be BYTE[16]');
+        $this->expectExceptionMessageIsOrContains('RawImageDigest must be BYTE[16]');
 
         $ifd = new Ifd([
             DngTag::RAW_IMAGE_DIGEST => new IfdEntry(DngTag::RAW_IMAGE_DIGEST, TiffConst::TYPE_BYTE, 8, 'digest8b'),
@@ -262,7 +262,7 @@ final class DngStructureValidatorTest extends TestCase
     public function rejectsPreviewColorSpaceOutOfRange(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('PreviewColorSpace value must be 0..4');
+        $this->expectExceptionMessageIsOrContains('PreviewColorSpace value must be 0..4');
 
         $ifd = new Ifd([
             DngTag::PREVIEW_COLOR_SPACE => new IfdEntry(DngTag::PREVIEW_COLOR_SPACE, TiffConst::TYPE_LONG, 1, 5),
@@ -290,7 +290,7 @@ final class DngStructureValidatorTest extends TestCase
     public function rejectsSemanticMaskWithoutName(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('SemanticName is required in Semantic Mask IFD');
+        $this->expectExceptionMessageIsOrContains('SemanticName is required in Semantic Mask IFD');
 
         $ifd = new Ifd([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, TiffConst::TYPE_SHORT, 1, Photometric::PhotometricMask->value),
@@ -319,7 +319,7 @@ final class DngStructureValidatorTest extends TestCase
     public function rejectsDepthFormatOutOfDomain(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DepthFormat value 5 is out of domain');
+        $this->expectExceptionMessageIsOrContains('DepthFormat value 5 is out of domain');
 
         $ifd = new Ifd([
             DngTag::DEPTH_FORMAT => new IfdEntry(DngTag::DEPTH_FORMAT, TiffConst::TYPE_SHORT, 1, 5),
@@ -351,7 +351,7 @@ final class DngStructureValidatorTest extends TestCase
     public function rejectsNoiseReductionAppliedOutOfRange(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('NoiseReductionApplied must be in [0.0, 1.0]');
+        $this->expectExceptionMessageIsOrContains('NoiseReductionApplied must be in [0.0, 1.0]');
 
         $ifd = new Ifd([
             DngTag::NOISE_REDUCTION_APPLIED => new IfdEntry(
@@ -400,7 +400,7 @@ final class DngStructureValidatorTest extends TestCase
     public function rejectsEnhanceParamsWrongType(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('EnhanceParams must use ASCII type');
+        $this->expectExceptionMessageIsOrContains('EnhanceParams must use ASCII type');
 
         $ifd = new Ifd([
             DngTag::ENHANCE_PARAMS => new IfdEntry(DngTag::ENHANCE_PARAMS, TiffConst::TYPE_UNDEFINED, 5, 'test'),
@@ -413,7 +413,7 @@ final class DngStructureValidatorTest extends TestCase
     public function rejectsEmptyEnhanceParams(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('EnhanceParams must not be empty');
+        $this->expectExceptionMessageIsOrContains('EnhanceParams must not be empty');
 
         $ifd = new Ifd([
             DngTag::ENHANCE_PARAMS => new IfdEntry(DngTag::ENHANCE_PARAMS, TiffConst::TYPE_ASCII, 0, ''),

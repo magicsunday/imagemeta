@@ -169,7 +169,7 @@ final class TiffExifParserMinMaxSampleValueTest extends TestCase
     public function rejectsWrongTypeForMinSampleValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('MinSampleValue must be SHORT');
+        $this->expectExceptionMessageIsOrContains('MinSampleValue must be SHORT');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildMinMaxTiff(
@@ -188,7 +188,7 @@ final class TiffExifParserMinMaxSampleValueTest extends TestCase
     public function rejectsCountMismatchAgainstSamplesPerPixel(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('MinSampleValue count 2 must match SamplesPerPixel 3');
+        $this->expectExceptionMessageIsOrContains('MinSampleValue count 2 must match SamplesPerPixel 3');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildMinMaxTiff(
@@ -207,7 +207,7 @@ final class TiffExifParserMinMaxSampleValueTest extends TestCase
     public function rejectsMinGreaterThanMaxPerComponent(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('MinSampleValue component 1 must be <= MaxSampleValue component 1');
+        $this->expectExceptionMessageIsOrContains('MinSampleValue component 1 must be <= MaxSampleValue component 1');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildMinMaxTiff(
@@ -228,7 +228,7 @@ final class TiffExifParserMinMaxSampleValueTest extends TestCase
     public function rejectsOutOfRangeValueForBitsPerSample(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('MaxSampleValue component 0 value 300 exceeds 8-bit range 0..255');
+        $this->expectExceptionMessageIsOrContains('MaxSampleValue component 0 value 300 exceeds 8-bit range 0..255');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildMinMaxTiff(

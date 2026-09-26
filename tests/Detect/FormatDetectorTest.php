@@ -83,7 +83,7 @@ final class FormatDetectorTest extends TestCase
         $stream = $this->createStream($bytes);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported or unknown container');
+        $this->expectExceptionMessageIsOrContains('Unsupported or unknown container');
 
         (new FormatDetector())->detect($stream);
     }
@@ -375,7 +375,7 @@ final class FormatDetectorTest extends TestCase
         $stream = $this->createStream("\x00\x00\x00\x0C\x4A\x58\x4C\x20\x0D\x0A\x87");
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported or unknown container');
+        $this->expectExceptionMessageIsOrContains('Unsupported or unknown container');
 
         (new FormatDetector())->detect($stream);
     }
@@ -452,7 +452,7 @@ final class FormatDetectorTest extends TestCase
         $stream = $this->createStream($bytes);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unable to read container signature');
+        $this->expectExceptionMessageIsOrContains('Unable to read container signature');
 
         (new FormatDetector())->detect($stream);
     }

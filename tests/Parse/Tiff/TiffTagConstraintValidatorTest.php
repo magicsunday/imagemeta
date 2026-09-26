@@ -78,7 +78,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     public function rejectsEnhancedIfdWithoutEnhanceParams(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag');
+        $this->expectExceptionMessageIsOrContains('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag');
 
         $ifd = new Ifd([
             TiffTag::NEW_SUBFILE_TYPE => new IfdEntry(TiffTag::NEW_SUBFILE_TYPE, TiffConst::TYPE_LONG, 1, 16),
@@ -91,7 +91,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     public function rejectsEnhancedIfdWithEmptyEnhanceParams(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('EnhanceParams must not be empty');
+        $this->expectExceptionMessageIsOrContains('EnhanceParams must not be empty');
 
         $ifd = new Ifd([
             TiffTag::NEW_SUBFILE_TYPE => new IfdEntry(TiffTag::NEW_SUBFILE_TYPE, TiffConst::TYPE_LONG, 1, 16),
@@ -119,7 +119,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     public function rejectsInvalidCompressionInIfd0JpegContext(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Compression value 5 in IFD0 is invalid');
+        $this->expectExceptionMessageIsOrContains('Compression value 5 in IFD0 is invalid');
 
         $ifd0 = new Ifd([
             ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, TiffConst::TYPE_SHORT, 1, 5),
@@ -132,7 +132,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     public function rejectsInvalidCompressionInIfd1(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Compression value 5 in IFD1 is invalid');
+        $this->expectExceptionMessageIsOrContains('Compression value 5 in IFD1 is invalid');
 
         $ifd0 = new Ifd([]);
         $ifd1 = new Ifd([
@@ -161,7 +161,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     public function rejectsT4OptionsWithWrongCompression(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('T4Options is only valid when Compression = 3');
+        $this->expectExceptionMessageIsOrContains('T4Options is only valid when Compression = 3');
 
         $ifd = new Ifd([
             TiffTag::T4_OPTIONS  => new IfdEntry(TiffTag::T4_OPTIONS, TiffConst::TYPE_LONG, 1, 0),
@@ -175,7 +175,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     public function rejectsT4OptionsWithReservedBits(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('T4Options has reserved bits set');
+        $this->expectExceptionMessageIsOrContains('T4Options has reserved bits set');
 
         $ifd = new Ifd([
             TiffTag::T4_OPTIONS  => new IfdEntry(TiffTag::T4_OPTIONS, TiffConst::TYPE_LONG, 1, 0b1000),
@@ -203,7 +203,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     public function rejectsFillOrderInvalidValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('FillOrder value 3 is invalid');
+        $this->expectExceptionMessageIsOrContains('FillOrder value 3 is invalid');
 
         $ifd = new Ifd([
             TiffTag::FILL_ORDER => new IfdEntry(TiffTag::FILL_ORDER, TiffConst::TYPE_SHORT, 1, 3),
@@ -232,7 +232,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     public function rejectsThreshholdingTwoWithoutCellTags(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Threshholding=2 requires both CellWidth and CellLength');
+        $this->expectExceptionMessageIsOrContains('Threshholding=2 requires both CellWidth and CellLength');
 
         $ifd = new Ifd([
             TiffTag::THRESHHOLDING => new IfdEntry(TiffTag::THRESHHOLDING, TiffConst::TYPE_SHORT, 1, 2),
@@ -245,7 +245,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     public function rejectsCellTagsWithoutThreshholdingTwo(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('CellWidth/CellLength are only valid when Threshholding=2');
+        $this->expectExceptionMessageIsOrContains('CellWidth/CellLength are only valid when Threshholding=2');
 
         $ifd = new Ifd([
             TiffTag::THRESHHOLDING => new IfdEntry(TiffTag::THRESHHOLDING, TiffConst::TYPE_SHORT, 1, 1),
@@ -275,7 +275,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     public function rejectsPositionTagWithZeroDenominator(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('XPosition denominator must be non-zero');
+        $this->expectExceptionMessageIsOrContains('XPosition denominator must be non-zero');
 
         $ifd = new Ifd([
             TiffTag::X_POSITION => new IfdEntry(TiffTag::X_POSITION, TiffConst::TYPE_RATIONAL, 1, new ExifRational(1, 0)),
@@ -303,7 +303,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     public function rejectsPredictorTwoWithoutLzwOrDeflate(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Predictor=2 requires Compression=5 (LZW) or 8 (Deflate)');
+        $this->expectExceptionMessageIsOrContains('Predictor=2 requires Compression=5 (LZW) or 8 (Deflate)');
 
         $ifd = new Ifd([
             TiffTag::PREDICTOR   => new IfdEntry(TiffTag::PREDICTOR, TiffConst::TYPE_SHORT, 1, 2),
@@ -332,7 +332,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     public function rejectsZeroImageWidth(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ImageWidth value 0 is invalid');
+        $this->expectExceptionMessageIsOrContains('ImageWidth value 0 is invalid');
 
         $ifd0 = new Ifd([
             ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 0),
@@ -360,7 +360,7 @@ final class TiffTagConstraintValidatorTest extends TestCase
     public function rejectsNewSubfileTypeWithReservedBits(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('NewSubfileType value 128 contains reserved bits');
+        $this->expectExceptionMessageIsOrContains('NewSubfileType value 128 contains reserved bits');
 
         $ifd = new Ifd([
             TiffTag::NEW_SUBFILE_TYPE => new IfdEntry(TiffTag::NEW_SUBFILE_TYPE, TiffConst::TYPE_LONG, 1, 128),

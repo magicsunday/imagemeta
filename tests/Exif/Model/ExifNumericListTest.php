@@ -61,7 +61,7 @@ final class ExifNumericListTest extends TestCase
         ];
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Numeric EXIF values must form a list.');
+        $this->expectExceptionMessageIsOrContains('Numeric EXIF values must form a list.');
 
         new ExifNumericList($values);
     }
@@ -79,7 +79,7 @@ final class ExifNumericListTest extends TestCase
         ];
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Numeric EXIF lists may only contain integers, floats, or UInt64 values.');
+        $this->expectExceptionMessageIsOrContains('Numeric EXIF lists may only contain integers, floats, or UInt64 values.');
 
         new ExifNumericList($values);
     }

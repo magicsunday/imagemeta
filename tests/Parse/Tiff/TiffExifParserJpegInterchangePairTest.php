@@ -222,7 +222,7 @@ final class TiffExifParserJpegInterchangePairTest extends TestCase
     public function rejectsLengthWhenInterchangeOffsetIsZero(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGInterchangeFormatLength is invalid when JPEGInterchangeFormat is zero');
+        $this->expectExceptionMessageIsOrContains('JPEGInterchangeFormatLength is invalid when JPEGInterchangeFormat is zero');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1JpegInterchange(
@@ -239,7 +239,7 @@ final class TiffExifParserJpegInterchangePairTest extends TestCase
     public function rejectsInvalidInterchangeFieldLayout(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGInterchangeFormat must be LONG[1].');
+        $this->expectExceptionMessageIsOrContains('JPEGInterchangeFormat must be LONG[1].');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildBlobWithIfd1JpegInterchange(

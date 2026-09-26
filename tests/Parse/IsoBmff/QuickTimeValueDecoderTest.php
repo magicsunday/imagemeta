@@ -237,7 +237,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     public function parseDataBoxStructuredRejectsTooSmall(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box too small');
+        $this->expectExceptionMessageIsOrContains('data box too small');
 
         $decoder    = $this->createDecoder();
         $content    = pack('N', 1) . "\x00\x00\x00";
@@ -274,7 +274,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     public function decodeDataPayloadRejectsInvalidUtf8(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box UTF-8 payload contains invalid byte sequence');
+        $this->expectExceptionMessageIsOrContains('data box UTF-8 payload contains invalid byte sequence');
 
         $decoder = $this->createDecoder();
         $invalid = "\xFF\xFE";
@@ -288,7 +288,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     public function decodeDataPayloadRejectsOddUtf16(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box UTF-16BE payload has odd byte count');
+        $this->expectExceptionMessageIsOrContains('data box UTF-16BE payload has odd byte count');
 
         $decoder = $this->createDecoder();
         $decoder->decodeDataPayload(2, "\x00\x41\x00", 3);
@@ -301,7 +301,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     public function decodeDataPayloadRejectsOversizedIntegerPayload(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('QuickTime integer payload must be 1');
+        $this->expectExceptionMessageIsOrContains('QuickTime integer payload must be 1');
 
         $decoder = $this->createDecoder();
         $decoder->decodeDataPayload(0x15, "\x00\x00\x00\x00\x00\x00\x00\x00\x00", 9);
@@ -314,7 +314,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     public function decodeDataPayloadRejectsTruncatedFloat32(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box float32 payload truncated');
+        $this->expectExceptionMessageIsOrContains('data box float32 payload truncated');
 
         $decoder = $this->createDecoder();
         $decoder->decodeDataPayload(0x17, "\x00\x00", 2);
@@ -339,7 +339,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     public function decodeDataPayloadRejectsTruncatedFloat64(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('data box float64 payload truncated');
+        $this->expectExceptionMessageIsOrContains('data box float64 payload truncated');
 
         $decoder = $this->createDecoder();
         $decoder->decodeDataPayload(0x18, "\x00\x00\x00\x00", 4);
@@ -545,7 +545,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     public function validateLocaleIndicatorRejectsCountryIndexWithoutList(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('requires a ctry list atom');
+        $this->expectExceptionMessageIsOrContains('requires a ctry list atom');
 
         $decoder = $this->createDecoder();
         $locale  = (5 << 16) | 0;
@@ -559,7 +559,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     public function validateLocaleIndicatorRejectsCountryIndexExceedingList(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('exceeds ctry list entry count');
+        $this->expectExceptionMessageIsOrContains('exceeds ctry list entry count');
 
         $decoder = $this->createDecoder();
         $locale  = (3 << 16) | 0;
@@ -574,7 +574,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     public function validateLocaleIndicatorRejectsLanguageIndexWithoutList(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('requires a lang list atom');
+        $this->expectExceptionMessageIsOrContains('requires a lang list atom');
 
         $decoder = $this->createDecoder();
         $locale  = 0 | 5;
@@ -610,7 +610,7 @@ final class QuickTimeValueDecoderTest extends TestCase
     public function validateDataOrderingRejectsWrongOrder(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('must be ordered from most-specific to most-general');
+        $this->expectExceptionMessageIsOrContains('must be ordered from most-specific to most-general');
 
         $decoder = $this->createDecoder();
 

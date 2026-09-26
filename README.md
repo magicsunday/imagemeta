@@ -205,7 +205,7 @@ make install    # Install composer dependencies
 make test       # Run full CI pipeline (mandatory gate before any commit)
 ```
 
-`make test` runs (in order): phplint → php-cs-fixer (dry-run) → rector (dry-run) → phpstan → phpunit → jscpd
+`make test` runs (in order): phplint → php-cs-fixer (dry-run) → rector (dry-run) → phpstan → deptrac → templates → phpunit → jscpd
 
 Additional targets:
 
@@ -217,6 +217,8 @@ Additional targets:
 | `make rector-check` | Rector check (dry-run) |
 | `make rector` | Apply rector rules |
 | `make stan` | PHPStan analysis |
+| `make deptrac` | Architecture layer check (Deptrac) |
+| `make templates` | Checks the tooling configs against the coding-standard templates |
 | `make unit` | PHPUnit tests only |
 | `make coverage` | PHPUnit with HTML + Clover coverage report |
 | `make cpd` | Copy-paste detection (jscpd) |

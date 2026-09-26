@@ -64,6 +64,14 @@ jobs:
               if: ${{ success() }}
               run: composer ci:test:php:phpstan -- --error-format=table
 
+            - name: Deptrac
+              if: ${{ success() }}
+              run: composer ci:test:php:deptrac
+
+            - name: Templates
+              if: ${{ success() }}
+              run: composer ci:test:php:templates
+
             - name: PHPUnit Tests
               if: ${{ success() }}
               run: composer ci:test:php:unit

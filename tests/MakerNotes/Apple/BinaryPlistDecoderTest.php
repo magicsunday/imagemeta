@@ -66,7 +66,7 @@ final class BinaryPlistDecoderTest extends TestCase
     {
         $decoder = new BinaryPlistDecoder();
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('must not be empty');
+        $this->expectExceptionMessageIsOrContains('must not be empty');
         $decoder->decode('');
     }
 
@@ -79,7 +79,7 @@ final class BinaryPlistDecoderTest extends TestCase
     {
         $decoder = new BinaryPlistDecoder();
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Unsupported property list format');
+        $this->expectExceptionMessageIsOrContains('Unsupported property list format');
         $decoder->decode('not-a-plist');
     }
 
@@ -99,7 +99,7 @@ final class BinaryPlistDecoderTest extends TestCase
         $payload = substr($payload, 0, -8) . $this->packUint64BE(0);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('offset table offset is invalid');
+        $this->expectExceptionMessageIsOrContains('offset table offset is invalid');
         $decoder->decode($payload);
     }
 
@@ -124,7 +124,7 @@ final class BinaryPlistDecoderTest extends TestCase
         $payload = substr($payload, 0, $trailerOffset) . $invalidTrailer;
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('offset table exceeds payload bounds');
+        $this->expectExceptionMessageIsOrContains('offset table exceeds payload bounds');
         $decoder->decode($payload);
     }
 
@@ -146,7 +146,7 @@ final class BinaryPlistDecoderTest extends TestCase
             . substr($payload, $offsetTableStart + 1);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('outside of the object table range');
+        $this->expectExceptionMessageIsOrContains('outside of the object table range');
         $decoder->decode($payload);
     }
 
@@ -171,7 +171,7 @@ final class BinaryPlistDecoderTest extends TestCase
         $payload = substr($payload, 0, $trailerOffset) . $invalidTrailer;
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Top level object index is out of range');
+        $this->expectExceptionMessageIsOrContains('Top level object index is out of range');
         $decoder->decode($payload);
     }
 
@@ -481,7 +481,7 @@ final class BinaryPlistDecoderTest extends TestCase
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1953);
-        $this->expectExceptionMessage('Circular reference');
+        $this->expectExceptionMessageIsOrContains('Circular reference');
 
         (new BinaryPlistDecoder())->decode($plist);
     }
@@ -506,7 +506,7 @@ final class BinaryPlistDecoderTest extends TestCase
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1954);
-        $this->expectExceptionMessage('Recursion depth');
+        $this->expectExceptionMessageIsOrContains('Recursion depth');
 
         (new BinaryPlistDecoder())->decode($plist);
     }

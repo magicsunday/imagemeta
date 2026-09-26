@@ -63,7 +63,7 @@ final class PlistTextParserTest extends TestCase
 
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1122);
-        $this->expectExceptionMessage('Recursion depth');
+        $this->expectExceptionMessageIsOrContains('Recursion depth');
 
         $parser->parse($plist);
     }

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Integration;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -19,6 +20,7 @@ use function file_get_contents;
 /**
  * @internal
  */
+#[CoversNothing]
 final class RedundantIntGuardCleanupTicket1821Test extends TestCase
 {
     #[Test]

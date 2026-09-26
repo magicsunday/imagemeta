@@ -9,13 +9,9 @@
 
 declare(strict_types=1);
 
-use Rector\CodingStyle\Rector\Catch_\CatchExceptionNameMatchingTypeRector;
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\Plus\RemoveDeadZeroAndOneOperationRector;
-use Rector\DeadCode\Rector\Stmt\RemoveUnreachableStatementRector;
 use Rector\Php84\Rector\MethodCall\NewMethodCallWithoutParenthesesRector;
-use Rector\Set\ValueObject\LevelSetList;
-use Rector\Set\ValueObject\SetList;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->paths([
@@ -49,35 +45,18 @@ return static function (RectorConfig $rectorConfig): void {
         );
     }
 
-    $rectorConfig->phpVersion(80400);
     $rectorConfig->phpstanConfig(__DIR__ . '/phpstan.neon');
-    $rectorConfig->importNames();
-    $rectorConfig->removeUnusedImports();
-    $rectorConfig->disableParallel();
     $rectorConfig->cacheDirectory(__DIR__ . '/.build/cache/.rector.cache');
     $rectorConfig->containerCacheDirectory(__DIR__ . '/.build/cache/.rector.container.cache');
 
-    // Define what rule sets will be applied
-    $rectorConfig->sets([
-        SetList::CODE_QUALITY,
-        SetList::CODING_STYLE,
-        SetList::DEAD_CODE,
-        SetList::EARLY_RETURN,
-        SetList::INSTANCEOF,
-        SetList::PRIVATIZATION,
-        SetList::TYPE_DECLARATION,
-        SetList::TYPE_DECLARATION_DOCBLOCKS,
-        LevelSetList::UP_TO_PHP_84,
-    ]);
+    // The shared rule sets and skips; 80400 is this package's PHP floor.
+    (require __DIR__ . '/.build/vendor/magicsunday/coding-standard/rector/base.php')($rectorConfig, 80400);
 
-    // Skip some rules
+    // Package-local skips on top of the shared ones.
     $rectorConfig->skip([
-        CatchExceptionNameMatchingTypeRector::class,
         // Explicit (new Foo())->method() parentheses kept for readability
         NewMethodCallWithoutParenthesesRector::class,
         // Intentional: $x * 1.0 casts int to float
         RemoveDeadZeroAndOneOperationRector::class,
-        // Intentional: defensive guard clauses after exhaustive matches
-        RemoveUnreachableStatementRector::class,
     ]);
 };

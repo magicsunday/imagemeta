@@ -195,7 +195,7 @@ final class QuickTimeKeyResolverTest extends TestCase
     public function parseKeysRejectsTruncated(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys box truncated');
+        $this->expectExceptionMessageIsOrContains('keys box truncated');
 
         // Only 7 bytes (needs at least 8)
         $content = chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
@@ -211,7 +211,7 @@ final class QuickTimeKeyResolverTest extends TestCase
     public function parseKeysRejectsNonZeroVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys box version must be 0');
+        $this->expectExceptionMessageIsOrContains('keys box version must be 0');
 
         $content = chr(1) . chr(0) . chr(0) . chr(0) . pack('N', 0);
 
@@ -241,7 +241,7 @@ final class QuickTimeKeyResolverTest extends TestCase
     public function parseKeysRejectsInvalidEntrySize(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('invalid keys entry size');
+        $this->expectExceptionMessageIsOrContains('invalid keys entry size');
 
         // version=0, flags=0, entry_count=1
         $data = chr(0) . chr(0) . chr(0) . chr(0) . pack('N', 1);
@@ -259,7 +259,7 @@ final class QuickTimeKeyResolverTest extends TestCase
     public function parseKeysRejectsEmptyKeyValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys entry has empty key_value');
+        $this->expectExceptionMessageIsOrContains('keys entry has empty key_value');
 
         // version=0, flags=0, entry_count=1
         $data = chr(0) . chr(0) . chr(0) . chr(0) . pack('N', 1);
@@ -294,7 +294,7 @@ final class QuickTimeKeyResolverTest extends TestCase
     public function parseKeysRejectsMdtaEmbeddedNulBytes(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys mdta key_value contains embedded NUL bytes');
+        $this->expectExceptionMessageIsOrContains('keys mdta key_value contains embedded NUL bytes');
 
         $payload = $this->buildKeysPayloadWithMdtaKey("com.apple\0quicktime.title");
 
@@ -309,7 +309,7 @@ final class QuickTimeKeyResolverTest extends TestCase
     public function parseKeysRejectsEntriesNotFillingContainer(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('keys entries do not fill container');
+        $this->expectExceptionMessageIsOrContains('keys entries do not fill container');
 
         $keyName = 'com.apple.quicktime.title';
         $payload = $this->buildKeysPayloadWithMdtaKey($keyName);
@@ -407,7 +407,7 @@ final class QuickTimeKeyResolverTest extends TestCase
     public function parseFreeformKeyRejectsNonZeroMeanVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('mean atom version must be 0');
+        $this->expectExceptionMessageIsOrContains('mean atom version must be 0');
 
         // mean: FullAtom (v=1, flags=0) + payload
         $meanPayload = chr(1) . chr(0) . chr(0) . chr(0) . 'com.apple.iTunes';

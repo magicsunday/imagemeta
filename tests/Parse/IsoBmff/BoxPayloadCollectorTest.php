@@ -271,7 +271,7 @@ final class BoxPayloadCollectorTest extends TestCase
     public function collectRejectsDuplicateHdlr(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('meta must contain exactly one hdlr box');
+        $this->expectExceptionMessageIsOrContains('meta must contain exactly one hdlr box');
 
         $hdlrBox1 = $this->box('hdlr', $this->hdlrPayload('pict'));
         $hdlrBox2 = $this->box('hdlr', $this->hdlrPayload('mdta'));
@@ -286,7 +286,7 @@ final class BoxPayloadCollectorTest extends TestCase
     public function collectRejectsUnsupportedMetaVersion(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('unsupported meta box version');
+        $this->expectExceptionMessageIsOrContains('unsupported meta box version');
 
         $hdlrBox = $this->box('hdlr', $this->hdlrPayload('pict'));
 
@@ -301,7 +301,7 @@ final class BoxPayloadCollectorTest extends TestCase
     public function collectRejectsDuplicateIdat(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('meta context must contain at most one idat box');
+        $this->expectExceptionMessageIsOrContains('meta context must contain at most one idat box');
 
         $hdlrBox  = $this->box('hdlr', $this->hdlrPayload('pict'));
         $idatBox1 = $this->box('idat', 'first');

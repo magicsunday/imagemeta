@@ -187,7 +187,7 @@ final class TiffExifParserDotRangeTest extends TestCase
     public function rejectsInvalidDotRangeCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DotRange count 4 must be 2 or 2*SamplesPerPixel (6)');
+        $this->expectExceptionMessageIsOrContains('DotRange count 4 must be 2 or 2*SamplesPerPixel (6)');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDotRangeTiff(
@@ -205,7 +205,7 @@ final class TiffExifParserDotRangeTest extends TestCase
     public function rejectsOutOfRangeDotRangeValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DotRange pair index 0 white value 256 exceeds max 255');
+        $this->expectExceptionMessageIsOrContains('DotRange pair index 0 white value 256 exceeds max 255');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDotRangeTiff(
@@ -223,7 +223,7 @@ final class TiffExifParserDotRangeTest extends TestCase
     public function rejectsReversedDotRangePair(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('DotRange pair index 0 requires black < white');
+        $this->expectExceptionMessageIsOrContains('DotRange pair index 0 requires black < white');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildDotRangeTiff(

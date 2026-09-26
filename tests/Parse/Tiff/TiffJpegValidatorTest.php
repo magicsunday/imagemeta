@@ -73,7 +73,7 @@ final class TiffJpegValidatorTest extends TestCase
     public function rejectsJpegProcInvalidValue(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGProc value 5 is invalid');
+        $this->expectExceptionMessageIsOrContains('JPEGProc value 5 is invalid');
 
         $ifd = new Ifd([
             TiffTag::JPEG_PROC   => new IfdEntry(TiffTag::JPEG_PROC, TiffConst::TYPE_SHORT, 1, 5),
@@ -87,7 +87,7 @@ final class TiffJpegValidatorTest extends TestCase
     public function rejectsJpegProcWithoutJpegCompression(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGProc is only valid when Compression=6 (JPEG)');
+        $this->expectExceptionMessageIsOrContains('JPEGProc is only valid when Compression=6 (JPEG)');
 
         $ifd = new Ifd([
             TiffTag::JPEG_PROC   => new IfdEntry(TiffTag::JPEG_PROC, TiffConst::TYPE_SHORT, 1, 1),
@@ -116,7 +116,7 @@ final class TiffJpegValidatorTest extends TestCase
     public function rejectsJpegRestartIntervalWithoutJpegCompression(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGRestartInterval is only valid when Compression=6 (JPEG)');
+        $this->expectExceptionMessageIsOrContains('JPEGRestartInterval is only valid when Compression=6 (JPEG)');
 
         $ifd = new Ifd([
             TiffTag::JPEG_RESTART_INTERVAL => new IfdEntry(TiffTag::JPEG_RESTART_INTERVAL, TiffConst::TYPE_SHORT, 1, 64),
@@ -157,7 +157,7 @@ final class TiffJpegValidatorTest extends TestCase
     public function rejectsLengthWhenOffsetIsZero(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGInterchangeFormatLength is invalid when JPEGInterchangeFormat is zero');
+        $this->expectExceptionMessageIsOrContains('JPEGInterchangeFormatLength is invalid when JPEGInterchangeFormat is zero');
 
         $ifd = new Ifd([
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, TiffConst::TYPE_LONG, 1, 0),
@@ -187,7 +187,7 @@ final class TiffJpegValidatorTest extends TestCase
     public function rejectsLosslessPredictorsWithoutJpegProc14(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGLosslessPredictors is only valid when JPEGProc=14');
+        $this->expectExceptionMessageIsOrContains('JPEGLosslessPredictors is only valid when JPEGProc=14');
 
         $ifd = new Ifd([
             TiffTag::JPEG_PROC                => new IfdEntry(TiffTag::JPEG_PROC, TiffConst::TYPE_SHORT, 1, 1),
@@ -202,7 +202,7 @@ final class TiffJpegValidatorTest extends TestCase
     public function rejectsMissingLosslessPredictorsWhenJpegProc14(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGProc=14 requires JPEGLosslessPredictors');
+        $this->expectExceptionMessageIsOrContains('JPEGProc=14 requires JPEGLosslessPredictors');
 
         $ifd = new Ifd([
             TiffTag::JPEG_PROC   => new IfdEntry(TiffTag::JPEG_PROC, TiffConst::TYPE_SHORT, 1, 14),
@@ -234,7 +234,7 @@ final class TiffJpegValidatorTest extends TestCase
     public function rejectsMissingDcTablesWhenJpegProc1(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('JPEGDCTables is required when JPEGProc=1');
+        $this->expectExceptionMessageIsOrContains('JPEGDCTables is required when JPEGProc=1');
 
         $ifd = new Ifd([
             TiffTag::JPEG_PROC     => new IfdEntry(TiffTag::JPEG_PROC, TiffConst::TYPE_SHORT, 1, 1),

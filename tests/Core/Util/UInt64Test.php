@@ -73,7 +73,7 @@ final class UInt64Test extends TestCase
     public function throwsExceptionForNegativeInteger(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Cannot create UInt64 from a negative integer.');
+        $this->expectExceptionMessageIsOrContains('Cannot create UInt64 from a negative integer.');
 
         UInt64::fromInt(-1);
     }
@@ -114,7 +114,7 @@ final class UInt64Test extends TestCase
         $value = new UInt64(0xFFFFFFFF, 0xFFFFFFFF);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('test exceeds supported integer range.');
+        $this->expectExceptionMessageIsOrContains('test exceeds supported integer range.');
 
         $value->toInt('test');
     }

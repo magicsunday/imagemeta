@@ -71,7 +71,7 @@ final class TiffColorInkValidatorTest extends TestCase
     public function rejectsInkNamesWhenInkSetIsCmyk(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('InkNames must not be present when InkSet=1 (CMYK)');
+        $this->expectExceptionMessageIsOrContains('InkNames must not be present when InkSet=1 (CMYK)');
 
         $ifd = new Ifd([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, TiffConst::TYPE_SHORT, 1, 5),
@@ -101,7 +101,7 @@ final class TiffColorInkValidatorTest extends TestCase
     public function rejectsMissingInkNamesWhenInkSetIsCustom(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('InkSet=2 requires an InkNames ASCII list');
+        $this->expectExceptionMessageIsOrContains('InkSet=2 requires an InkNames ASCII list');
 
         $ifd = new Ifd([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, TiffConst::TYPE_SHORT, 1, 5),
@@ -115,7 +115,7 @@ final class TiffColorInkValidatorTest extends TestCase
     public function rejectsInkNameCountMismatch(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('InkNames string count 2 must match NumberOfInks 4');
+        $this->expectExceptionMessageIsOrContains('InkNames string count 2 must match NumberOfInks 4');
 
         $ifd = new Ifd([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, TiffConst::TYPE_SHORT, 1, 5),
@@ -147,7 +147,7 @@ final class TiffColorInkValidatorTest extends TestCase
     public function rejectsMissingColorMapForPaletteImage(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Palette images (PhotometricInterpretation=3) require ColorMap');
+        $this->expectExceptionMessageIsOrContains('Palette images (PhotometricInterpretation=3) require ColorMap');
 
         $ifd = new Ifd([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, TiffConst::TYPE_SHORT, 1, 3),
@@ -160,7 +160,7 @@ final class TiffColorInkValidatorTest extends TestCase
     public function rejectsColorMapForNonPaletteImage(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ColorMap is only valid for palette images');
+        $this->expectExceptionMessageIsOrContains('ColorMap is only valid for palette images');
 
         $ifd = new Ifd([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, TiffConst::TYPE_SHORT, 1, 2),
@@ -190,7 +190,7 @@ final class TiffColorInkValidatorTest extends TestCase
     public function rejectsTransferFunctionWithInvalidPhotometric(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TransferFunction is only valid for PhotometricInterpretation {0,1,2,3,6}');
+        $this->expectExceptionMessageIsOrContains('TransferFunction is only valid for PhotometricInterpretation {0,1,2,3,6}');
 
         $ifd = new Ifd([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, TiffConst::TYPE_SHORT, 1, 5),
@@ -204,7 +204,7 @@ final class TiffColorInkValidatorTest extends TestCase
     public function rejectsTransferRangeWithWrongTypeOrCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TransferRange must be SHORT[6]');
+        $this->expectExceptionMessageIsOrContains('TransferRange must be SHORT[6]');
 
         $ifd = new Ifd([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, TiffConst::TYPE_SHORT, 1, 2),
@@ -218,7 +218,7 @@ final class TiffColorInkValidatorTest extends TestCase
     public function rejectsReferenceBlackWhiteWithInvalidPhotometric(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ReferenceBlackWhite is only valid for PhotometricInterpretation RGB(2) or YCbCr(6)');
+        $this->expectExceptionMessageIsOrContains('ReferenceBlackWhite is only valid for PhotometricInterpretation RGB(2) or YCbCr(6)');
 
         $ifd = new Ifd([
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, TiffConst::TYPE_SHORT, 1, 1),

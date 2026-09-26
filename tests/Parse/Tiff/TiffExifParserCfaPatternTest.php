@@ -163,7 +163,7 @@ final class TiffExifParserCfaPatternTest extends TestCase
     public function rejectsCfaPatternPayloadTooShort(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('CFAPattern payload is too short');
+        $this->expectExceptionMessageIsOrContains('CFAPattern payload is too short');
 
         $this->parseWithCfaPattern("\x02\x00");
     }
@@ -175,7 +175,7 @@ final class TiffExifParserCfaPatternTest extends TestCase
     public function rejectsCfaPatternZeroHorizontalRepeat(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('non-zero');
+        $this->expectExceptionMessageIsOrContains('non-zero');
 
         $this->parseWithCfaPattern(pack('v', 0) . pack('v', 2) . "\x00\x01");
     }
@@ -187,7 +187,7 @@ final class TiffExifParserCfaPatternTest extends TestCase
     public function rejectsCfaPatternZeroVerticalRepeat(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('non-zero');
+        $this->expectExceptionMessageIsOrContains('non-zero');
 
         $this->parseWithCfaPattern(pack('v', 2) . pack('v', 0) . "\x00\x01");
     }
@@ -215,7 +215,7 @@ final class TiffExifParserCfaPatternTest extends TestCase
     {
         // 2x2 = 4 pattern bytes, but 5 provided
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('does not match');
+        $this->expectExceptionMessageIsOrContains('does not match');
 
         $this->parseWithCfaPattern(pack('v', 2) . pack('v', 2) . "\x00\x01\x01\x02\xFF");
     }

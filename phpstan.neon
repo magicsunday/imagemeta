@@ -1,17 +1,11 @@
 includes:
-    - %currentWorkingDirectory%/.build/vendor/phpstan/phpstan-strict-rules/rules.neon
-    - %currentWorkingDirectory%/.build/vendor/phpstan/phpstan-deprecation-rules/rules.neon
-    - %currentWorkingDirectory%/.build/vendor/phpstan/phpstan-phpunit/extension.neon
-    - %currentWorkingDirectory%/.build/vendor/phpstan/phpstan-phpunit/rules.neon
-    - %currentWorkingDirectory%/.build/vendor/phpat/phpat/extension.neon
+    - %currentWorkingDirectory%/.build/vendor/magicsunday/coding-standard/phpstan/base.neon
     - %currentWorkingDirectory%/phpstan-baseline.neon
 
 parameters:
-    # You can currently choose from 11 levels (0 is the loosest and 10 is the strictest).
-    level: max
-
-    # PHP Version to check against (PHP 8.4 as minimum target)
-    phpVersion: 80400
+    phpVersion:
+        min: 80400
+        max: 80500
 
     tmpDir: %currentWorkingDirectory%/.build/cache/.phpstan.cache
 
@@ -22,11 +16,19 @@ parameters:
     excludePaths:
         - %currentWorkingDirectory%/.build/
 
-    phpat:
-        show_rule_names: true
+    ignoreErrors:
+        # A test method that calls a throwing API documents nothing by carrying @throws: PHPUnit
+        # catches whatever it throws and turns it into a failure (or an expectException pass).
+        # Checked-exception contracts are enforced on src/, where callers depend on them.
+        -
+            identifier: missingType.checkedException
+            path: %currentWorkingDirectory%/tests/*
 
-services:
-    -
-        class: MagicSunday\ImageMeta\Tests\Architecture\ArchitectureTest
-        tags:
-            - phpat.test
+        # Stream delegates its primitive reads to ByteReader, which pulls the bytes through a
+        # closure over Stream::read(). PHPStan cannot see through the closure, so
+        # ByteReader::readU64BE() declares only ParseError, although a truncated stream throws
+        # BoundsError at runtime; the catch in looksLikeIsoBmff() is reached.
+        -
+            identifier: catch.neverThrown
+            message: '#^Dead catch - MagicSunday\\ImageMeta\\Core\\BoundsError is never thrown in the try block\.$#'
+            path: %currentWorkingDirectory%/src/Detect/FormatDetector.php

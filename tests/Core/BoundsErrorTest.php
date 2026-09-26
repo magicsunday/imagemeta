@@ -49,7 +49,7 @@ final class BoundsErrorTest extends TestCase
     public function reportsContextInBoundsError(callable $operation, string $expectedMessage): void
     {
         $this->expectException(BoundsError::class);
-        $this->expectExceptionMessage($expectedMessage);
+        $this->expectExceptionMessageIsOrContains($expectedMessage);
 
         $operation();
     }

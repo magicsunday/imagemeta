@@ -80,7 +80,7 @@ final class TiffStructuralValidatorTest extends TestCase
     public function rejectsEnhancedIfdWithoutEnhanceParams(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag');
+        $this->expectExceptionMessageIsOrContains('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag');
 
         $ifd = new Ifd([
             TiffTag::NEW_SUBFILE_TYPE => new IfdEntry(TiffTag::NEW_SUBFILE_TYPE, TiffConst::TYPE_LONG, 1, 16),
@@ -119,7 +119,7 @@ final class TiffStructuralValidatorTest extends TestCase
     public function rejectsZeroImageWidthViaImageDataValidation(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('ImageWidth value 0 is invalid');
+        $this->expectExceptionMessageIsOrContains('ImageWidth value 0 is invalid');
 
         $ifd0 = new Ifd([
             ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, TiffConst::TYPE_SHORT, 1, 0),

@@ -88,7 +88,7 @@ final class TiffImageDataValidatorTest extends TestCase
     public function rejectsStripOffsetCountMismatch(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('StripOffsets count 2 does not match expected strip count 1');
+        $this->expectExceptionMessageIsOrContains('StripOffsets count 2 does not match expected strip count 1');
 
         $validator = $this->createValidator(2048);
 
@@ -127,7 +127,7 @@ final class TiffImageDataValidatorTest extends TestCase
     public function rejectsTileWidthNotMultipleOf16(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TileWidth 15 must be an integer multiple of 16');
+        $this->expectExceptionMessageIsOrContains('TileWidth 15 must be an integer multiple of 16');
 
         $validator = $this->createValidator();
 
@@ -145,7 +145,7 @@ final class TiffImageDataValidatorTest extends TestCase
     public function rejectsMixedStripAndTileLayout(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Strip and tile layout tags must not be mixed');
+        $this->expectExceptionMessageIsOrContains('Strip and tile layout tags must not be mixed');
 
         $validator = $this->createValidator();
 
@@ -164,7 +164,7 @@ final class TiffImageDataValidatorTest extends TestCase
     public function rejectsMissingTileOffsetsOrByteCounts(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('TileOffsets and TileByteCounts must both be present');
+        $this->expectExceptionMessageIsOrContains('TileOffsets and TileByteCounts must both be present');
 
         $validator = $this->createValidator();
 

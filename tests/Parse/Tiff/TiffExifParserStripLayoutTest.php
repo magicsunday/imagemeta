@@ -207,7 +207,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
     public function rejectsStripOffsetsWithFloatingPointType(int $stripOffsetsType): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('StripOffsets (tag 0x0111) must use integer TIFF field types');
+        $this->expectExceptionMessageIsOrContains('StripOffsets (tag 0x0111) must use integer TIFF field types');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildStripLayoutTiff(
@@ -238,7 +238,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
     public function rejectsMismatchedStripOffsetsCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('StripOffsets count 2 does not match expected strip count 3');
+        $this->expectExceptionMessageIsOrContains('StripOffsets count 2 does not match expected strip count 3');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildStripLayoutTiff(
@@ -259,7 +259,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
     public function rejectsMismatchedStripByteCountsCount(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('StripByteCounts count 2 does not match expected strip count 3');
+        $this->expectExceptionMessageIsOrContains('StripByteCounts count 2 does not match expected strip count 3');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildStripLayoutTiff(
@@ -280,7 +280,7 @@ final class TiffExifParserStripLayoutTest extends TestCase
     public function rejectsStripStorageRangeExceedingBlobBounds(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('exceeds TIFF data bounds');
+        $this->expectExceptionMessageIsOrContains('exceeds TIFF data bounds');
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildStripLayoutTiff(
