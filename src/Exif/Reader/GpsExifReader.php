@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
@@ -43,6 +44,8 @@ final readonly class GpsExifReader
      * Returns the parsed GPS metadata extracted from the GPS IFD.
      *
      * @return GpsFieldMap
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gps(): array
     {
@@ -55,6 +58,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the recorded GPS date stamp in ISO calendar format.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsDateStamp(): ?string
     {
@@ -65,6 +70,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the recorded GPS time stamp in HH:MM:SS(.sss) format.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsTimeStampString(): ?string
     {
@@ -75,6 +82,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the combined GPS timestamp in UTC when both date and time are available.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsTimestamp(): ?DateTimeImmutable
     {
@@ -85,6 +94,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the GPSSpeedRef value indicating the source units (K, M, N).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsSpeedRef(): ?string
     {
@@ -95,6 +106,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the GPS speed converted to metres per second.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsSpeedMetresPerSecond(): ?float
     {
@@ -105,6 +118,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the GPSTrackRef value (T for true, M for magnetic).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsTrackRef(): ?string
     {
@@ -115,6 +130,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the normalized course over ground in degrees within [0, 360).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsTrack(): ?float
     {
@@ -125,6 +142,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the GPSImgDirectionRef value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsImgDirectionRef(): ?string
     {
@@ -135,6 +154,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the normalized image direction in degrees within [0, 360).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsImgDirection(): ?float
     {
@@ -145,6 +166,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the GPSDestBearingRef value (true or magnetic).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsDestinationBearingRef(): ?string
     {
@@ -155,6 +178,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the normalized destination bearing in degrees within [0, 360).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsDestinationBearing(): ?float
     {
@@ -165,6 +190,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the GPSDestDistanceRef value (kilometres, miles or nautical miles).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsDestinationDistanceRef(): ?string
     {
@@ -175,6 +202,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the destination distance converted to metres.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsDestinationDistanceMetres(): ?float
     {
@@ -185,6 +214,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the GPS differential correction indicator.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsDifferential(): ?int
     {
@@ -195,6 +226,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns the horizontal positioning error in metres when provided.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsHorizontalPositioningError(): ?float
     {
@@ -205,6 +238,8 @@ final readonly class GpsExifReader
 
     /**
      * Returns a single value from the cached GPS metadata map.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function gpsValue(string $key): string|int|float|DateTimeImmutable|null
     {

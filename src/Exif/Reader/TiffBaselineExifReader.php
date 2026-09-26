@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\{ExifNumericList, ExifRational, ExifRationalList, ExifTag, Ifd, IfdEntry, IfdValueReader};
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
@@ -45,6 +46,8 @@ final readonly class TiffBaselineExifReader
      *
      * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileWidth for tiled image storage.
      * For thumbnail tile width, use thumbnailTileWidth().
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function tileWidth(): ?int
     {
@@ -56,6 +59,8 @@ final readonly class TiffBaselineExifReader
      *
      * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileLength for tiled image storage.
      * For thumbnail tile length, use thumbnailTileLength().
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function tileLength(): ?int
     {
@@ -69,6 +74,8 @@ final readonly class TiffBaselineExifReader
      * For thumbnail tile offsets, use thumbnailTileOffsets().
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function tileOffsets(): ?array
     {
@@ -82,6 +89,8 @@ final readonly class TiffBaselineExifReader
      * For thumbnail tile byte counts, use thumbnailTileByteCounts().
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function tileByteCounts(): ?array
     {
@@ -99,6 +108,8 @@ final readonly class TiffBaselineExifReader
      * describing the tone reproduction curve.
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function transferFunction(): ?array
     {
@@ -126,6 +137,8 @@ final readonly class TiffBaselineExifReader
      *
      * TIFF 6.0 §14 defines the Predictor tag as a mathematical operator applied before
      * compression. Valid values: 1 = No prediction (default), 2 = Horizontal differencing.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function predictor(): int
     {
@@ -139,6 +152,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns NewSubfileType tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x00FE.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function newSubfileType(): int
     {
@@ -149,6 +164,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns SubfileType tag value (deprecated).
      * TIFF 5.0 (deprecated in TIFF 6.0) — Tag 0x00FF.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subfileType(): ?int
     {
@@ -158,6 +175,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns Threshholding tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0107.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function threshholding(): int
     {
@@ -168,6 +187,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns CellWidth tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0108.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cellWidth(): ?int
     {
@@ -177,6 +198,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns CellLength tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0109.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cellLength(): ?int
     {
@@ -186,6 +209,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns FillOrder tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x010A.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function fillOrder(): int
     {
@@ -196,6 +221,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns MinSampleValue tag value.
      * TIFF 6.0 §8: default is 0 when tag is absent.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function minSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
@@ -205,6 +232,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns MaxSampleValue tag value.
      * TIFF 6.0 §8: default is (2^BitsPerSample)-1 when tag is absent.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function maxSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
@@ -215,6 +244,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns PageName tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011D.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function pageName(): ?string
     {
@@ -224,6 +255,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns XPosition tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011E.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function xPosition(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -233,6 +266,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns YPosition tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011F.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function yPosition(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -242,6 +277,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns FreeOffsets tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0120.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function freeOffsets(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -251,6 +288,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns FreeByteCounts tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0121.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function freeByteCounts(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -260,6 +299,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns GrayResponseUnit tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0122.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function grayResponseUnit(): int
     {
@@ -270,6 +311,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns GrayResponseCurve tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0123.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function grayResponseCurve(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -279,6 +322,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns T4Options tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0124.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function t4Options(): int
     {
@@ -289,6 +334,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns T6Options tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0125.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function t6Options(): int
     {
@@ -299,6 +346,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns PageNumber tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0129.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function pageNumber(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -308,6 +357,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns ColorMap tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0140.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function colorMap(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -317,6 +368,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns HalftoneHints tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0141.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function halftoneHints(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -326,6 +379,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns InkSet tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014C.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function inkSet(): int
     {
@@ -347,6 +402,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns NumberOfInks tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014E.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function numberOfInks(): int
     {
@@ -357,6 +414,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns DotRange tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0150.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dotRange(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -366,6 +425,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns TargetPrinter tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0151.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function targetPrinter(): ?string
     {
@@ -375,6 +436,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns ExtraSamples tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0152.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extraSamples(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -384,6 +447,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns SampleFormat tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0153.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sampleFormat(): int
     {
@@ -394,6 +459,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns SMinSampleValue tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0154.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sMinSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -403,6 +470,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns SMaxSampleValue tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0155.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sMaxSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -412,6 +481,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns TransferRange tag value.
      * TIFF 6.0 §8: default is [0, NV, 0, NV, 0, NV] where NV = (2^BitsPerSample)-1.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function transferRange(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -435,6 +506,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGProc tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0200.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegProc(): ?int
     {
@@ -444,6 +517,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGRestartInterval tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0203.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegRestartInterval(): ?int
     {
@@ -453,6 +528,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGLosslessPredictors tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0205.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegLosslessPredictors(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -462,6 +539,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGPointTransforms tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0206.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegPointTransforms(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -471,6 +550,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGQTables tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0207.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegQTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -480,6 +561,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGDCTables tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0208.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegDCTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -489,6 +572,8 @@ final readonly class TiffBaselineExifReader
     /**
      * Returns JPEGACTables tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0209.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegACTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
@@ -504,6 +589,8 @@ final readonly class TiffBaselineExifReader
      *
      * Used internally by methods that compute defaults based on bit depth
      * (maxSampleValue, transferFunction, transferRange).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function bitsPerSample(): ?int
     {

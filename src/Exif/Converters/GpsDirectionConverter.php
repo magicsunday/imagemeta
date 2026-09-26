@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
@@ -57,6 +58,8 @@ final readonly class GpsDirectionConverter
      *     dest_bearing_ref: ?string,
      *     dest_bearing: ?float,
      * }
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractFromIfd(Ifd $gps): array
     {
@@ -91,6 +94,8 @@ final readonly class GpsDirectionConverter
      * Resolves a bearing reference/value pair with EXIF defaulting semantics.
      *
      * @return array{0:?string, 1:?float}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function extractBearing(Ifd $gps, int $referenceTag, int $valueTag): array
     {

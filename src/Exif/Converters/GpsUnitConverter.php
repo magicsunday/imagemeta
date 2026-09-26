@@ -11,13 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
-use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
-use MagicSunday\ImageMeta\Exif\Model\ExifRational;
-use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
-use MagicSunday\ImageMeta\Exif\Model\ExifTag;
-use MagicSunday\ImageMeta\Exif\Model\Ifd;
-use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\{ExifNumericList, ExifRational, ExifRationalList, ExifTag, Ifd, IfdEntry};
 use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
 
 use function abs;
@@ -78,6 +74,8 @@ final readonly class GpsUnitConverter
      *     dest_distance_original_ref: ?string,
      *     dest_distance_original: ?float,
      * }
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractFromIfd(Ifd $gps): array
     {
@@ -173,6 +171,8 @@ final readonly class GpsUnitConverter
      *
      * @param string|null                                                                $ref   Speed reference (K, M or N).
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The measured value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function speedToMs(
         ?string $ref,
@@ -193,6 +193,8 @@ final readonly class GpsUnitConverter
      *
      * @param string|null                                                                $ref   Distance reference (K, M or N).
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The measured value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function distanceToMetres(
         ?string $ref,
@@ -209,6 +211,8 @@ final readonly class GpsUnitConverter
      * Normalizes the GPS altitude reference into a valid EXIF 3.0 §4.6.7.1.6 value.
      *
      * @return int|null 0-3 per EXIF 3.0 specification, null when unknown.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function normalizeAltitudeRef(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -287,6 +291,8 @@ final readonly class GpsUnitConverter
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw numeric value.
      *
      * @return array{ref:string, value:float}|null Normalized reference/value pair or null.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function resolveNumericReference(
         ?string $ref,
@@ -322,6 +328,8 @@ final readonly class GpsUnitConverter
      * @param array<string, callable(float): float>                                      $conversions Unit conversion callbacks.
      *
      * @return float|null Converted value or null when conversion fails.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function convertReferencedValue(
         ?string $ref,

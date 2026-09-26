@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Exif\Converters;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -67,6 +68,8 @@ final readonly class GpsTimestampConverter
      *     processing_method: ?string,
      *     area_information: ?string,
      * }
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractFromIfd(Ifd $gps): array
     {
@@ -157,6 +160,8 @@ final readonly class GpsTimestampConverter
      * minutes and seconds.
      *
      * @return array{hours:int, minutes:int, seconds:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseTime(ExifRationalList $value): ?array
     {

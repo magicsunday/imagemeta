@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -48,6 +49,8 @@ final readonly class ExposureParameterReader
      * Returns the exposure time in seconds if available.
      *
      * EXIF 3.0 §4.6.6.7.1 (ExposureTime)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function exposureTime(): ?float
     {
@@ -59,6 +62,8 @@ final readonly class ExposureParameterReader
      *
      * EXIF 3.0 §4.6.6.7.1 (ExposureTime) stores exposure as RATIONAL seconds.
      * Formats short exposures as fractions and longer exposures as decimal seconds.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function exposureTimeFormatted(): ?string
     {
@@ -71,6 +76,8 @@ final readonly class ExposureParameterReader
      * Returns the aperture (f-number) if available.
      *
      * EXIF 3.0 §4.6.6.7.2 (FNumber)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function fNumber(): ?float
     {
@@ -81,6 +88,8 @@ final readonly class ExposureParameterReader
      * Returns the camera exposure program enumeration if present.
      *
      * EXIF 3.0 §4.6.6.7.3 (ExposureProgram)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function exposureProgram(): ?ExposureProgram
     {
@@ -94,6 +103,8 @@ final readonly class ExposureParameterReader
      * Returns the APEX shutter speed value when available.
      *
      * EXIF 3.0 §4.6.6.7.13 (ShutterSpeedValue)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function shutterSpeedValue(): ?float
     {
@@ -102,6 +113,8 @@ final readonly class ExposureParameterReader
 
     /**
      * Returns the shutter speed in seconds derived from the APEX value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function shutterSpeedSeconds(): ?float
     {
@@ -119,6 +132,8 @@ final readonly class ExposureParameterReader
      *
      * EXIF 3.0 §4.6.6.7.13 (ShutterSpeedValue) stores APEX shutter speed.
      * This converts the APEX value to a fraction or decimal seconds format.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function shutterSpeedFormatted(): ?string
     {
@@ -135,6 +150,8 @@ final readonly class ExposureParameterReader
      * Returns the APEX aperture value when present.
      *
      * EXIF 3.0 §4.6.6.7.14 (ApertureValue)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function apertureValue(): ?float
     {
@@ -146,6 +163,8 @@ final readonly class ExposureParameterReader
      *
      * EXIF 3.0 §4.6.6.7.14 (ApertureValue) stores APEX aperture.
      * This converts the APEX value to an f-number display format.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function apertureValueFormatted(): ?string
     {
@@ -162,6 +181,8 @@ final readonly class ExposureParameterReader
      * Returns the scene brightness value (APEX) if present.
      *
      * EXIF 3.0 §4.6.6.7.15 (BrightnessValue)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function brightnessValue(): ?float
     {
@@ -179,6 +200,8 @@ final readonly class ExposureParameterReader
      *
      * EXIF 3.0 §4.6.6.7.15 (BrightnessValue) stores APEX brightness.
      * This converts the APEX value to a simple decimal format like "-2.21".
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function brightnessValueFormatted(): ?string
     {
@@ -195,6 +218,8 @@ final readonly class ExposureParameterReader
      * Returns the exposure bias value in EV if present.
      *
      * EXIF 3.0 §4.6.6.7.16 (ExposureBiasValue)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function exposureBias(): ?float
     {
@@ -206,6 +231,8 @@ final readonly class ExposureParameterReader
      *
      * EXIF 3.0 §4.6.6.7.17 (MaxApertureValue) encodes a single RATIONAL representing
      * the lens's smallest F number expressed as an APEX value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function maxApertureApex(): ?float
     {
@@ -216,6 +243,8 @@ final readonly class ExposureParameterReader
      * Returns the exposure mode enum indicating manual or auto settings.
      *
      * EXIF 3.0 §4.6.6.7.36 (ExposureMode)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function exposureMode(): ?ExposureMode
     {
@@ -229,6 +258,8 @@ final readonly class ExposureParameterReader
      *
      * EXIF 3.0 §4.6.6.7.38 (DigitalZoomRatio)
      * A ratio with a numerator of zero indicates that digital zoom was not used.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function digitalZoomRatio(): ?float
     {
@@ -245,6 +276,8 @@ final readonly class ExposureParameterReader
      * Returns the exposure index value.
      *
      * EXIF 3.0 §4.6.6.7.30 (ExposureIndex)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function exposureIndex(): ?float
     {
@@ -259,6 +292,8 @@ final readonly class ExposureParameterReader
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value.
      *
      * @return bool True when the value is the "unknown" sentinel.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function isUnknownBrightness(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Factory\Structured;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
@@ -38,6 +39,8 @@ final readonly class LensFactory
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
      * @return Lens Normalized lens metadata aggregate.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function create(Metadata $metadata): Lens
     {
@@ -78,6 +81,11 @@ final readonly class LensFactory
         );
     }
 
+    /**
+     * Returns the XMP MaxApertureValue converted from APEX to an f-number, or null when absent.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     private function xmpMaxApertureFNumber(?XmpFallbackResolver $resolver): ?float
     {
         $apex = $resolver?->float(ExifTag::MAX_APERTURE_VALUE);

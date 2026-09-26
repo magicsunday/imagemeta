@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Convenience;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\DateTimeUtil;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -29,6 +30,8 @@ final readonly class CaptureDateResolver
 {
     /**
      * Determines the most precise capture timestamp contained in the metadata.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function bestCaptureDateTime(Metadata $metadata): ?DateTimeImmutable
     {

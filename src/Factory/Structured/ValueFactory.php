@@ -126,6 +126,8 @@ final readonly class ValueFactory
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
      * @return ValueComponents
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function createComponents(Metadata $metadata): array
     {
@@ -338,6 +340,8 @@ final readonly class ValueFactory
      * @param Metadata         $metadata        Source metadata container.
      *
      * @return array{keywords: Keywords, related: RelatedAssets, depthMap: DepthMap, hdrGainMap: HdrGainMap}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function createXmpValues(
         ?XmpDocument $xmpDocument,
@@ -396,6 +400,8 @@ final readonly class ValueFactory
      * Creates thumbnail metadata from EXIF IFD1 entries.
      *
      * @param ParsedExif|null $exifDocument Parsed EXIF document.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function createThumbnail(?ParsedExif $exifDocument): Thumbnail
     {
@@ -418,6 +424,8 @@ final readonly class ValueFactory
      *
      * @param Metadata        $metadata     Source metadata container.
      * @param ParsedExif|null $exifDocument Parsed EXIF document.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function createColorProfile(Metadata $metadata, ?ParsedExif $exifDocument): ValueColorProfile
     {
@@ -448,6 +456,8 @@ final readonly class ValueFactory
      *
      * @param ParsedExif|null  $exifDocument Parsed EXIF document.
      * @param XmpDocument|null $xmpDocument  Parsed XMP document.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function createAuthor(?ParsedExif $exifDocument, ?XmpDocument $xmpDocument): Author
     {
@@ -480,6 +490,8 @@ final readonly class ValueFactory
      *
      * @param ParsedExif|null  $exifDocument Parsed EXIF document.
      * @param XmpDocument|null $xmpDocument  Parsed XMP document.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function createRights(?ParsedExif $exifDocument, ?XmpDocument $xmpDocument): Rights
     {

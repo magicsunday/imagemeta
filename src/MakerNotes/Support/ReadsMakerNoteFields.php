@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\MakerNotes\Support;
 
 use MagicSunday\ImageMeta\Core\Endian;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
 
@@ -26,6 +27,8 @@ trait ReadsMakerNoteFields
 {
     /**
      * Reads an unsigned 16-bit integer using the supplied byte order.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readU16(string $raw, int $offset, Endian $endian, string $context): int
     {
@@ -36,6 +39,8 @@ trait ReadsMakerNoteFields
 
     /**
      * Reads an unsigned 32-bit integer using the supplied byte order.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readU32(string $raw, int $offset, Endian $endian, string $context): int
     {

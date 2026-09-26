@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Exif\Reader;
 
 use Closure;
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -78,6 +79,8 @@ final readonly class TemporalExifReader
      *
      * Returns null when the tag is absent — does not fall back to DateTimeDigitized or DateTime.
      * Use {@see dateTimeOriginalBestEffort()} when a fallback chain is desired.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dateTimeOriginal(): ?DateTimeImmutable
     {
@@ -92,6 +95,8 @@ final readonly class TemporalExifReader
      * Returns the most appropriate capture timestamp prioritising DateTimeOriginal metadata.
      *
      * Fallback chain: DateTimeOriginal (0x9003) → DateTimeDigitized (0x9004) → captureDateTime().
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dateTimeOriginalBestEffort(): ?DateTimeImmutable
     {
@@ -112,6 +117,8 @@ final readonly class TemporalExifReader
 
     /**
      * Returns the fractional seconds associated with DateTimeOriginal.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subSecTimeOriginal(): ?string
     {
@@ -132,6 +139,8 @@ final readonly class TemporalExifReader
 
     /**
      * Returns the fractional seconds for DateTimeDigitized.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subSecTimeDigitized(): ?string
     {
@@ -140,6 +149,8 @@ final readonly class TemporalExifReader
 
     /**
      * Returns the raw ModifyDate (legacy DateTime) tag value from IFD0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dateTimeRaw(): ?string
     {
@@ -148,6 +159,8 @@ final readonly class TemporalExifReader
 
     /**
      * Returns the fractional seconds for the ModifyDate/DateTime tag.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subSecTime(): ?string
     {
@@ -192,6 +205,8 @@ final readonly class TemporalExifReader
      *
      * EXIF DateTime* values without OffsetTime* remain local/offset-unknown and
      * are therefore not converted into an absolute instant here.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function captureDateTime(): ?DateTimeImmutable
     {
@@ -230,6 +245,8 @@ final readonly class TemporalExifReader
 
     /**
      * Returns the digitised timestamp combining the raw value and offset tags.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dateTimeDigitized(): ?DateTimeImmutable
     {
@@ -245,6 +262,8 @@ final readonly class TemporalExifReader
      *
      * EXIF 3.0 §4.6.5.4.5 defines DateTime as "YYYY:MM:DD HH:MM:SS" with
      * blank-filled placeholders treated as unknown values.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dateTime(): ?DateTimeImmutable
     {
@@ -368,6 +387,8 @@ final readonly class TemporalExifReader
 
     /**
      * Normalizes textual and numeric offset encodings to a canonical string representation.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function normalizedOffset(?Ifd $ifd, int $tag): ?string
     {

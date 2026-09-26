@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -53,6 +54,8 @@ final readonly class ComponentsConverter
      * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value.
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function configuration(
         array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
@@ -76,6 +79,8 @@ final readonly class ComponentsConverter
      * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value.
      *
      * @return list<string>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function configurationLabels(
         array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
@@ -114,6 +119,8 @@ final readonly class ComponentsConverter
      * Returns a human readable description for the components configuration.
      *
      * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function configurationDescription(
         array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,

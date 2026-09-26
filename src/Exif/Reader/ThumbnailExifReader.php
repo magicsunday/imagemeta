@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
@@ -42,6 +43,8 @@ final readonly class ThumbnailExifReader
      * EXIF 3.0 §4.6.5.1.6 describes the JPEG thumbnail tags and requires both
      * offset and length to be populated for a valid embedded thumbnail.
      * EXIF 3.0 §4.6.5.1.4 requires Compression value 6 (JPEG) for JPEG thumbnails.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function hasThumbnail(): bool
     {
@@ -65,6 +68,8 @@ final readonly class ThumbnailExifReader
      *
      * EXIF 3.0 §4.6.5.2.4 documents JPEGInterchangeFormat as the byte offset to embedded
      * JPEG thumbnails stored in IFD1 (the first IFD after IFD0).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailJpegInterchangeFormat(): ?int
     {
@@ -76,6 +81,8 @@ final readonly class ThumbnailExifReader
      *
      * EXIF 3.0 §4.6.5.1.6 (Table 3) defines JPEGInterchangeFormatLength as the size in bytes
      * of the JPEG thumbnail stream in IFD1.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailJpegInterchangeFormatLength(): ?int
     {
@@ -87,6 +94,8 @@ final readonly class ThumbnailExifReader
      *
      * EXIF 3.0 §4.6.5.1.4 defines Compression value 6 to designate JPEG-compressed
      * thumbnails stored in IFD1.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailCompression(): ?Compression
     {
@@ -97,6 +106,8 @@ final readonly class ThumbnailExifReader
      * Returns the tile width defined for the thumbnail image data (IFD1).
      *
      * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileWidth for tiled image storage.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailTileWidth(): ?int
     {
@@ -107,6 +118,8 @@ final readonly class ThumbnailExifReader
      * Returns the tile length defined for the thumbnail image data (IFD1).
      *
      * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileLength for tiled image storage.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailTileLength(): ?int
     {
@@ -119,6 +132,8 @@ final readonly class ThumbnailExifReader
      * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailTileOffsets(): ?array
     {
@@ -131,6 +146,8 @@ final readonly class ThumbnailExifReader
      * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailTileByteCounts(): ?array
     {
@@ -144,6 +161,8 @@ final readonly class ThumbnailExifReader
      * the tag to be omitted for JPEG-compressed data.
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailStripOffsets(): ?array
     {
@@ -161,6 +180,8 @@ final readonly class ThumbnailExifReader
      * the tag to be omitted for JPEG-compressed data.
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailStripByteCounts(): ?array
     {

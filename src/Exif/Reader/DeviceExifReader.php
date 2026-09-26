@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
 use MagicSunday\ImageMeta\Core\Endian;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\ExifConst;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -83,6 +84,8 @@ final readonly class DeviceExifReader
      *
      * EXIF 3.0 §4.6.6.8.2 (Temperature, 0x9400) stores an SRATIONAL in °C with
      * a denominator of 0xFFFFFFFF indicating an unknown value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function temperatureCelsius(): ?float
     {
@@ -94,6 +97,8 @@ final readonly class DeviceExifReader
      *
      * EXIF 3.0 §4.6.6.8.3 (Humidity, 0x9401) stores a RATIONAL in % with
      * denominator 0xFFFFFFFF meaning the humidity is unknown.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function humidityPercent(): ?float
     {
@@ -105,6 +110,8 @@ final readonly class DeviceExifReader
      *
      * EXIF 3.0 §4.6.6.8.4 (Pressure, 0x9402) stores a RATIONAL in hPa and
      * uses 0xFFFFFFFF as denominator to express unknown values.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function pressureHPa(): ?float
     {
@@ -118,6 +125,8 @@ final readonly class DeviceExifReader
      * water surface, stored as SRATIONAL in metres with 0xFFFFFFFF indicating unknown.
      *
      * @return float|null Water depth in metres, or null if not present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function waterDepthMeters(): ?float
     {
@@ -132,6 +141,8 @@ final readonly class DeviceExifReader
      * 0xFFFFFFFF marks an unknown component.
      *
      * @return array{0:float,1:float,2:float}|null Three-component acceleration vector, or null if not present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function accelerationVector(): ?array
     {
@@ -165,6 +176,8 @@ final readonly class DeviceExifReader
      * denominator of 0xFFFFFFFF are treated as unknown and produce null.
      *
      * @return float|null Acceleration magnitude in m/s², or null if not present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function accelerationMs2(): ?float
     {
@@ -207,6 +220,8 @@ final readonly class DeviceExifReader
      * Positive values indicate upward tilt, negative values indicate downward tilt.
      *
      * @return float|null Elevation angle in degrees, or null if not present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cameraElevationAngleDeg(): ?float
     {
@@ -218,6 +233,8 @@ final readonly class DeviceExifReader
      *
      * EXIF 3.0 §4.6.6.9.11 captures the camera firmware name/version in ASCII or UTF-8
      * and expects the Software tag to be present alongside it.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cameraFirmware(): ?string
     {
@@ -229,6 +246,8 @@ final readonly class DeviceExifReader
      *
      * EXIF 3.0 §4.6.6.9.12 stores RAWDevelopingSoftware to document the RAW
      * processor and requires Software to be recorded too.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function rawDevelopingSoftware(): ?string
     {
@@ -240,6 +259,8 @@ final readonly class DeviceExifReader
      *
      * EXIF 3.0 §4.6.6.9.13 lists the primary image editing software and expects
      * the Software tag to accompany it.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageEditingSoftware(): ?string
     {
@@ -251,6 +272,8 @@ final readonly class DeviceExifReader
      *
      * EXIF 3.0 §4.6.6.9.14 records the tool used to edit metadata without changing
      * pixels and likewise expects Software to be filled.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function metadataEditingSoftware(): ?string
     {
@@ -259,6 +282,8 @@ final readonly class DeviceExifReader
 
     /**
      * Returns a rational or numeric entry converted to float, preferring GPS data when available.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function rationalFromGpsOrExif(int $tag): ?float
     {
@@ -277,6 +302,8 @@ final readonly class DeviceExifReader
 
     /**
      * Retrieves a raw entry value preferring the GPS IFD before falling back to the EXIF IFD.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function valueFromGpsOrExif(int $tag): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {

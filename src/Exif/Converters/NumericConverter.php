@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
 use Closure;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -49,6 +50,8 @@ final readonly class NumericConverter
 
     /**
      * Normalizes a numeric component from a rational pair.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function normalizeComponent(int|float|string|UInt64 $component): ?float
     {
@@ -75,6 +78,8 @@ final readonly class NumericConverter
      * Converts an unsigned 64-bit value into a signed integer when possible.
      *
      * BigTIFF uses LONG8 (64-bit) types for offset and count fields.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function uint64ToInt(UInt64 $value, string $context): ?int
     {
@@ -91,6 +96,8 @@ final readonly class NumericConverter
      * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value.
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function toIntList(
         array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,

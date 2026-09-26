@@ -43,6 +43,8 @@ final readonly class KeyedArchiveResolver
      * @return NativePlistValue
      *
      * @phpstan-return NativePlistValue
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function decodeBinaryPropertyList(string $raw): array|string|int|float|bool|null
     {
@@ -113,6 +115,8 @@ final readonly class KeyedArchiveResolver
      * @return NativePlistValue
      *
      * @phpstan-return NativePlistValue
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function plistValueToPhp(ApplePlistValueInterface $value): array|string|int|float|bool|null
     {
@@ -134,9 +138,13 @@ final readonly class KeyedArchiveResolver
     }
 
     /**
+     * Converts a decoded native plist value into its plist value object, recursing into arrays and dictionaries.
+     *
      * @param NativePlistValue $value
      *
      * @phpstan-param NativePlistValue $value
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function nativeToPlistValue(array|bool|float|int|string|null $value): ApplePlistValueInterface
     {

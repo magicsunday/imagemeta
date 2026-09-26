@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Model;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 
@@ -73,6 +74,8 @@ final readonly class IfdValueReader
      * @param int      $tag Tag identifier.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null Normalized value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function normalizedValue(
         ?Ifd $ifd,
@@ -89,6 +92,8 @@ final readonly class IfdValueReader
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw value.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null Normalized value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function normalizeScalarValue(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -139,6 +144,8 @@ final readonly class IfdValueReader
      * @param int      $tag Tag identifier.
      *
      * @return string|null Normalized string or null.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function str(?Ifd $ifd, int $tag): ?string
     {
@@ -167,6 +174,8 @@ final readonly class IfdValueReader
 
     /**
      * Returns an integer value from the given IFD if present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function int(?Ifd $ifd, int $tag): ?int
     {
@@ -177,6 +186,8 @@ final readonly class IfdValueReader
 
     /**
      * Returns a rational or numeric value converted to float if present in the given IFD.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function rational(?Ifd $ifd, int $tag): ?float
     {
@@ -206,6 +217,8 @@ final readonly class IfdValueReader
      * @param int      $tag Tag identifier.
      *
      * @return int|string|null Normalized enum scalar.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function enumValue(?Ifd $ifd, int $tag): int|string|null
     {
@@ -220,6 +233,8 @@ final readonly class IfdValueReader
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw value.
      *
      * @return int|string|null Enum-compatible scalar value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function normalizeEnumScalar(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -282,6 +297,8 @@ final readonly class IfdValueReader
      * Converts a numeric list or undefined string into a list of integers.
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function numericList(?Ifd $ifd, int $tag): ?array
     {
@@ -322,6 +339,8 @@ final readonly class IfdValueReader
      * Converts rational or numeric list values into floating point lists.
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function rationalList(?Ifd $ifd, int $tag): ?array
     {
@@ -378,6 +397,8 @@ final readonly class IfdValueReader
 
     /**
      * Coerces a raw EXIF scalar value into an integer when possible.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function coerceIntValue(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -444,6 +465,8 @@ final readonly class IfdValueReader
      * @param int      $tag Tag number to retrieve.
      *
      * @return array<int, int|float|string>|int|string|null Components input value or null if not found.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function componentsInput(?Ifd $ifd, int $tag): array|int|string|null
     {
@@ -520,6 +543,8 @@ final readonly class IfdValueReader
      *
      * @param Ifd|null $ifd IFD that may contain the DNG version tag.
      * @param int      $tag DNG tag identifier for the requested version field.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngVersionTag(?Ifd $ifd, int $tag): ?string
     {
@@ -558,6 +583,8 @@ final readonly class IfdValueReader
 
     /**
      * Returns sanitized sub-second components limited to microsecond precision.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sanitizedSubSec(?Ifd $ifd, int $tag): ?string
     {

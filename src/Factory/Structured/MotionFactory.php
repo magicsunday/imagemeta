@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Factory\Structured;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -30,6 +31,8 @@ final readonly class MotionFactory
      * @param AppleMakerNotes $apple    Pre-resolved Apple maker note metadata.
      *
      * @return Motion Motion metadata aggregate with camera orientation and per-axis acceleration.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function create(Metadata $metadata, AppleMakerNotes $apple): Motion
     {
@@ -43,6 +46,8 @@ final readonly class MotionFactory
      * @param AppleMakerNotes $apple        Aggregated Apple metadata composed from maker notes and QuickTime sources.
      *
      * @return Motion Motion metadata aggregate with camera orientation and per-axis acceleration.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function buildMotion(?ParsedExif $exifDocument, AppleMakerNotes $apple): Motion
     {

@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Convenience;
 
 use MagicSunday\ImageMeta\Contract\TiffExifParserInterface;
+use MagicSunday\ImageMeta\Core\BoundsError;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Value\StructuredMetadata;
 
@@ -39,6 +41,9 @@ final readonly class ExifReader
      * @param string $path Absolute or relative path to the media file that should be parsed.
      *
      * @return StructuredMetadata Immutable aggregate exposing the normalized metadata slices.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function read(string $path): StructuredMetadata
     {

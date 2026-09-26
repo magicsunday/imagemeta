@@ -34,6 +34,8 @@ final readonly class MakerNotesRecord
      * @param SamsungMakerNotes|null $samsung Additional Samsung specific maker note data.
      * @param DjiMakerNotes|null     $dji     Additional DJI specific maker note data.
      * @param bool|null              $safe    DNG MakerNoteSafety flag (true=safe, false=unsafe, null=absent).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function from(
         string $vendor,
@@ -47,6 +49,8 @@ final readonly class MakerNotesRecord
     }
 
     /**
+     * Creates a maker-note record and validates its vendor, payload length and SHA-1 digest.
+     *
      * @param string                 $vendor  Vendor responsible for the maker note payload. Must not be empty.
      * @param int                    $length  Number of bytes contained in the payload. Must be zero or positive.
      * @param string                 $sha1    Lowercase hexadecimal SHA-1 digest of the payload. Must be 40 characters long.
@@ -54,6 +58,8 @@ final readonly class MakerNotesRecord
      * @param SamsungMakerNotes|null $samsung Additional Samsung specific maker note data.
      * @param DjiMakerNotes|null     $dji     Additional DJI specific maker note data.
      * @param bool|null              $safe    DNG MakerNoteSafety flag (true=safe, false=unsafe, null=absent).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function __construct(
         public string $vendor,

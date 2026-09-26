@@ -51,6 +51,8 @@ final class Stream implements BinaryReadAccessInterface
      * Opens the given path for binary reading and wraps it in a stream instance.
      *
      * @param string $path Absolute or relative file system path to open.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function fromPath(string $path): self
     {
@@ -103,6 +105,9 @@ final class Stream implements BinaryReadAccessInterface
 
     /**
      * Reads a fixed number of bytes from the stream, advancing the cursor.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function read(int|UInt64 $length): string
     {
@@ -129,6 +134,8 @@ final class Stream implements BinaryReadAccessInterface
 
     /**
      * Creates a bounded view into this stream without copying bytes.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function window(int $offset, int $length): StreamWindow
     {
@@ -172,6 +179,9 @@ final class Stream implements BinaryReadAccessInterface
      *
      * @param int|UInt64 $offset Offset to seek to.
      * @param int        $whence Seek origin constant.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     protected function seekInternal(int|UInt64 $offset, int $whence): void
     {

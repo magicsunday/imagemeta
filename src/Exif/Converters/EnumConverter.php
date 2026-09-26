@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
 use BackedEnum;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
@@ -83,6 +84,8 @@ final readonly class EnumConverter
      * EXIF 3.0 §4.6.8 (MakerNoteSafety).
      *
      * @param ExifNumericList|ExifRationalList|ExifRational|int|float|string|null $value Raw value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function makerNoteSafety(
         ExifNumericList|ExifRationalList|ExifRational|int|float|string|null $value,

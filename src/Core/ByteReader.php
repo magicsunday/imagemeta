@@ -38,6 +38,9 @@ final readonly class ByteReader
 
     /**
      * Reads an unsigned 8-bit integer.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readU8(): int
     {
@@ -48,6 +51,9 @@ final readonly class ByteReader
 
     /**
      * Reads an unsigned 16-bit big-endian integer.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readU16BE(): int
     {
@@ -56,6 +62,9 @@ final readonly class ByteReader
 
     /**
      * Reads an unsigned 16-bit little-endian integer.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readU16LE(): int
     {
@@ -64,6 +73,9 @@ final readonly class ByteReader
 
     /**
      * Reads an unsigned 32-bit big-endian integer.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readU32BE(): int
     {
@@ -72,6 +84,9 @@ final readonly class ByteReader
 
     /**
      * Reads an unsigned 32-bit little-endian integer.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readU32LE(): int
     {
@@ -80,6 +95,9 @@ final readonly class ByteReader
 
     /**
      * Reads an unsigned 64-bit big-endian integer.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readU64BE(): UInt64
     {
@@ -91,6 +109,9 @@ final readonly class ByteReader
 
     /**
      * Reads an unsigned 64-bit little-endian integer.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readU64LE(): UInt64
     {
@@ -102,6 +123,9 @@ final readonly class ByteReader
 
     /**
      * Reads bytes and unpacks the first value according to the provided format.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function unpackInt(string $format, int $length): int
     {
