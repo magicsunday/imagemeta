@@ -36,6 +36,8 @@ final readonly class TiffSampleValidator
     }
 
     /**
+     * Validates the MinSampleValue and MaxSampleValue tags against the samples per pixel.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateMinMaxSampleValueTags(Ifd $ifd): void
@@ -168,6 +170,8 @@ final readonly class TiffSampleValidator
     }
 
     /**
+     * Validates the SampleFormat, SMinSampleValue and SMaxSampleValue tags and their consistency.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateSampleDomainTags(Ifd $ifd): void
@@ -372,6 +376,8 @@ final readonly class TiffSampleValidator
     }
 
     /**
+     * Asserts that an SMinSampleValue or SMaxSampleValue field type matches the declared SampleFormat values.
+     *
      * @param list<int> $sampleFormats
      *
      * @throws ParseError If the input is malformed or inconsistent.

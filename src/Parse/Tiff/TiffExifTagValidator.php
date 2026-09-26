@@ -270,6 +270,8 @@ final readonly class TiffExifTagValidator
     }
 
     /**
+     * Asserts that a MakerNoteSafety value lies in the DNG domain {0, 1}.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     private function assertMakerNoteSafetyDomain(int $value): void
@@ -283,6 +285,8 @@ final readonly class TiffExifTagValidator
     }
 
     /**
+     * Asserts that a Predictor value lies in the TIFF 6.0 domain {1, 2}.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     private function assertPredictorDomain(int $value): void

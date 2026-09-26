@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -91,7 +92,8 @@ final readonly class DngValidator
      *
      * @param list<Ifd> $additionalIfds Additional IFDs for cross-IFD validation.
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function validateIfd0(Ifd $ifd0, array $additionalIfds): void
     {

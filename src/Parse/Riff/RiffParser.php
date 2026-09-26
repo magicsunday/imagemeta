@@ -83,6 +83,8 @@ final class RiffParser implements RiffParserInterface
     }
 
     /**
+     * Walks the top-level chunks of the RIFF container and extracts its metadata.
+     *
      * @throws ParseError  If the input is malformed or inconsistent.
      * @throws BoundsError If a read reaches outside the declared byte range.
      */

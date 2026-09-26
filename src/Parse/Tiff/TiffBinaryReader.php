@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\BitMask;
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
@@ -46,7 +47,8 @@ final readonly class TiffBinaryReader
     /**
      * Reads an unsigned 16-bit integer using the file byte order.
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readU16(): int
     {
@@ -56,7 +58,8 @@ final readonly class TiffBinaryReader
     /**
      * Reads an unsigned 32-bit integer using the file byte order.
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readU32(): int
     {
@@ -66,7 +69,8 @@ final readonly class TiffBinaryReader
     /**
      * Reads an unsigned 64-bit integer using the file byte order.
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readU64(): UInt64
     {
@@ -80,7 +84,8 @@ final readonly class TiffBinaryReader
      *
      * @return array{0: int|UInt64|string, 1: string|null}
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readValueOrOffset(int $valueBytes): array
     {
@@ -107,6 +112,9 @@ final readonly class TiffBinaryReader
      *
      * @param int $offset Byte offset to read from.
      * @param int $length Number of bytes to read.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readAt(int $offset, int $length): string
     {
