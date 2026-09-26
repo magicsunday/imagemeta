@@ -144,9 +144,7 @@ final readonly class TemporalFactory
         $subSecTimeDigitized = $this->sanitizeSubSeconds($exifDocument?->subSecTimeDigitized());
         $subSecOriginal      = $this->sanitizeSubSeconds($subOriginalRaw);
 
-        if ($subSecTime === null) {
-            $subSecTime = $subSecOriginal ?? $subSecTimeDigitized;
-        }
+        $subSecTime ??= $subSecOriginal ?? $subSecTimeDigitized;
 
         $tzSource = null;
 

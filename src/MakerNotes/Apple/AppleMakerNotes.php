@@ -21,19 +21,17 @@ final readonly class AppleMakerNotes
         /** @var self|null $empty */
         static $empty = null;
 
-        if ($empty === null) {
-            $empty = new self(
-                identity: null,
-                hdr: null,
-                autoExposure: null,
-                autoFocus: null,
-                noise: null,
-                semanticStyle: null,
-                livePhoto: null,
-                camera: null,
-                flags: [],
-            );
-        }
+        $empty ??= new self(
+            identity: null,
+            hdr: null,
+            autoExposure: null,
+            autoFocus: null,
+            noise: null,
+            semanticStyle: null,
+            livePhoto: null,
+            camera: null,
+            flags: [],
+        );
 
         return $empty;
     }

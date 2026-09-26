@@ -87,9 +87,7 @@ final class AppleMakerNotesMerger
 
         $imageCaptureRequestId = $makerNotes?->identity?->imageCaptureRequestId;
 
-        if ($imageCaptureRequestId === null) {
-            $imageCaptureRequestId = $lookup->string('ImageCaptureRequestID');
-        }
+        $imageCaptureRequestId ??= $lookup->string('ImageCaptureRequestID');
 
         $burstUuid       = $this->preferMakerString($makerNotes?->identity?->burstUuid, $lookup, 'BurstUUID');
         $imageUniqueId   = $this->preferMakerString($makerNotes?->identity?->imageUniqueId, $lookup, 'ImageUniqueID');
@@ -106,9 +104,7 @@ final class AppleMakerNotesMerger
 
         $focusDistanceRange = $makerNotes?->autoFocus?->focusDistanceRange;
 
-        if ($focusDistanceRange === null) {
-            $focusDistanceRange = $this->quickTimeFocusDistanceRange($lookup);
-        }
+        $focusDistanceRange ??= $this->quickTimeFocusDistanceRange($lookup);
 
         $afMeasuredDepth = $this->preferMakerFloat($makerNotes?->autoFocus?->measuredDepth, $lookup, 'AFMeasuredDepth');
         $afConfidence    = $this->preferMakerFloat($makerNotes?->autoFocus?->confidence, $lookup, 'AFConfidence');
