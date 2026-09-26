@@ -580,7 +580,8 @@ final readonly class TrackMediaParser
      *
      * @return list<int>
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function readMatrixRaw(StreamWindow $win): array
     {

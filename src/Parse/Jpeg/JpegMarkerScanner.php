@@ -106,7 +106,8 @@ final readonly class JpegMarkerScanner
      * @param int  $offset     Offset in the stream where the marker begins.
      * @param bool $enforceMax Whether to enforce the APP segment size guard.
      *
-     * @throws ParseError When the segment length is invalid or exceeds the configured limit.
+     * @throws ParseError  When the segment length is invalid or exceeds the configured limit.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readSegmentLength(int $marker, int $offset, bool $enforceMax): int
     {

@@ -101,7 +101,8 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      *
      * @return int unsigned 16-bit integer
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readU16LE(): int
     {
@@ -113,7 +114,8 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      *
      * @return int unsigned 32-bit integer
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readU32LE(): int
     {
@@ -125,7 +127,8 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      *
      * @return UInt64 unsigned 64-bit integer
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readU64LE(): UInt64
     {

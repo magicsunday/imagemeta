@@ -24,11 +24,3 @@ parameters:
             identifier: missingType.checkedException
             path: %currentWorkingDirectory%/tests/*
 
-        # Stream delegates its primitive reads to ByteReader, which pulls the bytes through a
-        # closure over Stream::read(). PHPStan cannot see through the closure, so
-        # ByteReader::readU64BE() declares only ParseError, although a truncated stream throws
-        # BoundsError at runtime; the catch in looksLikeIsoBmff() is reached.
-        -
-            identifier: catch.neverThrown
-            message: '#^Dead catch - MagicSunday\\ImageMeta\\Core\\BoundsError is never thrown in the try block\.$#'
-            path: %currentWorkingDirectory%/src/Detect/FormatDetector.php

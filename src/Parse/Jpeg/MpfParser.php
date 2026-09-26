@@ -407,7 +407,8 @@ final class MpfParser
      *
      * @phpstan-return MpfValue
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function decodeValue(
         int $type,
@@ -506,7 +507,8 @@ final class MpfParser
      *
      * @return list<MpfEntry>
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseEntries(string $data, Endian $endian): array
     {
@@ -651,7 +653,8 @@ final class MpfParser
      *
      * @return int Unsigned 16-bit integer.
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function readU16(MemoryBuffer $buffer, Endian $endian): int
     {
@@ -666,7 +669,8 @@ final class MpfParser
      *
      * @return int Unsigned 32-bit integer.
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function readU32(MemoryBuffer $buffer, Endian $endian): int
     {
