@@ -56,7 +56,7 @@
         "ext-xmlreader": "*"
     },
     "require-dev": {
-        "infection/infection": "^0.32 || ^0.34",
+        "infection/infection": "^0.32 || ^0.34 || ^0.35",
         "magicsunday/coding-standard": "^2.1",
         "phpdocumentor/reflection-docblock": "^6.0"
     },
