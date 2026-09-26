@@ -49,6 +49,8 @@ final readonly class MakerNotesRecord
     }
 
     /**
+     * Creates a maker-note record and validates its vendor, payload length and SHA-1 digest.
+     *
      * @param string                 $vendor  Vendor responsible for the maker note payload. Must not be empty.
      * @param int                    $length  Number of bytes contained in the payload. Must be zero or positive.
      * @param string                 $sha1    Lowercase hexadecimal SHA-1 digest of the payload. Must be 40 characters long.
