@@ -42,6 +42,8 @@ use MagicSunday\ImageMeta\Factory\Structured\TemporalFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
+use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfo;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
@@ -100,6 +102,8 @@ use function strlen;
 #[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(Temporal::class)]
+#[UsesClass(NikonAviLookup::class)]
+#[UsesClass(OlympusAviLookup::class)]
 final class TemporalFactoryTest extends TestCase
 {
     #[Test]

@@ -64,6 +64,8 @@ use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
+use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
+use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
@@ -321,6 +323,8 @@ use function unlink;
 #[UsesClass(XmpSegmentHandler::class)]
 #[UsesClass(DepthMap::class)]
 #[UsesClass(HdrGainMap::class)]
+#[UsesClass(NikonAviLookup::class)]
+#[UsesClass(OlympusAviLookup::class)]
 final class IptcIntegrationTest extends TestCase
 {
     private const int MARKER_APP13 = 0xED;
