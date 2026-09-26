@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function is_array;
@@ -114,6 +115,8 @@ final readonly class AppleJpegIfdParser
      * @param string $raw Raw maker note payload bytes.
      *
      * @return array<string, IfdTagValue>|null Dictionary for AppleMakerNotesBuilder or null when unrecognized.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function parse(string $raw): ?array
     {
@@ -151,6 +154,8 @@ final readonly class AppleJpegIfdParser
      * Reads a single TIFF IFD and returns a dictionary of known tag values.
      *
      * @return array<string, IfdTagValue>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readIfd(string $raw, int $tiffBase, int $ifdStart, string $u16Fmt, string $u32Fmt): ?array
     {
@@ -190,6 +195,8 @@ final readonly class AppleJpegIfdParser
      * Reads one 12-byte IFD entry and returns a [key, value] pair for known tags.
      *
      * @return array{0: string, 1: IfdTagValue}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function convertEntry(string $raw, int $tiffBase, int $offset, string $u16Fmt, string $u32Fmt): ?array
     {
@@ -213,6 +220,8 @@ final readonly class AppleJpegIfdParser
      * Decodes the value for a single IFD entry based on its TIFF type.
      *
      * @return IfdTagValue|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeTagValue(
         string $raw,
@@ -240,6 +249,8 @@ final readonly class AppleJpegIfdParser
      * For count>1 the value field is an offset to out-of-line data.
      *
      * @return int|string|list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeSLongTag(
         string $raw,
@@ -278,6 +289,8 @@ final readonly class AppleJpegIfdParser
      * Decodes a LONG8 tag (type 16, 8 bytes per component, count=1 expected).
      *
      * The 4-byte value field contains an offset to the 8-byte value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeLong8Tag(string $raw, int $tiffBase, int $count, string $valueField, string $u32Fmt): ?int
     {
@@ -301,6 +314,8 @@ final readonly class AppleJpegIfdParser
      * Decodes an SRATIONAL tag (type 10, 8 bytes per component).
      *
      * @return float|list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeSRationalTag(
         string $raw,
@@ -325,6 +340,8 @@ final readonly class AppleJpegIfdParser
 
     /**
      * Decodes an ASCII tag (type 2, 1 byte per component).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeAsciiTag(
         string $raw,
@@ -354,6 +371,8 @@ final readonly class AppleJpegIfdParser
      * For the RunTime tag (0x0003), attempts binary plist decoding.
      *
      * @return NativePlistDictionary|string|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeUndefinedTag(
         string $raw,
@@ -387,6 +406,8 @@ final readonly class AppleJpegIfdParser
 
     /**
      * Resolves data bytes for an IFD entry, either inline or from an offset.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function resolveData(string $raw, int $tiffBase, int $dataBytes, string $valueField, string $u32Fmt): ?string
     {
@@ -406,6 +427,8 @@ final readonly class AppleJpegIfdParser
 
     /**
      * Decodes a single SRATIONAL (two signed 32-bit integers: numerator/denominator).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeSingleSRational(string $data, string $u32Fmt): ?float
     {
@@ -423,6 +446,8 @@ final readonly class AppleJpegIfdParser
      * Decodes multiple SRATIONALs into a list of floats, skipping entries with zero denominator.
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeSRationalList(string $data, int $count, string $u32Fmt): ?array
     {

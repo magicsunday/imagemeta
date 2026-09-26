@@ -122,6 +122,8 @@ final readonly class IccHeaderDecoder
      * @param string $data Raw ICC profile payload.
      *
      * @return string Rendering intent description.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractRenderingIntent(string $data): string
     {
@@ -174,6 +176,8 @@ final readonly class IccHeaderDecoder
      * @param string $data Raw ICC profile payload.
      *
      * @return string|null Formatted UTC timestamp without suffix or null when unavailable/invalid.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractProfileDateTime(string $data): ?string
     {
@@ -211,6 +215,8 @@ final readonly class IccHeaderDecoder
      * @param string $data Raw ICC profile payload.
      *
      * @return array{x: float, y: float, z: float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractIlluminant(string $data): ?array
     {

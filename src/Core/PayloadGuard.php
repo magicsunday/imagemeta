@@ -63,6 +63,8 @@ final class PayloadGuard
      * @param int    $sigCode     Error code for invalid TIFF signature.
      *
      * @return string Exif payload trimmed to the TIFF header.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function normalizeExifBlob(
         string $blob,

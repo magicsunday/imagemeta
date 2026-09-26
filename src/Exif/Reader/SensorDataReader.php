@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
 use MagicSunday\ImageMeta\Core\Endian;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -57,6 +58,8 @@ final readonly class SensorDataReader
      *
      * EXIF 3.0 §4.6.6.7.47 defines the CompositeImage tag with four enumerated
      * states, reserving all others.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function compositeImage(): ?CompositeImage
     {
@@ -74,6 +77,8 @@ final readonly class SensorDataReader
      * least two and the used count cannot exceed the captured total.
      *
      * @return array{0:int,1:int}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sourceImageNumberOfCompositeImage(): ?array
     {
@@ -102,6 +107,8 @@ final readonly class SensorDataReader
      * EXIF 3.0 §4.6.6.7.49 Figure 25 stores eight summary RATIONAL values
      * followed by one or more sequences of SHORT counts and RATIONAL exposure
      * times representing the contributing source images.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sourceExposureTimesOfCompositeImage(): ?SourceExposureTimes
     {
@@ -167,6 +174,8 @@ final readonly class SensorDataReader
      * Parses the binary layout defined for SourceExposureTimesOfCompositeImage.
      *
      * @param string $payload Raw tag payload stored as an UNDEFINED value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeSourceExposureTimes(string $payload): ?SourceExposureTimes
     {
@@ -253,6 +262,8 @@ final readonly class SensorDataReader
      * @param int    $offset  Offset within the payload.
      *
      * @return int|null Decoded value or null when out of range.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeShort(string $payload, int $offset): ?int
     {
@@ -271,6 +282,8 @@ final readonly class SensorDataReader
      * @param string $bytes Raw 8-byte rational value.
      *
      * @return float|null Decoded float value or null when invalid.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeRationalFromBytes(string $bytes): ?float
     {

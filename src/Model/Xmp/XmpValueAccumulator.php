@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Xmp;
 
+use MagicSunday\ImageMeta\Core\ParseError;
+
 use function array_key_exists;
 use function is_array;
 
@@ -29,6 +31,8 @@ final class XmpValueAccumulator
      * @param array<int, string>|string|XmpLanguageAlternative                $value
      *
      * @return array<string, string|array<int, string>|XmpLanguageAlternative>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function merge(array $data, string $key, array|string|XmpLanguageAlternative $value): array
     {
@@ -76,6 +80,8 @@ final class XmpValueAccumulator
     /**
      * @param array<int, string>|string|XmpLanguageAlternative $existing
      * @param array<int, string>|string|XmpLanguageAlternative $value
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private static function mergeLanguageAlternatives(
         array|string|XmpLanguageAlternative $existing,

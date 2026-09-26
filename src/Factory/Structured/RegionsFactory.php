@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Factory\Structured;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
@@ -49,6 +50,8 @@ final readonly class RegionsFactory
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
      * @return RegionCollection Regions metadata aggregate with face and region detection data.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function create(Metadata $metadata): RegionCollection
     {

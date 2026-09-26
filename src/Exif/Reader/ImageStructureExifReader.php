@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
@@ -55,6 +56,8 @@ final readonly class ImageStructureExifReader
      * JPEG primary images per EXIF 3.0 §4.6.5.1.4), PixelXDimension
      * takes priority so the defaulted UNCOMPRESSED value does not
      * suppress dimension tags that are actually present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageWidth(): ?int
     {
@@ -77,6 +80,8 @@ final readonly class ImageStructureExifReader
      *
      * Prefers PixelYDimension from the Exif IFD when present (EXIF 3.0
      * §4.6.6.3.2), falling back to ImageLength from IFD0 (TIFF 6.0 §8).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageHeight(): ?int
     {
@@ -99,6 +104,8 @@ final readonly class ImageStructureExifReader
      * EXIF 3.0 §4.6.5.1.2 ImageLength — Tag 0x0101, type SHORT or LONG, count 1; no default; not used for JPEG compressed data.
      *
      * @return int|null Image height in pixels
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageLength(): ?int
     {
@@ -110,6 +117,8 @@ final readonly class ImageStructureExifReader
      * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0xA002 PixelXDimension.
      *
      * @return int|null Image width in pixels
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function pixelXDimension(): ?int
     {
@@ -121,6 +130,8 @@ final readonly class ImageStructureExifReader
      * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0xA003 PixelYDimension.
      *
      * @return int|null Image height in pixels
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function pixelYDimension(): ?int
     {
@@ -134,6 +145,8 @@ final readonly class ImageStructureExifReader
      * Returns the EXIF orientation enumeration.
      *
      * TIFF 6.0 §8 and EXIF 3.0 §4.6.5.1.6 specify default value 1 (top-left) when not present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function orientation(): Orientation
     {
@@ -150,6 +163,8 @@ final readonly class ImageStructureExifReader
      * EXIF 3.0 §4.6.5.1.6 defines eight orientation states. This method
      * returns descriptions like "Rotate 180", "Rotate 90 CW", or
      * "Mirror horizontal" as commonly displayed by ExifTool.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function orientationDescription(): string
     {
@@ -169,6 +184,8 @@ final readonly class ImageStructureExifReader
      * Returns UNCOMPRESSED when the tag is absent (TIFF default), the resolved
      * enum case when the tag value is recognised, or null when the tag is
      * present but carries an unsupported code.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function compression(): ?Compression
     {
@@ -186,6 +203,8 @@ final readonly class ImageStructureExifReader
      *
      * EXIF 3.0 §4.6.6.3.4 defines this rational value for compressed imagery to indicate
      * the effective compression mode.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function compressedBitsPerPixel(): ?float
     {
@@ -201,6 +220,8 @@ final readonly class ImageStructureExifReader
      *
      * EXIF 3.0 §4.6.5.1.8 defaults to 72 dpi for JPEG primary images.
      * TIFF 6.0 defines no default; returns null in TIFF context.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function xResolution(): ?float
     {
@@ -213,6 +234,8 @@ final readonly class ImageStructureExifReader
      *
      * Defaults to XResolution when absent per EXIF 3.0 §4.6.5.1.9.
      * Returns null in TIFF context when both tags are absent.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function yResolution(): ?float
     {
@@ -224,6 +247,8 @@ final readonly class ImageStructureExifReader
      *
      * EXIF 3.0 §4.6.5.1.11 and TIFF 6.0 §8 specify default value 2 (inches) when
      * not present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function resolutionUnit(): ResolutionUnit
     {
@@ -242,6 +267,8 @@ final readonly class ImageStructureExifReader
      *
      * EXIF 3.0 §4.6.5.2.2 defines RowsPerStrip for strip-based images and
      * requires the tag to be omitted for JPEG-compressed primary images.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function rowsPerStrip(): ?int
     {
@@ -261,6 +288,8 @@ final readonly class ImageStructureExifReader
      * For thumbnail strip offsets, use thumbnailStripOffsets().
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function stripOffsets(): ?array
     {
@@ -279,6 +308,8 @@ final readonly class ImageStructureExifReader
      * For thumbnail strip byte counts, use thumbnailStripByteCounts().
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function stripByteCounts(): ?array
     {
@@ -298,6 +329,8 @@ final readonly class ImageStructureExifReader
      *
      * EXIF 3.0 §4.6.5.2.4 notes that this tag shall not be recorded for primary
      * images encoded with JPEG compression.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegInterchangeFormat(): ?int
     {
@@ -313,6 +346,8 @@ final readonly class ImageStructureExifReader
      *
      * EXIF 3.0 §4.6.5.2.4 notes that this tag shall not be recorded for primary
      * images encoded with JPEG compression.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegInterchangeFormatLength(): ?int
     {

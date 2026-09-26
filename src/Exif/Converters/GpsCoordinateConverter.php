@@ -76,6 +76,8 @@ final readonly class GpsCoordinateConverter
      *     dest_lon_ref: ?string,
      *     dest_lon: ?float,
      * }
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractFromIfd(Ifd $gps): array
     {
@@ -133,6 +135,8 @@ final readonly class GpsCoordinateConverter
      *
      * @param string|null                           $ref Reference direction (N, S, E, W).
      * @param ExifRationalList|ExifNumericList|null $val Coordinate values as DMS.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dmsToFloat(?string $ref, ExifRationalList|ExifNumericList|null $val): ?float
     {
@@ -195,6 +199,8 @@ final readonly class GpsCoordinateConverter
      * @param list<?float> $numericValues Converted numeric values (degrees, minutes, seconds).
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDmsComponents(array $numericValues): ?array
     {

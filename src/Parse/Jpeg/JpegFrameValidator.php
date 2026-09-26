@@ -108,6 +108,8 @@ final class JpegFrameValidator
      * @param int    $marker  Marker code (SOF0).
      * @param string $payload Raw SOF payload excluding the marker and length field.
      * @param int    $offset  Offset where the SOF marker begins.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function handleStartOfFrame(int $marker, string $payload, int $offset): void
     {
@@ -191,6 +193,8 @@ final class JpegFrameValidator
      *
      * @param string $payload   Raw SOS header payload (without marker and length field).
      * @param int    $sosOffset Offset where the SOS marker starts.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateSosHeader(string $payload, int $sosOffset): void
     {
@@ -305,6 +309,8 @@ final class JpegFrameValidator
      * entire image payload with no metadata benefit.
      *
      * @param int $sosOffset Offset where the SOS marker starts.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateSosSegment(int $sosOffset): void
     {

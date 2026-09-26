@@ -65,6 +65,8 @@ final readonly class DjiDecoder implements MakerNotesDecoderInterface
      * @param string      $raw   Raw maker note data stream captured from the image file.
      * @param string      $make  Reported camera make string.
      * @param string|null $model Optional camera model identifier for the payload.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
     {
@@ -79,6 +81,8 @@ final readonly class DjiDecoder implements MakerNotesDecoderInterface
 
     /**
      * Parses the raw DJI maker note payload into a structured representation.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseDjiData(string $raw): ?DjiMakerNotes
     {
@@ -179,6 +183,8 @@ final readonly class DjiDecoder implements MakerNotesDecoderInterface
      *
      * DJI maker notes have no TIFF header, so the byte order is determined by
      * reading the IFD entry count with each endianness and checking plausibility.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function detectEndian(string $raw, int $length): ?Endian
     {
@@ -233,6 +239,8 @@ final readonly class DjiDecoder implements MakerNotesDecoderInterface
 
     /**
      * Parses a single-precision IEEE 754 floating-point value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseFloat(string $valueBytes, Endian $endian): ?float
     {

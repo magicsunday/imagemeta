@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Parse\ParserLimits;
 
@@ -98,6 +99,9 @@ final readonly class QuickTimeKeyResolver
      * @param BoxDescriptor $keys Box descriptor for the QuickTime `keys` box.
      *
      * @return array<int, QuickTimeKeyEntry>
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseKeys(BoxDescriptor $keys): array
     {
@@ -192,6 +196,9 @@ final readonly class QuickTimeKeyResolver
      * Parses a free-form metadata key (----) into a dotted namespace string.
      *
      * @param BoxDescriptor $entry Box descriptor representing the free-form entry.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseFreeformKey(BoxDescriptor $entry): ?string
     {
@@ -252,6 +259,9 @@ final readonly class QuickTimeKeyResolver
      * @param BoxDescriptor $mean Box descriptor for the mean atom.
      *
      * @return string The decoded namespace string.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseFreeformMean(BoxDescriptor $mean): string
     {
@@ -267,6 +277,9 @@ final readonly class QuickTimeKeyResolver
      * @param BoxDescriptor $name Box descriptor for the name atom.
      *
      * @return string The decoded key name string.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseFreeformName(BoxDescriptor $name): string
     {
@@ -283,6 +296,9 @@ final readonly class QuickTimeKeyResolver
      * @param string        $label Human-readable atom label for error messages.
      *
      * @return string The decoded payload string.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseFreeformAtomPayload(BoxDescriptor $atom, string $label): string
     {

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\ExifConst;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
@@ -66,6 +67,8 @@ final readonly class SceneModeReader
 
     /**
      * Returns the flash status flags if present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function flash(): ?int
     {
@@ -77,6 +80,8 @@ final readonly class SceneModeReader
      *
      * EXIF 3.0 §4.6.6.7.21 (Flash) defines the bit field decoded into
      * fired state, return status, mode, flash-function flag, and red-eye mode.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function flashInfo(): ?FlashInfo
     {
@@ -87,6 +92,8 @@ final readonly class SceneModeReader
      * Returns the flash energy in beam candle power seconds when available.
      *
      * EXIF 3.0 §4.6.6.7.24 (FlashEnergy)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function flashEnergy(): ?float
     {
@@ -97,6 +104,8 @@ final readonly class SceneModeReader
      * Returns the metering mode enumeration if present.
      *
      * EXIF 3.0 §4.6.6.7.19 (MeteringMode) catalogue of camera metering algorithms.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function meteringMode(): ?MeteringMode
     {
@@ -110,6 +119,8 @@ final readonly class SceneModeReader
      * Returns the scene capture type enum when recorded.
      *
      * EXIF 3.0 §4.6.6.7.40 (SceneCaptureType)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sceneCaptureType(): ?SceneCaptureType
     {
@@ -154,6 +165,8 @@ final readonly class SceneModeReader
      * Returns whether a custom rendering process was applied.
      *
      * EXIF 3.0 §4.6.6.7.35 (CustomRendered)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function customRendered(): ?CustomRendered
     {
@@ -167,6 +180,8 @@ final readonly class SceneModeReader
      * Returns the in-camera contrast setting.
      *
      * EXIF 3.0 §4.6.6.7.42
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function contrast(): ?Contrast
     {
@@ -180,6 +195,8 @@ final readonly class SceneModeReader
      * Returns the in-camera saturation setting.
      *
      * EXIF 3.0 §4.6.6.7.43
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function saturation(): ?Saturation
     {
@@ -193,6 +210,8 @@ final readonly class SceneModeReader
      * Returns the in-camera sharpness setting.
      *
      * EXIF 3.0 §4.6.6.7.44
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sharpness(): ?Sharpness
     {
@@ -206,6 +225,8 @@ final readonly class SceneModeReader
      * Returns the gain control enum describing in-camera amplification.
      *
      * EXIF 3.0 §4.6.6.7.41
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gainControl(): ?GainControl
     {
@@ -218,6 +239,8 @@ final readonly class SceneModeReader
      * Returns the white balance enumeration if present.
      *
      * EXIF 3.0 §4.6.6.7.37 (WhiteBalance)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function whiteBalance(): ?WhiteBalance
     {
@@ -231,6 +254,8 @@ final readonly class SceneModeReader
      *
      * EXIF 3.0 §4.6.6.7.20 (LightSource) mapping of coded illuminants and
      * default value 0 for unknown light sources.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function lightSource(): ?LightSource
     {
@@ -246,6 +271,8 @@ final readonly class SceneModeReader
      * EXIF 3.0 §4.6.6.7.18 (SubjectDistance) states that a numerator of
      * 0xFFFFFFFF indicates infinity, while a numerator of 0 indicates an
      * unknown distance.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subjectDistance(): ?float
     {
@@ -273,6 +300,8 @@ final readonly class SceneModeReader
      *
      * EXIF 3.0 §4.6.6.7.46 provides the four valid SubjectDistanceRange codes;
      * other values are reserved.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subjectDistanceRange(): ?SubjectDistanceRange
     {
@@ -285,6 +314,8 @@ final readonly class SceneModeReader
      * Returns the development characteristic from the packed DevelopmentType tag.
      *
      * EXIF 3.1 §4.6.6.7.47: high byte (bits 15–8) of the packed SHORT.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function developmentCharacteristic(): ?DevelopmentCharacteristic
     {
@@ -301,6 +332,8 @@ final readonly class SceneModeReader
      * Returns the factory default comparison from the packed DevelopmentType tag.
      *
      * EXIF 3.1 §4.6.6.7.47: low byte (bits 7–0) of the packed SHORT.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function developmentDefault(): ?DevelopmentDefault
     {
@@ -317,6 +350,8 @@ final readonly class SceneModeReader
      * Returns the development type description string.
      *
      * EXIF 3.1 §4.6.6.7.48 (DevelopmentTypeDescription): UTF-8, no default.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function developmentTypeDescription(): ?string
     {
@@ -327,6 +362,8 @@ final readonly class SceneModeReader
      * Returns whether distortion correction was applied at capture.
      *
      * EXIF 3.1 §4.6.6.7.49 (DistortionCorrection): no default value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function distortionCorrection(): ?CorrectionApplied
     {
@@ -339,6 +376,8 @@ final readonly class SceneModeReader
      * Returns whether chromatic aberration correction was applied at capture.
      *
      * EXIF 3.1 §4.6.6.7.50 (ChromaticAberrationCorrection): no default value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function chromaticAberrationCorrection(): ?CorrectionApplied
     {
@@ -351,6 +390,8 @@ final readonly class SceneModeReader
      * Returns whether shading correction was applied at capture.
      *
      * EXIF 3.1 §4.6.6.7.51 (ShadingCorrection): no default value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function shadingCorrection(): ?CorrectionApplied
     {
@@ -363,6 +404,8 @@ final readonly class SceneModeReader
      * Returns the noise reduction tendency applied at capture.
      *
      * EXIF 3.1 §4.6.6.7.52 (NoiseReduction): no default value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function noiseReduction(): ?NoiseReduction
     {
@@ -376,6 +419,8 @@ final readonly class SceneModeReader
      *
      * EXIF 3.0 §4.6.6.7.22: SubjectArea tag 0x9214 indicates the location and area of the main
      * subject in the overall scene.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subjectArea(): ?SubjectArea
     {
@@ -407,6 +452,8 @@ final readonly class SceneModeReader
      * contains exactly two SHORT values.
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subjectLocation(): ?array
     {
@@ -428,6 +475,8 @@ final readonly class SceneModeReader
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value.
      *
      * @return int|null Numerator value or null.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function subjectDistanceNumerator(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,

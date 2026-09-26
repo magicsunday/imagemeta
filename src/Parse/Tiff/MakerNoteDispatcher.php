@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
@@ -38,6 +39,8 @@ final class MakerNoteDispatcher
      * @param Registry|null $registry Optional maker notes registry.
      * @param Ifd           $ifd0     Primary image IFD.
      * @param Ifd|null      $exifIfd  EXIF IFD when present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function resolve(?string $raw, ?Registry $registry, Ifd $ifd0, ?Ifd $exifIfd): ?MakerNotesRecord
     {
@@ -71,6 +74,8 @@ final class MakerNoteDispatcher
      * Creates a digest metadata instance for unknown maker notes.
      *
      * @param string $raw Raw maker note bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function digest(string $raw): MakerNotesRecord
     {
@@ -82,6 +87,8 @@ final class MakerNoteDispatcher
      *
      * @param MakerNotesRecord $metadata Maker note record to augment.
      * @param Ifd              $ifd0     Primary image IFD containing MakerNoteSafety tag.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function applySafety(MakerNotesRecord $metadata, Ifd $ifd0): MakerNotesRecord
     {

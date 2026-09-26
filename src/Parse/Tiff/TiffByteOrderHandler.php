@@ -30,6 +30,8 @@ final readonly class TiffByteOrderHandler
 {
     /**
      * Reads an unsigned 16-bit integer using the provided endianness.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function readUint16(BinaryReadAccessInterface $buffer, Endian $endianness): int
     {
@@ -40,6 +42,8 @@ final readonly class TiffByteOrderHandler
 
     /**
      * Reads an unsigned 32-bit integer using the provided endianness.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function readUint32(BinaryReadAccessInterface $buffer, Endian $endianness): int
     {
@@ -50,6 +54,8 @@ final readonly class TiffByteOrderHandler
 
     /**
      * Reads an unsigned 64-bit integer using the provided endianness.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function readUint64(BinaryReadAccessInterface $buffer, Endian $endianness): UInt64
     {
@@ -65,6 +71,8 @@ final readonly class TiffByteOrderHandler
      *
      * @param int|UInt64 $value Integer value to convert.
      * @param int        $bytes Target byte length.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function uintToBytes(int|UInt64 $value, int $bytes, Endian $endianness): string
     {

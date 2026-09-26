@@ -49,6 +49,8 @@ final readonly class TiffJpegThumbnailValidator
      * in this embedded thumbnail stream representation.
      *
      * @param Ifd|null $ifd1 Thumbnail IFD.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateJpegThumbnailStream(?Ifd $ifd1): void
     {

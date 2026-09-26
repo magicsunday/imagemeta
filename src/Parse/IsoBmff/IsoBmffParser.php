@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
@@ -171,6 +172,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * Walks each top-level box in the file and yields a descriptor object.
      *
      * @return iterable<BoxDescriptor>
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function walkTopLevelBoxes(): iterable
     {
@@ -191,6 +195,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      *
      * @param BoxDescriptor       $moov    Box descriptor for the movie box.
      * @param IsoBmffParseContext $context Shared parse-state context.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseMoovBox(BoxDescriptor $moov, IsoBmffParseContext $context): void
     {
@@ -305,6 +312,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      *
      * @param BoxDescriptor       $moof    Box descriptor for the movie fragment.
      * @param IsoBmffParseContext $context Shared parse-state context.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseMoofBox(BoxDescriptor $moof, IsoBmffParseContext $context): void
     {
@@ -327,6 +337,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param IsoBmffParseContext $context Shared parse-state context.
      *
      * @return QuickTimeKeyMap
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseFtyp(BoxDescriptor $ftyp, IsoBmffParseContext $context): array
     {
@@ -379,6 +392,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param BoxDescriptor       $udta             Box descriptor for the user data box.
      * @param IsoBmffParseContext $context          Shared parse-state context.
      * @param int                 $fileOffsetOrigin Absolute file-offset origin for nested iloc metadata.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseUdtaBox(BoxDescriptor $udta, IsoBmffParseContext $context, int $fileOffsetOrigin = 0): void
     {
@@ -478,6 +494,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param BoxDescriptor       $meta             Box descriptor for the metadata box.
      * @param IsoBmffParseContext $context          Shared parse-state context.
      * @param int                 $fileOffsetOrigin Absolute file-offset origin for iloc file-offset items.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseMetaBox(BoxDescriptor $meta, IsoBmffParseContext $context, int $fileOffsetOrigin = 0): void
     {
@@ -565,6 +584,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
 
     /**
      * Delegates payload collection to BoxPayloadCollector.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function collectDirectPayloads(BoxDescriptor $meta, IsoBmffParseContext $context, int $fileOffsetOrigin = 0): BoxPayloadCollection
     {
@@ -581,6 +603,9 @@ final readonly class IsoBmffParser implements IsoBmffParserInterface
      * @param string $payload Raw data box payload bytes for type 28.
      *
      * @return array{keys: QuickTimeKeyMap, atoms: QuickTimeDataAtomList}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseNestedMetadataPayload(string $payload): array
     {

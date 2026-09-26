@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Factory\Structured;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -41,6 +42,8 @@ final readonly class ExposureFactory
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
      * @return Exposure Normalized exposure metadata aggregate.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function create(Metadata $metadata): Exposure
     {

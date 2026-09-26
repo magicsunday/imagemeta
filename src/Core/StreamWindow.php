@@ -55,6 +55,9 @@ final class StreamWindow implements BinaryReadAccessInterface
 
     /**
      * Reads bytes from the bounded region and advances the cursor.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function read(int|UInt64 $length): string
     {
@@ -117,6 +120,9 @@ final class StreamWindow implements BinaryReadAccessInterface
      *
      * @param int|UInt64 $offset Offset to seek to.
      * @param int        $whence Seek origin constant.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     protected function seekInternal(int|UInt64 $offset, int $whence): void
     {

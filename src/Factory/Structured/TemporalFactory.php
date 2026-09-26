@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Factory\Structured;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\DateTimeUtil;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
@@ -54,6 +55,8 @@ final readonly class TemporalFactory
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
      * @return Temporal Normalized temporal metadata aggregate.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function create(Metadata $metadata): Temporal
     {
@@ -78,6 +81,8 @@ final readonly class TemporalFactory
      * @param OlympusAviLookup|null $olympusAviLookup Olympus AVI Camera Tags lookup for date fallbacks.
      *
      * @return Temporal Normalized temporal metadata aggregate.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function buildTemporal(?ParsedExif $exifDocument, QuickTimeLookup $lookup, ?XmpDocument $xmpDocument, ?RiffInfoLookup $riffLookup = null, ?NikonAviLookup $nikonAviLookup = null, ?OlympusAviLookup $olympusAviLookup = null): Temporal
     {
@@ -181,6 +186,8 @@ final readonly class TemporalFactory
      * Extracts the original capture timestamp components from the EXIF document.
      *
      * @return array{0:?DateTimeImmutable,1:?DateTimeZone,2:?string}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function originalTimestampComponents(?ParsedExif $document): array
     {

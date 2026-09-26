@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Riff;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Riff\NikonCameraTags;
 
@@ -148,6 +149,8 @@ final class NctgParser
      * Follows Postel's Law: tolerates truncated trailing tags, unknown tag IDs,
      * and zero denominators in rationals. Returns null only when the payload is
      * too short to contain any complete tag.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function parse(string $payload): ?NikonCameraTags
     {
@@ -245,6 +248,8 @@ final class NctgParser
      * Assigns a parsed tag value to the appropriate typed field and entries array.
      *
      * @param array<int, string> $entries
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function assignTag(
         int $tag,
@@ -347,6 +352,8 @@ final class NctgParser
      * Parses an unsigned rational (2x u32 LE). Returns null typed value on zero denominator.
      *
      * @return array{string|null, float|null}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseUnsignedRational(string $bytes, int $size): array
     {
@@ -371,6 +378,8 @@ final class NctgParser
      * Parses a signed rational (signed i32 numerator LE + u32 denominator LE).
      *
      * @return array{string|null, float|null}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseSignedRational(string $bytes, int $size): array
     {
@@ -398,6 +407,8 @@ final class NctgParser
      * Parses an unsigned short (u16 LE).
      *
      * @return array{string|null, int|null}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseShort(string $bytes, int $size): array
     {
@@ -414,6 +425,8 @@ final class NctgParser
      * Best-effort display for unknown tags.
      *
      * @return array{string|null, null}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseUnknownTag(string $bytes, int $size): array
     {

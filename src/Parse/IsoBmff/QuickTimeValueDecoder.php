@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
 use Closure;
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
@@ -87,6 +88,9 @@ final readonly class QuickTimeValueDecoder
      * @param BoxDescriptor $data Box descriptor for the `data` box.
      *
      * @return QuickTimeRawDataAtom Structured data atom with decoded payload and locale metadata.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseDataBoxStructured(BoxDescriptor $data): array
     {
@@ -133,6 +137,8 @@ final readonly class QuickTimeValueDecoder
      * @param int    $payloadSize Length of the payload in bytes.
      *
      * @return string|int|float Decoded payload value for the requested QuickTime data type.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function decodeDataPayload(int $type, string $payload, int $payloadSize): string|int|float
     {
@@ -273,6 +279,8 @@ final readonly class QuickTimeValueDecoder
      * @param string $fourcc Four-character code to convert.
      *
      * @return int|null Integer representation of the four-character code, or null when invalid.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function fourccToIndex(string $fourcc): ?int
     {
@@ -295,6 +303,8 @@ final readonly class QuickTimeValueDecoder
      * @param int             $locale        32-bit locale indicator (country << 16 | language).
      * @param list<list<int>> $countryLists  Country list arrays from ctry atom.
      * @param list<list<int>> $languageLists Language list arrays from lang atom.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateLocaleIndicator(int $locale, array $countryLists, array $languageLists): void
     {
@@ -331,6 +341,8 @@ final readonly class QuickTimeValueDecoder
      *
      * @param string                     $entryType  Item entry type for diagnostics.
      * @param list<QuickTimeRawDataAtom> $entryAtoms Parsed data atoms in encounter order.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDataOrdering(string $entryType, array $entryAtoms): void
     {
@@ -360,6 +372,8 @@ final readonly class QuickTimeValueDecoder
      * @param int    $payloadSize Length of the payload in bytes.
      *
      * @return int Decoded signed integer value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeQuickTimeSignedInt(string $payload, int $payloadSize): int
     {
@@ -412,6 +426,8 @@ final readonly class QuickTimeValueDecoder
      * @param int    $payloadSize Length of the payload in bytes.
      *
      * @return int Decoded unsigned integer value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeQuickTimeUnsignedInt(string $payload, int $payloadSize): int
     {

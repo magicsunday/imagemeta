@@ -43,6 +43,8 @@ final readonly class PlistTextParser
      * @return NativePlistDictionary|null
      *
      * @phpstan-return NativePlistDictionary|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function parse(string $raw): ?array
     {

@@ -49,6 +49,8 @@ final class XmpParser implements XmpParserInterface
      * @param string $xml The raw XML payload containing the XMP packet.
      *
      * @return XmpDocument Parsed XMP representation.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function parse(string $xml): XmpDocument
     {
@@ -98,6 +100,8 @@ final class XmpParser implements XmpParserInterface
 
     /**
      * Handles XMLReader element nodes and updates parse-state buffers.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function handleElementNode(XMLReader $reader, XmpParseState $state): void
     {
@@ -186,6 +190,8 @@ final class XmpParser implements XmpParserInterface
 
     /**
      * Handles XMLReader end-element nodes and finalizes buffered values.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function handleEndElementNode(XmpParseState $state, int $depth): void
     {
@@ -214,6 +220,8 @@ final class XmpParser implements XmpParserInterface
 
     /**
      * Finalizes a buffered rdf:li item into the nearest RDF container buffer.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function finalizeRdfListItem(XmpParseState $state, int $depth): void
     {
@@ -320,6 +328,8 @@ final class XmpParser implements XmpParserInterface
      * out namespace declarations (xmlns:*) and RDF structural attributes
      * (rdf:about, rdf:ID, rdf:nodeID, rdf:parseType) while capturing actual
      * property values.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function extractAttributes(XMLReader $reader, XmpParseState $state): void
     {
@@ -399,6 +409,8 @@ final class XmpParser implements XmpParserInterface
 
     /**
      * Stores a value derived from buffered list/text information.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function storeFinalizedElementValue(
         XmpParseState $state,
@@ -449,6 +461,8 @@ final class XmpParser implements XmpParserInterface
 
     /**
      * @return array<int, string|XmpStructuredValue>|string|XmpLanguageAlternative|XmpStructuredValue
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function finalizeElementValue(
         XmpParseState $state,
@@ -490,6 +504,8 @@ final class XmpParser implements XmpParserInterface
 
     /**
      * @param array<int, string|XmpStructuredValue>|string|XmpLanguageAlternative|XmpStructuredValue $value
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function appendStructuredFieldValue(
         XmpParseState $state,
@@ -539,6 +555,8 @@ final class XmpParser implements XmpParserInterface
      * @param list<array{lang: string, value: string}> $altItems
      *
      * @return list<string|XmpStructuredValue>|string|XmpLanguageAlternative
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function finalizeValue(array $items, array $altItems, string $listKind, string $text): array|string|XmpLanguageAlternative
     {
@@ -583,6 +601,8 @@ final class XmpParser implements XmpParserInterface
      * Finds the nearest parent list buffer and associated RDF container kind.
      *
      * @return array{depth: int, kind: string}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function findParentListBuffer(XmpParseState $state, int $depth, string $lang): ?array
     {
@@ -611,6 +631,8 @@ final class XmpParser implements XmpParserInterface
 
     /**
      * Validates xml:lang requirements for rdf:Alt container items.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateAltContainerLang(string $kind, string $lang): void
     {
@@ -628,6 +650,8 @@ final class XmpParser implements XmpParserInterface
      * Stores a value in the result map while merging multiple occurrences.
      *
      * @param array<int, string>|string|XmpLanguageAlternative $value
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function storeValue(XmpParseState $state, string $key, array|string|XmpLanguageAlternative $value): void
     {

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Reconciliation;
 
 use BackedEnum;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 
@@ -44,6 +45,8 @@ final readonly class XmpFallbackResolver
      * Creates a resolver from the metadata container's XMP document.
      *
      * Returns null when no XMP document is available.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function fromMetadata(Metadata $metadata): ?self
     {

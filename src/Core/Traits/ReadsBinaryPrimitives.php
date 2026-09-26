@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Core\Traits;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
 /**
@@ -38,6 +39,8 @@ trait ReadsBinaryPrimitives
      * Reads an unsigned 16-bit big-endian integer from the underlying source.
      *
      * @return int Unsigned 16-bit integer value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function readU16BE(): int
     {
@@ -48,6 +51,8 @@ trait ReadsBinaryPrimitives
      * Reads an unsigned 32-bit big-endian integer from the underlying source.
      *
      * @return int Unsigned 32-bit integer value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function readU32BE(): int
     {
@@ -58,6 +63,8 @@ trait ReadsBinaryPrimitives
      * Reads an unsigned 64-bit big-endian integer from the underlying source.
      *
      * @return UInt64 Unsigned 64-bit integer value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function readU64BE(): UInt64
     {

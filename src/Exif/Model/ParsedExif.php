@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Exif\Model;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Core\Endian;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
 use MagicSunday\ImageMeta\Exif\Reader\CameraLensExifReader;
@@ -183,36 +184,57 @@ final class ParsedExif
 
     // ── Camera / lens domain ──────────────────────────────────
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function cameraMake(): ?string
     {
         return $this->cameraLensReader()->cameraMake();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function cameraModel(): ?string
     {
         return $this->cameraLensReader()->cameraModel();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function lensModel(): ?string
     {
         return $this->cameraLensReader()->lensModel();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function lensMake(): ?string
     {
         return $this->cameraLensReader()->lensMake();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function ownerName(): ?string
     {
         return $this->cameraLensReader()->ownerName();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function bodySerialNumber(): ?string
     {
         return $this->cameraLensReader()->bodySerialNumber();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function lensSerialNumber(): ?string
     {
         return $this->cameraLensReader()->lensSerialNumber();
@@ -220,17 +242,25 @@ final class ParsedExif
 
     /**
      * @return array{0:float,1:float,2:float,3:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function lensSpecification(): ?array
     {
         return $this->cameraLensReader()->lensSpecification();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function uniqueCameraModel(): ?string
     {
         return $this->cameraLensReader()->uniqueCameraModel();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function localizedCameraModel(): ?string
     {
         return $this->cameraLensReader()->localizedCameraModel();
@@ -238,66 +268,105 @@ final class ParsedExif
 
     // ── Image structure domain ─────────────────────────────────
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function orientation(): Orientation
     {
         return $this->imageStructureReader()->orientation();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function orientationDescription(): string
     {
         return $this->imageStructureReader()->orientationDescription();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function imageWidth(): ?int
     {
         return $this->imageStructureReader()->imageWidth();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function imageHeight(): ?int
     {
         return $this->imageStructureReader()->imageHeight();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function imageLength(): ?int
     {
         return $this->imageStructureReader()->imageLength();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function pixelXDimension(): ?int
     {
         return $this->imageStructureReader()->pixelXDimension();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function pixelYDimension(): ?int
     {
         return $this->imageStructureReader()->pixelYDimension();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function compression(): ?Compression
     {
         return $this->imageStructureReader()->compression();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function compressedBitsPerPixel(): ?float
     {
         return $this->imageStructureReader()->compressedBitsPerPixel();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function resolutionUnit(): ResolutionUnit
     {
         return $this->imageStructureReader()->resolutionUnit();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function xResolution(): ?float
     {
         return $this->imageStructureReader()->xResolution();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function yResolution(): ?float
     {
         return $this->imageStructureReader()->yResolution();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function rowsPerStrip(): ?int
     {
         return $this->imageStructureReader()->rowsPerStrip();
@@ -305,6 +374,8 @@ final class ParsedExif
 
     /**
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function stripOffsets(): ?array
     {
@@ -313,17 +384,25 @@ final class ParsedExif
 
     /**
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function stripByteCounts(): ?array
     {
         return $this->imageStructureReader()->stripByteCounts();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function jpegInterchangeFormat(): ?int
     {
         return $this->imageStructureReader()->jpegInterchangeFormat();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function jpegInterchangeFormatLength(): ?int
     {
         return $this->imageStructureReader()->jpegInterchangeFormatLength();
@@ -331,6 +410,9 @@ final class ParsedExif
 
     // ── Colour space domain ────────────────────────────────────
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function colorSpace(): ?ColorSpace
     {
         return $this->colorSpaceReader()->colorSpace();
@@ -341,21 +423,33 @@ final class ParsedExif
         return $this->colorSpaceReader()->exifProfile();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function photometric(): ?Photometric
     {
         return $this->colorSpaceReader()->photometric();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function planarConfiguration(): ?PlanarConfiguration
     {
         return $this->colorSpaceReader()->planarConfiguration();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function samplesPerPixel(): int
     {
         return $this->colorSpaceReader()->samplesPerPixel();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function bitsPerSample(): ?int
     {
         return $this->colorSpaceReader()->bitsPerSample();
@@ -363,12 +457,17 @@ final class ParsedExif
 
     /**
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function bitsPerSampleList(): ?array
     {
         return $this->colorSpaceReader()->bitsPerSampleList();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function ycbcrPositioning(): ?YCbCrPositioning
     {
         return $this->colorSpaceReader()->ycbcrPositioning();
@@ -376,6 +475,8 @@ final class ParsedExif
 
     /**
      * @return array{0:int,1:int}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function ycbcrSubSampling(): ?array
     {
@@ -384,6 +485,8 @@ final class ParsedExif
 
     /**
      * @return array{0:float,1:float,2:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function ycbcrCoefficients(): ?array
     {
@@ -392,6 +495,8 @@ final class ParsedExif
 
     /**
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function referenceBlackWhite(): ?array
     {
@@ -400,6 +505,8 @@ final class ParsedExif
 
     /**
      * @return array{0:float,1:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function whitePoint(): ?array
     {
@@ -408,6 +515,8 @@ final class ParsedExif
 
     /**
      * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function primaryChromaticities(): ?array
     {
@@ -416,6 +525,8 @@ final class ParsedExif
 
     /**
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function componentsConfiguration(): ?array
     {
@@ -424,17 +535,25 @@ final class ParsedExif
 
     /**
      * @return list<string>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function componentsConfigurationLabels(): ?array
     {
         return $this->colorSpaceReader()->componentsConfigurationLabels();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function componentsConfigurationDescription(): ?string
     {
         return $this->colorSpaceReader()->componentsConfigurationDescription();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gamma(): ?float
     {
         return $this->colorSpaceReader()->gamma();
@@ -442,11 +561,17 @@ final class ParsedExif
 
     // ── DNG metadata domain ────────────────────────────────────
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function dngVersion(): ?string
     {
         return $this->dngMetadataReader()->dngVersion();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function dngBackwardVersion(): ?string
     {
         return $this->dngMetadataReader()->dngBackwardVersion();
@@ -454,46 +579,73 @@ final class ParsedExif
 
     // ── Description domain ─────────────────────────────────────
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function imageTitle(): ?string
     {
         return $this->descriptionReader()->imageTitle();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function documentName(): ?string
     {
         return $this->descriptionReader()->documentName();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function imageDescription(): ?string
     {
         return $this->descriptionReader()->imageDescription();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function hostComputer(): ?string
     {
         return $this->reader()->str($this->ifd0, TiffTag::HOST_COMPUTER);
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function software(): ?string
     {
         return $this->descriptionReader()->software();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function photographer(): ?string
     {
         return $this->descriptionReader()->photographer();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function imageEditor(): ?string
     {
         return $this->descriptionReader()->imageEditor();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function copyright(): ?string
     {
         return $this->descriptionReader()->copyright();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function artist(): ?string
     {
         return $this->descriptionReader()->artist();
@@ -504,6 +656,9 @@ final class ParsedExif
         return $this->descriptionReader()->learningOptOutIn();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function imageUniqueId(): ?string
     {
         return $this->descriptionReader()->imageUniqueId();
@@ -565,31 +720,49 @@ final class ParsedExif
 
     // ── Thumbnail domain ────────────────────────────────────────
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function hasThumbnail(): bool
     {
         return $this->thumbnailReader()->hasThumbnail();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function thumbnailJpegInterchangeFormat(): ?int
     {
         return $this->thumbnailReader()->thumbnailJpegInterchangeFormat();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function thumbnailJpegInterchangeFormatLength(): ?int
     {
         return $this->thumbnailReader()->thumbnailJpegInterchangeFormatLength();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function thumbnailCompression(): ?Compression
     {
         return $this->thumbnailReader()->thumbnailCompression();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function thumbnailTileWidth(): ?int
     {
         return $this->thumbnailReader()->thumbnailTileWidth();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function thumbnailTileLength(): ?int
     {
         return $this->thumbnailReader()->thumbnailTileLength();
@@ -597,6 +770,8 @@ final class ParsedExif
 
     /**
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailTileOffsets(): ?array
     {
@@ -605,6 +780,8 @@ final class ParsedExif
 
     /**
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailTileByteCounts(): ?array
     {
@@ -613,6 +790,8 @@ final class ParsedExif
 
     /**
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailStripOffsets(): ?array
     {
@@ -621,6 +800,8 @@ final class ParsedExif
 
     /**
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailStripByteCounts(): ?array
     {
@@ -629,6 +810,9 @@ final class ParsedExif
 
     // ── Exposure domain ─────────────────────────────────────────
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function spectralSensitivity(): ?string
     {
         return $this->isoSensitivityReader()->spectralSensitivity();
@@ -644,156 +828,249 @@ final class ParsedExif
         return $this->sensorDataReader()->oecfPayload();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function sensitivityType(): ?SensitivityType
     {
         return $this->isoSensitivityReader()->sensitivityType();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function standardOutputSensitivity(): ?int
     {
         return $this->isoSensitivityReader()->standardOutputSensitivity();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function recommendedExposureIndex(): ?int
     {
         return $this->isoSensitivityReader()->recommendedExposureIndex();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function isoSpeedValue(): ?int
     {
         return $this->isoSensitivityReader()->isoSpeedValue();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function iso(): ?int
     {
         return $this->isoSensitivityReader()->iso();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function isoBestEffort(): ?int
     {
         return $this->isoSensitivityReader()->isoBestEffort();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function isoSpeedLatitudeYyy(): ?int
     {
         return $this->isoSensitivityReader()->isoSpeedLatitudeYyy();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function isoSpeedLatitudeZzz(): ?int
     {
         return $this->isoSensitivityReader()->isoSpeedLatitudeZzz();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function exposureTime(): ?float
     {
         return $this->exposureParameterReader()->exposureTime();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function exposureTimeFormatted(): ?string
     {
         return $this->exposureParameterReader()->exposureTimeFormatted();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function shutterSpeedValue(): ?float
     {
         return $this->exposureParameterReader()->shutterSpeedValue();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function shutterSpeedSeconds(): ?float
     {
         return $this->exposureParameterReader()->shutterSpeedSeconds();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function shutterSpeedFormatted(): ?string
     {
         return $this->exposureParameterReader()->shutterSpeedFormatted();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function fNumber(): ?float
     {
         return $this->exposureParameterReader()->fNumber();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function apertureValue(): ?float
     {
         return $this->exposureParameterReader()->apertureValue();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function apertureValueFormatted(): ?string
     {
         return $this->exposureParameterReader()->apertureValueFormatted();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function focalLengthMm(): ?float
     {
         return $this->focalReader()->focalLengthMm();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function focalLength35Mm(): ?int
     {
         return $this->focalReader()->focalLength35Mm();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function exposureProgram(): ?ExposureProgram
     {
         return $this->exposureParameterReader()->exposureProgram();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function meteringMode(): ?MeteringMode
     {
         return $this->sceneModeReader()->meteringMode();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function flash(): ?int
     {
         return $this->sceneModeReader()->flash();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function flashInfo(): ?FlashInfo
     {
         return $this->sceneModeReader()->flashInfo();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function flashEnergy(): ?float
     {
         return $this->sceneModeReader()->flashEnergy();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function whiteBalance(): ?WhiteBalance
     {
         return $this->sceneModeReader()->whiteBalance();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function exposureBias(): ?float
     {
         return $this->exposureParameterReader()->exposureBias();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function brightnessValue(): ?float
     {
         return $this->exposureParameterReader()->brightnessValue();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function brightnessValueFormatted(): ?string
     {
         return $this->exposureParameterReader()->brightnessValueFormatted();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function maxApertureApex(): ?float
     {
         return $this->exposureParameterReader()->maxApertureApex();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function focalPlaneXResolution(): ?float
     {
         return $this->focalReader()->focalPlaneXResolution();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function focalPlaneYResolution(): ?float
     {
         return $this->focalReader()->focalPlaneYResolution();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function focalPlaneResolutionUnit(): int
     {
         return $this->focalReader()->focalPlaneResolutionUnit();
@@ -801,17 +1078,25 @@ final class ParsedExif
 
     /**
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subjectLocation(): ?array
     {
         return $this->sceneModeReader()->subjectLocation();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function exposureIndex(): ?float
     {
         return $this->exposureParameterReader()->exposureIndex();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function relatedSoundFile(): ?string
     {
         return $this->reader()->str($this->exifIfd, ExifTag::RELATED_SOUND_FILE);
@@ -822,6 +1107,9 @@ final class ParsedExif
         return $this->sensorDataReader()->spatialFrequencyResponse();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function compositeImage(): ?CompositeImage
     {
         return $this->sensorDataReader()->compositeImage();
@@ -829,17 +1117,25 @@ final class ParsedExif
 
     /**
      * @return array{0:int,1:int}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sourceImageNumberOfCompositeImage(): ?array
     {
         return $this->sensorDataReader()->sourceImageNumberOfCompositeImage();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function sourceExposureTimesOfCompositeImage(): ?SourceExposureTimes
     {
         return $this->sensorDataReader()->sourceExposureTimesOfCompositeImage();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function cfaPattern(): ?CfaPattern
     {
         return $this->focalReader()->cfaPattern();
@@ -847,6 +1143,8 @@ final class ParsedExif
 
     /**
      * @return list<CfaPatternColor>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cfaPatternColors(): ?array
     {
@@ -858,101 +1156,161 @@ final class ParsedExif
         return $this->sceneModeReader()->sceneType();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function customRendered(): ?CustomRendered
     {
         return $this->sceneModeReader()->customRendered();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function contrast(): ?Contrast
     {
         return $this->sceneModeReader()->contrast();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function saturation(): ?Saturation
     {
         return $this->sceneModeReader()->saturation();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function sharpness(): ?Sharpness
     {
         return $this->sceneModeReader()->sharpness();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function sensingMethod(): ?SensingMethod
     {
         return SensingMethod::fromExifValue($this->reader()->enumValue($this->exifIfd, ExifTag::SENSING_METHOD));
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function lightSource(): ?LightSource
     {
         return $this->sceneModeReader()->lightSource();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function sceneCaptureType(): ?SceneCaptureType
     {
         return $this->sceneModeReader()->sceneCaptureType();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function subjectDistanceRange(): ?SubjectDistanceRange
     {
         return $this->sceneModeReader()->subjectDistanceRange();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function developmentCharacteristic(): ?DevelopmentCharacteristic
     {
         return $this->sceneModeReader()->developmentCharacteristic();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function developmentDefault(): ?DevelopmentDefault
     {
         return $this->sceneModeReader()->developmentDefault();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function developmentTypeDescription(): ?string
     {
         return $this->sceneModeReader()->developmentTypeDescription();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function distortionCorrection(): ?CorrectionApplied
     {
         return $this->sceneModeReader()->distortionCorrection();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function chromaticAberrationCorrection(): ?CorrectionApplied
     {
         return $this->sceneModeReader()->chromaticAberrationCorrection();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function shadingCorrection(): ?CorrectionApplied
     {
         return $this->sceneModeReader()->shadingCorrection();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function noiseReduction(): ?NoiseReduction
     {
         return $this->sceneModeReader()->noiseReduction();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function subjectDistance(): ?float
     {
         return $this->sceneModeReader()->subjectDistance();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function subjectArea(): ?SubjectArea
     {
         return $this->sceneModeReader()->subjectArea();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function digitalZoomRatio(): ?float
     {
         return $this->exposureParameterReader()->digitalZoomRatio();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function exposureMode(): ?ExposureMode
     {
         return $this->exposureParameterReader()->exposureMode();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gainControl(): ?GainControl
     {
         return $this->sceneModeReader()->gainControl();
@@ -963,6 +1321,9 @@ final class ParsedExif
         return $this->focalReader()->fileSource();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function interopIndex(): ?string
     {
         return $this->focalReader()->interopIndex();
@@ -975,21 +1336,33 @@ final class ParsedExif
         return $this->deviceReader()->deviceSettingDescription();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function temperatureCelsius(): ?float
     {
         return $this->deviceReader()->temperatureCelsius();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function humidityPercent(): ?float
     {
         return $this->deviceReader()->humidityPercent();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function pressureHPa(): ?float
     {
         return $this->deviceReader()->pressureHPa();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function waterDepthMeters(): ?float
     {
         return $this->deviceReader()->waterDepthMeters();
@@ -997,37 +1370,57 @@ final class ParsedExif
 
     /**
      * @return array{0:float,1:float,2:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function accelerationVector(): ?array
     {
         return $this->deviceReader()->accelerationVector();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function accelerationMs2(): ?float
     {
         return $this->deviceReader()->accelerationMs2();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function cameraElevationAngleDeg(): ?float
     {
         return $this->deviceReader()->cameraElevationAngleDeg();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function cameraFirmware(): ?string
     {
         return $this->deviceReader()->cameraFirmware();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function rawDevelopingSoftware(): ?string
     {
         return $this->deviceReader()->rawDevelopingSoftware();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function imageEditingSoftware(): ?string
     {
         return $this->deviceReader()->imageEditingSoftware();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function metadataEditingSoftware(): ?string
     {
         return $this->deviceReader()->metadataEditingSoftware();
@@ -1040,16 +1433,25 @@ final class ParsedExif
         return $this->temporalReader()->dateTimeOriginalRaw();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function dateTimeOriginal(): ?DateTimeImmutable
     {
         return $this->temporalReader()->dateTimeOriginal();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function dateTimeOriginalBestEffort(): ?DateTimeImmutable
     {
         return $this->temporalReader()->dateTimeOriginalBestEffort();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function subSecTimeOriginal(): ?string
     {
         return $this->temporalReader()->subSecTimeOriginal();
@@ -1060,16 +1462,25 @@ final class ParsedExif
         return $this->temporalReader()->dateTimeDigitizedRaw();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function subSecTimeDigitized(): ?string
     {
         return $this->temporalReader()->subSecTimeDigitized();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function dateTimeRaw(): ?string
     {
         return $this->temporalReader()->dateTimeRaw();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function subSecTime(): ?string
     {
         return $this->temporalReader()->subSecTime();
@@ -1090,16 +1501,25 @@ final class ParsedExif
         return $this->temporalReader()->offsetTime();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function captureDateTime(): ?DateTimeImmutable
     {
         return $this->temporalReader()->captureDateTime();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function dateTimeDigitized(): ?DateTimeImmutable
     {
         return $this->temporalReader()->dateTimeDigitized();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function dateTime(): ?DateTimeImmutable
     {
         return $this->temporalReader()->dateTime();
@@ -1109,82 +1529,129 @@ final class ParsedExif
 
     /**
      * @return GpsFieldMap
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gps(): array
     {
         return $this->gpsReader()->gps();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsDateStamp(): ?string
     {
         return $this->gpsReader()->gpsDateStamp();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsTimeStampString(): ?string
     {
         return $this->gpsReader()->gpsTimeStampString();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsTimestamp(): ?DateTimeImmutable
     {
         return $this->gpsReader()->gpsTimestamp();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsSpeedRef(): ?string
     {
         return $this->gpsReader()->gpsSpeedRef();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsSpeedMetresPerSecond(): ?float
     {
         return $this->gpsReader()->gpsSpeedMetresPerSecond();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsTrackRef(): ?string
     {
         return $this->gpsReader()->gpsTrackRef();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsTrack(): ?float
     {
         return $this->gpsReader()->gpsTrack();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsImgDirectionRef(): ?string
     {
         return $this->gpsReader()->gpsImgDirectionRef();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsImgDirection(): ?float
     {
         return $this->gpsReader()->gpsImgDirection();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsDestinationBearingRef(): ?string
     {
         return $this->gpsReader()->gpsDestinationBearingRef();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsDestinationBearing(): ?float
     {
         return $this->gpsReader()->gpsDestinationBearing();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsDestinationDistanceRef(): ?string
     {
         return $this->gpsReader()->gpsDestinationDistanceRef();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsDestinationDistanceMetres(): ?float
     {
         return $this->gpsReader()->gpsDestinationDistanceMetres();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsDifferential(): ?int
     {
         return $this->gpsReader()->gpsDifferential();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function gpsHorizontalPositioningError(): ?float
     {
         return $this->gpsReader()->gpsHorizontalPositioningError();
@@ -1192,11 +1659,17 @@ final class ParsedExif
 
     // ── TIFF Baseline domain ────────────────────────────────────
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function tileWidth(): ?int
     {
         return $this->tiffBaselineReader()->tileWidth();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function tileLength(): ?int
     {
         return $this->tiffBaselineReader()->tileLength();
@@ -1204,6 +1677,8 @@ final class ParsedExif
 
     /**
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function tileOffsets(): ?array
     {
@@ -1212,6 +1687,8 @@ final class ParsedExif
 
     /**
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function tileByteCounts(): ?array
     {
@@ -1220,117 +1697,185 @@ final class ParsedExif
 
     /**
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function transferFunction(): ?array
     {
         return $this->tiffBaselineReader()->transferFunction();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function predictor(): int
     {
         return $this->tiffBaselineReader()->predictor();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function newSubfileType(): int
     {
         return $this->tiffBaselineReader()->newSubfileType();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function subfileType(): ?int
     {
         return $this->tiffBaselineReader()->subfileType();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function threshholding(): int
     {
         return $this->tiffBaselineReader()->threshholding();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function cellWidth(): ?int
     {
         return $this->tiffBaselineReader()->cellWidth();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function cellLength(): ?int
     {
         return $this->tiffBaselineReader()->cellLength();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function fillOrder(): int
     {
         return $this->tiffBaselineReader()->fillOrder();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function minSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
         return $this->tiffBaselineReader()->minSampleValue();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function maxSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
         return $this->tiffBaselineReader()->maxSampleValue();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function pageName(): ?string
     {
         return $this->tiffBaselineReader()->pageName();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function xPosition(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->xPosition();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function yPosition(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->yPosition();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function freeOffsets(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->freeOffsets();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function freeByteCounts(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->freeByteCounts();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function grayResponseUnit(): int
     {
         return $this->tiffBaselineReader()->grayResponseUnit();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function grayResponseCurve(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->grayResponseCurve();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function t4Options(): int
     {
         return $this->tiffBaselineReader()->t4Options();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function t6Options(): int
     {
         return $this->tiffBaselineReader()->t6Options();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function pageNumber(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->pageNumber();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function colorMap(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->colorMap();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function halftoneHints(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->halftoneHints();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function inkSet(): int
     {
         return $this->tiffBaselineReader()->inkSet();
@@ -1341,76 +1886,121 @@ final class ParsedExif
         return $this->tiffBaselineReader()->inkNames();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function numberOfInks(): int
     {
         return $this->tiffBaselineReader()->numberOfInks();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function dotRange(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->dotRange();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function targetPrinter(): ?string
     {
         return $this->tiffBaselineReader()->targetPrinter();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function extraSamples(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->extraSamples();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function sampleFormat(): int
     {
         return $this->tiffBaselineReader()->sampleFormat();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function sMinSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->sMinSampleValue();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function sMaxSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->sMaxSampleValue();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function transferRange(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->transferRange();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function jpegProc(): ?int
     {
         return $this->tiffBaselineReader()->jpegProc();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function jpegRestartInterval(): ?int
     {
         return $this->tiffBaselineReader()->jpegRestartInterval();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function jpegLosslessPredictors(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->jpegLosslessPredictors();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function jpegPointTransforms(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->jpegPointTransforms();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function jpegQTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->jpegQTables();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function jpegDCTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->jpegDCTables();
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function jpegACTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->tiffBaselineReader()->jpegACTables();

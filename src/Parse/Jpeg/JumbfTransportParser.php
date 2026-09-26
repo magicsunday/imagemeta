@@ -166,6 +166,8 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
      * @param int    $segmentOffset APP11 marker offset for diagnostics.
      *
      * @return array{identifier:string, instance:int, sequence:int, data:string}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseTransportHeader(string $payload, int $segmentOffset): array
     {
@@ -210,6 +212,8 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
      * @param int    $segmentOffset APP11 marker offset for diagnostics.
      *
      * @return string Raw bytes of the JUMBF superbox.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function extractJumbfSuperbox(string $payload, int $segmentOffset): string
     {
@@ -245,6 +249,8 @@ final class JumbfTransportParser implements SegmentAssemblerInterface
      *
      * @param string $boxStream     Box stream beginning with one or more ISO-BMFF-style boxes.
      * @param int    $segmentOffset APP11 marker offset for diagnostics.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function collectXmlPacketsFromBoxes(string $boxStream, int $segmentOffset): void
     {

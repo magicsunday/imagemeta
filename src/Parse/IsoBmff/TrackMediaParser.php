@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
 use Closure;
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
@@ -83,6 +84,9 @@ final readonly class TrackMediaParser
      * @param IsoBmffParseContext $context Shared parse-state context.
      *
      * @return array{handler:?string, isEnabledInMovie:bool, keys:QuickTimeKeyMap}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseTrak(BoxDescriptor $trak, IsoBmffParseContext $context): array
     {
@@ -320,6 +324,9 @@ final readonly class TrackMediaParser
      * @param string       $normalizedFormat Normalized four-character sample entry type.
      *
      * @return SampleEntryMap
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function parseMetaSampleEntry(StreamWindow $win, int $entryEnd, string $normalizedFormat): array
     {
@@ -367,6 +374,9 @@ final readonly class TrackMediaParser
      * @param int          $keyEnd Absolute end offset of the keys box.
      *
      * @return SampleEntryMap
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function parseMetaSampleEntryKeys(StreamWindow $win, int $keyEnd): array
     {
@@ -490,6 +500,9 @@ final readonly class TrackMediaParser
      * @param BoxDescriptor $mvhd Movie header box descriptor.
      *
      * @return array<string, int|float|string>
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseMvhd(BoxDescriptor $mvhd): array
     {
@@ -566,6 +579,8 @@ final readonly class TrackMediaParser
      * Reads 9 consecutive unsigned 32-bit big-endian values forming a 3x3 matrix.
      *
      * @return list<int>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readMatrixRaw(StreamWindow $win): array
     {
@@ -606,6 +621,9 @@ final readonly class TrackMediaParser
      * @param BoxDescriptor $hdlr Handler box descriptor.
      *
      * @return array{0: ?string, 1: ?string}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseHdlr(BoxDescriptor $hdlr): array
     {
@@ -679,6 +697,9 @@ final readonly class TrackMediaParser
      * @param BoxDescriptor $tkhd Track header descriptor.
      *
      * @return TkhdResult
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseTkhd(BoxDescriptor $tkhd): array
     {
@@ -810,6 +831,9 @@ final readonly class TrackMediaParser
      * @param int           $timescaleCode Error code for zero timescale.
      *
      * @return array{version: int, createDate: int, modifyDate: int, timescale: int}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseTimescaleHeader(
         BoxDescriptor $box,
@@ -878,6 +902,9 @@ final readonly class TrackMediaParser
      * @param BoxDescriptor $mdhd Media header box descriptor.
      *
      * @return MdhdResult
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseMdhd(BoxDescriptor $mdhd): array
     {
@@ -933,6 +960,9 @@ final readonly class TrackMediaParser
      * @param IsoBmffParseContext $context Shared parse-state context.
      *
      * @return array{0: ?string, 1: ?string, 2: SampleEntryMap, 3: MdhdResult, 4: MediaHdrInfo}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseMdia(BoxDescriptor $mdia, IsoBmffParseContext $context): array
     {
@@ -1012,6 +1042,9 @@ final readonly class TrackMediaParser
      * @param string|null   $handlerType Declared handler type for the media.
      *
      * @return array{0: SampleEntryMap, 1: MediaHdrInfo}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseMinf(BoxDescriptor $minf, ?string $handlerType): array
     {
@@ -1095,6 +1128,9 @@ final readonly class TrackMediaParser
      * Tolerate flags=0 for compatibility with non-conforming files.
      *
      * @return array{graphicsMode: int, opColor: string}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseVmhd(BoxDescriptor $vmhd): array
     {
@@ -1133,6 +1169,9 @@ final readonly class TrackMediaParser
      * FullBox with version=0 and flags=0. Balance is signed 8.8 fixed-point.
      *
      * @return array{balance: float}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseSmhd(BoxDescriptor $smhd): array
     {
@@ -1166,6 +1205,9 @@ final readonly class TrackMediaParser
      * @param string        $handlerType Media handler type.
      *
      * @return SampleEntryMap
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseStbl(BoxDescriptor $stbl, string $handlerType): array
     {
@@ -1243,6 +1285,9 @@ final readonly class TrackMediaParser
      * @param string        $handlerType Handler type describing the media kind.
      *
      * @return SampleEntryMap
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseStsd(BoxDescriptor $stsd, string $handlerType): array
     {

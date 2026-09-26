@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Factory\Structured;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Value\Device;
@@ -26,6 +27,8 @@ final readonly class DeviceFactory
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
      * @return Device Device value object describing capture hardware and software.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function create(Metadata $metadata): Device
     {

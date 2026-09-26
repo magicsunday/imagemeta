@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Xmp;
 
+use MagicSunday\ImageMeta\Core\ParseError;
+
 use function array_key_exists;
 use function is_array;
 use function sprintf;
@@ -34,6 +36,8 @@ final readonly class XmpStructuredValue
 
     /**
      * Merges two structured values while preserving existing values and multiplicity where possible.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function merge(self $first, self $second): self
     {
@@ -77,6 +81,8 @@ final readonly class XmpStructuredValue
      * @param array<int, string|self>|string|XmpLanguageAlternative|self $value
      *
      * @return array<int, string|self>|string|XmpLanguageAlternative|self
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private static function mergeFieldValue(array|string|XmpLanguageAlternative|self $existing, array|string|XmpLanguageAlternative|self $value): array|string|XmpLanguageAlternative|self
     {

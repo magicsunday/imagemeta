@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
+use MagicSunday\ImageMeta\Core\ParseError;
+
 use function array_key_exists;
 
 /**
@@ -77,6 +79,8 @@ final class ApplePlistDictionary implements ApplePlistValueInterface
 
     /**
      * Resolves the dictionary using keyed-archive dispatch logic.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function resolveValue(KeyedArchiveUnarchiver $unarchiver): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
     {

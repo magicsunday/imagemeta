@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Exif\Converters;
 use JsonException;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\Endian;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -67,6 +68,8 @@ final readonly class MatrixConverter
      * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $rational
      *
      * @return array{0:float,1:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function toWhitePoint(ExifRationalList|ExifNumericList|array|null $rational): ?array
     {
@@ -95,6 +98,8 @@ final readonly class MatrixConverter
      * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $rational
      *
      * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function toPrimaryChromaticities(ExifRationalList|ExifNumericList|array|null $rational): ?array
     {
@@ -165,6 +170,8 @@ final readonly class MatrixConverter
      * EXIF 3.0 Annex C.3 (SRATIONAL matrices) guidance for DNG ColorMatrix/ForwardMatrix encodings.
      *
      * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $matrix
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngMatrixToString(ExifRationalList|ExifNumericList|array|null $matrix): ?string
     {

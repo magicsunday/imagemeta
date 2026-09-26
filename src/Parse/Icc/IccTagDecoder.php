@@ -64,6 +64,8 @@ final readonly class IccTagDecoder
      * @param int    $profileSize Declared profile size limiting the accessible range.
      *
      * @return TagOffsetMap Tag offset map keyed by 4-byte tag signature.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function buildTagOffsetMap(string $data, int $profileSize): array
     {
@@ -161,6 +163,8 @@ final readonly class IccTagDecoder
      * @param TagOffsetMap $tagMap       Pre-built tag offset map from {@see buildTagOffsetMap()}.
      *
      * @return string|null Tag text or null when not available.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractTag(string $data, int $profileSize, string $tagSignature, int $majorVersion, array $tagMap = []): ?string
     {
@@ -204,6 +208,8 @@ final readonly class IccTagDecoder
      * @param TagOffsetMap $tagMap      Pre-built tag offset map from {@see buildTagOffsetMap()}.
      *
      * @return array{x: float, y: float, z: float}|null XYZ tristimulus values or null when not available.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractWhitePoint(string $data, int $profileSize, array $tagMap = []): ?array
     {
@@ -222,6 +228,8 @@ final readonly class IccTagDecoder
      * @param TagOffsetMap $tagMap       Pre-built tag offset map from {@see buildTagOffsetMap()}.
      *
      * @return array{x: float, y: float, z: float}|null XYZ tristimulus values or null when not available.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractXyzTag(string $data, int $profileSize, string $tagSignature, array $tagMap = []): ?array
     {
@@ -265,6 +273,8 @@ final readonly class IccTagDecoder
      *   surround: array{x: float, y: float, z: float},
      *   illuminantType: int
      * }|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractViewingConditions(string $data, int $profileSize, array $tagMap = []): ?array
     {
@@ -306,6 +316,8 @@ final readonly class IccTagDecoder
      *   flare: float,
      *   illuminant: int
      * }|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractMeasurement(string $data, int $profileSize, array $tagMap = []): ?array
     {
@@ -348,6 +360,8 @@ final readonly class IccTagDecoder
      * @param TagOffsetMap $tagMap       Pre-built tag offset map from {@see buildTagOffsetMap()}.
      *
      * @return array{gamma: float}|array{table: list<int>}|null Curve data or null when not available.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractTrcTag(string $data, int $profileSize, string $tagSignature, array $tagMap = []): ?array
     {
@@ -382,6 +396,8 @@ final readonly class IccTagDecoder
      * @param TagOffsetMap $tagMap       Pre-built tag offset map from {@see buildTagOffsetMap()}.
      *
      * @return string|null 4-byte signature value or null when not available.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractSignatureTag(string $data, int $profileSize, string $tagSignature, array $tagMap = []): ?string
     {
@@ -421,6 +437,8 @@ final readonly class IccTagDecoder
      * @param TagOffsetMap $tagMap       Pre-built tag offset map from {@see buildTagOffsetMap()}.
      *
      * @return string|null Raw tag data or null when not found.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function findTagData(string $data, int $profileSize, string $tagSignature, array $tagMap = []): ?string
     {
@@ -463,6 +481,8 @@ final readonly class IccTagDecoder
      * @param string $tagSignature 4-byte tag signature to search for.
      *
      * @return string|null Raw tag data or null when not found.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function findTagDataByScan(string $data, int $profileSize, string $tagSignature): ?string
     {
@@ -486,6 +506,8 @@ final readonly class IccTagDecoder
      * Parses one XYZNumber triplet (3 x s15Fixed16Number) from a payload offset.
      *
      * @return array{x: float, y: float, z: float}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseXyzTriplet(string $data, int $offset): array
     {
@@ -536,6 +558,8 @@ final readonly class IccTagDecoder
      * @param string $data Raw tag payload beginning with the type signature.
      *
      * @return string|null Extracted description or null when invalid.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseDescTag(string $data): ?string
     {
@@ -600,6 +624,8 @@ final readonly class IccTagDecoder
      * @param string $data Raw tag payload beginning with the type signature.
      *
      * @return string|null Extracted description string or null when no valid record exists.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseMlucTag(string $data): ?string
     {
@@ -716,6 +742,8 @@ final readonly class IccTagDecoder
      * @param string $data Raw tag payload beginning with the type signature.
      *
      * @return array{gamma: float}|null Parsed gamma or null when invalid.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseParametricCurve(string $data): ?array
     {
@@ -754,6 +782,8 @@ final readonly class IccTagDecoder
      * @param string $data Raw tag payload beginning with the type signature.
      *
      * @return array{gamma: float}|array{table: list<int>}|null Curve data or null when invalid.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseCurveType(string $data): ?array
     {

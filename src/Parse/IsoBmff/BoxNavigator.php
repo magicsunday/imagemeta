@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
@@ -53,7 +54,8 @@ final readonly class BoxNavigator
      *
      * @return iterable<BoxDescriptor>
      *
-     * @throws ParseError When child boxes do not align with the parent container.
+     * @throws ParseError  When child boxes do not align with the parent container.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function walkChildren(BoxDescriptor $parent, int $offset = 0, bool $allowTrailingTerminator = false): iterable
     {
@@ -93,7 +95,8 @@ final readonly class BoxNavigator
      * @param int  $limit             Limit offset that bounds the container.
      * @param bool $allowImplicitSize When true, allows size==0 boxes (implicit size to end of container).
      *
-     * @throws ParseError When the box header is invalid or the box exceeds the container.
+     * @throws ParseError  When the box header is invalid or the box exceeds the container.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readBoxAt(int $offset, int $limit, bool $allowImplicitSize = false): BoxDescriptor
     {
@@ -169,6 +172,9 @@ final readonly class BoxNavigator
      * Reads a FullBox header (ISO/IEC 14496-12 §4.2): 1-byte version + 3-byte flags.
      *
      * @param StreamWindow $window Window positioned at the start of the version/flags fields.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readFullBoxHeader(StreamWindow $window): FullBoxHeader
     {
@@ -183,6 +189,9 @@ final readonly class BoxNavigator
      *
      * @param StreamWindow $window Window to read from.
      * @param int          $bytes  Number of bytes representing the integer.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readUInt(StreamWindow $window, int $bytes): int
     {
@@ -201,6 +210,9 @@ final readonly class BoxNavigator
      * Reads an unsigned 24-bit integer from the provided window.
      *
      * @param StreamWindow $window Window to read from.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readUInt24(StreamWindow $window): int
     {
@@ -253,6 +265,9 @@ final readonly class BoxNavigator
      * Reads the entire payload of a stream window.
      *
      * @param StreamWindow $window Window to consume.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readAll(StreamWindow $window): string
     {

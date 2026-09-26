@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Factory;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Factory\Structured\ValueFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
@@ -45,6 +46,8 @@ final readonly class StructuredMetadataBuilder
 
     /**
      * Assembles the structured metadata aggregate from the supplied metadata container.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function assemble(Metadata $metadata): StructuredMetadata
     {

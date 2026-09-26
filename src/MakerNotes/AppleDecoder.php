@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleJpegIfdParser;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
@@ -53,6 +54,8 @@ final readonly class AppleDecoder implements MakerNotesDecoderInterface
      * @param string      $raw   Raw maker note data stream.
      * @param string      $make  Reported camera make string.
      * @param string|null $model Optional camera model identifier.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
     {
@@ -71,6 +74,8 @@ final readonly class AppleDecoder implements MakerNotesDecoderInterface
      * @param string $raw Raw maker note data stream.
      *
      * @return AppleMakerNotes|null Parsed maker notes instance or null when the payload cannot be decoded.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseAppleData(string $raw): ?AppleMakerNotes
     {

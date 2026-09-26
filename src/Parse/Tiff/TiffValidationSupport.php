@@ -63,6 +63,8 @@ final readonly class TiffValidationSupport
      * Extracts numeric tag components as a float list.
      *
      * @return list<float>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractNumericTagComponents(IfdEntry $entry, string $tagName): array
     {
@@ -99,6 +101,8 @@ final readonly class TiffValidationSupport
      * Extracts integer-only tag components.
      *
      * @return list<int>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractIntegerTagComponents(IfdEntry $entry, string $tagName): array
     {
@@ -130,6 +134,8 @@ final readonly class TiffValidationSupport
      * All BitsPerSample components must be positive, uniform, and ≤ 16.
      * Error codes are derived from a base: base+0=missing, base+1=notInt,
      * base+2=empty, base+3=nonPositive, base+4=nonUniform, base+5=tooLarge.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function resolveUniformBitsPerSample(Ifd $ifd, string $context, int $baseErrCode): int
     {
@@ -218,6 +224,8 @@ final readonly class TiffValidationSupport
      * @param int    $countCode Error code for decoded component count mismatch.
      *
      * @return array{0: int, 1: int}|null The two integer components, or null if absent.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractShortPair(
         Ifd $ifd,

@@ -170,6 +170,9 @@ final readonly class MetadataReader
      * @param ?int    $fileSize     File size in bytes if it could be determined.
      * @param ?string $extension    File extension detected from the path or stream.
      * @param ?string $digestSha256 Pre-computed SHA-256 digest for the stream contents.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function fromJpeg(
         Stream $stream,
@@ -223,6 +226,9 @@ final readonly class MetadataReader
      * @param ?int    $fileSize     File size in bytes if it could be determined.
      * @param ?string $extension    File extension detected from the path or stream.
      * @param ?string $digestSha256 Pre-computed SHA-256 digest for the stream contents.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function fromIsoBmff(
         Stream $stream,
@@ -269,6 +275,9 @@ final readonly class MetadataReader
      * @param ?int    $fileSize     File size in bytes if it could be determined.
      * @param ?string $extension    File extension detected from the path or stream.
      * @param ?string $digestSha256 Pre-computed SHA-256 digest for the stream contents.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function fromTiff(
         Stream $stream,
@@ -321,6 +330,9 @@ final readonly class MetadataReader
      * @param ?int    $fileSize     File size in bytes if it could be determined.
      * @param ?string $extension    File extension detected from the path or stream.
      * @param ?string $digestSha256 Pre-computed SHA-256 digest for the stream contents.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function fromJxl(
         Stream $stream,
@@ -355,6 +367,9 @@ final readonly class MetadataReader
      * @param ?int    $fileSize     File size in bytes if it could be determined.
      * @param ?string $extension    File extension detected from the path or stream.
      * @param ?string $digestSha256 Pre-computed SHA-256 digest for the stream contents.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function fromRiff(
         Stream $stream,
@@ -390,6 +405,9 @@ final readonly class MetadataReader
      *
      * @param Stream             $stream Source stream to scan.
      * @param QuickTimeMeta|null $qt     Existing QuickTime metadata from the parser.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function enrichWithDjiTelemetry(Stream $stream, ?QuickTimeMeta $qt): ?QuickTimeMeta
     {
@@ -426,6 +444,8 @@ final readonly class MetadataReader
      * Parses XMP blobs and merges them into a single document.
      *
      * @param list<string> $xmpBlobs Raw XMP packet strings.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseXmpBlobs(array $xmpBlobs): ?XmpDocument
     {
@@ -511,6 +531,9 @@ final readonly class MetadataReader
 
     /**
      * Calculates a SHA-256 digest by reading the opened stream once.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function calculateDigest(Stream $stream): string
     {
@@ -546,6 +569,9 @@ final readonly class MetadataReader
      * @param list<string> $exifBlobs
      *
      * @return array{0: ?ParsedExif, 1: ?MakerNotesRecord}
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function parseEmbeddedExifBlobs(
         array $exifBlobs,

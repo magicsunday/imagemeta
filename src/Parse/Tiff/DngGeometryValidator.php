@@ -47,6 +47,8 @@ final readonly class DngGeometryValidator
      * DNG 1.7.1.0 ("ActiveArea", "MaskedAreas"):
      * - ActiveArea: SHORT|LONG[4], order top,left,bottom,right with top<bottom and left<right
      * - MaskedAreas: SHORT|LONG[4*N], each rectangle uses the same ordering and must not overlap
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngActiveAndMaskedAreas(Ifd $ifd): void
     {
@@ -106,6 +108,8 @@ final readonly class DngGeometryValidator
      * DNG 1.7.1.0 ("BlackLevelRepeatDim", "BlackLevel", "BlackLevelDeltaH",
      * "BlackLevelDeltaV", "WhiteLevel") defines type/count constraints and
      * count formulas based on SamplesPerPixel and ActiveArea geometry.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngBlackWhiteLevelFamily(Ifd $ifd): void
     {
@@ -134,6 +138,8 @@ final readonly class DngGeometryValidator
      * - DefaultScale: RATIONAL[2], both components > 0
      * - DefaultCropOrigin: SHORT|LONG|RATIONAL with count 2, components >= 0
      * - DefaultCropSize: SHORT|LONG|RATIONAL with count 2, components > 0
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngDefaultCropScaleGeometry(Ifd $ifd): void
     {
@@ -243,6 +249,8 @@ final readonly class DngGeometryValidator
      * - OriginalBestQualityFinalSize defaults to OriginalDefaultFinalSize if specified.
      * - OriginalDefaultCropSize defaults to OriginalDefaultFinalSize if specified.
      * - If OriginalDefaultFinalSize is absent, defaults continue to current-file values.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngOriginalProxySizes(Ifd $ifd): void
     {
@@ -273,6 +281,8 @@ final readonly class DngGeometryValidator
      * Validates BestQualityScale (0xC65C) per DNG 1.7.1.0.
      *
      * Must be RATIONAL[1] with a strictly positive numeric value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngBestQualityScale(Ifd $ifd): void
     {
@@ -301,6 +311,8 @@ final readonly class DngGeometryValidator
      * Validates LinearResponseLimit (0xC62E) per DNG 1.7.1.0.
      *
      * Must be RATIONAL[1] with fraction semantics: 0 < value <= 1.0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngLinearResponseLimit(Ifd $ifd): void
     {
@@ -332,6 +344,8 @@ final readonly class DngGeometryValidator
      * Validates LinearizationTable (0xC618) DNG layout.
      *
      * DNG 1.7.1.0 defines LinearizationTable as a non-empty SHORT lookup table.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngLinearizationTable(Ifd $ifd): void
     {
@@ -358,6 +372,8 @@ final readonly class DngGeometryValidator
      *
      * Must be RATIONAL[4]: (Top, Left, Bottom, Right) with 0 <= Top < Bottom <= 1.0
      * and 0 <= Left < Right <= 1.0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngDefaultUserCrop(Ifd $ifd): void
     {
@@ -411,6 +427,8 @@ final readonly class DngGeometryValidator
      * Validates DefaultBlackRender (0xC7A6) per DNG 1.7.1.0.
      *
      * Must be LONG[1] with value 0 (Auto) or 1 (None).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngDefaultBlackRender(Ifd $ifd): void
     {
@@ -439,6 +457,8 @@ final readonly class DngGeometryValidator
      * Validates BaselineNoise and BaselineSharpness scalar tags per DNG 1.7.1.0.
      *
      * Both tags must be RATIONAL[1] with strictly positive finite values.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngBaselineScalars(Ifd $ifd): void
     {
@@ -480,6 +500,8 @@ final readonly class DngGeometryValidator
      * - ChromaBlurRadius (>= 0)
      * - AntiAliasStrength (>= 0)
      * - ShadowScale (> 0)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngRenderScalars(Ifd $ifd): void
     {
@@ -536,6 +558,8 @@ final readonly class DngGeometryValidator
      * 4) min f-stop at max focal.
      *
      * Aperture fields may use 0/0 to indicate unknown values.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngLensInfo(Ifd $ifd): void
     {
@@ -607,6 +631,8 @@ final readonly class DngGeometryValidator
      * Applicability is enforced when contextual tags are present:
      * - PhotometricInterpretation must be CFA (32803)
      * - CFARepeatPatternDim must be 2x2 for Bayer
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngBayerGreenSplit(Ifd $ifd): void
     {
@@ -676,6 +702,8 @@ final readonly class DngGeometryValidator
      * - BlackLevel: SHORT|LONG|RATIONAL, count = rows * cols * SamplesPerPixel.
      *
      * @return array{0: int|null, 1: int|null} Repeat rows and columns (null when absent).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDngBlackLevelRepeatDimAndLevel(
         Ifd $ifd,
@@ -710,6 +738,8 @@ final readonly class DngGeometryValidator
      *
      * DNG 1.7.1.0:
      * - BlackLevel: SHORT|LONG|RATIONAL, count = rows * cols * SamplesPerPixel.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDngBlackLevelEntry(
         Ifd $ifd,
@@ -765,6 +795,8 @@ final readonly class DngGeometryValidator
      * - ActiveArea: SHORT|LONG[4] rectangle (top, left, bottom, right).
      *
      * @return array{0: int|null, 1: int|null} Active width and length (null when absent/unusable).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function resolveDngActiveAreaDimensions(Ifd $ifd): array
     {
@@ -790,6 +822,8 @@ final readonly class DngGeometryValidator
      * DNG 1.7.1.0:
      * - BlackLevelDeltaH: SRATIONAL, count = ActiveArea width.
      * - BlackLevelDeltaV: SRATIONAL, count = ActiveArea length.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDngBlackLevelDeltas(
         Ifd $ifd,
@@ -828,6 +862,8 @@ final readonly class DngGeometryValidator
      *
      * DNG 1.7.1.0:
      * - BlackLevelDeltaH/V: SRATIONAL, count = ActiveArea width/length.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDngBlackLevelDeltaEntry(
         IfdEntry $entry,
@@ -867,6 +903,8 @@ final readonly class DngGeometryValidator
      *
      * DNG 1.7.1.0:
      * - WhiteLevel: SHORT|LONG, count = SamplesPerPixel.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDngWhiteLevel(Ifd $ifd, ?int $samplesPerPixel): void
     {
@@ -902,6 +940,8 @@ final readonly class DngGeometryValidator
      * Validates SubTileBlockSize (0xC71E) per DNG 1.7.1.0.
      *
      * Must be (SHORT|LONG)[2] with both components >= 1.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngSubTileBlockSize(Ifd $ifd): void
     {
@@ -941,6 +981,8 @@ final readonly class DngGeometryValidator
      * Validates RowInterleaveFactor (0xC71F) per DNG 1.7.1.0.
      *
      * Must be (SHORT|LONG)[1] with value >= 1.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngRowInterleaveFactor(Ifd $ifd): void
     {

@@ -77,6 +77,8 @@ final readonly class ItemPayloadResolver
      * @param list<int>                                                                                                                                                                     $visitedItemIds    Item IDs already visited for cycle detection.
      *
      * @return IsoBmffItemResolveResult Resolved payload data and any unresolved item descriptors.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function resolveItemData(int $itemId, array $locations, array $itemReferences, array $dataReferences, ?string $idatPayload, int $metaContextOffset, array $visitedItemIds = []): IsoBmffItemResolveResult
     {
@@ -119,6 +121,8 @@ final readonly class ItemPayloadResolver
      * @param int                                                                                                                                                               $metaContextOffset Absolute file offset of the owning meta box.
      *
      * @return IsoBmffItemResolveResult Resolved file-offset payload or unresolved item descriptor.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function resolveFileOffsetItemData(int $itemId, array $location, array $dataReferences, int $metaContextOffset): IsoBmffItemResolveResult
     {
@@ -160,6 +164,8 @@ final readonly class ItemPayloadResolver
      * @param int                                                                                                                                                               $metaContextOffset Absolute file offset of the owning meta box.
      *
      * @return IsoBmffItemResolveResult Resolved idat-offset payload or unresolved item descriptor.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function resolveIdatOffsetItemData(int $itemId, array $location, array $dataReferences, ?string $idatPayload, int $metaContextOffset): IsoBmffItemResolveResult
     {
@@ -203,6 +209,8 @@ final readonly class ItemPayloadResolver
      * @param list<int>                                                                                                                                                                     $visitedItemIds    Item IDs already visited for cycle detection.
      *
      * @return IsoBmffItemResolveResult Resolved item-offset payload or unresolved item descriptor.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function resolveItemOffsetItemData(
         int $itemId,
@@ -314,6 +322,8 @@ final readonly class ItemPayloadResolver
      * @param list<int>                                                                                                                                                                     $visitedItemIds    Item IDs already visited for cycle detection.
      *
      * @return IsoBmffItemResolveResult Resolved referenced item payload or unresolved item descriptor.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function resolveReferencedItemData(
         int $itemId,
@@ -381,6 +391,8 @@ final readonly class ItemPayloadResolver
      * @param string $blob Raw EXIF payload from ISO BMFF container.
      *
      * @return string EXIF payload trimmed to the TIFF header.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function normalizeExifBlob(string $blob): string
     {
@@ -481,6 +493,8 @@ final readonly class ItemPayloadResolver
      * @phpstan-param ExtentErrorCodes                              $errorCodes
      *
      * @return string Concatenated extent data read from the container.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function walkLinearExtents(
         array $extents,
@@ -554,6 +568,8 @@ final readonly class ItemPayloadResolver
      * @param int $originOverflowCode Error code for +origin overflow (unused when $originOffset is 0).
      *
      * @return int Computed effective offset.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function computeSafeOffset(
         int $baseOffset,
@@ -593,6 +609,8 @@ final readonly class ItemPayloadResolver
      * @param int                                                                                                                                                               $metaContextOffset Absolute file offset of the owning meta box.
      *
      * @return IsoBmffUnresolvedItem Unresolved item descriptor for deferred resolution.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function createUnresolvedItem(int $itemId, array $location, array $dataReferences, int $metaContextOffset): IsoBmffUnresolvedItem
     {

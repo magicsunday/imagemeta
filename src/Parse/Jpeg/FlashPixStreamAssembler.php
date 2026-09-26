@@ -86,6 +86,8 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      *
      * @param string $payload Raw segment payload including signature.
      * @param int    $offset  Offset in the stream where the marker begins.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function handleSegment(string $payload, int $offset): void
     {
@@ -106,6 +108,8 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      *
      * Gaps in stream data are filled with the declared entry default byte
      * (EXIF 3.0 §4.7.3.4 / §4.7.3.5).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function finalise(): void
     {
@@ -213,6 +217,8 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      *
      * @param string $payload Raw APP2 payload with FPXR prefix.
      * @param int    $offset  Marker offset used for diagnostics.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function extractBody(string $payload, int $offset): string
     {
@@ -253,6 +259,8 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      *
      * @param string $body   FPXR segment body without signature.
      * @param int    $offset Marker offset used for diagnostics.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseContentsList(string $body, int $offset): void
     {
@@ -435,6 +443,8 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      *
      * @param string $body   FPXR segment body without signature.
      * @param int    $offset Marker offset used for diagnostics.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseStreamData(string $body, int $offset): void
     {
@@ -509,6 +519,8 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      * Validates sequence metadata and tracks seen segments per contents-list entry.
      *
      * @param StreamDataHeader $header
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateSequenceMetadata(array $header, int $offset): void
     {
@@ -571,6 +583,8 @@ final class FlashPixStreamAssembler implements SegmentAssemblerInterface
      * @param StreamEntry      $entry
      *
      * @return StreamRange|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateRangeAndOverlap(array $header, array $entry, int $offset): ?array
     {

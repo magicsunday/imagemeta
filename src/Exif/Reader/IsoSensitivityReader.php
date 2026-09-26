@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\FallbackIfdSet;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
@@ -43,6 +44,8 @@ final readonly class IsoSensitivityReader
      * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.6.7.7 Table 14.
      *
      * Signals which ISO 12232 parameter the PhotographicSensitivity tag represents.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sensitivityType(): ?SensitivityType
     {
@@ -59,6 +62,8 @@ final readonly class IsoSensitivityReader
      * Returns the standard output sensitivity (SOS) value recorded for the capture.
      *
      * EXIF 3.0 §4.6.6.7.8
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function standardOutputSensitivity(): ?int
     {
@@ -69,6 +74,8 @@ final readonly class IsoSensitivityReader
      * Returns the recommended exposure index (REI) value recorded for the capture.
      *
      * EXIF 3.0 §4.6.6.7.9
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function recommendedExposureIndex(): ?int
     {
@@ -79,6 +86,8 @@ final readonly class IsoSensitivityReader
      * Returns the ISO speed value when provided separately from photographic sensitivity.
      *
      * EXIF 3.0 §4.6.6.7.10
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function isoSpeedValue(): ?int
     {
@@ -92,6 +101,8 @@ final readonly class IsoSensitivityReader
      * PhotographicSensitivity tag to ISO 12232 parameters and combinations.
      * When declared, the photographic sensitivity value must be prioritised for
      * the selected parameter(s) before falling back to legacy individual tags.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function iso(): ?int
     {
@@ -148,6 +159,8 @@ final readonly class IsoSensitivityReader
 
     /**
      * Returns the ISO sensitivity using a broader set of fallbacks for non-standard encodings.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function isoBestEffort(): ?int
     {
@@ -201,6 +214,8 @@ final readonly class IsoSensitivityReader
      * Returns the ISO latitude yyy value when present and paired with ISOSpeed and ISOSpeedLatitudezzz.
      *
      * EXIF 3.0 §4.6.6.7.11
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function isoSpeedLatitudeYyy(): ?int
     {
@@ -225,6 +240,8 @@ final readonly class IsoSensitivityReader
      * Returns the ISO latitude zzz value when present.
      *
      * EXIF 3.0 §4.6.6.7.12 (ISOSpeedLatitudezzz)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function isoSpeedLatitudeZzz(): ?int
     {
@@ -235,6 +252,8 @@ final readonly class IsoSensitivityReader
      * Returns the spectral sensitivity description.
      *
      * EXIF 3.0 §4.6.6.7.4 (SpectralSensitivity)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function spectralSensitivity(): ?string
     {

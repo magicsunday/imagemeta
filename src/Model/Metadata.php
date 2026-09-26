@@ -15,6 +15,7 @@ use Closure;
 use LogicException;
 use MagicSunday\ImageMeta\Contract\IptcParserInterface;
 use MagicSunday\ImageMeta\Contract\XmpParserInterface;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
@@ -207,6 +208,8 @@ final readonly class Metadata
      * The method keeps existing behaviour for callers that already provided an \MagicSunday\ImageMeta\Model\Xmp\XmpDocument
      * instance while allowing consumers of the aggregate to obtain a curated subset of XMP data without having
      * to instantiate the parser manually.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function selectiveXmpDocument(): ?XmpDocument
     {

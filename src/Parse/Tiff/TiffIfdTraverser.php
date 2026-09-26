@@ -214,6 +214,9 @@ final class TiffIfdTraverser
      *
      * @param int $offset Candidate offset.
      * @param int $tag    Tag identifier emitting the offset.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function validatePointerOffset(int $offset, int $tag): ?int
     {
@@ -236,6 +239,9 @@ final class TiffIfdTraverser
      *
      * @param float $value Floating-point representation to normalize.
      * @param int   $tag   Tag identifier emitting the offset.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function pointerOffsetFromFloat(float $value, int $tag): ?int
     {

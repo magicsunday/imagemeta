@@ -432,6 +432,8 @@ final class BinaryPlistDecoder
      *
      * @param int $offset Byte offset in payload.
      * @param int $info   Info nibble (count or extended length marker).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseSet(int $offset, int $info): ApplePlistArray
     {

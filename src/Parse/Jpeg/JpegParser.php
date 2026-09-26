@@ -120,6 +120,9 @@ final class JpegParser implements JpegParserInterface
      * Returns all discovered EXIF payloads in the order they appeared.
      *
      * @return list<string>
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function extractExifBlobs(): array
     {
@@ -132,6 +135,9 @@ final class JpegParser implements JpegParserInterface
      * Returns all discovered XMP packets in the order they appeared.
      *
      * @return list<string>
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function extractXmpPackets(): array
     {
@@ -142,6 +148,9 @@ final class JpegParser implements JpegParserInterface
 
     /**
      * Returns the merged ICC profile when complete metadata segments were found.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function getIccProfile(): ?string
     {
@@ -154,6 +163,9 @@ final class JpegParser implements JpegParserInterface
      * Returns all ICC profile segments in the order encountered.
      *
      * @return list<string>
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function getIccSegments(): array
     {
@@ -166,6 +178,9 @@ final class JpegParser implements JpegParserInterface
      * Returns all IPTC payloads captured from APP13 segments.
      *
      * @return list<string>
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function getIptcPayloads(): array
     {
@@ -179,6 +194,9 @@ final class JpegParser implements JpegParserInterface
      *
      * The ColorTransform byte indicates the colour encoding:
      * 0 = Unknown/RGB, 1 = YCbCr, 2 = YCCK.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function getAdobeApp14ColorTransform(): ?int
     {
@@ -191,6 +209,9 @@ final class JpegParser implements JpegParserInterface
      * Returns concatenated FlashPix extension streams keyed by contents-list index.
      *
      * @return array<int, string>
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function getFlashPixStreams(): array
     {
@@ -203,6 +224,9 @@ final class JpegParser implements JpegParserInterface
      * Returns EXIF audio streams discovered in APP2 markers.
      *
      * @return list<JpegAudioStream>
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function getAudioStreams(): array
     {
@@ -215,6 +239,9 @@ final class JpegParser implements JpegParserInterface
      * Returns the parsed MPF document or null when it is unavailable.
      *
      * Triggers lazy parsing via parseIfNeeded() if the stream has not been processed yet.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function getMpfDocument(): ?MpfDocument
     {
@@ -225,6 +252,9 @@ final class JpegParser implements JpegParserInterface
 
     /**
      * Returns the parsed JFIF APP0 segment when a JFIF marker was encountered.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function getJfifSegment(): ?JfifSegment
     {
@@ -235,6 +265,9 @@ final class JpegParser implements JpegParserInterface
 
     /**
      * Returns the precision in bits reported by the primary start of frame segment.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function getFrameSamplePrecision(): ?int
     {
@@ -245,6 +278,9 @@ final class JpegParser implements JpegParserInterface
 
     /**
      * Returns the frame height reported by the primary start of frame segment.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function getFrameHeight(): ?int
     {
@@ -255,6 +291,9 @@ final class JpegParser implements JpegParserInterface
 
     /**
      * Returns the frame width reported by the primary start of frame segment.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function getFrameWidth(): ?int
     {
@@ -267,6 +306,9 @@ final class JpegParser implements JpegParserInterface
      * Returns the horizontal and vertical sampling factors for components identified in the SOF.
      *
      * @return array<int, array{horizontal:int, vertical:int}>|null
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function getFrameComponentSamplingFactors(): ?array
     {
@@ -279,6 +321,9 @@ final class JpegParser implements JpegParserInterface
      * Returns the derived YCbCr subsampling factors inferred from the SOF component sampling.
      *
      * @return array{0:int,1:int}|null
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function getFrameYCbCrSubSampling(): ?array
     {
@@ -294,6 +339,9 @@ final class JpegParser implements JpegParserInterface
      * SOI and the first SOS marker while excluding restart and TEM markers from carrying
      * payloads. EXIF 3.0 §4.7 (Table 2) requires an EOI marker to terminate the JPEG
      * bitstream after scan data.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseIfNeeded(): void
     {
@@ -353,6 +401,9 @@ final class JpegParser implements JpegParserInterface
      * Processes a single marker encountered during the JPEG scan loop.
      *
      * @return bool True when the scan loop should terminate (EOI or SOS reached).
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function processMarkerSegment(int $marker, int $offset): bool
     {
@@ -413,6 +464,8 @@ final class JpegParser implements JpegParserInterface
      *
      * EXIF 3.0 §4.7 Table 2 defines one frame-header declaration in the
      * marker flow before SOS; additional SOF markers are non-conformant.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function processStartOfFrame(int $marker, string $payload, int $offset): void
     {
@@ -438,6 +491,9 @@ final class JpegParser implements JpegParserInterface
 
     /**
      * Finalises all assemblers and resolves deferred parse results.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function finaliseParseResults(): void
     {
@@ -491,6 +547,8 @@ final class JpegParser implements JpegParserInterface
      * Collects MPF APP2 segments to be parsed after the marker scan completes.
      *
      * EXIF 3.0 §4.6.4 specifies that Multi-Picture Format data resides in APP2 markers.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function handleMpfSegment(string $payload, int $offset): void
     {
@@ -507,6 +565,8 @@ final class JpegParser implements JpegParserInterface
      * Parses the JFIF APP0 segment payload and stores the first valid instance.
      *
      * JFIF 1.02 (2009) §3 defines the payload layout immediately following the "JFIF\0" identifier.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function handleJfifSegment(string $payload, int $offset): void
     {

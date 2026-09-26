@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Factory\Structured;
 use DateMalformedStringException;
 use DateTimeImmutable;
 use DateTimeZone;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\DateTimeUtil;
 use MagicSunday\ImageMeta\Core\Util\Iso6709Parser;
 use MagicSunday\ImageMeta\Core\Util\StringUtil;
@@ -64,6 +65,8 @@ final readonly class GpsFactory
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
      * @return Gps GPS metadata aggregate or empty GPS when no data is available.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function create(Metadata $metadata): Gps
     {
@@ -98,6 +101,8 @@ final readonly class GpsFactory
      * Builds a GPS value object from the available metadata.
      *
      * The GPS version defaults to 2.4.0.0 whenever EXIF omits the tag or only exposes padding bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function resolveGps(?ParsedExif $exifDocument, ?XmpDocument $xmpDocument): ?Gps
     {

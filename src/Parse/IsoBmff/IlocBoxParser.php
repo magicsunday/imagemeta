@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
 use MagicSunday\ImageMeta\Core\BitMask;
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
@@ -56,6 +57,9 @@ final readonly class IlocBoxParser
      * @param int           $fileOffsetOrigin Absolute data origin for file-offset construction method.
      *
      * @return array<int, IlocLocation>
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseIloc(BoxDescriptor $iloc, int $fileOffsetOrigin = 0): array
     {
@@ -180,6 +184,9 @@ final readonly class IlocBoxParser
      * @param BoxDescriptor $iinf Box descriptor containing the item information payload.
      *
      * @return list<InfeItem> Parsed item information entries from all contained infe boxes.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseIinf(BoxDescriptor $iinf): array
     {
@@ -259,6 +266,9 @@ final readonly class IlocBoxParser
      * @param BoxDescriptor $pitm Box descriptor containing the primary item payload.
      *
      * @return int|null Primary item ID or null when the box uses an unsupported version.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parsePitm(BoxDescriptor $pitm): ?int
     {
@@ -299,6 +309,9 @@ final readonly class IlocBoxParser
      * @param BoxDescriptor $iref Box descriptor containing item references.
      *
      * @return array<int, list<IsoBmffItemReference>>
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseIref(BoxDescriptor $iref): array
     {
@@ -346,6 +359,9 @@ final readonly class IlocBoxParser
      * @param BoxDescriptor $dinf Box descriptor representing the data information box.
      *
      * @return array<int, IsoBmffDataReference>
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseDinf(BoxDescriptor $dinf): array
     {
@@ -379,6 +395,9 @@ final readonly class IlocBoxParser
      * @param BoxDescriptor $dref Box descriptor representing the data reference box.
      *
      * @return array<int, IsoBmffDataReference>
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseDref(BoxDescriptor $dref): array
     {
@@ -432,6 +451,9 @@ final readonly class IlocBoxParser
      * @param int           $index One-based index of the reference.
      *
      * @return IsoBmffDataReference Parsed data reference entry for the given box.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseDataReferenceEntry(BoxDescriptor $entry, int $index): IsoBmffDataReference
     {
@@ -526,6 +548,9 @@ final readonly class IlocBoxParser
      * @param BoxDescriptor $infe Box descriptor for the entry being parsed.
      *
      * @return array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string, itemUriType?: ?string, hidden: bool}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseInfe(BoxDescriptor $infe): array
     {
@@ -652,6 +677,9 @@ final readonly class IlocBoxParser
      * @param int           $irefVersion Version of the parent iref box (0 or 1).
      *
      * @return array{fromItemId:int, references:list<IsoBmffItemReference>}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseSingleItemReference(BoxDescriptor $entry, int $irefVersion): array
     {
@@ -706,6 +734,8 @@ final readonly class IlocBoxParser
      * @param int $nibble Raw nibble extracted from the length-size field.
      *
      * @return int Validated byte width (0, 4, or 8).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateSizeNibble(int $nibble): int
     {
