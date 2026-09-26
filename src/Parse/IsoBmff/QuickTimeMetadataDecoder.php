@@ -100,10 +100,10 @@ final readonly class QuickTimeMetadataDecoder
      * @var array<string, array{key: string, size: int, type: string}>
      */
     private const array UDTA_BINARY_KEYS = [
-        'LOOP' => ['key' => 'com.apple.quicktime.loopStyle', 'size' => 4, 'type' => 'u32'],
+        'LOOP' => ['key' => 'com.apple.quicktime.loopStyle',         'size' => 4, 'type' => 'u32'],
         'SelO' => ['key' => 'com.apple.quicktime.playSelectionOnly', 'size' => 1, 'type' => 'u8'],
-        'AllF' => ['key' => 'com.apple.quicktime.playAllFrames', 'size' => 1, 'type' => 'u8'],
-        'WLOC' => ['key' => 'com.apple.quicktime.windowLocation', 'size' => 4, 'type' => 'u16pair'],
+        'AllF' => ['key' => 'com.apple.quicktime.playAllFrames',     'size' => 1, 'type' => 'u8'],
+        'WLOC' => ['key' => 'com.apple.quicktime.windowLocation',   'size' => 4, 'type' => 'u16pair'],
     ];
 
     /**
