@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -176,6 +177,8 @@ final readonly class GpsConverter
      * @param Ifd $gps The GPS IFD containing coordinate tags.
      *
      * @return GpsFieldMap
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function fromIfd(Ifd $gps): array
     {
@@ -258,6 +261,8 @@ final readonly class GpsConverter
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw value.
      *
      * @return array{normalized: ?string, raw: ?string}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function formatVersion(
         string|int|float|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,

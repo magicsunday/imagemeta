@@ -100,6 +100,9 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      * Reads an unsigned 16-bit integer using little-endian byte order.
      *
      * @return int unsigned 16-bit integer
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readU16LE(): int
     {
@@ -110,6 +113,9 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      * Reads an unsigned 32-bit integer using little-endian byte order.
      *
      * @return int unsigned 32-bit integer
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readU32LE(): int
     {
@@ -120,6 +126,9 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      * Reads an unsigned 64-bit integer using little-endian byte order.
      *
      * @return UInt64 unsigned 64-bit integer
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readU64LE(): UInt64
     {
@@ -159,6 +168,9 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      *
      * @param int|UInt64 $offset Offset to seek to.
      * @param int        $whence Seek origin constant.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     protected function seekInternal(int|UInt64 $offset, int $whence): void
     {
@@ -182,6 +194,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      * @return int Validated absolute offset.
      *
      * @throws BoundsError When the offset would exceed buffer bounds.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function normalizeOffset(int|UInt64 $offset, int $length, string $message): int
     {
@@ -208,6 +221,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      * @return positive-int Validated positive integer length.
      *
      * @throws BoundsError If the length is zero, negative, or exceeds bounds.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function normalizeLength(int|UInt64 $length): int
     {
@@ -242,6 +256,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      * @return int Validated absolute offset.
      *
      * @throws BoundsError When the offset would exceed buffer bounds.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function normalizeUInt64(UInt64 $value, int $padding, string $message): int
     {

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
@@ -63,6 +64,8 @@ final readonly class ColorSpaceExifReader
      * ExifIFD is present. When the tag is absent despite ExifIFD existing,
      * sRGB is assumed per the most common real-world usage. An explicitly
      * present but unrecognized value still returns null.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function colorSpace(): ?ColorSpace
     {
@@ -97,6 +100,8 @@ final readonly class ColorSpaceExifReader
 
     /**
      * Returns the photometric interpretation enum.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function photometric(): ?Photometric
     {
@@ -115,6 +120,8 @@ final readonly class ColorSpaceExifReader
      * EXIF 3.0 §4.6.5.1.10 states JPEG compressed data shall not record
      * this tag because the JPEG marker carries the equivalent information.
      * Returns null when the tag is absent in JPEG context (no Compression tag).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function planarConfiguration(): ?PlanarConfiguration
     {
@@ -143,6 +150,8 @@ final readonly class ColorSpaceExifReader
      * RGB, YCbCr, CIELab -> 3; grayscale/palette/mask -> 1.
      * JPEG context (no Compression tag) defaults to 3 per EXIF 3.0 §4.6.5.1.7;
      * TIFF context defaults to 1 per TIFF 6.0 §8.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function samplesPerPixel(): int
     {
@@ -173,6 +182,8 @@ final readonly class ColorSpaceExifReader
      * tag; precision comes from the JPEG SOF marker instead. Returns null in
      * JPEG context (no Compression tag) so callers can fall back to SOF.
      * TIFF 6.0 §8 default is 1 per component; EXIF profile uses 8 for RGB.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function bitsPerSample(): ?int
     {
@@ -189,6 +200,8 @@ final readonly class ColorSpaceExifReader
      * tag) so callers can fall back to SOF precision.
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function bitsPerSampleList(): ?array
     {
@@ -220,6 +233,8 @@ final readonly class ColorSpaceExifReader
      * conversion, defaulting to Annex D values when the tag is absent.
      *
      * @return array{0:float,1:float,2:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function ycbcrCoefficients(): ?array
     {
@@ -271,6 +286,8 @@ final readonly class ColorSpaceExifReader
      * SOF-derived subsampling can be used by the caller.
      *
      * @return array{0:int,1:int}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function ycbcrSubSampling(): ?array
     {
@@ -307,6 +324,8 @@ final readonly class ColorSpaceExifReader
      * EXIF 3.0 §4.6.5.1.13 defines the default as centered, but the tag
      * is only semantically applicable when the photometric interpretation
      * is YCbCr. Non-YCbCr images return null when the tag is absent.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function ycbcrPositioning(): ?YCbCrPositioning
     {
@@ -329,6 +348,8 @@ final readonly class ColorSpaceExifReader
      * EXIF 3.0 §4.6.5.3.5 describes defaults when the colour space is declared.
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function referenceBlackWhite(): ?array
     {
@@ -352,6 +373,8 @@ final readonly class ColorSpaceExifReader
      * point as exactly two rational values (X,Y).
      *
      * @return array{0:float,1:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function whitePoint(): ?array
     {
@@ -369,6 +392,8 @@ final readonly class ColorSpaceExifReader
      * (RedX, RedY, GreenX, GreenY, BlueX, BlueY).
      *
      * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function primaryChromaticities(): ?array
     {
@@ -389,6 +414,8 @@ final readonly class ColorSpaceExifReader
      * EXIF 3.0 §4.6.6.3.3 describes the four-byte component order for compressed image data.
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function componentsConfiguration(): ?array
     {
@@ -403,6 +430,8 @@ final readonly class ColorSpaceExifReader
      * EXIF 3.0 §4.6.6.3.3 documents the channel identifiers for compressed data streams.
      *
      * @return list<string>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function componentsConfigurationLabels(): ?array
     {
@@ -413,6 +442,8 @@ final readonly class ColorSpaceExifReader
 
     /**
      * Returns the component configuration as a formatted string.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function componentsConfigurationDescription(): ?string
     {
@@ -429,6 +460,8 @@ final readonly class ColorSpaceExifReader
      * Returns the gamma correction value when provided.
      *
      * EXIF 3.0 §4.6.6.2.2 (Gamma)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gamma(): ?float
     {
@@ -462,6 +495,8 @@ final readonly class ColorSpaceExifReader
      * specified: [0.299, 0.587, 0.114].
      *
      * @return array{0: float, 1: float, 2: float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function defaultYCbCrCoefficients(): ?array
     {
@@ -479,6 +514,8 @@ final readonly class ColorSpaceExifReader
      * the photometric interpretation is RGB or YCbCr.
      *
      * @return array{0: float, 1: float, 2: float, 3: float, 4: float, 5: float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function defaultReferenceBlackWhite(): ?array
     {

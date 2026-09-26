@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Factory\Structured;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
@@ -40,6 +41,8 @@ final readonly class ImageFactory
      * @param XmpDocument|null $xmpDocument Parsed XMP document for title/description overrides.
      *
      * @return Image Normalized image metadata aggregate.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function create(Metadata $metadata, ?XmpDocument $xmpDocument = null): Image
     {
@@ -107,6 +110,8 @@ final readonly class ImageFactory
      * @param XmpFallbackResolver|null $resolver     XMP fallback resolver for colour space lookup.
      *
      * @return ColorSpace|null Normalized colour space enumeration or null when undefined.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function normalizedColorSpace(?ParsedExif $exifDocument, ?XmpFallbackResolver $resolver = null): ?ColorSpace
     {

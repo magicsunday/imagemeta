@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
@@ -58,6 +59,8 @@ final readonly class DescriptionExifReader
      *
      * EXIF 3.0 §4.6.5.4.4 (Software) recommends recording the generating software
      * name and version in ASCII or UTF-8 with the terminating NUL accounted for in the count.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function software(): ?string
     {
@@ -66,6 +69,8 @@ final readonly class DescriptionExifReader
 
     /**
      * Returns the document name preferring EXIF 3.0 tags with XP fallbacks.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function documentName(): ?string
     {
@@ -91,6 +96,8 @@ final readonly class DescriptionExifReader
      * Returns the copyright notice string when present.
      *
      * EXIF 3.0 §4.6.5.4.7 represents empty or blank-filled copyright fields as unknown values.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function copyright(): ?string
     {
@@ -103,6 +110,8 @@ final readonly class DescriptionExifReader
      * EXIF 3.0 §4.6.5.4.6 requires Artist to be populated alongside
      * CameraOwnerName, Photographer, or ImageEditor. The closest available
      * attribution is returned when the primary tag is missing.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function artist(): ?string
     {
@@ -123,6 +132,8 @@ final readonly class DescriptionExifReader
      *
      * EXIF 3.0 §4.6.6.9.9 recommends keeping the photographer attribution stable
      * and recording Artist alongside it.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function photographer(): ?string
     {
@@ -145,6 +156,8 @@ final readonly class DescriptionExifReader
      *
      * EXIF 3.0 §4.6.6.9.10 captures the primary editor name and expects Artist to
      * be recorded when this tag is present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageEditor(): ?string
     {
@@ -165,6 +178,8 @@ final readonly class DescriptionExifReader
      *
      * EXIF 3.0 §4.6.6.9.8 allows ASCII or UTF-8 text for ImageTitle and
      * treats blank fields as unknown.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageTitle(): ?string
     {
@@ -187,6 +202,8 @@ final readonly class DescriptionExifReader
      *
      * EXIF 3.0 §4.6.5.4.1 (ImageDescription) defines a free-form ASCII or UTF-8
      * description of the image content with the NUL terminator included in the stored count.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageDescription(): ?string
     {
@@ -199,6 +216,8 @@ final readonly class DescriptionExifReader
      * EXIF 3.0 §4.6.6.9.1 records a 128-bit UUID in
      * hexadecimal ASCII with a fixed count of 33 (including the terminator).
      * Version 4 UUIDs are recommended and the value should remain immutable.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageUniqueId(): ?string
     {

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Model;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
 use function array_filter;
@@ -40,6 +41,8 @@ final readonly class IfdEntry
      * @param int            $type  The TIFF field type code.
      * @param int            $count The number of values stored in the entry.
      * @param ExifInputValue $value The raw value or values decoded from the IFD.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function __construct(
         public int $tag,
@@ -58,6 +61,8 @@ final readonly class IfdEntry
      * @param ExifInputValue $value Raw value passed to the constructor.
      *
      * @return ExifScalarValue
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function normalizeValue(
         int $type,

@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core\Traits;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
 use const SEEK_SET;
@@ -93,6 +95,9 @@ trait DelegatesToByteReader
      *
      * @param int|UInt64 $offset Absolute position in bytes.
      * @param int        $whence Seek origin constant.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function seek(int|UInt64 $offset, int $whence = SEEK_SET): void
     {

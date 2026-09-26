@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Core\Traits;
 
 use MagicSunday\ImageMeta\Core\BoundsError;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
 use const PHP_INT_MAX;
@@ -37,6 +38,7 @@ trait NormalizesOffsets
      * @return int Validated absolute offset.
      *
      * @throws BoundsError When the offset exceeds bounds.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function normalizeAbsoluteOffset(int|UInt64 $offset, string $message): int
     {
@@ -67,6 +69,7 @@ trait NormalizesOffsets
      * @return int Resolved absolute offset.
      *
      * @throws BoundsError When the resolved offset exceeds bounds.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function normalizeRelativeOffset(int|UInt64 $offset, int $base, string $message): int
     {
@@ -93,6 +96,8 @@ trait NormalizesOffsets
      * @param string     $message Error context for bounds violations.
      *
      * @return int Resolved offset value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function resolveOffsetValue(int|UInt64 $offset, string $message): int
     {
@@ -128,6 +133,7 @@ trait NormalizesOffsets
      * @return positive-int Validated positive length.
      *
      * @throws BoundsError When the length is zero, negative, or out of range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function normalizeReadLength(int|UInt64 $length, string $context): int
     {

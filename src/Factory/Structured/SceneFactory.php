@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Factory\Structured;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
@@ -40,6 +41,8 @@ final readonly class SceneFactory
      * @param int|null        $faceCount Optional number of detected face regions.
      *
      * @return Scene Scene metadata value object.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function create(Metadata $metadata, AppleMakerNotes $apple, ?int $faceCount = null): Scene
     {
@@ -60,6 +63,8 @@ final readonly class SceneFactory
      * @param XmpFallbackResolver|null $resolver     XMP fallback resolver for enum lookups.
      *
      * @return Scene Scene metadata value object.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function buildScene(
         ?ParsedExif $exifDocument,

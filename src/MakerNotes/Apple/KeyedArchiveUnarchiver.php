@@ -49,6 +49,8 @@ final class KeyedArchiveUnarchiver
      * @param ApplePlistDictionary $archive Root keyed archive dictionary.
      *
      * @return ApplePlistDictionary Resolved root dictionary.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function unarchive(ApplePlistDictionary $archive): ApplePlistDictionary
     {
@@ -98,6 +100,8 @@ final class KeyedArchiveUnarchiver
      * Resolves dictionary values using keyed-archive dictionary semantics.
      *
      * @phpstan-return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function resolveDictionaryValue(ApplePlistDictionary $value): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
     {

@@ -44,6 +44,8 @@ final readonly class UInt64
 
     /**
      * Creates an instance from two unsigned 32-bit parts.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function fromUInt32(int $hi, int $lo): self
     {
@@ -52,6 +54,8 @@ final readonly class UInt64
 
     /**
      * Creates an instance from a non-negative integer value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function fromInt(int $value): self
     {
@@ -207,6 +211,8 @@ final readonly class UInt64
      * Ensures that the given value is within the unsigned 32-bit range.
      *
      * @param int $value Value to validate.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function assertUint32(int $value): void
     {

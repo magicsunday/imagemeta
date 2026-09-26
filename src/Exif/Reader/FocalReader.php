@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\ExifConst;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
@@ -57,6 +58,8 @@ final readonly class FocalReader
      * Returns the focal length in millimetres if available.
      *
      * EXIF 3.0 §4.6.6.7.23 (FocalLength)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function focalLengthMm(): ?float
     {
@@ -65,6 +68,8 @@ final readonly class FocalReader
 
     /**
      * Returns the focal length in 35mm equivalent if available.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function focalLength35Mm(): ?int
     {
@@ -78,6 +83,8 @@ final readonly class FocalReader
      * width per {@see ExifTag::FOCAL_PLANE_RESOLUTION_UNIT} on the camera
      * focal plane. The value refers to the primary image rather than the
      * physical sensor grid.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function focalPlaneXResolution(): ?float
     {
@@ -90,6 +97,8 @@ final readonly class FocalReader
      * EXIF 3.0 §4.6.6.7.27 records the number of pixels in the image height per
      * {@see ExifTag::FOCAL_PLANE_RESOLUTION_UNIT} on the camera focal plane,
      * aligned with the primary image output.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function focalPlaneYResolution(): ?float
     {
@@ -101,6 +110,8 @@ final readonly class FocalReader
      *
      * EXIF 3.0 §4.6.6.7.28 reuses the {@see ResolutionUnit} scale for focal
      * plane resolution values.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function focalPlaneResolutionUnit(): int
     {
@@ -117,6 +128,8 @@ final readonly class FocalReader
      *
      * EXIF 3.0 §4.6.6.7.34 defines the payload as two SHORT repeat units followed by m×n
      * component identifiers describing the colour filter array.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cfaPattern(): ?CfaPattern
     {
@@ -136,6 +149,8 @@ final readonly class FocalReader
      * Returns the CFA pattern as colour enums when possible.
      *
      * @return list<CfaPatternColor>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cfaPatternColors(): ?array
     {
@@ -187,6 +202,8 @@ final readonly class FocalReader
      * Returns the interoperability index string when recorded.
      *
      * EXIF 3.0 §4.6.8.1.1: ASCII[4] including terminating NUL.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function interopIndex(): ?string
     {

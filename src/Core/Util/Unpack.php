@@ -34,6 +34,8 @@ final class Unpack
      * @param string $format  Format accepted by {@see unpack}.
      * @param string $bytes   Bytes to unpack the value from.
      * @param string $context Human-readable description used in error messages.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function int(string $format, string $bytes, string $context): int
     {
@@ -46,6 +48,8 @@ final class Unpack
      * @param string $format  Format accepted by {@see unpack}.
      * @param string $bytes   Bytes to unpack the value from.
      * @param string $context Human-readable description used in error messages.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function float(string $format, string $bytes, string $context): float
     {
@@ -58,6 +62,8 @@ final class Unpack
      * @param string $bytes        Raw bytes to unpack.
      * @param bool   $littleEndian Whether the bytes use little-endian order.
      * @param string $context      Human-readable description used in error messages.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function uint64(string $bytes, bool $littleEndian, string $context): UInt64
     {
@@ -101,6 +107,8 @@ final class Unpack
      * @param string $format  Format accepted by {@see unpack}.
      * @param string $bytes   Bytes to unpack the value from.
      * @param string $context Human-readable description used in error messages.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private static function numeric(string $format, string $bytes, string $context): int|float
     {

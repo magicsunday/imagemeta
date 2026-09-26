@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Exif;
 use BackedEnum;
 use DateTimeZone;
 use MagicSunday\ImageMeta\Core\Endian;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Converters\ConverterFactory;
 use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
@@ -52,6 +53,8 @@ final readonly class ValueConverters
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
      *
      * @param int|float|string|array<int, int|float|string|UInt64>|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The value to convert.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function rationalToFloat(
         int|float|string|array|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -65,6 +68,8 @@ final readonly class ValueConverters
      * @param ExifRationalList $value List containing exactly three SRATIONAL values.
      *
      * @return array{0:float,1:float,2:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function srationalTripletToFloatVector(ExifRationalList $value): ?array
     {
@@ -89,6 +94,8 @@ final readonly class ValueConverters
      * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $rational
      *
      * @return array{0:float,1:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function toWhitePoint(ExifRationalList|ExifNumericList|array|null $rational): ?array
     {
@@ -101,6 +108,8 @@ final readonly class ValueConverters
      * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $rational
      *
      * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function toPrimaryChromaticities(ExifRationalList|ExifNumericList|array|null $rational): ?array
     {
@@ -111,6 +120,8 @@ final readonly class ValueConverters
      * Serialises a DNG matrix or CFA pattern into a reproducible string representation.
      *
      * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $matrix
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngMatrixToString(ExifRationalList|ExifNumericList|array|null $matrix): ?string
     {
@@ -153,6 +164,8 @@ final readonly class ValueConverters
      * Converts the maker note safety flag into a boolean representation.
      *
      * @param ExifNumericList|ExifRationalList|ExifRational|int|float|string|null $value Raw maker note safety value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function makerNoteSafety(
         ExifNumericList|ExifRationalList|ExifRational|int|float|string|null $value,
@@ -164,6 +177,8 @@ final readonly class ValueConverters
      * Converts a stored APEX aperture value into a traditional f-number.
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The APEX value to convert.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function apexToFNumber(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -175,6 +190,8 @@ final readonly class ValueConverters
      * Converts an APEX shutter speed value into seconds.
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The APEX value to convert.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function apexShutterSpeedToSeconds(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -186,6 +203,8 @@ final readonly class ValueConverters
      * Formats an APEX shutter speed value as a human-readable fraction.
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The APEX value to format.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function formatShutterSpeedFromApex(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -207,6 +226,8 @@ final readonly class ValueConverters
      * Formats an APEX aperture value as a human-readable f-number string.
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The APEX value to format.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function formatApertureFromApex(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -218,6 +239,8 @@ final readonly class ValueConverters
      * Formats an APEX brightness value as a human-readable EV string.
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The APEX value to format.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function formatBrightnessValue(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -312,6 +335,8 @@ final readonly class ValueConverters
      * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value representation.
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function componentsConfiguration(
         array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
@@ -325,6 +350,8 @@ final readonly class ValueConverters
      * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value.
      *
      * @return list<string>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function componentsConfigurationLabels(
         array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
@@ -336,6 +363,8 @@ final readonly class ValueConverters
      * Returns a human readable description for the components configuration.
      *
      * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function componentsConfigurationDescription(
         array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
@@ -348,6 +377,8 @@ final readonly class ValueConverters
      *
      * @param string|null                                                                $ref   Speed reference (K, M or N).
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The measured value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsSpeedToMs(
         ?string $ref,
@@ -361,6 +392,8 @@ final readonly class ValueConverters
      *
      * @param string|null                                                                $ref   Distance reference (K, M or N).
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The measured value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsDistanceToMetres(
         ?string $ref,
@@ -422,6 +455,8 @@ final readonly class ValueConverters
      * @param Ifd $gps The GPS IFD containing coordinate tags.
      *
      * @return GpsFieldMap
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsFromIfd(Ifd $gps): array
     {

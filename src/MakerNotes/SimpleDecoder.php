@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes;
 
+use MagicSunday\ImageMeta\Core\ParseError;
+
 /**
  * Decoder for maker note vendors that only expose payload identity metadata.
  */
@@ -30,6 +32,8 @@ final readonly class SimpleDecoder implements MakerNotesDecoderInterface
      * @param string      $raw   Raw maker note data stream captured from the image file.
      * @param string      $make  Reported camera make string.
      * @param string|null $model Optional camera model identifier for the payload.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
     {

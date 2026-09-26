@@ -31,6 +31,8 @@ final readonly class ExifNumericList
 
     /**
      * @param array<int|string, bool|float|int|string|UInt64> $values Ordered list of numeric components.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function __construct(array $values)
     {
@@ -53,6 +55,8 @@ final readonly class ExifNumericList
      * @param array<int|string, bool|float|int|string|UInt64> $values
      *
      * @phpstan-assert list<int|float|UInt64> $values
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function assertList(array $values): void
     {
@@ -67,6 +71,8 @@ final readonly class ExifNumericList
      * Validates that all values are numeric (int, float, or UInt64).
      *
      * @param list<bool|float|int|string|UInt64> $values
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function assertNumericValues(array $values): void
     {

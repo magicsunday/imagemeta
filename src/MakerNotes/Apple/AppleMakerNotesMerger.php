@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
@@ -33,6 +34,8 @@ final class AppleMakerNotesMerger
 {
     /**
      * Merges decoded Apple maker notes with QuickTime metadata fallbacks.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function merge(
         ?MakerNotesRecord $makerNotes,

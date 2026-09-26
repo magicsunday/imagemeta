@@ -49,6 +49,8 @@ final readonly class SamsungDecoder implements MakerNotesDecoderInterface
      * @param string      $raw   Raw maker note data stream captured from the image file.
      * @param string      $make  Reported camera make string.
      * @param string|null $model Optional camera model identifier for the payload.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
     {
@@ -224,6 +226,8 @@ final readonly class SamsungDecoder implements MakerNotesDecoderInterface
 
     /**
      * Parses an integer value from the supplied bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseInt(string $valueBytes, int $type, Endian $endian): ?int
     {

@@ -194,6 +194,8 @@ final readonly class FormatDetector
      *
      * ISO/IEC 18181-2 §A.2.1: the JXL container begins with a box of type
      * 'JXL ' (size=12) containing the two-byte content 0x0D0A 0x870A.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function looksLikeJxl(Stream $stream): bool
     {
@@ -211,6 +213,8 @@ final readonly class FormatDetector
      * Checks whether the first two bytes are a TIFF byte-order mark and the following
      * two bytes contain a recognized TIFF-family magic number: classic TIFF (0x002A),
      * BigTIFF (0x002B), Olympus ORF (0x4F52), or Panasonic RW2 (0x0055).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function looksLikeTiff(Stream $stream, string $magic2): bool
     {
@@ -239,6 +243,9 @@ final readonly class FormatDetector
      *
      * Tolerates unknown box types by skipping them via their declared size.
      * Validates box header semantics before accepting signature boxes.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function looksLikeIsoBmff(Stream $stream): bool
     {
@@ -339,6 +346,8 @@ final readonly class FormatDetector
      *
      * RIFF 1991 §2: RIFF header = 'RIFF' (4) + size (4, LE) + formType (4).
      * AVI files use formType 'AVI '.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function looksLikeRiff(Stream $stream, string $magic2): bool
     {

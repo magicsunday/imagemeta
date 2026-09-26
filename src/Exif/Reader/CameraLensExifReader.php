@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
@@ -44,6 +45,8 @@ final readonly class CameraLensExifReader
      *
      * EXIF 3.0 §4.6.5.4.2 (Make) stores the free-form manufacturer identifier
      * as ASCII or UTF-8 including the terminating NUL.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cameraMake(): ?string
     {
@@ -55,6 +58,8 @@ final readonly class CameraLensExifReader
      *
      * EXIF 3.0 §4.6.5.4.3 (Model) defines the model name or number as an ASCII
      * or UTF-8 string with the NUL terminator counted in the tag length.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cameraModel(): ?string
     {
@@ -65,6 +70,8 @@ final readonly class CameraLensExifReader
      * Returns the lens model string if present.
      *
      * EXIF 3.0 §4.6.6.9.6 stores the lens model as an ASCII or UTF-8 string.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function lensModel(): ?string
     {
@@ -76,6 +83,8 @@ final readonly class CameraLensExifReader
      *
      * EXIF 3.0 §4.6.6.9.5 records LensMake as an ASCII or UTF-8 identifier and
      * expects it to remain stable once captured.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function lensMake(): ?string
     {
@@ -87,6 +96,8 @@ final readonly class CameraLensExifReader
      *
      * EXIF 3.0 §4.6.6.9.2 allows ASCII or UTF-8 text for CameraOwnerName and
      * expects Artist to be populated alongside it.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function ownerName(): ?string
     {
@@ -97,6 +108,8 @@ final readonly class CameraLensExifReader
      * Returns the camera body serial number if present.
      *
      * EXIF 3.0 §4.6.6.9.3 stores the camera body serial as an ASCII string.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function bodySerialNumber(): ?string
     {
@@ -108,6 +121,8 @@ final readonly class CameraLensExifReader
      *
      * EXIF 3.0 §4.6.6.9.7 defines LensSerialNumber as a free-form ASCII value
      * that should remain stable across edits.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function lensSerialNumber(): ?string
     {
@@ -123,6 +138,8 @@ final readonly class CameraLensExifReader
      * apertures are recorded as 0/0.
      *
      * @return array{0:float,1:float,2:float,3:float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function lensSpecification(): ?array
     {
@@ -144,6 +161,8 @@ final readonly class CameraLensExifReader
      * Returns the DNG camera serial number from IFD0 when present.
      *
      * DNG 1.7.1.0 (DNG Tags, CameraSerialNumber): ASCII, NUL-terminated.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cameraSerialNumber(): ?string
     {
@@ -154,6 +173,8 @@ final readonly class CameraLensExifReader
      * Returns the non-localized unique DNG camera model from IFD0 when present.
      *
      * DNG 1.7.1.0 (DNG Tags, UniqueCameraModel): ASCII, NUL-terminated.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function uniqueCameraModel(): ?string
     {
@@ -165,6 +186,8 @@ final readonly class CameraLensExifReader
      *
      * DNG 1.7.1.0 (DNG Tags, LocalizedCameraModel): ASCII or BYTE, NUL-terminated UTF-8.
      * Default: same as UniqueCameraModel when absent.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function localizedCameraModel(): ?string
     {

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\ExifConst;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
@@ -49,6 +50,8 @@ final readonly class ApexConverter
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value APEX aperture value.
      *
      * @return float|null The f-number or null if conversion fails.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function toFNumber(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -71,6 +74,8 @@ final readonly class ApexConverter
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value APEX shutter speed value.
      *
      * @return float|null Exposure time in seconds or null if conversion fails.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function toSeconds(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -92,6 +97,8 @@ final readonly class ApexConverter
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value APEX shutter speed value.
      *
      * @return string|null Formatted string like "1/125" or "2.5" or null.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function formatShutterSpeed(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -145,6 +152,8 @@ final readonly class ApexConverter
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value APEX aperture value.
      *
      * @return string|null Formatted string like "f/2.8" or null.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function formatAperture(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -185,6 +194,8 @@ final readonly class ApexConverter
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value APEX brightness value.
      *
      * @return string|null Formatted string like "-2.21" or null.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function formatBrightness(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,

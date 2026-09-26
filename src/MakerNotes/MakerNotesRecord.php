@@ -34,6 +34,8 @@ final readonly class MakerNotesRecord
      * @param SamsungMakerNotes|null $samsung Additional Samsung specific maker note data.
      * @param DjiMakerNotes|null     $dji     Additional DJI specific maker note data.
      * @param bool|null              $safe    DNG MakerNoteSafety flag (true=safe, false=unsafe, null=absent).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function from(
         string $vendor,
@@ -54,6 +56,8 @@ final readonly class MakerNotesRecord
      * @param SamsungMakerNotes|null $samsung Additional Samsung specific maker note data.
      * @param DjiMakerNotes|null     $dji     Additional DJI specific maker note data.
      * @param bool|null              $safe    DNG MakerNoteSafety flag (true=safe, false=unsafe, null=absent).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function __construct(
         public string $vendor,

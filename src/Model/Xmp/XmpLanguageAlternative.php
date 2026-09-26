@@ -34,6 +34,8 @@ final readonly class XmpLanguageAlternative
 
     /**
      * @param array<int, array{lang: string, value: string}> $entries
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function __construct(array $entries)
     {
@@ -44,6 +46,8 @@ final readonly class XmpLanguageAlternative
      * Creates a language alternative from scalar or list values without qualifiers.
      *
      * @param array<int, string>|string $value
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function fromValue(array|string $value): self
     {
@@ -134,6 +138,8 @@ final readonly class XmpLanguageAlternative
 
     /**
      * Merges two language alternatives, preserving entry order and duplicates.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public static function merge(self $first, self $second): self
     {
@@ -146,6 +152,8 @@ final readonly class XmpLanguageAlternative
      * @param array<int, array{lang: string, value: string}> $entries
      *
      * @return array<int, array{lang: string, value: string}>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function normalizeEntries(array $entries): array
     {

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Converters;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -51,6 +52,8 @@ final readonly class RationalConverter
      * and are intentionally not handled by this generic converter.
      *
      * @param int|float|string|array<int, int|float|string|array<int, int|float|string>|UInt64|ExifRational>|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The value to convert.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function toFloat(
         int|float|string|array|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
@@ -157,6 +160,8 @@ final readonly class RationalConverter
      * @param ExifRationalList $value List containing exactly 3 SRATIONAL values.
      *
      * @return array{0: float, 1: float, 2: float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function tripletToFloatVector(ExifRationalList $value): ?array
     {

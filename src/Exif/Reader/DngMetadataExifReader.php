@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Reader;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdValueReader;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
@@ -37,6 +38,8 @@ final readonly class DngMetadataExifReader
      * Returns the DNG version encoded in IFD0 when present.
      *
      * DNG 1.7.1.0 (DNG Tags, DNGVersion): BYTE[4], required in IFD0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngVersion(): ?string
     {
@@ -47,6 +50,8 @@ final readonly class DngMetadataExifReader
      * Returns the backward-compatibility DNG version encoded in IFD0 when present.
      *
      * DNG 1.7.1.0 (DNG Tags, DNGBackwardVersion): BYTE[4], required in IFD0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngBackwardVersion(): ?string
     {
@@ -57,6 +62,8 @@ final readonly class DngMetadataExifReader
      * Returns the DNG profile name from IFD0 when present.
      *
      * DNG 1.7.1.0 (DNG Tags, ProfileName): ASCII or UTF-8.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngProfileName(): ?string
     {
@@ -67,6 +74,8 @@ final readonly class DngMetadataExifReader
      * Returns the primary DNG calibration illuminant identifier.
      *
      * DNG 1.7.1.0 (DNG Tags, CalibrationIlluminant1): SHORT.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngCalibrationIlluminant1(): ?int
     {
@@ -77,6 +86,8 @@ final readonly class DngMetadataExifReader
      * Returns the secondary DNG calibration illuminant identifier.
      *
      * DNG 1.7.1.0 (DNG Tags, CalibrationIlluminant2): SHORT.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngCalibrationIlluminant2(): ?int
     {
@@ -89,6 +100,8 @@ final readonly class DngMetadataExifReader
      * DNG 1.7.1.0 (DNG Tags, ColorMatrix1): SRATIONAL.
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngColorMatrix1(): ?array
     {
@@ -101,6 +114,8 @@ final readonly class DngMetadataExifReader
      * DNG 1.7.1.0 (DNG Tags, ColorMatrix2): SRATIONAL.
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngColorMatrix2(): ?array
     {
@@ -113,6 +128,8 @@ final readonly class DngMetadataExifReader
      * DNG 1.7.1.0 (DNG Tags, CameraCalibration1): SRATIONAL.
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngCameraCalibration1(): ?array
     {
@@ -125,6 +142,8 @@ final readonly class DngMetadataExifReader
      * DNG 1.7.1.0 (DNG Tags, CameraCalibration2): SRATIONAL.
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngCameraCalibration2(): ?array
     {
@@ -137,6 +156,8 @@ final readonly class DngMetadataExifReader
      * DNG 1.7.1.0 (DNG Tags, ForwardMatrix1): SRATIONAL.
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngForwardMatrix1(): ?array
     {
@@ -149,6 +170,8 @@ final readonly class DngMetadataExifReader
      * DNG 1.7.1.0 (DNG Tags, ForwardMatrix2): SRATIONAL.
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngForwardMatrix2(): ?array
     {
@@ -161,6 +184,8 @@ final readonly class DngMetadataExifReader
      * DNG 1.7.1.0 (DNG Tags, AsShotNeutral): RATIONAL or SHORT.
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngAsShotNeutral(): ?array
     {
@@ -173,6 +198,8 @@ final readonly class DngMetadataExifReader
      * DNG 1.7.1.0 (DNG Tags, AsShotWhiteXY): RATIONAL.
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngAsShotWhiteXY(): ?array
     {
@@ -183,6 +210,8 @@ final readonly class DngMetadataExifReader
      * Returns the DNG baseline exposure offset value.
      *
      * DNG 1.7.1.0 (DNG Tags, BaselineExposure): SRATIONAL.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngBaselineExposure(): ?float
     {
@@ -193,6 +222,8 @@ final readonly class DngMetadataExifReader
      * Returns the DNG baseline noise level estimate.
      *
      * DNG 1.7.1.0 (DNG Tags, BaselineNoise): RATIONAL.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngBaselineNoise(): ?float
     {
@@ -203,6 +234,8 @@ final readonly class DngMetadataExifReader
      * Returns the DNG baseline sharpness estimate.
      *
      * DNG 1.7.1.0 (DNG Tags, BaselineSharpness): RATIONAL.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngBaselineSharpness(): ?float
     {
@@ -213,6 +246,8 @@ final readonly class DngMetadataExifReader
      * Returns the DNG linear response limit for the sensor.
      *
      * DNG 1.7.1.0 (DNG Tags, LinearResponseLimit): RATIONAL.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngLinearResponseLimit(): ?float
     {
@@ -225,6 +260,8 @@ final readonly class DngMetadataExifReader
      * DNG 1.7.1.0 (DNG Tags, LinearizationTable): SHORT.
      *
      * @return list<int>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function linearizationTable(): ?array
     {
@@ -237,6 +274,8 @@ final readonly class DngMetadataExifReader
      * DNG 1.7.1.0 (DNG Tags, AnalogBalance): RATIONAL.
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function analogBalance(): ?array
     {
@@ -247,6 +286,8 @@ final readonly class DngMetadataExifReader
      * Returns the DNG anti-aliasing strength applied during capture.
      *
      * DNG 1.7.1.0 (DNG Tags, AntiAliasStrength): RATIONAL.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function antiAliasStrength(): ?float
     {
@@ -257,6 +298,8 @@ final readonly class DngMetadataExifReader
      * Returns the DNG shadow scale parameter for tone mapping.
      *
      * DNG 1.7.1.0 (DNG Tags, ShadowScale): RATIONAL.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function shadowScale(): ?float
     {
@@ -267,6 +310,8 @@ final readonly class DngMetadataExifReader
      * Returns the DNG best quality scale factor for rendering.
      *
      * DNG 1.7.1.0 (DNG Tags, BestQualityScale): RATIONAL.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function bestQualityScale(): ?float
     {
@@ -277,6 +322,8 @@ final readonly class DngMetadataExifReader
      * Returns the DNG baseline exposure offset adjustment.
      *
      * DNG 1.7.1.0 (DNG Tags, BaselineExposureOffset): SRATIONAL.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function baselineExposureOffset(): ?float
     {
@@ -289,6 +336,8 @@ final readonly class DngMetadataExifReader
      * DNG 1.7.1.0 (DNG Tags, ProfileToneCurve): FLOAT.
      *
      * @return list<float>|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function profileToneCurve(): ?array
     {
