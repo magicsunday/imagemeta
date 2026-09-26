@@ -46,6 +46,7 @@ use MagicSunday\ImageMeta\Factory\Structured\ImageFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffAviHeader;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
@@ -115,6 +116,7 @@ use function strlen;
 #[UsesClass(RiffAviHeader::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 #[UsesClass(UserComment::class)]
+#[UsesClass(NikonAviLookup::class)]
 final class ImageFactoryTest extends TestCase
 {
     /**

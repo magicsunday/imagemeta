@@ -61,6 +61,8 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
+use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpContainer;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -254,6 +256,8 @@ use function strlen;
 #[UsesClass(TiffLayout::class)]
 #[UsesClass(TiffStructure::class)]
 #[UsesClass(UserComment::class)]
+#[UsesClass(NikonAviLookup::class)]
+#[UsesClass(OlympusAviLookup::class)]
 final class MetadataTest extends TestCase
 {
     private function createParsedExifDocument(string $make, string $model): ParsedExif

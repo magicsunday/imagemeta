@@ -71,3 +71,44 @@ jobs:
             - name: Copy-Paste Detection
               if: ${{ success() }}
               run: composer ci:test:php:cpd
+
+            - name: Dependency Audit
+              if: ${{ success() }}
+              run: composer ci:test:php:audit
+
+    mutation:
+        # Mutation testing is engine-independent and takes far longer than the
+        # rest of the gate, so it runs once, in parallel with the build matrix.
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+              with:
+                  php-version: '8.4'
+                  extensions: ctype, date, fileinfo, hash, iconv, json, pcre, xmlreader, yaml
+                  tools: composer:v2
+                  coverage: pcov
+
+            - name: Get composer cache directory
+              id: composer-cache
+              run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+            - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+              with:
+                  path: ${{ steps.composer-cache.outputs.dir }}
+                  key: ${{ runner.os }}-8.4-composer-${{ hashFiles('composer.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-8.4-composer-
+
+            - name: Install dependencies
+              run: |
+                  composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+            - name: Mutation Testing
+              run: composer ci:test:php:mutation

@@ -43,6 +43,8 @@ use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\Structured\ExposureFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
+use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
@@ -109,6 +111,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ExposureAdjustments::class)]
 #[UsesClass(ExposureSettings::class)]
 #[UsesClass(FlashInfo::class)]
+#[UsesClass(NikonAviLookup::class)]
+#[UsesClass(OlympusAviLookup::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 final class ExposureFactoryTest extends TestCase
 {

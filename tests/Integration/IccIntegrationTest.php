@@ -66,6 +66,8 @@ use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
 use MagicSunday\ImageMeta\Model\Icc\IccProfile;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
+use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
+use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccBinaryReader;
@@ -331,6 +333,8 @@ use function unlink;
 #[UsesClass(DepthMap::class)]
 #[UsesClass(IccRenderingIntent::class)]
 #[UsesClass(HdrGainMap::class)]
+#[UsesClass(NikonAviLookup::class)]
+#[UsesClass(OlympusAviLookup::class)]
 final class IccIntegrationTest extends TestCase
 {
     private const int MARKER_APP2 = 0xE2;
