@@ -169,13 +169,9 @@ final class JpegFrameValidator
         }
 
         /** @var array{lines:int,samples:int} $fields */
-        if ($this->frameLines === null) {
-            $this->frameLines = $fields['lines'];
-        }
+        $this->frameLines ??= $fields['lines'];
 
-        if ($this->frameSamplesPerLine === null) {
-            $this->frameSamplesPerLine = $fields['samples'];
-        }
+        $this->frameSamplesPerLine ??= $fields['samples'];
 
         $bitsPerSample = ord($payload[0]);
 

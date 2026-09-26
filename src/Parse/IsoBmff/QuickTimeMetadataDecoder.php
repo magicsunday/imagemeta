@@ -478,9 +478,7 @@ final readonly class QuickTimeMetadataDecoder
                     $itemName = $this->parseIlstNameAtom($sub, $seenNames);
 
                     // Use name as fallback key when no key index or fourcc is available
-                    if ($keyName === null) {
-                        $keyName = $itemName;
-                    }
+                    $keyName ??= $itemName;
                 } elseif ($sub->type === BoxType::ITIF->value) {
                     $this->parseIlstItemInfo($sub, $seenItemIds);
                 }
