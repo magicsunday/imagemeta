@@ -252,9 +252,7 @@ final readonly class RegionsFactory
 
             $confidence = $this->normalizer->normalizedConfidence($confidenceLevels[$index] ?? null, $confidenceScale);
 
-            if ($confidence === null) {
-                $confidence = $this->normalizer->normalizedConfidence($confidences[$index] ?? null, $confidenceScale);
-            }
+            $confidence ??= $this->normalizer->normalizedConfidence($confidences[$index] ?? null, $confidenceScale);
 
             $rotation = $angleInfoRolls[$index] ?? $rolls[$index] ?? $yaws[$index] ?? null;
 
