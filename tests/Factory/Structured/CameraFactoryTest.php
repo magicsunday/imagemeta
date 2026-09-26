@@ -41,6 +41,8 @@ use MagicSunday\ImageMeta\Factory\Structured\CameraFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
+use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffExifChunk;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -95,6 +97,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(XmpDocument::class)]
 #[UsesClass(Camera::class)]
+#[UsesClass(NikonAviLookup::class)]
+#[UsesClass(OlympusAviLookup::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 final class CameraFactoryTest extends TestCase
 {

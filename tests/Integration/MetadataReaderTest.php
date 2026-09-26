@@ -119,6 +119,8 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
+use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
 use MagicSunday\ImageMeta\Model\Xmp\XmpContainer;
@@ -530,6 +532,8 @@ use function unlink;
 #[UsesClass(HdrGainMap::class)]
 #[UsesClass(Iptc::class)]
 #[UsesClass(SpatialFrequencyResponse::class)]
+#[UsesClass(NikonAviLookup::class)]
+#[UsesClass(OlympusAviLookup::class)]
 final class MetadataReaderTest extends TestCase
 {
     use IsoBmffBoxTrait;

@@ -71,15 +71,11 @@ final readonly class SceneFactory
         $appleFlags = $apple->flags;
         $hdrLabel   = $apple->hdr?->imageType;
 
-        if ($hdrLabel === null) {
-            $hdrLabel = $lookup->string('HDRImageType');
-        }
+        $hdrLabel ??= $lookup->string('HDRImageType');
 
         $nightMode = $lookup->bool('NightMode');
 
-        if ($nightMode === null) {
-            $nightMode = $appleFlags['nightMode'] ?? null;
-        }
+        $nightMode ??= $appleFlags['nightMode'] ?? null;
 
         $hdrScene = null;
 

@@ -49,6 +49,8 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
+use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
+use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
@@ -209,6 +211,8 @@ use ReflectionProperty;
 #[UsesClass(Video::class)]
 #[UsesClass(WhiteBalanceDetails::class)]
 #[UsesClass(Xmp::class)]
+#[UsesClass(NikonAviLookup::class)]
+#[UsesClass(OlympusAviLookup::class)]
 final class MetadataBuilderTest extends TestCase
 {
     #[Test]

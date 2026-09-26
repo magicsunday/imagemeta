@@ -58,6 +58,8 @@ use MagicSunday\ImageMeta\Model\Icc\IccProfile;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
+use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpContainer;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -258,6 +260,8 @@ use function strlen;
 #[UsesClass(RegionType::class)]
 #[UsesClass(FlashPixSummaryInfo::class)]
 #[UsesClass(FlashPixSummaryData::class)]
+#[UsesClass(NikonAviLookup::class)]
+#[UsesClass(OlympusAviLookup::class)]
 final class ValueFactoryTest extends TestCase
 {
     /**
