@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\BitMask;
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
@@ -31,7 +32,8 @@ final readonly class TiffByteOrderHandler
     /**
      * Reads an unsigned 16-bit integer using the provided endianness.
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readUint16(BinaryReadAccessInterface $buffer, Endian $endianness): int
     {
@@ -43,7 +45,8 @@ final readonly class TiffByteOrderHandler
     /**
      * Reads an unsigned 32-bit integer using the provided endianness.
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readUint32(BinaryReadAccessInterface $buffer, Endian $endianness): int
     {
@@ -55,7 +58,8 @@ final readonly class TiffByteOrderHandler
     /**
      * Reads an unsigned 64-bit integer using the provided endianness.
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function readUint64(BinaryReadAccessInterface $buffer, Endian $endianness): UInt64
     {

@@ -41,6 +41,8 @@ final readonly class TiffColorInkValidator
     }
 
     /**
+     * Validates the InkSet, NumberOfInks and InkNames tags of a separated (CMYK) image.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateSeparatedImageInkTags(Ifd $ifd): void

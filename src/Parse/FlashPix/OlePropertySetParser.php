@@ -104,6 +104,8 @@ final class OlePropertySetParser
     }
 
     /**
+     * Parses the property ID/offset table of one property-set section into its typed properties.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     private function parseSectionEntries(string $raw, int $sectionOffset, int $length): ?OlePropertySet
@@ -167,6 +169,8 @@ final class OlePropertySetParser
     }
 
     /**
+     * Reads a little-endian VT_I2 value, or null when it runs past the section end.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readShort(string $raw, int $offset, int $length): ?int
@@ -179,6 +183,8 @@ final class OlePropertySetParser
     }
 
     /**
+     * Reads a little-endian VT_I4 value, or null when it runs past the section end.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readLong(string $raw, int $offset, int $length): ?int
@@ -191,6 +197,8 @@ final class OlePropertySetParser
     }
 
     /**
+     * Reads a little-endian VT_R4 value, or null when it runs past the section end.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readFloat(string $raw, int $offset, int $length): ?float
@@ -203,6 +211,8 @@ final class OlePropertySetParser
     }
 
     /**
+     * Reads a little-endian VT_R8 value, or null when it runs past the section end.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readDouble(string $raw, int $offset, int $length): ?float
@@ -215,6 +225,8 @@ final class OlePropertySetParser
     }
 
     /**
+     * Reads a VT_BOOL value (non-zero is true), or null when it runs past the section end.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readBoolean(string $raw, int $offset, int $length): ?bool
@@ -315,6 +327,8 @@ final class OlePropertySetParser
     }
 
     /**
+     * Reads an unsigned little-endian 16-bit integer at the given offset.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     private function u16(string $raw, int $offset): int
@@ -323,6 +337,8 @@ final class OlePropertySetParser
     }
 
     /**
+     * Reads an unsigned little-endian 32-bit integer at the given offset.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     private function u32(string $raw, int $offset): int

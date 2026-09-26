@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
@@ -1044,7 +1045,8 @@ final readonly class DngProfileValidator
      * payloads. Each payload starts with a byte-order marker ("II" or "MM"), magic
      * value 0x4352, and a 32-bit inner IFD offset relative to the payload start.
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function validateDngExtraCameraProfiles(Ifd $ifd): void
     {
@@ -1098,7 +1100,8 @@ final readonly class DngProfileValidator
     /**
      * Validates one ExtraCameraProfiles offset target and its embedded profile header.
      *
-     * @throws ParseError If the input is malformed or inconsistent.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function validateExtraCameraProfileRecord(int $profileIndex, int $profileOffset, int $blobSize): void
     {
