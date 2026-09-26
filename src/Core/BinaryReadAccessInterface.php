@@ -35,6 +35,9 @@ interface BinaryReadAccessInterface
      *
      * @param int|UInt64 $offset Byte offset relative to the origin specified by $whence.
      * @param int        $whence One of the PHP SEEK_* constants describing the origin.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function seek(int|UInt64 $offset, int $whence = SEEK_SET): void;
 
@@ -42,26 +45,41 @@ interface BinaryReadAccessInterface
      * Reads a fixed number of bytes from the current cursor position.
      *
      * @param int|UInt64 $length Number of bytes to read.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function read(int|UInt64 $length): string;
 
     /**
      * Reads an unsigned 8-bit integer from the data source.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readU8(): int;
 
     /**
      * Reads an unsigned 16-bit big-endian integer from the data source.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readU16BE(): int;
 
     /**
      * Reads an unsigned 32-bit big-endian integer from the data source.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readU32BE(): int;
 
     /**
      * Reads an unsigned 64-bit big-endian integer from the data source.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readU64BE(): UInt64;
 }

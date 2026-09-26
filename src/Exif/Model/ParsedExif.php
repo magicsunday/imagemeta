@@ -185,6 +185,8 @@ final class ParsedExif
     // ── Camera / lens domain ──────────────────────────────────
 
     /**
+     * Returns the camera manufacturer string if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cameraMake(): ?string
@@ -193,6 +195,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the camera model string if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cameraModel(): ?string
@@ -201,6 +205,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the lens model string if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function lensModel(): ?string
@@ -209,6 +215,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the lens manufacturer string if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function lensMake(): ?string
@@ -217,6 +225,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the camera owner name if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function ownerName(): ?string
@@ -225,6 +235,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the camera body serial number if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function bodySerialNumber(): ?string
@@ -233,6 +245,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the lens serial number if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function lensSerialNumber(): ?string
@@ -251,6 +265,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the non-localized unique DNG camera model from IFD0 when present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function uniqueCameraModel(): ?string
@@ -259,6 +275,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the localized DNG camera model from IFD0.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function localizedCameraModel(): ?string
@@ -269,6 +287,8 @@ final class ParsedExif
     // ── Image structure domain ─────────────────────────────────
 
     /**
+     * Returns the EXIF orientation enumeration.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function orientation(): Orientation
@@ -277,6 +297,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the orientation as a human-readable rotation description.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function orientationDescription(): string
@@ -285,6 +307,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the image width, preferring the compressed-specific EXIF tag when applicable.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageWidth(): ?int
@@ -293,6 +317,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the image height, preferring the compressed-specific EXIF tag when applicable.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageHeight(): ?int
@@ -301,6 +327,8 @@ final class ParsedExif
     }
 
     /**
+     * Alias for imageHeight() using exact EXIF tag name.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageLength(): ?int
@@ -309,6 +337,8 @@ final class ParsedExif
     }
 
     /**
+     * Alias for imageWidth() using exact EXIF tag name.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function pixelXDimension(): ?int
@@ -317,6 +347,8 @@ final class ParsedExif
     }
 
     /**
+     * Alias for imageHeight() using exact EXIF tag name.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function pixelYDimension(): ?int
@@ -325,6 +357,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the compression method enum for the primary image.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function compression(): ?Compression
@@ -333,6 +367,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the compressed bits per pixel ratio.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function compressedBitsPerPixel(): ?float
@@ -341,6 +377,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the resolution unit enum for the reported X/Y resolution values.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function resolutionUnit(): ResolutionUnit
@@ -349,6 +387,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the horizontal resolution value expressed in the resolution unit.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function xResolution(): ?float
@@ -357,6 +397,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the vertical resolution value expressed in the resolution unit.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function yResolution(): ?float
@@ -365,6 +407,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the rows per strip value when the image data is organized in strips.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function rowsPerStrip(): ?int
@@ -393,6 +437,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the JPEG interchange format offset for legacy thumbnails.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegInterchangeFormat(): ?int
@@ -401,6 +447,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the JPEG interchange format length for legacy thumbnails.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegInterchangeFormatLength(): ?int
@@ -411,6 +459,8 @@ final class ParsedExif
     // ── Colour space domain ────────────────────────────────────
 
     /**
+     * Returns the colour space enumeration.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function colorSpace(): ?ColorSpace
@@ -424,6 +474,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the photometric interpretation enum.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function photometric(): ?Photometric
@@ -432,6 +484,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the planar configuration enum.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function planarConfiguration(): ?PlanarConfiguration
@@ -440,6 +494,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the number of samples per pixel.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function samplesPerPixel(): int
@@ -448,6 +504,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the first component of BitsPerSample (convenience scalar).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function bitsPerSample(): ?int
@@ -466,6 +524,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the YCbCr positioning enum describing the chroma siting.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function ycbcrPositioning(): ?YCbCrPositioning
@@ -544,6 +604,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the component configuration as a formatted string.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function componentsConfigurationDescription(): ?string
@@ -552,6 +614,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the gamma correction value when provided.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gamma(): ?float
@@ -562,6 +626,8 @@ final class ParsedExif
     // ── DNG metadata domain ────────────────────────────────────
 
     /**
+     * Returns the DNG version encoded in IFD0 when present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngVersion(): ?string
@@ -570,6 +636,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the backward-compatibility DNG version encoded in IFD0 when present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dngBackwardVersion(): ?string
@@ -580,6 +648,8 @@ final class ParsedExif
     // ── Description domain ─────────────────────────────────────
 
     /**
+     * Returns the optional image title string.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageTitle(): ?string
@@ -588,6 +658,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the document name preferring EXIF 3.0 tags with XP fallbacks.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function documentName(): ?string
@@ -596,6 +668,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the EXIF image description when available.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageDescription(): ?string
@@ -604,6 +678,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the host computer.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function hostComputer(): ?string
@@ -612,6 +688,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the software or firmware identifier reported by the image source.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function software(): ?string
@@ -620,6 +698,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the photographer name if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function photographer(): ?string
@@ -628,6 +708,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the image editor attribution if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageEditor(): ?string
@@ -636,6 +718,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the copyright notice string when present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function copyright(): ?string
@@ -644,6 +728,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the artist tag value when present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function artist(): ?string
@@ -657,6 +743,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the image unique identifier if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageUniqueId(): ?string
@@ -721,6 +809,8 @@ final class ParsedExif
     // ── Thumbnail domain ────────────────────────────────────────
 
     /**
+     * Indicates whether a JPEG thumbnail is referenced by the EXIF structure.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function hasThumbnail(): bool
@@ -729,6 +819,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the JPEG thumbnail offset from the dedicated thumbnail IFD (IFD1).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailJpegInterchangeFormat(): ?int
@@ -737,6 +829,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the JPEG thumbnail byte length from the dedicated thumbnail IFD (IFD1).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailJpegInterchangeFormatLength(): ?int
@@ -745,6 +839,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the compression enum describing the JPEG thumbnail stored in IFD1.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailCompression(): ?Compression
@@ -753,6 +849,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the tile width defined for the thumbnail image data (IFD1).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailTileWidth(): ?int
@@ -761,6 +859,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the tile length defined for the thumbnail image data (IFD1).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function thumbnailTileLength(): ?int
@@ -811,6 +911,8 @@ final class ParsedExif
     // ── Exposure domain ─────────────────────────────────────────
 
     /**
+     * Returns the spectral sensitivity description.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function spectralSensitivity(): ?string
@@ -829,6 +931,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.6.7.7 Table 14.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sensitivityType(): ?SensitivityType
@@ -837,6 +941,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the standard output sensitivity (SOS) value recorded for the capture.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function standardOutputSensitivity(): ?int
@@ -845,6 +951,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the recommended exposure index (REI) value recorded for the capture.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function recommendedExposureIndex(): ?int
@@ -853,6 +961,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the ISO speed value when provided separately from photographic sensitivity.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function isoSpeedValue(): ?int
@@ -861,6 +971,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the ISO sensitivity value if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function iso(): ?int
@@ -869,6 +981,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the ISO sensitivity using a broader set of fallbacks for non-standard encodings.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function isoBestEffort(): ?int
@@ -877,6 +991,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the ISO latitude yyy value when present and paired with ISOSpeed and ISOSpeedLatitudezzz.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function isoSpeedLatitudeYyy(): ?int
@@ -885,6 +1001,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the ISO latitude zzz value when present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function isoSpeedLatitudeZzz(): ?int
@@ -893,6 +1011,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the exposure time in seconds if available.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function exposureTime(): ?float
@@ -901,6 +1021,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the exposure time as a human-readable string like "1/50".
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function exposureTimeFormatted(): ?string
@@ -909,6 +1031,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the APEX shutter speed value when available.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function shutterSpeedValue(): ?float
@@ -917,6 +1041,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the shutter speed in seconds derived from the APEX value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function shutterSpeedSeconds(): ?float
@@ -925,6 +1051,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the APEX shutter speed as a human-readable string like "1/20".
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function shutterSpeedFormatted(): ?string
@@ -933,6 +1061,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the aperture (f-number) if available.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function fNumber(): ?float
@@ -941,6 +1071,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the APEX aperture value when present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function apertureValue(): ?float
@@ -949,6 +1081,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the APEX aperture value as a human-readable f-number string like "f/1.9".
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function apertureValueFormatted(): ?string
@@ -957,6 +1091,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the focal length in millimetres if available.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function focalLengthMm(): ?float
@@ -965,6 +1101,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the focal length in 35mm equivalent if available.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function focalLength35Mm(): ?int
@@ -973,6 +1111,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the camera exposure program enumeration if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function exposureProgram(): ?ExposureProgram
@@ -981,6 +1121,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the metering mode enumeration if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function meteringMode(): ?MeteringMode
@@ -989,6 +1131,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the flash status flags if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function flash(): ?int
@@ -997,6 +1141,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the decoded flash information value object when present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function flashInfo(): ?FlashInfo
@@ -1005,6 +1151,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the flash energy in beam candle power seconds when available.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function flashEnergy(): ?float
@@ -1013,6 +1161,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the white balance enumeration if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function whiteBalance(): ?WhiteBalance
@@ -1021,6 +1171,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the exposure bias value in EV if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function exposureBias(): ?float
@@ -1029,6 +1181,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the scene brightness value (APEX) if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function brightnessValue(): ?float
@@ -1037,6 +1191,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the APEX brightness value as a human-readable decimal string.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function brightnessValueFormatted(): ?string
@@ -1045,6 +1201,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the maximum aperture value (APEX) if present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function maxApertureApex(): ?float
@@ -1053,6 +1211,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the focal plane X resolution.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function focalPlaneXResolution(): ?float
@@ -1061,6 +1221,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the focal plane Y resolution.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function focalPlaneYResolution(): ?float
@@ -1069,6 +1231,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the focal plane resolution unit.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function focalPlaneResolutionUnit(): int
@@ -1087,6 +1251,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the exposure index value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function exposureIndex(): ?float
@@ -1095,6 +1261,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the related sound file.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function relatedSoundFile(): ?string
@@ -1108,6 +1276,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the composite image classification when available.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function compositeImage(): ?CompositeImage
@@ -1126,6 +1296,8 @@ final class ParsedExif
     }
 
     /**
+     * Decodes the SourceExposureTimesOfCompositeImage payload.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sourceExposureTimesOfCompositeImage(): ?SourceExposureTimes
@@ -1134,6 +1306,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the CFA pattern layout when available.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cfaPattern(): ?CfaPattern
@@ -1157,6 +1331,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns whether a custom rendering process was applied.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function customRendered(): ?CustomRendered
@@ -1165,6 +1341,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the in-camera contrast setting.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function contrast(): ?Contrast
@@ -1173,6 +1351,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the in-camera saturation setting.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function saturation(): ?Saturation
@@ -1181,6 +1361,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the in-camera sharpness setting.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sharpness(): ?Sharpness
@@ -1189,6 +1371,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the sensing method.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sensingMethod(): ?SensingMethod
@@ -1197,6 +1381,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the light source enum describing the scene illumination.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function lightSource(): ?LightSource
@@ -1205,6 +1391,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the scene capture type enum when recorded.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sceneCaptureType(): ?SceneCaptureType
@@ -1213,6 +1401,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the subject distance range enum when provided.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subjectDistanceRange(): ?SubjectDistanceRange
@@ -1221,6 +1411,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the development characteristic from the packed DevelopmentType tag.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function developmentCharacteristic(): ?DevelopmentCharacteristic
@@ -1229,6 +1421,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the factory default comparison from the packed DevelopmentType tag.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function developmentDefault(): ?DevelopmentDefault
@@ -1237,6 +1431,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the development type description string.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function developmentTypeDescription(): ?string
@@ -1245,6 +1441,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns whether distortion correction was applied at capture.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function distortionCorrection(): ?CorrectionApplied
@@ -1253,6 +1451,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns whether chromatic aberration correction was applied at capture.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function chromaticAberrationCorrection(): ?CorrectionApplied
@@ -1261,6 +1461,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns whether shading correction was applied at capture.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function shadingCorrection(): ?CorrectionApplied
@@ -1269,6 +1471,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the noise reduction tendency applied at capture.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function noiseReduction(): ?NoiseReduction
@@ -1277,6 +1481,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the subject distance in metres when provided.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subjectDistance(): ?float
@@ -1285,6 +1491,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the EXIF subject area as a structured value object.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subjectArea(): ?SubjectArea
@@ -1293,6 +1501,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the digital zoom ratio when encoded by the camera.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function digitalZoomRatio(): ?float
@@ -1301,6 +1511,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the exposure mode enum indicating manual or auto settings.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function exposureMode(): ?ExposureMode
@@ -1309,6 +1521,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the gain control enum describing in-camera amplification.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gainControl(): ?GainControl
@@ -1322,6 +1536,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the interoperability index string when recorded.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function interopIndex(): ?string
@@ -1337,6 +1553,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the recorded temperature in Celsius.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function temperatureCelsius(): ?float
@@ -1345,6 +1563,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the relative humidity in percent.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function humidityPercent(): ?float
@@ -1353,6 +1573,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the ambient pressure in hPa.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function pressureHPa(): ?float
@@ -1361,6 +1583,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the recorded water depth in metres.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function waterDepthMeters(): ?float
@@ -1379,6 +1603,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the camera acceleration in metres per second squared.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function accelerationMs2(): ?float
@@ -1387,6 +1613,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the camera elevation angle in degrees.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cameraElevationAngleDeg(): ?float
@@ -1395,6 +1623,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the camera firmware string when present.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cameraFirmware(): ?string
@@ -1403,6 +1633,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the raw developing software string.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function rawDevelopingSoftware(): ?string
@@ -1411,6 +1643,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the image editing software string.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function imageEditingSoftware(): ?string
@@ -1419,6 +1653,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the metadata editing software string.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function metadataEditingSoftware(): ?string
@@ -1434,6 +1670,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the DateTimeOriginal tag (0x9003) combined with fractional seconds and offsets.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dateTimeOriginal(): ?DateTimeImmutable
@@ -1442,6 +1680,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the most appropriate capture timestamp prioritising DateTimeOriginal metadata.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dateTimeOriginalBestEffort(): ?DateTimeImmutable
@@ -1450,6 +1690,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the fractional seconds associated with DateTimeOriginal.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subSecTimeOriginal(): ?string
@@ -1463,6 +1705,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the fractional seconds for DateTimeDigitized.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subSecTimeDigitized(): ?string
@@ -1471,6 +1715,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the raw ModifyDate (legacy DateTime) tag value from IFD0.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dateTimeRaw(): ?string
@@ -1479,6 +1725,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the fractional seconds for the ModifyDate/DateTime tag.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subSecTime(): ?string
@@ -1502,6 +1750,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns a best-effort absolute capture timestamp.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function captureDateTime(): ?DateTimeImmutable
@@ -1510,6 +1760,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the digitised timestamp combining the raw value and offset tags.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dateTimeDigitized(): ?DateTimeImmutable
@@ -1518,6 +1770,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the ModifyDate/DateTime tag combined with its optional offset.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dateTime(): ?DateTimeImmutable
@@ -1538,6 +1792,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the recorded GPS date stamp in ISO calendar format.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsDateStamp(): ?string
@@ -1546,6 +1802,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the recorded GPS time stamp in HH:MM:SS(.sss) format.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsTimeStampString(): ?string
@@ -1554,6 +1812,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the combined GPS timestamp in UTC when both date and time are available.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsTimestamp(): ?DateTimeImmutable
@@ -1562,6 +1822,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the GPSSpeedRef value indicating the source units (K, M, N).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsSpeedRef(): ?string
@@ -1570,6 +1832,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the GPS speed converted to metres per second.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsSpeedMetresPerSecond(): ?float
@@ -1578,6 +1842,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the GPSTrackRef value (T for true, M for magnetic).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsTrackRef(): ?string
@@ -1586,6 +1852,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the normalized course over ground in degrees within [0, 360).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsTrack(): ?float
@@ -1594,6 +1862,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the GPSImgDirectionRef value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsImgDirectionRef(): ?string
@@ -1602,6 +1872,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the normalized image direction in degrees within [0, 360).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsImgDirection(): ?float
@@ -1610,6 +1882,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the GPSDestBearingRef value (true or magnetic).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsDestinationBearingRef(): ?string
@@ -1618,6 +1892,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the normalized destination bearing in degrees within [0, 360).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsDestinationBearing(): ?float
@@ -1626,6 +1902,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the GPSDestDistanceRef value (kilometres, miles or nautical miles).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsDestinationDistanceRef(): ?string
@@ -1634,6 +1912,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the destination distance converted to metres.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsDestinationDistanceMetres(): ?float
@@ -1642,6 +1922,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the GPS differential correction indicator.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsDifferential(): ?int
@@ -1650,6 +1932,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the horizontal positioning error in metres when provided.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function gpsHorizontalPositioningError(): ?float
@@ -1660,6 +1944,8 @@ final class ParsedExif
     // ── TIFF Baseline domain ────────────────────────────────────
 
     /**
+     * Returns the tile width defined for the primary image data (IFD0).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function tileWidth(): ?int
@@ -1668,6 +1954,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the tile length defined for the primary image data (IFD0).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function tileLength(): ?int
@@ -1706,6 +1994,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns the TIFF predictor value for differencing compression schemes.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function predictor(): int
@@ -1714,6 +2004,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns NewSubfileType tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function newSubfileType(): int
@@ -1722,6 +2014,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns SubfileType tag value (deprecated).
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function subfileType(): ?int
@@ -1730,6 +2024,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns Threshholding tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function threshholding(): int
@@ -1738,6 +2034,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns CellWidth tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cellWidth(): ?int
@@ -1746,6 +2044,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns CellLength tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function cellLength(): ?int
@@ -1754,6 +2054,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns FillOrder tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function fillOrder(): int
@@ -1762,6 +2064,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns MinSampleValue tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function minSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList
@@ -1770,6 +2074,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns MaxSampleValue tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function maxSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList
@@ -1778,6 +2084,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns PageName tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function pageName(): ?string
@@ -1786,6 +2094,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns XPosition tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function xPosition(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1794,6 +2104,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns YPosition tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function yPosition(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1802,6 +2114,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns FreeOffsets tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function freeOffsets(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1810,6 +2124,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns FreeByteCounts tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function freeByteCounts(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1818,6 +2134,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns GrayResponseUnit tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function grayResponseUnit(): int
@@ -1826,6 +2144,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns GrayResponseCurve tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function grayResponseCurve(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1834,6 +2154,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns T4Options tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function t4Options(): int
@@ -1842,6 +2164,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns T6Options tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function t6Options(): int
@@ -1850,6 +2174,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns PageNumber tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function pageNumber(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1858,6 +2184,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns ColorMap tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function colorMap(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1866,6 +2194,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns HalftoneHints tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function halftoneHints(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1874,6 +2204,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns InkSet tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function inkSet(): int
@@ -1887,6 +2219,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns NumberOfInks tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function numberOfInks(): int
@@ -1895,6 +2229,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns DotRange tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function dotRange(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1903,6 +2239,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns TargetPrinter tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function targetPrinter(): ?string
@@ -1911,6 +2249,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns ExtraSamples tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extraSamples(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1919,6 +2259,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns SampleFormat tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sampleFormat(): int
@@ -1927,6 +2269,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns SMinSampleValue tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sMinSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1935,6 +2279,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns SMaxSampleValue tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function sMaxSampleValue(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1943,6 +2289,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns TransferRange tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function transferRange(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1951,6 +2299,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns JPEGProc tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegProc(): ?int
@@ -1959,6 +2309,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns JPEGRestartInterval tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegRestartInterval(): ?int
@@ -1967,6 +2319,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns JPEGLosslessPredictors tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegLosslessPredictors(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1975,6 +2329,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns JPEGPointTransforms tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegPointTransforms(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1983,6 +2339,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns JPEGQTables tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegQTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1991,6 +2349,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns JPEGDCTables tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegDCTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -1999,6 +2359,8 @@ final class ParsedExif
     }
 
     /**
+     * Returns JPEGACTables tag value.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     public function jpegACTables(): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null

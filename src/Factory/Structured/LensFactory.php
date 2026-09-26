@@ -82,6 +82,8 @@ final readonly class LensFactory
     }
 
     /**
+     * Returns the XMP MaxApertureValue converted from APEX to an f-number, or null when absent.
+     *
      * @throws ParseError If the input is malformed or inconsistent.
      */
     private function xmpMaxApertureFNumber(?XmpFallbackResolver $resolver): ?float
