@@ -102,9 +102,7 @@ final readonly class XmpDocument
             }
 
             foreach ($document->containerKinds as $key => $containerKind) {
-                if (!isset($containerKinds[$key])) {
-                    $containerKinds[$key] = $containerKind;
-                }
+                $containerKinds[$key] ??= $containerKind;
             }
         }
 

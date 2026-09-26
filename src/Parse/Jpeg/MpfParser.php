@@ -161,9 +161,7 @@ final class MpfParser
 
         $entries = $this->parseEntries($entriesData, $endian);
 
-        if ($imageCount === null) {
-            $imageCount = count($entries);
-        }
+        $imageCount ??= count($entries);
 
         if ($imageCount !== count($entries)) {
             throw new ParseError('MP Entry list length does not match reported image count', 1293);

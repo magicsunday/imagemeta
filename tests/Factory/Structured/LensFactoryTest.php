@@ -41,6 +41,7 @@ use MagicSunday\ImageMeta\Exif\Reconciliation\XmpFallbackResolver;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\Structured\LensFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Lens;
@@ -91,6 +92,7 @@ use function strlen;
 #[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(XmpDocument::class)]
 #[UsesClass(Lens::class)]
+#[UsesClass(NikonAviLookup::class)]
 final class LensFactoryTest extends TestCase
 {
     /**

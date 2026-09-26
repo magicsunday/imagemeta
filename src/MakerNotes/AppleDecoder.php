@@ -82,9 +82,7 @@ final readonly class AppleDecoder implements MakerNotesDecoderInterface
 
         $decoded = $this->archiveResolver->decodeBinaryPropertyList($raw);
 
-        if ($decoded === null) {
-            $decoded = $this->textParser->parse($raw);
-        }
+        $decoded ??= $this->textParser->parse($raw);
 
         if (!is_array($decoded) || !KeyedArchiveResolver::isStringKeyedDictionary($decoded)) {
             return null;
