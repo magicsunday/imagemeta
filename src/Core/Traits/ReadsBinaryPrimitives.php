@@ -32,6 +32,7 @@ trait ReadsBinaryPrimitives
      * @return int Unsigned 8-bit integer value.
      *
      * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function readU8(): int
     {

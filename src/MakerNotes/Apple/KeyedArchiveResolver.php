@@ -138,6 +138,8 @@ final readonly class KeyedArchiveResolver
     }
 
     /**
+     * Converts a decoded native plist value into its plist value object, recursing into arrays and dictionaries.
+     *
      * @param NativePlistValue $value
      *
      * @phpstan-param NativePlistValue $value
