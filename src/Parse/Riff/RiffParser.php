@@ -82,6 +82,12 @@ final class RiffParser implements RiffParserInterface
     ) {
     }
 
+    /**
+     * Walks the top-level chunks of the RIFF container and extracts its metadata.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     */
     public function extract(): RiffParseResult
     {
         $this->stream->seek(0);
@@ -147,6 +153,9 @@ final class RiffParser implements RiffParserInterface
      * @param int $startOffset First byte of the first chunk header.
      * @param int $endOffset   Exclusive end boundary.
      * @param int $depth       Current LIST nesting depth.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function walkChunks(int $startOffset, int $endOffset, int $depth): void
     {
@@ -184,6 +193,9 @@ final class RiffParser implements RiffParserInterface
 
     /**
      * Dispatches a chunk to the appropriate handler based on its FourCC.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function dispatchChunk(string $chunkId, int $dataOffset, int $chunkSize, int $depth): void
     {
@@ -217,6 +229,9 @@ final class RiffParser implements RiffParserInterface
 
     /**
      * Handles a LIST chunk by reading its list type and dispatching to sub-parsers.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function handleList(int $dataOffset, int $dataSize, int $depth): void
     {
@@ -277,6 +292,9 @@ final class RiffParser implements RiffParserInterface
      * @param int $endOffset   Exclusive end boundary.
      *
      * @return Generator<int, array{string, int, int}> Yields [tag, dataOffset, size].
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function iterateSubChunks(int $startOffset, int $endOffset): Generator
     {
@@ -309,6 +327,9 @@ final class RiffParser implements RiffParserInterface
      * Reads a sub-chunk payload as a null-stripped string if within size limits.
      *
      * @return string|null The trimmed string, or null if empty/oversized/unreadable.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function readSubChunkString(int $dataOffset, int $size): ?string
     {
@@ -331,6 +352,9 @@ final class RiffParser implements RiffParserInterface
      * Parses INFO sub-chunks into key-value string pairs.
      *
      * RIFF 1991 section 3 — INFO List Chunk.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseInfoList(int $startOffset, int $endOffset): void
     {
@@ -347,6 +371,9 @@ final class RiffParser implements RiffParserInterface
      * Parses RIFF-native EXIF sub-chunks (LIST 'exif').
      *
      * ExifTool RIFF.pm — %Image::ExifTool::RIFF::Exif tag table.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseExifList(int $startOffset, int $endOffset): void
     {
@@ -398,6 +425,9 @@ final class RiffParser implements RiffParserInterface
 
     /**
      * Parses a stream list (LIST 'strl') looking for strd chunks with AVIF-prefixed TIFF blobs.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseStreamList(int $startOffset, int $endOffset): void
     {
@@ -442,6 +472,9 @@ final class RiffParser implements RiffParserInterface
      * Parses a Nikon Camera Data Table (LIST 'ncdt') looking for nctg (Nikon Camera Tags).
      *
      * Reference: ExifTool Nikon.pm — %Image::ExifTool::Nikon::AVI tag table.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseNikonList(int $startOffset, int $endOffset): void
     {
@@ -474,6 +507,9 @@ final class RiffParser implements RiffParserInterface
 
     /**
      * Handles a _PMX (XMP) chunk.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function handleXmp(int $dataOffset, int $dataSize): void
     {
@@ -492,6 +528,9 @@ final class RiffParser implements RiffParserInterface
 
     /**
      * Handles a top-level IDIT chunk (DateTimeOriginal string).
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function handleIdit(int $dataOffset, int $dataSize): void
     {
@@ -514,6 +553,9 @@ final class RiffParser implements RiffParserInterface
 
     /**
      * Handles an avih chunk (AVIMAINHEADER structure).
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function handleAviHeader(int $dataOffset, int $dataSize): void
     {
@@ -558,6 +600,9 @@ final class RiffParser implements RiffParserInterface
      * Olympus cameras embed metadata in JUNK chunks with an 'OLYMDigital Camera' signature.
      * Only the first successfully parsed Olympus JUNK chunk is retained — later non-Olympus
      * JUNK chunks are silently skipped.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function handleJunkChunk(int $dataOffset, int $dataSize): void
     {
@@ -585,6 +630,9 @@ final class RiffParser implements RiffParserInterface
      * Scans for concatenated RIFF 'AVIX' continuation chunks after the first container.
      *
      * OpenDML AVI Extensions — large AVI files use RIFF 'AVIX' continuations.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function walkAvixContinuations(int $startOffset): void
     {
@@ -617,6 +665,9 @@ final class RiffParser implements RiffParserInterface
 
     /**
      * Reads an unsigned 32-bit little-endian integer from the stream.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function readU32LE(): int
     {

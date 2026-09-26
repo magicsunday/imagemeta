@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
@@ -90,6 +91,8 @@ final readonly class DngProfileValidator
 
     /**
      * Validates DNG ProfileToneCurve structure and values.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngProfileToneCurve(Ifd $ifd): void
     {
@@ -179,6 +182,8 @@ final readonly class DngProfileValidator
      * Validates DNG ProfileHueSatMapDims LONG[3] layout and minimum division constraints.
      *
      * HueDivisions >= 1, SaturationDivisions >= 2, ValueDivisions >= 1.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngHueSatMapDims(Ifd $ifd): void
     {
@@ -198,6 +203,8 @@ final readonly class DngProfileValidator
      *
      * Count must equal HueDivisions * SatDivisions * ValueDivisions * 3.
      * Zero-saturation entries (saturation index 0) must have valueScale == 1.0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngHueSatMapData(Ifd $ifd): void
     {
@@ -274,6 +281,8 @@ final readonly class DngProfileValidator
      * Validates DNG IlluminantData payload structure per DNG 1.7.1.0.
      *
      * DataType 0 = chromaticity (x/y), DataType 1 = spectral (NumLambda >= 2).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngIlluminantData(Ifd $ifd): void
     {
@@ -324,6 +333,8 @@ final readonly class DngProfileValidator
      * Validates ProfileLookTableDims (0xC725) per DNG 1.7.1.0.
      *
      * Must be LONG[3]: HueDivisions >= 1, SaturationDivisions >= 2, ValueDivisions >= 1.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngProfileLookTableDims(Ifd $ifd): void
     {
@@ -340,6 +351,8 @@ final readonly class DngProfileValidator
 
     /**
      * Validates DNG LONG[3] dimension tags (Hue/Saturation/Value divisions).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDngDimsLong3(
         Ifd $ifd,
@@ -404,6 +417,8 @@ final readonly class DngProfileValidator
      *
      * Type must be FLOAT. Count must equal HueDivisions * SaturationDivisions * ValueDivisions * 3.
      * If dims is present, data must also be present and vice versa.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngProfileLookTableData(Ifd $ifd): void
     {
@@ -463,6 +478,8 @@ final readonly class DngProfileValidator
      * Validates BaselineExposure (0xC62A) DNG layout and scalar sanity.
      *
      * DNG 1.7.1.0 defines BaselineExposure as SRATIONAL[1] EV offset.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngBaselineExposure(Ifd $ifd): void
     {
@@ -492,6 +509,8 @@ final readonly class DngProfileValidator
      * Validates ProfileEmbedPolicy (0xC6FD) per DNG 1.7.1.0.
      *
      * Must be LONG[1] with value in {0,1,2,3}.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngProfileEmbedPolicy(Ifd $ifd): void
     {
@@ -513,6 +532,8 @@ final readonly class DngProfileValidator
      * Validates DNG NoiseProfile coefficient constraints per DNG 1.7.1.0.
      *
      * Count must be even (pairs of S_i, O_i). Each S_i must be > 0, each O_i must be >= 0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngNoiseProfile(Ifd $ifd): void
     {
@@ -567,6 +588,8 @@ final readonly class DngProfileValidator
      * @param int    $encTag  Encoding tag constant
      * @param int    $dimsTag Associated dimensions tag constant
      * @param string $name    Human-readable tag name for error messages
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngEncodingTag(Ifd $ifd, int $encTag, int $dimsTag, string $name): void
     {
@@ -618,6 +641,8 @@ final readonly class DngProfileValidator
      *
      * Payload must be exactly 8 bytes: Version(SHORT)=1, DynamicRange(SHORT) in {0,1},
      * HintMaxOutputValue(FLOAT) <= 1.0 for SDR (DynamicRange=0).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngProfileDynamicRange(Ifd $ifd): void
     {
@@ -670,6 +695,8 @@ final readonly class DngProfileValidator
      * Validates DNG ProfileGainTableMap2 binary layout per DNG 1.7.1.0.
      *
      * 80-byte header followed by gain data whose size must match the count formula.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngProfileGainTableMap2(Ifd $ifd): void
     {
@@ -693,6 +720,8 @@ final readonly class DngProfileValidator
      * @param string $payload ProfileGainTableMap2 raw payload bytes.
      *
      * @return GainTableMap2Header
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeProfileGainTableMap2Header(string $payload): array
     {
@@ -718,6 +747,8 @@ final readonly class DngProfileValidator
      * Validates ProfileGainTableMap2 scalar header values and returns bytes per element.
      *
      * @param GainTableMap2Header $header
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateProfileGainTableMap2Header(array $header): int
     {
@@ -742,6 +773,8 @@ final readonly class DngProfileValidator
      * Validates ProfileGainTableMap2 payload length against declared map dimensions.
      *
      * @param GainTableMap2Header $header
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateProfileGainTableMap2Length(int $length, array $header, int $bytesPerElement): void
     {
@@ -770,6 +803,8 @@ final readonly class DngProfileValidator
      * - 64-byte header
      * - gain array of FLOAT32 entries
      * - total size = 64 + 4 * MapPointsV * MapPointsH * MapPointsN
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngProfileGainTableMapLegacy(Ifd $ifd): void
     {
@@ -891,6 +926,8 @@ final readonly class DngProfileValidator
      * Extracts H/S/V dimension values and computes the expected data count (H*S*V*3).
      *
      * @return array{hueDivs: int, satDivs: int, valDivs: int, expectedCount: int}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function extractHsvDimensions(
         IfdEntry $dimsEntry,
@@ -927,6 +964,8 @@ final readonly class DngProfileValidator
 
     /**
      * Multiplies two integers with overflow checking against PHP_INT_MAX.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function checkedMultiply(int $left, int $right, string $overflowMessage, int $code): int
     {
@@ -947,6 +986,8 @@ final readonly class DngProfileValidator
      * ProfileGainTableMap (0xCD2D) is restricted to Raw IFDs and must not appear
      * in IFD 0. When both ProfileGainTableMap and ProfileGainTableMap2 exist,
      * ProfileGainTableMap2 supersedes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngGainMapPlacement(Ifd $ifd): void
     {
@@ -966,6 +1007,8 @@ final readonly class DngProfileValidator
      *
      * @param Ifd       $ifd0           Primary IFD.
      * @param list<Ifd> $additionalIfds Additional IFDs (IFD1+).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngMultiProfileName(Ifd $ifd0, array $additionalIfds): void
     {
@@ -1001,6 +1044,9 @@ final readonly class DngProfileValidator
      * DNG 1.7.1.0 "ExtraCameraProfiles" defines LONG[count] offsets to camera profile
      * payloads. Each payload starts with a byte-order marker ("II" or "MM"), magic
      * value 0x4352, and a 32-bit inner IFD offset relative to the payload start.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function validateDngExtraCameraProfiles(Ifd $ifd): void
     {
@@ -1031,6 +1077,8 @@ final readonly class DngProfileValidator
 
     /**
      * Validates the ExtraCameraProfiles tag-level type/count constraints.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateExtraCameraProfilesEntry(IfdEntry $entry): void
     {
@@ -1051,6 +1099,9 @@ final readonly class DngProfileValidator
 
     /**
      * Validates one ExtraCameraProfiles offset target and its embedded profile header.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function validateExtraCameraProfileRecord(int $profileIndex, int $profileOffset, int $blobSize): void
     {
@@ -1139,6 +1190,8 @@ final readonly class DngProfileValidator
      * Normalizes ExtraCameraProfiles offset values into an integer list.
      *
      * @return list<int>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function extractDngExtraCameraProfileOffsets(IfdEntry $entry): array
     {

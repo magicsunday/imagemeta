@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
@@ -148,6 +149,9 @@ final readonly class DngValueNormalizer
      * @param string   $rawBytes       Raw value bytes read for the entry.
      * @param int|null $componentSize  Precomputed bytes per component for this TIFF type.
      * @param int|null $expectedLength Precomputed total byte count for this value.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function normalizeCountedImageDataField(
         int $tag,
@@ -186,6 +190,8 @@ final readonly class DngValueNormalizer
      * bytes describing the colour filter layout.
      *
      * @param string $bytes Raw CFA pattern payload.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function decodeCfaPatternPayload(string $bytes): ExifNumericList
     {
@@ -260,6 +266,8 @@ final readonly class DngValueNormalizer
      *
      * @param int $tag  Tag identifier.
      * @param int $type TIFF field type code.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateCountedImageDataType(int $tag, int $type): void
     {
@@ -286,6 +294,9 @@ final readonly class DngValueNormalizer
      * @param int|null $expectedLength Precomputed total byte count for this value.
      *
      * @return list<int>
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function decodeCountedComponents(
         int $tag,

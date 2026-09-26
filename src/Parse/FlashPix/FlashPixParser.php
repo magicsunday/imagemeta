@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\FlashPix;
 
 use MagicSunday\ImageMeta\Contract\FlashPixParserInterface;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
 
 /**
@@ -30,6 +31,8 @@ final readonly class FlashPixParser implements FlashPixParserInterface
      * from the first parseable OLE property set.
      *
      * @param array<int, string> $streams Assembled FlashPix extension streams.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function parse(array $streams): FlashPixDocument
     {

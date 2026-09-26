@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Model\Dji\DjiTelemetry;
 
@@ -50,6 +52,9 @@ final readonly class DjiMdatTelemetryScanner
      * @param Stream $stream Source stream to scan.
      *
      * @return DjiTelemetry|null Extracted telemetry or null when no DJI records are found.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function scanStream(Stream $stream): ?DjiTelemetry
     {

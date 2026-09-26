@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
@@ -72,6 +73,9 @@ final readonly class BoxPayloadCollector
      *                                                        extents.
      *
      * @return BoxPayloadCollection Aggregated payloads and child-box-derived metadata extracted from the meta box.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function collect(BoxDescriptor $meta, bool $allowQuickTimeMetaWithoutFullBox, int $fileOffsetOrigin = 0): BoxPayloadCollection
     {
@@ -249,6 +253,9 @@ final readonly class BoxPayloadCollector
 
     /**
      * Collects and validates the single required handler box.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function collectHdlr(BoxDescriptor $child, int &$hdlrCount, ?string &$handlerType): void
     {
@@ -266,6 +273,9 @@ final readonly class BoxPayloadCollector
      *
      * @param BoxDescriptor $child      Exif child box whose payload should be normalized and collected.
      * @param list<string>  $directExif Collected direct Exif payloads from sibling boxes.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function collectDirectExifPayload(BoxDescriptor $child, array &$directExif): void
     {
@@ -281,6 +291,9 @@ final readonly class BoxPayloadCollector
      *
      * @param BoxDescriptor $child     XMP child box whose payload should be collected.
      * @param list<string>  $directXmp Collected direct XMP payloads from sibling boxes.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function collectDirectXmpPayload(BoxDescriptor $child, array &$directXmp): void
     {
@@ -293,6 +306,9 @@ final readonly class BoxPayloadCollector
      *
      * @param BoxDescriptor $child   UUID child box whose payload may contain XMP data.
      * @param list<string>  $uuidXmp Collected UUID-based XMP payloads from sibling boxes.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function collectUuidXmpPayload(BoxDescriptor $child, array &$uuidXmp): void
     {
@@ -310,6 +326,9 @@ final readonly class BoxPayloadCollector
      * @param BoxDescriptor $child `idat` child box whose payload should be collected.
      *
      * @param-out string       $idatPayload Captured `idat` payload bytes when the box is present.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function collectIdatPayload(BoxDescriptor $child, ?string &$idatPayload): void
     {
@@ -332,6 +351,9 @@ final readonly class BoxPayloadCollector
      *                                                          current meta context.
      * @param list<array<int, QuickTimeKeyEntry>> $keysMaps     Parsed QuickTime key-entry
      *                                                          maps collected from the meta box.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function collectKeysAtom(BoxDescriptor $child, bool &$requiresHdlr, array &$keysMaps): void
     {
@@ -349,6 +371,8 @@ final readonly class BoxPayloadCollector
      *
      * @param BoxDescriptor       $child     `ilst` child box to retain for later decoding.
      * @param list<BoxDescriptor> $ilstBoxes Collected `ilst` box descriptors for the current meta box.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function collectIlstAtom(BoxDescriptor $child, array &$ilstBoxes): void
     {
@@ -370,6 +394,9 @@ final readonly class BoxPayloadCollector
      *                                       current meta context.
      * @param list<list<int>> $lists         Parsed locale lists grouped by contained entry
      *                                       order.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function collectLocaleListAtom(BoxDescriptor $child, string $atomType, int $duplicateCode, bool &$requiresHdlr, array &$lists): void
     {
@@ -384,6 +411,9 @@ final readonly class BoxPayloadCollector
 
     /**
      * Collects metadata header presence and marks hdlr requirement.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function collectMhdr(BoxDescriptor $child, bool &$requiresHdlr, bool &$hasMhdr): void
     {
@@ -398,6 +428,8 @@ final readonly class BoxPayloadCollector
      * @param BoxDescriptor $child        Box whose payload size should be validated.
      * @param string        $errorMessage ParseError message used when the configured limit is exceeded.
      * @param int           $errorCode    ParseError code used when the configured limit is exceeded.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function assertPayloadWithinLimit(BoxDescriptor $child, string $errorMessage, int $errorCode): void
     {
@@ -415,6 +447,9 @@ final readonly class BoxPayloadCollector
      *                                                        meta box without a FullBox header.
      *
      * @return int Child-content offset within the meta box payload.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function detectMetaChildOffset(BoxDescriptor $meta, bool $allowQuickTimeMetaWithoutFullBox): int
     {
@@ -469,6 +504,8 @@ final readonly class BoxPayloadCollector
      * ISO/IEC 14496-12 §8.11.1: meta is FullBox('meta', version = 0, 0).
      *
      * @param string $peek First bytes of the meta box content.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateMetaFullBoxHeader(string $peek): void
     {
@@ -491,6 +528,8 @@ final readonly class BoxPayloadCollector
      * @param string $context Human-readable context included in error messages.
      *
      * @return int Parsed 32-bit unsigned integer value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readU32FromBytes(string $bytes, int $offset, string $context): int
     {
@@ -509,6 +548,8 @@ final readonly class BoxPayloadCollector
      * @param string $context Human-readable context included in error messages.
      *
      * @return int Parsed 64-bit unsigned integer value as a PHP integer.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readU64FromBytes(string $bytes, int $offset, string $context): int
     {
@@ -528,6 +569,9 @@ final readonly class BoxPayloadCollector
      * @param BoxDescriptor $iprp Box descriptor for the item properties box.
      *
      * @return array{width: ?int, height: ?int, iccProfile: ?string} Properties from ipco, or null values.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseIprp(BoxDescriptor $iprp): array
     {
@@ -546,6 +590,9 @@ final readonly class BoxPayloadCollector
      * @param BoxDescriptor $ipco Box descriptor for the item property container box.
      *
      * @return array{width: ?int, height: ?int, iccProfile: ?string} Extracted properties, or null values.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseIpco(BoxDescriptor $ipco): array
     {
@@ -573,6 +620,9 @@ final readonly class BoxPayloadCollector
      * @param BoxDescriptor $ispe Box descriptor for the image spatial extents box.
      *
      * @return array{width: ?int, height: ?int} Width/height or null pair if the box is malformed.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function parseIspe(BoxDescriptor $ispe): array
     {
@@ -606,6 +656,9 @@ final readonly class BoxPayloadCollector
      * @param BoxDescriptor $colr Box descriptor for the colour information box.
      *
      * @return string|null Binary ICC profile or null when unavailable.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function parseColr(BoxDescriptor $colr): ?string
     {
@@ -639,6 +692,8 @@ final readonly class BoxPayloadCollector
      * @param int    $limit  Maximum allowed size relative to the current container.
      *
      * @return bool True when the encoded size fits within the container, otherwise false.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function isPlausibleBoxSize(string $peek, int $offset, int $limit): bool
     {

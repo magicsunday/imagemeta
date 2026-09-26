@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Riff;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Riff\OlympusCameraTags;
 
@@ -62,6 +63,8 @@ final class OlympusJunkParser
      *
      * Returns null when the payload does not carry the Olympus signature or is
      * too short to contain all known fields.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function parse(string $payload): ?OlympusCameraTags
     {
@@ -134,6 +137,8 @@ final class OlympusJunkParser
      * Reads a rational64u (2x u32 LE) at the given offset.
      *
      * @return array{float|null, string|null} [typed value, display string]
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readRational(string $payload, int $offset): array
     {

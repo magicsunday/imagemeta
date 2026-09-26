@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 
 /**
@@ -48,6 +49,8 @@ final readonly class TiffStructuralValidator
      * Validates EnhancedIfd coupling for a single IFD.
      *
      * Called separately because IFD0 runs this before the additional-IFD loop.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateEnhancedIfd(Ifd $ifd): void
     {
@@ -61,6 +64,8 @@ final readonly class TiffStructuralValidator
      * Called for every IFD (both additional IFDs and IFD0).
      *
      * @param bool $strictTiffNewSubfileType Whether to enforce strict TIFF NewSubfileType rules.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validatePerIfd(Ifd $ifd, bool $strictTiffNewSubfileType): void
     {
@@ -95,6 +100,8 @@ final readonly class TiffStructuralValidator
      *
      * @param bool $jpegContext              Whether the TIFF is embedded in a JPEG container.
      * @param bool $strictTiffNewSubfileType Whether to enforce strict TIFF NewSubfileType rules.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateIfd0(Ifd $ifd0, ?Ifd $ifd1, bool $jpegContext, bool $strictTiffNewSubfileType): void
     {
@@ -107,6 +114,8 @@ final readonly class TiffStructuralValidator
      *
      * Only applicable when dimensions are not provided externally
      * (i.e. not in JPEG or ISO BMFF container context).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateImageData(Ifd $ifd0): void
     {

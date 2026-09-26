@@ -58,6 +58,8 @@ final readonly class DngVersionValidator
 
     /**
      * Rejects DNG files whose DNGBackwardVersion exceeds the supported reader version.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngBackwardVersionGate(Ifd $ifd): void
     {
@@ -87,6 +89,8 @@ final readonly class DngVersionValidator
      *
      * Rejects zero tuples (e.g. 0.0.0.0) and versions beyond this library's
      * supported range per DNG 1.7.1.0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngVersionValidity(Ifd $ifd): void
     {
@@ -126,6 +130,8 @@ final readonly class DngVersionValidator
 
     /**
      * Rejects DNG files where DNGBackwardVersion is higher than DNGVersion.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngBackwardVersionConsistency(Ifd $ifd): void
     {
@@ -171,6 +177,8 @@ final readonly class DngVersionValidator
 
     /**
      * Validates that non-default interleave factors have a sufficient DNGBackwardVersion.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngInterleaveVersionFloors(Ifd $ifd): void
     {
@@ -220,6 +228,8 @@ final readonly class DngVersionValidator
      * Rejects third-illuminant tags when DNGBackwardVersion < 1.6.0.0.
      *
      * DNG 1.7.1.0 Appendix A: third calibration set requires version >= 1.6.0.0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngThirdIlluminantVersionFloor(Ifd $ifd): void
     {

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Jxl;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Stream;
@@ -79,6 +80,9 @@ final readonly class JxlParser
 
     /**
      * Extracts EXIF blobs, XMP packets, and the gain map blob from the JXL container.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function extract(): JxlParseResult
     {
@@ -141,6 +145,9 @@ final readonly class JxlParser
      * Walks each top-level box in the container and yields a descriptor object.
      *
      * @return iterable<BoxDescriptor>
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function walkTopLevelBoxes(): iterable
     {
@@ -164,6 +171,8 @@ final readonly class JxlParser
      * @param string $blob Raw EXIF payload from the JXL Exif box.
      *
      * @return string EXIF payload trimmed to the TIFF header.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function normalizeExifBlob(string $blob): string
     {

@@ -59,6 +59,8 @@ final class OlePropertySetParser
 
     /**
      * Parses an OLE property set stream and returns the first section as a typed property set.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function parse(string $raw): ?OlePropertySet
     {
@@ -101,6 +103,11 @@ final class OlePropertySetParser
         }
     }
 
+    /**
+     * Parses the property ID/offset table of one property-set section into its typed properties.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     private function parseSectionEntries(string $raw, int $sectionOffset, int $length): ?OlePropertySet
     {
         $propertyCount = $this->u32($raw, $sectionOffset + 4);
@@ -143,6 +150,8 @@ final class OlePropertySetParser
 
     /**
      * Reads a typed property value from the stream.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readValue(string $raw, int $offset, int $typeCode, int $length): string|int|float|bool|DateTimeImmutable|null
     {
@@ -159,6 +168,11 @@ final class OlePropertySetParser
         };
     }
 
+    /**
+     * Reads a little-endian VT_I2 value, or null when it runs past the section end.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     private function readShort(string $raw, int $offset, int $length): ?int
     {
         if (($offset + 2) > $length) {
@@ -168,6 +182,11 @@ final class OlePropertySetParser
         return Unpack::int('v', substr($raw, $offset, 2), 'OLE SHORT');
     }
 
+    /**
+     * Reads a little-endian VT_I4 value, or null when it runs past the section end.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     private function readLong(string $raw, int $offset, int $length): ?int
     {
         if (($offset + 4) > $length) {
@@ -177,6 +196,11 @@ final class OlePropertySetParser
         return Unpack::int('V', substr($raw, $offset, 4), 'OLE LONG');
     }
 
+    /**
+     * Reads a little-endian VT_R4 value, or null when it runs past the section end.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     private function readFloat(string $raw, int $offset, int $length): ?float
     {
         if (($offset + 4) > $length) {
@@ -186,6 +210,11 @@ final class OlePropertySetParser
         return Unpack::float('g', substr($raw, $offset, 4), 'OLE FLOAT');
     }
 
+    /**
+     * Reads a little-endian VT_R8 value, or null when it runs past the section end.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     private function readDouble(string $raw, int $offset, int $length): ?float
     {
         if (($offset + 8) > $length) {
@@ -195,6 +224,11 @@ final class OlePropertySetParser
         return Unpack::float('e', substr($raw, $offset, 8), 'OLE DOUBLE');
     }
 
+    /**
+     * Reads a VT_BOOL value (non-zero is true), or null when it runs past the section end.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     private function readBoolean(string $raw, int $offset, int $length): ?bool
     {
         if (($offset + 2) > $length) {
@@ -206,6 +240,8 @@ final class OlePropertySetParser
 
     /**
      * Reads an ANSI string (LPSTR): uint32 size + size bytes, NUL-padded to 4-byte boundary.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readLpstr(string $raw, int $offset, int $length): ?string
     {
@@ -227,6 +263,8 @@ final class OlePropertySetParser
 
     /**
      * Reads a Unicode string (LPWSTR): uint32 charCount + charCount*2 bytes UTF-16LE.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readLpwstr(string $raw, int $offset, int $length): ?string
     {
@@ -257,6 +295,8 @@ final class OlePropertySetParser
 
     /**
      * Reads a Windows FILETIME (64-bit, 100-nanosecond intervals since 1601-01-01).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function readFiletime(string $raw, int $offset, int $length): ?DateTimeImmutable
     {
@@ -286,11 +326,21 @@ final class OlePropertySetParser
         return $dateTime instanceof DateTimeImmutable ? $dateTime : null;
     }
 
+    /**
+     * Reads an unsigned little-endian 16-bit integer at the given offset.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     private function u16(string $raw, int $offset): int
     {
         return Unpack::int('v', substr($raw, $offset, 2), 'OLE u16');
     }
 
+    /**
+     * Reads an unsigned little-endian 32-bit integer at the given offset.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     private function u32(string $raw, int $offset): int
     {
         return Unpack::int('V', substr($raw, $offset, 4), 'OLE u32');

@@ -112,6 +112,8 @@ final readonly class DngCalibrationValidator
      * DNG 1.7.1.0 pp. 32–42 defines matrix dimensional rules driven by the number of
      * color planes derived from CfaPlaneColor (Tag 0xC616). Each matrix tag must use
      * SRATIONAL type and match the expected element count.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngMatrixTags(Ifd $ifd): void
     {
@@ -171,6 +173,8 @@ final readonly class DngCalibrationValidator
     /**
      * Validates CalibrationIlluminant values against the EXIF LightSource domain
      * and enforces DNG version gating for value 255 (Other).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngCalibrationIlluminantDomain(Ifd $ifd): void
     {
@@ -221,6 +225,8 @@ final readonly class DngCalibrationValidator
      *
      * DNG 1.7.1.0 pp. 43–44, 91–93: when CalibrationIlluminant{1,2,3} = 255 (Other),
      * the corresponding IlluminantData{1,2,3} tag must be present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngIlluminantDependencies(Ifd $ifd): void
     {
@@ -258,6 +264,8 @@ final readonly class DngCalibrationValidator
      * DNG 1.7.1.0 "Requirements for three calibrations": when CalibrationIlluminant3
      * is present, CalibrationIlluminant1/2, ColorMatrix3, and all-or-none tag sets
      * must be structurally complete with distinct illuminant values.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngTripleIlluminant(Ifd $ifd): void
     {
@@ -323,6 +331,8 @@ final readonly class DngCalibrationValidator
      *
      * DNG 1.7.1.0 pp. 36–37: AsShotNeutral and AsShotWhiteXY are mutually
      * exclusive; both must not be present in the same IFD.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngWhiteBalanceExclusivity(Ifd $ifd): void
     {
@@ -339,6 +349,8 @@ final readonly class DngCalibrationValidator
      *
      * AsShotNeutral: SHORT or RATIONAL, count = ColorPlanes.
      * AsShotWhiteXY: RATIONAL, count = 2.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngWhiteBalanceLayout(Ifd $ifd): void
     {
@@ -383,6 +395,8 @@ final readonly class DngCalibrationValidator
      *
      * DNG 1.7.1.0 defines AnalogBalance as RATIONAL[ColorPlanes] with
      * positive finite gain components.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngAnalogBalance(Ifd $ifd): void
     {
@@ -432,6 +446,8 @@ final readonly class DngCalibrationValidator
     /**
      * Validates that when both CalibrationIlluminant1 and CalibrationIlluminant2
      * are present, neither has value 0 (unknown).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngCalibrationIlluminantPairZero(Ifd $ifd): void
     {
@@ -454,6 +470,8 @@ final readonly class DngCalibrationValidator
      * Validates DNG ColorimetricReference value domain and version gating.
      *
      * Allowed values are 0, 1, 2. Value 2 requires DNGBackwardVersion >= 1.7.0.0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngColorimetricReference(Ifd $ifd): void
     {
@@ -503,6 +521,8 @@ final readonly class DngCalibrationValidator
      *
      * ICC payload tags must be UNDEFINED and structurally valid ICC blobs.
      * Matrix tags must be SRATIONAL with count = (3 * ColorPlanes) or (ColorPlanes^2).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngIccProfilePairs(Ifd $ifd): void
     {
@@ -558,6 +578,8 @@ final readonly class DngCalibrationValidator
      *
      * DNG 1.7.1.0:
      * - ICC payload tags must be UNDEFINED and structurally valid ICC blobs.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDngIccPayloadEntry(
         IfdEntry $iccEntry,
@@ -593,6 +615,8 @@ final readonly class DngCalibrationValidator
      * DNG 1.7.1.0:
      * - Matrix tags must be SRATIONAL with count = (3 * ColorPlanes) or (ColorPlanes^2).
      * - All components must have non-zero denominators and finite values.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDngPreProfileMatrixEntry(
         IfdEntry $matrixEntry,
@@ -643,6 +667,8 @@ final readonly class DngCalibrationValidator
      * DNG 1.7.1.0:
      * - All components must decode to SRATIONAL list.
      * - Denominators must not be zero and values must be finite.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDngPreProfileMatrixComponents(IfdEntry $matrixEntry, string $matrixName): void
     {

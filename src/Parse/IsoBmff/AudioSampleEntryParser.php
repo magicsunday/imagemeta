@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
@@ -81,6 +82,9 @@ final readonly class AudioSampleEntryParser
      * @param string       $normalizedFormat Pre-normalized fourcc format string.
      *
      * @return AudioSampleEntryMap
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseSoundSampleEntry(
         StreamWindow $win,
@@ -190,6 +194,9 @@ final readonly class AudioSampleEntryParser
      * @param string       $normalizedFormat Pre-normalized fourcc format string.
      *
      * @return array<string, int|float|string|bool>
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseSoundSampleEntryVersion2(StreamWindow $win, int $entryStart, int $entryEnd, int $entrySize, string $normalizedFormat): array
     {
@@ -309,6 +316,9 @@ final readonly class AudioSampleEntryParser
      * @param StreamWindow $win                  Reader positioned at the start of trailing child bytes.
      * @param int          $entryEnd             Absolute offset where this sample entry ends.
      * @param bool         $allowSamplingRateBox Whether a `srat` box is allowed in this entry version.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseAudioSampleEntrySamplingRateBox(StreamWindow $win, int $entryEnd, bool $allowSamplingRateBox): ?int
     {
@@ -354,6 +364,8 @@ final readonly class AudioSampleEntryParser
      * Decodes an AudioSampleEntry 16.16 fixed-point sample rate.
      *
      * @param int $sampleRateRaw Raw 16.16 fixed-point value from the sample entry.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeAudioSampleRate16_16(int $sampleRateRaw): int|float
     {
@@ -378,6 +390,8 @@ final readonly class AudioSampleEntryParser
 
     /**
      * Calculates the minimum bytes required per audio packet for LPCM sample layouts.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function calculateLpcmMinBytesPerAudioPacket(int $bitsPerChannel, int $numChannels, int $framesPerPacket): int
     {

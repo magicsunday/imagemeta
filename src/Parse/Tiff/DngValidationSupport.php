@@ -67,6 +67,8 @@ final readonly class DngValidationSupport
      * Unpacks an unsigned 16-bit integer from a byte string.
      *
      * @param string $b Source bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function unpackU16(string $b): int
     {
@@ -79,6 +81,8 @@ final readonly class DngValidationSupport
      * Unpacks an unsigned 32-bit integer from a byte string.
      *
      * @param string $b Source bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function unpackU32(string $b): int
     {
@@ -91,6 +95,8 @@ final readonly class DngValidationSupport
      * Unpacks an IEEE-754 single-precision float from a byte string.
      *
      * @param string $b Source bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function unpackFloat(string $b): float
     {
@@ -103,6 +109,8 @@ final readonly class DngValidationSupport
      * Unpacks an IEEE-754 double-precision float from a byte string.
      *
      * @param string $b Source bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function unpackDouble(string $b): float
     {
@@ -219,6 +227,8 @@ final readonly class DngValidationSupport
      *
      * @param string $expectedTypeName     Human-readable type name used in messages.
      * @param string $denominatorCondition Condition phrase appended to "denominator must ...".
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractRationalScalar(
         Ifd $ifd,
@@ -270,6 +280,8 @@ final readonly class DngValidationSupport
      * Decodes a tag payload into rectangles (top, left, bottom, right).
      *
      * @return list<array{top: int, left: int, bottom: int, right: int}>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractDngRectangles(IfdEntry $entry, string $tagName): array
     {
@@ -356,6 +368,8 @@ final readonly class DngValidationSupport
      * Extracts two strictly positive integer values from a numeric list payload.
      *
      * @return array{0: int, 1: int}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractDngPositivePairFromNumericList(IfdEntry $entry, string $tagName): array
     {
@@ -382,6 +396,8 @@ final readonly class DngValidationSupport
      * Extracts two numeric components from crop/scale DNG tags.
      *
      * @return array{0: float, 1: float}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractDngCropScalePair(IfdEntry $entry, string $tagName): array
     {
@@ -446,6 +462,8 @@ final readonly class DngValidationSupport
      * @param list<int> $allowedTypes Allowed TIFF types for this tag.
      *
      * @return array{0: float, 1: float}|null
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function extractDngOriginalProxySize(
         Ifd $ifd,
@@ -508,6 +526,8 @@ final readonly class DngValidationSupport
      * Handles UInt64, int, and float (with integer-exactness check).
      *
      * @return list<int>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function coerceToIntegerComponents(IfdEntry $entry, string $tagName, int $errorCode): array
     {

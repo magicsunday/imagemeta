@@ -35,6 +35,11 @@ final readonly class TiffSampleValidator
     ) {
     }
 
+    /**
+     * Validates the MinSampleValue and MaxSampleValue tags against the samples per pixel.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function validateMinMaxSampleValueTags(Ifd $ifd): void
     {
         $minSampleValueEntry = $ifd->get(TiffTag::MIN_SAMPLE_VALUE);
@@ -101,6 +106,8 @@ final readonly class TiffSampleValidator
      * Validates MinSampleValue/MaxSampleValue components against BitsPerSample domain.
      *
      * @param list<int> $values
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateMinMaxValueRangeAgainstBitsPerSample(Ifd $ifd, string $tagName, array $values): void
     {
@@ -162,6 +169,11 @@ final readonly class TiffSampleValidator
         }
     }
 
+    /**
+     * Validates the SampleFormat, SMinSampleValue and SMaxSampleValue tags and their consistency.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function validateSampleDomainTags(Ifd $ifd): void
     {
         $sampleFormatEntry = $ifd->get(TiffTag::SAMPLE_FORMAT);
@@ -202,6 +214,8 @@ final readonly class TiffSampleValidator
      * - SampleFormat: SHORT[SamplesPerPixel], values {1,2,3,4}.
      *
      * @return list<int>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateSampleFormatEntry(IfdEntry $sampleFormatEntry, int $samplesPerPixel): array
     {
@@ -242,6 +256,8 @@ final readonly class TiffSampleValidator
      * Validates one Min/Max sample entry and checks BitsPerSample range compatibility.
      *
      * @return list<int>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateMinOrMaxSampleValueEntry(
         Ifd $ifd,
@@ -280,6 +296,8 @@ final readonly class TiffSampleValidator
      * - SMinSampleValue/SMaxSampleValue: count = SamplesPerPixel.
      *
      * @return list<int|float>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateSampleBoundEntry(
         IfdEntry $entry,
@@ -312,6 +330,8 @@ final readonly class TiffSampleValidator
      * @param list<int>|null       $sampleFormats
      * @param list<int|float>|null $sMinValues
      * @param list<int|float>|null $sMaxValues
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateSampleDomainCrossConstraints(
         ?array $sampleFormats,
@@ -356,7 +376,11 @@ final readonly class TiffSampleValidator
     }
 
     /**
+     * Asserts that an SMinSampleValue or SMaxSampleValue field type matches the declared SampleFormat values.
+     *
      * @param list<int> $sampleFormats
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateSampleDomainTypeCompatibility(string $tagName, int $tagType, array $sampleFormats): void
     {
@@ -396,6 +420,8 @@ final readonly class TiffSampleValidator
      * TIFF 6.0 baseline profile:
      * - ExtraSamples (Tag 338) must be SHORT[1]
      * - Value must be 1 (associated alpha)
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateExtraSamplesTag(Ifd $ifd): void
     {
@@ -427,6 +453,8 @@ final readonly class TiffSampleValidator
      * - GrayResponseUnit: SHORT[1], value domain 1..5.
      * - GrayResponseCurve: SHORT, count = 1 << BitsPerSample.
      * - Tags apply to grayscale photometric modes (WhiteIsZero/BlackIsZero).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateGrayResponseTags(Ifd $ifd): void
     {
@@ -500,6 +528,8 @@ final readonly class TiffSampleValidator
      * TIFF 6.0 §17:
      * - HalftoneHints is SHORT[2].
      * - Both hint values are gray codes within [0, (1<<BitsPerSample)-1].
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateHalftoneHintsTag(Ifd $ifd): void
     {

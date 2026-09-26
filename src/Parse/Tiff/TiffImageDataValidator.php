@@ -42,6 +42,8 @@ final readonly class TiffImageDataValidator
      * EXIF 3.0 §4.6.5.2.2 and §4.6.5.2.3 require RowsPerStrip and tie strip tag
      * counts to StripsPerImage, with planar-separate layout multiplying by
      * SamplesPerPixel (EXIF 3.0 §4.6.5.1.10).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateStripLayoutConsistency(Ifd $ifd0): void
     {
@@ -123,6 +125,8 @@ final readonly class TiffImageDataValidator
      * TIFF 6.0 tiled images require TileWidth/TileLength multiples of 16 and tile
      * offset/byte-count arrays sized to TilesPerImage. For planar separate images
      * (PlanarConfiguration=2), counts are multiplied by SamplesPerPixel.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateTileLayoutConsistency(Ifd $ifd0): void
     {
@@ -159,6 +163,8 @@ final readonly class TiffImageDataValidator
      *
      * TIFF 6.0 requires a single image organization per IFD: either strip-based
      * or tile-based, never both.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateTileStripExclusion(Ifd $ifd0): void
     {
@@ -181,6 +187,8 @@ final readonly class TiffImageDataValidator
      * integer multiples of 16.
      *
      * @return array{0: int, 1: int} Validated tile width and tile length.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateTileDimensions(?IfdEntry $tileWidthEntry, ?IfdEntry $tileLengthEntry): array
     {
@@ -215,6 +223,8 @@ final readonly class TiffImageDataValidator
      * TIFF 6.0 tiled images require tile offset/byte-count arrays sized to
      * TilesPerImage. For planar separate images (PlanarConfiguration=2),
      * counts are multiplied by SamplesPerPixel.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateTileCountArrays(
         Ifd $ifd0,
@@ -252,6 +262,8 @@ final readonly class TiffImageDataValidator
      *
      * TIFF 6.0 tiled images require tile offset/byte-count arrays sized
      * to TilesPerImage (adjusted for PlanarConfiguration=2).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateTileOffsetAndByteCountSizes(
         IfdEntry $tileOffsetsEntry,
@@ -354,6 +366,8 @@ final readonly class TiffImageDataValidator
      * Converts strip/tile offset or byte-count field values to integer lists.
      *
      * @return list<int>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function countedImageDataValues(IfdEntry $entry, int $tag): array
     {
@@ -390,6 +404,8 @@ final readonly class TiffImageDataValidator
      *
      * @param int[] $offsets
      * @param int[] $byteCounts
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateCountedImageDataRanges(
         int $offsetTag,

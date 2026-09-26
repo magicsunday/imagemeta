@@ -120,6 +120,9 @@ final class TiffExifParser implements TiffExifParserInterface
      * @param Registry|null $registry        Optional registry used to decode manufacturer-specific maker notes.
      * @param bool          $jpegContext     Whether the TIFF is embedded in a JPEG context.
      * @param bool          $embeddedContext Whether the TIFF is embedded in an ISO BMFF context.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseFromBlob(string $tiffBlob, ?Registry $registry = null, bool $jpegContext = false, bool $embeddedContext = false): ParsedExif
     {
@@ -135,6 +138,9 @@ final class TiffExifParser implements TiffExifParserInterface
      * @param Registry|null             $registry        Optional registry used to decode manufacturer-specific maker notes.
      * @param bool                      $jpegContext     Whether the TIFF is embedded in a JPEG context.
      * @param bool                      $embeddedContext Whether the TIFF is embedded in an ISO BMFF context.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseFromStream(
         BinaryReadAccessInterface $tiffSource,
@@ -147,6 +153,9 @@ final class TiffExifParser implements TiffExifParserInterface
 
     /**
      * Parses EXIF from a seekable TIFF data source.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseFromSource(
         BinaryReadAccessInterface $tiffSource,
@@ -179,6 +188,9 @@ final class TiffExifParser implements TiffExifParserInterface
      * and baseline TIFF header assumptions used during setup.
      *
      * @return array{0: TiffByteOrderHandler, 1: ExifTagDecoder}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function initializeState(BinaryReadAccessInterface $tiffSource): array
     {
@@ -240,6 +252,9 @@ final class TiffExifParser implements TiffExifParserInterface
      * Reads IFD0 and pointer-derived primary directories (Exif/GPS/Interop/SubIFD).
      *
      * @return array{0: Ifd, 1: ?Ifd, 2: ?Ifd, 3: ?Ifd, 4: array<int, Ifd>}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function readPrimaryIfds(TiffByteOrderHandler $byteOrderHandler, ExifTagDecoder $tagDecoder): array
     {
@@ -264,6 +279,9 @@ final class TiffExifParser implements TiffExifParserInterface
 
     /**
      * Resolves the Exif IFD pointer from IFD0.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function resolveExifIfd(Ifd $ifd0): ?Ifd
     {
@@ -284,6 +302,9 @@ final class TiffExifParser implements TiffExifParserInterface
 
     /**
      * Resolves the GPS IFD pointer from IFD0.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function resolveGpsIfd(Ifd $ifd0): ?Ifd
     {
@@ -306,6 +327,8 @@ final class TiffExifParser implements TiffExifParserInterface
      * Traverses the chained next-IFD pointers beyond IFD0.
      *
      * @return array{0: ?Ifd, 1: list<Ifd>}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function walkAdditionalIfds(Ifd $ifd0): array
     {
@@ -352,6 +375,9 @@ final class TiffExifParser implements TiffExifParserInterface
      *
      * @param list<Ifd>       $additionalIfds
      * @param array<int, Ifd> $subIfds
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function finalizeAndValidate(
         Ifd $ifd0,
@@ -398,6 +424,9 @@ final class TiffExifParser implements TiffExifParserInterface
      * @param bool      $jpegContext     Whether the TIFF is embedded in a JPEG.
      * @param bool      $embeddedContext Whether the TIFF is embedded in an ISO BMFF container.
      * @param list<Ifd> $additionalIfds  All chained IFDs beyond IFD0.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function validateParsedIfds(
         Ifd $ifd0,
@@ -448,6 +477,9 @@ final class TiffExifParser implements TiffExifParserInterface
      *
      * @param TiffByteOrderHandler $byteOrderHandler Endian-aware primitive I/O.
      * @param ExifTagDecoder       $tagDecoder       Tag classification for decoding.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function readFirstIfd(TiffByteOrderHandler $byteOrderHandler, ExifTagDecoder $tagDecoder): Ifd
     {
@@ -511,6 +543,9 @@ final class TiffExifParser implements TiffExifParserInterface
      * EXIF 3.0 §4.5.1 adopts the BigTIFF header layout and retains the reserved
      * word semantics aligned with TIFF 6.0 §8, constraining the offset-size and
      * reserved fields before the first IFD pointer.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseBigTiffHeader(): void
     {
@@ -538,6 +573,9 @@ final class TiffExifParser implements TiffExifParserInterface
      * including entry counts, entry sizes, and next-pointer chaining.
      *
      * @param int|UInt64|string $offset Zero-based byte offset to the IFD structure.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function readIfd(int|UInt64|string $offset): Ifd
     {
@@ -653,6 +691,9 @@ final class TiffExifParser implements TiffExifParserInterface
      *
      * EXIF 3.0 §4.5.2 defines the tag, type, count, and value/offset fields mirrored
      * by this reader, aligning with the TIFF 6.0 §8 directory entry layout.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function readDirEntry(): ?IfdEntry
     {

@@ -46,6 +46,8 @@ final readonly class TiffTagConstraintValidator
     /**
      * Validates that an Enhanced Image IFD (NewSubfileType bit 4) carries a
      * non-empty EnhanceParams tag as required by DNG 1.5+.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateEnhancedIfd(Ifd $ifd): void
     {
@@ -79,6 +81,8 @@ final readonly class TiffTagConstraintValidator
      * only enforced in JPEG context. Reader-side parsing tolerates known
      * real-world deviations (e.g. 4, 7 in IFD0 and 0 in IFD1) and preserves
      * the raw values (Postel's Law).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateCompressionDomain(Ifd $ifd0, ?Ifd $ifd1, bool $jpegContext): void
     {
@@ -132,6 +136,8 @@ final readonly class TiffTagConstraintValidator
      * TIFF 6.0:
      * - T4Options (Tag 292): LONG[1], only with Compression=3, bits 0..2 allowed.
      * - T6Options (Tag 293): LONG[1], only with Compression=4, bit 1 allowed; bit 0 and higher bits must be 0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateFaxOptionTags(Ifd $ifd): void
     {
@@ -190,6 +196,8 @@ final readonly class TiffTagConstraintValidator
      * - SHORT[1], values {1,2}, default 1.
      * - FillOrder=2 is intended for bilevel data (BitsPerSample=1) and
      *   uncompressed or CCITT compression families.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateFillOrderTag(Ifd $ifd): void
     {
@@ -266,6 +274,8 @@ final readonly class TiffTagConstraintValidator
      *
      * @param bool $strictTiffNewSubfileType True to enforce TIFF-only bit constraints;
      *                                       false to allow extended DNG NewSubfileType values.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateSubfileAndPageTags(Ifd $ifd, bool $strictTiffNewSubfileType): void
     {
@@ -298,6 +308,8 @@ final readonly class TiffTagConstraintValidator
      * - CellWidth/CellLength: SHORT[1], >0.
      * - CellWidth/CellLength are valid only when Threshholding=2.
      * - Threshholding=2 requires both cell tags together.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateThreshholdingAndCellTags(Ifd $ifd): void
     {
@@ -362,6 +374,8 @@ final readonly class TiffTagConstraintValidator
      * - XPosition/YPosition are RATIONAL[1].
      * - Rational denominator must be non-zero.
      * - YPosition must be strictly positive.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validatePositionTags(Ifd $ifd): void
     {
@@ -389,6 +403,8 @@ final readonly class TiffTagConstraintValidator
      * TIFF 6.0 defines FreeOffsets (Tag 288) and FreeByteCounts (Tag 289) as a
      * paired map where each offset points to a free-byte range with a matching
      * positive byte-count entry.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateFreeSpaceTags(Ifd $ifd): void
     {
@@ -450,6 +466,8 @@ final readonly class TiffTagConstraintValidator
      *
      * TIFF 6.0 Section 14 defines Predictor values {1,2} and describes horizontal
      * differencing (value 2) for LZW-compressed data.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validatePredictorTag(Ifd $ifd): void
     {
@@ -472,6 +490,8 @@ final readonly class TiffTagConstraintValidator
      * Validates that ImageWidth and ImageLength tags exist with valid positive values.
      *
      * EXIF 3.0 §4.6.4 requires both tags in IFD0 for non-JPEG primary images.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateImageDimensions(Ifd $ifd0): void
     {
@@ -509,6 +529,8 @@ final readonly class TiffTagConstraintValidator
      * TIFF 6.0:
      * - NewSubfileType: LONG[1] bitfield (bits 0..2 only in baseline TIFF).
      * - Bit 2 (transparency mask) requires PhotometricInterpretation=4.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateNewSubfileTypeEntry(
         Ifd $ifd,
@@ -552,6 +574,8 @@ final readonly class TiffTagConstraintValidator
      *
      * TIFF 6.0:
      * - SubfileType (deprecated): SHORT[1], value domain 1..3.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateSubfileTypeEntry(IfdEntry $subfileTypeEntry): void
     {
@@ -574,6 +598,8 @@ final readonly class TiffTagConstraintValidator
      * TIFF 6.0:
      * - When both NewSubfileType and SubfileType are present, the low two bits
      *   of NewSubfileType must equal (SubfileType - 1).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateSubfileTypeConsistency(
         ?IfdEntry $newSubfileTypeEntry,
@@ -604,6 +630,8 @@ final readonly class TiffTagConstraintValidator
      *
      * TIFF 6.0:
      * - PageNumber: SHORT[2], pageIndex < totalPages when totalPages != 0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validatePageNumberEntry(Ifd $ifd): void
     {
@@ -636,6 +664,8 @@ final readonly class TiffTagConstraintValidator
 
     /**
      * Validates a position tag as RATIONAL[1] with non-zero denominator.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validatePositionRational(IfdEntry $entry, string $tagName): void
     {
@@ -656,6 +686,8 @@ final readonly class TiffTagConstraintValidator
 
     /**
      * Validates a tag entry as a single integer component of the expected TIFF type.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function requireSingleIntEntryValue(IfdEntry $entry, int $expectedType, string $errorMessage, int $errorCode): int
     {
@@ -670,6 +702,8 @@ final readonly class TiffTagConstraintValidator
      * Extracts validated integer components for a free-space bookkeeping tag.
      *
      * @return list<int>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function extractFreeSpaceComponents(IfdEntry $entry, string $tagName): array
     {

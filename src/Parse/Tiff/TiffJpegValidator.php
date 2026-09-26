@@ -40,6 +40,8 @@ final readonly class TiffJpegValidator
      *
      * TIFF 6.0 Section 22 (JPEG Fields) defines JPEGProc as SHORT[1] with values
      * {1,14}, mandatory for JPEG-compressed image data and invalid otherwise.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateJpegProcTag(Ifd $ifd): void
     {
@@ -80,6 +82,8 @@ final readonly class TiffJpegValidator
      * as SHORT arrays with count SamplesPerPixel. JPEGLosslessPredictors is
      * mandatory for JPEGProc=14 and predictor values are limited to 1..7.
      * JPEGPointTransforms defaults to zero per component when omitted.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateJpegLosslessTags(Ifd $ifd): void
     {
@@ -142,6 +146,8 @@ final readonly class TiffJpegValidator
      *
      * TIFF 6.0 Section 22 defines JPEGRestartInterval as SHORT[1] in the JPEG
      * field set controlled by Compression=6 and JPEGProc.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateJpegRestartIntervalTag(Ifd $ifd): void
     {
@@ -178,6 +184,8 @@ final readonly class TiffJpegValidator
      * TIFF 6.0 Section 22 defines JPEGQTables, JPEGDCTables and JPEGACTables as
      * LONG arrays with count SamplesPerPixel whose values are offsets within the
      * TIFF blob. Mandatory fields depend on the JPEG process (JPEGProc).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateJpegTableTags(Ifd $ifd): void
     {
@@ -231,6 +239,8 @@ final readonly class TiffJpegValidator
      *
      * TIFF 6.0 Section 22 defines these fields as a coupled offset/length pair
      * for embedded JPEG interchange streams.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateJpegInterchangePairTags(Ifd $ifd): void
     {
@@ -287,6 +297,8 @@ final readonly class TiffJpegValidator
      * Validates a single JPEG table tag (type, count) and its offset bounds.
      *
      * TIFF 6.0 Section 22 defines JPEG table tags as LONG[SamplesPerPixel].
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateJpegTableEntry(?IfdEntry $entry, string $tagName, int $samplesPerPixel, int $errorCode): void
     {
@@ -305,6 +317,8 @@ final readonly class TiffJpegValidator
      * Validates that all JPEG table offsets point inside the TIFF blob.
      *
      * TIFF 6.0 Section 22 uses LONG offsets for JPEG table pointers.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateJpegTableOffsets(IfdEntry $entry, string $tagName): void
     {

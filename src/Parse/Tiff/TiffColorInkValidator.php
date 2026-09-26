@@ -40,6 +40,11 @@ final readonly class TiffColorInkValidator
     ) {
     }
 
+    /**
+     * Validates the InkSet, NumberOfInks and InkNames tags of a separated (CMYK) image.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     public function validateSeparatedImageInkTags(Ifd $ifd): void
     {
         if (!$this->requireSeparatedPhotometric($ifd)) {
@@ -127,6 +132,8 @@ final readonly class TiffColorInkValidator
      * - Count must be 2 or 2*SamplesPerPixel.
      * - Values are (black, white) pairs with black < white.
      * - Values must be within [0, (2^BitsPerSample)-1].
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateSeparatedImageDotRange(Ifd $ifd): void
     {
@@ -155,6 +162,8 @@ final readonly class TiffColorInkValidator
      *   and valid only for WhiteIsZero/BlackIsZero/RGB/Palette/YCbCr photometric modes.
      * - TransferRange (342): SHORT[6], valid only for RGB or YCbCr.
      * - ReferenceBlackWhite (532): RATIONAL[6], valid only for RGB or YCbCr.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateTransferFamilyTags(Ifd $ifd): void
     {
@@ -261,6 +270,8 @@ final readonly class TiffColorInkValidator
      * - ColorMap type is SHORT.
      * - ColorMap count is 3 * (1 << BitsPerSample).
      * - ColorMap shall not be used for non-palette photometric modes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validatePaletteColorMapTag(Ifd $ifd): void
     {
@@ -318,6 +329,8 @@ final readonly class TiffColorInkValidator
      * Returns true when the IFD uses Separated photometric mode, false when the
      * photometric mode is absent or non-Separated. Throws if TargetPrinter is present
      * but photometric mode is not Separated.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function requireSeparatedPhotometric(Ifd $ifd): bool
     {
@@ -340,6 +353,8 @@ final readonly class TiffColorInkValidator
      * TIFF 6.0 §16 (Tag 336 / DotRange):
      * - Type must be BYTE or SHORT.
      * - Count must be 2 or 2*SamplesPerPixel.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDotRangeTypeAndCount(Ifd $ifd, IfdEntry $dotRangeEntry): int
     {
@@ -387,6 +402,8 @@ final readonly class TiffColorInkValidator
      * - Values are integer (black, white) pairs.
      *
      * @return list<int>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function extractDotRangeValues(IfdEntry $dotRangeEntry): array
     {
@@ -427,6 +444,8 @@ final readonly class TiffColorInkValidator
      * - Values must be within [0, (2^BitsPerSample)-1].
      *
      * @return list<int>
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function extractDotRangeBitDepths(Ifd $ifd, int $samplesPerPixel): array
     {
@@ -479,6 +498,8 @@ final readonly class TiffColorInkValidator
      *
      * @param list<int> $dotRangeValues
      * @param list<int> $bitDepths
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDotRangePairs(int $dotRangeCount, array $dotRangeValues, array $bitDepths): void
     {
@@ -510,6 +531,8 @@ final readonly class TiffColorInkValidator
      * TIFF 6.0 §16 (Tag 336 / DotRange):
      * - Each pair must satisfy black < white.
      * - Both values must be within [0, (2^BitsPerSample)-1].
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDotRangePairBounds(int $pairIndex, int $black, int $white, int $bitDepth): void
     {

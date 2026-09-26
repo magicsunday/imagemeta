@@ -21,6 +21,8 @@ final readonly class IsoBmffParserConfig
     /**
      * @param int $maxItemPayloadSize     Maximum cumulative payload size in bytes when assembling item extents.
      * @param int $maxNestedMetadataDepth Maximum supported nesting depth for data-type 28 metadata payloads.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function __construct(
         public int $maxItemPayloadSize = 8_388_608,

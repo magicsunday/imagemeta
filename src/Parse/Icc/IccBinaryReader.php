@@ -38,6 +38,8 @@ final class IccBinaryReader
      * @param string $bytes Raw bytes to interpret as a big-endian integer.
      *
      * @return int Parsed unsigned integer value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function uInt32Be(string $bytes): int
     {
@@ -57,6 +59,8 @@ final class IccBinaryReader
      * @param string $bytes Raw bytes to interpret as a big-endian integer.
      *
      * @return int Parsed unsigned integer value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function uInt16Be(string $bytes): int
     {
@@ -80,6 +84,8 @@ final class IccBinaryReader
      * @param int    $offset Byte offset within the data.
      *
      * @return float Parsed fixed-point value as a float.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function s15Fixed16(string $data, int $offset): float
     {
@@ -126,6 +132,8 @@ final class IccBinaryReader
      * @param string $data Raw UTF-16BE encoded bytes.
      *
      * @return string|null Converted UTF-8 string or null when conversion fails.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function decodeUtf16Be(string $data): ?string
     {

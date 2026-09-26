@@ -125,6 +125,8 @@ final readonly class DngStructureValidator
 
     /**
      * Validates that DNG files include the required Orientation tag.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngRequiredOrientation(Ifd $ifd): void
     {
@@ -142,6 +144,8 @@ final readonly class DngStructureValidator
 
     /**
      * Requires UniqueCameraModel in IFD0 when DNGVersion is present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngRequiredUniqueCameraModel(Ifd $ifd): void
     {
@@ -159,6 +163,8 @@ final readonly class DngStructureValidator
 
     /**
      * Validates that depth map and semantic mask IFDs use their required PhotometricInterpretation.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngRolePhotometric(Ifd $ifd): void
     {
@@ -192,6 +198,8 @@ final readonly class DngStructureValidator
 
     /**
      * Rejects DNG IFD0-only tags found in additional IFDs.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngIfd0OnlyTags(Ifd $ifd): void
     {
@@ -213,6 +221,8 @@ final readonly class DngStructureValidator
      *
      * JXLEffort must be 1–9, JXLDecodeSpeed must be 1–4, and all three
      * JXL tags may only appear with Compression = 52546 (JPEG XL).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngJxlTags(Ifd $ifd): void
     {
@@ -275,6 +285,8 @@ final readonly class DngStructureValidator
      *
      * When PhotometricInterpretation is CFA (32803), both CFARepeatPatternDim
      * and CFAPattern must be present in the same IFD.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngCfaPhotometric(Ifd $ifd): void
     {
@@ -325,6 +337,8 @@ final readonly class DngStructureValidator
      * Validates CFALayout (0xC617) value domain and version gating per DNG 1.7.1.0.
      *
      * Allowed values are 1..9. Values 6..9 require DNGBackwardVersion >= 1.3.0.0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngCfaLayoutDomain(Ifd $ifd): void
     {
@@ -368,6 +382,8 @@ final readonly class DngStructureValidator
      * Flags (uint32), ParamByteCount (uint32), and ParamByteCount payload bytes.
      * The same framing was introduced with these tags in DNG 1.3.0.0 and remains
      * unchanged in later versions including DNG 1.7.1.0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngOpcodeLists(Ifd $ifd): void
     {
@@ -402,6 +418,8 @@ final readonly class DngStructureValidator
      * DNG 1.7.1.0 ("OriginalRawFileData") defines UNDEFINED payload bytes in big-endian
      * block order with four compressed forks and four 4-byte type/creator fields.
      * Trailing bytes are allowed for forward compatibility.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngOriginalRawFileData(Ifd $ifd): void
     {
@@ -441,6 +459,8 @@ final readonly class DngStructureValidator
      * Top-level: NumTables (1..20), CompositeMethod ({0,1}).
      * Per-table: Divisions (2..32), PixelType ({0,1,2}), GammaEncoding (0..4),
      * ColorPrimaries (0..4), GamutExtension ({0,1}), then Divisions^3 entries.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngRgbTables(Ifd $ifd): void
     {
@@ -564,6 +584,8 @@ final readonly class DngStructureValidator
      *
      * A Semantic Mask IFD is identified by PhotometricInterpretation = 52527.
      * SemanticName is required in that context per DNG 1.6+.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngSemanticMaskIdentity(Ifd $ifd): void
     {
@@ -604,6 +626,8 @@ final readonly class DngStructureValidator
      * Geometric constraints require T_crop + ImageLength <= H_full and
      * L_crop + ImageWidth <= W_full. If geometric constraints fail the tag
      * is ignored per DNG 1.6+ spec (no ParseError for geometry).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngMaskSubArea(Ifd $ifd): void
     {
@@ -641,6 +665,8 @@ final readonly class DngStructureValidator
      * file byte order. Payload: LONG child-count N, then N child entries each
      * containing LONG childTagCode, LONG byteLength L, and L bytes of data.
      * Duplicate child tag codes are rejected.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngImageStats(Ifd $ifd): void
     {
@@ -695,6 +721,8 @@ final readonly class DngStructureValidator
      *
      * Payload: SequenceID (NUL-terminated, min 8 chars), SequenceType (NUL-terminated, min 1 char),
      * FrameInfo (NUL-terminated), Index (uint32 big-endian), Count (uint32 big-endian), Final (uint8).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngImageSequenceInfo(Ifd $ifd): void
     {
@@ -763,6 +791,8 @@ final readonly class DngStructureValidator
      * Validates DNG digest tags (RawImageDigest, OriginalRawFileDigest, NewRawImageDigest).
      *
      * Each must be BYTE[16] per DNG 1.7.1.0.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngDigestTags(Ifd $ifd): void
     {
@@ -786,6 +816,8 @@ final readonly class DngStructureValidator
      * Validates PreviewColorSpace (0xC71A) per DNG 1.7.1.0.
      *
      * Must be LONG[1] with value in 0..4 (Unknown, Gray Gamma 2.2, sRGB, Adobe RGB, ProPhoto RGB).
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngPreviewColorSpace(Ifd $ifd): void
     {
@@ -815,6 +847,8 @@ final readonly class DngStructureValidator
      *
      * Must be ASCII with a valid ISO 8601 date/time string.
      * NUL termination is already enforced by the generic ASCII decoder.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngPreviewDateTime(Ifd $ifd): void
     {
@@ -866,6 +900,8 @@ final readonly class DngStructureValidator
      * DepthFormat: SHORT[1], allowed {0,1,2}
      * DepthUnits: SHORT[1], allowed {0,1}
      * DepthMeasureType: SHORT[1], allowed {0,1,2}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngDepthEnums(Ifd $ifd): void
     {
@@ -900,6 +936,8 @@ final readonly class DngStructureValidator
      *
      * Must be RATIONAL[1]. Special sentinel 0/0 means unknown.
      * Otherwise the value must be in the range [0.0, 1.0].
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngNoiseReductionApplied(Ifd $ifd): void
     {
@@ -939,6 +977,8 @@ final readonly class DngStructureValidator
      * Validates EnhanceParams (0xC7EE) per DNG 1.7.1.0.
      *
      * Must be ASCII type with a non-empty NUL-terminated string.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateDngEnhanceParams(Ifd $ifd): void
     {
@@ -968,6 +1008,8 @@ final readonly class DngStructureValidator
      *
      * @param string $tagName Human-readable opcode-list tag name.
      * @param string $payload Raw opcode-list bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDngOpcodeListPayload(string $tagName, string $payload): void
     {
@@ -1026,6 +1068,8 @@ final readonly class DngStructureValidator
 
     /**
      * Consumes a fixed 4-byte field from OriginalRawFileData.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function consumeDngOriginalRawFixedBlock(string $payload, int $offset, string $blockName): int
     {
@@ -1045,6 +1089,8 @@ final readonly class DngStructureValidator
      * @param string $payload   Raw OriginalRawFileData bytes.
      * @param int    $offset    Current parse cursor.
      * @param string $blockName Human-readable block name for error context.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateDngOriginalRawForkBlock(string $payload, int $offset, string $blockName): int
     {

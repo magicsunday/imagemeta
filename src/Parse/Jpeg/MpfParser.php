@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
 use Closure;
 use MagicSunday\ImageMeta\Core\BitMask;
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
@@ -94,7 +95,8 @@ final class MpfParser
      * TIFF magic in the MPF header (EXIF 3.0 §4.6.2) and uses the standard
      * TIFF byte-order indicators (EXIF 3.0 §4.6.1).
      *
-     * @throws ParseError When the MPF payload is malformed or contains invalid structures.
+     * @throws ParseError  When the MPF payload is malformed or contains invalid structures.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parse(string $payload): MpfDocument
     {
@@ -268,6 +270,9 @@ final class MpfParser
      * @param array<int, array{type: int, countFn: Closure(int):bool}> $constraints Per-tag type/count constraints.
      *
      * @return array{0: MpfDirectory, 1: int}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function readIfd(MemoryBuffer $buffer, Endian $endian, int $offset, array $constraints = []): array
     {
@@ -346,6 +351,9 @@ final class MpfParser
 
     /**
      * Resolves the data bytes referenced by an IFD entry.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function resolveValueData(
         MemoryBuffer $buffer,
@@ -398,6 +406,9 @@ final class MpfParser
      * @return int|string|array{numerator:int, denominator:int}|array<int, int>|array<int, array{numerator:int, denominator:int}>
      *
      * @phpstan-return MpfValue
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function decodeValue(
         int $type,
@@ -495,6 +506,9 @@ final class MpfParser
      * specified by EXIF 3.0 §4.6.3.
      *
      * @return list<MpfEntry>
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseEntries(string $data, Endian $endian): array
     {
@@ -638,6 +652,9 @@ final class MpfParser
      * @param Endian       $endian Byte order to use.
      *
      * @return int Unsigned 16-bit integer.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function readU16(MemoryBuffer $buffer, Endian $endian): int
     {
@@ -651,6 +668,9 @@ final class MpfParser
      * @param Endian       $endian Byte order to use.
      *
      * @return int Unsigned 32-bit integer.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function readU32(MemoryBuffer $buffer, Endian $endian): int
     {

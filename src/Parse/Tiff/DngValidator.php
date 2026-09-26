@@ -12,7 +12,9 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 
@@ -51,6 +53,8 @@ final readonly class DngValidator
      * Pre-loop validation: DNG version and required fields.
      *
      * Must be called before the additional-IFD loop.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validatePreLoop(Ifd $ifd0): void
     {
@@ -62,6 +66,8 @@ final readonly class DngValidator
      * Per-IFD validation for additional IFDs (called inside the IFD loop).
      *
      * Covers structural, geometry, and profile constraints that apply to every IFD.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validatePerIfd(Ifd $ifd): void
     {
@@ -85,6 +91,9 @@ final readonly class DngValidator
      * that only apply to the primary IFD.
      *
      * @param list<Ifd> $additionalIfds Additional IFDs for cross-IFD validation.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function validateIfd0(Ifd $ifd0, array $additionalIfds): void
     {
