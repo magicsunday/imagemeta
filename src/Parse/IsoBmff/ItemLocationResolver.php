@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffQueuedResolveResult;
@@ -106,6 +107,8 @@ final readonly class ItemLocationResolver
      * @param int                                                                                                                                                                           $metaContextOffset Absolute file offset of the owning meta box.
      *
      * @return IsoBmffQueuedResolveResult Resolved payloads and any unresolved item descriptors.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function resolveQueuedItems(array $itemIds, array $locations, array $itemReferences, ?callable $transform, array $dataReferences, ?string $idatPayload, int $metaContextOffset): IsoBmffQueuedResolveResult
     {

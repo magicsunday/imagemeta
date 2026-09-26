@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\PayloadGuard;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
@@ -111,6 +112,9 @@ final readonly class TiffValueDecoder
      * @param int|null          $valueBytes    Precomputed total byte count for this value.
      *
      * @return array{0: string, 1: int|null}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function valueBytes(
         int $type,
@@ -159,6 +163,8 @@ final readonly class TiffValueDecoder
      * @param string   $bytes         Raw value bytes read from the blob.
      * @param int|null $componentSize Precomputed bytes per component for this TIFF type.
      * @param int|null $expectedBytes Precomputed total byte count for this value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function decodeBytes(
         int $tag,
@@ -244,6 +250,8 @@ final readonly class TiffValueDecoder
      *
      * @param int                                                                   $tag   Tag identifier.
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value Decoded value.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function convertUInt64Values(
         int $tag,
@@ -291,6 +299,8 @@ final readonly class TiffValueDecoder
      *
      * @param int $componentSize Bytes per component.
      * @param int $count         Number of components.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function safeValueByteCount(int $componentSize, int $count): int
     {
@@ -323,6 +333,8 @@ final readonly class TiffValueDecoder
      *
      * @param int    $tag   Tag identifier.
      * @param UInt64 $value UInt64 value to normalize.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function normalizeScalarUInt64(int $tag, UInt64 $value): int|UInt64
     {

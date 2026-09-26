@@ -26,6 +26,8 @@ final readonly class JpegParserConfig
      * @param int $maxExtendedXmpSize        Maximum cumulative ExtendedXMP payload size in bytes.
      * @param int $maxIccProfileSize         Maximum combined ICC profile size in bytes.
      * @param int $maxFlashPixTotalSize      Maximum cumulative FlashPix stream size in bytes across all entries.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function __construct(
         public int $maxAppSegmentSize = 65_533,

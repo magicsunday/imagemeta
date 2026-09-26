@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 
@@ -99,10 +100,10 @@ final readonly class QuickTimeMetadataDecoder
      * @var array<string, array{key: string, size: int, type: string}>
      */
     private const array UDTA_BINARY_KEYS = [
-        'LOOP' => ['key' => 'com.apple.quicktime.loopStyle',         'size' => 4, 'type' => 'u32'],
+        'LOOP' => ['key' => 'com.apple.quicktime.loopStyle', 'size' => 4, 'type' => 'u32'],
         'SelO' => ['key' => 'com.apple.quicktime.playSelectionOnly', 'size' => 1, 'type' => 'u8'],
-        'AllF' => ['key' => 'com.apple.quicktime.playAllFrames',     'size' => 1, 'type' => 'u8'],
-        'WLOC' => ['key' => 'com.apple.quicktime.windowLocation',   'size' => 4, 'type' => 'u16pair'],
+        'AllF' => ['key' => 'com.apple.quicktime.playAllFrames', 'size' => 1, 'type' => 'u8'],
+        'WLOC' => ['key' => 'com.apple.quicktime.windowLocation', 'size' => 4, 'type' => 'u16pair'],
     ];
 
     /**
@@ -131,6 +132,9 @@ final readonly class QuickTimeMetadataDecoder
      * @param bool                                $isMdir        Whether the handler type is mdir.
      *
      * @return array{0: QuickTimeKeyMap, 1: QuickTimeDataAtomList}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes, array $existingAtoms = [], bool $hasMhdr = false, array $countryLists = [], array $languageLists = [], bool $isMdta = false, bool $isMdir = false): array
     {
@@ -190,6 +194,9 @@ final readonly class QuickTimeMetadataDecoder
      *
      * @param BoxDescriptor       $name    Box descriptor for the name atom.
      * @param IsoBmffParseContext $context Shared parse-state context.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function parseUdtaNameAtom(BoxDescriptor $name, IsoBmffParseContext $context): void
     {
@@ -223,6 +230,9 @@ final readonly class QuickTimeMetadataDecoder
      *
      * @param BoxDescriptor       $atom    Box descriptor for a direct udta child atom.
      * @param IsoBmffParseContext $context Shared parse-state context.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function parseUdtaTextAtom(BoxDescriptor $atom, IsoBmffParseContext $context): void
     {
@@ -265,6 +275,9 @@ final readonly class QuickTimeMetadataDecoder
      *
      * @param BoxDescriptor       $atom    Box descriptor for a direct udta child atom.
      * @param IsoBmffParseContext $context Shared parse-state context.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function parseUdtaBinaryAtom(BoxDescriptor $atom, IsoBmffParseContext $context): void
     {
@@ -297,6 +310,9 @@ final readonly class QuickTimeMetadataDecoder
      * a full atom with version 0 and flags 0, containing a uint32 nextItemID.
      *
      * @param BoxDescriptor $mhdr Box descriptor for the mhdr atom.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseMhdr(BoxDescriptor $mhdr): void
     {
@@ -319,6 +335,9 @@ final readonly class QuickTimeMetadataDecoder
      * @param string        $label Human-readable label for error messages ('ctry' or 'lang').
      *
      * @return list<list<int>> List of locale code arrays.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseLocaleListAtom(BoxDescriptor $box, string $label): array
     {
@@ -383,6 +402,9 @@ final readonly class QuickTimeMetadataDecoder
      * @param bool                          $isMdir        Whether the handler type is mdir.
      *
      * @return array{0: QuickTimeKeyMap, 1: QuickTimeDataAtomList, 2: bool}
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseIlst(BoxDescriptor $ilst, array $keyIndex, array $countryLists = [], array $languageLists = [], bool $isMdta = false, bool $isMdir = false): array
     {
@@ -504,6 +526,9 @@ final readonly class QuickTimeMetadataDecoder
      * @param array<string, true> $seenNames Previously encountered names for uniqueness check.
      *
      * @return string The validated name string.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseIlstNameAtom(BoxDescriptor $name, array &$seenNames): string
     {
@@ -545,6 +570,9 @@ final readonly class QuickTimeMetadataDecoder
      *
      * @param BoxDescriptor    $itif        Box descriptor for the itif atom.
      * @param array<int, true> $seenItemIds Previously encountered Item_IDs for uniqueness check.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function parseIlstItemInfo(BoxDescriptor $itif, array &$seenItemIds): void
     {
@@ -567,6 +595,9 @@ final readonly class QuickTimeMetadataDecoder
      * Validates a FullAtom header (version/flags) and leaves the window at payload offset.
      *
      * QuickTime File Format 2012 FullAtom layout: version (8-bit) + flags (24-bit).
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function validateFullAtomHeader(
         BoxDescriptor $box,

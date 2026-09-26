@@ -80,6 +80,8 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
      *
      * @param string $payload Raw APP1 payload containing extended XMP header fields.
      * @param int    $offset  Offset in the stream where the marker begins.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function handleSegment(string $payload, int $offset): void
     {
@@ -251,6 +253,8 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
 
     /**
      * Reassembles ExtendedXMP chunks and merges them with referenced base packets.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function finalise(): void
     {
@@ -308,6 +312,8 @@ final class ExtendedXmpAssembler implements SegmentAssemblerInterface
      *
      * @param string $guid       ExtendedXMP GUID.
      * @param int    $baseOffset Base APP1 offset for diagnostics.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function assemblePayload(string $guid, int $baseOffset): string
     {

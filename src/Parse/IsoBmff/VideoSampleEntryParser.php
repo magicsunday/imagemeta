@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
@@ -61,6 +62,9 @@ final readonly class VideoSampleEntryParser
      * @param string       $normalizedFormat Pre-normalized fourcc format string.
      *
      * @return VideoSampleEntryMap
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     public function parseVideoSampleEntry(StreamWindow $win, int $entryEnd, string $normalizedFormat): array
     {
@@ -129,6 +133,9 @@ final readonly class VideoSampleEntryParser
      * @param int          $colorTableId Signed color-table identifier field.
      * @param StreamWindow $win          Reader positioned at trailing sample-entry payload.
      * @param int          $entryEnd     Absolute sample-entry end offset.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function validateVideoSampleEntryDepthAndColorTable(int $depth, int $colorTableId, StreamWindow $win, int $entryEnd): void
     {
@@ -170,6 +177,9 @@ final readonly class VideoSampleEntryParser
      *
      * Accepts empty tails, coherent child-box sequences, and an optional final
      * 4-byte zero terminator documented by QuickTime.
+     *
+     * @throws ParseError  If the input is malformed or inconsistent.
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function validateVideoSampleEntryTrailingPayload(StreamWindow $win, int $entryEnd): void
     {
@@ -208,6 +218,8 @@ final readonly class VideoSampleEntryParser
      *
      * @param int    $resolutionRaw Raw unsigned 16.16 fixed-point value.
      * @param string $axis          Resolution axis (`horizontal` or `vertical`) for diagnostics.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeVideoResolution16_16(int $resolutionRaw, string $axis): int|float
     {

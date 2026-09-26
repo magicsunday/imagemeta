@@ -47,6 +47,9 @@ final readonly class TiffOffsetValidator
      * @param int|UInt64|string $offset  Candidate offset value.
      * @param string            $context Description for error messages.
      * @param int               $length  Optional data length for bounds check.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function ensureOffset(int|UInt64|string $offset, string $context, int $length = 0): int
     {
@@ -72,6 +75,9 @@ final readonly class TiffOffsetValidator
      *
      * @param UInt64 $offset  Candidate offset.
      * @param string $context Description for error messages.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function normalizeOptionalOffset(UInt64 $offset, string $context): int
     {
@@ -87,6 +93,9 @@ final readonly class TiffOffsetValidator
      *
      * @param int|UInt64|string $offset  Candidate offset.
      * @param string            $context Description for error messages.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     public function normalizeBigTiffOptionalOffset(int|UInt64|string $offset, string $context): int
     {
@@ -133,6 +142,8 @@ final readonly class TiffOffsetValidator
      * @param int    $offset  Non-negative integer offset.
      * @param int    $length  Data length for bounds check.
      * @param string $context Description for error messages.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
      */
     private function assertIntOffsetRange(int $offset, int $length, string $context): int
     {
@@ -159,6 +170,9 @@ final readonly class TiffOffsetValidator
      * @param UInt64 $offset  Candidate offset.
      * @param int    $length  Data length for bounds check.
      * @param string $context Description for error messages.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function assertOffsetRange(UInt64 $offset, int $length, string $context): void
     {
@@ -185,6 +199,9 @@ final readonly class TiffOffsetValidator
      * @param string $offset  Decimal string offset.
      * @param string $context Description for error messages.
      * @param int    $length  Data length for bounds check.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function ensureDecimalOffset(string $offset, string $context, int $length): int
     {
@@ -214,6 +231,8 @@ final readonly class TiffOffsetValidator
      * Normalizes a decimal string by validating its characters and removing leading zeros.
      *
      * @param string $value Decimal string to normalize.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function normalizeDecimalString(string $value): string
     {

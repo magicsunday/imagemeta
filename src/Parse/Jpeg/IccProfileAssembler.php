@@ -129,6 +129,8 @@ final class IccProfileAssembler implements SegmentAssemblerInterface
 
     /**
      * Merges ordered ICC chunks into the complete profile when all segments are present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function finalise(): void
     {

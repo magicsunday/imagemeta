@@ -76,6 +76,9 @@ final class IptcParser implements IptcParserInterface
      * @param int    $offset  Start offset for resource block parsing.
      *
      * @return IptcDatasetMap
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function parseResourceBlocks(string $payload, int $offset): array
     {
@@ -167,6 +170,9 @@ final class IptcParser implements IptcParserInterface
      *
      * @param string         $data     Raw IPTC IIM data.
      * @param IptcDatasetMap $datasets Map to accumulate into.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
      */
     private function parseIimData(string $data, array &$datasets): void
     {

@@ -70,6 +70,8 @@ final class JpegApp1Handler
      *
      * @param string $payload Raw APP1 payload including leading signature.
      * @param int    $offset  Offset in the stream where the marker begins.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function handleApp1(string $payload, int $offset): void
     {
@@ -118,6 +120,8 @@ final class JpegApp1Handler
 
     /**
      * Finalises extended XMP assembly.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function finalise(): void
     {
@@ -175,6 +179,8 @@ final class JpegApp1Handler
      * byte-order marker (II or MM) followed by TIFF magic (0x002A) or BigTIFF magic (0x002B).
      *
      * @param string $tiffData Raw bytes after the "Exif\0\0" signature.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateApp1TiffHeader(string $tiffData): void
     {

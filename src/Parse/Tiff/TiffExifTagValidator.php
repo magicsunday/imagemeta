@@ -95,6 +95,8 @@ final readonly class TiffExifTagValidator
 
     /**
      * Validates individual tag value domains inline during readDirEntry.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateTagValueDomain(
         int $tag,
@@ -140,6 +142,8 @@ final readonly class TiffExifTagValidator
      * @param Ifd      $ifd0        Primary image IFD.
      * @param Ifd|null $ifd1        Thumbnail IFD.
      * @param bool     $jpegContext True when APP1 data comes from JPEG primary image context.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validatePrimaryThumbnailStructureCompatibility(Ifd $ifd0, ?Ifd $ifd1, bool $jpegContext): void
     {
@@ -186,6 +190,8 @@ final readonly class TiffExifTagValidator
      * Bit 7 and above are reserved and must remain zero in strict conformance.
      *
      * @param Ifd|null $exifIfd EXIF IFD when present.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateFlashBitfield(?Ifd $exifIfd): void
     {
@@ -226,6 +232,8 @@ final readonly class TiffExifTagValidator
      * tolerated reader-side for real-world compatibility.
      *
      * @param Ifd $ifd0 Primary image IFD.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateJpegContextProhibitions(Ifd $ifd0): void
     {
@@ -243,6 +251,8 @@ final readonly class TiffExifTagValidator
      * Validates that EXIF 3.0 §4.6.6.9 tags are not placed in IFD0.
      *
      * @param Ifd $ifd0 Primary image IFD.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function validateExifIfdPlacement(Ifd $ifd0): void
     {
@@ -259,6 +269,9 @@ final readonly class TiffExifTagValidator
         }
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     private function assertMakerNoteSafetyDomain(int $value): void
     {
         if (($value !== 0) && ($value !== 1)) {
@@ -269,6 +282,9 @@ final readonly class TiffExifTagValidator
         }
     }
 
+    /**
+     * @throws ParseError If the input is malformed or inconsistent.
+     */
     private function assertPredictorDomain(int $value): void
     {
         if (($value !== 1) && ($value !== 2)) {

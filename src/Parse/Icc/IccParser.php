@@ -137,6 +137,8 @@ final readonly class IccParser implements IccParserInterface
      *
      * @param string|null        $profileData Raw ICC payload when available.
      * @param array<int, string> $segments    APP2 ICC segments.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function selectDecodeInput(?string $profileData, array $segments): ?string
     {
@@ -159,6 +161,8 @@ final readonly class IccParser implements IccParserInterface
      * @param string $data Candidate ICC payload.
      *
      * @return array{data: string, profileSize: int}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function validateAndNormalizeProfileData(string $data): array
     {
@@ -220,6 +224,8 @@ final readonly class IccParser implements IccParserInterface
      *   profileCreator: string|null,
      *   illuminant: array{x: float, y: float, z: float}|null
      * }
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeHeaderFields(string $data): array
     {
@@ -304,6 +310,8 @@ final readonly class IccParser implements IccParserInterface
      *     illuminant: int
      *   }|null
      * }
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function decodeTagFields(string $data, int $profileSize, int $majorVersion): array
     {
@@ -352,6 +360,8 @@ final readonly class IccParser implements IccParserInterface
      * Attempts to reconstruct the ICC payload from APP2 ICC segments.
      *
      * @param array<int, string> $segments Ordered ICC segments as extracted from the JPEG stream.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     private function combineSegments(array $segments): ?string
     {

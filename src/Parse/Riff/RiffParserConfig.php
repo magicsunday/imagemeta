@@ -22,6 +22,8 @@ final readonly class RiffParserConfig
      * @param int $maxChunkCount          Maximum number of chunks to scan before stopping.
      * @param int $maxMetadataPayloadSize Maximum allowed size for a single metadata payload in bytes.
      * @param int $maxListDepth           Maximum nesting depth for LIST chunks.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function __construct(
         public int $maxChunkCount = 100_000,

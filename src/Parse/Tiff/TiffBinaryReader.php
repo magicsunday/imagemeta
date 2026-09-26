@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Parse\Tiff;
 use MagicSunday\ImageMeta\Core\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\Endian;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
@@ -44,6 +45,8 @@ final readonly class TiffBinaryReader
 
     /**
      * Reads an unsigned 16-bit integer using the file byte order.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function readU16(): int
     {
@@ -52,6 +55,8 @@ final readonly class TiffBinaryReader
 
     /**
      * Reads an unsigned 32-bit integer using the file byte order.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function readU32(): int
     {
@@ -60,6 +65,8 @@ final readonly class TiffBinaryReader
 
     /**
      * Reads an unsigned 64-bit integer using the file byte order.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function readU64(): UInt64
     {
@@ -72,6 +79,8 @@ final readonly class TiffBinaryReader
      * @param int $valueBytes Total byte size of the entry value.
      *
      * @return array{0: int|UInt64|string, 1: string|null}
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function readValueOrOffset(int $valueBytes): array
     {
@@ -121,6 +130,8 @@ final readonly class TiffBinaryReader
      * Unpacks an unsigned 16-bit integer from a byte string.
      *
      * @param string $b Source bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function unpackU16(string $b): int
     {
@@ -133,6 +144,8 @@ final readonly class TiffBinaryReader
      * Unpacks a signed 16-bit integer from a byte string.
      *
      * @param string $b Source bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function unpackS16(string $b): int
     {
@@ -145,6 +158,8 @@ final readonly class TiffBinaryReader
      * Unpacks an unsigned 32-bit integer from a byte string.
      *
      * @param string $b Source bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function unpackU32(string $b): int
     {
@@ -157,6 +172,8 @@ final readonly class TiffBinaryReader
      * Unpacks a signed 32-bit integer from a byte string.
      *
      * @param string $b Source bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function unpackS32(string $b): int
     {
@@ -169,6 +186,8 @@ final readonly class TiffBinaryReader
      * Unpacks an IEEE-754 single-precision float from a byte string.
      *
      * @param string $b Source bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function unpackFloat(string $b): float
     {
@@ -181,6 +200,8 @@ final readonly class TiffBinaryReader
      * Unpacks an IEEE-754 double-precision float from a byte string.
      *
      * @param string $b Source bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function unpackDouble(string $b): float
     {
@@ -193,6 +214,8 @@ final readonly class TiffBinaryReader
      * Unpacks an unsigned 64-bit integer from a byte string.
      *
      * @param string $b Source bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function unpackU64(string $b): UInt64
     {
@@ -203,6 +226,8 @@ final readonly class TiffBinaryReader
      * Unpacks a signed 64-bit integer from a byte string.
      *
      * @param string $b Source bytes.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function unpackS64(string $b): int
     {
@@ -229,6 +254,8 @@ final readonly class TiffBinaryReader
      *
      * @param int|UInt64 $v     Integer value to convert.
      * @param int        $bytes Number of bytes to output.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function uXToBytes(int|UInt64 $v, int $bytes): string
     {
@@ -241,6 +268,8 @@ final readonly class TiffBinaryReader
      * @param string $bytes  Source buffer containing the integer.
      * @param int    $offset Byte offset within the buffer.
      * @param bool   $signed Whether to interpret the value as signed.
+     *
+     * @throws ParseError If the input is malformed or inconsistent.
      */
     public function read32FromBytes(string $bytes, int $offset, bool $signed): int
     {
