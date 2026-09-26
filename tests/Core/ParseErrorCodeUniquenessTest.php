@@ -243,9 +243,7 @@ final class ParseErrorCodeUniquenessTest extends TestCase
             foreach ($this->parseErrorCodeLiterals($filePath) as $hit) {
                 $code = $hit['code'];
 
-                if (!isset($locationsByCode[$code])) {
-                    $locationsByCode[$code] = [];
-                }
+                $locationsByCode[$code] ??= [];
 
                 $locationsByCode[$code][] = sprintf('%s:%d', $relativePath, $hit['line']);
             }
