@@ -295,9 +295,7 @@ final readonly class AppleMakerNotesBuilder
         $semanticStyleWarmth = $this->extractor->floatValue($dictionary, 'SemanticStyleWarmth');
         $semanticStyleTone   = $this->extractor->floatValue($dictionary, 'SemanticStyleTone');
 
-        if ($semanticStyleCompact === null) {
-            $semanticStyleCompact = SemanticStyle::fromDictionary($dictionary);
-        }
+        $semanticStyleCompact ??= SemanticStyle::fromDictionary($dictionary);
 
         if ($semanticStyleCompact !== null) {
             [
