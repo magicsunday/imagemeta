@@ -57,7 +57,7 @@
     },
     "require-dev": {
         "infection/infection": "^0.32 || ^0.34 || ^0.35",
-        "magicsunday/coding-standard": "^2.1",
+        "magicsunday/coding-standard": "^2.3",
         "phpdocumentor/reflection-docblock": "^6.0"
     },
     "autoload": {
@@ -105,7 +105,11 @@
             "check-consumer-config.php ."
         ],
         "ci:test:php:deptrac": [
-            "deptrac analyse --no-progress"
+            "deptrac analyse --no-progress",
+            "deptrac debug:unassigned",
+            "@php -r \"is_dir('.build') || mkdir('.build', 0777, true);\"",
+            "deptrac analyse --no-progress --formatter=graphviz-dot --output=.build/deptrac-layers.dot",
+            "check-deptrac-cycles.php .build/deptrac-layers.dot"
         ],
         "ci:test:php:audit": [
             "composer audit --format=plain"
