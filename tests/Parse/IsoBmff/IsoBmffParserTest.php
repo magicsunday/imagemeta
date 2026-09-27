@@ -171,6 +171,55 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * A top-level mdat whose declared size runs past the end of the file (an interrupted
+     * recording) is clamped so the walk continues, and tolerant mode reports the truncation.
+     * ISO/IEC 14496-12 §4.2 — a box's size covers the whole box.
+     */
+    #[Test]
+    public function tolerantParserReportsTruncatedMdat(): void
+    {
+        $exifPayload = pack('N', 0) . "MM\x00\x2Abefore-mdat";
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
+        $meta        = $this->fullBox('meta', $this->box('Exif', $exifPayload));
+        $mdat        = pack('N', 1000) . 'mdatpartial-payload';
+
+        $result = $this->createTolerantExtractor($ftyp . $meta . $mdat)->extract();
+
+        self::assertSame(["MM\x00\x2Abefore-mdat"], $result->exifBlobs);
+        self::assertCount(1, $result->warnings);
+        self::assertSame(ParseWarningScope::Container, $result->warnings[0]->scope);
+        self::assertSame(2143, $result->warnings[0]->code);
+    }
+
+    /**
+     * The default (strict) parser keeps clamping a truncated mdat silently.
+     */
+    #[Test]
+    public function strictParserClampsTruncatedMdatWithoutWarning(): void
+    {
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat = pack('N', 1000) . 'mdatpartial-payload';
+
+        $result = $this->createExtractor($ftyp . $mdat)->extract();
+
+        self::assertSame([], $result->warnings);
+    }
+
+    /**
+     * A complete mdat box yields no truncation warning in tolerant mode.
+     */
+    #[Test]
+    public function tolerantParserReportsNoWarningForCompleteMdat(): void
+    {
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat = $this->box('mdat', 'complete-payload');
+
+        $result = $this->createTolerantExtractor($ftyp . $mdat)->extract();
+
+        self::assertSame([], $result->warnings);
+    }
+
+    /**
      * An undamaged file yields no warnings in tolerant mode.
      */
     #[Test]

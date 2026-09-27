@@ -322,7 +322,7 @@ Codes are assigned per module in these ranges:
 | 2115–2142 | RIFF / AVI | `src/Parse/Riff/` |
 
 **Rules:**
-* New codes: use `max + 1` (currently **2142**).
+* New codes: use `max + 1` (currently **2143**).
 * Each code must be globally unique across all `src/` files.
 * Overlapping ranges are historical; do not extend them further.
 

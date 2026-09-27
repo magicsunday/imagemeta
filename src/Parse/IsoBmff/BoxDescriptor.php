@@ -28,6 +28,8 @@ final readonly class BoxDescriptor
      * @param int          $contentSize   Size of the box payload in bytes.
      * @param StreamWindow $window        Stream window exposing the box payload.
      * @param string|null  $userType      UUID for user boxes when applicable.
+     * @param int|null     $declaredSize  Size declared in the box header when it ran past the container
+     *                                    and was clamped (a truncated top-level mdat); null otherwise.
      */
     public function __construct(
         public string $type,
@@ -37,6 +39,7 @@ final readonly class BoxDescriptor
         public int $contentSize,
         public StreamWindow $window,
         public ?string $userType,
+        public ?int $declaredSize = null,
     ) {
     }
 }
