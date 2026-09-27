@@ -191,7 +191,9 @@ $height    = $aviHeader?->height;
   `MagicSunday\ImageMeta\Model\ParseWarning` carries a `scope` (`container`: the structural walk
   stopped or skipped data, so later data may be missing; `exif` / `xmp` / `iptc`: that payload was
   dropped), the numeric `code` of the tolerated `ParseError` (0 for truncated data) and a `message`.
-  Consumers decide whether a partially read file is acceptable:
+  An ISO BMFF recording cut off inside its media data (`mdat` declaring more bytes than the file
+  holds, e.g. an interrupted capture) keeps its metadata and is reported as a `container` warning
+  with code 2143. Consumers decide whether a partially read file is acceptable:
 
   ```php
   $metadata = MetadataReader::createDefault()->read($path);
