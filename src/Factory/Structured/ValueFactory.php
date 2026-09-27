@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Factory\ComponentKey;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
 use MagicSunday\ImageMeta\Model\FlashPix\FlashPixSummaryData;
+use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
@@ -27,6 +28,7 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpNamespace;
 use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
 use MagicSunday\ImageMeta\Value\Audio as ValueAudio;
+use MagicSunday\ImageMeta\Value\AudioClip;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
@@ -70,6 +72,7 @@ use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp as ValueXmp;
 
 use function array_filter;
+use function array_map;
 use function count;
 
 /**
@@ -319,7 +322,7 @@ final readonly class ValueFactory
             bitDepth: $quickTimeLookup->int(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY),
         );
 
-        $embeddedAudio = AudioClips::fromJpegAudioStreams($metadata->jpegAudioStreams);
+        $embeddedAudio = $this->createEmbeddedAudio($metadata->jpegAudioStreams);
         $flashPix      = $this->createFlashPix($metadata->flashPixStreams);
 
         return [
@@ -588,6 +591,26 @@ final readonly class ValueFactory
         string $localName,
     ): ?string {
         return $document?->string($namespace, $localName) ?? $creatorContact?->string($namespace, $localName);
+    }
+
+    /**
+     * Creates the embedded audio clips from the EXIF audio streams captured in JPEG APP2 segments.
+     *
+     * @param list<JpegAudioStream> $streams Audio streams in encounter order.
+     */
+    private function createEmbeddedAudio(array $streams): AudioClips
+    {
+        return new AudioClips(array_map(
+            static fn (JpegAudioStream $stream): AudioClip => new AudioClip(
+                $stream->format,
+                $stream->channels,
+                $stream->sampleRate,
+                $stream->bitDepth,
+                $stream->data,
+                $stream->version,
+            ),
+            $streams,
+        ));
     }
 
     /**
