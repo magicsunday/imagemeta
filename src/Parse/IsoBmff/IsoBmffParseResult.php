@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
+use MagicSunday\ImageMeta\Model\ParseWarning;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 
 /**
@@ -34,6 +35,7 @@ final readonly class IsoBmffParseResult
      * @param ?int                        $ispeHeight      Image height in pixels from the ispe box, if present.
      * @param ?string                     $iccProfile      Binary ICC profile from the colr box, if present.
      * @param list<int>                   $tmapItemIds     Item IDs for tone-map images.
+     * @param list<ParseWarning>          $warnings        Damage tolerated while walking the boxes.
      */
     public function __construct(
         public array $exifBlobs,
@@ -46,6 +48,7 @@ final readonly class IsoBmffParseResult
         public ?int $ispeHeight,
         public ?string $iccProfile,
         public array $tmapItemIds,
+        public array $warnings = [],
     ) {
     }
 }
