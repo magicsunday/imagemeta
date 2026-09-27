@@ -9,9 +9,9 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple\Support;
+namespace MagicSunday\ImageMeta\Tests\Model\QuickTime;
 
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
