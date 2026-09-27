@@ -19,7 +19,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMaps;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleRationalNormalizer;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
+use MagicSunday\ImageMeta\MakerNotes\Apple\SemanticStyle;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;

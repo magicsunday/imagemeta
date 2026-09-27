@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\MakerNotes\Apple\Support;
+namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 

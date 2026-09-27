@@ -75,9 +75,8 @@ src/
   Exif/              # EXIF parsing, converters, text formatting, reconciliation
   Factory/           # StructuredMetadata builder + ComponentKey
     Structured/      # Per-component factories (Camera, Gps, Temporal, etc.)
-  MakerNotes/        # Vendor MakerNote decoders (Apple, Samsung, DJI)
-    Support/         # Shared traits (ReadsMakerNoteFields)
-  Model/             # Data models (EXIF, IPTC, ICC, QuickTime, XMP, FlashPix, etc.)
+  MakerNotes/        # Vendor MakerNote decoders and records (Apple, Samsung, DJI)
+  Model/             # Data models (EXIF, IPTC, ICC, QuickTime, XMP, FlashPix, etc.) and their lookups
   Parse/             # Parsers: FlashPix/, Icc/, Iptc/, IsoBmff/, Jpeg/, Jxl/, Tiff/, Xmp/
   Value/             # Typed structured value objects (Camera, Gps, Exposure, etc.)
   MetadataReader.php # Main entry point

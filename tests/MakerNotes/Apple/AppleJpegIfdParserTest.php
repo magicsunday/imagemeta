@@ -25,7 +25,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleRationalNormalizer;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\PlistTextCursor;
 use MagicSunday\ImageMeta\MakerNotes\Apple\PlistTextParser;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
+use MagicSunday\ImageMeta\MakerNotes\Apple\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use PHPUnit\Framework\Attributes\CoversClass;

@@ -9,10 +9,9 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\MakerNotes\Apple\Support;
+namespace MagicSunday\ImageMeta\Model\QuickTime;
 
 use Closure;
-use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 
 /**
  * Helper that resolves QuickTime metadata values with fallback support.

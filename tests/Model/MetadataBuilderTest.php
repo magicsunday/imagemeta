@@ -45,14 +45,17 @@ use MagicSunday\ImageMeta\Factory\Structured\TiffDataFactory;
 use MagicSunday\ImageMeta\Factory\Structured\ValueFactory;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
+use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
 use MagicSunday\ImageMeta\Model\ParseWarning;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
 use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
@@ -158,6 +161,9 @@ use ReflectionProperty;
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(QuickTimeLookup::class)]
 #[UsesClass(FlashPixDocument::class)]
+#[UsesClass(IptcDocument::class)]
+#[UsesClass(XmpDocument::class)]
+#[UsesClass(XmpValueAccumulator::class)]
 #[UsesClass(FlashPixParser::class)]
 #[UsesClass(IccHeaderDecoder::class)]
 #[UsesClass(IccParser::class)]
@@ -262,6 +268,52 @@ final class MetadataBuilderTest extends TestCase
         self::assertInstanceOf(Closure::class, $firstResolver);
         self::assertInstanceOf(Closure::class, $secondResolver);
         self::assertNotSame($firstResolver, $secondResolver);
+    }
+
+    #[Test]
+    public function forwardsDocumentDecodersToBuiltMetadata(): void
+    {
+        $decodedXmpPackets   = [];
+        $decodedIptcPayloads = [];
+
+        $metadata = new MetadataBuilder()
+            ->withParsers(
+                static function (string $packet) use (&$decodedXmpPackets): XmpDocument {
+                    $decodedXmpPackets[] = $packet;
+
+                    return new XmpDocument(['{urn:test}Title' => $packet]);
+                },
+                static function (string $payload) use (&$decodedIptcPayloads): IptcDocument {
+                    $decodedIptcPayloads[] = $payload;
+
+                    return new IptcDocument(['2:5' => [$payload]]);
+                },
+            )
+            ->withXmp(['first-packet', 'second-packet'])
+            ->withIptc(['iptc-payload'])
+            ->build();
+
+        $xmpDocument  = $metadata->selectiveXmpDocument();
+        $iptcDocument = $metadata->selectiveIptcDocument();
+
+        self::assertSame(['first-packet', 'second-packet'], $decodedXmpPackets);
+        self::assertSame(['iptc-payload'], $decodedIptcPayloads);
+        self::assertInstanceOf(XmpDocument::class, $xmpDocument);
+        self::assertSame(['first-packet', 'second-packet'], $xmpDocument->stringList('urn:test', 'Title'));
+        self::assertInstanceOf(IptcDocument::class, $iptcDocument);
+        self::assertSame('iptc-payload', $iptcDocument->first(2, 5));
+    }
+
+    #[Test]
+    public function leavesSelectiveDocumentsUnresolvedWithoutDecoders(): void
+    {
+        $metadata = new MetadataBuilder()
+            ->withXmp(['packet'])
+            ->withIptc(['payload'])
+            ->build();
+
+        self::assertNull($metadata->selectiveXmpDocument());
+        self::assertNull($metadata->selectiveIptcDocument());
     }
 
     #[Test]

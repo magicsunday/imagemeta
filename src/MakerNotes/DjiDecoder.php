@@ -15,7 +15,6 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\Dji\DjiMakerNotes;
-use MagicSunday\ImageMeta\MakerNotes\Support\ReadsMakerNoteFields;
 
 use function strlen;
 use function substr;

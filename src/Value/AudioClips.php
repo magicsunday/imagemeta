@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
-use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
-
 /**
  * Aggregates audio clips extracted from EXIF audio APP2 segments.
  */
@@ -29,27 +27,5 @@ final readonly class AudioClips
     public function __construct(array $clips)
     {
         $this->clips = [...$clips];
-    }
-
-    /**
-     * Builds an audio clip aggregate from JPEG audio stream descriptors.
-     *
-     * @param list<JpegAudioStream> $streams
-     */
-    public static function fromJpegAudioStreams(array $streams): self
-    {
-        $clips = array_map(
-            static fn (JpegAudioStream $stream): AudioClip => new AudioClip(
-                $stream->format,
-                $stream->channels,
-                $stream->sampleRate,
-                $stream->bitDepth,
-                $stream->data,
-                $stream->version,
-            ),
-            $streams,
-        );
-
-        return new self($clips);
     }
 }
