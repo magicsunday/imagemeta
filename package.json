@@ -4,6 +4,6 @@
     "private": true,
     "license": "MIT",
     "devDependencies": {
-        "jscpd": "5.0.14"
+        "jscpd": "5.3.0"
     }
 }

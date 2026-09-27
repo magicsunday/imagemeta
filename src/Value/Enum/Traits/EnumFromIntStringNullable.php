@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Value\Traits;
+namespace MagicSunday\ImageMeta\Value\Enum\Traits;
 
 use ReflectionEnum;
 use ReflectionNamedType;
