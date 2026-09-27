@@ -49,7 +49,7 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
-use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+use MagicSunday\ImageMeta\Value\Enum\Traits\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;

@@ -87,7 +87,7 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffValidationSupport;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffValueDecoder;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
-use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+use MagicSunday\ImageMeta\Value\Enum\Traits\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
