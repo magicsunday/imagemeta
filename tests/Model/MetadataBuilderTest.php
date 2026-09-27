@@ -54,6 +54,7 @@ use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
 use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
@@ -159,6 +160,7 @@ use ReflectionProperty;
 #[UsesClass(FlashPixDocument::class)]
 #[UsesClass(IptcDocument::class)]
 #[UsesClass(XmpDocument::class)]
+#[UsesClass(XmpValueAccumulator::class)]
 #[UsesClass(FlashPixParser::class)]
 #[UsesClass(IccHeaderDecoder::class)]
 #[UsesClass(IccParser::class)]
