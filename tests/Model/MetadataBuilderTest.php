@@ -49,6 +49,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\FlashPix\FlashPixDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\MetadataBuilder;
+use MagicSunday\ImageMeta\Model\ParseWarning;
 use MagicSunday\ImageMeta\Model\Riff\NikonAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\OlympusAviLookup;
 use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
@@ -70,6 +71,7 @@ use MagicSunday\ImageMeta\Value\CreatorContact;
 use MagicSunday\ImageMeta\Value\DepthMap;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
+use MagicSunday\ImageMeta\Value\Enum\ParseWarningScope;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\ExposureAdjustments;
 use MagicSunday\ImageMeta\Value\ExposureSettings;
@@ -119,6 +121,7 @@ use ReflectionProperty;
  */
 #[CoversClass(MetadataBuilder::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(ParseWarning::class)]
 #[UsesClass(RiffInfoLookup::class)]
 #[UsesClass(StructuredMetadataBuilder::class)]
 #[UsesClass(DateTimeUtil::class)]
@@ -215,6 +218,35 @@ use ReflectionProperty;
 #[UsesClass(OlympusAviLookup::class)]
 final class MetadataBuilderTest extends TestCase
 {
+    /**
+     * Metadata built without warnings reports a complete, undamaged read.
+     */
+    #[Test]
+    public function buildsMetadataWithoutWarningsByDefault(): void
+    {
+        $metadata = (new MetadataBuilder($this->createStructuredResolver()))->build();
+
+        self::assertSame([], $metadata->warnings);
+        self::assertFalse($metadata->hasWarnings());
+    }
+
+    /**
+     * Warnings recorded while tolerating damaged input are carried into the aggregate in order.
+     */
+    #[Test]
+    public function carriesWarningsIntoBuiltMetadata(): void
+    {
+        $first  = new ParseWarning(ParseWarningScope::Container, 1262, 'box exceeds container bounds');
+        $second = new ParseWarning(ParseWarningScope::Xmp, 1400, 'malformed XMP packet');
+
+        $metadata = (new MetadataBuilder($this->createStructuredResolver()))
+            ->withWarnings([$first, $second])
+            ->build();
+
+        self::assertSame([$first, $second], $metadata->warnings);
+        self::assertTrue($metadata->hasWarnings());
+    }
+
     #[Test]
     public function injectsStructuredResolverIntoBuiltMetadata(): void
     {

@@ -126,6 +126,9 @@ final class MetadataBuilder
 
     private ?IptcParserInterface $iptcParser = null;
 
+    /** @var list<ParseWarning> */
+    private array $warnings = [];
+
     /**
      * @param (Closure(Metadata):StructuredMetadata)|null $structuredResolver Closure that converts a Metadata aggregate
      *                                                                        into typed StructuredMetadata. When null,
@@ -366,6 +369,18 @@ final class MetadataBuilder
     }
 
     /**
+     * Configures the damage tolerated while reading the source file.
+     *
+     * @param list<ParseWarning> $warnings Tolerated failures in encounter order.
+     */
+    public function withWarnings(array $warnings): self
+    {
+        $this->warnings = $warnings;
+
+        return $this;
+    }
+
+    /**
      * Builds the immutable Metadata aggregate from accumulated state.
      */
     public function build(): Metadata
@@ -409,6 +424,7 @@ final class MetadataBuilder
             xmpParser: $this->xmpParser,
             iptcParser: $this->iptcParser,
             structuredResolver: $this->structuredResolver,
+            warnings: $this->warnings,
         );
     }
 }
