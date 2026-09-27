@@ -15,12 +15,22 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
+use MagicSunday\ImageMeta\Model\ParseWarning;
 
 /**
  * Defines the contract for extracting metadata payloads from JPEG streams.
  */
 interface JpegParserInterface
 {
+    /**
+     * Returns the damage tolerated while scanning the stream.
+     *
+     * @return list<ParseWarning>
+     *
+     * @throws ParseError
+     */
+    public function getWarnings(): array;
+
     /**
      * @return list<string>
      *

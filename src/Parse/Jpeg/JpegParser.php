@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
+use Closure;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
@@ -19,6 +20,8 @@ use MagicSunday\ImageMeta\Model\Jpeg\JfifSegment;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Jpeg\Marker;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
+use MagicSunday\ImageMeta\Model\ParseWarning;
+use MagicSunday\ImageMeta\Value\Enum\ParseWarningScope;
 
 use function implode;
 use function ord;
@@ -93,14 +96,22 @@ final class JpegParser implements JpegParserInterface
 
     private ?int $firstSofOffset = null;
 
+    /** @var list<ParseWarning> */
+    private array $warnings = [];
+
     /**
      * Initialises the extractor with a seekable stream.
      *
-     * @param Stream           $stream Stream representing the JPEG binary stream.
-     * @param JpegParserConfig $config Parser limit configuration.
+     * @param Stream           $stream         Stream representing the JPEG binary stream.
+     * @param JpegParserConfig $config         Parser limit configuration.
+     * @param bool             $tolerateDamage When true, damaged segments are reported via getWarnings()
+     *                                         and the segments read so far are kept instead of throwing.
      */
-    public function __construct(private readonly Stream $stream, private readonly JpegParserConfig $config = new JpegParserConfig())
-    {
+    public function __construct(
+        private readonly Stream $stream,
+        private readonly JpegParserConfig $config = new JpegParserConfig(),
+        private readonly bool $tolerateDamage = false,
+    ) {
         $this->scanner           = new JpegMarkerScanner($stream, $config);
         $this->frameValidator    = new JpegFrameValidator($this->scanner);
         $this->iccAssembler      = new IccProfileAssembler($config->maxIccProfileSize);
@@ -114,6 +125,21 @@ final class JpegParser implements JpegParserInterface
         $this->jumbfParser = new JumbfTransportParser($this->app1Handler->appendXmpPacket(...));
 
         $this->markerHandlerRegistry = $this->createDefaultMarkerHandlerRegistry();
+    }
+
+    /**
+     * Returns the damage tolerated while scanning; always empty unless the parser tolerates damage.
+     *
+     * @return list<ParseWarning>
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     */
+    public function getWarnings(): array
+    {
+        $this->parseIfNeeded();
+
+        return $this->warnings;
     }
 
     /**
@@ -365,12 +391,47 @@ final class JpegParser implements JpegParserInterface
                     break;
                 }
             }
-        } catch (BoundsError) {
+        } catch (BoundsError $exception) {
             // Truncated stream — return whatever metadata was collected so far.
+            if ($this->tolerateDamage) {
+                $this->warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Container, $exception);
+            }
+        } catch (ParseError $exception) {
+            // A broken marker chain leaves no reliable position for the next
+            // segment, so the tolerant scan stops here and keeps what it read.
+            if (!$this->tolerateDamage) {
+                throw $exception;
+            }
+
+            $this->warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Container, $exception);
         }
 
         $this->finaliseParseResults();
         $this->parsed = true;
+    }
+
+    /**
+     * Runs one finalisation step; in tolerant mode a failing step is reported
+     * and skipped so the other assemblers still deliver their results.
+     *
+     * @param Closure(): void $step Finalisation step.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     */
+    private function finaliseStep(Closure $step): void
+    {
+        if (!$this->tolerateDamage) {
+            $step();
+
+            return;
+        }
+
+        try {
+            $step();
+        } catch (BoundsError|ParseError $exception) {
+            $this->warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Container, $exception);
+        }
     }
 
     /**
@@ -395,6 +456,7 @@ final class JpegParser implements JpegParserInterface
         $this->adobeApp14ColorTransform = null;
         $this->jfifSegment              = null;
         $this->firstSofOffset           = null;
+        $this->warnings                 = [];
     }
 
     /**
@@ -436,27 +498,50 @@ final class JpegParser implements JpegParserInterface
         $payloadLength = $segmentLength - 2;
         $payload       = $this->scanner->readSegmentPayload($marker, $offset, $payloadLength);
 
+        if (!$this->tolerateDamage) {
+            $this->processSegmentPayload($marker, $payload, $offset);
+
+            return false;
+        }
+
+        // The segment length was valid, so the next marker position is known:
+        // a malformed payload only costs this one segment.
+        try {
+            $this->processSegmentPayload($marker, $payload, $offset);
+        } catch (BoundsError|ParseError $exception) {
+            $this->warnings[] = ParseWarning::fromThrowable(ParseWarningScope::Container, $exception);
+        }
+
+        return false;
+    }
+
+    /**
+     * Hands a marker segment payload to its handler.
+     *
+     * @throws BoundsError If a read reaches outside the declared byte range.
+     * @throws ParseError  If the input is malformed or inconsistent.
+     */
+    private function processSegmentPayload(int $marker, string $payload, int $offset): void
+    {
         if ($this->markerHandlerRegistry->supports($marker)) {
             $this->markerHandlerRegistry->dispatch($marker, $this->stream, $payload, $offset);
 
-            return false;
+            return;
         }
 
         if ($marker === Marker::APP11) {
             $this->jumbfParser->handleSegment($payload, $offset);
 
-            return false;
+            return;
         }
 
         if ($marker === Marker::APP14) {
             $this->handleAdobeApp14Segment($payload);
 
-            return false;
+            return;
         }
 
         $this->processStartOfFrame($marker, $payload, $offset);
-
-        return false;
     }
 
     /**
@@ -497,10 +582,10 @@ final class JpegParser implements JpegParserInterface
      */
     private function finaliseParseResults(): void
     {
-        $this->iccAssembler->finalise();
-        $this->app1Handler->finalise();
-        $this->jumbfParser->finalise();
-        $this->flashPixAssembler->finalise();
+        $this->finaliseStep($this->iccAssembler->finalise(...));
+        $this->finaliseStep($this->app1Handler->finalise(...));
+        $this->finaliseStep($this->jumbfParser->finalise(...));
+        $this->finaliseStep($this->flashPixAssembler->finalise(...));
         $this->flashPixStreams = $this->flashPixAssembler->getStreams();
 
         if ($this->mpfSegments !== []) {
