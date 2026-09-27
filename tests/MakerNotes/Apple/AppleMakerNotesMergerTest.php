@@ -21,7 +21,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleNoise;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleSemanticStyle;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
+use MagicSunday\ImageMeta\MakerNotes\Apple\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;

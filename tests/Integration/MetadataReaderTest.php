@@ -98,7 +98,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleJpegIfdParser;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
+use MagicSunday\ImageMeta\MakerNotes\Apple\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;

@@ -16,7 +16,6 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\Samsung\SamsungMakerNotes;
-use MagicSunday\ImageMeta\MakerNotes\Support\ReadsMakerNoteFields;
 use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
 
 use function str_starts_with;

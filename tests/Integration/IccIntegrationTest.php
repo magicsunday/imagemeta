@@ -56,7 +56,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleCaptureIdentity;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleHdr;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
+use MagicSunday\ImageMeta\MakerNotes\Apple\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\MakerNotes\SimpleDecoder;
