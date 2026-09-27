@@ -455,7 +455,7 @@ XML;
             exifBlobs: [],
             quickTime: null,
             iptcBlobs: [$payload],
-            iptcParser: new IptcParser(),
+            iptcParser: new IptcParser()->parse(...),
         );
 
         $structured = StructuredMetadataBuilder::createDefault()->assemble($metadata);

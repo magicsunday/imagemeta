@@ -13,8 +13,6 @@ namespace MagicSunday\ImageMeta\Model;
 
 // jscpd:ignore-start
 use Closure;
-use MagicSunday\ImageMeta\Contract\IptcParserInterface;
-use MagicSunday\ImageMeta\Contract\XmpParserInterface;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
@@ -122,9 +120,11 @@ final class MetadataBuilder
 
     private ?string $digestSha256 = null;
 
-    private ?XmpParserInterface $xmpParser = null;
+    /** @var (Closure(string): XmpDocument)|null */
+    private ?Closure $xmpParser = null;
 
-    private ?IptcParserInterface $iptcParser = null;
+    /** @var (Closure(string): IptcDocument)|null */
+    private ?Closure $iptcParser = null;
 
     /**
      * @param (Closure(Metadata):StructuredMetadata)|null $structuredResolver Closure that converts a Metadata aggregate
@@ -138,12 +138,16 @@ final class MetadataBuilder
     }
 
     /**
-     * Configures parser instances for selective document creation.
+     * Configures the decoders used for selective document creation.
      *
-     * @param XmpParserInterface  $xmpParser  XMP parser used by {@see Metadata::selectiveXmpDocument()}.
-     * @param IptcParserInterface $iptcParser IPTC parser used by {@see Metadata::selectiveIptcDocument()}.
+     * Each decoder turns one captured payload into its document, typically a parser's
+     * `parse(...)` method passed as a first-class callable. The model takes closures rather
+     * than parser contracts, so it depends on no parser abstraction.
+     *
+     * @param Closure(string): XmpDocument  $xmpParser  Decodes one XMP packet for {@see Metadata::selectiveXmpDocument()}.
+     * @param Closure(string): IptcDocument $iptcParser Decodes one IPTC payload for {@see Metadata::selectiveIptcDocument()}.
      */
-    public function withParsers(XmpParserInterface $xmpParser, IptcParserInterface $iptcParser): self
+    public function withParsers(Closure $xmpParser, Closure $iptcParser): self
     {
         $this->xmpParser  = $xmpParser;
         $this->iptcParser = $iptcParser;

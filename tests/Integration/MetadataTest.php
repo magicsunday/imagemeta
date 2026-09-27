@@ -459,7 +459,7 @@ final class MetadataTest extends TestCase
 </x:xmpmeta>
 XML;
 
-        $metadata = new Metadata([], null, xmpBlobs: [$xmp], xmpParser: new XmpParser());
+        $metadata = new Metadata([], null, xmpBlobs: [$xmp], xmpParser: new XmpParser()->parse(...));
 
         $document = $metadata->selectiveXmpDocument();
 
@@ -495,7 +495,7 @@ XML;
 </x:xmpmeta>
 XML;
 
-        $metadata = new Metadata([], null, xmpBlobs: [$exifBlob, $tiffBlob], xmpParser: new XmpParser());
+        $metadata = new Metadata([], null, xmpBlobs: [$exifBlob, $tiffBlob], xmpParser: new XmpParser()->parse(...));
 
         $document = $metadata->selectiveXmpDocument();
 
@@ -543,7 +543,7 @@ XML;
             exifBlobs: [],
             quickTime: null,
             iptcBlobs: [$payload],
-            iptcParser: new IptcParser(),
+            iptcParser: new IptcParser()->parse(...),
         );
 
         $document = $metadata->selectiveIptcDocument();
