@@ -126,6 +126,7 @@ use MagicSunday\ImageMeta\Model\Riff\RiffInfoLookup;
 use MagicSunday\ImageMeta\Model\Tiff\TiffFieldType;
 use MagicSunday\ImageMeta\Model\Xmp\XmpContainer;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
 use MagicSunday\ImageMeta\Parse\FlashPix\FlashPixParser;
 use MagicSunday\ImageMeta\Parse\Icc\IccHeaderDecoder;
@@ -296,6 +297,7 @@ use function unlink;
  */
 #[CoversClass(MetadataReader::class)]
 #[UsesClass(ParseWarning::class)]
+#[UsesClass(XmpLanguageAlternative::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(AppleMakerNotesMerger::class)]
 #[UsesClass(Audio::class)]
